@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import javax.annotation.Nullable;
-
 /**
  * Guava code that will eventually be open-sourced properly. Package-private
  * until they're able to do that. A lot of these methods are discouraged
@@ -28,47 +26,6 @@ import javax.annotation.Nullable;
 class Strings {
   private Strings() {} // All static
 
-  /**
-   * Returns {@code true} if the given string is either null or the empty string
-   * ("").
-   *
-   * @param string the string reference to check
-   * @return {@code true} if {@code string} is either null or the empty string
-   */
-  static boolean isEmpty(@Nullable String string) {
-    return string == null || string.isEmpty();
-  }
-
-  /**
-   * Returns the given string if it is non-null; the empty string otherwise.
-   *
-   * @param string the string to test and possibly return
-   * @return {@code string} itself if it is non-null; {@code ""} if it is null
-   */
-  static String makeSafe(@Nullable String string) {
-    return (string == null) ? "" : string;
-  }
-
-  /**
-   * Returns a string consisting of the input string concatenated a given number
-   * of times. For example, {@code repeat("hey", 3)} returns the string {@code
-   * "heyheyhey"}.
-   *
-   * @param string any non-null string
-   * @param count the number of times to repeat it; a nonnegative integer
-   * @return a string containing {@code string} repeated {@code count} times
-   *     (the empty string if {@code count} is zero)
-   * @throws IllegalArgumentException if {@code count} is negative
-   */
-  static String repeat(String string, int count) {
-    // If this multiplication overflows, a NegativeArraySizeException or
-    // OutOfMemoryError is not far behind
-    StringBuilder builder = new StringBuilder(string.length() * count);
-    for (int i = 0; i < count; i++) {
-      builder.append(string);
-    }
-    return builder.toString();
-  }
   /**
    * If this given string is of length {@code maxLength} or less, it will
    * be returned as-is.

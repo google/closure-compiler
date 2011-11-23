@@ -22,6 +22,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import com.google.common.collect.ImmutableList;
@@ -976,7 +977,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   /** Expansion function for source map. */
   @VisibleForTesting
   String expandSourceMapPath(B options, JSModule forModule) {
-    if (Strings.isEmpty(options.sourceMapOutputPath)) {
+    if (Strings.isNullOrEmpty(options.sourceMapOutputPath)) {
       return null;
     }
     return expandCommandLinePath(options.sourceMapOutputPath, forModule);
@@ -1059,7 +1060,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   private void outputSourceMap(B options, String associatedName)
       throws IOException {
-    if (Strings.isEmpty(options.sourceMapOutputPath)) {
+    if (Strings.isNullOrEmpty(options.sourceMapOutputPath)) {
       return;
     }
 
