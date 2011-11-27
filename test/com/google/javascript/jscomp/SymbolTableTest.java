@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.SymbolTable.Reference;
 import com.google.javascript.jscomp.SymbolTable.Symbol;
 import com.google.javascript.jscomp.SymbolTable.SymbolScope;
@@ -28,6 +29,7 @@ import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author nicksantos@google.com (Nick Santos)
@@ -580,7 +582,7 @@ public class SymbolTableTest extends TestCase {
     Ordering<Symbol> ordering = table.getNaturalSymbolOrdering();
     assertSymmetricOrdering(ordering, a, ab);
     assertSymmetricOrdering(ordering, a, f);
-    assertSymmetricOrdering(ordering, ab, f);
+    assertSymmetricOrdering(ordering, f, ab);
     assertSymmetricOrdering(ordering, f, x);
   }
 
@@ -800,6 +802,26 @@ public class SymbolTableTest extends TestCase {
     assertEquals(1, table.getReferenceList(y).size());
   }
 
+  public void testNamespaceDefinitionOrder() throws Exception {
+    // Sometimes, weird things can happen where the files appear in
+    // a strange order. We need to make sure we're robust against this.
+    SymbolTable table = createSymbolTable(
+        "/** @const */ var goog = {};\n"
+        + "/** @constructor */ goog.dom.Foo = function() {};\n"
+        + "/** @const */ goog.dom = {};\n");
+
+    Symbol goog = getGlobalVar(table, "goog");
+    Symbol dom = getGlobalVar(table, "goog.dom");
+    Symbol Foo = getGlobalVar(table, "goog.dom.Foo");
+
+    assertNotNull(goog);
+    assertNotNull(dom);
+    assertNotNull(Foo);
+
+    assertEquals(dom, goog.getPropertyScope().getSlot("dom"));
+    assertEquals(Foo, dom.getPropertyScope().getSlot("Foo"));
+  }
+
   private void assertSymmetricOrdering(
       Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertTrue(ordering.compare(first, first) == 0);
@@ -809,7 +831,7 @@ public class SymbolTableTest extends TestCase {
   }
 
   private Symbol getGlobalVar(SymbolTable table, String name) {
-    return table.getGlobalScope().getSlot(name);
+    return table.getGlobalScope().getQualifiedSlot(name);
   }
 
   private Symbol getDocVar(SymbolTable table, String name) {
@@ -824,8 +846,8 @@ public class SymbolTableTest extends TestCase {
   private Symbol getLocalVar(SymbolTable table, String name) {
     for (SymbolScope scope : table.getAllScopes()) {
       if (!scope.isGlobalScope() && scope.isLexicalScope() &&
-          scope.getSlot(name) != null) {
-        return scope.getSlot(name);
+          scope.getQualifiedSlot(name) != null) {
+        return scope.getQualifiedSlot(name);
       }
     }
     return null;
@@ -859,19 +881,25 @@ public class SymbolTableTest extends TestCase {
    * Returns the same table for easy chaining.
    */
   private SymbolTable assertSymbolTableValid(SymbolTable table) {
+    Set<Symbol> allSymbols = Sets.newHashSet(table.getAllSymbols());
     for (Symbol sym : table.getAllSymbols()) {
       // Make sure that grabbing the symbol's scope and looking it up
       // again produces the same symbol.
-      assertEquals(sym, table.getScope(sym).getSlot(sym.getName()));
+      assertEquals(sym, table.getScope(sym).getQualifiedSlot(sym.getName()));
 
       for (Reference ref : table.getReferences(sym)) {
         // Make sure that the symbol and reference are mutually linked.
         assertEquals(sym, ref.getSymbol());
       }
+
+      Symbol scope = table.getSymbolForScope(table.getScope(sym));
+      assertTrue(
+          "The symbol's scope is a zombie scope that shouldn't exist: " + sym,
+          scope == null || allSymbols.contains(scope));
     }
 
     // Make sure that the global "this" is declared at the first input root.
-    Symbol global = getGlobalVar(table, "*global*");
+    Symbol global = getGlobalVar(table, SymbolTable.GLOBAL_THIS);
     assertNotNull(global);
     assertNotNull(global.getDeclaration());
     assertEquals(Token.SCRIPT, global.getDeclaration().getNode().getType());

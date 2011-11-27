@@ -274,7 +274,7 @@ public final class SymbolTable
 
     String name = NodeUtil.getBestLValueName(
         NodeUtil.getBestLValue(rootNode));
-    return name == null ? null : scope.getParentScope().getSlot(name);
+    return name == null ? null : scope.getParentScope().getQualifiedSlot(name);
   }
 
   /**
@@ -344,7 +344,7 @@ public final class SymbolTable
 
     // scope will sometimes be null if one of the type-stripping passes
     // was run, and the symbol isn't in the AST anymore.
-    return scope == null ? null : scope.getSlot(name);
+    return scope == null ? null : scope.getQualifiedSlot(name);
   }
 
   /**
@@ -413,7 +413,7 @@ public final class SymbolTable
     } else if (type.isFunctionType()) {
       return linkToCtor ?
           globalScope.getSlot("Function") :
-          globalScope.getSlot("Function.prototype");
+          globalScope.getQualifiedSlot("Function.prototype");
     } else if (type.autoboxesTo() != null) {
       return getSymbolForTypeHelper(type.autoboxesTo(), linkToCtor);
     } else {
@@ -679,7 +679,8 @@ public final class SymbolTable
         continue;
       }
 
-      Symbol root = symbol.scope.getSlot(qName.substring(0, rootIndex));
+      Symbol root = symbol.scope.getQualifiedSlot(
+          qName.substring(0, rootIndex));
       if (root == null) {
         // In theory, this should never happen, but we fail quietly anyway
         // just to be safe.
@@ -700,7 +701,7 @@ public final class SymbolTable
             Symbol namespace =
                 isAnySymbolDeclared(name, currentNode, root.scope);
             if (namespace == null) {
-              namespace = root.scope.getSlot(name);
+              namespace = root.scope.getQualifiedSlot(name);
             }
 
             if (namespace == null && root.scope.isGlobalScope()) {
@@ -804,7 +805,7 @@ public final class SymbolTable
       while (-1 != (dot = currentName.lastIndexOf('.'))) {
         currentName = currentName.substring(0, dot);
 
-        Symbol owner = s.scope.getSlot(currentName);
+        Symbol owner = s.scope.getQualifiedSlot(currentName);
         if (owner != null
             && owner.getType() != null
             && (owner.getType().isNominalConstructor() ||
@@ -1192,6 +1193,27 @@ public final class SymbolTable
       return parent;
     }
 
+    /**
+     * Get the slot for a fully-qualified name (e.g., "a.b.c") by trying
+     * to find property scopes at each part of the path.
+     */
+    public Symbol getQualifiedSlot(String name) {
+      Symbol fullyNamedSym = getSlot(name);
+      if (fullyNamedSym != null) {
+        return fullyNamedSym;
+      }
+
+      int dot = name.lastIndexOf(".");
+      if (dot != -1) {
+        Symbol owner = getQualifiedSlot(name.substring(0, dot));
+        if (owner != null && owner.getPropertyScope() != null) {
+          return owner.getPropertyScope().getSlot(name.substring(dot + 1));
+        }
+      }
+
+      return null;
+    }
+
     @Override
     public Symbol getSlot(String name) {
       Symbol own = getOwnSlot(name);
@@ -1202,14 +1224,6 @@ public final class SymbolTable
       Symbol ancestor = parent == null ? null : parent.getSlot(name);
       if (ancestor != null) {
         return ancestor;
-      }
-
-      int dot = name.lastIndexOf('.');
-      if (dot != -1) {
-        Symbol owner = getSlot(name.substring(0, dot));
-        if (owner != null && owner.getPropertyScope() != null) {
-          return owner.getPropertyScope().getSlot(name.substring(dot + 1));
-        }
       }
       return null;
     }
@@ -1290,9 +1304,9 @@ public final class SymbolTable
     }
 
     // Try to find the symbol by its fully qualified name.
-    private void tryDefineLexicalPropRef(String name, Node n) {
+    private void tryDefineLexicalQualifiedNameRef(String name, Node n) {
       if (name != null) {
-        Symbol lexicalSym = getEnclosingScope(n).getSlot(name);
+        Symbol lexicalSym = getEnclosingScope(n).getQualifiedSlot(name);
         if (lexicalSym != null) {
           lexicalSym.defineReferenceAt(n);
         }
@@ -1302,10 +1316,10 @@ public final class SymbolTable
     private void maybeDefineTypedReference(
         Node n, String propName, JSType owner) {
       if (owner.isGlobalThisType()) {
-          Symbol sym = globalScope.getSlot(propName);
-          if (sym != null) {
-            sym.defineReferenceAt(n);
-          }
+        Symbol sym = globalScope.getSlot(propName);
+        if (sym != null) {
+          sym.defineReferenceAt(n);
+        }
       } else if (owner.isNominalConstructor()) {
         maybeDefineReference(
             n, propName, getSymbolDeclaredBy(owner.toMaybeFunctionType()));
@@ -1324,7 +1338,7 @@ public final class SymbolTable
       if (n.isGetProp()) {
         JSType owner = n.getFirstChild().getJSType();
         if (owner == null || owner.isUnknownType()) {
-          tryDefineLexicalPropRef(n.getQualifiedName(), n);
+          tryDefineLexicalQualifiedNameRef(n.getQualifiedName(), n);
           return;
         }
 
@@ -1332,7 +1346,7 @@ public final class SymbolTable
       } else if (NodeUtil.isObjectLitKey(n, parent) && n.isString()) {
         JSType owner = parent.getJSType();
         if (owner == null || owner.isUnknownType()) {
-          tryDefineLexicalPropRef(NodeUtil.getBestLValueName(n), n);
+          tryDefineLexicalQualifiedNameRef(NodeUtil.getBestLValueName(n), n);
           return;
         }
 
@@ -1520,31 +1534,35 @@ public final class SymbolTable
     public int compare(Symbol a, Symbol b) {
       SymbolScope scopeA = getScope(a);
       SymbolScope scopeB = getScope(b);
-      int result = scopeA.getScopeDepth() - scopeB.getScopeDepth();
+
+      // More deeply nested symbols should go later.
+      int result = getLexicalScopeDepth(scopeA) - getLexicalScopeDepth(scopeB);
       if (result != 0) {
         return result;
       }
 
-      if (a.getDeclaration() == null && b.getDeclaration() == null) {
-        return a.getName().compareTo(b.getName());
-      } else if (a.getDeclaration() == null) {
-        return -1;
-      } else if (b.getDeclaration() == null) {
-        return 1;
-      }
-
-      // Make sure that Ctor comes before Ctor.prototype, even though
-      // they're on the same node.
-      if (b.getName().endsWith(".prototype") &&
-          b.getName().equals(a.getName() + ".prototype")) {
-        return -1;
-      } else if (a.getName().endsWith(".prototype") &&
-          a.getName().equals(b.getName() + ".prototype")) {
-        return 1;
-      }
-
-      return NODE_ORDERING.compare(
-          a.getDeclaration().getNode(),  b.getDeclaration().getNode());
+      // After than, just use lexicographic ordering.
+      // This ensures "a.b" comes before "a.b.c".
+      return a.getName().compareTo(b.getName());
     }
   };
+
+  /**
+   * For a lexical scope, just returns the normal scope depth.
+   *
+   * For a property scope, returns the number of scopes we have to search
+   *     to find the nearest lexical scope, plus that lexical scope's depth.
+   *
+   * For a doc info scope, returns 0.
+   */
+  private int getLexicalScopeDepth(SymbolScope scope) {
+    if (scope.isLexicalScope() || scope.isDocScope()) {
+      return scope.getScopeDepth();
+    } else {
+      Preconditions.checkState(scope.isPropertyScope());
+      Symbol sym = scope.getSymbolForScope();
+      Preconditions.checkNotNull(sym);
+      return getLexicalScopeDepth(getScope(sym)) + 1;
+    }
+  }
 }
