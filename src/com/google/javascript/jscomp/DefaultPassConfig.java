@@ -660,10 +660,6 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(rescopeGlobalSymbols);
     }
 
-    if (options.operaCompoundAssignFix) {
-      passes.add(operaCompoundAssignFix);
-    }
-
     // Safety checks
     passes.add(sanityCheckAst);
     passes.add(sanityCheckVars);
@@ -1861,14 +1857,6 @@ public class DefaultPassConfig extends PassConfig {
           anonymousFunctionNameMap = naf.getFunctionMap();
         }
       };
-    }
-  };
-
-  final PassFactory operaCompoundAssignFix =
-      new PassFactory("operaCompoundAssignFix", true) {
-    @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new OperaCompoundAssignFix(compiler);
     }
   };
 
