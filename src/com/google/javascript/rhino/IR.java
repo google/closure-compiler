@@ -40,6 +40,8 @@ package com.google.javascript.rhino;
 
 import com.google.common.base.Preconditions;
 
+import java.util.List;
+
 /**
  * An AST construction helper class
  * @author johnlenz@google.com (John Lenz)
@@ -69,7 +71,16 @@ public class IR {
   }
 
   public static Node paramList(Node ... params) {
-    Node paramList = new Node(Token.PARAM_LIST);
+    Node paramList = paramList();
+    for (Node param : params) {
+      Preconditions.checkState(param.isName());
+      paramList.addChildToBack(param);
+    }
+    return paramList;
+  }
+
+  public static Node paramList(List<Node> params) {
+    Node paramList = paramList();
     for (Node param : params) {
       Preconditions.checkState(param.isName());
       paramList.addChildToBack(param);
@@ -405,6 +416,10 @@ public class IR {
 
   public static Node number(double d) {
     return Node.newNumber(d);
+  }
+
+  public static Node thisNode() {
+    return new Node(Token.THIS);
   }
 
   public static Node trueNode() {

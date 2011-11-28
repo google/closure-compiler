@@ -153,7 +153,7 @@ class RuntimeTypeCheck implements CompilerPass {
       }
 
       Node classNode = NodeUtil.newQualifiedNameNode(
-          compiler.getCodingConvention(), className, -1, -1);
+          compiler.getCodingConvention(), className);
 
       Node marker = IR.string(
               interfaceType == null ?
@@ -375,7 +375,7 @@ class RuntimeTypeCheck implements CompilerPass {
 
   private Node jsCode(String prop) {
     return NodeUtil.newQualifiedNameNode(
-        compiler.getCodingConvention(), "jscomp.typecheck." + prop, -1, -1);
+        compiler.getCodingConvention(), "jscomp.typecheck." + prop);
   }
 
   @VisibleForTesting

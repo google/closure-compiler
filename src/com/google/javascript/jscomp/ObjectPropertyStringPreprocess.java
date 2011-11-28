@@ -132,13 +132,15 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
 
       Node newFirstArgument = NodeUtil.newQualifiedNameNode(
           compiler.getCodingConvention(),
-          compiler.getCodingConvention().getGlobalObject(),
-          firstArgument.getLineno(), firstArgument.getCharno());
+          compiler.getCodingConvention().getGlobalObject())
+              .srcrefTree(firstArgument);
+
       Node newSecondArgument = NodeUtil.newQualifiedNameNode(
           compiler.getCodingConvention(),
           firstArgument.getQualifiedName() + "." +
-          firstArgument.getNext().getString(),
-          secondArgument.getLineno(), secondArgument.getCharno());
+          firstArgument.getNext().getString())
+              .srcrefTree(secondArgument);
+
       n.replaceChild(firstArgument, newFirstArgument);
       n.replaceChild(secondArgument, newSecondArgument);
 

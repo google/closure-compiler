@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
@@ -29,7 +28,6 @@ import com.google.javascript.rhino.jstype.TernaryValue;
 import junit.framework.TestCase;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 public class NodeUtilTest extends TestCase {
@@ -552,23 +550,6 @@ public class NodeUtilTest extends TestCase {
     assertContainsAnonFunc(false, "for (;;) function a(){}");
     assertContainsAnonFunc(false, "for (p in o) function a(){};");
     assertContainsAnonFunc(false, "with (x) function a(){}");
-  }
-
-  public void testNewFunctionNode() {
-    Node expected = parse("function foo(p1, p2, p3) { throw 2; }");
-    Node body = new Node(Token.BLOCK, new Node(Token.THROW, Node.newNumber(2)));
-    List<Node> params = Lists.newArrayList(Node.newString(Token.NAME, "p1"),
-                                           Node.newString(Token.NAME, "p2"),
-                                           Node.newString(Token.NAME, "p3"));
-    Node function = NodeUtil.newFunctionNode(
-        "foo", params, body, -1, -1);
-    Node actual = new Node(Token.SCRIPT);
-    actual.setIsSyntheticBlock(true);
-    actual.addChildToFront(function);
-    String difference = expected.checkTreeEquals(actual);
-    if (difference != null) {
-      assertTrue("Nodes do not match:\n" + difference, false);
-    }
   }
 
   private void assertContainsAnonFunc(boolean expected, String js) {

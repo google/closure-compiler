@@ -36,7 +36,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -2265,37 +2264,19 @@ public final class NodeUtil {
     return addingRoot;
   }
 
-  /** Creates function name(params_0, ..., params_n) { body }. */
-  public static Node newFunctionNode(String name, List<Node> params,
-      Node body, int lineno, int charno) {
-    Node parameterParen = new Node(Token.PARAM_LIST, lineno, charno);
-    for (Node param : params) {
-      parameterParen.addChildToBack(param);
-    }
-    Node function = new Node(Token.FUNCTION, lineno, charno);
-    function.addChildrenToBack(
-        Node.newString(Token.NAME, name, lineno, charno));
-    function.addChildToBack(parameterParen);
-    function.addChildToBack(body);
-    return function;
-  }
-
   /**
    * Creates a node representing a qualified name.
    *
    * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
-   * @param lineno The source line offset.
-   * @param charno The source character offset from start of the line.
    * @return A NAME or GETPROP node
    */
   public static Node newQualifiedNameNode(
-      CodingConvention convention, String name, int lineno, int charno) {
+      CodingConvention convention, String name) {
     int endPos = name.indexOf('.');
     if (endPos == -1) {
-      return newName(convention, name, lineno, charno);
+      return newName(convention, name);
     }
-    Node node = newName(
-        convention, name.substring(0, endPos), lineno, charno);
+    Node node = newName(convention, name.substring(0, endPos));
     int startPos;
     do {
       startPos = endPos + 1;
@@ -2303,11 +2284,11 @@ public final class NodeUtil {
       String part = (endPos == -1
                      ? name.substring(startPos)
                      : name.substring(startPos, endPos));
-      Node propNode = Node.newString(part, lineno, charno);
+      Node propNode = IR.string(part);
       if (convention.isConstantKey(part)) {
         propNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
-      node = new Node(Token.GETPROP, node, propNode, lineno, charno);
+      node = IR.getprop(node, propNode);
     } while (endPos != -1);
 
     return node;
@@ -2329,7 +2310,7 @@ public final class NodeUtil {
   static Node newQualifiedNameNode(
       CodingConvention convention, String name, Node basisNode,
       String originalName) {
-    Node node = newQualifiedNameNode(convention, name, -1, -1);
+    Node node = newQualifiedNameNode(convention, name);
     setDebugInformation(node, basisNode, originalName);
     return node;
   }
@@ -2362,8 +2343,8 @@ public final class NodeUtil {
   }
 
   private static Node newName(
-      CodingConvention convention, String name, int lineno, int charno) {
-    Node nameNode = Node.newString(Token.NAME, name, lineno, charno);
+      CodingConvention convention, String name) {
+    Node nameNode = IR.name(name);
     if (convention.isConstant(name)) {
       nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
@@ -2375,19 +2356,13 @@ public final class NodeUtil {
    * location information from the basis node.
    *
    * @param name The name for the new NAME node.
-   * @param basisNode The node that represents the name as currently found in
+   * @param srcref The node that represents the name as currently found in
    *     the AST.
    *
    * @return The node created.
    */
-  static Node newName(
-      CodingConvention convention, String name, Node basisNode) {
-    Node nameNode = IR.name(name);
-    if (convention.isConstantKey(name)) {
-      nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-    }
-    nameNode.copyInformationFrom(basisNode);
-    return nameNode;
+  static Node newName(CodingConvention convention, String name, Node srcref) {
+    return newName(convention, name).srcref(srcref);
   }
 
   /**
