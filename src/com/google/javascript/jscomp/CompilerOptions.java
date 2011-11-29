@@ -55,12 +55,13 @@ public class CompilerOptions implements Serializable, Cloneable {
   private LanguageMode languageIn;
 
   /**
-   * The JavaScript language version accepted.
+   * The JavaScript language version that should be produced.
+   * Currently, this is always the same as {@link #languageIn}.
    */
   private LanguageMode languageOut;
 
   /**
-   * Whether the compiler handles `const' keyword or not.
+   * Whether the compiler accepts the `const' keyword.
    */
   boolean acceptConstKeyword;
 
@@ -70,8 +71,6 @@ public class CompilerOptions implements Serializable, Cloneable {
    * be coerced to the global "this" and primitives to objects).
    */
   private boolean assumeStrictThis;
-
-  // TODO(johnlenz): Add an language output mode.
 
   /**
    * Configures the compiler for use as an IDE backend.  In this mode:
@@ -179,7 +178,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Checks types on expressions */
   public boolean checkTypes;
 
-  /** Tightens types based on a global analysis. */
+  /** Tightens types based on a global analysis. Experimental. */
   public boolean tightenTypes;
 
   /** Checks for inexistant property calls */
