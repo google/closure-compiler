@@ -143,20 +143,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.aggressiveVarCheck = level;
   }
 
-  public CheckLevel checkFunctions;
-
-  /** Checks function arity */
-  public void setCheckFunctions(CheckLevel level) {
-    this.checkFunctions = level;
-  }
-
-  public CheckLevel checkMethods;
-
-  /** Checks method arity */
-  public void setCheckMethods(CheckLevel level) {
-    this.checkMethods = level;
-  }
-
   /** Makes sure no duplicate messages */
   public boolean checkDuplicateMessages;
 
@@ -757,8 +743,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     checkSymbols = false;
     checkShadowVars = CheckLevel.OFF;
     aggressiveVarCheck = CheckLevel.OFF;
-    checkFunctions = CheckLevel.OFF;
-    checkMethods = CheckLevel.OFF;
     checkDuplicateMessages = false;
     allowLegacyJsMessages = false;
     strictMessageReplacement = false;
