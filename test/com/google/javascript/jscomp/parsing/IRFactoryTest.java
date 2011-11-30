@@ -638,7 +638,6 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
 
     Node firstVarDecl = root.getFirstChild();
     Node firstVar = firstVarDecl.getFirstChild();
-    Node firstInitializer = firstVar.getFirstChild();
     Node callNode = firstVar.getFirstChild();
     Node fnName = callNode.getFirstChild();
     Node regexObject = fnName.getNext();
@@ -646,9 +645,9 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     Node endRegexString = regexObject.getNext();
 
     assertNodePosition(1, 0, firstVarDecl);
-    assertNodePosition(1, 4, firstVar);
-    assertNodePosition(2, 7, callNode);
-    assertNodePosition(2, 0, fnName);
+    assertNodePosition(1, 4, 4, firstVar);
+    assertNodePosition(2, 0, 18, callNode);
+    assertNodePosition(2, 0, 7, fnName);
     assertNodePosition(3, 0, regexObject);
     assertNodePosition(3, 0, aString);
     assertNodePosition(3, 5, endRegexString);
@@ -848,13 +847,19 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     Node functionProp = functionCall.getFirstChild();
     Node firstNameComponent = functionProp.getFirstChild();
     Node lastNameComponent = firstNameComponent.getNext();
+    Node aNameComponent = firstNameComponent.getFirstChild();
+    Node bNameComponent = aNameComponent.getNext();
 
-    assertNodePosition(3, 4, functionCall);
+    assertNodePosition(1, 0, 13, functionCall);
+    assertNodePosition(1, 0, 10, functionProp);
     // TODO(bowdidge) New Rhino doesn't keep the position of the dot handy.
     // New Rhino treats the location of the qualified name as the beginning of
     // the whole name.
-    // assertNodePosition(1, 0, firstNameComponent);
-    assertNodePosition(3, 0, lastNameComponent);
+    assertNodePosition(1, 0, 4, firstNameComponent);
+    assertNodePosition(3, 0, 4, lastNameComponent);
+
+    assertNodePosition(1, 0, 1, aNameComponent);
+    assertNodePosition(2, 0, 1, bNameComponent);
   }
 
   public void testLinenoDeclaration() {

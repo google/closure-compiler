@@ -77,7 +77,7 @@ public class ParserTest extends BaseJSTypeTestCase {
 
     assertEquals(Token.CALL, call.getType());
     assertEquals(2, call.getLineno());
-    assertEquals(4, call.getCharno());
+    assertEquals(1, call.getCharno());
   }
 
   public void testLinenoCharnoGetProp1() throws Exception {

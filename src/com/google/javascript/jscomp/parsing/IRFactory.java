@@ -591,9 +591,8 @@ class IRFactory {
         node.addChildToBack(transform(child));
       }
 
-      int leftParamPos = callNode.getAbsolutePosition() + callNode.getLp();
-      node.setLineno(callNode.getLineno());
-      node.setCharno(position2charno(leftParamPos));
+      node.setLineno(node.getFirstChild().getLineno());
+      node.setCharno(node.getFirstChild().getCharno());
       maybeSetLengthFrom(node, callNode);
       return node;
     }
@@ -815,10 +814,13 @@ class IRFactory {
 
     @Override
     Node processPropertyGet(PropertyGet getNode) {
-      return newNode(
-          Token.GETPROP,
-          transform(getNode.getTarget()),
-          transformAsString(getNode.getProperty()));
+      Node leftChild = transform(getNode.getTarget());
+      Node newNode = newNode(
+          Token.GETPROP, leftChild, transformAsString(getNode.getProperty()));
+      newNode.setLineno(leftChild.getLineno());
+      newNode.setCharno(leftChild.getCharno());
+      maybeSetLengthFrom(newNode, getNode);
+      return newNode;
     }
 
     @Override
