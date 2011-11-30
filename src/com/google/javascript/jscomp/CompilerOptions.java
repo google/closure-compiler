@@ -167,6 +167,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Tightens types based on a global analysis. Experimental. */
   public boolean tightenTypes;
 
+  /** Checks for inexistant property calls */
+  public boolean checkTypedPropertyCalls;
+
   public CheckLevel reportMissingOverride;
 
   /**
@@ -747,6 +750,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     checkControlStructures = false;
     checkTypes = false;
     tightenTypes = false;
+    checkTypedPropertyCalls = false;
     reportMissingOverride = CheckLevel.OFF;
     reportUnknownTypes = CheckLevel.OFF;
     checkRequires = CheckLevel.OFF;
