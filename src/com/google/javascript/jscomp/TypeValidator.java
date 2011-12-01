@@ -494,9 +494,13 @@ class TypeValidator {
    * @param variableName The name of the variable.
    * @param newType The type being applied to the variable. Mostly just here
    *     for the benefit of the warning.
+   * @return The variable we end up with. Most of the time, this will just
+   *     be {@code var}, but in some rare cases we will need to declare
+   *     a new var with new source info.
    */
-  void expectUndeclaredVariable(String sourceName, CompilerInput input,
+  Var expectUndeclaredVariable(String sourceName, CompilerInput input,
       Node n, Node parent, Var var, String variableName, JSType newType) {
+    Var newVar = var;
     boolean allowDupe = false;
     if (n.isGetProp() ||
         NodeUtil.isObjectLitKey(n, parent)) {
@@ -525,7 +529,7 @@ class TypeValidator {
       if (var.input == null) {
         Scope s = var.getScope();
         s.undeclare(var);
-        s.declare(variableName, n, varType, input, false);
+        newVar = s.declare(variableName, n, varType, input, false);
 
         n.setJSType(varType);
         if (parent.isVar()) {
@@ -552,6 +556,8 @@ class TypeValidator {
         }
       }
     }
+
+    return newVar;
   }
 
   /**

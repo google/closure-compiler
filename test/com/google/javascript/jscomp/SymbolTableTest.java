@@ -822,6 +822,22 @@ public class SymbolTableTest extends TestCase {
     assertEquals(Foo, dom.getPropertyScope().getSlot("Foo"));
   }
 
+  public void testSymbolForScopeOfNatives() throws Exception {
+    SymbolTable table = createSymbolTable("");
+
+    // From the externs.
+    Symbol sliceArg = getLocalVar(table, "sliceArg");
+    assertNotNull(sliceArg);
+
+    Symbol scope = table.getSymbolForScope(table.getScope(sliceArg));
+    assertNotNull(scope);
+    assertEquals(scope, getGlobalVar(table, "String.prototype.slice"));
+
+    Symbol proto = getGlobalVar(table, "String.prototype");
+    assertEquals(
+        "externs1", proto.getDeclaration().getNode().getSourceFileName());
+  }
+
   private void assertSymmetricOrdering(
       Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertTrue(ordering.compare(first, first) == 0);

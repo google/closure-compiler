@@ -1082,21 +1082,24 @@ final class TypedScopeCreator implements ScopeCreator {
         }
       }
 
+      // The input may be null if we are working with a AST snippet. So read
+      // the extern info from the node.
+      boolean isExtern = n.isFromExterns();
+      Var newVar = null;
+
       // declared in closest scope?
       CompilerInput input = compiler.getInput(inputId);
       if (scopeToDeclareIn.isDeclared(variableName, false)) {
         Var oldVar = scopeToDeclareIn.getVar(variableName);
-        validator.expectUndeclaredVariable(
+        newVar = validator.expectUndeclaredVariable(
             sourceName, input, n, parent, oldVar, variableName, type);
       } else {
         if (!inferred) {
           setDeferredType(n, type);
         }
 
-        // The input may be null if we are working with a AST snippet.
-        boolean isExtern = n.isFromExterns();
-        Var newVar =
-            scopeToDeclareIn.declare(variableName, n, type, input, inferred);
+        newVar =
+          scopeToDeclareIn.declare(variableName, n, type, input, inferred);
 
         if (type instanceof EnumType) {
           Node initialValue = newVar.getInitialValue();
@@ -1107,60 +1110,63 @@ final class TypedScopeCreator implements ScopeCreator {
             compiler.report(JSError.make(sourceName, n, ENUM_INITIALIZER));
           }
         }
+      }
 
-        // We need to do some additional work for constructors and interfaces.
-        FunctionType fnType = JSType.toMaybeFunctionType(type);
-        if (fnType != null &&
-            // We don't want to look at empty function types.
-            !type.isEmptyType()) {
-          if ((fnType.isConstructor() || fnType.isInterface()) &&
-              !fnType.equals(getNativeType(U2U_CONSTRUCTOR_TYPE))) {
-            // Declare var.prototype in the scope chain.
-            FunctionType superClassCtor = fnType.getSuperClassConstructor();
-            ObjectType.Property prototypeSlot = fnType.getSlot("prototype");
+      // We need to do some additional work for constructors and interfaces.
+      FunctionType fnType = JSType.toMaybeFunctionType(type);
+      if (fnType != null &&
+          // We don't want to look at empty function types.
+          !type.isEmptyType()) {
+        if ((fnType.isConstructor() || fnType.isInterface()) &&
+            !fnType.equals(getNativeType(U2U_CONSTRUCTOR_TYPE))) {
+          // Declare var.prototype in the scope chain.
+          FunctionType superClassCtor = fnType.getSuperClassConstructor();
+          ObjectType.Property prototypeSlot = fnType.getSlot("prototype");
 
-            String prototypeName = variableName + ".prototype";
+          // When we declare the function prototype implicitly, we
+          // want to make sure that the function and its prototype
+          // are declared at the same node. We also want to make sure
+          // that the if a symbol has both a Var and a JSType, they have
+          // the same node.
+          //
+          // This consistency is helpful to users of SymbolTable,
+          // because everything gets declared at the same place.
+          prototypeSlot.setNode(n);
 
-            // There are some rare cases where the prototype will already
-            // be declared. See TypedScopeCreatorTest#testBogusPrototypeInit.
-            // Fortunately, other warnings will complain if this happens.
-            if (scopeToDeclareIn.getOwnSlot(prototypeName) == null) {
-              // When we declare the function prototype implicitly, we
-              // want to make sure that the function and its prototype
-              // are declared at the same node. We also want to make sure
-              // that the if a symbol has both a Var and a JSType, they have
-              // the same node.
-              //
-              // This consistency is helpful to users of SymbolTable,
-              // because everything gets declared at the same place.
-              prototypeSlot.setNode(n);
+          String prototypeName = variableName + ".prototype";
 
-              scopeToDeclareIn.declare(prototypeName,
-                  n, prototypeSlot.getType(), input,
-                  /* declared iff there's an explicit supertype */
-                  superClassCtor == null ||
-                  superClassCtor.getInstanceType().equals(
-                      getNativeType(OBJECT_TYPE)));
-            }
+          // There are some rare cases where the prototype will already
+          // be declared. See TypedScopeCreatorTest#testBogusPrototypeInit.
+          // Fortunately, other warnings will complain if this happens.
+          Var prototypeVar = scopeToDeclareIn.getVar(prototypeName);
+          if (prototypeVar != null && prototypeVar.scope == scopeToDeclareIn) {
+            scopeToDeclareIn.undeclare(prototypeVar);
+          }
 
-            // Make sure the variable is initialized to something if
-            // it constructs itself.
-            if (newVar.getInitialValue() == null &&
-                !isExtern &&
-                // We want to make sure that when we declare a new instance
-                // type (with @constructor) that there's actually a ctor for it.
-                // This doesn't apply to structural constructors
-                // (like function(new:Array). Checking the constructed
-                // type against the variable name is a sufficient check for
-                // this.
-                variableName.equals(
-                    fnType.getInstanceType().getReferenceName())) {
-              compiler.report(
-                  JSError.make(sourceName, n,
-                      fnType.isConstructor() ?
-                          CTOR_INITIALIZER : IFACE_INITIALIZER,
-                      variableName));
-            }
+          scopeToDeclareIn.declare(prototypeName,
+              n, prototypeSlot.getType(), input,
+              /* declared iff there's an explicit supertype */
+              superClassCtor == null ||
+              superClassCtor.getInstanceType().equals(
+                  getNativeType(OBJECT_TYPE)));
+
+          // Make sure the variable is initialized to something if
+          // it constructs itself.
+          if (newVar.getInitialValue() == null &&
+              !isExtern &&
+              // We want to make sure that when we declare a new instance
+              // type (with @constructor) that there's actually a ctor for it.
+              // This doesn't apply to structural constructors
+              // (like function(new:Array). Checking the constructed
+              // type against the variable name is a sufficient check for
+              // this.
+              variableName.equals(
+                  fnType.getInstanceType().getReferenceName())) {
+            compiler.report(
+                JSError.make(sourceName, n,
+                    fnType.isConstructor() ?
+                    CTOR_INITIALIZER : IFACE_INITIALIZER,
+                    variableName));
           }
         }
       }
