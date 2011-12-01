@@ -70,8 +70,9 @@ public class DiagnosticGroups {
   // If a group is suppressable on a per-file basis, it should be added
   // to parser/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
-      "accessControls, ambiguousFunctionDecl, checkRegExp," +
+      "accessControls, ambiguousFunctionDecl, checkRegExp, " +
       "checkTypes, checkVars, constantProperty, deprecated, " +
+      "duplicateMessage, " +
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
       "internetExplorerChecks, invalidCasts, missingProperties, " +
       "nonStandardJsDocs, strictModuleDepCheck, typeInvalidation, " +
@@ -210,6 +211,10 @@ public class DiagnosticGroups {
   public static DiagnosticGroup CHECK_PROVIDES =
       DiagnosticGroups.registerGroup("checkProvides",
           CheckProvides.MISSING_PROVIDE_WARNING);
+
+  public static DiagnosticGroup DUPLICATE_MESSAGE =
+      DiagnosticGroups.registerGroup("duplicateMessage",
+          JsMessageVisitor.MESSAGE_DUPLICATE_KEY);
 
   /**
    * Adds warning levels by name.

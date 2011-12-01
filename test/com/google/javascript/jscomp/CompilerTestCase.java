@@ -146,16 +146,20 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   protected abstract CompilerPass getProcessor(Compiler compiler);
 
+
   /**
-   * Gets the compiler options to use for this test. Defaults to do nothing
-   * options.
-   *
-   * This is really only for configuring warnings guards. Use getProcessor
-   * to determine what passes should be run.
+   * Gets the compiler options to use for this test. Use getProcessor to
+   * determine what passes should be run.
    */
   protected CompilerOptions getOptions() {
-    CompilerOptions options = new CompilerOptions();
+    return getOptions(new CompilerOptions());
+  }
 
+  /**
+   * Gets the compiler options to use for this test. Use getProcessor to
+   * determine what passes should be run.
+   */
+  protected CompilerOptions getOptions(CompilerOptions options) {
     if (this.acceptES5) {
       options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     }

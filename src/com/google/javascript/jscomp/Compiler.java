@@ -1306,11 +1306,18 @@ public class Compiler extends AbstractCompiler {
     return input.getAstRoot(this);
   }
 
+  /**
+   * Allow subclasses to override the default CompileOptions object.
+   */
+  protected CompilerOptions newCompilerOptions() {
+    return new CompilerOptions();
+  }
+
   void initCompilerOptionsIfTesting() {
     if (options == null) {
       // initialization for tests that don't initialize the compiler
       // by the normal mechanisms.
-      initOptions(new CompilerOptions());
+      initOptions(newCompilerOptions());
     }
   }
 
@@ -1980,7 +1987,7 @@ public class Compiler extends AbstractCompiler {
   @Override
   public ErrorManager getErrorManager() {
     if (options == null) {
-      initOptions(new CompilerOptions());
+      initOptions(newCompilerOptions());
     }
     return errorManager;
   }
