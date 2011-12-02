@@ -126,16 +126,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Checks that all symbols are defined */
   public boolean checkSymbols;
 
-  public CheckLevel checkShadowVars;
-
-  /**
-   * Checks that all variables with the @noshadow attribute are
-   * never shadowed.
-   */
-  public void setCheckShadowVars(CheckLevel level) {
-    this.checkShadowVars = level;
-  }
-
   public CheckLevel aggressiveVarCheck;
 
   /** Checks for suspicious variable definitions and undefined variables */
@@ -738,7 +728,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     nameAnonymousFunctionsOnly = false;
     devMode = DevMode.OFF;
     checkSymbols = false;
-    checkShadowVars = CheckLevel.OFF;
     aggressiveVarCheck = CheckLevel.OFF;
     checkDuplicateMessages = false;
     allowLegacyJsMessages = false;
