@@ -206,7 +206,8 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     if (options.checkSuspiciousCode ||
-        options.enables(DiagnosticGroups.GLOBAL_THIS)) {
+        options.enables(DiagnosticGroups.GLOBAL_THIS) ||
+        options.enables(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT)) {
       checks.add(suspiciousCode);
     }
 
