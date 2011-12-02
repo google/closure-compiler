@@ -58,8 +58,6 @@ public enum WarningLevel {
 
     // Allow passes that aren't going to report anything to be skipped.
 
-    // NOTE: options.checkShadowVars is not in this list as it produces an
-    // error.
     options.checkRequires = CheckLevel.OFF;
     options.checkProvides = CheckLevel.OFF;
     options.checkMissingGetCssNameLevel = CheckLevel.OFF;

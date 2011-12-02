@@ -252,10 +252,6 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(checkRegExp);
     }
 
-    if (options.checkShadowVars.isOn()) {
-      checks.add(checkShadowVars);
-    }
-
     if (options.aggressiveVarCheck.isOn()) {
       checks.add(checkVariableReferences);
     }
@@ -1027,16 +1023,6 @@ public class DefaultPassConfig extends PassConfig {
               pass.isGlobalRegExpPropertiesUsed());
         }
       };
-    }
-  };
-
-  /** Checks that no vars are illegally shadowed. */
-  final PassFactory checkShadowVars =
-      new PassFactory("variableShadowDeclarationCheck", true) {
-    @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new VariableShadowDeclarationCheck(
-          compiler, options.checkShadowVars);
     }
   };
 
