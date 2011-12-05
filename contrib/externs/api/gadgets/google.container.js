@@ -222,7 +222,7 @@ google.container.GadgetHolder.prototype.getUrl = function() {};
 google.container.GadgetHolder.prototype.getView = function() {};
 
 /**
- * @return {string}
+ * @return {Element}
  * @nosideeffects
  */
 google.container.GadgetHolder.prototype.getIframeElement = function() {};
