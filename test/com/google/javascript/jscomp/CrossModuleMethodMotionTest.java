@@ -430,4 +430,124 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
         });
   }
 
+  public void testIssue600() {
+    testSame(
+        createModuleChain(
+            "var jQuery1 = (function() {\n" +
+            "  var jQuery2 = function() {};\n" +
+            "  var theLoneliestNumber = 1;\n" +
+            "  jQuery2.prototype = {\n" +
+            "    size: function() {\n" +
+            "      return theLoneliestNumber;\n" +
+            "    }\n" +
+            "  };\n" +
+            "  return jQuery2;\n" +
+            "})();\n",
+
+            "(function() {" +
+            "  var div = jQuery1('div');" +
+            "  div.size();" +
+            "})();"));
+  }
+
+  public void testIssue600b() {
+    testSame(
+        createModuleChain(
+            "var jQuery1 = (function() {\n" +
+            "  var jQuery2 = function() {};\n" +
+            "  jQuery2.prototype = {\n" +
+            "    size: function() {\n" +
+            "      return 1;\n" +
+            "    }\n" +
+            "  };\n" +
+            "  return jQuery2;\n" +
+            "})();\n",
+
+            "(function() {" +
+            "  var div = jQuery1('div');" +
+            "  div.size();" +
+            "})();"));
+  }
+
+  public void testIssue600c() {
+    test(
+        createModuleChain(
+            "var jQuery2 = function() {};\n" +
+            "jQuery2.prototype = {\n" +
+            "  size: function() {\n" +
+            "    return 1;\n" +
+            "  }\n" +
+            "};\n",
+
+            "(function() {" +
+            "  var div = jQuery2('div');" +
+            "  div.size();" +
+            "})();"),
+        new String[] {
+            STUB_DECLARATIONS +
+            "var jQuery2 = function() {};\n" +
+            "jQuery2.prototype = {\n" +
+            "  size: JSCompiler_stubMethod(0)\n" +
+            "};\n",
+            "jQuery2.prototype.size=" +
+            "    JSCompiler_unstubMethod(0,function(){return 1});" +
+            "(function() {" +
+            "  var div = jQuery2('div');" +
+            "  div.size();" +
+            "})();"
+        });
+  }
+
+  public void testIssue600d() {
+    test(
+        createModuleChain(
+            "var jQuery2 = function() {};\n" +
+            "(function() {" +
+            "  jQuery2.prototype = {\n" +
+            "    size: function() {\n" +
+            "      return 1;\n" +
+            "    }\n" +
+            "  };\n" +
+            "})();",
+
+            "(function() {" +
+            "  var div = jQuery2('div');" +
+            "  div.size();" +
+            "})();"),
+        new String[] {
+            STUB_DECLARATIONS +
+            "var jQuery2 = function() {};\n" +
+            "(function() {" +
+            "  jQuery2.prototype = {\n" +
+            "    size: JSCompiler_stubMethod(0)\n" +
+            "  };\n" +
+            "})();",
+            "jQuery2.prototype.size=" +
+            "    JSCompiler_unstubMethod(0,function(){return 1});" +
+            "(function() {" +
+            "  var div = jQuery2('div');" +
+            "  div.size();" +
+            "})();"
+        });
+  }
+
+  public void testIssue600e() {
+    testSame(
+        createModuleChain(
+            "var jQuery2 = function() {};\n" +
+            "(function() {" +
+            "  var theLoneliestNumber = 1;\n" +
+            "  jQuery2.prototype = {\n" +
+            "    size: function() {\n" +
+            "      return theLoneliestNumber;\n" +
+            "    }\n" +
+            "  };\n" +
+            "})();",
+
+            "(function() {" +
+            "  var div = jQuery2('div');" +
+            "  div.size();" +
+            "})();"));
+  }
+
 }
