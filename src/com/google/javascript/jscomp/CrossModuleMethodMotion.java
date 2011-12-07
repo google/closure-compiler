@@ -24,7 +24,6 @@ import com.google.javascript.rhino.Node;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.logging.Logger;
 
 /**
  * Move prototype methods into later modules.
@@ -32,9 +31,6 @@ import java.util.logging.Logger;
  * @author nicksantos@google.com (Nick Santos)
  */
 class CrossModuleMethodMotion implements CompilerPass {
-
-  private static final Logger logger =
-    Logger.getLogger(CrossModuleMethodMotion.class.getName());
 
   // Internal errors
   static final DiagnosticType NULL_COMMON_MODULE_ERROR = DiagnosticType.error(

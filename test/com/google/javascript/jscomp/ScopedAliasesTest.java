@@ -38,7 +38,6 @@ public class ScopedAliasesTest extends CompilerTestCase {
   private static final String GOOG_SCOPE_START_BLOCK =
       "goog.scope(function() {";
   private static final String GOOG_SCOPE_END_BLOCK = "});";
-  private static final int GOOG_SCOPE_LEN = "goog.scope".length();
 
   private static String EXTERNS = "var window;";
 

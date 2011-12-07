@@ -211,8 +211,6 @@ class FunctionRewriter implements CompilerPass {
      *
      * @param methodName Method to call.
      * @param argumentNode Method argument.
-     * @param lineno line number in original source.
-     * @param charno character offset in original line.
      */
     protected final Node buildCallNode(String methodName, Node argumentNode,
                                        Node srcref) {
