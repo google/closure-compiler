@@ -133,18 +133,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.aggressiveVarCheck = level;
   }
 
-  /** Makes sure no duplicate messages */
-  public boolean checkDuplicateMessages;
-
-  /** Allows old deprecated js message style */
-  public boolean allowLegacyJsMessages;
-
-  /**
-   * Whether we should throw an exception in case if the message absent from a
-   * bundle.
-   */
-  public boolean strictMessageReplacement;
-
   /** Checks for suspicious statements that have no effect */
   public boolean checkSuspiciousCode;
 
@@ -729,9 +717,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     devMode = DevMode.OFF;
     checkSymbols = false;
     aggressiveVarCheck = CheckLevel.OFF;
-    checkDuplicateMessages = false;
-    allowLegacyJsMessages = false;
-    strictMessageReplacement = false;
     checkSuspiciousCode = false;
     checkControlStructures = false;
     checkTypes = false;
