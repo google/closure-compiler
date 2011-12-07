@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.JSModule;
 import com.google.javascript.jscomp.JSSourceFile;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
+import com.google.javascript.jscomp.CompilerOptions.Reach;
 
 import java.util.ArrayList;
 
@@ -128,7 +129,7 @@ public class SecureCompiler {
     CompilerOptions options = new CompilerOptions();
 
     options.variableRenaming = VariableRenamingPolicy.OFF;
-    options.inlineLocalVariables = true;
+    options.setInlineVariables(Reach.LOCAL_ONLY);
     options.inlineLocalFunctions = true;
     options.checkGlobalThisLevel = CheckLevel.OFF;
     options.coalesceVariableNames = true;

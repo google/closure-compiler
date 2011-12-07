@@ -142,8 +142,12 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Checks types on expressions */
   public boolean checkTypes;
 
+  boolean tightenTypes;
+
   /** Tightens types based on a global analysis. Experimental. */
-  public boolean tightenTypes;
+  public void setTightenTypes(boolean tighten) {
+    this.tightenTypes = tighten;
+  }
 
   public CheckLevel reportMissingOverride;
 
@@ -155,7 +159,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.reportMissingOverride = level;
   }
 
-  public CheckLevel reportUnknownTypes;
+  CheckLevel reportUnknownTypes;
 
   /** Flags a warning for every node whose type could not be determined. */
   public void setReportUnknownTypes(CheckLevel level) {
@@ -222,12 +226,12 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public String checkMissingGetCssNameBlacklist;
 
-  /** Checks that the synctactic restrictions of ES5 strict mode are met. */
-  // TODO(johnlenz): remove this.
-  public boolean checkEs5Strict;
-
   /** Checks that the synctactic restrictions of Caja are met. */
-  public boolean checkCaja;
+  boolean checkCaja;
+
+  public void setCheckCaja(boolean check) {
+    checkCaja = check;
+  }
 
   /**
    * A set of extra annotation names which are accepted and silently ignored
@@ -255,8 +259,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Enhanced function inlining */
   public boolean inlineLocalFunctions;
 
-  /** Assume closures capture only what they reference */
-  public boolean assumeClosuresOnlyCaptureReferences;
+  boolean assumeClosuresOnlyCaptureReferences;
 
   /** Move code to a deeper module */
   public boolean crossModuleCodeMotion;
@@ -274,7 +277,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   public boolean inlineVariables;
 
   /** Inlines variables */
-  public boolean inlineLocalVariables;
+  boolean inlineLocalVariables;
 
   // TODO(user): This is temporary. Once flow sensitive inlining is stable
   // Remove this.
@@ -303,7 +306,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Extracts common prototype member declarations */
   public boolean extractPrototypeMemberDeclarations;
 
-  /** Removes functions that have no body */
+  // TODO(johnlenz): REMOVE THS
   public boolean removeEmptyFunctions;
 
   /** Removes unused member prototypes */
@@ -321,23 +324,36 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Adds variable aliases for externals to reduce code size */
   public boolean aliasExternals;
 
-  /**
-   * If set to a non-empty string, then during an alias externals pass only
-   * externals with these names will be considered for aliasing.
-   */
-  public String aliasableGlobals;
+  String aliasableGlobals;
 
   /**
-   * Additional globals that can not be aliased since they may be undefined or
-   * can cause errors.  Comma separated list of symbols.  e.g. "foo,bar"
+   * A comma separated white-list of global names. When {@link #aliasExternals}
+   * is enable, if set to a non-empty string, only externals with these names
+   * will be considered for aliasing.
    */
-  public String unaliasableGlobals;
+  public void setAliasableGlobals(String names) {
+    aliasableGlobals = names;
+  }
+
+  String unaliasableGlobals;
+
+  /**
+   * A comma separated white-list of global names. When {@link #aliasExternals}
+   * is enable, these global names will not be aliased.
+   */
+  public void setUnaliasableGlobals(String names) {
+    unaliasableGlobals = names;
+  }
 
   /** Collapses multiple variable declarations into one */
   public boolean collapseVariableDeclarations;
 
   /** Group multiple variable declarations into one */
-  public boolean groupVariableDeclarations;
+  boolean groupVariableDeclarations;
+
+  public void groupVariableDeclarations(boolean enabled) {
+    groupVariableDeclarations = enabled;
+  }
 
   /**
    * Collapses anonymous function declarations into named function
@@ -441,7 +457,11 @@ public class CompilerOptions implements Serializable, Cloneable {
   public boolean collapseProperties;
 
   /** Split object literals into individual variables when possible. */
-  public boolean collapseObjectLiterals;
+  boolean collapseObjectLiterals;
+
+  public void setCollapseObjectLiterals(boolean enabled) {
+    collapseObjectLiterals = true;
+  }
 
   /** Flattens multi-level property names on extern types (e.g. String$f = x) */
   boolean collapsePropertiesOnExternTypes;
@@ -461,7 +481,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   /**
    * Where to save debug report for compute function side effects.
    */
-  public String debugFunctionSideEffectsPath;
+  String debugFunctionSideEffectsPath;
 
   /**
    * Rename properties to disambiguate between unrelated fields based on
@@ -484,8 +504,12 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Whether to export test functions. */
   public boolean exportTestFunctions;
 
+  boolean specializeInitialModule;
+
   /** Specialize the initial module at the cost of later modules */
-  public boolean specializeInitialModule;
+  public void setSpecializeInitialModule(boolean enabled) {
+    specializeInitialModule = enabled;
+  }
 
   //--------------------------------
   // Special-purpose alterations
@@ -504,17 +528,12 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** A CodingConvention to use during the compile. */
   private CodingConvention codingConvention;
 
-  /** Instrument code for the purpose of collecting coverage data. */
-  public boolean instrumentForCoverage;
-
-  /**
-   * Instrument code for the purpose of collecting coverage data - restrict to
-   * coverage pass only, and skip all other passes.
-   */
-  public boolean instrumentForCoverageOnly;
+  boolean ignoreCajaProperties;
 
   /** Add code to skip properties that Caja adds to Object.prototype */
-  public boolean ignoreCajaProperties;
+  public void setIgnoreCajaProperties(boolean enabled) {
+    ignoreCajaProperties = enabled;
+  }
 
   public String syntheticBlockStartMarker;
 
@@ -575,14 +594,18 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Move top level function declarations to the top */
   public boolean moveFunctionDeclarations;
 
-  /** Instrumentation template to use */
+  /** Instrumentation template to use with #recordFunctionInformation */
   public String instrumentationTemplate;
+
+  String appNameStr;
 
   /**
    * App identifier string for use by the instrumentation template's
-   * app_name_setter
+   * app_name_setter. @see #instrumentationTemplate
    */
-  public String appNameStr;
+  public void setAppNameStr(String appNameStr) {
+    this.appNameStr = appNameStr;
+  }
 
   /** Record function information */
   public boolean recordFunctionInformation;
@@ -627,10 +650,18 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** The string to use as the separator for printInputDelimiter */
   public String inputDelimiter = "// Input %num%";
 
-  /** Where to save a report of global name usage */
-  public String reportPath;
+  String reportPath;
 
-  public TracerMode tracer;
+  /** Where to save a report of global name usage */
+  public void setReportPath(String reportPath) {
+    this.reportPath = reportPath;
+  }
+
+  TracerMode tracer;
+
+  public void setTracerMode(TracerMode mode) {
+    tracer = mode;
+  }
 
   private boolean colorizeErrorOutput;
 
@@ -658,11 +689,19 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** The output path for the created externs file. */
   String externExportsPath;
 
+  String nameReferenceReportPath;
+
   /** Where to save a cross-reference report from the name reference graph */
-  public String nameReferenceReportPath;
+  public void setNameReferenceReportPath(String filePath) {
+    nameReferenceReportPath = filePath;
+  }
+
+  String nameReferenceGraphPath;
 
   /** Where to save the name reference graph */
-  public String nameReferenceGraphPath;
+  public void setNameReferenceGraphPath(String filePath) {
+    nameReferenceGraphPath = filePath;
+  }
 
   //--------------------------------
   // Debugging Options
@@ -792,8 +831,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     // Alterations
     runtimeTypeCheck = false;
     runtimeTypeCheckLogFunction = null;
-    instrumentForCoverage = false;
-    instrumentForCoverageOnly = false;
     ignoreCajaProperties = false;
     syntheticBlockStartMarker = null;
     syntheticBlockEndMarker = null;
@@ -1344,7 +1381,8 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
-   * If true, enables enables additional optimizations.
+   * Whether to assume closures capture only what they reference. This allows
+   * more aggressive function inlining.
    */
   public void setAssumeClosuresOnlyCaptureReferences(boolean enable) {
     this.assumeClosuresOnlyCaptureReferences = enable;
