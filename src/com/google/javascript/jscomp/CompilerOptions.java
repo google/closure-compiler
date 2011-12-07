@@ -667,8 +667,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public ErrorFormat errorFormat;
 
-  public String jsOutputFile;
-
   private ComposeWarningsGuard warningsGuard =
       new ComposeWarningsGuard();
 
@@ -872,7 +870,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     colorizeErrorOutput = false;
     errorFormat = ErrorFormat.SINGLELINE;
     debugFunctionSideEffectsPath = null;
-    jsOutputFile = "";
     externExports = false;
     nameReferenceReportPath = null;
     nameReferenceGraphPath = null;

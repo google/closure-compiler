@@ -239,8 +239,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       if (config.skipNormalOutputs) {
         throw new FlagUsageException("skip_normal_outputs and js_output_file"
             + " cannot be used together.");
-      } else {
-        options.jsOutputFile = config.jsOutputFile;
       }
     }
 
@@ -693,9 +691,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     setRunOptions(options);
 
-    boolean writeOutputToFile = !options.jsOutputFile.isEmpty();
+    boolean writeOutputToFile = !config.jsOutputFile.isEmpty();
     if (writeOutputToFile) {
-      jsOutput = fileNameToLegacyOutputWriter(options.jsOutputFile);
+      jsOutput = fileNameToLegacyOutputWriter(config.jsOutputFile);
     } else if (jsOutput instanceof OutputStream) {
       jsOutput = streamToLegacyOutputWriter((OutputStream) jsOutput);
     }
@@ -785,7 +783,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
             OUTPUT_WRAPPER_MARKER);
 
         // Output the source map if requested.
-        outputSourceMap(options, options.jsOutputFile);
+        outputSourceMap(options, config.jsOutputFile);
       } else {
         parsedModuleWrappers = parseModuleWrappers(config.moduleWrapper, modules);
         maybeCreateDirsForPath(config.moduleOutputPathPrefix);
@@ -833,7 +831,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       // Output the externs if required.
       if (options.externExportsPath != null) {
         Writer eeOut =
-            openExternExportsStream(options, options.jsOutputFile);
+            openExternExportsStream(options, config.jsOutputFile);
         eeOut.append(result.externExport);
         eeOut.close();
       }
@@ -1118,7 +1116,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     // Check the create_name_map_files FLAG.
     if (config.createNameMapFiles) {
-      String basePath = getMapPath(options.jsOutputFile);
+      String basePath = getMapPath(config.jsOutputFile);
 
       propertyMapOutputPath = basePath + "_props_map.out";
       variableMapOutputPath = basePath + "_vars_map.out";
