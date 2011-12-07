@@ -450,6 +450,11 @@ public class FunctionType extends PrototypeObjectType {
     }
   }
 
+  /** Returns interfaces directly implemented by the class. */
+  public Iterable<ObjectType> getOwnImplementedInterfaces() {
+    return implementedInterfaces;
+  }
+
   public void setImplementedInterfaces(List<ObjectType> implementedInterfaces) {
     // Records this type for each implemented interface.
     for (ObjectType type : implementedInterfaces) {
