@@ -211,6 +211,11 @@ public class CodingConventions {
     public boolean isPropertyTestFunction(Node call) {
       return nextConvention.isPropertyTestFunction(call);
     }
+    
+    @Override
+    public boolean isPrototypeAlias(Node getProp) {
+      return false;
+    }
 
     @Override
     public ObjectLiteralCast getObjectLiteralCast(NodeTraversal t,
@@ -369,6 +374,11 @@ public class CodingConventions {
 
     @Override
     public boolean isPropertyTestFunction(Node call) {
+      return false;
+    }
+    
+    @Override
+    public boolean isPrototypeAlias(Node getProp) {
       return false;
     }
 

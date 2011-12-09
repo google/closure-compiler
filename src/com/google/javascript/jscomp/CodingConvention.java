@@ -252,6 +252,11 @@ public interface CodingConvention extends Serializable {
    * Whether this CALL function is testing for the existence of a property.
    */
   public boolean isPropertyTestFunction(Node call);
+  
+  /**
+   * Whether this GETPROP node is an alias for an object prototype.
+   */
+  public boolean isPrototypeAlias(Node getProp);
 
   /**
    * Checks if the given method performs a object literal cast, and if it does,

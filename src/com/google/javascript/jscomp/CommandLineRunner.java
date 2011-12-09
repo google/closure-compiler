@@ -326,6 +326,12 @@ public class CommandLineRunner extends
         + "manage_closure_dependencies option will be set to true and "
         + "all files will be sorted in dependency order.")
     private List<String> closure_entry_point = Lists.newArrayList();
+    
+    @Option(name = "--process_jquery_primitives",
+        handler = BooleanOptionHandler.class,
+        usage = "Processes built-ins from the Jquery library, such as "
+        + "jQuery.fn and jQuery.extend()")
+    private boolean process_jquery_primitives = false;
 
     @Option(name = "--output_manifest",
         usage = "Prints out a list of all the files in the compilation. "
@@ -681,7 +687,14 @@ public class CommandLineRunner extends
     }
 
     options.closurePass = flags.process_closure_primitives;
+    
+    options.jqueryPass = flags.process_jquery_primitives &&
+        CompilationLevel.ADVANCED_OPTIMIZATIONS == level;
 
+    if (flags.process_jquery_primitives) {
+      options.setCodingConvention(new JqueryCodingConvention());
+    }
+    
     if (!flags.translationsFile.isEmpty()) {
       try {
         options.messageBundle = new XtbMessageBundle(

@@ -238,6 +238,10 @@ public class DefaultPassConfig extends PassConfig {
     if (options.closurePass) {
       checks.add(closurePrimitives.makeOneTimePass());
     }
+    
+    if (options.jqueryPass) {
+      checks.add(jqueryAliases.makeOneTimePass());
+    }
 
     if (options.closurePass && options.checkMissingGetCssNameLevel.isOn()) {
       checks.add(closureCheckGetCssName);
@@ -884,7 +888,16 @@ public class DefaultPassConfig extends PassConfig {
       };
     }
   };
-
+  
+  /** Expand jQuery Primitives and Aliases pass. */
+  final PassFactory jqueryAliases =
+      new PassFactory("jqueryAliases", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new ExpandJqueryAliases(compiler);
+    }
+  };
+  
   /**
    * The default i18n pass.
    * A lot of the options are not configurable, because ReplaceMessages

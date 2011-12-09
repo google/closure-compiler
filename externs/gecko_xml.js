@@ -71,3 +71,9 @@ function DOMParser() {}
  * @return {Document}
  */
 DOMParser.prototype.parseFromString = function(src, type) {};
+
+/**
+ * @constructor
+ * @extends {DOMParser}
+ */
+window.DOMParser = function() {};

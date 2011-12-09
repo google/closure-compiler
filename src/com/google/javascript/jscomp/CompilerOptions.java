@@ -550,6 +550,9 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /** Processes goog.provide() and goog.require() calls */
   public boolean closurePass;
+  
+  /** Processes jQuery aliases */
+  public boolean jqueryPass;
 
   /** Rewrite new Date(goog.now()) to new Date().  */
   boolean rewriteNewDateGoogNow;
@@ -836,6 +839,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     markAsCompiled = false;
     removeTryCatchFinally = false;
     closurePass = false;
+    jqueryPass = false;
     rewriteNewDateGoogNow = true;
     removeAbstractMethods = true;
     removeClosureAsserts = false;
