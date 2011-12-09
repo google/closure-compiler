@@ -73,7 +73,6 @@ function DOMParser() {}
 DOMParser.prototype.parseFromString = function(src, type) {};
 
 /**
- * @constructor
- * @extends {DOMParser}
+ * @type {function(new:DOMParser)}
  */
-window.DOMParser = function() {};
+Window.prototype.DOMParser = function() {};
