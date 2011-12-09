@@ -22,6 +22,7 @@ import com.google.javascript.rhino.Node;
 /**
  * Simplifies regular expression patterns and flags.
  *
+ * @author Mike Samuel <mikesamuel@gmail.com>
  */
 class PeepholeSimplifyRegExp extends AbstractPeepholeOptimization {
 

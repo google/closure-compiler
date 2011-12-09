@@ -31,6 +31,7 @@ import com.google.javascript.rhino.Node;
  *  - jQuery.fn -> jQuery.prototype
  *  - jQuery.extend -> expanded into direct object assignments
  *
+ * @author chadkillingsworth@missouristate.edu (Chad Killingsworth)
  */
 class ExpandJqueryAliases extends AbstractPostOrderCallback
     implements CompilerPass {

@@ -21,6 +21,7 @@
  * @see http://www.w3.org/TR/IndexedDB/
  *
  * @externs
+ * @author guido.tapia@picnet.com.au (Guido Tapia)
  */
 
 /** @type {IDBFactory} */

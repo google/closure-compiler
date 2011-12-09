@@ -23,6 +23,7 @@ import java.util.Arrays;
  * where P(bit[x+1] == bit[x]).  E.g. [101,102,103,104,105,1001,1002,1003,1004]
  * is chunky.
  *
+ * @author mikesamuel@gmail.com (Mike Samuel)
  */
 final class CharRanges {
   /**
