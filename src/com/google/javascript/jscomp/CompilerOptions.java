@@ -550,7 +550,7 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /** Processes goog.provide() and goog.require() calls */
   public boolean closurePass;
-  
+
   /** Processes jQuery aliases */
   public boolean jqueryPass;
 

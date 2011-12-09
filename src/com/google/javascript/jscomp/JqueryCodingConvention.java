@@ -34,12 +34,12 @@ public class JqueryCodingConvention extends CodingConventions.Proxy {
   public JqueryCodingConvention(CodingConvention wrapped) {
     super(wrapped);
   }
-  
+
   @Override
   public String getGlobalObject() {
     return "window";
   }
-  
+
   private final Set<String> propertyTestFunctions = ImmutableSet.of(
       "jQuery.isPlainObject", "jQuery.isFunction", "jQuery.isNumeric",
       "jQuery.isEmptyObject");
@@ -50,10 +50,10 @@ public class JqueryCodingConvention extends CodingConventions.Proxy {
     return propertyTestFunctions.contains(
         call.getFirstChild().getQualifiedName());
   }
-  
+
   private final Set<String> prototypeAliases = ImmutableSet.of(
       "jQuery.fn", "jQuerySub.fn");
-  
+
   @Override
   public boolean isPrototypeAlias(Node n) {
     if (n.isGetProp()) {

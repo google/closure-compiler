@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  */
 public class ExpandJqueryAliasesTest extends CompilerTestCase {
   private JqueryCodingConvention conv = new JqueryCodingConvention();
-  
+
   public ExpandJqueryAliasesTest() {}
 
   @Override
@@ -32,25 +32,25 @@ public class ExpandJqueryAliasesTest extends CompilerTestCase {
 
   public void testJqueryFnAliasExpansion() {
     String setupCode = "var jQuery={};jQuery.fn=jQuery.prototype;";
-    
+
     testSame(setupCode);
-    
+
     test(setupCode + "jQuery.fn.foo='bar';",
         setupCode + "jQuery.prototype.foo='bar';");
-    
+
     test(setupCode + "jQuerySub.fn.foo='bar';",
         setupCode + "jQuerySub.prototype.foo='bar';");
   }
-  
+
   public void testJqueryExtendAliasExpansion() {
     String setupCode = "var jQuery={},obj2={};";
-    
+
     //test invalid extend call
     testSame(setupCode + "jQuery.extend();");
-    
+
     //test empty extend call
     testSame(setupCode + "jQuery.extend({});");
-    
+
     /*
      * TODO(Chad Killingsworth) fix the following unit tests...
      */
@@ -58,19 +58,19 @@ public class ExpandJqueryAliasesTest extends CompilerTestCase {
     test(setupCode + "jQuery.extend({a:'test', b:'test2'});",
         setupCode + "(function(){" +
         "jQuery.a='test';jQuery.b='test2';return jQuery;})();");
-    
+
     //Extend the jQuery prototype
     test(setupCode + "jQuery.fn=jQuery.prototype;" +
         "jQuery.fn.extend({a:'test', b:'test2';return jQuery;});",
         setupCode + "jQuery.fn=jQuery.prototype;(function(){" +
         "jQuery.prototype.a='test';jQuery.prototype.b='test2';" +
         "return jQuery;})();");
-    
+
     //Extend obj2
     test(setupCode + "jQuery.extend(obj2, {a:'test', b:'test2'});",
         setupCode + "(function(){" +
         "obj2.a='test';obj2.b='test2';return obj2;})();");
-    
+
     //Extend the jQuery namespace - 2 argument call
     test(setupCode + "jQuery.extend(jQuery,{a:'test', b:'test2'});",
         setupCode + "(function(){" +

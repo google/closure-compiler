@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Replace known jQuery aliases and methods with standard
@@ -32,7 +31,6 @@ import com.google.javascript.rhino.Token;
  *  - jQuery.fn -> jQuery.prototype
  *  - jQuery.extend -> expanded into direct object assignments
  *
- * @author chadkillingsworth@missouristate.edu (Chad Killingsworth)
  */
 class ExpandJqueryAliases extends AbstractPostOrderCallback
     implements CompilerPass {
@@ -45,14 +43,14 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
   ExpandJqueryAliases(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
-  
+
   public static boolean isJqueryExtendReference(Node n, String qname) {
     if (JqueryExtendNames.contains(qname)) {
       Node firstArgument = n.getNext();
       if (firstArgument == null) {
         return false;
       }
-      
+
       Node secondArgument = firstArgument.getNext();
       if ((firstArgument.isObjectLit() && secondArgument == null) ||
           (firstArgument.isName() && secondArgument != null &&
@@ -66,11 +64,11 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (compiler.getCodingConvention().isPrototypeAlias(n)) {
-      replaceJqueryPrototypeAlias(n);     
+      replaceJqueryPrototypeAlias(n);
     } else if (n.isCall()) {
       Node callTarget = n.getFirstChild();
       String qName = callTarget.getQualifiedName();
-      
+
       if (isJqueryExtendReference(callTarget, qName)) {
         replaceJqueryExtendCall(n);
       }
@@ -92,18 +90,18 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
       compiler.reportCodeChange();
     }
   }
-  
+
   private void replaceJqueryExtendCall(Node n) {
     Node callTarget = n.getFirstChild();
     Node objectToExtend = callTarget.getNext(); //first argument
     Node extendArg = objectToExtend.getNext(); //second argument
-    
+
     if (extendArg == null) {
       //Only one argument was specified, so extend jQuery namespace
       extendArg = objectToExtend;
       objectToExtend = callTarget.getFirstChild();
     }
-    
+
     //Check for an empty object literal
     if (!extendArg.hasChildren())
       return;
@@ -113,7 +111,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
      * function that returns the extended object.
      */
     Node fncBlock = IR.block().srcref(n);
-    
+
     while (extendArg.hasChildren()) {
       Node currentProp = extendArg.removeFirstChild();
       Node propValue = currentProp.removeFirstChild();
@@ -127,10 +125,10 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
             currentProp).srcref(currentProp);
       }
 
-      Node assignNode = IR.assign(newProp, propValue).srcref(currentProp);      
+      Node assignNode = IR.assign(newProp, propValue).srcref(currentProp);
       fncBlock.addChildToBack(IR.exprResult(assignNode).srcref(currentProp));
     }
-    
+
     Node targetVal;
     if ("jQuery.prototype".equals(objectToExtend.getQualifiedName())) {
       /* When extending the jQuery prototype, return the jQuery namespace.
@@ -142,17 +140,17 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
       targetVal = objectToExtend.cloneTree();
     }
     fncBlock.addChildToBack(IR.returnNode(targetVal).srcref(targetVal));
-    
+
     Node fnc = IR.function(IR.name("").srcref(n),
         IR.paramList().srcref(n),
         fncBlock);
     n.replaceChild(callTarget, fnc);
-    
+
     //remove any other pre-existing call arguments
     while(fnc.getNext() != null) {
       n.removeChildAfter(fnc);
     }
-    
+
     compiler.reportCodeChange();
   }
 }
