@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import java.util.Set;
 import java.util.logging.Logger;
-
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -39,7 +38,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
   private static final Logger logger =
       Logger.getLogger(ExpandJqueryAliases.class.getName());
   private static final Set<String> JqueryExtendNames = ImmutableSet.of(
-              "jQuery.extend", "jQuery.fn.extend", "jQuery.prototype.extend");
+      "jQuery.extend", "jQuery.fn.extend", "jQuery.prototype.extend");
 
   ExpandJqueryAliases(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -55,7 +54,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
       Node secondArgument = firstArgument.getNext();
       if ((firstArgument.isObjectLit() && secondArgument == null) ||
           (firstArgument.isName() && secondArgument != null &&
-          secondArgument.isObjectLit())) {
+          secondArgument.isObjectLit() && secondArgument.getNext() == null)) {
         return true;
       }
     }
@@ -146,7 +145,8 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
         IR.paramList().srcref(n),
         fncBlock);
     n.replaceChild(callTarget, fnc);
-
+    n.putBooleanProp(Node.FREE_CALL, true);
+    
     //remove any other pre-existing call arguments
     while(fnc.getNext() != null) {
       n.removeChildAfter(fnc);
