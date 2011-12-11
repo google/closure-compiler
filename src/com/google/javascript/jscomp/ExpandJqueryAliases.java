@@ -146,7 +146,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
         fncBlock);
     n.replaceChild(callTarget, fnc);
     n.putBooleanProp(Node.FREE_CALL, true);
-    
+
     //remove any other pre-existing call arguments
     while(fnc.getNext() != null) {
       n.removeChildAfter(fnc);

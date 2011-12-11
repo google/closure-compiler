@@ -53,7 +53,7 @@ public class ExpandJqueryAliasesTest extends CompilerTestCase {
 
     test("jQuery.extend({a:'test'})",
         "(function(){jQuery.a='test';return jQuery})()");
-    
+
     //Extend the jQuery prototype
     test(setupCode + "jQuery.fn=jQuery.prototype;" +
         "jQuery.fn.extend({a:'test', b:'test2'});",
