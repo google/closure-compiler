@@ -1191,7 +1191,7 @@ public class Compiler extends AbstractCompiler {
       }
 
       // Check if the sources need to be re-ordered.
-      if (options.manageClosureDependencies) {
+      if (options.dependencyOptions.needsManagement()) {
         for (CompilerInput input : inputs) {
           input.setCompiler(this);
 
@@ -1205,8 +1205,7 @@ public class Compiler extends AbstractCompiler {
         try {
           inputs =
               (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
-              .manageDependencies(
-                  options.manageClosureDependenciesEntryPoints, inputs);
+              .manageDependencies(options.dependencyOptions, inputs);
         } catch (CircularDependencyException e) {
           report(JSError.make(
               JSModule.CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));

@@ -75,7 +75,7 @@ public class CompilerTest extends TestCase {
             "mix", "goog.require('gin'); goog.require('tonic');")};
     CompilerOptions options = new CompilerOptions();
     options.ideMode = true;
-    options.manageClosureDependencies = true;
+    options.setManageClosureDependencies(true);
     Compiler compiler = new Compiler();
     compiler.init(new JSSourceFile[0], inputs, options);
     compiler.parseInputs();

@@ -223,7 +223,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.setTweakProcessing(config.tweakProcessing);
     createDefineOrTweakReplacements(config.tweak, options, true);
 
-    options.manageClosureDependencies = config.manageClosureDependencies;
+    options.setManageClosureDependencies(config.manageClosureDependencies);
     if (config.closureEntryPoints.size() > 0) {
       options.setManageClosureDependencies(config.closureEntryPoints);
     }

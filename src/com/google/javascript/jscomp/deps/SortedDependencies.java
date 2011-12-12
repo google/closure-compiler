@@ -188,6 +188,19 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
    * list.
    */
   public List<INPUT> getSortedDependenciesOf(List<INPUT> roots) {
+    return getDependenciesOf(roots, true);
+  }
+
+  /**
+   * Gets all the dependencies of the given roots. The inputs must be returned
+   * in a stable order. In other words, if A comes before B, and A does not
+   * transitively depend on B, then A must also come before B in the returned
+   * list.
+   *
+   * @param sorted If true, get them in topologically sorted order. If false,
+   *     get them in the original order they were passed to the compiler.
+   */
+  public List<INPUT> getDependenciesOf(List<INPUT> roots, boolean sorted) {
     Preconditions.checkArgument(inputs.containsAll(roots));
     Set<INPUT> included = Sets.newHashSet();
     Deque<INPUT> worklist = new ArrayDeque<INPUT>(roots);
@@ -204,7 +217,7 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
     }
 
     ImmutableList.Builder<INPUT> builder = ImmutableList.builder();
-    for (INPUT current : sortedList) {
+    for (INPUT current : (sorted ? sortedList : inputs)) {
       if (included.contains(current)) {
         builder.add(current);
       }

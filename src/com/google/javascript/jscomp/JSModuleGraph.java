@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.LinkedListMultimap;
@@ -274,37 +275,67 @@ public class JSModuleGraph {
   }
 
   /**
-   * Sort the sources of modules in dependency-order.
+   * Applies a DependencyOptions in "dependency sorting" and "dependency pruning"
+   * mode to the given list of inputs. Returns a new list with the files sorted
+   * and removed. This module graph will be updated to reflect the new list.
    *
-   * If a source file provides a symbol that is not required, then that
-   * file will be removed from the compilation. If a source file provides
-   * a symbol that is not required until a later module, then that
-   * file will be moved to the later module.
+   * If you need more fine-grained dependency management, you should create your
+   * own DependencyOptions and call
+   * {@code manageDependencies(DependencyOptions, List<CompilerInput>)}.
    *
    * @param entryPoints The entry points into the program.
    *     Expressed as JS symbols.
    * @param inputs The original list of sources. Used to ensure that the sort
    *     is stable.
-   * @return The sorted list of sources.
    * @throws CircularDependencyException if there is a circular dependency
    *     between the provides and requires.
    * @throws MissingProvideException if an entry point was not provided
    *     by any of the inputs.
+   * @see DependencyOptions for more info on how this works.
    */
   public List<CompilerInput> manageDependencies(
       List<String> entryPoints,
       List<CompilerInput> inputs)
       throws CircularDependencyException, MissingProvideException {
+    DependencyOptions depOptions = new DependencyOptions();
+    depOptions.setDependencySorting(true);
+    depOptions.setDependencyPruning(true);
+    depOptions.setEntryPoints(entryPoints);
+    return manageDependencies(depOptions, inputs);
+  }
+
+  /**
+   * Apply the dependency options to the list of sources, returning a new
+   * source list re-ordering and dropping files as necessary.
+   * This module graph will be updated to reflect the new list.
+   *
+   * @param inputs The original list of sources. Used to ensure that the sort
+   *     is stable.
+   * @throws CircularDependencyException if there is a circular dependency
+   *     between the provides and requires.
+   * @throws MissingProvideException if an entry point was not provided
+   *     by any of the inputs.
+   * @see DependencyOptions for more info on how this works.
+   */
+  public List<CompilerInput> manageDependencies(
+      DependencyOptions depOptions,
+      List<CompilerInput> inputs)
+      throws CircularDependencyException, MissingProvideException {
+
     SortedDependencies<CompilerInput> sorter =
         new SortedDependencies<CompilerInput>(inputs);
     Set<CompilerInput> entryPointInputs =
-        Sets.newLinkedHashSet(sorter.getInputsWithoutProvides());
-    for (String entryPoint : entryPoints) {
+        Sets.newLinkedHashSet(
+            depOptions.shouldDropMoochers() ?
+            ImmutableList.<CompilerInput>of() :
+            sorter.getInputsWithoutProvides());
+    for (String entryPoint : depOptions.getEntryPoints()) {
       entryPointInputs.add(sorter.getInputProviding(entryPoint));
     }
 
     // The order of inputs, sorted independently of modules.
-    List<CompilerInput> absoluteOrder = sorter.getSortedDependenciesOf(inputs);
+    List<CompilerInput> absoluteOrder =
+        sorter.getDependenciesOf(inputs, depOptions.shouldSortDependencies());
 
     // Figure out which sources *must* be in each module.
     ListMultimap<JSModule, CompilerInput> entryPointInputsPerModule =
@@ -325,8 +356,9 @@ public class JSModuleGraph {
     // of that module's dependencies.
     for (JSModule module : entryPointInputsPerModule.keySet()) {
       List<CompilerInput> transitiveClosure =
-          sorter.getSortedDependenciesOf(
-              entryPointInputsPerModule.get(module));
+          sorter.getDependenciesOf(
+              entryPointInputsPerModule.get(module),
+              depOptions.shouldSortDependencies());
       for (CompilerInput input : transitiveClosure) {
         JSModule oldModule = input.getModule();
         if (oldModule == null) {

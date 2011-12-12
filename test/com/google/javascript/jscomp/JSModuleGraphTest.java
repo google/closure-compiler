@@ -176,6 +176,28 @@ public class JSModuleGraphTest extends TestCase {
         sourceNames(results));
   }
 
+  public void testManageDependencies3() throws Exception {
+    List<CompilerInput> inputs = setUpManageDependenciesTest();
+    DependencyOptions depOptions = new DependencyOptions();
+    depOptions.setDependencySorting(true);
+    depOptions.setDependencyPruning(true);
+    depOptions.setMoocherDropping(true);
+    depOptions.setEntryPoints(ImmutableList.<String>of("c2"));
+    List<CompilerInput> results = graph.manageDependencies(
+        depOptions, inputs);
+
+    // Everything gets pushed up into module c, because that's
+    // the only one that has entry points.
+    assertInputs(A);
+    assertInputs(B);
+    assertInputs(C, "a1", "c1", "c2");
+    assertInputs(E);
+
+    assertEquals(
+        Lists.newArrayList("a1", "c1", "c2"),
+        sourceNames(results));
+  }
+
   private List<CompilerInput> setUpManageDependenciesTest() {
     List<CompilerInput> inputs = Lists.newArrayList();
 

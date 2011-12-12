@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -112,8 +111,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   // Input Options
   //--------------------------------
 
-  boolean manageClosureDependencies = false;
-  List<String> manageClosureDependenciesEntryPoints = ImmutableList.of();
+  DependencyOptions dependencyOptions = new DependencyOptions();
 
   /** Returns localized replacement for MSG_* variables */
   // Transient so that clients don't have to implement Serializable.
@@ -1238,11 +1236,21 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
+   * Sets dependency options. See the DependencyOptions class for more info.
+   * This supercedes manageClosureDependencies.
+   */
+  public void setDependencyOptions(DependencyOptions options) {
+    this.dependencyOptions = options;
+  }
+
+  /**
    * Sort inputs by their goog.provide/goog.require calls, and prune inputs
    * whose symbols are not required.
    */
   public void setManageClosureDependencies(boolean newVal) {
-    manageClosureDependencies = newVal;
+    dependencyOptions.setDependencySorting(newVal);
+    dependencyOptions.setDependencyPruning(newVal);
+    dependencyOptions.setMoocherDropping(false);
   }
 
   /**
@@ -1256,8 +1264,8 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setManageClosureDependencies(List<String> entryPoints) {
     Preconditions.checkNotNull(entryPoints);
-    manageClosureDependencies = true;
-    manageClosureDependenciesEntryPoints = entryPoints;
+    setManageClosureDependencies(true);
+    dependencyOptions.setEntryPoints(entryPoints);
   }
 
   /**
