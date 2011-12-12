@@ -50,8 +50,6 @@ Window.prototype.content;
  */
 Window.prototype.closed;
 
-Window.prototype.console;
-
 /** @see https://developer.mozilla.org/en/DOM/window.controllers */
 Window.prototype.controllers;
 

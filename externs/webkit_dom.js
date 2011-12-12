@@ -22,27 +22,80 @@
  * @externs
  */
 
-Window.prototype.console = {};
+/**
+ * @constructor
+ * @see http://trac.webkit.org/browser/trunk/WebCore/page/Console.idl
+ * @see http://trac.webkit.org/browser/trunk/WebCore/page/Console.cpp
+ */
+function Console() {};
 
 /**
- * @param {string} msg
+ * @param {...*} var_args
  */
-Window.prototype.console.error = function(msg) {};
+Console.prototype.error = function(var_args) {};
 
 /**
- * @param {string} msg
+ * @param {...*} var_args
  */
-Window.prototype.console.info = function(msg) {};
+Console.prototype.info = function(var_args) {};
 
 /**
- * @param {string} msg
+ * @param {...*} var_args
  */
-Window.prototype.console.log = function(msg) {};
+Console.prototype.log = function(var_args) {};
 
 /**
- * @param {string} msg
+ * @param {...*} var_args
  */
-Window.prototype.console.warn = function(msg) {};
+Console.prototype.warn = function(var_args) {};
+
+/**
+ * @param {...*} var_args
+ */
+Console.prototype.debug = function(var_args) {};
+
+/**
+ * @param {*} value
+ */
+Console.prototype.dir = function(value) {};
+
+/**
+ * @param {...*} var_args
+ */
+Console.prototype.dirxml = function(var_args) {};
+
+/**
+ * @param {*} value
+ */
+Console.prototype.trace = function(value) {};
+
+/**
+ * @param {*} value
+ */
+Console.prototype.count = function(value) {};
+
+/**
+ * @param {string=} opt_title
+ */
+Console.prototype.profile = function(opt_title) {};
+
+Console.prototype.profileEnd = function() {};
+
+/**
+ * @param {string} name
+ */
+Console.prototype.time = function(name) {};
+
+/**
+ * @param {string} name
+ */
+Console.prototype.timeEnd = function(name) {};
+
+Console.prototype.group = function() {};
+Console.prototype.groupEnd = function() {};
+
+/** @type {Console} */
+Window.prototype.console;
 
 /**
  * @type {number}
