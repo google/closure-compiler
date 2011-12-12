@@ -693,7 +693,7 @@ class RemoveUnusedVars
    * y.foo = 3; // is a reference.
    * </code>
    *
-   * Interpreting assigments could mark a variable as referenced that
+   * Interpreting assignments could mark a variable as referenced that
    * wasn't referenced before, in order to keep it alive. Because we find
    * references by lazily traversing subtrees, marking a variable as
    * referenced could trigger new traversals of new subtrees, which could
@@ -729,6 +729,7 @@ class RemoveUnusedVars
             assignedToUnknownValue = true;
           }
 
+          boolean maybeEscaped = false;
           for (Assign assign : assignsByVar.get(var)) {
             if (assign.isPropertyAssign) {
               hasPropertyAssign = true;
@@ -736,9 +737,12 @@ class RemoveUnusedVars
                 assign.assignNode.getLastChild(), true)) {
               assignedToUnknownValue = true;
             }
+            if (assign.maybeAliased) {
+              maybeEscaped = true;
+            }
           }
 
-          if (assignedToUnknownValue && hasPropertyAssign) {
+          if ((assignedToUnknownValue || maybeEscaped) && hasPropertyAssign) {
             changes = markReferencedVar(var) || changes;
             maybeUnreferenced.remove(current);
             current--;
@@ -892,14 +896,18 @@ class RemoveUnusedVars
     // way.
     final boolean mayHaveSecondarySideEffects;
 
+    // If true, the value may have escaped and any modification is a use.
+    final boolean maybeAliased;
+
     Assign(Node assignNode, Node nameNode, boolean isPropertyAssign) {
       Preconditions.checkState(NodeUtil.isAssignmentOp(assignNode));
       this.assignNode = assignNode;
       this.nameNode = nameNode;
       this.isPropertyAssign = isPropertyAssign;
 
+      this.maybeAliased = NodeUtil.isExpressionResultUsed(assignNode);
       this.mayHaveSecondarySideEffects =
-          !assignNode.getParent().isExprResult() ||
+          maybeAliased ||
           NodeUtil.mayHaveSideEffects(assignNode.getFirstChild()) ||
           NodeUtil.mayHaveSideEffects(assignNode.getLastChild());
     }

@@ -735,4 +735,23 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
         "for (var i in x) { x[i].call(x); }" +
         "window['Foo'] = Foo;");
   }
+
+  public void testIssue618_1() {
+    this.removeGlobal = false;
+    testSame(
+        "function f() {\n" +
+        "  var a = [], b;\n" +
+        "  a.push(b = []);\n" +
+        "  b[0] = 1;\n" +
+        "  return a;\n" +
+        "}");
+  }
+
+  public void testIssue618_2() {
+    this.removeGlobal = false;
+    testSame(
+        "var b;\n" +
+        "a.push(b = []);\n" +
+        "b[0] = 1;\n");
+  }
 }
