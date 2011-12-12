@@ -188,56 +188,17 @@ public class TokenStream {
     }
 
     public static boolean isJSIdentifier(String s) {
-        int length = s.length();
+      int length = s.length();
 
-        if (length == 0 || !Character.isJavaIdentifierStart(s.charAt(0)))
-            return false;
+      if (length == 0 || !Character.isJavaIdentifierStart(s.charAt(0)))
+        return false;
 
-        for (int i=1; i<length; i++) {
-            char c = s.charAt(i);
-            if (!Character.isJavaIdentifierPart(c)) {
-                if (c == '\\') {
-                    if (! ((i + 5) < length)
-                        && (s.charAt(i + 1) == 'u')
-                        && 0 <= xDigitToInt(s.charAt(i + 2), 0)
-                        && 0 <= xDigitToInt(s.charAt(i + 3), 0)
-                        && 0 <= xDigitToInt(s.charAt(i + 4), 0)
-                        && 0 <= xDigitToInt(s.charAt(i + 5), 0)) {
-                        return true;
-                     }
-                }
-
-                return false;
-            }
+      for (int i = 1; i < length; i++) {
+        if (!Character.isJavaIdentifierPart(s.charAt(i))) {
+          return false;
         }
+      }
 
-        return true;
-    }
-
-    /**
-     * If character <tt>c</tt> is a hexadecimal digit, return
-     * <tt>accumulator</tt> * 16 plus corresponding
-     * number. Otherise return -1.
-     */
-    private static int xDigitToInt(int c, int accumulator) {
-        check: {
-            // Use 0..9 < A..Z < a..z
-            if (c <= '9') {
-                c -= '0';
-                if (0 <= c) { break check; }
-            } else if (c <= 'F') {
-                if ('A' <= c) {
-                    c -= ('A' - 10);
-                    break check;
-                }
-            } else if (c <= 'f') {
-                if ('a' <= c) {
-                    c -= ('a' - 10);
-                    break check;
-                }
-            }
-            return -1;
-        }
-        return (accumulator << 4) | c;
+      return true;
     }
 }

@@ -1278,4 +1278,8 @@ public class CodePrinterTest extends TestCase {
     assertPrint("'\\u000B' == '\\v'", "\"\\x0B\"==\"\\v\"");
     assertPrint("'\\x0B' == '\\v'", "\"\\x0B\"==\"\\v\"");
   }
+
+  public void testIssue5746867() {
+    assertPrint("var a = { '$\\\\' : 5 };", "var a={\"$\\\\\":5}");
+  }
 }

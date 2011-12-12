@@ -68,4 +68,9 @@ public class ConvertToDottedPropertiesTest extends CompilerTestCase {
     testSame("({'1.0':0})");
     testSame("({'\u1d17A':0})");
   }
+
+  public void test5746867() {
+    testSame("var a = { '$\\\\' : 5 };");
+    testSame("var a = { 'x\\\\u0041$\\\\' : 5 };");
+  }
 }
