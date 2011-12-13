@@ -147,7 +147,7 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /** Tightens types based on a global analysis. Experimental. */
   public void setTightenTypes(boolean tighten) {
-    this.tightenTypes = tighten;
+    tightenTypes = tighten;
   }
 
   public CheckLevel reportMissingOverride;
@@ -157,28 +157,28 @@ public class CompilerOptions implements Serializable, Cloneable {
    * overrides a base class property.
    */
   public void setReportMissingOverride(CheckLevel level) {
-    this.reportMissingOverride = level;
+    reportMissingOverride = level;
   }
 
   CheckLevel reportUnknownTypes;
 
   /** Flags a warning for every node whose type could not be determined. */
   public void setReportUnknownTypes(CheckLevel level) {
-    this.reportUnknownTypes = level;
+    reportUnknownTypes = level;
   }
 
   /** Checks for missing goog.require() calls **/
   public CheckLevel checkRequires;
 
   public void setCheckRequires(CheckLevel level) {
-    this.checkRequires = level;
+    checkRequires = level;
   }
 
   public CheckLevel checkProvides;
 
   /** Checks for missing goog.provides() calls **/
   public void setCheckProvides(CheckLevel level) {
-    this.checkProvides = level;
+    checkProvides = level;
   }
 
   public CheckLevel checkGlobalNamesLevel;
@@ -188,14 +188,14 @@ public class CompilerOptions implements Serializable, Cloneable {
    * (e.g. "a.b")
    */
   public void setCheckGlobalNamesLevel(CheckLevel level) {
-    this.checkGlobalNamesLevel = level;
+    checkGlobalNamesLevel = level;
   }
 
   public CheckLevel brokenClosureRequiresLevel;
 
   /** Sets the check level for bad Closure require calls. */
   public void setBrokenClosureRequiresLevel(CheckLevel level) {
-    this.brokenClosureRequiresLevel = level;
+    brokenClosureRequiresLevel = level;
   }
 
   public CheckLevel checkGlobalThisLevel;
@@ -307,7 +307,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Extracts common prototype member declarations */
   public boolean extractPrototypeMemberDeclarations;
 
-  // TODO(johnlenz): REMOVE THS
+  // TODO(johnlenz): REMOVE THIS
   public boolean removeEmptyFunctions;
 
   /** Removes unused member prototypes */
@@ -351,10 +351,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /** Group multiple variable declarations into one */
   boolean groupVariableDeclarations;
-
-  public void groupVariableDeclarations(boolean enabled) {
-    groupVariableDeclarations = enabled;
-  }
 
   /**
    * Collapses anonymous function declarations into named function
@@ -671,8 +667,7 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public ErrorFormat errorFormat;
 
-  private ComposeWarningsGuard warningsGuard =
-      new ComposeWarningsGuard();
+  private ComposeWarningsGuard warningsGuard = new ComposeWarningsGuard();
 
   int summaryDetailLevel = 1;
 
@@ -1185,10 +1180,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.nameAnonymousFunctionsOnly = value;
   }
 
-  public void lineLengthThreshold(int value) {
-    this.lineLengthThreshold = value;
-  }
-
   public void setColorizeErrorOutput(boolean colorizeErrorOutput) {
     this.colorizeErrorOutput = colorizeErrorOutput;
   }
@@ -1283,8 +1274,12 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.summaryDetailLevel = summaryDetailLevel;
   }
 
-  public void enableExternExports(boolean enable) {
-    this.externExports = enable;
+  /**
+   * @deprecated replaced by {@link #setExternExports}
+   */
+  @Deprecated
+  public void enableExternExports(boolean enabled) {
+    this.externExports = enabled;
   }
 
   public void setExtraAnnotationNames(Set<String> extraAnnotationNames) {
@@ -1411,6 +1406,403 @@ public class CompilerOptions implements Serializable, Cloneable {
         Maps.newHashMap(propertyInvalidationErrors);
   }
 
+  public void setLanguageOut(LanguageMode languageOut) {
+    this.languageOut = languageOut;
+  }
+
+  public void setIdeMode(boolean ideMode) {
+    this.ideMode = ideMode;
+  }
+
+  public void setSkipAllPasses(boolean skipAllPasses) {
+    this.skipAllPasses = skipAllPasses;
+  }
+
+  public void setDevMode(DevMode devMode) {
+    this.devMode = devMode;
+  }
+
+  public void setMessageBundle(MessageBundle messageBundle) {
+    this.messageBundle = messageBundle;
+  }
+
+  public void setCheckSymbols(boolean checkSymbols) {
+    this.checkSymbols = checkSymbols;
+  }
+
+  public void setCheckSuspiciousCode(boolean checkSuspiciousCode) {
+    this.checkSuspiciousCode = checkSuspiciousCode;
+  }
+
+  public void setCheckControlStructures(boolean checkControlStructures) {
+    this.checkControlStructures = checkControlStructures;
+  }
+
+  public void setCheckTypes(boolean checkTypes) {
+    this.checkTypes = checkTypes;
+  }
+
+  public void setCheckMissingGetCssNameBlacklist(String blackList) {
+    this.checkMissingGetCssNameBlacklist = blackList;
+  }
+
+  public void setFoldConstants(boolean foldConstants) {
+    this.foldConstants = foldConstants;
+  }
+
+  public void setDeadAssignmentElimination(boolean deadAssignmentElimination) {
+    this.deadAssignmentElimination = deadAssignmentElimination;
+  }
+
+  public void setInlineConstantVars(boolean inlineConstantVars) {
+    this.inlineConstantVars = inlineConstantVars;
+  }
+
+  public void setInlineFunctions(boolean inlineFunctions) {
+    this.inlineFunctions = inlineFunctions;
+  }
+
+  public void setInlineLocalFunctions(boolean inlineLocalFunctions) {
+    this.inlineLocalFunctions = inlineLocalFunctions;
+  }
+
+  public void setCrossModuleCodeMotion(boolean crossModuleCodeMotion) {
+    this.crossModuleCodeMotion = crossModuleCodeMotion;
+  }
+
+  public void setCoalesceVariableNames(boolean coalesceVariableNames) {
+    this.coalesceVariableNames = coalesceVariableNames;
+  }
+
+  public void setCrossModuleMethodMotion(boolean crossModuleMethodMotion) {
+    this.crossModuleMethodMotion = crossModuleMethodMotion;
+  }
+
+  public void setInlineGetters(boolean inlineGetters) {
+    this.inlineGetters = inlineGetters;
+  }
+
+  public void setInlineVariables(boolean inlineVariables) {
+    this.inlineVariables = inlineVariables;
+  }
+
+  public void setInlineLocalVariables(boolean inlineLocalVariables) {
+    this.inlineLocalVariables = inlineLocalVariables;
+  }
+
+  public void setFlowSensitiveInlineVariables(boolean enabled) {
+    this.flowSensitiveInlineVariables = enabled;
+  }
+
+  public void setSmartNameRemoval(boolean smartNameRemoval) {
+    this.smartNameRemoval = smartNameRemoval;
+  }
+
+  public void setRemoveDeadCode(boolean removeDeadCode) {
+    this.removeDeadCode = removeDeadCode;
+  }
+
+  public void setExtractPrototypeMemberDeclarations(boolean enabled) {
+    this.extractPrototypeMemberDeclarations = enabled;
+  }
+
+  public void setRemoveUnusedPrototypeProperties(boolean enabled) {
+    this.removeUnusedPrototypeProperties = enabled;
+  }
+
+  public void setRemoveUnusedPrototypePropertiesInExterns(
+      boolean enabled) {
+    this.removeUnusedPrototypePropertiesInExterns = enabled;
+  }
+
+  public void setRemoveUnusedVars(boolean removeUnusedVars) {
+    this.removeUnusedVars = removeUnusedVars;
+  }
+
+  public void setRemoveUnusedLocalVars(boolean removeUnusedLocalVars) {
+    this.removeUnusedLocalVars = removeUnusedLocalVars;
+  }
+
+  public void setAliasExternals(boolean aliasExternals) {
+    this.aliasExternals = aliasExternals;
+  }
+
+  public void setCollapseVariableDeclarations(boolean enabled) {
+    this.collapseVariableDeclarations = enabled;
+  }
+
+  public void setGroupVariableDeclarations(boolean enabled) {
+    this.groupVariableDeclarations = enabled;
+  }
+
+  public void setCollapseAnonymousFunctions(boolean enabled) {
+    this.collapseAnonymousFunctions = enabled;
+  }
+
+  public void setAliasableStrings(Set<String> aliasableStrings) {
+    this.aliasableStrings = aliasableStrings;
+  }
+
+  public void setAliasStringsBlacklist(String aliasStringsBlacklist) {
+    this.aliasStringsBlacklist = aliasStringsBlacklist;
+  }
+
+  public void setAliasAllStrings(boolean aliasAllStrings) {
+    this.aliasAllStrings = aliasAllStrings;
+  }
+
+  public void setOutputJsStringUsage(boolean outputJsStringUsage) {
+    this.outputJsStringUsage = outputJsStringUsage;
+  }
+
+  public void setConvertToDottedProperties(boolean convertToDottedProperties) {
+    this.convertToDottedProperties = convertToDottedProperties;
+  }
+
+  public void setRewriteFunctionExpressions(boolean rewriteFunctionExpressions) {
+    this.rewriteFunctionExpressions = rewriteFunctionExpressions;
+  }
+
+  public void setOptimizeParameters(boolean optimizeParameters) {
+    this.optimizeParameters = optimizeParameters;
+  }
+
+  public void setOptimizeReturns(boolean optimizeReturns) {
+    this.optimizeReturns = optimizeReturns;
+  }
+
+  public void setOptimizeCalls(boolean optimizeCalls) {
+    this.optimizeCalls = optimizeCalls;
+  }
+
+  public void setOptimizeArgumentsArray(boolean optimizeArgumentsArray) {
+    this.optimizeArgumentsArray = optimizeArgumentsArray;
+  }
+
+  public void setVariableRenaming(VariableRenamingPolicy variableRenaming) {
+    this.variableRenaming = variableRenaming;
+  }
+
+  public void setPropertyRenaming(PropertyRenamingPolicy propertyRenaming) {
+    this.propertyRenaming = propertyRenaming;
+  }
+
+  public void setLabelRenaming(boolean labelRenaming) {
+    this.labelRenaming = labelRenaming;
+  }
+
+  public void setReserveRawExports(boolean reserveRawExports) {
+    this.reserveRawExports = reserveRawExports;
+  }
+
+  public void setGeneratePseudoNames(boolean generatePseudoNames) {
+    this.generatePseudoNames = generatePseudoNames;
+  }
+
+  public void setRenamePrefix(String renamePrefix) {
+    this.renamePrefix = renamePrefix;
+  }
+
+  public void setRenamePrefixNamespace(String renamePrefixNamespace) {
+    this.renamePrefixNamespace = renamePrefixNamespace;
+  }
+
+  public void setAliasKeywords(boolean aliasKeywords) {
+    this.aliasKeywords = aliasKeywords;
+  }
+
+  public void setCollapseProperties(boolean collapseProperties) {
+    this.collapseProperties = collapseProperties;
+  }
+
+  public void setDevirtualizePrototypeMethods(boolean devirtualizePrototypeMethods) {
+    this.devirtualizePrototypeMethods = devirtualizePrototypeMethods;
+  }
+
+  public void setComputeFunctionSideEffects(boolean computeFunctionSideEffects) {
+    this.computeFunctionSideEffects = computeFunctionSideEffects;
+  }
+
+  public void setDebugFunctionSideEffectsPath(String debugFunctionSideEffectsPath) {
+    this.debugFunctionSideEffectsPath = debugFunctionSideEffectsPath;
+  }
+
+  public void setDisambiguateProperties(boolean disambiguateProperties) {
+    this.disambiguateProperties = disambiguateProperties;
+  }
+
+  public void setAmbiguateProperties(boolean ambiguateProperties) {
+    this.ambiguateProperties = ambiguateProperties;
+  }
+
+  public void setAnonymousFunctionNaming(
+      AnonymousFunctionNamingPolicy anonymousFunctionNaming) {
+    this.anonymousFunctionNaming = anonymousFunctionNaming;
+  }
+
+  public void setInputVariableMapSerialized(byte[] inputVariableMapSerialized) {
+    this.inputVariableMapSerialized = inputVariableMapSerialized;
+  }
+
+  public void setInputPropertyMapSerialized(byte[] inputPropertyMapSerialized) {
+    this.inputPropertyMapSerialized = inputPropertyMapSerialized;
+  }
+
+  public void setExportTestFunctions(boolean exportTestFunctions) {
+    this.exportTestFunctions = exportTestFunctions;
+  }
+
+  public void setRuntimeTypeCheck(boolean runtimeTypeCheck) {
+    this.runtimeTypeCheck = runtimeTypeCheck;
+  }
+
+  public void setRuntimeTypeCheckLogFunction(String runtimeTypeCheckLogFunction) {
+    this.runtimeTypeCheckLogFunction = runtimeTypeCheckLogFunction;
+  }
+
+  public void setSyntheticBlockStartMarker(String syntheticBlockStartMarker) {
+    this.syntheticBlockStartMarker = syntheticBlockStartMarker;
+  }
+
+  public void setSyntheticBlockEndMarker(String syntheticBlockEndMarker) {
+    this.syntheticBlockEndMarker = syntheticBlockEndMarker;
+  }
+
+  public void setLocale(String locale) {
+    this.locale = locale;
+  }
+
+  public void setMarkAsCompiled(boolean markAsCompiled) {
+    this.markAsCompiled = markAsCompiled;
+  }
+
+  public void setRemoveTryCatchFinally(boolean removeTryCatchFinally) {
+    this.removeTryCatchFinally = removeTryCatchFinally;
+  }
+
+  public void setClosurePass(boolean closurePass) {
+    this.closurePass = closurePass;
+  }
+
+  public void setGatherCssNames(boolean gatherCssNames) {
+    this.gatherCssNames = gatherCssNames;
+  }
+
+  public void setStripTypes(Set<String> stripTypes) {
+    this.stripTypes = stripTypes;
+  }
+
+  public void setStripNameSuffixes(Set<String> stripNameSuffixes) {
+    this.stripNameSuffixes = stripNameSuffixes;
+  }
+
+  public void setStripNamePrefixes(Set<String> stripNamePrefixes) {
+    this.stripNamePrefixes = stripNamePrefixes;
+  }
+
+  public void setStripTypePrefixes(Set<String> stripTypePrefixes) {
+    this.stripTypePrefixes = stripTypePrefixes;
+  }
+
+  public void setCustomPasses(Multimap<CustomPassExecutionTime, CompilerPass> customPasses) {
+    this.customPasses = customPasses;
+  }
+
+  public void setMarkNoSideEffectCalls(boolean markNoSideEffectCalls) {
+    this.markNoSideEffectCalls = markNoSideEffectCalls;
+  }
+
+  public void setDefineReplacements(Map<String, Object> defineReplacements) {
+    this.defineReplacements = defineReplacements;
+  }
+
+  public void setTweakReplacements(Map<String, Object> tweakReplacements) {
+    this.tweakReplacements = tweakReplacements;
+  }
+
+  public void setMoveFunctionDeclarations(boolean moveFunctionDeclarations) {
+    this.moveFunctionDeclarations = moveFunctionDeclarations;
+  }
+
+  public void setInstrumentationTemplate(String instrumentationTemplate) {
+    this.instrumentationTemplate = instrumentationTemplate;
+  }
+
+  public void setRecordFunctionInformation(boolean recordFunctionInformation) {
+    this.recordFunctionInformation = recordFunctionInformation;
+  }
+
+  public void setCssRenamingMap(CssRenamingMap cssRenamingMap) {
+    this.cssRenamingMap = cssRenamingMap;
+  }
+
+  public void setReplaceStringsFunctionDescriptions(List<String> replaceStringsFunctionDescriptions) {
+    this.replaceStringsFunctionDescriptions = replaceStringsFunctionDescriptions;
+  }
+
+  public void setReplaceStringsPlaceholderToken(String replaceStringsPlaceholderToken) {
+    this.replaceStringsPlaceholderToken = replaceStringsPlaceholderToken;
+  }
+
+  public void setReplaceStringsReservedStrings(Set<String> replaceStringsReservedStrings) {
+    this.replaceStringsReservedStrings = replaceStringsReservedStrings;
+  }
+
+  public void setPrettyPrint(boolean prettyPrint) {
+    this.prettyPrint = prettyPrint;
+  }
+
+  public void setLineBreak(boolean lineBreak) {
+    this.lineBreak = lineBreak;
+  }
+
+  public void setPrintInputDelimiter(boolean printInputDelimiter) {
+    this.printInputDelimiter = printInputDelimiter;
+  }
+
+  public void setInputDelimiter(String inputDelimiter) {
+    this.inputDelimiter = inputDelimiter;
+  }
+
+  public void setTracer(TracerMode tracer) {
+    this.tracer = tracer;
+  }
+
+  public void setErrorFormat(ErrorFormat errorFormat) {
+    this.errorFormat = errorFormat;
+  }
+
+  public void setWarningsGuard(ComposeWarningsGuard warningsGuard) {
+    this.warningsGuard = warningsGuard;
+  }
+
+  public void setLineLengthThreshold(int lineLengthThreshold) {
+    this.lineLengthThreshold = lineLengthThreshold;
+  }
+
+  public void setExternExports(boolean externExports) {
+    this.externExports = externExports;
+  }
+
+  public void setExternExportsPath(String externExportsPath) {
+    this.externExportsPath = externExportsPath;
+  }
+
+  public void setSourceMapOutputPath(String sourceMapOutputPath) {
+    this.sourceMapOutputPath = sourceMapOutputPath;
+  }
+
+  public void setSourceMapDetailLevel(SourceMap.DetailLevel sourceMapDetailLevel) {
+    this.sourceMapDetailLevel = sourceMapDetailLevel;
+  }
+
+  public void setSourceMapFormat(SourceMap.Format sourceMapFormat) {
+    this.sourceMapFormat = sourceMapFormat;
+  }
+
+  public void setSourceMapLocationMappings(List<SourceMap.LocationMapping> sourceMapLocationMappings) {
+    this.sourceMapLocationMappings = sourceMapLocationMappings;
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // Enums
