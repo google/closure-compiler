@@ -22,6 +22,7 @@
  *    http://www.w3.org/TR/ElementTraversal/#ecmascript-bindings
  *
  * @externs
+ * @author arv@google.com (Erik Arvidsson)
  */
 
 /**

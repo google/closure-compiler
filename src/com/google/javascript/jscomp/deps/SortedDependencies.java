@@ -231,6 +231,12 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
 
   private static <T> List<T> topologicalStableSort(
       List<T> items, Multimap<T, T> deps) {
+    if (items.size() == 0) {
+      // Priority queue blows up if we give it a size of 0. Since we need
+      // to special case this either way, just bail out.
+      return Lists.newArrayList();
+    }
+
     final Map<T, Integer> originalIndex = Maps.newHashMap();
     for (int i = 0; i < items.size(); i++) {
       originalIndex.put(items.get(i), i);

@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.LinkedListMultimap;
@@ -324,13 +323,17 @@ public class JSModuleGraph {
 
     SortedDependencies<CompilerInput> sorter =
         new SortedDependencies<CompilerInput>(inputs);
-    Set<CompilerInput> entryPointInputs =
-        Sets.newLinkedHashSet(
-            depOptions.shouldDropMoochers() ?
-            ImmutableList.<CompilerInput>of() :
-            sorter.getInputsWithoutProvides());
-    for (String entryPoint : depOptions.getEntryPoints()) {
-      entryPointInputs.add(sorter.getInputProviding(entryPoint));
+    Set<CompilerInput> entryPointInputs = Sets.newLinkedHashSet();
+    if (depOptions.shouldPruneDependencies()) {
+      if (!depOptions.shouldDropMoochers()) {
+        entryPointInputs.addAll(sorter.getInputsWithoutProvides());
+      }
+
+      for (String entryPoint : depOptions.getEntryPoints()) {
+        entryPointInputs.add(sorter.getInputProviding(entryPoint));
+      }
+    } else {
+      entryPointInputs.addAll(inputs);
     }
 
     // The order of inputs, sorted independently of modules.
