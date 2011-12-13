@@ -36,6 +36,9 @@ import java.util.Set;
  */
 public class CompilerOptions implements Serializable, Cloneable {
 
+  // Unused. For people using reflection to circumvent access control.
+  private boolean manageClosureDependencies = false;
+
   // A common enum for compiler passes that can run either globally or locally.
   public enum Reach {
     ALL,
@@ -1251,6 +1254,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     dependencyOptions.setDependencySorting(newVal);
     dependencyOptions.setDependencyPruning(newVal);
     dependencyOptions.setMoocherDropping(false);
+    manageClosureDependencies = newVal;
   }
 
   /**
