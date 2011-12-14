@@ -633,6 +633,16 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** List of properties that we report invalidation errors for. */
   Map<String, CheckLevel> propertyInvalidationErrors;
 
+  /** Transform AMD to Common JS modules. */
+  boolean transformAMDToCJSModules = false;
+
+  /** Transform AMD to Common JS modules. */
+  boolean processCommonJSModules = false;
+
+  /** Common JS module prefix. */
+  String commonJSModulePathPrefix =
+      ProcessCommonJSModules.DEFAULT_FILENAME_PREFIX;
+
 
   //--------------------------------
   // Output options
@@ -1803,6 +1813,28 @@ public class CompilerOptions implements Serializable, Cloneable {
   public void setSourceMapLocationMappings(List<SourceMap.LocationMapping> sourceMapLocationMappings) {
     this.sourceMapLocationMappings = sourceMapLocationMappings;
   }
+
+  /**
+   * Activates transformation of AMD to CJS modules.
+   */
+  public void setTransformAMDToCJSModules(boolean transformAMDToCJSModules) {
+    this.transformAMDToCJSModules = transformAMDToCJSModules;
+  }
+
+  /**
+   * Activates Common JS module processing.
+   */
+  public void setProcessCommonJSModules(boolean processCommonJSModules) {
+    this.processCommonJSModules = processCommonJSModules;
+  }
+
+  /**
+   * Sets a path prefix for Common JS modules.
+   */
+  public void setCommonJSModulePathPrefix(String commonJSModulePathPrefix) {
+    this.commonJSModulePathPrefix = commonJSModulePathPrefix;
+  }
+
 
   //////////////////////////////////////////////////////////////////////////////
   // Enums

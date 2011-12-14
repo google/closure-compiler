@@ -16,6 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
+import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -101,5 +106,29 @@ public class CompilerTest extends TestCase {
     JSSourceFile input = JSSourceFile.fromCode("input.js",
         "(function (undefined) { alert(undefined); })();");
     compiler.compile(externs, input, options);
+  }
+
+  public void testCommonJSProvidesAndRequire() throws
+      CircularDependencyException, MissingProvideException {
+    JSSourceFile[] inputs = {
+        JSSourceFile.fromCode("gin.js", "require('tonic')"),
+        JSSourceFile.fromCode("tonic.js", ""),
+        JSSourceFile.fromCode("mix.js", "require('gin'); require('tonic');")};
+    CompilerOptions options = new CompilerOptions();
+    options.ideMode = true;
+    List<String> entryPoints = Lists.newArrayList("module$mix");
+    options.setManageClosureDependencies(entryPoints);
+    options.closurePass = true;
+    options.processCommonJSModules = true;
+    Compiler compiler = new Compiler();
+    compiler.init(new JSSourceFile[0], inputs, options);
+    compiler.parseInputs();
+    JSModuleGraph graph = compiler.getModuleGraph();
+    assertEquals(graph.getModuleCount(), 3);
+    List<CompilerInput> result = graph.manageDependencies(entryPoints,
+        compiler.getInputsForTesting());
+    assertEquals("tonic.js", result.get(0).getName());
+    assertEquals("gin.js", result.get(1).getName());
+    assertEquals("mix.js", result.get(2).getName());
   }
 }

@@ -305,6 +305,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     options.acceptConstKeyword = config.acceptConstKeyword;
+    options.transformAMDToCJSModules = config.transformAMDToCJSModules;
+    options.processCommonJSModules = config.processCommonJSModules;
+    options.commonJSModulePathPrefix = config.commonJSModulePathPrefix;
   }
 
   final protected A getCompiler() {
@@ -1845,6 +1848,39 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setManifestMaps(List<String> manifestMaps) {
       this.manifestMaps = manifestMaps;
+      return this;
+    }
+
+
+    private boolean transformAMDToCJSModules = false;
+
+    /**
+     * Set whether to transform AMD to Common JS modules.
+     */
+    CommandLineConfig setTransformAMDToCJSModules(boolean transformAMDToCJSModules) {
+      this.transformAMDToCJSModules = transformAMDToCJSModules;
+      return this;
+    }
+
+    private boolean processCommonJSModules = false;
+
+    /**
+     * Sets whether to process Common JS modules.
+     */
+    CommandLineConfig setProcessCommonJSModules(boolean processCommonJSModules) {
+      this.processCommonJSModules = processCommonJSModules;
+      return this;
+    }
+
+
+    private String commonJSModulePathPrefix =
+        ProcessCommonJSModules.DEFAULT_FILENAME_PREFIX;
+
+    /**
+     * Sets the Common JS module path prefix.
+     */
+    CommandLineConfig setCommonJSModulePathPrefix(String commonJSModulePathPrefix) {
+      this.commonJSModulePathPrefix = commonJSModulePathPrefix;
       return this;
     }
 

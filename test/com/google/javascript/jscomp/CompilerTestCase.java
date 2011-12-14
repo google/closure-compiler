@@ -98,6 +98,8 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   private boolean astValidationEnabled = true;
 
+  private String filename = "testcode";
+
   /**
    * Constructs a test.
    *
@@ -176,6 +178,10 @@ public abstract class CompilerTestCase extends TestCase  {
 
   protected CodingConvention getCodingConvention() {
     return new GoogleCodingConvention();
+  }
+
+  public void setFilename(String filename) {
+    this.filename = filename;
   }
 
   /**
@@ -420,7 +426,7 @@ public abstract class CompilerTestCase extends TestCase  {
     // actually cause the type check to run.
     options.checkTypes = parseTypeInfo;
     compiler.init(externs, new JSSourceFile[] {
-        JSSourceFile.fromCode("testcode", js) }, options);
+        JSSourceFile.fromCode(filename, js) }, options);
 
     BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
 

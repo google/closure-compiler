@@ -186,6 +186,23 @@ public class CompilerInput
     }
   }
 
+  // TODO(nicksantos): Remove addProvide/addRequire/removeRequire once
+  // there is better support for discovering non-closure dependencies.
+  void addProvide(String provide) {
+    getProvides();
+    provides.add(provide);
+  }
+
+  void addRequire(String require) {
+    getRequires();
+    requires.add(require);
+  }
+
+  public void removeRequire(String require) {
+    getRequires();
+    requires.remove(require);
+  }
+
   /**
    * Regenerates the provides/requires if we need to do so.
    */
@@ -310,6 +327,11 @@ public class CompilerInput
     // An input may only belong to one module.
     Preconditions.checkArgument(
         module == null || this.module == null || this.module == module);
+    this.module = module;
+  }
+
+  /** Overrides the module to which the input belongs. */
+  void overrideModule(JSModule module) {
     this.module = module;
   }
 

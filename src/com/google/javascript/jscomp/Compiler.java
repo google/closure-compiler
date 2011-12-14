@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
@@ -1190,6 +1191,11 @@ public class Compiler extends AbstractCompiler {
         externsRoot.addChildToBack(n);
       }
 
+      // Modules inferred in ProcessCommonJS pass.
+      if (options.transformAMDToCJSModules || options.processCommonJSModules) {
+        processAMDAndCommonJSModules();
+      }
+
       // Check if the sources need to be re-ordered.
       if (options.dependencyOptions.needsManagement()) {
         for (CompilerInput input : inputs) {
@@ -1286,6 +1292,65 @@ public class Compiler extends AbstractCompiler {
       return externAndJsRoot;
     } finally {
       stopTracer(tracer, "parseInputs");
+    }
+  }
+
+  /**
+   * Transforms AMD and CJS modules to something closure compiler can
+   * process and creates JSModules and the corresponding dependency tree
+   * on the way.
+   */
+  private void processAMDAndCommonJSModules() {
+    Map<String, JSModule> modulesByName = Maps.newLinkedHashMap();
+    Map<CompilerInput, JSModule> modulesByInput = Maps.newLinkedHashMap();
+    // TODO(nicksantos): Refactor module dependency resolution to work nicely
+    // with multiple ways to express dependencies. Directly support JSModules
+    // that are equivalent to a signal file and which express their deps
+    // directly in the source.
+    for (CompilerInput input : inputs) {
+      input.setCompiler(this);
+      Node root = input.getAstRoot(this);
+      if (root == null) {
+        continue;
+      }
+      if (options.transformAMDToCJSModules) {
+        new TransformAMDToCJSModule(this).process(null, root);
+      }
+      if (options.processCommonJSModules) {
+        ProcessCommonJSModules cjs = new ProcessCommonJSModules(this,
+            options.commonJSModulePathPrefix);
+        cjs.process(null, root);
+        JSModule m = cjs.getModule();
+        if (m != null) {
+          modulesByName.put(m.getName(), m);
+          modulesByInput.put(input, m);
+        }
+      }
+    }
+    if (options.processCommonJSModules) {
+      List<JSModule> modules = Lists.newArrayList(modulesByName.values());
+      if (!modules.isEmpty()) {
+        this.modules = modules;
+        this.moduleGraph = new JSModuleGraph(this.modules);
+      }
+      for (JSModule module : modules) {
+        for (CompilerInput input : module.getInputs()) {
+          for (String require : input.getRequires()) {
+            module.addDependency(modulesByName.get(require));
+          }
+        }
+      }
+      try {
+        modules = Lists.newArrayList();
+        for (CompilerInput input : this.moduleGraph.manageDependencies(
+            options.dependencyOptions, inputs)) {
+          modules.add(modulesByInput.get(input));
+        }
+        this.modules = modules;
+        this.moduleGraph = new JSModuleGraph(modules);
+      } catch (Exception e) {
+        Throwables.propagate(e);
+      }
     }
   }
 

@@ -105,6 +105,16 @@ public class JSModule implements DependencyInfo, Serializable {
     input.setModule(this);
   }
 
+  /**
+   * Adds a source code input to this module. Call only if the input might
+   * already be associated with a module. Otherwise use
+   * add(CompilerInput input).
+   */
+  void addAndOverrideModule(CompilerInput input) {
+    inputs.add(input);
+    input.overrideModule(this);
+  }
+
   /** Adds a source code input to this module. */
   public void addFirst(CompilerInput input) {
     inputs.add(0, input);

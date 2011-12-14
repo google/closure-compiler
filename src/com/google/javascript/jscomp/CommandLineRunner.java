@@ -302,6 +302,24 @@ public class CommandLineRunner extends
         + "PRETTY_PRINT, PRINT_INPUT_DELIMITER")
     private List<FormattingOption> formatting = Lists.newArrayList();
 
+    @Option(name = "--process_common_js_modules",
+        usage = "Process Common JS modules to a concatenable form.")
+    private boolean process_common_js_modules = false;
+
+    @Option(name = "--common_js_module_path_prefix",
+        usage = "Path prefix to be removed from Common JS module names.")
+    private String common_js_path_prefix =
+        ProcessCommonJSModules.DEFAULT_FILENAME_PREFIX;
+
+    @Option(name = "--common_js_entry_module",
+        usage = "Root of your common JS dependency hierarchy. "+
+            "Your main script.")
+    private String common_js_entry_module;
+
+    @Option(name = "--transform_amd_modules",
+        usage = "Transform AMD to Common JS modules.")
+    private boolean transform_amd_modules = false;
+
     @Option(name = "--process_closure_primitives",
         handler = BooleanOptionHandler.class,
         usage = "Processes built-ins from the Closure library, such as "
@@ -627,6 +645,18 @@ public class CommandLineRunner extends
       err.flush();
     }
 
+    if (flags.process_common_js_modules) {
+      flags.process_closure_primitives = true;
+      flags.manage_closure_dependencies = true;
+      if (flags.common_js_entry_module == null) {
+        err.println("Please specify --common_js_entry_module.");
+        err.flush();
+        isConfigValid = false;
+      }
+      flags.closure_entry_point = Lists.newArrayList(
+          ProcessCommonJSModules.toModuleName(flags.common_js_entry_module));
+    }
+
     if (!isConfigValid || flags.display_help) {
       isConfigValid = false;
       parser.printUsage(err);
@@ -662,7 +692,10 @@ public class CommandLineRunner extends
           .setClosureEntryPoints(flags.closure_entry_point)
           .setOutputManifest(ImmutableList.of(flags.output_manifest))
           .setAcceptConstKeyword(flags.accept_const_keyword)
-          .setLanguageIn(flags.language_in);
+          .setLanguageIn(flags.language_in)
+          .setProcessCommonJSModules(flags.process_common_js_modules)
+          .setCommonJSModulePathPrefix(flags.common_js_path_prefix)
+          .setTransformAMDToCJSModules(flags.transform_amd_modules);
     }
   }
 
