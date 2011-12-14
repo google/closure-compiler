@@ -27,11 +27,3 @@
 /** @type {Console} */
 var console;
 
-// TODO(nicksantos): Tools that translate JS to Java blow up when there
-// are properties called 'assert'. Ew.
-
-/**
- * @param {*} condition
- * @param {...*} var_args
- */
-Console.prototype.assert = function(condition, var_args) {};

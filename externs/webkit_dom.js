@@ -30,6 +30,12 @@
 function Console() {};
 
 /**
+ * @param {*} condition
+ * @param {...*} var_args
+ */
+Console.prototype.assert = function(condition, var_args) {};
+
+/**
  * @param {...*} var_args
  */
 Console.prototype.error = function(var_args) {};
