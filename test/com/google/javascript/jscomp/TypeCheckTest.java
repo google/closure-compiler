@@ -8995,6 +8995,34 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "var x = {}; f(x); g(x);");
   }
 
+  public void testRecordType6() throws Exception {
+    testTypes(
+        "/** @return {{prop: (number|undefined)}} x */" +
+        "function f() { return {}; }");
+  }
+
+  public void testRecordType7() throws Exception {
+    testTypes(
+        "/** @return {{prop: (number|undefined)}} x */" +
+        "function f() { var x = {}; g(x); return x; }" +
+        "/** @param {number} x */" +
+        "function g(x) {}",
+        "actual parameter 1 of g does not match formal parameter\n" +
+        "found   : {prop: (number|undefined)}\n" +
+        "required: number");
+  }
+
+  public void testRecordType8() throws Exception {
+    testTypes(
+        "/** @return {{prop: (number|string)}} x */" +
+        "function f() { var x = {prop: 3}; g(x.prop); return x; }" +
+        "/** @param {string} x */" +
+        "function g(x) {}",
+        "actual parameter 1 of g does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
   public void testDuplicateRecordFields1() throws Exception {
     testTypes("/**"
          + "* @param {{x:string, x:number}} a"

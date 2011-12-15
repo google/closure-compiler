@@ -378,8 +378,11 @@ class TypeInference
         scope = traverse(n.getFirstChild(), scope);
         break;
 
-      case Token.VAR:
       case Token.RETURN:
+        scope = traverseReturn(n, scope);
+        break;
+
+      case Token.VAR:
       case Token.THROW:
         scope = traverseChildren(n, scope);
         break;
@@ -405,6 +408,26 @@ class TypeInference
       }
     }
 
+    return scope;
+  }
+
+  /**
+   * Traverse a return value.
+   */
+  private FlowScope traverseReturn(Node n, FlowScope scope) {
+    scope = traverseChildren(n, scope);
+
+    Node retValue = n.getFirstChild();
+    if (retValue != null) {
+      JSType type = functionScope.getRootNode().getJSType();
+      if (type != null) {
+        FunctionType fnType = type.toMaybeFunctionType();
+        if (fnType != null) {
+          inferPropertyTypesToMatchConstraint(
+              retValue.getJSType(), fnType.getReturnType());
+        }
+      }
+    }
     return scope;
   }
 
@@ -1035,6 +1058,10 @@ class TypeInference
    */
   private void inferPropertyTypesToMatchConstraint(
       JSType type, JSType constraint) {
+    if (type == null || constraint == null) {
+      return;
+    }
+
     ObjectType constraintObj =
         ObjectType.cast(constraint.restrictByNotNullOrUndefined());
     if (constraintObj != null && constraintObj.isRecordType()) {
