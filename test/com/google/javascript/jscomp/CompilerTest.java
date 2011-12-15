@@ -87,6 +87,9 @@ public class CompilerTest extends TestCase {
     assertEquals(compiler.externAndJsRoot, compiler.jsRoot.getParent());
     assertEquals(compiler.externAndJsRoot, compiler.externsRoot.getParent());
     assertNotNull(compiler.externAndJsRoot);
+
+    Node jsRoot = compiler.jsRoot;
+    assertEquals(3, jsRoot.getChildCount());
   }
 
   public void testLocalUndefined() throws Exception {

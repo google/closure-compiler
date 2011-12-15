@@ -1215,11 +1215,19 @@ public class Compiler extends AbstractCompiler {
         } catch (CircularDependencyException e) {
           report(JSError.make(
               JSModule.CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));
-          return null;
+
+          // If in IDE mode, we ignore the error and keep going.
+          if (hasErrors()) {
+            return null;
+          }
         } catch (MissingProvideException e) {
           report(JSError.make(
               MISSING_ENTRY_ERROR, e.getMessage()));
-          return null;
+
+          // If in IDE mode, we ignore the error and keep going.
+          if (hasErrors()) {
+            return null;
+          }
         }
       }
 
