@@ -513,32 +513,43 @@ public class FunctionType extends PrototypeObjectType {
   @Override
   public JSType getPropertyType(String name) {
     if (!hasOwnProperty(name)) {
-      if ("call".equals(name)) {
-        // Define the "call" function lazily.
-        Node params = getParametersNode();
-        if (params == null) {
-          // If there's no params array, don't do any type-checking
-          // in this CALL function.
-          defineDeclaredProperty(name,
-              new FunctionBuilder(registry)
-              .withReturnType(getReturnType())
-              .build(),
-              source);
-        } else {
-          params = params.cloneTree();
+      // Define the "call", "apply", and "bind" functions lazily.
+      boolean isCall = "call".equals(name);
+      boolean isBind = "bind".equals(name);
+      if (isCall || isBind) {
+        // Notice that "call" and "bind" have the same argument signature,
+        // except that all the arguments of "bind" (except the first)
+        // are optional.
+        FunctionBuilder builder = new FunctionBuilder(registry)
+            .withReturnType(
+                isCall ?
+                getReturnType() :
+                (new FunctionBuilder(registry)
+                    .withReturnType(getReturnType()).build()));
+
+        Node origParams = getParametersNode();
+        if (origParams != null) {
+          Node params = origParams.cloneTree();
+
           Node thisTypeNode = Node.newString(Token.NAME, "thisType");
           thisTypeNode.setJSType(
               registry.createOptionalNullableType(getTypeOfThis()));
           params.addChildToFront(thisTypeNode);
-          thisTypeNode.setOptionalArg(true);
+          thisTypeNode.setOptionalArg(isCall);
 
-          defineDeclaredProperty(name,
-              new FunctionBuilder(registry)
-              .withParamsNode(params)
-              .withReturnType(getReturnType())
-              .build(),
-              source);
+          if (isBind) {
+            // The arguments of bind() are unique in that they are all
+            // optional but not undefinable.
+            for (Node current = thisTypeNode.getNext();
+                 current != null; current = current.getNext()) {
+              current.setOptionalArg(true);
+            }
+          }
+
+          builder.withParamsNode(params);
         }
+
+        defineDeclaredProperty(name, builder.build(), source);
       } else if ("apply".equals(name)) {
         // Define the "apply" function lazily.
         FunctionParamBuilder builder = new FunctionParamBuilder(registry);

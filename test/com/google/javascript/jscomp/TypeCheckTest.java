@@ -6219,6 +6219,26 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testFunctionBind1() throws Exception {
+    testTypes(
+        "/** @type {function(string, number): boolean} */" +
+        "function f(x, y) { return true; }" +
+        "f.bind(null, 3);",
+        "actual parameter 2 of f.bind does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void testFunctionBind2() throws Exception {
+    testTypes(
+        "/** @type {function(number): boolean} */" +
+        "function f(x) { return true; }" +
+        "f(f.bind(null, 3)());",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
   public void testCast2() throws Exception {
     // can upcast to a base type.
     testTypes("/** @constructor */function base() {}\n" +

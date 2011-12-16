@@ -253,4 +253,16 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
 
     Asserts.assertEquivalenceOperations(fn, loop);
   }
+
+  public void testBindSignature() {
+    FunctionType fn = new FunctionBuilder(registry)
+        .withTypeOfThis(DATE_TYPE)
+        .withParamsNode(registry.createParameters(STRING_TYPE, NUMBER_TYPE))
+        .withReturnType(BOOLEAN_TYPE).build();
+
+    assertEquals(
+        "function ((Date|null|undefined), string, number):" +
+        " function (...[?]): boolean",
+        fn.getPropertyType("bind").toString());
+  }
 }
