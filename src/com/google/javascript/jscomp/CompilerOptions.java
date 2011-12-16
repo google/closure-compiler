@@ -1141,8 +1141,16 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /**
    * Set the variable removal policy for the compiler.
+   * @deprecated
    */
   public void setRemoveUnusedVariable(Reach reach) {
+    setRemoveUnusedVariables(reach);
+  }
+
+  /**
+   * Set the variable removal policy for the compiler.
+   */
+  public void setRemoveUnusedVariables(Reach reach) {
     switch (reach) {
       case ALL:
         this.removeUnusedVars = true;
