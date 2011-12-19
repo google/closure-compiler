@@ -307,9 +307,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Extracts common prototype member declarations */
   public boolean extractPrototypeMemberDeclarations;
 
-  // TODO(johnlenz): REMOVE THIS
-  public boolean removeEmptyFunctions;
-
   /** Removes unused member prototypes */
   public boolean removeUnusedPrototypeProperties;
 
