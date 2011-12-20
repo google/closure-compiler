@@ -187,19 +187,27 @@ chrome.tabs.sendRequest = function(tabId, request, opt_callback) {};
 chrome.tabs.update = function(tabId, updateProperties, opt_callback) {};
 
 /** @type {ChromeEvent} */
+chrome.tabs.onActiveChanged;
+/** @type {ChromeEvent} */
 chrome.tabs.onAttached;
 /** @type {ChromeEvent} */
 chrome.tabs.onCreated;
 /** @type {ChromeEvent} */
 chrome.tabs.onDetached;
 /** @type {ChromeEvent} */
+chrome.tabs.onHighlightChanged;
+/** @type {ChromeEvent} */
 chrome.tabs.onMoved;
 /** @type {ChromeEvent} */
 chrome.tabs.onRemoved;
 /** @type {ChromeEvent} */
-chrome.tabs.onSelectionChanged;
-/** @type {ChromeEvent} */
 chrome.tabs.onUpdated;
+
+// DEPRECATED:
+// TODO(user): Remove once all usage has been confirmed to have ended.
+
+/** @type {ChromeEvent} */
+chrome.tabs.onSelectionChanged;
 
 
 /** @see http://code.google.com/chrome/extensions/windows.html */
@@ -440,6 +448,33 @@ chrome.bookmarks.onCreated;
 chrome.bookmarks.onMoved;
 /** @type {ChromeEvent} */
 chrome.bookmarks.onRemoved;
+
+
+/** @see http://code.google.com/chrome/extensions/omnibox.html */
+chrome.omnibox = {};
+
+/**
+ * @param {SuggestResult} suggestion A partial SuggestResult object.
+ */
+chrome.omnibox.setDefaultSuggestion = function(suggestion) {};
+
+/** @type {ChromeEvent} */
+chrome.omnibox.onInputCancelled;
+/** @type {ChromeEvent} */
+chrome.omnibox.onInputChanged;
+/** @type {ChromeEvent} */
+chrome.omnibox.onInputEntered;
+/** @type {ChromeEvent} */
+chrome.omnibox.onInputStarted;
+
+/**
+ * @constructor
+ */
+function SuggestResult() {}
+/** @type {string} */
+SuggestResult.prototype.content;
+/** @type {string} */
+SuggestResult.prototype.description;
 
 
 /** @see http://code.google.com/chrome/extensions/dev/contextMenus.html */

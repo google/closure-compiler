@@ -17,7 +17,7 @@
 /**
  * @fileoverview Definitions for W3C's Selectors API.
  *  This file depends on w3c_dom1.js.
- *  @see http://www.w3.org/TR/selectors-api2/
+ *  Created from http://www.w3.org/TR/selectors-api/
  *
  * @externs
  */
@@ -49,31 +49,3 @@ Element.prototype.querySelector = function(selectors) {};
  * @override
  */
 Element.prototype.querySelectorAll = function(selectors) {};
-
-/**
- * @param {string} selectors
- * @param {(Node|NodeList)=} refNodes
- * @return {boolean}
- */
-Element.prototype.matchesSelector = function(selectors, refNodes) {};
-
-/**
- * @see https://developer.mozilla.org/en/DOM/Node.mozMatchesSelector
- * @param {string} selectors
- * @return {boolean}
- */
-Element.prototype.mozMatchesSelector = function(selectors) {};
-
-/**
- * @see http://developer.apple.com/library/safari/documentation/WebKit/Reference/ElementClassRef/Element/Element.html
- * @param {string} selectors
- * @return {boolean}
- */
-Element.prototype.webkitMatchesSelector = function(selectors) {};
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ff975201.aspx
- * @param {string} selectors
- * @return {boolean}
- */
-Element.prototype.msMatchesSelector = function(selectors) {};
