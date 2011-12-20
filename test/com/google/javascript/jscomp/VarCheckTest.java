@@ -165,37 +165,6 @@ public class VarCheckTest extends CompilerTestCase {
     test("var a = {b:5}; with (a){b;}", null, VarCheck.UNDEFINED_VAR_ERROR);
   }
 
-  public void testInvalidFunctionDecl1() {
-    // This test deliberately sets up an invalid AST.
-    super.enableAstValidation(false);
-
-    final CompilerTestCase testcase = this;
-
-    // A compiler pass that create invalid function names.
-    testSetupPass = new CompilerPass() {
-
-      void visit(Node n) {
-        if (n.isName()
-            && !n.getString().isEmpty()
-            && n.getParent().isFunction()) {
-          n.setString("");
-          testcase.getLastCompiler().reportCodeChange();
-        }
-        for (Node c : n.children()) {
-          visit(c);
-        }
-      }
-
-      @Override
-      public void process(Node externs, Node root) {
-        visit(root);
-      }
-    };
-
-    test("function f() {};", null, VarCheck.INVALID_FUNCTION_DECL);
-    test("if (true) { function f(){}; }", null, VarCheck.INVALID_FUNCTION_DECL);
-  }
-
   public void testValidFunctionExpr() {
     testSame("(function() {});");
   }

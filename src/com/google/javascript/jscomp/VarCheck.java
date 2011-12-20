@@ -66,10 +66,6 @@ class VarCheck extends AbstractPostOrderCallback implements
       "JSC_UNDEFINED_EXTERN_VAR_ERROR",
       "name {0} is not undefined in the externs.");
 
-  static final DiagnosticType INVALID_FUNCTION_DECL =
-    DiagnosticType.error("JSC_INVALID_FUNCTION_DECL",
-        "Syntax error: function declaration must have a name");
-
   private CompilerInput synthesizedExternsInput = null;
   private Node synthesizedExternsRoot = null;
 
@@ -135,12 +131,7 @@ class VarCheck extends AbstractPostOrderCallback implements
     // Only a function can have an empty name.
     if (varName.isEmpty()) {
       Preconditions.checkState(parent.isFunction());
-
-      // A function declaration with an empty name passes Rhino,
-      // but is supposed to be a syntax error according to the spec.
-      if (!NodeUtil.isFunctionExpression(parent)) {
-        t.report(n, INVALID_FUNCTION_DECL);
-      }
+      Preconditions.checkState(NodeUtil.isFunctionExpression(parent));
       return;
     }
 

@@ -608,6 +608,9 @@ class IRFactory {
             "unnamed function statement",
             sourceName,
             functionNode.getLineno(), "", 0);
+
+          // Return the bare minimum to put the AST in a valid state.
+          return newNode(Token.EXPR_RESULT, Node.newNumber(0));
         }
         name = new Name();
         name.setIdentifier("");
