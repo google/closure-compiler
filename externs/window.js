@@ -46,6 +46,13 @@ var navigator;
 var document;
 
 /**
+ * @type {Location}
+ * @see https://developer.mozilla.org/en/DOM/window.location
+ * @const
+ */
+var location;
+
+/**
  * @see https://developer.mozilla.org/En/DOM/Window.screen
  * @const
  */
