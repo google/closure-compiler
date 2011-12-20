@@ -34,3 +34,9 @@
  * @param {string} modifiersList
  */
 KeyboardEvent.prototype.initKeyboardEvent = function(typeArg, canBubbleArg, cancelableArg, viewArg, keyIdentifierArg, keyLocationArg, modifiersList) {};
+
+/** @type {boolean} */
+Event.prototype.defaultPrevented;
+
+/** @type {string} */
+Event.prototype.namespaceURI;
