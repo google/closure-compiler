@@ -121,7 +121,7 @@ class CrossModuleMethodMotion implements CompilerPass {
         // We should only move a property across modules if:
         // 1) We can move it deeper in the module graph, and
         // 2) it's a function, and
-        // 3) it is not a get or a set, and
+        // 3) it is not a GETTER_DEF or a SETTER_DEF, and
         // 4) the class is available in the global scope.
         //
         // #1 should be obvious. #2 is more subtle. It's possible
@@ -134,7 +134,7 @@ class CrossModuleMethodMotion implements CompilerPass {
         // So if we move a prototype method into a deeper module, we must
         // replace it with a stub function so that it preserves its original
         // behavior.
-        if (!(prop.getRootVar() != null && prop.getRootVar().isGlobal())) {
+        if (prop.getRootVar() == null || !prop.getRootVar().isGlobal()) {
           continue;
         }
 

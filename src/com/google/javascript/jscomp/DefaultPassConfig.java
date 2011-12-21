@@ -990,7 +990,7 @@ public class DefaultPassConfig extends PassConfig {
       final boolean late = false;
       return new PeepholeOptimizationsPass(compiler,
             new PeepholeSubstituteAlternateSyntax(late),
-            new PeepholeReplaceKnownMethods(late),
+            new PeepholeReplaceKnownMethods(),
             new PeepholeRemoveDeadCode(),
             new PeepholeFoldConstants(late),
             new PeepholeCollectPropertyAssignments());
@@ -1007,7 +1007,7 @@ public class DefaultPassConfig extends PassConfig {
             new StatementFusion(),
             new PeepholeRemoveDeadCode(),
             new PeepholeSubstituteAlternateSyntax(late),
-            new PeepholeReplaceKnownMethods(late),
+            new PeepholeReplaceKnownMethods(),
             new PeepholeFoldConstants(late),
             new ReorderConstantExpression());
     }

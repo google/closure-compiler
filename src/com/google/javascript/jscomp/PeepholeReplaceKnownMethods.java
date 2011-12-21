@@ -22,7 +22,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 /**
  * Just to fold known methods when they are called with constants.
@@ -32,18 +31,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
 
   // The LOCALE independent "locale"
   private static final Locale ROOT_LOCALE = new Locale("");
-  private final boolean late;
 
-  /**
-   * @param late When late is true, this mean we are currently running after
-   * most of the other optimizations. In this case we avoid changes that make
-   * the code larger (but otherwise easier to analyze - such as using string
-   * splitting).
-   */
-  PeepholeReplaceKnownMethods(boolean late) {
-    this.late = late;
-  }
-  
   @Override
   Node optimizeSubtree(Node subtree) {
     if (subtree.isCall() ){
@@ -103,9 +91,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
 
     String functionNameString = functionName.getString();
     Node firstArg = callTarget.getNext();
-    if (functionNameString.equals("split")) {
-      subtree = tryFoldStringSplit(subtree, stringNode, firstArg);
-    } else if (firstArg == null) {
+    if (firstArg == null) {
       if (functionNameString.equals("toLowerCase")) {
         subtree = tryFoldStringToLowerCase(subtree, stringNode);
       } else if (functionNameString.equals("toUpperCase")) {
@@ -658,59 +644,4 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     reportCodeChange();
     return resultNode;
   }
-  
-  /**
-   * Try to fold .split() calls on strings
-   */
-  private Node tryFoldStringSplit(Node n, Node stringNode, Node arg1) {
-    if (late) {
-      return n;
-    }
-    
-    Preconditions.checkArgument(n.isCall());
-    Preconditions.checkArgument(stringNode.isString());
-
-    String separator = null;
-    String stringValue = stringNode.getString();
-    int limit = stringValue.length();
-
-    if (arg1 != null) {
-      if (arg1.isString()) {
-        separator = arg1.getString();
-      } else if (!arg1.isNull()) {
-        return n;
-      }
-      
-      Node arg2 = arg1.getNext();
-      if (arg2 != null) {
-        if (arg2.isNumber()) {
-          limit = (int) arg2.getDouble();
-          if (limit < 0) {
-            return n;
-          }
-        } else {
-          return n;
-        }
-      }
-    }
-    
-    String[] stringArray;
-    if (separator != null) {
-      stringArray = stringValue.split(Pattern.quote(separator));
-    } else {
-      stringArray = new String[1];
-      stringArray[0] = stringValue;
-    }
-    
-    Node arrayOfStrings = IR.arraylit();
-    for (int i = 0; i < limit && i < stringArray.length; i++) {
-      arrayOfStrings.addChildToBack(
-          IR.string(stringArray[i]).srcref(stringNode));
-    }
-    
-    Node parent = n.getParent();
-    parent.replaceChild(n, arrayOfStrings);
-    reportCodeChange();
-    return arrayOfStrings;
- }
 }

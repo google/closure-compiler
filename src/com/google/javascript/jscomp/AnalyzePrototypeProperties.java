@@ -468,7 +468,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
             String name = dest.getString();
             Property prop = new AssignmentProperty(
                 grandParent,
-                t.getScope().getVar(root.getString()),
+                maybeGetVar(t, root),
                 t.getModule());
             getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
             return true;
@@ -481,11 +481,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
           if (map.isObjectLit()) {
             for (Node key = map.getFirstChild();
                  key != null; key = key.getNext()) {
-              // May be STRING, GET, or SET,
+              // May be STRING, GETTER_DEF, or SETTER_DEF,
               String name = key.getString();
               Property prop = new LiteralProperty(
                   key, key.getFirstChild(), map, n,
-                  t.getScope().getVar(root.getString()),
+                  maybeGetVar(t, root),
                   t.getModule());
               getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
             }
@@ -494,6 +494,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
           break;
       }
       return false;
+    }
+
+    private Var maybeGetVar(NodeTraversal t, Node maybeName) {
+      return maybeName.isName()
+          ? t.getScope().getVar(maybeName.getString()) : null;
     }
 
     private void addGlobalUseOfSymbol(String name, JSModule module,

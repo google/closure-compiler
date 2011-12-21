@@ -550,4 +550,12 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
             "})();"));
   }
 
+  public void testPrototypeOfThisAssign() {
+    testSame(
+        createModuleChain(
+            "/** @constructor */" +
+            "function F() {}" +
+            "this.prototype.foo = function() {};",
+            "(new F()).foo();"));
+  }
 }
