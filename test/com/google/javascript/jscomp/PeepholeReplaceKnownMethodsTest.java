@@ -22,6 +22,8 @@ package com.google.javascript.jscomp;
  */
 public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
+  private boolean late = true;
+  
   public PeepholeReplaceKnownMethodsTest() {
     super("");
   }
@@ -34,7 +36,7 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     CompilerPass peepholePass = new PeepholeOptimizationsPass(compiler,
-          new PeepholeReplaceKnownMethods());
+          new PeepholeReplaceKnownMethods(late));
     return peepholePass;
   }
 
@@ -190,6 +192,23 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = 'abcde'.charCodeAt(true)");  // or x = 98
     fold("x = '\\ud834\udd1e'.charCodeAt(0)", "x = 55348");
     fold("x = '\\ud834\udd1e'.charCodeAt(1)", "x = 56606");
+  }
+  
+  public void testFoldStringSplit() {
+    late = false;
+    fold("x = 'abcde'.split()", "x = ['abcde']");
+    fold("x = 'abcde'.split(null)", "x = ['abcde']");
+    fold("x = 'a b c d e'.split(' ')", "x = ['a','b','c','d','e']");
+    fold("x = 'a b c d e'.split(' ', 0)", "x = []");
+    fold("x = 'abcde'.split('cd')", "x = ['ab','e']");
+    fold("x = 'a b c d e'.split(' ', 1)", "x = ['a']");
+    fold("x = 'a b c d e'.split(' ', 3)", "x = ['a','b','c']");
+    fold("x = 'a b c d e'.split(null, 1)", "x = ['a b c d e']");
+    foldSame("x = 'abcde'.split(/ /)");
+    foldSame("x = 'abcde'.split(' ', -1)");
+    
+    late = true;
+    foldSame("x = 'a b c d e'.split(' ')");
   }
 
   public void testJoinBug() {
