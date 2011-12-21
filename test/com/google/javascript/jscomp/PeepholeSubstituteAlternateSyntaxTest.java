@@ -445,9 +445,9 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("x = new Array(Array(1, '2', 3, '4'))", "x = [[1, '2', 3, '4']]");
     fold("x = Array(Array(1, '2', 3, '4'))", "x = [[1, '2', 3, '4']]");
     fold("x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))",
-         "x = [{}, [\"abc\", {}, [[]]]");
+         "x = [{}, [\"abc\", {}, [[]]]]");
     fold("x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))",
-         "x = [{}, [\"abc\", {}, [[]]]");
+         "x = [{}, [\"abc\", {}, [[]]]]");
 
     disableNormalize();
     // Cannot fold above when not normalized
