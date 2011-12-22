@@ -22,6 +22,8 @@ package com.google.javascript.jscomp;
  */
 public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
+  private boolean late = true;
+
   public PeepholeReplaceKnownMethodsTest() {
     super("");
   }
@@ -190,6 +192,27 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = 'abcde'.charCodeAt(true)");  // or x = 98
     fold("x = '\\ud834\udd1e'.charCodeAt(0)", "x = 55348");
     fold("x = '\\ud834\udd1e'.charCodeAt(1)", "x = 56606");
+  }
+
+  public void testFoldStringSplit() {
+    // NOTE(nicksantos): These are cases that will have to be resolved
+    // properly if we want to implement split()
+    late = false;
+    foldSame("x = 'abcde'.split()");
+    foldSame("x = 'abcde'.split(null)");
+    foldSame("x = 'a b c d e'.split(' ')");
+    foldSame("x = 'a b c d e'.split(' ', 0)");
+    foldSame("x = 'abcde'.split('cd')");
+    foldSame("x = 'a b c d e'.split(' ', 1)");
+    foldSame("x = 'a b c d e'.split(' ', 3)");
+    foldSame("x = 'a b c d e'.split(null, 1)");
+    foldSame("x = 'abcde'.split(/ /)");
+    foldSame("x = 'abcde'.split(' ', -1)");
+    foldSame("x = 'abcde'.split('')");
+    foldSame("x = 'aaaaa'.split('a')");
+
+    late = true;
+    foldSame("x = 'a b c d e'.split(' ')");
   }
 
   public void testJoinBug() {
