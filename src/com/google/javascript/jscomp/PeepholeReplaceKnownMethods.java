@@ -31,18 +31,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
 
   // The LOCALE independent "locale"
   private static final Locale ROOT_LOCALE = new Locale("");
-  private final boolean late;
 
-  /**
-   * @param late When late is true, this mean we are currently running after
-   * most of the other optimizations. In this case we avoid changes that make
-   * the code larger (but otherwise easier to analyze - such as using string
-   * splitting).
-   */
-  PeepholeReplaceKnownMethods(boolean late) {
-    this.late = late;
-  }
-  
   @Override
   Node optimizeSubtree(Node subtree) {
     if (subtree.isCall() ){
@@ -102,9 +91,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
 
     String functionNameString = functionName.getString();
     Node firstArg = callTarget.getNext();
-    if (functionNameString.equals("split")) {
-      subtree = tryFoldStringSplit(subtree, stringNode, firstArg);
-    } else if (firstArg == null) {
+    if (firstArg == null) {
       if (functionNameString.equals("toLowerCase")) {
         subtree = tryFoldStringToLowerCase(subtree, stringNode);
       } else if (functionNameString.equals("toUpperCase")) {
@@ -656,123 +643,5 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     parent.replaceChild(n, resultNode);
     reportCodeChange();
     return resultNode;
-  }
-
-  /**
-   * Support function for jsSplit, find the first occurrence of
-   * separator within stringValue starting at startIndex.
-   */
-  private int jsSplitMatch(String stringValue, int startIndex,
-      String separator) {
-
-    if (startIndex + separator.length() > stringValue.length()) {
-      return -1;
-    }
-    
-    int matchIndex = stringValue.indexOf(separator, startIndex);
-    
-    if (matchIndex < 0) {
-      return -1;
-    }
-    
-    return matchIndex + separator.length();
-  }
-  
-  /**
-   * Implement the JS String.split method using a string separator.
-   */
-  private String[] jsSplit(String stringValue, String separator, int limit) {
-    Preconditions.checkArgument(limit >= 0);
-
-    // For limits of 0, return an empty array
-    if (limit == 0) {
-      return new String[0];
-    }
-    
-    /* If a separator is not specified, return the entire string as
-     * the only element of an array.
-     */
-    if (separator == null) {
-      return new String[] {stringValue};
-    }
-    
-    List<String> splitStrings = Lists.newArrayList();
-    
-    /* If an empty string is specified for the separator, split apart each
-     * character of the string.
-     */
-    if (separator.length() == 0) {
-      for (int i = 0; i < stringValue.length() && i < limit; i++) {
-        splitStrings.add(stringValue.substring(i, i + 1));
-      }      
-    } else {    
-      int startIndex = 0, matchEndIndex;
-      while ((matchEndIndex =
-          jsSplitMatch(stringValue, startIndex, separator)) >= 0 &&
-          splitStrings.size() < limit) {
-        if (separator.length() == 0) {
-          matchEndIndex++;
-        }
-        splitStrings.add(stringValue.substring(startIndex,
-            matchEndIndex - separator.length()));
-        startIndex = matchEndIndex;
-      }
-      if (startIndex < stringValue.length() && splitStrings.size() < limit) {
-        splitStrings.add(stringValue.substring(startIndex));
-      }
-    }
-    
-    return splitStrings.toArray(new String[splitStrings.size()]);
-  }
-  
-  /**
-   * Try to fold .split() calls on strings
-   */
-  private Node tryFoldStringSplit(Node n, Node stringNode, Node arg1) {
-    if (late) {
-      return n;
-    }
-    
-    Preconditions.checkArgument(n.isCall());
-    Preconditions.checkArgument(stringNode.isString());
-
-    String separator = null;
-    String stringValue = stringNode.getString();
-    
-    // Maximum number of possible splits
-    int limit = stringValue.length() + 1;
-
-    if (arg1 != null) {
-      if (arg1.isString()) {
-        separator = arg1.getString();
-      } else if (!arg1.isNull()) {
-        return n;
-      }
-      
-      Node arg2 = arg1.getNext();
-      if (arg2 != null) {
-        if (arg2.isNumber()) {
-          limit = Math.min((int) arg2.getDouble(), limit);
-          if (limit < 0) {
-            return n;
-          }
-        } else {
-          return n;
-        }
-      }
-    }
-    
-    // Split the string and convert the returned array into JS nodes
-    String[] stringArray = jsSplit(stringValue, separator, limit);    
-    Node arrayOfStrings = IR.arraylit();
-    for (int i = 0; i < stringArray.length; i++) {
-      arrayOfStrings.addChildToBack(
-          IR.string(stringArray[i]).srcref(stringNode));
-    }
-
-    Node parent = n.getParent();
-    parent.replaceChild(n, arrayOfStrings);
-    reportCodeChange();
-    return arrayOfStrings;
   }
 }

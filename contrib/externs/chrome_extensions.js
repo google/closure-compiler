@@ -165,6 +165,14 @@ chrome.tabs.insertCSS = function(tabId, details, opt_callback) {};
 chrome.tabs.move = function(tabId, moveProperties, opt_callback) {};
 
 /**
+ * @param {Object.<string, (number|string)>} queryInfo An object which may have
+ *     'active', 'pinned', 'highlighted', 'status', 'title', 'url', 'windowId',
+ *     and 'windowType' keys.
+ * @param {function(Array.<Tab>) : void=} opt_callback Callback.
+ */
+chrome.tabs.query = function(queryInfo, opt_callback) {};
+
+/**
  * @param {number} tabId Tab id.
  * @param {function(Tab) : void=} opt_callback Callback.
  */
