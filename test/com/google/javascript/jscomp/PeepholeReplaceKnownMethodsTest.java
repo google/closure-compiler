@@ -36,7 +36,7 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     CompilerPass peepholePass = new PeepholeOptimizationsPass(compiler,
-          new PeepholeReplaceKnownMethods());
+          new PeepholeReplaceKnownMethods(late));
     return peepholePass;
   }
 
@@ -195,21 +195,22 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   public void testFoldStringSplit() {
-    // NOTE(nicksantos): These are cases that will have to be resolved
-    // properly if we want to implement split()
     late = false;
-    foldSame("x = 'abcde'.split()");
-    foldSame("x = 'abcde'.split(null)");
-    foldSame("x = 'a b c d e'.split(' ')");
-    foldSame("x = 'a b c d e'.split(' ', 0)");
-    foldSame("x = 'abcde'.split('cd')");
-    foldSame("x = 'a b c d e'.split(' ', 1)");
-    foldSame("x = 'a b c d e'.split(' ', 3)");
-    foldSame("x = 'a b c d e'.split(null, 1)");
+    fold("x = 'abcde'.split('foo')", "x = ['abcde']");
+    fold("x = 'abcde'.split()", "x = ['abcde']");
+    fold("x = 'abcde'.split(null)", "x = ['abcde']");
+    fold("x = 'a b c d e'.split(' ')", "x = ['a','b','c','d','e']");
+    fold("x = 'a b c d e'.split(' ', 0)", "x = []");
+    fold("x = 'abcde'.split('cd')", "x = ['ab','e']");
+    fold("x = 'a b c d e'.split(' ', 1)", "x = ['a']");
+    fold("x = 'a b c d e'.split(' ', 3)", "x = ['a','b','c']");
+    fold("x = 'a b c d e'.split(null, 1)", "x = ['a b c d e']");
+    fold("x = 'aaaaa'.split('a')", "x = ['', '', '', '', '']");
+    fold("x = 'abcde'.split('')", "x = ['a','b','c','d','e']");
+    fold("x = 'abcde'.split('', 3)", "x = ['a','b','c']");
+
     foldSame("x = 'abcde'.split(/ /)");
     foldSame("x = 'abcde'.split(' ', -1)");
-    foldSame("x = 'abcde'.split('')");
-    foldSame("x = 'aaaaa'.split('a')");
 
     late = true;
     foldSame("x = 'a b c d e'.split(' ')");
