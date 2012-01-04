@@ -79,6 +79,21 @@ Touch.prototype.screenY;
 Touch.prototype.target;
 
 /**
+ * Creates a new Touch object.
+ * @see http://developer.apple.com/library/safari/#documentation/UserExperience/Reference/DocumentAdditionsReference/DocumentAdditions/DocumentAdditions.html#//apple_ref/javascript/instm/Document/createTouch
+ * @param {Window} view
+ * @param {EventTarget} target
+ * @param {number} identifier
+ * @param {number} pageX
+ * @param {number} pageY
+ * @param {number} screenX
+ * @param {number} screenY
+ * @return {Touch}
+ */
+Document.prototype.createTouch = function(view, target, identifier, pageX,
+    pageY, screenX, screenY) {};
+
+/**
  * The TouchList class is used to represent a collection of Touch objects.
  * @see http://developer.apple.com/library/safari/#documentation/UserExperience/Reference/TouchListClassReference/TouchList/TouchList.html
  * @constructor
@@ -97,6 +112,14 @@ TouchList.prototype.length;
  * @return {!Touch}
  */
 TouchList.prototype.item = function(index) {};
+
+/**
+ * Creates a new TouchList object.
+ * @see http://developer.apple.com/library/safari/#documentation/UserExperience/Reference/DocumentAdditionsReference/DocumentAdditions/DocumentAdditions.html#//apple_ref/javascript/instm/Document/createTouchList
+ * @param {Array.<Touch>} touches
+ * @return {TouchList}
+ */
+Document.prototype.createTouchList = function(touches) {};
 
 /**
  * The TouchEvent class encapsulates information about a touch event.
