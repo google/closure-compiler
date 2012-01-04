@@ -356,10 +356,10 @@ jQuery.prototype.clearQueue = function(queueName) {};
 jQuery.prototype.click = function(arg1, handler) {};
 
 /**
- * @suppress {checkTypes} see issue 583
  * @param {boolean=} withDataAndEvents
  * @param {boolean=} deepWithDataAndEvents
  * @return {jQuery}
+ * @suppress {checkTypes} see issue 583
  */
 jQuery.prototype.clone = function(withDataAndEvents, deepWithDataAndEvents) {};
 
@@ -491,15 +491,15 @@ jQuery.deferred.prototype.done = function(doneCallbacks, doneCallbacks2) {};
 jQuery.deferred.prototype.fail = function(failCallbacks, failCallbacks2) {};
 
 /**
- * @deprecated
  * @return {boolean}
+ * @deprecated
  * @nosideeffects
  */
 jQuery.deferred.prototype.isRejected = function() {};
 
 /**
- * @deprecated
  * @return {boolean}
+ * @deprecated
  * @nosideeffects
  */
 jQuery.deferred.prototype.isResolved = function() {};
@@ -586,8 +586,8 @@ jQuery.prototype.delay = function(duration, queueName) {};
 /**
  * @param {string} selector
  * @param {(string|Object.<string,*>)} arg2
- * @param {(function()|Object.<string, *>)=} arg3
- * @param {function()=} handler
+ * @param {(function(jQuery.event)|Object.<string, *>)=} arg3
+ * @param {function(jQuery.event)=} handler
  * @return {jQuery}
  */
 jQuery.prototype.delegate = function(selector, arg2, arg3, handler) {};
@@ -619,10 +619,10 @@ $.dequeue = function(elem, queueName) {};
 jQuery.prototype.detach = function(selector) {};
 
 /**
- * @deprecated
  * @param {(string|Object.<string,*>)=} arg1
  * @param {string=} handler
  * @return {jQuery}
+ * @deprecated
  */
 jQuery.prototype.die = function(arg1, handler) {};
 
@@ -1291,11 +1291,11 @@ jQuery.prototype.last = function() {};
 jQuery.prototype.length;
 
 /**
- * @deprecated
  * @param {(string|Object)} arg1
- * @param {(function()|Object)=} arg2
- * @param {function()=} handler
+ * @param {(function(jQuery.event)|Object)=} arg2
+ * @param {function(jQuery.event)=} handler
  * @return {jQuery}
+ * @deprecated
  */
 jQuery.prototype.live = function(arg1, arg2, handler) {};
 
@@ -1449,7 +1449,7 @@ jQuery.noop = function() {};
 $.noop = function() {};
 
 /**
- * @param {(jQuerySelector|Array.<Element>|function(number))} arg1
+ * @param {(jQuerySelector|Array.<Element>|function(number)|jQuery)} arg1
  * @return {jQuery}
  */
 jQuery.prototype.not = function(arg1) {};
@@ -1468,8 +1468,8 @@ $.now = function() {};
 
 /**
  * @param {(string|Object.<string,*>)} arg1
- * @param {(string|function())=} selector
- * @param {function()=} handler
+ * @param {(string|function(jQuery.event))=} selector
+ * @param {function(jQuery.event)=} handler
  * @return {jQuery}
  */
 jQuery.prototype.off = function(arg1, selector, handler) {};
@@ -1491,7 +1491,7 @@ jQuery.prototype.offsetParent = function() {};
  * @param {(string|Object.<string,*>)} arg1
  * @param {*=} selector
  * @param {*=} data
- * @param {function()=} handler
+ * @param {function(jQuery.event)=} handler
  * @return {jQuery}
  */
 jQuery.prototype.on = function(arg1, selector, data, handler) {};
@@ -1500,7 +1500,7 @@ jQuery.prototype.on = function(arg1, selector, data, handler) {};
  * @param {(string|Object.<string,*>)} arg1
  * @param {*=} arg2
  * @param {*=} arg3
- * @param {function()=} handler
+ * @param {function(jQuery.event)=} handler
  * @return {jQuery}
  */
 jQuery.prototype.one = function(arg1, arg2, arg3, handler) {};
@@ -2040,7 +2040,7 @@ jQuery.prototype.trigger = function(arg1, extraParameters) {};
 
 /**
  * @param {string} eventType
- * @param {Array.<*>} extraParameters
+ * @param {Array.<*>=} extraParameters
  * @return {*}
  */
 jQuery.prototype.triggerHandler = function(eventType, extraParameters) {};
@@ -2083,7 +2083,7 @@ jQuery.prototype.unbind = function(arg1, arg2) {};
 /**
  * @param {string=} arg1
  * @param {(string|Object.<string,*>)=} arg2
- * @param {function()=} handler
+ * @param {function(jQuery.event)=} handler
  * @return {jQuery}
  */
 jQuery.prototype.undelegate = function(arg1, arg2, handler) {};
