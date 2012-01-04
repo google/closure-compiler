@@ -786,8 +786,7 @@ class TypeInference
       if (functionType.isFunctionType()) {
         FunctionType fnType = functionType.toMaybeFunctionType();
         n.setJSType(fnType.getReturnType());
-        updateTypeOfParameters(n, fnType);
-        updateTypeOfThisOnClosure(n, fnType);
+        backwardsInferenceFromCallSite(n, fnType);
       } else if (functionType.equals(getNativeType(CHECKED_UNKNOWN_TYPE))) {
         n.setJSType(getNativeType(CHECKED_UNKNOWN_TYPE));
       }
@@ -850,6 +849,61 @@ class TypeInference
       redeclareSimpleVar(scope, node, narrowed);
     }
     return scope;
+  }
+
+  /**
+   * We only do forward type inference. We do not do full backwards
+   * type inference.
+   *
+   * In other words, if we have,
+   * <code>
+   * var x = f();
+   * g(x);
+   * </code>
+   * a forward type-inference engine would try to figure out the type
+   * of "x" from the return type of "f". A backwards type-inference engine
+   * would try to figure out the type of "x" from the parameter type of "g".
+   *
+   * However, there are a few special syntactic forms where we do some
+   * some half-assed backwards type-inference, because programmers
+   * expect it in this day and age. To take an example from java,
+   * <code>
+   * List<String> x = Lists.newArrayList();
+   * </code>
+   * The Java compiler will be able to infer the generic type of the List
+   * returned by newArrayList().
+   *
+   * In much the same way, we do some special-case backwards inference for
+   * JS. Those cases are enumerated here.
+   */
+  private void backwardsInferenceFromCallSite(Node n, FunctionType fnType) {
+    updateTypeOfParameters(n, fnType);
+    updateTypeOfThisOnClosure(n, fnType);
+    updateBind(n, fnType);
+  }
+
+  /**
+   * When "bind" is called on a function, we infer the type of the returned
+   * "bound" function by looking at the number of parameters in the call site.
+   */
+  private void updateBind(Node n, FunctionType fnType) {
+    // TODO(nicksantos): Use the coding convention, so that we get goog.bind
+    // for free.
+    Node calledFn = n.getFirstChild();
+    boolean looksLikeBind = calledFn.isGetProp()
+        && calledFn.getLastChild().getString().equals("bind");
+    if (!looksLikeBind) {
+      return;
+    }
+
+    Node callTarget = calledFn.getFirstChild();
+    FunctionType callTargetFn = getJSType(callTarget)
+        .restrictByNotNullOrUndefined().toMaybeFunctionType();
+    if (callTargetFn == null) {
+      return;
+    }
+
+    n.setJSType(callTargetFn.getBindReturnType(n.getChildCount() - 1));
   }
 
   /**

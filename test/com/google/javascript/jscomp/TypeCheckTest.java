@@ -6239,6 +6239,26 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testFunctionBind3() throws Exception {
+    testTypes(
+        "/** @type {function(number, string): boolean} */" +
+        "function f(x, y) { return true; }" +
+        "f.bind(null, 3)(true);",
+        "actual parameter 1 of function does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: string");
+  }
+
+  public void testGoogBind1() throws Exception {
+    // We currently do not support goog.bind natively.
+    testClosureTypes(
+        "var goog = {}; goog.bind = function(var_args) {};" +
+        "/** @type {function(number): boolean} */" +
+        "function f(x, y) { return true; }" +
+        "f(goog.bind(f, null, 'x')());",
+        null);
+  }
+
   public void testCast2() throws Exception {
     // can upcast to a base type.
     testTypes("/** @constructor */function base() {}\n" +

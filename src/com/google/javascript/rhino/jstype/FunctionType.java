@@ -517,39 +517,7 @@ public class FunctionType extends PrototypeObjectType {
       boolean isCall = "call".equals(name);
       boolean isBind = "bind".equals(name);
       if (isCall || isBind) {
-        // Notice that "call" and "bind" have the same argument signature,
-        // except that all the arguments of "bind" (except the first)
-        // are optional.
-        FunctionBuilder builder = new FunctionBuilder(registry)
-            .withReturnType(
-                isCall ?
-                getReturnType() :
-                (new FunctionBuilder(registry)
-                    .withReturnType(getReturnType()).build()));
-
-        Node origParams = getParametersNode();
-        if (origParams != null) {
-          Node params = origParams.cloneTree();
-
-          Node thisTypeNode = Node.newString(Token.NAME, "thisType");
-          thisTypeNode.setJSType(
-              registry.createOptionalNullableType(getTypeOfThis()));
-          params.addChildToFront(thisTypeNode);
-          thisTypeNode.setOptionalArg(isCall);
-
-          if (isBind) {
-            // The arguments of bind() are unique in that they are all
-            // optional but not undefinable.
-            for (Node current = thisTypeNode.getNext();
-                 current != null; current = current.getNext()) {
-              current.setOptionalArg(true);
-            }
-          }
-
-          builder.withParamsNode(params);
-        }
-
-        defineDeclaredProperty(name, builder.build(), source);
+        defineDeclaredProperty(name, getCallOrBindSignature(isCall), source);
       } else if ("apply".equals(name)) {
         // Define the "apply" function lazily.
         FunctionParamBuilder builder = new FunctionParamBuilder(registry);
@@ -573,6 +541,64 @@ public class FunctionType extends PrototypeObjectType {
     }
 
     return super.getPropertyType(name);
+  }
+
+  /**
+   * Get the return value of calling "bind" on this function
+   * with the specified number of arguments.
+   *
+   * If -1 is passed, then we will return a result that accepts
+   * any parameters.
+   */
+  public FunctionType getBindReturnType(int argsToBind) {
+    FunctionBuilder builder = new FunctionBuilder(registry)
+        .withReturnType(getReturnType());
+    if (argsToBind >= 0) {
+      Node origParams = getParametersNode();
+      if (origParams != null) {
+        Node params = origParams.cloneTree();
+        for (int i = 1; i < argsToBind && params.getFirstChild() != null; i++) {
+          params.removeFirstChild();
+        }
+        builder.withParamsNode(params);
+      }
+    }
+    return builder.build();
+  }
+
+  /**
+   * Notice that "call" and "bind" have the same argument signature,
+   * except that all the arguments of "bind" (except the first)
+   * are optional.
+   */
+  private FunctionType getCallOrBindSignature(boolean isCall) {
+    boolean isBind = !isCall;
+    FunctionBuilder builder = new FunctionBuilder(registry)
+        .withReturnType(isCall ? getReturnType() : getBindReturnType(-1));
+
+    Node origParams = getParametersNode();
+    if (origParams != null) {
+      Node params = origParams.cloneTree();
+
+      Node thisTypeNode = Node.newString(Token.NAME, "thisType");
+      thisTypeNode.setJSType(
+          registry.createOptionalNullableType(getTypeOfThis()));
+      params.addChildToFront(thisTypeNode);
+      thisTypeNode.setOptionalArg(isCall);
+
+      if (isBind) {
+        // The arguments of bind() are unique in that they are all
+        // optional but not undefinable.
+        for (Node current = thisTypeNode.getNext();
+             current != null; current = current.getNext()) {
+          current.setOptionalArg(true);
+        }
+      }
+
+      builder.withParamsNode(params);
+    }
+
+    return builder.build();
   }
 
   @Override
