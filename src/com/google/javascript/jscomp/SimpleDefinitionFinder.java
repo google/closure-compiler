@@ -218,7 +218,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
         }
       }
 
-      if (inExterns && (parent != null) && NodeUtil.isExpressionNode(parent)) {
+      if (inExterns && (parent != null) && parent.isExprResult()) {
         String name = getSimplifiedName(node);
         if (name != null) {
 

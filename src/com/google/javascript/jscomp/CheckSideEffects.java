@@ -105,7 +105,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback {
         // This no-op statement was there so that JSDoc information could
         // be attached to the name. This check should not complain about it.
         return;
-      } else if (NodeUtil.isExpressionNode(n)) {
+      } else if (n.isExprResult()) {
         // we already reported the problem when we visited the child.
         return;
       }

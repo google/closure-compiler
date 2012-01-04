@@ -358,7 +358,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
           } else if (current.isAssign() &&
                      current.getFirstChild() == child) {
             Node currentParent = current.getParent();
-            if (NodeUtil.isExpressionNode(currentParent) &&
+            if (currentParent.isExprResult() &&
                 canMoveValue(current.getLastChild())) {
               return info.addDeclaration(
                   new Declaration(t.getModule(), current, currentParent,

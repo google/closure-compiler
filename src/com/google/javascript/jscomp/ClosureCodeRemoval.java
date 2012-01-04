@@ -120,7 +120,7 @@ final class ClosureCodeRemoval implements CompilerPass {
       Node rhs = node.getNext();
       Node last = parent;
       for (Node ancestor : assignAncestors) {
-        if (NodeUtil.isExpressionNode(ancestor)) {
+        if (ancestor.isExprResult()) {
           lastAncestor.removeChild(ancestor);
         } else {
           rhs.detachFromParent();
@@ -211,7 +211,7 @@ final class ClosureCodeRemoval implements CompilerPass {
     for (Node call : assertionCalls) {
       // If the assertion is an expression, just strip the whole thing.
       Node parent = call.getParent();
-      if (NodeUtil.isExpressionNode(parent)) {
+      if (parent.isExprResult()) {
         parent.getParent().removeChild(parent);
       } else {
         // Otherwise, replace the assertion with its first argument,

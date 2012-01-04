@@ -157,7 +157,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
         // 2)
         // /** @deprecated */
         // obj.prop;
-        if (NodeUtil.isExpressionNode(parent) ||
+        if (parent.isExprResult() ||
             (parent.isAssign() &&
              parent.getFirstChild() == n)) {
           docInfo = n.getJSDocInfo();

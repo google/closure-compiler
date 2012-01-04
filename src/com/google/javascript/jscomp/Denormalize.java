@@ -70,7 +70,7 @@ class Denormalize implements CompilerPass, Callback {
     }
 
     // Is the current node something that can be in a for loop initializer?
-    if (!NodeUtil.isExpressionNode(n) && !n.isVar()) {
+    if (!n.isExprResult() && !n.isVar()) {
       return;
     }
 

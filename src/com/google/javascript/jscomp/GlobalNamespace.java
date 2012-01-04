@@ -828,7 +828,7 @@ class GlobalNamespace
      */
     boolean isNestedAssign(Node parent) {
       return parent.isAssign() &&
-             !NodeUtil.isExpressionNode(parent.getParent());
+             !parent.getParent().isExprResult();
     }
 
     /**

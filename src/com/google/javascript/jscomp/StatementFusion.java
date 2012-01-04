@@ -57,7 +57,7 @@ public class StatementFusion extends AbstractPeepholeOptimization {
     Node last = block.getLastChild();
 
     for (Node c = block.getFirstChild(); c != null; c = c.getNext()) {
-      if (!NodeUtil.isExpressionNode(c) && c != last) {
+      if (!c.isExprResult() && c != last) {
         return false;
       }
     }

@@ -103,7 +103,7 @@ class ChainCalls implements CompilerPass {
      */
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!NodeUtil.isExpressionNode(n)) {
+      if (!n.isExprResult()) {
         return;
       }
 

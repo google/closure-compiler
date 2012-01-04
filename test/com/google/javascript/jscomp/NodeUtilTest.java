@@ -711,9 +711,9 @@ public class NodeUtilTest extends TestCase {
 
   public void testIsFunctionExpression1() {
     Node root = parse("(function foo() {})");
-    Node StatementNode = root.getFirstChild();
-    assertTrue(NodeUtil.isExpressionNode(StatementNode));
-    Node functionNode = StatementNode.getFirstChild();
+    Node statementNode = root.getFirstChild();
+    assertTrue(statementNode.isExprResult());
+    Node functionNode = statementNode.getFirstChild();
     assertTrue(functionNode.isFunction());
     assertTrue(NodeUtil.isFunctionExpression(functionNode));
   }

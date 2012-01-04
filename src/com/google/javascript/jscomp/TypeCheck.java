@@ -550,7 +550,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case Token.CALL:
         visitCall(t, n);
-        typeable = !NodeUtil.isExpressionNode(parent);
+        typeable = !parent.isExprResult();
         break;
 
       case Token.RETURN:

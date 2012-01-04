@@ -448,7 +448,7 @@ class RenameProperties implements CompilerPass {
           if (NodeUtil.isFunctionDeclaration(n)) {
             String name = n.getFirstChild().getString();
             if (RENAME_PROPERTY_FUNCTION_NAME.equals(name)) {
-              if (NodeUtil.isExpressionNode(parent)) {
+              if (parent.isExprResult()) {
                 parent.detachFromParent();
               } else {
                 parent.removeChild(n);

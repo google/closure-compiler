@@ -17,9 +17,8 @@
  * @fileoverview Definitions for all the extensions over the
  *  W3C's DOM3 specification in HTML5. This file depends on
  *  w3c_dom3.js. The whole file has been fully type annotated.
- *
- *  @see http://www.whatwg.org/specs/web-apps/current-work/multipage/index.html
- *  @see http://dev.w3.org/html5/spec/Overview.html 
+ *  Created from
+ *  http://www.whatwg.org/specs/web-apps/current-work/multipage/index.html
  *
  *  This also includes ArrayBuffer, from
  *  http://www.khronos.org/registry/typedarray/specs/latest/#3, which is
@@ -911,21 +910,10 @@ SharedWorker.prototype.port;
  */
 SharedWorker.prototype.onerror = function() {};
 
-/** @type {Element} */
-HTMLElement.prototype.contextMenu;
-
-/** @type {boolean} */
-HTMLElement.prototype.draggable;
-
 /**
- * This is actually a DOMSettableTokenList property. However since that
- * interface isn't currently defined and no known browsers implement this
- * feature, just define the property for now.
- * 
- * @const
- * @type {Object}
+ * @type {boolean}
  */
-HTMLElement.prototype.dropzone;
+HTMLElement.prototype.draggable;
 
 /**
  * @see http://www.w3.org/TR/html5/dom.html#dom-getelementsbyclassname
@@ -935,12 +923,6 @@ HTMLElement.prototype.dropzone;
  */
 HTMLElement.prototype.getElementsByClassName = function(classNames) {};
 // NOTE: Document.prototype.getElementsByClassName is in gecko_dom.js
-
-/** @type {boolean} */
-HTMLElement.prototype.hidden;
-
-/** @type {boolean} */
-HTMLElement.prototype.spellcheck;
 
 /** @type {string} */
 HTMLInputElement.prototype.autocomplete;

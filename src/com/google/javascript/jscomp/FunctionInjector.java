@@ -466,13 +466,13 @@ class FunctionInjector {
       case SIMPLE_ASSIGNMENT:
         // The assignment is now part of the inline function so
         // replace it completely.
-        Preconditions.checkState(NodeUtil.isExpressionNode(grandParent));
+        Preconditions.checkState(grandParent.isExprResult());
         greatGrandParent.replaceChild(grandParent, newBlock);
         break;
 
       case SIMPLE_CALL:
         // If nothing is looking at the result just replace the call.
-        Preconditions.checkState(NodeUtil.isExpressionNode(parent));
+        Preconditions.checkState(parent.isExprResult());
         grandParent.replaceChild(parent, newBlock);
         break;
 

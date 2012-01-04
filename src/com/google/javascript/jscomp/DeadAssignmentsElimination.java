@@ -245,7 +245,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         Node op = new Node(NodeUtil.getOpFromAssignmentOp(n), lhs, rhs);
         parent.replaceChild(n, op);
       } else if (n.isInc() || n.isDec()) {
-        if (NodeUtil.isExpressionNode(parent)) {
+        if (parent.isExprResult()) {
           parent.replaceChild(n,
               IR.voidNode(IR.number(0).srcref(n)));
         } else if(n.isComma() && n != parent.getLastChild()) {

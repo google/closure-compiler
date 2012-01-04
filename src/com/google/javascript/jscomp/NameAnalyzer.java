@@ -321,7 +321,7 @@ final class NameAnalyzer implements CompilerPass {
           replaceWithRhs(containingNode, parent);
           break;
         case Token.ASSIGN:
-          if (NodeUtil.isExpressionNode(containingNode)) {
+          if (containingNode.isExprResult()) {
             replaceWithRhs(containingNode.getParent(), containingNode);
           } else {
             replaceWithRhs(containingNode, parent);
@@ -355,7 +355,7 @@ final class NameAnalyzer implements CompilerPass {
 
     @Override public void remove() {
       Node gramps = parent.getParent();
-      if (NodeUtil.isExpressionNode(gramps)) {
+      if (gramps.isExprResult()) {
         // name.prototype.foo = function() { ... };
         changeProxy.removeChild(gramps.getParent(), gramps);
       } else {
@@ -428,7 +428,7 @@ final class NameAnalyzer implements CompilerPass {
     @Override
     public void remove() {
       Preconditions.checkState(node.isCall());
-      if (NodeUtil.isExpressionNode(parent)) {
+      if (parent.isExprResult()) {
         changeProxy.removeChild(gramps, parent);
       } else {
         changeProxy.replaceWith(parent, node, IR.voidNode(IR.number(0)));

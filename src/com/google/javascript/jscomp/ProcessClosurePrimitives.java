@@ -824,7 +824,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         boolean explicit) {
       Preconditions.checkArgument(
           node == null /* The base case */ ||
-          NodeUtil.isExpressionNode(node));
+          node.isExprResult());
       this.namespace = namespace;
       this.firstNode = node;
       this.firstModule = module;
@@ -838,7 +838,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     void addProvide(Node node, JSModule module, boolean explicit) {
       if (explicit) {
         Preconditions.checkState(explicitNode == null);
-        Preconditions.checkArgument(NodeUtil.isExpressionNode(node));
+        Preconditions.checkArgument(node.isExprResult());
         explicitNode = node;
         explicitModule = module;
       }
@@ -856,11 +856,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      * assignment so it repurposed later.
      */
     void addDefinition(Node node, JSModule module) {
-      Preconditions.checkArgument(NodeUtil.isExpressionNode(node) || // assign
+      Preconditions.checkArgument(node.isExprResult() || // assign
                                   node.isFunction() ||
                                   node.isVar());
       Preconditions.checkArgument(explicitNode != node);
-      if ((candidateDefinition == null) || !NodeUtil.isExpressionNode(node)) {
+      if ((candidateDefinition == null) || !node.isExprResult()) {
         candidateDefinition = node;
         updateMinimumModule(module);
       }
@@ -902,7 +902,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
         // Does this need a VAR keyword?
         replacementNode = candidateDefinition;
-        if (NodeUtil.isExpressionNode(candidateDefinition) &&
+        if (candidateDefinition.isExprResult() &&
             !candidateDefinition.getFirstChild().isQualifiedName()) {
           candidateDefinition.putBooleanProp(Node.IS_NAMESPACE, true);
           Node assignNode = candidateDefinition.getFirstChild();

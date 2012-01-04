@@ -211,7 +211,7 @@ class StripCode implements CompilerPass {
           if (isReferenceToRemovedVar(t, n)) {
             if (parent.getFirstChild() == n) {
               Node gramps = parent.getParent();
-              if (NodeUtil.isExpressionNode(gramps)) {
+              if (gramps.isExprResult()) {
                 // Remove the assignment.
                 Node greatGramps = gramps.getParent();
                 replaceWithEmpty(gramps, greatGramps);
@@ -254,7 +254,7 @@ class StripCode implements CompilerPass {
           replaceWithNull(ancestorChild, ancestor);
           break;
         }
-        if (NodeUtil.isExpressionNode(ancestor)) {
+        if (ancestor.isExprResult()) {
           // Remove the entire expression statement.
           Node ancParent = ancestor.getParent();
           replaceWithEmpty(ancestor, ancParent);
@@ -294,7 +294,7 @@ class StripCode implements CompilerPass {
         // Limit to EXPR_RESULT because it is not
         // safe to eliminate assignment in complex expressions,
         // e.g. in ((x = 7) + 8)
-        if (NodeUtil.isExpressionNode(parent)) {
+        if (parent.isExprResult()) {
           Node gramps = parent.getParent();
           replaceWithEmpty(parent, gramps);
           compiler.reportCodeChange();
@@ -323,7 +323,7 @@ class StripCode implements CompilerPass {
       Node expression = n.getFirstChild();
       if (nameEndsWithFieldNameToStrip(expression) ||
           qualifiedNameBeginsWithStripType(expression)) {
-        if (NodeUtil.isExpressionNode(parent)) {
+        if (parent.isExprResult()) {
           Node gramps = parent.getParent();
           replaceWithEmpty(parent, gramps);
         } else {

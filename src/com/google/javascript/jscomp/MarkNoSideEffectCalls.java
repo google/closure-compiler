@@ -123,7 +123,7 @@ class MarkNoSideEffectCalls implements CompilerPass {
       }
 
       if (node.isGetProp()) {
-        if (NodeUtil.isExpressionNode(parent) &&
+        if (parent.isExprResult() &&
             hasNoSideEffectsAnnotation(node)) {
           noSideEffectFunctionNames.add(node);
         }

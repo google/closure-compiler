@@ -1480,10 +1480,6 @@ public final class NodeUtil {
     throw new IllegalArgumentException("Not an assignment op:" + n);
   }
 
-  static boolean isExpressionNode(Node n) {
-    return n.isExprResult();
-  }
-
   /**
    * Determines if the given node contains a function statement or function
    * expression.

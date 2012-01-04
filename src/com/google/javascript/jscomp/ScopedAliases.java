@@ -296,7 +296,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       if (preprocessorSymbolTable != null) {
         preprocessorSymbolTable.addReference(n.getFirstChild());
       }
-      if (!NodeUtil.isExpressionNode(parent)) {
+      if (!parent.isExprResult()) {
         report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
       }
       if (n.getChildCount() != 2) {
