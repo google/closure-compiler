@@ -6249,6 +6249,26 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testFunctionBind4() throws Exception {
+    testTypes(
+        "/** @param {...number} x */" +
+        "function f(x) {}" +
+        "f.bind(null, 3, 3, 3)(true);",
+        "actual parameter 1 of function does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: (number|undefined)");
+  }
+
+  public void testFunctionBind5() throws Exception {
+    testTypes(
+        "/** @param {...number} x */" +
+        "function f(x) {}" +
+        "f.bind(null, true)(3, 3, 3);",
+        "actual parameter 2 of f.bind does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: (number|undefined)");
+  }
+
   public void testGoogBind1() throws Exception {
     // We currently do not support goog.bind natively.
     testClosureTypes(

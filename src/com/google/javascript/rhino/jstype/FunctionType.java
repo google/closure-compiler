@@ -558,6 +558,9 @@ public class FunctionType extends PrototypeObjectType {
       if (origParams != null) {
         Node params = origParams.cloneTree();
         for (int i = 1; i < argsToBind && params.getFirstChild() != null; i++) {
+          if (params.getFirstChild().isVarArgs()) {
+            break;
+          }
           params.removeFirstChild();
         }
         builder.withParamsNode(params);
