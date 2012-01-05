@@ -57,3 +57,8 @@ gapi.plusone.go = function(opt_container) {};
  */
 gapi.plusone.render = function(id, params) {};
 
+
+/**
+ * Container to define user supplied configuration for the plusone button.
+ */
+var ___gcfg = {};
