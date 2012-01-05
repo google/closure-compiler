@@ -385,6 +385,26 @@ public class SymbolTableTest extends TestCase {
         2, Iterables.size(table.getReferences(methodA)));
   }
 
+  public void testMethodReferencesMissingTypeInfo() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Missing}\n" +
+        " */ var DomHelper = function(){};\n" +
+        "/** method */ DomHelper.prototype.method = function() {\n" +
+        "  this.method();\n" +
+        "};\n" +
+        "function f() { " +
+        "  (new DomHelper()).method();\n" +
+        "};");
+
+    Symbol method =
+        getGlobalVar(table, "DomHelper.prototype.method");
+    assertEquals(
+        3, Iterables.size(table.getReferences(method)));
+  }
+
+
   public void testFieldReferences() throws Exception {
     SymbolTable table = createSymbolTable(
         "/** @constructor */ var DomHelper = function(){" +

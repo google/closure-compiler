@@ -1304,13 +1304,15 @@ public final class SymbolTable
     }
 
     // Try to find the symbol by its fully qualified name.
-    private void tryDefineLexicalQualifiedNameRef(String name, Node n) {
+    private boolean tryDefineLexicalQualifiedNameRef(String name, Node n) {
       if (name != null) {
         Symbol lexicalSym = getEnclosingScope(n).getQualifiedSlot(name);
         if (lexicalSym != null) {
           lexicalSym.defineReferenceAt(n);
+          return true;
         }
       }
+      return false;
     }
 
     private void maybeDefineTypedReference(
@@ -1335,19 +1337,35 @@ public final class SymbolTable
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      // There are two ways to define a property reference:
+      // 1) As a fully qualified lexical symbol (e.g., x.y)
+      // 2) As a property of another object (e.g., x's y)
+
       if (n.isGetProp()) {
         JSType owner = n.getFirstChild().getJSType();
         if (owner == null || owner.isUnknownType()) {
-          tryDefineLexicalQualifiedNameRef(n.getQualifiedName(), n);
-          return;
+          boolean defined = tryDefineLexicalQualifiedNameRef(
+              n.getQualifiedName(), n);
+
+          // If the owner is unknown, and we haven't been able to define
+          // this lexically, try to define it as a property (in case
+          // the owner is just a type with an unresolved superclass).
+          if (defined || owner == null) {
+            return;
+          }
         }
 
         maybeDefineTypedReference(n, n.getLastChild().getString(), owner);
       } else if (NodeUtil.isObjectLitKey(n, parent) && n.isString()) {
         JSType owner = parent.getJSType();
         if (owner == null || owner.isUnknownType()) {
-          tryDefineLexicalQualifiedNameRef(NodeUtil.getBestLValueName(n), n);
-          return;
+          boolean defined = tryDefineLexicalQualifiedNameRef(
+              NodeUtil.getBestLValueName(n), n);
+
+          // See comments above.
+          if (defined || owner == null) {
+            return;
+          }
         }
 
         maybeDefineTypedReference(n, n.getString(), owner);
