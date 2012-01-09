@@ -2796,6 +2796,19 @@ WebGLContextAttributes.prototype.preserveDrawingBuffer;
 /**
  * @constructor
  * @noalias
+ * @extends {Event}
+ */
+function WebGLContextEvent() {}
+
+/**
+ * @type {string}
+ */
+WebGLContextEvent.prototype.statusMessage;
+
+
+/**
+ * @constructor
+ * @noalias
  */
 function WebGLObject() {}
 
@@ -2897,6 +2910,119 @@ WebGLObjectArray.prototype.get = function(index) {};
  */
 function WebGLUniformLocation() {}
 
+
+/**
+ * @see http://www.khronos.org/registry/webgl/extensions/OES_texture_float/
+ * @constructor
+ * @noalias
+ */
+function OES_texture_float() {}
+
+
+/**
+ * @see http://www.khronos.org/registry/webgl/extensions/OES_texture_half_float/
+ * @constructor
+ * @noalias
+ */
+function OES_texture_half_float() {}
+
+/** @type {number} */
+OES_texture_half_float.prototype.HALF_FLOAT_OES;
+
+
+/**
+ * @see http://www.khronos.org/registry/webgl/extensions/OES_standard_derivatives/
+ * @constructor
+ * @noalias
+ */
+function OES_standard_derivatives() {}
+
+/** @type {number} */
+OES_standard_derivatives.prototype.FRAGMENT_SHADER_DERIVATIVE_HINT_OES;
+
+
+/**
+ * @see http://www.khronos.org/registry/webgl/extensions/WEBGL_debug_renderer_info/
+ * @constructor
+ * @noalias
+ */
+function WEBGL_debug_renderer_info() {}
+
+/** @type {number} */
+WEBGL_debug_renderer_info.prototype.UNMASKED_VENDOR_WEBGL;
+
+/** @type {number} */
+WEBGL_debug_renderer_info.prototype.UNMASKED_RENDERER_WEBGL;
+
+
+/**
+ * @see http://www.khronos.org/registry/webgl/extensions/WEBGL_debug_shaders/
+ * @constructor
+ * @noalias
+ */
+function WEBGL_debug_shaders() {}
+
+/**
+ * @param {WebGLShader} shader
+ * @return {string}
+ */
+WEBGL_debug_shaders.prototype.getTranslatedShaderSource = function(shader) {};
+
+
+/**
+ * @see http://www.khronos.org/registry/webgl/extensions/WEBGL_lose_context/
+ * @constructor
+ * @noalias
+ */
+function WEBGL_lose_context() {}
+
+WEBGL_lose_context.prototype.loseContext = function() {};
+
+WEBGL_lose_context.prototype.restoreContext = function() {};
+
+
+/**
+ * @see http://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/
+ * @constructor
+ * @noalias
+ * @extends {WebGLObject}
+ */
+function WebGLVertexArrayObjectOES() {}
+
+
+/**
+ * @see http://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/
+ * @constructor
+ * @noalias
+ */
+function OES_vertex_array_object() {}
+
+/** @type {number} */
+OES_vertex_array_object.prototype.VERTEX_ARRAY_BINDING_OES;
+
+/**
+ * @return {WebGLVertexArrayObjectOES}
+ */
+OES_vertex_array_object.prototype.createVertexArrayOES = function() {};
+
+/**
+ * @param {WebGLVertexArrayObjectOES} arrayObject
+ */
+OES_vertex_array_object.prototype.deleteVertexArrayOES =
+    function(arrayObject) {};
+
+/**
+ * @param {WebGLVertexArrayObjectOES} arrayObject
+ * @return {boolean}
+ */
+OES_vertex_array_object.prototype.isVertexArrayOES = function(arrayObject) {};
+
+/**
+ * @param {WebGLVertexArrayObjectOES} arrayObject
+ */
+OES_vertex_array_object.prototype.bindVertexArrayOES = function(arrayObject) {};
+
+
 /**
  * @constructor
  * @noalias
@@ -2992,7 +3118,7 @@ function WebGLIntArray(dataOrLength) {}
  */
 function ArrayBufferView() {}
 
-/** @type {ArrayBuffer} */
+/** @type {!ArrayBuffer} */
 ArrayBufferView.prototype.buffer;
 
 /** @type {number} */
