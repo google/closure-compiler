@@ -566,7 +566,7 @@ function GearsWorkerPool() {}
 /**
  * @param {string} messageText The message contents
  *     (Deprecated, use messageObject.text)
- * @param {string} senderId ID of the source worker.
+ * @param {number} senderId ID of the source worker.
  *     (Deprecated, use messageObject.sender)
  * @param {GearsMessageObject} messageObject An object containing
  *     all information about a message.
@@ -576,7 +576,7 @@ GearsWorkerPool.prototype.onmessage = function(messageText,
                                                messageObject) {};
 
 /**
- * @param {GearsErrorObject} errorObject An object that explains
+ * @param {!GearsErrorObject} errorObject An object that explains
  *     the problem.
  * @return {boolean|undefined} Return true to indicate that the error was
  *     handled, which prevents it from bubbling up to the parent.

@@ -1419,19 +1419,19 @@ WebSocket.prototype.bufferedAmount;
 
 /**
  * An event handler called on open event.
- * @type {?function(Event)}
+ * @type {?function(!Event)}
  */
 WebSocket.prototype.onopen;
 
 /**
  * An event handler called on message event.
- * @type {?function(MessageEvent)}
+ * @type {?function(!MessageEvent)}
  */
 WebSocket.prototype.onmessage;
 
 /**
  * An event handler called on close event.
- * @type {?function(Event)}
+ * @type {?function(!Event)}
  */
 WebSocket.prototype.onclose;
 
