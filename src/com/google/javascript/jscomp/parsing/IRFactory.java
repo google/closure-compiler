@@ -19,56 +19,56 @@ package com.google.javascript.jscomp.parsing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
-import com.google.javascript.jscomp.mozilla.rhino.Token.CommentType;
-import com.google.javascript.jscomp.mozilla.rhino.ast.ArrayLiteral;
-import com.google.javascript.jscomp.mozilla.rhino.ast.Assignment;
-import com.google.javascript.jscomp.mozilla.rhino.ast.AstNode;
-import com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot;
-import com.google.javascript.jscomp.mozilla.rhino.ast.Block;
-import com.google.javascript.jscomp.mozilla.rhino.ast.BreakStatement;
-import com.google.javascript.jscomp.mozilla.rhino.ast.CatchClause;
-import com.google.javascript.jscomp.mozilla.rhino.ast.Comment;
-import com.google.javascript.jscomp.mozilla.rhino.ast.ConditionalExpression;
-import com.google.javascript.jscomp.mozilla.rhino.ast.ContinueStatement;
-import com.google.javascript.jscomp.mozilla.rhino.ast.DoLoop;
-import com.google.javascript.jscomp.mozilla.rhino.ast.ElementGet;
-import com.google.javascript.jscomp.mozilla.rhino.ast.EmptyExpression;
-import com.google.javascript.jscomp.mozilla.rhino.ast.ExpressionStatement;
-import com.google.javascript.jscomp.mozilla.rhino.ast.ForInLoop;
-import com.google.javascript.jscomp.mozilla.rhino.ast.ForLoop;
-import com.google.javascript.jscomp.mozilla.rhino.ast.FunctionCall;
-import com.google.javascript.jscomp.mozilla.rhino.ast.FunctionNode;
-import com.google.javascript.jscomp.mozilla.rhino.ast.IfStatement;
-import com.google.javascript.jscomp.mozilla.rhino.ast.InfixExpression;
-import com.google.javascript.jscomp.mozilla.rhino.ast.KeywordLiteral;
-import com.google.javascript.jscomp.mozilla.rhino.ast.Label;
-import com.google.javascript.jscomp.mozilla.rhino.ast.LabeledStatement;
-import com.google.javascript.jscomp.mozilla.rhino.ast.Name;
-import com.google.javascript.jscomp.mozilla.rhino.ast.NewExpression;
-import com.google.javascript.jscomp.mozilla.rhino.ast.NumberLiteral;
-import com.google.javascript.jscomp.mozilla.rhino.ast.ObjectLiteral;
-import com.google.javascript.jscomp.mozilla.rhino.ast.ObjectProperty;
-import com.google.javascript.jscomp.mozilla.rhino.ast.ParenthesizedExpression;
-import com.google.javascript.jscomp.mozilla.rhino.ast.PropertyGet;
-import com.google.javascript.jscomp.mozilla.rhino.ast.RegExpLiteral;
-import com.google.javascript.jscomp.mozilla.rhino.ast.ReturnStatement;
-import com.google.javascript.jscomp.mozilla.rhino.ast.Scope;
-import com.google.javascript.jscomp.mozilla.rhino.ast.StringLiteral;
-import com.google.javascript.jscomp.mozilla.rhino.ast.SwitchCase;
-import com.google.javascript.jscomp.mozilla.rhino.ast.SwitchStatement;
-import com.google.javascript.jscomp.mozilla.rhino.ast.ThrowStatement;
-import com.google.javascript.jscomp.mozilla.rhino.ast.TryStatement;
-import com.google.javascript.jscomp.mozilla.rhino.ast.UnaryExpression;
-import com.google.javascript.jscomp.mozilla.rhino.ast.VariableDeclaration;
-import com.google.javascript.jscomp.mozilla.rhino.ast.VariableInitializer;
-import com.google.javascript.jscomp.mozilla.rhino.ast.WhileLoop;
-import com.google.javascript.jscomp.mozilla.rhino.ast.WithStatement;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.head.ErrorReporter;
+import com.google.javascript.rhino.head.Token.CommentType;
+import com.google.javascript.rhino.head.ast.ArrayLiteral;
+import com.google.javascript.rhino.head.ast.Assignment;
+import com.google.javascript.rhino.head.ast.AstNode;
+import com.google.javascript.rhino.head.ast.AstRoot;
+import com.google.javascript.rhino.head.ast.Block;
+import com.google.javascript.rhino.head.ast.BreakStatement;
+import com.google.javascript.rhino.head.ast.CatchClause;
+import com.google.javascript.rhino.head.ast.Comment;
+import com.google.javascript.rhino.head.ast.ConditionalExpression;
+import com.google.javascript.rhino.head.ast.ContinueStatement;
+import com.google.javascript.rhino.head.ast.DoLoop;
+import com.google.javascript.rhino.head.ast.ElementGet;
+import com.google.javascript.rhino.head.ast.EmptyExpression;
+import com.google.javascript.rhino.head.ast.ExpressionStatement;
+import com.google.javascript.rhino.head.ast.ForInLoop;
+import com.google.javascript.rhino.head.ast.ForLoop;
+import com.google.javascript.rhino.head.ast.FunctionCall;
+import com.google.javascript.rhino.head.ast.FunctionNode;
+import com.google.javascript.rhino.head.ast.IfStatement;
+import com.google.javascript.rhino.head.ast.InfixExpression;
+import com.google.javascript.rhino.head.ast.KeywordLiteral;
+import com.google.javascript.rhino.head.ast.Label;
+import com.google.javascript.rhino.head.ast.LabeledStatement;
+import com.google.javascript.rhino.head.ast.Name;
+import com.google.javascript.rhino.head.ast.NewExpression;
+import com.google.javascript.rhino.head.ast.NumberLiteral;
+import com.google.javascript.rhino.head.ast.ObjectLiteral;
+import com.google.javascript.rhino.head.ast.ObjectProperty;
+import com.google.javascript.rhino.head.ast.ParenthesizedExpression;
+import com.google.javascript.rhino.head.ast.PropertyGet;
+import com.google.javascript.rhino.head.ast.RegExpLiteral;
+import com.google.javascript.rhino.head.ast.ReturnStatement;
+import com.google.javascript.rhino.head.ast.Scope;
+import com.google.javascript.rhino.head.ast.StringLiteral;
+import com.google.javascript.rhino.head.ast.SwitchCase;
+import com.google.javascript.rhino.head.ast.SwitchStatement;
+import com.google.javascript.rhino.head.ast.ThrowStatement;
+import com.google.javascript.rhino.head.ast.TryStatement;
+import com.google.javascript.rhino.head.ast.UnaryExpression;
+import com.google.javascript.rhino.head.ast.VariableDeclaration;
+import com.google.javascript.rhino.head.ast.VariableInitializer;
+import com.google.javascript.rhino.head.ast.WhileLoop;
+import com.google.javascript.rhino.head.ast.WithStatement;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.Set;
@@ -378,9 +378,9 @@ class IRFactory {
 
   private class TransformDispatcher extends TypeSafeDispatcher<Node> {
     private Node processGeneric(
-        com.google.javascript.jscomp.mozilla.rhino.Node n) {
+        com.google.javascript.rhino.head.Node n) {
       Node node = newNode(transformTokenType(n.getType()));
-      for (com.google.javascript.jscomp.mozilla.rhino.Node child : n) {
+      for (com.google.javascript.rhino.head.Node child : n) {
         node.addChildToBack(transform((AstNode)child));
       }
       return node;
@@ -440,7 +440,7 @@ class IRFactory {
     @Override
     Node processAstRoot(AstRoot rootNode) {
       Node node = newNode(Token.SCRIPT);
-      for (com.google.javascript.jscomp.mozilla.rhino.Node child : rootNode) {
+      for (com.google.javascript.rhino.head.Node child : rootNode) {
         node.addChildToBack(transform((AstNode)child));
       }
       parseDirectives(node);
@@ -1012,7 +1012,7 @@ class IRFactory {
     @Override
     Node processVariableDeclaration(VariableDeclaration declarationNode) {
       if (!config.acceptConstKeyword && declarationNode.getType() ==
-          com.google.javascript.jscomp.mozilla.rhino.Token.CONST) {
+          com.google.javascript.rhino.head.Token.CONST) {
         processIllegalToken(declarationNode);
       }
 
@@ -1053,7 +1053,7 @@ class IRFactory {
     Node processIllegalToken(AstNode node) {
       errorReporter.error(
           "Unsupported syntax: " +
-          com.google.javascript.jscomp.mozilla.rhino.Token.typeToName(
+          com.google.javascript.rhino.head.Token.typeToName(
               node.getType()),
           sourceName,
           node.getLineno(), "", 0);
@@ -1098,179 +1098,179 @@ class IRFactory {
 
   private static int transformTokenType(int token) {
     switch (token) {
-      case com.google.javascript.jscomp.mozilla.rhino.Token.RETURN:
+      case com.google.javascript.rhino.head.Token.RETURN:
         return Token.RETURN;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.BITOR:
+      case com.google.javascript.rhino.head.Token.BITOR:
         return Token.BITOR;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.BITXOR:
+      case com.google.javascript.rhino.head.Token.BITXOR:
         return Token.BITXOR;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.BITAND:
+      case com.google.javascript.rhino.head.Token.BITAND:
         return Token.BITAND;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.EQ:
+      case com.google.javascript.rhino.head.Token.EQ:
         return Token.EQ;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.NE:
+      case com.google.javascript.rhino.head.Token.NE:
         return Token.NE;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.LT:
+      case com.google.javascript.rhino.head.Token.LT:
         return Token.LT;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.LE:
+      case com.google.javascript.rhino.head.Token.LE:
         return Token.LE;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.GT:
+      case com.google.javascript.rhino.head.Token.GT:
         return Token.GT;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.GE:
+      case com.google.javascript.rhino.head.Token.GE:
         return Token.GE;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.LSH:
+      case com.google.javascript.rhino.head.Token.LSH:
         return Token.LSH;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.RSH:
+      case com.google.javascript.rhino.head.Token.RSH:
         return Token.RSH;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.URSH:
+      case com.google.javascript.rhino.head.Token.URSH:
         return Token.URSH;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ADD:
+      case com.google.javascript.rhino.head.Token.ADD:
         return Token.ADD;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.SUB:
+      case com.google.javascript.rhino.head.Token.SUB:
         return Token.SUB;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.MUL:
+      case com.google.javascript.rhino.head.Token.MUL:
         return Token.MUL;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.DIV:
+      case com.google.javascript.rhino.head.Token.DIV:
         return Token.DIV;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.MOD:
+      case com.google.javascript.rhino.head.Token.MOD:
         return Token.MOD;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.NOT:
+      case com.google.javascript.rhino.head.Token.NOT:
         return Token.NOT;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.BITNOT:
+      case com.google.javascript.rhino.head.Token.BITNOT:
         return Token.BITNOT;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.POS:
+      case com.google.javascript.rhino.head.Token.POS:
         return Token.POS;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.NEG:
+      case com.google.javascript.rhino.head.Token.NEG:
         return Token.NEG;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.NEW:
+      case com.google.javascript.rhino.head.Token.NEW:
         return Token.NEW;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.DELPROP:
+      case com.google.javascript.rhino.head.Token.DELPROP:
         return Token.DELPROP;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.TYPEOF:
+      case com.google.javascript.rhino.head.Token.TYPEOF:
         return Token.TYPEOF;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.GETPROP:
+      case com.google.javascript.rhino.head.Token.GETPROP:
         return Token.GETPROP;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.GETELEM:
+      case com.google.javascript.rhino.head.Token.GETELEM:
         return Token.GETELEM;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.CALL:
+      case com.google.javascript.rhino.head.Token.CALL:
         return Token.CALL;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.NAME:
+      case com.google.javascript.rhino.head.Token.NAME:
         return Token.NAME;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.NUMBER:
+      case com.google.javascript.rhino.head.Token.NUMBER:
         return Token.NUMBER;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.STRING:
+      case com.google.javascript.rhino.head.Token.STRING:
         return Token.STRING;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.NULL:
+      case com.google.javascript.rhino.head.Token.NULL:
         return Token.NULL;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.THIS:
+      case com.google.javascript.rhino.head.Token.THIS:
         return Token.THIS;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.FALSE:
+      case com.google.javascript.rhino.head.Token.FALSE:
         return Token.FALSE;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.TRUE:
+      case com.google.javascript.rhino.head.Token.TRUE:
         return Token.TRUE;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.SHEQ:
+      case com.google.javascript.rhino.head.Token.SHEQ:
         return Token.SHEQ;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.SHNE:
+      case com.google.javascript.rhino.head.Token.SHNE:
         return Token.SHNE;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.REGEXP:
+      case com.google.javascript.rhino.head.Token.REGEXP:
         return Token.REGEXP;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.THROW:
+      case com.google.javascript.rhino.head.Token.THROW:
         return Token.THROW;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.IN:
+      case com.google.javascript.rhino.head.Token.IN:
         return Token.IN;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.INSTANCEOF:
+      case com.google.javascript.rhino.head.Token.INSTANCEOF:
         return Token.INSTANCEOF;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ARRAYLIT:
+      case com.google.javascript.rhino.head.Token.ARRAYLIT:
         return Token.ARRAYLIT;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.OBJECTLIT:
+      case com.google.javascript.rhino.head.Token.OBJECTLIT:
         return Token.OBJECTLIT;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.TRY:
+      case com.google.javascript.rhino.head.Token.TRY:
         return Token.TRY;
       // The LP represents a parameter list
-      case com.google.javascript.jscomp.mozilla.rhino.Token.LP:
+      case com.google.javascript.rhino.head.Token.LP:
         return Token.PARAM_LIST;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.COMMA:
+      case com.google.javascript.rhino.head.Token.COMMA:
         return Token.COMMA;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ASSIGN:
+      case com.google.javascript.rhino.head.Token.ASSIGN:
         return Token.ASSIGN;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ASSIGN_BITOR:
+      case com.google.javascript.rhino.head.Token.ASSIGN_BITOR:
         return Token.ASSIGN_BITOR;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ASSIGN_BITXOR:
+      case com.google.javascript.rhino.head.Token.ASSIGN_BITXOR:
         return Token.ASSIGN_BITXOR;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ASSIGN_BITAND:
+      case com.google.javascript.rhino.head.Token.ASSIGN_BITAND:
         return Token.ASSIGN_BITAND;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ASSIGN_LSH:
+      case com.google.javascript.rhino.head.Token.ASSIGN_LSH:
         return Token.ASSIGN_LSH;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ASSIGN_RSH:
+      case com.google.javascript.rhino.head.Token.ASSIGN_RSH:
         return Token.ASSIGN_RSH;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ASSIGN_URSH:
+      case com.google.javascript.rhino.head.Token.ASSIGN_URSH:
         return Token.ASSIGN_URSH;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ASSIGN_ADD:
+      case com.google.javascript.rhino.head.Token.ASSIGN_ADD:
         return Token.ASSIGN_ADD;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ASSIGN_SUB:
+      case com.google.javascript.rhino.head.Token.ASSIGN_SUB:
         return Token.ASSIGN_SUB;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ASSIGN_MUL:
+      case com.google.javascript.rhino.head.Token.ASSIGN_MUL:
         return Token.ASSIGN_MUL;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ASSIGN_DIV:
+      case com.google.javascript.rhino.head.Token.ASSIGN_DIV:
         return Token.ASSIGN_DIV;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ASSIGN_MOD:
+      case com.google.javascript.rhino.head.Token.ASSIGN_MOD:
         return Token.ASSIGN_MOD;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.HOOK:
+      case com.google.javascript.rhino.head.Token.HOOK:
         return Token.HOOK;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.OR:
+      case com.google.javascript.rhino.head.Token.OR:
         return Token.OR;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.AND:
+      case com.google.javascript.rhino.head.Token.AND:
         return Token.AND;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.INC:
+      case com.google.javascript.rhino.head.Token.INC:
         return Token.INC;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.DEC:
+      case com.google.javascript.rhino.head.Token.DEC:
         return Token.DEC;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.FUNCTION:
+      case com.google.javascript.rhino.head.Token.FUNCTION:
         return Token.FUNCTION;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.IF:
+      case com.google.javascript.rhino.head.Token.IF:
         return Token.IF;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.SWITCH:
+      case com.google.javascript.rhino.head.Token.SWITCH:
         return Token.SWITCH;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.CASE:
+      case com.google.javascript.rhino.head.Token.CASE:
         return Token.CASE;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.DEFAULT:
+      case com.google.javascript.rhino.head.Token.DEFAULT:
         return Token.DEFAULT_CASE;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.WHILE:
+      case com.google.javascript.rhino.head.Token.WHILE:
         return Token.WHILE;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.DO:
+      case com.google.javascript.rhino.head.Token.DO:
         return Token.DO;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.FOR:
+      case com.google.javascript.rhino.head.Token.FOR:
         return Token.FOR;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.BREAK:
+      case com.google.javascript.rhino.head.Token.BREAK:
         return Token.BREAK;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.CONTINUE:
+      case com.google.javascript.rhino.head.Token.CONTINUE:
         return Token.CONTINUE;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.VAR:
+      case com.google.javascript.rhino.head.Token.VAR:
         return Token.VAR;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.WITH:
+      case com.google.javascript.rhino.head.Token.WITH:
         return Token.WITH;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.CATCH:
+      case com.google.javascript.rhino.head.Token.CATCH:
         return Token.CATCH;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.VOID:
+      case com.google.javascript.rhino.head.Token.VOID:
         return Token.VOID;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.EMPTY:
+      case com.google.javascript.rhino.head.Token.EMPTY:
         return Token.EMPTY;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.BLOCK:
+      case com.google.javascript.rhino.head.Token.BLOCK:
         return Token.BLOCK;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.LABEL:
+      case com.google.javascript.rhino.head.Token.LABEL:
         return Token.LABEL;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.EXPR_VOID:
-      case com.google.javascript.jscomp.mozilla.rhino.Token.EXPR_RESULT:
+      case com.google.javascript.rhino.head.Token.EXPR_VOID:
+      case com.google.javascript.rhino.head.Token.EXPR_RESULT:
         return Token.EXPR_RESULT;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.SCRIPT:
+      case com.google.javascript.rhino.head.Token.SCRIPT:
         return Token.SCRIPT;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.GET:
+      case com.google.javascript.rhino.head.Token.GET:
         return Token.GETTER_DEF;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.SET:
+      case com.google.javascript.rhino.head.Token.SET:
         return Token.SETTER_DEF;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.CONST:
+      case com.google.javascript.rhino.head.Token.CONST:
         return Token.CONST;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.DEBUGGER:
+      case com.google.javascript.rhino.head.Token.DEBUGGER:
         return Token.DEBUGGER;
     }
 

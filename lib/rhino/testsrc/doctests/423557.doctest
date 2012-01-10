@@ -1,0 +1,12 @@
+// Test for using keywords as identifiers
+// https://bugzilla.mozilla.org/show_bug.cgi?id=423557
+js> var x = {if: 1}
+js> x.if
+1
+js> x.function = 3
+3
+js> x.if + x.function
+4
+js> delete x.if
+true
+js> x.if

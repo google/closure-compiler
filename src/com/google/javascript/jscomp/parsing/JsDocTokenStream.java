@@ -17,8 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.base.Preconditions;
-
-import com.google.javascript.jscomp.mozilla.rhino.ScriptRuntime;
+import com.google.javascript.rhino.head.ScriptRuntime;
 
 /**
  * This class implements the scanner for JsDoc strings.

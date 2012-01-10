@@ -16,8 +16,8 @@
 
 package com.google.javascript.jscomp.testing;
 
-import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
-import com.google.javascript.jscomp.mozilla.rhino.EvaluatorException;
+import com.google.javascript.rhino.head.ErrorReporter;
+import com.google.javascript.rhino.head.EvaluatorException;
 
 import junit.framework.Assert;
 

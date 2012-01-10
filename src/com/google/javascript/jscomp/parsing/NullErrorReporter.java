@@ -38,18 +38,18 @@ public abstract class NullErrorReporter  {
     return new OldRhinoNullReporter();
   }
 
-  public static com.google.javascript.jscomp.mozilla.rhino.ErrorReporter
+  public static com.google.javascript.rhino.head.ErrorReporter
       forNewRhino() {
     return new NewRhinoNullReporter();
   }
 
   private static class NewRhinoNullReporter extends NullErrorReporter
-      implements com.google.javascript.jscomp.mozilla.rhino.ErrorReporter {
+      implements com.google.javascript.rhino.head.ErrorReporter {
     @Override
-    public com.google.javascript.jscomp.mozilla.rhino.EvaluatorException
+    public com.google.javascript.rhino.head.EvaluatorException
       runtimeError(String message, String sourceName, int line,
                    String lineSource, int lineOffset) {
-      return new com.google.javascript.jscomp.mozilla.rhino.EvaluatorException(
+      return new com.google.javascript.rhino.head.EvaluatorException(
           message);
     }
 

@@ -17,11 +17,6 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.mozilla.rhino.CompilerEnvirons;
-import com.google.javascript.jscomp.mozilla.rhino.Parser;
-import com.google.javascript.jscomp.mozilla.rhino.Token.CommentType;
-import com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot;
-import com.google.javascript.jscomp.mozilla.rhino.ast.Comment;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.InputId;
@@ -30,6 +25,11 @@ import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.head.CompilerEnvirons;
+import com.google.javascript.rhino.head.Parser;
+import com.google.javascript.rhino.head.Token.CommentType;
+import com.google.javascript.rhino.head.ast.AstRoot;
+import com.google.javascript.rhino.head.ast.Comment;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.SimpleSourceFile;

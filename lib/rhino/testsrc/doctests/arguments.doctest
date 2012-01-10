@@ -1,0 +1,120 @@
+js> var args = (function() { return arguments })()
+js> Object.getPrototypeOf(args) === Object.prototype
+true
+js> args.constructor === Object.prototype.constructor
+true
+js> Object.getOwnPropertyDescriptor(args, 'constructor').toSource();
+({value:function Object() { [native code for Object.Object, arity=1] }
+, writable:true, enumerable:false, configurable:true})
+
+js> args.toString()
+[object Arguments]
+
+js> var toStr = Object.prototype.toString;
+js> var _ = Object.prototype.toString = function() { 
+  >   return this === args ? 
+  >     "executes Object.prototype.toString.call(arguments)" : 
+  >     "'this' should be 'arguments'"
+  > }
+js> args.toString()
+executes Object.prototype.toString.call(arguments)
+js> Object.prototype.toString = toStr; undefined
+
+js> var toLocStr = Object.prototype.toLocaleString;
+js> var _ = Object.prototype.toLocaleString = function() { 
+  >   return this === args ? 
+  >     "executes Object.prototype.toLocaleString.call(arguments)" : 
+  >     "'this' should be 'arguments'"
+  > }
+js> args.toLocaleString()
+executes Object.prototype.toLocaleString.call(arguments)
+js> Object.prototype.toLocaleString = toLocStr; undefined;
+
+js> (function() { return arguments[2] })('a','b','c')
+c
+js> (function(x,y,z) { return arguments[2] })('a','b','c')
+c
+
+js> (function(x) { 
+  >   arguments[0] = "modified"; 
+  >   return x; 
+  > })("original")
+modified
+
+js> (function(x) { 
+  >   x = "modified"; 
+  >   return arguments[0]; 
+  > })("original")
+modified
+
+js> (function(x) { 
+  >   delete arguments[0]; 
+  >   arguments[0] = "modified"; 
+  >   return x; 
+  > })("original")
+original
+
+js> (function(x) { 
+  >   delete x;
+  >   var x = "modified";
+  >   return arguments[0]
+  > })("original")
+modified
+
+js> (function(x) { 
+  >   Object.defineProperty(arguments, 0, {get:function(){return "modified"}});
+  >   return arguments[0]; 
+  > })("original")
+modified
+
+js> (function(x) { 
+  >   Object.defineProperty(arguments, 0, {get:function(){return "modified"}});
+  >   return x; 
+  > })("original")
+original
+
+js> (function(x) { 
+  >   Object.defineProperty(arguments, 0, {value:"modified"});
+  >   return arguments[0]; 
+  > })("original")
+modified
+
+js> (function(x) { 
+  >   Object.defineProperty(arguments, 0, {value:"modified"});
+  >   return x; 
+  > })("original")
+modified
+
+js> (function() { for (var i in arguments) print(i); })('a','b','c')
+0
+1
+2
+
+js> (function() { 
+  >   arguments.a = 1; 
+  >   Object.defineProperty(arguments, 'b', {value:2, enumerable:true});
+  >   Object.defineProperty(arguments, 'c', {value:3, enumerable:false});
+  >   Object.defineProperty(arguments, 0, {enumerable:false});
+  >   for (var p in arguments) print(p);
+  > })('hi')
+a
+b
+
+js> (function() { return Object.getOwnPropertyDescriptor(arguments, 0) === undefined })()
+true
+
+js> (function() { return Object.getOwnPropertyDescriptor(arguments, 0).toSource(); })("a")
+({value:"a", writable:true, enumerable:true, configurable:true})
+
+js> (function(x) { 
+  >   Object.defineProperty(arguments, 0, {enumerable:false});
+  >   return Object.getOwnPropertyDescriptor(arguments, 0).enumerable;
+  > })("original")
+false
+
+js> (function() { 
+  >   Object.defineProperty(arguments, 0, {value:2, writable:false});
+  >   arguments[0] = 3;
+  >   return arguments[0];
+  > })(1); 
+2 

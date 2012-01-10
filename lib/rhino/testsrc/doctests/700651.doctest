@@ -1,0 +1,4 @@
+js> escape(/[\u0000]/.exec("\u0000"))
+%00
+js> escape(/[^\u0000]/.exec("\u0000"))
+null

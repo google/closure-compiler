@@ -1,0 +1,13 @@
+js> var re = new RegExp("(?:<script.*?>)(.*)<\/script>")
+js> var t = 'foo <script>boo();</script>bar'
+js> var r = re.exec(t)
+js> if (r[1] != "boo();") {
+  > 	throw "Bad result: " + r[1]
+  > } else {
+  > 	print("ok")
+  > }
+ok
+js> var str = "<<xy";
+js> var matches = str.match(/(?:<<)xy/);
+js> print(matches.join(", "));
+<<xy

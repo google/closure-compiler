@@ -17,9 +17,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.ScriptRuntime;
-import com.google.javascript.jscomp.CheckLevel;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -80,13 +80,13 @@ class RhinoErrorReporter {
 
         // Trailing comma
         replacePlaceHolders(
-            com.google.javascript.jscomp.mozilla.rhino.ScriptRuntime
+            com.google.javascript.rhino.head.ScriptRuntime
               .getMessage0("msg.extra.trailing.comma")),
         TRAILING_COMMA,
 
         // Duplicate parameter
         replacePlaceHolders(
-            com.google.javascript.jscomp.mozilla.rhino.ScriptRuntime
+            com.google.javascript.rhino.head.ScriptRuntime
               .getMessage0("msg.dup.parms")),
         DUPLICATE_PARAM,
 
@@ -99,7 +99,7 @@ class RhinoErrorReporter {
         TYPE_PARSE_ERROR);
   }
 
-  public static com.google.javascript.jscomp.mozilla.rhino.ErrorReporter
+  public static com.google.javascript.rhino.head.ErrorReporter
       forNewRhino(AbstractCompiler compiler) {
     return new NewRhinoErrorReporter(compiler);
   }
@@ -145,17 +145,17 @@ class RhinoErrorReporter {
   }
 
   private static class NewRhinoErrorReporter extends RhinoErrorReporter
-      implements com.google.javascript.jscomp.mozilla.rhino.ErrorReporter {
+      implements com.google.javascript.rhino.head.ErrorReporter {
 
     private NewRhinoErrorReporter(AbstractCompiler compiler) {
       super(compiler);
     }
 
     @Override
-    public com.google.javascript.jscomp.mozilla.rhino.EvaluatorException
+    public com.google.javascript.rhino.head.EvaluatorException
         runtimeError(String message, String sourceName, int line,
             String lineSource, int lineOffset) {
-      return new com.google.javascript.jscomp.mozilla.rhino.EvaluatorException(
+      return new com.google.javascript.rhino.head.EvaluatorException(
           message, sourceName, line, lineSource, lineOffset);
     }
 

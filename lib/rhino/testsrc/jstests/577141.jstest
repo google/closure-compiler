@@ -1,0 +1,4 @@
+var ns = new Namespace( "dc", "http://purl.org/dc/elements/1.1" );
+var x = new XML( "<something/>" );
+x.setNamespace( ns );
+"success";

@@ -1,0 +1,6 @@
+var tmp=new XML('<message xmlns="http://something"><data></data></message>');
+default xml namespace = "http://something";
+var otherData = new XML(<otherData></otherData>); 
+otherData['@anAtt'] = "anATTValue"; 
+tmp.data.otherData=otherData;
+"success";

@@ -79,7 +79,7 @@
   <target name="rhino">
     <ant antfile="build.xml"
          inheritAll="false"
-         dir="lib/rhino/src/mozilla/js/rhino/"
+         dir="lib/rhino/"
          target="jar">
       <property name="build.dir" value="${buildlib.dir}"/>
       <property name="no-e4x" value="true"/>
@@ -93,9 +93,9 @@
              classname="com.tonicsystems.jarjar.JarJarTask"
              classpath="lib/jarjar.jar"/>
     <jarjar destfile="${buildlib.dir}/rhino.jar" update="true">
-      <zipfileset src="${buildlib.dir}/rhino1_7R3pre/js.jar"/>
+      <zipfileset src="${buildlib.dir}/rhino1_7R4pre/js.jar"/>
       <rule pattern="org.mozilla.javascript.**"
-            result="com.google.javascript.jscomp.mozilla.rhino.@1"/>
+            result="com.google.javascript.rhino.head.@1"/>
     </jarjar>
   </target>
 

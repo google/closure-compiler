@@ -1,0 +1,34 @@
+js> var x = <x><foo>bar</foo></x>;
+js> x.foo[0] = "baz";
+baz
+js> x.foo[1] = "barf";
+barf
+js> x
+<x>
+  <foo>baz</foo>
+  <foo>barf</foo>
+</x>
+js> var xmlTester=<message><data></data></message>;
+js> xmlTester['data']['test'][0] = "test0";
+test0
+js> xmlTester['data']['test'][1] = "test1";
+test1
+js> xmlTester
+<message>
+  <data>
+    <test>test0</test>
+    <test>test1</test>
+  </data>
+</message>
+js> var xmlTester=<message><data></data></message>;
+js> xmlTester['data']['test'][0] = <subTest>subtest1</subTest>;
+subtest1
+js> xmlTester['data']['test'][1] = "test1";
+test1
+js> xmlTester
+<message>
+  <data>
+    <subTest>subtest1</subTest>
+    <test>test1</test>
+  </data>
+</message>

@@ -18,14 +18,14 @@ package com.google.javascript.jscomp.parsing;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.mozilla.rhino.CompilerEnvirons;
-import com.google.javascript.jscomp.mozilla.rhino.Context;
-import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
-import com.google.javascript.jscomp.mozilla.rhino.EvaluatorException;
-import com.google.javascript.jscomp.mozilla.rhino.Parser;
-import com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.head.CompilerEnvirons;
+import com.google.javascript.rhino.head.Context;
+import com.google.javascript.rhino.head.ErrorReporter;
+import com.google.javascript.rhino.head.EvaluatorException;
+import com.google.javascript.rhino.head.Parser;
+import com.google.javascript.rhino.head.ast.AstRoot;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.IOException;
@@ -113,20 +113,20 @@ public class ParserRunner {
     compilerEnv.initFromContext(cx);
     compilerEnv.setRecordingComments(true);
     compilerEnv.setRecordingLocalJsDocComments(true);
+
     // ES5 specifically allows trailing commas
     compilerEnv.setWarnTrailingComma(
         config.languageMode == LanguageMode.ECMASCRIPT3);
 
-    if (config.isIdeMode || config.languageMode != LanguageMode.ECMASCRIPT3) {
-      // Do our own identifier check for ECMASCRIPT 5
-      compilerEnv.setReservedKeywordAsIdentifier(true);
-      compilerEnv.setAllowKeywordAsObjectPropertyName(true);
-    }
+    // Do our own identifier check for ECMASCRIPT 5
+    boolean acceptEs5 =
+        config.isIdeMode || config.languageMode != LanguageMode.ECMASCRIPT3;
+    compilerEnv.setReservedKeywordAsIdentifier(acceptEs5);
+    compilerEnv.setAllowKeywordAsObjectPropertyName(acceptEs5);
 
-    if (config.isIdeMode) {
-      compilerEnv.setAllowMemberExprAsFunctionName(true);
-    }
+    compilerEnv.setAllowMemberExprAsFunctionName(config.isIdeMode);
     compilerEnv.setIdeMode(config.isIdeMode);
+    compilerEnv.setRecoverFromErrors(config.isIdeMode);
 
     Parser p = new Parser(compilerEnv, errorReporter);
     AstRoot astRoot = null;

@@ -1,0 +1,6 @@
+js> ({"1": true})["1"]
+true
+js> JSON.parse("{\"1\": true}")["1"]
+true
+js> JSON.parse("{\"a\": true}")["a"]
+true

@@ -1,0 +1,18 @@
+js> parseInt
+function parseInt() { [native code for parseInt, arity=2] }
+js> parseInt("0");
+0
+js> parseInt("1")
+1
+js> parseInt("-1")
+-1
+js> parseInt("    2")
+2
+js> parseInt("3then some other chars")
+3
+js> parseInt('0xF')
+15
+js> parseInt('0xf')
+15
+js> parseInt('010')
+8
