@@ -505,16 +505,16 @@ function Database() {}
 Database.prototype.version;
 
 /**
- * @param {function(SQLTransaction) : void} callback
- * @param {(function(SQLError) : void)=} opt_errorCallback
+ * @param {function(!SQLTransaction) : void} callback
+ * @param {(function(!SQLError) : void)=} opt_errorCallback
  * @param {Function=} opt_Callback
  */
 Database.prototype.transaction = function(
     callback, opt_errorCallback, opt_Callback) {};
 
 /**
- * @param {function(SQLTransaction) : void} callback
- * @param {(function(SQLError) : void)=} opt_errorCallback
+ * @param {function(!SQLTransaction) : void} callback
+ * @param {(function(!SQLError) : void)=} opt_errorCallback
  * @param {Function=} opt_Callback
  */
 Database.prototype.readTransaction = function(
@@ -523,8 +523,8 @@ Database.prototype.readTransaction = function(
 /**
  * @param {string} oldVersion
  * @param {string} newVersion
- * @param {function(SQLTransaction) : void} callback
- * @param {function(SQLError) : void} errorCallback
+ * @param {function(!SQLTransaction) : void} callback
+ * @param {function(!SQLError) : void} errorCallback
  * @param {Function} successCallback
  */
 Database.prototype.changeVersion = function(
@@ -536,7 +536,7 @@ Database.prototype.changeVersion = function(
 function DatabaseCallback() {}
 
 /**
- * @param {Database} db
+ * @param {!Database} db
  * @return {undefined}
  */
 DatabaseCallback.prototype.handleEvent = function(db) {};
@@ -564,8 +564,8 @@ function SQLTransaction() {}
 /**
  * @param {string} sqlStatement
  * @param {Array.<*>=} opt_queryArgs
- * @param {(function(SQLTransaction, SQLResultSet) : void)=} opt_callback
- * @param {(function(SQLTransaction, SQLError) : void)=} opt_errorCallback
+ * @param {(function(!SQLTransaction, !SQLResultSet) : void)=} opt_callback
+ * @param {(function(!SQLTransaction, !SQLError) : void)=} opt_errorCallback
  */
 SQLTransaction.prototype.executeSql = function(
     sqlStatement, opt_queryArgs, opt_callback, opt_errorCallback) {};
