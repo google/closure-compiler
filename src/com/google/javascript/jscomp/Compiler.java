@@ -1048,6 +1048,35 @@ public class Compiler extends AbstractCompiler {
     return true;
   }
 
+  /**
+   * Add a new source input dynamically. Intended for incremental compilation.
+   * <p>
+   * If the new source input doesn't parse, it will not be added, and a false
+   * will be returned.
+   *
+   * @param ast the JS Source to add.
+   * @return true if the source was added successfully, false otherwise.
+   * @throws IllegalStateException if an input for this ast already exists.
+   */
+  boolean addNewSourceAst(JsAst ast) {
+    CompilerInput oldInput = getInput(ast.getInputId());
+    if (oldInput != null) {
+      throw new IllegalStateException(
+          "Input already exists: " + ast.getInputId().getIdName());
+    }
+    Node newRoot = ast.getAstRoot(this);
+    if (newRoot == null) {
+      return false;
+    }
+
+    getRoot().getLastChild().addChildToBack(newRoot);
+
+    CompilerInput newInput = new CompilerInput(ast);
+    inputsById.put(ast.getInputId(), newInput);
+
+    return true;
+  }
+
   @Override
   JSModuleGraph getModuleGraph() {
     return moduleGraph;
