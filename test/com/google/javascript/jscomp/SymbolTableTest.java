@@ -404,6 +404,26 @@ public class SymbolTableTest extends TestCase {
         3, Iterables.size(table.getReferences(method)));
   }
 
+  public void testFieldReferencesMissingTypeInfo() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Missing}\n" +
+        " */ var DomHelper = function(){ this.prop = 1; };\n" +
+        "/** @type {number} */ DomHelper.prototype.prop = 2;\n" +
+        "function f() {\n" +
+        "  return (new DomHelper()).prop;\n" +
+        "};");
+
+    Symbol prop =
+        getGlobalVar(table, "DomHelper.prototype.prop");
+    assertEquals(3, table.getReferenceList(prop).size());
+
+    Symbol thisDotProp =
+        getLocalVar(table, "this.prop");
+    assertEquals(
+        1, table.getReferenceList(thisDotProp).size());
+  }
 
   public void testFieldReferences() throws Exception {
     SymbolTable table = createSymbolTable(

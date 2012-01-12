@@ -1291,7 +1291,7 @@ public final class SymbolTable
           this);
     }
 
-    private void maybeDefineReference(
+    private boolean maybeDefineReference(
         Node n, String propName, Symbol ownerSymbol) {
       // getPropertyScope() will be null in some rare cases where there
       // are no extern declarations for built-in types (like Function).
@@ -1299,8 +1299,10 @@ public final class SymbolTable
         Symbol prop = ownerSymbol.getPropertyScope().getSlot(propName);
         if (prop != null) {
           prop.defineReferenceAt(n);
+          return true;
         }
       }
+      return false;
     }
 
     // Try to find the symbol by its fully qualified name.
@@ -1315,24 +1317,31 @@ public final class SymbolTable
       return false;
     }
 
-    private void maybeDefineTypedReference(
+    private boolean maybeDefineTypedReference(
         Node n, String propName, JSType owner) {
       if (owner.isGlobalThisType()) {
         Symbol sym = globalScope.getSlot(propName);
         if (sym != null) {
           sym.defineReferenceAt(n);
+          return true;
         }
       } else if (owner.isNominalConstructor()) {
-        maybeDefineReference(
+        return maybeDefineReference(
             n, propName, getSymbolDeclaredBy(owner.toMaybeFunctionType()));
       } else if (owner.isEnumType()) {
-        maybeDefineReference(
+        return maybeDefineReference(
             n, propName, getSymbolDeclaredBy(owner.toMaybeEnumType()));
       } else {
+        boolean defined = false;
         for (Symbol ctor : getAllSymbolsForType(owner)) {
-          maybeDefineReference(n, propName, getSymbolForInstancesOf(ctor));
+          if (maybeDefineReference(
+                  n, propName, getSymbolForInstancesOf(ctor))) {
+            defined = true;
+          }
         }
+        return defined;
       }
+      return false;
     }
 
     @Override
@@ -1340,35 +1349,35 @@ public final class SymbolTable
       // There are two ways to define a property reference:
       // 1) As a fully qualified lexical symbol (e.g., x.y)
       // 2) As a property of another object (e.g., x's y)
+      // Property definitions should take precedence over lexical
+      // definitions. e.g., for "a.b", it's more useful to record
+      // this as "property b of the type of a", than as "symbol a.b".
 
       if (n.isGetProp()) {
         JSType owner = n.getFirstChild().getJSType();
-        if (owner == null || owner.isUnknownType()) {
-          boolean defined = tryDefineLexicalQualifiedNameRef(
-              n.getQualifiedName(), n);
+        if (owner != null) {
+          boolean defined = maybeDefineTypedReference(
+              n, n.getLastChild().getString(), owner);
 
-          // If the owner is unknown, and we haven't been able to define
-          // this lexically, try to define it as a property (in case
-          // the owner is just a type with an unresolved superclass).
-          if (defined || owner == null) {
+          if (defined) {
             return;
           }
         }
 
-        maybeDefineTypedReference(n, n.getLastChild().getString(), owner);
+        tryDefineLexicalQualifiedNameRef(n.getQualifiedName(), n);
       } else if (NodeUtil.isObjectLitKey(n, parent) && n.isString()) {
         JSType owner = parent.getJSType();
-        if (owner == null || owner.isUnknownType()) {
-          boolean defined = tryDefineLexicalQualifiedNameRef(
-              NodeUtil.getBestLValueName(n), n);
+        if (owner != null) {
+          boolean defined =
+              maybeDefineTypedReference(n, n.getString(), owner);
 
-          // See comments above.
-          if (defined || owner == null) {
+          if (defined) {
             return;
           }
         }
 
-        maybeDefineTypedReference(n, n.getString(), owner);
+        tryDefineLexicalQualifiedNameRef(
+            NodeUtil.getBestLValueName(n), n);
       }
     }
   }
