@@ -18,7 +18,7 @@
  * @fileoverview Definitions for WebGL functions as described at
  *  https://cvs.khronos.org/svn/repos/registry/trunk/public/webgl/doc/spec/WebGL-spec.html
  *
- *  This relies on html5.js being included for Canvas and ArrayBuffer support.
+ *  This relies on html5.js being included for Canvas and Typed Array support.
  *
  * @externs
  */
@@ -1939,7 +1939,7 @@ WebGLRenderingContext.prototype.blendFuncSeparate = function(
 
 /**
  * @param {number} target
- * @param {WebGLArray|WebGLArrayBuffer|ArrayBufferView|ArrayBuffer|number} data
+ * @param {ArrayBufferView|ArrayBuffer|number} data
  * @param {number} usage
  */
 WebGLRenderingContext.prototype.bufferData = function(target, data, usage) {};
@@ -1947,7 +1947,7 @@ WebGLRenderingContext.prototype.bufferData = function(target, data, usage) {};
 /**
  * @param {number} target
  * @param {number} offset
- * @param {WebGLArray|WebGLArrayBuffer|ArrayBufferView|ArrayBuffer} data
+ * @param {ArrayBufferView|ArrayBuffer} data
  */
 WebGLRenderingContext.prototype.bufferSubData = function(
     target, offset, data) {};
@@ -2482,7 +2482,7 @@ WebGLRenderingContext.prototype.stencilOpSeparate = function(
  *     number} img or border
  * @param {number=} opt_format
  * @param {number=} opt_type
- * @param {WebGLArray|ArrayBufferView=} opt_pixels
+ * @param {ArrayBufferView=} opt_pixels
  */
 WebGLRenderingContext.prototype.texImage2D = function(
     target, level, internalformat, format, type, img, opt_format, opt_type,
@@ -2514,7 +2514,7 @@ WebGLRenderingContext.prototype.texParameteri = function(
  * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|
  *     number} data or format
  * @param {number=} opt_type
- * @param {WebGLArray|ArrayBufferView=} opt_pixels
+ * @param {ArrayBufferView=} opt_pixels
  */
 WebGLRenderingContext.prototype.texSubImage2D = function(
     target, level, xoffset, yoffset, format, type, data, opt_type,
@@ -2528,7 +2528,7 @@ WebGLRenderingContext.prototype.uniform1f = function(location, value) {};
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {WebGLFloatArray|Float32Array|Array.<number>} value
+ * @param {Float32Array|Array.<number>} value
  */
 WebGLRenderingContext.prototype.uniform1fv = function(location, value) {};
 
@@ -2540,7 +2540,7 @@ WebGLRenderingContext.prototype.uniform1i = function(location, value) {};
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {WebGLIntArray|Int32Array|Array.<number>} value
+ * @param {Int32Array|Array.<number>} value
  */
 WebGLRenderingContext.prototype.uniform1iv = function(location, value) {};
 
@@ -2554,7 +2554,7 @@ WebGLRenderingContext.prototype.uniform2f = function(
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {WebGLFloatArray|Float32Array|Array.<number>} value
+ * @param {Float32Array|Array.<number>} value
  */
 WebGLRenderingContext.prototype.uniform2fv = function(location, value) {};
 
@@ -2568,7 +2568,7 @@ WebGLRenderingContext.prototype.uniform2i = function(
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {WebGLIntArray|Int32Array|Array.<number>} value
+ * @param {Int32Array|Array.<number>} value
  */
 WebGLRenderingContext.prototype.uniform2iv = function(location, value) {};
 
@@ -2583,7 +2583,7 @@ WebGLRenderingContext.prototype.uniform3f = function(
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {WebGLFloatArray|Float32Array|Array.<number>} value
+ * @param {Float32Array|Array.<number>} value
  */
 WebGLRenderingContext.prototype.uniform3fv = function(location, value) {};
 
@@ -2598,7 +2598,7 @@ WebGLRenderingContext.prototype.uniform3i = function(
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {WebGLIntArray|Int32Array|Array.<number>} value
+ * @param {Int32Array|Array.<number>} value
  */
 WebGLRenderingContext.prototype.uniform3iv = function(location, value) {};
 
@@ -2614,7 +2614,7 @@ WebGLRenderingContext.prototype.uniform4f = function(
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {WebGLFloatArray|Float32Array|Array.<number>} value
+ * @param {Float32Array|Array.<number>} value
  */
 WebGLRenderingContext.prototype.uniform4fv = function(location, value) {};
 
@@ -2630,14 +2630,14 @@ WebGLRenderingContext.prototype.uniform4i = function(
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {WebGLIntArray|Int32Array|Array.<number>} value
+ * @param {Int32Array|Array.<number>} value
  */
 WebGLRenderingContext.prototype.uniform4iv = function(location, value) {};
 
 /**
  * @param {WebGLUniformLocation} location
  * @param {boolean} transpose
- * @param {WebGLFloatArray|Float32Array|Array.<number>} data
+ * @param {Float32Array|Array.<number>} data
  */
 WebGLRenderingContext.prototype.uniformMatrix2fv = function(
     location, transpose, data) {};
@@ -2645,7 +2645,7 @@ WebGLRenderingContext.prototype.uniformMatrix2fv = function(
 /**
  * @param {WebGLUniformLocation} location
  * @param {boolean} transpose
- * @param {WebGLFloatArray|Float32Array|Array.<number>} data
+ * @param {Float32Array|Array.<number>} data
  */
 WebGLRenderingContext.prototype.uniformMatrix3fv = function(
     location, transpose, data) {};
@@ -2653,7 +2653,7 @@ WebGLRenderingContext.prototype.uniformMatrix3fv = function(
 /**
  * @param {WebGLUniformLocation} location
  * @param {boolean} transpose
- * @param {WebGLFloatArray|Float32Array|Array.<number>} data
+ * @param {Float32Array|Array.<number>} data
  */
 WebGLRenderingContext.prototype.uniformMatrix4fv = function(
     location, transpose, data) {};
@@ -2676,7 +2676,7 @@ WebGLRenderingContext.prototype.vertexAttrib1f = function(index, value) {};
 
 /**
  * @param {number} index
- * @param {WebGLFloatArray|Float32Array|Array.<number>} values
+ * @param {Float32Array|Array.<number>} values
  */
 WebGLRenderingContext.prototype.vertexAttrib1fv = function(index, values) {};
 
@@ -2690,7 +2690,7 @@ WebGLRenderingContext.prototype.vertexAttrib2f = function(
 
 /**
  * @param {number} index
- * @param {WebGLFloatArray|Float32Array|Array.<number>} values
+ * @param {Float32Array|Array.<number>} values
  */
 WebGLRenderingContext.prototype.vertexAttrib2fv = function(
     index, values) {};
@@ -2706,7 +2706,7 @@ WebGLRenderingContext.prototype.vertexAttrib3f = function(
 
 /**
  * @param {number} index
- * @param {WebGLFloatArray|Float32Array|Array.<number>} values
+ * @param {Float32Array|Array.<number>} values
  */
 WebGLRenderingContext.prototype.vertexAttrib3fv = function(index, values) {};
 
@@ -2722,7 +2722,7 @@ WebGLRenderingContext.prototype.vertexAttrib4f = function(
 
 /**
  * @param {number} index
- * @param {WebGLFloatArray|Float32Array|Array.<number>} values
+ * @param {Float32Array|Array.<number>} values
  */
 WebGLRenderingContext.prototype.vertexAttrib4fv = function(index, values) {};
 
@@ -2878,17 +2878,6 @@ WebGLActiveInfo.prototype.name;
 
 
 /**
- * @param {number} length
- * @constructor
- * @noalias
- */
-function WebGLArrayBuffer(length) {}
-
-/** @type {number} */
-WebGLArrayBuffer.prototype.byteLength;
-
-
-/**
  * @constructor
  * @noalias
  */
@@ -3021,398 +3010,3 @@ OES_vertex_array_object.prototype.isVertexArrayOES = function(arrayObject) {};
  * @param {WebGLVertexArrayObjectOES} arrayObject
  */
 OES_vertex_array_object.prototype.bindVertexArrayOES = function(arrayObject) {};
-
-
-/**
- * @constructor
- * @noalias
- * @extends {WebGLObject}
- */
-function WebGLArray() {}
-
-/** @type {WebGLArrayBuffer} */
-WebGLArray.prototype.buffer;
-
-/** @type {number} */
-WebGLArray.prototype.byteOffset;
-
-/** @type {number} */
-WebGLArray.prototype.byteLength;
-
-/** @type {number} */
-WebGLArray.prototype.length;
-
-/**
- * @param {number} offset
- * @param {number} length
- * @return {WebGLArray}
- */
-WebGLArray.prototype.slice = function(offset, length) {};
-
-/**
- * @param {Array.<number>|WebGLArray|number} dataOrLength
- * @extends {WebGLArray}
- * @constructor
- * @noalias
- */
-function WebGLFloatArray(dataOrLength) {}
-
-
-/**
- * @param {Array.<number>|WebGLArray|number} dataOrLength
- * @extends {WebGLArray}
- * @constructor
- * @noalias
- */
-function WebGLUnsignedByteArray(dataOrLength) {}
-
-
-/**
- * @param {Array.<number>|WebGLArray|number} dataOrLength
- * @extends {WebGLArray}
- * @constructor
- * @noalias
- */
-function WebGLByteArray(dataOrLength) {}
-
-
-/**
- * @param {Array.<number>|WebGLArray|number} dataOrLength
- * @extends {WebGLArray}
- * @constructor
- * @noalias
- */
-function WebGLUnsignedShortArray(dataOrLength) {}
-
-
-/**
- * @param {Array.<number>|WebGLArray|number} dataOrLength
- * @extends {WebGLArray}
- * @constructor
- * @noalias
- */
-function WebGLShortArray(dataOrLength) {}
-
-
-/**
- * @param {Array.<number>|WebGLArray|number} dataOrLength
- * @extends {WebGLArray}
- * @constructor
- * @noalias
- */
-function WebGLUnsignedIntArray(dataOrLength) {}
-
-
-/**
- * @param {Array.<number>|WebGLArray|number} dataOrLength
- * @extends {WebGLArray}
- * @constructor
- * @noalias
- */
-function WebGLIntArray(dataOrLength) {}
-
-
-/**
- * @constructor
- * @noalias
- */
-function ArrayBufferView() {}
-
-/** @type {!ArrayBuffer} */
-ArrayBufferView.prototype.buffer;
-
-/** @type {number} */
-ArrayBufferView.prototype.byteOffset;
-
-/** @type {number} */
-ArrayBufferView.prototype.byteLength;
-
-
-/**
- * @constructor
- * @noalias
- * @extends ArrayBufferView
- */
-function TypedArray() {}
-
-/** @type {number} */
-TypedArray.BYTES_PER_ELEMENT;
-
-/** @type {number} */
-TypedArray.prototype.BYTES_PER_ELEMENT;
-
-/** @type {number} */
-TypedArray.prototype.length;
-
-/**
- * @param {TypedArray|Array.<number>} array
- * @param {number=} opt_offset
- */
-TypedArray.prototype.set = function(array, opt_offset) {};
-
-/**
- * @param {number} begin
- * @param {number=} opt_end
- */
-TypedArray.prototype.slice = function(begin, opt_end) {};
-
-/**
- * @param {number} begin
- * @param {number=} opt_end
- * @return {TypedArray}
- */
-TypedArray.prototype.subarray = function(begin, opt_end) {};
-
-
-/**
- * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
- *     or buffer
- * @param {number=} opt_byteOffset
- * @param {number=} opt_length
- * @extends {TypedArray}
- * @constructor
- * @noalias
- */
-function Int8Array(length, opt_byteOffset, opt_length) {}
-
-/** @type {number} */
-Int8Array.BYTES_PER_ELEMENT;
-
-
-/**
- * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
- *     or buffer
- * @param {number=} opt_byteOffset
- * @param {number=} opt_length
- * @extends {TypedArray}
- * @constructor
- * @noalias
- */
-function Uint8Array(length, opt_byteOffset, opt_length) {}
-
-/** @type {number} */
-Uint8Array.BYTES_PER_ELEMENT;
-
-/**
- * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
- *     or buffer
- * @param {number=} opt_byteOffset
- * @param {number=} opt_length
- * @extends {TypedArray}
- * @constructor
- * @noalias
- */
-function Int16Array(length, opt_byteOffset, opt_length) {}
-
-/** @type {number} */
-Int16Array.BYTES_PER_ELEMENT;
-
-/**
- * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
- *     or buffer
- * @param {number=} opt_byteOffset
- * @param {number=} opt_length
- * @extends {TypedArray}
- * @constructor
- * @noalias
- */
-function Uint16Array(length, opt_byteOffset, opt_length) {}
-
-/** @type {number} */
-Uint16Array.BYTES_PER_ELEMENT;
-
-/**
- * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
- *     or buffer
- * @param {number=} opt_byteOffset
- * @param {number=} opt_length
- * @extends {TypedArray}
- * @constructor
- * @noalias
- */
-function Int32Array(length, opt_byteOffset, opt_length) {}
-
-/** @type {number} */
-Int32Array.BYTES_PER_ELEMENT;
-
-
-/**
- * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
- *     or buffer
- * @param {number=} opt_byteOffset
- * @param {number=} opt_length
- * @extends {TypedArray}
- * @constructor
- * @noalias
- */
-function Uint32Array(length, opt_byteOffset, opt_length) {}
-
-/** @type {number} */
-Uint32Array.BYTES_PER_ELEMENT;
-
-
-/**
- * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
- *     or buffer
- * @param {number=} opt_byteOffset
- * @param {number=} opt_length
- * @extends {TypedArray}
- * @constructor
- * @noalias
- */
-function Float32Array(length, opt_byteOffset, opt_length) {}
-
-/** @type {number} */
-Float32Array.BYTES_PER_ELEMENT;
-
-
-/**
- * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
- *     or buffer
- * @param {number=} opt_byteOffset
- * @param {number=} opt_length
- * @extends {TypedArray}
- * @constructor
- * @noalias
- */
-function Float64Array(length, opt_byteOffset, opt_length) {}
-
-/** @type {number} */
-Float64Array.BYTES_PER_ELEMENT;
-
-
-/**
- * @param {ArrayBuffer} buffer
- * @param {number=} opt_byteOffset
- * @param {number=} opt_byteLength
- * @extends {ArrayBufferView}
- * @constructor
- * @noalias
- */
-function DataView(buffer, opt_byteOffset, opt_byteLength) {}
-
-
-/**
- * @param {number} byteOffset
- * @return {number}
- */
-DataView.prototype.getInt8 = function(byteOffset) {};
-
-
-/**
- * @param {number} byteOffset
- * @return {number}
- */
-DataView.prototype.getUint8 = function(byteOffset) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {boolean=} opt_littleEndian
- * @return {number}
- */
-DataView.prototype.getInt16 = function(byteOffset, opt_littleEndian) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {boolean=} opt_littleEndian
- * @return {number}
- */
-DataView.prototype.getUint16 = function(byteOffset, opt_littleEndian) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {boolean=} opt_littleEndian
- * @return {number}
- */
-DataView.prototype.getInt32 = function(byteOffset, opt_littleEndian) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {boolean=} opt_littleEndian
- * @return {number}
- */
-DataView.prototype.getUint32 = function(byteOffset, opt_littleEndian) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {boolean=} opt_littleEndian
- * @return {number}
- */
-DataView.prototype.getFloat32 = function(byteOffset, opt_littleEndian) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {boolean=} opt_littleEndian
- * @return {number}
- */
-DataView.prototype.getFloat64 = function(byteOffset, opt_littleEndian) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {number} value
- */
-DataView.prototype.setInt8 = function(byteOffset, value) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {number} value
- */
-DataView.prototype.setUint8 = function(byteOffset, value) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {number} value
- * @param {boolean=} opt_littleEndian
- */
-DataView.prototype.setInt16 = function(byteOffset, value, opt_littleEndian) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {number} value
- * @param {boolean=} opt_littleEndian
- */
-DataView.prototype.setUint16 = function(byteOffset, value, opt_littleEndian) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {number} value
- * @param {boolean=} opt_littleEndian
- */
-DataView.prototype.setInt32 = function(byteOffset, value, opt_littleEndian) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {number} value
- * @param {boolean=} opt_littleEndian
- */
-DataView.prototype.setUint32 = function(byteOffset, value, opt_littleEndian) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {number} value
- * @param {boolean=} opt_littleEndian
- */
-DataView.prototype.setFloat32 = function(
-    byteOffset, value, opt_littleEndian) {};
-
-
-/**
- * @param {number} byteOffset
- * @param {number} value
- * @param {boolean=} opt_littleEndian
- */
-DataView.prototype.setFloat64 = function(
-    byteOffset, value, opt_littleEndian) {};
