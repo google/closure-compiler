@@ -1480,7 +1480,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testFunctionType(
         "/** @param {number} opt_a\n@return {string} */" +
         "function f(opt_a) {}",
-        "function ((number|undefined)): string");
+        "function (number=): string");
   }
 
   public void testFunctionArguments3() throws Exception {
@@ -1494,7 +1494,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testFunctionType(
         "/** @param {number} opt_a\n@return {string} */" +
         "function f(a,opt_a) {}",
-        "function (?, (number|undefined)): string");
+        "function (?, number=): string");
   }
 
   public void testFunctionArguments5() throws Exception {
@@ -1638,7 +1638,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testFunctionInference6() throws Exception {
     testFunctionType(
         "/** @this Date\n@return {string} */function f(opt_a) {}",
-        "function (this:Date, ?): string");
+        "function (this:Date, ?=): string");
   }
 
   public void testFunctionInference7() throws Exception {
@@ -2426,7 +2426,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testIn4() throws Exception {
     testTypes("Date in Object",
         "left side of 'in'\n" +
-        "found   : function (new:Date, ?, ?, ?, ?, ?, ?, ?): string\n" +
+        "found   : function (new:Date, ?=, ?=, ?=, ?=, ?=, ?=, ?=): string\n" +
         "required: string");
   }
 
@@ -4759,7 +4759,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {number} x */ function f(x) {}" +
         "f(this.Object);",
         "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : function (new:Object, *): ?\n" +
+        "found   : function (new:Object, *=): ?\n" +
         "required: number");
   }
 

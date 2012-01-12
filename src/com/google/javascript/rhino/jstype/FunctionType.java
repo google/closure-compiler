@@ -875,19 +875,12 @@ public class FunctionType extends PrototypeObjectType {
         b.append(", ");
       }
       Node p = call.parameters.getFirstChild();
-      if (p.isVarArgs()) {
-        appendVarArgsString(b, p.getJSType());
-      } else {
-        b.append(p.getJSType().toString());
-      }
+      appendArgString(b, p);
+
       p = p.getNext();
       while (p != null) {
         b.append(", ");
-        if (p.isVarArgs()) {
-          appendVarArgsString(b, p.getJSType());
-        } else {
-          b.append(p.getJSType().toString());
-        }
+        appendArgString(b, p);
         p = p.getNext();
       }
     }
@@ -898,6 +891,16 @@ public class FunctionType extends PrototypeObjectType {
     return b.toString();
   }
 
+  private void appendArgString(StringBuilder b, Node p) {
+    if (p.isVarArgs()) {
+      appendVarArgsString(b, p.getJSType());
+    } else if (p.isOptionalArg()) {
+      appendOptionalArgString(b, p.getJSType());
+    } else {
+      b.append(p.getJSType().toString());
+    }
+  }
+
   /** Gets the string representation of a var args param. */
   private void appendVarArgsString(StringBuilder builder, JSType paramType) {
     if (paramType.isUnionType()) {
@@ -906,6 +909,17 @@ public class FunctionType extends PrototypeObjectType {
           registry.getNativeType(JSTypeNative.VOID_TYPE));
     }
     builder.append("...[").append(paramType.toString()).append("]");
+  }
+
+  /** Gets the string representation of an optional param. */
+  private void appendOptionalArgString(
+      StringBuilder builder, JSType paramType) {
+    if (paramType.isUnionType()) {
+      // Remove the optionalness from the var arg.
+      paramType = paramType.toMaybeUnionType().getRestrictedUnion(
+          registry.getNativeType(JSTypeNative.VOID_TYPE));
+    }
+    builder.append(paramType).append("=");
   }
 
   /**

@@ -660,7 +660,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     // The type of apply() on a function instance is resolved dynamically,
     // since apply varies with the type of the function it's called on.
     assertEquals(
-        "function ((Object|null|undefined), (Object|null|undefined)): ?",
+        "function ((Object|null)=, (Object|null)=): ?",
         f.getPropertyType("apply").toString());
 
     // The type of apply() on the function prototype just takes what it was
@@ -677,7 +677,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
     Var v = globalScope.getVar("Object");
     FunctionType obj = (FunctionType) v.getType();
-    assertEquals("function (new:Object, *): ?", obj.toString());
+    assertEquals("function (new:Object, *=): ?", obj.toString());
     assertNotNull(v.getNode());
     assertNotNull(v.input);
   }

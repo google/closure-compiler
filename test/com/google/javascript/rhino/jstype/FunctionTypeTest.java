@@ -261,7 +261,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         .withReturnType(BOOLEAN_TYPE).build();
 
     assertEquals(
-        "function ((Date|null|undefined), string, number):" +
+        "function ((Date|null|undefined), string=, number=):" +
         " function (...[?]): boolean",
         fn.getPropertyType("bind").toString());
   }
