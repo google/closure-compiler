@@ -121,6 +121,9 @@ class GlobalVarReferenceMap implements ReferenceMap {
   private void removeScriptReferences(InputId inputId) {
     Preconditions.checkNotNull(inputId);
 
+    if (!inputOrder.containsKey(inputId)) {
+      return; // Input did not exist when last computed, so skip
+    }
     // TODO(bashir): If this is too slow it is not too difficult to make it
     // faster with keeping an index for variables accessed in sourceName.
     for (ReferenceCollection collection : refMap.values()) {

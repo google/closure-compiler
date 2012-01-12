@@ -1072,6 +1072,13 @@ public class Compiler extends AbstractCompiler {
     getRoot().getLastChild().addChildToBack(newRoot);
 
     CompilerInput newInput = new CompilerInput(ast);
+
+    // TODO(tylerg): handle this for multiple modules at some point.
+    if (moduleGraph == null && !modules.isEmpty()) {
+      // singleton module
+      modules.get(0).add(newInput);
+    }
+
     inputsById.put(ast.getInputId(), newInput);
 
     return true;
