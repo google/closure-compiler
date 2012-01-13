@@ -324,4 +324,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract GlobalVarReferenceMap getGlobalVarReferences();
 
+  /**
+   * @return a CompilerInput that can be modified to add addition extern
+   * definitions;
+   */
+  abstract CompilerInput getSynthesizedExternsInput();
 }

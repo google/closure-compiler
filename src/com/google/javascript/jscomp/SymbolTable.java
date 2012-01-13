@@ -612,7 +612,7 @@ public final class SymbolTable
   private boolean isGoodRefToAdd(@Nullable StaticReference<JSType> ref) {
     return ref != null && ref.getNode() != null
         && ref.getNode().getStaticSourceFile() != null
-        && !VarCheck.SYNTHETIC_VARS_DECLAR.equals(
+        && !Compiler.SYNTHETIC_EXTERNS.equals(
             ref.getNode().getStaticSourceFile().getName());
   }
 

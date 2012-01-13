@@ -97,6 +97,8 @@ public class CommandLineRunnerTest extends TestCase {
         + "/** @constructor */ function Window() {}\n"
         + "/** @type {string} */ Window.prototype.name;\n"
         + "/** @type {Window} */ var window;"
+        + "/** @constructor */ function Element() {}"
+        + "Element.prototype.offsetWidth;"
         + "/** @nosideeffects */ function noSideEffects() {}")
   );
 
@@ -384,10 +386,16 @@ public class CommandLineRunnerTest extends TestCase {
          "}");
   }
 
+  public void testHiddenSideEffect() {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    test("element.offsetWidth;",
+         "element.offsetWidth", CheckSideEffects.USELESS_CODE_ERROR);
+  }
+
   public void testIssue504() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
     test("void function() { alert('hi'); }();",
-         "alert('hi');", CheckSideEffects.USELESS_CODE_ERROR);
+         "alert('hi');void 0", CheckSideEffects.USELESS_CODE_ERROR);
   }
 
   public void testIssue601() {

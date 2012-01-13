@@ -205,6 +205,8 @@ public class DefaultPassConfig extends PassConfig {
       return checks;
     }
 
+    checks.add(checkSideEffects);
+
     if (options.checkSuspiciousCode ||
         options.enables(DiagnosticGroups.GLOBAL_THIS) ||
         options.enables(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT)) {
@@ -661,6 +663,8 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(rescopeGlobalSymbols);
     }
 
+    passes.add(stripSideEffectProtection);
+
     // Safety checks
     passes.add(sanityCheckAst);
     passes.add(sanityCheckVars);
@@ -735,6 +739,39 @@ public class DefaultPassConfig extends PassConfig {
   /**
    * Checks for code that is probably wrong (such as stray expressions).
    */
+  final HotSwapPassFactory checkSideEffects =
+      new HotSwapPassFactory("checkSideEffects", true) {
+
+    @Override
+    protected HotSwapCompilerPass createInternal(final AbstractCompiler
+        compiler) {
+      // The current approach to protecting "hidden" side-effects is to
+      // wrap them in a function call that is stripped later, this shouldn't
+      // be done in IDE mode where AST changes may be unexpected.
+      boolean protectHiddenSideEffects =
+          options.protectHiddenSideEffects && !options.ideMode;
+      return new CheckSideEffects(compiler,
+          options.checkSuspiciousCode ? CheckLevel.WARNING : CheckLevel.OFF,
+              protectHiddenSideEffects);
+    }
+  };
+
+  /**
+   * Checks for code that is probably wrong (such as stray expressions).
+   */
+  final PassFactory stripSideEffectProtection =
+      new PassFactory("stripSideEffectProtection", true) {
+
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler
+        compiler) {
+      return new CheckSideEffects.StripProtection(compiler);
+    }
+  };
+
+  /**
+   * Checks for code that is probably wrong (such as stray expressions).
+   */
   // TODO(bolinfest): Write a CompilerPass for this.
   final HotSwapPassFactory suspiciousCode =
       new HotSwapPassFactory("suspiciousCode", true) {
@@ -745,7 +782,6 @@ public class DefaultPassConfig extends PassConfig {
       List<Callback> sharedCallbacks = Lists.newArrayList();
       if (options.checkSuspiciousCode) {
         sharedCallbacks.add(new CheckAccidentalSemicolon(CheckLevel.WARNING));
-        sharedCallbacks.add(new CheckSideEffects(CheckLevel.WARNING));
       }
 
       if (options.enables(DiagnosticGroups.GLOBAL_THIS)) {

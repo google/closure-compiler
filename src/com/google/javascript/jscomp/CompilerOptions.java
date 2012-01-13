@@ -737,6 +737,18 @@ public class CompilerOptions implements Serializable, Cloneable {
   boolean looseTypes;
 
   /**
+   * When set, assume that apparently side-effect free code is meaningful.
+   */
+  boolean protectHiddenSideEffects;
+
+  /**
+   * When enabled, assume that apparently side-effect free code is meaningful.
+   */
+  public void setProtectHiddenSideEffects(boolean enable) {
+    this.protectHiddenSideEffects = enable;
+  }
+
+  /**
    * Data holder Alias Transformation information accumulated during a compile.
    */
   private transient AliasTransformationHandler aliasHandler;

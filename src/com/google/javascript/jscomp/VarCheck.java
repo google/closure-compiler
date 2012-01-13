@@ -34,8 +34,6 @@ import java.util.Set;
  */
 class VarCheck extends AbstractPostOrderCallback implements
     HotSwapCompilerPass {
-  /** Name of the synthetic script that holds undefined variables. */
-  static final String SYNTHETIC_VARS_DECLAR = "{SyntheticVarsDeclar}";
 
   static final DiagnosticType UNDEFINED_VAR_ERROR = DiagnosticType.error(
       "JSC_UNDEFINED_VARIABLE",
@@ -66,7 +64,6 @@ class VarCheck extends AbstractPostOrderCallback implements
       "JSC_UNDEFINED_EXTERN_VAR_ERROR",
       "name {0} is not undefined in the externs.");
 
-  private CompilerInput synthesizedExternsInput = null;
   private Node synthesizedExternsRoot = null;
 
   // Vars that still need to be declared in externs. These will be declared
@@ -267,11 +264,7 @@ class VarCheck extends AbstractPostOrderCallback implements
 
   /** Lazily create a "new" externs input for undeclared variables. */
   private CompilerInput getSynthesizedExternsInput() {
-    if (synthesizedExternsInput == null) {
-      synthesizedExternsInput =
-          compiler.newExternInput(SYNTHETIC_VARS_DECLAR);
-    }
-    return synthesizedExternsInput;
+    return compiler.getSynthesizedExternsInput();
   }
 
   /** Lazily create a "new" externs root for undeclared variables. */

@@ -116,6 +116,7 @@ public enum CompilationLevel {
     options.optimizeArgumentsArray = true;
     options.setRemoveUnusedVariables(Reach.LOCAL_ONLY);
     options.collapseObjectLiterals = true;
+    options.protectHiddenSideEffects = true;
 
     // Allows annotations that are not standard.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
@@ -144,6 +145,7 @@ public enum CompilationLevel {
     options.removeDeadCode = true;
     options.optimizeArgumentsArray = true;
     options.collapseObjectLiterals = true;
+    options.protectHiddenSideEffects = true;
 
     // All the advance optimizations.
     options.removeClosureAsserts = true;

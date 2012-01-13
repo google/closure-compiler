@@ -1821,6 +1821,11 @@ public class Compiler extends AbstractCompiler {
   private final List<CodeChangeHandler> codeChangeHandlers =
       Lists.<CodeChangeHandler>newArrayList();
 
+  /** Name of the synthetic input that holds synthesized externs. */
+  static final String SYNTHETIC_EXTERNS = "{SyntheticVarsDeclar}";
+
+  private CompilerInput synthesizedExternsInput = null;
+
   @Override
   void addChangeHandler(CodeChangeHandler handler) {
     codeChangeHandlers.add(handler);
@@ -2213,6 +2218,14 @@ public class Compiler extends AbstractCompiler {
   @Override
   GlobalVarReferenceMap getGlobalVarReferences() {
     return globalRefMap;
+  }
+
+  @Override
+  CompilerInput getSynthesizedExternsInput() {
+    if (synthesizedExternsInput == null) {
+      synthesizedExternsInput = newExternInput(SYNTHETIC_EXTERNS);
+    }
+    return synthesizedExternsInput;
   }
 
 }
