@@ -915,6 +915,38 @@ public class ParserTest extends BaseJSTypeTestCase {
     parse("x.yield;");
   }
 
+  public void testGetPropFunctionName() {
+    parseError("function a.b() {}",
+        "missing ( before function parameters.");
+    parseError("var x = function a.b() {}",
+        "missing ( before function parameters.");
+  }
+
+  public void testGetPropFunctionNameIdeMode() {
+    // In IDE mode, we try to fix up the tree, but sometimes
+    // this leads to even more errors.
+    isIdeMode = true;
+    parseError("function a.b() {}",
+        "missing ( before function parameters.",
+        "missing formal parameter",
+        "missing ) after formal parameters",
+        "missing { before function body",
+        "syntax error",
+        "missing ; before statement",
+        "Unsupported syntax: ERROR",
+        "Unsupported syntax: ERROR");
+    parseError("var x = function a.b() {}",
+        "missing ( before function parameters.",
+        "missing formal parameter",
+        "missing ) after formal parameters",
+        "missing { before function body",
+        "syntax error",
+        "missing ; before statement",
+        "missing ; before statement",
+        "Unsupported syntax: ERROR",
+        "Unsupported syntax: ERROR");
+  }
+
   public void testIdeModePartialTree() {
     Node partialTree = parseError("function Foo() {} f.",
         "missing name after . operator");

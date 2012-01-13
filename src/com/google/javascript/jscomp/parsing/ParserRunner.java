@@ -124,7 +124,7 @@ public class ParserRunner {
     compilerEnv.setReservedKeywordAsIdentifier(acceptEs5);
     compilerEnv.setAllowKeywordAsObjectPropertyName(acceptEs5);
 
-    compilerEnv.setAllowMemberExprAsFunctionName(config.isIdeMode);
+    compilerEnv.setAllowMemberExprAsFunctionName(false);
     compilerEnv.setIdeMode(config.isIdeMode);
     compilerEnv.setRecoverFromErrors(config.isIdeMode);
 
