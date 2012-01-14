@@ -1580,6 +1580,22 @@ public class NodeUtilTest extends TestCase {
     testFunctionName("this.a = function a() {}", "this.a");
   }
 
+  public void testGetBestLValue() {
+    assertEquals("x", getFunctionLValue("var x = function() {};"));
+    assertEquals("x", getFunctionLValue("x = function() {};"));
+    assertEquals("x", getFunctionLValue("function x() {};"));
+    assertEquals("x", getFunctionLValue("var x = y ? z : function() {};"));
+    assertEquals("x", getFunctionLValue("var x = y ? function() {} : z;"));
+    assertEquals("x", getFunctionLValue("var x = y && function() {};"));
+    assertEquals("x", getFunctionLValue("var x = y || function() {};"));
+    assertEquals("x", getFunctionLValue("var x = (y, function() {});"));
+  }
+
+  private String getFunctionLValue(String js) {
+    Node lVal = NodeUtil.getBestLValue(getFunctionNode(js));
+    return lVal == null ? null : lVal.getString();
+  }
+
   static void testFunctionName(String js, String expected) {
     assertEquals(
         expected,

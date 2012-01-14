@@ -3011,13 +3011,18 @@ public final class NodeUtil {
       if (parent.isName()) {
         return getBestJSDocInfo(parent);
       } else if (parent.isAssign()) {
-        info = parent.getJSDocInfo();
+        return parent.getJSDocInfo();
       } else if (isObjectLitKey(parent, parent.getParent())) {
-        info = parent.getJSDocInfo();
+        return parent.getJSDocInfo();
       } else if (parent.isFunction()) {
-        info = parent.getJSDocInfo();
+        return parent.getJSDocInfo();
       } else if (parent.isVar() && parent.hasOneChild()) {
-        info = parent.getJSDocInfo();
+        return parent.getJSDocInfo();
+      } else if ((parent.isHook() && parent.getFirstChild() != n) ||
+                 parent.isOr() ||
+                 parent.isAnd() ||
+                 (parent.isComma() && parent.getFirstChild() != n)) {
+        return getBestJSDocInfo(parent);
       }
     }
     return info;
@@ -3035,6 +3040,12 @@ public final class NodeUtil {
       return parent.getFirstChild();
     } else if (isObjectLitKey(parent, parent.getParent())) {
       return parent;
+    } else if (
+        (parent.isHook() && parent.getFirstChild() != n) ||
+        parent.isOr() ||
+        parent.isAnd() ||
+        (parent.isComma() && parent.getFirstChild() != n)) {
+      return getBestLValue(parent);
     }
     return null;
   }

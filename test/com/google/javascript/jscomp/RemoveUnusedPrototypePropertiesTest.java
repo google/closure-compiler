@@ -484,4 +484,24 @@ public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
         "function x() { (new Foo).methodA; }");
   }
 
+  public void testHook1() throws Exception {
+    test(
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype.method1 = Math.random() ?" +
+        "   function() { this.method2(); } : function() { this.method3(); };" +
+        "Foo.prototype.method2 = function() {};" +
+        "Foo.prototype.method3 = function() {};",
+        "");
+  }
+
+  public void testHook2() throws Exception {
+    testSame(
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype.method1 = Math.random() ?" +
+        "   function() { this.method2(); } : function() { this.method3(); };" +
+        "Foo.prototype.method2 = function() {};" +
+        "Foo.prototype.method3 = function() {};" +
+        "(new Foo()).method1();");
+  }
+
 }

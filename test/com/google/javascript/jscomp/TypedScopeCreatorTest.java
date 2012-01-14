@@ -1137,6 +1137,30 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame("var x = {}; /** @interface */ x.f;", IFACE_INITIALIZER);
   }
 
+  public void testFunctionInHook() throws Exception {
+    testSame("/** @param {number} x */ var f = Math.random() ? " +
+        "function(x) {} : function(x) {};");
+    assertEquals("number", lastLocalScope.getVar("x").getType().toString());
+  }
+
+  public void testFunctionInAnd() throws Exception {
+    testSame("/** @param {number} x */ var f = Math.random() && " +
+        "function(x) {};");
+    assertEquals("number", lastLocalScope.getVar("x").getType().toString());
+  }
+
+  public void testFunctionInOr() throws Exception {
+    testSame("/** @param {number} x */ var f = Math.random() || " +
+        "function(x) {};");
+    assertEquals("number", lastLocalScope.getVar("x").getType().toString());
+  }
+
+  public void testFunctionInComma() throws Exception {
+    testSame("/** @param {number} x */ var f = (Math.random(), " +
+        "function(x) {});");
+    assertEquals("number", lastLocalScope.getVar("x").getType().toString());
+  }
+
   private JSType findNameType(final String name, Scope scope) {
     return findTypeOnMatchedNode(new Predicate<Node>() {
       @Override public boolean apply(Node n) {
