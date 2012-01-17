@@ -8777,6 +8777,37 @@ public class TypeCheckTest extends CompilerTypeTestCase {
             "Bad type annotation. missing object name in @lends tag"));
   }
 
+  public void testLends10() throws Exception {
+    testTypes(
+        "function defineClass(x) { return function() {}; } " +
+        "/** @constructor */" +
+        "var Foo = defineClass(" +
+        "    /** @lends {Foo.prototype} */ ({/** @type {number} */ bar: 1}));" +
+        "/** @return {string} */ function f() { return (new Foo()).bar; }",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void testLends11() throws Exception {
+    testTypes(
+        "function defineClass(x, y) { return function() {}; } " +
+        "/** @constructor */" +
+        "var Foo = function() {};" +
+        "/** @return {*} */ Foo.prototype.bar = function() { return 3; };" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */\n" +
+        "var SubFoo = defineClass(Foo, " +
+        "    /** @lends {SubFoo.prototype} */ ({\n" +
+        "      /** @return {number} */ bar: function() { return 3; }}));" +
+        "/** @return {string} */ function f() { return (new SubFoo()).bar(); }",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
   public void testDeclaredNativeTypeEquality() throws Exception {
     Node n = parseAndTypeCheck("/** @constructor */ function Object() {};");
     assertEquals(registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),
