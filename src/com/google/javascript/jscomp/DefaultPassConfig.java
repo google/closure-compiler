@@ -510,7 +510,7 @@ public class DefaultPassConfig extends PassConfig {
 
       // After inlining some of the variable uses, some variables are unused.
       // Re-run remove unused vars to clean it up.
-      if (options.removeUnusedVars) {
+      if (options.removeUnusedVars || options.removeUnusedLocalVars) {
         passes.add(removeUnusedVars);
       }
     }
