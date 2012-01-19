@@ -240,7 +240,7 @@ class AmbiguateProperties implements CompilerPass {
       }
     }
 
-    logger.info("Collapsed " + numRenamedPropertyNames + " properties into "
+    logger.fine("Collapsed " + numRenamedPropertyNames + " properties into "
                 + numNewPropertyNames + " and skipped renaming "
                 + numSkippedPropertyNames + " properties.");
   }

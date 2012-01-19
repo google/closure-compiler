@@ -110,7 +110,7 @@ class AliasStrings extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    logger.info("Aliasing common strings");
+    logger.fine("Aliasing common strings");
 
     // Traverse the tree and collect strings
     NodeTraversal.traverse(compiler, root, this);
@@ -330,7 +330,7 @@ class AliasStrings extends AbstractPostOrderCallback
       }
     }
     // TODO(user): Make this save to file OR output to the application
-    logger.info(sb.toString());
+    logger.fine(sb.toString());
   }
 
   // -------------------------------------------------------------------------

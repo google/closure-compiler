@@ -77,7 +77,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    logger.info("Expanding Jquery Aliases");
+    logger.fine("Expanding Jquery Aliases");
 
     // Traverse the tree and collect strings
     NodeTraversal.traverse(compiler, root, this);

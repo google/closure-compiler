@@ -53,7 +53,7 @@ class NameAnonymousFunctions implements CompilerPass {
     AnonymousFunctionNamingCallback namingCallback =
         new AnonymousFunctionNamingCallback(new AnonymousFunctionNamer());
     NodeTraversal.traverse(compiler, root, namingCallback);
-    logger.info("Named " + namedCount + " anon functions using " +
+    logger.fine("Named " + namedCount + " anon functions using " +
         bytesUsed + " bytes");
   }
 

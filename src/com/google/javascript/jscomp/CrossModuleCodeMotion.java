@@ -71,7 +71,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    logger.info("Moving functions + variable into deeper modules");
+    logger.fine("Moving functions + variable into deeper modules");
 
     // If there are <2 modules, then we will never move anything, so we're done
     if (graph != null && graph.getModuleCount() > 1) {

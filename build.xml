@@ -15,6 +15,18 @@
 -->
 <project name="compiler" basedir="." default="jar" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
+  <!--
+    Use -Dtest.class to change what tests are run on the command-line.
+    i.e., -Dtest.class=CommandLineRunnerTest will run just that test class.
+  -->
+  <property name="test.class" value="*Test"/>
+
+  <!--
+    Use -Dtest.fork to specify whether or not to fork the process.
+    Some machines run better with forking turned off.
+  -->
+  <property name="test.fork" value="true"/>
+
   <!-- Force java 6 -->
   <property name="ant.build.javac.source" value="1.6" />
   <property name="ant.build.javac.target" value="1.6" />
@@ -41,7 +53,7 @@
   <property name="compiler-jarfile"
             value="${build.dir}/${ant.project.name}.jar" />
   <property name="num-fuzz-tests" value="10000"/>
-  <property name="test" value="*Test"/>
+
   <property name="jsonml.dir" value="${basedir}/src/com/google/javascript/jscomp/jsonml" />
   <property name="jsonml-classes.dir" value = "${build.dir}/jsonml-classes" />
   <property name="jsonml-jarfile" value="${build.dir}/secure_compiler.jar" />
@@ -309,12 +321,13 @@
     <javac srcdir="${src.dir}"
            destdir="${testClasses.dir}"
            excludes=".svn"
-           debug="${javac.debug}">
+           debug="on">
       <classpath refid="allclasspath.path" />
     </javac>
     <javac srcdir="${test.dir}"
            destdir="${testClasses.dir}"
-           excludes=".svn">
+           excludes=".svn"
+           debug="on">
       <classpath refid="allclasspath.path" />
     </javac>
   </target>
@@ -329,55 +342,31 @@
     </jar>
   </target>
 
-  <target name="test-forkless"
-      depends="compile-tests"
-      description="execute JUnit tests without forking the process">
-    <junit showoutput="true">
-      <classpath refid="allclasspath.path" />
-      <classpath>
-        <pathelement location="${build.dir}/test" />
-      </classpath>
-      <formatter type="plain" usefile="false" />
-      <batchtest haltonfailure="true">
-        <fileset dir="${build.dir}/test">
-          <include name="**/*Test.class" />
-        </fileset>
-      </batchtest>
-    </junit>
-  </target>
-
   <target name="test"
           depends="compile-tests"
-          description="compile and execute JUnit tests">
-    <junit printsummary="on" fork="true" forkmode="once" showoutput="true">
+          description="Compile and execute the JUnit tests.">
+    <mkdir dir="build/testoutput"/>
+    <junit printsummary="on" fork="${test.fork}"
+           forkmode="once" showoutput="true"
+           failureproperty="junit.failure">
       <classpath refid="allclasspath.path" />
       <classpath>
         <pathelement location="${build.dir}/test" />
       </classpath>
-      <formatter type="plain" usefile="false" />
-      <batchtest haltonfailure="true">
+      <batchtest todir="build/testoutput">
+        <formatter type="brief" usefile="false" />
+        <formatter type="xml" />
         <fileset dir="${build.dir}/test">
-          <include name="**/*Test.class" />
+          <include name="**/${test.class}.class" />
         </fileset>
       </batchtest>
     </junit>
-  </target>
-
-  <target name="testclass"
-          depends="compile-tests"
-          description="compile and execute one JUnit class specified with the -Dtest flag.">
-    <junit printsummary="on" fork="true" forkmode="once" showoutput="true">
-      <classpath refid="allclasspath.path" />
-      <classpath>
-        <pathelement location="${build.dir}/test" />
-      </classpath>
-      <formatter type="plain" usefile="false" />
-      <batchtest>
-        <fileset dir="${build.dir}/test">
-          <include name="**/${test}.class" />
-        </fileset>
-      </batchtest>
-    </junit>
+    <junitreport>
+       <fileset dir="build/testoutput" includes="*.xml"/>
+       <report todir="build/testoutput"/>
+    </junitreport>
+    <fail if="junit.failure"
+          message="Unit tests failed. See build/testoutput/index.html" />
   </target>
 
   <target name="fuzz-test"

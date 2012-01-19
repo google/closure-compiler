@@ -245,7 +245,7 @@ class PhaseOptimizer implements CompilerPass {
 
     @Override
     public void process(Node externs, Node root) {
-      logger.info(name);
+      logger.fine(name);
       startPass(name);
       processInternal(externs, root);
       endPass(externs, root);
