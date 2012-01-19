@@ -70,7 +70,7 @@ chrome.extension.getViews = function(fetchProperties) {};
  * @param {number|*=} opt_arg1 Either the extensionId to send the request to,
  *     in which case the request is passed as the next arg, or the request.
  * @param {*=} opt_request The request value, if arg1 was the extensionId.
- * @param {function(*) : void=} opt_callback The callback function which
+ * @param {function(*): void=} opt_callback The callback function which
  *     takes a JSON response object sent by the handler of the request.
  */
 chrome.extension.sendRequest = function(opt_arg1, opt_request, opt_callback) {};
@@ -97,7 +97,7 @@ chrome.tabs = {};
  * @param {number?} windowId Window Id.
  * @param {Object?} options parameters of image capture, such as the format of
  *    the resulting image.
- * @param {function(string) : void} callback Callback function which accepts
+ * @param {function(string): void} callback Callback function which accepts
  *    the data URL string of a JPEG encoding of the visible area of the
  *    captured tab. May be assigned to the 'src' property of an HTML Image
  *    element for display.
@@ -112,13 +112,13 @@ chrome.tabs.connect = function(tabId, opt_connectInfo) {};
 
 /**
  * @param {Object} createProperties Info object.
- * @param {function(Tab) : void=} opt_callback The callback function.
+ * @param {function(Tab): void=} opt_callback The callback function.
  */
 chrome.tabs.create = function(createProperties, opt_callback) {};
 
 /**
  * @param {number?} tabId Tab id.
- * @param {function(string) : void} callback Callback function.
+ * @param {function(string): void} callback Callback function.
  */
 chrome.tabs.detectLanguage = function(tabId, callback) {};
 
@@ -126,25 +126,25 @@ chrome.tabs.detectLanguage = function(tabId, callback) {};
  * @param {number?} tabId Tab id.
  * @param {Object?} details An object which may have 'code', 'file',
  *    or 'allFrames' keys.
- * @param {function() : void=} opt_callback Callback function.
+ * @param {function(): void=} opt_callback Callback function.
  */
 chrome.tabs.executeScript = function(tabId, details, opt_callback) {};
 
 /**
  * @param {number} tabId Tab id.
- * @param {function(Tab) : void} callback Callback.
+ * @param {function(Tab): void} callback Callback.
  */
 chrome.tabs.get = function(tabId, callback) {};
 
 /**
  * @param {number?} windowId Window id.
- * @param {function(Array.<Tab>) : void} callback Callback.
+ * @param {function(Array.<Tab>): void} callback Callback.
  */
 chrome.tabs.getAllInWindow = function(windowId, callback) {};
 
 /**
  * @param {number?} windowId Window id.
- * @param {function(Tab) : void} callback Callback.
+ * @param {function(Tab): void} callback Callback.
  */
 chrome.tabs.getSelected = function(windowId, callback) {};
 
@@ -152,7 +152,7 @@ chrome.tabs.getSelected = function(windowId, callback) {};
  * @param {number?} tabId Tab id.
  * @param {Object?} details An object which may have 'code', 'file',
  *     or 'allFrames' keys.
- * @param {function() : void=} opt_callback Callback function.
+ * @param {function(): void=} opt_callback Callback function.
  */
 chrome.tabs.insertCSS = function(tabId, details, opt_callback) {};
 
@@ -160,7 +160,7 @@ chrome.tabs.insertCSS = function(tabId, details, opt_callback) {};
  * @param {number} tabId Tab id.
  * @param {Object.<string, number>} moveProperties An object with 'index'
  *     and optional 'windowId' keys.
- * @param {function(Tab) : void=} opt_callback Callback.
+ * @param {function(Tab): void=} opt_callback Callback.
  */
 chrome.tabs.move = function(tabId, moveProperties, opt_callback) {};
 
@@ -168,20 +168,20 @@ chrome.tabs.move = function(tabId, moveProperties, opt_callback) {};
  * @param {Object.<string, (number|string)>} queryInfo An object which may have
  *     'active', 'pinned', 'highlighted', 'status', 'title', 'url', 'windowId',
  *     and 'windowType' keys.
- * @param {function(Array.<Tab>) : void=} opt_callback Callback.
+ * @param {function(Array.<Tab>): void=} opt_callback Callback.
  */
 chrome.tabs.query = function(queryInfo, opt_callback) {};
 
 /**
  * @param {number} tabId Tab id.
- * @param {function(Tab) : void=} opt_callback Callback.
+ * @param {function(Tab): void=} opt_callback Callback.
  */
 chrome.tabs.remove = function(tabId, opt_callback) {};
 
 /**
  * @param {number} tabId Tab id.
  * @param {*} request The request value of any type.
- * @param {function(*) : void=} opt_callback The callback function which
+ * @param {function(*): void=} opt_callback The callback function which
  *     takes a JSON response object sent by the handler of the request.
  */
 chrome.tabs.sendRequest = function(tabId, request, opt_callback) {};
@@ -190,7 +190,7 @@ chrome.tabs.sendRequest = function(tabId, request, opt_callback) {};
  * @param {number} tabId Tab id.
  * @param {Object.<string, (string|boolean)>} updateProperties An object which
  *     may have 'url' or 'selected' key.
- * @param {function(Tab) : void=} opt_callback Callback.
+ * @param {function(Tab): void=} opt_callback Callback.
  */
 chrome.tabs.update = function(tabId, updateProperties, opt_callback) {};
 
@@ -224,7 +224,7 @@ chrome.windows = {};
 /**
  * @param {Object?} createData May have 'url', 'left', 'top',
  *     'width', or 'height' properties.
- * @param {function(ChromeWindow) : void=} opt_callback Callback.
+ * @param {function(ChromeWindow): void=} opt_callback Callback.
  */
 chrome.windows.create = function(createData, opt_callback) {};
 
@@ -235,18 +235,18 @@ chrome.windows.create = function(createData, opt_callback) {};
 chrome.windows.getAll = function(getInfo, callback) {};
 
 /**
- * @param {function(ChromeWindow) : void} callback Callback.
+ * @param {function(ChromeWindow): void} callback Callback.
  */
 chrome.windows.getCurrent = function(callback) {};
 
 /**
- * @param {function(ChromeWindow) : void} callback Callback.
+ * @param {function(ChromeWindow): void} callback Callback.
  */
 chrome.windows.getLastFocused = function(callback) {};
 
 /**
  * @param {number} tabId Tab Id.
- * @param {function() : void=} opt_callback Callback.
+ * @param {function(): void=} opt_callback Callback.
  */
 chrome.windows.remove = function(tabId, opt_callback) {};
 
@@ -254,7 +254,7 @@ chrome.windows.remove = function(tabId, opt_callback) {};
  * @param {number} tabId Tab Id.
  * @param {Object.<string, number>} updateProperties An object which may
  *     have 'left', 'top', 'width', or 'height' keys.
- * @param {function() : void=} opt_callback Callback.
+ * @param {function(): void=} opt_callback Callback.
  */
 chrome.windows.update = function(tabId, updateProperties, opt_callback) {};
 
@@ -275,7 +275,7 @@ chrome.windows.WINDOW_ID_NONE;
 chrome.i18n = {};
 
 /**
- * @param {function(Array.<string>) : void} callback The callback function which
+ * @param {function(Array.<string>): void} callback The callback function which
  *     accepts an array of the accept languages of the browser, such as
  *     'en-US','en','zh-CN'.
  */
@@ -364,7 +364,7 @@ chrome.bookmarks = {};
 /**
  * @param {Object} bookmark An object which has 'parentId' and
  *     optionally 'index', 'title', and 'url'.
- * @param {function(BookmarkTreeNode) : void=} opt_callback The
+ * @param {function(BookmarkTreeNode): void=} opt_callback The
  *     callback function which accepts a BookmarkTreeNode object.
  * @return {BookmarkTreeNode}
  */
@@ -372,7 +372,7 @@ chrome.bookmarks.create = function(bookmark, opt_callback) {};
 
 /**
  * @param {(string|Array.<string>)} idOrIdList
- * @param {function(Array.<BookmarkTreeNode>) : void} callback The
+ * @param {function(Array.<BookmarkTreeNode>): void} callback The
  *     callback function which accepts an array of BookmarkTreeNode.
  * @return {Array.<BookmarkTreeNode>}
  */
@@ -380,7 +380,7 @@ chrome.bookmarks.get = function(idOrIdList, callback) {};
 
 /**
  * @param {string} id
- * @param {function(Array.<BookmarkTreeNode>) : void} callback The
+ * @param {function(Array.<BookmarkTreeNode>): void} callback The
  *     callback function which accepts an array of BookmarkTreeNode.
  * @return {Array.<BookmarkTreeNode>}
  */
@@ -388,20 +388,20 @@ chrome.bookmarks.getChildren = function(id, callback) {};
 
 /**
  * @param {number} numberOfItems The number of items to return.
- * @param {function(Array.<BookmarkTreeNode>) : void} callback The
+ * @param {function(Array.<BookmarkTreeNode>): void} callback The
  *     callback function which accepts an array of BookmarkTreeNode.
  */
 chrome.bookmarks.getRecent = function(numberOfItems, callback) {};
 
 /**
  * @param {string} id The ID of the root of the subtree to retrieve.
- * @param {function(Array.<BookmarkTreeNode>) : void} callback The
+ * @param {function(Array.<BookmarkTreeNode>): void} callback The
  *     callback function which accepts an array of BookmarkTreeNode.
  */
 chrome.bookmarks.getSubTree = function(id, callback) {};
 
 /**
- * @param {function(Array.<BookmarkTreeNode>) : void} callback The
+ * @param {function(Array.<BookmarkTreeNode>): void} callback The
  *     callback function which accepts an array of BookmarkTreeNode.
  * @return {Array.<BookmarkTreeNode>}
  */
@@ -411,7 +411,7 @@ chrome.bookmarks.getTree = function(callback) {};
  * @param {string} id
  * @param {Object} destination An object which has 'parentId' and
  *     optionally 'index'.
- * @param {function(Array.<BookmarkTreeNode>) : void=} opt_callback
+ * @param {function(Array.<BookmarkTreeNode>): void=} opt_callback
  *     The callback function which accepts an array of
  *     BookmarkTreeNode.
  * @return {BookmarkTreeNode}
@@ -420,19 +420,19 @@ chrome.bookmarks.move = function(id, destination, opt_callback) {};
 
 /**
  * @param {string} id
- * @param {function() : void=} opt_callback
+ * @param {function(): void=} opt_callback
  */
 chrome.bookmarks.remove = function(id, opt_callback) {};
 
 /**
  * @param {string} id
- * @param {function() : void=} opt_callback
+ * @param {function(): void=} opt_callback
  */
 chrome.bookmarks.removeTree = function(id, opt_callback) {};
 
 /**
  * @param {string} query
- * @param {function(Array.<BookmarkTreeNode>) : void} callback
+ * @param {function(Array.<BookmarkTreeNode>): void} callback
  * @return {Array.<BookmarkTreeNode>}
  */
 chrome.bookmarks.search = function(query, callback) {};
@@ -440,7 +440,7 @@ chrome.bookmarks.search = function(query, callback) {};
 /**
  * @param {string} id
  * @param {Object} changes An object which may have 'title' as a key.
- * @param {function(BookmarkTreeNode) : void=} opt_callback The
+ * @param {function(BookmarkTreeNode): void=} opt_callback The
  *     callback function which accepts a BookmarkTreeNode object.
  * @return {BookmarkTreeNode}
  */
@@ -518,18 +518,18 @@ chrome.cookies = {};
 
 /**
  * @param {Object} details
- * @param {function(Cookie=) : void} callback
+ * @param {function(Cookie=): void} callback
  */
 chrome.cookies.get = function(details, callback) {};
 
 /**
  * @param {Object} details
- * @param {function(Array.<Cookie>) : void} callback
+ * @param {function(Array.<Cookie>): void} callback
  */
 chrome.cookies.getAll = function(details, callback) {};
 
 /**
- * @param {function(Array.<CookieStore>) : void} callback
+ * @param {function(Array.<CookieStore>): void} callback
  */
 chrome.cookies.getAllCookieStores = function(callback) {};
 
@@ -680,7 +680,7 @@ chrome.experimental.popup = {};
 /**
  * @param {string} url
  * @param {Object} showDetails
- * @param {function() : void=} opt_callback
+ * @param {function(): void=} opt_callback
  */
 chrome.experimental.popup.show = function(url, showDetails, opt_callback) {};
 
@@ -694,7 +694,7 @@ chrome.experimental.processes = {};
  * @param {number} tabId
  * @param {function(Process)} callback
  */
-chrome.experimental.processes.getProcessForTab = function(tabId, callback) {}
+chrome.experimental.processes.getProcessForTab = function(tabId, callback) {};
 
 
 chrome.experimental.rlz = {};
@@ -783,7 +783,7 @@ chrome.idle = {};
 /**
  * @param {number} thresholdSeconds Threshold in seconds, used to determine
  *     when a machine is in the idle state.
- * @param {function(string) : void} callback Callback to handle the state.
+ * @param {function(string): void} callback Callback to handle the state.
  */
 chrome.idle.queryState = function(thresholdSeconds, callback) {};
 
