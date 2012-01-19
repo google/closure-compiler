@@ -65,6 +65,7 @@ public final class CompileTask
   private boolean printInputDelimiter;
   private boolean generateExports;
   private boolean replaceProperties;
+  private boolean forceRecompile;
   private String replacePropertiesPrefix;
   private File outputFile;
   private final List<Parameter> defineParams;
@@ -82,6 +83,7 @@ public final class CompileTask
     this.printInputDelimiter = false;
     this.generateExports = false;
     this.replaceProperties = false;
+    this.forceRecompile = false;
     this.replacePropertiesPrefix = "closure.define.";
     this.defineParams = Lists.newLinkedList();
     this.externFileLists = Lists.newLinkedList();
@@ -193,6 +195,13 @@ public final class CompileTask
   }
 
   /**
+   * Set force recompile option
+   */
+  public void setForceRecompile(boolean forceRecompile) {
+    this.forceRecompile = forceRecompile;
+  }
+
+  /**
    * Set generateExports option
    */
   public void setGenerateExports(boolean generateExports) {
@@ -233,7 +242,7 @@ public final class CompileTask
     JSSourceFile[] externs = findExternFiles();
     JSSourceFile[] sources = findSourceFiles();
 
-    if (isStale()) {
+    if (isStale() || forceRecompile) {
       log("Compiling " + sources.length + " file(s) with " +
           externs.length + " extern(s)");
 
