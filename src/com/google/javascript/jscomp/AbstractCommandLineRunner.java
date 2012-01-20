@@ -1312,7 +1312,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       Appendable out, boolean isManifest) throws IOException {
     Joiner commas = Joiner.on(",");
     boolean requiresNewline = false;
-    for (JSModule module : graph.getAllModulesInDependencyOrder()) {
+    for (JSModule module : graph.getAllModules()) {
       if (requiresNewline) {
         out.append("\n");
       }

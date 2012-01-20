@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.LinkedListMultimap;
@@ -32,7 +33,6 @@ import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -49,7 +49,7 @@ import java.util.TreeSet;
  */
 public class JSModuleGraph {
 
-  private Set<JSModule> modules;
+  private List<JSModule> modules;
 
   /**
    * Lists of modules at each depth. <code>modulesByDepth.get(3)</code> is a
@@ -75,14 +75,17 @@ public class JSModuleGraph {
    * Creates a module graph from a list of modules in dependency order.
    */
   public JSModuleGraph(JSModule[] modulesInDepOrder) {
-    this(Lists.<JSModule>newArrayList(modulesInDepOrder));
+    this(ImmutableList.copyOf(modulesInDepOrder));
   }
 
   /**
    * Creates a module graph from a list of modules in dependency order.
    */
   public JSModuleGraph(List<JSModule> modulesInDepOrder) {
-    modules = Sets.newHashSetWithExpectedSize(modulesInDepOrder.size());
+    Preconditions.checkState(
+        modulesInDepOrder.size() == Sets.newHashSet(modulesInDepOrder).size(),
+        "Found duplicate modules");
+    modules = ImmutableList.copyOf(modulesInDepOrder);
     modulesByDepth = Lists.newArrayList();
 
     for (JSModule module : modulesInDepOrder) {
@@ -99,7 +102,6 @@ public class JSModuleGraph {
       }
 
       module.setDepth(depth);
-      modules.add(module);
       if (depth == modulesByDepth.size()) {
         modulesByDepth.add(new ArrayList<JSModule>());
       }
@@ -108,19 +110,9 @@ public class JSModuleGraph {
   }
 
   /**
-   * Gets an iterable over all modules.
+   * Gets an iterable over all modules in dependency order.
    */
   Iterable<JSModule> getAllModules() {
-    return modules;
-  }
-
-  /**
-   * Gets all the modules in dependency order. Modules with the same depth
-   * will be ordered deterministically.
-   */
-  Iterable<JSModule> getAllModulesInDependencyOrder() {
-    List<JSModule> modules = Lists.newArrayList(getAllModules());
-    Collections.sort(modules, new DepthComparator());
     return modules;
   }
 
@@ -385,7 +377,7 @@ public class JSModuleGraph {
 
     // Now, generate the sorted result.
     List<CompilerInput> result = Lists.newArrayList();
-    for (JSModule module : getAllModulesInDependencyOrder()) {
+    for (JSModule module : getAllModules()) {
       result.addAll(module.getInputs());
     }
 
@@ -395,7 +387,7 @@ public class JSModuleGraph {
   LinkedDirectedGraph<JSModule, String> toGraphvizGraph() {
     LinkedDirectedGraph<JSModule, String> graphViz =
         LinkedDirectedGraph.create();
-    for (JSModule module : getAllModulesInDependencyOrder()) {
+    for (JSModule module : getAllModules()) {
       graphViz.createNode(module);
       for (JSModule dep : module.getDependencies()) {
         graphViz.createNode(dep);
