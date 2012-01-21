@@ -958,6 +958,19 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertNotNull(partialTree);
   }
 
+  public void testForEach() {
+    parseError(
+        "function f(stamp, status) {\n" +
+        "  for each ( var curTiming in this.timeLog.timings ) {\n" +
+        "    if ( curTiming.callId == stamp ) {\n" +
+        "      curTiming.flag = status;\n" +
+        "      break;\n" +
+        "    }\n" +
+        "  }\n" +
+        "};",
+        "unsupported language extension: for each");
+  }
+
   /**
    * Verify that the given code has the given parse errors.
    * @return If in IDE mode, returns a partial tree.
@@ -966,7 +979,6 @@ public class ParserTest extends BaseJSTypeTestCase {
     TestErrorReporter testErrorReporter = new TestErrorReporter(errors, null);
     Node script = null;
     try {
-
       StaticSourceFile file = new SimpleSourceFile("input", false);
       script = ParserRunner.parse(
           file, string, ParserRunner.createConfig(isIdeMode, mode, false),
