@@ -271,7 +271,7 @@ final class FunctionTypeBuilder {
               oldParam.isVarArgs() ||
               oldParam.isOptionalArg();
 
-          // The subclass method might right its var_args as individual
+          // The subclass method might write its var_args as individual
           // arguments.
           if (currentParam.getNext() != null && newParam.isVarArgs()) {
             newParam.setVarArgs(false);
@@ -287,6 +287,12 @@ final class FunctionTypeBuilder {
               codingConvention.isVarArgsParameter(currentParam));
         }
       }
+
+      // Clone any remaining params that aren't in the function literal.
+      while (oldParams.hasNext()) {
+        paramBuilder.newParameterFromNode(oldParams.next());
+      }
+
       parametersNode = paramBuilder.build();
     }
     return this;
@@ -437,6 +443,7 @@ final class FunctionTypeBuilder {
         Sets.<String>newHashSet() :
         Sets.newHashSet(info.getParameterNames());
     boolean foundTemplateType = false;
+    boolean isVarArgs = false;
     for (Node arg : argsParent.children()) {
       String argumentName = arg.getString();
       allJsDocParams.remove(argumentName);
@@ -444,7 +451,8 @@ final class FunctionTypeBuilder {
       // type from JSDocInfo
       JSType parameterType = null;
       boolean isOptionalParam = isOptionalParameter(arg, info);
-      boolean isVarArgs = isVarArgsParameter(arg, info);
+      isVarArgs = isVarArgsParameter(arg, info);
+
       if (info != null && info.hasParameterType(argumentName)) {
         parameterType =
             info.getParameterType(argumentName).evaluate(scope, typeRegistry);
@@ -470,6 +478,14 @@ final class FunctionTypeBuilder {
           isVarArgs);
 
       if (oldParameterType != null) {
+        oldParameterType = oldParameterType.getNext();
+      }
+    }
+
+    // Copy over any old parameters that aren't in the param list.
+    if (!isVarArgs) {
+      while (oldParameterType != null && !isVarArgs) {
+        builder.newParameterFromNode(oldParameterType);
         oldParameterType = oldParameterType.getNext();
       }
     }

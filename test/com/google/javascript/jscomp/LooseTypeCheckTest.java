@@ -1775,10 +1775,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor \n * @extends {F} */ " +
         "function G() {}" +
         "/** @override */ G.prototype.foo = function() { };" +
-        "(new G()).foo(1);",
-        "Function G.prototype.foo: called with 1 argument(s). " +
-        "Function requires at least 0 argument(s) " +
-        "and no more than 0 argument(s).");
+        "(new G()).foo(1);");
   }
 
   public void testMethodInference7() throws Exception {

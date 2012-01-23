@@ -2030,10 +2030,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor \n * @extends {F} */ " +
         "function G() {}" +
         "/** @override */ G.prototype.foo = function() { };" +
-        "(new G()).foo(1);",
-        "Function G.prototype.foo: called with 1 argument(s). " +
-        "Function requires at least 0 argument(s) " +
-        "and no more than 0 argument(s).");
+        "(new G()).foo(1);");
   }
 
   public void testMethodInference7() throws Exception {
@@ -5323,6 +5320,27 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "var s = 'hello';" +
         "alert(s.toLowerCase.indexOf('1'));",
         "Property indexOf never defined on String.prototype.toLowerCase");
+  }
+
+  public void testIssue368() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo(){}" +
+        "/**\n" +
+        " * @param {number} one\n" +
+        " * @param {string} two\n" +
+        " */\n" +
+        "Foo.prototype.add = function(one, two) {};" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */\n" +
+        "function Bar(){}" +
+        "/** @override */\n" +
+        "Bar.prototype.add = function(ignored) {};" +
+        "(new Bar()).add(1, 2);",
+        "actual parameter 2 of Bar.prototype.add does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: string");
   }
 
   public void testIssue380() throws Exception {
