@@ -1319,6 +1319,17 @@ public class IntegrationTest extends TestCase {
     test(options, code, expected);
   }
 
+  public void testBadBreakStatementInIdeMode() {
+    // Ensure that type-checking doesn't crash, even if the CFG is malformed.
+    // This can happen in IDE mode.
+    CompilerOptions options = createCompilerOptions();
+    options.ideMode = true;
+    options.checkTypes = true;
+    test(options,
+         "function f() { try { } catch(e) { break; } }",
+         RhinoErrorReporter.PARSE_ERROR);
+  }
+
   public void testIssue63SourceMap() {
     CompilerOptions options = createCompilerOptions();
     String code = "var a;";

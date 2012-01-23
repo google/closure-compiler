@@ -578,7 +578,15 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         }
         lastJump = cur;
       }
-      Preconditions.checkState(parent != null, "Cannot find break target.");
+      if (parent == null) {
+        if (compiler.isIdeMode()) {
+          // In IDE mode, we expect that the data flow graph may
+          // not be well-formed.
+          return;
+        } else {
+          throw new IllegalStateException("Cannot find break target.");
+        }
+      }
       previous = cur;
     }
     if (lastJump == node) {
