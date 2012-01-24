@@ -673,7 +673,7 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
     }
   }
 
-  static interface EntryVisitor {
+  public static interface EntryVisitor {
     void visit(String sourceName,
                String symbolName,
                FilePosition sourceStartPosition,
