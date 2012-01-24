@@ -286,6 +286,18 @@ public class ReplaceMessagesTest extends TestCase {
         error.description);
   }
 
+  public void testTranslatedPlaceHolderMissMatch() {
+    registerMessage(new JsMessage.Builder("MSG_A")
+        .appendPlaceholderReference("a")
+        .appendStringPart("!")
+        .build());
+
+    process("var MSG_A = goog.getMsg('{$a}');");
+    assertEquals(1, compiler.getErrors().length);
+    JSError error = compiler.getErrors()[0];
+    assertEquals(MESSAGE_TREE_MALFORMED, error.getType());
+  }
+
   private void assertOutputEquals(String input, String output) {
     String output1 = process(input);
     JSError[] errors = compiler.getErrors();
@@ -296,7 +308,6 @@ public class ReplaceMessagesTest extends TestCase {
     assertEquals(output, output1);
   }
 
-
   private String process(String input) {
     compiler = new Compiler();
     Node root = compiler.parseTestCode(input);
@@ -306,7 +317,6 @@ public class ReplaceMessagesTest extends TestCase {
 
     return compiler.toSource(root);
   }
-
 
   private void registerMessage(JsMessage message) {
     messages.put(message.getKey(), message);

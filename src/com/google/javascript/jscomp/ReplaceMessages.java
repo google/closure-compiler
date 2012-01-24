@@ -35,7 +35,7 @@ class ReplaceMessages extends JsMessageVisitor {
 
   static final DiagnosticType BUNDLE_DOES_NOT_HAVE_THE_MESSAGE =
       DiagnosticType.error("JSC_BUNDLE_DOES_NOT_HAVE_THE_MESSAGE",
-          "Message with id = {0} cound not be found in replacement bundle");
+          "Message with id = {0} could not be found in replacement bundle");
 
   ReplaceMessages(AbstractCompiler compiler, MessageBundle bundle,
       boolean checkDuplicatedMessages, JsMessage.Style style,
@@ -291,6 +291,12 @@ class ReplaceMessages extends JsMessageVisitor {
     if (part instanceof JsMessage.PlaceholderReference) {
       JsMessage.PlaceholderReference phRef =
           (JsMessage.PlaceholderReference) part;
+
+      // The translated message is null
+      if (objLitNode == null) {
+        throw new MalformedException("Empty placeholder value map " +
+            "for a translated message with placeholders.", objLitNode);
+      }
 
       for (Node key = objLitNode.getFirstChild(); key != null;
            key = key.getNext()) {
