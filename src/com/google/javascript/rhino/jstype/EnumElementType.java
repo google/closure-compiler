@@ -160,8 +160,10 @@ public class EnumElementType extends ObjectType {
   }
 
   @Override
-  public String toString() {
-    return getReferenceName() + ".<" + primitiveType + ">";
+  String toStringHelper(boolean forAnnotations) {
+    return forAnnotations ?
+        primitiveType.toString() :
+        (getReferenceName() + ".<" + primitiveType + ">");
   }
 
   @Override

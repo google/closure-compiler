@@ -350,7 +350,7 @@ class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public String toString() {
+  String toStringHelper(boolean forAnnotations) {
     if (hasReferenceName()) {
       return getReferenceName();
     } else if (prettyPrint) {

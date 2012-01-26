@@ -88,7 +88,7 @@ public final class StringType extends ValueType {
   }
 
   @Override
-  public String toString() {
+  String toStringHelper(boolean forAnnotations) {
     return getDisplayName();
   }
 

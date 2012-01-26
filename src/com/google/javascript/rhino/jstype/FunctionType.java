@@ -850,7 +850,7 @@ public class FunctionType extends PrototypeObjectType {
    * {@code this:T} if the function expects a known type for {@code this}.
    */
   @Override
-  public String toString() {
+  String toStringHelper(boolean forAnnotations) {
     if (!isPrettyPrint() ||
         this == registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE)) {
       return "Function";
@@ -868,58 +868,61 @@ public class FunctionType extends PrototypeObjectType {
       } else {
         b.append("this:");
       }
-      b.append(typeOfThis.toString());
+      b.append(typeOfThis.toStringHelper(forAnnotations));
     }
     if (paramNum > 0) {
       if (hasKnownTypeOfThis) {
         b.append(", ");
       }
       Node p = call.parameters.getFirstChild();
-      appendArgString(b, p);
+      appendArgString(b, p, forAnnotations);
 
       p = p.getNext();
       while (p != null) {
         b.append(", ");
-        appendArgString(b, p);
+        appendArgString(b, p, forAnnotations);
         p = p.getNext();
       }
     }
     b.append("): ");
-    b.append(call.returnType);
+    b.append(call.returnType.toStringHelper(forAnnotations));
 
     setPrettyPrint(true);
     return b.toString();
   }
 
-  private void appendArgString(StringBuilder b, Node p) {
+  private void appendArgString(
+      StringBuilder b, Node p, boolean forAnnotations) {
     if (p.isVarArgs()) {
-      appendVarArgsString(b, p.getJSType());
+      appendVarArgsString(b, p.getJSType(), forAnnotations);
     } else if (p.isOptionalArg()) {
-      appendOptionalArgString(b, p.getJSType());
+      appendOptionalArgString(b, p.getJSType(), forAnnotations);
     } else {
-      b.append(p.getJSType().toString());
+      b.append(p.getJSType().toStringHelper(forAnnotations));
     }
   }
 
   /** Gets the string representation of a var args param. */
-  private void appendVarArgsString(StringBuilder builder, JSType paramType) {
+  private void appendVarArgsString(StringBuilder builder, JSType paramType,
+      boolean forAnnotations) {
     if (paramType.isUnionType()) {
       // Remove the optionalness from the var arg.
       paramType = paramType.toMaybeUnionType().getRestrictedUnion(
           registry.getNativeType(JSTypeNative.VOID_TYPE));
     }
-    builder.append("...[").append(paramType.toString()).append("]");
+    builder.append("...[").append(
+        paramType.toStringHelper(forAnnotations)).append("]");
   }
 
   /** Gets the string representation of an optional param. */
   private void appendOptionalArgString(
-      StringBuilder builder, JSType paramType) {
+      StringBuilder builder, JSType paramType, boolean forAnnotations) {
     if (paramType.isUnionType()) {
       // Remove the optionalness from the var arg.
       paramType = paramType.toMaybeUnionType().getRestrictedUnion(
           registry.getNativeType(JSTypeNative.VOID_TYPE));
     }
-    builder.append(paramType).append("=");
+    builder.append(paramType.toStringHelper(forAnnotations)).append("=");
   }
 
   /**

@@ -100,7 +100,7 @@ public final class NullType extends ValueType {
   }
 
   @Override
-  public String toString() {
+  String toStringHelper(boolean forAnnotations) {
     return getDisplayName();
   }
 

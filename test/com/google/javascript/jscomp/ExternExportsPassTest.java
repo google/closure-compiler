@@ -74,8 +74,8 @@ public class ExternExportsPassTest extends TestCase {
   public void testExportProperty() throws Exception {
     compileAndCheck("var a = {}; a.b = {}; a.b.c = function(d, e, f) {};" +
                     "goog.exportProperty(a.b, 'cprop', a.b.c)",
-                    "var a = {};\n" +
-                    "a.b = {};\n" +
+                    "var a;\n" +
+                    "a.b;\n" +
                     "/**\n" +
                     " * @param {*} d\n" +
                     " * @param {*} e\n" +
@@ -93,7 +93,7 @@ public class ExternExportsPassTest extends TestCase {
                     "goog.exportProperty(a.b, 'c', a.b.c);" +
                     "goog.exportProperty(a.b.prototype, 'c', a.b.prototype.c);",
 
-                    "var a = {};\n" +
+                    "var a;\n" +
                     "/**\n" +
                     " * @param {*} p1\n" +
                     " * @return {undefined}\n" +
@@ -123,8 +123,9 @@ public class ExternExportsPassTest extends TestCase {
                     "goog.exportProperty(a.b, 'c', a.b.c);" +
                     "goog.exportProperty(a.b.prototype, 'c', a.b.prototype.c);",
 
+                    "/** @type {{b: function (?): undefined}} */\n" +
                     "var hello = {};\n" +
-                    "hello.b = {};\n" +
+                    "hello.b;\n" +
                     "/**\n" +
                     " * @param {*} d\n" +
                     " * @param {*} e\n" +
@@ -165,21 +166,21 @@ public class ExternExportsPassTest extends TestCase {
   public void testExportNonStaticSymbol() throws Exception {
     compileAndCheck("var a = {}; a.b = {}; var d = {}; a.b.c = d;" +
                     "goog.exportSymbol('foobar', a.b.c)",
-                    "var foobar = {};\n");
+                    "var foobar;\n");
   }
 
   public void testExportNonStaticSymbol2() throws Exception {
     compileAndCheck("var a = {}; a.b = {}; var d = null; a.b.c = d;" +
                     "goog.exportSymbol('foobar', a.b.c())",
-                    "var foobar = {};\n");
+                    "var foobar;\n");
   }
 
   public void testExportNonexistentProperty() throws Exception {
     compileAndCheck("var a = {}; a.b = {}; a.b.c = function(d, e, f) {};" +
                     "goog.exportProperty(a.b, 'none', a.b.none)",
-                    "var a = {};\n" +
-                    "a.b = {};\n" +
-                    "a.b.none = {};\n");
+                    "var a;\n" +
+                    "a.b;\n" +
+                    "a.b.none;\n");
   }
 
   public void testExportSymbolWithTypeAnnotation() {
@@ -290,15 +291,15 @@ public class ExternExportsPassTest extends TestCase {
    * Enums are not currently handled.
    */
    public void testExportEnum() {
+     // We don't care what the values of the object properties are.
+     // They're ignored by the type checker, and even if they weren't, it'd
+     // be incomputable to get them correct in all cases
+     // (think complex objects).
      compileAndCheck(
-         "/** @enum {string}\n @export */ var E = {A:1, B:2};" +
+         "/** @enum {string}\n @export */ var E = {A:8, B:9};" +
          "goog.exportSymbol('E', E);",
-         // TODO(johnlenz): We would like this:
-         // "/**\n" +
-         // " * @enum {string}\n" +
-         //" */\n" +
-         "var E = {};\n"
-     );
+         "/** @enum {string} */\n" +
+         "var E = {A:1, B:2};\n");
    }
 
   /** If we export a property with "prototype" as a path component, there

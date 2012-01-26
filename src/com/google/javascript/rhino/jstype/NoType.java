@@ -111,7 +111,7 @@ public class NoType extends NoObjectType {
   }
 
   @Override
-  public String toString() {
-    return "None";
+  String toStringHelper(boolean forAnnotations) {
+    return forAnnotations ? "?" : "None";
   }
 }

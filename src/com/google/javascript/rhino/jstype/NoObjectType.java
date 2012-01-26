@@ -177,8 +177,8 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public String toString() {
-    return "NoObject";
+  String toStringHelper(boolean forAnnotations) {
+    return forAnnotations ? "?" : "NoObject";
   }
 
   @Override

@@ -93,11 +93,11 @@ class InstanceObjectType extends PrototypeObjectType {
   }
 
   @Override
-  public String toString() {
+  String toStringHelper(boolean forAnnotations) {
     if (constructor.hasReferenceName()) {
       return constructor.getReferenceName();
     } else {
-      return super.toString();
+      return super.toStringHelper(forAnnotations);
     }
   }
 

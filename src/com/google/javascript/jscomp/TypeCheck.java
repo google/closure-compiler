@@ -941,6 +941,13 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param key the assign node
    */
   private void visitObjLitKey(NodeTraversal t, Node key, Node objlit) {
+    // Do not validate object lit value types in externs. We don't really care,
+    // and it makes it easier to generate externs.
+    if (objlit.isFromExterns()) {
+      ensureTyped(t, key);
+      return;
+    }
+
     // TODO(johnlenz): Validate get and set function declarations are valid
     // as is the functions can have "extraneous" bits.
 

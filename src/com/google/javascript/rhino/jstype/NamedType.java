@@ -153,7 +153,7 @@ class NamedType extends ProxyObjectType {
   }
 
   @Override
-  public String toString() {
+  String toStringHelper(boolean forAnnotations) {
     return reference;
   }
 

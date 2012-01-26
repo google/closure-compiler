@@ -1141,10 +1141,33 @@ public abstract class JSType implements Serializable {
   }
 
   /**
+   * A string representation of this type, suitable for printing
+   * in warnings.
+   */
+  @Override
+  public String toString() {
+    return toStringHelper(false);
+  }
+
+  /**
    * A hash code function for diagnosing complicated issues
    * around type-identity.
    */
   public String toDebugHashCodeString() {
     return "{" + this.hashCode() + "}";
   }
+
+  /**
+   * A string representation of this type, suitable for printing
+   * in type annotations at code generation time.
+   */
+  public final String toAnnotationString() {
+    return toStringHelper(true);
+  }
+
+  /**
+   * @param forAnnotations Whether this is for use in code generator
+   *     annotations. Otherwise, it's for warnings.
+   */
+  abstract String toStringHelper(boolean forAnnotations);
 }

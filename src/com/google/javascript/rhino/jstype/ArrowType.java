@@ -252,4 +252,9 @@ final class ArrowType extends JSType {
     }
     return returnType == null || returnType.isUnknownType();
   }
+
+  @Override
+  String toStringHelper(boolean forAnnotations) {
+    return super.toString();
+  }
 }

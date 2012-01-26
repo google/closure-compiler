@@ -121,7 +121,7 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
-  public String toString() {
+  String toStringHelper(boolean forAnnotations) {
     return getReferenceName();
   }
 

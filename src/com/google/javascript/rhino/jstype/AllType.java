@@ -81,7 +81,7 @@ public final class AllType extends JSType {
   }
 
   @Override
-  public String toString() {
+  String toStringHelper(boolean forAnnotations) {
     return "*";
   }
 

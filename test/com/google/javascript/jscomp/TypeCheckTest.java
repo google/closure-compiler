@@ -226,6 +226,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string", false);
   }
 
+
+  public void testTypeCheckCustomExterns2() throws Exception {
+    testTypes(
+        DEFAULT_EXTERNS + "/** @enum {string} */ var Enum = {FOO: 1, BAR: 1};",
+        "/** @param {Enum} x */ function f(x) {} f(Enum.FOO); f(true);",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: Enum.<string>",
+        false);
+  }
+
   public void testParameterizedArray1() throws Exception {
     testTypes("/** @param {!Array.<number>} a\n" +
         "* @return {string}\n" +

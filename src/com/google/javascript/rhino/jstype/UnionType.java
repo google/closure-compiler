@@ -401,7 +401,7 @@ public class UnionType extends JSType {
     return restricted.build();
   }
 
-  @Override public String toString() {
+  @Override String toStringHelper(boolean forAnnotations) {
     StringBuilder result = new StringBuilder();
     boolean firstAlternate = true;
 
@@ -412,7 +412,7 @@ public class UnionType extends JSType {
       if (!firstAlternate) {
         result.append("|");
       }
-      result.append(t.toString());
+      result.append(t.toStringHelper(forAnnotations));
       firstAlternate = false;
     }
     result.append(")");

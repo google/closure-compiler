@@ -91,7 +91,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      * it to the externsRoot AST.
      */
     void generateExterns() {
-      appendExtern(getExportedPath(), getFunctionValue(value));
+      appendExtern(getExportedPath(), getValue(value));
     }
 
     /**
@@ -110,7 +110,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      * a.b.c = function(x,y) { }
      * </pre>
      */
-    protected void appendExtern(String path, Node functionToExport) {
+    void appendExtern(String path, Node valueToExport) {
       List<String> pathPrefixes = computePathPrefixes(path);
 
       for (int i = 0; i < pathPrefixes.size(); ++i) {
@@ -140,10 +140,15 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
            * exported for a.b with a namespace.
            */
 
-          if (isCompletePathPrefix && functionToExport != null) {
-            initializer = createExternFunction(functionToExport);
+          if (isCompletePathPrefix && valueToExport != null) {
+            if (valueToExport.isFunction()) {
+              initializer = createExternFunction(valueToExport);
+            } else {
+              Preconditions.checkState(valueToExport.isObjectLit());
+              initializer = createExternObjectLit(valueToExport);
+            }
           } else {
-            initializer = IR.objectlit();
+            initializer = IR.empty();
           }
 
           appendPathDefinition(pathPrefix, initializer);
@@ -177,12 +182,20 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       Node pathDefinition;
 
       if (!path.contains(".")) {
-        pathDefinition = NodeUtil.newVarNode(path, initializer);
+        if (initializer.isEmpty()) {
+          pathDefinition = IR.var(IR.name(path));
+        } else {
+          pathDefinition = NodeUtil.newVarNode(path, initializer);
+        }
       } else {
         Node qualifiedPath = NodeUtil.newQualifiedNameNode(
             compiler.getCodingConvention(), path);
-        pathDefinition = NodeUtil.newExpr(
-            IR.assign(qualifiedPath, initializer));
+        if (initializer.isEmpty()) {
+          pathDefinition = NodeUtil.newExpr(qualifiedPath);
+        } else {
+          pathDefinition = NodeUtil.newExpr(
+              IR.assign(qualifiedPath, initializer));
+        }
       }
 
       externsRoot.addChildToBack(pathDefinition);
@@ -208,6 +221,33 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       externFunction.setJSType(exportedFunction.getJSType());
 
       return externFunction;
+    }
+
+    /**
+     * Given an object literal to export, create an object lit with all its
+     * string properties. We don't care what the values of those properties
+     * are because they are not checked.
+     */
+    private Node createExternObjectLit(Node exportedObjectLit) {
+      Node lit = IR.objectlit();
+      lit.setJSType(exportedObjectLit.getJSType());
+
+      // This is an indirect way of telling the typed code generator
+      // "print the type of this"
+      lit.setJSDocInfo(new JSDocInfo());
+
+      int index = 1;
+      for (Node child = exportedObjectLit.getFirstChild();
+           child != null;
+           child = child.getNext()) {
+        if (child.isString()) {
+          lit.addChildToBack(
+              IR.propdef(
+                  IR.string(child.getString()),
+                  IR.number(index++)));
+        }
+      }
+      return lit;
     }
 
     /**
@@ -279,10 +319,10 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
     /**
      * If the given value is a qualified name which refers
-     * a function, the function's node is returned. Otherwise,
+     * a function or object literal, the node is returned. Otherwise,
      * {@code null} is returned.
      */
-    protected Node getFunctionValue(Node qualifiedNameNode) {
+    protected Node getValue(Node qualifiedNameNode) {
       String qualifiedName = value.getQualifiedName();
 
       if (qualifiedName == null) {
@@ -296,7 +336,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
       Node definition;
 
-      switch(definitionParent.getType()) {
+      switch (definitionParent.getType()) {
         case Token.ASSIGN:
           definition = definitionParent.getLastChild();
           break;
@@ -307,7 +347,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
             return null;
       }
 
-      if (!definition.isFunction()) {
+      if (!definition.isFunction() && !definition.isObjectLit()) {
         return null;
       }
 

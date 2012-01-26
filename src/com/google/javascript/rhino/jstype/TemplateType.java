@@ -61,7 +61,7 @@ public class TemplateType extends ProxyObjectType {
   }
 
   @Override
-  public String toString() {
+  String toStringHelper(boolean forAnnotations) {
     return name;
   }
 
