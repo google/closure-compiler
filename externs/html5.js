@@ -562,11 +562,16 @@ function SQLTransaction() {}
 /**
  * @param {string} sqlStatement
  * @param {Array.<*>=} opt_queryArgs
- * @param {(function(!SQLTransaction, !SQLResultSet) : void)=} opt_callback
+ * @param {SQLStatementCallback=} opt_callback
  * @param {(function(!SQLTransaction, !SQLError) : void)=} opt_errorCallback
  */
 SQLTransaction.prototype.executeSql = function(
     sqlStatement, opt_queryArgs, opt_callback, opt_errorCallback) {};
+
+/**
+ * @typedef {(function(!SQLTransaction, !SQLResultSet) : void)}
+ */
+var SQLStatementCallback;
 
 /**
  * @constructor
