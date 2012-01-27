@@ -62,4 +62,7 @@ Document.prototype.webkitCurrentFullScreenElement;
 Document.prototype.webkitFullScreenKeyboardInputAllowed;
 
 /** @type {number} */
-Element.ALLOW_KEYBOARD_INPUT;
+Element.ALLOW_KEYBOARD_INPUT = 1;
+
+/** @type {number} */
+Element.prototype.ALLOW_KEYBOARD_INPUT = 1;
