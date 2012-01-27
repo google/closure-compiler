@@ -228,8 +228,11 @@ public class SymbolTableTest extends TestCase {
         "})();\n");
 
     Symbol ab = getGlobalVar(table, "a.b");
-    assertNotNull(ab);
-    assertEquals(1, table.getReferenceList(ab).size());
+    assertNull(ab);
+
+    Symbol propB = getGlobalVar(table, "A.prototype.b");
+    assertNotNull(propB);
+    assertEquals(5, table.getReferenceList(propB).size());
   }
 
   public void testRemovalOfNamespacedReferencesOfProperties()
@@ -419,10 +422,7 @@ public class SymbolTableTest extends TestCase {
         getGlobalVar(table, "DomHelper.prototype.prop");
     assertEquals(3, table.getReferenceList(prop).size());
 
-    Symbol thisDotProp =
-        getLocalVar(table, "this.prop");
-    assertEquals(
-        1, table.getReferenceList(thisDotProp).size());
+    assertNull(getLocalVar(table, "this.prop"));
   }
 
   public void testFieldReferences() throws Exception {

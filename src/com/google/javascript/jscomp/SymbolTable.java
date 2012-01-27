@@ -1317,6 +1317,19 @@ public final class SymbolTable
       return false;
     }
 
+    // Try to remove a reference by its fully qualified name.
+    // If the symbol has no references left, remove it completely.
+    private void tryRemoveLexicalQualifiedNameRef(String name, Node n) {
+      if (name != null) {
+        Symbol lexicalSym = getEnclosingScope(n).getQualifiedSlot(name);
+        if (lexicalSym != null &&
+            lexicalSym.isLexicalVariable() &&
+            lexicalSym.getDeclaration().getNode() == n) {
+          removeSymbol(lexicalSym);
+        }
+      }
+    }
+
     private boolean maybeDefineTypedReference(
         Node n, String propName, JSType owner) {
       if (owner.isGlobalThisType()) {
@@ -1360,6 +1373,7 @@ public final class SymbolTable
               n, n.getLastChild().getString(), owner);
 
           if (defined) {
+            tryRemoveLexicalQualifiedNameRef(n.getQualifiedName(), n);
             return;
           }
         }
@@ -1372,6 +1386,8 @@ public final class SymbolTable
               maybeDefineTypedReference(n, n.getString(), owner);
 
           if (defined) {
+            tryRemoveLexicalQualifiedNameRef(
+                NodeUtil.getBestLValueName(n), n);
             return;
           }
         }
