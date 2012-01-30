@@ -21,14 +21,15 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Strings;
+import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
-import com.google.common.io.Files;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
@@ -1356,6 +1357,23 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   private void printBundleTo(Iterable<CompilerInput> inputs, Appendable out)
       throws IOException {
     for (CompilerInput input : inputs) {
+      // Every module has an empty file in it. This makes it easier to implement
+      // cross-module code motion.
+      //
+      // But it also leads to a weird edge case because
+      // a) If we don't have a module spec, we create a singleton module, and
+      // b) If we print a bundle file, we copy the original input files.
+      //
+      // This means that in the (rare) case where we have no inputs, and no
+      // module spec, and we're printing a bundle file, we'll have a fake
+      // input file that shouldn't be copied. So we special-case this, to
+      // make all the other cases simpler.
+      if (input.getName().equals(
+              Compiler.createFillFileName(Compiler.SINGLETON_MODULE_NAME))) {
+        Preconditions.checkState(1 == Iterables.size(inputs));
+        return;
+      }
+
       String rootRelativePath = rootRelativePathsMap.get(input.getName());
       String displayName = rootRelativePath != null
           ? rootRelativePath

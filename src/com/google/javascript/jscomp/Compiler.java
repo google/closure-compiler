@@ -68,6 +68,7 @@ import java.util.regex.Matcher;
  *
  */
 public class Compiler extends AbstractCompiler {
+  static final String SINGLETON_MODULE_NAME = "[singleton]";
 
   static final DiagnosticType MODULE_DEPENDENCY_ERROR =
       DiagnosticType.error("JSC_MODULE_DEPENDENCY_ERROR",
@@ -304,7 +305,7 @@ public class Compiler extends AbstractCompiler {
    */
   public void init(List<JSSourceFile> externs, List<JSSourceFile> inputs,
       CompilerOptions options) {
-    JSModule module = new JSModule("[singleton]");
+    JSModule module = new JSModule(SINGLETON_MODULE_NAME);
     for (JSSourceFile input : inputs) {
       module.add(input);
     }
@@ -402,13 +403,22 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
+   * Empty modules get an empty "fill" file, so that we can move code into
+   * an empty module.
+   */
+  static String createFillFileName(String moduleName) {
+    return "[" + moduleName + "]";
+  }
+
+  /**
    * Fill any empty modules with a place holder file. It makes any cross module
    * motion easier.
    */
   private static void fillEmptyModules(List<JSModule> modules) {
     for (JSModule module : modules) {
       if (module.getInputs().isEmpty()) {
-        module.add(JSSourceFile.fromCode("[" + module.getName() + "]", ""));
+        module.add(JSSourceFile.fromCode(
+            createFillFileName(module.getName()), ""));
       }
     }
   }
