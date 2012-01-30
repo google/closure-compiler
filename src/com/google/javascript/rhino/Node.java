@@ -173,8 +173,16 @@ public class Node implements Cloneable, Serializable {
 
     @Override
     boolean isEquivalentTo(Node node, boolean compareJsType, boolean recurse) {
-      return (super.isEquivalentTo(node, compareJsType, recurse)
-          && getDouble() == ((NumberNode) node).getDouble());
+      boolean equivalent = super.isEquivalentTo(node, compareJsType, recurse);
+      if (equivalent) {
+        double thisValue = getDouble();
+        double thatValue = ((NumberNode) node).getDouble();
+        if (thisValue == thatValue) {
+          // detect the difference between 0.0 and -0.0.
+          return (thisValue != 0.0) || (1/thisValue == 1/thatValue);
+        }
+      }
+      return false;
     }
 
     private double number;

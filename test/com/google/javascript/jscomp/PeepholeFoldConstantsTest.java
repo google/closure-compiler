@@ -312,7 +312,8 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("a=!10", "a=false");
     fold("a=!false", "a=true");
     fold("a=!foo()", "a=!foo()");
-    fold("a=-0", "a=0");
+    fold("a=-0", "a=-0.0");
+    fold("a=-(0)", "a=-0.0");
     fold("a=-Infinity", "a=-Infinity");
     fold("a=-NaN", "a=NaN");
     fold("a=-foo()", "a=-foo()");

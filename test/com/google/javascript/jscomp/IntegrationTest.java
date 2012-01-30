@@ -1904,6 +1904,18 @@ public class IntegrationTest extends TestCase {
     test(options, code, result);
   }
 
+  public void testNegativeZero() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS
+        .setOptionsForCompilationLevel(options);
+    test(options,
+        "function bar(x) { return x; }\n" +
+        "function foo(x) { print(x / bar(0));\n" +
+        "                 print(x / bar(-0)); }\n" +
+        "foo(3);",
+        "print(3/0);print(3/-0);");
+  }
+
   private void testSame(CompilerOptions options, String original) {
     testSame(options, new String[] { original });
   }
