@@ -203,18 +203,16 @@ public class VarCheckTest extends CompilerTestCase {
                          null);
   }
 
-  public void testMissingModuleDependencySkipNonStrictPromoted() {
+  public void testMissingModuleDependencySkipNonStrictNotPromoted() {
     sanityCheck = true;
     strictModuleDepErrorLevel = CheckLevel.ERROR;
-    testIndependentModules("var x = 10;", "var y = x++;",
-        VarCheck.STRICT_MODULE_DEP_ERROR, null);
+    testIndependentModules("var x = 10;", "var y = x++;", null, null);
   }
 
-  public void testViolatedModuleDependencyNonStrictPromoted() {
+  public void testViolatedModuleDependencyNonStrictNotPromoted() {
     sanityCheck = true;
     strictModuleDepErrorLevel = CheckLevel.ERROR;
-    testDependentModules("var y = x++;", "var x = 10;",
-        VarCheck.STRICT_MODULE_DEP_ERROR);
+    testDependentModules("var y = x++;", "var x = 10;", null);
   }
 
   public void testDependentStrictModuleDependencyCheck() {

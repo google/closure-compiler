@@ -177,11 +177,12 @@ class VarCheck extends AbstractPostOrderCallback implements
     JSModule currModule = currInput.getModule();
     JSModule varModule = varInput.getModule();
     JSModuleGraph moduleGraph = compiler.getModuleGraph();
-    if (varModule != currModule && varModule != null && currModule != null) {
+    if (!sanityCheck &&
+        varModule != currModule && varModule != null && currModule != null) {
       if (moduleGraph.dependsOn(currModule, varModule)) {
         // The module dependency was properly declared.
       } else {
-        if (!sanityCheck && scope.isGlobal()) {
+        if (scope.isGlobal()) {
           if (moduleGraph.dependsOn(varModule, currModule)) {
             // The variable reference violates a declared module dependency.
             t.report(n, VIOLATED_MODULE_DEP_ERROR,
