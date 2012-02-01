@@ -26,7 +26,7 @@ interface CodeChangeHandler {
   // change reporting.
 
   /** Report a change to the AST. */
-  void reportCodeChange();
+  void reportChange();
 
   /**
    * A trivial change handler that just records whether the code
@@ -36,7 +36,7 @@ interface CodeChangeHandler {
     private boolean hasChanged = false;
 
     @Override
-    public void reportCodeChange() {
+    public void reportChange() {
       hasChanged = true;
     }
 
@@ -54,7 +54,7 @@ interface CodeChangeHandler {
    */
   static final class ForbiddenChange implements CodeChangeHandler {
     @Override
-    public void reportCodeChange() {
+    public void reportChange() {
       throw new IllegalStateException("Code changes forbidden");
     }
   }

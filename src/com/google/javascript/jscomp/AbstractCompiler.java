@@ -36,8 +36,7 @@ import java.util.Map;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public abstract class AbstractCompiler
-    implements SourceExcerptProvider, CodeChangeHandler {
+public abstract class AbstractCompiler implements SourceExcerptProvider {
   static final DiagnosticType READ_ERROR = DiagnosticType.error(
       "JSC_READ_ERROR", "Cannot read: {0}");
 
@@ -105,7 +104,6 @@ public abstract class AbstractCompiler
   /**
    * Report code changes.
    */
-  @Override
   public abstract void reportCodeChange();
 
   /**

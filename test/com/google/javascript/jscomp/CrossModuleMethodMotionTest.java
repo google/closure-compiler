@@ -412,7 +412,7 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
   }
 
   // An anonymous inner function reading a closure variable is fine.
-  public void testInnerFunctionClosureVariableReads1() {
+  public void testInnerFunctionClosureVariableReads() {
     test(createModuleChain(
             "function Foo() {}" +
             "Foo.prototype.baz = function(){var x = 1;" +
@@ -428,15 +428,6 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
            "    0, function(){var x = 1; return function(){x}});" +
            "var y = new Foo(); y.baz();"
         });
-  }
-
-  // An anonymous inner function reading a closure variable is fine.
-  public void testInnerFunctionClosureVariableReads2() {
-    testSame(createModuleChain(
-            "function foo() {var x = 1;" +
-            "  return function(){x}};",
-            // Module 2
-            "var y = foo(); y.baz();"));
   }
 
   public void testIssue600() {
@@ -567,43 +558,4 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
             "this.prototype.foo = function() {};",
             "(new F()).foo();"));
   }
-
-  public void testThisPropAssign1() {
-    testSame(
-        createModuleChain(
-            "this.foo = function() {}",
-            "this.foo();"));
-  }
-
-  public void testThisPropAssign2() {
-    testSame(
-        createModuleChain(
-            "function f() { this.foo = function() {} }",
-            "x.foo();"));
-  }
-
-  public void testThisPropAssign3() {
-    testSame(
-        createModuleChain(
-            "function f() { this.foo = function() {} }",
-            "f();x.foo();"));
-  }
-
-  public void testMovePrototypeMethodWithThisPropSet1() {
-    test(createModuleChain(
-             "function Foo() {}" +
-             "Foo.prototype.method = function() { this.x = 1 };",
-             // Module 2
-             "(new Foo).method()"),
-         new String[] {
-             STUB_DECLARATIONS +
-             "function Foo() {}" +
-             "Foo.prototype.method = JSCompiler_stubMethod(0);",
-             // Module 2
-             "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {" +
-                 "this.x = 1 });" +
-             "(new Foo).method()"
-         });
-  }
-
 }

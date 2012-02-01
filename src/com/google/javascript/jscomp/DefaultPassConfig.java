@@ -545,7 +545,9 @@ public class DefaultPassConfig extends PassConfig {
     // Extracting prototype properties screws up the heuristic renaming
     // policies, so never run it when those policies are requested.
     if (options.extractPrototypeMemberDeclarations &&
-        !usingHeuristicRenaming()) {
+        (options.propertyRenaming != PropertyRenamingPolicy.HEURISTIC &&
+         options.propertyRenaming !=
+            PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC)) {
       passes.add(extractPrototypeMemberDeclarations);
     }
 
@@ -670,11 +672,6 @@ public class DefaultPassConfig extends PassConfig {
     return passes;
   }
 
-  private boolean usingHeuristicRenaming() {
-    return options.propertyRenaming == PropertyRenamingPolicy.HEURISTIC ||
-        options.propertyRenaming == PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC;
-  }
-
   /** Creates the passes for the main optimization loop. */
   private List<PassFactory> getMainOptimizationLoop() {
     List<PassFactory> passes = Lists.newArrayList();
@@ -732,6 +729,7 @@ public class DefaultPassConfig extends PassConfig {
 
     if (options.removeUnusedPrototypeProperties) {
       passes.add(removeUnusedPrototypeProperties);
+      passes.add(removeUnusedClassProperties);
     }
 
     assertAllLoopablePasses(passes);
@@ -1623,12 +1621,20 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("removeUnusedPrototypeProperties", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
-      // TODO(johnlenz): make the object literal anchoring an compiler option.
       return new RemoveUnusedPrototypeProperties(
           compiler, options.removeUnusedPrototypePropertiesInExterns,
-          !options.removeUnusedVars,
-          !usingHeuristicRenaming(), // can remove "this" properties
-          true); // anchor object lit prop
+          !options.removeUnusedVars);
+    }
+  };
+
+  /**
+   * Remove prototype properties that do not appear to be used.
+   */
+  final PassFactory removeUnusedClassProperties =
+      new PassFactory("removeUnusedClassProperties", false) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new RemoveUnusedClassProperties(compiler);
     }
   };
 
@@ -2176,7 +2182,9 @@ public class DefaultPassConfig extends PassConfig {
    * will ruin the invariants that it depends on.
    */
   private boolean isInliningForbidden() {
-    return usingHeuristicRenaming();
+    return options.propertyRenaming == PropertyRenamingPolicy.HEURISTIC ||
+        options.propertyRenaming ==
+            PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC;
   }
 
   /** Create a compiler pass that runs the given passes in serial. */

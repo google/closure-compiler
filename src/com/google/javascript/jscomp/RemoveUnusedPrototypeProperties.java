@@ -38,33 +38,26 @@ class RemoveUnusedPrototypeProperties implements
     Logger.getLogger(RemoveUnusedPrototypeProperties.class.getName());
 
   private final AbstractCompiler compiler;
-  private final boolean canModifyExternsProtypeProps;
+  private final boolean canModifyExterns;
   private final boolean anchorUnusedVars;
   private SpecializeModule.SpecializationState specializationState;
-  private final boolean canModifyThisProperties;
-  private final boolean anchorObjectLiteralProperties;
 
   /**
    * Creates a new pass for removing unused prototype properties, based
    * on the uniqueness of property names.
    * @param compiler The compiler.
-   * @param canModifyExternsProtypeProps If true, then we can remove prototype
+   * @param canModifyExterns If true, then we can remove prototype
    *     properties that are declared in the externs file.
    * @param anchorUnusedVars If true, then we must keep unused variables
    *     and the prototype properties they reference, even if they are
    *     never used.
-   * @param canModifyThisProperties
-   * @param anchorObjectLiteralProperties
    */
   RemoveUnusedPrototypeProperties(AbstractCompiler compiler,
-      boolean canModifyExternsProtypeProps,
-      boolean anchorUnusedVars, boolean canModifyThisProperties,
-      boolean anchorObjectLiteralProperties) {
+      boolean canModifyExterns,
+      boolean anchorUnusedVars) {
     this.compiler = compiler;
-    this.canModifyExternsProtypeProps = canModifyExternsProtypeProps;
+    this.canModifyExterns = canModifyExterns;
     this.anchorUnusedVars = anchorUnusedVars;
-    this.canModifyThisProperties = canModifyThisProperties;
-    this.anchorObjectLiteralProperties = anchorObjectLiteralProperties;
   }
 
   @Override
@@ -76,9 +69,7 @@ class RemoveUnusedPrototypeProperties implements
   public void process(Node externRoot, Node root) {
     AnalyzePrototypeProperties analyzer =
         new AnalyzePrototypeProperties(compiler,
-            null /* no module graph */, canModifyExternsProtypeProps,
-            anchorUnusedVars, canModifyThisProperties,
-            anchorObjectLiteralProperties);
+            null /* no module graph */, canModifyExterns, anchorUnusedVars);
     analyzer.process(externRoot, root);
     removeUnusedSymbols(analyzer.getAllNameInfo());
   }
@@ -108,7 +99,7 @@ class RemoveUnusedPrototypeProperties implements
           }
 
           if (canRemove) {
-            declaration.remove(compiler);
+            declaration.remove();
             changed = true;
           }
         }
