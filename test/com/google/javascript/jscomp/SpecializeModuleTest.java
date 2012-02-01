@@ -47,7 +47,8 @@ public class SpecializeModuleTest extends CompilerTestCase {
     new PassFactory("removeUnusedPrototypeProperties", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new RemoveUnusedPrototypeProperties(compiler, false, false);
+      return new RemoveUnusedPrototypeProperties(
+          compiler, false, false, true, false);
     }
   };
 

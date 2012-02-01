@@ -1854,7 +1854,7 @@ public class Compiler extends AbstractCompiler {
   @Override
   public void reportCodeChange() {
     for (CodeChangeHandler handler : codeChangeHandlers) {
-      handler.reportChange();
+      handler.reportCodeChange();
     }
   }
 

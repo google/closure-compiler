@@ -23,10 +23,16 @@ package com.google.javascript.jscomp;
  */
 public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
   private static final String EXTERNS =
-      "IFoo.prototype.bar; var mExtern; mExtern.bExtern; mExtern['cExtern'];";
+      "IFoo.prototype.bar; var mExtern; mExtern.bExtern; mExtern['cExtern'];" +
+      "var window;\n" +
+      "function alert(a) {}\n" +
+      "var EXT = {};" +
+      "EXT.ext;";
 
   private boolean canRemoveExterns = false;
   private boolean anchorUnusedVars = false;
+  private boolean canRemoveThisProps = true;
+  private boolean anchorObjectLitProps = false;
 
   public RemoveUnusedPrototypePropertiesTest() {
     super(EXTERNS);
@@ -35,13 +41,21 @@ public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new RemoveUnusedPrototypeProperties(compiler,
-        canRemoveExterns, anchorUnusedVars);
+        canRemoveExterns, anchorUnusedVars,
+        canRemoveThisProps, anchorObjectLitProps);
+  }
+
+  @Override
+  protected int getNumRepetitions() {
+    return 3;
   }
 
   @Override
   public void setUp() {
     anchorUnusedVars = false;
     canRemoveExterns = false;
+    canRemoveThisProps = true;
+    anchorObjectLitProps = false;
   }
 
   public void testAnalyzePrototypeProperties() {
@@ -151,8 +165,8 @@ public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
            "e.prototype['alias1'] = e.prototype.method1 = function(){};" +
            "e.prototype['alias2'] = e.prototype.method2 = function(){};",
          "function e(){}" +
-           "e.prototype[\"alias1\"]=e.prototype.method1=function(){};" +
-           "e.prototype[\"alias2\"]=e.prototype.method2=function(){};");
+           "e.prototype[\"alias1\"] = function(){};" +
+           "e.prototype[\"alias2\"] = function(){};");
   }
 
   public void testAliasing5() {
@@ -186,10 +200,76 @@ public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
   public void testAliasing7() {
     // An exported alias must preserved any referenced values in the
     // referenced function.
-    testSame("function e(){}" +
-           "e.prototype['alias1'] = e.prototype.method1 = " +
+    test("function e(){}" +
+         "e.prototype['alias1'] = e.prototype.method1 = " +
+             "function(){this.method2()};" +
+         "e.prototype.method2 = function(){};",
+         "function e(){}" +
+         "e.prototype['alias1'] = " +
+             "function(){this.method2()};" +
+         "e.prototype.method2 = function(){};");
+  }
+
+  public void testAliasing8a() {
+    // An exported alias must preserved any referenced values in the
+    // referenced function.
+    test("function e(){}" +
+         "e.prototype.alias1 = e.prototype.method1 = " +
+             "function(){this.method2()};" +
+         "e.prototype.method2 = function(){};" +
+         "x.alias1()",
+         "function e(){}" +
+         "e.prototype.alias1 = " +
+             "function(){this.method2()};" +
+         "e.prototype.method2 = function(){};" +
+         "x.alias1()");
+  }
+
+  public void testAliasing8b() {
+    // An exported alias must preserved any referenced values in the
+    // referenced function.
+    test(  "function e(){}" +
+           "e.prototype.alias1 = e.prototype.method1 = " +
                "function(){this.method2()};" +
-           "e.prototype.method2 = function(){};");
+           "e.prototype.method2 = function(){};" +
+           "x.method1()",
+           "function e(){}" +
+           "e.prototype.method1 = " +
+               "function(){this.method2()};" +
+           "e.prototype.method2 = function(){};" +
+           "x.method1()");
+  }
+
+  public void testAliasing9a() {
+    // An exported alias must preserved any referenced values in the
+    // referenced function.
+    test("function e(){}; function init() {" +
+         "e.prototype['alias1'] = e.prototype.method1 = " +
+             "function(){this.method2()}; " +
+         "e.prototype.method2 = function(){};" +
+         "}" +
+         "init();",
+         "function e(){}; function init() {" +
+         "e.prototype['alias1'] = " +
+             "function(){this.method2()}; " +
+         "e.prototype.method2 = function(){};" +
+         "}" +
+         "init();");
+  }
+
+  public void testAliasing9b() {
+    // An exported alias must preserved any referenced values in the
+    // referenced function.
+    test(  "function e(){}; function init() {" +
+           "e.prototype.alias1 = e.prototype.method1 = " +
+               "function(){this.method2()}; " +
+           "e.prototype.method2 = function(){};" +
+           "}" +
+           "init();",
+           ";function init() {" +
+           "}" +
+           "init();"
+           );
   }
 
   public void testStatementRestriction() {
@@ -197,7 +277,7 @@ public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
            "var x = e.prototype.method1 = function(){};" +
            "var y = new e; x()",
          "function e(){}" +
-           "var x = e.prototype.method1 = function(){};" +
+           "var x = function(){};" +
            "var y = new e; x()");
   }
 
@@ -334,11 +414,26 @@ public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
   public void testUsingAnonymousObjectsToDefeatRemoval() {
     String constructor = "function Foo() {}";
     String declaration = constructor + "Foo.prototype.baz = 3;";
+
+    this.anchorObjectLitProps = false;
+
     test(declaration, "");
-    testSame(declaration + "var x = {}; x.baz = 5;");
+    test(declaration + "var x = {}; x.baz = 5;",
+        "var x = {}; x.baz = 5;");
+    test(declaration + "var x = {baz: 5};",
+        "var x = {baz: 5};");
+    test(declaration + "var x = {'baz': 5};",
+        "var x = {'baz': 5};");
+
+    this.anchorObjectLitProps = true;
+
+    test(declaration, "");
+    // TODO(johnlenz): is it necessary to support this case?
+    // testSame(declaration + "var x = {}; x.baz = 5;");
     testSame(declaration + "var x = {baz: 5};");
     test(declaration + "var x = {'baz': 5};",
          "var x = {'baz': 5};");
+
   }
 
   public void testGlobalFunctionsInGraph() {
@@ -484,10 +579,20 @@ public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
         "function x() { (new Foo).methodA; }");
   }
 
-  public void testHook1() throws Exception {
+  public void testHook1a() throws Exception {
     test(
         "/** @constructor */ function Foo() {}" +
         "Foo.prototype.method1 = Math.random() ?" +
+        "   function() { this.method2(); } : function() { this.method3(); };" +
+        "Foo.prototype.method2 = function() {};" +
+        "Foo.prototype.method3 = function() {};",
+        "Math.random()");  // preserve side-effect
+  }
+
+  public void testHook1b() throws Exception {
+    test(
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype.method1 = externalVar ?" +
         "   function() { this.method2(); } : function() { this.method3(); };" +
         "Foo.prototype.method2 = function() {};" +
         "Foo.prototype.method3 = function() {};",
@@ -502,6 +607,209 @@ public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
         "Foo.prototype.method2 = function() {};" +
         "Foo.prototype.method3 = function() {};" +
         "(new Foo()).method1();");
+  }
+
+  public void testSimpleExtern1() {
+    // A property defined in the externs but defined on "this" can not
+    // be safely removed.
+    testSame("this.ext = 2");
+  }
+
+  public void testSimpleExtern2() {
+    this.canRemoveExterns = true;
+    // A property defined in the externs but defined on "this" can not
+    // be safely removed.
+    testSame("this.ext = 2");
+  }
+
+  public void testSimple1a() {
+    // A property defined on "this" can be removed
+    test("this.a = 2", "");
+  }
+
+  public void testSimple1b() {
+    this.canRemoveThisProps = false;
+
+    // A property defined on "this" cannot be removed
+    testSame("this.a = 2");
+  }
+
+  public void testSimple2() {
+    // A property defined on "this" can be removed
+    test("this.a = function() {}", "");
+  }
+
+  public void testSimple3() {
+    // A property defined on "this" can be removed
+    test("this.a = f()", "f()");
+  }
+
+  public void testSimple4() {
+    // A property defined on "this" can be removed
+    test("var x = (this.a = 2)", "var x = 2");
+  }
+
+  public void testSimple5() {
+    // A property defined on "this" can be removed
+    test("var x;x = (this.a = 2)", "var x;x = 2");
+  }
+
+  public void testSimple6() {
+    // A property defined on "this" can be removed
+    testSame("this.a = 2; x = this.a;");
+  }
+
+  public void testSimple7() {
+    // A property defined on "this" can be removed, even when defined
+    // as part of an expression
+    test("this.a = 2, f()", "0, f()");
+    test("x = (this.a = 2, f())", "x = (0, f())");
+    test("x = (f(), this.a = 2)", "x = (f(), 2)");
+  }
+
+  public void testSimple8() {
+    // A property defined on an object other than "this" can not be removed.
+    testSame("y.a = 2");
+  }
+
+  public void testSimple9() {
+    // but doesn't prevent the removal of the definition on 'this'.
+    test("y.a = 2; this.a = 2", "y.a = 2;");
+  }
+
+  public void testSimple10() {
+    // Some use of the property "a" prevents the removal.
+    testSame("y.a = 2; this.a = 1; alert(x.a)");
+  }
+
+  public void testObjLit() {
+    // A property defined on an object other than "this" can not be removed.
+    testSame("({a:2})");
+    // but doesn't prevent the removal of the definition on 'this'.
+    test("({a:0}); this.a = 1;", "({a:0});");
+    // Some use of the property "a" prevents the removal.
+    testSame("x = ({a:0}); this.a = 1; alert(x.a)");
+  }
+
+  public void testExtern() {
+    // A property defined in the externs is can not be removed.
+    testSame("this.ext = 2");
+  }
+
+  public void testExport() {
+    // An exported property can not be removed.
+    testSame("this.ext = 2; window['export'] = this.ext;");
+    testSame(
+        "function f() { this.ext = 2; } f(); window['export'] = this.ext;");
+  }
+
+
+  public void testAssignOp1() {
+    // Properties defined using a compound assignment can be removed if the
+    // result of the assignment expression is not immediately used.
+    test("this.x += 2", "");
+    testSame("x = (this.x += 2)");
+    testSame("this.x += 2; x = this.x;");
+    // But, of course, a later use prevents its removal.
+    testSame("this.x += 2; x.x;");
+  }
+
+  public void testAssignOp2() {
+    // Properties defined using a compound assignment can be removed if the
+    // result of the assignment expression is not immediately used.
+    test("this.a += 2, f()", "0, f()");
+    test("x = (this.a += 2, f())", "x = (0, f())");
+    testSame("x = (f(), this.a += 2)");
+  }
+
+  public void testInc1() {
+    // Increments and Decrements are handled similiarly to compound assignments
+    // but need a placeholder value when replaced.
+    test("this.x++", "0");
+    testSame("x = (this.x++)");
+    testSame("this.x++; x = this.x;");
+
+    test("--this.x", "0");
+    testSame("x = (--this.x)");
+    testSame("--this.x; x = this.x;");
+  }
+
+  public void testInc2() {
+    // Increments and Decrements are handled similiarly to compound assignments
+    // but need a placeholder value when replaced.
+    test("this.a++, f()", "0, f()");
+    test("x = (this.a++, f())", "x = (0, f())");
+    testSame("x = (f(), this.a++)");
+
+    test("--this.a, f()", "0, f()");
+    test("x = (--this.a, f())", "x = (0, f())");
+    testSame("x = (f(), --this.a)");
+  }
+
+  public void testJSCompiler_renameProperty1() {
+    // JSCompiler_renameProperty introduces a use of the property
+    testSame("this.a = 2; x[JSCompiler_renameProperty('a')]");
+    testSame("this.a = 2; JSCompiler_renameProperty('a')");
+  }
+
+  public void testJSCompiler_renameProperty2() {
+    // JSCompiler_renameProperty introduces a use of the property
+    testSame("x.prototype.a = 2; x[JSCompiler_renameProperty('a')]");
+    testSame("x.prototype.a = 2; JSCompiler_renameProperty('a')");
+  }
+
+  public void testGoogReflectObject1() {
+    // JSCompiler_renameProperty introduces a use of the property
+    testSame("this.a = 2; f(goog.reflect.object(foo, {a:1}));");
+    testSame("this.a = 2; goog.reflect.object(foo, {a:1});");
+  }
+
+  public void testGoogReflectObject2() {
+    // JSCompiler_renameProperty introduces a use of the property
+    testSame("x.prototype.a = 2; f(goog.reflect.object(foo, {a:1}));");
+    testSame("x.prototype.a = 2; goog.reflect.object(foo, {a:1});");
+  }
+
+  public void testForIn() {
+    // This is the basic assumption that this pass makes:
+    // it can remove properties even when the object is used in a FOR-IN loop
+    test("this.y = 1;for (var a in x) { alert(x[a]) }",
+         "for (var a in x) { alert(x[a]) }");
+  }
+
+  public void testObjectKeys() {
+    // This is the basic assumption that this pass makes:
+    // it can remove properties even when the object are referenced
+    test("this.y = 1;alert(Object.keys(this))",
+         "alert(Object.keys(this))");
+  }
+
+  public void testConditionalSideEffect1() {
+     test("this.a = 1;" +
+          "this.b = ((this.a) ? f() : g())",
+          "this.a = 1;" +
+          "this.a ? f() : g()");
+  }
+
+  public void testConditionalSideEffect2() {
+    test("this.a = 1;" +
+         "this.b = ((this.a) ? f() : 1)",
+         "this.a = 1;" +
+         "this.a && f()");
+  }
+
+  public void testConditionalSideEffect3() {
+    test("this.a = 1;" +
+         "this.b = (this.a) || f()",
+         "this.a = 1;" +
+         "this.a || f()");
+  }
+
+  public void testConditionalSideEffect4() {
+    test("this.a = 0;" +
+         "this.b = (this.a) && f()",
+         "this.a = 0;" +
+         "this.a && f()");
   }
 
 }

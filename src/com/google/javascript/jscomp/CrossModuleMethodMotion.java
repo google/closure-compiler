@@ -73,7 +73,7 @@ class CrossModuleMethodMotion implements CompilerPass {
     this.idGenerator = idGenerator;
     this.moduleGraph = compiler.getModuleGraph();
     this.analyzer = new AnalyzePrototypeProperties(compiler, moduleGraph,
-        canModifyExterns, false);
+        canModifyExterns, false, false, true);
   }
 
   @Override
@@ -134,6 +134,9 @@ class CrossModuleMethodMotion implements CompilerPass {
         // So if we move a prototype method into a deeper module, we must
         // replace it with a stub function so that it preserves its original
         // behavior.
+
+        // getRootVar will be null if the definition is an expression like
+        // "this" of "foo()".
         if (prop.getRootVar() == null || !prop.getRootVar().isGlobal()) {
           continue;
         }

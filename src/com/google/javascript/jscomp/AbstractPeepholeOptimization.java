@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Node;
  * that code (if it is not needed) or replaces it with smaller code.
  *
  */
-abstract class AbstractPeepholeOptimization {
+abstract class AbstractPeepholeOptimization implements CodeChangeHandler {
 
   private NodeTraversal currentTraversal;
 
@@ -57,7 +57,8 @@ abstract class AbstractPeepholeOptimization {
    * Helper method for telling the compiler that something has changed.
    * Subclasses must call these if they have changed the AST.
    */
-  protected void reportCodeChange() {
+  @Override
+  public void reportCodeChange() {
     Preconditions.checkNotNull(currentTraversal);
     currentTraversal.getCompiler().reportCodeChange();
   }

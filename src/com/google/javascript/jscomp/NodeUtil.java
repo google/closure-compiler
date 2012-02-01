@@ -3130,4 +3130,133 @@ public final class NodeUtil {
     }
     return result;
   }
+
+  /**
+   * General cascading unused operation node removal.
+   * @param n The root of the expression to simplify.
+   * @return The replacement node, or null if the node was is not useful.
+   */
+  static Node trySimplifyUnusedResult(Node n, CodeChangeHandler reporter) {
+    return trySimplifyUnusedResult(n, reporter, true);
+  }
+
+  /**
+   * General cascading unused operation node removal.
+   * @param n The root of the expression to simplify.
+   * @param removeUnused If true, the node is removed from the AST if
+   *     it is not useful, otherwise it replaced with an EMPTY node.
+   * @return The replacement node, or null if the node was is not useful.
+   */
+  static Node trySimplifyUnusedResult(
+      Node n, CodeChangeHandler reporter, boolean removeUnused) {
+    Node result = n;
+
+    // Simplify the results of conditional expressions
+    switch (n.getType()) {
+      case Token.HOOK:
+        Node trueNode = trySimplifyUnusedResult(n.getFirstChild().getNext(), reporter);
+        Node falseNode = trySimplifyUnusedResult(n.getLastChild(), reporter);
+        // If one or more of the conditional children were removed,
+        // transform the HOOK to an equivalent operation:
+        //    x() ? foo() : 1 --> x() && foo()
+        //    x() ? 1 : foo() --> x() || foo()
+        //    x() ? 1 : 1 --> x()
+        //    x ? 1 : 1 --> null
+        if (trueNode == null && falseNode != null) {
+          n.setType(Token.OR);
+          Preconditions.checkState(n.getChildCount() == 2);
+        } else if (trueNode != null && falseNode == null) {
+          n.setType(Token.AND);
+          Preconditions.checkState(n.getChildCount() == 2);
+        } else if (trueNode == null && falseNode == null) {
+          result = trySimplifyUnusedResult(n.getFirstChild(), reporter);
+        } else {
+          // The structure didn't change.
+          result = n;
+        }
+        break;
+      case Token.AND:
+      case Token.OR:
+        // Try to remove the second operand from a AND or OR operations:
+        //    x() || f --> x()
+        //    x() && f --> x()
+        Node conditionalResultNode = trySimplifyUnusedResult(
+            n.getLastChild(), reporter);
+        if (conditionalResultNode == null) {
+          Preconditions.checkState(n.hasOneChild());
+          // The conditionally executed code was removed, so
+          // replace the AND/OR with its LHS or remove it if it isn't useful.
+          result = trySimplifyUnusedResult(n.getFirstChild(), reporter);
+        }
+        break;
+      case Token.FUNCTION:
+        // A function expression isn't useful if it isn't used, remove it and
+        // don't bother to look at its children.
+        result = null;
+        break;
+      case Token.COMMA:
+        // We rewrite other operations as COMMA expressions (which will later
+        // get split into individual EXPR_RESULT statement, if possible), so
+        // we special case COMMA (we don't want to rewrite COMMAs as new COMMAs
+        // nodes.
+        Node left = trySimplifyUnusedResult(n.getFirstChild(), reporter);
+        Node right = trySimplifyUnusedResult(n.getLastChild(), reporter);
+        if (left == null && right == null) {
+          result = null;
+        } else if (left == null) {
+          result = right;
+        } else if (right == null){
+          result = left;
+        } else {
+          // The structure didn't change.
+          result = n;
+        }
+        break;
+      default:
+        if (!NodeUtil.nodeTypeMayHaveSideEffects(n)) {
+          // This is the meat of this function. The node itself doesn't generate
+          // any side-effects but preserve any side-effects in the children.
+          Node resultList = null;
+          for (Node next, c = n.getFirstChild(); c != null; c = next) {
+            next = c.getNext();
+            c = trySimplifyUnusedResult(c, reporter);
+            if (c != null) {
+              c.detachFromParent();
+              if (resultList == null)  {
+                // The first side-effect can be used stand-alone.
+                resultList = c;
+              } else {
+                // Leave the side-effects in-place, simplifying it to a COMMA
+                // expression.
+                resultList = IR.comma(resultList, c).srcref(c);
+              }
+            }
+          }
+          result = resultList;
+        }
+    }
+
+    // Fix up the AST, replace or remove the an unused node (if requested).
+    if (n != result) {
+      Node parent = n.getParent();
+      if (result == null) {
+        if (removeUnused) {
+          parent.removeChild(n);
+        } else {
+          result = IR.empty().srcref(n);
+          parent.replaceChild(n, result);
+        }
+      } else {
+        // A new COMMA expression may not have an existing parent.
+        if (result.getParent() != null) {
+          result.detachFromParent();
+        }
+        n.getParent().replaceChild(n, result);
+      }
+      reporter.reportCodeChange();
+    }
+
+    return result;
+  }
+
 }

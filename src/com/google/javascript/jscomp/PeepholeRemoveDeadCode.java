@@ -135,7 +135,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * @return the replacement node, if changed, or the original if not
    */
   private Node tryFoldExpr(Node subtree) {
-    Node result = trySimplifyUnusedResult(subtree.getFirstChild());
+    Node result = NodeUtil.trySimplifyUnusedResult(
+        subtree.getFirstChild(), this);
     if (result == null) {
       Node parent = subtree.getParent();
       // If the EXPR_RESULT no longer has any children, remove it as well.
@@ -151,132 +152,6 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     return subtree;
   }
 
-  /**
-   * General cascading unused operation node removal.
-   * @param n The root of the expression to simplify.
-   * @return The replacement node, or null if the node was is not useful.
-   */
-  private Node trySimplifyUnusedResult(Node n) {
-    return trySimplifyUnusedResult(n, true);
-  }
-
-  /**
-   * General cascading unused operation node removal.
-   * @param n The root of the expression to simplify.
-   * @param removeUnused If true, the node is removed from the AST if
-   *     it is not useful, otherwise it replaced with an EMPTY node.
-   * @return The replacement node, or null if the node was is not useful.
-   */
-  private Node trySimplifyUnusedResult(Node n, boolean removeUnused) {
-    Node result = n;
-
-    // Simplify the results of conditional expressions
-    switch (n.getType()) {
-      case Token.HOOK:
-        Node trueNode = trySimplifyUnusedResult(n.getFirstChild().getNext());
-        Node falseNode = trySimplifyUnusedResult(n.getLastChild());
-        // If one or more of the conditional children were removed,
-        // transform the HOOK to an equivalent operation:
-        //    x() ? foo() : 1 --> x() && foo()
-        //    x() ? 1 : foo() --> x() || foo()
-        //    x() ? 1 : 1 --> x()
-        //    x ? 1 : 1 --> null
-        if (trueNode == null && falseNode != null) {
-          n.setType(Token.OR);
-          Preconditions.checkState(n.getChildCount() == 2);
-        } else if (trueNode != null && falseNode == null) {
-          n.setType(Token.AND);
-          Preconditions.checkState(n.getChildCount() == 2);
-        } else if (trueNode == null && falseNode == null) {
-          result = trySimplifyUnusedResult(n.getFirstChild());
-        } else {
-          // The structure didn't change.
-          result = n;
-        }
-        break;
-      case Token.AND:
-      case Token.OR:
-        // Try to remove the second operand from a AND or OR operations:
-        //    x() || f --> x()
-        //    x() && f --> x()
-        Node conditionalResultNode = trySimplifyUnusedResult(
-            n.getLastChild());
-        if (conditionalResultNode == null) {
-          Preconditions.checkState(n.hasOneChild());
-          // The conditionally executed code was removed, so
-          // replace the AND/OR with its LHS or remove it if it isn't useful.
-          result = trySimplifyUnusedResult(n.getFirstChild());
-        }
-        break;
-      case Token.FUNCTION:
-        // A function expression isn't useful if it isn't used, remove it and
-        // don't bother to look at its children.
-        result = null;
-        break;
-      case Token.COMMA:
-        // We rewrite other operations as COMMA expressions (which will later
-        // get split into individual EXPR_RESULT statement, if possible), so
-        // we special case COMMA (we don't want to rewrite COMMAs as new COMMAs
-        // nodes.
-        Node left = trySimplifyUnusedResult(n.getFirstChild());
-        Node right = trySimplifyUnusedResult(n.getLastChild());
-        if (left == null && right == null) {
-          result = null;
-        } else if (left == null) {
-          result = right;
-        } else if (right == null){
-          result = left;
-        } else {
-          // The structure didn't change.
-          result = n;
-        }
-        break;
-      default:
-        if (!NodeUtil.nodeTypeMayHaveSideEffects(n)) {
-          // This is the meat of this function. The node itself doesn't generate
-          // any side-effects but preserve any side-effects in the children.
-          Node resultList = null;
-          for (Node next, c = n.getFirstChild(); c != null; c = next) {
-            next = c.getNext();
-            c = trySimplifyUnusedResult(c);
-            if (c != null) {
-              c.detachFromParent();
-              if (resultList == null)  {
-                // The first side-effect can be used stand-alone.
-                resultList = c;
-              } else {
-                // Leave the side-effects in-place, simplifying it to a COMMA
-                // expression.
-                resultList = IR.comma(resultList, c).srcref(c);
-              }
-            }
-          }
-          result = resultList;
-        }
-    }
-
-    // Fix up the AST, replace or remove the an unused node (if requested).
-    if (n != result) {
-      Node parent = n.getParent();
-      if (result == null) {
-        if (removeUnused) {
-          parent.removeChild(n);
-        } else {
-          result = IR.empty().srcref(n);
-          parent.replaceChild(n, result);
-        }
-      } else {
-        // A new COMMA expression may not have an existing parent.
-        if (result.getParent() != null) {
-          result.detachFromParent();
-        }
-        n.getParent().replaceChild(n, result);
-      }
-      reportCodeChange();
-    }
-
-    return result;
-  }
 
   /**
    * Remove useless switches and cases.
@@ -442,7 +317,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Node left = n.getFirstChild();
     Node right = left.getNext();
 
-    left = trySimplifyUnusedResult(left);
+    left = NodeUtil.trySimplifyUnusedResult(left, this);
     if (left == null || !mayHaveSideEffects(left)) {
       // Fold it!
       n.removeChild(right);
@@ -776,11 +651,12 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Node increment = cond.getNext();
 
     if (!init.isEmpty() && !init.isVar()) {
-      init = trySimplifyUnusedResult(init, false);
+      init = NodeUtil.trySimplifyUnusedResult(init, this, false);
     }
 
     if (!increment.isEmpty()) {
-      increment = trySimplifyUnusedResult(increment, false);
+      increment = NodeUtil.trySimplifyUnusedResult(
+          increment, this, false);
     }
 
     // There is an initializer skip it
