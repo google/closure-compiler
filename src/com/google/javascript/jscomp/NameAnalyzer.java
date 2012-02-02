@@ -632,11 +632,9 @@ final class NameAnalyzer implements CompilerPass {
         Node nameNode = n.getFirstChild();
         NameInformation ns = createNameInformation(t, nameNode, n);
         if (ns != null && ns.onlyAffectsClassDef) {
-          JsName name = getName(ns.name, false);
-          if (name != null) {
-            refNodes.add(new ClassDefiningFunctionNode(
-                            name, n, parent, parent.getParent()));
-          }
+          JsName name = getName(ns.name, true);
+          refNodes.add(new ClassDefiningFunctionNode(
+              name, n, parent, parent.getParent()));
         }
       }
     }
