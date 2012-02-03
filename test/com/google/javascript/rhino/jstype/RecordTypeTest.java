@@ -56,6 +56,8 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
     loop.setReferencedType(record);
     assertEquals("{loop: {...}, number: number, string: string}",
         record.toString());
+    assertEquals("{loop: ?, number: number, string: string}",
+        record.toAnnotationString());
 
     Asserts.assertEquivalenceOperations(record, loop);
   }
@@ -71,6 +73,10 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
         .build();
     assertEquals("{a1: number, a2: number, a3: number, a4: number, ...}",
         record.toString());
+    assertEquals(
+        "{a1: number, a2: number, a3: number, a4: number," +
+        " a5: number, a6: number}",
+        record.toAnnotationString());
   }
 
   public void testSupAndInf() {

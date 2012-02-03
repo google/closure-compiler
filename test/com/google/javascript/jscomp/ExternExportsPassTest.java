@@ -397,6 +397,22 @@ public class ExternExportsPassTest extends TestCase {
       assertEquals(0, libraryCompileResult.errors.length);
   }
 
+  public void testTypedef() {
+    compileAndCheck(
+        "/** @typedef {{x: number, y: number}} */ var Coord;\n" +
+        "/**\n" +
+        " * @param {Coord} a\n" +
+        " * @export\n" +
+        " */\n" +
+        "var fn = function(a) {};" +
+        "goog.exportSymbol('fn', fn);",
+        "/**\n" +
+        " * @param {{x: number, y: number}} a\n" +
+        " * @return {undefined}\n" +
+        " */\n" +
+        "var fn = function(a) {\n};\n");
+  }
+
   private void compileAndCheck(String js, String expected) {
     Result result = compileAndExportExterns(js);
 

@@ -377,10 +377,10 @@ class PrototypeObjectType extends ObjectType {
 
         sb.append(property);
         sb.append(": ");
-        sb.append(getPropertyType(property).toString());
+        sb.append(getPropertyType(property).toStringHelper(forAnnotations));
 
         ++i;
-        if (i == MAX_PRETTY_PRINTED_PROPERTIES) {
+        if (!forAnnotations && i == MAX_PRETTY_PRINTED_PROPERTIES) {
           sb.append(", ...");
           break;
         }
@@ -391,7 +391,7 @@ class PrototypeObjectType extends ObjectType {
       prettyPrint = true;
       return sb.toString();
     } else {
-      return "{...}";
+      return forAnnotations ? "?" : "{...}";
     }
   }
 
