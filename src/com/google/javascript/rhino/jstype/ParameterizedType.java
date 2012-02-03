@@ -62,4 +62,12 @@ final class ParameterizedType extends ProxyObjectType {
   public JSType getParameterType() {
     return parameterType;
   }
+
+  @Override
+  String toStringHelper(boolean forAnnotations) {
+    String result = super.toStringHelper(forAnnotations);
+    return parameterType.isUnknownType() ?
+        result :
+        (result + ".<" + parameterType.toStringHelper(forAnnotations) + ">");
+  }
 }

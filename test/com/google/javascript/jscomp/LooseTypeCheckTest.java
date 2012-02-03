@@ -250,7 +250,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "* @return {number}\n" +
         "*/ var f = function(a) { return a[0]; };",
         "inconsistent return type\n" +
-        "found   : Array\n" +
+        "found   : Array.<number>\n" +
         "required: number");
   }
 
