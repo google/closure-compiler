@@ -15,14 +15,14 @@
  */
 package com.google.javascript.jscomp;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * Rewrites a Common JS module http://wiki.commonjs.org/wiki/Modules/1.1.1
@@ -33,9 +33,9 @@ import com.google.javascript.rhino.Node;
  * goog.provide and goog.require are emitted for closure compiler automatic
  * ordering.
  */
-class ProcessCommonJSModules implements CompilerPass {
+public class ProcessCommonJSModules implements CompilerPass {
 
-  public static final String  DEFAULT_FILENAME_PREFIX = "." + File.separator;
+  public static final String DEFAULT_FILENAME_PREFIX = "." + File.separator;
 
   private static final String MODULE_NAME_PREFIX = "module$";
 
@@ -45,15 +45,14 @@ class ProcessCommonJSModules implements CompilerPass {
   private JSModule module;
 
   ProcessCommonJSModules(AbstractCompiler compiler, String filenamePrefix) {
-    this.compiler = compiler;
-    this.filenamePrefix = filenamePrefix;
-    this.reportDependencies = true;
+    this(compiler, filenamePrefix, true);
   }
 
   ProcessCommonJSModules(AbstractCompiler compiler, String filenamePrefix,
       boolean reportDependencies) {
     this.compiler = compiler;
-    this.filenamePrefix = filenamePrefix;
+    this.filenamePrefix = filenamePrefix.endsWith(File.separator) ?
+        filenamePrefix : filenamePrefix + File.separator;
     this.reportDependencies = reportDependencies;
   }
 
@@ -63,7 +62,7 @@ class ProcessCommonJSModules implements CompilerPass {
         .traverse(compiler, root, new ProcessCommonJsModulesCallback());
   }
 
-  private String guessCJSModuleName(String filename) {
+  String guessCJSModuleName(String filename) {
     return toModuleName(normalizeSourceName(filename));
   }
 
@@ -245,7 +244,7 @@ class ProcessCommonJSModules implements CompilerPass {
 
     private final String suffix;
 
-    public SuffixVarsCallback(String suffix) {
+    SuffixVarsCallback(String suffix) {
       this.suffix = suffix;
     }
 

@@ -138,4 +138,10 @@ public class ProcessCommonJSModulesTest extends CompilerTestCase {
         "module$foo$bar=module$foo$bar.module$exports");
 
   }
+
+  public void testGuessModuleName() {
+    ProcessCommonJSModules pass = new ProcessCommonJSModules(null, "foo");
+    assertEquals("module$baz",
+        pass.guessCJSModuleName("foo/baz.js"));
+  }
 }
