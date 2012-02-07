@@ -633,7 +633,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Transform AMD to Common JS modules. */
   boolean transformAMDToCJSModules = false;
 
-  /** Transform AMD to Common JS modules. */
+  /** Rewrite Common JS modules so that they can be concatenated together. */
   boolean processCommonJSModules = false;
 
   /** Common JS module prefix. */
@@ -1847,7 +1847,8 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
-   * Activates Common JS module processing.
+   * Rewrites CommonJS modulee so that modules can be concatenated together,
+   * by renaming all globals to avoid conflicting with other modules.
    */
   public void setProcessCommonJSModules(boolean processCommonJSModules) {
     this.processCommonJSModules = processCommonJSModules;
