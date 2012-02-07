@@ -80,6 +80,14 @@ public class CodePrinterTest extends TestCase {
   }
 
   String parsePrint(String js, boolean prettyprint, boolean lineBreak,
+      boolean preferLineBreakAtEof, int lineThreshold) {
+    return new CodePrinter.Builder(parse(js, true)).setPrettyPrint(prettyprint)
+        .setLineLengthThreshold(lineThreshold).setLineBreak(lineBreak)
+        .setPreferLineBreakAtEndOfFile(preferLineBreakAtEof)
+        .build();
+  }
+
+  String parsePrint(String js, boolean prettyprint, boolean lineBreak,
       int lineThreshold, boolean outputTypes) {
     return new CodePrinter.Builder(parse(js, true)).setPrettyPrint(prettyprint)
         .setOutputTypes(outputTypes)
@@ -461,6 +469,40 @@ public class CodePrinterTest extends TestCase {
     assertEquals(expected,
         parsePrint(js, false, true,
             CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD));
+  }
+
+  public void testPreferLineBreakAtEndOfFile() {
+    // short final line, no previous break, do nothing
+    assertLineBreakAtEndOfFile(
+        "\"1234567890\";",
+        "\"1234567890\"",
+        "\"1234567890\"");
+
+    // short final line, shift previous break to end
+    assertLineBreakAtEndOfFile(
+        "\"123456789012345678901234567890\";\"1234567890\"",
+        "\"123456789012345678901234567890\";\n\"1234567890\"",
+        "\"123456789012345678901234567890\";\"1234567890\";\n");
+
+    // long final line, no previous break, add a break at end
+    assertLineBreakAtEndOfFile(
+        "\"1234567890\";\"12345678901234567890\";",
+        "\"1234567890\";\"12345678901234567890\"",
+        "\"1234567890\";\"12345678901234567890\";\n");
+
+    // long final line, previous break, add a break at end
+    assertLineBreakAtEndOfFile(
+        "\"123456789012345678901234567890\";\"12345678901234567890\";",
+        "\"123456789012345678901234567890\";\n\"12345678901234567890\"",
+        "\"123456789012345678901234567890\";\n\"12345678901234567890\";\n");
+  }
+
+  private void assertLineBreakAtEndOfFile(String js,
+      String expectedWithoutBreakAtEnd, String expectedWithBreakAtEnd) {
+    assertEquals(expectedWithoutBreakAtEnd,
+        parsePrint(js, false, false, false, 30));
+    assertEquals(expectedWithBreakAtEnd,
+        parsePrint(js, false, false, true, 30));
   }
 
   public void testPrettyPrinter() {

@@ -1664,6 +1664,7 @@ public class Compiler extends AbstractCompiler {
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
     builder.setPrettyPrint(options.prettyPrint);
     builder.setLineBreak(options.lineBreak);
+    builder.setPreferLineBreakAtEndOfFile(options.preferLineBreakAtEndOfFile);
     builder.setSourceMap(sourceMap);
     builder.setSourceMapDetailLevel(options.sourceMapDetailLevel);
     builder.setTagAsStrict(firstOutput &&

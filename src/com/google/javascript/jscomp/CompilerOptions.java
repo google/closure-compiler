@@ -651,6 +651,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Line break the output a bit more aggressively */
   public boolean lineBreak;
 
+  /** Prefer line breaks at end of file */
+  public boolean preferLineBreakAtEndOfFile;
+
   /** Prints a separator comment before each js script */
   public boolean printInputDelimiter;
 
@@ -884,6 +887,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     printInputDelimiter = false;
     prettyPrint = false;
     lineBreak = false;
+    preferLineBreakAtEndOfFile = false;
     reportPath = null;
     tracer = TracerMode.OFF;
     colorizeErrorOutput = false;
@@ -1781,6 +1785,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setLineBreak(boolean lineBreak) {
     this.lineBreak = lineBreak;
+  }
+
+  public void setPreferLineBreakAtEndOfFile(boolean lineBreakAtEnd) {
+    this.preferLineBreakAtEndOfFile = lineBreakAtEnd;
   }
 
   public void setPrintInputDelimiter(boolean printInputDelimiter) {

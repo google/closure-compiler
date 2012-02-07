@@ -135,16 +135,20 @@ class CodePrinter {
 
     /**
      * Reports to the code consumer that the given line has been cut at the
-     * given position (i.e. a \n has been inserted there). All mappings in
-     * the source maps after that position will be renormalized as needed.
+     * given position, i.e. a \n has been inserted there. Or that a cut has
+     * been undone, i.e. a previously inserted \n has been removed.
+     * All mappings in the source maps after that position will be renormalized
+     * as needed.
      */
-    void reportLineCut(int lineIndex, int charIndex) {
+    void reportLineCut(int lineIndex, int charIndex, boolean insertion) {
       if (createSrcMap) {
         for (Mapping mapping : allMappings) {
-          mapping.start = convertPosition(mapping.start, lineIndex, charIndex);
+          mapping.start = convertPosition(mapping.start, lineIndex, charIndex,
+              insertion);
 
           if (mapping.end != null) {
-            mapping.end = convertPosition(mapping.end, lineIndex, charIndex);
+            mapping.end = convertPosition(mapping.end, lineIndex, charIndex,
+                insertion);
           }
         }
       }
@@ -152,26 +156,45 @@ class CodePrinter {
 
     /**
      * Converts the given position by normalizing it against the insertion
-     * of a newline at the given line and character position.
+     * or removal of a newline at the given line and character position.
      *
      * @param position The existing position before the newline was inserted.
      * @param lineIndex The index of the line at which the newline was inserted.
      * @param characterPosition The position on the line at which the newline
      *     was inserted.
+     * @param insertion True if a newline was inserted, false if a newline was
+     *     removed.
      *
      * @return The normalized position.
+     * @throws IllegalStateException if an attempt to reverse a line cut is
+     *     made on a previous line rather than the current line.
      */
     private FilePosition convertPosition(FilePosition position, int lineIndex,
-                                     int characterPosition) {
+                                     int characterPosition, boolean insertion) {
       int originalLine = position.getLine();
       int originalChar = position.getColumn();
-      if (originalLine == lineIndex && originalChar >= characterPosition) {
-        // If the position falls on the line itself, then normalize it
-        // if it falls at or after the place the newline was inserted.
-        return new FilePosition(
-            originalLine + 1, originalChar - characterPosition);
+      if (insertion) {
+        if (originalLine == lineIndex && originalChar >= characterPosition) {
+          // If the position falls on the line itself, then normalize it
+          // if it falls at or after the place the newline was inserted.
+          return new FilePosition(
+              originalLine + 1, originalChar - characterPosition);
+        } else {
+          return position;
+        }
       } else {
-        return position;
+        if (originalLine == lineIndex) {
+          return new FilePosition(
+              originalLine - 1, originalChar + characterPosition);
+        } else if (originalLine > lineIndex) {
+            // Not supported, can only undo a cut on the most recent line. To
+            // do this on a previous lines would require reevaluating the cut
+            // positions on all subsequent lines.
+            throw new IllegalStateException(
+                "Cannot undo line cut on a previous line.");
+        } else {
+          return position;
+        }
       }
     }
 
@@ -390,8 +413,11 @@ class CodePrinter {
     // probably require explicit modelling of the gzip algorithm.
 
     private final boolean lineBreak;
+    private final boolean preferLineBreakAtEndOfFile;
     private int lineStartPosition = 0;
     private int preferredBreakPosition = 0;
+    private int prevCutPosition = 0;
+    private int prevLineStartPosition = 0;
 
   /**
    * @param lineBreak break the lines a bit more aggressively
@@ -402,10 +428,12 @@ class CodePrinter {
    * @param sourceMapDetailLevel A filter to control which nodes get mapped into
    *     the source map.
    */
-    private CompactCodePrinter(boolean lineBreak, int lineLengthThreshold,
+    private CompactCodePrinter(boolean lineBreak,
+        boolean preferLineBreakAtEndOfFile, int lineLengthThreshold,
         boolean createSrcMap, SourceMap.DetailLevel sourceMapDetailLevel) {
       super(lineLengthThreshold, createSrcMap, sourceMapDetailLevel);
       this.lineBreak = lineBreak;
+      this.preferLineBreakAtEndOfFile = preferLineBreakAtEndOfFile;
     }
 
     /**
@@ -423,6 +451,8 @@ class CodePrinter {
     @Override
     void startNewLine() {
       if (lineLength > 0) {
+        prevCutPosition = code.length();
+        prevLineStartPosition = lineStartPosition;
         code.append('\n');
         lineLength = 0;
         lineIndex++;
@@ -464,7 +494,8 @@ class CodePrinter {
             preferredBreakPosition < lineStartPosition + lineLength) {
           int position = preferredBreakPosition;
           code.insert(position, '\n');
-          reportLineCut(lineIndex, position - lineStartPosition);
+          prevCutPosition = position;
+          reportLineCut(lineIndex, position - lineStartPosition, true);
           lineIndex++;
           lineLength -= (position - lineStartPosition);
           lineStartPosition = position + 1;
@@ -478,12 +509,45 @@ class CodePrinter {
     void notePreferredLineBreak() {
       preferredBreakPosition = code.length();
     }
+
+    @Override
+    void endFile() {
+      super.endFile();
+      if (!preferLineBreakAtEndOfFile) {
+        return;
+      }
+      if (lineLength > lineLengthThreshold / 2) {
+        // Add an extra break at end of file.
+        append(";");
+        startNewLine();
+      } else if (prevCutPosition > 0) {
+        // Shift the previous break to end of file.
+        for (int i = prevCutPosition; i < code.length() - 1; i++) {
+          code.setCharAt(i, code.charAt(i+1));
+        }
+        code.setLength(code.length() - 1);
+        lineStartPosition = prevLineStartPosition;
+        lineLength = code.length() - lineStartPosition;
+        reportLineCut(lineIndex, prevCutPosition, false);
+        lineIndex--;
+        prevCutPosition = 0;
+        prevLineStartPosition = 0;
+        append(";");
+        startNewLine();
+      } else {
+        // A small file with no line breaks. We do nothing in this case to
+        // avoid excessive line breaks. It's not ideal if a lot of these pile
+        // up, but that is reasonably unlikely.
+      }
+    }
+
   }
 
   static class Builder {
     private final Node root;
     private boolean prettyPrint = false;
     private boolean lineBreak = false;
+    private boolean preferLineBreakAtEndOfFile = false;
     private boolean outputTypes = false;
     private int lineLengthThreshold = DEFAULT_LINE_LENGTH_THRESHOLD;
     private SourceMap sourceMap = null;
@@ -517,6 +581,17 @@ class CodePrinter {
      */
     Builder setLineBreak(boolean lineBreak) {
       this.lineBreak = lineBreak;
+      return this;
+    }
+
+    /**
+     * Sets whether line breaking is preferred at end of file. This is useful
+     * if JS serving code needs a place to insert code, such as script tags,
+     * without interfering with source maps.
+     * @param lineBreakAtEnd If true, prefer line breaking at end of file.
+     */
+    Builder setPreferLineBreakAtEndOfFile(boolean lineBreakAtEnd) {
+      this.preferLineBreakAtEndOfFile = lineBreakAtEnd;
       return this;
     }
 
@@ -592,8 +667,9 @@ class CodePrinter {
               ? Format.PRETTY
               : Format.COMPACT;
 
-      return toSource(root, outputFormat, lineBreak, lineLengthThreshold,
-          sourceMap, sourceMapDetailLevel, outputCharset, tagAsStrict);
+      return toSource(root, outputFormat, lineBreak, preferLineBreakAtEndOfFile,
+          lineLengthThreshold, sourceMap, sourceMapDetailLevel, outputCharset,
+          tagAsStrict);
     }
   }
 
@@ -607,7 +683,8 @@ class CodePrinter {
    * Converts a tree to js code
    */
   private static String toSource(Node root, Format outputFormat,
-                                 boolean lineBreak,  int lineLengthThreshold,
+                                 boolean lineBreak,  boolean preferEndOfFileBreak,
+                                 int lineLengthThreshold,
                                  SourceMap sourceMap,
                                  SourceMap.DetailLevel sourceMapDetailLevel,
                                  Charset outputCharset,
@@ -618,7 +695,7 @@ class CodePrinter {
     MappedCodePrinter mcp =
         outputFormat == Format.COMPACT
         ? new CompactCodePrinter(
-            lineBreak, lineLengthThreshold,
+            lineBreak, preferEndOfFileBreak, lineLengthThreshold,
             createSourceMap, sourceMapDetailLevel)
         : new PrettyCodePrinter(
             lineLengthThreshold, createSourceMap, sourceMapDetailLevel);
