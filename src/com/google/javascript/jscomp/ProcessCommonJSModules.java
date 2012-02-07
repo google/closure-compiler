@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -34,7 +35,7 @@ import com.google.javascript.rhino.Node;
  */
 class ProcessCommonJSModules implements CompilerPass {
 
-  public static final String  DEFAULT_FILENAME_PREFIX = "./";
+  public static final String  DEFAULT_FILENAME_PREFIX = "." + File.separator;
 
   private static final String MODULE_NAME_PREFIX = "module$";
 
@@ -81,7 +82,8 @@ class ProcessCommonJSModules implements CompilerPass {
    */
   public static String toModuleName(String filename) {
     return MODULE_NAME_PREFIX +
-        filename.replaceAll("^\\./", "").replaceAll("/", "\\$")
+        filename.replaceAll("^\\." + File.separator, "")
+            .replaceAll(File.separator, "\\$")
             .replaceAll("\\.js$", "").replaceAll("-", "_");
   }
 
@@ -94,8 +96,8 @@ class ProcessCommonJSModules implements CompilerPass {
     requiredFilename = requiredFilename.replaceAll("\\.js$", "");
     currentFilename = currentFilename.replaceAll("\\.js$", "");
 
-    if (requiredFilename.startsWith("./") ||
-        requiredFilename.startsWith("../")) {
+    if (requiredFilename.startsWith("." + File.separator) ||
+        requiredFilename.startsWith(".." + File.separator)) {
       try {
         requiredFilename = (new URI(currentFilename)).resolve(new URI(requiredFilename))
             .toString();
