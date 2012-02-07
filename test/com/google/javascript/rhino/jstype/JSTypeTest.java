@@ -2973,7 +2973,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         .withParamsNode(registry.createParameters())
         .withTypeOfThis(DATE_TYPE).build();
     FunctionType dateMethodWithParam = new FunctionBuilder(registry)
-        .withParamsNode(registry.createParameters(NUMBER_TYPE))
+        .withParamsNode(registry.createOptionalParameters(NUMBER_TYPE))
         .withTypeOfThis(DATE_TYPE).build();
     FunctionType dateMethodWithReturn = new FunctionBuilder(registry)
         .withReturnType(NUMBER_TYPE)
@@ -2982,7 +2982,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         .withParamsNode(registry.createParameters())
         .withTypeOfThis(STRING_OBJECT_TYPE).build();
     FunctionType stringMethodWithParam = new FunctionBuilder(registry)
-        .withParamsNode(registry.createParameters(NUMBER_TYPE))
+        .withParamsNode(registry.createOptionalParameters(NUMBER_TYPE))
         .withTypeOfThis(STRING_OBJECT_TYPE).build();
     FunctionType stringMethodWithReturn = new FunctionBuilder(registry)
         .withReturnType(NUMBER_TYPE)
@@ -4374,7 +4374,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testSubtypingFunctionFixedArgsNotMatching() throws Exception {
     FunctionType f1 = registry.createFunctionType(OBJECT_TYPE,
-        false, EVAL_ERROR_TYPE);
+        false, EVAL_ERROR_TYPE, UNKNOWN_TYPE);
     FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE,
         false, ERROR_TYPE, ALL_TYPE);
 

@@ -2050,11 +2050,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "F.prototype.foo = function() { };" +
         "/** @constructor \n * @extends {F} */ " +
         "function G() {}" +
-        "/** @override */ G.prototype.foo = function(x, y) { };" +
-        "(new G()).foo();",
-        "Function G.prototype.foo: called with 0 argument(s). " +
-        "Function requires at least 2 argument(s) " +
-        "and no more than 2 argument(s).");
+        "/** @override */ G.prototype.foo = function(x, y) { };",
+        "mismatch of the foo property type and the type of the property " +
+        "it overrides from superclass F\n" +
+        "original: function (this:F): undefined\n" +
+        "override: function (this:G, ?, ?): undefined");
   }
 
   public void testMethodInference8() throws Exception {
@@ -2064,10 +2064,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor \n * @extends {F} */ " +
         "function G() {}" +
         "/** @override */ " +
-        "G.prototype.foo = function(a, opt_b, var_args) { };" +
-        "(new G()).foo();",
-        "Function G.prototype.foo: called with 0 argument(s). " +
-        "Function requires at least 1 argument(s).");
+        "G.prototype.foo = function(opt_b, var_args) { };" +
+        "(new G()).foo(1, 2, 3);");
   }
 
   public void testMethodInference9() throws Exception {
@@ -2077,7 +2075,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor \n * @extends {F} */ " +
         "function G() {}" +
         "/** @override */ " +
-        "G.prototype.foo = function(a, var_args, opt_b) { };",
+        "G.prototype.foo = function(var_args, opt_b) { };",
         "variable length argument must be last");
   }
 

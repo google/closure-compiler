@@ -84,27 +84,67 @@ final class ArrowType extends JSType {
 
     ArrowType that = (ArrowType) other;
 
+    // This is described in Draft 2 of the ES4 spec,
+    // Section 3.4.7: Subtyping Function Types.
+
     // this.returnType <: that.returnType (covariant)
     if (!this.returnType.isSubtype(that.returnType)) {
       return false;
     }
+
     // that.paramType[i] <: this.paramType[i] (contravariant)
-    // TODO(nicksantos): This is incorrect. It should be invariant.
-    // Follow up with closure team on how to fix this without everyone
-    // hating on us.
+    //
+    // If this.paramType[i] is required,
+    // then that.paramType[i] is required.
+    //
+    // In theory, the "required-ness" should work in the other direction as
+    // well. In other words, if we have
+    //
+    // function f(number, number) {}
+    // function g(number) {}
+    //
+    // Then f *should* not be a subtype of g, and g *should* not be
+    // a subtype of f. But in practice, we do not implement it this way.
+    // We want to support the use case where you can pass g where f is
+    // expected, and pretend that g ignores the second argument.
+    // That way, you can have a single "no-op" function, and you don't have
+    // to create a new no-op function for every possible type signature.
+    //
+    // So, in this case, g < f, but f !< g
     Node thisParam = parameters.getFirstChild();
     Node thatParam = that.parameters.getFirstChild();
     while (thisParam != null && thatParam != null) {
       JSType thisParamType = thisParam.getJSType();
+      JSType thatParamType = thatParam.getJSType();
       if (thisParamType != null) {
-        JSType thatParamType = thatParam.getJSType();
         if (thatParamType == null ||
             !thatParamType.isSubtype(thisParamType)) {
           return false;
         }
       }
+
       boolean thisIsVarArgs = thisParam.isVarArgs();
       boolean thatIsVarArgs = thatParam.isVarArgs();
+      boolean thisIsOptional = thisIsVarArgs || thisParam.isOptionalArg();
+      boolean thatIsOptional = thatIsVarArgs || thatParam.isOptionalArg();
+
+      // "that" can't be a supertype, because it's missing a required argument.
+      if (!thisIsOptional && thatIsOptional) {
+        // NOTE(nicksantos): In our type system, we use {function(...?)} and
+        // {function(...NoType)} to to indicate that arity should not be
+        // checked. Strictly speaking, this is not a correct formulation,
+        // because now a sub-function can required arguments that are var_args
+        // in the super-function. So we special-case this.
+        boolean isTopFunction =
+            thatIsVarArgs &&
+            (thatParamType == null ||
+             thatParamType.isUnknownType() ||
+             thatParamType.isNoType());
+        if (!isTopFunction) {
+          return false;
+        }
+      }
+
       // don't advance if we have variable arguments
       if (!thisIsVarArgs) {
         thisParam = thisParam.getNext();
@@ -112,6 +152,7 @@ final class ArrowType extends JSType {
       if (!thatIsVarArgs) {
         thatParam = thatParam.getNext();
       }
+
       // both var_args indicates the end
       if (thisIsVarArgs && thatIsVarArgs) {
         thisParam = null;
@@ -119,23 +160,13 @@ final class ArrowType extends JSType {
       }
     }
 
-    // Right now, the parser's type system doesn't have a good way
-    // to model optional arguments.
-    //
-    // Suppose we have
-    // function f(number, number) {}
-    // function g(number) {}
-    // If the second arg of f is optional, then f is a subtype of g,
-    // but g is not a subtype of f.
-    // If the second arg of f is required, then g is a subtype of f,
-    // but f is not a subtype of g.
-    //
-    // Until we model optional params, let's just punt on this.
-    // If one type has more arguments than the other, we won't check them.
-    //
-    // NOTE(nicksantos): This is described in Draft 2 of the ES4 spec,
-    // Section 3.4.6: Subtyping Function Types. It seems really
-    // strange but I haven't thought a lot about the implementation.
+    // "that" can't be a supertype, because it's missing a required arguement.
+    if (thisParam != null
+        && !thisParam.isOptionalArg() && !thisParam.isVarArgs()
+        && thatParam == null) {
+      return false;
+    }
+
     return true;
   }
 

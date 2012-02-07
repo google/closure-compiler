@@ -147,9 +147,9 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         .withReturnType(BOOLEAN_TYPE).build();
 
     assertLeastSupertype(
-        "Function", twoNumbers, oneNumber);
+        "function (number, number): boolean", twoNumbers, oneNumber);
     assertGreatestSubtype(
-        "function (...[*]): None", twoNumbers, oneNumber);
+        "function (number): boolean", twoNumbers, oneNumber);
   }
 
   public void testSubtypeWithInterfaceThisType() {
