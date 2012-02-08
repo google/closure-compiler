@@ -1665,12 +1665,14 @@ public final class JsDocInfoParser {
       // {?=} - equals
       // {function(?, number)} - comma
       // {function(number, ?)} - right paren
+      // {function(number, ...[?])} - right bracket
       // {function(): ?|number} - pipe
       // I'm not a big fan of using look-ahead for this, but it makes
       // the type language a lot nicer.
       token = next();
       if (token == JsDocToken.COMMA ||
           token == JsDocToken.EQUALS ||
+          token == JsDocToken.RB ||
           token == JsDocToken.RC ||
           token == JsDocToken.RP ||
           token == JsDocToken.PIPE) {

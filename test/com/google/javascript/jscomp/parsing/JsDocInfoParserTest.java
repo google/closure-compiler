@@ -498,6 +498,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     testParseType("function (?): (?|number)", "function (?): ?");
   }
 
+  public void testParseFunctionalType19() throws Exception {
+    testParseType(
+        "function(...[?]): void",
+        "function (...[?]): undefined");
+  }
+
   public void testStructuralConstructor() throws Exception {
     JSType type = testParseType(
         "function (new:Object)", "function (new:Object): ?");

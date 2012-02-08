@@ -4598,6 +4598,81 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testOverriddenParams1() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @param {...?} var_args */" +
+        "Foo.prototype.bar = function(var_args) {};" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() {}" +
+        "/**\n" +
+        " * @param {number} x\n" +
+        " * @override\n" +
+        " */" +
+        "SubFoo.prototype.bar = function(x) {};");
+  }
+
+  public void testOverriddenParams2() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @type {function(...[?])} */" +
+        "Foo.prototype.bar = function(var_args) {};" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() {}" +
+        "/**\n" +
+        " * @type {function(number)}\n" +
+        " * @override\n" +
+        " */" +
+        "SubFoo.prototype.bar = function(x) {};");
+  }
+
+  public void testOverriddenParams3() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @param {...number} var_args */" +
+        "Foo.prototype.bar = function(var_args) { };" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() {}" +
+        "/**\n" +
+        " * @param {number} x\n" +
+        " * @override\n" +
+        " */" +
+        "SubFoo.prototype.bar = function(x) {};",
+        "mismatch of the bar property type and the type of the " +
+        "property it overrides from superclass Foo\n" +
+        "original: function (this:Foo, ...[number]): undefined\n" +
+        "override: function (this:SubFoo, number): undefined");
+  }
+
+  public void testOverriddenParams4() throws Exception {
+    // TODO(nicksantos): This should emit a warning.
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @type {function(...[number])} */" +
+        "Foo.prototype.bar = function(var_args) {};" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() {}" +
+        "/**\n" +
+        " * @type {function(number)}\n" +
+        " * @override\n" +
+        " */" +
+        "SubFoo.prototype.bar = function(x) {};");
+    /*
+        "mismatch of the bar property type and the type of the " +
+        "property it overrides from superclass Foo\n" +
+        "original: function (this:Foo, ...[number]): undefined\n" +
+        "override: function (this:SubFoo, number): undefined");
+        */
+  }
+
   public void testOverriddenReturn1() throws Exception {
     testTypes(
         "/** @constructor */ function Foo() {}" +
