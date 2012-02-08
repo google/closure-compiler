@@ -178,6 +178,8 @@ public class Compiler extends AbstractCompiler {
 
   private GlobalVarReferenceMap globalRefMap = null;
 
+  private volatile double progress = 0.0;
+
   /**
    * Creates a Compiler that reports errors and warnings to its logger.
    */
@@ -643,7 +645,11 @@ public class Compiler extends AbstractCompiler {
   }
 
   private void compileInternal() {
+    setProgress(0.0);
     parse();
+    // 15 percent of the work is assumed to be for parsing (based on some
+    // minimal analysis on big JS projects, of course this depends on options)
+    setProgress(0.15);
     if (hasErrors()) {
       return;
     }
@@ -682,6 +688,7 @@ public class Compiler extends AbstractCompiler {
     if (options.devMode == DevMode.START_AND_END) {
       runSanityCheck();
     }
+    setProgress(1.0);
   }
 
   public void parse() {
@@ -735,7 +742,10 @@ public class Compiler extends AbstractCompiler {
   public void check() {
     runCustomPasses(CustomPassExecutionTime.BEFORE_CHECKS);
 
-    PhaseOptimizer phaseOptimizer = new PhaseOptimizer(this, tracker);
+    // We are currently only interested in check-passes for progress reporting
+    // as it is used for IDEs, that's why the maximum progress is set to 1.0.
+    PhaseOptimizer phaseOptimizer = new PhaseOptimizer(this, tracker,
+        new PhaseOptimizer.ProgressRange(getProgress(), 1.0));
     if (options.devMode == DevMode.EVERY_PASS) {
       phaseOptimizer.setSanityCheck(sanityCheck);
     }
@@ -1754,7 +1764,7 @@ public class Compiler extends AbstractCompiler {
     // unmodified local names.
     normalize();
 
-    PhaseOptimizer phaseOptimizer = new PhaseOptimizer(this, tracker);
+    PhaseOptimizer phaseOptimizer = new PhaseOptimizer(this, tracker, null);
     if (options.devMode == DevMode.EVERY_PASS) {
       phaseOptimizer.setSanityCheck(sanityCheck);
     }
@@ -2237,6 +2247,22 @@ public class Compiler extends AbstractCompiler {
       synthesizedExternsInput = newExternInput(SYNTHETIC_EXTERNS);
     }
     return synthesizedExternsInput;
+  }
+
+  @Override
+  public double getProgress() {
+    return progress;
+  }
+
+  @Override
+  void setProgress(double newProgress) {
+    if (newProgress > 1.0) {
+      progress = 1.0;
+    } else if (newProgress < 0.0) {
+      progress = 0.0;
+    } else {
+      progress = newProgress;
+    }
   }
 
 }

@@ -329,4 +329,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * definitions;
    */
   abstract CompilerInput getSynthesizedExternsInput();
+
+  /**
+   * @return a number in [0,1] range indicating an approximate progress of the
+   * last compile. Note this should only be used as a hint and no assumptions
+   * should be made on accuracy, even a completed compile may choose not to set
+   * this to 1.0 at the end.
+   */
+  public abstract double getProgress();
+
+  /** Sets the progress to a certain value in [0,1] range. */
+  abstract void setProgress(double progress);
 }
