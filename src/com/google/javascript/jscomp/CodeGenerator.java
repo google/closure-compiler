@@ -100,7 +100,7 @@ class CodeGenerator {
           "Bad binary operator \"%s\": expected 2 arguments but got %s",
           opstr, childCount);
       int p = NodeUtil.precedence(type);
-      addLeftExpr(first, p, context);
+      addExpr(first, p, context);
       cc.addOp(opstr, true);
 
       // For right-hand-side of operations, only pass context if it's
@@ -195,7 +195,7 @@ class CodeGenerator {
           addIdentifier(n.getString());
           cc.addOp("=", true);
           if (first.isComma()) {
-            addExpr(first, NodeUtil.precedence(Token.ASSIGN));
+            addExpr(first, NodeUtil.precedence(Token.ASSIGN), Context.OTHER);
           } else {
             // Add expression, consider nearby code at lowest level of
             // precedence.
@@ -218,7 +218,26 @@ class CodeGenerator {
 
       case Token.COMMA:
         Preconditions.checkState(childCount == 2);
-        addList(first, false, context);
+
+        // We could use addList recursively here, but sometimes we produce
+        // very deeply nested commas and run out of stack space, so we
+        // just unroll the recursion.
+        //
+        // We assume COMMA nodes are left-recursive.
+        Node firstNonComma = n.getFirstChild();
+        while (firstNonComma.getType() == Token.COMMA) {
+          firstNonComma = firstNonComma.getFirstChild();
+        }
+
+        addExpr(firstNonComma, 0, context);
+
+        Node current = firstNonComma;
+        do {
+          current = current.getParent();
+          cc.listSeparator();
+          addExpr(current.getFirstChild().getNext(), 0, Context.OTHER);
+        } while (current != n);
+
         break;
 
       case Token.NUMBER:
@@ -234,7 +253,7 @@ class CodeGenerator {
         // All of these unary operators are right-associative
         Preconditions.checkState(childCount == 1);
         cc.addOp(NodeUtil.opToStrNoFail(type), false);
-        addExpr(first, NodeUtil.precedence(type));
+        addExpr(first, NodeUtil.precedence(type), Context.OTHER);
         break;
       }
 
@@ -248,7 +267,7 @@ class CodeGenerator {
           cc.addNumber(-n.getFirstChild().getDouble());
         } else {
           cc.addOp(NodeUtil.opToStrNoFail(type), false);
-          addExpr(first, NodeUtil.precedence(type));
+          addExpr(first, NodeUtil.precedence(type), Context.OTHER);
         }
 
         break;
@@ -257,11 +276,11 @@ class CodeGenerator {
       case Token.HOOK: {
         Preconditions.checkState(childCount == 3);
         int p = NodeUtil.precedence(type);
-        addLeftExpr(first, p + 1, context);
+        addExpr(first, p + 1, context);
         cc.addOp("?", true);
-        addExpr(first.getNext(), 1);
+        addExpr(first.getNext(), 1, Context.OTHER);
         cc.addOp(":", true);
-        addExpr(last, 1);
+        addExpr(last, 1, Context.OTHER);
         break;
       }
 
@@ -450,7 +469,7 @@ class CodeGenerator {
         if (needsParens) {
           add("(");
         }
-        addLeftExpr(first, NodeUtil.precedence(type), context);
+        addExpr(first, NodeUtil.precedence(type), context);
         if (needsParens) {
           add(")");
         }
@@ -463,7 +482,7 @@ class CodeGenerator {
         Preconditions.checkState(
             childCount == 2,
             "Bad GETELEM: expected 2 children but got %s", childCount);
-        addLeftExpr(first, NodeUtil.precedence(type), context);
+        addExpr(first, NodeUtil.precedence(type), context);
         add("[");
         add(first.getNext());
         add("]");
@@ -486,7 +505,7 @@ class CodeGenerator {
         // A non-zero post-prop value indicates a post inc/dec, default of zero
         // is a pre-inc/dec.
         if (postProp != 0) {
-          addLeftExpr(first, NodeUtil.precedence(type), context);
+          addExpr(first, NodeUtil.precedence(type), context);
           cc.addOp(o, false);
         } else {
           cc.addOp(o, false);
@@ -508,10 +527,10 @@ class CodeGenerator {
         if (isIndirectEval(first)
             || n.getBooleanProp(Node.FREE_CALL) && NodeUtil.isGet(first)) {
           add("(0,");
-          addExpr(first, NodeUtil.precedence(Token.COMMA));
+          addExpr(first, NodeUtil.precedence(Token.COMMA), Context.OTHER);
           add(")");
         } else {
-          addLeftExpr(first, NodeUtil.precedence(type), context);
+          addExpr(first, NodeUtil.precedence(type), context);
         }
         add("(");
         addList(first.getNext());
@@ -615,7 +634,7 @@ class CodeGenerator {
             first, Token.CALL, NodeUtil.MATCH_NOT_FUNCTION)) {
           precedence = NodeUtil.precedence(first.getType()) + 1;
         }
-        addExpr(first, precedence);
+        addExpr(first, precedence, Context.OTHER);
 
         // '()' is optional when no arguments are present
         Node next = first.getNext();
@@ -673,11 +692,11 @@ class CodeGenerator {
               if (!Double.isNaN(d)) {
                 cc.addNumber(d);
               } else {
-                addExpr(c, 1);
+                addExpr(c, 1, Context.OTHER);
               }
             }
             add(":");
-            addExpr(c.getFirstChild(), 1);
+            addExpr(c.getFirstChild(), 1, Context.OTHER);
           }
         }
         add("}");
@@ -851,23 +870,6 @@ class CodeGenerator {
     }
   }
 
-  /**
-   * Adds a node at the left-hand side of an expression. Unlike
-   * {@link #addExpr(Node,int)}, this preserves information about the context.
-   *
-   * The left side of an expression is special because in the JavaScript
-   * grammar, certain tokens may be parsed differently when they are at
-   * the beginning of a statement. For example, "{}" is parsed as a block,
-   * but "{'x': 'y'}" is parsed as an object literal.
-   */
-  void addLeftExpr(Node n, int minPrecedence, Context context) {
-    addExpr(n, minPrecedence, context);
-  }
-
-  void addExpr(Node n, int minPrecedence) {
-    addExpr(n, minPrecedence, Context.OTHER);
-  }
-
   private void addExpr(Node n, int minPrecedence, Context context) {
     if ((NodeUtil.precedence(n.getType()) < minPrecedence) ||
         ((context == Context.IN_FOR_INIT_CLAUSE) &&
@@ -893,10 +895,10 @@ class CodeGenerator {
     for (Node n = firstInList; n != null; n = n.getNext()) {
       boolean isFirst = n == firstInList;
       if (isFirst) {
-        addLeftExpr(n, isArrayOrFunctionArgument ? 1 : 0, lhsContext);
+        addExpr(n, isArrayOrFunctionArgument ? 1 : 0, lhsContext);
       } else {
         cc.listSeparator();
-        addExpr(n, isArrayOrFunctionArgument ? 1 : 0);
+        addExpr(n, isArrayOrFunctionArgument ? 1 : 0, Context.OTHER);
       }
     }
   }
@@ -915,7 +917,7 @@ class CodeGenerator {
       if (n != firstInList) {
         cc.listSeparator();
       }
-      addExpr(n, 1);
+      addExpr(n, 1, Context.OTHER);
       lastWasEmpty = n.isEmpty();
     }
 

@@ -16,12 +16,16 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
+
+import java.util.List;
 
 public class CodePrinterTest extends TestCase {
   static Node parse(String js) {
@@ -1344,5 +1348,23 @@ public class CodePrinterTest extends TestCase {
 
   public void testIssue5746867() {
     assertPrint("var a = { '$\\\\' : 5 };", "var a={\"$\\\\\":5}");
+  }
+
+  public void testManyCommas() {
+    int numCommas = 10000;
+    List<String> numbers = Lists.newArrayList("0", "1");
+    Node current = new Node(Token.COMMA, Node.newNumber(0), Node.newNumber(1));
+    for (int i = 2; i < numCommas; i++) {
+      current = new Node(Token.COMMA, current);
+
+      // 1000 is printed as 1E3, and screws up our test.
+      int num = i % 1000;
+      numbers.add(String.valueOf(num));
+      current.addChildToBack(Node.newNumber(num));
+    }
+
+    String expected = Joiner.on(",").join(numbers);
+    String actual = printNode(current).replace("\n", "");
+    assertEquals(expected, actual);
   }
 }
