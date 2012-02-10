@@ -614,7 +614,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     if (parsedModuleWrappers == null) {
       parsedModuleWrappers = parseModuleWrappers(
           config.moduleWrapper,
-          Lists.newArrayList(compiler.getModuleGraph().getAllModules()));
+          Lists.newArrayList(
+              compiler.getDegenerateModuleGraph().getAllModules()));
     }
 
     String fileName = getModuleOutputFileName(m);
@@ -1273,9 +1274,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         continue;
       }
 
-      JSModuleGraph graph = compiler.getModuleGraph();
       if (shouldGenerateOutputPerModule(output)) {
         // Generate per-module manifests or bundles
+        JSModuleGraph graph = compiler.getDegenerateModuleGraph();
         Iterable<JSModule> modules = graph.getAllModules();
         for (JSModule module : modules) {
           Writer out = fileNameToOutputWriter2(
@@ -1291,14 +1292,15 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         // Generate a single file manifest or bundle.
         Writer out = fileNameToOutputWriter2(
             expandCommandLinePath(output, null));
-        if (graph == null) {
+        if (config.module.isEmpty()) {
           if (isManifest) {
             printManifestTo(compiler.getInputsInOrder(), out);
           } else {
             printBundleTo(compiler.getInputsInOrder(), out);
           }
         } else {
-          printModuleGraphManifestOrBundleTo(graph, out, isManifest);
+          printModuleGraphManifestOrBundleTo(
+              compiler.getDegenerateModuleGraph(), out, isManifest);
         }
         out.close();
       }

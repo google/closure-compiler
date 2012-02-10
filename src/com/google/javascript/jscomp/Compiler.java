@@ -1109,6 +1109,14 @@ public class Compiler extends AbstractCompiler {
     return moduleGraph;
   }
 
+  /**
+   * Gets a module graph. This will always return a module graph, even
+   * in the degenerate case when there's only one module.
+   */
+  JSModuleGraph getDegenerateModuleGraph() {
+    return moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph;
+  }
+
   @Override
   public JSTypeRegistry getTypeRegistry() {
     if (typeRegistry == null) {
