@@ -156,6 +156,23 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
     testSame(NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);
   }
 
+  public void testSuppressionOfUndefinedNamesWarning() {
+    testSame(new String[] {
+        NAMES +
+        "/** @constructor */ function Foo() { };" +
+        "/** @suppress {undefinedNames} */" +
+        "Foo.prototype.bar = function() {" +
+        "  alert(a.x);" +
+        "  alert(a.x.b());" +
+        "  a.x();" +
+        "  var c = a.x.b;" +
+        "  var c = a.x.b();" +
+        "  a.x.b();" +
+        "  a.x.b = 3;" +
+        "};",
+    });
+  }
+
   public void testNoWarningForSimpleVarModuleDep1() {
     testSame(createModuleChain(
         NAMES,

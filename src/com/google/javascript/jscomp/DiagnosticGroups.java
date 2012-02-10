@@ -76,7 +76,7 @@ public class DiagnosticGroups {
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
       "internetExplorerChecks, invalidCasts, missingProperties, " +
       "nonStandardJsDocs, strictModuleDepCheck, typeInvalidation, " +
-      "undefinedVars, unknownDefines, uselessCode, " +
+      "undefinedNames, undefinedVars, unknownDefines, uselessCode, " +
       "visibility";
 
   public static DiagnosticGroup GLOBAL_THIS =
@@ -157,6 +157,10 @@ public class DiagnosticGroups {
   public static DiagnosticGroup UNDEFINED_VARIABLES =
       DiagnosticGroups.registerGroup("undefinedVars",
           VarCheck.UNDEFINED_VAR_ERROR);
+
+  public static DiagnosticGroup UNDEFINED_NAMES =
+      DiagnosticGroups.registerGroup("undefinedNames",
+          CheckGlobalNames.UNDEFINED_NAME_WARNING);
 
   public static DiagnosticGroup DEBUGGER_STATEMENT_PRESENT =
       DiagnosticGroups.registerGroup("checkDebuggerStatement",
