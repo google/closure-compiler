@@ -1141,9 +1141,9 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
           "'abc'",
           "'def'",
           "NaN",
-          "Infinity"
+          "Infinity",
           // TODO(nicksantos): Add more literals
-          // "-Infinity",
+          "-Infinity"
           //"({})",
           // "[]"
           //"[0]",
@@ -1182,7 +1182,9 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
             assertSameResults(join(a, op, b), "false");
             assertSameResults(join(a, inverse, b), "false");
           } else if (a.equals(b) && equalitors.contains(op)) {
-            if (a.equals("NaN") || a.equals("Infinity")) {
+            if (a.equals("NaN") ||
+                a.equals("Infinity") ||
+                a.equals("-Infinity")) {
               foldSame(join(a, op, b));
               foldSame(join(a, inverse, b));
             } else {
@@ -1224,6 +1226,10 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
         }
       }
     }
+  }
+
+  public void testConvertToNumberNegativeInf() {
+    foldSame("var x = 3 * (r ? Infinity : -Infinity);");
   }
 
   private String join(String operandA, String op, String operandB) {

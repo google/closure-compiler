@@ -266,6 +266,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     double value = result;
 
     Node replacement = NodeUtil.numberNode(value, n);
+    if (replacement.isEquivalentTo(n)) {
+      return;
+    }
 
     n.getParent().replaceChild(n, replacement);
     reportCodeChange();
