@@ -1367,4 +1367,10 @@ public class CodePrinterTest extends TestCase {
     String actual = printNode(current).replace("\n", "");
     assertEquals(expected, actual);
   }
+
+  public void testMinusNegativeZero() {
+    // Negative zero is weird, because we have to be able to distinguish
+    // it from positive zero (there are some subtle differences in behavior).
+    assertPrint("x- -0", "x- -0.0");
+  }
 }
