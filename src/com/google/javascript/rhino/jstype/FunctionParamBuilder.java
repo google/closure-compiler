@@ -118,6 +118,18 @@ public class FunctionParamBuilder {
     return newParam;
   }
 
+  /**
+   * Copies the parameter specification from the given node,
+   * but makes sure it's optional.
+   */
+  public Node newOptionalParameterFromNode(Node n) {
+    Node newParam = newParameterFromNode(n);
+    if (!newParam.isVarArgs() && !newParam.isOptionalArg()) {
+      newParam.setOptionalArg(true);
+    }
+    return newParam;
+  }
+
   // Add a parameter to the list with the given type.
   private Node newParameter(JSType type) {
     Node paramNode = Node.newString(Token.NAME, "");

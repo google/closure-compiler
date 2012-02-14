@@ -4673,6 +4673,42 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         */
   }
 
+  public void testOverriddenParams5() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @param {number} x */" +
+        "Foo.prototype.bar = function(x) { };" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() {}" +
+        "/**\n" +
+        " * @override\n" +
+        " */" +
+        "SubFoo.prototype.bar = function() {};" +
+        "(new SubFoo()).bar();");
+  }
+
+  public void testOverriddenParams6() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @param {number} x */" +
+        "Foo.prototype.bar = function(x) { };" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() {}" +
+        "/**\n" +
+        " * @override\n" +
+        " */" +
+        "SubFoo.prototype.bar = function() {};" +
+        "(new SubFoo()).bar(true);",
+        "actual parameter 1 of SubFoo.prototype.bar " +
+        "does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
   public void testOverriddenReturn1() throws Exception {
     testTypes(
         "/** @constructor */ function Foo() {}" +

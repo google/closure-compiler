@@ -288,9 +288,10 @@ final class FunctionTypeBuilder {
         }
       }
 
-      // Clone any remaining params that aren't in the function literal.
+      // Clone any remaining params that aren't in the function literal,
+      // but make them optional.
       while (oldParams.hasNext()) {
-        paramBuilder.newParameterFromNode(oldParams.next());
+        paramBuilder.newOptionalParameterFromNode(oldParams.next());
       }
 
       parametersNode = paramBuilder.build();
