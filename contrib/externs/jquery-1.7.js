@@ -1697,16 +1697,18 @@ jQuery.prototype.prop = function(arg1, arg2) {};
 /**
  * @param {(function()|Object)} arg1
  * @param {(Object|string)} arg2
+ * @param {...*} var_args
  * @return {function()}
  */
-jQuery.proxy = function(arg1, arg2) {};
+jQuery.proxy = function(arg1, arg2, var_args) {};
 
 /**
  * @param {(function()|Object)} arg1
  * @param {(Object|string)} arg2
+ * @param {...*} var_args
  * @return {function()}
  */
-$.proxy = function(arg1, arg2) {};
+$.proxy = function(arg1, arg2, var_args) {};
 
 /**
  * @param {Array.<Element>} elements
