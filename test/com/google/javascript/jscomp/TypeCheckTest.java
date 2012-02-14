@@ -3486,6 +3486,31 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "goog.SubDisposable.prototype.dispose = function() {};");
   }
 
+  public void testGoodImplements5() throws Exception {
+    testTypes(
+        "/** @interface */\n" +
+        "goog.Disposable = function() {};" +
+        "/** @type {Function} */" +
+        "goog.Disposable.prototype.dispose = function() {};" +
+        "/** @implements {goog.Disposable}\n * @constructor */" +
+        "goog.SubDisposable = function() {};" +
+        "/** @param {number} key \n @override */ " +
+        "goog.SubDisposable.prototype.dispose = function(key) {};");
+  }
+
+  public void testGoodImplements6() throws Exception {
+    testTypes(
+        "var myNullFunction = function() {};" +
+        "/** @interface */\n" +
+        "goog.Disposable = function() {};" +
+        "/** @return {number} */" +
+        "goog.Disposable.prototype.dispose = myNullFunction;" +
+        "/** @implements {goog.Disposable}\n * @constructor */" +
+        "goog.SubDisposable = function() {};" +
+        "/** @return {number} \n @override */ " +
+        "goog.SubDisposable.prototype.dispose = function() { return 0; };");
+  }
+
   public void testBadImplements1() throws Exception {
     testTypes("/** @interface */function Base1() {}\n" +
         "/** @interface */function Base2() {}\n" +

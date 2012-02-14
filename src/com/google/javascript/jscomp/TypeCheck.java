@@ -1173,9 +1173,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     String abstractMethodName =
         compiler.getCodingConvention().getAbstractMethodName();
-    if (!rvalueType.isOrdinaryFunction() &&
-        !(rvalue.isQualifiedName() &&
-          rvalue.getQualifiedName().equals(abstractMethodName))) {
+    if (!rvalueType.isFunctionType()) {
       // This is bad i18n style but we don't localize our compiler errors.
       String abstractMethodMessage = (abstractMethodName != null)
          ? ", or " + abstractMethodName
