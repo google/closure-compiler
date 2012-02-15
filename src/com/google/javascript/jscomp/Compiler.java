@@ -35,6 +35,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.head.ErrorReporter;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
@@ -1126,7 +1127,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
-  MemoizedScopeCreator getTypedScopeCreator() {
+  public MemoizedScopeCreator getTypedScopeCreator() {
     return getPassConfig().getTypedScopeCreator();
   }
 
@@ -2271,6 +2272,86 @@ public class Compiler extends AbstractCompiler {
     } else {
       progress = newProgress;
     }
+  }
+
+  /**
+   * Replaces one file in a hot-swap mode. The given JsAst should be made
+   * from a new version of a file that already was present in the last compile
+   * call. If the file is new, this will silently ignored.
+   *
+   * @param ast the ast of the file that is being replaced
+   */
+  public void replaceScript(JsAst ast) {
+    CompilerInput input = this.getInput(ast.getInputId());
+    if (!replaceIncrementalSourceAst(ast)) {
+      return;
+    }
+    Node originalRoot = input.getAstRoot(this);
+
+    processNewScript(ast, originalRoot);
+  }
+
+  /**
+   * Adds a new Script AST to the compile state. If a script for the same file
+   * already exists the script will not be added, instead a call to
+   * #replaceScript should be used.
+   *
+   * @param ast the ast of the new file
+   */
+  public void addNewScript(JsAst ast) {
+    if (!addNewSourceAst(ast)) {
+      return;
+    }
+    Node emptyScript = new Node(Token.SCRIPT);
+    InputId inputId = ast.getInputId();
+    emptyScript.setInputId(inputId);
+    emptyScript.setStaticSourceFile(
+        JSSourceFile.fromCode(inputId.getIdName(), ""));
+
+    processNewScript(ast, emptyScript);
+  }
+
+  private void processNewScript(JsAst ast, Node originalRoot) {
+    Node js = ast.getAstRoot(this);
+    Preconditions.checkNotNull(js);
+
+    runHotSwap(originalRoot, js, this.getCleanupPassConfig());
+    // NOTE: If hot swap passes that use GlobalNamespace are added, we will need
+    // to revisit this approach to clearing GlobalNamespaces
+    runHotSwapPass(null, null, ensureDefaultPassConfig().garbageCollectChecks);
+
+    this.getTypeRegistry().clearNamedTypes();
+    this.removeSyntheticVarsInput();
+
+    runHotSwap(originalRoot, js, this.ensureDefaultPassConfig());
+  }
+
+  /**
+   * Execute the passes from a PassConfig instance over a single replaced file.
+   */
+  private void runHotSwap(
+      Node originalRoot, Node js, PassConfig passConfig) {
+    for (PassFactory passFactory : passConfig.getChecks()) {
+      runHotSwapPass(originalRoot, js, passFactory);
+    }
+  }
+
+  private void runHotSwapPass(
+      Node originalRoot, Node js, PassFactory passFactory) {
+    HotSwapCompilerPass pass = passFactory.getHotSwapPass(this);
+    if (pass != null) {
+      logger.info("Performing HotSwap for pass " + passFactory.getName());
+      pass.hotSwapScript(js, originalRoot);
+    }
+  }
+
+  private PassConfig getCleanupPassConfig() {
+    return new CleanupPasses(getOptions());
+  }
+
+  private void removeSyntheticVarsInput() {
+    String sourceName = Compiler.SYNTHETIC_EXTERNS;
+    removeExternInput(new InputId(sourceName));
   }
 
 }
