@@ -56,10 +56,20 @@ function PerformanceNavigation() {}
 /** @type {number} */ PerformanceNavigation.prototype.type;
 /** @type {number} */ PerformanceNavigation.prototype.redirectCount;
 
+// Only available in Webkit, and only with the --enable-memory-info flag.
+/** @constructor */
+function PerformanceMemory() {}
+/** @type {number} */ PerformanceMemory.prototype.jsHeapSizeLimit;
+/** @type {number} */ PerformanceMemory.prototype.totalJSHeapSize;
+/** @type {number} */ PerformanceMemory.prototype.usedJSHeapSize;
+
 /** @constructor */
 function Performance() {}
 /** @type {PerformanceTiming} */ Performance.prototype.timing;
 /** @type {PerformanceNavigation} */ Performance.prototype.navigation;
+
+// Only available in Webkit, and only with the --enable-memory-info flag.
+/** @type {PerformanceMemory} */ Performance.prototype.memory;
 
 /** @type {Performance} */
 Window.prototype.performance;
