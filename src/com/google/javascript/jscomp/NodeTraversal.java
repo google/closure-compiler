@@ -538,7 +538,7 @@ public class NodeTraversal {
 
     // Body
     Preconditions.checkState(body.getNext() == null &&
-            body.isBlock());
+            body.isBlock(), body);
     traverseBranch(body, n);
 
     popScope();

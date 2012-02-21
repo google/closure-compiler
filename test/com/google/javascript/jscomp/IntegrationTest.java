@@ -1934,6 +1934,21 @@ public class IntegrationTest extends TestCase {
         "print(3/0);print(3/-0);");
   }
 
+  public void testIncompleteFunction() {
+    CompilerOptions options = createCompilerOptions();
+    options.ideMode = true;
+    DiagnosticType[] warnings = new DiagnosticType[]{
+        RhinoErrorReporter.PARSE_ERROR,
+        RhinoErrorReporter.PARSE_ERROR,
+        RhinoErrorReporter.PARSE_ERROR,
+        RhinoErrorReporter.PARSE_ERROR};
+    test(options,
+        new String[] { "var foo = {bar: function(e) }" },
+        new String[] { "var foo = {bar: function(e){}};" },
+        warnings
+    );
+  }
+
   private void testSame(CompilerOptions options, String original) {
     testSame(options, new String[] { original });
   }
@@ -2006,6 +2021,25 @@ public class IntegrationTest extends TestCase {
     } else {
       assertEquals(warning, compiler.getWarnings()[0].getType());
     }
+
+    if (compiled != null) {
+      Node root = compiler.getRoot().getLastChild();
+      Node expectedRoot = parse(compiled, options);
+      String explanation = expectedRoot.checkTreeEquals(root);
+      assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
+          "\nResult: " + compiler.toSource(root) +
+          "\n" + explanation, explanation);
+    }
+  }
+
+  /**
+   * Asserts that when compiling with the given compiler options,
+   * there is an error or warning.
+   */
+  private void test(CompilerOptions options,
+      String[] original, String[] compiled, DiagnosticType[] warnings) {
+    Compiler compiler = compile(options, original);
+    checkUnexpectedErrorsOrWarnings(compiler, warnings.length);
 
     if (compiled != null) {
       Node root = compiler.getRoot().getLastChild();

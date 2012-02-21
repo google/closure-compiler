@@ -664,6 +664,13 @@ class IRFactory {
       node.addChildToBack(lp);
 
       Node bodyNode = transform(functionNode.getBody());
+      if (!bodyNode.isBlock()) {
+        // When in ideMode Rhino tries to parse some constructs the compiler
+        // doesn't support, repair it here. see Rhino's
+        // Parser#parseFunctionBodyExpr.
+        Preconditions.checkState(config.isIdeMode);
+        bodyNode = IR.block();
+      }
       parseDirectives(bodyNode);
       node.addChildToBack(bodyNode);
      return node;
