@@ -1134,9 +1134,14 @@ public class Node implements Cloneable, Serializable {
 
   public int getSourceOffset() {
     StaticSourceFile file = getStaticSourceFile();
-    int lineOffset = file == null ?
-        Integer.MIN_VALUE : file.getLineOffset(getLineno());
-    return lineOffset + getCharno();
+    if (file == null) {
+      return -1;
+    }
+    int lineno = getLineno();
+    if (lineno == -1) {
+      return -1;
+    }
+    return file.getLineOffset(lineno) + getCharno();
   }
 
   public int getSourcePosition() {

@@ -372,6 +372,16 @@ public class NodeTest extends TestCase {
     assertEquals("bar.js", lhs.getSourceFileName());
   }
 
+  public void testInvalidSourceOffset() {
+    Node string = Node.newString("a");
+
+    string.setSourceEncodedPosition(-1);
+    assertTrue(string.getSourceOffset() < 0);
+
+    string.setSourceFileForTesting("foo.js");
+    assertTrue(string.getSourceOffset() < 0);
+  }
+
   private static Node getVarRef(String name) {
     return Node.newString(Token.NAME, name);
   }

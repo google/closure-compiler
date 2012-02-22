@@ -64,6 +64,10 @@ public final class SimpleSourceFile implements StaticSourceFile {
 
   @Override
   public int getLineOffset(int line) {
+    if (line < 1) {
+      throw new IllegalStateException(
+          "Should not call getLineOffset with line number " + line);
+    }
     return Integer.MIN_VALUE;
   }
 
