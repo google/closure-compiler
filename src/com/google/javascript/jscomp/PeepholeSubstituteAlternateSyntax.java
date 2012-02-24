@@ -62,7 +62,7 @@ class PeepholeSubstituteAlternateSyntax
    * @param late When late is false, this mean we are currently running before
    * most of the other optimizations. In this case we would avoid optimizations
    * that would make the code harder to analyze (such as using string spliting,
-   * merging statements with commans, etc). When this is true, we would
+   * merging statements with commas, etc). When this is true, we would
    * do anything to minimize for size.
    */
   PeepholeSubstituteAlternateSyntax(boolean late) {
@@ -264,7 +264,7 @@ class PeepholeSubstituteAlternateSyntax
   }
 
   private Node trySplitComma(Node n) {
-    if (!late) {
+    if (late) {
       return n;
     }
     Node parent = n.getParent();

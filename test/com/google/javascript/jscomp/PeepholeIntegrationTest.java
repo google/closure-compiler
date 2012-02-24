@@ -35,7 +35,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    this.late = true;
+    this.late = false;
     enableLineNumberCheck(true);
 
     // TODO(nicksantos): Turn this on. There are some normalizations
@@ -180,12 +180,12 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     fold("function z() {if (a) { return true }" +
          "else if (b) { return true }" +
          "else { return true }}",
-         "function z() {return !0;}");
+         "function z() {return true;}");
 
     fold("function z() {if (a()) { return true }" +
          "else if (b()) { return true }" +
          "else { return true }}",
-         "function z() {a()||b();return !0;}");
+         "function z() {a()||b();return true;}");
   }
 
   public void testFoldLogicalOpIntegration() {
@@ -331,6 +331,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   }
 
   public void testTrueFalseFolding() {
+    late = true;
     fold("x = true", "x = !0");
     fold("x = false", "x = !1");
     fold("x = !3", "x = !1");
@@ -341,13 +342,15 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   }
 
   public void testCommaSplitingConstantCondition() {
+    late = false;
     fold("(b=0,b=1);if(b)x=b;", "b=0;b=1;x=b;");
     fold("(b=0,b=1);if(b)x=b;", "b=0;b=1;x=b;");
   }
 
   public void testAvoidCommaSplitting() {
-    fold("x(),y(),z()", "x();y();z()");
     late = false;
+    fold("x(),y(),z()", "x();y();z()");
+    late = true;
     foldSame("x(),y(),z()");
   }
 
@@ -377,5 +380,13 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
          "function f() {x?a():y&&a();}");
   }
 
+  public void testFoldHook2() {
+    fold("function f(a) {if (!a) return a; else return a;}",
+         "function f(a) {return a}");
+  }
 
+  public void disable_testFoldHook1() {
+    fold("function f(a) {return (!a)?a:a;}",
+         "function f(a) {return a}");
+  }
 }

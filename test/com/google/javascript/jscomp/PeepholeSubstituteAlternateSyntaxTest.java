@@ -836,6 +836,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   }
 
   public void testSplitCommaExpressions() {
+    late = false;
     // Don't try to split in expressions.
     foldSame("while (foo(), !0) boo()");
     foldSame("var a = (foo(), !0);");
@@ -852,32 +853,37 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   }
 
   public void testComma1() {
-    fold("1, 2", "1; 1");
     late = false;
+    fold("1, 2", "1; 1");
+    late = true;
     foldSame("1, 2");
   }
 
   public void testComma2() {
-    test("1, a()", "1; a()");
     late = false;
+    test("1, a()", "1; a()");
+    late = true;
     foldSame("1, a()");
   }
 
   public void testComma3() {
-    test("1, a(), b()", "1; a(); b()");
     late = false;
+    test("1, a(), b()", "1; a(); b()");
+    late = true;
     foldSame("1, a(), b()");
   }
 
   public void testComma4() {
-    test("a(), b()", "a();b()");
     late = false;
+    test("a(), b()", "a();b()");
+    late = true;
     foldSame("a(), b()");
   }
 
   public void testComma5() {
-    test("a(), b(), 1", "a();b();1");
     late = false;
+    test("a(), b(), 1", "a();b();1");
+    late = true;
     foldSame("a(), b(), 1");
   }
 
