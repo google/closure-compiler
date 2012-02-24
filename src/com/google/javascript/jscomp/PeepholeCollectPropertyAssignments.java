@@ -146,7 +146,8 @@ public class PeepholeCollectPropertyAssignments
       return false;
     }
     // and does not have a reference to a variable initialized after it.
-    if (mightContainForwardReference(rhs, name)) {
+    if (!NodeUtil.isLiteralValue(rhs, true)
+        && mightContainForwardReference(rhs, name)) {
       return false;
     }
 

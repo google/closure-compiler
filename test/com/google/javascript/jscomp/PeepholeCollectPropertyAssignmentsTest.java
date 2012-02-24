@@ -178,4 +178,41 @@ public class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCase {
          "var o; o = {x:1}; o.y = (o = {}); o.z = 4;");
   }
 
+  public final void testObjectFunctionRollup1() {
+    test("var o; o = {};" +
+         "o.x = function() {};",
+         "var o; o = {x:function () {}};");
+  }
+
+  public final void testObjectFunctionRollup2() {
+    testSame(
+         "var o; o = {};" +
+         "o.x = (function() {return o})();");
+  }
+
+  public final void testObjectFunctionRollup3() {
+    test("var o; o = {};" +
+         "o.x = function() {return o};",
+         "var o; o = {x:function () {return o}};");
+  }
+
+  public final void testObjectFunctionRollup4() {
+    testSame(
+        "function f() {return o};" +
+        "var o; o = {};" +
+        "o.x = f();");
+  }
+
+  public final void testObjectFunctionRollup5() {
+    test("var o; o = {};" +
+         "o.x = function() {return o};" +
+         "o.y = [function() {return o}];" +
+         "o.z = {a:function() {return o}};",
+
+         "var o; o = {" +
+         "x:function () {return o}, " +
+         "y:[function () {return o}], " +
+         "z:{a:function () {return o}}};");
+  }
+
 }
