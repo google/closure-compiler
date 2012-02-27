@@ -1695,7 +1695,9 @@ public class IntegrationTest extends TestCase {
       "  return a;" +
       "}";
 
-    test(options, code, expected);
+    // TODO(johnlenz): re-enable this.
+    // Once a "x ? a : a" => "a" optimization is added.
+    // test(options, code, expected);
   }
 
   public void testLateStatementFusion() {

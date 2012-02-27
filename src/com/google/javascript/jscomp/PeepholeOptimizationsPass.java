@@ -16,8 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
+
+import java.util.ArrayList;
 
 /**
  * A compiler pass to run various peephole optimizations (e.g. constant folding,
@@ -26,14 +29,62 @@ import com.google.javascript.rhino.Node;
  * @author dcc@google.com (Devin Coughlin)
  * @author acleung@google.com (Alan Leung)(
  */
-class PeepholeOptimizationsPass extends AbstractPostOrderCallback
+class PeepholeOptimizationsPass
     implements CompilerPass {
   private AbstractCompiler compiler;
 
   // Use an array here for faster iteration compared to ImmutableSet
-  // TODO should sort based on likelihood that a given optimzation can
-  // modify something.
   private final AbstractPeepholeOptimization[] peepholeOptimizations;
+
+  // Track whether the a scope has been modified so that it can be revisited
+  // immediately.
+  private StateStack traversalState = new StateStack();
+
+  static private class ScopeState {
+    boolean changed;
+    boolean traverseChildScopes;
+    ScopeState() {
+      reset();
+    }
+
+    void reset() {
+      changed = false;
+      traverseChildScopes = true;
+    }
+  }
+
+  static private class StateStack {
+    private ArrayList<ScopeState> states = Lists.newArrayList();
+    private int currentDepth = 0;
+
+    StateStack() {
+      states.add(new ScopeState());
+    }
+
+    ScopeState peek() {
+      return states.get(currentDepth);
+    }
+
+    void push() {
+      currentDepth++;
+      if (states.size() <= currentDepth) {
+        states.add(new ScopeState());
+      } else {
+        states.get(currentDepth).reset();
+      }
+    }
+
+    void pop() {
+      currentDepth--;
+    }
+  }
+
+  private class PeepholeChangeHandler implements CodeChangeHandler {
+    @Override
+    public void reportChange() {
+      traversalState.peek().changed = true;
+    }
+  }
 
   /**
    * Creates a peephole optimization pass that runs the given
@@ -51,15 +102,72 @@ class PeepholeOptimizationsPass extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal t = new NodeTraversal(compiler, this);
-
-    beginTraversal(t);
-    t.traverse(root);
-    endTraversal(t);
+    PeepholeChangeHandler handler = new PeepholeChangeHandler();
+    compiler.addChangeHandler(handler);
+    beginTraversal();
+    traverse(root);
+    endTraversal();
+    compiler.removeChangeHandler(handler);
   }
 
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
+  private void traverse(Node node) {
+    // The goal here is to avoid retraversing
+    // the entire AST to catch newly created opportunities.
+    // So we track whether a "unit of code" has changed,
+    // and revisit immediately.
+    if (!shouldVisit(node)) {
+      return;
+    }
+
+    int visits = 0;
+    do {
+      for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
+        traverse(c);
+      }
+
+      visit(node);
+      visits++;
+
+      Preconditions.checkState(visits < 10000, "too many interations");
+    } while (shouldRetraverse(node));
+
+    exitNode(node);
+  }
+
+  private boolean shouldRetraverse(Node node) {
+    if (node.getParent() != null && node.isFunction() || node.isScript()) {
+      ScopeState state = traversalState.peek();
+      if (state.changed) {
+        // prepare to re-visit the scope:
+        // when revisiting, only visit the immediate scope
+        // this reduces the cost of getting to a fixed
+        // point in global scope.
+        state.changed = false;
+        state.traverseChildScopes = false;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean shouldVisit(Node node) {
+    if (node.isFunction() || node.isScript()) {
+      ScopeState previous = traversalState.peek();
+      if (!previous.traverseChildScopes) {
+        return false;
+      }
+      traversalState.push();
+    }
+    return true;
+  }
+
+  private void exitNode(Node node) {
+    if (node.isFunction() || node.isScript()) {
+      traversalState.pop();
+    }
+  }
+
+  public void visit(Node n) {
     Node currentVersionOfNode = n;
     boolean somethingChanged = false;
 
@@ -86,15 +194,15 @@ class PeepholeOptimizationsPass extends AbstractPostOrderCallback
    * Make sure that all the optimizations have the current traversal so they
    * can report errors.
    */
-  private void beginTraversal(NodeTraversal t) {
+  private void beginTraversal() {
     for (AbstractPeepholeOptimization optimization : peepholeOptimizations) {
-      optimization.beginTraversal(t);
+      optimization.beginTraversal(compiler);
     }
   }
 
-  private void endTraversal(NodeTraversal t) {
+  private void endTraversal() {
     for (AbstractPeepholeOptimization optimization : peepholeOptimizations) {
-      optimization.endTraversal(t);
+      optimization.endTraversal(compiler);
     }
   }
 }

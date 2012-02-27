@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Node;
  */
 abstract class AbstractPeepholeOptimization {
 
-  private NodeTraversal currentTraversal;
+  private AbstractCompiler compiler;
 
   /**
    * Given a node to optimize and a traversal, optimize the node. Subclasses
@@ -49,8 +49,9 @@ abstract class AbstractPeepholeOptimization {
    * @param n The node for which the error should be reported
    */
   protected void error(DiagnosticType diagnostic, Node n) {
-    JSError error = currentTraversal.makeError(n, diagnostic, n.toString());
-    currentTraversal.getCompiler().report(error);
+    JSError error =
+        JSError.make(NodeUtil.getSourceName(n), n, diagnostic, n.toString());
+    compiler.report(error);
   }
 
   /**
@@ -58,8 +59,8 @@ abstract class AbstractPeepholeOptimization {
    * Subclasses must call these if they have changed the AST.
    */
   protected void reportCodeChange() {
-    Preconditions.checkNotNull(currentTraversal);
-    currentTraversal.getCompiler().reportCodeChange();
+    Preconditions.checkNotNull(compiler);
+    compiler.reportCodeChange();
   }
 
   /**
@@ -70,8 +71,8 @@ abstract class AbstractPeepholeOptimization {
     /* Our implementation delegates to the compiler. We provide this
      * method because we don't want to expose Compiler to PeepholeOptimizations.
      */
-    Preconditions.checkNotNull(currentTraversal);
-    return currentTraversal.getCompiler().areNodesEqualForInlining(n1, n2);
+    Preconditions.checkNotNull(compiler);
+    return compiler.areNodesEqualForInlining(n1, n2);
   }
 
   /**
@@ -79,24 +80,23 @@ abstract class AbstractPeepholeOptimization {
    *  and has the Denormalize pass not yet been run?)
    */
   protected boolean isASTNormalized() {
-    Preconditions.checkNotNull(currentTraversal);
-    Preconditions.checkNotNull(currentTraversal.getCompiler());
+    Preconditions.checkNotNull(compiler);
 
-    return currentTraversal.getCompiler().getLifeCycleStage().isNormalized();
+    return compiler.getLifeCycleStage().isNormalized();
   }
 
   /**
    * Informs the optimization that a traversal will begin.
    */
-  void beginTraversal(NodeTraversal traversal) {
-    currentTraversal = traversal;
+  void beginTraversal(AbstractCompiler compiler) {
+    this.compiler = compiler;
   }
 
   /**
    * Informs the optimization that a traversal has completed.
    */
-  void endTraversal(NodeTraversal traversal) {
-    currentTraversal = null;
+  void endTraversal(AbstractCompiler compiler) {
+    this.compiler = null;
   }
 
   // NodeUtil's mayEffectMutableState and mayHaveSideEffects need access to the
@@ -107,14 +107,14 @@ abstract class AbstractPeepholeOptimization {
    * state.
    */
   boolean mayEffectMutableState(Node n) {
-    return NodeUtil.mayEffectMutableState(n, currentTraversal.getCompiler());
+    return NodeUtil.mayEffectMutableState(n, compiler);
   }
 
   /**
    * @return Whether the node may have side effects when executed.
    */
   boolean mayHaveSideEffects(Node n) {
-    return NodeUtil.mayHaveSideEffects(n, currentTraversal.getCompiler());
+    return NodeUtil.mayHaveSideEffects(n, compiler);
   }
 
   /**
@@ -123,8 +123,8 @@ abstract class AbstractPeepholeOptimization {
    *     ignored when this is true.
    */
   boolean isEcmaScript5OrGreater() {
-    return currentTraversal != null
-        && currentTraversal.getCompiler().acceptEcmaScript5();
+    return compiler != null
+        && compiler.acceptEcmaScript5();
   }
 
   /**
@@ -132,7 +132,7 @@ abstract class AbstractPeepholeOptimization {
    */
   CodingConvention getCodingConvention() {
     // Note: this assumes a thread safe coding convention object.
-    return currentTraversal.getCompiler().getCodingConvention();
+    return compiler.getCodingConvention();
   }
 
   /**
