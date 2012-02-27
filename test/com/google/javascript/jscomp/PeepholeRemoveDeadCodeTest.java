@@ -143,6 +143,9 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("var z=x?y():void 0");
     foldSame("(w?x:void 0).y=z");
     foldSame("(w?x:void 0).y+=z");
+
+    fold("y = (x ? void 0 : void 0)", "y = void 0");
+    fold("y = (x ? f() : f())", "y = f()");
   }
 
   public void testConstantConditionWithSideEffect1() {

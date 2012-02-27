@@ -727,7 +727,11 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
     TernaryValue condValue = NodeUtil.getImpureBooleanValue(cond);
     if (condValue == TernaryValue.UNKNOWN) {
-      return n;  // We can't remove branches otherwise!
+      // If the result nodes are equivalent, then one of the nodes can be
+      // removed and it doesn't matter which.
+      if (!areNodesEqualForInlining(thenBody, elseBody)) {
+        return n;  // We can't remove branches otherwise!
+      }
     }
 
     // Transform "(a = 2) ? x =2 : y" into "a=2,x=2"
