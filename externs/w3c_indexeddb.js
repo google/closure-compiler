@@ -50,6 +50,12 @@ function IDBFactory() {}
 IDBFactory.prototype.open = function(name, opt_description) {};
 
 /**
+ * @param {string} name The name of the database to delete.
+ * @return {!IDBRequest} The IDBRequest object.
+ */
+IDBFactory.prototype.deleteDatabase = function(name) {};
+
+/**
  * @constructor
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBDatabaseException
  */
