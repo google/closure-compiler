@@ -63,6 +63,7 @@ function IDBDatabaseException() {}
 
 /**
  * @constructor
+ * @extends {IDBDatabaseException}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBDatabaseException
  */
 function webkitIDBDatabaseException() {}
@@ -223,6 +224,12 @@ IDBDatabaseException.message;
  */
 webkitIDBDatabaseException.message;
 
+/** @type {function(new:IDBRequest)} */
+Window.prototype.IDBRequest;
+
+/** @type {function(new:IDBRequest)} */
+Window.prototype.webkitIDBRequest;
+
 /**
  * @constructor
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBRequest
@@ -231,6 +238,7 @@ function IDBRequest() {}
 
 /**
  * @constructor
+ * @extends {IDBRequest}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBRequest
  */
 function webkitIDBRequest() {}
@@ -505,6 +513,12 @@ IDBIndex.prototype.get = function(key) {};
  */
 IDBIndex.prototype.getKey = function(key) {};
 
+/** @type {function(new:IDBCursor)} */
+Window.prototype.IDBCursor;
+
+/** @type {function(new:IDBCursor)} */
+Window.prototype.webkitIDBCursor;
+
 /**
  * @constructor
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBCursor
@@ -513,6 +527,7 @@ function IDBCursor() {}
 
 /**
  * @constructor
+ * @extends {IDBCursor}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBCursor
  */
 function webkitIDBCursor() {}
@@ -613,6 +628,12 @@ IDBCursor.prototype.advance = function(count) {};
  */
 IDBCursor.prototype['delete'] = function() {};
 
+/** @type {function(new:IDBTransaction)} */
+Window.prototype.IDBTransaction;
+
+/** @type {function(new:IDBTransaction)} */
+Window.prototype.webkitIDBTransaction;
+
 /**
  * @constructor
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBTransaction
@@ -621,6 +642,7 @@ function IDBTransaction() {}
 
 /**
  * @constructor
+ * @extends {IDBTransaction}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBTransaction
  */
 function webkitIDBTransaction() {}
@@ -699,6 +721,12 @@ IDBTransaction.prototype.oncomplete = function() {};
  */
 IDBTransaction.prototype.onerror = function() {};
 
+/** @type {function(new:IDBKeyRange)} */
+Window.prototype.IDBKeyRange;
+
+/** @type {function(new:IDBKeyRange)} */
+Window.prototype.webkitIDBKeyRange;
+
 /**
  * @constructor
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBKeyRange
@@ -707,6 +735,7 @@ function IDBKeyRange() {}
 
 /**
  * @constructor
+ * @extends {IDBKeyRange}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBKeyRange
  */
 function webkitIDBKeyRange() {}
