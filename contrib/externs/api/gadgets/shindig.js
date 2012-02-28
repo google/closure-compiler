@@ -35,6 +35,15 @@ shindig.random = function() {};
 
 /**
  * Implements a SHA1 hasher.
- * @return {Object} SHA1 hasher object.
+ * @return {{reset: function(), update:
+ * function(Array.<number>|string,number=), digest:
+ * function():Array.<number>, digestString: function():string}} SHA1
+ * hasher object. Methods of the returned object are: reset() which
+ * resets the internal accumulator, update(bytes, opt_length) which
+ * adds a byte array or string to the internal accumulator (or
+ * optionally just a prefix of length opt_length), digest() which
+ * returns a finalized hash as an array of 20 byte values, and
+ * digestString() which returns a hex-encoded string containing a
+ * finalized hash.
  */
 shindig.sha1 = function() {};
