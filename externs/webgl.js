@@ -1838,9 +1838,19 @@ WebGLRenderingContext.prototype.INVALID_FRAMEBUFFER_OPERATION;
 
 
 /**
- * @type {HTMLCanvasElement}
+ * @type {!HTMLCanvasElement}
  */
 WebGLRenderingContext.prototype.canvas;
+
+/**
+ * @type {number}
+ */
+WebGLRenderingContext.prototype.drawingBufferWidth;
+
+/**
+ * @type {number}
+ */
+WebGLRenderingContext.prototype.drawingBufferHeight;
 
 /**
  * @param {number} type
@@ -1849,7 +1859,7 @@ WebGLRenderingContext.prototype.canvas;
 WebGLRenderingContext.prototype.sizeInBytes = function(type) {};
 
 /**
- * @return {WebGLContextAttributes}
+ * @return {!WebGLContextAttributes}
  */
 WebGLRenderingContext.prototype.getContextAttributes = function() {};
 
@@ -2023,33 +2033,33 @@ WebGLRenderingContext.prototype.copyTexSubImage2D = function(
     target, level, xoffset, yoffset, x, y, width, height) {};
 
 /**
- * @return {WebGLBuffer}
+ * @return {!WebGLBuffer}
  */
 WebGLRenderingContext.prototype.createBuffer = function() {};
 
 /**
- * @return {WebGLFramebuffer}
+ * @return {!WebGLFramebuffer}
  */
 WebGLRenderingContext.prototype.createFramebuffer = function() {};
 
 /**
- * @return {WebGLProgram}
+ * @return {!WebGLProgram}
  */
 WebGLRenderingContext.prototype.createProgram = function() {};
 
 /**
- * @return {WebGLRenderbuffer}
+ * @return {!WebGLRenderbuffer}
  */
 WebGLRenderingContext.prototype.createRenderbuffer = function() {};
 
 /**
  * @param {number} type
- * @return {WebGLShader}
+ * @return {!WebGLShader}
  */
 WebGLRenderingContext.prototype.createShader = function(type) {};
 
 /**
- * @return {WebGLTexture}
+ * @return {!WebGLTexture}
  */
 WebGLRenderingContext.prototype.createTexture = function() {};
 
@@ -2197,7 +2207,7 @@ WebGLRenderingContext.prototype.getActiveUniform = function(program, index) {};
 
 /**
  * @param {WebGLProgram} program
- * @return {WebGLObjectArray}
+ * @return {!Array.<WebGLShader>}
  */
 WebGLRenderingContext.prototype.getAttachedShaders = function(program) {};
 
@@ -2746,7 +2756,7 @@ WebGLRenderingContext.prototype.vertexAttribPointer = function(
 WebGLRenderingContext.prototype.viewport = function(x, y, width, height) {};
 
 /**
- * @return {Array.<string>}
+ * @return {!Array.<string>}
  */
 WebGLRenderingContext.prototype.getSupportedExtensions = function() {};
 
