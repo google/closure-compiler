@@ -22,7 +22,6 @@ import com.google.common.collect.Sets;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -68,7 +67,7 @@ public class DiagnosticGroup implements Serializable {
       Maps.newHashMap();
 
   /** Create a diagnostic group that matches only the given type. */
-  static DiagnosticGroup forType(DiagnosticType type) {
+  public static DiagnosticGroup forType(DiagnosticType type) {
     if (!singletons.containsKey(type)) {
       singletons.put(type, new DiagnosticGroup(type));
     }
@@ -124,9 +123,9 @@ public class DiagnosticGroup implements Serializable {
   }
 
   /**
-   * Returns an iterator over all the types in this group.
+   * Returns an iterable over all the types in this group.
    */
-  Collection<DiagnosticType> getTypes() {
+  public Iterable<DiagnosticType> getTypes() {
     return types;
   }
 
