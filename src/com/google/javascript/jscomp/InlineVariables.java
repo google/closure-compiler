@@ -558,14 +558,21 @@ class InlineVariables implements CompilerPass {
         return false;
       }
 
-      // Bug 2388531: Don't inline subclass definitions into class defining
-      // calls as this confused class removing logic.
       if (value.isFunction()) {
         Node callNode = reference.getParent();
         if (reference.getParent().isCall()) {
+          CodingConvention convention = compiler.getCodingConvention();
+          // Bug 2388531: Don't inline subclass definitions into class defining
+          // calls as this confused class removing logic.
           SubclassRelationship relationship =
-              compiler.getCodingConvention().getClassesDefinedByCall(callNode);
+              convention.getClassesDefinedByCall(callNode);
           if (relationship != null) {
+            return false;
+          }
+
+          // issue 668: Don't inline singleton getter methods
+          // calls as this confused class removing logic.
+          if (convention.getSingletonGetterClassName(callNode) != null) {
             return false;
           }
         }
