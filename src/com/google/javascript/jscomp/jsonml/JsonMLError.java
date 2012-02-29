@@ -72,7 +72,7 @@ public class JsonMLError {
     int n = error.lineNumber;
     JsonML element = ast.getElementPreOrder(n);
 
-    ErrorLevel level = error.level == CheckLevel.ERROR
+    ErrorLevel level = error.getDefaultLevel() == CheckLevel.ERROR
         ? ErrorLevel.COMPILATION_ERROR
         : ErrorLevel.COMPILATION_WARNING;
 

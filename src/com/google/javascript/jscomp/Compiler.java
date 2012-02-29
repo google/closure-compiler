@@ -1956,7 +1956,7 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   public void report(JSError error) {
-    CheckLevel level = error.level;
+    CheckLevel level = error.getDefaultLevel();
     if (warningsGuard != null) {
       CheckLevel newLevel = warningsGuard.level(error);
       if (newLevel != null) {

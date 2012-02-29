@@ -32,7 +32,7 @@ public class StrictWarningsGuard extends WarningsGuard {
     if (error.getType() == UNRAISABLE_WARNING) {
       return null;
     }
-    return error.level.isOn() ? CheckLevel.ERROR : null;
+    return error.getDefaultLevel().isOn() ? CheckLevel.ERROR : null;
   }
 
   @Override
