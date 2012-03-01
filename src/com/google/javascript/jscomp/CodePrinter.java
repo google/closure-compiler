@@ -521,14 +521,13 @@ class CodePrinter {
         append(";");
         startNewLine();
       } else if (prevCutPosition > 0) {
-        // Shift the previous break to end of file.
-        for (int i = prevCutPosition; i < code.length() - 1; i++) {
-          code.setCharAt(i, code.charAt(i+1));
-        }
-        code.setLength(code.length() - 1);
+        // Shift the previous break to end of file by replacing it with a
+        // <space> and adding a new break at end of file. Adding the space
+        // handles cases like instanceof\nfoo. (it would be nice to avoid this)
+        code.setCharAt(prevCutPosition, ' ');
         lineStartPosition = prevLineStartPosition;
         lineLength = code.length() - lineStartPosition;
-        reportLineCut(lineIndex, prevCutPosition, false);
+        reportLineCut(lineIndex, prevCutPosition + 1, false);
         lineIndex--;
         prevCutPosition = 0;
         prevLineStartPosition = 0;

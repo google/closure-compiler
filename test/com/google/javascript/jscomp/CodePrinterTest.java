@@ -486,7 +486,11 @@ public class CodePrinterTest extends TestCase {
     assertLineBreakAtEndOfFile(
         "\"123456789012345678901234567890\";\"1234567890\"",
         "\"123456789012345678901234567890\";\n\"1234567890\"",
-        "\"123456789012345678901234567890\";\"1234567890\";\n");
+        "\"123456789012345678901234567890\"; \"1234567890\";\n");
+    assertLineBreakAtEndOfFile(
+        "var12345678901234567890123456 instanceof Object;",
+        "var12345678901234567890123456 instanceof\nObject",
+        "var12345678901234567890123456 instanceof Object;\n");
 
     // long final line, no previous break, add a break at end
     assertLineBreakAtEndOfFile(
