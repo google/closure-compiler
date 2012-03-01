@@ -454,7 +454,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   boolean collapseObjectLiterals;
 
   public void setCollapseObjectLiterals(boolean enabled) {
-    collapseObjectLiterals = true;
+    collapseObjectLiterals = enabled;
   }
 
   /** Flattens multi-level property names on extern types (e.g. String$f = x) */
@@ -668,6 +668,10 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   TracerMode tracer;
+
+  public TracerMode getTracerMode() {
+    return tracer;
+  }
 
   public void setTracerMode(TracerMode mode) {
     tracer = mode;
@@ -1908,7 +1912,8 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public static enum TracerMode {
     ALL,  // Collect all timing and size metrics.
-    FAST, // Collect all timing and size metrics, except gzipped size.
+    RAW_SIZE, // Collect all timing and size metrics, except gzipped size.
+    TIMING_ONLY, // Collect timing metrics only.
     OFF;  // Collect no timing and size metrics.
 
     boolean isOn() {

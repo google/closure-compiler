@@ -31,6 +31,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
+import com.google.javascript.jscomp.PerformanceTracker.Stats;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
@@ -52,6 +53,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 
 /**
@@ -790,7 +792,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         // Output the source map if requested.
         outputSourceMap(options, config.jsOutputFile);
       } else {
-        parsedModuleWrappers = parseModuleWrappers(config.moduleWrapper, modules);
+        parsedModuleWrappers = parseModuleWrappers(
+            config.moduleWrapper, modules);
         maybeCreateDirsForPath(config.moduleOutputPathPrefix);
 
         // If the source map path is in fact a pattern for each
@@ -847,10 +850,92 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       // Output the manifest and bundle files if requested.
       outputManifest();
       outputBundle();
+
+      if (options.tracer.isOn()) {
+        outputTracerReport();
+      }
     }
 
     // return 0 if no errors, the error count otherwise
     return Math.min(result.errors.length, 0x7f);
+  }
+
+  private void outputTracerReport() {
+    OutputStreamWriter output = new OutputStreamWriter(this.err);
+    try {
+      int runtime = 0;
+      int runs = 0;
+      int changes = 0;
+      int diff = 0;
+      int gzDiff = 0;
+
+      // header
+      output.write("Summary:\n");
+      output.write("pass,runtime,runs,chancingRuns,reduction,gzReduction\n");
+      Map<String, Stats> runtimeMap = compiler.tracker.getStats();
+      for (Entry<String, Stats> entry : runtimeMap.entrySet()) {
+        String key = entry.getKey();
+        Stats stats = entry.getValue();
+
+        output.write(key);
+        output.write(",");
+        output.write(String.valueOf(stats.runtime));
+        runtime += stats.runtime;
+        output.write(",");
+        output.write(String.valueOf(stats.runs));
+        runs += stats.runs;
+        output.write(",");
+        output.write(String.valueOf(stats.changes));
+        changes += stats.changes;
+        output.write(",");
+        output.write(String.valueOf(stats.diff));
+        diff += stats.diff;
+        output.write(",");
+        output.write(String.valueOf(stats.gzDiff));
+        gzDiff += stats.gzDiff;
+        output.write("\n");
+      }
+      output.write("TOTAL");
+      output.write(",");
+      output.write(String.valueOf(runtime));
+      output.write(",");
+      output.write(String.valueOf(runs));
+      output.write(",");
+      output.write(String.valueOf(changes));
+      output.write(",");
+      output.write(String.valueOf(diff));
+      output.write(",");
+      output.write(String.valueOf(gzDiff));
+      output.write("\n");
+      output.write("\n");
+
+      output.write("Log:\n");
+      output.write(
+          "pass,runtime,runs,chancingRuns,reduction,gzReduction,size,gzSize\n");
+      List<Stats> runtimeLog = compiler.tracker.getLog();
+      for (Stats stats : runtimeLog) {
+        output.write(stats.pass);
+        output.write(",");
+        output.write(String.valueOf(stats.runtime));
+        output.write(",");
+        output.write(String.valueOf(stats.runs));
+        output.write(",");
+        output.write(String.valueOf(stats.changes));
+        output.write(",");
+        output.write(String.valueOf(stats.diff));
+        output.write(",");
+        output.write(String.valueOf(stats.gzDiff));
+        output.write(",");
+        output.write(String.valueOf(stats.size));
+        output.write(",");
+        output.write(String.valueOf(stats.gzSize));
+        output.write("\n");
+      }
+      output.write("\n");
+      output.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -990,7 +1075,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * Converts a file name into a Writer taking in account the output charset.
    * Returns null if the file name is null.
    */
-  private Writer fileNameToLegacyOutputWriter(String fileName) throws IOException {
+  private Writer fileNameToLegacyOutputWriter(String fileName)
+      throws IOException {
     if (fileName == null) {
       return null;
     }
@@ -1877,7 +1963,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     /**
      * Set whether to transform AMD to Common JS modules.
      */
-    CommandLineConfig setTransformAMDToCJSModules(boolean transformAMDToCJSModules) {
+    CommandLineConfig setTransformAMDToCJSModules(
+        boolean transformAMDToCJSModules) {
       this.transformAMDToCJSModules = transformAMDToCJSModules;
       return this;
     }
@@ -1887,7 +1974,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     /**
      * Sets whether to process Common JS modules.
      */
-    CommandLineConfig setProcessCommonJSModules(boolean processCommonJSModules) {
+    CommandLineConfig setProcessCommonJSModules(
+        boolean processCommonJSModules) {
       this.processCommonJSModules = processCommonJSModules;
       return this;
     }
@@ -1899,7 +1987,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     /**
      * Sets the Common JS module path prefix.
      */
-    CommandLineConfig setCommonJSModulePathPrefix(String commonJSModulePathPrefix) {
+    CommandLineConfig setCommonJSModulePathPrefix(
+        String commonJSModulePathPrefix) {
       this.commonJSModulePathPrefix = commonJSModulePathPrefix;
       return this;
     }

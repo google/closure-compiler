@@ -24,7 +24,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
@@ -1239,8 +1238,7 @@ public class Compiler extends AbstractCompiler {
     externAndJsRoot.setIsSyntheticBlock(true);
 
     if (options.tracer.isOn()) {
-      tracker = new PerformanceTracker(jsRoot,
-          options.tracer == TracerMode.ALL);
+      tracker = new PerformanceTracker(jsRoot, options.tracer);
       addChangeHandler(tracker.getCodeChangeHandler());
     }
 

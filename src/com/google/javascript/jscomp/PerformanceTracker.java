@@ -16,15 +16,19 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodeChangeHandler.RecentChange;
+import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.rhino.Node;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
@@ -33,6 +37,7 @@ import java.util.zip.GZIPOutputStream;
 public class PerformanceTracker {
 
   private final Node jsRoot;
+  private final boolean trackSize;
   private final boolean trackGzippedSize;
 
   // Keeps track of AST changes and computes code size estimation
@@ -44,18 +49,49 @@ public class PerformanceTracker {
 
   private Deque<String> currentRunningPass = new ArrayDeque<String>();
 
-  /** Maps pass name to total time spend. */
-  private final Map<String, Long> runtimeRecord = Maps.newHashMap();
+  /** Summary stats by pass name. */
+  private final Map<String, Stats> summary = Maps.newHashMap();
 
-  /** Maps pass name to total size reduction. */
-  private final Map<String, Integer> codeSizeRecord = Maps.newHashMap();
+  /** Stats for each run of a compiler pass. */
+  private final List<Stats> log = Lists.newArrayList();
 
-  /** Maps pass name to total size reduction. */
-  private final Map<String, Integer> zippedCodeSizeRecord = Maps.newHashMap();
 
-  PerformanceTracker(Node jsRoot, boolean trackGzippedSize) {
+  public static class Stats {
+    public Stats(String pass) {
+      this.pass = pass;
+    }
+    public final String pass;
+    public long runtime = 0;
+    public int runs = 0;
+    public int changes = 0;
+    public int diff = 0;
+    public int gzDiff = 0;
+    public int size = 0;
+    public int gzSize = 0;
+  }
+
+  PerformanceTracker(Node jsRoot, TracerMode mode) {
     this.jsRoot = jsRoot;
-    this.trackGzippedSize = trackGzippedSize;
+    switch (mode) {
+      case TIMING_ONLY:
+        this.trackSize = false;
+        this.trackGzippedSize = false;
+        break;
+
+      case RAW_SIZE:
+        this.trackSize = true;
+        this.trackGzippedSize = false;
+        break;
+
+      case ALL:
+        this.trackSize = true;
+        this.trackGzippedSize = true;
+        break;
+
+      case OFF:
+      default:
+        throw new UnsupportedOperationException();
+    }
   }
 
   CodeChangeHandler getCodeChangeHandler() {
@@ -78,55 +114,113 @@ public class PerformanceTracker {
     if (!passName.equals(currentPassName)) {
       throw new RuntimeException(passName + " is not running.");
     }
-    Long total = runtimeRecord.get(passName);
-    if (total == null) {
-      total = 0L;
-    }
-    total = total.longValue() + result;
-    runtimeRecord.put(passName, total);
 
+    CodeSizeEstimatePrinter printer = null;
+    if (codeChange.hasCodeChanged() && (trackSize || trackGzippedSize)) {
+      printer = estimateCodeSize(jsRoot);
+    }
+
+    Stats logStats = new Stats(currentPassName);
+    log.add(logStats);
+    updateStats(logStats, result, printer);
+
+    Stats summaryStats = summary.get(passName);
+    if (summaryStats == null) {
+      summaryStats = new Stats(passName);
+      summary.put(passName, summaryStats);
+    }
+    updateStats(summaryStats, result, printer);
+
+    if (printer != null) {
+      if (trackSize) {
+        curCodeSizeEstimate = printer.calcSize();
+      }
+      if (trackGzippedSize) {
+        curZippedCodeSizeEstimate = printer.calcZippedSize();
+      }
+    }
+  }
+
+  private void updateStats(Stats stats,
+      long result, CodeSizeEstimatePrinter printer) {
+    stats.runtime += result;
+    stats.runs += 1;
     if (codeChange.hasCodeChanged()) {
-      CodeSizeEstimatePrinter printer = estimateCodeSize(jsRoot);
-      curCodeSizeEstimate = recordSizeChange(curCodeSizeEstimate,
-          printer.calcSize(), passName, codeSizeRecord);
-      curZippedCodeSizeEstimate = recordSizeChange(curZippedCodeSizeEstimate,
-          printer.calcZippedSize(), passName, zippedCodeSizeRecord);
+      stats.changes += 1;
+    }
+
+    if (printer != null) {
+      recordSizeChange(
+          curCodeSizeEstimate, printer.calcSize(), stats);
+      recordGzSizeChange(
+          curZippedCodeSizeEstimate, printer.calcZippedSize(), stats);
     }
   }
 
   /**
    * Record the size change in the given record for that given pass.
-   *
-   * @return The new estimated size.
    */
-  private static int recordSizeChange(int oldSize, int newSize, String passName,
-      Map<String, Integer> record) {
+  private static void recordSizeChange(int oldSize, int newSize, Stats record) {
     if (oldSize != -1) {
       int delta = oldSize - newSize;
-      Integer reduction = record.get(passName);
       if (delta > 0) {
-        if (reduction == null) {
-          reduction = delta;
-        } else {
-          reduction = reduction + delta;
-        }
-        record.put(passName, reduction);
+        record.diff += delta;
       }
     }
-    return newSize;
+    if (newSize != -1) {
+      record.size = newSize;
+    }
   }
 
+  /**
+   * Record the gzip size change in the given record for that given pass.
+   */
+  private static void recordGzSizeChange(
+      int oldSize, int newSize, Stats record) {
+    if (oldSize != -1) {
+      int delta = oldSize - newSize;
+      if (delta > 0) {
+        record.gzDiff += delta;
+      }
+    }
+    if (newSize != -1) {
+      record.gzSize = newSize;
+    }
+  }
 
   public ImmutableMap<String, Long> getRuntimeRecord() {
-    return ImmutableMap.copyOf(runtimeRecord);
+    ImmutableMap.Builder<String, Long> builder =
+        new ImmutableMap.Builder<String, Long>();
+    for (Map.Entry<String, Stats> entry : summary.entrySet()) {
+      builder.put(entry.getKey(), entry.getValue().runtime);
+    }
+    return builder.build();
+  }
+
+  public ImmutableMap<String, Stats> getStats() {
+    return ImmutableMap.copyOf(summary);
+  }
+
+  public ImmutableList<Stats> getLog() {
+    return ImmutableList.copyOf(log);
   }
 
   public ImmutableMap<String, Integer> getCodeSizeRecord() {
-    return ImmutableMap.copyOf(codeSizeRecord);
+    ImmutableMap.Builder<String, Integer> builder =
+      new ImmutableMap.Builder<String, Integer>();
+    for (Map.Entry<String, Stats> entry : summary.entrySet()) {
+      builder.put(entry.getKey(), entry.getValue().diff);
+    }
+    return builder.build();
   }
 
   public ImmutableMap<String, Integer> getZippedCodeSizeRecord() {
-    return ImmutableMap.copyOf(zippedCodeSizeRecord);
+    ImmutableMap.Builder<String, Integer> builder =
+      new ImmutableMap.Builder<String, Integer>();
+    for (Map.Entry<String, Stats> entry : summary.entrySet()) {
+      builder.put(entry.getKey(), entry.getValue().gzDiff);
+    }
+    return builder.build();
   }
 
   private final CodeSizeEstimatePrinter estimateCodeSize(Node root) {
