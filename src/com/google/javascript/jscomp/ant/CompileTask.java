@@ -17,10 +17,13 @@
 package com.google.javascript.jscomp.ant;
 
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.DiagnosticGroup;
+import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.JSSourceFile;
 import com.google.javascript.jscomp.MessageFormatter;
 import com.google.javascript.jscomp.Result;
@@ -41,7 +44,6 @@ import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 
 /**
@@ -72,6 +74,7 @@ public final class CompileTask
   private final List<FileList> externFileLists;
   private final List<FileList> sourceFileLists;
   private final List<Path> sourcePaths;
+  private final List<Warning> warnings;
 
   public CompileTask() {
     this.warningLevel = WarningLevel.DEFAULT;
@@ -89,6 +92,7 @@ public final class CompileTask
     this.externFileLists = Lists.newLinkedList();
     this.sourceFileLists = Lists.newLinkedList();
     this.sourcePaths = Lists.newLinkedList();
+    this.warnings = Lists.newLinkedList();
   }
 
   /**
@@ -216,6 +220,18 @@ public final class CompileTask
   }
 
   /**
+   * Adds a <warning/> entry
+   *
+   * Each warning entry must have two attributes, group and level. Group must
+   * contain one of the constants from DiagnosticGroups (e.g.,
+   * "ACCESS_CONTROLS"), while level must contain one of the CheckLevel
+   * constants ("ERROR", "WARNING" or "OFF").
+   */
+  public void addWarning(Warning warning) {
+    this.warnings.add(warning);
+  }
+
+  /**
    * Sets the source files.
    */
   public void addSources(FileList list) {
@@ -277,6 +293,17 @@ public final class CompileTask
     }
 
     convertDefineParameters(options);
+
+    for (Warning warning : warnings) {
+      CheckLevel level = warning.getLevel();
+      String groupName = warning.getGroup();
+      DiagnosticGroup group = new DiagnosticGroups().forName(groupName);
+      if (group == null) {
+        throw new BuildException(
+            "Unrecognized 'warning' option value (" + groupName + ")");
+      }
+      options.setWarningLevel(group, level);
+    }
 
     return options;
   }
