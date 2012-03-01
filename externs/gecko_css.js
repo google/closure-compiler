@@ -24,6 +24,7 @@
 
 
 /** @type {string} */ CSSProperties.prototype.MozAppearance;
+/** @type {string} */ CSSProperties.prototype.MozBackfaceVisibility;
 /** @type {string} */ CSSProperties.prototype.MozBackgroundClip;
 /** @type {string} */ CSSProperties.prototype.MozBackgroundInlinePolicy;
 /** @type {string} */ CSSProperties.prototype.MozBackgroundOrigin;
@@ -80,6 +81,7 @@
 /** @type {string} */ CSSProperties.prototype.MozOutlineWidth;
 /** @type {string} */ CSSProperties.prototype.MozPaddingEnd;
 /** @type {string} */ CSSProperties.prototype.MozPaddingStart;
+/** @type {string} */ CSSProperties.prototype.MozPerspective;
 /** @type {string} */ CSSProperties.prototype.MozStackSizing;
 /** @type {string} */ CSSProperties.prototype.MozTabSize;
 /** @type {string} */ CSSProperties.prototype.MozTransform;
