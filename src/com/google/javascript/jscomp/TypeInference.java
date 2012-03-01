@@ -1118,21 +1118,8 @@ class TypeInference
 
     ObjectType constraintObj =
         ObjectType.cast(constraint.restrictByNotNullOrUndefined());
-    if (constraintObj != null && constraintObj.isRecordType()) {
-      ObjectType objType = ObjectType.cast(type.restrictByNotNullOrUndefined());
-      if (objType != null) {
-        for (String prop : constraintObj.getOwnPropertyNames()) {
-          JSType propType = constraintObj.getPropertyType(prop);
-          if (!objType.isPropertyTypeDeclared(prop)) {
-            JSType typeToInfer = propType;
-            if (!objType.hasProperty(prop)) {
-              typeToInfer =
-                  getNativeType(VOID_TYPE).getLeastSupertype(propType);
-            }
-            objType.defineInferredProperty(prop, typeToInfer, null);
-          }
-        }
-      }
+    if (constraintObj != null) {
+      type.matchConstraint(constraintObj);
     }
   }
 

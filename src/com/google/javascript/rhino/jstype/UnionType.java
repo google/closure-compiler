@@ -586,4 +586,11 @@ public class UnionType extends JSType {
     }
     return currentCommonSuper;
   }
+
+  @Override
+  public void matchConstraint(ObjectType constraintObj) {
+    for (JSType alternate : alternates) {
+      alternate.matchConstraint(constraintObj);
+    }
+  }
 }
