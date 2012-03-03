@@ -861,6 +861,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   private void outputTracerReport() {
+    JvmMetrics.maybeWriteJvmMetrics(this.err, "verbose:pretty:all");
+
     OutputStreamWriter output = new OutputStreamWriter(this.err);
     try {
       int runtime = 0;
