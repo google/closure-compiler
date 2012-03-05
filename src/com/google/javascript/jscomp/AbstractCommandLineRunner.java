@@ -114,8 +114,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   private String legacyOutputCharset;
 
   private boolean testMode = false;
-  private Supplier<List<JSSourceFile>> externsSupplierForTesting = null;
-  private Supplier<List<JSSourceFile>> inputsSupplierForTesting = null;
+  private Supplier<List<SourceFile>> externsSupplierForTesting = null;
+  private Supplier<List<SourceFile>> inputsSupplierForTesting = null;
   private Supplier<List<JSModule>> modulesSupplierForTesting = null;
   private Function<Integer, Boolean> exitCodeReceiverForTesting = null;
   private Map<String, String> rootRelativePathsMap = null;
@@ -151,8 +151,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   @VisibleForTesting
   void enableTestMode(
-      Supplier<List<JSSourceFile>> externsSupplier,
-      Supplier<List<JSSourceFile>> inputsSupplier,
+      Supplier<List<SourceFile>> externsSupplier,
+      Supplier<List<SourceFile>> inputsSupplier,
       Supplier<List<JSModule>> modulesSupplier,
       Function<Integer, Boolean> exitCodeReceiver) {
     Preconditions.checkArgument(
@@ -391,13 +391,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    *        stdin. If true, '-' is only allowed to appear once.
    * @return An array of inputs
    */
-  protected List<JSSourceFile> createInputs(List<String> files,
+  protected List<SourceFile> createInputs(List<String> files,
       boolean allowStdIn) throws FlagUsageException, IOException {
-    List<JSSourceFile> inputs = new ArrayList<JSSourceFile>(files.size());
+    List<SourceFile> inputs = new ArrayList<SourceFile>(files.size());
     boolean usingStdin = false;
     for (String filename : files) {
       if (!"-".equals(filename)) {
-        JSSourceFile newFile = JSSourceFile.fromFile(filename, inputCharset);
+        SourceFile newFile = SourceFile.fromFile(filename, inputCharset);
         inputs.add(newFile);
       } else {
         if (!allowStdIn) {
@@ -415,7 +415,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
           throw new FlagUsageException("Bundle files cannot be generated " +
               "when the input is from stdin.");
         }
-        inputs.add(JSSourceFile.fromInputStream("stdin", System.in));
+        inputs.add(SourceFile.fromInputStream("stdin", System.in));
         usingStdin = true;
       }
     }
@@ -425,7 +425,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Creates js source code inputs from a list of files.
    */
-  private List<JSSourceFile> createSourceInputs(List<String> files)
+  private List<SourceFile> createSourceInputs(List<String> files)
       throws FlagUsageException, IOException {
     if (isInTestMode()) {
       return inputsSupplierForTesting.get();
@@ -443,10 +443,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Creates js extern inputs from a list of files.
    */
-  private List<JSSourceFile> createExternInputs(List<String> files)
+  private List<SourceFile> createExternInputs(List<String> files)
       throws FlagUsageException, IOException {
     if (files.isEmpty()) {
-      return ImmutableList.of(JSSourceFile.fromCode("/dev/null", ""));
+      return ImmutableList.of(SourceFile.fromCode("/dev/null", ""));
     }
     try {
       return createInputs(files, false);
@@ -516,7 +516,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       }
       List<String> moduleJsFiles =
           jsFiles.subList(nextJsFileIndex, nextJsFileIndex + numJsFiles);
-      for (JSSourceFile input : createInputs(moduleJsFiles, false)) {
+      for (SourceFile input : createInputs(moduleJsFiles, false)) {
         module.add(input);
       }
       nextJsFileIndex += numJsFiles;
@@ -688,7 +688,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   protected int doRun() throws FlagUsageException, IOException {
     Compiler.setLoggingLevel(Level.parse(config.loggingLevel));
 
-    List<JSSourceFile> externs = createExterns();
+    List<SourceFile> externs = createExterns();
 
     compiler = createCompiler();
     B options = createOptions();
@@ -715,7 +715,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         result = compiler.compileModules(externs, modules, options);
       }
     } else {
-      List<JSSourceFile> inputs = createSourceInputs(jsFiles);
+      List<SourceFile> inputs = createSourceInputs(jsFiles);
       if (config.skipNormalOutputs) {
         compiler.init(externs, inputs, options);
       } else {
@@ -996,7 +996,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     return Charsets.UTF_8;
   }
 
-  protected List<JSSourceFile> createExterns() throws FlagUsageException,
+  protected List<SourceFile> createExterns() throws FlagUsageException,
       IOException {
     return isInTestMode() ? externsSupplierForTesting.get() :
         createExternInputs(config.externs);

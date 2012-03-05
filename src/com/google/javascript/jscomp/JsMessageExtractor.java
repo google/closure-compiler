@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
@@ -95,7 +94,7 @@ public class JsMessageExtractor {
   /**
    * Extracts js messages from javascript code.
    */
-  public Collection<JsMessage> extractMessages(JSSourceFile... inputs)
+  public Collection<JsMessage> extractMessages(SourceFile... inputs)
       throws IOException {
     return extractMessages(ImmutableList.copyOf(inputs));
   }
@@ -110,18 +109,18 @@ public class JsMessageExtractor {
    * @throws RuntimeException if there are problems parsing the js code or the
    *     js messages, or if two messages have the same key
    */
-  public Collection<JsMessage> extractMessages(
-      Iterable<JSSourceFile> inputs) throws IOException {
+  public <T extends SourceFile> Collection<JsMessage> extractMessages(
+      Iterable<T> inputs) throws IOException {
 
     Compiler compiler = new Compiler();
     compiler.init(
-        new JSSourceFile[] {},
-        Iterables.toArray(inputs, JSSourceFile.class),
+        ImmutableList.<SourceFile>of(),
+        Lists.newArrayList(inputs),
         new CompilerOptions());
 
     ExtractMessagesVisitor extractCompilerPass =
         new ExtractMessagesVisitor(compiler);
-    for (JSSourceFile input : inputs) {
+    for (SourceFile input : inputs) {
       // Parse the js files individually, to prevent out-of-memory
       // problems.
       Node root = new JsAst(input).getAstRoot(compiler);

@@ -305,10 +305,12 @@ public class Compiler extends AbstractCompiler {
   /**
    * Initializes the instance state needed for a compile job.
    */
-  public void init(List<JSSourceFile> externs, List<JSSourceFile> inputs,
+  public <T1 extends SourceFile, T2 extends SourceFile> void init(
+      List<T1> externs,
+      List<T2> inputs,
       CompilerOptions options) {
     JSModule module = new JSModule(SINGLETON_MODULE_NAME);
-    for (JSSourceFile input : inputs) {
+    for (SourceFile input : inputs) {
       module.add(input);
     }
 
@@ -321,7 +323,7 @@ public class Compiler extends AbstractCompiler {
    */
   public void init(JSSourceFile[] externs, JSModule[] modules,
       CompilerOptions options) {
-    initModules(Lists.<JSSourceFile>newArrayList(externs),
+    initModules(Lists.<SourceFile>newArrayList(externs),
          Lists.<JSModule>newArrayList(modules), options);
   }
 
@@ -329,9 +331,8 @@ public class Compiler extends AbstractCompiler {
    * Initializes the instance state needed for a compile job if the sources
    * are in modules.
    */
-  public void initModules(
-      List<JSSourceFile> externs, List<JSModule> modules,
-      CompilerOptions options) {
+  public <T extends SourceFile> void initModules(
+      List<T> externs, List<JSModule> modules, CompilerOptions options) {
     initOptions(options);
 
     checkFirstModule(modules);
@@ -373,10 +374,10 @@ public class Compiler extends AbstractCompiler {
     }
   }
 
-  private List<CompilerInput> makeCompilerInput(
-      List<JSSourceFile> files, boolean isExtern) {
+  private <T extends SourceFile> List<CompilerInput> makeCompilerInput(
+      List<T> files, boolean isExtern) {
     List<CompilerInput> inputs = Lists.newArrayList();
-    for (JSSourceFile file : files) {
+    for (T file : files) {
       inputs.add(new CompilerInput(file, isExtern));
     }
     return inputs;
@@ -419,7 +420,7 @@ public class Compiler extends AbstractCompiler {
   private static void fillEmptyModules(List<JSModule> modules) {
     for (JSModule module : modules) {
       if (module.getInputs().isEmpty()) {
-        module.add(JSSourceFile.fromCode(
+        module.add(SourceFile.fromCode(
             createFillFileName(module.getName()), ""));
       }
     }
@@ -486,18 +487,19 @@ public class Compiler extends AbstractCompiler {
   }
 
   public Result compile(
-      JSSourceFile extern, JSSourceFile input, CompilerOptions options) {
-     return compile(extern, new JSSourceFile[] { input }, options);
+      SourceFile extern, SourceFile input, CompilerOptions options) {
+     return compile(Lists.newArrayList(extern), Lists.newArrayList(input), options);
   }
 
   public Result compile(
-      JSSourceFile extern, JSSourceFile[] input, CompilerOptions options) {
-     return compile(new JSSourceFile[] { extern }, input, options);
+      SourceFile extern, JSSourceFile[] input, CompilerOptions options) {
+     return compile(Lists.newArrayList(extern), Lists.newArrayList(input), options);
   }
 
   public Result compile(
       JSSourceFile extern, JSModule[] modules, CompilerOptions options) {
-     return compile(new JSSourceFile[] { extern }, modules, options);
+     return compileModules(
+         Lists.newArrayList(extern), Lists.newArrayList(modules), options);
   }
 
   /**
@@ -506,16 +508,16 @@ public class Compiler extends AbstractCompiler {
   public Result compile(JSSourceFile[] externs,
                         JSSourceFile[] inputs,
                         CompilerOptions options) {
-    return compile(Lists.<JSSourceFile>newArrayList(externs),
-        Lists.<JSSourceFile>newArrayList(inputs),
+    return compile(Lists.<SourceFile>newArrayList(externs),
+        Lists.<SourceFile>newArrayList(inputs),
         options);
   }
 
   /**
    * Compiles a list of inputs.
    */
-  public Result compile(List<JSSourceFile> externs,
-      List<JSSourceFile> inputs, CompilerOptions options) {
+  public <T1 extends SourceFile, T2 extends SourceFile> Result compile(
+      List<T1> externs, List<T2> inputs, CompilerOptions options) {
     // The compile method should only be called once.
     Preconditions.checkState(jsRoot == null);
 
@@ -538,7 +540,7 @@ public class Compiler extends AbstractCompiler {
   public Result compile(JSSourceFile[] externs,
                         JSModule[] modules,
                         CompilerOptions options) {
-    return compileModules(Lists.<JSSourceFile>newArrayList(externs),
+    return compileModules(Lists.<SourceFile>newArrayList(externs),
         Lists.<JSModule>newArrayList(modules),
         options);
   }
@@ -546,7 +548,7 @@ public class Compiler extends AbstractCompiler {
   /**
    * Compiles a list of modules.
    */
-  public Result compileModules(List<JSSourceFile> externs,
+  public <T extends SourceFile> Result compileModules(List<T> externs,
       List<JSModule> modules, CompilerOptions options) {
     // The compile method should only be called once.
     Preconditions.checkState(jsRoot == null);
@@ -1425,7 +1427,7 @@ public class Compiler extends AbstractCompiler {
     }
   }
 
-  public Node parse(JSSourceFile file) {
+  public Node parse(SourceFile file) {
     initCompilerOptionsIfTesting();
     addToDebugLog("Parsing: " + file.getName());
     return new JsAst(file).getAstRoot(this);
@@ -1436,7 +1438,7 @@ public class Compiler extends AbstractCompiler {
   @Override
   Node parseSyntheticCode(String js) {
     CompilerInput input = new CompilerInput(
-        JSSourceFile.fromCode(" [synthetic:" + (++syntheticCodeId) + "] ", js));
+        SourceFile.fromCode(" [synthetic:" + (++syntheticCodeId) + "] ", js));
     inputsById.put(input.getInputId(), input);
     return input.getAstRoot(this);
   }
@@ -1459,14 +1461,14 @@ public class Compiler extends AbstractCompiler {
   @Override
   Node parseSyntheticCode(String fileName, String js) {
     initCompilerOptionsIfTesting();
-    return parse(JSSourceFile.fromCode(fileName, js));
+    return parse(SourceFile.fromCode(fileName, js));
   }
 
   @Override
   Node parseTestCode(String js) {
     initCompilerOptionsIfTesting();
     CompilerInput input = new CompilerInput(
-        JSSourceFile.fromCode(" [testcode] ", js));
+        SourceFile.fromCode(" [testcode] ", js));
     if (inputsById == null) {
       inputsById = Maps.newHashMap();
     }
@@ -2158,7 +2160,7 @@ public class Compiler extends AbstractCompiler {
    * different output targets without having to perform checking multiple times.
    *
    * NOTE: This does not include all parts of the compiler's internal state. In
-   * particular, JSSourceFiles and CompilerOptions are not recorded. In
+   * particular, SourceFiles and CompilerOptions are not recorded. In
    * order to recreate a Compiler instance from scratch, you would need to
    * call {@code init} with the same arguments as in the initial creation before
    * restoring intermediate state.
@@ -2304,7 +2306,7 @@ public class Compiler extends AbstractCompiler {
     InputId inputId = ast.getInputId();
     emptyScript.setInputId(inputId);
     emptyScript.setStaticSourceFile(
-        JSSourceFile.fromCode(inputId.getIdName(), ""));
+        SourceFile.fromCode(inputId.getIdName(), ""));
 
     processNewScript(ast, emptyScript);
   }

@@ -33,6 +33,7 @@ import java.nio.charset.Charset;
  * @author nicksantos@google.com (Nick Santos)
  * @author moedinger@google.com (Andrew Moedinger)
  */
+// TODO(nicksantos): Delete this file.
 public class JSSourceFile extends SourceFile implements Serializable {
   private static final long serialVersionUID = 1L;
 

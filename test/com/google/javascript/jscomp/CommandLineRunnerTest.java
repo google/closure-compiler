@@ -68,8 +68,8 @@ public class CommandLineRunnerTest extends TestCase {
   private List<String> args = Lists.newArrayList();
 
   /** Externs for the test */
-  private final List<JSSourceFile> DEFAULT_EXTERNS = ImmutableList.of(
-    JSSourceFile.fromCode("externs",
+  private final List<SourceFile> DEFAULT_EXTERNS = ImmutableList.of(
+    SourceFile.fromCode("externs",
         "var arguments;"
         + "/**\n"
         + " * @constructor\n"
@@ -102,7 +102,7 @@ public class CommandLineRunnerTest extends TestCase {
         + "/** @nosideeffects */ function noSideEffects() {}")
   );
 
-  private List<JSSourceFile> externs;
+  private List<SourceFile> externs;
 
   @Override
   public void setUp() throws Exception {
@@ -800,7 +800,7 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testSyntheticExterns() {
     externs = ImmutableList.of(
-        JSSourceFile.fromCode("externs", "myVar.property;"));
+        SourceFile.fromCode("externs", "myVar.property;"));
     test("var theirVar = {}; var myVar = {}; var yourVar = {};",
          VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
 
@@ -1049,11 +1049,11 @@ public class CommandLineRunnerTest extends TestCase {
   private Compiler compile(String[] original) {
     CommandLineRunner runner = createCommandLineRunner(original);
     assertTrue(runner.shouldRunCompiler());
-    Supplier<List<JSSourceFile>> inputsSupplier = null;
+    Supplier<List<SourceFile>> inputsSupplier = null;
     Supplier<List<JSModule>> modulesSupplier = null;
 
     if (useModules == ModulePattern.NONE) {
-      List<JSSourceFile> inputs = Lists.newArrayList();
+      List<SourceFile> inputs = Lists.newArrayList();
       for (int i = 0; i < original.length; i++) {
         inputs.add(JSSourceFile.fromCode(getFilename(i), original[i]));
       }
@@ -1071,7 +1071,7 @@ public class CommandLineRunnerTest extends TestCase {
     }
 
     runner.enableTestMode(
-        Suppliers.<List<JSSourceFile>>ofInstance(externs),
+        Suppliers.<List<SourceFile>>ofInstance(externs),
         inputsSupplier,
         modulesSupplier,
         new Function<Integer, Boolean>() {

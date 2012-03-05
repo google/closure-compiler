@@ -83,11 +83,11 @@ public class CompilerInput
     }
   }
 
-  public CompilerInput(JSSourceFile file) {
+  public CompilerInput(SourceFile file) {
     this(file, false);
   }
 
-  public CompilerInput(JSSourceFile file, boolean isExtern) {
+  public CompilerInput(SourceFile file, boolean isExtern) {
     this(new JsAst(file), isExtern);
   }
 

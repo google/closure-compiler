@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.JSSourceFile;
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.MessageFormatter;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.WarningLevel;
@@ -255,12 +255,12 @@ public final class CompileTask
     CompilerOptions options = createCompilerOptions();
     Compiler compiler = createCompiler(options);
 
-    JSSourceFile[] externs = findExternFiles();
-    JSSourceFile[] sources = findSourceFiles();
+    List<SourceFile> externs = findExternFiles();
+    List<SourceFile> sources = findSourceFiles();
 
     if (isStale() || forceRecompile) {
-      log("Compiling " + sources.length + " file(s) with " +
-          externs.length + " extern(s)");
+      log("Compiling " + sources.size() + " file(s) with " +
+          externs.size() + " extern(s)");
 
       Result result = compiler.compile(externs, sources, options);
       if (result.success) {
@@ -407,8 +407,8 @@ public final class CompileTask
     return compiler;
   }
 
-  private JSSourceFile[] findExternFiles() {
-    List<JSSourceFile> files = Lists.newLinkedList();
+  private List<SourceFile> findExternFiles() {
+    List<SourceFile> files = Lists.newLinkedList();
     if (!this.customExternsOnly) {
       files.addAll(getDefaultExterns());
     }
@@ -417,11 +417,11 @@ public final class CompileTask
       files.addAll(findJavaScriptFiles(list));
     }
 
-    return files.toArray(new JSSourceFile[files.size()]);
+    return files;
   }
 
-  private JSSourceFile[] findSourceFiles() {
-    List<JSSourceFile> files = Lists.newLinkedList();
+  private List<SourceFile> findSourceFiles() {
+    List<SourceFile> files = Lists.newLinkedList();
 
     for (FileList list : this.sourceFileLists) {
       files.addAll(findJavaScriptFiles(list));
@@ -431,19 +431,19 @@ public final class CompileTask
       files.addAll(findJavaScriptFiles(list));
     }
 
-    return files.toArray(new JSSourceFile[files.size()]);
+    return files;
   }
 
   /**
    * Translates an Ant file list into the file format that the compiler
    * expects.
    */
-  private List<JSSourceFile> findJavaScriptFiles(FileList fileList) {
-    List<JSSourceFile> files = Lists.newLinkedList();
+  private List<SourceFile> findJavaScriptFiles(FileList fileList) {
+    List<SourceFile> files = Lists.newLinkedList();
     File baseDir = fileList.getDir(getProject());
 
     for (String included : fileList.getFiles(getProject())) {
-      files.add(JSSourceFile.fromFile(new File(baseDir, included),
+      files.add(SourceFile.fromFile(new File(baseDir, included),
           Charset.forName(encoding)));
     }
 
@@ -454,11 +454,11 @@ public final class CompileTask
    * Translates an Ant Path into the file list format that the compiler
    * expects.
    */
-  private List<JSSourceFile> findJavaScriptFiles(Path path) {
-    List<JSSourceFile> files = Lists.newArrayList();
+  private List<SourceFile> findJavaScriptFiles(Path path) {
+    List<SourceFile> files = Lists.newArrayList();
 
     for (String included : path.list()) {
-      files.add(JSSourceFile.fromFile(new File(included),
+      files.add(SourceFile.fromFile(new File(included),
           Charset.forName(encoding)));
     }
 
@@ -470,7 +470,7 @@ public final class CompileTask
    *
    * Adapted from {@link CommandLineRunner}.
    */
-  private List<JSSourceFile> getDefaultExterns() {
+  private List<SourceFile> getDefaultExterns() {
     try {
       return CommandLineRunner.getDefaultExterns();
     } catch (IOException e) {

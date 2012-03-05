@@ -756,13 +756,13 @@ public class CommandLineRunner extends
   }
 
   @Override
-  protected List<JSSourceFile> createExterns() throws FlagUsageException,
+  protected List<SourceFile> createExterns() throws FlagUsageException,
       IOException {
-    List<JSSourceFile> externs = super.createExterns();
+    List<SourceFile> externs = super.createExterns();
     if (flags.use_only_custom_externs || isInTestMode()) {
       return externs;
     } else {
-      List<JSSourceFile> defaultExterns = getDefaultExterns();
+      List<SourceFile> defaultExterns = getDefaultExterns();
       defaultExterns.addAll(externs);
       return defaultExterns;
     }
@@ -825,16 +825,16 @@ public class CommandLineRunner extends
    * @return a mutable list
    * @throws IOException
    */
-  public static List<JSSourceFile> getDefaultExterns() throws IOException {
+  public static List<SourceFile> getDefaultExterns() throws IOException {
     InputStream input = CommandLineRunner.class.getResourceAsStream(
         "/externs.zip");
     ZipInputStream zip = new ZipInputStream(input);
-    Map<String, JSSourceFile> externsMap = Maps.newHashMap();
+    Map<String, SourceFile> externsMap = Maps.newHashMap();
     for (ZipEntry entry = null; (entry = zip.getNextEntry()) != null; ) {
       BufferedInputStream entryStream = new BufferedInputStream(
           new LimitInputStream(zip, entry.getSize()));
       externsMap.put(entry.getName(),
-          JSSourceFile.fromInputStream(
+          SourceFile.fromInputStream(
               // Give the files an odd prefix, so that they do not conflict
               // with the user's files.
               "externs.zip//" + entry.getName(),
@@ -847,7 +847,7 @@ public class CommandLineRunner extends
 
     // Order matters, so the resources must be added to the result list
     // in the expected order.
-    List<JSSourceFile> externs = Lists.newArrayList();
+    List<SourceFile> externs = Lists.newArrayList();
     for (String key : DEFAULT_EXTERNS_NAMES) {
       externs.add(externsMap.get(key));
     }

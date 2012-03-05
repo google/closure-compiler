@@ -90,12 +90,12 @@ public class JSModule implements DependencyInfo, Serializable {
   }
 
   /** Adds a source file input to this module. */
-  public void add(JSSourceFile file) {
+  public void add(SourceFile file) {
     add(new CompilerInput(file));
   }
 
   /** Adds a source file input to this module. */
-  public void addFirst(JSSourceFile file) {
+  public void addFirst(SourceFile file) {
     addFirst(new CompilerInput(file));
   }
 
