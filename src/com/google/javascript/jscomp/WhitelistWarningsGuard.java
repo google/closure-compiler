@@ -18,13 +18,18 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+import com.google.common.collect.TreeMultimap;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
+import com.google.javascript.jscomp.CheckLevel;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -39,7 +44,7 @@ import java.util.regex.Pattern;
  * @author anatol@google.com (Anatol Pomazau)
  * @author bashir@google.com (Bashir Sadjad)
  */
-public abstract class WhitelistWarningsGuard extends WarningsGuard {
+public class WhitelistWarningsGuard extends WarningsGuard {
   /** The set of white-listed warnings, same format as {@code formatWarning}. */
   private final Set<String> whiteList;
 
@@ -58,6 +63,18 @@ public abstract class WhitelistWarningsGuard extends WarningsGuard {
     this.whiteList = whiteList;
   }
 
+  @Override
+  public CheckLevel level(JSError error) {
+    if (containWarning(formatWarning(error))) {
+      // If the message matches the guard we use WARNING, so that it
+      // - Shows up on stderr, and
+      // - Gets caught by the WhitelistBuilder downstream in the pipeline
+      return CheckLevel.WARNING;
+    }
+
+    return null;
+  }
+
   /**
    * Determines whether a given warning is included in the white-list.
    *
@@ -71,6 +88,11 @@ public abstract class WhitelistWarningsGuard extends WarningsGuard {
   @Override
   public int getPriority() {
     return WarningsGuard.Priority.SUPPRESS_BY_WHITELIST.getValue();
+  }
+
+  /** Creates a warnings guard from a file. */
+  public static WhitelistWarningsGuard fromFile(File file) {
+    return new WhitelistWarningsGuard(loadWhitelistedJsWarnings(file));
   }
 
   /**
@@ -138,5 +160,85 @@ public abstract class WhitelistWarningsGuard extends WarningsGuard {
       warning = warning.substring(0, lineLength);
     }
     return warning;
+  }
+
+  public static class WhitelistBuilder implements ErrorHandler {
+    private final Set<JSError> warnings = Sets.newLinkedHashSet();
+    private String productName = null;
+    private String generatorTarget = null;
+    private boolean withLineNumber = false;
+
+    /** Fill in your product name to get a fun message! */
+    public WhitelistBuilder setProductName(String name) {
+      this.productName = name;
+      return this;
+    }
+
+    /** Fill in instructions on how to generate this whitelist. */
+    public WhitelistBuilder setGeneratorTarget(String name) {
+      this.generatorTarget = name;
+      return this;
+    }
+
+    /**
+     * Sets whether line number are recorded in the whitelist.
+     * This means that if lines are added below the warning, the warning
+     * will need to be fixed or the whitelist will need to be regenerated.
+     */
+    public WhitelistBuilder setWithLineNumber(boolean line) {
+      this.withLineNumber = line;
+      return this;
+    }
+
+    @Override
+    public void report(CheckLevel level, JSError error) {
+      warnings.add(error);
+    }
+
+    /**
+     * Writes the warnings collected in a format that the WhitelistWarningsGuard
+     * can read back later.
+     */
+    public void writeWhitelist(File out) throws IOException {
+      PrintStream stream = new PrintStream(out);
+      appendWhitelist(stream);
+      stream.close();
+    }
+
+    /**
+     * Writes the warnings collected in a format that the WhitelistWarningsGuard
+     * can read back later.
+     */
+    public void appendWhitelist(PrintStream out) {
+      out.append(
+          "# This is a list of legacy warnings that have yet to be fixed.\n");
+
+      if (productName != null) {
+        out.append("# Please find some time and fix at least one of them "
+            + "and it will be the happiest day for " + productName + ".\n");
+      }
+
+      if (generatorTarget != null) {
+        out.append("# When you fix any of these warnings, run "
+            + generatorTarget + " task.\n");
+      }
+
+      Multimap<DiagnosticType, String> warningsByType = TreeMultimap.create();
+      for (JSError warning : warnings) {
+        warningsByType.put(
+            warning.getType(), formatWarning(warning, withLineNumber));
+      }
+
+      for (DiagnosticType type : warningsByType.keySet()) {
+        out.append("\n# Warning ")
+            .append(type.key)
+            .append(": ")
+            .println(getFirstLine(type.format.toPattern()));
+
+        for (String warning : warningsByType.get(type)) {
+          out.println(warning);
+        }
+      }
+    }
   }
 }

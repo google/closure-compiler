@@ -761,6 +761,11 @@ public class CompilerOptions implements Serializable, Cloneable {
   private transient AliasTransformationHandler aliasHandler;
 
   /**
+   * Handler for compiler warnings and errors.
+   */
+  transient ErrorHandler errorHandler;
+
+  /**
    * Initializes compiler options. All options are disabled by default.
    *
    * Command-line frontends to the compiler should set these properties
@@ -903,6 +908,7 @@ public class CompilerOptions implements Serializable, Cloneable {
 
     // Debugging
     aliasHandler = NULL_ALIAS_TRANSFORMATION_HANDLER;
+    errorHandler = null;
   }
 
   /**
@@ -1384,6 +1390,22 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public AliasTransformationHandler getAliasTransformationHandler() {
     return this.aliasHandler;
+  }
+
+  /**
+   * Set a custom handler for warnings and errors.
+   *
+   * This is mostly used for piping the warnings and errors to
+   * a file behind the scenes.
+   *
+   * If you want to filter warnings and errors, you should use a WarningsGuard.
+   *
+   * If you want to change how warnings and errors are reported to the user,
+   * you should set a ErrorManager on the Compiler. An ErrorManager is
+   * intended to summarize the errors for a single compile job.
+   */
+  public void setErrorHandler(ErrorHandler handler) {
+    this.errorHandler = handler;
   }
 
   /**

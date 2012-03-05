@@ -1965,6 +1965,9 @@ public class Compiler extends AbstractCompiler {
     }
 
     if (level.isOn()) {
+      if (getOptions().errorHandler != null) {
+        getOptions().errorHandler.report(level, error);
+      }
       errorManager.report(level, error);
     }
   }
