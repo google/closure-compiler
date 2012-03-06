@@ -42,6 +42,13 @@ public class CheckProvidesTest extends CompilerTestCase {
     testSame(js);
   }
 
+  public void testNoProvideInnerClass() {
+    testSame(
+        "goog.provide('X');\n" +
+        "/** @constructor */ function X(){};" +
+        "/** @constructor */ X.Y = function(){};");
+  }
+
   public void testMissingGoogProvide(){
     String[] js = new String[]{"/** @constructor */ X = function(){};"};
     String warning = "missing goog.provide('X')";
