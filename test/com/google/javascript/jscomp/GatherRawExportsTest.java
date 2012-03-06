@@ -107,6 +107,14 @@ public class GatherRawExportsTest extends CompilerTestCase {
     assertExported("var a = window; a['b']");
   }
 
+  public void testExportOnTopFound1() {
+    assertExported("top['a']", "a");
+  }
+
+  public void testExportOntopFound2() {
+    assertExported("top.a", "a");
+  }
+
   private void assertExported(String js, String ... names) {
     Set<String> setNames = Sets.newHashSet(names);
     testSame(js);

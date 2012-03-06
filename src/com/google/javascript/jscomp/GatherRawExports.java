@@ -33,7 +33,7 @@ class GatherRawExports extends AbstractPostOrderCallback
 
   private final AbstractCompiler compiler;
 
-  private static final String GLOBAL_THIS_NAME = "window";
+  private static final String GLOBAL_THIS_NAMES[] = { "window", "top" };
 
   private final Set<String> exportedVariables = Sets.newHashSet();
 
@@ -66,8 +66,11 @@ class GatherRawExports extends AbstractPostOrderCallback
       return t.inGlobalScope();
     } else if (n.isName()) {
       String varName = n.getString();
-      if (varName.equals(GLOBAL_THIS_NAME)) {
-        return true;
+      int items = GLOBAL_THIS_NAMES.length;
+      for (int i = 0; i < items; i++) {
+        if (varName.equals(GLOBAL_THIS_NAMES[i])) {
+          return true;
+        }
       }
     }
     return false;
