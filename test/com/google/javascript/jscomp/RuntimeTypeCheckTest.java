@@ -240,8 +240,8 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
 
   private void testChecks(String js, String expected) {
     Compiler compiler = new Compiler();
-    compiler.init(Lists.<JSSourceFile>newArrayList(),
-                  Lists.<JSSourceFile>newArrayList(),
+    compiler.init(Lists.<SourceFile>newArrayList(),
+                  Lists.<SourceFile>newArrayList(),
                   new CompilerOptions());
     Node boilerplateCode =
         RuntimeTypeCheck.getBoilerplateCode(compiler, null);

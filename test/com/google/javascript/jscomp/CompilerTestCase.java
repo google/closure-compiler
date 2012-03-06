@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CodeChangeHandler.RecentChange;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -43,7 +44,7 @@ import java.util.List;
 public abstract class CompilerTestCase extends TestCase  {
 
   /** Externs for the test */
-  private final JSSourceFile[] externsInputs;
+  private final List<SourceFile> externsInputs;
 
   /** Whether to compare input and output as trees instead of strings */
   private final boolean compareAsTree;
@@ -118,9 +119,8 @@ public abstract class CompilerTestCase extends TestCase  {
    * </pre>
    */
   protected CompilerTestCase(String externs, boolean compareAsTree) {
-    this.externsInputs = new JSSourceFile[] {
-        JSSourceFile.fromCode("externs", externs)
-    };
+    this.externsInputs = ImmutableList.of(
+        SourceFile.fromCode("externs", externs));
     this.compareAsTree = compareAsTree;
     this.parseTypeInfo = false;
   }
@@ -391,9 +391,8 @@ public abstract class CompilerTestCase extends TestCase  {
   public void test(String externs, String js, String expected,
                    DiagnosticType error, DiagnosticType warning,
                    String description) {
-    JSSourceFile[] externsInputs = new JSSourceFile[]{
-        JSSourceFile.fromCode("externs", externs)
-    };
+    List<SourceFile> externsInputs = ImmutableList.of(
+        SourceFile.fromCode("externs", externs));
     test(externsInputs, js, expected, error, warning, description);
   }
 
@@ -411,7 +410,7 @@ public abstract class CompilerTestCase extends TestCase  {
    *      or null if no warning is expected or if the warning's description
    *      should not be examined
    */
-  public void test(JSSourceFile[] externs, String js, String expected,
+  public void test(List<SourceFile> externs, String js, String expected,
                    DiagnosticType error,
                    DiagnosticType warning, String description) {
     Compiler compiler = createCompiler();
@@ -425,8 +424,8 @@ public abstract class CompilerTestCase extends TestCase  {
     // Note that in this context, turning on the checkTypes option won't
     // actually cause the type check to run.
     options.checkTypes = parseTypeInfo;
-    compiler.init(externs, new JSSourceFile[] {
-        JSSourceFile.fromCode(filename, js) }, options);
+    compiler.init(externs, ImmutableList.of(
+        SourceFile.fromCode(filename, js)), options);
 
     BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
 
@@ -488,9 +487,9 @@ public abstract class CompilerTestCase extends TestCase  {
     Compiler compiler = createCompiler();
     lastCompiler = compiler;
 
-    JSSourceFile[] inputs = new JSSourceFile[js.length];
+    List<SourceFile> inputs = Lists.newArrayList();
     for (int i = 0; i < js.length; i++) {
-      inputs[i] = JSSourceFile.fromCode("input" + i, js[i]);
+      inputs.add(SourceFile.fromCode("input" + i, js[i]));
     }
     compiler.init(externsInputs, inputs, getOptions());
     test(compiler, expected, error, warning, description);
@@ -534,7 +533,8 @@ public abstract class CompilerTestCase extends TestCase  {
     Compiler compiler = createCompiler();
     lastCompiler = compiler;
 
-    compiler.init(externsInputs, modules, getOptions());
+    compiler.initModules(
+        externsInputs, Lists.newArrayList(modules), getOptions());
     test(compiler, expected, error, warning);
   }
 
@@ -617,9 +617,8 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   public void testSame(String externs, String js, DiagnosticType warning,
                        String description) {
-    JSSourceFile[] externsInputs = new JSSourceFile[]{
-        JSSourceFile.fromCode("externs", externs)
-    };
+    List<SourceFile> externsInputs = ImmutableList.of(
+        SourceFile.fromCode("externs", externs));
     test(externsInputs, js, js, null, warning, description);
   }
 
@@ -936,9 +935,9 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   protected Node parseExpectedJs(String[] expected) {
     Compiler compiler = createCompiler();
-    JSSourceFile[] inputs = new JSSourceFile[expected.length];
+    List<SourceFile> inputs = Lists.newArrayList();
     for (int i = 0; i < expected.length; i++) {
-      inputs[i] = JSSourceFile.fromCode("expected" + i, expected[i]);
+      inputs.add(SourceFile.fromCode("expected" + i, expected[i]));
     }
     compiler.init(externsInputs, inputs, getOptions());
     Node root = compiler.parseInputs();
@@ -1017,7 +1016,7 @@ public abstract class CompilerTestCase extends TestCase  {
     JSModule[] modules = new JSModule[inputs.length];
     for (int i = 0; i < inputs.length; i++) {
       JSModule module = modules[i] = new JSModule("m" + i);
-      module.add(JSSourceFile.fromCode("i" + i, inputs[i]));
+      module.add(SourceFile.fromCode("i" + i, inputs[i]));
     }
     return modules;
   }

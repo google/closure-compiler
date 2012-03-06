@@ -756,17 +756,17 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
     // while nothing is moved. This should not be a problem if we know all
     // modules are non-empty.
     JSModule m1 = new JSModule("m1");
-    m1.add(JSSourceFile.fromCode("m1", "function x() {}"));
+    m1.add(SourceFile.fromCode("m1", "function x() {}"));
 
     JSModule empty = new JSModule("empty");
     empty.addDependency(m1);
 
     JSModule m2 = new JSModule("m2");
-    m2.add(JSSourceFile.fromCode("m2", "x()"));
+    m2.add(SourceFile.fromCode("m2", "x()"));
     m2.addDependency(empty);
 
     JSModule m3 = new JSModule("m3");
-    m3.add(JSSourceFile.fromCode("m3", "x()"));
+    m3.add(SourceFile.fromCode("m3", "x()"));
     m3.addDependency(empty);
 
     test(new JSModule[] {m1,empty,m2,m3},

@@ -1273,8 +1273,8 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     Compiler compiler = createCompiler();
     CompilerOptions options = getOptions();
     compiler.init(
-        new JSSourceFile[] {},
-        new JSSourceFile[] { JSSourceFile.fromCode("testcode", js) },
+        ImmutableList.<SourceFile>of(),
+        ImmutableList.of(SourceFile.fromCode("testcode", js)),
         options);
     Node root = compiler.parseInputs();
     assertTrue("Unexpected parse error(s): " +

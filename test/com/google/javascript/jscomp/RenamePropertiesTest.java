@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * {@link RenameProperties} tests.
@@ -218,13 +220,13 @@ public class RenamePropertiesTest extends CompilerTestCase {
                        "var noo;noo.getC(noo);noo.zoo=noo;noo.cloo=noo;";
 
     JSModule module1 = new JSModule("m1");
-    module1.add(JSSourceFile.fromCode("input1", module1Js));
+    module1.add(SourceFile.fromCode("input1", module1Js));
 
     JSModule module2 = new JSModule("m2");
-    module2.add(JSSourceFile.fromCode("input2", module2Js));
+    module2.add(SourceFile.fromCode("input2", module2Js));
 
     JSModule module3 = new JSModule("m3");
-    module3.add(JSSourceFile.fromCode("input3", module3Js));
+    module3.add(SourceFile.fromCode("input3", module3Js));
 
     JSModule[] modules = new JSModule[] { module1, module2, module3 };
     Compiler compiler = compileModules("", modules);
@@ -394,13 +396,14 @@ public class RenamePropertiesTest extends CompilerTestCase {
   }
 
   private Compiler compileModules(String externs, JSModule[] modules) {
-    JSSourceFile externsInput = JSSourceFile.fromCode("externs", externs);
+    SourceFile externsInput = SourceFile.fromCode("externs", externs);
 
     CompilerOptions options = new CompilerOptions();
     options.propertyRenaming = PropertyRenamingPolicy.ALL_UNQUOTED;
 
     Compiler compiler = new Compiler();
-    compiler.compile(externsInput, modules, options);
+    compiler.compileModules(
+        ImmutableList.of(externsInput), Lists.newArrayList(modules), options);
     return compiler;
   }
 

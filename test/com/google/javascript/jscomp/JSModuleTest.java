@@ -75,24 +75,24 @@ public class JSModuleTest extends TestCase {
 
   public void testSortInputs() throws Exception {
     CompilerInput a = new CompilerInput(
-        JSSourceFile.fromCode("a.js",
+        SourceFile.fromCode("a.js",
             "goog.require('b');goog.require('c')"));
     CompilerInput b = new CompilerInput(
-        JSSourceFile.fromCode("b.js",
+        SourceFile.fromCode("b.js",
             "goog.provide('b');goog.require('d')"));
     CompilerInput c = new CompilerInput(
-        JSSourceFile.fromCode("c.js",
+        SourceFile.fromCode("c.js",
             "goog.provide('c');goog.require('d')"));
     CompilerInput d = new CompilerInput(
-        JSSourceFile.fromCode("d.js",
+        SourceFile.fromCode("d.js",
             "goog.provide('d')"));
 
     // Independent modules.
     CompilerInput e = new CompilerInput(
-        JSSourceFile.fromCode("e.js",
+        SourceFile.fromCode("e.js",
             "goog.provide('e')"));
     CompilerInput f = new CompilerInput(
-        JSSourceFile.fromCode("f.js",
+        SourceFile.fromCode("f.js",
             "goog.provide('f')"));
 
     assertSortedInputs(

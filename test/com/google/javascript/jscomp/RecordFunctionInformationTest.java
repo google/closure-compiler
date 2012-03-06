@@ -16,10 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
-
 
 /**
  * Tests for {@link RecordFunctionInformation}
@@ -162,8 +163,8 @@ public class RecordFunctionInformationTest extends TestCase {
 
   private void test(String js, FunctionInformationMap expected) {
     Compiler compiler = new Compiler();
-    compiler.init(new JSSourceFile[] { JSSourceFile.fromCode("externs", "") },
-                  new JSSourceFile[] { JSSourceFile.fromCode("testcode", js) },
+    compiler.init(ImmutableList.of(SourceFile.fromCode("externs", "")),
+                  ImmutableList.of(SourceFile.fromCode("testcode", js)),
                   new CompilerOptions());
     test(compiler, expected);
   }
@@ -191,9 +192,10 @@ public class RecordFunctionInformationTest extends TestCase {
 
   private Compiler compilerFor(JSModule[] modules) {
       Compiler compiler = new Compiler();
-      compiler.init(new JSSourceFile[] { JSSourceFile.fromCode("externs", "") },
-                    modules,
-                    new CompilerOptions());
+      compiler.initModules(
+          ImmutableList.of(SourceFile.fromCode("externs", "")),
+          Lists.newArrayList(modules),
+          new CompilerOptions());
       return compiler;
   }
 

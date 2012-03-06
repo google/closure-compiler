@@ -16,6 +16,8 @@
 package com.google.javascript.jscomp;
 
 
+import com.google.common.collect.ImmutableList;
+
 import junit.framework.TestCase;
 
 /**
@@ -25,16 +27,18 @@ public class JSCompilerSourceExcerptProviderTest extends TestCase {
 
   @Override
   protected void setUp() throws Exception {
-    JSSourceFile foo = JSSourceFile.fromCode("foo",
+    SourceFile foo = SourceFile.fromCode("foo",
         "foo:first line\nfoo:second line\nfoo:third line\n");
-    JSSourceFile bar = JSSourceFile.fromCode("bar",
+    SourceFile bar = SourceFile.fromCode("bar",
         "bar:first line\nbar:second line\nbar:third line\nbar:fourth line\n");
-    JSSourceFile foo2 = JSSourceFile.fromCode("foo2",
+    SourceFile foo2 = SourceFile.fromCode("foo2",
         "foo2:first line\nfoo2:second line\nfoo2:third line");
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     compiler.init(
-        new JSSourceFile[] {}, new JSSourceFile[] {foo, bar, foo2}, options);
+        ImmutableList.<SourceFile>of(),
+        ImmutableList.of(foo, bar, foo2),
+        options);
     this.provider = compiler;
   }
 

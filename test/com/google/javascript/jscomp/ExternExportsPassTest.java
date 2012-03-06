@@ -18,9 +18,11 @@ package com.google.javascript.jscomp;
 
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 import junit.framework.TestCase;
 
+import java.util.List;
 
 /**
  * Tests for {@link ExternExportsPass}.
@@ -463,17 +465,15 @@ public class ExternExportsPassTest extends TestCase {
     options.checkSymbols = true;
     options.checkTypes = runCheckTypes;
 
-    JSSourceFile[] inputs = {
-      JSSourceFile.fromCode("testcode",
+    List<SourceFile> inputs = Lists.newArrayList(
+      SourceFile.fromCode("testcode",
                             "var goog = {};" +
                             "goog.exportSymbol = function(a, b) {}; " +
                             "goog.exportProperty = function(a, b, c) {}; " +
-                            js)
-    };
+                            js));
 
-    JSSourceFile[] externFiles = {
-        JSSourceFile.fromCode("externs", externs)
-    };
+    List<SourceFile> externFiles = Lists.newArrayList(
+        SourceFile.fromCode("externs", externs));
 
     Result result = compiler.compile(externFiles, inputs, options);
 

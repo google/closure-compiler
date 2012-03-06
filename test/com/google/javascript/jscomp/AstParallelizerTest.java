@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -119,14 +121,14 @@ public class AstParallelizerTest extends TestCase {
 
   private void splitFiles(String[] input) {
     Compiler compiler = new Compiler();
-    JSSourceFile[] files = new JSSourceFile[input.length];
+    List<SourceFile> files = Lists.newArrayList();
 
-    for (int i = 0; i < files.length; i ++) {
-      files[i] = JSSourceFile.fromCode("file" + i, input[i]);
+    for (int i = 0; i < input.length; i ++) {
+      files.add(SourceFile.fromCode("file" + i, input[i]));
     }
 
     compiler.init(
-        new JSSourceFile[0], files, new CompilerOptions());
+        ImmutableList.<SourceFile>of(), files, new CompilerOptions());
     compiler.parse();
     Node orginal = compiler.getRoot();
     Node root = orginal.cloneTree();

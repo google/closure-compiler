@@ -18,13 +18,17 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
+
+import java.util.List;
 
 /**
  * Tests for {@link PassFactory}.
@@ -34,8 +38,8 @@ import junit.framework.TestCase;
 public class IntegrationTest extends TestCase {
 
   /** Externs for the test */
-  private final JSSourceFile[] DEFAULT_EXTERNS = new JSSourceFile[] {
-    JSSourceFile.fromCode("externs",
+  private final List<SourceFile> DEFAULT_EXTERNS = ImmutableList.of(
+    SourceFile.fromCode("externs",
         "var arguments;\n"
         + "/** @constructor */ function Window() {}\n"
         + "/** @type {string} */ Window.prototype.name;\n"
@@ -44,10 +48,9 @@ public class IntegrationTest extends TestCase {
         + "/** @nosideeffects */ function noSideEffects() {}\n"
         + "/** @constructor\n * @nosideeffects */ function Widget() {}\n"
         + "/** @modifies {this} */ Widget.prototype.go = function() {};\n"
-        + "/** @return {string} */ var widgetToken = function() {};\n")
-  };
+        + "/** @return {string} */ var widgetToken = function() {};\n"));
 
-  private JSSourceFile[] externs = DEFAULT_EXTERNS;
+  private List<SourceFile> externs = DEFAULT_EXTERNS;
 
   private static final String CLOSURE_BOILERPLATE =
       "/** @define {boolean} */ var COMPILED = false; var goog = {};" +
@@ -1549,9 +1552,8 @@ public class IntegrationTest extends TestCase {
     CompilerOptions options = createCompilerOptions();
 
     options.aliasExternals = true;
-    externs = new JSSourceFile[] {
-      JSSourceFile.fromCode("externs", "extern.foo")
-    };
+    externs = ImmutableList.of(
+        SourceFile.fromCode("externs", "extern.foo"));
 
     test(options,
          "var extern; " +
@@ -1564,10 +1566,9 @@ public class IntegrationTest extends TestCase {
   public void testDuplicateVariablesInExterns() {
     CompilerOptions options = createCompilerOptions();
     options.checkSymbols = true;
-    externs = new JSSourceFile[] {
-      JSSourceFile.fromCode("externs",
-          "var externs = {}; /** @suppress {duplicate} */ var externs = {};")
-    };
+    externs = ImmutableList.of(
+        SourceFile.fromCode("externs",
+            "var externs = {}; /** @suppress {duplicate} */ var externs = {};"));
     testSame(options, "");
   }
 
@@ -2095,20 +2096,21 @@ public class IntegrationTest extends TestCase {
 
   private Compiler compile(CompilerOptions options, String[] original) {
     Compiler compiler = lastCompiler = new Compiler();
-    JSSourceFile[] inputs = new JSSourceFile[original.length];
+    List<SourceFile> inputs = Lists.newArrayList();
     for (int i = 0; i < original.length; i++) {
-      inputs[i] = JSSourceFile.fromCode("input" + i, original[i]);
+      inputs.add(SourceFile.fromCode("input" + i, original[i]));
     }
-    compiler.compile(
-        externs, CompilerTestCase.createModuleChain(original), options);
+    compiler.compileModules(
+        externs, Lists.newArrayList(CompilerTestCase.createModuleChain(original)),
+        options);
     return compiler;
   }
 
   private Node parse(String[] original, CompilerOptions options) {
     Compiler compiler = new Compiler();
-    JSSourceFile[] inputs = new JSSourceFile[original.length];
-    for (int i = 0; i < inputs.length; i++) {
-      inputs[i] = JSSourceFile.fromCode("input" + i, original[i]);
+    List<SourceFile> inputs = Lists.newArrayList();
+    for (int i = 0; i < original.length; i++) {
+      inputs.add(SourceFile.fromCode("input" + i, original[i]));
     }
     compiler.init(externs, inputs, options);
     checkUnexpectedErrorsOrWarnings(compiler, 0);

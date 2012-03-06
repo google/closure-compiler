@@ -922,10 +922,10 @@ public class SymbolTableTest extends TestCase {
   }
 
   private SymbolTable createSymbolTable(String input) {
-    List<JSSourceFile> inputs = Lists.newArrayList(
-        JSSourceFile.fromCode("in1", input));
-    List<JSSourceFile> externs = Lists.newArrayList(
-        JSSourceFile.fromCode("externs1", EXTERNS));
+    List<SourceFile> inputs = Lists.newArrayList(
+        SourceFile.fromCode("in1", input));
+    List<SourceFile> externs = Lists.newArrayList(
+        SourceFile.fromCode("externs1", EXTERNS));
 
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);

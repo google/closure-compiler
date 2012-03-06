@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
@@ -26,6 +27,7 @@ import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -1416,14 +1418,13 @@ public class FunctionInjectorTest extends TestCase {
         assumeStrictThis,
         assumeMinimumCapture);
 
-    JSSourceFile[] externsInputs = new JSSourceFile[] {
-        JSSourceFile.fromCode("externs", "")
-    };
+    List<SourceFile> externsInputs = Lists.newArrayList(
+        SourceFile.fromCode("externs", ""));
 
     CompilerOptions options = new CompilerOptions();
     options.setCodingConvention(new GoogleCodingConvention());
-    compiler.init(externsInputs, new JSSourceFile[] {
-        JSSourceFile.fromCode("code", code) }, options);
+    compiler.init(externsInputs, Lists.newArrayList(
+        SourceFile.fromCode("code", code)), options);
     Node parseRoot = compiler.parseInputs();
     Node externsRoot = parseRoot.getFirstChild();
     final Node tree = parseRoot.getLastChild();

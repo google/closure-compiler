@@ -66,8 +66,8 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
           // Inject additional code at the beginning.
           if (additionalCode != null) {
-            JSSourceFile file =
-                JSSourceFile.fromCode("additionalcode", additionalCode);
+            SourceFile file =
+                SourceFile.fromCode("additionalcode", additionalCode);
             Node scriptNode = root.getFirstChild();
             Node newScriptNode = new CompilerInput(file).getAstRoot(compiler);
             if (addAdditionalNamespace) {
@@ -83,8 +83,8 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
           // Inject additional code at the end.
           if (additionalEndCode != null) {
-            JSSourceFile file =
-                JSSourceFile.fromCode("additionalendcode", additionalEndCode);
+            SourceFile file =
+                SourceFile.fromCode("additionalendcode", additionalEndCode);
             Node scriptNode = root.getFirstChild();
             Node newScriptNode = new CompilerInput(file).getAstRoot(compiler);
             if (addAdditionalNamespace) {

@@ -9717,8 +9717,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   private TypeCheckResult parseAndTypeCheckWithScope(
       String externs, String js) {
     compiler.init(
-        Lists.newArrayList(JSSourceFile.fromCode("[externs]", externs)),
-        Lists.newArrayList(JSSourceFile.fromCode("[testcode]", js)),
+        Lists.newArrayList(SourceFile.fromCode("[externs]", externs)),
+        Lists.newArrayList(SourceFile.fromCode("[testcode]", js)),
         compiler.getOptions());
 
     Node n = compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler);

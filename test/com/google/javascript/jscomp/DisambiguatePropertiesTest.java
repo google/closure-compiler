@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -1277,9 +1278,9 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
 
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    compiler.init(new JSSourceFile[]{JSSourceFile.fromCode("externs", "")},
-                  new JSSourceFile[]{
-                      JSSourceFile.fromCode("testcode", js)}, options);
+    compiler.init(ImmutableList.of(SourceFile.fromCode("externs", "")),
+        ImmutableList.of(SourceFile.fromCode("testcode", js)),
+        options);
 
     Node root = compiler.parseInputs();
     Node externsRoot = root.getFirstChild();
@@ -1336,9 +1337,10 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     this.runTightenTypes = runTightenTypes;
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    compiler.init(new JSSourceFile[]{JSSourceFile.fromCode("externs", "")},
-                  new JSSourceFile[]{
-                      JSSourceFile.fromCode("testcode", js)}, options);
+    compiler.init(
+        ImmutableList.of(SourceFile.fromCode("externs", "")),
+        ImmutableList.of(SourceFile.fromCode("testcode", js)),
+        options);
 
     Node root = compiler.parseInputs();
     assertTrue("Unexpected parse error(s): " +

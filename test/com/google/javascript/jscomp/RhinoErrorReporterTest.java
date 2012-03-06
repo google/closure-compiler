@@ -16,11 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
+
+import java.util.List;
 
 /**
  * Tests for error message filtering.
@@ -57,10 +60,9 @@ public class RhinoErrorReporterTest extends TestCase {
   private void assertError(
       String code, DiagnosticType type, String description) {
     Compiler compiler = new Compiler();
-    JSSourceFile[] externs = new JSSourceFile[] {};
-    JSSourceFile[] inputs =  new JSSourceFile[] {
-      JSSourceFile.fromCode("input", code)
-    };
+    List<SourceFile> externs = ImmutableList.of();
+    List<SourceFile> inputs = ImmutableList.of(
+        SourceFile.fromCode("input", code));
     compiler.init(externs, inputs, new CompilerOptions());
     compiler.parseInputs();
     assertEquals("Expected error", 1, compiler.getErrorCount());

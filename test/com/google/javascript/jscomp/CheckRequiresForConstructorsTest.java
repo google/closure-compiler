@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_WARNING;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Result;
 
@@ -200,14 +201,14 @@ public class CheckRequiresForConstructorsTest extends CompilerTestCase {
 
   public void testRequiresAreCaughtBeforeProcessed() {
     String js = "var foo = {}; var bar = new foo.bar.goo();";
-    JSSourceFile input = JSSourceFile.fromCode("foo.js", js);
+    SourceFile input = SourceFile.fromCode("foo.js", js);
     Compiler compiler = new Compiler();
     CompilerOptions opts = new CompilerOptions();
     opts.checkRequires = CheckLevel.WARNING;
     opts.closurePass = true;
 
-    Result result = compiler.compile(new JSSourceFile[] {},
-        new JSSourceFile[] {input}, opts);
+    Result result = compiler.compile(ImmutableList.<SourceFile>of(),
+        ImmutableList.of(input), opts);
     JSError[] warnings = result.warnings;
     assertNotNull(warnings);
     assertTrue(warnings.length > 0);

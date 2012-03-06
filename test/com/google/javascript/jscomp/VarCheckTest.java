@@ -16,10 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-
 
 public class VarCheckTest extends CompilerTestCase {
   private static final String EXTERNS = "var window; function alert() {}";
@@ -268,9 +268,9 @@ public class VarCheckTest extends CompilerTestCase {
   private void testTwoModules(String code1, String code2, boolean m2DependsOnm1,
                               DiagnosticType error, DiagnosticType warning) {
     JSModule m1 = new JSModule("m1");
-    m1.add(JSSourceFile.fromCode("input1", code1));
+    m1.add(SourceFile.fromCode("input1", code1));
     JSModule m2 = new JSModule("m2");
-    m2.add(JSSourceFile.fromCode("input2", code2));
+    m2.add(SourceFile.fromCode("input2", code2));
     if (m2DependsOnm1) {
       m2.addDependency(m1);
     }
@@ -371,8 +371,8 @@ public class VarCheckTest extends CompilerTestCase {
         DiagnosticGroup.forType(VarCheck.UNDEFINED_VAR_ERROR),
         CheckLevel.OFF);
     compiler.init(
-        new JSSourceFile[] { JSSourceFile.fromCode("extern", extern) },
-        new JSSourceFile[] { JSSourceFile.fromCode("input", input) },
+        ImmutableList.of(SourceFile.fromCode("extern", extern)),
+        ImmutableList.of(SourceFile.fromCode("input", input)),
         options);
     compiler.parseInputs();
     assertFalse(compiler.hasErrors());

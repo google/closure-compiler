@@ -1055,7 +1055,7 @@ public class CommandLineRunnerTest extends TestCase {
     if (useModules == ModulePattern.NONE) {
       List<SourceFile> inputs = Lists.newArrayList();
       for (int i = 0; i < original.length; i++) {
-        inputs.add(JSSourceFile.fromCode(getFilename(i), original[i]));
+        inputs.add(SourceFile.fromCode(getFilename(i), original[i]));
       }
       inputsSupplier = Suppliers.ofInstance(inputs);
     } else if (useModules == ModulePattern.STAR) {
@@ -1090,9 +1090,9 @@ public class CommandLineRunnerTest extends TestCase {
     String[] argStrings = args.toArray(new String[] {});
     CommandLineRunner runner = new CommandLineRunner(argStrings);
     Compiler compiler = runner.createCompiler();
-    List<JSSourceFile> inputs = Lists.newArrayList();
+    List<SourceFile> inputs = Lists.newArrayList();
     for (int i = 0; i < original.length; i++) {
-      inputs.add(JSSourceFile.fromCode(getFilename(i), original[i]));
+      inputs.add(SourceFile.fromCode(getFilename(i), original[i]));
     }
     CompilerOptions options = new CompilerOptions();
     // ECMASCRIPT5 is the most forgiving.

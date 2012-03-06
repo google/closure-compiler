@@ -38,7 +38,7 @@ public class JsMessageExtractorTest extends TestCase {
     try {
       String sourceCode = Joiner.on("\n").join(js);
       return new JsMessageExtractor(null, RELAX)
-          .extractMessages(JSSourceFile.fromCode("testcode", sourceCode));
+          .extractMessages(SourceFile.fromCode("testcode", sourceCode));
     } catch (IOException e) {
       fail(e.getMessage());
       return null;

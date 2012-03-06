@@ -395,8 +395,8 @@ public class NormalizeTest extends CompilerTestCase {
   public void testNormalizeSyntheticCode() {
     Compiler compiler = new Compiler();
     compiler.init(
-        Lists.<JSSourceFile>newArrayList(),
-        Lists.<JSSourceFile>newArrayList(), new CompilerOptions());
+        Lists.<SourceFile>newArrayList(),
+        Lists.<SourceFile>newArrayList(), new CompilerOptions());
     Node code = Normalize.parseAndNormalizeSyntheticCode(
         compiler, "function f(x) {} function g(x) {}", "prefix_");
     assertEquals(

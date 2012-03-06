@@ -39,13 +39,13 @@ import java.util.Map;
 public class GlobalVarReferenceMapTest extends TestCase {
 
   private final CompilerInput INPUT1 =
-      new CompilerInput(JSSourceFile.fromCode("input1", ""), false);
+      new CompilerInput(SourceFile.fromCode("input1", ""), false);
   private final CompilerInput INPUT2 =
-      new CompilerInput(JSSourceFile.fromCode("input2", ""), false);
+      new CompilerInput(SourceFile.fromCode("input2", ""), false);
   private final CompilerInput INPUT3 =
-      new CompilerInput(JSSourceFile.fromCode("input3", ""), false);
+      new CompilerInput(SourceFile.fromCode("input3", ""), false);
   private final CompilerInput EXTERN1 =
-      new CompilerInput(JSSourceFile.fromCode("extern1", ""), true);
+      new CompilerInput(SourceFile.fromCode("extern1", ""), true);
 
   private final GlobalVarReferenceMap map = new GlobalVarReferenceMap(
       Lists.newArrayList(INPUT1, INPUT2, INPUT3), Lists.newArrayList(EXTERN1));

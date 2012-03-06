@@ -24,13 +24,13 @@ import java.util.logging.Level;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.JSSourceFile;
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.WarningLevel;
 
 public class CompileEachLineOfProgramOutput {
-  private static final JSSourceFile extern =
-      JSSourceFile.fromCode("externs.js", "");
+  private static final SourceFile extern =
+      SourceFile.fromCode("externs.js", "");
   private static final CompilerOptions options =
       new CompilerOptions();
 
@@ -95,7 +95,7 @@ public class CompileEachLineOfProgramOutput {
   }
 
   public static Result compile(String program, int num) {
-    JSSourceFile input = JSSourceFile.fromCode(""+num, program);
+    SourceFile input = SourceFile.fromCode(""+num, program);
     Compiler compiler = new Compiler();
     Result result = compiler.compile(extern, input, options);
     return result;

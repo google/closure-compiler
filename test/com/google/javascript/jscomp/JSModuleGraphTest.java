@@ -123,16 +123,16 @@ public class JSModuleGraphTest extends TestCase {
   }
 
   public void testCoalesceDuplicateFiles() {
-    A.add(JSSourceFile.fromCode("a.js", ""));
+    A.add(SourceFile.fromCode("a.js", ""));
 
-    B.add(JSSourceFile.fromCode("a.js", ""));
-    B.add(JSSourceFile.fromCode("b.js", ""));
+    B.add(SourceFile.fromCode("a.js", ""));
+    B.add(SourceFile.fromCode("b.js", ""));
 
-    C.add(JSSourceFile.fromCode("b.js", ""));
-    C.add(JSSourceFile.fromCode("c.js", ""));
+    C.add(SourceFile.fromCode("b.js", ""));
+    C.add(SourceFile.fromCode("c.js", ""));
 
-    E.add(JSSourceFile.fromCode("c.js", ""));
-    E.add(JSSourceFile.fromCode("d.js", ""));
+    E.add(SourceFile.fromCode("c.js", ""));
+    E.add(SourceFile.fromCode("d.js", ""));
 
     graph.coalesceDuplicateFiles();
 
@@ -278,7 +278,7 @@ public class JSModuleGraphTest extends TestCase {
     return inputNames;
   }
 
-  private JSSourceFile code(
+  private SourceFile code(
       String sourceName, List<String> provides, List<String> requires) {
     String text = "";
     for (String p : provides) {
@@ -287,7 +287,7 @@ public class JSModuleGraphTest extends TestCase {
     for (String r : requires) {
       text += "goog.require('" + r + "');\n";
     }
-    return JSSourceFile.fromCode(sourceName, text);
+    return SourceFile.fromCode(sourceName, text);
   }
 
   private List<String> provides(String ... strings) {
