@@ -167,3 +167,8 @@ ViewCSS.prototype.getMatchedCSSRules =
 Document.prototype.getCSSCanvasContext =
     function(contextId, name, width, height) {};
 
+/**
+ * @type {string}
+ * @see http://code.google.com/chrome/whitepapers/pagevisibility.html
+ */
+Document.prototype.webkitVisibilityState;
