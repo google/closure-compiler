@@ -37,14 +37,16 @@ class PhaseOptimizer implements CompilerPass {
   // This ordering is computed offline by running with compute_phase_ordering.
   @VisibleForTesting
   static final List<String> OPTIMAL_ORDER = ImmutableList.of(
-     "removeUnreachableCode",
-     "removeUnusedVars",
-     "foldConstants",
      "deadAssignmentsElimination",
-     "inlineVariables",
      "inlineFunctions",
      "removeUnusedPrototypeProperties",
-     "minimizeExitPoints");
+     "removeUnreachableCode",
+     "removeUnusedVars",
+     "minimizeExitPoints",
+     "inlineVariables",
+     "collapseObjectLiterals",
+     "peepholeOptimizations"
+     );
 
   static final int MAX_LOOPS = 100;
   static final String OPTIMIZE_LOOP_ERROR =
