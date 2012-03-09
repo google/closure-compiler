@@ -277,8 +277,9 @@
 
     <!-- Move runtime_type_check.js where RuntimeTypeCheck.java expects it. -->
     <mkdir dir="${classes.dir}/com/google/javascript/jscomp/js" />
-    <copy file="${src.dir}/com/google/javascript/jscomp/js/runtime_type_check.js"
-          todir="${classes.dir}/com/google/javascript/jscomp/js" />
+    <copy todir="${classes.dir}/com/google/javascript/jscomp/js">
+      <fileset dir="${src.dir}/com/google/javascript/jscomp/js" />
+    </copy>
   </target>
 
   <target name="jar-nodeps"

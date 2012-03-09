@@ -631,24 +631,14 @@ public class Node implements Cloneable, Serializable {
   }
 
   public void addChildrenToBack(Node children) {
-    for (Node child = children; child != null; child = child.next) {
-      Preconditions.checkArgument(child.parent == null);
-      child.parent = this;
-    }
-    if (last != null) {
-      last.next = children;
-    }
-    last = children.getLastSibling();
-    if (first == null) {
-      first = children;
-    }
+    addChildrenAfter(children, getLastChild());
   }
 
   /**
    * Add 'child' before 'node'.
    */
   public void addChildBefore(Node newChild, Node node) {
-    Preconditions.checkArgument(node != null,
+    Preconditions.checkArgument(node != null && node.parent == this,
         "The existing child node of the parent should not be null.");
     Preconditions.checkArgument(newChild.next == null,
         "The new child node has siblings.");
@@ -670,13 +660,35 @@ public class Node implements Cloneable, Serializable {
   public void addChildAfter(Node newChild, Node node) {
     Preconditions.checkArgument(newChild.next == null,
         "The new child node has siblings.");
-    Preconditions.checkArgument(newChild.parent == null,
-        "The new child node already has a parent.");
-    newChild.parent = this;
-    newChild.next = node.next;
-    node.next = newChild;
-    if (last == node) {
-        last = newChild;
+    addChildrenAfter(newChild, node);
+  }
+
+  /**
+   * Add all children after 'node'.
+   */
+  public void addChildrenAfter(Node children, Node node) {
+    Preconditions.checkArgument(node == null || node.parent == this);
+    for (Node child = children; child != null; child = child.next) {
+      Preconditions.checkArgument(child.parent == null);
+      child.parent = this;
+    }
+
+    Node lastSibling = children.getLastSibling();
+    if (node != null) {
+      Node oldNext = node.next;
+      node.next = children;
+      lastSibling.next = oldNext;
+      if (node == last) {
+        last = lastSibling;
+      }
+    } else {
+      // Append to the beginning.
+      if (first != null) {
+        lastSibling.next = first;
+      } else {
+        last = lastSibling;
+      }
+      first = children;
     }
   }
 

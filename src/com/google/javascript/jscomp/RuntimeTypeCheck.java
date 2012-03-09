@@ -16,12 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import com.google.common.io.CharStreams;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -29,8 +26,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.TreeSet;
@@ -367,33 +362,24 @@ class RuntimeTypeCheck implements CompilerPass {
   }
 
   private void addBoilerplateCode() {
-    Node js = getBoilerplateCode(compiler, logFunction);
-    compiler.getNodeForCodeInsertion(null).addChildrenToFront(
-        js.removeChildren());
-    compiler.reportCodeChange();
+    Node newNode = compiler.ensureLibraryInjected("runtime_type_check");
+    if (newNode != null && logFunction != null) {
+      // Inject the custom log function.
+      Node logOverride = IR.exprResult(
+          IR.assign(
+              NodeUtil.newQualifiedNameNode(
+                  compiler.getCodingConvention(),
+                  "jscomp.typecheck.log"),
+              NodeUtil.newQualifiedNameNode(
+                  compiler.getCodingConvention(),
+                  logFunction)));
+      newNode.getParent().addChildAfter(logOverride, newNode);
+      compiler.reportCodeChange();
+    }
   }
 
   private Node jsCode(String prop) {
     return NodeUtil.newQualifiedNameNode(
         compiler.getCodingConvention(), "jscomp.typecheck." + prop);
-  }
-
-  @VisibleForTesting
-  static Node getBoilerplateCode(
-      AbstractCompiler compiler, @Nullable String logFunction) {
-    String boilerplateCode;
-    try {
-      boilerplateCode = CharStreams.toString(new InputStreamReader(
-          RuntimeTypeCheck.class.getResourceAsStream(
-          "js/runtime_type_check.js"), Charsets.UTF_8));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    boilerplateCode = boilerplateCode.replace("%%LOG%%",
-        logFunction == null ? "function(warning, expr) {}" : logFunction);
-
-    return Normalize.parseAndNormalizeSyntheticCode(
-        compiler, boilerplateCode, "jscomp_runtimeTypeCheck_");
   }
 }

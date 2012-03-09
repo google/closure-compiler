@@ -340,4 +340,19 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   /** Sets the progress to a certain value in [0,1] range. */
   abstract void setProgress(double progress);
+
+  /**
+   * The subdir js/ contains libraries of code that we inject
+   * at compile-time only if requested by this function.
+   *
+   * Notice that these libraries will almost always create global symbols.
+   *
+   * @param resourceName The name of the library. For example, if "base" is
+   *     is specified, then we load js/base.js
+   * @return If new code was injected, returns the last expression node of the
+   *     library. If the caller needs to add additional code, they should add
+   *     it as the next sibling of this node. If new code was not injected,
+   *     returns null.
+   */
+  abstract Node ensureLibraryInjected(String resourceName);
 }

@@ -20,8 +20,8 @@
  *
  */
 
-var jscomp = jscomp || {};
-jscomp.typecheck = jscomp.typecheck || {};
+/** @const */
+jscomp.typecheck = {};
 
 /**
  * A state variable to suspend checking, to avoid infinite calls
@@ -39,7 +39,7 @@ jscomp.typecheck.suspendChecking = false;
  * @param {string} warning the warning to log.
  * @param {*} expr the faulty expression.
  */
-jscomp.typecheck.log = %%LOG%%;
+jscomp.typecheck.log = function(warning, expr) {};
 
 /**
  * Checks that the given expression matches one of the given checkers,

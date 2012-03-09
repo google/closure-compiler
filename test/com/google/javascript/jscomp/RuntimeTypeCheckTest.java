@@ -243,9 +243,12 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
     compiler.init(Lists.<SourceFile>newArrayList(),
                   Lists.<SourceFile>newArrayList(),
                   new CompilerOptions());
-    Node boilerplateCode =
-        RuntimeTypeCheck.getBoilerplateCode(compiler, null);
-    test(js, compiler.toSource(boilerplateCode) + ";" + expected);
+    Node base = compiler.loadLibraryCode("base");
+    Node typeCheck = compiler.loadLibraryCode("runtime_type_check");
+    test(js,
+         compiler.toSource(base) + ";"
+         + compiler.toSource(typeCheck) + ";"
+         + expected);
   }
 
   @Override

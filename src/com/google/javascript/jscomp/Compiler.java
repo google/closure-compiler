@@ -17,11 +17,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.CharStreams;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
@@ -39,6 +41,7 @@ import com.google.javascript.rhino.head.ErrorReporter;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
@@ -101,6 +104,10 @@ public class Compiler extends AbstractCompiler {
 
   // Warnings guard for filtering warnings.
   private WarningsGuard warningsGuard;
+
+  // Compile-time injected libraries. The node points to the last node of
+  // the library, so code can be inserted after.
+  private final Map<String, Node> injectedLibraries = Maps.newLinkedHashMap();
 
   // Parse tree root nodes
   Node externsRoot;
@@ -2179,6 +2186,7 @@ public class Compiler extends AbstractCompiler {
     private PassConfig.State passConfigState;
     private JSTypeRegistry typeRegistry;
     private AbstractCompiler.LifeCycleStage lifeCycleStage;
+    private Map<String, Node> injectedLibraries;
 
     private IntermediateState() {}
   }
@@ -2196,6 +2204,7 @@ public class Compiler extends AbstractCompiler {
     state.passConfigState = getPassConfig().getIntermediateState();
     state.typeRegistry = typeRegistry;
     state.lifeCycleStage = getLifeCycleStage();
+    state.injectedLibraries = Maps.newLinkedHashMap(injectedLibraries);
 
     return state;
   }
@@ -2214,6 +2223,9 @@ public class Compiler extends AbstractCompiler {
     getPassConfig().setIntermediateState(state.passConfigState);
     typeRegistry = state.typeRegistry;
     setLifeCycleStage(state.lifeCycleStage);
+
+    injectedLibraries.clear();
+    injectedLibraries.putAll(state.injectedLibraries);
   }
 
   @VisibleForTesting
@@ -2357,4 +2369,49 @@ public class Compiler extends AbstractCompiler {
     removeExternInput(new InputId(sourceName));
   }
 
+  @Override
+  Node ensureLibraryInjected(String resourceName) {
+    if (injectedLibraries.containsKey(resourceName)) {
+      return null;
+    }
+
+    // All libraries depend on js/base.js
+    boolean isBase = "base".equals(resourceName);
+    if (!isBase) {
+      ensureLibraryInjected("base");
+    }
+
+    Node firstChild = loadLibraryCode(resourceName).removeChildren();
+    Node lastChild = firstChild.getLastSibling();
+
+    Node parent = getNodeForCodeInsertion(null);
+    if (isBase) {
+      parent.addChildrenToFront(firstChild);
+    } else {
+      parent.addChildrenAfter(
+          firstChild, injectedLibraries.get("base"));
+    }
+    reportCodeChange();
+
+    injectedLibraries.put(resourceName, lastChild);
+    return lastChild;
+  }
+
+  /** Load a library as a resource */
+  @VisibleForTesting
+  Node loadLibraryCode(String resourceName) {
+    String originalCode;
+    try {
+      originalCode = CharStreams.toString(new InputStreamReader(
+          Compiler.class.getResourceAsStream(
+              String.format("js/%s.js", resourceName)),
+          Charsets.UTF_8));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    return Normalize.parseAndNormalizeSyntheticCode(
+        this, originalCode,
+        String.format("jscomp_%s_", resourceName));
+  }
 }
