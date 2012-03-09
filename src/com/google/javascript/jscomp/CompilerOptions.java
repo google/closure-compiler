@@ -1283,8 +1283,10 @@ public class CompilerOptions implements Serializable, Cloneable {
    * whose symbols are not required.
    */
   public void setManageClosureDependencies(boolean newVal) {
-    dependencyOptions.setDependencySorting(newVal);
-    dependencyOptions.setDependencyPruning(newVal);
+    dependencyOptions.setDependencySorting(
+        newVal || dependencyOptions.shouldSortDependencies());
+    dependencyOptions.setDependencyPruning(
+        newVal || dependencyOptions.shouldPruneDependencies());
     dependencyOptions.setMoocherDropping(false);
     manageClosureDependencies = newVal;
   }

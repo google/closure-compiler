@@ -1972,6 +1972,18 @@ public class IntegrationTest extends TestCase {
     );
   }
 
+  public void testSortingOff() {
+    CompilerOptions options = new CompilerOptions();
+    options.closurePass = true;
+    options.setCodingConvention(new ClosureCodingConvention());
+    test(options,
+         new String[] {
+           "goog.require('goog.beer');",
+           "goog.provide('goog.beer');"
+         },
+         ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
+  }
+
   public void testProvideRequireSameFile() throws Exception {
     CompilerOptions options = createCompilerOptions();
     options.setDependencyOptions(

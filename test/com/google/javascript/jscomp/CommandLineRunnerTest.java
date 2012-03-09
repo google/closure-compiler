@@ -499,14 +499,15 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourceSortingOff() {
-    test(new String[] {
+    args.add("--compilation_level=WHITESPACE_ONLY");
+    testSame(
+        new String[] {
           "goog.require('beer');",
           "goog.provide('beer');"
-         }, ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
+        });
   }
 
   public void testSourceSortingOn() {
-    args.add("--manage_closure_dependencies=true");
     test(new String[] {
           "goog.require('beer');",
           "goog.provide('beer');"

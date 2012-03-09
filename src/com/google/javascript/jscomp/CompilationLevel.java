@@ -98,6 +98,7 @@ public enum CompilationLevel {
 
     // Does not call applyBasicCompilationOptions(options) because the call to
     // skipAllCompilerPasses() cannot be easily undone.
+    options.dependencyOptions.setDependencySorting(true);
     options.closurePass = true;
     options.setRenamingPolicy(
         VariableRenamingPolicy.LOCAL, PropertyRenamingPolicy.OFF);
@@ -133,6 +134,7 @@ public enum CompilationLevel {
     // create possible conflicts between multiple diagnostic groups.
 
     // All the safe optimizations.
+    options.dependencyOptions.setDependencySorting(true);
     options.closurePass = true;
     options.foldConstants = true;
     options.coalesceVariableNames = true;

@@ -226,10 +226,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.setTweakProcessing(config.tweakProcessing);
     createDefineOrTweakReplacements(config.tweak, options, true);
 
+    // Dependency options
     options.setManageClosureDependencies(config.manageClosureDependencies);
     if (config.closureEntryPoints.size() > 0) {
       options.setManageClosureDependencies(config.closureEntryPoints);
     }
+
     options.devMode = config.jscompDevMode;
     options.setCodingConvention(config.codingConvention);
     options.setSummaryDetailLevel(config.summaryDetailLevel);

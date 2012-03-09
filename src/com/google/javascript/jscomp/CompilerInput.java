@@ -53,12 +53,9 @@ public class CompilerInput
   private final Set<String> requires = Sets.newHashSet();
   private boolean generatedDependencyInfoFromSource = false;
 
-  // An error manager for handling problems when dealing with
-  // provides/requires.
-  private ErrorManager errorManager;
-
   // An AbstractCompiler for doing parsing.
-  private AbstractCompiler compiler;
+  // We do not want to persist this across serialized state.
+  private transient AbstractCompiler compiler;
 
   public CompilerInput(SourceAst ast) {
     this(ast, ast.getSourceFile().getName(), false);
@@ -145,27 +142,27 @@ public class CompilerInput
     return ast;
   }
 
-  /** Sets an error manager for routing error messages. */
-  public void setErrorManager(ErrorManager errorManager) {
-    this.errorManager = errorManager;
-  }
-
   /** Sets an abstract compiler for doing parsing. */
   public void setCompiler(AbstractCompiler compiler) {
     this.compiler = compiler;
-    setErrorManager(compiler.getErrorManager());
+  }
+
+  private void checkErrorManager() {
+    Preconditions.checkNotNull(compiler,
+        "Expected setCompiler to be called first: " + this);
+    Preconditions.checkNotNull(compiler.getErrorManager(),
+        "Expected compiler to call an error manager: " + this);
   }
 
   /** Gets a list of types depended on by this input. */
   @Override
   public Collection<String> getRequires() {
-    Preconditions.checkNotNull(errorManager,
-        "Expected setErrorManager to be called first");
+    checkErrorManager();
     try {
       regenerateDependencyInfoIfNecessary();
       return Collections.<String>unmodifiableSet(requires);
     } catch (IOException e) {
-      errorManager.report(CheckLevel.ERROR,
+      compiler.getErrorManager().report(CheckLevel.ERROR,
           JSError.make(AbstractCompiler.READ_ERROR, getName()));
       return ImmutableList.<String>of();
     }
@@ -174,13 +171,12 @@ public class CompilerInput
   /** Gets a list of types provided by this input. */
   @Override
   public Collection<String> getProvides() {
-    Preconditions.checkNotNull(errorManager,
-        "Expected setErrorManager to be called first");
+    checkErrorManager();
     try {
       regenerateDependencyInfoIfNecessary();
       return Collections.<String>unmodifiableSet(provides);
     } catch (IOException e) {
-      errorManager.report(CheckLevel.ERROR,
+      compiler.getErrorManager().report(CheckLevel.ERROR,
           JSError.make(AbstractCompiler.READ_ERROR, getName()));
       return ImmutableList.<String>of();
     }
@@ -240,8 +236,9 @@ public class CompilerInput
         // getPathRelativeToClosureBase() here because we're not using
         // this to generate deps files. (We're only using it for
         // symbol dependencies.)
-        DependencyInfo info = (new JsFileParser(errorManager)).parseFile(
-            getName(), getName(), getCode());
+        DependencyInfo info =
+            (new JsFileParser(compiler.getErrorManager())).parseFile(
+                getName(), getName(), getCode());
 
         provides.addAll(info.getProvides());
         requires.addAll(info.getRequires());

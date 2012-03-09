@@ -131,8 +131,10 @@ public class CompilerTest extends TestCase {
     assertEquals(graph.getModuleCount(), 3);
     List<CompilerInput> result = graph.manageDependencies(entryPoints,
         compiler.getInputsForTesting());
-    assertEquals("tonic.js", result.get(0).getName());
-    assertEquals("gin.js", result.get(1).getName());
-    assertEquals("mix.js", result.get(2).getName());
+    assertEquals("[module$tonic]", result.get(0).getName());
+    assertEquals("[module$gin]", result.get(1).getName());
+    assertEquals("tonic.js", result.get(2).getName());
+    assertEquals("gin.js", result.get(3).getName());
+    assertEquals("mix.js", result.get(4).getName());
   }
 }

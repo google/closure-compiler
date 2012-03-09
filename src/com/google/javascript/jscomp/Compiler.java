@@ -479,14 +479,14 @@ public class Compiler extends AbstractCompiler {
     inputsById = new HashMap<InputId, CompilerInput>();
     for (CompilerInput input : externs) {
       InputId id = input.getInputId();
-      CompilerInput previous = inputsById.put(id, input);
+      CompilerInput previous = putCompilerInput(id, input);
       if (previous != null) {
         report(JSError.make(DUPLICATE_EXTERN_INPUT, input.getName()));
       }
     }
     for (CompilerInput input : inputs) {
       InputId id = input.getInputId();
-      CompilerInput previous = inputsById.put(id, input);
+      CompilerInput previous = putCompilerInput(id, input);
       if (previous != null) {
         report(JSError.make(DUPLICATE_INPUT, input.getName()));
       }
@@ -1021,17 +1021,22 @@ public class Compiler extends AbstractCompiler {
       throw new IllegalArgumentException("Conflicting externs name: " + name);
     }
     CompilerInput input = new CompilerInput(ast, true);
-    inputsById.put(input.getInputId(), input);
+    putCompilerInput(input.getInputId(), input);
     externsRoot.addChildToFront(ast.getAstRoot(this));
     externs.add(0, input);
     return input;
+  }
+
+  private CompilerInput putCompilerInput(InputId id, CompilerInput input) {
+    input.setCompiler(this);
+    return inputsById.put(id, input);
   }
 
   /** Add a source input dynamically. Intended for incremental compilation. */
   void addIncrementalSourceAst(JsAst ast) {
     InputId id = ast.getInputId();
     Preconditions.checkState(getInput(id) == null, "Duplicate input %s", id.getIdName());
-    inputsById.put(id, new CompilerInput(ast));
+    putCompilerInput(id, new CompilerInput(ast));
   }
 
   /**
@@ -1059,7 +1064,7 @@ public class Compiler extends AbstractCompiler {
     }
 
     CompilerInput newInput = new CompilerInput(ast);
-    inputsById.put(ast.getInputId(), newInput);
+    putCompilerInput(ast.getInputId(), newInput);
 
     JSModule module = oldInput.getModule();
     if (module != null) {
@@ -1108,7 +1113,7 @@ public class Compiler extends AbstractCompiler {
       modules.get(0).add(newInput);
     }
 
-    inputsById.put(ast.getInputId(), newInput);
+    putCompilerInput(ast.getInputId(), newInput);
 
     return true;
   }
@@ -1268,11 +1273,14 @@ public class Compiler extends AbstractCompiler {
         processAMDAndCommonJSModules();
       }
 
-      // Check if the sources need to be re-ordered.
-      if (options.dependencyOptions.needsManagement()) {
-        for (CompilerInput input : inputs) {
-          input.setCompiler(this);
+      // Check if inputs need to be rebuilt from modules.
+      boolean staleInputs = false;
 
+      // Check if the sources need to be re-ordered.
+      if (options.dependencyOptions.needsManagement() &&
+          !options.skipAllPasses &&
+          options.closurePass) {
+        for (CompilerInput input : inputs) {
           // Forward-declare all the provided types, so that they
           // are not flagged even if they are dropped from the process.
           for (String provide : input.getProvides()) {
@@ -1284,6 +1292,7 @@ public class Compiler extends AbstractCompiler {
           inputs =
               (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
               .manageDependencies(options.dependencyOptions, inputs);
+          staleInputs = true;
         } catch (CircularDependencyException e) {
           report(JSError.make(
               JSModule.CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));
@@ -1303,8 +1312,6 @@ public class Compiler extends AbstractCompiler {
         }
       }
 
-      // Check if inputs need to be rebuilt from modules.
-      boolean staleInputs = false;
       for (CompilerInput input : inputs) {
         Node n = input.getAstRoot(this);
 
@@ -1446,7 +1453,7 @@ public class Compiler extends AbstractCompiler {
   Node parseSyntheticCode(String js) {
     CompilerInput input = new CompilerInput(
         SourceFile.fromCode(" [synthetic:" + (++syntheticCodeId) + "] ", js));
-    inputsById.put(input.getInputId(), input);
+    putCompilerInput(input.getInputId(), input);
     return input.getAstRoot(this);
   }
 
@@ -1479,7 +1486,7 @@ public class Compiler extends AbstractCompiler {
     if (inputsById == null) {
       inputsById = Maps.newHashMap();
     }
-    inputsById.put(input.getInputId(), input);
+    putCompilerInput(input.getInputId(), input);
     return input.getAstRoot(this);
   }
 
