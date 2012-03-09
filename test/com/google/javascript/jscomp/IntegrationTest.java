@@ -1972,6 +1972,18 @@ public class IntegrationTest extends TestCase {
     );
   }
 
+  public void testProvideRequireSameFile() throws Exception {
+    CompilerOptions options = createCompilerOptions();
+    options.setDependencyOptions(
+        new DependencyOptions()
+        .setDependencySorting(true));
+    options.closurePass = true;
+    test(
+        options,
+        "goog.provide('x');\ngoog.require('x');",
+        "var x = {};");
+  }
+
   private void testSame(CompilerOptions options, String original) {
     testSame(options, new String[] { original });
   }

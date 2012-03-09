@@ -83,7 +83,7 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
     for (INPUT input : inputs) {
       for (String req : input.getRequires()) {
         INPUT dep = provideMap.get(req);
-        if (dep != null) {
+        if (dep != null && dep != input) {
           deps.put(input, dep);
         }
       }

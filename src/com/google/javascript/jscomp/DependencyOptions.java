@@ -50,9 +50,11 @@ public class DependencyOptions implements Serializable {
    * If true, we will sort the input files based on dependency information
    * in them. Otherwise, we will use the order of files specified
    * on the command-line.
+   * @return this for easy building.
    */
-  public void setDependencySorting(boolean enabled) {
+  public DependencyOptions setDependencySorting(boolean enabled) {
     this.sortDependencies = enabled;
+    return this;
   }
 
   /**
@@ -64,9 +66,12 @@ public class DependencyOptions implements Serializable {
    *
    * This does not affect how we handle files that do not provide symbols.
    * See setMoocherDropping for information on how these are handled.
+   *
+   * @return this for easy chaining.
    */
-  public void setDependencyPruning(boolean enabled) {
+  public DependencyOptions setDependencyPruning(boolean enabled) {
     this.pruneDependencies = enabled;
+    return this;
   }
 
   /**
@@ -84,9 +89,12 @@ public class DependencyOptions implements Serializable {
    *
    * Notice that this option only makes sense if dependency pruning is on,
    * and a set of entry points is specified.
+   *
+   * @return this for easy chaining.
    */
-  public void setMoocherDropping(boolean enabled) {
+  public DependencyOptions setMoocherDropping(boolean enabled) {
     this.dropMoochers = enabled;
+    return this;
   }
 
   /**

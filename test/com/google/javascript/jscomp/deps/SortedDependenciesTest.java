@@ -119,20 +119,19 @@ public class SortedDependenciesTest extends TestCase {
       new SortedDependencies<SimpleDependencyInfo>(
           Lists.newArrayList(a, b, c));
       fail("expected exception");
-    } catch (CircularDependencyException e) {}
-  }
-
-  public void testSort4() {
-    SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "a", "a", provides("a"), requires("a"));
-
-    try {
-      new SortedDependencies<SimpleDependencyInfo>(
-          Lists.newArrayList(a));
-      fail("expected exception");
-    } catch (CircularDependencyException e){
+    } catch (CircularDependencyException e) {
       assertEquals("a -> a", e.getMessage());
     }
+  }
+
+  public void testSort4() throws Exception {
+    // Check the degenerate case.
+    SimpleDependencyInfo a = new SimpleDependencyInfo(
+        "a", "a", provides("a"), requires("a"));
+    assertSortedDeps(
+        ImmutableList.of(a),
+        ImmutableList.of(a),
+        ImmutableList.of(a));
   }
 
   public void testSort5() throws Exception {

@@ -861,4 +861,8 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
     test("goog.provide('x.y.z'); /** @typedef {number} */ x.y.z;",
          "var x = {}; x.y = {}; x.y.z;");
   }
+
+  public void testProvideRequireSameFile() {
+    test("goog.provide('x');\ngoog.require('x');", "var x = {};");
+  }
 }
