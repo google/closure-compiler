@@ -21,7 +21,7 @@
  */
 
 /** @const */
-jscomp.typecheck = {};
+$jscomp.typecheck = {};
 
 /**
  * A state variable to suspend checking, to avoid infinite calls
@@ -29,7 +29,7 @@ jscomp.typecheck = {};
  *
  * @type {boolean}
  */
-jscomp.typecheck.suspendChecking = false;
+$jscomp.typecheck.suspendChecking = false;
 
 
 /**
@@ -39,38 +39,38 @@ jscomp.typecheck.suspendChecking = false;
  * @param {string} warning the warning to log.
  * @param {*} expr the faulty expression.
  */
-jscomp.typecheck.log = function(warning, expr) {};
+$jscomp.typecheck.log = function(warning, expr) {};
 
 /**
  * Checks that the given expression matches one of the given checkers,
  * logging if not, and returning the expression regardless.
  *
  * @param {*} expr the expression to check.
- * @param {!Array.<!jscomp.typecheck.Checker>} checkers the checkers to
+ * @param {!Array.<!$jscomp.typecheck.Checker>} checkers the checkers to
  *     use in checking, one of these has to match for checking to succeed.
  * #return {*} the given expression back.
  */
-jscomp.typecheck.checkType = function(expr, checkers) {
-  if (jscomp.typecheck.suspendChecking) {
+$jscomp.typecheck.checkType = function(expr, checkers) {
+  if ($jscomp.typecheck.suspendChecking) {
     return expr;
   }
-  jscomp.typecheck.suspendChecking = true;
+  $jscomp.typecheck.suspendChecking = true;
 
   for (var i = 0; i < checkers.length; i++) {
     var checker = checkers[i];
     var ok = checker.check(expr);
     if (ok) {
-      jscomp.typecheck.suspendChecking = false;
+      $jscomp.typecheck.suspendChecking = false;
       return expr;
     }
   }
 
-  var warning = jscomp.typecheck.prettify_(expr) + ' not in ' +
+  var warning = $jscomp.typecheck.prettify_(expr) + ' not in ' +
       checkers.join(' ');
 
-  jscomp.typecheck.log(warning, expr);
+  $jscomp.typecheck.log(warning, expr);
 
-  jscomp.typecheck.suspendChecking = false;
+  $jscomp.typecheck.suspendChecking = false;
   return expr;
 };
 
@@ -82,8 +82,8 @@ jscomp.typecheck.checkType = function(expr, checkers) {
  * @return {string} a string representation of the given expression.
  * @private
  */
-jscomp.typecheck.prettify_ = function(expr) {
-  return jscomp.typecheck.getClassName_(expr) || String(expr);
+$jscomp.typecheck.prettify_ = function(expr) {
+  return $jscomp.typecheck.getClassName_(expr) || String(expr);
 };
 
 /**
@@ -94,7 +94,7 @@ jscomp.typecheck.prettify_ = function(expr) {
  *     expression is not an object.
  * @private
  */
-jscomp.typecheck.getClassName_ = function(expr) {
+$jscomp.typecheck.getClassName_ = function(expr) {
   var className = void 0;
   if (typeof expr == 'object' && expr && expr.constructor) {
     className = expr.constructor.name;
@@ -112,7 +112,7 @@ jscomp.typecheck.getClassName_ = function(expr) {
  *
  * @interface
  */
-jscomp.typecheck.Checker = function() {};
+$jscomp.typecheck.Checker = function() {};
 
 
 /**
@@ -121,7 +121,7 @@ jscomp.typecheck.Checker = function() {};
  * @param {*} expr the expression to check.
  * @return {boolean} whether the given expression matches this checker.
  */
-jscomp.typecheck.Checker.prototype.check = function(expr) {};
+$jscomp.typecheck.Checker.prototype.check = function(expr) {};
 
 
 
@@ -130,10 +130,10 @@ jscomp.typecheck.Checker.prototype.check = function(expr) {};
  *
  * @param {string} type the value type (e.g. 'number') of this checker.
  * @constructor
- * @implements {jscomp.typecheck.Checker}
+ * @implements {$jscomp.typecheck.Checker}
  * @private
  */
-jscomp.typecheck.ValueChecker_ = function(type) {
+$jscomp.typecheck.ValueChecker_ = function(type) {
   /**
    * The value type of this checker.
    * @type {string}
@@ -144,13 +144,13 @@ jscomp.typecheck.ValueChecker_ = function(type) {
 
 
 /** @inheritDoc */
-jscomp.typecheck.ValueChecker_.prototype.check = function(expr) {
+$jscomp.typecheck.ValueChecker_.prototype.check = function(expr) {
   return typeof(expr) == this.type_;
 };
 
 
 /** @inheritDoc */
-jscomp.typecheck.ValueChecker_.prototype.toString = function() {
+$jscomp.typecheck.ValueChecker_.prototype.toString = function() {
   return 'value(' + this.type_ + ')';
 };
 
@@ -160,20 +160,20 @@ jscomp.typecheck.ValueChecker_.prototype.toString = function() {
  * A checker class for null values.
  *
  * @constructor
- * @implements {jscomp.typecheck.Checker}
+ * @implements {$jscomp.typecheck.Checker}
  * @private
  */
-jscomp.typecheck.NullChecker_ = function() {};
+$jscomp.typecheck.NullChecker_ = function() {};
 
 
 /** @inheritDoc */
-jscomp.typecheck.NullChecker_.prototype.check = function(expr) {
+$jscomp.typecheck.NullChecker_.prototype.check = function(expr) {
   return expr === null;
 };
 
 
 /** @inheritDoc */
-jscomp.typecheck.NullChecker_.prototype.toString = function() {
+$jscomp.typecheck.NullChecker_.prototype.toString = function() {
   return 'value(null)';
 };
 
@@ -195,10 +195,10 @@ jscomp.typecheck.NullChecker_.prototype.toString = function() {
  *
  * @param {string} className the name of the extern class to check.
  * @constructor
- * @implements {jscomp.typecheck.Checker}
+ * @implements {$jscomp.typecheck.Checker}
  * @private
  */
-jscomp.typecheck.ExternClassChecker_ = function(className) {
+$jscomp.typecheck.ExternClassChecker_ = function(className) {
   /**
    * The name of the extern class to check.
    * @type {string}
@@ -213,7 +213,7 @@ jscomp.typecheck.ExternClassChecker_ = function(className) {
  *
  * @type {!Array.<!Window>}
  */
-jscomp.typecheck.ExternClassChecker_.windows = [];
+$jscomp.typecheck.ExternClassChecker_.windows = [];
 
 
 /**
@@ -221,29 +221,29 @@ jscomp.typecheck.ExternClassChecker_.windows = [];
  *
  * @type {!Array.<!Function>}
  */
-jscomp.typecheck.ExternClassChecker_.oldOpenFuns = [];
+$jscomp.typecheck.ExternClassChecker_.oldOpenFuns = [];
 
 
 /**
  * Redefines the open method on the given window, adding tracking.
  *
- * @param {!Window} win the window to track.
+ * @param {!Object} win the window to track.
  */
-jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow = function(win) {
+$jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow = function(win) {
   if (win.tracked) {
     return;
   }
   win.tracked = true;
 
-  var key = jscomp.typecheck.ExternClassChecker_.oldOpenFuns.length;
+  var key = $jscomp.typecheck.ExternClassChecker_.oldOpenFuns.length;
 
-  jscomp.typecheck.ExternClassChecker_.oldOpenFuns.push(win.open);
-  jscomp.typecheck.ExternClassChecker_.windows.push(win);
+  $jscomp.typecheck.ExternClassChecker_.oldOpenFuns.push(win.open);
+  $jscomp.typecheck.ExternClassChecker_.windows.push(win);
 
   win.open = function() {
-    var w = jscomp.typecheck.ExternClassChecker_.oldOpenFuns[key].apply(
+    var w = $jscomp.typecheck.ExternClassChecker_.oldOpenFuns[key].apply(
         this, arguments);
-    jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow(w);
+    $jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow(w);
     return w;
   };
 };
@@ -255,29 +255,29 @@ jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow = function(win) {
  * @return {!Object}
  * @private
  */
-jscomp.typecheck.ExternClassChecker_.getGlobalThis_ = function() {
+$jscomp.typecheck.ExternClassChecker_.getGlobalThis_ = function() {
   return (function() { return this; }).call(null);
 };
 
 
 // Install listeners on the global 'this' object.
 (function() {
-  var globalThis = jscomp.typecheck.ExternClassChecker_.getGlobalThis_();
-  jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow(globalThis);
+  var globalThis = $jscomp.typecheck.ExternClassChecker_.getGlobalThis_();
+  $jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow(globalThis);
 
   var theTop = globalThis['top'];
   if (theTop) {
-    jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow(theTop);
+    $jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow(theTop);
   }
 })();
 
 
 /** @inheritDoc */
-jscomp.typecheck.ExternClassChecker_.prototype.check = function(expr) {
+$jscomp.typecheck.ExternClassChecker_.prototype.check = function(expr) {
   var classTypeDefined = [ false ];
-  for (var i = 0; i < jscomp.typecheck.ExternClassChecker_.windows.length;
+  for (var i = 0; i < $jscomp.typecheck.ExternClassChecker_.windows.length;
       i++) {
-    var w = jscomp.typecheck.ExternClassChecker_.windows[i];
+    var w = $jscomp.typecheck.ExternClassChecker_.windows[i];
     if (this.checkWindow_(w, expr, classTypeDefined)) {
       return true;
     }
@@ -287,7 +287,7 @@ jscomp.typecheck.ExternClassChecker_.prototype.check = function(expr) {
 
 
 /** @inheritDoc */
-jscomp.typecheck.ExternClassChecker_.prototype.toString = function() {
+$jscomp.typecheck.ExternClassChecker_.prototype.toString = function() {
   return 'ext_class(' + this.className_ + ')';
 };
 
@@ -303,7 +303,7 @@ jscomp.typecheck.ExternClassChecker_.prototype.toString = function() {
  * @return true if the given expression is an instance of this class.
  * @private
  */
-jscomp.typecheck.ExternClassChecker_.prototype.checkWindow_ =
+$jscomp.typecheck.ExternClassChecker_.prototype.checkWindow_ =
     function(w, expr, classTypeDefined) {
   var classType = w[this.className_];
   classTypeDefined[0] |= !!classType;
@@ -325,10 +325,10 @@ jscomp.typecheck.ExternClassChecker_.prototype.checkWindow_ =
  *
  * @param {string} className name of the class to check.
  * @constructor
- * @implements {jscomp.typecheck.Checker}
+ * @implements {$jscomp.typecheck.Checker}
  * @private
  */
-jscomp.typecheck.ClassChecker_ = function(className) {
+$jscomp.typecheck.ClassChecker_ = function(className) {
 
   /**
    * The name of the class to check.
@@ -340,13 +340,13 @@ jscomp.typecheck.ClassChecker_ = function(className) {
 
 
 /** @inheritDoc */
-jscomp.typecheck.ClassChecker_.prototype.check = function(expr) {
+$jscomp.typecheck.ClassChecker_.prototype.check = function(expr) {
   return !!(expr && expr['instance_of__' + this.className_]);
 };
 
 
 /** @inheritDoc */
-jscomp.typecheck.ClassChecker_.prototype.toString = function() {
+$jscomp.typecheck.ClassChecker_.prototype.toString = function() {
   return 'class(' + this.className_ + ')';
 };
 
@@ -357,10 +357,10 @@ jscomp.typecheck.ClassChecker_.prototype.toString = function() {
  *
  * @param {string} interfaceName name of the interface to check.
  * @constructor
- * @implements {jscomp.typecheck.Checker}
+ * @implements {$jscomp.typecheck.Checker}
  * @private
  */
-jscomp.typecheck.InterfaceChecker_ = function(interfaceName) {
+$jscomp.typecheck.InterfaceChecker_ = function(interfaceName) {
 
   /**
    * The name of the interface to check.
@@ -372,13 +372,13 @@ jscomp.typecheck.InterfaceChecker_ = function(interfaceName) {
 
 
 /** @inheritDoc */
-jscomp.typecheck.InterfaceChecker_.prototype.check = function(expr) {
+$jscomp.typecheck.InterfaceChecker_.prototype.check = function(expr) {
   return !!(expr && expr['implements__' + this.interfaceName_]);
 };
 
 
 /** @inheritDoc */
-jscomp.typecheck.InterfaceChecker_.prototype.toString = function() {
+$jscomp.typecheck.InterfaceChecker_.prototype.toString = function() {
   return 'interface(' + this.interfaceName_ + ')';
 };
 
@@ -387,19 +387,19 @@ jscomp.typecheck.InterfaceChecker_.prototype.toString = function() {
 /**
  * A checker for null values.
  *
- * #type {!jscomp.typecheck.Checker} a checker.
+ * #type {!$jscomp.typecheck.Checker} a checker.
  */
-jscomp.typecheck.nullChecker = new jscomp.typecheck.NullChecker_();
+$jscomp.typecheck.nullChecker = new $jscomp.typecheck.NullChecker_();
 
 
 /**
  * Creates a checker for the given value type (excluding the null type).
  *
  * @param {string} type the value type.
- * @return {!jscomp.typecheck.Checker} a checker.
+ * @return {!$jscomp.typecheck.Checker} a checker.
  */
-jscomp.typecheck.valueChecker = function(type) {
-  return new jscomp.typecheck.ValueChecker_(type);
+$jscomp.typecheck.valueChecker = function(type) {
+  return new $jscomp.typecheck.ValueChecker_(type);
 };
 
 
@@ -407,10 +407,10 @@ jscomp.typecheck.valueChecker = function(type) {
  * Creates a checker for the given extern class name.
  *
  * @param {string} className the class name.
- * @return {!jscomp.typecheck.Checker} a checker.
+ * @return {!$jscomp.typecheck.Checker} a checker.
  */
-jscomp.typecheck.externClassChecker = function(className) {
-  return new jscomp.typecheck.ExternClassChecker_(className);
+$jscomp.typecheck.externClassChecker = function(className) {
+  return new $jscomp.typecheck.ExternClassChecker_(className);
 };
 
 
@@ -418,10 +418,10 @@ jscomp.typecheck.externClassChecker = function(className) {
  * Creates a checker for the given user-defined class.
  *
  * @param {string} className the class name.
- * @return {!jscomp.typecheck.Checker} a checker.
+ * @return {!$jscomp.typecheck.Checker} a checker.
  */
-jscomp.typecheck.classChecker = function(className) {
-  return new jscomp.typecheck.ClassChecker_(className);
+$jscomp.typecheck.classChecker = function(className) {
+  return new $jscomp.typecheck.ClassChecker_(className);
 };
 
 
@@ -429,8 +429,8 @@ jscomp.typecheck.classChecker = function(className) {
  * Creates a checker for the given user-defined interface.
  *
  * @param {string} interfaceName the interface name.
- * @return {!jscomp.typecheck.Checker} a checker.
+ * @return {!$jscomp.typecheck.Checker} a checker.
  */
-jscomp.typecheck.interfaceChecker = function(interfaceName) {
-  return new jscomp.typecheck.InterfaceChecker_(interfaceName);
+$jscomp.typecheck.interfaceChecker = function(interfaceName) {
+  return new $jscomp.typecheck.InterfaceChecker_(interfaceName);
 };

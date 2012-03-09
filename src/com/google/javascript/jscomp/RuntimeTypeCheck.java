@@ -369,7 +369,7 @@ class RuntimeTypeCheck implements CompilerPass {
           IR.assign(
               NodeUtil.newQualifiedNameNode(
                   compiler.getCodingConvention(),
-                  "jscomp.typecheck.log"),
+                  "$jscomp.typecheck.log"),
               NodeUtil.newQualifiedNameNode(
                   compiler.getCodingConvention(),
                   logFunction)));
@@ -380,6 +380,6 @@ class RuntimeTypeCheck implements CompilerPass {
 
   private Node jsCode(String prop) {
     return NodeUtil.newQualifiedNameNode(
-        compiler.getCodingConvention(), "jscomp.typecheck." + prop);
+        compiler.getCodingConvention(), "$jscomp.typecheck." + prop);
   }
 }

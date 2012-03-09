@@ -39,8 +39,8 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
   public void testValue() {
     testChecks("/** @param {number} i */ function f(i) {}",
         "function f(i) {" +
-        "  jscomp.typecheck.checkType(i, " +
-        "      [jscomp.typecheck.valueChecker('number')]);" +
+        "  $jscomp.typecheck.checkType(i, " +
+        "      [$jscomp.typecheck.valueChecker('number')]);" +
         "}");
   }
 
@@ -49,8 +49,8 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
     // to ensure the immutable annotations are preserved.
     testChecks("/** @param {number} CONST */ function f(CONST) {}",
         "function f(CONST) {" +
-        "  jscomp.typecheck.checkType(CONST, " +
-        "      [jscomp.typecheck.valueChecker('number')]);" +
+        "  $jscomp.typecheck.checkType(CONST, " +
+        "      [$jscomp.typecheck.valueChecker('number')]);" +
         "}");
   }
 
@@ -58,42 +58,42 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
     testChecks("/** @param {number} i */ function f(i) { function g() {} }",
         "function f(i) {" +
         "  function g() {}" +
-        "  jscomp.typecheck.checkType(i, " +
-        "      [jscomp.typecheck.valueChecker('number')]);" +
+        "  $jscomp.typecheck.checkType(i, " +
+        "      [$jscomp.typecheck.valueChecker('number')]);" +
         "}");
   }
 
   public void testNullValue() {
     testChecks("/** @param {null} i */ function f(i) {}",
         "function f(i) {" +
-        "  jscomp.typecheck.checkType(i, [jscomp.typecheck.nullChecker]);" +
+        "  $jscomp.typecheck.checkType(i, [$jscomp.typecheck.nullChecker]);" +
         "}");
   }
 
   public void testValues() {
     testChecks("/** @param {number} i\n@param {string} j*/ function f(i, j) {}",
         "function f(i, j) {" +
-        "  jscomp.typecheck.checkType(i, " +
-        "      [jscomp.typecheck.valueChecker('number')]);" +
-        "  jscomp.typecheck.checkType(j, " +
-        "      [jscomp.typecheck.valueChecker('string')]);" +
+        "  $jscomp.typecheck.checkType(i, " +
+        "      [$jscomp.typecheck.valueChecker('number')]);" +
+        "  $jscomp.typecheck.checkType(j, " +
+        "      [$jscomp.typecheck.valueChecker('string')]);" +
         "}");
   }
 
   public void testSkipParamOK() {
     testChecks("/** @param {*} i\n@param {string} j*/ function f(i, j) {}",
         "function f(i, j) {" +
-        "  jscomp.typecheck.checkType(j, " +
-        "      [jscomp.typecheck.valueChecker('string')]);" +
+        "  $jscomp.typecheck.checkType(j, " +
+        "      [$jscomp.typecheck.valueChecker('string')]);" +
         "}");
   }
 
   public void testUnion() {
     testChecks("/** @param {number|string} x */ function f(x) {}",
         "function f(x) {" +
-        "  jscomp.typecheck.checkType(x, [" +
-        "      jscomp.typecheck.valueChecker('number'), " +
-        "      jscomp.typecheck.valueChecker('string')" +
+        "  $jscomp.typecheck.checkType(x, [" +
+        "      $jscomp.typecheck.valueChecker('number'), " +
+        "      $jscomp.typecheck.valueChecker('string')" +
         "]);" +
         "}");
   }
@@ -105,16 +105,16 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
   public void testReturn() {
     testChecks("/** @return {string} */ function f() { return 'x'; }",
         "function f() {" +
-        "  return jscomp.typecheck.checkType('x', " +
-        "      [jscomp.typecheck.valueChecker('string')]);" +
+        "  return $jscomp.typecheck.checkType('x', " +
+        "      [$jscomp.typecheck.valueChecker('string')]);" +
         "}");
   }
 
   public void testNativeClass() {
     testChecks("/** @param {!String} x */ function f(x) {}",
         "function f(x) {" +
-        "  jscomp.typecheck.checkType(x, " +
-        "      [jscomp.typecheck.externClassChecker('String')]);" +
+        "  $jscomp.typecheck.checkType(x, " +
+        "      [$jscomp.typecheck.externClassChecker('String')]);" +
         "}");
   }
 
@@ -124,8 +124,8 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
         "var goog = {}; goog.Foo = function() {};" +
         "goog.Foo.prototype['instance_of__goog.Foo'] = true;" +
         "function f(x) {" +
-        "  jscomp.typecheck.checkType(x, " +
-        "    [jscomp.typecheck.classChecker('goog.Foo')]);" +
+        "  $jscomp.typecheck.checkType(x, " +
+        "    [$jscomp.typecheck.classChecker('goog.Foo')]);" +
         "}");
   }
 
@@ -148,8 +148,8 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
         "/** @param {!I} i */function f(i) {}",
         "function I() {}" +
         "function f(i) {" +
-        "  jscomp.typecheck.checkType(i, " +
-        "    [jscomp.typecheck.interfaceChecker('I')])" +
+        "  $jscomp.typecheck.checkType(i, " +
+        "    [$jscomp.typecheck.interfaceChecker('I')])" +
         "}");
   }
 
@@ -159,8 +159,8 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
         "/** @constructor\n@implements {I} */function C() {}",
         "function I() {}" +
         "function f(i) {" +
-        "  jscomp.typecheck.checkType(i, " +
-        "      [jscomp.typecheck.interfaceChecker('I')])" +
+        "  $jscomp.typecheck.checkType(i, " +
+        "      [$jscomp.typecheck.interfaceChecker('I')])" +
         "}" +
         "function C() {}" +
         "C.prototype['instance_of__C'] = true;" +
@@ -175,8 +175,8 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
         "function I() {}" +
         "function J() {}" +
         "function f(i) {" +
-        "  jscomp.typecheck.checkType(i, " +
-        "      [jscomp.typecheck.interfaceChecker('I')])" +
+        "  $jscomp.typecheck.checkType(i, " +
+        "      [$jscomp.typecheck.interfaceChecker('I')])" +
         "}" +
         "function C() {}" +
         "C.prototype['instance_of__C'] = true;" +
@@ -191,8 +191,8 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
         "C.prototype.f = function() {};",
         "function I() {}" +
         "function f(i) {" +
-        "  jscomp.typecheck.checkType(i, " +
-        "      [jscomp.typecheck.interfaceChecker('I')])" +
+        "  $jscomp.typecheck.checkType(i, " +
+        "      [$jscomp.typecheck.interfaceChecker('I')])" +
         "}" +
         "function C() {}" +
         "C.prototype['instance_of__C'] = true;" +
@@ -211,8 +211,8 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
         "var goog = {}; goog.inherits = function(x, y) {};" +
         "function I() {}" +
         "function f(i) {" +
-        "  jscomp.typecheck.checkType(i, " +
-        "      [jscomp.typecheck.interfaceChecker('I')])" +
+        "  $jscomp.typecheck.checkType(i, " +
+        "      [$jscomp.typecheck.interfaceChecker('I')])" +
         "}" +
         "function B() {}" +
         "B.prototype['instance_of__B'] = true;" +

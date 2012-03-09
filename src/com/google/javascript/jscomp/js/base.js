@@ -25,4 +25,4 @@
 // Because this is injected at compile-time, we don't annotate
 // it as a constant, because that would just be extra work for
 // the compiler.
-var jscomp = {};
+var $jscomp = {};
