@@ -1387,7 +1387,7 @@ public class Compiler extends AbstractCompiler {
    * process and creates JSModules and the corresponding dependency tree
    * on the way.
    */
-  private void processAMDAndCommonJSModules() {
+  void processAMDAndCommonJSModules() {
     Map<String, JSModule> modulesByName = Maps.newLinkedHashMap();
     Map<CompilerInput, JSModule> modulesByInput = Maps.newLinkedHashMap();
     // TODO(nicksantos): Refactor module dependency resolution to work nicely
@@ -1423,7 +1423,12 @@ public class Compiler extends AbstractCompiler {
       for (JSModule module : modules) {
         for (CompilerInput input : module.getInputs()) {
           for (String require : input.getRequires()) {
-            module.addDependency(modulesByName.get(require));
+            JSModule dependency = modulesByName.get(require);
+            if (dependency == null) {
+              report(JSError.make(MISSING_ENTRY_ERROR, require));
+            } else {
+              module.addDependency(dependency);
+            }
           }
         }
       }
