@@ -316,6 +316,7 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_CONSISTIDGEN  = 0x00040000;
   // @idGenerator
   private static final int MASK_IDGEN         = 0x00080000;
+  private static final int MASK_EXPOSE        = 0x00100000; // @expose
 
   // 3 bit type field stored in the top 3 bits of the most significant
   // nibble.
@@ -383,6 +384,10 @@ public class JSDocInfo implements Serializable {
 
   void setExport(boolean value) {
     setFlag(value, MASK_EXPORT);
+  }
+
+  void setExpose(boolean value) {
+    setFlag(value, MASK_EXPOSE);
   }
 
   void setNoShadow(boolean value) {
@@ -516,6 +521,14 @@ public class JSDocInfo implements Serializable {
    */
   public boolean isExport() {
     return getFlag(MASK_EXPORT);
+  }
+
+  /**
+   * Returns whether the {@code @expose} annotation is present on this
+   * {@link JSDocInfo}.
+   */
+  public boolean isExpose() {
+    return getFlag(MASK_EXPOSE);
   }
 
   /**

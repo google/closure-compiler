@@ -834,6 +834,20 @@ final public class JSDocInfoBuilder {
 
   /**
    * Records that the {@link JSDocInfo} being built should have its
+   * {@link JSDocInfo#isExpose()} flag set to {@code true}.
+   */
+  public boolean recordExpose() {
+    if (!currentInfo.isExpose()) {
+      currentInfo.setExpose(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Records that the {@link JSDocInfo} being built should have its
    * {@link JSDocInfo#isNoShadow()} flag set to {@code true}.
    */
   public boolean recordNoShadow() {

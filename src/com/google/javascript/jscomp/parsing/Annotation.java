@@ -36,6 +36,7 @@ enum Annotation {
   EXTENDS,
   EXTERNS,
   EXPORT,
+  EXPOSE,
   FILE_OVERVIEW,
   HIDDEN,
   IDGENERATOR,
@@ -84,6 +85,7 @@ enum Annotation {
       put("desc", Annotation.DESC).
       put("enum", Annotation.ENUM).
       put("export", Annotation.EXPORT).
+      put("expose", Annotation.EXPOSE).
       put("extends", Annotation.EXTENDS).
       put("externs", Annotation.EXTERNS).
       put("fileoverview", Annotation.FILE_OVERVIEW).

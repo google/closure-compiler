@@ -389,6 +389,14 @@ public final class JsDocInfoParser {
                   token = eatTokensUntilEOL();
                   continue retry;
 
+                case EXPOSE:
+                  if (!jsdocBuilder.recordExpose()) {
+                    parser.addParserWarning("msg.jsdoc.expose",
+                        stream.getLineno(), stream.getCharno());
+                  }
+                  token = eatTokensUntilEOL();
+                  continue retry;
+
                 case EXTERNS:
                   if (!jsdocBuilder.recordExterns()) {
                     parser.addParserWarning("msg.jsdoc.externs",

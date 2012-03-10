@@ -1409,6 +1409,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@export\n@export*/", "extra @export tag");
   }
 
+  public void testParseExpose1() throws Exception {
+    assertTrue(parse("@expose*/").isExpose());
+  }
+
+  public void testParseExpose2() throws Exception {
+    parse("@expose\n@expose*/", "extra @expose tag");
+  }
+
   public void testParseExterns1() throws Exception {
     assertTrue(parseFileOverview("@externs*/").isExterns());
   }
