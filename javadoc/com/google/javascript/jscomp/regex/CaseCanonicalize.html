@@ -1,0 +1,406 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<TITLE>
+CaseCanonicalize (Compiler)
+</TITLE>
+
+
+<LINK REL ="stylesheet" TYPE="text/css" HREF="../../../../../dev_javadoc.css" TITLE="Style">
+
+<SCRIPT type="text/javascript">
+function windowTitle()
+{
+    if (location.href.indexOf('is-external=true') == -1) {
+        parent.document.title="CaseCanonicalize (Compiler)";
+    }
+}
+</SCRIPT>
+<NOSCRIPT>
+</NOSCRIPT>
+
+</HEAD>
+
+<BODY BGCOLOR="white" onload="windowTitle();">
+<HR>
+
+
+<!-- ========= START OF TOP NAVBAR ======= -->
+<A NAME="navbar_top"><!-- --></A>
+<A HREF="#skip-navbar_top" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_top_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;PREV CLASS&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/regex/RegExpTree.html" title="class in com.google.javascript.jscomp.regex"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../../index.html?com/google/javascript/jscomp/regex/CaseCanonicalize.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="CaseCanonicalize.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_top"></A>
+<!-- ========= END OF TOP NAVBAR ========= -->
+
+<HR>
+<!-- ======== START OF CLASS DATA ======== -->
+<H2>
+<FONT SIZE="-1">
+com.google.javascript.jscomp.regex</FONT>
+<BR>
+Class CaseCanonicalize</H2>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
+  <IMG SRC="../../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.regex.CaseCanonicalize</B>
+</PRE>
+<HR>
+<DL>
+<DT><PRE>public final class <B>CaseCanonicalize</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
+</PRE>
+
+<P>
+Implements the EcmaScript 5
+ <a href="http://es5.github.com/#Canonicalize">Canonicalize</a> operation
+ used to specify how case-insensitive regular expressions match.
+
+ <p>
+ From section <a href="http://es5.github.com/#x15.10.2.9">15.10.2.9</a>,
+ <blockquote>
+ The abstract operation Canonicalize takes a character parameter ch and
+ performs the following steps:
+ <ul>
+   <li>If IgnoreCase is false, return ch.
+   <li>Let u be ch converted to upper case as if by calling the standard
+   built-in method <code>String.prototype.toUpperCase</code> on the one-character
+   String ch.
+   <li>If u does not consist of a single character, return ch.
+   <li>Let cu be u's character.
+   <li>If ch's code unit value is greater than or equal to decimal 128 and
+   cu's code unit value is less than decimal 128, then return ch.
+   <li>Return cu.
+ </ul>
+<P>
+
+<P>
+<HR>
+
+<P>
+<!-- =========== FIELD SUMMARY =========== -->
+
+<A NAME="field_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Field Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;com.google.javascript.jscomp.regex.CharRanges</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html#CASE_SENSITIVE">CASE_SENSITIVE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Set of code units that are case-insensitively equivalent to some other
+ code unit according to the EcmaScript
+ <a href="http://es5.github.com/#Canonicalize">Canonicalize</a> operation
+ described in section 15.10.2.8.</TD>
+</TR>
+</TABLE>
+&nbsp;
+<!-- ========== METHOD SUMMARY =========== -->
+
+<A NAME="method_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;char</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html#caseCanonicalize(char)">caseCanonicalize</A></B>(char&nbsp;ch)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the case canonical version of the given code-unit.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html#caseCanonicalize(java.lang.String)">caseCanonicalize</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;s)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the case canonical version of the given string.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;com.google.javascript.jscomp.regex.CharRanges</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html#expandToAllMatched(com.google.javascript.jscomp.regex.CharRanges)">expandToAllMatched</A></B>(com.google.javascript.jscomp.regex.CharRanges&nbsp;ranges)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Given a character range that may include case sensitive code-units,
+ such as <code>[0-9B-M]</code>, returns the character range that includes all
+ the code-units in the input and those that are case-insensitively
+ equivalent to a code-unit in the input.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;com.google.javascript.jscomp.regex.CharRanges</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html#reduceToMinimum(com.google.javascript.jscomp.regex.CharRanges)">reduceToMinimum</A></B>(com.google.javascript.jscomp.regex.CharRanges&nbsp;ranges)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Given a character range that may include case sensitive code-units,
+ such as <code>[0-9B-M]</code>, returns the character range that includes
+ the minimal set of code units such that for every code unit in the
+ input there is a case-sensitively equivalent canonical code unit in the
+ output.</TD>
+</TR>
+</TABLE>
+&nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Methods inherited from class java.lang.<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+</TR>
+</TABLE>
+&nbsp;
+<P>
+
+<!-- ============ FIELD DETAIL =========== -->
+
+<A NAME="field_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Field Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="CASE_SENSITIVE"><!-- --></A><H3>
+CASE_SENSITIVE</H3>
+<PRE>
+public static final com.google.javascript.jscomp.regex.CharRanges <B>CASE_SENSITIVE</B></PRE>
+<DL>
+<DD>Set of code units that are case-insensitively equivalent to some other
+ code unit according to the EcmaScript
+ <a href="http://es5.github.com/#Canonicalize">Canonicalize</a> operation
+ described in section 15.10.2.8.
+ The case sensitive characters are the ones that canonicalize to a character
+ other than themselves or have a character that canonicalizes to them.
+ Canonicalize is based on the definition of
+ <code>String.prototype.toUpperCase</code> which is itself based on Unicode 3.0.0
+ as specified at
+ <a href="ftp://ftp.unicode.org/Public/3.0-Update/UnicodeData-3.0.0.txt">
+ UnicodeData-3.0.0
+ </a>
+ and <a href="ftp://ftp.unicode.org/Public/3.0-Update/SpecialCasing-2.txt">
+ SpecialCasings-2.txt
+ </a>.
+
+ <p>
+ This table was generated by running the below on Chrome:
+ </p>
+ <pre>
+ for (var cc = 0; cc < 0x10000; ++cc) {
+   var ch = String.fromCharCode(cc);
+   var u = ch.toUpperCase();
+   if (ch != u && u.length === 1) {
+     var cu = u.charCodeAt(0);
+     if (cc <= 128 || u.charCodeAt(0) > 128) {
+       print('0x' + cc.toString(16) + ', 0x' + cu.toString(16) + ',');
+     }
+   }
+ }
+ </pre>
+<P>
+<DL>
+</DL>
+</DL>
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<A NAME="method_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Method Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="caseCanonicalize(java.lang.String)"><!-- --></A><H3>
+caseCanonicalize</H3>
+<PRE>
+public static <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>caseCanonicalize</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;s)</PRE>
+<DL>
+<DD>Returns the case canonical version of the given string.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="caseCanonicalize(char)"><!-- --></A><H3>
+caseCanonicalize</H3>
+<PRE>
+public static char <B>caseCanonicalize</B>(char&nbsp;ch)</PRE>
+<DL>
+<DD>Returns the case canonical version of the given code-unit.  EcmaScript 5
+ explicitly says that code-units are to be treated as their code-point
+ equivalent, even surrogates.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="expandToAllMatched(com.google.javascript.jscomp.regex.CharRanges)"><!-- --></A><H3>
+expandToAllMatched</H3>
+<PRE>
+public static com.google.javascript.jscomp.regex.CharRanges <B>expandToAllMatched</B>(com.google.javascript.jscomp.regex.CharRanges&nbsp;ranges)</PRE>
+<DL>
+<DD>Given a character range that may include case sensitive code-units,
+ such as <code>[0-9B-M]</code>, returns the character range that includes all
+ the code-units in the input and those that are case-insensitively
+ equivalent to a code-unit in the input.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="reduceToMinimum(com.google.javascript.jscomp.regex.CharRanges)"><!-- --></A><H3>
+reduceToMinimum</H3>
+<PRE>
+public static com.google.javascript.jscomp.regex.CharRanges <B>reduceToMinimum</B>(com.google.javascript.jscomp.regex.CharRanges&nbsp;ranges)</PRE>
+<DL>
+<DD>Given a character range that may include case sensitive code-units,
+ such as <code>[0-9B-M]</code>, returns the character range that includes
+ the minimal set of code units such that for every code unit in the
+ input there is a case-sensitively equivalent canonical code unit in the
+ output.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<!-- ========= END OF CLASS DATA ========= -->
+<HR>
+
+
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<A NAME="navbar_bottom"><!-- --></A>
+<A HREF="#skip-navbar_bottom" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_bottom_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;PREV CLASS&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/regex/RegExpTree.html" title="class in com.google.javascript.jscomp.regex"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../../index.html?com/google/javascript/jscomp/regex/CaseCanonicalize.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="CaseCanonicalize.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_bottom"></A>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+
+<HR>
+
+        <div id="footer">
+          <div id="footerlogo">
+            <img src="http://www.google.com/images/art.gif"
+                 alt="Google colored balls">
+          </div>
+
+          <div id="copyright">
+          <p>&copy; 2009 Google -
+            <a href="http://www.google.com/privacy.html">Privacy Policy</a> -
+            <a href="http://www.google.com/terms_of_service.html">Terms and Conditions</a> -
+            <a href="http://www.google.com/about.html">About Google</a>
+          </p>
+          </div>
+        </div>
+      
+      
+</BODY>
+</HTML>

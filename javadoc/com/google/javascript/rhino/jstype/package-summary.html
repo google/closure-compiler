@@ -92,6 +92,11 @@ Provides abstractions to represent types in JavaScript.
 <B>Interface Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
+<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticReference.html" title="interface in com.google.javascript.rhino.jstype">StaticReference&lt;T&gt;</A></B></TD>
+<TD>The <code>StaticReference</code> tells us all the ways that a <code>StaticSlot</code>
+ is used in a program.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope&lt;T&gt;</A></B></TD>
 <TD>The <code>StaticScope</code> interface must be implemented by any object that
  defines variables for the purposes of static analysis.</TD>
@@ -100,6 +105,14 @@ Provides abstractions to represent types in JavaScript.
 <TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot&lt;T&gt;</A></B></TD>
 <TD>The <code>StaticSlot</code> interface must be implemented by variables that can
  appear as members of a <code>StaticScope</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSourceFile.html" title="interface in com.google.javascript.rhino.jstype">StaticSourceFile</A></B></TD>
+<TD>The <code>StaticSourceFile</code> contains information about a compiler input.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html" title="interface in com.google.javascript.rhino.jstype">StaticSymbolTable&lt;S extends StaticSlot&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;,R extends StaticReference&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&gt;</A></B></TD>
+<TD>Lookup references by the symbols that they refer to.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/Visitor.html" title="interface in com.google.javascript.rhino.jstype">Visitor&lt;T&gt;</A></B></TD>
@@ -141,17 +154,9 @@ Provides abstractions to represent types in JavaScript.
 <TD>A builder for the Rhino Node representing Function parameters.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionPrototypeType.html" title="class in com.google.javascript.rhino.jstype">FunctionPrototypeType</A></B></TD>
-<TD>Represents the prototype of a <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype"><CODE>FunctionType</CODE></A>.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></B></TD>
 <TD>This derived type provides extended information about a function, including
  its return type and argument types.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/InstanceObjectType.html" title="class in com.google.javascript.rhino.jstype">InstanceObjectType</A></B></TD>
-<TD>An object type that is an instance of some function constructor.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></B></TD>
@@ -186,16 +191,24 @@ Provides abstractions to represent types in JavaScript.
 <TD>Object type.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/RecordType.html" title="class in com.google.javascript.rhino.jstype">RecordType</A></B></TD>
-<TD>A record (structural) type.</TD>
+<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.Property.html" title="class in com.google.javascript.rhino.jstype">ObjectType.Property</A></B></TD>
+<TD>&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/RecordTypeBuilder.html" title="class in com.google.javascript.rhino.jstype">RecordTypeBuilder</A></B></TD>
 <TD>A builder for record types.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
+<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleReference.html" title="class in com.google.javascript.rhino.jstype">SimpleReference&lt;T extends StaticSlot&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&gt;</A></B></TD>
+<TD>A simple immutable reference.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleSlot.html" title="class in com.google.javascript.rhino.jstype">SimpleSlot</A></B></TD>
 <TD>The minimum implementation of StaticSlot<JSType>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleSourceFile.html" title="class in com.google.javascript.rhino.jstype">SimpleSourceFile</A></B></TD>
+<TD>A simple implementation of <code>StaticSourceFile</code> for testing.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/rhino/jstype/StringType.html" title="class in com.google.javascript.rhino.jstype">StringType</A></B></TD>

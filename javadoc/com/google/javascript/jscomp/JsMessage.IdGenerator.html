@@ -89,6 +89,9 @@ com.google.javascript.jscomp</FONT>
 <BR>
 Interface JsMessage.IdGenerator</H2>
 <DL>
+<DT><B>All Known Implementing Classes:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/GoogleJsMessageIdGenerator.html" title="class in com.google.javascript.jscomp">GoogleJsMessageIdGenerator</A></DD>
+</DL>
+<DL>
 <DT><B>Enclosing class:</B><DD><A HREF="../../../../com/google/javascript/jscomp/JsMessage.html" title="class in com.google.javascript.jscomp">JsMessage</A></DD>
 </DL>
 <HR>
@@ -112,11 +115,11 @@ Interface JsMessage.IdGenerator</H2>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JsMessage.IdGenerator.html#generateId(java.lang.String, java.util.List)">generateId</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;key,
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JsMessage.IdGenerator.html#generateId(java.lang.String, java.util.List)">generateId</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;meaning,
            <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/CharSequence.html?is-external=true" title="class or interface in java.lang">CharSequence</A>&gt;&nbsp;messageParts)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Generate the ID for the message.</TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -135,11 +138,19 @@ Interface JsMessage.IdGenerator</H2>
 <A NAME="generateId(java.lang.String, java.util.List)"><!-- --></A><H3>
 generateId</H3>
 <PRE>
-<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>generateId</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;key,
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>generateId</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;meaning,
                   <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/CharSequence.html?is-external=true" title="class or interface in java.lang">CharSequence</A>&gt;&nbsp;messageParts)</PRE>
 <DL>
+<DD>Generate the ID for the message. Messages with the same messageParts
+ and meaning will get the same id. Messages with the same id
+ will get the same translation.
+<P>
 <DD><DL>
-</DL>
+<DT><B>Parameters:</B><DD><CODE>meaning</CODE> - The programmer-specified meaning. If no <code>@meaning</code>
+     annotation appears, we will use the name of the variable it's
+     assigned to. If the variable is unnamed, then we will just
+     use a fingerprint of the message.<DD><CODE>messageParts</CODE> - The parts of the message, including the main
+     message text.</DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->

@@ -250,6 +250,15 @@ The base generic class for graph-like data structure and algorithms in
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>abstract &nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.GraphEdge.html" title="interface in com.google.javascript.jscomp.graph">Graph.GraphEdge</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getFirstEdge(N, N)">getFirstEdge</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n1,
+             <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Retrieves any edge from the graph.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>abstract &nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphNode.html" title="interface in com.google.javascript.jscomp.graph">GraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&gt;&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNeighborNodes(N)">getNeighborNodes</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;value)</CODE>
 
@@ -585,6 +594,25 @@ public abstract <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.ht
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>n1</CODE> - Node one.<DD><CODE>n2</CODE> - Node two.
 <DT><B>Returns:</B><DD>The list of edges between those two values in the graph.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getFirstEdge(java.lang.Object,java.lang.Object)"><!-- --></A><A NAME="getFirstEdge(N, N)"><!-- --></A><H3>
+getFirstEdge</H3>
+<PRE>
+public abstract <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.GraphEdge.html" title="interface in com.google.javascript.jscomp.graph">Graph.GraphEdge</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&gt; <B>getFirstEdge</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n1,
+                                                  <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n2)</PRE>
+<DL>
+<DD>Retrieves any edge from the graph.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>n1</CODE> - Node one.<DD><CODE>n2</CODE> - Node two.
+<DT><B>Returns:</B><DD>The first edges between those two values in the graph. null if
+    there are none.</DL>
 </DD>
 </DL>
 <HR>

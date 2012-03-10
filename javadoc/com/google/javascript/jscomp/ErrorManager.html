@@ -52,8 +52,8 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/ErrorFormat.html" title="enum in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/FindExportableNodes.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/ErrorHandler.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/FieldCleanupPass.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/ErrorManager.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="ErrorManager.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -89,11 +89,14 @@ com.google.javascript.jscomp</FONT>
 <BR>
 Interface ErrorManager</H2>
 <DL>
+<DT><B>All Superinterfaces:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/ErrorHandler.html" title="interface in com.google.javascript.jscomp">ErrorHandler</A></DD>
+</DL>
+<DL>
 <DT><B>All Known Implementing Classes:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/ant/AntErrorManager.html" title="class in com.google.javascript.jscomp.ant">AntErrorManager</A>, <A HREF="../../../../com/google/javascript/jscomp/BasicErrorManager.html" title="class in com.google.javascript.jscomp">BasicErrorManager</A>, <A HREF="../../../../com/google/javascript/jscomp/LoggerErrorManager.html" title="class in com.google.javascript.jscomp">LoggerErrorManager</A>, <A HREF="../../../../com/google/javascript/jscomp/PrintStreamErrorManager.html" title="class in com.google.javascript.jscomp">PrintStreamErrorManager</A></DD>
 </DL>
 <HR>
 <DL>
-<DT><PRE>public interface <B>ErrorManager</B></DL>
+<DT><PRE>public interface <B>ErrorManager</B><DT>extends <A HREF="../../../../com/google/javascript/jscomp/ErrorHandler.html" title="interface in com.google.javascript.jscomp">ErrorHandler</A></DL>
 </PRE>
 
 <P>
@@ -203,6 +206,9 @@ void <B>report</B>(<A HREF="../../../../com/google/javascript/jscomp/CheckLevel.
  <A HREF="../../../../com/google/javascript/jscomp/ErrorManager.html#generateReport()"><CODE>generateReport()</CODE></A> at the discretion of the implementation.
 <P>
 <DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/ErrorHandler.html#report(com.google.javascript.jscomp.CheckLevel, com.google.javascript.jscomp.JSError)">report</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/ErrorHandler.html" title="interface in com.google.javascript.jscomp">ErrorHandler</A></CODE></DL>
+</DD>
+<DD><DL>
 <DT><B>Parameters:</B><DD><CODE>level</CODE> - the reporting level<DD><CODE>error</CODE> - the error to report</DL>
 </DD>
 </DL>
@@ -219,6 +225,9 @@ void <B>generateReport</B>()</PRE>
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -229,6 +238,9 @@ int <B>getErrorCount</B>()</PRE>
 <DL>
 <DD>Gets the number of reported errors.
 <P>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -245,6 +257,9 @@ int <B>getWarningCount</B>()</PRE>
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -255,6 +270,9 @@ getErrors</H3>
 <DL>
 <DD>Gets all the errors.
 <P>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -271,6 +289,9 @@ getWarnings</H3>
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -284,6 +305,9 @@ void <B>setTypedPercent</B>(double&nbsp;typedPercent)</PRE>
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -294,6 +318,9 @@ double <B>getTypedPercent</B>()</PRE>
 <DL>
 <DD>Gets the percentage of typed expressions.
 <P>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -328,8 +355,8 @@ double <B>getTypedPercent</B>()</PRE>
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/ErrorFormat.html" title="enum in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/FindExportableNodes.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/ErrorHandler.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/FieldCleanupPass.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/ErrorManager.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="ErrorManager.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;

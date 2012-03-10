@@ -1,0 +1,1489 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<TITLE>
+IR (Compiler)
+</TITLE>
+
+
+<LINK REL ="stylesheet" TYPE="text/css" HREF="../../../../dev_javadoc.css" TITLE="Style">
+
+<SCRIPT type="text/javascript">
+function windowTitle()
+{
+    if (location.href.indexOf('is-external=true') == -1) {
+        parent.document.title="IR (Compiler)";
+    }
+}
+</SCRIPT>
+<NOSCRIPT>
+</NOSCRIPT>
+
+</HEAD>
+
+<BODY BGCOLOR="white" onload="windowTitle();">
+<HR>
+
+
+<!-- ========= START OF TOP NAVBAR ======= -->
+<A NAME="navbar_top"><!-- --></A>
+<A HREF="#skip-navbar_top" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_top_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../index.html?com/google/javascript/rhino/IR.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="IR.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_top"></A>
+<!-- ========= END OF TOP NAVBAR ========= -->
+
+<HR>
+<!-- ======== START OF CLASS DATA ======== -->
+<H2>
+<FONT SIZE="-1">
+com.google.javascript.rhino</FONT>
+<BR>
+Class IR</H2>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
+  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.rhino.IR</B>
+</PRE>
+<HR>
+<DL>
+<DT><PRE>public class <B>IR</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
+</PRE>
+
+<P>
+An AST construction helper class
+<P>
+
+<P>
+<HR>
+
+<P>
+
+<!-- ========== METHOD SUMMARY =========== -->
+
+<A NAME="method_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#add(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">add</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+    <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#and(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">and</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+    <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#arraylit(com.google.javascript.rhino.Node...)">arraylit</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;exprs)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#assign(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">assign</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;target,
+       <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#block()">block</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#block(com.google.javascript.rhino.Node...)">block</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;stmts)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#block(com.google.javascript.rhino.Node)">block</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;stmt)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#breakNode()">breakNode</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#breakNode(com.google.javascript.rhino.Node)">breakNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#call(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node...)">call</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;target,
+     <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;args)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#caseNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">caseNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr,
+         <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#catchNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">catchNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr,
+          <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#comma(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">comma</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+      <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#continueNode()">continueNode</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#continueNode(com.google.javascript.rhino.Node)">continueNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#defaultCase(com.google.javascript.rhino.Node)">defaultCase</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#doNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">doNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body,
+       <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#empty()">empty</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#eq(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">eq</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+   <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"=="</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#exprResult(com.google.javascript.rhino.Node)">exprResult</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#falseNode()">falseNode</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#forIn(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">forIn</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;target,
+      <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond,
+      <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#forNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">forNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;init,
+        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond,
+        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;incr,
+        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#function(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">function</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;name,
+         <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;params,
+         <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#getelem(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">getelem</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;target,
+        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;elem)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#getprop(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">getprop</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;target,
+        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;prop)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#hook(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">hook</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond,
+     <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;trueval,
+     <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;falseval)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#ifNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">ifNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond,
+       <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;then)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#ifNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">ifNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond,
+       <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;then,
+       <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;elseNode)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#label(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">label</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;name,
+      <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;stmt)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#labelName(java.lang.String)">labelName</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#name(java.lang.String)">name</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#neg(com.google.javascript.rhino.Node)">neg</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#newNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node...)">newNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;target,
+        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;args)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#not(com.google.javascript.rhino.Node)">not</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#nullNode()">nullNode</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#number(double)">number</A></B>(double&nbsp;d)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#objectlit(com.google.javascript.rhino.Node...)">objectlit</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;propdefs)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#or(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">or</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+   <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#paramList()">paramList</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#paramList(java.util.List)">paramList</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&gt;&nbsp;params)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#paramList(com.google.javascript.rhino.Node...)">paramList</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;params)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#paramList(com.google.javascript.rhino.Node)">paramList</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;param)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#pos(com.google.javascript.rhino.Node)">pos</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#propdef(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">propdef</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;string,
+        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;value)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#regexp(com.google.javascript.rhino.Node)">regexp</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#regexp(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">regexp</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr,
+       <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;flags)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#returnNode()">returnNode</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#returnNode(com.google.javascript.rhino.Node)">returnNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#script(com.google.javascript.rhino.Node...)">script</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;stmts)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#sheq(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">sheq</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+     <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"==="</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#string(java.lang.String)">string</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;s)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#sub(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">sub</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+    <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#switchNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node...)">switchNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond,
+           <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;cases)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#thisNode()">thisNode</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#throwNode(com.google.javascript.rhino.Node)">throwNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#trueNode()">trueNode</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#tryCatch(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">tryCatch</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;tryBody,
+         <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;catchNode)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#tryCatchFinally(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">tryCatchFinally</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;tryBody,
+                <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;catchNode,
+                <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;finallyBody)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#tryFinally(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">tryFinally</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;tryBody,
+           <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;finallyBody)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#var(com.google.javascript.rhino.Node)">var</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#var(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">var</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;name,
+    <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;value)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/IR.html#voidNode(com.google.javascript.rhino.Node)">voidNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Methods inherited from class java.lang.<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+</TR>
+</TABLE>
+&nbsp;
+<P>
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<A NAME="method_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Method Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="empty()"><!-- --></A><H3>
+empty</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>empty</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="function(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+function</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>function</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;name,
+                            <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;params,
+                            <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="paramList()"><!-- --></A><H3>
+paramList</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>paramList</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="paramList(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+paramList</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>paramList</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;param)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="paramList(com.google.javascript.rhino.Node...)"><!-- --></A><H3>
+paramList</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>paramList</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;params)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="paramList(java.util.List)"><!-- --></A><H3>
+paramList</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>paramList</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&gt;&nbsp;params)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="block()"><!-- --></A><H3>
+block</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>block</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="block(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+block</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>block</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;stmt)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="block(com.google.javascript.rhino.Node...)"><!-- --></A><H3>
+block</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>block</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;stmts)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="script(com.google.javascript.rhino.Node...)"><!-- --></A><H3>
+script</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>script</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;stmts)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="var(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+var</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>var</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;name,
+                       <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;value)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="var(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+var</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>var</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;name)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="returnNode()"><!-- --></A><H3>
+returnNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>returnNode</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="returnNode(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+returnNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>returnNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="throwNode(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+throwNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>throwNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="exprResult(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+exprResult</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>exprResult</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="ifNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+ifNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>ifNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond,
+                          <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;then)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="ifNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+ifNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>ifNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond,
+                          <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;then,
+                          <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;elseNode)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="doNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+doNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>doNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body,
+                          <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="forIn(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+forIn</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>forIn</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;target,
+                         <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond,
+                         <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="forNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+forNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>forNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;init,
+                           <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond,
+                           <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;incr,
+                           <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="switchNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node...)"><!-- --></A><H3>
+switchNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>switchNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond,
+                              <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;cases)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="caseNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+caseNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>caseNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr,
+                            <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="defaultCase(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+defaultCase</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>defaultCase</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="label(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+label</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>label</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;name,
+                         <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;stmt)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="labelName(java.lang.String)"><!-- --></A><H3>
+labelName</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>labelName</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="tryFinally(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+tryFinally</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>tryFinally</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;tryBody,
+                              <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;finallyBody)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="tryCatch(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+tryCatch</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>tryCatch</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;tryBody,
+                            <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;catchNode)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="tryCatchFinally(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+tryCatchFinally</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>tryCatchFinally</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;tryBody,
+                                   <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;catchNode,
+                                   <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;finallyBody)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="catchNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+catchNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>catchNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr,
+                             <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="breakNode()"><!-- --></A><H3>
+breakNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>breakNode</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="breakNode(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+breakNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>breakNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;name)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="continueNode()"><!-- --></A><H3>
+continueNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>continueNode</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="continueNode(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+continueNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>continueNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;name)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="call(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node...)"><!-- --></A><H3>
+call</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>call</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;target,
+                        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;args)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="newNode(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node...)"><!-- --></A><H3>
+newNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>newNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;target,
+                           <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;args)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="name(java.lang.String)"><!-- --></A><H3>
+name</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>name</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getprop(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getprop</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>getprop</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;target,
+                           <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;prop)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getelem(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getelem</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>getelem</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;target,
+                           <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;elem)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="assign(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+assign</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>assign</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;target,
+                          <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="hook(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+hook</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>hook</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;cond,
+                        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;trueval,
+                        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;falseval)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="comma(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+comma</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>comma</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+                         <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="and(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+and</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>and</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+                       <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="or(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+or</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>or</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+                      <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="not(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+not</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>not</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="eq(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+eq</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>eq</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+                      <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</PRE>
+<DL>
+<DD>"=="
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="sheq(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+sheq</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>sheq</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+                        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</PRE>
+<DL>
+<DD>"==="
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="voidNode(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+voidNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>voidNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="neg(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+neg</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>neg</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="pos(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+pos</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>pos</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="add(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+add</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>add</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+                       <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="sub(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+sub</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>sub</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr1,
+                       <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr2)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="objectlit(com.google.javascript.rhino.Node...)"><!-- --></A><H3>
+objectlit</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>objectlit</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;propdefs)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="propdef(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+propdef</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>propdef</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;string,
+                           <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;value)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="arraylit(com.google.javascript.rhino.Node...)"><!-- --></A><H3>
+arraylit</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>arraylit</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>...&nbsp;exprs)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="regexp(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+regexp</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>regexp</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="regexp(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+regexp</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>regexp</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;expr,
+                          <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;flags)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="string(java.lang.String)"><!-- --></A><H3>
+string</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>string</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;s)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="number(double)"><!-- --></A><H3>
+number</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>number</B>(double&nbsp;d)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="thisNode()"><!-- --></A><H3>
+thisNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>thisNode</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="trueNode()"><!-- --></A><H3>
+trueNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>trueNode</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="falseNode()"><!-- --></A><H3>
+falseNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>falseNode</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="nullNode()"><!-- --></A><H3>
+nullNode</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>nullNode</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<!-- ========= END OF CLASS DATA ========= -->
+<HR>
+
+
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<A NAME="navbar_bottom"><!-- --></A>
+<A HREF="#skip-navbar_bottom" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_bottom_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../index.html?com/google/javascript/rhino/IR.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="IR.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_bottom"></A>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+
+<HR>
+
+        <div id="footer">
+          <div id="footerlogo">
+            <img src="http://www.google.com/images/art.gif"
+                 alt="Google colored balls">
+          </div>
+
+          <div id="copyright">
+          <p>&copy; 2009 Google -
+            <a href="http://www.google.com/privacy.html">Privacy Policy</a> -
+            <a href="http://www.google.com/terms_of_service.html">Terms and Conditions</a> -
+            <a href="http://www.google.com/about.html">About Google</a>
+          </p>
+          </div>
+        </div>
+      
+      
+</BODY>
+</HTML>

@@ -116,11 +116,107 @@ NodeUtil contains utilities that get properties from the Node object.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#getFunctionJSDocInfo(com.google.javascript.rhino.Node)">getFunctionJSDocInfo</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get the JSDocInfo for a function.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#getFunctionParameters(com.google.javascript.rhino.Node)">getFunctionParameters</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;fnNode)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#getInputId(com.google.javascript.rhino.Node)">getInputId</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#getInverseOperator(int)">getInverseOperator</A></B>(int&nbsp;type)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the inverse of an operator if it is invertible.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#getNearestFunctionName(com.google.javascript.rhino.Node)">getNearestFunctionName</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the function's name.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#getRootOfQualifiedName(com.google.javascript.rhino.Node)">getRootOfQualifiedName</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;qName)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the root node of a qualified name.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/jstype/StaticSourceFile.html" title="interface in com.google.javascript.rhino.jstype">StaticSourceFile</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#getSourceFile(com.google.javascript.rhino.Node)">getSourceFile</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#getSourceName(com.google.javascript.rhino.Node)">getSourceName</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#getVarsDeclaredInBranch(com.google.javascript.rhino.Node)">getVarsDeclaredInBranch</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;root)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Retrieves vars declared in the current node tree, excluding descent scopes.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#isRelationalOperation(com.google.javascript.rhino.Node)">isRelationalOperation</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if the operator on this node is relational.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#isSymmetricOperation(com.google.javascript.rhino.Node)">isSymmetricOperation</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if the operator on this node is symmetric</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#isValidQualifiedName(java.lang.String)">isValidQualifiedName</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Determines whether the given name is a valid qualified name.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#isValidSimpleName(java.lang.String)">isValidSimpleName</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Determines whether the given name is a valid variable name.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -133,21 +229,8 @@ NodeUtil contains utilities that get properties from the Node object.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#newFunctionNode(java.lang.String, java.util.List, com.google.javascript.rhino.Node, int, int)">newFunctionNode</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-                <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&gt;&nbsp;params,
-                <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body,
-                int&nbsp;lineno,
-                int&nbsp;charno)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates function name(params_0, ..., params_n) { body }.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#newQualifiedNameNode(java.lang.String, int, int)">newQualifiedNameNode</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-                     int&nbsp;lineno,
-                     int&nbsp;charno)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#newQualifiedNameNode(com.google.javascript.jscomp.CodingConvention, java.lang.String)">newQualifiedNameNode</A></B>(<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>&nbsp;convention,
+                     <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a node representing a qualified name.</TD>
@@ -175,6 +258,70 @@ NodeUtil contains utilities that get properties from the Node object.
 </TR>
 </TABLE>
 
+<A NAME="getNearestFunctionName(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getNearestFunctionName</H3>
+<PRE>
+public static <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getNearestFunctionName</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</PRE>
+<DL>
+<DD>Gets the function's name. This method recognizes the forms:
+ <ul>
+ <li><code>&amp;#123;'name': function() ...&amp;#125;</code></li>
+ <li><code>&amp;#123;name: function() ...&amp;#125;</code></li>
+ <li><code>function name() ...</code></li>
+ <li><code>var name = function() ...</code></li>
+ <li><code>qualified.name = function() ...</code></li>
+ <li><code>var name2 = function name1() ...</code></li>
+ <li><code>qualified.name2 = function name1() ...</code></li>
+ </ul>
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>n</CODE> - a node whose type is <A HREF="../../../../com/google/javascript/rhino/Token.html#FUNCTION"><CODE>Token.FUNCTION</CODE></A>
+<DT><B>Returns:</B><DD>the function's name, or <code>null</code> if it has no name</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isSymmetricOperation(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+isSymmetricOperation</H3>
+<PRE>
+public static boolean <B>isSymmetricOperation</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</PRE>
+<DL>
+<DD>Returns true if the operator on this node is symmetric
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isRelationalOperation(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+isRelationalOperation</H3>
+<PRE>
+public static boolean <B>isRelationalOperation</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</PRE>
+<DL>
+<DD>Returns true if the operator on this node is relational.
+ the returned set does not include the equalities.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getInverseOperator(int)"><!-- --></A><H3>
+getInverseOperator</H3>
+<PRE>
+public static int <B>getInverseOperator</B>(int&nbsp;type)</PRE>
+<DL>
+<DD>Returns the inverse of an operator if it is invertible.
+ ex. '>' ==> '<'
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="newExpr(com.google.javascript.rhino.Node)"><!-- --></A><H3>
 newExpr</H3>
 <PRE>
@@ -189,16 +336,27 @@ public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title=
 </DL>
 <HR>
 
-<A NAME="newFunctionNode(java.lang.String, java.util.List, com.google.javascript.rhino.Node, int, int)"><!-- --></A><H3>
-newFunctionNode</H3>
+<A NAME="newQualifiedNameNode(com.google.javascript.jscomp.CodingConvention, java.lang.String)"><!-- --></A><H3>
+newQualifiedNameNode</H3>
 <PRE>
-public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>newFunctionNode</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-                                   <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&gt;&nbsp;params,
-                                   <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body,
-                                   int&nbsp;lineno,
-                                   int&nbsp;charno)</PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>newQualifiedNameNode</B>(<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>&nbsp;convention,
+                                        <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
 <DL>
-<DD>Creates function name(params_0, ..., params_n) { body }.
+<DD>Creates a node representing a qualified name.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>name</CODE> - A qualified name (e.g. "foo" or "foo.bar.baz")
+<DT><B>Returns:</B><DD>A NAME or GETPROP node</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getRootOfQualifiedName(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getRootOfQualifiedName</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>getRootOfQualifiedName</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;qName)</PRE>
+<DL>
+<DD>Gets the root node of a qualified name. Must be either NAME or THIS.
 <P>
 <DD><DL>
 </DL>
@@ -206,18 +364,28 @@ public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title=
 </DL>
 <HR>
 
-<A NAME="newQualifiedNameNode(java.lang.String, int, int)"><!-- --></A><H3>
-newQualifiedNameNode</H3>
+<A NAME="isValidSimpleName(java.lang.String)"><!-- --></A><H3>
+isValidSimpleName</H3>
 <PRE>
-public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>newQualifiedNameNode</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-                                        int&nbsp;lineno,
-                                        int&nbsp;charno)</PRE>
+public static boolean <B>isValidSimpleName</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
 <DL>
-<DD>Creates a node representing a qualified name.
+<DD>Determines whether the given name is a valid variable name.
 <P>
 <DD><DL>
-<DT><B>Parameters:</B><DD><CODE>name</CODE> - A qualified name (e.g. "foo" or "foo.bar.baz")<DD><CODE>lineno</CODE> - The source line offset.<DD><CODE>charno</CODE> - The source character offset from start of the line.
-<DT><B>Returns:</B><DD>A NAME or GETPROP node</DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isValidQualifiedName(java.lang.String)"><!-- --></A><H3>
+isValidQualifiedName</H3>
+<PRE>
+public static boolean <B>isValidQualifiedName</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+<DL>
+<DD>Determines whether the given name is a valid qualified name.
+<P>
+<DD><DL>
+</DL>
 </DD>
 </DL>
 <HR>
@@ -231,6 +399,67 @@ public static <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collectio
 <P>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getFunctionParameters(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getFunctionParameters</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>getFunctionParameters</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;fnNode)</PRE>
+<DL>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>fnNode</CODE> - The function.
+<DT><B>Returns:</B><DD>The Node containing the Function parameters.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getFunctionJSDocInfo(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getFunctionJSDocInfo</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A> <B>getFunctionJSDocInfo</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</PRE>
+<DL>
+<DD>Get the JSDocInfo for a function.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSourceName(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getSourceName</H3>
+<PRE>
+public static <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getSourceName</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</PRE>
+<DL>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>n</CODE> - The node.
+<DT><B>Returns:</B><DD>The source name property on the node or its ancestors.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSourceFile(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getSourceFile</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/jstype/StaticSourceFile.html" title="interface in com.google.javascript.rhino.jstype">StaticSourceFile</A> <B>getSourceFile</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</PRE>
+<DL>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>n</CODE> - The node.
+<DT><B>Returns:</B><DD>The source name property on the node or its ancestors.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getInputId(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getInputId</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A> <B>getInputId</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</PRE>
+<DL>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>n</CODE> - The node.
+<DT><B>Returns:</B><DD>The InputId property on the node or its ancestors.</DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->

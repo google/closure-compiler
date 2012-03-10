@@ -52,8 +52,8 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/FunctionInformationMap.Module.Builder.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Instrumentation.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/FunctionInformationMapOrBuilder.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/GoogleJsMessageIdGenerator.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/GoogleCodingConvention.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="GoogleCodingConvention.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -73,7 +73,7 @@ function windowTitle()
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#fields_inherited_from_class_com.google.javascript.jscomp.CodingConventions.Proxy">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
 DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>
@@ -90,16 +90,15 @@ com.google.javascript.jscomp</FONT>
 Class GoogleCodingConvention</H2>
 <PRE>
 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
-  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">com.google.javascript.jscomp.DefaultCodingConvention</A>
-      <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">com.google.javascript.jscomp.ClosureCodingConvention</A>
-          <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.GoogleCodingConvention</B>
+  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html" title="class in com.google.javascript.jscomp">com.google.javascript.jscomp.CodingConventions.Proxy</A>
+      <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.GoogleCodingConvention</B>
 </PRE>
 <DL>
-<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></DD>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DD>
 </DL>
 <HR>
 <DL>
-<DT><PRE>public class <B>GoogleCodingConvention</B><DT>extends <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A></DL>
+<DT><PRE>public class <B>GoogleCodingConvention</B><DT>extends <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html" title="class in com.google.javascript.jscomp">CodingConventions.Proxy</A></DL>
 </PRE>
 
 <P>
@@ -108,6 +107,8 @@ This describes the Google-specific JavaScript coding conventions.
 <P>
 
 <P>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../serialized-form.html#com.google.javascript.jscomp.GoogleCodingConvention">Serialized Form</A></DL>
 <HR>
 
 <P>
@@ -126,11 +127,29 @@ This describes the Google-specific JavaScript coding conventions.
 <TH ALIGN="left"><B>Nested classes/interfaces inherited from interface com.google.javascript.jscomp.<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.AssertionFunctionSpec.html" title="class in com.google.javascript.jscomp">CodingConvention.AssertionFunctionSpec</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.DelegateRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.DelegateRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.ObjectLiteralCast.html" title="class in com.google.javascript.jscomp">CodingConvention.ObjectLiteralCast</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.SubclassRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassType.html" title="enum in com.google.javascript.jscomp">CodingConvention.SubclassType</A></CODE></TD>
+<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.AssertionFunctionSpec.html" title="class in com.google.javascript.jscomp">CodingConvention.AssertionFunctionSpec</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.Bind.html" title="class in com.google.javascript.jscomp">CodingConvention.Bind</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.DelegateRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.DelegateRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.ObjectLiteralCast.html" title="class in com.google.javascript.jscomp">CodingConvention.ObjectLiteralCast</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.SubclassRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassType.html" title="enum in com.google.javascript.jscomp">CodingConvention.SubclassType</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;
+<!-- =========== FIELD SUMMARY =========== -->
 
+<A NAME="field_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Field Summary</B></FONT></TH>
+</TR>
+</TABLE>
+&nbsp;<A NAME="fields_inherited_from_class_com.google.javascript.jscomp.CodingConventions.Proxy"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Fields inherited from class com.google.javascript.jscomp.<A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html" title="class in com.google.javascript.jscomp">CodingConventions.Proxy</A></B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#nextConvention">nextConvention</A></CODE></TD>
+</TR>
+</TABLE>
+&nbsp;
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 
 <A NAME="constructor_summary"><!-- --></A>
@@ -143,7 +162,13 @@ This describes the Google-specific JavaScript coding conventions.
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/GoogleCodingConvention.html#GoogleCodingConvention()">GoogleCodingConvention</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;By default, decorate the ClosureCodingConvention.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/GoogleCodingConvention.html#GoogleCodingConvention(com.google.javascript.jscomp.CodingConvention)">GoogleCodingConvention</A></B>(<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>&nbsp;convention)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Decorates a wrapped CodingConvention.</TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -220,22 +245,13 @@ This describes the Google-specific JavaScript coding conventions.
  for a variable argument list function.</TD>
 </TR>
 </TABLE>
-&nbsp;<A NAME="methods_inherited_from_class_com.google.javascript.jscomp.ClosureCodingConvention"><!-- --></A>
+&nbsp;<A NAME="methods_inherited_from_class_com.google.javascript.jscomp.CodingConventions.Proxy"><!-- --></A>
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
 <TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
-<TH ALIGN="left"><B>Methods inherited from class com.google.javascript.jscomp.<A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A></B></TH>
+<TH ALIGN="left"><B>Methods inherited from class com.google.javascript.jscomp.<A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html" title="class in com.google.javascript.jscomp">CodingConventions.Proxy</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#applySingletonGetter(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.ObjectType)">applySingletonGetter</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#applySubclassRelationship(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.jscomp.CodingConvention.SubclassType)">applySubclassRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#extractClassNameIfProvide(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">extractClassNameIfProvide</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#extractClassNameIfRequire(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">extractClassNameIfRequire</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#getAbstractMethodName()">getAbstractMethodName</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#getAssertionFunctions()">getAssertionFunctions</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#getClassesDefinedByCall(com.google.javascript.rhino.Node)">getClassesDefinedByCall</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#getExportPropertyFunction()">getExportPropertyFunction</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#getExportSymbolFunction()">getExportSymbolFunction</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#getGlobalObject()">getGlobalObject</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#getObjectLiteralCast(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node)">getObjectLiteralCast</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#getSingletonGetterClassName(com.google.javascript.rhino.Node)">getSingletonGetterClassName</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#identifyTypeDeclarationCall(com.google.javascript.rhino.Node)">identifyTypeDeclarationCall</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#identifyTypeDefAssign(com.google.javascript.rhino.Node)">identifyTypeDefAssign</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#isPropertyTestFunction(com.google.javascript.rhino.Node)">isPropertyTestFunction</A>, <A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#isSuperClassReference(java.lang.String)">isSuperClassReference</A></CODE></TD>
-</TR>
-</TABLE>
-&nbsp;<A NAME="methods_inherited_from_class_com.google.javascript.jscomp.DefaultCodingConvention"><!-- --></A>
-<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
-<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
-<TH ALIGN="left"><B>Methods inherited from class com.google.javascript.jscomp.<A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></B></TH>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#applyDelegateRelationship(com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType)">applyDelegateRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#defineDelegateProxyPrototypeProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.List)">defineDelegateProxyPrototypeProperties</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#getDelegateRelationship(com.google.javascript.rhino.Node)">getDelegateRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#getDelegateSuperclassName()">getDelegateSuperclassName</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isExported(java.lang.String)">isExported</A></CODE></TD>
+<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#applyDelegateRelationship(com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType)">applyDelegateRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#applySingletonGetter(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.ObjectType)">applySingletonGetter</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#applySubclassRelationship(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.jscomp.CodingConvention.SubclassType)">applySubclassRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#checkForCallingConventionDefiningCalls(com.google.javascript.rhino.Node, java.util.Map)">checkForCallingConventionDefiningCalls</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#defineDelegateProxyPrototypeProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.List, java.util.Map)">defineDelegateProxyPrototypeProperties</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#describeFunctionBind(com.google.javascript.rhino.Node)">describeFunctionBind</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#extractClassNameIfProvide(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">extractClassNameIfProvide</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#extractClassNameIfRequire(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">extractClassNameIfRequire</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getAbstractMethodName()">getAbstractMethodName</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getAssertionFunctions()">getAssertionFunctions</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getClassesDefinedByCall(com.google.javascript.rhino.Node)">getClassesDefinedByCall</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getDelegateRelationship(com.google.javascript.rhino.Node)">getDelegateRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getDelegateSuperclassName()">getDelegateSuperclassName</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getExportPropertyFunction()">getExportPropertyFunction</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getExportSymbolFunction()">getExportSymbolFunction</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getGlobalObject()">getGlobalObject</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getObjectLiteralCast(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node)">getObjectLiteralCast</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getSingletonGetterClassName(com.google.javascript.rhino.Node)">getSingletonGetterClassName</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#identifyTypeDeclarationCall(com.google.javascript.rhino.Node)">identifyTypeDeclarationCall</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isExported(java.lang.String)">isExported</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isPropertyTestFunction(com.google.javascript.rhino.Node)">isPropertyTestFunction</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isPrototypeAlias(com.google.javascript.rhino.Node)">isPrototypeAlias</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isSuperClassReference(java.lang.String)">isSuperClassReference</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
@@ -265,6 +281,18 @@ GoogleCodingConvention</H3>
 <PRE>
 public <B>GoogleCodingConvention</B>()</PRE>
 <DL>
+<DD>By default, decorate the ClosureCodingConvention.
+<P>
+</DL>
+<HR>
+
+<A NAME="GoogleCodingConvention(com.google.javascript.jscomp.CodingConvention)"><!-- --></A><H3>
+GoogleCodingConvention</H3>
+<PRE>
+public <B>GoogleCodingConvention</B>(<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>&nbsp;convention)</PRE>
+<DL>
+<DD>Decorates a wrapped CodingConvention.
+<P>
 </DL>
 
 <!-- ============ METHOD DETAIL ========== -->
@@ -301,7 +329,7 @@ public boolean <B>isConstant</B>(<A HREF="http://java.sun.com/javase/6/docs/api/
  </pre>
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isConstant(java.lang.String)">isConstant</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isConstant(java.lang.String)">isConstant</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isConstant(java.lang.String)">isConstant</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isConstant(java.lang.String)">isConstant</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html" title="class in com.google.javascript.jscomp">CodingConventions.Proxy</A></CODE></DL>
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>name</CODE> - potentially constant variable name
@@ -321,7 +349,7 @@ public boolean <B>isConstantKey</B>(<A HREF="http://java.sun.com/javase/6/docs/a
  annotation.
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isConstantKey(java.lang.String)">isConstantKey</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isConstantKey(java.lang.String)">isConstantKey</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isConstantKey(java.lang.String)">isConstantKey</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isConstantKey(java.lang.String)">isConstantKey</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html" title="class in com.google.javascript.jscomp">CodingConventions.Proxy</A></CODE></DL>
 </DD>
 <DD><DL>
 </DL>
@@ -347,7 +375,7 @@ public boolean <B>isValidEnumKey</B>(<A HREF="http://java.sun.com/javase/6/docs/
  </ul>
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isValidEnumKey(java.lang.String)">isValidEnumKey</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isValidEnumKey(java.lang.String)">isValidEnumKey</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isValidEnumKey(java.lang.String)">isValidEnumKey</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isValidEnumKey(java.lang.String)">isValidEnumKey</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html" title="class in com.google.javascript.jscomp">CodingConventions.Proxy</A></CODE></DL>
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>key</CODE> - the potential key to an enum
@@ -372,7 +400,7 @@ public boolean <B>isOptionalParameter</B>(<A HREF="../../../../com/google/javasc
  treated as optional arguments.
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html" title="class in com.google.javascript.jscomp">CodingConventions.Proxy</A></CODE></DL>
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>parameter</CODE> - The parameter's node.
@@ -393,7 +421,7 @@ public boolean <B>isVarArgsParameter</B>(<A HREF="../../../../com/google/javascr
  last parameter in a function declaration.
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html" title="class in com.google.javascript.jscomp">CodingConventions.Proxy</A></CODE></DL>
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>parameter</CODE> - The parameter's node.
@@ -416,7 +444,7 @@ public boolean <B>isExported</B>(<A HREF="http://java.sun.com/javase/6/docs/api/
  considered exported.
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isExported(java.lang.String, boolean)">isExported</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isExported(java.lang.String, boolean)">isExported</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isExported(java.lang.String, boolean)">isExported</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isExported(java.lang.String, boolean)">isExported</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html" title="class in com.google.javascript.jscomp">CodingConventions.Proxy</A></CODE></DL>
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>name</CODE> - A global variable or function name.<DD><CODE>local</CODE> - <code>true</code> if the name is a local variable.
@@ -439,7 +467,7 @@ public boolean <B>isPrivate</B>(<A HREF="http://java.sun.com/javase/6/docs/api/j
  names are never considered private (see <A HREF="../../../../com/google/javascript/jscomp/GoogleCodingConvention.html#isExported(java.lang.String, boolean)"><CODE>isExported(java.lang.String, boolean)</CODE></A>).
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isPrivate(java.lang.String)">isPrivate</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#isPrivate(java.lang.String)">isPrivate</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isPrivate(java.lang.String)">isPrivate</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isPrivate(java.lang.String)">isPrivate</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html" title="class in com.google.javascript.jscomp">CodingConventions.Proxy</A></CODE></DL>
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>name</CODE> - The name of a global variable or function, or a method or
@@ -477,8 +505,8 @@ public boolean <B>isPrivate</B>(<A HREF="http://java.sun.com/javase/6/docs/api/j
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/FunctionInformationMap.Module.Builder.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Instrumentation.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/FunctionInformationMapOrBuilder.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/GoogleJsMessageIdGenerator.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/GoogleCodingConvention.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="GoogleCodingConvention.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -498,7 +526,7 @@ public boolean <B>isPrivate</B>(<A HREF="http://java.sun.com/javase/6/docs/api/j
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#fields_inherited_from_class_com.google.javascript.jscomp.CodingConventions.Proxy">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
 DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>

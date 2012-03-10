@@ -109,7 +109,7 @@ Stores the internal compiler state just before optimization is performed.
  different output targets without having to perform checking multiple times.
 
  NOTE: This does not include all parts of the compiler's internal state. In
- particular, JSSourceFiles and CompilerOptions are not recorded. In
+ particular, SourceFiles and CompilerOptions are not recorded. In
  order to recreate a Compiler instance from scratch, you would need to
  call <code>init</code> with the same arguments as in the initial creation before
  restoring intermediate state.

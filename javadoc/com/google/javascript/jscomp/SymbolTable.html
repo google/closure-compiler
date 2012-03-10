@@ -1,0 +1,867 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<TITLE>
+SymbolTable (Compiler)
+</TITLE>
+
+
+<LINK REL ="stylesheet" TYPE="text/css" HREF="../../../../dev_javadoc.css" TITLE="Style">
+
+<SCRIPT type="text/javascript">
+function windowTitle()
+{
+    if (location.href.indexOf('is-external=true') == -1) {
+        parent.document.title="SymbolTable (Compiler)";
+    }
+}
+</SCRIPT>
+<NOSCRIPT>
+</NOSCRIPT>
+
+</HEAD>
+
+<BODY BGCOLOR="white" onload="windowTitle();">
+<HR>
+
+
+<!-- ========= START OF TOP NAVBAR ======= -->
+<A NAME="navbar_top"><!-- --></A>
+<A HREF="#skip-navbar_top" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_top_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/StrictWarningsGuard.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Reference.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/SymbolTable.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="SymbolTable.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_top"></A>
+<!-- ========= END OF TOP NAVBAR ========= -->
+
+<HR>
+<!-- ======== START OF CLASS DATA ======== -->
+<H2>
+<FONT SIZE="-1">
+com.google.javascript.jscomp</FONT>
+<BR>
+Class SymbolTable</H2>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
+  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.SymbolTable</B>
+</PRE>
+<DL>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html" title="interface in com.google.javascript.rhino.jstype">StaticSymbolTable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>,<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Reference.html" title="class in com.google.javascript.jscomp">SymbolTable.Reference</A>&gt;</DD>
+</DL>
+<HR>
+<DL>
+<DT><PRE>public final class <B>SymbolTable</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html" title="interface in com.google.javascript.rhino.jstype">StaticSymbolTable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>,<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Reference.html" title="class in com.google.javascript.jscomp">SymbolTable.Reference</A>&gt;</DL>
+</PRE>
+
+<P>
+A symbol table for people that want to use Closure Compiler as an indexer.
+
+ Contains an index of all the symbols in the code within a compilation
+ job. The API is designed for people who want to visit all the symbols, rather
+ than people who want to lookup a specific symbol by a certain key.
+
+ We can use this to combine different types of symbol tables. For example,
+ one class might have a <code>StaticSymbolTable</code> of all variable references,
+ and another class might have a <code>StaticSymbolTable</code> of all type names
+ in JSDoc comments. This class allows you to combine them into a unified
+ index.
+
+ Most passes build their own "partial" symbol table that implements the same
+ interface (StaticSymbolTable, StaticSlot, and friends). Individual compiler
+ passes usually need more or less metadata about the certainty of symbol
+ information. Building a complete symbol table with all the necessary metadata
+ for all passes would be too slow. However, as long as these "partial" symbol
+ tables implement the proper interfaces, we should be able to add them to this
+ symbol table to make it more complete.
+
+ If clients want fast lookup, they should build their own wrapper around
+ this symbol table that indexes symbols or references by the desired lookup
+ key.
+
+ By design, when this symbol table creates symbols for types, it tries
+ to mimic the symbol table you would get in an OO language. For example,
+ the "type Foo" and "the constructor that creates objects of type Foo"
+ are the same symbol. The types of "Foo.prototype" and "new Foo()" also
+ have the same symbol. Although JSCompiler internally treats these as
+ distinct symbols, we assume that most clients will not care about
+ the distinction.
+<P>
+
+<P>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#addSymbolsFrom(com.google.javascript.rhino.jstype.StaticSymbolTable)"><CODE>For more information on how to write plugins for this
+    symbol table.</CODE></A></DL>
+<HR>
+
+<P>
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+
+<A NAME="nested_class_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Nested Class Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Reference.html" title="class in com.google.javascript.jscomp">SymbolTable.Reference</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;<!-- =========== FIELD SUMMARY =========== -->
+
+<A NAME="field_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Field Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#GLOBAL_THIS">GLOBAL_THIS</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The name we use for the JavaScript built-in Global object.</TD>
+</TR>
+</TABLE>
+&nbsp;
+<!-- ========== METHOD SUMMARY =========== -->
+
+<A NAME="method_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#addAnonymousFunctions()">addAnonymousFunctions</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finds anonymous functions in local scopes, and gives them names
+ and symbols.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#declareInferredSymbol(com.google.javascript.jscomp.SymbolTable.SymbolScope, java.lang.String, com.google.javascript.rhino.Node)">declareInferredSymbol</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A>&nbsp;scope,
+                      <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+                      <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;declNode)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Declare a symbol after the main symbol table was constructed.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getAllJSDocInfo()">getAllJSDocInfo</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getAllScopes()">getAllScopes</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets all the scopes in this symbol table.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getAllSymbols()">getAllSymbols</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns all variables in this symbol table.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getAllSymbolsForType(com.google.javascript.rhino.jstype.JSType)">getAllSymbolsForType</A></B>(<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets all symbols associated with the given type.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getAllSymbolsForTypeOf(com.google.javascript.jscomp.SymbolTable.Symbol)">getAllSymbolsForTypeOf</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&nbsp;sym)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get all symbols associated with the type of the given symbol.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getAllSymbolsSorted()">getAllSymbolsSorted</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get the symbols in their natural ordering.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getEnclosingScope(com.google.javascript.rhino.Node)">getEnclosingScope</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the scope that contains the given node.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getGlobalScope()">getGlobalScope</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the global scope.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;com.google.common.collect.Ordering&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getNaturalSymbolOrdering()">getNaturalSymbolOrdering</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the 'natural' ordering of symbols.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getParameterInFunction(com.google.javascript.jscomp.SymbolTable.Symbol, java.lang.String)">getParameterInFunction</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&nbsp;sym,
+                       <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;paramName)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If <code>sym</code> is a function, try to find a Symbol for
+ a parameter with the given name.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Reference.html" title="class in com.google.javascript.jscomp">SymbolTable.Reference</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getReferenceList(com.google.javascript.jscomp.SymbolTable.Symbol)">getReferenceList</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&nbsp;symbol)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Reference.html" title="class in com.google.javascript.jscomp">SymbolTable.Reference</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getReferences(com.google.javascript.jscomp.SymbolTable.Symbol)">getReferences</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&nbsp;symbol)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the references that point to the given symbol.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getScope(com.google.javascript.jscomp.SymbolTable.Symbol)">getScope</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&nbsp;slot)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the scope for a given symbol.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getSymbolDeclaredBy(com.google.javascript.rhino.jstype.EnumType)">getSymbolDeclaredBy</A></B>(<A HREF="../../../../com/google/javascript/rhino/jstype/EnumType.html" title="class in com.google.javascript.rhino.jstype">EnumType</A>&nbsp;enumType)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the symbol for the given enum.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getSymbolDeclaredBy(com.google.javascript.rhino.jstype.FunctionType)">getSymbolDeclaredBy</A></B>(<A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;fn)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the symbol for the given constuctor or interface.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getSymbolForInstancesOf(com.google.javascript.rhino.jstype.FunctionType)">getSymbolForInstancesOf</A></B>(<A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;fn)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the symbol for the prototype of the given constructor or interface.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getSymbolForInstancesOf(com.google.javascript.jscomp.SymbolTable.Symbol)">getSymbolForInstancesOf</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&nbsp;sym)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the symbol for the prototype if this is the symbol for a constructor
+ or interface.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#getSymbolForScope(com.google.javascript.jscomp.SymbolTable.SymbolScope)">getSymbolForScope</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A>&nbsp;scope)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All local scopes are associated with a function, and some functions
+ are associated with a symbol.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html#toDebugString()">toDebugString</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Methods inherited from class java.lang.<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+</TR>
+</TABLE>
+&nbsp;
+<P>
+
+<!-- ============ FIELD DETAIL =========== -->
+
+<A NAME="field_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Field Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="GLOBAL_THIS"><!-- --></A><H3>
+GLOBAL_THIS</H3>
+<PRE>
+public static final <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>GLOBAL_THIS</B></PRE>
+<DL>
+<DD>The name we use for the JavaScript built-in Global object.  It's
+ anonymous in JavaScript, so we have to give it an invalid identifier
+ to avoid conflicts with user-defined property names.
+<P>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.jscomp.SymbolTable.GLOBAL_THIS">Constant Field Values</A></DL>
+</DL>
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<A NAME="method_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Method Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="getReferences(com.google.javascript.jscomp.SymbolTable.Symbol)"><!-- --></A><H3>
+getReferences</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Reference.html" title="class in com.google.javascript.jscomp">SymbolTable.Reference</A>&gt; <B>getReferences</B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&nbsp;symbol)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html#getReferences(S)">StaticSymbolTable</A></CODE></B></DD>
+<DD>Returns the references that point to the given symbol.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html#getReferences(S)">getReferences</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html" title="interface in com.google.javascript.rhino.jstype">StaticSymbolTable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>,<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Reference.html" title="class in com.google.javascript.jscomp">SymbolTable.Reference</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getReferenceList(com.google.javascript.jscomp.SymbolTable.Symbol)"><!-- --></A><H3>
+getReferenceList</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Reference.html" title="class in com.google.javascript.jscomp">SymbolTable.Reference</A>&gt; <B>getReferenceList</B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&nbsp;symbol)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAllSymbols()"><!-- --></A><H3>
+getAllSymbols</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&gt; <B>getAllSymbols</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html#getAllSymbols()">StaticSymbolTable</A></CODE></B></DD>
+<DD>Returns all variables in this symbol table.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html#getAllSymbols()">getAllSymbols</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html" title="interface in com.google.javascript.rhino.jstype">StaticSymbolTable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>,<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Reference.html" title="class in com.google.javascript.jscomp">SymbolTable.Reference</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAllSymbolsSorted()"><!-- --></A><H3>
+getAllSymbolsSorted</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&gt; <B>getAllSymbolsSorted</B>()</PRE>
+<DL>
+<DD>Get the symbols in their natural ordering.
+ Always returns a mutable list.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getNaturalSymbolOrdering()"><!-- --></A><H3>
+getNaturalSymbolOrdering</H3>
+<PRE>
+public com.google.common.collect.Ordering&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&gt; <B>getNaturalSymbolOrdering</B>()</PRE>
+<DL>
+<DD>Gets the 'natural' ordering of symbols.
+
+ Right now, we only guarantee that symbols in the global scope will come
+ before symbols in local scopes. After that, the order is deterministic but
+ undefined.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getScope(com.google.javascript.jscomp.SymbolTable.Symbol)"><!-- --></A><H3>
+getScope</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A> <B>getScope</B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&nbsp;slot)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html#getScope(S)">StaticSymbolTable</A></CODE></B></DD>
+<DD>Returns the scope for a given symbol.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html#getScope(S)">getScope</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html" title="interface in com.google.javascript.rhino.jstype">StaticSymbolTable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>,<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Reference.html" title="class in com.google.javascript.jscomp">SymbolTable.Reference</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAllJSDocInfo()"><!-- --></A><H3>
+getAllJSDocInfo</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A>&gt; <B>getAllJSDocInfo</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="declareInferredSymbol(com.google.javascript.jscomp.SymbolTable.SymbolScope, java.lang.String, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+declareInferredSymbol</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A> <B>declareInferredSymbol</B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A>&nbsp;scope,
+                                                <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+                                                <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;declNode)</PRE>
+<DL>
+<DD>Declare a symbol after the main symbol table was constructed.
+ Throws an exception if you try to declare a symbol twice.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getEnclosingScope(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getEnclosingScope</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A> <B>getEnclosingScope</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</PRE>
+<DL>
+<DD>Gets the scope that contains the given node.
+ If <code>n</code> is a function name, we return the scope that contains the
+ function, not the function itself.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getParameterInFunction(com.google.javascript.jscomp.SymbolTable.Symbol, java.lang.String)"><!-- --></A><H3>
+getParameterInFunction</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A> <B>getParameterInFunction</B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&nbsp;sym,
+                                                 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;paramName)</PRE>
+<DL>
+<DD>If <code>sym</code> is a function, try to find a Symbol for
+ a parameter with the given name.
+
+ Returns null if we couldn't find one.
+
+ Notice that this just makes a best effort, and may not be able
+ to find parameters for non-conventional function definitions.
+ For example, we would not be able to find "y" in this code:
+ <code>
+ var x = x() ? function(y) {} : function(y) {};
+ </code>
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSymbolForScope(com.google.javascript.jscomp.SymbolTable.SymbolScope)"><!-- --></A><H3>
+getSymbolForScope</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A> <B>getSymbolForScope</B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A>&nbsp;scope)</PRE>
+<DL>
+<DD>All local scopes are associated with a function, and some functions
+ are associated with a symbol. Returns the symbol associated with the given
+ scope.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAllSymbolsForTypeOf(com.google.javascript.jscomp.SymbolTable.Symbol)"><!-- --></A><H3>
+getAllSymbolsForTypeOf</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&gt; <B>getAllSymbolsForTypeOf</B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&nbsp;sym)</PRE>
+<DL>
+<DD>Get all symbols associated with the type of the given symbol.
+
+ For example, given a variable x declared as
+ /* @type {Array|Date} /
+ var x = f();
+ this will return the constructors for Array and Date.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getGlobalScope()"><!-- --></A><H3>
+getGlobalScope</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A> <B>getGlobalScope</B>()</PRE>
+<DL>
+<DD>Returns the global scope.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSymbolDeclaredBy(com.google.javascript.rhino.jstype.FunctionType)"><!-- --></A><H3>
+getSymbolDeclaredBy</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A> <B>getSymbolDeclaredBy</B>(<A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;fn)</PRE>
+<DL>
+<DD>Gets the symbol for the given constuctor or interface.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSymbolDeclaredBy(com.google.javascript.rhino.jstype.EnumType)"><!-- --></A><H3>
+getSymbolDeclaredBy</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A> <B>getSymbolDeclaredBy</B>(<A HREF="../../../../com/google/javascript/rhino/jstype/EnumType.html" title="class in com.google.javascript.rhino.jstype">EnumType</A>&nbsp;enumType)</PRE>
+<DL>
+<DD>Gets the symbol for the given enum.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSymbolForInstancesOf(com.google.javascript.jscomp.SymbolTable.Symbol)"><!-- --></A><H3>
+getSymbolForInstancesOf</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A> <B>getSymbolForInstancesOf</B>(<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&nbsp;sym)</PRE>
+<DL>
+<DD>Gets the symbol for the prototype if this is the symbol for a constructor
+ or interface.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSymbolForInstancesOf(com.google.javascript.rhino.jstype.FunctionType)"><!-- --></A><H3>
+getSymbolForInstancesOf</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A> <B>getSymbolForInstancesOf</B>(<A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;fn)</PRE>
+<DL>
+<DD>Gets the symbol for the prototype of the given constructor or interface.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAllSymbolsForType(com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
+getAllSymbolsForType</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A>&gt; <B>getAllSymbolsForType</B>(<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</PRE>
+<DL>
+<DD>Gets all symbols associated with the given type.
+ For union types, this may be multiple symbols.
+ For instance types, this will return the constructor of
+ that instance.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="toDebugString()"><!-- --></A><H3>
+toDebugString</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>toDebugString</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAllScopes()"><!-- --></A><H3>
+getAllScopes</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A>&gt; <B>getAllScopes</B>()</PRE>
+<DL>
+<DD>Gets all the scopes in this symbol table.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="addAnonymousFunctions()"><!-- --></A><H3>
+addAnonymousFunctions</H3>
+<PRE>
+public void <B>addAnonymousFunctions</B>()</PRE>
+<DL>
+<DD>Finds anonymous functions in local scopes, and gives them names
+ and symbols. They will show up as local variables with names
+ "function%0", "function%1", etc.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<!-- ========= END OF CLASS DATA ========= -->
+<HR>
+
+
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<A NAME="navbar_bottom"><!-- --></A>
+<A HREF="#skip-navbar_bottom" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_bottom_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/StrictWarningsGuard.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.Reference.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/SymbolTable.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="SymbolTable.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_bottom"></A>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+
+<HR>
+
+        <div id="footer">
+          <div id="footerlogo">
+            <img src="http://www.google.com/images/art.gif"
+                 alt="Google colored balls">
+          </div>
+
+          <div id="copyright">
+          <p>&copy; 2009 Google -
+            <a href="http://www.google.com/privacy.html">Privacy Policy</a> -
+            <a href="http://www.google.com/terms_of_service.html">Terms and Conditions</a> -
+            <a href="http://www.google.com/about.html">About Google</a>
+          </p>
+          </div>
+        </div>
+      
+      
+</BODY>
+</HTML>

@@ -52,7 +52,7 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleSlot.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/StaticReference.html" title="interface in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/StaticScope.html" target="_top"><B>FRAMES</B></A>  &nbsp;
@@ -91,7 +91,7 @@ Interface StaticScope&lt;T&gt;</H2>
 <DL>
 <DT><DT><B>Type Parameters:</B><DD><CODE>T</CODE> - The type of information stored about the slot</DL>
 <DL>
-<DT><B>All Known Implementing Classes:</B> <DD><A HREF="../../../../../com/google/javascript/rhino/testing/EmptyScope.html" title="class in com.google.javascript.rhino.testing">EmptyScope</A>, <A HREF="../../../../../com/google/javascript/jscomp/Scope.html" title="class in com.google.javascript.jscomp">Scope</A></DD>
+<DT><B>All Known Implementing Classes:</B> <DD><A HREF="../../../../../com/google/javascript/rhino/testing/AbstractStaticScope.html" title="class in com.google.javascript.rhino.testing">AbstractStaticScope</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/EnumElementType.html" title="class in com.google.javascript.rhino.jstype">EnumElementType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/EnumType.html" title="class in com.google.javascript.rhino.jstype">EnumType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>, <A HREF="../../../../../com/google/javascript/rhino/testing/MapBasedScope.html" title="class in com.google.javascript.rhino.testing">MapBasedScope</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/NoObjectType.html" title="class in com.google.javascript.rhino.jstype">NoObjectType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/NoType.html" title="class in com.google.javascript.rhino.jstype">NoType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>, <A HREF="../../../../../com/google/javascript/jscomp/Scope.html" title="class in com.google.javascript.jscomp">Scope</A>, <A HREF="../../../../../com/google/javascript/jscomp/SymbolTable.SymbolScope.html" title="class in com.google.javascript.jscomp">SymbolTable.SymbolScope</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/TemplateType.html" title="class in com.google.javascript.rhino.jstype">TemplateType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/UnknownType.html" title="class in com.google.javascript.rhino.jstype">UnknownType</A></DD>
 </DL>
 <HR>
 <DL>
@@ -136,6 +136,14 @@ The <code>StaticScope</code> interface must be implemented by any object that
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html#getRootNode()">getRootNode</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the root node associated with this scope.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="type parameter in StaticScope">T</A>&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html#getSlot(java.lang.String)">getSlot</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
 
@@ -163,6 +171,19 @@ The <code>StaticScope</code> interface must be implemented by any object that
 <B>Method Detail</B></FONT></TH>
 </TR>
 </TABLE>
+
+<A NAME="getRootNode()"><!-- --></A><H3>
+getRootNode</H3>
+<PRE>
+<A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>getRootNode</B>()</PRE>
+<DL>
+<DD>Returns the root node associated with this scope. May be null.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
 
 <A NAME="getParentScope()"><!-- --></A><H3>
 getParentScope</H3>
@@ -248,7 +269,7 @@ getTypeOfThis</H3>
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleSlot.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/StaticReference.html" title="interface in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/StaticScope.html" target="_top"><B>FRAMES</B></A>  &nbsp;

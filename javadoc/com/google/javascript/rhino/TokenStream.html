@@ -53,7 +53,7 @@ function windowTitle()
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../com/google/javascript/rhino/Token.html" title="class in com.google.javascript.rhino"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/rhino/UintMap.html" title="class in com.google.javascript.rhino"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;NEXT CLASS</FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/rhino/TokenStream.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="TokenStream.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -105,8 +105,6 @@ This class implements the JavaScript scanner.
 <P>
 
 <P>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../com/google/javascript/rhino/Parser.html" title="class in com.google.javascript.rhino"><CODE>Parser</CODE></A></DL>
 <HR>
 
 <P>
@@ -120,10 +118,7 @@ This class implements the JavaScript scanner.
 <B>Constructor Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/TokenStream.html#TokenStream(com.google.javascript.rhino.Parser, java.io.Reader, java.lang.String, int)">TokenStream</A></B>(<A HREF="../../../../com/google/javascript/rhino/Parser.html" title="class in com.google.javascript.rhino">Parser</A>&nbsp;parser,
-            <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Reader.html?is-external=true" title="class or interface in java.io">Reader</A>&nbsp;sourceReader,
-            <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceString,
-            int&nbsp;lineno)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/TokenStream.html#TokenStream()">TokenStream</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -140,46 +135,6 @@ This class implements the JavaScript scanner.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected &nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/TokenStream.html#getChar()">getChar</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected &nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/TokenStream.html#getCharno()">getCharno</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected &nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/TokenStream.html#getLineno()">getLineno</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/TokenStream.html#getToken()">getToken</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/TokenStream.html#getTokenno()">getTokenno</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/TokenStream.html#isJSIdentifier(java.lang.String)">isJSIdentifier</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;s)</CODE>
 
@@ -189,23 +144,7 @@ This class implements the JavaScript scanner.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/TokenStream.html#isKeyword(java.lang.String)">isKeyword</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;s)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/TokenStream.html#setFileLevelJsDocBuilder(com.google.javascript.rhino.Node.FileLevelJsDocBuilder)">setFileLevelJsDocBuilder</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.FileLevelJsDocBuilder.html" title="class in com.google.javascript.rhino">Node.FileLevelJsDocBuilder</A>&nbsp;fileLevelJsDocBuilder)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Set the FileLevelJsDocBuilder on the TokenStream.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected &nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/TokenStream.html#ungetChar(int)">ungetChar</A></B>(int&nbsp;c)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/TokenStream.html#isKeyword(java.lang.String)">isKeyword</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -233,13 +172,10 @@ This class implements the JavaScript scanner.
 </TR>
 </TABLE>
 
-<A NAME="TokenStream(com.google.javascript.rhino.Parser, java.io.Reader, java.lang.String, int)"><!-- --></A><H3>
+<A NAME="TokenStream()"><!-- --></A><H3>
 TokenStream</H3>
 <PRE>
-public <B>TokenStream</B>(<A HREF="../../../../com/google/javascript/rhino/Parser.html" title="class in com.google.javascript.rhino">Parser</A>&nbsp;parser,
-                   <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Reader.html?is-external=true" title="class or interface in java.io">Reader</A>&nbsp;sourceReader,
-                   <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceString,
-                   int&nbsp;lineno)</PRE>
+public <B>TokenStream</B>()</PRE>
 <DL>
 </DL>
 
@@ -256,7 +192,7 @@ public <B>TokenStream</B>(<A HREF="../../../../com/google/javascript/rhino/Parse
 <A NAME="isKeyword(java.lang.String)"><!-- --></A><H3>
 isKeyword</H3>
 <PRE>
-public static boolean <B>isKeyword</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;s)</PRE>
+public static boolean <B>isKeyword</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
 <DL>
 <DD><DL>
 </DL>
@@ -271,93 +207,6 @@ public static boolean <B>isJSIdentifier</B>(<A HREF="http://java.sun.com/javase/
 <DL>
 <DD><DL>
 </DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getLineno()"><!-- --></A><H3>
-getLineno</H3>
-<PRE>
-protected final int <B>getLineno</B>()</PRE>
-<DL>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getCharno()"><!-- --></A><H3>
-getCharno</H3>
-<PRE>
-protected final int <B>getCharno</B>()</PRE>
-<DL>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getToken()"><!-- --></A><H3>
-getToken</H3>
-<PRE>
-public final int <B>getToken</B>()
-                   throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
-<DL>
-<DD><DL>
-
-<DT><B>Throws:</B>
-<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getTokenno()"><!-- --></A><H3>
-getTokenno</H3>
-<PRE>
-public int <B>getTokenno</B>()</PRE>
-<DL>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="ungetChar(int)"><!-- --></A><H3>
-ungetChar</H3>
-<PRE>
-protected void <B>ungetChar</B>(int&nbsp;c)</PRE>
-<DL>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getChar()"><!-- --></A><H3>
-getChar</H3>
-<PRE>
-protected int <B>getChar</B>()
-               throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
-<DL>
-<DD><DL>
-
-<DT><B>Throws:</B>
-<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="setFileLevelJsDocBuilder(com.google.javascript.rhino.Node.FileLevelJsDocBuilder)"><!-- --></A><H3>
-setFileLevelJsDocBuilder</H3>
-<PRE>
-public void <B>setFileLevelJsDocBuilder</B>(<A HREF="../../../../com/google/javascript/rhino/Node.FileLevelJsDocBuilder.html" title="class in com.google.javascript.rhino">Node.FileLevelJsDocBuilder</A>&nbsp;fileLevelJsDocBuilder)</PRE>
-<DL>
-<DD>Set the FileLevelJsDocBuilder on the TokenStream. The TokenStream passes
- the builder on to the JSDocInfoParser if it exists. Otherwise this method
- is a no-op.
-<P>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>fileLevelJsDocBuilder</CODE> - </DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->
@@ -391,7 +240,7 @@ public void <B>setFileLevelJsDocBuilder</B>(<A HREF="../../../../com/google/java
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../com/google/javascript/rhino/Token.html" title="class in com.google.javascript.rhino"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/rhino/UintMap.html" title="class in com.google.javascript.rhino"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;NEXT CLASS</FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/rhino/TokenStream.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="TokenStream.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;

@@ -52,7 +52,7 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/GoogleCodingConvention.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/HotSwapCompilerPass.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/Instrumentation.Builder.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/Instrumentation.html" target="_top"><B>FRAMES</B></A>  &nbsp;
@@ -96,11 +96,11 @@ Class Instrumentation</H2>
               <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.Instrumentation</B>
 </PRE>
 <DL>
-<DT><B>All Implemented Interfaces:</B> <DD>com.google.protobuf.Message, com.google.protobuf.MessageLite, <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DD>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A>, com.google.protobuf.Message, com.google.protobuf.MessageLite, com.google.protobuf.MessageLiteOrBuilder, com.google.protobuf.MessageOrBuilder, <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DD>
 </DL>
 <HR>
 <DL>
-<DT><PRE>public final class <B>Instrumentation</B><DT>extends com.google.protobuf.GeneratedMessage</DL>
+<DT><PRE>public final class <B>Instrumentation</B><DT>extends com.google.protobuf.GeneratedMessage<DT>implements <A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></DL>
 </PRE>
 
 <P>
@@ -132,7 +132,7 @@ Class Instrumentation</H2>
 <TH ALIGN="left"><B>Nested classes/interfaces inherited from class com.google.protobuf.GeneratedMessage</B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE>com.google.protobuf.GeneratedMessage.ExtendableBuilder&lt;MessageType extends com.google.protobuf.GeneratedMessage.ExtendableMessage,BuilderType extends com.google.protobuf.GeneratedMessage.ExtendableBuilder&gt;, com.google.protobuf.GeneratedMessage.ExtendableMessage&lt;MessageType extends com.google.protobuf.GeneratedMessage.ExtendableMessage&gt;, com.google.protobuf.GeneratedMessage.FieldAccessorTable, com.google.protobuf.GeneratedMessage.GeneratedExtension&lt;ContainingType extends com.google.protobuf.Message,Type&gt;</CODE></TD>
+<TD><CODE>com.google.protobuf.GeneratedMessage.BuilderParent, com.google.protobuf.GeneratedMessage.ExtendableBuilder&lt;MessageType extends com.google.protobuf.GeneratedMessage.ExtendableMessage,BuilderType extends com.google.protobuf.GeneratedMessage.ExtendableBuilder&gt;, com.google.protobuf.GeneratedMessage.ExtendableMessage&lt;MessageType extends com.google.protobuf.GeneratedMessage.ExtendableMessage&gt;, com.google.protobuf.GeneratedMessage.ExtendableMessageOrBuilder&lt;MessageType extends com.google.protobuf.GeneratedMessage.ExtendableMessage&gt;, com.google.protobuf.GeneratedMessage.FieldAccessorTable, com.google.protobuf.GeneratedMessage.GeneratedExtension&lt;ContainingType extends com.google.protobuf.Message,Type&gt;</CODE></TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -191,6 +191,15 @@ Class Instrumentation</H2>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;<A NAME="fields_inherited_from_class_com.google.protobuf.GeneratedMessage"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Fields inherited from class com.google.protobuf.GeneratedMessage</B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE>alwaysUseFieldBuilders</CODE></TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -388,6 +397,14 @@ Class Instrumentation</H2>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../com/google/javascript/jscomp/Instrumentation.Builder.html" title="class in com.google.javascript.jscomp">Instrumentation.Builder</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Instrumentation.html#newBuilderForType(com.google.protobuf.GeneratedMessage.BuilderParent)">newBuilderForType</A></B>(com.google.protobuf.GeneratedMessage.BuilderParent&nbsp;parent)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Instrumentation.html" title="class in com.google.javascript.jscomp">Instrumentation</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Instrumentation.html#parseDelimitedFrom(java.io.InputStream)">parseDelimitedFrom</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/io/InputStream.html?is-external=true" title="class or interface in java.io">InputStream</A>&nbsp;input)</CODE>
 
@@ -502,7 +519,7 @@ Class Instrumentation</H2>
 <TH ALIGN="left"><B>Methods inherited from class com.google.protobuf.GeneratedMessage</B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE>getAllFields, getDescriptorForType, getField, getRepeatedField, getRepeatedFieldCount, getUnknownFields, hasField, newGeneratedExtension</CODE></TD>
+<TD><CODE>getAllFields, getDescriptorForType, getField, getRepeatedField, getRepeatedFieldCount, getUnknownFields, hasField, newFileScopedGeneratedExtension, newMessageScopedGeneratedExtension</CODE></TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_com.google.protobuf.AbstractMessage"><!-- --></A>
@@ -511,7 +528,7 @@ Class Instrumentation</H2>
 <TH ALIGN="left"><B>Methods inherited from class com.google.protobuf.AbstractMessage</B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE>equals, hashCode, toString</CODE></TD>
+<TD><CODE>equals, hashBoolean, hashCode, hashEnum, hashEnumList, hashFields, hashLong, toString</CODE></TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_com.google.protobuf.AbstractMessageLite"><!-- --></A>
@@ -530,6 +547,15 @@ Class Instrumentation</H2>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+</TR>
+</TABLE>
+&nbsp;<A NAME="methods_inherited_from_class_com.google.protobuf.MessageOrBuilder"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Methods inherited from interface com.google.protobuf.MessageOrBuilder</B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE>getAllFields, getDescriptorForType, getField, getRepeatedField, getRepeatedFieldCount, getUnknownFields, hasField</CODE></TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_com.google.protobuf.MessageLite"><!-- --></A>
@@ -631,6 +657,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -639,6 +668,9 @@ getDefaultInstanceForType</H3>
 <PRE>
 public <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.html" title="class in com.google.javascript.jscomp">Instrumentation</A> <B>getDefaultInstanceForType</B>()</PRE>
 <DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE>getDefaultInstanceForType</CODE> in interface <CODE>com.google.protobuf.MessageLiteOrBuilder</CODE><DT><B>Specified by:</B><DD><CODE>getDefaultInstanceForType</CODE> in interface <CODE>com.google.protobuf.MessageOrBuilder</CODE></DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -650,6 +682,9 @@ getDescriptor</H3>
 <PRE>
 public static final com.google.protobuf.Descriptors.Descriptor <B>getDescriptor</B>()</PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -676,6 +711,9 @@ hasReportDefined</H3>
 public boolean <B>hasReportDefined</B>()</PRE>
 <DL>
 <DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#hasReportDefined()">hasReportDefined</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
+<DD><DL>
 </DL>
 </DD>
 </DL>
@@ -686,6 +724,9 @@ getReportDefined</H3>
 <PRE>
 public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getReportDefined</B>()</PRE>
 <DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#getReportDefined()">getReportDefined</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -698,6 +739,9 @@ hasReportCall</H3>
 public boolean <B>hasReportCall</B>()</PRE>
 <DL>
 <DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#hasReportCall()">hasReportCall</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
+<DD><DL>
 </DL>
 </DD>
 </DL>
@@ -708,6 +752,9 @@ getReportCall</H3>
 <PRE>
 public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getReportCall</B>()</PRE>
 <DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#getReportCall()">getReportCall</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -720,6 +767,9 @@ hasReportExit</H3>
 public boolean <B>hasReportExit</B>()</PRE>
 <DL>
 <DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#hasReportExit()">hasReportExit</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
+<DD><DL>
 </DL>
 </DD>
 </DL>
@@ -730,6 +780,9 @@ getReportExit</H3>
 <PRE>
 public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getReportExit</B>()</PRE>
 <DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#getReportExit()">getReportExit</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -742,6 +795,9 @@ getDeclarationToRemoveList</H3>
 public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>getDeclarationToRemoveList</B>()</PRE>
 <DL>
 <DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#getDeclarationToRemoveList()">getDeclarationToRemoveList</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
+<DD><DL>
 </DL>
 </DD>
 </DL>
@@ -752,6 +808,9 @@ getDeclarationToRemoveCount</H3>
 <PRE>
 public int <B>getDeclarationToRemoveCount</B>()</PRE>
 <DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#getDeclarationToRemoveCount()">getDeclarationToRemoveCount</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -764,6 +823,9 @@ getDeclarationToRemove</H3>
 public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getDeclarationToRemove</B>(int&nbsp;index)</PRE>
 <DL>
 <DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#getDeclarationToRemove(int)">getDeclarationToRemove</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
+<DD><DL>
 </DL>
 </DD>
 </DL>
@@ -774,6 +836,9 @@ getInitList</H3>
 <PRE>
 public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>getInitList</B>()</PRE>
 <DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#getInitList()">getInitList</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -786,6 +851,9 @@ getInitCount</H3>
 public int <B>getInitCount</B>()</PRE>
 <DL>
 <DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#getInitCount()">getInitCount</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
+<DD><DL>
 </DL>
 </DD>
 </DL>
@@ -796,6 +864,9 @@ getInit</H3>
 <PRE>
 public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getInit</B>(int&nbsp;index)</PRE>
 <DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#getInit(int)">getInit</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -808,6 +879,9 @@ hasAppNameSetter</H3>
 public boolean <B>hasAppNameSetter</B>()</PRE>
 <DL>
 <DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#hasAppNameSetter()">hasAppNameSetter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
+<DD><DL>
 </DL>
 </DD>
 </DL>
@@ -818,6 +892,9 @@ getAppNameSetter</H3>
 <PRE>
 public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getAppNameSetter</B>()</PRE>
 <DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html#getAppNameSetter()">getAppNameSetter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/InstrumentationOrBuilder.html" title="interface in com.google.javascript.jscomp">InstrumentationOrBuilder</A></CODE></DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -830,7 +907,7 @@ isInitialized</H3>
 public final boolean <B>isInitialized</B>()</PRE>
 <DL>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE>isInitialized</CODE> in interface <CODE>com.google.protobuf.MessageLite</CODE><DT><B>Overrides:</B><DD><CODE>isInitialized</CODE> in class <CODE>com.google.protobuf.GeneratedMessage</CODE></DL>
+<DT><B>Specified by:</B><DD><CODE>isInitialized</CODE> in interface <CODE>com.google.protobuf.MessageLiteOrBuilder</CODE><DT><B>Overrides:</B><DD><CODE>isInitialized</CODE> in class <CODE>com.google.protobuf.GeneratedMessage</CODE></DL>
 </DD>
 <DD><DL>
 </DL>
@@ -893,6 +970,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.
                                  throws com.google.protobuf.InvalidProtocolBufferException</PRE>
 <DL>
 <DD><DL>
+</DL>
+</DD>
+<DD><DL>
 
 <DT><B>Throws:</B>
 <DD><CODE>com.google.protobuf.InvalidProtocolBufferException</CODE></DL>
@@ -908,6 +988,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.
                                  throws com.google.protobuf.InvalidProtocolBufferException</PRE>
 <DL>
 <DD><DL>
+</DL>
+</DD>
+<DD><DL>
 
 <DT><B>Throws:</B>
 <DD><CODE>com.google.protobuf.InvalidProtocolBufferException</CODE></DL>
@@ -921,6 +1004,9 @@ parseFrom</H3>
 public static <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.html" title="class in com.google.javascript.jscomp">Instrumentation</A> <B>parseFrom</B>(byte[]&nbsp;data)
                                  throws com.google.protobuf.InvalidProtocolBufferException</PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 
 <DT><B>Throws:</B>
@@ -937,6 +1023,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.
                                  throws com.google.protobuf.InvalidProtocolBufferException</PRE>
 <DL>
 <DD><DL>
+</DL>
+</DD>
+<DD><DL>
 
 <DT><B>Throws:</B>
 <DD><CODE>com.google.protobuf.InvalidProtocolBufferException</CODE></DL>
@@ -950,6 +1039,9 @@ parseFrom</H3>
 public static <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.html" title="class in com.google.javascript.jscomp">Instrumentation</A> <B>parseFrom</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/io/InputStream.html?is-external=true" title="class or interface in java.io">InputStream</A>&nbsp;input)
                                  throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 
 <DT><B>Throws:</B>
@@ -966,6 +1058,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.
                                  throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
 <DL>
 <DD><DL>
+</DL>
+</DD>
+<DD><DL>
 
 <DT><B>Throws:</B>
 <DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
@@ -979,6 +1074,9 @@ parseDelimitedFrom</H3>
 public static <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.html" title="class in com.google.javascript.jscomp">Instrumentation</A> <B>parseDelimitedFrom</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/io/InputStream.html?is-external=true" title="class or interface in java.io">InputStream</A>&nbsp;input)
                                           throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 
 <DT><B>Throws:</B>
@@ -995,6 +1093,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.
                                           throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
 <DL>
 <DD><DL>
+</DL>
+</DD>
+<DD><DL>
 
 <DT><B>Throws:</B>
 <DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
@@ -1008,6 +1109,9 @@ parseFrom</H3>
 public static <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.html" title="class in com.google.javascript.jscomp">Instrumentation</A> <B>parseFrom</B>(com.google.protobuf.CodedInputStream&nbsp;input)
                                  throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 
 <DT><B>Throws:</B>
@@ -1024,6 +1128,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.
                                  throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
 <DL>
 <DD><DL>
+</DL>
+</DD>
+<DD><DL>
 
 <DT><B>Throws:</B>
 <DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
@@ -1039,6 +1146,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -1047,6 +1157,9 @@ newBuilderForType</H3>
 <PRE>
 public <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.Builder.html" title="class in com.google.javascript.jscomp">Instrumentation.Builder</A> <B>newBuilderForType</B>()</PRE>
 <DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE>newBuilderForType</CODE> in interface <CODE>com.google.protobuf.Message</CODE><DT><B>Specified by:</B><DD><CODE>newBuilderForType</CODE> in interface <CODE>com.google.protobuf.MessageLite</CODE></DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -1061,6 +1174,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -1069,6 +1185,23 @@ toBuilder</H3>
 <PRE>
 public <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.Builder.html" title="class in com.google.javascript.jscomp">Instrumentation.Builder</A> <B>toBuilder</B>()</PRE>
 <DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE>toBuilder</CODE> in interface <CODE>com.google.protobuf.Message</CODE><DT><B>Specified by:</B><DD><CODE>toBuilder</CODE> in interface <CODE>com.google.protobuf.MessageLite</CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="newBuilderForType(com.google.protobuf.GeneratedMessage.BuilderParent)"><!-- --></A><H3>
+newBuilderForType</H3>
+<PRE>
+protected <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.Builder.html" title="class in com.google.javascript.jscomp">Instrumentation.Builder</A> <B>newBuilderForType</B>(com.google.protobuf.GeneratedMessage.BuilderParent&nbsp;parent)</PRE>
+<DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE>newBuilderForType</CODE> in class <CODE>com.google.protobuf.GeneratedMessage</CODE></DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -1103,7 +1236,7 @@ public <A HREF="../../../../com/google/javascript/jscomp/Instrumentation.Builder
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/GoogleCodingConvention.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/HotSwapCompilerPass.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/Instrumentation.Builder.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/Instrumentation.html" target="_top"><B>FRAMES</B></A>  &nbsp;

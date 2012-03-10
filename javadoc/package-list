@@ -1,8 +1,12 @@
+com.google.debugging.sourcemap
+com.google.debugging.sourcemap.proto
 com.google.javascript.jscomp
 com.google.javascript.jscomp.ant
 com.google.javascript.jscomp.deps
 com.google.javascript.jscomp.graph
+com.google.javascript.jscomp.jsonml
 com.google.javascript.jscomp.parsing
+com.google.javascript.jscomp.regex
 com.google.javascript.jscomp.testing
 com.google.javascript.rhino
 com.google.javascript.rhino.jstype

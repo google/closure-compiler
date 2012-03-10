@@ -1,0 +1,743 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<TITLE>
+JsonML (Compiler)
+</TITLE>
+
+
+<LINK REL ="stylesheet" TYPE="text/css" HREF="../../../../../dev_javadoc.css" TITLE="Style">
+
+<SCRIPT type="text/javascript">
+function windowTitle()
+{
+    if (location.href.indexOf('is-external=true') == -1) {
+        parent.document.title="JsonML (Compiler)";
+    }
+}
+</SCRIPT>
+<NOSCRIPT>
+</NOSCRIPT>
+
+</HEAD>
+
+<BODY BGCOLOR="white" onload="windowTitle();">
+<HR>
+
+
+<!-- ========= START OF TOP NAVBAR ======= -->
+<A NAME="navbar_top"><!-- --></A>
+<A HREF="#skip-navbar_top" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_top_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/ErrorLevel.html" title="enum in com.google.javascript.jscomp.jsonml"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonMLAst.html" title="class in com.google.javascript.jscomp.jsonml"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../../index.html?com/google/javascript/jscomp/jsonml/JsonML.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="JsonML.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_top"></A>
+<!-- ========= END OF TOP NAVBAR ========= -->
+
+<HR>
+<!-- ======== START OF CLASS DATA ======== -->
+<H2>
+<FONT SIZE="-1">
+com.google.javascript.jscomp.jsonml</FONT>
+<BR>
+Class JsonML</H2>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
+  <IMG SRC="../../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.jsonml.JsonML</B>
+</PRE>
+<HR>
+<DL>
+<DT><PRE>public class <B>JsonML</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
+</PRE>
+
+<P>
+Class which represents JsonML element according to the specification at
+ "http://code.google.com/p/es-lab/wiki/JsonMLASTFormat"
+<P>
+
+<P>
+<HR>
+
+<P>
+
+<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+
+<A NAME="constructor_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Constructor Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#JsonML(com.google.javascript.jscomp.jsonml.TagType)">JsonML</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagType.html" title="enum in com.google.javascript.jscomp.jsonml">TagType</A>&nbsp;type)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a new element with a given type.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#JsonML(com.google.javascript.jscomp.jsonml.TagType, com.google.javascript.jscomp.jsonml.JsonML...)">JsonML</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagType.html" title="enum in com.google.javascript.jscomp.jsonml">TagType</A>&nbsp;type,
+       <A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>...&nbsp;children)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a new element.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#JsonML(com.google.javascript.jscomp.jsonml.TagType, java.util.List)">JsonML</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagType.html" title="enum in com.google.javascript.jscomp.jsonml">TagType</A>&nbsp;type,
+       <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;? extends <A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&gt;&nbsp;children)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#JsonML(com.google.javascript.jscomp.jsonml.TagType, java.util.Map)">JsonML</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagType.html" title="enum in com.google.javascript.jscomp.jsonml">TagType</A>&nbsp;type,
+       <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;? extends <A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagAttr.html" title="enum in com.google.javascript.jscomp.jsonml">TagAttr</A>,?&gt;&nbsp;attributes)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#JsonML(com.google.javascript.jscomp.jsonml.TagType, java.util.Map, java.util.List)">JsonML</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagType.html" title="enum in com.google.javascript.jscomp.jsonml">TagType</A>&nbsp;type,
+       <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;? extends <A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagAttr.html" title="enum in com.google.javascript.jscomp.jsonml">TagAttr</A>,?&gt;&nbsp;attributes,
+       <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;? extends <A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&gt;&nbsp;children)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;
+<!-- ========== METHOD SUMMARY =========== -->
+
+<A NAME="method_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#addChild(int, com.google.javascript.jscomp.jsonml.JsonML)">addChild</A></B>(int&nbsp;index,
+         <A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&nbsp;element)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Inserts the given JsonML element at the given position in the
+ list of children.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#appendChild(com.google.javascript.jscomp.jsonml.JsonML)">appendChild</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&nbsp;element)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Appends a given child element to the list of children.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#appendChildren(java.util.Collection)">appendChildren</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;? extends <A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&gt;&nbsp;elements)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Appends a collection of children to the back of the list of children.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#childrenSize()">childrenSize</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns number of the children.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#clearChildren()">clearChildren</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Removes all elements from the list of children.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#getAttribute(com.google.javascript.jscomp.jsonml.TagAttr)">getAttribute</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagAttr.html" title="enum in com.google.javascript.jscomp.jsonml">TagAttr</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns value associated with a given attribute.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagAttr.html" title="enum in com.google.javascript.jscomp.jsonml">TagAttr</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#getAttributes()">getAttributes</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns a map with attributes and respective values.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#getChild(int)">getChild</A></B>(int&nbsp;index)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns child at a given position.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#getChildren()">getChildren</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns a list of all children.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#getChildren(int, int)">getChildren</A></B>(int&nbsp;fromIndex,
+            int&nbsp;toIndex)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the portion of children list between the specified
+ fromIndex, inclusive, and toIndex, exclusive.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagType.html" title="enum in com.google.javascript.jscomp.jsonml">TagType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#getType()">getType</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns type of the JsonML element.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#hasChildren()">hasChildren</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if the JsonML element has at least one child.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#setAttribute(com.google.javascript.jscomp.jsonml.TagAttr, java.lang.Object)">setAttribute</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagAttr.html" title="enum in com.google.javascript.jscomp.jsonml">TagAttr</A>&nbsp;name,
+             <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A>&nbsp;value)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets value for a given attribute.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#setAttributes(java.util.Map)">setAttributes</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagAttr.html" title="enum in com.google.javascript.jscomp.jsonml">TagAttr</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A>&gt;&nbsp;attributes)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets attributes of the JsonML element.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#setChild(int, com.google.javascript.jscomp.jsonml.JsonML)">setChild</A></B>(int&nbsp;index,
+         <A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&nbsp;element)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Replaces the element at the given position in the list of children wit
+ the given JsonML element.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#setChildren(com.google.javascript.jscomp.jsonml.JsonML...)">setChildren</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>...&nbsp;children)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Replaces all elements in the list of children with the given
+ JsonML elements.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#setChildren(java.util.List)">setChildren</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&gt;&nbsp;children)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Replaces all elements in the list of children with the given
+ list of JsonML elements..</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#toString()">toString</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html#toStringTree()">toStringTree</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Prints a JsonML tree in a human readable format.</TD>
+</TR>
+</TABLE>
+&nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Methods inherited from class java.lang.<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+</TR>
+</TABLE>
+&nbsp;
+<P>
+
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+
+<A NAME="constructor_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Constructor Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="JsonML(com.google.javascript.jscomp.jsonml.TagType)"><!-- --></A><H3>
+JsonML</H3>
+<PRE>
+public <B>JsonML</B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagType.html" title="enum in com.google.javascript.jscomp.jsonml">TagType</A>&nbsp;type)</PRE>
+<DL>
+<DD>Creates a new element with a given type.
+<P>
+<DL>
+<DT><B>Parameters:</B><DD><CODE>type</CODE> - </DL>
+</DL>
+<HR>
+
+<A NAME="JsonML(com.google.javascript.jscomp.jsonml.TagType, com.google.javascript.jscomp.jsonml.JsonML...)"><!-- --></A><H3>
+JsonML</H3>
+<PRE>
+public <B>JsonML</B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagType.html" title="enum in com.google.javascript.jscomp.jsonml">TagType</A>&nbsp;type,
+              <A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>...&nbsp;children)</PRE>
+<DL>
+<DD>Creates a new element.
+<P>
+<DL>
+<DT><B>Parameters:</B><DD><CODE>type</CODE> - type of the element<DD><CODE>children</CODE> - children to append to the element</DL>
+</DL>
+<HR>
+
+<A NAME="JsonML(com.google.javascript.jscomp.jsonml.TagType, java.util.List)"><!-- --></A><H3>
+JsonML</H3>
+<PRE>
+public <B>JsonML</B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagType.html" title="enum in com.google.javascript.jscomp.jsonml">TagType</A>&nbsp;type,
+              <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;? extends <A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&gt;&nbsp;children)</PRE>
+<DL>
+</DL>
+<HR>
+
+<A NAME="JsonML(com.google.javascript.jscomp.jsonml.TagType, java.util.Map)"><!-- --></A><H3>
+JsonML</H3>
+<PRE>
+public <B>JsonML</B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagType.html" title="enum in com.google.javascript.jscomp.jsonml">TagType</A>&nbsp;type,
+              <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;? extends <A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagAttr.html" title="enum in com.google.javascript.jscomp.jsonml">TagAttr</A>,?&gt;&nbsp;attributes)</PRE>
+<DL>
+</DL>
+<HR>
+
+<A NAME="JsonML(com.google.javascript.jscomp.jsonml.TagType, java.util.Map, java.util.List)"><!-- --></A><H3>
+JsonML</H3>
+<PRE>
+public <B>JsonML</B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagType.html" title="enum in com.google.javascript.jscomp.jsonml">TagType</A>&nbsp;type,
+              <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;? extends <A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagAttr.html" title="enum in com.google.javascript.jscomp.jsonml">TagAttr</A>,?&gt;&nbsp;attributes,
+              <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;? extends <A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&gt;&nbsp;children)</PRE>
+<DL>
+</DL>
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<A NAME="method_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Method Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="addChild(int, com.google.javascript.jscomp.jsonml.JsonML)"><!-- --></A><H3>
+addChild</H3>
+<PRE>
+public void <B>addChild</B>(int&nbsp;index,
+                     <A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&nbsp;element)</PRE>
+<DL>
+<DD>Inserts the given JsonML element at the given position in the
+ list of children.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>index</CODE> - index at which the given element is to be inserted<DD><CODE>element</CODE> - JsonML element to be inserted</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="appendChild(com.google.javascript.jscomp.jsonml.JsonML)"><!-- --></A><H3>
+appendChild</H3>
+<PRE>
+public void <B>appendChild</B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&nbsp;element)</PRE>
+<DL>
+<DD>Appends a given child element to the list of children.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>element</CODE> - JsonML element to append</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="appendChildren(java.util.Collection)"><!-- --></A><H3>
+appendChildren</H3>
+<PRE>
+public void <B>appendChildren</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;? extends <A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&gt;&nbsp;elements)</PRE>
+<DL>
+<DD>Appends a collection of children to the back of the list of children.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>elements</CODE> - collection of JsonML elements to append</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="childrenSize()"><!-- --></A><H3>
+childrenSize</H3>
+<PRE>
+public int <B>childrenSize</B>()</PRE>
+<DL>
+<DD>Returns number of the children.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="clearChildren()"><!-- --></A><H3>
+clearChildren</H3>
+<PRE>
+public void <B>clearChildren</B>()</PRE>
+<DL>
+<DD>Removes all elements from the list of children.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAttribute(com.google.javascript.jscomp.jsonml.TagAttr)"><!-- --></A><H3>
+getAttribute</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A> <B>getAttribute</B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagAttr.html" title="enum in com.google.javascript.jscomp.jsonml">TagAttr</A>&nbsp;name)</PRE>
+<DL>
+<DD>Returns value associated with a given attribute.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>name</CODE> - name of the attribute
+<DT><B>Returns:</B><DD>associated value or null if the attribute is not present</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAttributes()"><!-- --></A><H3>
+getAttributes</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagAttr.html" title="enum in com.google.javascript.jscomp.jsonml">TagAttr</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A>&gt; <B>getAttributes</B>()</PRE>
+<DL>
+<DD>Returns a map with attributes and respective values.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getChild(int)"><!-- --></A><H3>
+getChild</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A> <B>getChild</B>(int&nbsp;index)</PRE>
+<DL>
+<DD>Returns child at a given position.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getChildren()"><!-- --></A><H3>
+getChildren</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&gt; <B>getChildren</B>()</PRE>
+<DL>
+<DD>Returns a list of all children.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getChildren(int, int)"><!-- --></A><H3>
+getChildren</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&gt; <B>getChildren</B>(int&nbsp;fromIndex,
+                                int&nbsp;toIndex)</PRE>
+<DL>
+<DD>Returns the portion of children list between the specified
+ fromIndex, inclusive, and toIndex, exclusive.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>fromIndex</CODE> - low endpoint (inclusive)<DD><CODE>toIndex</CODE> - high endpoint (exclusive)</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getType()"><!-- --></A><H3>
+getType</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagType.html" title="enum in com.google.javascript.jscomp.jsonml">TagType</A> <B>getType</B>()</PRE>
+<DL>
+<DD>Returns type of the JsonML element.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="hasChildren()"><!-- --></A><H3>
+hasChildren</H3>
+<PRE>
+public boolean <B>hasChildren</B>()</PRE>
+<DL>
+<DD>Returns true if the JsonML element has at least one child.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setAttribute(com.google.javascript.jscomp.jsonml.TagAttr, java.lang.Object)"><!-- --></A><H3>
+setAttribute</H3>
+<PRE>
+public void <B>setAttribute</B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagAttr.html" title="enum in com.google.javascript.jscomp.jsonml">TagAttr</A>&nbsp;name,
+                         <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A>&nbsp;value)</PRE>
+<DL>
+<DD>Sets value for a given attribute.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>name</CODE> - name of the attribute<DD><CODE>value</CODE> - value to associate with the attribute</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setAttributes(java.util.Map)"><!-- --></A><H3>
+setAttributes</H3>
+<PRE>
+public void <B>setAttributes</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/TagAttr.html" title="enum in com.google.javascript.jscomp.jsonml">TagAttr</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A>&gt;&nbsp;attributes)</PRE>
+<DL>
+<DD>Sets attributes of the JsonML element.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>attributes</CODE> - map with attributes and their values</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setChild(int, com.google.javascript.jscomp.jsonml.JsonML)"><!-- --></A><H3>
+setChild</H3>
+<PRE>
+public void <B>setChild</B>(int&nbsp;index,
+                     <A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&nbsp;element)</PRE>
+<DL>
+<DD>Replaces the element at the given position in the list of children wit
+ the given JsonML element.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>index</CODE> - index of element to replace<DD><CODE>element</CODE> - JsonML element to append</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setChildren(com.google.javascript.jscomp.jsonml.JsonML...)"><!-- --></A><H3>
+setChildren</H3>
+<PRE>
+public void <B>setChildren</B>(<A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>...&nbsp;children)</PRE>
+<DL>
+<DD>Replaces all elements in the list of children with the given
+ JsonML elements.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>children</CODE> - a comma separated list of JsonML elements</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setChildren(java.util.List)"><!-- --></A><H3>
+setChildren</H3>
+<PRE>
+public void <B>setChildren</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonML.html" title="class in com.google.javascript.jscomp.jsonml">JsonML</A>&gt;&nbsp;children)</PRE>
+<DL>
+<DD>Replaces all elements in the list of children with the given
+ list of JsonML elements..
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>children</CODE> - a list of JsonML elements.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="toString()"><!-- --></A><H3>
+toString</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>toString</B>()</PRE>
+<DL>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A></CODE> in class <CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="toStringTree()"><!-- --></A><H3>
+toStringTree</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>toStringTree</B>()</PRE>
+<DL>
+<DD>Prints a JsonML tree in a human readable format.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<!-- ========= END OF CLASS DATA ========= -->
+<HR>
+
+
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<A NAME="navbar_bottom"><!-- --></A>
+<A HREF="#skip-navbar_bottom" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_bottom_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/ErrorLevel.html" title="enum in com.google.javascript.jscomp.jsonml"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/jsonml/JsonMLAst.html" title="class in com.google.javascript.jscomp.jsonml"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../../index.html?com/google/javascript/jscomp/jsonml/JsonML.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="JsonML.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_bottom"></A>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+
+<HR>
+
+        <div id="footer">
+          <div id="footerlogo">
+            <img src="http://www.google.com/images/art.gif"
+                 alt="Google colored balls">
+          </div>
+
+          <div id="copyright">
+          <p>&copy; 2009 Google -
+            <a href="http://www.google.com/privacy.html">Privacy Policy</a> -
+            <a href="http://www.google.com/terms_of_service.html">Terms and Conditions</a> -
+            <a href="http://www.google.com/about.html">About Google</a>
+          </p>
+          </div>
+        </div>
+      
+      
+</BODY>
+</HTML>

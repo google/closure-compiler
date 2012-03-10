@@ -52,7 +52,7 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Scope.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Scope.Arguments.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/ShowByPathWarningsGuard.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/Scope.Var.html" target="_top"><B>FRAMES</B></A>  &nbsp;
@@ -93,14 +93,17 @@ Class Scope.Var</H2>
   <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.Scope.Var</B>
 </PRE>
 <DL>
-<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</DD>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/rhino/jstype/StaticReference.html" title="interface in com.google.javascript.rhino.jstype">StaticReference</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;, <A HREF="../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</DD>
+</DL>
+<DL>
+<DT><B>Direct Known Subclasses:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/Scope.Arguments.html" title="class in com.google.javascript.jscomp">Scope.Arguments</A></DD>
 </DL>
 <DL>
 <DT><B>Enclosing class:</B><DD><A HREF="../../../../com/google/javascript/jscomp/Scope.html" title="class in com.google.javascript.jscomp">Scope</A></DD>
 </DL>
 <HR>
 <DL>
-<DT><PRE>public static class <B>Scope.Var</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</DL>
+<DT><PRE>public static class <B>Scope.Var</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;, <A HREF="../../../../com/google/javascript/rhino/jstype/StaticReference.html" title="interface in com.google.javascript.rhino.jstype">StaticReference</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</DL>
 </PRE>
 
 <P>
@@ -127,6 +130,14 @@ Stores info about a variable
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html#getDeclaration()">getDeclaration</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the declaration of this symbol.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -171,10 +182,34 @@ Stores info about a variable
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html#getNode()">getNode</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the node for the name of the variable.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html#getParentNode()">getParentNode</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the parent of the name node.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/jstype/StaticSourceFile.html" title="interface in com.google.javascript.rhino.jstype">StaticSourceFile</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html#getSourceFile()">getSourceFile</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The source file where the reference lives.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html#getSymbol()">getSymbol</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The variable that this reference points to.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -191,6 +226,15 @@ Stores info about a variable
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html#isBleedingFunction()">isBleedingFunction</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Whether this is a bleeding function (an anonymous named function
+ that bleeds into the inner scope.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -288,12 +332,96 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-e
 </DL>
 <HR>
 
+<A NAME="getNode()"><!-- --></A><H3>
+getNode</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>getNode</B>()</PRE>
+<DL>
+<DD>Gets the node for the name of the variable.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticReference.html#getNode()">getNode</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticReference.html" title="interface in com.google.javascript.rhino.jstype">StaticReference</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSourceFile()"><!-- --></A><H3>
+getSourceFile</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/jstype/StaticSourceFile.html" title="interface in com.google.javascript.rhino.jstype">StaticSourceFile</A> <B>getSourceFile</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticReference.html#getSourceFile()">StaticReference</A></CODE></B></DD>
+<DD>The source file where the reference lives.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticReference.html#getSourceFile()">getSourceFile</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticReference.html" title="interface in com.google.javascript.rhino.jstype">StaticReference</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSymbol()"><!-- --></A><H3>
+getSymbol</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A> <B>getSymbol</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticReference.html#getSymbol()">StaticReference</A></CODE></B></DD>
+<DD>The variable that this reference points to.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticReference.html#getSymbol()">getSymbol</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticReference.html" title="interface in com.google.javascript.rhino.jstype">StaticReference</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getDeclaration()"><!-- --></A><H3>
+getDeclaration</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A> <B>getDeclaration</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSlot.html#getDeclaration()">StaticSlot</A></CODE></B></DD>
+<DD>Gets the declaration of this symbol. May not exist.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSlot.html#getDeclaration()">getDeclaration</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="getParentNode()"><!-- --></A><H3>
 getParentNode</H3>
 <PRE>
 public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>getParentNode</B>()</PRE>
 <DL>
 <DD>Gets the parent of the name node.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isBleedingFunction()"><!-- --></A><H3>
+isBleedingFunction</H3>
+<PRE>
+public boolean <B>isBleedingFunction</B>()</PRE>
+<DL>
+<DD>Whether this is a bleeding function (an anonymous named function
+ that bleeds into the inner scope.
 <P>
 <DD><DL>
 </DL>
@@ -390,7 +518,7 @@ getType</H3>
 public <A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>getType</B>()</PRE>
 <DL>
 <DD>Gets this variable's type. To know whether this type has been inferred,
- see <code>#isInferred()</code>.
+ see <code>#isTypeInferred()</code>.
 <P>
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSlot.html#getType()">getType</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></DL>
@@ -426,7 +554,7 @@ public <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="c
 <DD>Gets the JSDocInfo for the variable.
 <P>
 <DD><DL>
-</DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSlot.html#getJSDocInfo()">getJSDocInfo</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></DL>
 </DD>
 <DD><DL>
 </DL>
@@ -549,7 +677,7 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-e
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Scope.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Scope.Arguments.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/ShowByPathWarningsGuard.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/Scope.Var.html" target="_top"><B>FRAMES</B></A>  &nbsp;

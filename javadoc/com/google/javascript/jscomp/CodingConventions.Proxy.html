@@ -1,0 +1,1165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<TITLE>
+CodingConventions.Proxy (Compiler)
+</TITLE>
+
+
+<LINK REL ="stylesheet" TYPE="text/css" HREF="../../../../dev_javadoc.css" TITLE="Style">
+
+<SCRIPT type="text/javascript">
+function windowTitle()
+{
+    if (location.href.indexOf('is-external=true') == -1) {
+        parent.document.title="CodingConventions.Proxy (Compiler)";
+    }
+}
+</SCRIPT>
+<NOSCRIPT>
+</NOSCRIPT>
+
+</HEAD>
+
+<BODY BGCOLOR="white" onload="windowTitle();">
+<HR>
+
+
+<!-- ========= START OF TOP NAVBAR ======= -->
+<A NAME="navbar_top"><!-- --></A>
+<A HREF="#skip-navbar_top" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_top_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConventions.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/CodingConventions.Proxy.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="CodingConventions.Proxy.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_top"></A>
+<!-- ========= END OF TOP NAVBAR ========= -->
+
+<HR>
+<!-- ======== START OF CLASS DATA ======== -->
+<H2>
+<FONT SIZE="-1">
+com.google.javascript.jscomp</FONT>
+<BR>
+Class CodingConventions.Proxy</H2>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
+  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.CodingConventions.Proxy</B>
+</PRE>
+<DL>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DD>
+</DL>
+<DL>
+<DT><B>Direct Known Subclasses:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A>, <A HREF="../../../../com/google/javascript/jscomp/GoogleCodingConvention.html" title="class in com.google.javascript.jscomp">GoogleCodingConvention</A>, <A HREF="../../../../com/google/javascript/jscomp/JqueryCodingConvention.html" title="class in com.google.javascript.jscomp">JqueryCodingConvention</A></DD>
+</DL>
+<DL>
+<DT><B>Enclosing class:</B><DD><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.html" title="class in com.google.javascript.jscomp">CodingConventions</A></DD>
+</DL>
+<HR>
+<DL>
+<DT><PRE>public static class <B>CodingConventions.Proxy</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></DL>
+</PRE>
+
+<P>
+A convention that wraps another.
+
+ When you want to support a new library, you should subclass this
+ delegate, and override the methods that you want to customize.
+
+ This way, a person using jQuery and Closure Library can create a new
+ coding convention by creating a jQueryCodingConvention that delegates
+ to a ClosureCodingConvention that delegates to a DefaultCodingConvention.
+<P>
+
+<P>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../serialized-form.html#com.google.javascript.jscomp.CodingConventions.Proxy">Serialized Form</A></DL>
+<HR>
+
+<P>
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+
+<A NAME="nested_class_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Nested Class Summary</B></FONT></TH>
+</TR>
+</TABLE>
+&nbsp;<A NAME="nested_classes_inherited_from_class_com.google.javascript.jscomp.CodingConvention"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Nested classes/interfaces inherited from interface com.google.javascript.jscomp.<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.AssertionFunctionSpec.html" title="class in com.google.javascript.jscomp">CodingConvention.AssertionFunctionSpec</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.Bind.html" title="class in com.google.javascript.jscomp">CodingConvention.Bind</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.DelegateRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.DelegateRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.ObjectLiteralCast.html" title="class in com.google.javascript.jscomp">CodingConvention.ObjectLiteralCast</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.SubclassRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassType.html" title="enum in com.google.javascript.jscomp">CodingConvention.SubclassType</A></CODE></TD>
+</TR>
+</TABLE>
+&nbsp;
+<!-- =========== FIELD SUMMARY =========== -->
+
+<A NAME="field_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Field Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#nextConvention">nextConvention</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;
+<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+
+<A NAME="constructor_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Constructor Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected </CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#CodingConventions.Proxy(com.google.javascript.jscomp.CodingConvention)">CodingConventions.Proxy</A></B>(<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>&nbsp;convention)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;
+<!-- ========== METHOD SUMMARY =========== -->
+
+<A NAME="method_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#applyDelegateRelationship(com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType)">applyDelegateRelationship</A></B>(<A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;delegateSuperclass,
+                          <A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;delegateBase,
+                          <A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;delegator,
+                          <A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;delegateProxy,
+                          <A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;findDelegate)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In many JS libraries, the function that creates a delegate relationship
+ also adds properties to the delegator and delegate base.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#applySingletonGetter(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.ObjectType)">applySingletonGetter</A></B>(<A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;functionType,
+                     <A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;getterType,
+                     <A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;objectType)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In many JS libraries, the function that adds a singleton getter to a class
+ adds properties to the class.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#applySubclassRelationship(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.jscomp.CodingConvention.SubclassType)">applySubclassRelationship</A></B>(<A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;parentCtor,
+                          <A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;childCtor,
+                          <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassType.html" title="enum in com.google.javascript.jscomp">CodingConvention.SubclassType</A>&nbsp;type)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In many JS libraries, the function that produces inheritance also
+ adds properties to the superclass and/or subclass.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#checkForCallingConventionDefiningCalls(com.google.javascript.rhino.Node, java.util.Map)">checkForCallingConventionDefiningCalls</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
+                                       <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;delegateCallingConventions)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks for function calls that set the calling conventions on delegate
+ methods.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#defineDelegateProxyPrototypeProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.List, java.util.Map)">defineDelegateProxyPrototypeProperties</A></B>(<A HREF="../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;registry,
+                                       <A HREF="../../../../com/google/javascript/jscomp/Scope.html" title="class in com.google.javascript.jscomp">Scope</A>&nbsp;scope,
+                                       <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;&nbsp;delegateProxyPrototypes,
+                                       <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;delegateCallingConventions)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Defines the delegate proxy prototype properties.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.Bind.html" title="class in com.google.javascript.jscomp">CodingConvention.Bind</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#describeFunctionBind(com.google.javascript.rhino.Node)">describeFunctionBind</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A Bind instance or null.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#extractClassNameIfProvide(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">extractClassNameIfProvide</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node,
+                          <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parent)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convenience method for determining provided dependencies amongst different
+ js scripts.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#extractClassNameIfRequire(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">extractClassNameIfRequire</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node,
+                          <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parent)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Convenience method for determining required dependencies amongst different
+ js scripts.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getAbstractMethodName()">getAbstractMethodName</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Function name for abstract methods.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.AssertionFunctionSpec.html" title="class in com.google.javascript.jscomp">CodingConvention.AssertionFunctionSpec</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getAssertionFunctions()">getAssertionFunctions</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the set of AssertionFunction.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.SubclassRelationship</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getClassesDefinedByCall(com.google.javascript.rhino.Node)">getClassesDefinedByCall</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;callNode)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks if the given method defines a subclass relationship,
+ and if it does, returns information on that relationship.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.DelegateRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.DelegateRelationship</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getDelegateRelationship(com.google.javascript.rhino.Node)">getDelegateRelationship</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;callNode)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getDelegateSuperclassName()">getDelegateSuperclassName</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getExportPropertyFunction()">getExportPropertyFunction</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Function name used when exporting properties.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getExportSymbolFunction()">getExportSymbolFunction</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Function name used when exporting symbols.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getGlobalObject()">getGlobalObject</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the name of the global object.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.ObjectLiteralCast.html" title="class in com.google.javascript.jscomp">CodingConvention.ObjectLiteralCast</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getObjectLiteralCast(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node)">getObjectLiteralCast</A></B>(<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.html" title="class in com.google.javascript.jscomp">NodeTraversal</A>&nbsp;t,
+                     <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;callNode)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks if the given method performs a object literal cast, and if it does,
+ returns information on the cast.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#getSingletonGetterClassName(com.google.javascript.rhino.Node)">getSingletonGetterClassName</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;callNode)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks if the given method defines a singleton getter, and if it does,
+ returns the name of the class with the singleton getter.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#identifyTypeDeclarationCall(com.google.javascript.rhino.Node)">identifyTypeDeclarationCall</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks if the given CALL node is forward-declaring any types,
+ and returns the name of the types if it is.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isConstant(java.lang.String)">isConstant</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;variableName)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This checks whether a given variable name, such as a name in all-caps
+ should be treated as if it had the @const annotation.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isConstantKey(java.lang.String)">isConstantKey</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;keyName)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This checks whether a given key of an object literal, such as a
+ name in all-caps should be treated as if it had the @const
+ annotation.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isExported(java.lang.String)">isExported</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Should be isExported(name, true) || isExported(name, false);</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isExported(java.lang.String, boolean)">isExported</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+           boolean&nbsp;local)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether a global variable or function name should be treated as
+ exported, or externally referenceable.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This checks whether a given parameter name should be treated as an
+ optional parameter as far as type checking or function call arg count
+ checking is concerned.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isPrivate(java.lang.String)">isPrivate</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether a name should be considered private.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isPropertyTestFunction(com.google.javascript.rhino.Node)">isPropertyTestFunction</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;call)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Whether this CALL function is testing for the existence of a property.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isPrototypeAlias(com.google.javascript.rhino.Node)">isPrototypeAlias</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;getProp)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Whether this GETPROP node is an alias for an object prototype.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isSuperClassReference(java.lang.String)">isSuperClassReference</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if passed a string referring to the superclass.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isValidEnumKey(java.lang.String)">isValidEnumKey</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;key)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This checks that a given <code>key</code> may be used as a key for an enum.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This checks whether a given parameter should be treated as a marker
+ for a variable argument list function.</TD>
+</TR>
+</TABLE>
+&nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Methods inherited from class java.lang.<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+</TR>
+</TABLE>
+&nbsp;
+<P>
+
+<!-- ============ FIELD DETAIL =========== -->
+
+<A NAME="field_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Field Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="nextConvention"><!-- --></A><H3>
+nextConvention</H3>
+<PRE>
+protected final <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A> <B>nextConvention</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+
+<A NAME="constructor_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Constructor Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="CodingConventions.Proxy(com.google.javascript.jscomp.CodingConvention)"><!-- --></A><H3>
+CodingConventions.Proxy</H3>
+<PRE>
+protected <B>CodingConventions.Proxy</B>(<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>&nbsp;convention)</PRE>
+<DL>
+</DL>
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<A NAME="method_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Method Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="isConstant(java.lang.String)"><!-- --></A><H3>
+isConstant</H3>
+<PRE>
+public boolean <B>isConstant</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;variableName)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isConstant(java.lang.String)">CodingConvention</A></CODE></B></DD>
+<DD>This checks whether a given variable name, such as a name in all-caps
+ should be treated as if it had the @const annotation.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isConstant(java.lang.String)">isConstant</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>variableName</CODE> - potentially constant variable name
+<DT><B>Returns:</B><DD><code>true</code> if the name should be treated as a constant.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isConstantKey(java.lang.String)"><!-- --></A><H3>
+isConstantKey</H3>
+<PRE>
+public boolean <B>isConstantKey</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;keyName)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isConstantKey(java.lang.String)">CodingConvention</A></CODE></B></DD>
+<DD>This checks whether a given key of an object literal, such as a
+ name in all-caps should be treated as if it had the @const
+ annotation.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isConstantKey(java.lang.String)">isConstantKey</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isValidEnumKey(java.lang.String)"><!-- --></A><H3>
+isValidEnumKey</H3>
+<PRE>
+public boolean <B>isValidEnumKey</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;key)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isValidEnumKey(java.lang.String)">CodingConvention</A></CODE></B></DD>
+<DD>This checks that a given <code>key</code> may be used as a key for an enum.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isValidEnumKey(java.lang.String)">isValidEnumKey</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>key</CODE> - the potential key to an enum
+<DT><B>Returns:</B><DD><code>true</code> if the <code>key</code> may be used as an enum key,
+     <code>false</code> otherwise</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isOptionalParameter(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+isOptionalParameter</H3>
+<PRE>
+public boolean <B>isOptionalParameter</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
+<DD>This checks whether a given parameter name should be treated as an
+ optional parameter as far as type checking or function call arg count
+ checking is concerned. Note that an optional function parameter may be
+ declared as a simple type and is automatically converted to a union of the
+ declared type and Undefined.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>parameter</CODE> - The parameter's node.
+<DT><B>Returns:</B><DD><code>true</code> if the parameter should be treated as an optional
+ parameter.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isVarArgsParameter(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+isVarArgsParameter</H3>
+<PRE>
+public boolean <B>isVarArgsParameter</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
+<DD>This checks whether a given parameter should be treated as a marker
+ for a variable argument list function. A VarArgs parameter must be the
+ last parameter in a function declaration.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>parameter</CODE> - The parameter's node.
+<DT><B>Returns:</B><DD><code>true</code> if the parameter should be treated as a variable
+ length parameter.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isExported(java.lang.String, boolean)"><!-- --></A><H3>
+isExported</H3>
+<PRE>
+public boolean <B>isExported</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+                          boolean&nbsp;local)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isExported(java.lang.String, boolean)">CodingConvention</A></CODE></B></DD>
+<DD>Checks whether a global variable or function name should be treated as
+ exported, or externally referenceable.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isExported(java.lang.String, boolean)">isExported</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>name</CODE> - A global variable or function name.<DD><CODE>local</CODE> - <code>true</code> if the name is a local variable.
+<DT><B>Returns:</B><DD><code>true</code> if the name should be considered exported.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isExported(java.lang.String)"><!-- --></A><H3>
+isExported</H3>
+<PRE>
+public final boolean <B>isExported</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isExported(java.lang.String)">CodingConvention</A></CODE></B></DD>
+<DD>Should be isExported(name, true) || isExported(name, false);
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isExported(java.lang.String)">isExported</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isPrivate(java.lang.String)"><!-- --></A><H3>
+isPrivate</H3>
+<PRE>
+public boolean <B>isPrivate</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isPrivate(java.lang.String)">CodingConvention</A></CODE></B></DD>
+<DD>Checks whether a name should be considered private. Private global
+ variables and functions can only be referenced within the source file in
+ which they are declared. Private properties and methods should only be
+ accessed by the class that defines them.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isPrivate(java.lang.String)">isPrivate</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>name</CODE> - The name of a global variable or function, or a method or
+     property.
+<DT><B>Returns:</B><DD><code>true</code> if the name should be considered private.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getClassesDefinedByCall(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getClassesDefinedByCall</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.SubclassRelationship</A> <B>getClassesDefinedByCall</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;callNode)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getClassesDefinedByCall(com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
+<DD>Checks if the given method defines a subclass relationship,
+ and if it does, returns information on that relationship. By default,
+ always returns null. Meant to be overridden by subclasses.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getClassesDefinedByCall(com.google.javascript.rhino.Node)">getClassesDefinedByCall</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>callNode</CODE> - A CALL node.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isSuperClassReference(java.lang.String)"><!-- --></A><H3>
+isSuperClassReference</H3>
+<PRE>
+public boolean <B>isSuperClassReference</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isSuperClassReference(java.lang.String)">CodingConvention</A></CODE></B></DD>
+<DD>Returns true if passed a string referring to the superclass.  The string
+ will usually be from the string node at the right of a GETPROP, e.g.
+ this.superClass_.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isSuperClassReference(java.lang.String)">isSuperClassReference</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="extractClassNameIfProvide(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+extractClassNameIfProvide</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>extractClassNameIfProvide</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node,
+                                        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parent)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#extractClassNameIfProvide(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
+<DD>Convenience method for determining provided dependencies amongst different
+ js scripts.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#extractClassNameIfProvide(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">extractClassNameIfProvide</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="extractClassNameIfRequire(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+extractClassNameIfRequire</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>extractClassNameIfRequire</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node,
+                                        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parent)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#extractClassNameIfRequire(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
+<DD>Convenience method for determining required dependencies amongst different
+ js scripts.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#extractClassNameIfRequire(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">extractClassNameIfRequire</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getExportPropertyFunction()"><!-- --></A><H3>
+getExportPropertyFunction</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getExportPropertyFunction</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getExportPropertyFunction()">CodingConvention</A></CODE></B></DD>
+<DD>Function name used when exporting properties.
+ Signature: fn(object, publicName, symbol).
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getExportPropertyFunction()">getExportPropertyFunction</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>function name.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getExportSymbolFunction()"><!-- --></A><H3>
+getExportSymbolFunction</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getExportSymbolFunction</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getExportSymbolFunction()">CodingConvention</A></CODE></B></DD>
+<DD>Function name used when exporting symbols.
+ Signature: fn(publicPath, object).
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getExportSymbolFunction()">getExportSymbolFunction</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>function name.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="identifyTypeDeclarationCall(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+identifyTypeDeclarationCall</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>identifyTypeDeclarationCall</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#identifyTypeDeclarationCall(com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
+<DD>Checks if the given CALL node is forward-declaring any types,
+ and returns the name of the types if it is.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#identifyTypeDeclarationCall(com.google.javascript.rhino.Node)">identifyTypeDeclarationCall</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="applySubclassRelationship(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.jscomp.CodingConvention.SubclassType)"><!-- --></A><H3>
+applySubclassRelationship</H3>
+<PRE>
+public void <B>applySubclassRelationship</B>(<A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;parentCtor,
+                                      <A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;childCtor,
+                                      <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassType.html" title="enum in com.google.javascript.jscomp">CodingConvention.SubclassType</A>&nbsp;type)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#applySubclassRelationship(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.jscomp.CodingConvention.SubclassType)">CodingConvention</A></CODE></B></DD>
+<DD>In many JS libraries, the function that produces inheritance also
+ adds properties to the superclass and/or subclass.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#applySubclassRelationship(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.jscomp.CodingConvention.SubclassType)">applySubclassRelationship</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAbstractMethodName()"><!-- --></A><H3>
+getAbstractMethodName</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getAbstractMethodName</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getAbstractMethodName()">CodingConvention</A></CODE></B></DD>
+<DD>Function name for abstract methods. An abstract method can be assigned to
+ an interface method instead of an function expression in order to avoid
+ linter warnings produced by assigning a function without a return value
+ where a return value is expected.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getAbstractMethodName()">getAbstractMethodName</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>function name.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSingletonGetterClassName(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getSingletonGetterClassName</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getSingletonGetterClassName</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;callNode)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getSingletonGetterClassName(com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
+<DD>Checks if the given method defines a singleton getter, and if it does,
+ returns the name of the class with the singleton getter. By default, always
+ returns null. Meant to be overridden by subclasses.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getSingletonGetterClassName(com.google.javascript.rhino.Node)">getSingletonGetterClassName</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>callNode</CODE> - A CALL node.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="applySingletonGetter(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.ObjectType)"><!-- --></A><H3>
+applySingletonGetter</H3>
+<PRE>
+public void <B>applySingletonGetter</B>(<A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;functionType,
+                                 <A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;getterType,
+                                 <A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;objectType)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#applySingletonGetter(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.ObjectType)">CodingConvention</A></CODE></B></DD>
+<DD>In many JS libraries, the function that adds a singleton getter to a class
+ adds properties to the class.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#applySingletonGetter(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.ObjectType)">applySingletonGetter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getDelegateRelationship(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getDelegateRelationship</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.DelegateRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.DelegateRelationship</A> <B>getDelegateRelationship</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;callNode)</PRE>
+<DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getDelegateRelationship(com.google.javascript.rhino.Node)">getDelegateRelationship</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="applyDelegateRelationship(com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType)"><!-- --></A><H3>
+applyDelegateRelationship</H3>
+<PRE>
+public void <B>applyDelegateRelationship</B>(<A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;delegateSuperclass,
+                                      <A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;delegateBase,
+                                      <A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;delegator,
+                                      <A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;delegateProxy,
+                                      <A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;findDelegate)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#applyDelegateRelationship(com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType)">CodingConvention</A></CODE></B></DD>
+<DD>In many JS libraries, the function that creates a delegate relationship
+ also adds properties to the delegator and delegate base.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#applyDelegateRelationship(com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType)">applyDelegateRelationship</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getDelegateSuperclassName()"><!-- --></A><H3>
+getDelegateSuperclassName</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getDelegateSuperclassName</B>()</PRE>
+<DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getDelegateSuperclassName()">getDelegateSuperclassName</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>the name of the delegate superclass.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="checkForCallingConventionDefiningCalls(com.google.javascript.rhino.Node, java.util.Map)"><!-- --></A><H3>
+checkForCallingConventionDefiningCalls</H3>
+<PRE>
+public void <B>checkForCallingConventionDefiningCalls</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
+                                                   <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;delegateCallingConventions)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#checkForCallingConventionDefiningCalls(com.google.javascript.rhino.Node, java.util.Map)">CodingConvention</A></CODE></B></DD>
+<DD>Checks for function calls that set the calling conventions on delegate
+ methods.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#checkForCallingConventionDefiningCalls(com.google.javascript.rhino.Node, java.util.Map)">checkForCallingConventionDefiningCalls</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="defineDelegateProxyPrototypeProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.List, java.util.Map)"><!-- --></A><H3>
+defineDelegateProxyPrototypeProperties</H3>
+<PRE>
+public void <B>defineDelegateProxyPrototypeProperties</B>(<A HREF="../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;registry,
+                                                   <A HREF="../../../../com/google/javascript/jscomp/Scope.html" title="class in com.google.javascript.jscomp">Scope</A>&nbsp;scope,
+                                                   <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;&nbsp;delegateProxyPrototypes,
+                                                   <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;delegateCallingConventions)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#defineDelegateProxyPrototypeProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.List, java.util.Map)">CodingConvention</A></CODE></B></DD>
+<DD>Defines the delegate proxy prototype properties. Their types depend on
+ properties of the delegate base methods.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#defineDelegateProxyPrototypeProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.List, java.util.Map)">defineDelegateProxyPrototypeProperties</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+<DD><CODE>delegateProxyPrototypes</CODE> - List of delegate proxy prototypes.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getGlobalObject()"><!-- --></A><H3>
+getGlobalObject</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getGlobalObject</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getGlobalObject()">CodingConvention</A></CODE></B></DD>
+<DD>Gets the name of the global object.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getGlobalObject()">getGlobalObject</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAssertionFunctions()"><!-- --></A><H3>
+getAssertionFunctions</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.AssertionFunctionSpec.html" title="class in com.google.javascript.jscomp">CodingConvention.AssertionFunctionSpec</A>&gt; <B>getAssertionFunctions</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getAssertionFunctions()">CodingConvention</A></CODE></B></DD>
+<DD>Returns the set of AssertionFunction.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getAssertionFunctions()">getAssertionFunctions</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="describeFunctionBind(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+describeFunctionBind</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.Bind.html" title="class in com.google.javascript.jscomp">CodingConvention.Bind</A> <B>describeFunctionBind</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#describeFunctionBind(com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
+<DD>A Bind instance or null.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#describeFunctionBind(com.google.javascript.rhino.Node)">describeFunctionBind</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isPropertyTestFunction(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+isPropertyTestFunction</H3>
+<PRE>
+public boolean <B>isPropertyTestFunction</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;call)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isPropertyTestFunction(com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
+<DD>Whether this CALL function is testing for the existence of a property.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isPropertyTestFunction(com.google.javascript.rhino.Node)">isPropertyTestFunction</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isPrototypeAlias(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+isPrototypeAlias</H3>
+<PRE>
+public boolean <B>isPrototypeAlias</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;getProp)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isPrototypeAlias(com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
+<DD>Whether this GETPROP node is an alias for an object prototype.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isPrototypeAlias(com.google.javascript.rhino.Node)">isPrototypeAlias</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getObjectLiteralCast(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getObjectLiteralCast</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.ObjectLiteralCast.html" title="class in com.google.javascript.jscomp">CodingConvention.ObjectLiteralCast</A> <B>getObjectLiteralCast</B>(<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.html" title="class in com.google.javascript.jscomp">NodeTraversal</A>&nbsp;t,
+                                                               <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;callNode)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getObjectLiteralCast(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
+<DD>Checks if the given method performs a object literal cast, and if it does,
+ returns information on the cast. By default, always returns null. Meant
+ to be overridden by subclasses.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getObjectLiteralCast(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node)">getObjectLiteralCast</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>t</CODE> - The node traversal.<DD><CODE>callNode</CODE> - A CALL node.</DL>
+</DD>
+</DL>
+<!-- ========= END OF CLASS DATA ========= -->
+<HR>
+
+
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<A NAME="navbar_bottom"><!-- --></A>
+<A HREF="#skip-navbar_bottom" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_bottom_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConventions.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/CodingConventions.Proxy.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="CodingConventions.Proxy.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_bottom"></A>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+
+<HR>
+
+        <div id="footer">
+          <div id="footerlogo">
+            <img src="http://www.google.com/images/art.gif"
+                 alt="Google colored balls">
+          </div>
+
+          <div id="copyright">
+          <p>&copy; 2009 Google -
+            <a href="http://www.google.com/privacy.html">Privacy Policy</a> -
+            <a href="http://www.google.com/terms_of_service.html">Terms and Conditions</a> -
+            <a href="http://www.google.com/about.html">About Google</a>
+          </p>
+          </div>
+        </div>
+      
+      
+</BODY>
+</HTML>

@@ -53,7 +53,7 @@ function windowTitle()
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/SourceFile.Generator.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/StrictWarningsGuard.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SourceMap.DetailLevel.html" title="enum in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/SourceMap.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="SourceMap.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -73,9 +73,9 @@ function windowTitle()
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>
 </TABLE>
 <A NAME="skip-navbar_top"></A>
@@ -110,17 +110,34 @@ Collects information mapping the generated (compiled) source back to
 <HR>
 
 <P>
+<!-- ======== NESTED CLASS SUMMARY ======== -->
 
-<!-- ======== CONSTRUCTOR SUMMARY ======== -->
-
-<A NAME="constructor_summary"><!-- --></A>
+<A NAME="nested_class_summary"><!-- --></A>
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
 <TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
 <TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
-<B>Constructor Summary</B></FONT></TH>
+<B>Nested Class Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SourceMap.html#SourceMap()">SourceMap</A></B>()</CODE>
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SourceMap.DetailLevel.html" title="enum in com.google.javascript.jscomp">SourceMap.DetailLevel</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Source maps can be very large different levels of detail can be specified.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SourceMap.Format.html" title="enum in com.google.javascript.jscomp">SourceMap.Format</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SourceMap.LocationMapping.html" title="class in com.google.javascript.jscomp">SourceMap.LocationMapping</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -138,11 +155,62 @@ Collects information mapping the generated (compiled) source back to
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SourceMap.html#addMapping(com.google.javascript.rhino.Node, com.google.debugging.sourcemap.FilePosition, com.google.debugging.sourcemap.FilePosition)">addMapping</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node,
+           <A HREF="../../../../com/google/debugging/sourcemap/FilePosition.html" title="class in com.google.debugging.sourcemap">FilePosition</A>&nbsp;outputStartPosition,
+           <A HREF="../../../../com/google/debugging/sourcemap/FilePosition.html" title="class in com.google.debugging.sourcemap">FilePosition</A>&nbsp;outputEndPosition)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SourceMap.html#appendTo(java.lang.Appendable, java.lang.String)">appendTo</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Appendable.html?is-external=true" title="class or interface in java.lang">Appendable</A>&nbsp;out,
          <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Appends the source map in LavaBug format to the given buffer.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SourceMap.html#reset()">reset</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SourceMap.html#setPrefixMappings(java.util.List)">setPrefixMappings</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SourceMap.LocationMapping.html" title="class in com.google.javascript.jscomp">SourceMap.LocationMapping</A>&gt;&nbsp;sourceMapLocationMappings)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SourceMap.html#setStartingPosition(int, int)">setStartingPosition</A></B>(int&nbsp;offsetLine,
+                    int&nbsp;offsetIndex)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SourceMap.html#setWrapperPrefix(java.lang.String)">setWrapperPrefix</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;prefix)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SourceMap.html#validate(boolean)">validate</A></B>(boolean&nbsp;validate)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
@@ -157,23 +225,6 @@ Collects information mapping the generated (compiled) source back to
 &nbsp;
 <P>
 
-<!-- ========= CONSTRUCTOR DETAIL ======== -->
-
-<A NAME="constructor_detail"><!-- --></A>
-<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
-<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
-<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
-<B>Constructor Detail</B></FONT></TH>
-</TR>
-</TABLE>
-
-<A NAME="SourceMap()"><!-- --></A><H3>
-SourceMap</H3>
-<PRE>
-public <B>SourceMap</B>()</PRE>
-<DL>
-</DL>
-
 <!-- ============ METHOD DETAIL ========== -->
 
 <A NAME="method_detail"><!-- --></A>
@@ -184,6 +235,19 @@ public <B>SourceMap</B>()</PRE>
 </TR>
 </TABLE>
 
+<A NAME="addMapping(com.google.javascript.rhino.Node, com.google.debugging.sourcemap.FilePosition, com.google.debugging.sourcemap.FilePosition)"><!-- --></A><H3>
+addMapping</H3>
+<PRE>
+public void <B>addMapping</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node,
+                       <A HREF="../../../../com/google/debugging/sourcemap/FilePosition.html" title="class in com.google.debugging.sourcemap">FilePosition</A>&nbsp;outputStartPosition,
+                       <A HREF="../../../../com/google/debugging/sourcemap/FilePosition.html" title="class in com.google.debugging.sourcemap">FilePosition</A>&nbsp;outputEndPosition)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="appendTo(java.lang.Appendable, java.lang.String)"><!-- --></A><H3>
 appendTo</H3>
 <PRE>
@@ -191,13 +255,66 @@ public void <B>appendTo</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/
                      <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)
               throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
 <DL>
-<DD>Appends the source map in LavaBug format to the given buffer.
-<P>
 <DD><DL>
-<DT><B>Parameters:</B><DD><CODE>out</CODE> - The stream to which the map will be appended.<DD><CODE>name</CODE> - The name of the generated source file that this source map
-   represents.
+
 <DT><B>Throws:</B>
 <DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="reset()"><!-- --></A><H3>
+reset</H3>
+<PRE>
+public void <B>reset</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setStartingPosition(int, int)"><!-- --></A><H3>
+setStartingPosition</H3>
+<PRE>
+public void <B>setStartingPosition</B>(int&nbsp;offsetLine,
+                                int&nbsp;offsetIndex)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setWrapperPrefix(java.lang.String)"><!-- --></A><H3>
+setWrapperPrefix</H3>
+<PRE>
+public void <B>setWrapperPrefix</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;prefix)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="validate(boolean)"><!-- --></A><H3>
+validate</H3>
+<PRE>
+public void <B>validate</B>(boolean&nbsp;validate)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setPrefixMappings(java.util.List)"><!-- --></A><H3>
+setPrefixMappings</H3>
+<PRE>
+public void <B>setPrefixMappings</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SourceMap.LocationMapping.html" title="class in com.google.javascript.jscomp">SourceMap.LocationMapping</A>&gt;&nbsp;sourceMapLocationMappings)</PRE>
+<DL>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>sourceMapLocationMappings</CODE> - </DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->
@@ -231,7 +348,7 @@ public void <B>appendTo</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/SourceFile.Generator.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/StrictWarningsGuard.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SourceMap.DetailLevel.html" title="enum in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/SourceMap.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="SourceMap.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -251,9 +368,9 @@ public void <B>appendTo</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>
 </TABLE>
 <A NAME="skip-navbar_bottom"></A>

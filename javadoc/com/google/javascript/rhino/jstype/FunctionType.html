@@ -52,8 +52,8 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionPrototypeType.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/InstanceObjectType.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionParamBuilder.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/FunctionType.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="FunctionType.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -73,7 +73,7 @@ function windowTitle()
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;<A HREF="#nested_classes_inherited_from_class_com.google.javascript.rhino.jstype.JSType">NESTED</A>&nbsp;|&nbsp;<A HREF="#fields_inherited_from_class_com.google.javascript.rhino.jstype.JSType">FIELD</A>&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;<A HREF="#nested_classes_inherited_from_class_com.google.javascript.rhino.jstype.ObjectType">NESTED</A>&nbsp;|&nbsp;<A HREF="#fields_inherited_from_class_com.google.javascript.rhino.jstype.JSType">FIELD</A>&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
 DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>
@@ -95,7 +95,7 @@ Class FunctionType</H2>
           <IMG SRC="../../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.rhino.jstype.FunctionType</B>
 </PRE>
 <DL>
-<DT><B>All Implemented Interfaces:</B> <DD><A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DD>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;, <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DD>
 </DL>
 <DL>
 <DT><B>Direct Known Subclasses:</B> <DD><A HREF="../../../../../com/google/javascript/rhino/jstype/NoObjectType.html" title="class in com.google.javascript.rhino.jstype">NoObjectType</A></DD>
@@ -129,7 +129,17 @@ This derived type provides extended information about a function, including
 <B>Nested Class Summary</B></FONT></TH>
 </TR>
 </TABLE>
-&nbsp;<A NAME="nested_classes_inherited_from_class_com.google.javascript.rhino.jstype.JSType"><!-- --></A>
+&nbsp;<A NAME="nested_classes_inherited_from_class_com.google.javascript.rhino.jstype.ObjectType"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Nested classes/interfaces inherited from class com.google.javascript.rhino.jstype.<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.Property.html" title="class in com.google.javascript.rhino.jstype">ObjectType.Property</A></CODE></TD>
+</TR>
+</TABLE>
+&nbsp;
+<A NAME="nested_classes_inherited_from_class_com.google.javascript.rhino.jstype.JSType"><!-- --></A>
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
 <TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
 <TH ALIGN="left"><B>Nested classes/interfaces inherited from class com.google.javascript.rhino.jstype.<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></B></TH>
@@ -177,12 +187,38 @@ This derived type provides extended information about a function, including
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#clearCachedValues()">clearCachedValues</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Clear cached values.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getAllExtendedInterfaces()">getAllExtendedInterfaces</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns all extended interfaces declared by an interfaces or its super-
+ interfaces.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getAllImplementedInterfaces()">getAllImplementedInterfaces</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns all interfaces implemented by a class or its superclass and any
  superclasses for any of those interfaces.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getBindReturnType(int)">getBindReturnType</A></B>(int&nbsp;argsToBind)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get the return value of calling "bind" on this function
+ with the specified number of arguments.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -194,11 +230,35 @@ This derived type provides extended information about a function, including
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getGreatestSubtype(com.google.javascript.rhino.jstype.JSType)">getGreatestSubtype</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;that)</CODE>
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getCtorExtendedInterfaces()">getCtorExtendedInterfaces</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the greatest subtype of <code>this</code> and <code>that</code>.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the interfaces extended by the interface associated with this type.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getCtorImplementedInterfaces()">getCtorImplementedInterfaces</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the interfaces implemented by the ctor associated with this type.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getExtendedInterfaces()">getExtendedInterfaces</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns interfaces directly extended by an interface</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getExtendedInterfacesCount()">getExtendedInterfacesCount</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the number of interfaces directly extended by an interface</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -226,14 +286,6 @@ This derived type provides extended information about a function, including
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getLeastSupertype(com.google.javascript.rhino.jstype.JSType)">getLeastSupertype</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;that)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the least supertype of <code>this</code> and <code>that</code>.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;int</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getMaxArguments()">getMaxArguments</A></B>()</CODE>
 
@@ -251,6 +303,22 @@ This derived type provides extended information about a function, including
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getOwnerFunction()">getOwnerFunction</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the owner of this if it's a function prototype.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getOwnImplementedInterfaces()">getOwnImplementedInterfaces</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns interfaces directly implemented by the class.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getOwnPropertyJSDocInfo(java.lang.String)">getOwnPropertyJSDocInfo</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</CODE>
 
@@ -263,7 +331,7 @@ This derived type provides extended information about a function, including
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getOwnPropertyNames()">getOwnPropertyNames</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the names of all the properties directly on this type.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Includes the prototype iff someone has created it.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -291,6 +359,14 @@ This derived type provides extended information about a function, including
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getPropertyNode(java.lang.String)">getPropertyNode</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the node corresponding to the definition of the specified property.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getPropertyType(java.lang.String)">getPropertyType</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
 
@@ -299,7 +375,7 @@ This derived type provides extended information about a function, including
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionPrototypeType.html" title="class in com.google.javascript.rhino.jstype">FunctionPrototypeType</A></CODE></FONT></TD>
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getPrototype()">getPrototype</A></B>()</CODE>
 
 <BR>
@@ -320,6 +396,14 @@ This derived type provides extended information about a function, including
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.Property.html" title="class in com.google.javascript.rhino.jstype">ObjectType.Property</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getSlot(java.lang.String)">getSlot</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns any defined slot within this scope for this name.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -356,7 +440,17 @@ This derived type provides extended information about a function, including
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<CODE>static&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getTopDefiningInterface(com.google.javascript.rhino.jstype.ObjectType, java.lang.String)">getTopDefiningInterface</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;type,
+                        <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Given an interface and a property, finds the top-most super interface
+ that has the property defined (including this interface).</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#getTopMostDefiningType(java.lang.String)">getTopMostDefiningType</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</CODE>
 
 <BR>
@@ -378,7 +472,7 @@ This derived type provides extended information about a function, including
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#hasCachedValues()">hasCachedValues</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if any cached valeus have been set for this type.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if any cached values have been set for this type.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -399,6 +493,14 @@ This derived type provides extended information about a function, including
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#hasImplementedInterfaces()">hasImplementedInterfaces</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#hasInstanceType()">hasInstanceType</A></B>()</CODE>
 
 <BR>
@@ -407,7 +509,7 @@ This derived type provides extended information about a function, including
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#hasOwnProperty(java.lang.String)">hasOwnProperty</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#hasOwnProperty(java.lang.String)">hasOwnProperty</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether the property whose name is given is present directly on
@@ -416,7 +518,7 @@ This derived type provides extended information about a function, including
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#hasProperty(java.lang.String)">hasProperty</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#hasProperty(java.lang.String)">hasProperty</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether the property whose name is given is present on the
@@ -429,15 +531,6 @@ This derived type provides extended information about a function, including
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if the object is named.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#hasUnknownSupertype()">hasUnknownSupertype</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Given a constructor or an interface type, find out whether the unknown
- type is a supertype of the current type.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -455,14 +548,6 @@ This derived type provides extended information about a function, including
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Two function types are equal if their signatures match.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#isFunctionType()">isFunctionType</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -542,6 +627,14 @@ This derived type provides extended information about a function, including
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#matchConstraint(com.google.javascript.rhino.jstype.ObjectType)">matchConstraint</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;constraintObj)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Modify this type so that it matches the specified type.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#matchesNumberContext()">matchesNumberContext</A></B>()</CODE>
 
@@ -569,6 +662,22 @@ This derived type provides extended information about a function, including
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#removeProperty(java.lang.String)">removeProperty</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Removes the declared or inferred property from this ObjectType.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#setExtendedInterfaces(java.util.List)">setExtendedInterfaces</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;&nbsp;extendedInterfaces)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#setImplementedInterfaces(java.util.List)">setImplementedInterfaces</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;&nbsp;implementedInterfaces)</CODE>
 
@@ -578,21 +687,12 @@ This derived type provides extended information about a function, including
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#setPropertyJSDocInfo(java.lang.String, com.google.javascript.rhino.JSDocInfo, boolean)">setPropertyJSDocInfo</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName,
-                     <A HREF="../../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A>&nbsp;info,
-                     boolean&nbsp;inExterns)</CODE>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#setPropertyJSDocInfo(java.lang.String, com.google.javascript.rhino.JSDocInfo)">setPropertyJSDocInfo</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName,
+                     <A HREF="../../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A>&nbsp;info)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the docInfo for the specified property from the
  <A HREF="../../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> on its definition.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#setPrototype(com.google.javascript.rhino.jstype.FunctionPrototypeType)">setPrototype</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionPrototypeType.html" title="class in com.google.javascript.rhino.jstype">FunctionPrototypeType</A>&nbsp;prototype)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the prototype.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -622,14 +722,12 @@ This derived type provides extended information about a function, including
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#toString()">toString</A></B>()</CODE>
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#toMaybeFunctionType()">toMaybeFunctionType</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Informally, a function is represented by
- <code>function (params): returnType</code> where the <code>params</code> is a comma
- separated list of types, the first one being a special
- <code>this:T</code> if the function expects a known type for <code>this</code>.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Downcasts this to a FunctionType, or returns null if this is not
+ a function.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -661,7 +759,7 @@ This derived type provides extended information about a function, including
 <TH ALIGN="left"><B>Methods inherited from class com.google.javascript.rhino.jstype.<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#cast(com.google.javascript.rhino.jstype.JSType)">cast</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#defineDeclaredProperty(java.lang.String, com.google.javascript.rhino.jstype.JSType, boolean)">defineDeclaredProperty</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#defineInferredProperty(java.lang.String, com.google.javascript.rhino.jstype.JSType, boolean)">defineInferredProperty</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#findPropertyType(java.lang.String)">findPropertyType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getCtorImplementedInterfaces()">getCtorImplementedInterfaces</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getIndexType()">getIndexType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getJSDocInfo()">getJSDocInfo</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getParameterType()">getParameterType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getPossibleToBooleanOutcomes()">getPossibleToBooleanOutcomes</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getPropertyNames()">getPropertyNames</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#isObject()">isObject</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#isUnknownType()">isUnknownType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#setJSDocInfo(com.google.javascript.rhino.JSDocInfo)">setJSDocInfo</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#testForEquality(com.google.javascript.rhino.jstype.JSType)">testForEquality</A></CODE></TD>
+<TD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#cast(com.google.javascript.rhino.jstype.JSType)">cast</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#createDelegateSuffix(java.lang.String)">createDelegateSuffix</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#defineDeclaredProperty(java.lang.String, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node)">defineDeclaredProperty</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#defineInferredProperty(java.lang.String, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node)">defineInferredProperty</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#findPropertyType(java.lang.String)">findPropertyType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getDisplayName()">getDisplayName</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getIndexType()">getIndexType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getJSDocInfo()">getJSDocInfo</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getNormalizedReferenceName()">getNormalizedReferenceName</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getOwnSlot(java.lang.String)">getOwnSlot</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getParameterType()">getParameterType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getParentScope()">getParentScope</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getPossibleToBooleanOutcomes()">getPossibleToBooleanOutcomes</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getPropertyNames()">getPropertyNames</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getRootNode()">getRootNode</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#isFunctionPrototypeType()">isFunctionPrototypeType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#isObject()">isObject</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#isUnknownType()">isUnknownType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#setJSDocInfo(com.google.javascript.rhino.JSDocInfo)">setJSDocInfo</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#testForEquality(com.google.javascript.rhino.jstype.JSType)">testForEquality</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_com.google.javascript.rhino.jstype.JSType"><!-- --></A>
@@ -670,7 +768,7 @@ This derived type provides extended information about a function, including
 <TH ALIGN="left"><B>Methods inherited from class com.google.javascript.rhino.jstype.<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#autoboxesTo()">autoboxesTo</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#canAssignTo(com.google.javascript.rhino.jstype.JSType)">canAssignTo</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#canTestForEqualityWith(com.google.javascript.rhino.jstype.JSType)">canTestForEqualityWith</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#canTestForShallowEqualityWith(com.google.javascript.rhino.jstype.JSType)">canTestForShallowEqualityWith</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#clearResolved()">clearResolved</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#dereference()">dereference</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#differsFrom(com.google.javascript.rhino.jstype.JSType)">differsFrom</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#equals(java.lang.Object)">equals</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#forceResolve(com.google.javascript.rhino.ErrorReporter, com.google.javascript.rhino.jstype.StaticScope)">forceResolve</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getRestrictedTypeGivenToBooleanOutcome(boolean)">getRestrictedTypeGivenToBooleanOutcome</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getTypesUnderEquality(com.google.javascript.rhino.jstype.JSType)">getTypesUnderEquality</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getTypesUnderInequality(com.google.javascript.rhino.jstype.JSType)">getTypesUnderInequality</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getTypesUnderShallowEquality(com.google.javascript.rhino.jstype.JSType)">getTypesUnderShallowEquality</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getTypesUnderShallowInequality(com.google.javascript.rhino.jstype.JSType)">getTypesUnderShallowInequality</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isAllType()">isAllType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isArrayType()">isArrayType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isBooleanObjectType()">isBooleanObjectType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isBooleanValueType()">isBooleanValueType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isCheckedUnknownType()">isCheckedUnknownType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isDateType()">isDateType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isEmptyType()">isEmptyType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isEnumElementType()">isEnumElementType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isEnumType()">isEnumType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isEquivalent(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType)">isEquivalent</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isFunctionPrototypeType()">isFunctionPrototypeType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNominalType()">isNominalType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNoObjectType()">isNoObjectType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNoType()">isNoType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNullable()">isNullable</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNullType()">isNullType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNumber()">isNumber</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNumberObjectType()">isNumberObjectType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNumberValueType()">isNumberValueType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isRecordType()">isRecordType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isRegexpType()">isRegexpType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isResolved()">isResolved</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isString()">isString</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isStringObjectType()">isStringObjectType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isStringValueType()">isStringValueType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isTemplateType()">isTemplateType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isUnionType()">isUnionType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isVoidType()">isVoidType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#matchesInt32Context()">matchesInt32Context</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#matchesUint32Context()">matchesUint32Context</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#resolve(com.google.javascript.rhino.ErrorReporter, com.google.javascript.rhino.jstype.StaticScope)">resolve</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#restrictByNotNullOrUndefined()">restrictByNotNullOrUndefined</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toObjectType()">toObjectType</A></CODE></TD>
+<TD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#autobox()">autobox</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#autoboxesTo()">autoboxesTo</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#canAssignTo(com.google.javascript.rhino.jstype.JSType)">canAssignTo</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#canTestForEqualityWith(com.google.javascript.rhino.jstype.JSType)">canTestForEqualityWith</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#canTestForShallowEqualityWith(com.google.javascript.rhino.jstype.JSType)">canTestForShallowEqualityWith</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#clearResolved()">clearResolved</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#collapseUnion()">collapseUnion</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#dereference()">dereference</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#differsFrom(com.google.javascript.rhino.jstype.JSType)">differsFrom</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#equals(java.lang.Object)">equals</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#forceResolve(com.google.javascript.rhino.ErrorReporter, com.google.javascript.rhino.jstype.StaticScope)">forceResolve</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getGreatestSubtype(com.google.javascript.rhino.jstype.JSType)">getGreatestSubtype</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getLeastSupertype(com.google.javascript.rhino.jstype.JSType)">getLeastSupertype</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getRestrictedTypeGivenToBooleanOutcome(boolean)">getRestrictedTypeGivenToBooleanOutcome</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getTypesUnderEquality(com.google.javascript.rhino.jstype.JSType)">getTypesUnderEquality</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getTypesUnderInequality(com.google.javascript.rhino.jstype.JSType)">getTypesUnderInequality</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getTypesUnderShallowEquality(com.google.javascript.rhino.jstype.JSType)">getTypesUnderShallowEquality</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getTypesUnderShallowInequality(com.google.javascript.rhino.jstype.JSType)">getTypesUnderShallowInequality</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#hasDisplayName()">hasDisplayName</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isAllType()">isAllType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isArrayType()">isArrayType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isBooleanObjectType()">isBooleanObjectType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isBooleanValueType()">isBooleanValueType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isCheckedUnknownType()">isCheckedUnknownType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isDateType()">isDateType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isEmptyType()">isEmptyType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isEnumElementType()">isEnumElementType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isEnumType()">isEnumType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isEquivalent(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType)">isEquivalent</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isFunctionType()">isFunctionType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isGlobalThisType()">isGlobalThisType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNominalConstructor()">isNominalConstructor</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNominalType()">isNominalType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNoObjectType()">isNoObjectType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNoResolvedType()">isNoResolvedType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNoType()">isNoType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNullable()">isNullable</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNullType()">isNullType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNumber()">isNumber</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNumberObjectType()">isNumberObjectType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNumberValueType()">isNumberValueType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isRecordType()">isRecordType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isRegexpType()">isRegexpType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isResolved()">isResolved</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isString()">isString</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isStringObjectType()">isStringObjectType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isStringValueType()">isStringValueType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isTemplateType()">isTemplateType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isUnionType()">isUnionType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isVoidType()">isVoidType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#matchesInt32Context()">matchesInt32Context</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#matchesUint32Context()">matchesUint32Context</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#resolve(com.google.javascript.rhino.ErrorReporter, com.google.javascript.rhino.jstype.StaticScope)">resolve</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#restrictByNotNullOrUndefined()">restrictByNotNullOrUndefined</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#setValidator(com.google.common.base.Predicate)">setValidator</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toAnnotationString()">toAnnotationString</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toMaybeEnumElementType()">toMaybeEnumElementType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toMaybeEnumType()">toMaybeEnumType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toMaybeFunctionType(com.google.javascript.rhino.jstype.JSType)">toMaybeFunctionType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toMaybeUnionType()">toMaybeUnionType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toObjectType()">toObjectType</A>, <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toString()">toString</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
@@ -702,6 +800,7 @@ public boolean <B>isInstanceType</B>()</PRE>
 <DL>
 <DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isInstanceType()">JSType</A></CODE></B></DD>
 <DD>Whether this type is an Instance object of some constructor.
+ Does not necessarily mean this is an <CODE>InstanceObjectType</CODE>.
 <P>
 <DD><DL>
 <DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isInstanceType()">isInstanceType</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></DL>
@@ -766,13 +865,25 @@ public boolean <B>isOrdinaryFunction</B>()</PRE>
 </DL>
 <HR>
 
-<A NAME="isFunctionType()"><!-- --></A><H3>
-isFunctionType</H3>
+<A NAME="toMaybeFunctionType()"><!-- --></A><H3>
+toMaybeFunctionType</H3>
 <PRE>
-public boolean <B>isFunctionType</B>()</PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A> <B>toMaybeFunctionType</B>()</PRE>
 <DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toMaybeFunctionType()">JSType</A></CODE></B></DD>
+<DD>Downcasts this to a FunctionType, or returns null if this is not
+ a function.
+
+ For the purposes of this function, we define a MaybeFunctionType as any
+ type in the sub-lattice
+ { x | LEAST_FUNCTION_TYPE <= x <= GREATEST_FUNCTION_TYPE }
+ This definition excludes bottom types like NoType and NoObjectType.
+
+ This definition is somewhat arbitrary and axiomatic, but this is the
+ definition that makes the most sense for the most callers.
+<P>
 <DD><DL>
-<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isFunctionType()">isFunctionType</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toMaybeFunctionType()">toMaybeFunctionType</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></DL>
 </DD>
 <DD><DL>
 </DL>
@@ -795,6 +906,17 @@ public boolean <B>canBeCalled</B>()</PRE>
 <DD><DL>
 
 <DT><B>Returns:</B><DD><code>true</code> if this type might be callable.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="hasImplementedInterfaces()"><!-- --></A><H3>
+hasImplementedInterfaces</H3>
+<PRE>
+public boolean <B>hasImplementedInterfaces</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
 </DD>
 </DL>
 <HR>
@@ -872,10 +994,48 @@ public boolean <B>isReturnTypeInferred</B>()</PRE>
 </DL>
 <HR>
 
+<A NAME="getSlot(java.lang.String)"><!-- --></A><H3>
+getSlot</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.Property.html" title="class in com.google.javascript.rhino.jstype">ObjectType.Property</A> <B>getSlot</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html#getSlot(java.lang.String)">StaticScope</A></CODE></B></DD>
+<DD>Returns any defined slot within this scope for this name.  This call
+ continues searching through parent scopes if a slot with this name is not
+ found in the current scope.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html#getSlot(java.lang.String)">getSlot</A></CODE> in interface <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>name</CODE> - The name of the variable slot to look up.
+<DT><B>Returns:</B><DD>The defined slot for the variable, or <code>null</code> if no
+         definition exists.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getOwnPropertyNames()"><!-- --></A><H3>
+getOwnPropertyNames</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>getOwnPropertyNames</B>()</PRE>
+<DL>
+<DD>Includes the prototype iff someone has created it. We do not want
+ to expose the prototype for ordinary functions.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="getPrototype()"><!-- --></A><H3>
 getPrototype</H3>
 <PRE>
-public <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionPrototypeType.html" title="class in com.google.javascript.rhino.jstype">FunctionPrototypeType</A> <B>getPrototype</B>()</PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>getPrototype</B>()</PRE>
 <DL>
 <DD>Gets the <code>prototype</code> property of this function type. This is
  equivalent to <code>(ObjectType) getPropertyType("prototype")</code>.
@@ -896,20 +1056,6 @@ public void <B>setPrototypeBasedOn</B>(<A HREF="../../../../../com/google/javasc
 <P>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>baseType</CODE> - The base type.</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="setPrototype(com.google.javascript.rhino.jstype.FunctionPrototypeType)"><!-- --></A><H3>
-setPrototype</H3>
-<PRE>
-public boolean <B>setPrototype</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionPrototypeType.html" title="class in com.google.javascript.rhino.jstype">FunctionPrototypeType</A>&nbsp;prototype)</PRE>
-<DL>
-<DD>Sets the prototype.
-<P>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>prototype</CODE> - the prototype. If this value is <code>null</code> it will
-        silently be discarded.</DL>
 </DD>
 </DL>
 <HR>
@@ -942,6 +1088,19 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is
 </DL>
 <HR>
 
+<A NAME="getOwnImplementedInterfaces()"><!-- --></A><H3>
+getOwnImplementedInterfaces</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt; <B>getOwnImplementedInterfaces</B>()</PRE>
+<DL>
+<DD>Returns interfaces directly implemented by the class.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="setImplementedInterfaces(java.util.List)"><!-- --></A><H3>
 setImplementedInterfaces</H3>
 <PRE>
@@ -953,38 +1112,57 @@ public void <B>setImplementedInterfaces</B>(<A HREF="http://java.sun.com/javase/
 </DL>
 <HR>
 
-<A NAME="hasProperty(java.lang.String)"><!-- --></A><H3>
-hasProperty</H3>
+<A NAME="getAllExtendedInterfaces()"><!-- --></A><H3>
+getAllExtendedInterfaces</H3>
 <PRE>
-public boolean <B>hasProperty</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt; <B>getAllExtendedInterfaces</B>()</PRE>
 <DL>
-<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#hasProperty(java.lang.String)">ObjectType</A></CODE></B></DD>
-<DD>Checks whether the property whose name is given is present on the
- object.
+<DD>Returns all extended interfaces declared by an interfaces or its super-
+ interfaces. If this is called before all types are resolved, it may return
+ an incomplete set.
 <P>
-<DD><DL>
-</DL>
-</DD>
 <DD><DL>
 </DL>
 </DD>
 </DL>
 <HR>
 
-<A NAME="hasOwnProperty(java.lang.String)"><!-- --></A><H3>
-hasOwnProperty</H3>
+<A NAME="getExtendedInterfaces()"><!-- --></A><H3>
+getExtendedInterfaces</H3>
 <PRE>
-public boolean <B>hasOwnProperty</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt; <B>getExtendedInterfaces</B>()</PRE>
 <DL>
-<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#hasOwnProperty(java.lang.String)">ObjectType</A></CODE></B></DD>
-<DD>Checks whether the property whose name is given is present directly on
- the object.  Returns false even if it is declared on a supertype.
+<DD>Returns interfaces directly extended by an interface
 <P>
 <DD><DL>
 </DL>
 </DD>
+</DL>
+<HR>
+
+<A NAME="getExtendedInterfacesCount()"><!-- --></A><H3>
+getExtendedInterfacesCount</H3>
+<PRE>
+public int <B>getExtendedInterfacesCount</B>()</PRE>
+<DL>
+<DD>Returns the number of interfaces directly extended by an interface
+<P>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setExtendedInterfaces(java.util.List)"><!-- --></A><H3>
+setExtendedInterfaces</H3>
+<PRE>
+public void <B>setExtendedInterfaces</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;&nbsp;extendedInterfaces)
+                           throws <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/UnsupportedOperationException.html?is-external=true" title="class or interface in java.lang">UnsupportedOperationException</A></PRE>
+<DL>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/UnsupportedOperationException.html?is-external=true" title="class or interface in java.lang">UnsupportedOperationException</A></CODE></DL>
 </DD>
 </DL>
 <HR>
@@ -1010,71 +1188,19 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" t
 </DL>
 <HR>
 
-<A NAME="isPropertyTypeInferred(java.lang.String)"><!-- --></A><H3>
-isPropertyTypeInferred</H3>
+<A NAME="getBindReturnType(int)"><!-- --></A><H3>
+getBindReturnType</H3>
 <PRE>
-public boolean <B>isPropertyTypeInferred</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;property)</PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A> <B>getBindReturnType</B>(int&nbsp;argsToBind)</PRE>
 <DL>
-<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#isPropertyTypeInferred(java.lang.String)">ObjectType</A></CODE></B></DD>
-<DD>Checks whether the property's type is inferred.
+<DD>Get the return value of calling "bind" on this function
+ with the specified number of arguments.
+
+ If -1 is passed, then we will return a result that accepts
+ any parameters.
 <P>
 <DD><DL>
 </DL>
-</DD>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getLeastSupertype(com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
-getLeastSupertype</H3>
-<PRE>
-public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>getLeastSupertype</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;that)</PRE>
-<DL>
-<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getLeastSupertype(com.google.javascript.rhino.jstype.JSType)">JSType</A></CODE></B></DD>
-<DD>Gets the least supertype of <code>this</code> and <code>that</code>.
- The least supertype is the join (&#8744;) or supremum of both types in the
- type lattice.<p>
- Examples:
- <ul>
- <li><code>number &amp;#8744; *</code> = <code>*</code></li>
- <li><code>number &amp;#8744; Object</code> = <code>(number, Object)</code></li>
- <li><code>Number &amp;#8744; Object</code> = <code>Object</code></li>
- </ul>
-<P>
-<DD><DL>
-<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getLeastSupertype(com.google.javascript.rhino.jstype.JSType)">getLeastSupertype</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></DL>
-</DD>
-<DD><DL>
-
-<DT><B>Returns:</B><DD><code>this &amp;#8744; that</code></DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getGreatestSubtype(com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
-getGreatestSubtype</H3>
-<PRE>
-public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>getGreatestSubtype</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;that)</PRE>
-<DL>
-<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getGreatestSubtype(com.google.javascript.rhino.jstype.JSType)">JSType</A></CODE></B></DD>
-<DD>Gets the greatest subtype of <code>this</code> and <code>that</code>.
- The greatest subtype is the meet (&#8743;) or infimum of both types in the
- type lattice.<p>
- Examples
- <ul>
- <li><code>Number &amp;#8743; Any</code> = <code>Any</code></li>
- <li><code>number &amp;#8743; Object</code> = <code>Any</code></li>
- <li><code>Number &amp;#8743; Object</code> = <code>Number</code></li>
- </ul>
-<P>
-<DD><DL>
-<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getGreatestSubtype(com.google.javascript.rhino.jstype.JSType)">getGreatestSubtype</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></DL>
-</DD>
-<DD><DL>
-
-<DT><B>Returns:</B><DD><code>this &amp;#8744; that</code></DL>
 </DD>
 </DL>
 <HR>
@@ -1093,13 +1219,14 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.h
 </DL>
 <HR>
 
-<A NAME="hasUnknownSupertype()"><!-- --></A><H3>
-hasUnknownSupertype</H3>
+<A NAME="getTopDefiningInterface(com.google.javascript.rhino.jstype.ObjectType, java.lang.String)"><!-- --></A><H3>
+getTopDefiningInterface</H3>
 <PRE>
-public boolean <B>hasUnknownSupertype</B>()</PRE>
+public static <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>getTopDefiningInterface</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;type,
+                                                 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</PRE>
 <DL>
-<DD>Given a constructor or an interface type, find out whether the unknown
- type is a supertype of the current type.
+<DD>Given an interface and a property, finds the top-most super interface
+ that has the property defined (including this interface).
 <P>
 <DD><DL>
 </DL>
@@ -1110,7 +1237,7 @@ public boolean <B>hasUnknownSupertype</B>()</PRE>
 <A NAME="getTopMostDefiningType(java.lang.String)"><!-- --></A><H3>
 getTopMostDefiningType</H3>
 <PRE>
-public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>getTopMostDefiningType</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>getTopMostDefiningType</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</PRE>
 <DL>
 <DD>Given a constructor or an interface type and a property, finds the
  top-most superclass that has the property defined (including this
@@ -1158,25 +1285,6 @@ hasEqualCallType</H3>
 <PRE>
 public boolean <B>hasEqualCallType</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&nbsp;otherType)</PRE>
 <DL>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="toString()"><!-- --></A><H3>
-toString</H3>
-<PRE>
-public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>toString</B>()</PRE>
-<DL>
-<DD>Informally, a function is represented by
- <code>function (params): returnType</code> where the <code>params</code> is a comma
- separated list of types, the first one being a special
- <code>this:T</code> if the function expects a known type for <code>this</code>.
-<P>
-<DD><DL>
-</DL>
-</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -1257,6 +1365,9 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.htm
 <DD>Gets the type of <code>this</code> in this function.
 <P>
 <DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html#getTypeOfThis()">getTypeOfThis</A></CODE> in interface <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getTypeOfThis()">getTypeOfThis</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
+</DD>
+<DD><DL>
 </DL>
 </DD>
 </DL>
@@ -1288,6 +1399,24 @@ public void <B>setSource</B>(<A HREF="../../../../../com/google/javascript/rhino
 </DL>
 <HR>
 
+<A NAME="clearCachedValues()"><!-- --></A><H3>
+clearCachedValues</H3>
+<PRE>
+public void <B>clearCachedValues</B>()</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#clearCachedValues()">ObjectType</A></CODE></B></DD>
+<DD>Clear cached values. Should be called before making changes to a prototype
+ that may have been changed since creation.
+<P>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#clearCachedValues()">clearCachedValues</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="getSubTypes()"><!-- --></A><H3>
 getSubTypes</H3>
 <PRE>
@@ -1309,7 +1438,7 @@ hasCachedValues</H3>
 public boolean <B>hasCachedValues</B>()</PRE>
 <DL>
 <DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#hasCachedValues()">ObjectType</A></CODE></B></DD>
-<DD>Returns true if any cached valeus have been set for this type.  If true,
+<DD>Returns true if any cached values have been set for this type.  If true,
  then the prototype chain should not be changed, as it might invalidate the
  cached values.
 <P>
@@ -1369,16 +1498,35 @@ public int <B>getPropertiesCount</B>()</PRE>
 </DL>
 <HR>
 
-<A NAME="getOwnPropertyNames()"><!-- --></A><H3>
-getOwnPropertyNames</H3>
+<A NAME="hasProperty(java.lang.String)"><!-- --></A><H3>
+hasProperty</H3>
 <PRE>
-public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>getOwnPropertyNames</B>()</PRE>
+public boolean <B>hasProperty</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</PRE>
 <DL>
-<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getOwnPropertyNames()">ObjectType</A></CODE></B></DD>
-<DD>Returns the names of all the properties directly on this type.
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#hasProperty(java.lang.String)">ObjectType</A></CODE></B></DD>
+<DD>Checks whether the property whose name is given is present on the
+ object.
 <P>
 <DD><DL>
-<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getOwnPropertyNames()">getOwnPropertyNames</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#hasProperty(java.lang.String)">hasProperty</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="hasOwnProperty(java.lang.String)"><!-- --></A><H3>
+hasOwnProperty</H3>
+<PRE>
+public boolean <B>hasOwnProperty</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#hasOwnProperty(java.lang.String)">ObjectType</A></CODE></B></DD>
+<DD>Checks whether the property whose name is given is present directly on
+ the object.  Returns false even if it is declared on a supertype.
+<P>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#hasOwnProperty(java.lang.String)">hasOwnProperty</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
 </DD>
 <DD><DL>
 </DL>
@@ -1403,6 +1551,23 @@ public boolean <B>isPropertyTypeDeclared</B>(<A HREF="http://java.sun.com/javase
 </DL>
 <HR>
 
+<A NAME="isPropertyTypeInferred(java.lang.String)"><!-- --></A><H3>
+isPropertyTypeInferred</H3>
+<PRE>
+public boolean <B>isPropertyTypeInferred</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;property)</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#isPropertyTypeInferred(java.lang.String)">ObjectType</A></CODE></B></DD>
+<DD>Checks whether the property's type is inferred.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#isPropertyTypeInferred(java.lang.String)">isPropertyTypeInferred</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="isPropertyInExterns(java.lang.String)"><!-- --></A><H3>
 isPropertyInExterns</H3>
 <PRE>
@@ -1416,6 +1581,49 @@ public boolean <B>isPropertyInExterns</B>(<A HREF="http://java.sun.com/javase/6/
 </DD>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="removeProperty(java.lang.String)"><!-- --></A><H3>
+removeProperty</H3>
+<PRE>
+public boolean <B>removeProperty</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#removeProperty(java.lang.String)">ObjectType</A></CODE></B></DD>
+<DD>Removes the declared or inferred property from this ObjectType.
+<P>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#removeProperty(java.lang.String)">removeProperty</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>name</CODE> - the property's name
+<DT><B>Returns:</B><DD>true if the property was removed successfully. False if the
+         property did not exist, or could not be removed.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getPropertyNode(java.lang.String)"><!-- --></A><H3>
+getPropertyNode</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>getPropertyNode</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getPropertyNode(java.lang.String)">ObjectType</A></CODE></B></DD>
+<DD>Gets the node corresponding to the definition of the specified property.
+ This could be the node corresponding to declaration of the property or the
+ node corresponding to the first reference to this property, e.g.,
+ "this.propertyName" in a constructor. Note this is mainly intended to be
+ an estimate of where in the source code a property is defined. Sometime
+ the returned node is not even part of the global AST but in the AST of the
+ JsDoc that defines a type.
+<P>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getPropertyNode(java.lang.String)">getPropertyNode</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>propertyName</CODE> - the name of the property
+<DT><B>Returns:</B><DD>the <code>Node</code> corresponding to the property or null.</DL>
 </DD>
 </DL>
 <HR>
@@ -1439,26 +1647,22 @@ public <A HREF="../../../../../com/google/javascript/rhino/JSDocInfo.html" title
 </DL>
 <HR>
 
-<A NAME="setPropertyJSDocInfo(java.lang.String, com.google.javascript.rhino.JSDocInfo, boolean)"><!-- --></A><H3>
+<A NAME="setPropertyJSDocInfo(java.lang.String, com.google.javascript.rhino.JSDocInfo)"><!-- --></A><H3>
 setPropertyJSDocInfo</H3>
 <PRE>
 public void <B>setPropertyJSDocInfo</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName,
-                                 <A HREF="../../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A>&nbsp;info,
-                                 boolean&nbsp;inExterns)</PRE>
+                                 <A HREF="../../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A>&nbsp;info)</PRE>
 <DL>
-<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#setPropertyJSDocInfo(java.lang.String, com.google.javascript.rhino.JSDocInfo, boolean)">ObjectType</A></CODE></B></DD>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#setPropertyJSDocInfo(java.lang.String, com.google.javascript.rhino.JSDocInfo)">ObjectType</A></CODE></B></DD>
 <DD>Sets the docInfo for the specified property from the
  <A HREF="../../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> on its definition.
 <P>
 <DD><DL>
-<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#setPropertyJSDocInfo(java.lang.String, com.google.javascript.rhino.JSDocInfo, boolean)">setPropertyJSDocInfo</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#setPropertyJSDocInfo(java.lang.String, com.google.javascript.rhino.JSDocInfo)">setPropertyJSDocInfo</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
 </DD>
 <DD><DL>
 <DD><CODE>info</CODE> - <code>JSDocInfo</code> for the property definition. May be
-        <code>null</code>.<DD><CODE>inExterns</CODE> - <code>true</code> if this property was defined in an externs
-        file. TightenTypes assumes that any function passed to an externs
-        property could be called, so setting this incorrectly could result
-        in live code being removed.</DL>
+        <code>null</code>.</DL>
 </DD>
 </DL>
 <HR>
@@ -1632,6 +1836,80 @@ public boolean <B>isNativeObjectType</B>()</PRE>
 </DL>
 </DD>
 </DL>
+<HR>
+
+<A NAME="getOwnerFunction()"><!-- --></A><H3>
+getOwnerFunction</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A> <B>getOwnerFunction</B>()</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getOwnerFunction()">ObjectType</A></CODE></B></DD>
+<DD>Gets the owner of this if it's a function prototype.
+<P>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getOwnerFunction()">getOwnerFunction</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getCtorImplementedInterfaces()"><!-- --></A><H3>
+getCtorImplementedInterfaces</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt; <B>getCtorImplementedInterfaces</B>()</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getCtorImplementedInterfaces()">ObjectType</A></CODE></B></DD>
+<DD>Gets the interfaces implemented by the ctor associated with this type.
+ Intended to be overridden by subclasses.
+<P>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getCtorImplementedInterfaces()">getCtorImplementedInterfaces</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getCtorExtendedInterfaces()"><!-- --></A><H3>
+getCtorExtendedInterfaces</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt; <B>getCtorExtendedInterfaces</B>()</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getCtorExtendedInterfaces()">ObjectType</A></CODE></B></DD>
+<DD>Gets the interfaces extended by the interface associated with this type.
+ Intended to be overriden by subclasses.
+<P>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getCtorExtendedInterfaces()">getCtorExtendedInterfaces</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="matchConstraint(com.google.javascript.rhino.jstype.ObjectType)"><!-- --></A><H3>
+matchConstraint</H3>
+<PRE>
+public void <B>matchConstraint</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;constraintObj)</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#matchConstraint(com.google.javascript.rhino.jstype.ObjectType)">JSType</A></CODE></B></DD>
+<DD>Modify this type so that it matches the specified type.
+
+ This is useful for reverse type-inference, where we want to
+ infer that an object literal matches its contraint (much like
+ how the java compiler does reverse-inference to figure out generics).
+<P>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#matchConstraint(com.google.javascript.rhino.jstype.ObjectType)">matchConstraint</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
 <!-- ========= END OF CLASS DATA ========= -->
 <HR>
 
@@ -1662,8 +1940,8 @@ public boolean <B>isNativeObjectType</B>()</PRE>
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionPrototypeType.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/InstanceObjectType.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionParamBuilder.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/FunctionType.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="FunctionType.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -1683,7 +1961,7 @@ public boolean <B>isNativeObjectType</B>()</PRE>
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;<A HREF="#nested_classes_inherited_from_class_com.google.javascript.rhino.jstype.JSType">NESTED</A>&nbsp;|&nbsp;<A HREF="#fields_inherited_from_class_com.google.javascript.rhino.jstype.JSType">FIELD</A>&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;<A HREF="#nested_classes_inherited_from_class_com.google.javascript.rhino.jstype.ObjectType">NESTED</A>&nbsp;|&nbsp;<A HREF="#fields_inherited_from_class_com.google.javascript.rhino.jstype.JSType">FIELD</A>&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
 DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>

@@ -53,7 +53,7 @@ function windowTitle()
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Scope.Arguments.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/Scope.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="Scope.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -93,11 +93,11 @@ Class Scope</H2>
   <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.Scope</B>
 </PRE>
 <DL>
-<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</DD>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;, <A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html" title="interface in com.google.javascript.rhino.jstype">StaticSymbolTable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>,<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&gt;</DD>
 </DL>
 <HR>
 <DL>
-<DT><PRE>public class <B>Scope</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</DL>
+<DT><PRE>public class <B>Scope</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;, <A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html" title="interface in com.google.javascript.rhino.jstype">StaticSymbolTable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>,<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&gt;</DL>
 </PRE>
 
 <P>
@@ -130,6 +130,15 @@ Scope contains information about a variable scope in javascript.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.Arguments.html" title="class in com.google.javascript.jscomp">Scope.Arguments</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A special subclass of Var used to distinguish "arguments" in the current
+ scope.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;class</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A></B></CODE>
 
 <BR>
@@ -144,6 +153,30 @@ Scope contains information about a variable scope in javascript.
 <TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
 <TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
 <B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.html#getAllSymbols()">getAllSymbols</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns all variables in this symbol table.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.html#getArgumentsVar()">getArgumentsVar</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get a unique VAR object to represents "arguments" within this scope</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Iterator.html?is-external=true" title="class or interface in java.util">Iterator</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.html#getDeclarativelyUnboundVarsWithoutTypes()">getDeclarativelyUnboundVarsWithoutTypes</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets all variables declared with "var" but without declared types attached.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -171,11 +204,27 @@ Scope contains information about a variable scope in javascript.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.html#getReferences(com.google.javascript.jscomp.Scope.Var)">getReferences</A></B>(<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&nbsp;var)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the references that point to the given symbol.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.html#getRootNode()">getRootNode</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the container node of the scope.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Scope.html#getScope(com.google.javascript.jscomp.Scope.Var)">getScope</A></B>(<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&nbsp;var)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the scope for a given symbol.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -274,7 +323,7 @@ public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class 
  node or the global BLOCK/SCRIPT node.
 <P>
 <DD><DL>
-</DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticScope.html#getRootNode()">getRootNode</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></DL>
 </DD>
 <DD><DL>
 </DL>
@@ -383,6 +432,22 @@ public <A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="
 </DL>
 <HR>
 
+<A NAME="getArgumentsVar()"><!-- --></A><H3>
+getArgumentsVar</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A> <B>getArgumentsVar</B>()</PRE>
+<DL>
+<DD>Get a unique VAR object to represents "arguments" within this scope
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="isDeclared(java.lang.String, boolean)"><!-- --></A><H3>
 isDeclared</H3>
 <PRE>
@@ -409,6 +474,57 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Iterator.html?is
 <P>
 <DD><DL>
 </DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getReferences(com.google.javascript.jscomp.Scope.Var)"><!-- --></A><H3>
+getReferences</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&gt; <B>getReferences</B>(<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&nbsp;var)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html#getReferences(S)">StaticSymbolTable</A></CODE></B></DD>
+<DD>Returns the references that point to the given symbol.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html#getReferences(S)">getReferences</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html" title="interface in com.google.javascript.rhino.jstype">StaticSymbolTable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>,<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getScope(com.google.javascript.jscomp.Scope.Var)"><!-- --></A><H3>
+getScope</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt; <B>getScope</B>(<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&nbsp;var)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html#getScope(S)">StaticSymbolTable</A></CODE></B></DD>
+<DD>Returns the scope for a given symbol.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html#getScope(S)">getScope</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html" title="interface in com.google.javascript.rhino.jstype">StaticSymbolTable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>,<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAllSymbols()"><!-- --></A><H3>
+getAllSymbols</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&gt; <B>getAllSymbols</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html#getAllSymbols()">StaticSymbolTable</A></CODE></B></DD>
+<DD>Returns all variables in this symbol table.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html#getAllSymbols()">getAllSymbols</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSymbolTable.html" title="interface in com.google.javascript.rhino.jstype">StaticSymbolTable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>,<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&gt;</CODE></DL>
 </DD>
 <DD><DL>
 </DL>
@@ -462,6 +578,22 @@ public boolean <B>isLocal</B>()</PRE>
 </DL>
 </DD>
 </DL>
+<HR>
+
+<A NAME="getDeclarativelyUnboundVarsWithoutTypes()"><!-- --></A><H3>
+getDeclarativelyUnboundVarsWithoutTypes</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Iterator.html?is-external=true" title="class or interface in java.util">Iterator</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>&gt; <B>getDeclarativelyUnboundVarsWithoutTypes</B>()</PRE>
+<DL>
+<DD>Gets all variables declared with "var" but without declared types attached.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
 <!-- ========= END OF CLASS DATA ========= -->
 <HR>
 
@@ -493,7 +625,7 @@ public boolean <B>isLocal</B>()</PRE>
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Scope.Arguments.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/Scope.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="Scope.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;

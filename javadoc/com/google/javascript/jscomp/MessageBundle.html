@@ -88,6 +88,9 @@ DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHO
 com.google.javascript.jscomp</FONT>
 <BR>
 Interface MessageBundle</H2>
+<DL>
+<DT><B>All Known Implementing Classes:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/EmptyMessageBundle.html" title="class in com.google.javascript.jscomp">EmptyMessageBundle</A>, <A HREF="../../../../com/google/javascript/jscomp/XtbMessageBundle.html" title="class in com.google.javascript.jscomp">XtbMessageBundle</A></DD>
+</DL>
 <HR>
 <DL>
 <DT><PRE>public interface <B>MessageBundle</B></DL>
@@ -118,14 +121,6 @@ An interface for providing alterative values for user-visible messages in
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns an iterable over the keys that this object has replacements for.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Locale.html?is-external=true" title="class or interface in java.util">Locale</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/MessageBundle.html#getLocale()">getLocale</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns bundle locale.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -201,20 +196,6 @@ getAllMessages</H3>
 <DD><DL>
 
 <DT><B>Returns:</B><DD>all messages from this bundle.</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getLocale()"><!-- --></A><H3>
-getLocale</H3>
-<PRE>
-<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Locale.html?is-external=true" title="class or interface in java.util">Locale</A> <B>getLocale</B>()</PRE>
-<DL>
-<DD>Returns bundle locale.
-<P>
-<DD><DL>
-
-<DT><B>Returns:</B><DD>locale for bundle's messages.</DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->

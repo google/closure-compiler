@@ -93,9 +93,12 @@ Class JSSourceFile</H2>
   <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">com.google.javascript.jscomp.SourceFile</A>
       <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.JSSourceFile</B>
 </PRE>
+<DL>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/rhino/jstype/StaticSourceFile.html" title="interface in com.google.javascript.rhino.jstype">StaticSourceFile</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DD>
+</DL>
 <HR>
 <DL>
-<DT><PRE>public class <B>JSSourceFile</B><DT>extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A></DL>
+<DT><PRE>public class <B>JSSourceFile</B><DT>extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A><DT>implements <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DL>
 </PRE>
 
 <P>
@@ -104,6 +107,8 @@ An abstract representation of a JavaScript source file, as input to
 <P>
 
 <P>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../serialized-form.html#com.google.javascript.jscomp.JSSourceFile">Serialized Form</A></DL>
 <HR>
 
 <P>
@@ -122,7 +127,7 @@ An abstract representation of a JavaScript source file, as input to
 <TH ALIGN="left"><B>Nested classes/interfaces inherited from class com.google.javascript.jscomp.<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/SourceFile.Generator.html" title="interface in com.google.javascript.jscomp">SourceFile.Generator</A></CODE></TD>
+<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/SourceFile.Builder.html" title="class in com.google.javascript.jscomp">SourceFile.Builder</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.Generator.html" title="interface in com.google.javascript.jscomp">SourceFile.Generator</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -219,7 +224,7 @@ An abstract representation of a JavaScript source file, as input to
 <TH ALIGN="left"><B>Methods inherited from class com.google.javascript.jscomp.<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#fromCode(java.lang.String, java.lang.String, java.lang.String)">fromCode</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#fromInputStream(java.lang.String, java.lang.String, java.io.InputStream)">fromInputStream</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#fromReader(java.lang.String, java.io.Reader)">fromReader</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#getCodeReader()">getCodeReader</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#getLine(int)">getLine</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#getName()">getName</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#getOriginalPath()">getOriginalPath</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#getRegion(int)">getRegion</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#setOriginalPath(java.lang.String)">setOriginalPath</A></CODE></TD>
+<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#builder()">builder</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#fromCode(java.lang.String, java.lang.String, java.lang.String)">fromCode</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#fromInputStream(java.lang.String, java.lang.String, java.io.InputStream)">fromInputStream</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#fromReader(java.lang.String, java.io.Reader)">fromReader</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#getCodeReader()">getCodeReader</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#getLine(int)">getLine</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#getLineOffset(int)">getLineOffset</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#getName()">getName</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#getOriginalPath()">getOriginalPath</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#getRegion(int)">getRegion</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#isExtern()">isExtern</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#setOriginalPath(java.lang.String)">setOriginalPath</A>, <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html#toString()">toString</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
@@ -228,7 +233,7 @@ An abstract representation of a JavaScript source file, as input to
 <TH ALIGN="left"><B>Methods inherited from class java.lang.<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -253,6 +258,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.htm
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -261,6 +269,9 @@ fromFile</H3>
 <PRE>
 public static <A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A> <B>fromFile</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;fileName)</PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -276,6 +287,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.htm
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -284,6 +298,9 @@ fromFile</H3>
 <PRE>
 public static <A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A> <B>fromFile</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/io/File.html?is-external=true" title="class or interface in java.io">File</A>&nbsp;file)</PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -299,6 +316,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.htm
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -309,6 +329,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.htm
                                            <A HREF="http://java.sun.com/javase/6/docs/api/java/io/InputStream.html?is-external=true" title="class or interface in java.io">InputStream</A>&nbsp;s)
                                     throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 
 <DT><B>Throws:</B>
@@ -323,6 +346,9 @@ fromGenerator</H3>
 public static <A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A> <B>fromGenerator</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;fileName,
                                          <A HREF="../../../../com/google/javascript/jscomp/SourceFile.Generator.html" title="interface in com.google.javascript.jscomp">SourceFile.Generator</A>&nbsp;generator)</PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>

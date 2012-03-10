@@ -52,7 +52,7 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/InstanceObjectType.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.TypePair.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/JSType.html" target="_top"><B>FRAMES</B></A>  &nbsp;
@@ -210,6 +210,14 @@ Represents JavaScript value types.<p>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#autobox()">autobox</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Dereference a type for property access.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#autoboxesTo()">autoboxesTo</A></B>()</CODE>
 
 <BR>
@@ -261,6 +269,14 @@ Represents JavaScript value types.<p>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#collapseUnion()">collapseUnion</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the least supertype of this that's not a union.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#dereference()">dereference</A></B>()</CODE>
 
@@ -301,6 +317,14 @@ Represents JavaScript value types.<p>
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Force this type to resolve, even if the registry is in a lazy
  resolving mode.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getDisplayName()">getDisplayName</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns a user meaningful label for the JSType instance.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -379,6 +403,14 @@ Represents JavaScript value types.<p>
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Computes the subset of <code>this</code> and <code>that</code> types under
  shallow inequality.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#hasDisplayName()">hasDisplayName</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -500,7 +532,15 @@ Represents JavaScript value types.<p>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isFunctionType()">isFunctionType</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if toMaybeFunctionType returns a non-null FunctionType.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isGlobalThisType()">isGlobalThisType</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if this is a global this type.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -522,6 +562,14 @@ Represents JavaScript value types.<p>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNominalConstructor()">isNominalConstructor</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Whether this type is the original constructor of a nominal type.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNominalType()">isNominalType</A></B>()</CODE>
 
 <BR>
@@ -532,6 +580,14 @@ Represents JavaScript value types.<p>
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNoObjectType()">isNoObjectType</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNoResolvedType()">isNoResolvedType</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -651,7 +707,7 @@ Represents JavaScript value types.<p>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>abstract &nbsp;boolean</CODE></FONT></TD>
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isSubtype(com.google.javascript.rhino.jstype.JSType)">isSubtype</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;that)</CODE>
 
 <BR>
@@ -688,6 +744,14 @@ Represents JavaScript value types.<p>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#matchConstraint(com.google.javascript.rhino.jstype.ObjectType)">matchConstraint</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;contraint)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Modify this type so that it matches the specified type.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -754,11 +818,28 @@ Represents JavaScript value types.<p>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#setValidator(com.google.common.base.Predicate)">setValidator</A></B>(com.google.common.base.Predicate&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;validator)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Certain types have constraints on them at resolution-time.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/TernaryValue.html" title="enum in com.google.javascript.rhino.jstype">TernaryValue</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#testForEquality(com.google.javascript.rhino.jstype.JSType)">testForEquality</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;that)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compares <code>this</code> and <code>that</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toAnnotationString()">toAnnotationString</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A string representation of this type, suitable for printing
+ in type annotations at code generation time.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -771,11 +852,61 @@ Represents JavaScript value types.<p>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/EnumElementType.html" title="class in com.google.javascript.rhino.jstype">EnumElementType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toMaybeEnumElementType()">toMaybeEnumElementType</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Downcasts this to an EnumElementType, or returns null if this is not an EnumElementType.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/EnumType.html" title="class in com.google.javascript.rhino.jstype">EnumType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toMaybeEnumType()">toMaybeEnumType</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Downcasts this to an EnumType, or returns null if this is not an EnumType.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toMaybeFunctionType()">toMaybeFunctionType</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Downcasts this to a FunctionType, or returns null if this is not
+ a function.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toMaybeFunctionType(com.google.javascript.rhino.jstype.JSType)">toMaybeFunctionType</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Null-safe version of toMaybeFunctionType().</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/UnionType.html" title="class in com.google.javascript.rhino.jstype">UnionType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toMaybeUnionType()">toMaybeUnionType</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Downcasts this to a UnionType, or returns null if this is not a UnionType.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toObjectType()">toObjectType</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Casts this to an ObjectType, or returns null if this is not an ObjectType.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toString()">toString</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A string representation of this type, suitable for printing
+ in warnings.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -807,7 +938,7 @@ Represents JavaScript value types.<p>
 <TH ALIGN="left"><B>Methods inherited from class java.lang.<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -910,10 +1041,60 @@ public <A HREF="../../../../../com/google/javascript/rhino/JSDocInfo.html" title
 </DL>
 <HR>
 
+<A NAME="getDisplayName()"><!-- --></A><H3>
+getDisplayName</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getDisplayName</B>()</PRE>
+<DL>
+<DD>Returns a user meaningful label for the JSType instance.  For example,
+ Functions and Enums will return their declaration name (if they have one).
+ Some types will not have a meaningful display name.  Calls to
+ hasDisplayName() will return true IFF getDisplayName() will return null
+ or a zero length string.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>the display name of the type, or null if one is not available</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="hasDisplayName()"><!-- --></A><H3>
+hasDisplayName</H3>
+<PRE>
+public boolean <B>hasDisplayName</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>true if the JSType has a user meaningful label.</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="isNoType()"><!-- --></A><H3>
 isNoType</H3>
 <PRE>
 public boolean <B>isNoType</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isNoResolvedType()"><!-- --></A><H3>
+isNoResolvedType</H3>
+<PRE>
+public boolean <B>isNoResolvedType</B>()</PRE>
 <DL>
 <DD><DL>
 </DL>
@@ -1201,8 +1382,42 @@ public boolean <B>isCheckedUnknownType</B>()</PRE>
 <A NAME="isUnionType()"><!-- --></A><H3>
 isUnionType</H3>
 <PRE>
-public boolean <B>isUnionType</B>()</PRE>
+public final boolean <B>isUnionType</B>()</PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="toMaybeUnionType()"><!-- --></A><H3>
+toMaybeUnionType</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/UnionType.html" title="class in com.google.javascript.rhino.jstype">UnionType</A> <B>toMaybeUnionType</B>()</PRE>
+<DL>
+<DD>Downcasts this to a UnionType, or returns null if this is not a UnionType.
+
+ Named in honor of Haskell's Maybe type constructor.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isGlobalThisType()"><!-- --></A><H3>
+isGlobalThisType</H3>
+<PRE>
+public final boolean <B>isGlobalThisType</B>()</PRE>
+<DL>
+<DD>Returns true if this is a global this type.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -1215,8 +1430,51 @@ public boolean <B>isUnionType</B>()</PRE>
 <A NAME="isFunctionType()"><!-- --></A><H3>
 isFunctionType</H3>
 <PRE>
-public boolean <B>isFunctionType</B>()</PRE>
+public final boolean <B>isFunctionType</B>()</PRE>
 <DL>
+<DD>Returns true if toMaybeFunctionType returns a non-null FunctionType.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="toMaybeFunctionType()"><!-- --></A><H3>
+toMaybeFunctionType</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A> <B>toMaybeFunctionType</B>()</PRE>
+<DL>
+<DD>Downcasts this to a FunctionType, or returns null if this is not
+ a function.
+
+ For the purposes of this function, we define a MaybeFunctionType as any
+ type in the sub-lattice
+ { x | LEAST_FUNCTION_TYPE <= x <= GREATEST_FUNCTION_TYPE }
+ This definition excludes bottom types like NoType and NoObjectType.
+
+ This definition is somewhat arbitrary and axiomatic, but this is the
+ definition that makes the most sense for the most callers.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="toMaybeFunctionType(com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
+toMaybeFunctionType</H3>
+<PRE>
+public static <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A> <B>toMaybeFunctionType</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</PRE>
+<DL>
+<DD>Null-safe version of toMaybeFunctionType().
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -1229,8 +1487,24 @@ public boolean <B>isFunctionType</B>()</PRE>
 <A NAME="isEnumElementType()"><!-- --></A><H3>
 isEnumElementType</H3>
 <PRE>
-public boolean <B>isEnumElementType</B>()</PRE>
+public final boolean <B>isEnumElementType</B>()</PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="toMaybeEnumElementType()"><!-- --></A><H3>
+toMaybeEnumElementType</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/EnumElementType.html" title="class in com.google.javascript.rhino.jstype">EnumElementType</A> <B>toMaybeEnumElementType</B>()</PRE>
+<DL>
+<DD>Downcasts this to an EnumElementType, or returns null if this is not an EnumElementType.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -1245,6 +1519,22 @@ isEnumType</H3>
 <PRE>
 public boolean <B>isEnumType</B>()</PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="toMaybeEnumType()"><!-- --></A><H3>
+toMaybeEnumType</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/EnumType.html" title="class in com.google.javascript.rhino.jstype">EnumType</A> <B>toMaybeEnumType</B>()</PRE>
+<DL>
+<DD>Downcasts this to an EnumType, or returns null if this is not an EnumType.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -1333,12 +1623,30 @@ public boolean <B>isNominalType</B>()</PRE>
 </DL>
 <HR>
 
+<A NAME="isNominalConstructor()"><!-- --></A><H3>
+isNominalConstructor</H3>
+<PRE>
+public final boolean <B>isNominalConstructor</B>()</PRE>
+<DL>
+<DD>Whether this type is the original constructor of a nominal type.
+ Does not include structural constructors.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="isInstanceType()"><!-- --></A><H3>
 isInstanceType</H3>
 <PRE>
 public boolean <B>isInstanceType</B>()</PRE>
 <DL>
 <DD>Whether this type is an Instance object of some constructor.
+ Does not necessarily mean this is an <CODE>InstanceObjectType</CODE>.
 <P>
 <DD><DL>
 </DL>
@@ -1652,6 +1960,24 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.htm
 </DL>
 <HR>
 
+<A NAME="autobox()"><!-- --></A><H3>
+autobox</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>autobox</B>()</PRE>
+<DL>
+<DD>Dereference a type for property access.
+
+ Autoboxes the type, and filters null/undefined, and returns the result.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="dereference()"><!-- --></A><H3>
 dereference</H3>
 <PRE>
@@ -1742,6 +2068,22 @@ isNullable</H3>
 public boolean <B>isNullable</B>()</PRE>
 <DL>
 <DD>Tests whether this type is nullable.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="collapseUnion()"><!-- --></A><H3>
+collapseUnion</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>collapseUnion</B>()</PRE>
+<DL>
+<DD>Gets the least supertype of this that's not a union.
 <P>
 <DD><DL>
 </DL>
@@ -1965,7 +2307,7 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" t
 <A NAME="isSubtype(com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
 isSubtype</H3>
 <PRE>
-public abstract boolean <B>isSubtype</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;that)</PRE>
+public boolean <B>isSubtype</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;that)</PRE>
 <DL>
 <DD>Checks whether <code>this</code> is a subtype of <code>that</code>.<p>
 
@@ -2113,6 +2455,42 @@ public final void <B>clearResolved</B>()</PRE>
 </DL>
 <HR>
 
+<A NAME="setValidator(com.google.common.base.Predicate)"><!-- --></A><H3>
+setValidator</H3>
+<PRE>
+public boolean <B>setValidator</B>(com.google.common.base.Predicate&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;validator)</PRE>
+<DL>
+<DD>Certain types have constraints on them at resolution-time.
+ For example, a type in an <code>@extends</code> annotation must be an
+ object. Clients should inject a validator that emits a warning
+ if the type does not validate, and return false.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="toString()"><!-- --></A><H3>
+toString</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>toString</B>()</PRE>
+<DL>
+<DD>A string representation of this type, suitable for printing
+ in warnings.
+<P>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A></CODE> in class <CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="toDebugHashCodeString()"><!-- --></A><H3>
 toDebugHashCodeString</H3>
 <PRE>
@@ -2120,6 +2498,43 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-e
 <DL>
 <DD>A hash code function for diagnosing complicated issues
  around type-identity.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="toAnnotationString()"><!-- --></A><H3>
+toAnnotationString</H3>
+<PRE>
+public final <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>toAnnotationString</B>()</PRE>
+<DL>
+<DD>A string representation of this type, suitable for printing
+ in type annotations at code generation time.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="matchConstraint(com.google.javascript.rhino.jstype.ObjectType)"><!-- --></A><H3>
+matchConstraint</H3>
+<PRE>
+public void <B>matchConstraint</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;contraint)</PRE>
+<DL>
+<DD>Modify this type so that it matches the specified type.
+
+ This is useful for reverse type-inference, where we want to
+ infer that an object literal matches its contraint (much like
+ how the java compiler does reverse-inference to figure out generics).
 <P>
 <DD><DL>
 </DL>
@@ -2158,7 +2573,7 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-e
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/InstanceObjectType.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.TypePair.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/JSType.html" target="_top"><B>FRAMES</B></A>  &nbsp;

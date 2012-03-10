@@ -182,7 +182,10 @@ A directed graph using linked list within nodes to store edge information.
 <B>Constructor Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#LinkedDirectedGraph()">LinkedDirectedGraph</A></B>()</CODE>
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected </CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#LinkedDirectedGraph(boolean, boolean)">LinkedDirectedGraph</A></B>(boolean&nbsp;useNodeAnnotations,
+                    boolean&nbsp;useEdgeAnnotations)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -237,6 +240,51 @@ A directed graph using linked list within nodes to store edge information.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets a node from the graph given a value.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" SUMMARY="">
+<TR ALIGN="right" VALIGN="">
+<TD NOWRAP><FONT SIZE="-1">
+<CODE>&lt;N,E&gt; <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedDirectedGraph</A>&lt;N,E&gt;</CODE></FONT></TD>
+</TR>
+</TABLE>
+</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#createWithEdgeAnnotations()">createWithEdgeAnnotations</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" SUMMARY="">
+<TR ALIGN="right" VALIGN="">
+<TD NOWRAP><FONT SIZE="-1">
+<CODE>&lt;N,E&gt; <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedDirectedGraph</A>&lt;N,E&gt;</CODE></FONT></TD>
+</TR>
+</TABLE>
+</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#createWithNodeAnnotations()">createWithNodeAnnotations</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" SUMMARY="">
+<TR ALIGN="right" VALIGN="">
+<TD NOWRAP><FONT SIZE="-1">
+<CODE>&lt;N,E&gt; <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedDirectedGraph</A>&lt;N,E&gt;</CODE></FONT></TD>
+</TR>
+</TABLE>
+</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#createWithoutAnnotations()">createWithoutAnnotations</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -329,6 +377,15 @@ A directed graph using linked list within nodes to store edge information.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Retrieves an edge from the graph.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.GraphEdge.html" title="interface in com.google.javascript.jscomp.graph">Graph.GraphEdge</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">E</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#getFirstEdge(N, N)">getFirstEdge</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>&nbsp;n1,
+             <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>&nbsp;n2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Retrieves any edge from the graph.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -514,10 +571,11 @@ protected final <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.htm
 </TR>
 </TABLE>
 
-<A NAME="LinkedDirectedGraph()"><!-- --></A><H3>
+<A NAME="LinkedDirectedGraph(boolean, boolean)"><!-- --></A><H3>
 LinkedDirectedGraph</H3>
 <PRE>
-public <B>LinkedDirectedGraph</B>()</PRE>
+protected <B>LinkedDirectedGraph</B>(boolean&nbsp;useNodeAnnotations,
+                              boolean&nbsp;useEdgeAnnotations)</PRE>
 <DL>
 </DL>
 
@@ -541,6 +599,48 @@ public <A HREF="../../../../../com/google/javascript/jscomp/graph/SubGraph.html"
 <P>
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/AdjacencyGraph.html#newSubGraph()">newSubGraph</A></CODE> in interface <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/AdjacencyGraph.html" title="interface in com.google.javascript.jscomp.graph">AdjacencyGraph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">E</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createWithoutAnnotations()"><!-- --></A><H3>
+createWithoutAnnotations</H3>
+<PRE>
+public static &lt;N,E&gt; <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedDirectedGraph</A>&lt;N,E&gt; <B>createWithoutAnnotations</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createWithNodeAnnotations()"><!-- --></A><H3>
+createWithNodeAnnotations</H3>
+<PRE>
+public static &lt;N,E&gt; <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedDirectedGraph</A>&lt;N,E&gt; <B>createWithNodeAnnotations</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createWithEdgeAnnotations()"><!-- --></A><H3>
+createWithEdgeAnnotations</H3>
+<PRE>
+public static &lt;N,E&gt; <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedDirectedGraph</A>&lt;N,E&gt; <B>createWithEdgeAnnotations</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
 </DD>
 <DD><DL>
 </DL>
@@ -731,6 +831,26 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-ext
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>n1</CODE> - Node one.<DD><CODE>n2</CODE> - Node two.
 <DT><B>Returns:</B><DD>The list of edges between those two values in the graph.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getFirstEdge(java.lang.Object,java.lang.Object)"><!-- --></A><A NAME="getFirstEdge(N, N)"><!-- --></A><H3>
+getFirstEdge</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.GraphEdge.html" title="interface in com.google.javascript.jscomp.graph">Graph.GraphEdge</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">E</A>&gt; <B>getFirstEdge</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>&nbsp;n1,
+                                         <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>&nbsp;n2)</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getFirstEdge(N, N)">Graph</A></CODE></B></DD>
+<DD>Retrieves any edge from the graph.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getFirstEdge(N, N)">getFirstEdge</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">E</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>n1</CODE> - Node one.<DD><CODE>n2</CODE> - Node two.
+<DT><B>Returns:</B><DD>The first edges between those two values in the graph. null if
+    there are none.</DL>
 </DD>
 </DL>
 <HR>

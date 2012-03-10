@@ -147,7 +147,7 @@ A JavaScript module has a unique name, consists of a list of compiler inputs,
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSModule.html#add(com.google.javascript.jscomp.JSSourceFile)">add</A></B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;file)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSModule.html#add(com.google.javascript.jscomp.SourceFile)">add</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;file)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adds a source file input to this module.</TD>
@@ -180,7 +180,7 @@ A JavaScript module has a unique name, consists of a list of compiler inputs,
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSModule.html#addFirst(com.google.javascript.jscomp.JSSourceFile)">addFirst</A></B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;file)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSModule.html#addFirst(com.google.javascript.jscomp.SourceFile)">addFirst</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;file)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adds a source file input to this module.</TD>
@@ -217,6 +217,14 @@ A JavaScript module has a unique name, consists of a list of compiler inputs,
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the list of modules that this module depends on.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSModule.html#getDepth()">getDepth</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -289,6 +297,14 @@ A JavaScript module has a unique name, consists of a list of compiler inputs,
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Removes any input with the given name.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSModule.html#setDepth(int)">setDepth</A></B>(int&nbsp;dep)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -425,10 +441,10 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-e
 </DL>
 <HR>
 
-<A NAME="add(com.google.javascript.jscomp.JSSourceFile)"><!-- --></A><H3>
+<A NAME="add(com.google.javascript.jscomp.SourceFile)"><!-- --></A><H3>
 add</H3>
 <PRE>
-public void <B>add</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;file)</PRE>
+public void <B>add</B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;file)</PRE>
 <DL>
 <DD>Adds a source file input to this module.
 <P>
@@ -441,10 +457,10 @@ public void <B>add</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourc
 </DL>
 <HR>
 
-<A NAME="addFirst(com.google.javascript.jscomp.JSSourceFile)"><!-- --></A><H3>
+<A NAME="addFirst(com.google.javascript.jscomp.SourceFile)"><!-- --></A><H3>
 addFirst</H3>
 <PRE>
-public void <B>addFirst</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;file)</PRE>
+public void <B>addFirst</B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;file)</PRE>
 <DL>
 <DD>Adds a source file input to this module.
 <P>
@@ -722,6 +738,35 @@ public static <A HREF="../../../../com/google/javascript/jscomp/JSModule.html" t
 
 <DT><B>Throws:</B>
 <DD><CODE><A HREF="../../../../com/google/javascript/jscomp/deps/SortedDependencies.CircularDependencyException.html" title="class in com.google.javascript.jscomp.deps">SortedDependencies.CircularDependencyException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setDepth(int)"><!-- --></A><H3>
+setDepth</H3>
+<PRE>
+public void <B>setDepth</B>(int&nbsp;dep)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>dep</CODE> - the depth to set</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getDepth()"><!-- --></A><H3>
+getDepth</H3>
+<PRE>
+public int <B>getDepth</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>the depth</DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->

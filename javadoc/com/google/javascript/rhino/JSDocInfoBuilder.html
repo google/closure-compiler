@@ -153,7 +153,7 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#build(java.lang.String)">build</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#build(com.google.javascript.rhino.Node)">build</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;associatedNode)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Builds a <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> object based on the populated information and
@@ -209,7 +209,7 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether this builder is populated with information that can be
- used to <A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#build(java.lang.String)"><CODE>build(java.lang.String)</CODE></A> a <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> object.</TD>
+ used to <A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#build(com.google.javascript.rhino.Node)"><CODE>build(com.google.javascript.rhino.Node)</CODE></A> a <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> object.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -218,7 +218,7 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether this builder is populated with information that can be
- used to <A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#build(java.lang.String)"><CODE>build(java.lang.String)</CODE></A> a <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> object that has a
+ used to <A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#build(com.google.javascript.rhino.Node)"><CODE>build(com.google.javascript.rhino.Node)</CODE></A> a <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> object that has a
  fileoverview tag.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
@@ -240,6 +240,17 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
          int&nbsp;charno)</CODE>
 
 <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Deprecated.</B>&nbsp;<I>Use #markName(String, StaticSourceFile, int, int)</I></TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#markName(java.lang.String, com.google.javascript.rhino.jstype.StaticSourceFile, int, int)">markName</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+         <A HREF="../../../../com/google/javascript/rhino/jstype/StaticSourceFile.html" title="interface in com.google.javascript.rhino.jstype">StaticSourceFile</A>&nbsp;file,
+         int&nbsp;lineno,
+         int&nbsp;charno)</CODE>
+
+<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adds a name declaration to the current marker.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
@@ -257,9 +268,10 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#markTypeNode(com.google.javascript.rhino.Node, int, int, int, boolean)">markTypeNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;typeNode,
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#markTypeNode(com.google.javascript.rhino.Node, int, int, int, int, boolean)">markTypeNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;typeNode,
              int&nbsp;lineno,
              int&nbsp;startCharno,
+             int&nbsp;endLineno,
              int&nbsp;endCharno,
              boolean&nbsp;hasLC)</CODE>
 
@@ -281,6 +293,16 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records a block-level description.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#recordConsistentIdGenerator()">recordConsistentIdGenerator</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isConsistentIdGenerator()"><CODE>JSDocInfo.isConsistentIdGenerator()</CODE></A> flag set to
+ <code>true</code>.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -353,6 +375,23 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#recordExpose()">recordExpose</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isExpose()"><CODE>JSDocInfo.isExpose()</CODE></A> flag set to <code>true</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#recordExtendedInterface(com.google.javascript.rhino.JSTypeExpression)">recordExtendedInterface</A></B>(<A HREF="../../../../com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino">JSTypeExpression</A>&nbsp;interfaceType)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records an extended interface type.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#recordExterns()">recordExterns</A></B>()</CODE>
 
 <BR>
@@ -375,6 +414,16 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
  <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isHidden()"><CODE>JSDocInfo.isHidden()</CODE></A> flag set to <code>true</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#recordIdGenerator()">recordIdGenerator</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isIdGenerator()"><CODE>JSDocInfo.isIdGenerator()</CODE></A> flag set to
+ <code>true</code>.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -414,6 +463,30 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#recordLends(java.lang.String)">recordLends</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records that we're lending to another name.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#recordMeaning(java.lang.String)">recordMeaning</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;meaning)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records a meaning giving context for translation (i18n).</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#recordModifies(java.util.Set)">recordModifies</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;modifies)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records the list of modifies warnings.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#recordNoAlias()">recordNoAlias</A></B>()</CODE>
 
 <BR>
@@ -427,7 +500,7 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
- <CODE>JSDocInfo#isNoCompilek()</CODE> flag set to <code>true</code>.</TD>
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isNoCompile()"><CODE>JSDocInfo.isNoCompile()</CODE></A> flag set to <code>true</code>.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -455,6 +528,14 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
  <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isNoTypeCheck()"><CODE>JSDocInfo.isNoTypeCheck()</CODE></A> flag set to <code>true</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#recordOriginalCommentString(java.lang.String)">recordOriginalCommentString</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceComment)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the original JSDoc comment string.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -582,6 +663,14 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records a visibility.</TD>
 </TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#shouldParseDocumentation()">shouldParseDocumentation</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
@@ -622,13 +711,38 @@ public <B>JSDocInfoBuilder</B>(boolean&nbsp;parseDocumentation)</PRE>
 </TR>
 </TABLE>
 
+<A NAME="recordOriginalCommentString(java.lang.String)"><!-- --></A><H3>
+recordOriginalCommentString</H3>
+<PRE>
+public void <B>recordOriginalCommentString</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceComment)</PRE>
+<DL>
+<DD>Sets the original JSDoc comment string. This is a no-op if the builder
+ isn't configured to record documentation.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="shouldParseDocumentation()"><!-- --></A><H3>
+shouldParseDocumentation</H3>
+<PRE>
+public boolean <B>shouldParseDocumentation</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="isPopulated()"><!-- --></A><H3>
 isPopulated</H3>
 <PRE>
 public boolean <B>isPopulated</B>()</PRE>
 <DL>
 <DD>Returns whether this builder is populated with information that can be
- used to <A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#build(java.lang.String)"><CODE>build(java.lang.String)</CODE></A> a <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> object.
+ used to <A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#build(com.google.javascript.rhino.Node)"><CODE>build(com.google.javascript.rhino.Node)</CODE></A> a <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> object.
 <P>
 <DD><DL>
 </DL>
@@ -642,7 +756,7 @@ isPopulatedWithFileOverview</H3>
 public boolean <B>isPopulatedWithFileOverview</B>()</PRE>
 <DL>
 <DD>Returns whether this builder is populated with information that can be
- used to <A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#build(java.lang.String)"><CODE>build(java.lang.String)</CODE></A> a <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> object that has a
+ used to <A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#build(com.google.javascript.rhino.Node)"><CODE>build(com.google.javascript.rhino.Node)</CODE></A> a <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> object that has a
  fileoverview tag.
 <P>
 <DD><DL>
@@ -664,17 +778,17 @@ public boolean <B>isDescriptionRecorded</B>()</PRE>
 </DL>
 <HR>
 
-<A NAME="build(java.lang.String)"><!-- --></A><H3>
+<A NAME="build(com.google.javascript.rhino.Node)"><!-- --></A><H3>
 build</H3>
 <PRE>
-public <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A> <B>build</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName)</PRE>
+public <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A> <B>build</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;associatedNode)</PRE>
 <DL>
 <DD>Builds a <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> object based on the populated information and
  returns it. Once this method is called, the builder can be reused to build
  another <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> object.
 <P>
 <DD><DL>
-<DT><B>Parameters:</B><DD><CODE>sourceName</CODE> - The source file containing the JSDoc.
+<DT><B>Parameters:</B><DD><CODE>associatedNode</CODE> - The source node containing the JSDoc.
 <DT><B>Returns:</B><DD>a <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> object populated with the values given to this
      builder. If no value was populated, this method simply returns
      <code>null</code></DL>
@@ -715,12 +829,13 @@ public void <B>markText</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/
 </DL>
 <HR>
 
-<A NAME="markTypeNode(com.google.javascript.rhino.Node, int, int, int, boolean)"><!-- --></A><H3>
+<A NAME="markTypeNode(com.google.javascript.rhino.Node, int, int, int, int, boolean)"><!-- --></A><H3>
 markTypeNode</H3>
 <PRE>
 public void <B>markTypeNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;typeNode,
                          int&nbsp;lineno,
                          int&nbsp;startCharno,
+                         int&nbsp;endLineno,
                          int&nbsp;endCharno,
                          boolean&nbsp;hasLC)</PRE>
 <DL>
@@ -735,7 +850,26 @@ public void <B>markTypeNode</B>(<A HREF="../../../../com/google/javascript/rhino
 <A NAME="markName(java.lang.String, int, int)"><!-- --></A><H3>
 markName</H3>
 <PRE>
+<FONT SIZE="-1"><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Deprecated.html?is-external=true" title="class or interface in java.lang">@Deprecated</A>
+</FONT>public void <B>markName</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+                                int&nbsp;lineno,
+                                int&nbsp;charno)</PRE>
+<DL>
+<DD><B>Deprecated.</B>&nbsp;<I>Use #markName(String, StaticSourceFile, int, int)</I>
+<P>
+<DD>Adds a name declaration to the current marker.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="markName(java.lang.String, com.google.javascript.rhino.jstype.StaticSourceFile, int, int)"><!-- --></A><H3>
+markName</H3>
+<PRE>
 public void <B>markName</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+                     <A HREF="../../../../com/google/javascript/rhino/jstype/StaticSourceFile.html" title="interface in com.google.javascript.rhino.jstype">StaticSourceFile</A>&nbsp;file,
                      int&nbsp;lineno,
                      int&nbsp;charno)</PRE>
 <DL>
@@ -878,6 +1012,23 @@ public boolean <B>addReference</B>(<A HREF="http://java.sun.com/javase/6/docs/ap
 </DL>
 <HR>
 
+<A NAME="recordConsistentIdGenerator()"><!-- --></A><H3>
+recordConsistentIdGenerator</H3>
+<PRE>
+public boolean <B>recordConsistentIdGenerator</B>()</PRE>
+<DL>
+<DD>Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isConsistentIdGenerator()"><CODE>JSDocInfo.isConsistentIdGenerator()</CODE></A> flag set to
+ <code>true</code>.
+<P>
+<DD><DL>
+
+<DT><B>Returns:</B><DD><code>true</code> if the consistentIdGenerator flag was recorded and
+     <code>false</code> if it was already recorded</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="recordVersion(java.lang.String)"><!-- --></A><H3>
 recordVersion</H3>
 <PRE>
@@ -917,6 +1068,19 @@ public boolean <B>recordSuppressions</B>(<A HREF="http://java.sun.com/javase/6/d
 </DL>
 <HR>
 
+<A NAME="recordModifies(java.util.Set)"><!-- --></A><H3>
+recordModifies</H3>
+<PRE>
+public boolean <B>recordModifies</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;modifies)</PRE>
+<DL>
+<DD>Records the list of modifies warnings.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="recordType(com.google.javascript.rhino.JSTypeExpression)"><!-- --></A><H3>
 recordType</H3>
 <PRE>
@@ -942,6 +1106,23 @@ public boolean <B>recordTypedef</B>(<A HREF="../../../../com/google/javascript/r
 <P>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="recordIdGenerator()"><!-- --></A><H3>
+recordIdGenerator</H3>
+<PRE>
+public boolean <B>recordIdGenerator</B>()</PRE>
+<DL>
+<DD>Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isIdGenerator()"><CODE>JSDocInfo.isIdGenerator()</CODE></A> flag set to
+ <code>true</code>.
+<P>
+<DD><DL>
+
+<DT><B>Returns:</B><DD><code>true</code> if the idGenerator flag was recorded and <code>false</code>
+     if it was already recorded</DL>
 </DD>
 </DL>
 <HR>
@@ -1070,6 +1251,21 @@ public boolean <B>recordDescription</B>(<A HREF="http://java.sun.com/javase/6/do
 </DL>
 <HR>
 
+<A NAME="recordMeaning(java.lang.String)"><!-- --></A><H3>
+recordMeaning</H3>
+<PRE>
+public boolean <B>recordMeaning</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;meaning)</PRE>
+<DL>
+<DD>Records a meaning giving context for translation (i18n). Different
+ meanings will result in different translations.
+<P>
+<DD><DL>
+
+<DT><B>Returns:</B><DD><code>true</code> If the meaning was successfully updated.</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="recordFileOverview(java.lang.String)"><!-- --></A><H3>
 recordFileOverview</H3>
 <PRE>
@@ -1107,7 +1303,7 @@ recordNoCompile</H3>
 public boolean <B>recordNoCompile</B>()</PRE>
 <DL>
 <DD>Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
- <CODE>JSDocInfo#isNoCompilek()</CODE> flag set to <code>true</code>.
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isNoCompile()"><CODE>JSDocInfo.isNoCompile()</CODE></A> flag set to <code>true</code>.
 <P>
 <DD><DL>
 
@@ -1282,6 +1478,20 @@ public boolean <B>recordExport</B>()</PRE>
 </DL>
 <HR>
 
+<A NAME="recordExpose()"><!-- --></A><H3>
+recordExpose</H3>
+<PRE>
+public boolean <B>recordExpose</B>()</PRE>
+<DL>
+<DD>Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isExpose()"><CODE>JSDocInfo.isExpose()</CODE></A> flag set to <code>true</code>.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="recordNoShadow()"><!-- --></A><H3>
 recordNoShadow</H3>
 <PRE>
@@ -1370,6 +1580,32 @@ recordImplementedInterface</H3>
 public boolean <B>recordImplementedInterface</B>(<A HREF="../../../../com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino">JSTypeExpression</A>&nbsp;interfaceName)</PRE>
 <DL>
 <DD>Records an implemented interface.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="recordExtendedInterface(com.google.javascript.rhino.JSTypeExpression)"><!-- --></A><H3>
+recordExtendedInterface</H3>
+<PRE>
+public boolean <B>recordExtendedInterface</B>(<A HREF="../../../../com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino">JSTypeExpression</A>&nbsp;interfaceType)</PRE>
+<DL>
+<DD>Records an extended interface type.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="recordLends(java.lang.String)"><!-- --></A><H3>
+recordLends</H3>
+<PRE>
+public boolean <B>recordLends</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+<DL>
+<DD>Records that we're lending to another name.
 <P>
 <DD><DL>
 </DL>

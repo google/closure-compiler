@@ -151,8 +151,17 @@ Extracts messages and message comments from JS code.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JsMessage.html" title="class in com.google.javascript.jscomp">JsMessage</A>&gt;</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JsMessageExtractor.html#extractMessages(java.lang.Iterable)">extractMessages</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;inputs)</CODE>
+<CODE>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" SUMMARY="">
+<TR ALIGN="right" VALIGN="">
+<TD NOWRAP><FONT SIZE="-1">
+<CODE>&lt;T extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt; 
+<BR>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JsMessage.html" title="class in com.google.javascript.jscomp">JsMessage</A>&gt;</CODE></FONT></TD>
+</TR>
+</TABLE>
+</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JsMessageExtractor.html#extractMessages(java.lang.Iterable)">extractMessages</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;T&gt;&nbsp;inputs)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Extracts js messages from javascript code.</TD>
@@ -160,7 +169,7 @@ Extracts messages and message comments from JS code.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JsMessage.html" title="class in com.google.javascript.jscomp">JsMessage</A>&gt;</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JsMessageExtractor.html#extractMessages(com.google.javascript.jscomp.JSSourceFile...)">extractMessages</A></B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>...&nbsp;inputs)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JsMessageExtractor.html#extractMessages(com.google.javascript.jscomp.SourceFile...)">extractMessages</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>...&nbsp;inputs)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Extracts js messages from javascript code.</TD>
@@ -206,10 +215,10 @@ public <B>JsMessageExtractor</B>(<A HREF="../../../../com/google/javascript/jsco
 </TR>
 </TABLE>
 
-<A NAME="extractMessages(com.google.javascript.jscomp.JSSourceFile...)"><!-- --></A><H3>
+<A NAME="extractMessages(com.google.javascript.jscomp.SourceFile...)"><!-- --></A><H3>
 extractMessages</H3>
 <PRE>
-public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JsMessage.html" title="class in com.google.javascript.jscomp">JsMessage</A>&gt; <B>extractMessages</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>...&nbsp;inputs)
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JsMessage.html" title="class in com.google.javascript.jscomp">JsMessage</A>&gt; <B>extractMessages</B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>...&nbsp;inputs)
                                       throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
 <DL>
 <DD>Extracts js messages from javascript code.
@@ -225,7 +234,7 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?
 <A NAME="extractMessages(java.lang.Iterable)"><!-- --></A><H3>
 extractMessages</H3>
 <PRE>
-public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JsMessage.html" title="class in com.google.javascript.jscomp">JsMessage</A>&gt; <B>extractMessages</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;inputs)
+public &lt;T extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt; <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JsMessage.html" title="class in com.google.javascript.jscomp">JsMessage</A>&gt; <B>extractMessages</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;T&gt;&nbsp;inputs)
                                       throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
 <DL>
 <DD>Extracts js messages from javascript code.

@@ -52,7 +52,7 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;PREV CLASS&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/testing/AbstractStaticScope.html" title="class in com.google.javascript.rhino.testing"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html" title="class in com.google.javascript.rhino.testing"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/testing/Asserts.html" target="_top"><B>FRAMES</B></A>  &nbsp;
@@ -116,6 +116,16 @@ Helper methods for making assertions about the validity of types.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/Asserts.html#assertEquivalenceOperations(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType)">assertEquivalenceOperations</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;a,
+                            <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;b)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;For the given equivalent types, run all type operations that
+ should have trivial solutions (getGreatestSubtype, isEquivalentTo, etc)</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/Asserts.html#assertResolvesToSame(com.google.javascript.rhino.jstype.JSType)">assertResolvesToSame</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</CODE>
 
@@ -137,6 +147,25 @@ Helper methods for making assertions about the validity of types.
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/Asserts.html#assertTypeEquals(java.lang.String, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType)">assertTypeEquals</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
                  <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;a,
                  <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;b)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/Asserts.html#assertTypeNotEquals(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType)">assertTypeNotEquals</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;a,
+                    <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;b)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/Asserts.html#assertTypeNotEquals(java.lang.String, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType)">assertTypeNotEquals</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
+                    <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;a,
+                    <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;b)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -217,6 +246,31 @@ public static <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.
 </DL>
 <HR>
 
+<A NAME="assertTypeNotEquals(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
+assertTypeNotEquals</H3>
+<PRE>
+public static void <B>assertTypeNotEquals</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;a,
+                                       <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;b)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="assertTypeNotEquals(java.lang.String, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
+assertTypeNotEquals</H3>
+<PRE>
+public static void <B>assertTypeNotEquals</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
+                                       <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;a,
+                                       <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;b)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="assertTypeEquals(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
 assertTypeEquals</H3>
 <PRE>
@@ -236,6 +290,21 @@ public static void <B>assertTypeEquals</B>(<A HREF="http://java.sun.com/javase/6
                                     <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;a,
                                     <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;b)</PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="assertEquivalenceOperations(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
+assertEquivalenceOperations</H3>
+<PRE>
+public static void <B>assertEquivalenceOperations</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;a,
+                                               <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;b)</PRE>
+<DL>
+<DD>For the given equivalent types, run all type operations that
+ should have trivial solutions (getGreatestSubtype, isEquivalentTo, etc)
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -270,7 +339,7 @@ public static void <B>assertTypeEquals</B>(<A HREF="http://java.sun.com/javase/6
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;PREV CLASS&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/testing/AbstractStaticScope.html" title="class in com.google.javascript.rhino.testing"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html" title="class in com.google.javascript.rhino.testing"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/testing/Asserts.html" target="_top"><B>FRAMES</B></A>  &nbsp;

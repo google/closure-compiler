@@ -1,0 +1,601 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<TITLE>
+CallGraph (Compiler)
+</TITLE>
+
+
+<LINK REL ="stylesheet" TYPE="text/css" HREF="../../../../dev_javadoc.css" TITLE="Style">
+
+<SCRIPT type="text/javascript">
+function windowTitle()
+{
+    if (location.href.indexOf('is-external=true') == -1) {
+        parent.document.title="CallGraph (Compiler)";
+    }
+}
+</SCRIPT>
+<NOSCRIPT>
+</NOSCRIPT>
+
+</HEAD>
+
+<BODY BGCOLOR="white" onload="windowTitle();">
+<HR>
+
+
+<!-- ========= START OF TOP NAVBAR ======= -->
+<A NAME="navbar_top"><!-- --></A>
+<A HREF="#skip-navbar_top" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_top_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/BasicErrorManager.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Callsite.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/CallGraph.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="CallGraph.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_top"></A>
+<!-- ========= END OF TOP NAVBAR ========= -->
+
+<HR>
+<!-- ======== START OF CLASS DATA ======== -->
+<H2>
+<FONT SIZE="-1">
+com.google.javascript.jscomp</FONT>
+<BR>
+Class CallGraph</H2>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
+  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.CallGraph</B>
+</PRE>
+<DL>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/CompilerPass.html" title="interface in com.google.javascript.jscomp">CompilerPass</A></DD>
+</DL>
+<HR>
+<DL>
+<DT><PRE>public class <B>CallGraph</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="../../../../com/google/javascript/jscomp/CompilerPass.html" title="interface in com.google.javascript.jscomp">CompilerPass</A></DL>
+</PRE>
+
+<P>
+A pass the uses a <CODE>DefinitionProvider</CODE> to compute a call graph for an
+ AST.
+
+ <p>A <A HREF="../../../../com/google/javascript/jscomp/CallGraph.html" title="class in com.google.javascript.jscomp"><CODE>CallGraph</CODE></A> connects <A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp"><CODE>CallGraph.Function</CODE></A>s to <A HREF="../../../../com/google/javascript/jscomp/CallGraph.Callsite.html" title="class in com.google.javascript.jscomp"><CODE>CallGraph.Callsite</CODE></A>s and
+ vice versa: each function in the graph links to the callsites it contains and
+ each callsite links to the functions it could call. Similarly, each callsite
+ links to the function that contains it and each function links to the
+ callsites that could call it.
+
+ <p>The callgraph is not precise. That is, a callsite may indicate it can
+ call a function when in fact it does not do so in the running program.
+
+ <p>The callgraph is also not complete: in some cases it may be unable to
+ determine some targets of a callsite. In this case,
+ Callsite.hasUnknownTarget() will return true.
+
+ <p>The CallGraph doesn't (currently) have functions for externally defined
+ functions; however, callsites that target externs will have hasExternTarget()
+ return true.
+
+ <p>TODO(dcc): Have CallGraph (optionally?) include functions for externs.
+<P>
+
+<P>
+<HR>
+
+<P>
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+
+<A NAME="nested_class_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Nested Class Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.Callsite.html" title="class in com.google.javascript.jscomp">CallGraph.Callsite</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;An inner class that represents call sites in the call graph.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp">CallGraph.Function</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;An inner class that represents functions in the call graph.</TD>
+</TR>
+</TABLE>
+&nbsp;<!-- =========== FIELD SUMMARY =========== -->
+
+<A NAME="field_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Field Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.html#MAIN_FUNCTION_NAME">MAIN_FUNCTION_NAME</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The name we give the main function.</TD>
+</TR>
+</TABLE>
+&nbsp;
+<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+
+<A NAME="constructor_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Constructor Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.html#CallGraph(com.google.javascript.jscomp.AbstractCompiler)">CallGraph</A></B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a call graph object support both forward and backward lookups.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.html#CallGraph(com.google.javascript.jscomp.AbstractCompiler, boolean, boolean)">CallGraph</A></B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler,
+          boolean&nbsp;computeForwardGraph,
+          boolean&nbsp;computeBackwardGraph)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a call graph object supporting the specified lookups.</TD>
+</TR>
+</TABLE>
+&nbsp;
+<!-- ========== METHOD SUMMARY =========== -->
+
+<A NAME="method_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Callsite.html" title="class in com.google.javascript.jscomp">CallGraph.Callsite</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.html#getAllCallsites()">getAllCallsites</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns a collection of all callsites in the call graph.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp">CallGraph.Function</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.html#getAllFunctions()">getAllFunctions</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns a collection of all functions (including the main function)
+ in the call graph.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp">CallGraph.Function</A>,<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Callsite.html" title="class in com.google.javascript.jscomp">CallGraph.Callsite</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.html#getBackwardDirectedGraph()">getBackwardDirectedGraph</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Constructs and returns a directed graph where the nodes are functions and
+ the edges are callsites connecting callees to callers.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Callsite.html" title="class in com.google.javascript.jscomp">CallGraph.Callsite</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.html#getCallsiteForAstNode(com.google.javascript.rhino.Node)">getCallsiteForAstNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;callsiteNode)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the call graph Callsite object corresponding to the provided
+ AST Token.CALL or Token.NEW node, or null if no such object exists.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp">CallGraph.Function</A>,<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Callsite.html" title="class in com.google.javascript.jscomp">CallGraph.Callsite</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.html#getForwardDirectedGraph()">getForwardDirectedGraph</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Constructs and returns a directed graph where the nodes are functions and
+ the edges are callsites connecting callers to callees.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp">CallGraph.Function</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.html#getFunctionForAstNode(com.google.javascript.rhino.Node)">getFunctionForAstNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;functionNode)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the call graph Function object corresponding to the provided
+ AST Token.FUNCTION node, or null if no such object exists.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp">CallGraph.Function</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.html#getMainFunction()">getMainFunction</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns a Function object representing the "main" global function.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp">CallGraph.Function</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.html#getUniqueFunctionWithName(java.lang.String)">getUniqueFunctionWithName</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;desiredName)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finds a function with the given name.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CallGraph.html#process(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">process</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;externsRoot,
+        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;jsRoot)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Builds a call graph for the given externsRoot and jsRoot.</TD>
+</TR>
+</TABLE>
+&nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Methods inherited from class java.lang.<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+</TR>
+</TABLE>
+&nbsp;
+<P>
+
+<!-- ============ FIELD DETAIL =========== -->
+
+<A NAME="field_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Field Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="MAIN_FUNCTION_NAME"><!-- --></A><H3>
+MAIN_FUNCTION_NAME</H3>
+<PRE>
+public static final <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>MAIN_FUNCTION_NAME</B></PRE>
+<DL>
+<DD>The name we give the main function.
+<P>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.jscomp.CallGraph.MAIN_FUNCTION_NAME">Constant Field Values</A></DL>
+</DL>
+
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+
+<A NAME="constructor_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Constructor Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="CallGraph(com.google.javascript.jscomp.AbstractCompiler, boolean, boolean)"><!-- --></A><H3>
+CallGraph</H3>
+<PRE>
+public <B>CallGraph</B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler,
+                 boolean&nbsp;computeForwardGraph,
+                 boolean&nbsp;computeBackwardGraph)</PRE>
+<DL>
+<DD>Creates a call graph object supporting the specified lookups.
+
+ At leats one (and possibly both) of computeForwardGraph and
+ computeBackwardGraph must be true.
+<P>
+<DL>
+<DT><B>Parameters:</B><DD><CODE>compiler</CODE> - The compiler<DD><CODE>computeForwardGraph</CODE> - Should the call graph allow lookup of the target
+        functions a given callsite could call?<DD><CODE>computeBackwardGraph</CODE> - Should the call graph allow lookup of the
+        callsites that could call a given function?</DL>
+</DL>
+<HR>
+
+<A NAME="CallGraph(com.google.javascript.jscomp.AbstractCompiler)"><!-- --></A><H3>
+CallGraph</H3>
+<PRE>
+public <B>CallGraph</B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler)</PRE>
+<DL>
+<DD>Creates a call graph object support both forward and backward lookups.
+<P>
+</DL>
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<A NAME="method_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Method Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="process(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+process</H3>
+<PRE>
+public void <B>process</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;externsRoot,
+                    <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;jsRoot)</PRE>
+<DL>
+<DD>Builds a call graph for the given externsRoot and jsRoot.
+ This method must not be called more than once per CallGraph instance.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CompilerPass.html#process(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">process</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CompilerPass.html" title="interface in com.google.javascript.jscomp">CompilerPass</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>externsRoot</CODE> - Top of external JS tree<DD><CODE>jsRoot</CODE> - Top of JS tree</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getFunctionForAstNode(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getFunctionForAstNode</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp">CallGraph.Function</A> <B>getFunctionForAstNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;functionNode)</PRE>
+<DL>
+<DD>Returns the call graph Function object corresponding to the provided
+ AST Token.FUNCTION node, or null if no such object exists.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getMainFunction()"><!-- --></A><H3>
+getMainFunction</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp">CallGraph.Function</A> <B>getMainFunction</B>()</PRE>
+<DL>
+<DD>Returns a Function object representing the "main" global function.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAllFunctions()"><!-- --></A><H3>
+getAllFunctions</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp">CallGraph.Function</A>&gt; <B>getAllFunctions</B>()</PRE>
+<DL>
+<DD>Returns a collection of all functions (including the main function)
+ in the call graph.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getUniqueFunctionWithName(java.lang.String)"><!-- --></A><H3>
+getUniqueFunctionWithName</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp">CallGraph.Function</A> <B>getUniqueFunctionWithName</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;desiredName)</PRE>
+<DL>
+<DD>Finds a function with the given name. Throws an exception if
+ there are no functions or multiple functions with the name. This is
+ for testing purposes only.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getCallsiteForAstNode(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getCallsiteForAstNode</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/CallGraph.Callsite.html" title="class in com.google.javascript.jscomp">CallGraph.Callsite</A> <B>getCallsiteForAstNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;callsiteNode)</PRE>
+<DL>
+<DD>Returns the call graph Callsite object corresponding to the provided
+ AST Token.CALL or Token.NEW node, or null if no such object exists.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAllCallsites()"><!-- --></A><H3>
+getAllCallsites</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Callsite.html" title="class in com.google.javascript.jscomp">CallGraph.Callsite</A>&gt; <B>getAllCallsites</B>()</PRE>
+<DL>
+<DD>Returns a collection of all callsites in the call graph.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getForwardDirectedGraph()"><!-- --></A><H3>
+getForwardDirectedGraph</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp">CallGraph.Function</A>,<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Callsite.html" title="class in com.google.javascript.jscomp">CallGraph.Callsite</A>&gt; <B>getForwardDirectedGraph</B>()</PRE>
+<DL>
+<DD>Constructs and returns a directed graph where the nodes are functions and
+ the edges are callsites connecting callers to callees.
+
+ It is safe to call this method on both forward and backwardly constructed
+ CallGraphs.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getBackwardDirectedGraph()"><!-- --></A><H3>
+getBackwardDirectedGraph</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Function.html" title="class in com.google.javascript.jscomp">CallGraph.Function</A>,<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Callsite.html" title="class in com.google.javascript.jscomp">CallGraph.Callsite</A>&gt; <B>getBackwardDirectedGraph</B>()</PRE>
+<DL>
+<DD>Constructs and returns a directed graph where the nodes are functions and
+ the edges are callsites connecting callees to callers.
+
+ It is safe to call this method on both forward and backwardly constructed
+ CallGraphs.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<!-- ========= END OF CLASS DATA ========= -->
+<HR>
+
+
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<A NAME="navbar_bottom"><!-- --></A>
+<A HREF="#skip-navbar_bottom" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_bottom_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/BasicErrorManager.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CallGraph.Callsite.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/CallGraph.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="CallGraph.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_bottom"></A>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+
+<HR>
+
+        <div id="footer">
+          <div id="footerlogo">
+            <img src="http://www.google.com/images/art.gif"
+                 alt="Google colored balls">
+          </div>
+
+          <div id="copyright">
+          <p>&copy; 2009 Google -
+            <a href="http://www.google.com/privacy.html">Privacy Policy</a> -
+            <a href="http://www.google.com/terms_of_service.html">Terms and Conditions</a> -
+            <a href="http://www.google.com/about.html">About Google</a>
+          </p>
+          </div>
+        </div>
+      
+      
+</BODY>
+</HTML>

@@ -53,7 +53,7 @@ function windowTitle()
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html" title="class in com.google.javascript.jscomp.deps"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/DepsGenerator.html" title="class in com.google.javascript.jscomp.deps"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/jscomp/deps/DepsFileParser.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="DepsFileParser.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -122,6 +122,13 @@ A parser that can extract dependency information from existing deps.js files.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Constructor</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/DepsFileParser.html#DepsFileParser(com.google.common.base.Function, com.google.javascript.jscomp.ErrorManager)">DepsFileParser</A></B>(com.google.common.base.Function&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;pathTranslator,
+               <A HREF="../../../../../com/google/javascript/jscomp/ErrorManager.html" title="interface in com.google.javascript.jscomp">ErrorManager</A>&nbsp;errorManager)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -213,6 +220,17 @@ public <B>DepsFileParser</B>(<A HREF="../../../../../com/google/javascript/jscom
 <P>
 <DL>
 <DT><B>Parameters:</B><DD><CODE>errorManager</CODE> - Handles parse errors.</DL>
+</DL>
+<HR>
+
+<A NAME="DepsFileParser(com.google.common.base.Function, com.google.javascript.jscomp.ErrorManager)"><!-- --></A><H3>
+DepsFileParser</H3>
+<PRE>
+public <B>DepsFileParser</B>(com.google.common.base.Function&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;pathTranslator,
+                      <A HREF="../../../../../com/google/javascript/jscomp/ErrorManager.html" title="interface in com.google.javascript.jscomp">ErrorManager</A>&nbsp;errorManager)</PRE>
+<DL>
+<DL>
+<DT><B>Parameters:</B><DD><CODE>pathTranslator</CODE> - Translates paths in different build systems.<DD><CODE>errorManager</CODE> - Handles parse errors.</DL>
 </DL>
 
 <!-- ============ METHOD DETAIL ========== -->
@@ -329,7 +347,7 @@ protected boolean <B>parseLine</B>(<A HREF="http://java.sun.com/javase/6/docs/ap
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html" title="class in com.google.javascript.jscomp.deps"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/DepsGenerator.html" title="class in com.google.javascript.jscomp.deps"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/jscomp/deps/DepsFileParser.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="DepsFileParser.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;

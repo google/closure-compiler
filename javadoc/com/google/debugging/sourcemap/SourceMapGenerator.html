@@ -1,0 +1,392 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<TITLE>
+SourceMapGenerator (Compiler)
+</TITLE>
+
+
+<LINK REL ="stylesheet" TYPE="text/css" HREF="../../../../dev_javadoc.css" TITLE="Style">
+
+<SCRIPT type="text/javascript">
+function windowTitle()
+{
+    if (location.href.indexOf('is-external=true') == -1) {
+        parent.document.title="SourceMapGenerator (Compiler)";
+    }
+}
+</SCRIPT>
+<NOSCRIPT>
+</NOSCRIPT>
+
+</HEAD>
+
+<BODY BGCOLOR="white" onload="windowTitle();">
+<HR>
+
+
+<!-- ========= START OF TOP NAVBAR ======= -->
+<A NAME="navbar_top"><!-- --></A>
+<A HREF="#skip-navbar_top" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_top_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../com/google/debugging/sourcemap/SourceMapFormat.html" title="enum in com.google.debugging.sourcemap"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/debugging/sourcemap/SourceMapGeneratorFactory.html" title="class in com.google.debugging.sourcemap"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../index.html?com/google/debugging/sourcemap/SourceMapGenerator.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="SourceMapGenerator.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_top"></A>
+<!-- ========= END OF TOP NAVBAR ========= -->
+
+<HR>
+<!-- ======== START OF CLASS DATA ======== -->
+<H2>
+<FONT SIZE="-1">
+com.google.debugging.sourcemap</FONT>
+<BR>
+Interface SourceMapGenerator</H2>
+<DL>
+<DT><B>All Known Implementing Classes:</B> <DD><A HREF="../../../../com/google/debugging/sourcemap/SourceMapGeneratorV1.html" title="class in com.google.debugging.sourcemap">SourceMapGeneratorV1</A>, <A HREF="../../../../com/google/debugging/sourcemap/SourceMapGeneratorV2.html" title="class in com.google.debugging.sourcemap">SourceMapGeneratorV2</A>, <A HREF="../../../../com/google/debugging/sourcemap/SourceMapGeneratorV3.html" title="class in com.google.debugging.sourcemap">SourceMapGeneratorV3</A></DD>
+</DL>
+<HR>
+<DL>
+<DT><PRE>public interface <B>SourceMapGenerator</B></DL>
+</PRE>
+
+<P>
+Collects information mapping the generated (compiled) source back to
+ its original source for debugging purposes
+<P>
+
+<P>
+<HR>
+
+<P>
+
+<!-- ========== METHOD SUMMARY =========== -->
+
+<A NAME="method_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/debugging/sourcemap/SourceMapGenerator.html#addMapping(java.lang.String, java.lang.String, com.google.debugging.sourcemap.FilePosition, com.google.debugging.sourcemap.FilePosition, com.google.debugging.sourcemap.FilePosition)">addMapping</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
+           <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;symbolName,
+           <A HREF="../../../../com/google/debugging/sourcemap/FilePosition.html" title="class in com.google.debugging.sourcemap">FilePosition</A>&nbsp;sourceStartPosition,
+           <A HREF="../../../../com/google/debugging/sourcemap/FilePosition.html" title="class in com.google.debugging.sourcemap">FilePosition</A>&nbsp;outputStartPosition,
+           <A HREF="../../../../com/google/debugging/sourcemap/FilePosition.html" title="class in com.google.debugging.sourcemap">FilePosition</A>&nbsp;outputEndPosition)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adds a mapping for the given node.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/debugging/sourcemap/SourceMapGenerator.html#appendIndexMapTo(java.lang.Appendable, java.lang.String, java.util.List)">appendIndexMapTo</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Appendable.html?is-external=true" title="class or interface in java.lang">Appendable</A>&nbsp;out,
+                 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+                 <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/debugging/sourcemap/SourceMapSection.html" title="class in com.google.debugging.sourcemap">SourceMapSection</A>&gt;&nbsp;sections)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Appends the index source map to the given buffer.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/debugging/sourcemap/SourceMapGenerator.html#appendTo(java.lang.Appendable, java.lang.String)">appendTo</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Appendable.html?is-external=true" title="class or interface in java.lang">Appendable</A>&nbsp;out,
+         <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Appends the source map to the given buffer.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/debugging/sourcemap/SourceMapGenerator.html#reset()">reset</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Resets the source map for reuse.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/debugging/sourcemap/SourceMapGenerator.html#setStartingPosition(int, int)">setStartingPosition</A></B>(int&nbsp;offsetLine,
+                    int&nbsp;offsetIndex)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the source code that exists in the buffer for which the
+ generated code is being generated.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/debugging/sourcemap/SourceMapGenerator.html#setWrapperPrefix(java.lang.String)">setWrapperPrefix</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;prefix)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the prefix used for wrapping the generated source file before
+ it is written.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/debugging/sourcemap/SourceMapGenerator.html#validate(boolean)">validate</A></B>(boolean&nbsp;validate)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Whether to perform additional validation on the source map.</TD>
+</TR>
+</TABLE>
+&nbsp;
+<P>
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<A NAME="method_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Method Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="appendTo(java.lang.Appendable, java.lang.String)"><!-- --></A><H3>
+appendTo</H3>
+<PRE>
+void <B>appendTo</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Appendable.html?is-external=true" title="class or interface in java.lang">Appendable</A>&nbsp;out,
+              <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)
+              throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>Appends the source map to the given buffer.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>out</CODE> - The stream to which the map will be appended.<DD><CODE>name</CODE> - The name of the generated source file that this source map
+   represents.
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="appendIndexMapTo(java.lang.Appendable, java.lang.String, java.util.List)"><!-- --></A><H3>
+appendIndexMapTo</H3>
+<PRE>
+void <B>appendIndexMapTo</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Appendable.html?is-external=true" title="class or interface in java.lang">Appendable</A>&nbsp;out,
+                      <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+                      <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/debugging/sourcemap/SourceMapSection.html" title="class in com.google.debugging.sourcemap">SourceMapSection</A>&gt;&nbsp;sections)
+                      throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>Appends the index source map to the given buffer.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>out</CODE> - The stream to which the map will be appended.<DD><CODE>name</CODE> - The name of the generated source file that this source map
+   represents.<DD><CODE>sections</CODE> - An ordered list of map sections to include in the index.
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="reset()"><!-- --></A><H3>
+reset</H3>
+<PRE>
+void <B>reset</B>()</PRE>
+<DL>
+<DD>Resets the source map for reuse. A reset needs to be called between
+ each generated output file.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="addMapping(java.lang.String, java.lang.String, com.google.debugging.sourcemap.FilePosition, com.google.debugging.sourcemap.FilePosition, com.google.debugging.sourcemap.FilePosition)"><!-- --></A><H3>
+addMapping</H3>
+<PRE>
+void <B>addMapping</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
+                <FONT SIZE="-1"><A HREF="http://java.sun.com/javase/6/docs/api/javax/annotation/Nullable.html?is-external=true" title="class or interface in javax.annotation">@Nullable</A></FONT>
+                <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;symbolName,
+                <A HREF="../../../../com/google/debugging/sourcemap/FilePosition.html" title="class in com.google.debugging.sourcemap">FilePosition</A>&nbsp;sourceStartPosition,
+                <A HREF="../../../../com/google/debugging/sourcemap/FilePosition.html" title="class in com.google.debugging.sourcemap">FilePosition</A>&nbsp;outputStartPosition,
+                <A HREF="../../../../com/google/debugging/sourcemap/FilePosition.html" title="class in com.google.debugging.sourcemap">FilePosition</A>&nbsp;outputEndPosition)</PRE>
+<DL>
+<DD>Adds a mapping for the given node.  Mappings must be added in order.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>sourceName</CODE> - The file name to use in the generate source map
+     to represent this source.<DD><CODE>symbolName</CODE> - The symbol name associated with this position in the
+     source map.<DD><CODE>sourceStartPosition</CODE> - The starting position in the original source for
+     represented range outputStartPosition to outputEndPosition in the
+     generated file.<DD><CODE>outputStartPosition</CODE> - The position on the starting line<DD><CODE>outputEndPosition</CODE> - The position on the ending line.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setWrapperPrefix(java.lang.String)"><!-- --></A><H3>
+setWrapperPrefix</H3>
+<PRE>
+void <B>setWrapperPrefix</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;prefix)</PRE>
+<DL>
+<DD>Sets the prefix used for wrapping the generated source file before
+ it is written. This ensures that the source map is adjusted for the
+ change in character offsets.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>prefix</CODE> - The prefix that is added before the generated source code.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setStartingPosition(int, int)"><!-- --></A><H3>
+setStartingPosition</H3>
+<PRE>
+void <B>setStartingPosition</B>(int&nbsp;offsetLine,
+                         int&nbsp;offsetIndex)</PRE>
+<DL>
+<DD>Sets the source code that exists in the buffer for which the
+ generated code is being generated. This ensures that the source map
+ accurately reflects the fact that the source is being appended to
+ an existing buffer and as such, does not start at line 0, position 0
+ but rather some other line and position.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>offsetLine</CODE> - The index of the current line being printed.<DD><CODE>offsetIndex</CODE> - The column index of the current character being printed.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="validate(boolean)"><!-- --></A><H3>
+validate</H3>
+<PRE>
+void <B>validate</B>(boolean&nbsp;validate)</PRE>
+<DL>
+<DD>Whether to perform additional validation on the source map.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>validate</CODE> - </DL>
+</DD>
+</DL>
+<!-- ========= END OF CLASS DATA ========= -->
+<HR>
+
+
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<A NAME="navbar_bottom"><!-- --></A>
+<A HREF="#skip-navbar_bottom" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_bottom_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../com/google/debugging/sourcemap/SourceMapFormat.html" title="enum in com.google.debugging.sourcemap"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/debugging/sourcemap/SourceMapGeneratorFactory.html" title="class in com.google.debugging.sourcemap"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../index.html?com/google/debugging/sourcemap/SourceMapGenerator.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="SourceMapGenerator.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_bottom"></A>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+
+<HR>
+
+        <div id="footer">
+          <div id="footerlogo">
+            <img src="http://www.google.com/images/art.gif"
+                 alt="Google colored balls">
+          </div>
+
+          <div id="copyright">
+          <p>&copy; 2009 Google -
+            <a href="http://www.google.com/privacy.html">Privacy Policy</a> -
+            <a href="http://www.google.com/terms_of_service.html">Terms and Conditions</a> -
+            <a href="http://www.google.com/about.html">About Google</a>
+          </p>
+          </div>
+        </div>
+      
+      
+</BODY>
+</HTML>

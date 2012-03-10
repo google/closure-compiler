@@ -92,7 +92,7 @@ Interface SourceAst</H2>
 <DT><B>All Superinterfaces:</B> <DD><A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DD>
 </DL>
 <DL>
-<DT><B>All Known Implementing Classes:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>, <A HREF="../../../../com/google/javascript/jscomp/JsAst.html" title="class in com.google.javascript.jscomp">JsAst</A></DD>
+<DT><B>All Known Implementing Classes:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>, <A HREF="../../../../com/google/javascript/jscomp/JsAst.html" title="class in com.google.javascript.jscomp">JsAst</A>, <A HREF="../../../../com/google/javascript/jscomp/jsonml/JsonMLAst.html" title="class in com.google.javascript.jscomp.jsonml">JsonMLAst</A>, <A HREF="../../../../com/google/javascript/jscomp/SyntheticAst.html" title="class in com.google.javascript.jscomp">SyntheticAst</A></DD>
 </DL>
 <HR>
 <DL>
@@ -131,6 +131,14 @@ An interface for accessing the AST root of an input.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the root node of the AST for the source file this represents.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/SourceAst.html#getInputId()">getInputId</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -193,6 +201,21 @@ void <B>clearAst</B>()</PRE>
 </DD>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getInputId()"><!-- --></A><H3>
+getInputId</H3>
+<PRE>
+<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A> <B>getInputId</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>The input id associated with this AST</DL>
 </DD>
 </DL>
 <HR>

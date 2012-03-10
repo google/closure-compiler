@@ -52,7 +52,7 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/DefaultPassConfig.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/DependencyOptions.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroups.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/DiagnosticGroup.html" target="_top"><B>FRAMES</B></A>  &nbsp;
@@ -92,9 +92,12 @@ Class DiagnosticGroup</H2>
 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
   <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.DiagnosticGroup</B>
 </PRE>
+<DL>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DD>
+</DL>
 <HR>
 <DL>
-<DT><PRE>public class <B>DiagnosticGroup</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
+<DT><PRE>public class <B>DiagnosticGroup</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DL>
 </PRE>
 
 <P>
@@ -103,6 +106,8 @@ Group a set of related diagnostic types together, so that they can
 <P>
 
 <P>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../serialized-form.html#com.google.javascript.jscomp.DiagnosticGroup">Serialized Form</A></DL>
 <HR>
 
 <P>
@@ -127,6 +132,13 @@ Group a set of related diagnostic types together, so that they can
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Create a group that matches all errors of the given types.</TD>
 </TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroup.html#DiagnosticGroup(java.lang.String, com.google.javascript.jscomp.DiagnosticGroup...)">DiagnosticGroup</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+                <A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroup.html" title="class in com.google.javascript.jscomp">DiagnosticGroup</A>...&nbsp;groups)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Create a composite group.</TD>
+</TR>
 </TABLE>
 &nbsp;
 <!-- ========== METHOD SUMMARY =========== -->
@@ -136,6 +148,22 @@ Group a set of related diagnostic types together, so that they can
 <TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
 <TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
 <B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroup.html" title="class in com.google.javascript.jscomp">DiagnosticGroup</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroup.html#forType(com.google.javascript.jscomp.DiagnosticType)">forType</A></B>(<A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&nbsp;type)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Create a diagnostic group that matches only the given type.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroup.html#getTypes()">getTypes</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns an iterable over all the types in this group.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -154,6 +182,14 @@ Group a set of related diagnostic types together, so that they can
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether the given error's type matches a type
  in this group.</TD>
 </TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroup.html#toString()">toString</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
@@ -161,7 +197,7 @@ Group a set of related diagnostic types together, so that they can
 <TH ALIGN="left"><B>Methods inherited from class java.lang.<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -195,6 +231,17 @@ public <B>DiagnosticGroup</B>(<A HREF="../../../../com/google/javascript/jscomp/
 <DD>Create a composite group.
 <P>
 </DL>
+<HR>
+
+<A NAME="DiagnosticGroup(java.lang.String, com.google.javascript.jscomp.DiagnosticGroup...)"><!-- --></A><H3>
+DiagnosticGroup</H3>
+<PRE>
+public <B>DiagnosticGroup</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+                       <A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroup.html" title="class in com.google.javascript.jscomp">DiagnosticGroup</A>...&nbsp;groups)</PRE>
+<DL>
+<DD>Create a composite group.
+<P>
+</DL>
 
 <!-- ============ METHOD DETAIL ========== -->
 
@@ -206,6 +253,22 @@ public <B>DiagnosticGroup</B>(<A HREF="../../../../com/google/javascript/jscomp/
 </TR>
 </TABLE>
 
+<A NAME="forType(com.google.javascript.jscomp.DiagnosticType)"><!-- --></A><H3>
+forType</H3>
+<PRE>
+public static <A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroup.html" title="class in com.google.javascript.jscomp">DiagnosticGroup</A> <B>forType</B>(<A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&nbsp;type)</PRE>
+<DL>
+<DD>Create a diagnostic group that matches only the given type.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="matches(com.google.javascript.jscomp.JSError)"><!-- --></A><H3>
 matches</H3>
 <PRE>
@@ -214,6 +277,9 @@ public boolean <B>matches</B>(<A HREF="../../../../com/google/javascript/jscomp/
 <DD>Returns whether the given error's type matches a type
  in this group.
 <P>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -227,6 +293,39 @@ public boolean <B>matches</B>(<A HREF="../../../../com/google/javascript/jscomp/
 <DL>
 <DD>Returns whether the given type matches a type in this group.
 <P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getTypes()"><!-- --></A><H3>
+getTypes</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&gt; <B>getTypes</B>()</PRE>
+<DL>
+<DD>Returns an iterable over all the types in this group.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="toString()"><!-- --></A><H3>
+toString</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>toString</B>()</PRE>
+<DL>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A></CODE> in class <CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></CODE></DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -261,7 +360,7 @@ public boolean <B>matches</B>(<A HREF="../../../../com/google/javascript/jscomp/
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/DefaultPassConfig.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/DependencyOptions.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroups.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/DiagnosticGroup.html" target="_top"><B>FRAMES</B></A>  &nbsp;

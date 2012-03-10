@@ -137,10 +137,9 @@ A simple <A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html" ti
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/SimpleErrorReporter.html#error(java.lang.String, java.lang.String, int, java.lang.String, int)">error</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/SimpleErrorReporter.html#error(java.lang.String, java.lang.String, int, int)">error</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
       <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
       int&nbsp;line,
-      <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;lineSource,
       int&nbsp;lineOffset)</CODE>
 
 <BR>
@@ -156,23 +155,10 @@ A simple <A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html" ti
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/EvaluatorException.html" title="class in com.google.javascript.rhino">EvaluatorException</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/SimpleErrorReporter.html#runtimeError(java.lang.String, java.lang.String, int, java.lang.String, int)">runtimeError</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
-             <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
-             int&nbsp;line,
-             <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;lineSource,
-             int&nbsp;lineOffset)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates an EvaluatorException that may be thrown.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/SimpleErrorReporter.html#warning(java.lang.String, java.lang.String, int, java.lang.String, int)">warning</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/SimpleErrorReporter.html#warning(java.lang.String, java.lang.String, int, int)">warning</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
         <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
         int&nbsp;line,
-        <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;lineSource,
         int&nbsp;lineOffset)</CODE>
 
 <BR>
@@ -226,41 +212,39 @@ public <B>SimpleErrorReporter</B>()</PRE>
 </TR>
 </TABLE>
 
-<A NAME="warning(java.lang.String, java.lang.String, int, java.lang.String, int)"><!-- --></A><H3>
+<A NAME="warning(java.lang.String, java.lang.String, int, int)"><!-- --></A><H3>
 warning</H3>
 <PRE>
 public void <B>warning</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
                     <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
                     int&nbsp;line,
-                    <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;lineSource,
                     int&nbsp;lineOffset)</PRE>
 <DL>
-<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html#warning(java.lang.String, java.lang.String, int, java.lang.String, int)">ErrorReporter</A></CODE></B></DD>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html#warning(java.lang.String, java.lang.String, int, int)">ErrorReporter</A></CODE></B></DD>
 <DD>Report a warning.
 
  The implementing class may choose to ignore the warning
  if it desires.
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html#warning(java.lang.String, java.lang.String, int, java.lang.String, int)">warning</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html" title="interface in com.google.javascript.rhino">ErrorReporter</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html#warning(java.lang.String, java.lang.String, int, int)">warning</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html" title="interface in com.google.javascript.rhino">ErrorReporter</A></CODE></DL>
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>message</CODE> - a String describing the warning<DD><CODE>sourceName</CODE> - a String describing the JavaScript source
- where the warning occured; typically a filename or URL<DD><CODE>line</CODE> - the line number associated with the warning<DD><CODE>lineSource</CODE> - the text of the line (may be null)<DD><CODE>lineOffset</CODE> - the offset into lineSource where problem was detected</DL>
+ where the warning occured; typically a filename or URL<DD><CODE>line</CODE> - the line number associated with the warning<DD><CODE>lineOffset</CODE> - the offset into lineSource where problem was detected</DL>
 </DD>
 </DL>
 <HR>
 
-<A NAME="error(java.lang.String, java.lang.String, int, java.lang.String, int)"><!-- --></A><H3>
+<A NAME="error(java.lang.String, java.lang.String, int, int)"><!-- --></A><H3>
 error</H3>
 <PRE>
 public void <B>error</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
                   <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
                   int&nbsp;line,
-                  <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;lineSource,
                   int&nbsp;lineOffset)</PRE>
 <DL>
-<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html#error(java.lang.String, java.lang.String, int, java.lang.String, int)">ErrorReporter</A></CODE></B></DD>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html#error(java.lang.String, java.lang.String, int, int)">ErrorReporter</A></CODE></B></DD>
 <DD>Report an error.
 
  The implementing class is free to throw an exception if
@@ -272,37 +256,11 @@ public void <B>error</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lan
  errors, however.
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html#error(java.lang.String, java.lang.String, int, java.lang.String, int)">error</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html" title="interface in com.google.javascript.rhino">ErrorReporter</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html#error(java.lang.String, java.lang.String, int, int)">error</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html" title="interface in com.google.javascript.rhino">ErrorReporter</A></CODE></DL>
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>message</CODE> - a String describing the error<DD><CODE>sourceName</CODE> - a String describing the JavaScript source
- where the error occured; typically a filename or URL<DD><CODE>line</CODE> - the line number associated with the error<DD><CODE>lineSource</CODE> - the text of the line (may be null)<DD><CODE>lineOffset</CODE> - the offset into lineSource where problem was detected</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="runtimeError(java.lang.String, java.lang.String, int, java.lang.String, int)"><!-- --></A><H3>
-runtimeError</H3>
-<PRE>
-public <A HREF="../../../../com/google/javascript/rhino/EvaluatorException.html" title="class in com.google.javascript.rhino">EvaluatorException</A> <B>runtimeError</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
-                                       <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
-                                       int&nbsp;line,
-                                       <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;lineSource,
-                                       int&nbsp;lineOffset)</PRE>
-<DL>
-<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html#runtimeError(java.lang.String, java.lang.String, int, java.lang.String, int)">ErrorReporter</A></CODE></B></DD>
-<DD>Creates an EvaluatorException that may be thrown.
-
- runtimeErrors, unlike errors, will always terminate the
- current script.
-<P>
-<DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html#runtimeError(java.lang.String, java.lang.String, int, java.lang.String, int)">runtimeError</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/rhino/ErrorReporter.html" title="interface in com.google.javascript.rhino">ErrorReporter</A></CODE></DL>
-</DD>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>message</CODE> - a String describing the error<DD><CODE>sourceName</CODE> - a String describing the JavaScript source
- where the error occured; typically a filename or URL<DD><CODE>line</CODE> - the line number associated with the error<DD><CODE>lineSource</CODE> - the text of the line (may be null)<DD><CODE>lineOffset</CODE> - the offset into lineSource where problem was detected
-<DT><B>Returns:</B><DD>an EvaluatorException that will be thrown.</DL>
+ where the error occured; typically a filename or URL<DD><CODE>line</CODE> - the line number associated with the error<DD><CODE>lineOffset</CODE> - the offset into lineSource where problem was detected</DL>
 </DD>
 </DL>
 <HR>

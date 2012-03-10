@@ -236,6 +236,38 @@ Compiler (and the other classes in this package) does the following:
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#acceptConstKeyword()">acceptConstKeyword</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#acceptEcmaScript5()">acceptEcmaScript5</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#addNewScript(com.google.javascript.jscomp.JsAst)">addNewScript</A></B>(<A HREF="../../../../com/google/javascript/jscomp/JsAst.html" title="class in com.google.javascript.jscomp">JsAst</A>&nbsp;ast)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adds a new Script AST to the compile state.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html" title="class in com.google.javascript.jscomp">SymbolTable</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#buildKnownSymbolTable()">buildKnownSymbolTable</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#check()">check</A></B>()</CODE>
 
@@ -274,8 +306,27 @@ Compiler (and the other classes in this package) does the following:
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" SUMMARY="">
+<TR ALIGN="right" VALIGN="">
+<TD NOWRAP><FONT SIZE="-1">
+<CODE>&lt;T1 extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>,T2 extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt; 
+<BR>
+<A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A></CODE></FONT></TD>
+</TR>
+</TABLE>
+</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#compile(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)">compile</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;T1&gt;&nbsp;externs,
+        <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;T2&gt;&nbsp;inputs,
+        <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a list of inputs.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#compile(com.google.javascript.jscomp.JSSourceFile, com.google.javascript.jscomp.JSSourceFile[], com.google.javascript.jscomp.CompilerOptions)">compile</A></B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;extern,
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#compile(com.google.javascript.jscomp.SourceFile, com.google.javascript.jscomp.JSSourceFile[], com.google.javascript.jscomp.CompilerOptions)">compile</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;extern,
         <A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>[]&nbsp;input,
         <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
 
@@ -285,8 +336,8 @@ Compiler (and the other classes in this package) does the following:
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#compile(com.google.javascript.jscomp.JSSourceFile, com.google.javascript.jscomp.JSSourceFile, com.google.javascript.jscomp.CompilerOptions)">compile</A></B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;extern,
-        <A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;input,
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#compile(com.google.javascript.jscomp.SourceFile, com.google.javascript.jscomp.SourceFile, com.google.javascript.jscomp.CompilerOptions)">compile</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;extern,
+        <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;input,
         <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
 
 <BR>
@@ -294,18 +345,17 @@ Compiler (and the other classes in this package) does the following:
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#compile(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)">compile</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
-        <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;inputs,
-        <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
-
+<CODE>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" SUMMARY="">
+<TR ALIGN="right" VALIGN="">
+<TD NOWRAP><FONT SIZE="-1">
+<CODE>&lt;T extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt; 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a list of inputs.</TD>
+<A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A></CODE></FONT></TD>
 </TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#compileModules(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)">compileModules</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
+</TABLE>
+</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#compileModules(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)">compileModules</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;T&gt;&nbsp;externs,
                <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>&gt;&nbsp;modules,
                <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
 
@@ -335,6 +385,15 @@ Compiler (and the other classes in this package) does the following:
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the current coding convention.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroups.html" title="class in com.google.javascript.jscomp">DiagnosticGroups</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#getDiagnosticGroups()">getDiagnosticGroups</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The warning classes that are available from the command-line, and
+ are suppressable by the <code>@suppress</code> annotation.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -371,10 +430,18 @@ Compiler (and the other classes in this package) does the following:
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#getInput(java.lang.String)">getInput</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#getInput(com.google.javascript.rhino.InputId)">getInput</A></B>(<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A>&nbsp;id)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Looks up an input (possibly an externs input) by name.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A>,<A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#getInputsById()">getInputsById</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns an unmodifiable view of the compiler inputs indexed by id.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -383,6 +450,14 @@ Compiler (and the other classes in this package) does the following:
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns an array constructed from errors + temporary warnings.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;double</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#getProgress()">getProgress</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -452,6 +527,14 @@ Compiler (and the other classes in this package) does the following:
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;com.google.javascript.jscomp.MemoizedScopeCreator</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#getTypedScopeCreator()">getTypedScopeCreator</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets a memoized scope creator with type information.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#getTypeRegistry()">getTypeRegistry</A></B>()</CODE>
 
@@ -506,9 +589,18 @@ Compiler (and the other classes in this package) does the following:
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#init(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)">init</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
-     <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;inputs,
+<CODE>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" SUMMARY="">
+<TR ALIGN="right" VALIGN="">
+<TD NOWRAP><FONT SIZE="-1">
+<CODE>&lt;T1 extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>,T2 extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt; 
+<BR>
+void</CODE></FONT></TD>
+</TR>
+</TABLE>
+</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#init(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)">init</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;T1&gt;&nbsp;externs,
+     <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;T2&gt;&nbsp;inputs,
      <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
 
 <BR>
@@ -516,8 +608,17 @@ Compiler (and the other classes in this package) does the following:
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#initModules(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)">initModules</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
+<CODE>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" SUMMARY="">
+<TR ALIGN="right" VALIGN="">
+<TD NOWRAP><FONT SIZE="-1">
+<CODE>&lt;T extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt; 
+<BR>
+void</CODE></FONT></TD>
+</TR>
+</TABLE>
+</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#initModules(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)">initModules</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;T&gt;&nbsp;externs,
             <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>&gt;&nbsp;modules,
             <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
 
@@ -548,6 +649,22 @@ Compiler (and the other classes in this package) does the following:
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if type checking is enabled.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.LanguageMode.html" title="enum in com.google.javascript.jscomp">CompilerOptions.LanguageMode</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#languageMode()">languageMode</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#newCompilerOptions()">newCompilerOptions</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Allow subclasses to override the default CompileOptions object.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -584,7 +701,7 @@ Compiler (and the other classes in this package) does the following:
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#parse(com.google.javascript.jscomp.JSSourceFile)">parse</A></B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;file)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#parse(com.google.javascript.jscomp.SourceFile)">parse</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;file)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -604,6 +721,22 @@ Compiler (and the other classes in this package) does the following:
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rebuilds the internal list of inputs by iterating over all modules.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#removeExternInput(com.google.javascript.rhino.InputId)">removeExternInput</A></B>(<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A>&nbsp;id)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Removes an input file from AST.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#replaceScript(com.google.javascript.jscomp.JsAst)">replaceScript</A></B>(<A HREF="../../../../com/google/javascript/jscomp/JsAst.html" title="class in com.google.javascript.jscomp">JsAst</A>&nbsp;ast)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Replaces one file in a hot-swap mode.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -855,9 +988,9 @@ public void <B>init</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSour
 <A NAME="init(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
 init</H3>
 <PRE>
-public void <B>init</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
-                 <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;inputs,
-                 <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
+public &lt;T1 extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>,T2 extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt; void <B>init</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;T1&gt;&nbsp;externs,
+                                                               <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;T2&gt;&nbsp;inputs,
+                                                               <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
 <DL>
 <DD>Initializes the instance state needed for a compile job.
 <P>
@@ -886,9 +1019,9 @@ public void <B>init</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSour
 <A NAME="initModules(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
 initModules</H3>
 <PRE>
-public void <B>initModules</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
-                        <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>&gt;&nbsp;modules,
-                        <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
+public &lt;T extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt; void <B>initModules</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;T&gt;&nbsp;externs,
+                                               <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>&gt;&nbsp;modules,
+                                               <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
 <DL>
 <DD>Initializes the instance state needed for a compile job if the sources
  are in modules.
@@ -914,11 +1047,11 @@ public void <B>rebuildInputsFromModules</B>()</PRE>
 </DL>
 <HR>
 
-<A NAME="compile(com.google.javascript.jscomp.JSSourceFile, com.google.javascript.jscomp.JSSourceFile, com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
+<A NAME="compile(com.google.javascript.jscomp.SourceFile, com.google.javascript.jscomp.SourceFile, com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
 compile</H3>
 <PRE>
-public <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A> <B>compile</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;extern,
-                      <A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;input,
+public <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A> <B>compile</B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;extern,
+                      <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;input,
                       <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
 <DL>
 <DD><DL>
@@ -927,10 +1060,10 @@ public <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="cla
 </DL>
 <HR>
 
-<A NAME="compile(com.google.javascript.jscomp.JSSourceFile, com.google.javascript.jscomp.JSSourceFile[], com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
+<A NAME="compile(com.google.javascript.jscomp.SourceFile, com.google.javascript.jscomp.JSSourceFile[], com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
 compile</H3>
 <PRE>
-public <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A> <B>compile</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;extern,
+public <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A> <B>compile</B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;extern,
                       <A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>[]&nbsp;input,
                       <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
 <DL>
@@ -971,9 +1104,9 @@ public <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="cla
 <A NAME="compile(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
 compile</H3>
 <PRE>
-public <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A> <B>compile</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
-                      <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;inputs,
-                      <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
+public &lt;T1 extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>,T2 extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt; <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A> <B>compile</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;T1&gt;&nbsp;externs,
+                                                                    <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;T2&gt;&nbsp;inputs,
+                                                                    <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
 <DL>
 <DD>Compiles a list of inputs.
 <P>
@@ -1001,9 +1134,9 @@ public <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="cla
 <A NAME="compileModules(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
 compileModules</H3>
 <PRE>
-public <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A> <B>compileModules</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
-                             <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>&gt;&nbsp;modules,
-                             <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
+public &lt;T extends <A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt; <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A> <B>compileModules</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;T&gt;&nbsp;externs,
+                                                    <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>&gt;&nbsp;modules,
+                                                    <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
 <DL>
 <DD>Compiles a list of modules.
 <P>
@@ -1120,27 +1253,44 @@ getRoot</H3>
 <PRE>
 public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>getRoot</B>()</PRE>
 <DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html#getRoot()">AbstractCompiler</A></CODE></B></DD>
 <DD>Returns the root node of the AST, which includes both externs and source.
 <P>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
 </DL>
 <HR>
 
-<A NAME="getInput(java.lang.String)"><!-- --></A><H3>
+<A NAME="getInput(com.google.javascript.rhino.InputId)"><!-- --></A><H3>
 getInput</H3>
 <PRE>
-public <A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A> <B>getInput</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A> <B>getInput</B>(<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A>&nbsp;id)</PRE>
 <DL>
-<DD><B>Description copied from class: <CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html#getInput(java.lang.String)">AbstractCompiler</A></CODE></B></DD>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html#getInput(com.google.javascript.rhino.InputId)">AbstractCompiler</A></CODE></B></DD>
 <DD>Looks up an input (possibly an externs input) by name. May return null.
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html#getInput(java.lang.String)">getInput</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html#getInput(com.google.javascript.rhino.InputId)">getInput</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A></CODE></DL>
 </DD>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="removeExternInput(com.google.javascript.rhino.InputId)"><!-- --></A><H3>
+removeExternInput</H3>
+<PRE>
+protected void <B>removeExternInput</B>(<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A>&nbsp;id)</PRE>
+<DL>
+<DD>Removes an input file from AST.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>id</CODE> - The id of the input to be removed.</DL>
 </DD>
 </DL>
 <HR>
@@ -1173,6 +1323,34 @@ public <A HREF="../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.ht
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html#getTypeRegistry()">getTypeRegistry</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A></CODE></DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getTypedScopeCreator()"><!-- --></A><H3>
+getTypedScopeCreator</H3>
+<PRE>
+public com.google.javascript.jscomp.MemoizedScopeCreator <B>getTypedScopeCreator</B>()</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html#getTypedScopeCreator()">AbstractCompiler</A></CODE></B></DD>
+<DD>Gets a memoized scope creator with type information.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="buildKnownSymbolTable()"><!-- --></A><H3>
+buildKnownSymbolTable</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/SymbolTable.html" title="class in com.google.javascript.jscomp">SymbolTable</A> <B>buildKnownSymbolTable</B>()</PRE>
+<DL>
 <DD><DL>
 </DL>
 </DD>
@@ -1213,11 +1391,24 @@ public com.google.javascript.jscomp.ReverseAbstractInterpreter <B>getReverseAbst
 </DL>
 <HR>
 
-<A NAME="parse(com.google.javascript.jscomp.JSSourceFile)"><!-- --></A><H3>
+<A NAME="parse(com.google.javascript.jscomp.SourceFile)"><!-- --></A><H3>
 parse</H3>
 <PRE>
-public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>parse</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;file)</PRE>
+public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>parse</B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;file)</PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="newCompilerOptions()"><!-- --></A><H3>
+newCompilerOptions</H3>
+<PRE>
+protected <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A> <B>newCompilerOptions</B>()</PRE>
+<DL>
+<DD>Allow subclasses to override the default CompileOptions object.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -1386,6 +1577,47 @@ public boolean <B>isIdeMode</B>()</PRE>
 </DL>
 <HR>
 
+<A NAME="acceptEcmaScript5()"><!-- --></A><H3>
+acceptEcmaScript5</H3>
+<PRE>
+public boolean <B>acceptEcmaScript5</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>Whether the compiler is in ES5Mode.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="languageMode()"><!-- --></A><H3>
+languageMode</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.LanguageMode.html" title="enum in com.google.javascript.jscomp">CompilerOptions.LanguageMode</A> <B>languageMode</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="acceptConstKeyword()"><!-- --></A><H3>
+acceptConstKeyword</H3>
+<PRE>
+public boolean <B>acceptConstKeyword</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>Whether the compiler accepts `const' keyword.</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="isTypeCheckingEnabled()"><!-- --></A><H3>
 isTypeCheckingEnabled</H3>
 <PRE>
@@ -1397,6 +1629,20 @@ public boolean <B>isTypeCheckingEnabled</B>()</PRE>
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getDiagnosticGroups()"><!-- --></A><H3>
+getDiagnosticGroups</H3>
+<PRE>
+protected <A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroups.html" title="class in com.google.javascript.jscomp">DiagnosticGroups</A> <B>getDiagnosticGroups</B>()</PRE>
+<DL>
+<DD>The warning classes that are available from the command-line, and
+ are suppressable by the <code>@suppress</code> annotation.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -1573,6 +1819,19 @@ public <A HREF="../../../../com/google/javascript/jscomp/ErrorManager.html" titl
 </DL>
 <HR>
 
+<A NAME="getInputsById()"><!-- --></A><H3>
+getInputsById</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A>,<A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>&gt; <B>getInputsById</B>()</PRE>
+<DL>
+<DD>Returns an unmodifiable view of the compiler inputs indexed by id.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="getState()"><!-- --></A><H3>
 getState</H3>
 <PRE>
@@ -1596,6 +1855,54 @@ public void <B>setState</B>(<A HREF="../../../../com/google/javascript/jscomp/Co
 <P>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getProgress()"><!-- --></A><H3>
+getProgress</H3>
+<PRE>
+public double <B>getProgress</B>()</PRE>
+<DL>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html#getProgress()">getProgress</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>a number in [0,1] range indicating an approximate progress of the
+ last compile. Note this should only be used as a hint and no assumptions
+ should be made on accuracy, even a completed compile may choose not to set
+ this to 1.0 at the end.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="replaceScript(com.google.javascript.jscomp.JsAst)"><!-- --></A><H3>
+replaceScript</H3>
+<PRE>
+public void <B>replaceScript</B>(<A HREF="../../../../com/google/javascript/jscomp/JsAst.html" title="class in com.google.javascript.jscomp">JsAst</A>&nbsp;ast)</PRE>
+<DL>
+<DD>Replaces one file in a hot-swap mode. The given JsAst should be made
+ from a new version of a file that already was present in the last compile
+ call. If the file is new, this will silently ignored.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>ast</CODE> - the ast of the file that is being replaced</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="addNewScript(com.google.javascript.jscomp.JsAst)"><!-- --></A><H3>
+addNewScript</H3>
+<PRE>
+public void <B>addNewScript</B>(<A HREF="../../../../com/google/javascript/jscomp/JsAst.html" title="class in com.google.javascript.jscomp">JsAst</A>&nbsp;ast)</PRE>
+<DL>
+<DD>Adds a new Script AST to the compile state. If a script for the same file
+ already exists the script will not be added, instead a call to
+ #replaceScript should be used.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>ast</CODE> - the ast of the new file</DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->

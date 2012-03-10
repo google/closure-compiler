@@ -122,19 +122,6 @@ A class for the internal representation of an input to the compiler.
 <B>Constructor Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#CompilerInput(com.google.javascript.jscomp.JSSourceFile)">CompilerInput</A></B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;file)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#CompilerInput(com.google.javascript.jscomp.JSSourceFile, boolean)">CompilerInput</A></B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;file,
-              boolean&nbsp;isExtern)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#CompilerInput(com.google.javascript.jscomp.SourceAst)">CompilerInput</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SourceAst.html" title="interface in com.google.javascript.jscomp">SourceAst</A>&nbsp;ast)</CODE>
 
 <BR>
@@ -148,8 +135,29 @@ A class for the internal representation of an input to the compiler.
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#CompilerInput(com.google.javascript.jscomp.SourceAst, com.google.javascript.rhino.InputId, boolean)">CompilerInput</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SourceAst.html" title="interface in com.google.javascript.jscomp">SourceAst</A>&nbsp;ast,
+              <A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A>&nbsp;inputId,
+              boolean&nbsp;isExtern)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#CompilerInput(com.google.javascript.jscomp.SourceAst, java.lang.String, boolean)">CompilerInput</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SourceAst.html" title="interface in com.google.javascript.jscomp">SourceAst</A>&nbsp;ast,
-              <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;inputName,
+              <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;inputId,
+              boolean&nbsp;isExtern)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#CompilerInput(com.google.javascript.jscomp.SourceFile)">CompilerInput</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;file)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#CompilerInput(com.google.javascript.jscomp.SourceFile, boolean)">CompilerInput</A></B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;file,
               boolean&nbsp;isExtern)</CODE>
 
 <BR>
@@ -175,6 +183,14 @@ A class for the internal representation of an input to the compiler.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/SourceAst.html" title="interface in com.google.javascript.jscomp">SourceAst</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#getAst()">getAst</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#getAstRoot(com.google.javascript.jscomp.AbstractCompiler)">getAstRoot</A></B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler)</CODE>
 
@@ -191,11 +207,27 @@ A class for the internal representation of an input to the compiler.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#getInputId()">getInputId</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns a name for this input.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#getLine(int)">getLine</A></B>(int&nbsp;lineNumber)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the source line for the indicated line number.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#getLineOffset(int)">getLineOffset</A></B>(int&nbsp;lineno)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -212,6 +244,14 @@ A class for the internal representation of an input to the compiler.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns a name for this input.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#getNumLines()">getNumLines</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -272,18 +312,18 @@ A class for the internal representation of an input to the compiler.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#setCompiler(com.google.javascript.jscomp.AbstractCompiler)">setCompiler</A></B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#removeRequire(java.lang.String)">removeRequire</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;require)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets an abstract compiler for doing parsing.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#setErrorManager(com.google.javascript.jscomp.ErrorManager)">setErrorManager</A></B>(<A HREF="../../../../com/google/javascript/jscomp/ErrorManager.html" title="interface in com.google.javascript.jscomp">ErrorManager</A>&nbsp;errorManager)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#setCompiler(com.google.javascript.jscomp.AbstractCompiler)">setCompiler</A></B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets an error manager for routing error messages.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets an abstract compiler for doing parsing.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -301,6 +341,14 @@ A class for the internal representation of an input to the compiler.
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the source file the generated AST represents.</TD>
 </TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#toString()">toString</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
@@ -308,7 +356,7 @@ A class for the internal representation of an input to the compiler.
 <TH ALIGN="left"><B>Methods inherited from class java.lang.<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -345,24 +393,34 @@ public <B>CompilerInput</B>(<A HREF="../../../../com/google/javascript/jscomp/So
 CompilerInput</H3>
 <PRE>
 public <B>CompilerInput</B>(<A HREF="../../../../com/google/javascript/jscomp/SourceAst.html" title="interface in com.google.javascript.jscomp">SourceAst</A>&nbsp;ast,
-                     <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;inputName,
+                     <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;inputId,
                      boolean&nbsp;isExtern)</PRE>
 <DL>
 </DL>
 <HR>
 
-<A NAME="CompilerInput(com.google.javascript.jscomp.JSSourceFile)"><!-- --></A><H3>
+<A NAME="CompilerInput(com.google.javascript.jscomp.SourceAst, com.google.javascript.rhino.InputId, boolean)"><!-- --></A><H3>
 CompilerInput</H3>
 <PRE>
-public <B>CompilerInput</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;file)</PRE>
+public <B>CompilerInput</B>(<A HREF="../../../../com/google/javascript/jscomp/SourceAst.html" title="interface in com.google.javascript.jscomp">SourceAst</A>&nbsp;ast,
+                     <A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A>&nbsp;inputId,
+                     boolean&nbsp;isExtern)</PRE>
 <DL>
 </DL>
 <HR>
 
-<A NAME="CompilerInput(com.google.javascript.jscomp.JSSourceFile, boolean)"><!-- --></A><H3>
+<A NAME="CompilerInput(com.google.javascript.jscomp.SourceFile)"><!-- --></A><H3>
 CompilerInput</H3>
 <PRE>
-public <B>CompilerInput</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&nbsp;file,
+public <B>CompilerInput</B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;file)</PRE>
+<DL>
+</DL>
+<HR>
+
+<A NAME="CompilerInput(com.google.javascript.jscomp.SourceFile, boolean)"><!-- --></A><H3>
+CompilerInput</H3>
+<PRE>
+public <B>CompilerInput</B>(<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&nbsp;file,
                      boolean&nbsp;isExtern)</PRE>
 <DL>
 </DL>
@@ -377,6 +435,23 @@ public <B>CompilerInput</B>(<A HREF="../../../../com/google/javascript/jscomp/JS
 </TR>
 </TABLE>
 
+<A NAME="getInputId()"><!-- --></A><H3>
+getInputId</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A> <B>getInputId</B>()</PRE>
+<DL>
+<DD>Returns a name for this input. Must be unique across all inputs.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/SourceAst.html#getInputId()">getInputId</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/SourceAst.html" title="interface in com.google.javascript.jscomp">SourceAst</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>The input id associated with this AST</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="getName()"><!-- --></A><H3>
 getName</H3>
 <PRE>
@@ -386,6 +461,20 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-e
 <P>
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html#getName()">getName</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAst()"><!-- --></A><H3>
+getAst</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/SourceAst.html" title="interface in com.google.javascript.jscomp">SourceAst</A> <B>getAst</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
 </DD>
 <DD><DL>
 </DL>
@@ -499,22 +588,6 @@ public <A HREF="../../../../com/google/javascript/jscomp/SourceAst.html" title="
 </DL>
 <HR>
 
-<A NAME="setErrorManager(com.google.javascript.jscomp.ErrorManager)"><!-- --></A><H3>
-setErrorManager</H3>
-<PRE>
-public void <B>setErrorManager</B>(<A HREF="../../../../com/google/javascript/jscomp/ErrorManager.html" title="interface in com.google.javascript.jscomp">ErrorManager</A>&nbsp;errorManager)</PRE>
-<DL>
-<DD>Sets an error manager for routing error messages.
-<P>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
 <A NAME="setCompiler(com.google.javascript.jscomp.AbstractCompiler)"><!-- --></A><H3>
 setCompiler</H3>
 <PRE>
@@ -556,6 +629,20 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?
 <P>
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html#getProvides()">getProvides</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="removeRequire(java.lang.String)"><!-- --></A><H3>
+removeRequire</H3>
+<PRE>
+public void <B>removeRequire</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;require)</PRE>
+<DL>
+<DD><DL>
+</DL>
 </DD>
 <DD><DL>
 </DL>
@@ -658,6 +745,49 @@ public boolean <B>isExtern</B>()</PRE>
 <DL>
 <DD><DL>
 </DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getLineOffset(int)"><!-- --></A><H3>
+getLineOffset</H3>
+<PRE>
+public int <B>getLineOffset</B>(int&nbsp;lineno)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getNumLines()"><!-- --></A><H3>
+getNumLines</H3>
+<PRE>
+public int <B>getNumLines</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>The number of lines in this input.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="toString()"><!-- --></A><H3>
+toString</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>toString</B>()</PRE>
+<DL>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A></CODE> in class <CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></CODE></DL>
 </DD>
 <DD><DL>
 </DL>

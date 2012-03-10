@@ -52,7 +52,7 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/rhino/Kit.html" title="class in com.google.javascript.rhino"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.AncestorIterable.html" title="class in com.google.javascript.rhino"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/rhino/Node.html" target="_top"><B>FRAMES</B></A>  &nbsp;
@@ -95,9 +95,6 @@ Class Node</H2>
 <DL>
 <DT><B>All Implemented Interfaces:</B> <DD><A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Cloneable.html?is-external=true" title="class or interface in java.lang">Cloneable</A></DD>
 </DL>
-<DL>
-<DT><B>Direct Known Subclasses:</B> <DD><A HREF="../../../../com/google/javascript/rhino/ScriptOrFnNode.html" title="class in com.google.javascript.rhino">ScriptOrFnNode</A></DD>
-</DL>
 <HR>
 <DL>
 <DT><PRE>public class <B>Node</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Cloneable.html?is-external=true" title="class or interface in java.lang">Cloneable</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DL>
@@ -138,6 +135,14 @@ This class implements the root of the intermediate representation.
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;An inner class that provides back-door access to the license
  property of the JSDocInfo property for this node.</TD>
 </TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.SideEffectFlags.html" title="class in com.google.javascript.rhino">Node.SideEffectFlags</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A helper class for getting and setting the side-effect flags.</TD>
+</TR>
 </TABLE>
 &nbsp;<!-- =========== FIELD SUMMARY =========== -->
 
@@ -150,63 +155,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#ATTRIBUTE_FLAG">ATTRIBUTE_FLAG</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#BOTH">BOTH</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#BRACELESS_TYPE">BRACELESS_TYPE</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#BREAK_PROP">BREAK_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#CASEARRAY_PROP">CASEARRAY_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#CASES_PROP">CASES_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#CATCH_SCOPE_PROP">CATCH_SCOPE_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#CODEOFFSET_PROP">CODEOFFSET_PROP</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -232,22 +181,6 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#CONTINUE_PROP">CONTINUE_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#DEBUGSOURCE_PROP">DEBUGSOURCE_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#DECR_FLAG">DECR_FLAG</A></B></CODE>
 
 <BR>
@@ -256,31 +189,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#DEFAULT_PROP">DEFAULT_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#DESCENDANTS_FLAG">DESCENDANTS_FLAG</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#DIRECT_EVAL">DIRECT_EVAL</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#DIRECTCALL_PROP">DIRECTCALL_PROP</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -304,7 +213,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#ENUM_PROP">ENUM_PROP</A></B></CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#FLAG_ARGUMENTS_UNMODIFIED">FLAG_ARGUMENTS_UNMODIFIED</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -312,7 +221,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#FINALLY_PROP">FINALLY_PROP</A></B></CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#FLAG_GLOBAL_STATE_UNMODIFIED">FLAG_GLOBAL_STATE_UNMODIFIED</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -320,7 +229,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#FIXUPS_PROP">FIXUPS_PROP</A></B></CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#FLAG_LOCAL_RESULTS">FLAG_LOCAL_RESULTS</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -328,7 +237,23 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#FUNCTION_PROP">FUNCTION_PROP</A></B></CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#FLAG_NO_THROWS">FLAG_NO_THROWS</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#FLAG_THIS_UNMODIFIED">FLAG_THIS_UNMODIFIED</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#FREE_CALL">FREE_CALL</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -337,6 +262,14 @@ This class implements the root of the intermediate representation.
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#INCRDECR_PROP">INCRDECR_PROP</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#INPUT_ID">INPUT_ID</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -384,31 +317,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#ISNUMBER_PROP">ISNUMBER_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#JSDOC_INFO_PROP">JSDOC_INFO_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#LABEL_ID_PROP">LABEL_ID_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#LABEL_PROP">LABEL_PROP</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -424,39 +333,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#LASTUSE_PROP">LASTUSE_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#LEFT">LEFT</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#LOCAL_BLOCK_PROP">LOCAL_BLOCK_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#LOCAL_PROP">LOCAL_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#LOCALCOUNT_PROP">LOCALCOUNT_PROP</A></B></CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#LENGTH">LENGTH</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -473,39 +350,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#MEMBER_TYPE_PROP">MEMBER_TYPE_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#NAME_PROP">NAME_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#NO_SIDE_EFFECTS_CALL">NO_SIDE_EFFECTS_CALL</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#NON_SPECIALCALL">NON_SPECIALCALL</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#OBJECT_IDS_PROP">OBJECT_IDS_PROP</A></B></CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#NO_SIDE_EFFECTS">NO_SIDE_EFFECTS</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -545,14 +390,6 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#PROPERTY_FLAG">PROPERTY_FLAG</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#QUOTED_PROP">QUOTED_PROP</A></B></CODE>
 
 <BR>
@@ -561,7 +398,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#REGEXP_PROP">REGEXP_PROP</A></B></CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#SIDE_EFFECT_FLAGS">SIDE_EFFECT_FLAGS</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -569,7 +406,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#RIGHT">RIGHT</A></B></CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#SIDE_EFFECTS_ALL">SIDE_EFFECTS_ALL</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -577,7 +414,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#SKIP_INDEXES_PROP">SKIP_INDEXES_PROP</A></B></CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#SIDE_EFFECTS_FLAGS_MASK">SIDE_EFFECTS_FLAGS_MASK</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -585,7 +422,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#SOURCEFILE_PROP">SOURCEFILE_PROP</A></B></CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#SLASH_V">SLASH_V</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -601,39 +438,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#SPECIAL_PROP_PROP">SPECIAL_PROP_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#SPECIALCALL_EVAL">SPECIALCALL_EVAL</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#SPECIALCALL_PROP">SPECIALCALL_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#SPECIALCALL_WITH">SPECIALCALL_WITH</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#SUPPRESSIONS">SUPPRESSIONS</A></B></CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#STATIC_SOURCE_FILE">STATIC_SOURCE_FILE</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -649,63 +454,7 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#TARGET_PROP">TARGET_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#TARGETBLOCK_PROP">TARGETBLOCK_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#TEMP_PROP">TEMP_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#TYPE_PROP">TYPE_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#USES_PROP">USES_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#VAR_ARGS_NAME">VAR_ARGS_NAME</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#VARIABLE_PROP">VARIABLE_PROP</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#VARS_PROP">VARS_PROP</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -857,6 +606,15 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#addChildrenAfter(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">addChildrenAfter</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;children,
+                 <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add all children after 'node'.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#addChildrenToBack(com.google.javascript.rhino.Node)">addChildrenToBack</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;children)</CODE>
 
 <BR>
@@ -889,6 +647,14 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#addSuppression(java.lang.String)">addSuppression</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;warning)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adds a warning to be suppressed.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#appendStringTree(java.lang.Appendable)">appendStringTree</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Appendable.html?is-external=true" title="class or interface in java.lang">Appendable</A>&nbsp;appendable)</CODE>
 
 <BR>
@@ -901,24 +667,6 @@ This class implements the root of the intermediate representation.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks if the subtree under this node is the same as another subtree.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#checkTreeEqualsSilent(com.google.javascript.rhino.Node)">checkTreeEqualsSilent</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node2)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If this is a compilation pass and not a test, do not construct error
- strings.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#checkTreeTypeAwareEqualsSilent(com.google.javascript.rhino.Node)">checkTreeTypeAwareEqualsSilent</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node2)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks if the subtree under this node is the same as another subtree
- including types.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -935,6 +683,15 @@ This class implements the root of the intermediate representation.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#clonePropsFrom(com.google.javascript.rhino.Node)">clonePropsFrom</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Clone the properties from the provided node without copying
+ the property object.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1088,6 +845,22 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getIndexOfChild(com.google.javascript.rhino.Node)">getIndexOfChild</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;child)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getInputId()">getInputId</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;int</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getIntProp(int)">getIntProp</A></B>(int&nbsp;propType)</CODE>
 
 <BR>
@@ -1137,6 +910,14 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getLength()">getLength</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;int</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getLineno()">getLineno</A></B>()</CODE>
 
 <BR>
@@ -1177,19 +958,51 @@ This class implements the root of the intermediate representation.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getSideEffectFlags()">getSideEffectFlags</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the side effects flags for this node.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getSourceFileName()">getSourceFileName</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getSourceOffset()">getSourceOffset</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getSourcePosition()">getSourcePosition</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/jstype/StaticSourceFile.html" title="interface in com.google.javascript.rhino.jstype">StaticSourceFile</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getStaticSourceFile()">getStaticSourceFile</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the source file associated with this input.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getString()">getString</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Can only be called when node has String context.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getSuppressions()">getSuppressions</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the set of supressions for this node.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1236,7 +1049,143 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#hasSideEffects()">hasSideEffects</A></B>()</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isAdd()">isAdd</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AST type check methods</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isAnd()">isAnd</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isArrayLit()">isArrayLit</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isAssign()">isAssign</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isAssignAdd()">isAssignAdd</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isBlock()">isBlock</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isBreak()">isBreak</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isCall()">isCall</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isCase()">isCase</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isCatch()">isCatch</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isComma()">isComma</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isContinue()">isContinue</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isDebugger()">isDebugger</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isDec()">isDec</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isDefaultCase()">isDefaultCase</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isDelProp()">isDelProp</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isDo()">isDo</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isEmpty()">isEmpty</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -1252,6 +1201,169 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isEquivalentToTyped(com.google.javascript.rhino.Node)">isEquivalentToTyped</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if this node is equivalent semantically to another and
+ the types are equivalent.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isExprResult()">isExprResult</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isFalse()">isFalse</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isFor()">isFor</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isFromExterns()">isFromExterns</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isFunction()">isFunction</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isGetElem()">isGetElem</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isGetProp()">isGetProp</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isGetterDef()">isGetterDef</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isHook()">isHook</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isIf()">isIf</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isIn()">isIn</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isInc()">isInc</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isInstanceOf()">isInstanceOf</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isLabel()">isLabel</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isLabelName()">isLabelName</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isLocalResultCall()">isLocalResultCall</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if this node is a function or constructor call that
+ returns a primitive or a local object (an object that has no other
+ references).</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isName()">isName</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isNE()">isNE</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isNew()">isNew</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isNoSideEffectsCall()">isNoSideEffectsCall</A></B>()</CODE>
 
 <BR>
@@ -1261,10 +1373,66 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isNot()">isNot</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isNull()">isNull</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isNumber()">isNumber</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isObjectLit()">isObjectLit</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isOnlyModifiesThisCall()">isOnlyModifiesThisCall</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isOptionalArg()">isOptionalArg</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether this node is an optional argument node.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isOr()">isOr</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isParamList()">isParamList</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1281,7 +1449,55 @@ This class implements the root of the intermediate representation.
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isQuotedString()">isQuotedString</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This should only be called for STRING nodes created in object lits.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This should only be called for STRING nodes children of OBJECTLIT.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isRegExp()">isRegExp</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isReturn()">isReturn</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isScript()">isScript</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isSetterDef()">isSetterDef</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isString()">isString</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isSwitch()">isSwitch</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1291,6 +1507,46 @@ This class implements the root of the intermediate representation.
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether this is a synthetic block that should not be considered
  a real source block.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isThis()">isThis</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isThrow()">isThrow</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isTrue()">isTrue</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isTry()">isTry</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isTypeOf()">isTypeOf</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1305,10 +1561,42 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isVar()">isVar</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isVarArgs()">isVarArgs</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether this node is a variable length argument node.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isVoid()">isVoid</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isWhile()">isWhile</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isWith()">isWith</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1487,10 +1775,10 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#setIsNoSideEffectsCall()">setIsNoSideEffectsCall</A></B>()</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#setInputId(com.google.javascript.rhino.InputId)">setInputId</A></B>(<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A>&nbsp;inputId)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Marks this function or constructor call node as having no side effects.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1520,6 +1808,14 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#setLength(int)">setLength</A></B>(int&nbsp;length)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#setLineno(int)">setLineno</A></B>(int&nbsp;lineno)</CODE>
 
 <BR>
@@ -1539,7 +1835,55 @@ This class implements the root of the intermediate representation.
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#setQuotedString()">setQuotedString</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This should only be called for STRING nodes created in object lits.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This should only be called for STRING nodes children of OBJECTLIT.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#setSideEffectFlags(int)">setSideEffectFlags</A></B>(int&nbsp;flags)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Marks this function or constructor call's side effect flags.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#setSideEffectFlags(com.google.javascript.rhino.Node.SideEffectFlags)">setSideEffectFlags</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.SideEffectFlags.html" title="class in com.google.javascript.rhino">Node.SideEffectFlags</A>&nbsp;flags)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#setSourceEncodedPosition(int)">setSourceEncodedPosition</A></B>(int&nbsp;sourcePosition)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#setSourceEncodedPositionForTree(int)">setSourceEncodedPositionForTree</A></B>(int&nbsp;sourcePosition)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#setSourceFileForTesting(java.lang.String)">setSourceFileForTesting</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the source file to a non-extern file of the given name.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#setStaticSourceFile(com.google.javascript.rhino.jstype.StaticSourceFile)">setStaticSourceFile</A></B>(<A HREF="../../../../com/google/javascript/rhino/jstype/StaticSourceFile.html" title="interface in com.google.javascript.rhino.jstype">StaticSourceFile</A>&nbsp;file)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1548,14 +1892,6 @@ This class implements the root of the intermediate representation.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Can only be called when node has String context.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#setSuppressions(java.util.Set)">setSuppressions</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;val)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the warning suppressions on this node.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1592,8 +1928,16 @@ This class implements the root of the intermediate representation.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#tokenToName(int)">tokenToName</A></B>(int&nbsp;token)</CODE>
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#srcref(com.google.javascript.rhino.Node)">srcref</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#srcrefTree(com.google.javascript.rhino.Node)">srcrefTree</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -1623,6 +1967,42 @@ This class implements the root of the intermediate representation.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#useSourceInfoFrom(com.google.javascript.rhino.Node)">useSourceInfoFrom</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Overwrite all the source information in this node with
+ that of <code>other</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#useSourceInfoFromForTree(com.google.javascript.rhino.Node)">useSourceInfoFromForTree</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Overwrite all the source information in this node and its subtree with
+ that of <code>other</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#useSourceInfoIfMissingFrom(com.google.javascript.rhino.Node)">useSourceInfoIfMissingFrom</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Overwrite all the source information in this node with
+ that of <code>other</code> iff the source info is missing.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#useSourceInfoIfMissingFromForTree(com.google.javascript.rhino.Node)">useSourceInfoIfMissingFromForTree</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Overwrite all the source information in this node and its subtree with
+ that of <code>other</code> iff the source info is missing.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1656,196 +2036,6 @@ This class implements the root of the intermediate representation.
 </TR>
 </TABLE>
 
-<A NAME="LOCAL_BLOCK_PROP"><!-- --></A><H3>
-LOCAL_BLOCK_PROP</H3>
-<PRE>
-public static final int <B>LOCAL_BLOCK_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.LOCAL_BLOCK_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="OBJECT_IDS_PROP"><!-- --></A><H3>
-OBJECT_IDS_PROP</H3>
-<PRE>
-public static final int <B>OBJECT_IDS_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.OBJECT_IDS_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="CATCH_SCOPE_PROP"><!-- --></A><H3>
-CATCH_SCOPE_PROP</H3>
-<PRE>
-public static final int <B>CATCH_SCOPE_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.CATCH_SCOPE_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="LABEL_ID_PROP"><!-- --></A><H3>
-LABEL_ID_PROP</H3>
-<PRE>
-public static final int <B>LABEL_ID_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.LABEL_ID_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="TARGET_PROP"><!-- --></A><H3>
-TARGET_PROP</H3>
-<PRE>
-public static final int <B>TARGET_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.TARGET_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="BREAK_PROP"><!-- --></A><H3>
-BREAK_PROP</H3>
-<PRE>
-public static final int <B>BREAK_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.BREAK_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="CONTINUE_PROP"><!-- --></A><H3>
-CONTINUE_PROP</H3>
-<PRE>
-public static final int <B>CONTINUE_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.CONTINUE_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="ENUM_PROP"><!-- --></A><H3>
-ENUM_PROP</H3>
-<PRE>
-public static final int <B>ENUM_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.ENUM_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="FUNCTION_PROP"><!-- --></A><H3>
-FUNCTION_PROP</H3>
-<PRE>
-public static final int <B>FUNCTION_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.FUNCTION_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="TEMP_PROP"><!-- --></A><H3>
-TEMP_PROP</H3>
-<PRE>
-public static final int <B>TEMP_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.TEMP_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="LOCAL_PROP"><!-- --></A><H3>
-LOCAL_PROP</H3>
-<PRE>
-public static final int <B>LOCAL_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.LOCAL_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="CODEOFFSET_PROP"><!-- --></A><H3>
-CODEOFFSET_PROP</H3>
-<PRE>
-public static final int <B>CODEOFFSET_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.CODEOFFSET_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="FIXUPS_PROP"><!-- --></A><H3>
-FIXUPS_PROP</H3>
-<PRE>
-public static final int <B>FIXUPS_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.FIXUPS_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="VARS_PROP"><!-- --></A><H3>
-VARS_PROP</H3>
-<PRE>
-public static final int <B>VARS_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.VARS_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="USES_PROP"><!-- --></A><H3>
-USES_PROP</H3>
-<PRE>
-public static final int <B>USES_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.USES_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="REGEXP_PROP"><!-- --></A><H3>
-REGEXP_PROP</H3>
-<PRE>
-public static final int <B>REGEXP_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.REGEXP_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="CASES_PROP"><!-- --></A><H3>
-CASES_PROP</H3>
-<PRE>
-public static final int <B>CASES_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.CASES_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="DEFAULT_PROP"><!-- --></A><H3>
-DEFAULT_PROP</H3>
-<PRE>
-public static final int <B>DEFAULT_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.DEFAULT_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="CASEARRAY_PROP"><!-- --></A><H3>
-CASEARRAY_PROP</H3>
-<PRE>
-public static final int <B>CASEARRAY_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.CASEARRAY_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
 <A NAME="SOURCENAME_PROP"><!-- --></A><H3>
 SOURCENAME_PROP</H3>
 <PRE>
@@ -1853,126 +2043,6 @@ public static final int <B>SOURCENAME_PROP</B></PRE>
 <DL>
 <DL>
 <DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.SOURCENAME_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="TYPE_PROP"><!-- --></A><H3>
-TYPE_PROP</H3>
-<PRE>
-public static final int <B>TYPE_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.TYPE_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="SPECIAL_PROP_PROP"><!-- --></A><H3>
-SPECIAL_PROP_PROP</H3>
-<PRE>
-public static final int <B>SPECIAL_PROP_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.SPECIAL_PROP_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="LABEL_PROP"><!-- --></A><H3>
-LABEL_PROP</H3>
-<PRE>
-public static final int <B>LABEL_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.LABEL_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="FINALLY_PROP"><!-- --></A><H3>
-FINALLY_PROP</H3>
-<PRE>
-public static final int <B>FINALLY_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.FINALLY_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="LOCALCOUNT_PROP"><!-- --></A><H3>
-LOCALCOUNT_PROP</H3>
-<PRE>
-public static final int <B>LOCALCOUNT_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.LOCALCOUNT_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="TARGETBLOCK_PROP"><!-- --></A><H3>
-TARGETBLOCK_PROP</H3>
-<PRE>
-public static final int <B>TARGETBLOCK_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.TARGETBLOCK_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="VARIABLE_PROP"><!-- --></A><H3>
-VARIABLE_PROP</H3>
-<PRE>
-public static final int <B>VARIABLE_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.VARIABLE_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="LASTUSE_PROP"><!-- --></A><H3>
-LASTUSE_PROP</H3>
-<PRE>
-public static final int <B>LASTUSE_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.LASTUSE_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="ISNUMBER_PROP"><!-- --></A><H3>
-ISNUMBER_PROP</H3>
-<PRE>
-public static final int <B>ISNUMBER_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.ISNUMBER_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="DIRECTCALL_PROP"><!-- --></A><H3>
-DIRECTCALL_PROP</H3>
-<PRE>
-public static final int <B>DIRECTCALL_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.DIRECTCALL_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="SPECIALCALL_PROP"><!-- --></A><H3>
-SPECIALCALL_PROP</H3>
-<PRE>
-public static final int <B>SPECIALCALL_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.SPECIALCALL_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="DEBUGSOURCE_PROP"><!-- --></A><H3>
-DEBUGSOURCE_PROP</H3>
-<PRE>
-public static final int <B>DEBUGSOURCE_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.DEBUGSOURCE_PROP">Constant Field Values</A></DL>
 </DL>
 <HR>
 
@@ -1996,16 +2066,6 @@ public static final int <B>VAR_ARGS_NAME</B></PRE>
 </DL>
 <HR>
 
-<A NAME="SKIP_INDEXES_PROP"><!-- --></A><H3>
-SKIP_INDEXES_PROP</H3>
-<PRE>
-public static final int <B>SKIP_INDEXES_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.SKIP_INDEXES_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
 <A NAME="INCRDECR_PROP"><!-- --></A><H3>
 INCRDECR_PROP</H3>
 <PRE>
@@ -2013,26 +2073,6 @@ public static final int <B>INCRDECR_PROP</B></PRE>
 <DL>
 <DL>
 <DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.INCRDECR_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="MEMBER_TYPE_PROP"><!-- --></A><H3>
-MEMBER_TYPE_PROP</H3>
-<PRE>
-public static final int <B>MEMBER_TYPE_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.MEMBER_TYPE_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="NAME_PROP"><!-- --></A><H3>
-NAME_PROP</H3>
-<PRE>
-public static final int <B>NAME_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.NAME_PROP">Constant Field Values</A></DL>
 </DL>
 <HR>
 
@@ -2076,16 +2116,6 @@ public static final int <B>SYNTHETIC_BLOCK_PROP</B></PRE>
 </DL>
 <HR>
 
-<A NAME="SOURCEFILE_PROP"><!-- --></A><H3>
-SOURCEFILE_PROP</H3>
-<PRE>
-public static final int <B>SOURCEFILE_PROP</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.SOURCEFILE_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
 <A NAME="EMPTY_BLOCK"><!-- --></A><H3>
 EMPTY_BLOCK</H3>
 <PRE>
@@ -2116,13 +2146,13 @@ public static final int <B>BRACELESS_TYPE</B></PRE>
 </DL>
 <HR>
 
-<A NAME="NO_SIDE_EFFECTS_CALL"><!-- --></A><H3>
-NO_SIDE_EFFECTS_CALL</H3>
+<A NAME="SIDE_EFFECT_FLAGS"><!-- --></A><H3>
+SIDE_EFFECT_FLAGS</H3>
 <PRE>
-public static final int <B>NO_SIDE_EFFECTS_CALL</B></PRE>
+public static final int <B>SIDE_EFFECT_FLAGS</B></PRE>
 <DL>
 <DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.NO_SIDE_EFFECTS_CALL">Constant Field Values</A></DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.SIDE_EFFECT_FLAGS">Constant Field Values</A></DL>
 </DL>
 <HR>
 
@@ -2196,13 +2226,53 @@ public static final int <B>DIRECT_EVAL</B></PRE>
 </DL>
 <HR>
 
-<A NAME="SUPPRESSIONS"><!-- --></A><H3>
-SUPPRESSIONS</H3>
+<A NAME="FREE_CALL"><!-- --></A><H3>
+FREE_CALL</H3>
 <PRE>
-public static final int <B>SUPPRESSIONS</B></PRE>
+public static final int <B>FREE_CALL</B></PRE>
 <DL>
 <DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.SUPPRESSIONS">Constant Field Values</A></DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.FREE_CALL">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="STATIC_SOURCE_FILE"><!-- --></A><H3>
+STATIC_SOURCE_FILE</H3>
+<PRE>
+public static final int <B>STATIC_SOURCE_FILE</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.STATIC_SOURCE_FILE">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="LENGTH"><!-- --></A><H3>
+LENGTH</H3>
+<PRE>
+public static final int <B>LENGTH</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.LENGTH">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="INPUT_ID"><!-- --></A><H3>
+INPUT_ID</H3>
+<PRE>
+public static final int <B>INPUT_ID</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.INPUT_ID">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="SLASH_V"><!-- --></A><H3>
+SLASH_V</H3>
+<PRE>
+public static final int <B>SLASH_V</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.SLASH_V">Constant Field Values</A></DL>
 </DL>
 <HR>
 
@@ -2213,66 +2283,6 @@ public static final int <B>LAST_PROP</B></PRE>
 <DL>
 <DL>
 <DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.LAST_PROP">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="BOTH"><!-- --></A><H3>
-BOTH</H3>
-<PRE>
-public static final int <B>BOTH</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.BOTH">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="LEFT"><!-- --></A><H3>
-LEFT</H3>
-<PRE>
-public static final int <B>LEFT</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.LEFT">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="RIGHT"><!-- --></A><H3>
-RIGHT</H3>
-<PRE>
-public static final int <B>RIGHT</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.RIGHT">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="NON_SPECIALCALL"><!-- --></A><H3>
-NON_SPECIALCALL</H3>
-<PRE>
-public static final int <B>NON_SPECIALCALL</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.NON_SPECIALCALL">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="SPECIALCALL_EVAL"><!-- --></A><H3>
-SPECIALCALL_EVAL</H3>
-<PRE>
-public static final int <B>SPECIALCALL_EVAL</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.SPECIALCALL_EVAL">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="SPECIALCALL_WITH"><!-- --></A><H3>
-SPECIALCALL_WITH</H3>
-<PRE>
-public static final int <B>SPECIALCALL_WITH</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.SPECIALCALL_WITH">Constant Field Values</A></DL>
 </DL>
 <HR>
 
@@ -2293,36 +2303,6 @@ public static final int <B>POST_FLAG</B></PRE>
 <DL>
 <DL>
 <DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.POST_FLAG">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="PROPERTY_FLAG"><!-- --></A><H3>
-PROPERTY_FLAG</H3>
-<PRE>
-public static final int <B>PROPERTY_FLAG</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.PROPERTY_FLAG">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="ATTRIBUTE_FLAG"><!-- --></A><H3>
-ATTRIBUTE_FLAG</H3>
-<PRE>
-public static final int <B>ATTRIBUTE_FLAG</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.ATTRIBUTE_FLAG">Constant Field Values</A></DL>
-</DL>
-<HR>
-
-<A NAME="DESCENDANTS_FLAG"><!-- --></A><H3>
-DESCENDANTS_FLAG</H3>
-<PRE>
-public static final int <B>DESCENDANTS_FLAG</B></PRE>
-<DL>
-<DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.DESCENDANTS_FLAG">Constant Field Values</A></DL>
 </DL>
 <HR>
 
@@ -2368,6 +2348,86 @@ public static final int <B>COLUMN_MASK</B></PRE>
 <P>
 <DL>
 <DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.COLUMN_MASK">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="FLAG_GLOBAL_STATE_UNMODIFIED"><!-- --></A><H3>
+FLAG_GLOBAL_STATE_UNMODIFIED</H3>
+<PRE>
+public static final int <B>FLAG_GLOBAL_STATE_UNMODIFIED</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.FLAG_GLOBAL_STATE_UNMODIFIED">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="FLAG_THIS_UNMODIFIED"><!-- --></A><H3>
+FLAG_THIS_UNMODIFIED</H3>
+<PRE>
+public static final int <B>FLAG_THIS_UNMODIFIED</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.FLAG_THIS_UNMODIFIED">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="FLAG_ARGUMENTS_UNMODIFIED"><!-- --></A><H3>
+FLAG_ARGUMENTS_UNMODIFIED</H3>
+<PRE>
+public static final int <B>FLAG_ARGUMENTS_UNMODIFIED</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.FLAG_ARGUMENTS_UNMODIFIED">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="FLAG_NO_THROWS"><!-- --></A><H3>
+FLAG_NO_THROWS</H3>
+<PRE>
+public static final int <B>FLAG_NO_THROWS</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.FLAG_NO_THROWS">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="FLAG_LOCAL_RESULTS"><!-- --></A><H3>
+FLAG_LOCAL_RESULTS</H3>
+<PRE>
+public static final int <B>FLAG_LOCAL_RESULTS</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.FLAG_LOCAL_RESULTS">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="SIDE_EFFECTS_FLAGS_MASK"><!-- --></A><H3>
+SIDE_EFFECTS_FLAGS_MASK</H3>
+<PRE>
+public static final int <B>SIDE_EFFECTS_FLAGS_MASK</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.SIDE_EFFECTS_FLAGS_MASK">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="SIDE_EFFECTS_ALL"><!-- --></A><H3>
+SIDE_EFFECTS_ALL</H3>
+<PRE>
+public static final int <B>SIDE_EFFECTS_ALL</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.SIDE_EFFECTS_ALL">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="NO_SIDE_EFFECTS"><!-- --></A><H3>
+NO_SIDE_EFFECTS</H3>
+<PRE>
+public static final int <B>NO_SIDE_EFFECTS</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#com.google.javascript.rhino.Node.NO_SIDE_EFFECTS">Constant Field Values</A></DL>
 </DL>
 
 <!-- ========= CONSTRUCTOR DETAIL ======== -->
@@ -2723,6 +2783,20 @@ public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class 
 </DL>
 <HR>
 
+<A NAME="getIndexOfChild(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+getIndexOfChild</H3>
+<PRE>
+public int <B>getIndexOfChild</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;child)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="getLastSibling()"><!-- --></A><H3>
 getLastSibling</H3>
 <PRE>
@@ -2827,6 +2901,23 @@ public void <B>addChildAfter</B>(<A HREF="../../../../com/google/javascript/rhin
 </DL>
 <HR>
 
+<A NAME="addChildrenAfter(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+addChildrenAfter</H3>
+<PRE>
+public void <B>addChildrenAfter</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;children,
+                             <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node)</PRE>
+<DL>
+<DD>Add all children after 'node'.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="removeChild(com.google.javascript.rhino.Node)"><!-- --></A><H3>
 removeChild</H3>
 <PRE>
@@ -2871,6 +2962,25 @@ public void <B>replaceChildAfter</B>(<A HREF="../../../../com/google/javascript/
 </DD>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="clonePropsFrom(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+clonePropsFrom</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>clonePropsFrom</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</PRE>
+<DL>
+<DD>Clone the properties from the provided node without copying
+ the property object.  The recieving node may not have any
+ existing properties.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>other</CODE> - The node to clone properties from.
+<DT><B>Returns:</B><DD>this node.</DL>
 </DD>
 </DL>
 <HR>
@@ -2983,34 +3093,6 @@ putIntProp</H3>
 <PRE>
 public void <B>putIntProp</B>(int&nbsp;propType,
                        int&nbsp;value)</PRE>
-<DL>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getLineno()"><!-- --></A><H3>
-getLineno</H3>
-<PRE>
-public int <B>getLineno</B>()</PRE>
-<DL>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getCharno()"><!-- --></A><H3>
-getCharno</H3>
-<PRE>
-public int <B>getCharno</B>()</PRE>
 <DL>
 <DD><DL>
 </DL>
@@ -3158,6 +3240,193 @@ public void <B>appendStringTree</B>(<A HREF="http://java.sun.com/javase/6/docs/a
 </DL>
 <HR>
 
+<A NAME="setStaticSourceFile(com.google.javascript.rhino.jstype.StaticSourceFile)"><!-- --></A><H3>
+setStaticSourceFile</H3>
+<PRE>
+public void <B>setStaticSourceFile</B>(<A HREF="../../../../com/google/javascript/rhino/jstype/StaticSourceFile.html" title="interface in com.google.javascript.rhino.jstype">StaticSourceFile</A>&nbsp;file)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setSourceFileForTesting(java.lang.String)"><!-- --></A><H3>
+setSourceFileForTesting</H3>
+<PRE>
+public void <B>setSourceFileForTesting</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+<DL>
+<DD>Sets the source file to a non-extern file of the given name.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSourceFileName()"><!-- --></A><H3>
+getSourceFileName</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getSourceFileName</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getStaticSourceFile()"><!-- --></A><H3>
+getStaticSourceFile</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/jstype/StaticSourceFile.html" title="interface in com.google.javascript.rhino.jstype">StaticSourceFile</A> <B>getStaticSourceFile</B>()</PRE>
+<DL>
+<DD>Returns the source file associated with this input. May be null
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setInputId(com.google.javascript.rhino.InputId)"><!-- --></A><H3>
+setInputId</H3>
+<PRE>
+public void <B>setInputId</B>(<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A>&nbsp;inputId)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>inputId</CODE> - </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getInputId()"><!-- --></A><H3>
+getInputId</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A> <B>getInputId</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>The Id of the CompilerInput associated with this Node.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isFromExterns()"><!-- --></A><H3>
+isFromExterns</H3>
+<PRE>
+public boolean <B>isFromExterns</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getLength()"><!-- --></A><H3>
+getLength</H3>
+<PRE>
+public int <B>getLength</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setLength(int)"><!-- --></A><H3>
+setLength</H3>
+<PRE>
+public void <B>setLength</B>(int&nbsp;length)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getLineno()"><!-- --></A><H3>
+getLineno</H3>
+<PRE>
+public int <B>getLineno</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getCharno()"><!-- --></A><H3>
+getCharno</H3>
+<PRE>
+public int <B>getCharno</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSourceOffset()"><!-- --></A><H3>
+getSourceOffset</H3>
+<PRE>
+public int <B>getSourceOffset</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSourcePosition()"><!-- --></A><H3>
+getSourcePosition</H3>
+<PRE>
+public int <B>getSourcePosition</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="setLineno(int)"><!-- --></A><H3>
 setLineno</H3>
 <PRE>
@@ -3176,6 +3445,34 @@ public void <B>setLineno</B>(int&nbsp;lineno)</PRE>
 setCharno</H3>
 <PRE>
 public void <B>setCharno</B>(int&nbsp;charno)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setSourceEncodedPosition(int)"><!-- --></A><H3>
+setSourceEncodedPosition</H3>
+<PRE>
+public void <B>setSourceEncodedPosition</B>(int&nbsp;sourcePosition)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setSourceEncodedPositionForTree(int)"><!-- --></A><H3>
+setSourceEncodedPositionForTree</H3>
+<PRE>
+public void <B>setSourceEncodedPositionForTree</B>(int&nbsp;sourcePosition)</PRE>
 <DL>
 <DD><DL>
 </DL>
@@ -3411,55 +3708,6 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-e
 </DL>
 <HR>
 
-<A NAME="checkTreeEqualsSilent(com.google.javascript.rhino.Node)"><!-- --></A><H3>
-checkTreeEqualsSilent</H3>
-<PRE>
-public boolean <B>checkTreeEqualsSilent</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node2)</PRE>
-<DL>
-<DD>If this is a compilation pass and not a test, do not construct error
- strings. Instead return true if the trees are equal.
-<P>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="checkTreeTypeAwareEqualsSilent(com.google.javascript.rhino.Node)"><!-- --></A><H3>
-checkTreeTypeAwareEqualsSilent</H3>
-<PRE>
-public boolean <B>checkTreeTypeAwareEqualsSilent</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node2)</PRE>
-<DL>
-<DD>Checks if the subtree under this node is the same as another subtree
- including types. Returns null if it's equal, or a message describing the
- differences.
-<P>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="tokenToName(int)"><!-- --></A><H3>
-tokenToName</H3>
-<PRE>
-public static <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>tokenToName</B>(int&nbsp;token)</PRE>
-<DL>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
 <A NAME="isEquivalentTo(com.google.javascript.rhino.Node)"><!-- --></A><H3>
 isEquivalentTo</H3>
 <PRE>
@@ -3476,11 +3724,14 @@ public boolean <B>isEquivalentTo</B>(<A HREF="../../../../com/google/javascript/
 </DL>
 <HR>
 
-<A NAME="hasSideEffects()"><!-- --></A><H3>
-hasSideEffects</H3>
+<A NAME="isEquivalentToTyped(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+isEquivalentToTyped</H3>
 <PRE>
-public boolean <B>hasSideEffects</B>()</PRE>
+public boolean <B>isEquivalentToTyped</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node)</PRE>
 <DL>
+<DD>Returns true if this node is equivalent semantically to another and
+ the types are equivalent.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -3689,6 +3940,102 @@ public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class 
 <DD><DL>
 
 <DT><B>Returns:</B><DD>this</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="useSourceInfoFrom(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+useSourceInfoFrom</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>useSourceInfoFrom</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</PRE>
+<DL>
+<DD>Overwrite all the source information in this node with
+ that of <code>other</code>.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="srcref(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+srcref</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>srcref</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="useSourceInfoFromForTree(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+useSourceInfoFromForTree</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>useSourceInfoFromForTree</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</PRE>
+<DL>
+<DD>Overwrite all the source information in this node and its subtree with
+ that of <code>other</code>.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="srcrefTree(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+srcrefTree</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>srcrefTree</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="useSourceInfoIfMissingFrom(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+useSourceInfoIfMissingFrom</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>useSourceInfoIfMissingFrom</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</PRE>
+<DL>
+<DD>Overwrite all the source information in this node with
+ that of <code>other</code> iff the source info is missing.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="useSourceInfoIfMissingFromForTree(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+useSourceInfoIfMissingFromForTree</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>useSourceInfoIfMissingFromForTree</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</PRE>
+<DL>
+<DD>Overwrite all the source information in this node and its subtree with
+ that of <code>other</code> iff the source info is missing.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
 </DD>
 </DL>
 <HR>
@@ -3907,28 +4254,13 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-exte
 </DL>
 <HR>
 
-<A NAME="setSuppressions(java.util.Set)"><!-- --></A><H3>
-setSuppressions</H3>
+<A NAME="addSuppression(java.lang.String)"><!-- --></A><H3>
+addSuppression</H3>
 <PRE>
-public void <B>setSuppressions</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;val)</PRE>
+public void <B>addSuppression</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;warning)</PRE>
 <DL>
-<DD>Sets the warning suppressions on this node.
-<P>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getSuppressions()"><!-- --></A><H3>
-getSuppressions</H3>
-<PRE>
-public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>getSuppressions</B>()</PRE>
-<DL>
-<DD>Returns the set of supressions for this node.
+<DD>Adds a warning to be suppressed. This is indistinguishable
+ from having a <code>@suppress</code> tag in the code.
 <P>
 <DD><DL>
 </DL>
@@ -3973,12 +4305,12 @@ public boolean <B>wasEmptyNode</B>()</PRE>
 </DL>
 <HR>
 
-<A NAME="setIsNoSideEffectsCall()"><!-- --></A><H3>
-setIsNoSideEffectsCall</H3>
+<A NAME="setSideEffectFlags(int)"><!-- --></A><H3>
+setSideEffectFlags</H3>
 <PRE>
-public void <B>setIsNoSideEffectsCall</B>()</PRE>
+public void <B>setSideEffectFlags</B>(int&nbsp;flags)</PRE>
 <DL>
-<DD>Marks this function or constructor call node as having no side effects.
+<DD>Marks this function or constructor call's side effect flags.
  This property is only meaningful for <A HREF="../../../../com/google/javascript/rhino/Token.html#CALL"><CODE>Token.CALL</CODE></A> and
  <A HREF="../../../../com/google/javascript/rhino/Token.html#NEW"><CODE>Token.NEW</CODE></A> nodes.
 <P>
@@ -3987,6 +4319,51 @@ public void <B>setIsNoSideEffectsCall</B>()</PRE>
 </DD>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setSideEffectFlags(com.google.javascript.rhino.Node.SideEffectFlags)"><!-- --></A><H3>
+setSideEffectFlags</H3>
+<PRE>
+public void <B>setSideEffectFlags</B>(<A HREF="../../../../com/google/javascript/rhino/Node.SideEffectFlags.html" title="class in com.google.javascript.rhino">Node.SideEffectFlags</A>&nbsp;flags)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSideEffectFlags()"><!-- --></A><H3>
+getSideEffectFlags</H3>
+<PRE>
+public int <B>getSideEffectFlags</B>()</PRE>
+<DL>
+<DD>Returns the side effects flags for this node.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isOnlyModifiesThisCall()"><!-- --></A><H3>
+isOnlyModifiesThisCall</H3>
+<PRE>
+public boolean <B>isOnlyModifiesThisCall</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>Whether the only side-effect is "modifies this"</DL>
 </DD>
 </DL>
 <HR>
@@ -4008,12 +4385,30 @@ public boolean <B>isNoSideEffectsCall</B>()</PRE>
 </DL>
 <HR>
 
+<A NAME="isLocalResultCall()"><!-- --></A><H3>
+isLocalResultCall</H3>
+<PRE>
+public boolean <B>isLocalResultCall</B>()</PRE>
+<DL>
+<DD>Returns true if this node is a function or constructor call that
+ returns a primitive or a local object (an object that has no other
+ references).
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="isQuotedString()"><!-- --></A><H3>
 isQuotedString</H3>
 <PRE>
 public boolean <B>isQuotedString</B>()</PRE>
 <DL>
-<DD>This should only be called for STRING nodes created in object lits.
+<DD>This should only be called for STRING nodes children of OBJECTLIT.
 <P>
 <DD><DL>
 </DL>
@@ -4029,8 +4424,794 @@ setQuotedString</H3>
 <PRE>
 public void <B>setQuotedString</B>()</PRE>
 <DL>
-<DD>This should only be called for STRING nodes created in object lits.
+<DD>This should only be called for STRING nodes children of OBJECTLIT.
 <P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isAdd()"><!-- --></A><H3>
+isAdd</H3>
+<PRE>
+public boolean <B>isAdd</B>()</PRE>
+<DL>
+<DD>AST type check methods
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isAnd()"><!-- --></A><H3>
+isAnd</H3>
+<PRE>
+public boolean <B>isAnd</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isArrayLit()"><!-- --></A><H3>
+isArrayLit</H3>
+<PRE>
+public boolean <B>isArrayLit</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isAssign()"><!-- --></A><H3>
+isAssign</H3>
+<PRE>
+public boolean <B>isAssign</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isAssignAdd()"><!-- --></A><H3>
+isAssignAdd</H3>
+<PRE>
+public boolean <B>isAssignAdd</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isBlock()"><!-- --></A><H3>
+isBlock</H3>
+<PRE>
+public boolean <B>isBlock</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isBreak()"><!-- --></A><H3>
+isBreak</H3>
+<PRE>
+public boolean <B>isBreak</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isCall()"><!-- --></A><H3>
+isCall</H3>
+<PRE>
+public boolean <B>isCall</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isCase()"><!-- --></A><H3>
+isCase</H3>
+<PRE>
+public boolean <B>isCase</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isCatch()"><!-- --></A><H3>
+isCatch</H3>
+<PRE>
+public boolean <B>isCatch</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isComma()"><!-- --></A><H3>
+isComma</H3>
+<PRE>
+public boolean <B>isComma</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isContinue()"><!-- --></A><H3>
+isContinue</H3>
+<PRE>
+public boolean <B>isContinue</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isDebugger()"><!-- --></A><H3>
+isDebugger</H3>
+<PRE>
+public boolean <B>isDebugger</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isDec()"><!-- --></A><H3>
+isDec</H3>
+<PRE>
+public boolean <B>isDec</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isDefaultCase()"><!-- --></A><H3>
+isDefaultCase</H3>
+<PRE>
+public boolean <B>isDefaultCase</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isDelProp()"><!-- --></A><H3>
+isDelProp</H3>
+<PRE>
+public boolean <B>isDelProp</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isDo()"><!-- --></A><H3>
+isDo</H3>
+<PRE>
+public boolean <B>isDo</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isEmpty()"><!-- --></A><H3>
+isEmpty</H3>
+<PRE>
+public boolean <B>isEmpty</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isExprResult()"><!-- --></A><H3>
+isExprResult</H3>
+<PRE>
+public boolean <B>isExprResult</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isFalse()"><!-- --></A><H3>
+isFalse</H3>
+<PRE>
+public boolean <B>isFalse</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isFor()"><!-- --></A><H3>
+isFor</H3>
+<PRE>
+public boolean <B>isFor</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isFunction()"><!-- --></A><H3>
+isFunction</H3>
+<PRE>
+public boolean <B>isFunction</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isGetterDef()"><!-- --></A><H3>
+isGetterDef</H3>
+<PRE>
+public boolean <B>isGetterDef</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isGetElem()"><!-- --></A><H3>
+isGetElem</H3>
+<PRE>
+public boolean <B>isGetElem</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isGetProp()"><!-- --></A><H3>
+isGetProp</H3>
+<PRE>
+public boolean <B>isGetProp</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isHook()"><!-- --></A><H3>
+isHook</H3>
+<PRE>
+public boolean <B>isHook</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isIf()"><!-- --></A><H3>
+isIf</H3>
+<PRE>
+public boolean <B>isIf</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isIn()"><!-- --></A><H3>
+isIn</H3>
+<PRE>
+public boolean <B>isIn</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isInc()"><!-- --></A><H3>
+isInc</H3>
+<PRE>
+public boolean <B>isInc</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isInstanceOf()"><!-- --></A><H3>
+isInstanceOf</H3>
+<PRE>
+public boolean <B>isInstanceOf</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isLabel()"><!-- --></A><H3>
+isLabel</H3>
+<PRE>
+public boolean <B>isLabel</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isLabelName()"><!-- --></A><H3>
+isLabelName</H3>
+<PRE>
+public boolean <B>isLabelName</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isName()"><!-- --></A><H3>
+isName</H3>
+<PRE>
+public boolean <B>isName</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isNE()"><!-- --></A><H3>
+isNE</H3>
+<PRE>
+public boolean <B>isNE</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isNew()"><!-- --></A><H3>
+isNew</H3>
+<PRE>
+public boolean <B>isNew</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isNot()"><!-- --></A><H3>
+isNot</H3>
+<PRE>
+public boolean <B>isNot</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isNull()"><!-- --></A><H3>
+isNull</H3>
+<PRE>
+public boolean <B>isNull</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isNumber()"><!-- --></A><H3>
+isNumber</H3>
+<PRE>
+public boolean <B>isNumber</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isObjectLit()"><!-- --></A><H3>
+isObjectLit</H3>
+<PRE>
+public boolean <B>isObjectLit</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isOr()"><!-- --></A><H3>
+isOr</H3>
+<PRE>
+public boolean <B>isOr</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isParamList()"><!-- --></A><H3>
+isParamList</H3>
+<PRE>
+public boolean <B>isParamList</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isRegExp()"><!-- --></A><H3>
+isRegExp</H3>
+<PRE>
+public boolean <B>isRegExp</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isReturn()"><!-- --></A><H3>
+isReturn</H3>
+<PRE>
+public boolean <B>isReturn</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isScript()"><!-- --></A><H3>
+isScript</H3>
+<PRE>
+public boolean <B>isScript</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isSetterDef()"><!-- --></A><H3>
+isSetterDef</H3>
+<PRE>
+public boolean <B>isSetterDef</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isString()"><!-- --></A><H3>
+isString</H3>
+<PRE>
+public boolean <B>isString</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isSwitch()"><!-- --></A><H3>
+isSwitch</H3>
+<PRE>
+public boolean <B>isSwitch</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isThis()"><!-- --></A><H3>
+isThis</H3>
+<PRE>
+public boolean <B>isThis</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isThrow()"><!-- --></A><H3>
+isThrow</H3>
+<PRE>
+public boolean <B>isThrow</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isTrue()"><!-- --></A><H3>
+isTrue</H3>
+<PRE>
+public boolean <B>isTrue</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isTry()"><!-- --></A><H3>
+isTry</H3>
+<PRE>
+public boolean <B>isTry</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isTypeOf()"><!-- --></A><H3>
+isTypeOf</H3>
+<PRE>
+public boolean <B>isTypeOf</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isVar()"><!-- --></A><H3>
+isVar</H3>
+<PRE>
+public boolean <B>isVar</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isVoid()"><!-- --></A><H3>
+isVoid</H3>
+<PRE>
+public boolean <B>isVoid</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isWhile()"><!-- --></A><H3>
+isWhile</H3>
+<PRE>
+public boolean <B>isWhile</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isWith()"><!-- --></A><H3>
+isWith</H3>
+<PRE>
+public boolean <B>isWith</B>()</PRE>
+<DL>
 <DD><DL>
 </DL>
 </DD>
@@ -4068,7 +5249,7 @@ public void <B>setQuotedString</B>()</PRE>
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/rhino/Kit.html" title="class in com.google.javascript.rhino"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.AncestorIterable.html" title="class in com.google.javascript.rhino"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/rhino/Node.html" target="_top"><B>FRAMES</B></A>  &nbsp;

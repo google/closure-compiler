@@ -52,7 +52,7 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/rhino/FunctionNode.html" title="class in com.google.javascript.rhino"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/rhino/IR.html" title="class in com.google.javascript.rhino"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/rhino/JSDocInfo.Marker.html" title="class in com.google.javascript.rhino"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/rhino/JSDocInfo.html" target="_top"><B>FRAMES</B></A>  &nbsp;
@@ -97,7 +97,7 @@ Class JSDocInfo</H2>
 </DL>
 <HR>
 <DL>
-<DT><PRE>public final class <B>JSDocInfo</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DL>
+<DT><PRE>public class <B>JSDocInfo</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DL>
 </PRE>
 
 <P>
@@ -138,10 +138,20 @@ Class JSDocInfo</H2>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.NamePosition.html" title="class in com.google.javascript.rhino">JSDocInfo.NamePosition</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A piece of information (found in a marker) which contains a position
+ with a name node.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;class</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.StringPosition.html" title="class in com.google.javascript.rhino">JSDocInfo.StringPosition</A></B></CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A piece of information in a marker containing a position with a string.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A piece of information (found in a marker) which contains a position
+ with a string.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -149,7 +159,8 @@ Class JSDocInfo</H2>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.TypePosition.html" title="class in com.google.javascript.rhino">JSDocInfo.TypePosition</A></B></CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A piece of information in a marker containing a position with a type.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A piece of information (found in a marker) which contains a position
+ with a type expression syntax tree.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -184,6 +195,30 @@ Class JSDocInfo</H2>
 <TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
 <TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
 <B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#addSuppression(java.lang.String)">addSuppression</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;suppression)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add a suppressed warning.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#containsDeclaration()">containsDeclaration</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#getAssociatedNode()">getAssociatedNode</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -244,6 +279,22 @@ Class JSDocInfo</H2>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino">JSTypeExpression</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#getExtendedInterfaces()">getExtendedInterfaces</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the interfaces extended by an interface</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#getExtendedInterfacesCount()">getExtendedInterfacesCount</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the number of extended interfaces specified</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#getFileOverview()">getFileOverview</A></B>()</CODE>
 
@@ -270,6 +321,14 @@ Class JSDocInfo</H2>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#getLendsName()">getLendsName</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the name we're lending to in a <code>@lends</code> annotation.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#getLicense()">getLicense</A></B>()</CODE>
 
 <BR>
@@ -282,6 +341,30 @@ Class JSDocInfo</H2>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the list of all markers for the documentation in this JSDoc.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#getMeaning()">getMeaning</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the meaning specified by the <code>@meaning</code> annotation.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#getModifies()">getModifies</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the set of sideeffect notations.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#getOriginalCommentString()">getOriginalCommentString</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the original JSDoc comment string.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -450,6 +533,14 @@ Class JSDocInfo</H2>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#hasModifies()">hasModifies</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#hasParameter(java.lang.String)">hasParameter</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;parameter)</CODE>
 
 <BR>
@@ -502,6 +593,14 @@ Class JSDocInfo</H2>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isConsistentIdGenerator()">isConsistentIdGenerator</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isConstant()">isConstant</A></B>()</CODE>
 
 <BR>
@@ -547,6 +646,15 @@ Class JSDocInfo</H2>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isExpose()">isExpose</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether the <code>@expose</code> annotation is present on this
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isExterns()">isExterns</A></B>()</CODE>
 
 <BR>
@@ -561,6 +669,14 @@ Class JSDocInfo</H2>
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether the <code>@hidden</code> annotation is present on this
  <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isIdGenerator()">isIdGenerator</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -642,6 +758,14 @@ Class JSDocInfo</H2>
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether the <code>@override</code> annotation is present on this
  <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#setAssociatedNode(com.google.javascript.rhino.Node)">setAssociatedNode</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the node associated with this JSDoc.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -735,6 +859,22 @@ public void <B>setDeprecated</B>(boolean&nbsp;value)</PRE>
 </DD>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isConsistentIdGenerator()"><!-- --></A><H3>
+isConsistentIdGenerator</H3>
+<PRE>
+public boolean <B>isConsistentIdGenerator</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>whether the <code>@consistentIdGenerator</code> is present on
+ this <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A></DL>
 </DD>
 </DL>
 <HR>
@@ -927,6 +1067,23 @@ public boolean <B>isExport</B>()</PRE>
 </DL>
 <HR>
 
+<A NAME="isExpose()"><!-- --></A><H3>
+isExpose</H3>
+<PRE>
+public boolean <B>isExpose</B>()</PRE>
+<DL>
+<DD>Returns whether the <code>@expose</code> annotation is present on this
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A>.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="isNoShadow()"><!-- --></A><H3>
 isNoShadow</H3>
 <PRE>
@@ -940,6 +1097,22 @@ public boolean <B>isNoShadow</B>()</PRE>
 </DD>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isIdGenerator()"><!-- --></A><H3>
+isIdGenerator</H3>
+<PRE>
+public boolean <B>isIdGenerator</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>whether the <code>@idGenerator</code> is present on
+ this <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A></DL>
 </DD>
 </DL>
 <HR>
@@ -1029,11 +1202,42 @@ public boolean <B>isNoCompile</B>()</PRE>
 </DL>
 <HR>
 
+<A NAME="containsDeclaration()"><!-- --></A><H3>
+containsDeclaration</H3>
+<PRE>
+public boolean <B>containsDeclaration</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>Whether there is declaration present on this <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A>.</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="setVisibility(com.google.javascript.rhino.JSDocInfo.Visibility)"><!-- --></A><H3>
 setVisibility</H3>
 <PRE>
 public void <B>setVisibility</B>(<A HREF="../../../../com/google/javascript/rhino/JSDocInfo.Visibility.html" title="enum in com.google.javascript.rhino">JSDocInfo.Visibility</A>&nbsp;visibility)</PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="addSuppression(java.lang.String)"><!-- --></A><H3>
+addSuppression</H3>
+<PRE>
+public void <B>addSuppression</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;suppression)</PRE>
+<DL>
+<DD>Add a suppressed warning.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -1361,6 +1565,51 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-e
 </DL>
 <HR>
 
+<A NAME="getMeaning()"><!-- --></A><H3>
+getMeaning</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getMeaning</B>()</PRE>
+<DL>
+<DD>Gets the meaning specified by the <code>@meaning</code> annotation.
+
+ In localization systems, two messages with the same content but
+ different "meanings" may be translated differently. By default, we
+ use the name of the variable that the message is initialized to as
+ the "meaning" of the message.
+
+ But some code generators (like Closure Templates) inject their own
+ meaning with the jsdoc <code>@meaning</code> annotation.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getLendsName()"><!-- --></A><H3>
+getLendsName</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getLendsName</B>()</PRE>
+<DL>
+<DD>Gets the name we're lending to in a <code>@lends</code> annotation.
+
+ In many reflection APIs, you pass an anonymous object to a function,
+ and that function mixes the anonymous object into another object.
+ The <code>@lends</code> annotation allows the type system to track
+ those property assignments.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="getLicense()"><!-- --></A><H3>
 getLicense</H3>
 <PRE>
@@ -1462,6 +1711,40 @@ public int <B>getImplementedInterfaceCount</B>()</PRE>
 </DL>
 <HR>
 
+<A NAME="getExtendedInterfaces()"><!-- --></A><H3>
+getExtendedInterfaces</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino">JSTypeExpression</A>&gt; <B>getExtendedInterfaces</B>()</PRE>
+<DL>
+<DD>Returns the interfaces extended by an interface
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>An immutable list of JSTypeExpression objects that can
+    be resolved to types.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getExtendedInterfacesCount()"><!-- --></A><H3>
+getExtendedInterfacesCount</H3>
+<PRE>
+public int <B>getExtendedInterfacesCount</B>()</PRE>
+<DL>
+<DD>Gets the number of extended interfaces specified
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="getDeprecationReason()"><!-- --></A><H3>
 getDeprecationReason</H3>
 <PRE>
@@ -1484,6 +1767,22 @@ getSuppressions</H3>
 public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>getSuppressions</B>()</PRE>
 <DL>
 <DD>Returns the set of suppressed warnings.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getModifies()"><!-- --></A><H3>
+getModifies</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>getModifies</B>()</PRE>
+<DL>
+<DD>Returns the set of sideeffect notations.
 <P>
 <DD><DL>
 </DL>
@@ -1640,6 +1939,40 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-e
 </DL>
 <HR>
 
+<A NAME="getAssociatedNode()"><!-- --></A><H3>
+getAssociatedNode</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>getAssociatedNode</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setAssociatedNode(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+setAssociatedNode</H3>
+<PRE>
+public void <B>setAssociatedNode</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node)</PRE>
+<DL>
+<DD>Sets the node associated with this JSDoc.
+ Notice that many nodes may have pointer to the same JSDocInfo
+ object (because we propagate it across the type graph). But there
+ is only one canonical "owner" node of the JSDocInfo, which corresponds
+ to its original place in the syntax tree.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="getSourceName()"><!-- --></A><H3>
 getSourceName</H3>
 <PRE>
@@ -1706,6 +2039,37 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?
 <DT><B>Returns:</B><DD>collection of all type nodes</DL>
 </DD>
 </DL>
+<HR>
+
+<A NAME="hasModifies()"><!-- --></A><H3>
+hasModifies</H3>
+<PRE>
+public boolean <B>hasModifies</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getOriginalCommentString()"><!-- --></A><H3>
+getOriginalCommentString</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getOriginalCommentString</B>()</PRE>
+<DL>
+<DD>Returns the original JSDoc comment string. Returns null unless
+ parseJsDocDocumentation is enabled via the ParserConfig.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
 <!-- ========= END OF CLASS DATA ========= -->
 <HR>
 
@@ -1736,7 +2100,7 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/rhino/FunctionNode.html" title="class in com.google.javascript.rhino"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/rhino/IR.html" title="class in com.google.javascript.rhino"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/rhino/JSDocInfo.Marker.html" title="class in com.google.javascript.rhino"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/rhino/JSDocInfo.html" target="_top"><B>FRAMES</B></A>  &nbsp;

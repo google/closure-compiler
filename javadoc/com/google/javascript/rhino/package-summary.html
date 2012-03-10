@@ -79,9 +79,7 @@ function windowTitle()
 <H2>
 Package com.google.javascript.rhino
 </H2>
-The core parsing functionality for
-<a href="http://www.mozilla.org/rhino/">Rhino</a> but with the support for
-embedding and scripting removed.
+The core AST from <a href="http://www.mozilla.org/rhino/">Rhino</a>.
 <P>
 <B>See:</B>
 <BR>
@@ -109,20 +107,12 @@ embedding and scripting removed.
 <B>Class Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/CompilerEnvirons.html" title="class in com.google.javascript.rhino">CompilerEnvirons</A></B></TD>
-<TD>&nbsp;</TD>
+<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A></B></TD>
+<TD>An id used uniquely identify a CompilerInput</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/Context.html" title="class in com.google.javascript.rhino">Context</A></B></TD>
-<TD>This class represents the runtime context of an executing script.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/Decompiler.html" title="class in com.google.javascript.rhino">Decompiler</A></B></TD>
-<TD>The following class save decompilation information about the source.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/FunctionNode.html" title="class in com.google.javascript.rhino">FunctionNode</A></B></TD>
-<TD>&nbsp;</TD>
+<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/IR.html" title="class in com.google.javascript.rhino">IR</A></B></TD>
+<TD>An AST construction helper class</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A></B></TD>
@@ -134,12 +124,19 @@ embedding and scripting removed.
  for this JSDocInfo.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
+<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.NamePosition.html" title="class in com.google.javascript.rhino">JSDocInfo.NamePosition</A></B></TD>
+<TD>A piece of information (found in a marker) which contains a position
+ with a name node.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.StringPosition.html" title="class in com.google.javascript.rhino">JSDocInfo.StringPosition</A></B></TD>
-<TD>A piece of information in a marker containing a position with a string.</TD>
+<TD>A piece of information (found in a marker) which contains a position
+ with a string.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.TypePosition.html" title="class in com.google.javascript.rhino">JSDocInfo.TypePosition</A></B></TD>
-<TD>A piece of information in a marker containing a position with a type.</TD>
+<TD>A piece of information (found in a marker) which contains a position
+ with a type expression syntax tree.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html" title="class in com.google.javascript.rhino">JSDocInfoBuilder</A></B></TD>
@@ -151,10 +148,6 @@ embedding and scripting removed.
  type expression can be evaluated later.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/Kit.html" title="class in com.google.javascript.rhino">Kit</A></B></TD>
-<TD>Collection of utilities</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></B></TD>
 <TD>This class implements the root of the intermediate representation.</TD>
 </TR>
@@ -163,24 +156,8 @@ embedding and scripting removed.
 <TD>Iterator to go up the ancestor tree.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/ObjArray.html" title="class in com.google.javascript.rhino">ObjArray</A></B></TD>
-<TD>Implementation of resizable array with focus on minimizing memory usage by storing few initial array elements in object fields.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/ObjToIntMap.html" title="class in com.google.javascript.rhino">ObjToIntMap</A></B></TD>
-<TD>Map to associate objects to integers.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/ObjToIntMap.Iterator.html" title="class in com.google.javascript.rhino">ObjToIntMap.Iterator</A></B></TD>
-<TD>&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/Parser.html" title="class in com.google.javascript.rhino">Parser</A></B></TD>
-<TD>This class implements the JavaScript parser.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/ScriptOrFnNode.html" title="class in com.google.javascript.rhino">ScriptOrFnNode</A></B></TD>
-<TD>&nbsp;</TD>
+<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/Node.SideEffectFlags.html" title="class in com.google.javascript.rhino">Node.SideEffectFlags</A></B></TD>
+<TD>A helper class for getting and setting the side-effect flags.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/ScriptRuntime.html" title="class in com.google.javascript.rhino">ScriptRuntime</A></B></TD>
@@ -204,14 +181,6 @@ embedding and scripting removed.
 <TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/TokenStream.html" title="class in com.google.javascript.rhino">TokenStream</A></B></TD>
 <TD>This class implements the JavaScript scanner.</TD>
 </TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/UintMap.html" title="class in com.google.javascript.rhino">UintMap</A></B></TD>
-<TD>Map to associate non-negative integers to objects or integers.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/UniqueTag.html" title="class in com.google.javascript.rhino">UniqueTag</A></B></TD>
-<TD>Class instances represent serializable tags to mark special Object values.</TD>
-</TR>
 </TABLE>
 &nbsp;
 
@@ -230,39 +199,12 @@ embedding and scripting removed.
 &nbsp;
 
 <P>
-
-<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
-<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
-<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
-<B>Exception Summary</B></FONT></TH>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/EcmaError.html" title="class in com.google.javascript.rhino">EcmaError</A></B></TD>
-<TD>The class of exceptions raised by the engine as described in
- ECMA edition 3.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/EvaluatorException.html" title="class in com.google.javascript.rhino">EvaluatorException</A></B></TD>
-<TD>The class of exceptions thrown by the JavaScript engine.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../com/google/javascript/rhino/RhinoException.html" title="class in com.google.javascript.rhino">RhinoException</A></B></TD>
-<TD>The class of exceptions thrown by the JavaScript engine.</TD>
-</TR>
-</TABLE>
-&nbsp;
-
-<P>
 <A NAME="package_description"><!-- --></A><H2>
 Package com.google.javascript.rhino Description
 </H2>
 
 <P>
-The core parsing functionality for
-<a href="http://www.mozilla.org/rhino/">Rhino</a> but with the support for
-embedding and scripting removed.
-With respect to the compiler, Rhino is primarily used to build up the
-abstract syntax tree (AST).
+The core AST from <a href="http://www.mozilla.org/rhino/">Rhino</a>.
 
 Rhino is an open-source implementation of JavaScript written entirely in Java.
 It is typically embedded into Java applications to provide scripting to end

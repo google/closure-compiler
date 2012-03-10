@@ -117,10 +117,9 @@ An error reporter which consumes all calls and performs no actions.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/parsing/NullErrorReporter.html#error(java.lang.String, java.lang.String, int, java.lang.String, int)">error</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/parsing/NullErrorReporter.html#error(java.lang.String, java.lang.String, int, int)">error</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
       <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
       int&nbsp;line,
-      <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;lineSource,
       int&nbsp;lineOffset)</CODE>
 
 <BR>
@@ -128,7 +127,7 @@ An error reporter which consumes all calls and performs no actions.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;com.google.javascript.jscomp.mozilla.rhino.ErrorReporter</CODE></FONT></TD>
+<CODE>static&nbsp;com.google.javascript.rhino.head.ErrorReporter</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/parsing/NullErrorReporter.html#forNewRhino()">forNewRhino</A></B>()</CODE>
 
 <BR>
@@ -145,10 +144,9 @@ An error reporter which consumes all calls and performs no actions.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/parsing/NullErrorReporter.html#warning(java.lang.String, java.lang.String, int, java.lang.String, int)">warning</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/parsing/NullErrorReporter.html#warning(java.lang.String, java.lang.String, int, int)">warning</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
         <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
         int&nbsp;line,
-        <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;lineSource,
         int&nbsp;lineOffset)</CODE>
 
 <BR>
@@ -177,13 +175,12 @@ An error reporter which consumes all calls and performs no actions.
 </TR>
 </TABLE>
 
-<A NAME="error(java.lang.String, java.lang.String, int, java.lang.String, int)"><!-- --></A><H3>
+<A NAME="error(java.lang.String, java.lang.String, int, int)"><!-- --></A><H3>
 error</H3>
 <PRE>
 public void <B>error</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
                   <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
                   int&nbsp;line,
-                  <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;lineSource,
                   int&nbsp;lineOffset)</PRE>
 <DL>
 <DD><DL>
@@ -192,13 +189,12 @@ public void <B>error</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lan
 </DL>
 <HR>
 
-<A NAME="warning(java.lang.String, java.lang.String, int, java.lang.String, int)"><!-- --></A><H3>
+<A NAME="warning(java.lang.String, java.lang.String, int, int)"><!-- --></A><H3>
 warning</H3>
 <PRE>
 public void <B>warning</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;message,
                     <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
                     int&nbsp;line,
-                    <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;lineSource,
                     int&nbsp;lineOffset)</PRE>
 <DL>
 <DD><DL>
@@ -221,7 +217,7 @@ public static <A HREF="../../../../../com/google/javascript/rhino/ErrorReporter.
 <A NAME="forNewRhino()"><!-- --></A><H3>
 forNewRhino</H3>
 <PRE>
-public static com.google.javascript.jscomp.mozilla.rhino.ErrorReporter <B>forNewRhino</B>()</PRE>
+public static com.google.javascript.rhino.head.ErrorReporter <B>forNewRhino</B>()</PRE>
 <DL>
 <DD><DL>
 </DL>

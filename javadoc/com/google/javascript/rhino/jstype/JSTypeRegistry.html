@@ -174,6 +174,15 @@ The type registry is used to resolve named types.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#clearNamedTypes()">clearNamedTypes</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Flushes out the current resolved and unresovled Named Types from
+ the type registry.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#clearTemplateTypeName()">clearTemplateTypeName</A></B>()</CODE>
 
 <BR>
@@ -237,7 +246,8 @@ The type registry is used to resolve named types.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/EnumType.html" title="class in com.google.javascript.rhino.jstype">EnumType</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#createEnumType(java.lang.String, com.google.javascript.rhino.jstype.JSType)">createEnumType</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#createEnumType(java.lang.String, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.JSType)">createEnumType</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+               <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;source,
                <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;elementsType)</CODE>
 
 <BR>
@@ -249,17 +259,6 @@ The type registry is used to resolve named types.
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#createFromTypeNodes(com.google.javascript.rhino.Node, java.lang.String, com.google.javascript.rhino.jstype.StaticScope)">createFromTypeNodes</A></B>(<A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
                     <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
                     <A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a JSType from the nodes representing a type.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#createFromTypeNodes(com.google.javascript.rhino.Node, java.lang.String, com.google.javascript.rhino.jstype.StaticScope, boolean)">createFromTypeNodes</A></B>(<A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
-                    <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
-                    <A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope,
-                    boolean&nbsp;forgiving)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a JSType from the nodes representing a type.</TD>
@@ -473,8 +472,8 @@ The type registry is used to resolve named types.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/RecordType.html" title="class in com.google.javascript.rhino.jstype">RecordType</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#createRecordType(java.util.Map)">createRecordType</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;properties)</CODE>
+<CODE>&nbsp;com.google.javascript.rhino.jstype.RecordType</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#createRecordType(java.util.Map)">createRecordType</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty&gt;&nbsp;properties)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a record type.</TD>
@@ -503,7 +502,7 @@ The type registry is used to resolve named types.
             <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;t)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records declared type names.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records declared global type names.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -520,6 +519,15 @@ The type registry is used to resolve named types.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns a collection of types that directly implement <code>interfaceInstance</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#getEachReferenceTypeWithProperty(java.lang.String)">getEachReferenceTypeWithProperty</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns each reference type that has a property <code>propertyName</code>
+ defined on it.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -585,7 +593,7 @@ The type registry is used to resolve named types.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;</CODE></FONT></TD>
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#getTypesWithProperty(java.lang.String)">getTypesWithProperty</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</CODE>
 
 <BR>
@@ -602,10 +610,10 @@ The type registry is used to resolve named types.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#identifyEnumName(java.lang.String)">identifyEnumName</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#identifyNonNullableName(java.lang.String)">identifyNonNullableName</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Identifies the name of an enum before we actually declare it.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Identifies the name of a typedef or enum before we actually declare it.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -626,8 +634,17 @@ The type registry is used to resolve named types.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#registerPropertyOnType(java.lang.String, com.google.javascript.rhino.jstype.ObjectType)">registerPropertyOnType</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName,
-                       <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;owner)</CODE>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#overwriteDeclaredType(java.lang.String, com.google.javascript.rhino.jstype.JSType)">overwriteDeclaredType</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+                      <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;t)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Overrides a declared global type name.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#registerPropertyOnType(java.lang.String, com.google.javascript.rhino.jstype.JSType)">registerPropertyOnType</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName,
+                       <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tells the type system that <code>owner</code> may have a property named
@@ -640,6 +657,15 @@ The type registry is used to resolve named types.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Reset to run the TypeCheck pass.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#resetImplicitPrototype(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.ObjectType)">resetImplicitPrototype</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type,
+                       <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;newImplicitProto)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Set the implicit prototype if it's possible to do so.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -680,6 +706,16 @@ The type registry is used to resolve named types.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#unregisterPropertyOnType(java.lang.String, com.google.javascript.rhino.jstype.JSType)">unregisterPropertyOnType</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName,
+                         <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Removes the index's reference to a property on the given type (if it is
+ currently registered).</TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
@@ -794,11 +830,11 @@ public void <B>resetForTypeCheck</B>()</PRE>
 </DL>
 <HR>
 
-<A NAME="registerPropertyOnType(java.lang.String, com.google.javascript.rhino.jstype.ObjectType)"><!-- --></A><H3>
+<A NAME="registerPropertyOnType(java.lang.String, com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
 registerPropertyOnType</H3>
 <PRE>
 public void <B>registerPropertyOnType</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName,
-                                   <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;owner)</PRE>
+                                   <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</PRE>
 <DL>
 <DD>Tells the type system that <code>owner</code> may have a property named
  <code>propertyName</code>. This allows the registry to keep track of what
@@ -816,6 +852,25 @@ public void <B>registerPropertyOnType</B>(<A HREF="http://java.sun.com/javase/6/
 </DD>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="unregisterPropertyOnType(java.lang.String, com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
+unregisterPropertyOnType</H3>
+<PRE>
+public void <B>unregisterPropertyOnType</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName,
+                                     <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</PRE>
+<DL>
+<DD>Removes the index's reference to a property on the given type (if it is
+ currently registered). If the property is not registered on the type yet,
+ this method will not change internal state.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>propertyName</CODE> - the name of the property to unregister<DD><CODE>type</CODE> - the type to unregister the property on.</DL>
 </DD>
 </DL>
 <HR>
@@ -858,9 +913,37 @@ public boolean <B>canPropertyBeDefined</B>(<A HREF="../../../../../com/google/ja
 <A NAME="getTypesWithProperty(java.lang.String)"><!-- --></A><H3>
 getTypesWithProperty</H3>
 <PRE>
-public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt; <B>getTypesWithProperty</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt; <B>getTypesWithProperty</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</PRE>
 <DL>
 <DD>Returns each type that has a property <code>propertyName</code> defined on it.
+
+ Like most types in our type system, the collection of types returned
+ will be collapsed. This means that if a type is defined on
+ <code>Object</code> and on <code>Array</code>, it would be reasonable for this
+ method to return either <code>[Object, Array]</code> or just <code>[Object]</code>.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getEachReferenceTypeWithProperty(java.lang.String)"><!-- --></A><H3>
+getEachReferenceTypeWithProperty</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt; <B>getEachReferenceTypeWithProperty</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</PRE>
+<DL>
+<DD>Returns each reference type that has a property <code>propertyName</code>
+ defined on it.
+
+ Unlike most types in our type system, the collection of types returned
+ will not be collapsed. This means that if a type is defined on
+ <code>Object</code> and on <code>Array</code>, this method must return
+ <code>[Object, Array]</code>. It would not be correct to collapse them to
+ <code>[Object]</code>.
 <P>
 <DD><DL>
 </DL>
@@ -930,9 +1013,8 @@ declareType</H3>
 public boolean <B>declareType</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
                            <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;t)</PRE>
 <DL>
-<DD>Records declared type names. Given the limited scopes of JavaScript, all
- named types are dumped in a common global scope. We may need to revise this
- assumption in the future.
+<DD>Records declared global type names. This makes resolution faster
+ and more robust in the common case.
 <P>
 <DD><DL>
 </DL>
@@ -940,6 +1022,24 @@ public boolean <B>declareType</B>(<A HREF="http://java.sun.com/javase/6/docs/api
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>name</CODE> - The name of the type to be recorded.<DD><CODE>t</CODE> - The actual type being associated with the name.
 <DT><B>Returns:</B><DD>True if this name is not already defined, false otherwise.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="overwriteDeclaredType(java.lang.String, com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
+overwriteDeclaredType</H3>
+<PRE>
+public void <B>overwriteDeclaredType</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+                                  <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;t)</PRE>
+<DL>
+<DD>Overrides a declared global type name. Throws an exception if this
+ type name hasn't been declared yet.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
 </DD>
 </DL>
 <HR>
@@ -1076,6 +1176,24 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" t
 </DL>
 <HR>
 
+<A NAME="clearNamedTypes()"><!-- --></A><H3>
+clearNamedTypes</H3>
+<PRE>
+public void <B>clearNamedTypes</B>()</PRE>
+<DL>
+<DD>Flushes out the current resolved and unresovled Named Types from
+ the type registry.  This is intended to be used ONLY before a
+ compile is run.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="resolveTypesInScope(com.google.javascript.rhino.jstype.StaticScope)"><!-- --></A><H3>
 resolveTypesInScope</H3>
 <PRE>
@@ -1193,10 +1311,11 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" t
 </DL>
 <HR>
 
-<A NAME="createEnumType(java.lang.String, com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
+<A NAME="createEnumType(java.lang.String, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
 createEnumType</H3>
 <PRE>
 public <A HREF="../../../../../com/google/javascript/rhino/jstype/EnumType.html" title="class in com.google.javascript.rhino.jstype">EnumType</A> <B>createEnumType</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+                               <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;source,
                                <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;elementsType)</PRE>
 <DL>
 <DD>Creates an enum type.
@@ -1552,7 +1671,7 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.htm
 <A NAME="createRecordType(java.util.Map)"><!-- --></A><H3>
 createRecordType</H3>
 <PRE>
-public <A HREF="../../../../../com/google/javascript/rhino/jstype/RecordType.html" title="class in com.google.javascript.rhino.jstype">RecordType</A> <B>createRecordType</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;properties)</PRE>
+public com.google.javascript.rhino.jstype.RecordType <B>createRecordType</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty&gt;&nbsp;properties)</PRE>
 <DL>
 <DD>Creates a record type.
 <P>
@@ -1595,6 +1714,28 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.htm
 </DD>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="resetImplicitPrototype(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.ObjectType)"><!-- --></A><H3>
+resetImplicitPrototype</H3>
+<PRE>
+public boolean <B>resetImplicitPrototype</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type,
+                                      <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;newImplicitProto)</PRE>
+<DL>
+<DD>Set the implicit prototype if it's possible to do so.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>True if we were able to set the implicit prototype successfully,
+     false if it was not possible to do so for some reason. There are
+     a few different reasons why this could fail: for example, numbers
+     can't be implicit prototypes, and we don't want to change the implicit
+     prototype if other classes have already subclassed this one.</DL>
 </DD>
 </DL>
 <HR>
@@ -1676,12 +1817,12 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" t
 </DL>
 <HR>
 
-<A NAME="identifyEnumName(java.lang.String)"><!-- --></A><H3>
-identifyEnumName</H3>
+<A NAME="identifyNonNullableName(java.lang.String)"><!-- --></A><H3>
+identifyNonNullableName</H3>
 <PRE>
-public void <B>identifyEnumName</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+public void <B>identifyNonNullableName</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
 <DL>
-<DD>Identifies the name of an enum before we actually declare it.
+<DD>Identifies the name of a typedef or enum before we actually declare it.
 <P>
 <DD><DL>
 </DL>
@@ -1706,26 +1847,6 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" t
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>n</CODE> - The node with type info.<DD><CODE>sourceName</CODE> - The source file name.<DD><CODE>scope</CODE> - A scope for doing type name lookups.</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="createFromTypeNodes(com.google.javascript.rhino.Node, java.lang.String, com.google.javascript.rhino.jstype.StaticScope, boolean)"><!-- --></A><H3>
-createFromTypeNodes</H3>
-<PRE>
-public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>createFromTypeNodes</B>(<A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
-                                  <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
-                                  <A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope,
-                                  boolean&nbsp;forgiving)</PRE>
-<DL>
-<DD>Creates a JSType from the nodes representing a type.
-<P>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>n</CODE> - The node with type info.<DD><CODE>sourceName</CODE> - The source file name.<DD><CODE>scope</CODE> - A scope for doing type name lookups.<DD><CODE>forgiving</CODE> - Whether we should be forgiving about type names
-     that we can't find.</DL>
 </DD>
 </DL>
 <HR>

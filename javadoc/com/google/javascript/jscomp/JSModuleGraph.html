@@ -192,6 +192,26 @@ A <A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finds the deepest common dependency of two modules, including the
  modules themselves.</TD>
 </TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSModuleGraph.html#manageDependencies(com.google.javascript.jscomp.DependencyOptions, java.util.List)">manageDependencies</A></B>(<A HREF="../../../../com/google/javascript/jscomp/DependencyOptions.html" title="class in com.google.javascript.jscomp">DependencyOptions</A>&nbsp;depOptions,
+                   <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>&gt;&nbsp;inputs)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Apply the dependency options to the list of sources, returning a new
+ source list re-ordering and dropping files as necessary.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSModuleGraph.html#manageDependencies(java.util.List, java.util.List)">manageDependencies</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;entryPoints,
+                   <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>&gt;&nbsp;inputs)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Applies a DependencyOptions in "dependency sorting" and "dependency pruning"
+ mode to the given list of inputs.</TD>
+</TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
@@ -303,6 +323,59 @@ public void <B>coalesceDuplicateFiles</B>()</PRE>
 <P>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="manageDependencies(java.util.List, java.util.List)"><!-- --></A><H3>
+manageDependencies</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>&gt; <B>manageDependencies</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;entryPoints,
+                                              <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>&gt;&nbsp;inputs)
+                                       throws <A HREF="../../../../com/google/javascript/jscomp/deps/SortedDependencies.CircularDependencyException.html" title="class in com.google.javascript.jscomp.deps">SortedDependencies.CircularDependencyException</A>,
+                                              <A HREF="../../../../com/google/javascript/jscomp/deps/SortedDependencies.MissingProvideException.html" title="class in com.google.javascript.jscomp.deps">SortedDependencies.MissingProvideException</A></PRE>
+<DL>
+<DD>Applies a DependencyOptions in "dependency sorting" and "dependency pruning"
+ mode to the given list of inputs. Returns a new list with the files sorted
+ and removed. This module graph will be updated to reflect the new list.
+
+ If you need more fine-grained dependency management, you should create your
+ own DependencyOptions and call
+ <code>manageDependencies(DependencyOptions, List&lt;CompilerInput&gt;)</code>.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>entryPoints</CODE> - The entry points into the program.
+     Expressed as JS symbols.<DD><CODE>inputs</CODE> - The original list of sources. Used to ensure that the sort
+     is stable.
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="../../../../com/google/javascript/jscomp/deps/SortedDependencies.CircularDependencyException.html" title="class in com.google.javascript.jscomp.deps">SortedDependencies.CircularDependencyException</A></CODE> - if there is a circular dependency
+     between the provides and requires.
+<DD><CODE><A HREF="../../../../com/google/javascript/jscomp/deps/SortedDependencies.MissingProvideException.html" title="class in com.google.javascript.jscomp.deps">SortedDependencies.MissingProvideException</A></CODE> - if an entry point was not provided
+     by any of the inputs.<DT><B>See Also:</B><DD><A HREF="../../../../com/google/javascript/jscomp/DependencyOptions.html" title="class in com.google.javascript.jscomp"><CODE>for more info on how this works.</CODE></A></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="manageDependencies(com.google.javascript.jscomp.DependencyOptions, java.util.List)"><!-- --></A><H3>
+manageDependencies</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>&gt; <B>manageDependencies</B>(<A HREF="../../../../com/google/javascript/jscomp/DependencyOptions.html" title="class in com.google.javascript.jscomp">DependencyOptions</A>&nbsp;depOptions,
+                                              <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>&gt;&nbsp;inputs)
+                                       throws <A HREF="../../../../com/google/javascript/jscomp/deps/SortedDependencies.CircularDependencyException.html" title="class in com.google.javascript.jscomp.deps">SortedDependencies.CircularDependencyException</A>,
+                                              <A HREF="../../../../com/google/javascript/jscomp/deps/SortedDependencies.MissingProvideException.html" title="class in com.google.javascript.jscomp.deps">SortedDependencies.MissingProvideException</A></PRE>
+<DL>
+<DD>Apply the dependency options to the list of sources, returning a new
+ source list re-ordering and dropping files as necessary.
+ This module graph will be updated to reflect the new list.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>inputs</CODE> - The original list of sources. Used to ensure that the sort
+     is stable.
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="../../../../com/google/javascript/jscomp/deps/SortedDependencies.CircularDependencyException.html" title="class in com.google.javascript.jscomp.deps">SortedDependencies.CircularDependencyException</A></CODE> - if there is a circular dependency
+     between the provides and requires.
+<DD><CODE><A HREF="../../../../com/google/javascript/jscomp/deps/SortedDependencies.MissingProvideException.html" title="class in com.google.javascript.jscomp.deps">SortedDependencies.MissingProvideException</A></CODE> - if an entry point was not provided
+     by any of the inputs.<DT><B>See Also:</B><DD><A HREF="../../../../com/google/javascript/jscomp/DependencyOptions.html" title="class in com.google.javascript.jscomp"><CODE>for more info on how this works.</CODE></A></DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->

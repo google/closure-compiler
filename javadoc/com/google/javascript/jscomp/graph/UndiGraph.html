@@ -73,9 +73,9 @@ function windowTitle()
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#methods_inherited_from_class_com.google.javascript.jscomp.graph.Graph">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;METHOD</FONT></TD>
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>
 </TABLE>
 <A NAME="skip-navbar_top"></A>
@@ -174,6 +174,14 @@ A generic undirected graph.
 <TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
 <B>Method Summary</B></FONT></TH>
 </TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>abstract &nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.UndiGraphNode.html" title="interface in com.google.javascript.jscomp.graph">UndiGraph.UndiGraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.html" title="type parameter in UndiGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.html" title="type parameter in UndiGraph">E</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.html#getUndirectedGraphNode(N)">getUndirectedGraphNode</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.html" title="type parameter in UndiGraph">N</A>&nbsp;nodeValue)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_com.google.javascript.jscomp.graph.Graph"><!-- --></A>
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
@@ -181,7 +189,7 @@ A generic undirected graph.
 <TH ALIGN="left"><B>Methods inherited from class com.google.javascript.jscomp.graph.<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#clearEdgeAnnotations()">clearEdgeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#clearNodeAnnotations()">clearNodeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#connect(N, E, N)">connect</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#connectIfNotFound(N, E, N)">connectIfNotFound</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#createNode(N)">createNode</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#disconnect(N, N)">disconnect</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getEdges()">getEdges</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getEdges(N, N)">getEdges</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNeighborNodes(N)">getNeighborNodes</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNeighborNodesIterator(N)">getNeighborNodesIterator</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNodeDegree(N)">getNodeDegree</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNodes()">getNodes</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getWeight(N)">getWeight</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#hasNode(N)">hasNode</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#isConnected(N, E, N)">isConnected</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#isConnected(N, N)">isConnected</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#popEdgeAnnotations()">popEdgeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#popNodeAnnotations()">popNodeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#pushEdgeAnnotations()">pushEdgeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#pushNodeAnnotations()">pushNodeAnnotations</A></CODE></TD>
+<TD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#clearEdgeAnnotations()">clearEdgeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#clearNodeAnnotations()">clearNodeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#connect(N, E, N)">connect</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#connectIfNotFound(N, E, N)">connectIfNotFound</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#createNode(N)">createNode</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#disconnect(N, N)">disconnect</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getEdges()">getEdges</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getEdges(N, N)">getEdges</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getFirstEdge(N, N)">getFirstEdge</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNeighborNodes(N)">getNeighborNodes</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNeighborNodesIterator(N)">getNeighborNodesIterator</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNodeDegree(N)">getNodeDegree</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNodes()">getNodes</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getWeight(N)">getWeight</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#hasNode(N)">hasNode</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#isConnected(N, E, N)">isConnected</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#isConnected(N, N)">isConnected</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#popEdgeAnnotations()">popEdgeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#popNodeAnnotations()">popNodeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#pushEdgeAnnotations()">pushEdgeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#pushNodeAnnotations()">pushNodeAnnotations</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
@@ -220,6 +228,26 @@ UndiGraph</H3>
 <PRE>
 public <B>UndiGraph</B>()</PRE>
 <DL>
+</DL>
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<A NAME="method_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Method Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="getUndirectedGraphNode(java.lang.Object)"><!-- --></A><A NAME="getUndirectedGraphNode(N)"><!-- --></A><H3>
+getUndirectedGraphNode</H3>
+<PRE>
+public abstract <A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.UndiGraphNode.html" title="interface in com.google.javascript.jscomp.graph">UndiGraph.UndiGraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.html" title="type parameter in UndiGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.html" title="type parameter in UndiGraph">E</A>&gt; <B>getUndirectedGraphNode</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.html" title="type parameter in UndiGraph">N</A>&nbsp;nodeValue)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->
 <HR>
@@ -272,9 +300,9 @@ public <B>UndiGraph</B>()</PRE>
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#methods_inherited_from_class_com.google.javascript.jscomp.graph.Graph">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;METHOD</FONT></TD>
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>
 </TABLE>
 <A NAME="skip-navbar_bottom"></A>

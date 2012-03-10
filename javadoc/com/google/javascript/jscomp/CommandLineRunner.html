@@ -52,7 +52,7 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassType.html" title="enum in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/CompilationLevel.html" title="enum in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/CommandLineRunner.html" target="_top"><B>FRAMES</B></A>  &nbsp;
@@ -103,12 +103,13 @@ CommandLineRunner translates flags into Java API calls on the Compiler.
  This class may be extended and used to create other Java classes
  that behave the same as running the Compiler from the command line. If you
  want to run the compiler in-process in Java, you should look at this class
- for hints on what API calls to make, but you should not use this class directly.
+ for hints on what API calls to make, but you should not use this class
+ directly.
 
  Example:
  <pre>
  class MyCommandLineRunner extends CommandLineRunner {
-   MyCommandLineRunner(String[] args) throws CmdLineException {
+   MyCommandLineRunner(String[] args) {
      super(args);
    }
 
@@ -119,14 +120,17 @@ CommandLineRunner translates flags into Java API calls on the Compiler.
    }
 
    public static void main(String[] args) {
-     try {
-       (new MyCommandLineRunner(args)).run();
-     } catch (CmdLineException e) {
+     MyCommandLineRunner runner = new MyCommandLineRunner(args);
+     if (runner.shouldRunCompiler()) {
+       runner.run();
+     } else {
        System.exit(-1);
      }
    }
  }
  </pre>
+
+ This class is totally not thread-safe.
 <P>
 
 <P>
@@ -143,11 +147,20 @@ CommandLineRunner translates flags into Java API calls on the Compiler.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected static&nbsp;class</CODE></FONT></TD>
+<CODE>static&nbsp;class</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/AbstractCommandLineRunner.FlagUsageException.html" title="class in com.google.javascript.jscomp">AbstractCommandLineRunner.FlagUsageException</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;An exception thrown when command-line flags are used incorrectly.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected static&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/AbstractCommandLineRunner.WarningGuardSpec.html" title="class in com.google.javascript.jscomp">AbstractCommandLineRunner.WarningGuardSpec</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A little helper class to make it easier to collect warning types
+ from --jscomp_error, --jscomp_warning, and --jscomp_off.</TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -189,6 +202,14 @@ CommandLineRunner translates flags into Java API calls on the Compiler.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html#checkModuleName(java.lang.String)">checkModuleName</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Validates the module name.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>protected &nbsp;<A HREF="../../../../com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html#createCompiler()">createCompiler</A></B>()</CODE>
 
@@ -198,11 +219,20 @@ CommandLineRunner translates flags into Java API calls on the Compiler.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected &nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;</CODE></FONT></TD>
+<CODE>protected &nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html#createExterns()">createExterns</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html#createInputs(java.util.List, boolean)">createInputs</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;files,
+             boolean&nbsp;allowStdIn)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates inputs from a list of files.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -222,6 +252,14 @@ CommandLineRunner translates flags into Java API calls on the Compiler.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/io/OutputStream.html?is-external=true" title="class or interface in java.io">OutputStream</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html#filenameToOutputStream(java.lang.String)">filenameToOutputStream</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;fileName)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Converts a file name into a Ouputstream.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>protected &nbsp;com.google.javascript.jscomp.AbstractCommandLineRunner.CommandLineConfig</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html#getCommandLineConfig()">getCommandLineConfig</A></B>()</CODE>
 
@@ -238,7 +276,7 @@ CommandLineRunner translates flags into Java API calls on the Compiler.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;</CODE></FONT></TD>
+<CODE>static&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html#getDefaultExterns()">getDefaultExterns</A></B>()</CODE>
 
 <BR>
@@ -250,7 +288,7 @@ CommandLineRunner translates flags into Java API calls on the Compiler.
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html#getDiagnosticGroups()">getDiagnosticGroups</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The warning classes that are available from the command-line.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -267,7 +305,15 @@ CommandLineRunner translates flags into Java API calls on the Compiler.
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html#initOptionsFromFlags(com.google.javascript.jscomp.CompilerOptions)">initOptionsFromFlags</A></B>(<A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Deprecated.</B>&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html#isInTestMode()">isInTestMode</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether we're in test mode.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -289,10 +335,10 @@ CommandLineRunner translates flags into Java API calls on the Compiler.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>protected &nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html#setRunOptions(B)">setRunOptions</A></B>(B&nbsp;options)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CommandLineRunner.html#setRunOptions(com.google.javascript.jscomp.CompilerOptions)">setRunOptions</A></B>(<A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets options based on the configurations set flags API.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -394,9 +440,9 @@ protected <A HREF="../../../../com/google/javascript/jscomp/Compiler.html" title
 <A NAME="createExterns()"><!-- --></A><H3>
 createExterns</H3>
 <PRE>
-protected <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt; <B>createExterns</B>()
-                                    throws <A HREF="../../../../com/google/javascript/jscomp/AbstractCommandLineRunner.FlagUsageException.html" title="class in com.google.javascript.jscomp">AbstractCommandLineRunner.FlagUsageException</A>,
-                                           <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+protected <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt; <B>createExterns</B>()
+                                  throws <A HREF="../../../../com/google/javascript/jscomp/AbstractCommandLineRunner.FlagUsageException.html" title="class in com.google.javascript.jscomp">AbstractCommandLineRunner.FlagUsageException</A>,
+                                         <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
 <DL>
 <DD><DL>
 </DL>
@@ -413,8 +459,8 @@ protected <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-
 <A NAME="getDefaultExterns()"><!-- --></A><H3>
 getDefaultExterns</H3>
 <PRE>
-public static <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt; <B>getDefaultExterns</B>()
-                                            throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+public static <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt; <B>getDefaultExterns</B>()
+                                          throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
 <DL>
 <DD><DL>
 
@@ -450,6 +496,19 @@ public static void <B>main</B>(<A HREF="http://java.sun.com/javase/6/docs/api/ja
 </DL>
 <HR>
 
+<A NAME="isInTestMode()"><!-- --></A><H3>
+isInTestMode</H3>
+<PRE>
+protected boolean <B>isInTestMode</B>()</PRE>
+<DL>
+<DD>Returns whether we're in test mode.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="getCommandLineConfig()"><!-- --></A><H3>
 getCommandLineConfig</H3>
 <PRE>
@@ -468,6 +527,8 @@ getDiagnosticGroups</H3>
 <PRE>
 protected <A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroups.html" title="class in com.google.javascript.jscomp">DiagnosticGroups</A> <B>getDiagnosticGroups</B>()</PRE>
 <DL>
+<DD>The warning classes that are available from the command-line.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -477,10 +538,36 @@ protected <A HREF="../../../../com/google/javascript/jscomp/DiagnosticGroups.htm
 <A NAME="initOptionsFromFlags(com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
 initOptionsFromFlags</H3>
 <PRE>
-protected void <B>initOptionsFromFlags</B>(<A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
+<FONT SIZE="-1"><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Deprecated.html?is-external=true" title="class or interface in java.lang">@Deprecated</A>
+</FONT>protected void <B>initOptionsFromFlags</B>(<A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
 <DL>
+<DD><B>Deprecated.</B>&nbsp;
+<P>
+<DD>No longer does anything.
+<P>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setRunOptions(com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
+setRunOptions</H3>
+<PRE>
+protected void <B>setRunOptions</B>(<A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)
+                      throws <A HREF="../../../../com/google/javascript/jscomp/AbstractCommandLineRunner.FlagUsageException.html" title="class in com.google.javascript.jscomp">AbstractCommandLineRunner.FlagUsageException</A>,
+                             <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>Sets options based on the configurations set flags API.
+ Called during the run() run() method.
+ If you want to ignore the flags API, or intepret flags your own way,
+ then you should override this method.
+<P>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCommandLineRunner.FlagUsageException.html" title="class in com.google.javascript.jscomp">AbstractCommandLineRunner.FlagUsageException</A></CODE>
+<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
 </DD>
 </DL>
 <HR>
@@ -492,22 +579,6 @@ protected final A <B>getCompiler</B>()</PRE>
 <DL>
 <DD><DL>
 </DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="setRunOptions(com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><A NAME="setRunOptions(B)"><!-- --></A><H3>
-setRunOptions</H3>
-<PRE>
-protected final void <B>setRunOptions</B>(B&nbsp;options)
-                            throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A>,
-                                   <A HREF="../../../../com/google/javascript/jscomp/AbstractCommandLineRunner.FlagUsageException.html" title="class in com.google.javascript.jscomp">AbstractCommandLineRunner.FlagUsageException</A></PRE>
-<DL>
-<DD><DL>
-
-<DT><B>Throws:</B>
-<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE>
-<DD><CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCommandLineRunner.FlagUsageException.html" title="class in com.google.javascript.jscomp">AbstractCommandLineRunner.FlagUsageException</A></CODE></DL>
 </DD>
 </DL>
 <HR>
@@ -540,6 +611,46 @@ protected <A HREF="http://java.sun.com/javase/6/docs/api/java/io/PrintStream.htm
 </DL>
 <HR>
 
+<A NAME="createInputs(java.util.List, boolean)"><!-- --></A><H3>
+createInputs</H3>
+<PRE>
+protected <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>&gt; <B>createInputs</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;files,
+                                        boolean&nbsp;allowStdIn)
+                                 throws <A HREF="../../../../com/google/javascript/jscomp/AbstractCommandLineRunner.FlagUsageException.html" title="class in com.google.javascript.jscomp">AbstractCommandLineRunner.FlagUsageException</A>,
+                                        <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>Creates inputs from a list of files.
+
+ Can be overridden by subclasses who want to pull files from different
+ places.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>files</CODE> - A list of filenames<DD><CODE>allowStdIn</CODE> - Whether '-' is allowed appear as a filename to represent
+        stdin. If true, '-' is only allowed to appear once.
+<DT><B>Returns:</B><DD>An array of inputs
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCommandLineRunner.FlagUsageException.html" title="class in com.google.javascript.jscomp">AbstractCommandLineRunner.FlagUsageException</A></CODE>
+<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="checkModuleName(java.lang.String)"><!-- --></A><H3>
+checkModuleName</H3>
+<PRE>
+protected void <B>checkModuleName</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)
+                        throws <A HREF="../../../../com/google/javascript/jscomp/AbstractCommandLineRunner.FlagUsageException.html" title="class in com.google.javascript.jscomp">AbstractCommandLineRunner.FlagUsageException</A></PRE>
+<DL>
+<DD>Validates the module name. Can be overridden by subclasses.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>name</CODE> - The module name
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCommandLineRunner.FlagUsageException.html" title="class in com.google.javascript.jscomp">AbstractCommandLineRunner.FlagUsageException</A></CODE> - if the validation fails</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="doRun()"><!-- --></A><H3>
 doRun</H3>
 <PRE>
@@ -554,6 +665,23 @@ protected int <B>doRun</B>()
 <DT><B>Returns:</B><DD>system exit status
 <DT><B>Throws:</B>
 <DD><CODE><A HREF="../../../../com/google/javascript/jscomp/AbstractCommandLineRunner.FlagUsageException.html" title="class in com.google.javascript.jscomp">AbstractCommandLineRunner.FlagUsageException</A></CODE>
+<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="filenameToOutputStream(java.lang.String)"><!-- --></A><H3>
+filenameToOutputStream</H3>
+<PRE>
+protected <A HREF="http://java.sun.com/javase/6/docs/api/java/io/OutputStream.html?is-external=true" title="class or interface in java.io">OutputStream</A> <B>filenameToOutputStream</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;fileName)
+                                       throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>Converts a file name into a Ouputstream.
+ Returns null if the file name is null.
+<P>
+<DD><DL>
+
+<DT><B>Throws:</B>
 <DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
 </DD>
 </DL>
@@ -587,7 +715,7 @@ protected int <B>doRun</B>()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassType.html" title="enum in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConventions.Proxy.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/CompilationLevel.html" title="enum in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/CommandLineRunner.html" target="_top"><B>FRAMES</B></A>  &nbsp;

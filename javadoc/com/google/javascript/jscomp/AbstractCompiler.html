@@ -177,10 +177,18 @@ An abstract compiler, to help remove the circular dependency of
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>abstract &nbsp;<A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html#getInput(java.lang.String)">getInput</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html#getInput(com.google.javascript.rhino.InputId)">getInput</A></B>(<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A>&nbsp;inputId)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Looks up an input (possibly an externs input) by name.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>abstract &nbsp;double</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html#getProgress()">getProgress</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -271,10 +279,10 @@ public <B>AbstractCompiler</B>()</PRE>
 </TR>
 </TABLE>
 
-<A NAME="getInput(java.lang.String)"><!-- --></A><H3>
+<A NAME="getInput(com.google.javascript.rhino.InputId)"><!-- --></A><H3>
 getInput</H3>
 <PRE>
-public abstract <A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A> <B>getInput</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName)</PRE>
+public abstract <A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A> <B>getInput</B>(<A HREF="../../../../com/google/javascript/rhino/InputId.html" title="class in com.google.javascript.rhino">InputId</A>&nbsp;inputId)</PRE>
 <DL>
 <DD>Looks up an input (possibly an externs input) by name. May return null.
 <P>
@@ -395,6 +403,24 @@ public abstract <A HREF="../../../../com/google/javascript/jscomp/ErrorManager.h
 </DD>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getProgress()"><!-- --></A><H3>
+getProgress</H3>
+<PRE>
+public abstract double <B>getProgress</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>a number in [0,1] range indicating an approximate progress of the
+ last compile. Note this should only be used as a hint and no assumptions
+ should be made on accuracy, even a completed compile may choose not to set
+ this to 1.0 at the end.</DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->

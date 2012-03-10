@@ -52,8 +52,8 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/RecordType.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleSlot.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.Property.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleReference.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/RecordTypeBuilder.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="RecordTypeBuilder.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -133,8 +133,9 @@ A builder for record types.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/RecordTypeBuilder.html" title="class in com.google.javascript.rhino.jstype">RecordTypeBuilder</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/RecordTypeBuilder.html#addProperty(java.lang.String, com.google.javascript.rhino.jstype.JSType)">addProperty</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-            <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</CODE>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/RecordTypeBuilder.html#addProperty(java.lang.String, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node)">addProperty</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+            <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type,
+            <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;propertyNode)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adds a property with the given name and type to the record type.</TD>
@@ -187,17 +188,19 @@ public <B>RecordTypeBuilder</B>(<A HREF="../../../../../com/google/javascript/rh
 </TR>
 </TABLE>
 
-<A NAME="addProperty(java.lang.String, com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
+<A NAME="addProperty(java.lang.String, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node)"><!-- --></A><H3>
 addProperty</H3>
 <PRE>
 public <A HREF="../../../../../com/google/javascript/rhino/jstype/RecordTypeBuilder.html" title="class in com.google.javascript.rhino.jstype">RecordTypeBuilder</A> <B>addProperty</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-                                     <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</PRE>
+                                     <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type,
+                                     <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;propertyNode)</PRE>
 <DL>
 <DD>Adds a property with the given name and type to the record type.
 <P>
 <DD><DL>
-
-<DT><B>Returns:</B><DD>The builder itself for chaining purposes.</DL>
+<DT><B>Parameters:</B><DD><CODE>name</CODE> - the name of the new property<DD><CODE>type</CODE> - the JSType of the new property<DD><CODE>propertyNode</CODE> - the node that holds this property definition
+<DT><B>Returns:</B><DD>The builder itself for chaining purposes, or null if there's
+          a duplicate.</DL>
 </DD>
 </DL>
 <HR>
@@ -244,8 +247,8 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" t
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/RecordType.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleSlot.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.Property.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleReference.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/RecordTypeBuilder.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="RecordTypeBuilder.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;

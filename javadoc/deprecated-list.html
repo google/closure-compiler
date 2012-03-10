@@ -82,9 +82,25 @@ function windowTitle()
 </CENTER>
 <HR SIZE="4" NOSHADE>
 <B>Contents</B><UL>
+<LI><A HREF="#field">Deprecated Fields</A>
 <LI><A HREF="#method">Deprecated Methods</A>
+<LI><A HREF="#constructor">Deprecated Constructors</A>
 </UL>
 
+<A NAME="field"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Deprecated Fields</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><A HREF="com/google/javascript/jscomp/JSError.html#level">com.google.javascript.jscomp.JSError.level</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<I>Use #getDefaultLevel</I>&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;
+<P>
 <A NAME="method"><!-- --></A>
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
 <TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
@@ -92,32 +108,46 @@ function windowTitle()
 <B>Deprecated Methods</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><A HREF="com/google/javascript/rhino/EcmaError.html#getColumnNumber()">com.google.javascript.rhino.EcmaError.getColumnNumber()</A>
+<TD><A HREF="com/google/javascript/jscomp/parsing/ParserRunner.html#createConfig(boolean)">com.google.javascript.jscomp.parsing.ParserRunner.createConfig(boolean)</A>
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<I>Use <A HREF="com/google/javascript/rhino/RhinoException.html#columnNumber()"><CODE>RhinoException.columnNumber()</CODE></A> from the super class.</I>&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><A HREF="com/google/javascript/rhino/EcmaError.html#getLineNumber()">com.google.javascript.rhino.EcmaError.getLineNumber()</A>
+<TD><A HREF="com/google/javascript/jscomp/CompilerOptions.html#enableExternExports(boolean)">com.google.javascript.jscomp.CompilerOptions.enableExternExports(boolean)</A>
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<I>Use <A HREF="com/google/javascript/rhino/RhinoException.html#lineNumber()"><CODE>RhinoException.lineNumber()</CODE></A> from the super class.</I>&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<I>replaced by <A HREF="com/google/javascript/jscomp/CompilerOptions.html#setExternExports(boolean)"><CODE>CompilerOptions.setExternExports(boolean)</CODE></A></I>&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><A HREF="com/google/javascript/rhino/EcmaError.html#getLineSource()">com.google.javascript.rhino.EcmaError.getLineSource()</A>
+<TD><A HREF="com/google/javascript/rhino/JSDocInfo.Marker.html#getName()">com.google.javascript.rhino.JSDocInfo.Marker.getName()</A>
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<I>Use <A HREF="com/google/javascript/rhino/RhinoException.html#lineSource()"><CODE>RhinoException.lineSource()</CODE></A> from the super class.</I>&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<I>Use #getNameNode</I>&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><A HREF="com/google/javascript/rhino/EcmaError.html#getSourceName()">com.google.javascript.rhino.EcmaError.getSourceName()</A>
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<I>Use <A HREF="com/google/javascript/rhino/RhinoException.html#sourceName()"><CODE>RhinoException.sourceName()</CODE></A> from the super class.</I>&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><A HREF="com/google/javascript/rhino/Context.html#hasCompileFunctionsWithDynamicScope()">com.google.javascript.rhino.Context.hasCompileFunctionsWithDynamicScope()</A>
+<TD><A HREF="com/google/debugging/sourcemap/SourceMapSection.html#getSectionUrl()">com.google.debugging.sourcemap.SourceMapSection.getSectionUrl()</A>
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<I></I>&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><A HREF="com/google/javascript/rhino/Context.html#setCompileFunctionsWithDynamicScope(boolean)">com.google.javascript.rhino.Context.setCompileFunctionsWithDynamicScope(boolean)</A>
+<TD><A HREF="com/google/javascript/rhino/JSDocInfoBuilder.html#markName(java.lang.String, int, int)">com.google.javascript.rhino.JSDocInfoBuilder.markName(String, int, int)</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<I>Use #markName(String, StaticSourceFile, int, int)</I>&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><A HREF="com/google/javascript/jscomp/CompilerOptions.html#setRemoveUnusedVariable(com.google.javascript.jscomp.CompilerOptions.Reach)">com.google.javascript.jscomp.CompilerOptions.setRemoveUnusedVariable(CompilerOptions.Reach)</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;
+<P>
+<A NAME="constructor"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Deprecated Constructors</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><A HREF="com/google/debugging/sourcemap/SourceMapSection.html#SourceMapSection(java.lang.String, int, int)">com.google.debugging.sourcemap.SourceMapSection(String, int, int)</A>
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<I></I>&nbsp;&nbsp;</TD>
 </TR>

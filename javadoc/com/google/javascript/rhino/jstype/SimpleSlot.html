@@ -52,8 +52,8 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/RecordTypeBuilder.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleReference.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleSourceFile.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/SimpleSlot.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="SimpleSlot.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -93,11 +93,14 @@ Class SimpleSlot</H2>
   <IMG SRC="../../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.rhino.jstype.SimpleSlot</B>
 </PRE>
 <DL>
-<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</DD>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;, <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DD>
+</DL>
+<DL>
+<DT><B>Direct Known Subclasses:</B> <DD><A HREF="../../../../../com/google/javascript/jscomp/SymbolTable.Symbol.html" title="class in com.google.javascript.jscomp">SymbolTable.Symbol</A></DD>
 </DL>
 <HR>
 <DL>
-<DT><PRE>public class <B>SimpleSlot</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</DL>
+<DT><PRE>public class <B>SimpleSlot</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;, <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DL>
 </PRE>
 
 <P>
@@ -105,6 +108,8 @@ The minimum implementation of StaticSlot<JSType>.
 <P>
 
 <P>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../../serialized-form.html#com.google.javascript.rhino.jstype.SimpleSlot">Serialized Form</A></DL>
 <HR>
 
 <P>
@@ -134,6 +139,22 @@ The minimum implementation of StaticSlot<JSType>.
 <TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
 <TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
 <B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/StaticReference.html" title="interface in com.google.javascript.rhino.jstype">StaticReference</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleSlot.html#getDeclaration()">getDeclaration</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the declaration of this symbol.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleSlot.html#getJSDocInfo()">getJSDocInfo</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the JSDoc for this slot.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -251,6 +272,40 @@ public boolean <B>isTypeInferred</B>()</PRE>
 </DL>
 </DD>
 </DL>
+<HR>
+
+<A NAME="getDeclaration()"><!-- --></A><H3>
+getDeclaration</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/StaticReference.html" title="interface in com.google.javascript.rhino.jstype">StaticReference</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt; <B>getDeclaration</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html#getDeclaration()">StaticSlot</A></CODE></B></DD>
+<DD>Gets the declaration of this symbol. May not exist.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html#getDeclaration()">getDeclaration</A></CODE> in interface <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getJSDocInfo()"><!-- --></A><H3>
+getJSDocInfo</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A> <B>getJSDocInfo</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html#getJSDocInfo()">StaticSlot</A></CODE></B></DD>
+<DD>Gets the JSDoc for this slot.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html#getJSDocInfo()">getJSDocInfo</A></CODE> in interface <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/StaticSlot.html" title="interface in com.google.javascript.rhino.jstype">StaticSlot</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
 <!-- ========= END OF CLASS DATA ========= -->
 <HR>
 
@@ -281,8 +336,8 @@ public boolean <B>isTypeInferred</B>()</PRE>
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/RecordTypeBuilder.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleReference.html" title="class in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/SimpleSourceFile.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/SimpleSlot.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="SimpleSlot.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
