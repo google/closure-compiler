@@ -706,7 +706,7 @@ final class NameAnalyzer implements CompilerPass {
             return false;
           }
           // TODO(johnlenz): handle NEW calls that record their 'this'
-          // in global scope and effectly return an alias.
+          // in global scope and effectively return an alias.
           // Other non-local references are handled by this pass.
           return true;
         }
