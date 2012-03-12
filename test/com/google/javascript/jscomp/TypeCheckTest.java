@@ -2174,23 +2174,31 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testDuplicateStaticPropertyDecl4() throws Exception {
-    testTypes(
+    testClosureTypesMultipleWarnings(
         "var goog = goog || {};" +
         "/** @type {!Foo} */ goog.foo;" +
         "/** @type {string} */ goog.foo = 'x';" +
         "/** @constructor */ function Foo() {}",
-        "variable goog.foo redefined with type string, " +
-        "original definition at [testcode]:1 with type Foo");
+        Lists.newArrayList(
+            "assignment to property foo of goog\n" +
+            "found   : string\n" +
+            "required: Foo",
+            "variable goog.foo redefined with type string, " +
+            "original definition at [testcode]:1 with type Foo"));
   }
 
   public void testDuplicateStaticPropertyDecl5() throws Exception {
-    testTypes(
+    testClosureTypesMultipleWarnings(
         "var goog = goog || {};" +
         "/** @type {!Foo} */ goog.foo;" +
         "/** @type {string}\n * @suppress {duplicate} */ goog.foo = 'x';" +
         "/** @constructor */ function Foo() {}",
-        "variable goog.foo redefined with type string, " +
-        "original definition at [testcode]:1 with type Foo");
+        Lists.newArrayList(
+            "assignment to property foo of goog\n" +
+            "found   : string\n" +
+            "required: Foo",
+            "variable goog.foo redefined with type string, " +
+            "original definition at [testcode]:1 with type Foo"));
   }
 
   public void testDuplicateStaticPropertyDecl6() throws Exception {
@@ -2240,7 +2248,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function f(x) { /** @type {string} */ var x = ''; }",
         Lists.newArrayList(
             "variable x redefined with type string, original definition" +
-            " at  [testcode] :2 with type number",
+            " at [testcode]:2 with type number",
             "initializing variable\n" +
             "found   : string\n" +
             "required: number"));
@@ -2280,6 +2288,32 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */ function F() {}" +
         "/** jsdoc */ F.prototype.bar = function() {};" +
         "F.prototype.bar = function() {};");
+  }
+
+  public void testDuplicateInstanceMethod5() throws Exception {
+    testTypes(
+        "/** @constructor */ function F() {}" +
+        "/** jsdoc \n * @return {number} */ F.prototype.bar = function() {" +
+        "  return 3;" +
+        "};" +
+        "/** jsdoc \n * @suppress {duplicate} */ " +
+        "F.prototype.bar = function() { return ''; };",
+        "inconsistent return type\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
+  public void testDuplicateInstanceMethod6() throws Exception {
+    testTypes(
+        "/** @constructor */ function F() {}" +
+        "/** jsdoc \n * @return {number} */ F.prototype.bar = function() {" +
+        "  return 3;" +
+        "};" +
+        "/** jsdoc \n * @return {string} * \n @suppress {duplicate} */ " +
+        "F.prototype.bar = function() { return ''; };",
+        "assignment to property bar of F.prototype\n" +
+        "found   : function (this:F): string\n" +
+        "required: function (this:F): number");
   }
 
   public void testStubFunctionDeclaration1() throws Exception {
@@ -3511,6 +3545,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "goog.SubDisposable.prototype.dispose = function() { return 0; };");
   }
 
+  public void testGoodImplements7() throws Exception {
+    testTypes(
+        "var myNullFunction = function() {};" +
+        "/** @interface */\n" +
+        "goog.Disposable = function() {};" +
+        "/** @return {number} */" +
+        "goog.Disposable.prototype.dispose = function() {};" +
+        "/** @implements {goog.Disposable}\n * @constructor */" +
+        "goog.SubDisposable = function() {};" +
+        "/** @return {number} \n @override */ " +
+        "goog.SubDisposable.prototype.dispose = function() { return 0; };");
+  }
+
   public void testBadImplements1() throws Exception {
     testTypes("/** @interface */function Base1() {}\n" +
         "/** @interface */function Base2() {}\n" +
@@ -3542,6 +3589,26 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @implements {Disposable}\n * @interface */function f() {}",
         "f cannot implement this type; an interface can only extend, " +
         "but not implement interfaces");
+  }
+
+  public void testBadImplements5() throws Exception {
+    testTypes("/** @interface */function Disposable() {}\n" +
+        "/** @type {number} */ Disposable.prototype.bar = function() {};",
+        "assignment to property bar of Disposable.prototype\n" +
+        "found   : function (): undefined\n" +
+        "required: number");
+  }
+
+  public void testBadImplements6() throws Exception {
+    testClosureTypesMultipleWarnings(
+        "/** @interface */function Disposable() {}\n" +
+        "/** @type {function()} */ Disposable.prototype.bar = 3;",
+        Lists.newArrayList(
+            "assignment to property bar of Disposable.prototype\n" +
+            "found   : number\n" +
+            "required: function (): ?",
+            "interface members can only be empty property declarations, " +
+            "empty functions, or goog.abstractMethod"));
   }
 
   public void testInterfaceExtends() throws Exception {
@@ -4676,7 +4743,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testOverriddenParams4() throws Exception {
-    // TODO(nicksantos): This should emit a warning.
     testTypes(
         "/** @constructor */ function Foo() {}" +
         "/** @type {function(...[number])} */" +
@@ -4689,13 +4755,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         " * @type {function(number)}\n" +
         " * @override\n" +
         " */" +
-        "SubFoo.prototype.bar = function(x) {};");
-    /*
+        "SubFoo.prototype.bar = function(x) {};",
         "mismatch of the bar property type and the type of the " +
         "property it overrides from superclass Foo\n" +
-        "original: function (this:Foo, ...[number]): undefined\n" +
-        "override: function (this:SubFoo, number): undefined");
-        */
+        "original: function (...[number]): ?\n" +
+        "override: function (number): ?");
   }
 
   public void testOverriddenParams5() throws Exception {
@@ -4769,6 +4833,39 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "inconsistent return type\n" +
         "found   : goog.A\n" +
         "required: number");
+  }
+
+  public void testOverriddenProperty1() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @type {Object} */" +
+        "Foo.prototype.bar = {};" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() {}" +
+        "/**\n" +
+        " * @type {Array}\n" +
+        " * @override\n" +
+        " */" +
+        "SubFoo.prototype.bar = [];");
+  }
+
+  public void testOverriddenProperty2() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {" +
+        "  /** @type {Object} */" +
+        "  this.bar = {};" +
+        "}" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() {}" +
+        "/**\n" +
+        " * @type {Array}\n" +
+        " * @override\n" +
+        " */" +
+        "SubFoo.prototype.bar = [];");
   }
 
   public void testThis2() throws Exception {
@@ -5617,6 +5714,18 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "and no more than 1 argument(s).");
   }
 
+  public void testIssue635() throws Exception {
+    // TODO(nicksantos): Make this emit a warning, because of the 'this' type.
+    testTypes(
+        "/** @constructor */" +
+        "function F() {}" +
+        "F.prototype.bar = function() { this.baz(); };" +
+        "F.prototype.baz = function() {};" +
+        "/** @constructor */" +
+        "function G() {}" +
+        "G.prototype.bar = F.prototype.bar;");
+  }
+
   public void testIssue669() throws Exception {
     testTypes(
         "/** @return {{prop1: (Object|undefined)}} */" +
@@ -5819,7 +5928,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "var x = f();" +
         "/** @type {string} */" +
         "x.y = 3;",
-        "assignment to property y of x\n" +
+        "assignment\n" +
         "found   : number\n" +
         "required: string");
   }
@@ -7335,35 +7444,42 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Bad type annotation. Unknown type goog.Missing");
   }
 
-  // TODO(user): We should support this way of declaring properties as it is
-  // widely used.
-  //public void testInheritanceCheck15() throws Exception {
-  //  testTypes(
-  //      "/** @constructor */function Super() {};" +
-  //      "/** @param {number} bar */Super.prototype.foo;" +
-  //      "/** @constructor\n @extends {Super} */function Sub() {};" +
-  //      "/** @override\n  @param {number} bar */Sub.prototype.foo =\n" +
-  //      "function(bar) {};");
-  //}
+  public void testInheritanceCheck15() throws Exception {
+    testTypes(
+        "/** @constructor */function Super() {};" +
+        "/** @param {number} bar */Super.prototype.foo;" +
+        "/** @constructor\n @extends {Super} */function Sub() {};" +
+        "/** @override\n  @param {number} bar */Sub.prototype.foo =\n" +
+        "function(bar) {};");
+  }
 
-//   public void testInterfacePropertyOverride1() throws Exception {
-//     testTypes(
-//         "/** @interface */function Super() {};" +
-//         "/** @desc description */Super.prototype.foo = function() {};" +
-//         "/** @interface\n @extends {Super} */function Sub() {};" +
-//         "/** @desc description */Sub.prototype.foo = function() {};",
-//         "property foo is already defined by the Super extended interface");
-//   }
+  public void testInheritanceCheck16() throws Exception {
+    testTypes(
+        "var goog = {};" +
+        "/** @constructor */goog.Super = function() {};" +
+        "/** @type {number} */ goog.Super.prototype.foo = 3;" +
+        "/** @constructor\n @extends {goog.Super} */goog.Sub = function() {};" +
+        "/** @type {number} */ goog.Sub.prototype.foo = 5;",
+        "property foo already defined on superclass goog.Super; " +
+        "use @override to override it");
+  }
 
-//   public void testInterfacePropertyOverride2() throws Exception {
-//     testTypes(
-//         "/** @interface */function Root() {};" +
-//         "/** @desc description */Root.prototype.foo = function() {};" +
-//         "/** @interface\n @extends {Root} */function Super() {};" +
-//         "/** @interface\n @extends {Super} */function Sub() {};" +
-//         "/** @desc description */Sub.prototype.foo = function() {};",
-//         "property foo is already defined by the Root extended interface");
-//   }
+  public void testInterfacePropertyOverride1() throws Exception {
+    testTypes(
+        "/** @interface */function Super() {};" +
+        "/** @desc description */Super.prototype.foo = function() {};" +
+        "/** @interface\n @extends {Super} */function Sub() {};" +
+        "/** @desc description */Sub.prototype.foo = function() {};");
+  }
+
+  public void testInterfacePropertyOverride2() throws Exception {
+    testTypes(
+        "/** @interface */function Root() {};" +
+        "/** @desc description */Root.prototype.foo = function() {};" +
+        "/** @interface\n @extends {Root} */function Super() {};" +
+        "/** @interface\n @extends {Super} */function Sub() {};" +
+        "/** @desc description */Sub.prototype.foo = function() {};");
+  }
 
   public void testInterfaceInheritanceCheck1() throws Exception {
     testTypes(
@@ -7870,11 +7986,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testErrorMismatchingPropertyOnInterface6() throws Exception {
-    testTypes("/** @interface */ function T() {};\n" +
+    testClosureTypesMultipleWarnings(
+        "/** @interface */ function T() {};\n" +
         "/** @return {number} */T.prototype.x = 1",
-        "interface members can only be empty property declarations, "
-        + "empty functions, or goog.abstractMethod"
-        );
+        Lists.newArrayList(
+            "assignment to property x of T.prototype\n" +
+            "found   : number\n" +
+            "required: function (this:T): number",
+            "interface members can only be empty property declarations, " +
+            "empty functions, or goog.abstractMethod"));
   }
 
   public void testInterfaceNonEmptyFunction() throws Exception {
@@ -7912,13 +8032,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testDirectPrototypeAssign() throws Exception {
+    // For now, we just ignore @type annotations on the prototype.
     testTypes(
         "/** @constructor */ function Foo() {}" +
         "/** @constructor */ function Bar() {}" +
-        "/** @type {Array} */ Bar.prototype = new Foo()",
-        "assignment to property prototype of Bar\n" +
-        "found   : Foo\n" +
-        "required: (Array|null)");
+        "/** @type {Array} */ Bar.prototype = new Foo()");
   }
 
   // In all testResolutionViaRegistry* tests, since u is unknown, u.T can only

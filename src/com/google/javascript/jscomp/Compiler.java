@@ -1487,7 +1487,7 @@ public class Compiler extends AbstractCompiler {
   Node parseTestCode(String js) {
     initCompilerOptionsIfTesting();
     CompilerInput input = new CompilerInput(
-        SourceFile.fromCode(" [testcode] ", js));
+        SourceFile.fromCode("[testcode]", js));
     if (inputsById == null) {
       inputsById = Maps.newHashMap();
     }

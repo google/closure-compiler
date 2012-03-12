@@ -786,21 +786,20 @@ public class FunctionType extends PrototypeObjectType {
    */
   public ObjectType getTopMostDefiningType(String propertyName) {
     Preconditions.checkState(isConstructor() || isInterface());
-    Preconditions.checkArgument(getPrototype().hasProperty(propertyName));
+    Preconditions.checkArgument(getInstanceType().hasProperty(propertyName));
     FunctionType ctor = this;
 
     if (isInterface()) {
       return getTopDefiningInterface(this.getInstanceType(), propertyName);
     }
 
-    ObjectType topInstanceType = ctor.getInstanceType();
-    while (true) {
+    ObjectType topInstanceType = null;
+    do {
       topInstanceType = ctor.getInstanceType();
       ctor = ctor.getSuperClassConstructor();
-      if (ctor == null || !ctor.getPrototype().hasProperty(propertyName)) {
-        break;
-      }
-    }
+    } while (ctor != null
+        && ctor.getPrototype().hasProperty(propertyName));
+
     return topInstanceType;
   }
 

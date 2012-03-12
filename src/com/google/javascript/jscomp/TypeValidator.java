@@ -350,6 +350,18 @@ class TypeValidator {
         // the line numbers of both types.
         registerMismatch(rightType, leftType, null);
       } else {
+        // Do not type-check interface methods, because we expect that
+        // they will have dummy implementations that do not match the type
+        // annotations.
+        JSType ownerType = getJSType(owner);
+        if (ownerType.isFunctionPrototypeType()) {
+          FunctionType ownerFn = ownerType.toObjectType().getOwnerFunction();
+          if (ownerFn.isInterface() &&
+              rightType.isFunctionType() && leftType.isFunctionType()) {
+            return true;
+          }
+        }
+
         mismatch(t, n,
             "assignment to property " + propName + " of " +
             getReadableJSTypeName(owner, true),

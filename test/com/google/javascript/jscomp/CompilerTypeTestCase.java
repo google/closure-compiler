@@ -34,7 +34,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
   static final String CLOSURE_DEFS =
       "var goog = {};" +
       "goog.inherits = function(x, y) {};" +
-      "goog.abstractMethod = function() {};" +
+      "/** @type {!Function} */ goog.abstractMethod = function() {};" +
       "goog.isArray = function(x) {};" +
       "goog.isDef = function(x) {};" +
       "goog.isFunction = function(x) {};" +

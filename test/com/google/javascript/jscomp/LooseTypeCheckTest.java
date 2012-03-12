@@ -1908,23 +1908,31 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testDuplicateStaticPropertyDecl4() throws Exception {
-    testTypes(
+    testClosureTypesMultipleWarnings(
         "var goog = goog || {};" +
         "/** @type {!Foo} */ goog.foo;" +
         "/** @type {string} */ goog.foo = 'x';" +
         "/** @constructor */ function Foo() {}",
-        "variable goog.foo redefined with type string, " +
-        "original definition at [testcode]:1 with type Foo");
+        Lists.newArrayList(
+            "assignment to property foo of goog\n" +
+            "found   : string\n" +
+            "required: Foo",
+            "variable goog.foo redefined with type string, " +
+            "original definition at [testcode]:1 with type Foo"));
   }
 
   public void testDuplicateStaticPropertyDecl5() throws Exception {
-    testTypes(
+    testClosureTypesMultipleWarnings(
         "var goog = goog || {};" +
         "/** @type {!Foo} */ goog.foo;" +
         "/** @type {string}\n * @suppress {duplicate} */ goog.foo = 'x';" +
         "/** @constructor */ function Foo() {}",
-        "variable goog.foo redefined with type string, " +
-        "original definition at [testcode]:1 with type Foo");
+        Lists.newArrayList(
+            "assignment to property foo of goog\n" +
+            "found   : string\n" +
+            "required: Foo",
+            "variable goog.foo redefined with type string, " +
+            "original definition at [testcode]:1 with type Foo"));
   }
 
   public void testDuplicateStaticPropertyDecl6() throws Exception {
@@ -1963,7 +1971,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "function f(x) { /** @type {string} */ var x = ''; }",
         Lists.newArrayList(
             "variable x redefined with type string, original definition" +
-            " at  [testcode] :2 with type number",
+            " at [testcode]:2 with type number",
             "initializing variable\n" +
             "found   : string\n" +
             "required: number"));
@@ -4426,7 +4434,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "var x = f();" +
         "/** @type {string} */" +
         "x.y = 3;",
-        "assignment to property y of x\n" +
+        "assignment\n" +
         "found   : number\n" +
         "required: string");
   }
@@ -6073,11 +6081,15 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testErrorMismatchingPropertyOnInterface6() throws Exception {
-    testTypes("/** @interface */ function T() {};\n" +
+    testClosureTypesMultipleWarnings(
+        "/** @interface */ function T() {};\n" +
         "/** @return {number} */T.prototype.x = 1",
-        "interface members can only be empty property declarations, "
-        + "empty functions, or goog.abstractMethod"
-        );
+        Lists.newArrayList(
+            "assignment to property x of T.prototype\n" +
+            "found   : number\n" +
+            "required: function (this:T): number",
+            "interface members can only be empty property declarations, " +
+            "empty functions, or goog.abstractMethod"));
   }
 
   public void testInterfaceNonEmptyFunction() throws Exception {
@@ -6115,13 +6127,11 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testDirectPrototypeAssign() throws Exception {
+    // For now, we just ignore @type annotations on the prototype.
     testTypes(
         "/** @constructor */ function Foo() {}" +
         "/** @constructor */ function Bar() {}" +
-        "/** @type {Array} */ Bar.prototype = new Foo()",
-        "assignment to property prototype of Bar\n" +
-        "found   : Foo\n" +
-        "required: (Array|null|undefined)");
+        "/** @type {Array} */ Bar.prototype = new Foo()");
   }
 
   // In all testResolutionViaRegistry* tests, since u is unknown, u.T can only

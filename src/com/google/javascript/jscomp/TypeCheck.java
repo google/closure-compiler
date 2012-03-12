@@ -835,6 +835,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     Node lvalue = assign.getFirstChild();
     Node rvalue = assign.getLastChild();
 
+    // Check property sets to 'object.property' when 'object' is known.
     if (lvalue.isGetProp()) {
       Node object = lvalue.getFirstChild();
       JSType objectJsType = getJSType(object);
@@ -850,16 +851,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
       }
 
-      // /** @type ... */object.name = ...;
-      if (info != null && info.hasType()) {
-        visitAnnotatedAssignGetprop(t, assign,
-            info.getType().evaluate(t.getScope(), typeRegistry), object,
-            property, rvalue);
-        return;
-      }
-
       checkEnumAlias(t, info, rvalue);
 
+      // Prototype assignments are special, because they actually affect
+      // the definition of a class. These are mostly validated
+      // during TypedScopeCreator, and we only look for the "dumb" cases here.
       // object.prototype = ...;
       if (property.equals("prototype")) {
         if (objectJsType != null && objectJsType.isFunctionType()) {
@@ -868,13 +864,21 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             JSType rvalueType = rvalue.getJSType();
             validator.expectObject(t, rvalue, rvalueType,
                 OVERRIDING_PROTOTYPE_WITH_NON_OBJECT);
+            return;
           }
-        } else {
-          // TODO(user): might want to flag that
         }
-        return;
       }
 
+      // Inheritance checks for prototype properties.
+      //
+      // TODO(nicksantos): This isn't the right place to do this check. We
+      // really want to do this when we're looking at the constructor.
+      // We'd find all its properties and make sure they followed inheritance
+      // rules, like we currently do for @implements to make sure
+      // all the methods are implemented.
+      //
+      // As-is, this misses many other ways to override a property.
+      //
       // object.prototype.property = ...;
       if (object.isGetProp()) {
         Node object2 = object.getFirstChild();
@@ -888,13 +892,12 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
               checkDeclaredPropertyInheritance(
                   t, assign, functionType, property, info, getJSType(rvalue));
             }
-          } else {
-            // TODO(user): might want to flag that
           }
-          return;
         }
       }
 
+      // The generic checks for 'object.property' when 'object' is known,
+      // and 'property' is declared on it.
       // object.property = ...;
       ObjectType type = ObjectType.cast(
           objectJsType.restrictByNotNullOrUndefined());
@@ -905,22 +908,33 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           validator.expectCanAssignToPropertyOf(
               t, assign, getJSType(rvalue),
               type.getPropertyType(property), object, property);
-        }
-        return;
-      }
-    } else if (lvalue.isName()) {
-      // variable with inferred type case
-      JSType rvalueType = getJSType(assign.getLastChild());
-      Var var = t.getScope().getVar(lvalue.getString());
-      if (var != null) {
-        if (var.isTypeInferred()) {
           return;
         }
       }
     }
 
-    // fall through case
+    // Check qualified name sets to 'object' and 'object.property'.
+    // This can sometimes handle cases when the type of 'object' is not known.
+    // e.g.,
+    // var obj = createUnknownType();
+    // /** @type {number} */ obj.foo = true;
     JSType leftType = getJSType(lvalue);
+    if (lvalue.isQualifiedName()) {
+      // variable with inferred type case
+      JSType rvalueType = getJSType(assign.getLastChild());
+      Var var = t.getScope().getVar(lvalue.getQualifiedName());
+      if (var != null) {
+        if (var.isTypeInferred()) {
+          return;
+        }
+
+        if (var.getType() != null) {
+          leftType = var.getType();
+        }
+      }
+    }
+
+    // Fall through case for arbitrary LHS and arbitrary RHS.
     Node rightChild = assign.getLastChild();
     JSType rightType = getJSType(rightChild);
     if (validator.expectCanAssignTo(
@@ -1034,7 +1048,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     FunctionType superClass = ctorType.getSuperClassConstructor();
     boolean superClassHasProperty = superClass != null &&
-        superClass.getPrototype().hasProperty(propertyName);
+        superClass.getInstanceType().hasProperty(propertyName);
     // For interface
     boolean superInterfacesHasProperty = false;
     if (ctorType.isInterface()) {
@@ -1094,7 +1108,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (superClassHasProperty) {
       // there is a superclass implementation
       JSType superClassPropType =
-          superClass.getPrototype().getPropertyType(propertyName);
+          superClass.getInstanceType().getPropertyType(propertyName);
       if (!propertyType.canAssignTo(superClassPropType)) {
         compiler.report(
             t.makeError(n, HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
@@ -1189,20 +1203,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           t.makeError(object, INTERFACE_FUNCTION_NOT_EMPTY,
               abstractMethodName));
     }
-  }
-
-  /**
-   * Visits an ASSIGN node for cases such as
-   * <pre>
-   * object.property = ...;
-   * </pre>
-   * that have an {@code @type} annotation.
-   */
-  private void visitAnnotatedAssignGetprop(NodeTraversal t,
-      Node assign, JSType type, Node object, String property, Node rvalue) {
-    // verifying that the rvalue has the correct type
-    validator.expectCanAssignToPropertyOf(t, assign, getJSType(rvalue), type,
-        object, property);
   }
 
   /**
