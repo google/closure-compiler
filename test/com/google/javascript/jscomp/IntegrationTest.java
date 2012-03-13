@@ -2018,6 +2018,29 @@ public class IntegrationTest extends TestCase {
         "var x = {};");
   }
 
+  public void testStrictWarningsGuard() throws Exception {
+    CompilerOptions options = createCompilerOptions();
+    options.checkTypes = true;
+    options.addWarningsGuard(new StrictWarningsGuard());
+
+    Compiler compiler = compile(options,
+        "/** @return {number} */ function f() { return true; }");
+    assertEquals(1, compiler.getErrors().length);
+    assertEquals(0, compiler.getWarnings().length);
+  }
+
+  public void testStrictWarningsGuardEmergencyMode() throws Exception {
+    CompilerOptions options = createCompilerOptions();
+    options.checkTypes = true;
+    options.addWarningsGuard(new StrictWarningsGuard());
+    options.useEmergencyFailSafe();
+
+    Compiler compiler = compile(options,
+        "/** @return {number} */ function f() { return true; }");
+    assertEquals(0, compiler.getErrors().length);
+    assertEquals(1, compiler.getWarnings().length);
+  }
+
   private void testSame(CompilerOptions options, String original) {
     testSame(options, new String[] { original });
   }

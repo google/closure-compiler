@@ -47,6 +47,7 @@ public class ComposeWarningsGuard extends WarningsGuard {
 
   private final Comparator<WarningsGuard> guardComparator =
       new GuardComparator(orderOfAddition);
+  private boolean demoteErrors = false;
 
   private static class GuardComparator
       implements Comparator<WarningsGuard>, Serializable {
@@ -85,8 +86,13 @@ public class ComposeWarningsGuard extends WarningsGuard {
 
   void addGuard(WarningsGuard guard) {
     if (guard instanceof ComposeWarningsGuard) {
+      ComposeWarningsGuard composeGuard = (ComposeWarningsGuard) guard;
+      if (composeGuard.demoteErrors) {
+        this.demoteErrors = composeGuard.demoteErrors;
+      }
+
       // Reverse the guards, so that they have the same order in the result.
-      addGuards(((ComposeWarningsGuard) guard).guards.descendingSet());
+      addGuards(composeGuard.guards.descendingSet());
     } else {
       numberOfAdds++;
       orderOfAddition.put(guard, numberOfAdds);
@@ -106,6 +112,9 @@ public class ComposeWarningsGuard extends WarningsGuard {
     for (WarningsGuard guard : guards) {
       CheckLevel newLevel = guard.level(error);
       if (newLevel != null) {
+        if (demoteErrors && newLevel == CheckLevel.ERROR) {
+          return CheckLevel.WARNING;
+        }
         return newLevel;
       }
     }
@@ -159,22 +168,9 @@ public class ComposeWarningsGuard extends WarningsGuard {
    */
   ComposeWarningsGuard makeEmergencyFailSafeGuard() {
     ComposeWarningsGuard safeGuard = new ComposeWarningsGuard();
+    safeGuard.demoteErrors = true;
     for (WarningsGuard guard : guards.descendingSet()) {
-      if (guard instanceof StrictWarningsGuard) {
-        continue;
-      } else if (guard instanceof DiagnosticGroupWarningsGuard) {
-        DiagnosticGroupWarningsGuard dgGuard =
-            (DiagnosticGroupWarningsGuard) guard;
-        if (dgGuard.level == CheckLevel.ERROR) {
-          safeGuard.addGuard(
-              new DiagnosticGroupWarningsGuard(
-                  dgGuard.group, CheckLevel.WARNING));
-        } else {
-        safeGuard.addGuard(guard);
-        }
-      } else {
-        safeGuard.addGuard(guard);
-      }
+      safeGuard.addGuard(guard);
     }
     return safeGuard;
   }
