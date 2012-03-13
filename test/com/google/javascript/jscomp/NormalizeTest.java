@@ -462,6 +462,19 @@ public class NormalizeTest extends CompilerTestCase {
     }
   }
 
+  public void testExposeSimple() {
+    test("var x = {}; /** @expose */ x.y = 3; x.y = 5;",
+         "var x = {}; x['y'] = 3; x['y'] = 5;");
+  }
+
+  public void testExposeComplex() {
+    test(
+        "var x = {/** @expose */ a: 1, b: 2};"
+        + "x.a = 3; /** @expose */ x.b = 5;",
+        "var x = {'a': 1, 'b': 2};"
+        + "x['a'] = 3; x['b'] = 5;");
+  }
+
   private Set<Node> findNodesWithProperty(Node root, final int prop) {
     final Set<Node> set = Sets.newHashSet();
     NodeTraversal.traverse(

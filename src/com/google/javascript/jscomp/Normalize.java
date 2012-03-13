@@ -57,6 +57,7 @@ import java.util.Set;
  *    handling).
  * 5) Removes duplicate variable declarations.
  * 6) Marks constants with the IS_CONSTANT_NAME annotation.
+ * 7) Finds properties marked @expose, and rewrites them in [] notation.
  *
  * @author johnlenz@google.com (johnlenz)
  */
@@ -144,8 +145,72 @@ class Normalize implements CompilerPass {
     new PropagateConstantAnnotationsOverVars(compiler, assertOnChange)
         .process(externs, root);
 
+    FindExposeAnnotations findExposeAnnotations = new FindExposeAnnotations();
+    NodeTraversal.traverse(compiler, root, findExposeAnnotations);
+    if (!findExposeAnnotations.exposedProperties.isEmpty()) {
+      NodeTraversal.traverse(compiler, root,
+          new RewriteExposedProperties(
+              findExposeAnnotations.exposedProperties));
+    }
+
     if (!compiler.getLifeCycleStage().isNormalized()) {
       compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
+    }
+  }
+
+  /**
+   * Find all the @expose annotations.
+   */
+  private static class FindExposeAnnotations extends AbstractPostOrderCallback {
+    private final Set<String> exposedProperties = Sets.newHashSet();
+
+    @Override public void visit(NodeTraversal t, Node n, Node parent) {
+      if (NodeUtil.isExprAssign(n)) {
+        Node assign = n.getFirstChild();
+        Node lhs = assign.getFirstChild();
+        if (lhs.isGetProp() && isMarkedExpose(assign)) {
+          exposedProperties.add(lhs.getLastChild().getString());
+        }
+      } else if (NodeUtil.isObjectLitKey(n, parent) &&
+          n.isString() &&
+          isMarkedExpose(n)) {
+        exposedProperties.add(n.getString());
+      }
+    }
+
+    private boolean isMarkedExpose(Node n) {
+      JSDocInfo info = n.getJSDocInfo();
+      return info != null && info.isExpose();
+    }
+  }
+
+  /**
+   * Rewrite all exposed properties in [] form.
+   */
+  private class RewriteExposedProperties
+      extends AbstractPostOrderCallback {
+    private final Set<String> exposedProperties;
+
+    RewriteExposedProperties(Set<String> exposedProperties) {
+      this.exposedProperties = exposedProperties;
+    }
+
+    @Override public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isGetProp()) {
+        String propName = n.getLastChild().getString();
+        if (exposedProperties.contains(propName)) {
+          Node obj = n.removeFirstChild();
+          Node prop = n.removeFirstChild();
+          n.getParent().replaceChild(n, IR.getelem(obj, prop));
+          compiler.reportCodeChange();
+        }
+      } else if (n.isString() && NodeUtil.isObjectLitKey(n, parent)) {
+        String propName = n.getString();
+        if (exposedProperties.contains(propName)) {
+          n.setQuotedString();
+          compiler.reportCodeChange();
+        }
+      }
     }
   }
 
