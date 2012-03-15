@@ -659,7 +659,21 @@ class IRFactory {
 
       lp.setCharno(position2charno(lparenCharno));
       for (AstNode param : functionNode.getParams()) {
-        lp.addChildToBack(transform(param));
+        Node paramNode = transform(param);
+        // When in ideMode Rhino can generate a param list with only a single
+        // ErrorNode. This is transformed into an EMPTY node. Drop this node in
+        // ideMode to keep the AST in a valid state.
+        if (paramNode.isName()) {
+          lp.addChildToBack(paramNode);
+        } else {
+          // We expect this in ideMode or when there is an error handling
+          // destructuring parameter assignments which aren't supported
+          // (an error has already been reported).
+          Preconditions.checkState(
+              config.isIdeMode
+              || paramNode.isObjectLit()
+              || paramNode.isArrayLit());
+        }
       }
       node.addChildToBack(lp);
 

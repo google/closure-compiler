@@ -1979,7 +1979,7 @@ public class IntegrationTest extends TestCase {
         "");
   }
 
-  public void testIncompleteFunction() {
+  public void testIncompleteFunction1() {
     CompilerOptions options = createCompilerOptions();
     options.ideMode = true;
     DiagnosticType[] warnings = new DiagnosticType[]{
@@ -1990,6 +1990,23 @@ public class IntegrationTest extends TestCase {
     test(options,
         new String[] { "var foo = {bar: function(e) }" },
         new String[] { "var foo = {bar: function(e){}};" },
+        warnings
+    );
+  }
+
+  public void testIncompleteFunction2() {
+    CompilerOptions options = createCompilerOptions();
+    options.ideMode = true;
+    DiagnosticType[] warnings = new DiagnosticType[]{
+        RhinoErrorReporter.PARSE_ERROR,
+        RhinoErrorReporter.PARSE_ERROR,
+        RhinoErrorReporter.PARSE_ERROR,
+        RhinoErrorReporter.PARSE_ERROR,
+        RhinoErrorReporter.PARSE_ERROR,
+        RhinoErrorReporter.PARSE_ERROR};
+    test(options,
+        new String[] { "function hi" },
+        new String[] { "function hi() {}" },
         warnings
     );
   }

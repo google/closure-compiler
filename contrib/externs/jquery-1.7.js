@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for jQuery 1.7.1
+ * @fileoverview Externs for jQuery 1.7
  *
  * Note that some functions use different return types depending on the number
  * of parameters passed in. In these cases, you may need to annotate the type
@@ -38,8 +38,8 @@ var jQuerySelector;
  * @param {(jQuerySelector|Element|Object|Array.<Element>|jQuery|string|
  *     function())=} arg1
  * @param {(Element|jQuery|Document|
- *     Object.<string, (string|function(!jQuery.event=))>)=} arg2
- * @return {!jQuery}
+ *     Object.<string, (string|function(jQuery.event=))>)=} arg2
+ * @return {jQuery}
  */
 function jQuery(arg1, arg2) {}
 
@@ -49,29 +49,29 @@ function jQuery(arg1, arg2) {}
  * @param {(jQuerySelector|Element|Array.<Element>|Object|jQuery|string|
  *     function())} arg1
  * @param {(Element|jQuery|Document|
- *     Object.<string, (string|function(!jQuery.event=))>)=} arg2
- * @return {!jQuery}
+ *     Object.<string, (string|function(jQuery.event=))>)=} arg2
+ * @return {jQuery}
  */
 function $(arg1, arg2) {}
 
 /**
  * @param {(jQuerySelector|Array.<Element>|string|jQuery)} arg1
  * @param {Element=} context
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.add = function(arg1, context) {};
 
 /**
  * @param {(string|function(number,String))} arg1
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.addClass = function(arg1) {};
 
 /**
  * @param {(string|Element|jQuery|function(number))} arg1
  * @param {(string|Element|Array.<Element>|jQuery)=} content
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.after = function(arg1, content) {};
 
@@ -91,13 +91,13 @@ $.ajax = function(arg1, settings) {};
 
 /**
  * @param {function(jQuery.event,XMLHttpRequest,Object.<string, *>)} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.ajaxComplete = function(handler) {};
 
 /**
  * @param {function(jQuery.event,jQuery.jqXHR,Object.<string, *>,*)} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.ajaxError = function(handler) {};
 
@@ -117,99 +117,9 @@ $.ajaxPrefilter = function(dataTypes, handler) {};
 
 /**
  * @param {function(jQuery.event,jQuery.jqXHR,Object.<string, *>)} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.ajaxSend = function(handler) {};
-
-/** @const */
-jQuery.ajaxSettings = {};
-
-/** @const */
-$.ajaxSettings = {};
-
-/** @type {Object.<string, string>} */
-jQuery.ajaxSettings.accepts = {};
-
-/** @type {Object.<string, string>} */
-$.ajaxSettings.accepts = {};
-
-/** @type {boolean} */
-jQuery.ajaxSettings.async;
-
-/** @type {boolean} */
-$.ajaxSettings.async;
-
-/** @type {Object.<string, RegExp>} */
-jQuery.ajaxSettings.contents = {};
-
-/** @type {Object.<string, RegExp>} */
-$.ajaxSettings.contents = {};
-
-/** @type {string} */
-jQuery.ajaxSettings.contentType;
-
-/** @type {string} */
-$.ajaxSettings.contentType;
-
-/** @type {Object.<string, *>} */
-jQuery.ajaxSettings.converters = {};
-
-/** @type {Object.<string, *>} */
-$.ajaxSettings.converters = {};
-
-/** @type {Object.<string, boolean>} */
-jQuery.ajaxSettings.flatOptions = {};
-
-/** @type {Object.<string, boolean>} */
-$.ajaxSettings.flatOptions = {};
-
-/** @type {boolean} */
-jQuery.ajaxSettings.global;
-
-/** @type {boolean} */
-$.ajaxSettings.global;
-
-/** @type {boolean} */
-jQuery.ajaxSettings.isLocal;
-
-/** @type {boolean} */
-$.ajaxSettings.isLocal;
-
-/** @type {boolean} */
-jQuery.ajaxSettings.processData;
-
-/** @type {boolean} */
-$.ajaxSettings.processData;
-
-/** @type {Object.<string, string>} */
-jQuery.ajaxSettings.responseFields = {};
-
-/** @type {Object.<string, string>} */
-$.ajaxSettings.responseFields = {};
-
-/** @type {boolean} */
-jQuery.ajaxSettings.traditional;
-
-/** @type {boolean} */
-$.ajaxSettings.traditional;
-
-/** @type {string} */
-jQuery.ajaxSettings.type;
-
-/** @type {string} */
-$.ajaxSettings.type;
-
-/** @type {string} */
-jQuery.ajaxSettings.url;
-
-/** @type {string} */
-$.ajaxSettings.url;
-
-/** @return {XMLHttpRequest|ActiveXObject} */
-jQuery.ajaxSettings.xhr = function() {};
-
-/** @return {XMLHttpRequest|ActiveXObject} */
-$.ajaxSettings.xhr = function() {};
 
 /** @param {Object.<string,*>} options */
 jQuery.ajaxSetup = function(options) {};
@@ -219,24 +129,24 @@ $.ajaxSetup = function(options) {};
 
 /**
  * @param {function()} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.ajaxStart = function(handler) {};
 
 /**
  * @param {function()} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.ajaxStop = function(handler) {};
 
 /**
  * @param {function(jQuery.event,XMLHttpRequest,Object.<string, *>)} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.ajaxSuccess = function(handler) {};
 
 /**
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.andSelf = function() {};
@@ -246,49 +156,49 @@ jQuery.prototype.andSelf = function() {};
  * @param {(string|number|function()|Object.<string,*>)=} arg2
  * @param {(string|function())=} easing
  * @param {function()=} complete
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.animate = function(properties, arg2, easing, complete) {};
 
 /**
  * @param {(string|Element|jQuery|function(number,string))} arg1
  * @param {(string|Element|Array.<Element>|jQuery)=} content
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.append = function(arg1, content) {};
 
 /**
  * @param {(jQuerySelector|Element|jQuery)} target
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.appendTo = function(target) {};
 
 /**
  * @param {(string|Object.<string,*>)} arg1
  * @param {(string|number|function(number,string))=} arg2
- * @return {(string|!jQuery)}
+ * @return {(string|jQuery)}
  */
 jQuery.prototype.attr = function(arg1, arg2) {};
 
 /**
  * @param {(string|Element|jQuery|function())} arg1
  * @param {(string|Element|Array.<Element>|jQuery)=} content
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.before = function(arg1, content) {};
 
 /**
- * @param {(string|Object.<string, function(!jQuery.event=)>)} arg1
+ * @param {(string|Object.<string, function(jQuery.event=)>)} arg1
  * @param {(Object.<string, *>|function(jQuery.event)|boolean)=} eventData
  * @param {(function(jQuery.event)|boolean)=} arg3
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.bind = function(arg1, eventData, arg3) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.blur = function(arg1, handler) {};
 
@@ -341,16 +251,16 @@ jQuery.browser.opera;
 $.browser.opera;
 
 /**
- * @deprecated
  * @type {boolean}
  * @const
+ * @deprecated
  */
 jQuery.browser.safari;
 
 /**
- * @deprecated
  * @type {boolean}
  * @const
+ * @deprecated
  */
 $.browser.safari;
 
@@ -421,34 +331,34 @@ jQuery.callbacks.prototype.remove = function(callbacks) {};
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.change = function(arg1, handler) {};
 
 /**
  * @param {jQuerySelector=} selector
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.children = function(selector) {};
 
 /**
  * @param {string=} queueName
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.clearQueue = function(queueName) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.click = function(arg1, handler) {};
 
 /**
  * @param {boolean=} withDataAndEvents
  * @param {boolean=} deepWithDataAndEvents
- * @return {!jQuery}
+ * @return {jQuery}
  * @suppress {checkTypes} see issue 583
  */
 jQuery.prototype.clone = function(withDataAndEvents, deepWithDataAndEvents) {};
@@ -456,7 +366,7 @@ jQuery.prototype.clone = function(withDataAndEvents, deepWithDataAndEvents) {};
 /**
  * @param {(jQuerySelector|jQuery|Element|string|Array.<string>)} arg1
  * @param {Element=} context
- * @return {(!jQuery|Array.<Element>)}
+ * @return {(jQuery|Array.<Element>)}
  * @nosideeffects
  */
 jQuery.prototype.closest = function(arg1, context) {};
@@ -476,7 +386,7 @@ jQuery.contains = function(container, contained) {};
 $.contains = function(container, contained) {};
 
 /**
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.contents = function() {};
@@ -487,7 +397,7 @@ jQuery.prototype.context;
 /**
  * @param {(string|Object.<string,*>)} arg1
  * @param {(string|number|function(number,*))=} arg2
- * @return {(string|!jQuery)}
+ * @return {(string|jQuery)}
  */
 jQuery.prototype.css = function(arg1, arg2) {};
 
@@ -523,7 +433,7 @@ $.data = function(elem, key, value) {};
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.dblclick = function(arg1, handler) {};
 
@@ -581,15 +491,15 @@ jQuery.deferred.prototype.done = function(doneCallbacks, doneCallbacks2) {};
 jQuery.deferred.prototype.fail = function(failCallbacks, failCallbacks2) {};
 
 /**
- * @deprecated
  * @return {boolean}
+ * @deprecated
  * @nosideeffects
  */
 jQuery.deferred.prototype.isRejected = function() {};
 
 /**
- * @deprecated
  * @return {boolean}
+ * @deprecated
  * @nosideeffects
  */
 jQuery.deferred.prototype.isResolved = function() {};
@@ -669,7 +579,7 @@ jQuery.deferred.prototype.then
 /**
  * @param {number} duration
  * @param {string=} queueName
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.delay = function(duration, queueName) {};
 
@@ -678,41 +588,41 @@ jQuery.prototype.delay = function(duration, queueName) {};
  * @param {(string|Object.<string,*>)} arg2
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg3
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.delegate = function(selector, arg2, arg3, handler) {};
 
 /**
  * @param {Element} elem
  * @param {string=} queueName
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.dequeue = function(elem, queueName) {};
 
 /**
  * @param {string=} queueName
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.dequeue = function(queueName) {};
 
 /**
  * @param {Element} elem
  * @param {string=} queueName
- * @return {!jQuery}
+ * @return {jQuery}
  */
 $.dequeue = function(elem, queueName) {};
 
 /**
  * @param {jQuerySelector=} selector
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.detach = function(selector) {};
 
 /**
- * @deprecated
  * @param {(string|Object.<string,*>)=} arg1
  * @param {string=} handler
- * @return {!jQuery}
+ * @return {jQuery}
+ * @deprecated
  */
 jQuery.prototype.die = function(arg1, handler) {};
 
@@ -725,7 +635,7 @@ jQuery.each = function(collection, callback) {};
 
 /**
  * @param {function(number,Element)} fnc
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.each = function(fnc) {};
 
@@ -736,18 +646,18 @@ jQuery.prototype.each = function(fnc) {};
  */
 $.each = function(collection, callback) {};
 
-/** @return {!jQuery} */
+/** @return {jQuery} */
 jQuery.prototype.empty = function() {};
 
 /**
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.end = function() {};
 
 /**
  * @param {number} arg1
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.eq = function(arg1) {};
@@ -758,7 +668,7 @@ jQuery.error = function(message) {};
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.error = function(arg1, handler) {};
 
@@ -797,7 +707,7 @@ $.Event = function(eventType) {};
 /** @type {Element} */
 jQuery.event.prototype.currentTarget;
 
-/** @type {Object.<string, *>} */
+/** @type {*} */
 jQuery.event.prototype.data;
 
 /** @type {Element} */
@@ -888,7 +798,7 @@ $.extend = function(arg1, var_args) {};
  * @param {(string|number|function())=} duration
  * @param {(function()|string)=} arg2
  * @param {function()=} callback
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.fadeIn = function(duration, arg2, callback) {};
 
@@ -896,7 +806,7 @@ jQuery.prototype.fadeIn = function(duration, arg2, callback) {};
  * @param {(string|number|function())=} duration
  * @param {(function()|string)=} arg2
  * @param {function()=} callback
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.fadeOut = function(duration, arg2, callback) {};
 
@@ -905,7 +815,7 @@ jQuery.prototype.fadeOut = function(duration, arg2, callback) {};
  * @param {number} opacity
  * @param {(function()|string)=} arg3
  * @param {function()=} callback
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.fadeTo = function(duration, opacity, arg3, callback) {};
 
@@ -913,25 +823,25 @@ jQuery.prototype.fadeTo = function(duration, opacity, arg3, callback) {};
  * @param {(string|number|function())=} duration
  * @param {(string|function())=} easing
  * @param {function()=} callback
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.fadeToggle = function(duration, easing, callback) {};
 
 /**
  * @param {(jQuerySelector|function(number)|Element|jQuery)} arg1
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.filter = function(arg1) {};
 
 /**
  * @param {(jQuerySelector|jQuery|Element)} arg1
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.find = function(arg1) {};
 
 /**
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.first = function() {};
@@ -945,21 +855,21 @@ $.fn;
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.focus = function(arg1, handler) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.focusin = function(arg1, handler) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.focusout = function(arg1, handler) {};
 
@@ -1026,14 +936,14 @@ $.getJSON = function(url, data, success) {};
 
 /**
  * @param {string} url
- * @param {function(Node,string,jQuery.jqXHR)=} success
+ * @param {function(string,string)=} success
  * @return {jQuery.jqXHR}
  */
 jQuery.getScript = function(url, success) {};
 
 /**
  * @param {string} url
- * @param {function(Node,string,jQuery.jqXHR)=} success
+ * @param {function(string,string)=} success
  * @return {jQuery.jqXHR}
  */
 $.getScript = function(url, success) {};
@@ -1062,7 +972,7 @@ $.grep = function(arr, fnc, invert) {};
 
 /**
  * @param {(string|Element)} arg1
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.has = function(arg1) {};
@@ -1090,7 +1000,7 @@ $.hasData = function(elem) {};
 
 /**
  * @param {(string|number|function(number,number))=} arg1
- * @return {(number|!jQuery)}
+ * @return {(number|jQuery)}
  */
 jQuery.prototype.height = function(arg1) {};
 
@@ -1098,7 +1008,7 @@ jQuery.prototype.height = function(arg1) {};
  * @param {(string|number|function())=} duration
  * @param {(function()|string)=} arg2
  * @param {function()=} callback
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.hide = function(duration, arg2, callback) {};
 
@@ -1111,13 +1021,13 @@ $.holdReady = function(hold) {};
 /**
  * @param {function(jQuery.event)} arg1
  * @param {function(jQuery.event)=} handlerOut
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.hover = function(arg1, handlerOut) {};
 
 /**
  * @param {(string|function(number,string))=} arg1
- * @return {(string|!jQuery)}
+ * @return {(string|jQuery)}
  */
 jQuery.prototype.html = function(arg1) {};
 
@@ -1159,13 +1069,13 @@ jQuery.prototype.innerWidth = function() {};
 
 /**
  * @param {(jQuerySelector|Element|jQuery)} target
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.insertAfter = function(target) {};
 
 /**
  * @param {(jQuerySelector|Element|jQuery)} target
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.insertBefore = function(target) {};
 
@@ -1314,24 +1224,24 @@ jQuery.jqXHR.prototype.error = function (callback) {};
 jQuery.jqXHR.prototype.fail = function(failCallbacks) {};
 
 /**
- * @deprecated
  * @override
  * @return {boolean}
  * @nosideeffects
+ * @deprecated
  */
 jQuery.jqXHR.prototype.isRejected = function() {};
 
 /**
- * @deprecated
  * @override
  * @return {boolean}
  * @nosideeffects
+ * @deprecated
  */
 jQuery.jqXHR.prototype.isResolved = function() {};
 
 /**
- * @deprecated
  * @override
+ * @deprecated
  */
 jQuery.jqXHR.prototype.onreadystatechange = function (callback) {};
 
@@ -1353,26 +1263,26 @@ jQuery.jqXHR.prototype.then = function(doneCallbacks, failCallbacks) {};
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.keydown = function(arg1, handler) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.keypress = function(arg1, handler) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.keyup = function(arg1, handler) {};
 
 /**
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.last = function() {};
@@ -1381,11 +1291,11 @@ jQuery.prototype.last = function() {};
 jQuery.prototype.length;
 
 /**
- * @deprecated
  * @param {(string|Object)} arg1
  * @param {(function(jQuery.event)|Object)=} arg2
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
+ * @deprecated
  */
 jQuery.prototype.live = function(arg1, arg2, handler) {};
 
@@ -1393,7 +1303,7 @@ jQuery.prototype.live = function(arg1, arg2, handler) {};
  * @param {(function(jQuery.event)|Object.<string, *>|string)} arg1
  * @param {(function(jQuery.event)|Object.<string,*>|string)=} arg2
  * @param {function(string,string,XMLHttpRequest)=} complete
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.load = function(arg1, arg2, complete) {};
 
@@ -1418,7 +1328,7 @@ jQuery.map = function(arg1, callback) {};
 
 /**
  * @param {function(number,Element)} callback
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.map = function(callback) {};
 
@@ -1446,62 +1356,62 @@ $.merge = function(first, second) {};
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.mousedown = function(arg1, handler) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.mouseenter = function(arg1, handler) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.mouseleave = function(arg1, handler) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.mousemove = function(arg1, handler) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.mouseout = function(arg1, handler) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.mouseover = function(arg1, handler) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.mouseup = function(arg1, handler) {};
 
 /**
  * @param {jQuerySelector=} selector
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.next = function(selector) {};
 
 /**
  * @param {string=} selector
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.nextAll = function(selector) {};
@@ -1509,7 +1419,7 @@ jQuery.prototype.nextAll = function(selector) {};
 /**
  * @param {(jQuerySelector|Element)=} arg1
  * @param {jQuerySelector=} filter
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.nextUntil = function(arg1, filter) {};
@@ -1540,7 +1450,7 @@ $.noop = function() {};
 
 /**
  * @param {(jQuerySelector|Array.<Element>|function(number)|jQuery)} arg1
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.not = function(arg1) {};
 
@@ -1560,19 +1470,19 @@ $.now = function() {};
  * @param {(string|Object.<string,*>)} arg1
  * @param {(string|function(jQuery.event))=} selector
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.off = function(arg1, selector, handler) {};
 
 /**
  * @param {({left:number,top:number}|
  *     function(number,{top:number,left:number}))=} arg1
- * @return {({left:number,top:number}|!jQuery)}
+ * @return {({left:number,top:number}|jQuery)}
  */
 jQuery.prototype.offset = function(arg1) {};
 
 /**
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.offsetParent = function() {};
@@ -1582,7 +1492,7 @@ jQuery.prototype.offsetParent = function() {};
  * @param {*=} selector
  * @param {*=} data
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.on = function(arg1, selector, data, handler) {};
 
@@ -1591,7 +1501,7 @@ jQuery.prototype.on = function(arg1, selector, data, handler) {};
  * @param {*=} arg2
  * @param {*=} arg3
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.one = function(arg1, arg2, arg3, handler) {};
 
@@ -1625,14 +1535,14 @@ $.param = function(obj, traditional) {};
 
 /**
  * @param {jQuerySelector=} selector
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.parent = function(selector) {};
 
 /**
  * @param {jQuerySelector=} selector
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.parents = function(selector) {};
@@ -1640,7 +1550,7 @@ jQuery.prototype.parents = function(selector) {};
 /**
  * @param {(jQuerySelector|Element)=} arg1
  * @param {jQuerySelector=} filter
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.parentsUntil = function(arg1, filter) {};
@@ -1698,26 +1608,26 @@ $.post = function(url, data, success, dataType) {};
 /**
  * @param {(string|Element|jQuery|function(number,string))} arg1
  * @param {(string|Element|jQuery)=} content
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.prepend = function(arg1, content) {};
 
 /**
  * @param {(jQuerySelector|Element|jQuery)} target
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.prependTo = function(target) {};
 
 /**
  * @param {jQuerySelector=} selector
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.prev = function(selector) {};
 
 /**
  * @param {jQuerySelector=} selector
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.prevAll = function(selector) {};
@@ -1725,7 +1635,7 @@ jQuery.prototype.prevAll = function(selector) {};
 /**
  * @param {(jQuerySelector|Element)=} arg1
  * @param {jQuerySelector=} filter
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.prevUntil = function(arg1, filter) {};
@@ -1757,16 +1667,16 @@ jQuery.Promise.prototype.done = function(doneCallbacks) {};
 jQuery.Promise.prototype.fail = function(failCallbacks) {};
 
 /**
- * @deprecated
  * @return {boolean}
  * @nosideeffects
+ * @deprecated
  */
 jQuery.Promise.prototype.isRejected = function() {};
 
 /**
- * @deprecated
  * @return {boolean}
  * @nosideeffects
+ * @deprecated
  */
 jQuery.Promise.prototype.isResolved = function() {};
 
@@ -1780,34 +1690,38 @@ jQuery.Promise.prototype.then = function(doneCallbacks, failCallbacks) {};
 /**
  * @param {(string|Object.<string,*>)} arg1
  * @param {(string|number|boolean|function(number,String))=} arg2
- * @return {(string|!jQuery)}
+ * @return {(string|jQuery)}
  */
 jQuery.prototype.prop = function(arg1, arg2) {};
 
 /**
+ * @param {(function()|Object)} arg1
+ * @param {(Object|string)} arg2
  * @param {...*} var_args
  * @return {function()}
  */
-jQuery.proxy = function(var_args) {};
+jQuery.proxy = function(arg1, arg2, var_args) {};
 
 /**
+ * @param {(function()|Object)} arg1
+ * @param {(Object|string)} arg2
  * @param {...*} var_args
  * @return {function()}
  */
-$.proxy = function(var_args) {};
+$.proxy = function(arg1, arg2, var_args) {};
 
 /**
  * @param {Array.<Element>} elements
  * @param {string=} name
  * @param {Array.<*>=} args
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.pushStack = function(elements, name, args) {};
 
 /**
  * @param {(string|Array.<function()>|function(function()))=} queueName
  * @param {(Array.<function()>|function(function()))=} arg2
- * @return {(Array.<Element>|!jQuery)}
+ * @return {(Array.<Element>|jQuery)}
  */
 jQuery.prototype.queue = function(queueName, arg2) {};
 
@@ -1815,7 +1729,7 @@ jQuery.prototype.queue = function(queueName, arg2) {};
  * @param {Element} elem
  * @param {string=} queueName
  * @param {(Array.<function()>|function())=} arg3
- * @return {(Array.<Element>|!jQuery)}
+ * @return {(Array.<Element>|jQuery)}
  */
 jQuery.queue = function(elem, queueName, arg3) {};
 
@@ -1823,102 +1737,102 @@ jQuery.queue = function(elem, queueName, arg3) {};
  * @param {Element} elem
  * @param {string=} queueName
  * @param {(Array.<function()>|function())=} arg3
- * @return {(Array.<Element>|!jQuery)}
+ * @return {(Array.<Element>|jQuery)}
  */
 $.queue = function(elem, queueName, arg3) {};
 
 /**
  * @param {function()} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.ready = function(handler) {};
 
 /**
  * @param {string=} selector
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.remove = function(selector) {};
 
 /**
  * @param {string} attributeName
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.removeAttr = function(attributeName) {};
 
 /**
  * @param {(string|function(number,string))=} arg1
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.removeClass = function(arg1) {};
 
 /**
- * @param {(string|Array.<string>)=} arg1
- * @return {!jQuery}
+ * @param {(string|Array)=} arg1
+ * @return {jQuery}
  */
 jQuery.prototype.removeData = function(arg1) {};
 
 /**
  * @param {Element} elem
  * @param {string=} name
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.removeData = function(elem, name) {};
 
 /**
  * @param {Element} elem
  * @param {string=} name
- * @return {!jQuery}
+ * @return {jQuery}
  */
 $.removeData = function(elem, name) {};
 
 /**
  * @param {string} propertyName
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.removeProp = function(propertyName) {};
 
 /**
  * @param {jQuerySelector} target
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.replaceAll = function(target) {};
 
 /**
  * @param {(string|Element|jQuery|function())} arg1
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.replaceWith = function(arg1) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.resize = function(arg1, handler) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.scroll = function(arg1, handler) {};
 
 /**
  * @param {number=} value
- * @return {(number|!jQuery)}
+ * @return {(number|jQuery)}
  */
 jQuery.prototype.scrollLeft = function(value) {};
 
 /**
  * @param {number=} value
- * @return {(number|!jQuery)}
+ * @return {(number|jQuery)}
  */
 jQuery.prototype.scrollTop = function(value) {};
 
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.select = function(arg1, handler) {};
 
@@ -1938,13 +1852,13 @@ jQuery.prototype.serializeArray = function() {};
  * @param {(string|number|function())=} duration
  * @param {(function()|string)=} arg2
  * @param {function()=} callback
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.show = function(duration, arg2, callback) {};
 
 /**
  * @param {jQuerySelector=} selector
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.siblings = function(selector) {};
@@ -1958,7 +1872,7 @@ jQuery.prototype.size = function() {};
 /**
  * @param {number} start
  * @param {number=} end
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.prototype.slice = function(start, end) {};
@@ -1967,7 +1881,7 @@ jQuery.prototype.slice = function(start, end) {};
  * @param {(string|number|function())=} duration
  * @param {(function()|string)=} arg2
  * @param {function()=} callback
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.slideDown = function(duration, arg2, callback) {};
 
@@ -1975,7 +1889,7 @@ jQuery.prototype.slideDown = function(duration, arg2, callback) {};
  * @param {(string|number|function())=} duration
  * @param {(function()|string)=} arg2
  * @param {function()=} callback
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.slideToggle = function(duration, arg2, callback) {};
 
@@ -1983,7 +1897,7 @@ jQuery.prototype.slideToggle = function(duration, arg2, callback) {};
  * @param {(string|number|function())=} duration
  * @param {(function()|string)=} arg2
  * @param {function()=} callback
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.slideUp = function(duration, arg2, callback) {};
 
@@ -1991,20 +1905,18 @@ jQuery.prototype.slideUp = function(duration, arg2, callback) {};
  * @param {(boolean|string)=} arg1
  * @param {boolean=} arg2
  * @param {boolean=} jumpToEnd
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.stop = function(arg1, arg2, jumpToEnd) {};
 
 /**
- * @deprecated
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 jQuery.sub = function() {};
 
 /**
- * @deprecated
- * @return {!jQuery}
+ * @return {jQuery}
  * @nosideeffects
  */
 $.sub = function() {};
@@ -2012,7 +1924,7 @@ $.sub = function() {};
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)=} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.submit = function(arg1, handler) {};
 
@@ -2096,7 +2008,7 @@ $.support.tbody;
 
 /**
  * @param {(string|function(number,string))=} arg1
- * @return {(string|!jQuery)}
+ * @return {(string|jQuery)}
  */
 jQuery.prototype.text = function(arg1) {};
 
@@ -2110,23 +2022,23 @@ jQuery.prototype.toArray = function() {};
  * @param {(function(jQuery.event)|string|number|function()|boolean)=} arg1
  * @param {(function(jQuery.event)|function()|string)=} arg2
  * @param {(function(jQuery.event)|function())=} arg3
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.toggle = function(arg1, arg2, arg3) {};
 
 /**
  * @param {(string|boolean|function(number,string,boolean))=} arg1
  * @param {boolean=} flag
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.toggleClass = function(arg1, flag) {};
 
 /**
  * @param {(string|jQuery.event)} arg1
- * @param {...*} var_args
- * @return {!jQuery}
+ * @param {Object=} extraParameters
+ * @return {jQuery}
  */
-jQuery.prototype.trigger = function(arg1, var_args) {};
+jQuery.prototype.trigger = function(arg1, extraParameters) {};
 
 /**
  * @param {string} eventType
@@ -2166,7 +2078,7 @@ $.type = function(obj) {};
 /**
  * @param {(string|function(jQuery.event)|jQuery.event)=} arg1
  * @param {(function(jQuery.event)|boolean)=} arg2
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.unbind = function(arg1, arg2) {};
 
@@ -2174,7 +2086,7 @@ jQuery.prototype.unbind = function(arg1, arg2) {};
  * @param {string=} arg1
  * @param {(string|Object.<string,*>)=} arg2
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.undelegate = function(arg1, arg2, handler) {};
 
@@ -2193,16 +2105,16 @@ $.unique = function(arr) {};
 /**
  * @param {(function(jQuery.event)|Object.<string, *>)} arg1
  * @param {function(jQuery.event)=} handler
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.unload = function(arg1, handler) {};
 
-/** @return {!jQuery} */
+/** @return {jQuery} */
 jQuery.prototype.unwrap = function() {};
 
 /**
  * @param {(string|function(number,*))=} arg1
- * @return {(string|number|Array.<string>|!jQuery)}
+ * @return {(string|number|Array.<string>|jQuery)}
  */
 jQuery.prototype.val = function(arg1) {};
 
@@ -2220,24 +2132,24 @@ $.when = function(deferreds) {};
 
 /**
  * @param {(string|number|function(number,number))=} arg1
- * @return {(number|!jQuery)}
+ * @return {(number|jQuery)}
  */
 jQuery.prototype.width = function(arg1) {};
 
 /**
  * @param {(string|jQuerySelector|Element|jQuery|function(number))} arg1
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.wrap = function(arg1) {};
 
 /**
  * @param {(string|jQuerySelector|Element|jQuery)} wrappingElement
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.wrapAll = function(wrappingElement) {};
 
 /**
  * @param {(string|function(number))} arg1
- * @return {!jQuery}
+ * @return {jQuery}
  */
 jQuery.prototype.wrapInner = function(arg1) {};

@@ -349,8 +349,12 @@ public class CommandLineRunnerTest extends TestCase {
   //////////////////////////////////////////////////////////////////////////////
   // Integration tests
 
-  public void testIssue70() {
+  public void testIssue70a() {
     test("function foo({}) {}", RhinoErrorReporter.PARSE_ERROR);
+  }
+
+  public void testIssue70b() {
+    test("function foo([]) {}", RhinoErrorReporter.PARSE_ERROR);
   }
 
   public void testIssue81() {
