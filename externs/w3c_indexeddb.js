@@ -370,6 +370,21 @@ IDBDatabase.prototype.transaction = function(storeNames, mode) {};
 IDBDatabase.prototype.close = function() {};
 
 /**
+ * @type {Function}
+ */
+IDBDatabase.prototype.onabort = function() {};
+
+/**
+ * @type {Function}
+ */
+IDBDatabase.prototype.onerror = function() {};
+
+/**
+ * @type {Function}
+ */
+IDBDatabase.prototype.onversionchange = function() {};
+
+/**
  * @constructor
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBObjectStore
  */
