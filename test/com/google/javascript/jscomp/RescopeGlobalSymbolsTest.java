@@ -120,6 +120,38 @@ public class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "_.foo = function () { var _$a$ = 1;}");
   }
 
+  public void testExterns() {
+    test("var document;",
+        "document",
+        "window.document", null, null);
+    test("var document;",
+        "document.getElementsByTagName('test')",
+        "window.document.getElementsByTagName('test')", null, null);
+    test("var document;",
+        "window.document.getElementsByTagName('test')",
+        "window.document.getElementsByTagName('test')", null, null);
+    test("var document;document.getElementsByTagName",
+        "document.getElementsByTagName('test')",
+        "window.document.getElementsByTagName('test')", null, null);
+    test("var document,navigator",
+        "document.navigator;navigator",
+        "window.document.navigator;window.navigator", null, null);
+    test("var iframes",
+        "function test() { iframes.resize(); }",
+        "_.test = function() { window.iframes.resize(); }", null, null);
+    test("var iframes",
+        "var foo = iframes;",
+        "_.foo = window.iframes;", null, null);
+    // Special names.
+    test("var arguments, window, eval;",
+        "arguments;window;eval;",
+        "arguments;window;eval;", null, null);
+    // Actually not an extern.
+    test("",
+        "document",
+        "window.document", null, null);
+  }
+
   private class StringCompare extends CompilerTestCase {
 
     StringCompare() {

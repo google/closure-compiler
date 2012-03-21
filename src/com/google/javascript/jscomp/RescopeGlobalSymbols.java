@@ -15,12 +15,14 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Finds all references to global symbols and rewrites them to be property
@@ -46,6 +48,9 @@ class RescopeGlobalSymbols implements CompilerPass {
 
   // Appended to variables names that conflict with globalSymbolNamespace.
   private static final String DISAMBIGUATION_SUFFIX = "$";
+  private static final String WINDOW = "window";
+  private static final Set<String> SPECIAL_EXTERNS =
+      ImmutableSet.of(WINDOW, "eval", "arguments");
 
   private final AbstractCompiler compiler;
   private final String globalSymbolNamespace;
@@ -88,6 +93,11 @@ class RescopeGlobalSymbols implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new RewriteScopeCallback());
     // 3. removing the var from every statement in global scope.
     NodeTraversal.traverse(compiler, root, new RemoveGlobalVarCallback());
+
+    // Extra pass which makes all extern global symbols reference window
+    // explicitly.
+    NodeTraversal.traverse(compiler, root,
+        new MakeExternsReferenceWindowExplicitly());
   }
 
   /**
@@ -261,5 +271,32 @@ class RescopeGlobalSymbols implements CompilerPass {
       }
       return comma;
     }
+  }
+
+  /**
+   * Rewrites extern names to be explicit children of window instead of only
+   * implicitly referencing it.
+   * This enables injecting window into a scope and make all global symbol
+   * depend on the injected object.
+   */
+  private class MakeExternsReferenceWindowExplicitly extends
+      AbstractPostOrderCallback {
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (!n.isName()) {
+        return;
+      }
+      String name = n.getString();
+      Scope.Var var = t.getScope().getVar(name);
+      if (name.length() > 0 && (var == null || var.isExtern()) &&
+          !globalSymbolNamespace.equals(name) &&
+          !SPECIAL_EXTERNS.contains(name)) {
+        parent.replaceChild(n, IR.getprop(IR.name(WINDOW), IR.string(name))
+            .srcrefTree(n));
+        compiler.reportCodeChange();
+      }
+    }
+
   }
 }
