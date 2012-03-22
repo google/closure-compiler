@@ -563,8 +563,8 @@ $.Deferred = function(opt_fn) {};
  * @param {function()=} alwaysCallbacks2
  * @return {jQuery.deferred}
  */
-jQuery.deferred.prototype.always
-    = function(alwaysCallbacks, alwaysCallbacks2) {};
+jQuery.deferred.prototype.always =
+    function(alwaysCallbacks, alwaysCallbacks2) {};
 
 /**
  * @param {function()} doneCallbacks
