@@ -40,3 +40,6 @@ Event.prototype.defaultPrevented;
 
 /** @type {string} */
 Event.prototype.namespaceURI;
+
+/** @return {undefined} */
+Event.prototype.stopImmediatePropagation = function() {};
