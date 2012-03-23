@@ -41,62 +41,38 @@ package org.mozilla.javascript.ast;
 import org.mozilla.javascript.Token;
 
 /**
- * AST node for a single 'for (foo in bar)' loop construct in a JavaScript 1.7
- * Array comprehension.  This node type is almost equivalent to a
- * {@link ForInLoop}, except that it has no body statement.
- * Node type is {@link Token#FOR}.<p>
+ * AST node for an empty statement.  Node type is {@link Token#EMPTY}.<p>
+ *
  */
-public class ArrayComprehensionLoop extends ForInLoop {
+public class EmptyStatement extends AstNode {
 
-    public ArrayComprehensionLoop() {
+    {
+        type = Token.EMPTY;
     }
 
-    public ArrayComprehensionLoop(int pos) {
+    public EmptyStatement() {
+    }
+
+    public EmptyStatement(int pos) {
         super(pos);
     }
 
-    public ArrayComprehensionLoop(int pos, int len) {
+    public EmptyStatement(int pos, int len) {
         super(pos, len);
-    }
-    
-    /**
-     * Returns {@code null} for loop body
-     * @return loop body (always {@code null} for this node type)
-     */
-    public AstNode getBody() {
-        return null;
-    }
-
-    /**
-     * Throws an exception on attempts to set the loop body.
-     * @param body loop body
-     * @throws UnsupportedOperationException
-     */
-    public void setBody(AstNode body) {
-        throw new UnsupportedOperationException("this node type has no body");
     }
 
     @Override
     public String toSource(int depth) {
-        return makeIndent(depth)
-                + " for "
-                + (isForEach()?"each ":"")
-                + "("
-                + iterator.toSource(0)
-                + " in "
-                + iteratedObject.toSource(0)
-                + ")";
+        StringBuilder sb = new StringBuilder();
+        sb.append(makeIndent(depth)).append(";\n");
+        return sb.toString();
     }
 
     /**
-     * Visits the iterator expression and the iterated object expression.
-     * There is no body-expression for this loop type.
+     * Visits this node.  There are no children.
      */
     @Override
     public void visit(NodeVisitor v) {
-        if (v.visit(this)) {
-            iterator.visit(v);
-            iteratedObject.visit(v);
-        }
+        v.visit(this);
     }
 }

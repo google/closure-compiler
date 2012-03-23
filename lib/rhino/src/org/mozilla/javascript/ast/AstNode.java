@@ -148,6 +148,7 @@ public abstract class AstNode extends Node implements Comparable<AstNode> {
         operatorNames.put(Token.ASSIGN_DIV, "/=");
         operatorNames.put(Token.ASSIGN_MOD, "%=");
         operatorNames.put(Token.ASSIGN_BITXOR, "^=");
+        operatorNames.put(Token.VOID, "void");
     }
 
     public static class PositionComparator implements Comparator<AstNode>, Serializable {
@@ -485,6 +486,8 @@ public abstract class AstNode extends Node implements Comparable<AstNode> {
             sb.append(item.toSource(0));
             if (count++ < max-1) {
                 sb.append(", ");
+            } else if (item instanceof EmptyExpression) {
+                sb.append(",");
             }
         }
     }

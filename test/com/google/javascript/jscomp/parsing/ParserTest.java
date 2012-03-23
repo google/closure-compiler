@@ -675,7 +675,7 @@ public class ParserTest extends BaseJSTypeTestCase {
 
   public void testGeneratorsForbidden() {
     parseError("var i = (x for (x in obj));",
-        "missing ) in parenthetical");
+        "Unsupported syntax: GENEXPR");
   }
 
   public void testGettersForbidden1() {
@@ -933,6 +933,8 @@ public class ParserTest extends BaseJSTypeTestCase {
         "missing { before function body",
         "syntax error",
         "missing ; before statement",
+        "missing ; before statement",
+        "missing } after function body",
         "Unsupported syntax: ERROR",
         "Unsupported syntax: ERROR");
     parseError("var x = function a.b() {}",
@@ -943,6 +945,7 @@ public class ParserTest extends BaseJSTypeTestCase {
         "syntax error",
         "missing ; before statement",
         "missing ; before statement",
+        "missing } after function body",
         "Unsupported syntax: ERROR",
         "Unsupported syntax: ERROR");
   }

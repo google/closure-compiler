@@ -44,6 +44,9 @@ package org.mozilla.javascript;
  * EcmaScript 5 spec, 15.3.4.5
  */
 public class BoundFunction extends BaseFunction {
+
+  static final long serialVersionUID = 2118137342826470729L;
+
   private final Callable targetFunction;
   private final Scriptable boundThis;
   private final Object[] boundArgs;

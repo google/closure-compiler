@@ -115,7 +115,7 @@ public class KeywordLiteral extends AstNode {
             sb.append("false");
             break;
         case Token.DEBUGGER:
-            sb.append("debugger");
+            sb.append("debugger;\n");
             break;
         default:
             throw new IllegalStateException("Invalid keyword literal type: "

@@ -360,6 +360,8 @@ public abstract class RhinoException extends RuntimeException
         useMozillaStackStyle = flag;
     }
 
+    static final long serialVersionUID = 1883500631321581169L;
+    
     private static boolean useMozillaStackStyle = false;
 
     private String sourceName;

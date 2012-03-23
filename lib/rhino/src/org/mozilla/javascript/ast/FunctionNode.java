@@ -417,8 +417,19 @@ public class FunctionNode extends ScriptNode {
             sb.append(") ");
         }
         if (isExpressionClosure) {
-            sb.append(" ");
-            sb.append(getBody().toSource(0));
+            AstNode body = getBody();
+            if (body.getLastChild() instanceof ReturnStatement) {
+                // omit "return" keyword, just print the expression
+                body = ((ReturnStatement) body.getLastChild()).getReturnValue();
+                sb.append(body.toSource(0));
+                if (functionType == FUNCTION_STATEMENT) {
+                    sb.append(";");
+                }
+            } else {
+                // should never happen
+                sb.append(" ");
+                sb.append(body.toSource(0));
+            }
         } else {
             sb.append(getBody().toSource(depth).trim());
         }

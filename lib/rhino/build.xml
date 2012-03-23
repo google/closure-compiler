@@ -171,9 +171,10 @@
       <include name="org/mozilla/javascript/xml/*.class"/>
       <include name="org/mozilla/javascript/continuations/*.class"/>
       <include name="org/mozilla/javascript/jdk13/*.class"/>
-
-      <!-- exclude classes that defines only int constants -->
-      <exclude name="org/mozilla/javascript/Token.class"/>
+      <include name="org/mozilla/javascript/ast/*.class"/>
+      <include name="org/mozilla/javascript/json/*.class"/>
+      <include name="org/mozilla/javascript/annotations/*.class"/>
+      <include name="org/mozilla/javascript/v8dtoa/*.class"/>
 
       <!-- exclude classes that uses class generation library -->
       <exclude name="org/mozilla/javascript/JavaAdapter*.class"/>

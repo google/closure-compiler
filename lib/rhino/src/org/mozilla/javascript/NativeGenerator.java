@@ -95,23 +95,6 @@ public final class NativeGenerator extends IdScriptableObject {
         return "Generator";
     }
 
-    /**
-     * Close the generator if it is still open.
-     */
-    @Override
-    protected void finalize() throws Throwable {
-        if (savedState != null) {
-            // This is a little tricky since we are most likely running in
-            // a different thread. We need to get a Context to run this, and
-            // we must call "doTopCall" since this will likely be the outermost
-            // JavaScript frame on this thread.
-            Context cx = Context.getCurrentContext();
-            ContextFactory factory = cx != null ? cx.getFactory()
-                                                : ContextFactory.getGlobal();
-            factory.call(new CloseGeneratorAction(this));
-        }
-    }
-
     private static class CloseGeneratorAction implements ContextAction {
         private NativeGenerator generator;
 

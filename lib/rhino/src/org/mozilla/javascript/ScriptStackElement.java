@@ -9,6 +9,8 @@ import java.io.Serializable;
  */
 public final class ScriptStackElement implements Serializable {
 
+    static final long serialVersionUID = -6416688260860477449L;
+
     public final String fileName;
     public final String functionName;
     public final int lineNumber;

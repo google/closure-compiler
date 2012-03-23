@@ -22,7 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Steve Yegge
+ *   Travis Ennis
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -38,42 +38,35 @@
 
 package org.mozilla.javascript.ast;
 
-import org.mozilla.javascript.Token;
-
 /**
- * AST node for a single 'for (foo in bar)' loop construct in a JavaScript 1.7
- * Array comprehension.  This node type is almost equivalent to a
- * {@link ForInLoop}, except that it has no body statement.
- * Node type is {@link Token#FOR}.<p>
  */
-public class ArrayComprehensionLoop extends ForInLoop {
-
-    public ArrayComprehensionLoop() {
+public class GeneratorExpressionLoop extends ForInLoop {
+    
+    public GeneratorExpressionLoop() {
     }
 
-    public ArrayComprehensionLoop(int pos) {
+    public GeneratorExpressionLoop(int pos) {
         super(pos);
     }
 
-    public ArrayComprehensionLoop(int pos, int len) {
+    public GeneratorExpressionLoop(int pos, int len) {
         super(pos, len);
     }
     
     /**
-     * Returns {@code null} for loop body
-     * @return loop body (always {@code null} for this node type)
+     * Returns whether the loop is a for-each loop
      */
-    public AstNode getBody() {
-        return null;
+    @Override
+    public boolean isForEach() {
+        return false;
     }
 
     /**
-     * Throws an exception on attempts to set the loop body.
-     * @param body loop body
-     * @throws UnsupportedOperationException
+     * Sets whether the loop is a for-each loop
      */
-    public void setBody(AstNode body) {
-        throw new UnsupportedOperationException("this node type has no body");
+    @Override
+    public void setIsForEach(boolean isForEach) {
+        throw new UnsupportedOperationException("this node type does not support for each");
     }
 
     @Override

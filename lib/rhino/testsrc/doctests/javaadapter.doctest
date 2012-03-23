@@ -1,0 +1,49 @@
+js> var x = new JavaAdapter(java.util.HashMap, {})
+js> x
+{}
+js> x instanceof java.util.HashMap
+true
+js> x instanceof java.util.Map
+true
+js> x.put("foo", "bar")
+null
+js> x
+{foo=bar}
+js> x.get("foo")
+bar
+js> x = new JavaAdapter(java.util.HashMap, {}, {a: "b"})
+{a=b}
+js> x.get("a")
+b
+js> x.remove("a")
+b
+js> x
+{}
+js> x.get("a")
+null
+js> x = new JavaAdapter(java.util.HashMap, {get: function(key) {return 2 + this.super$get(key)}})
+{}
+js> x.put("foo", "bar")
+null
+js> x.get("foo")
+2bar
+js> x.get("bar")
+2.0
+js> x = new JavaAdapter({}); x.class.superclass
+class java.lang.Object
+js> x.class.interfaces.length
+0
+js> var Appendable = java.lang.Appendable
+js> var Runnable = java.lang.Runnable
+js> function append() {return this}
+js> function run() {return "done"}
+js> var x = new JavaAdapter(Runnable, Appendable, {run: run, append: append})
+js> x instanceof Appendable
+true
+js> x instanceof Runnable
+true
+js> x.append("foo") === x
+true
+js> x.run()
+js>
+

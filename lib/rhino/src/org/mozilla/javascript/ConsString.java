@@ -38,6 +38,8 @@
 
 package org.mozilla.javascript;
 
+import java.io.Serializable;
+
 /**
  * <p>This class represents a string composed of two components, each of which
  * may be a <code>java.lang.String</code> or another ConsString.</p>
@@ -54,7 +56,9 @@ package org.mozilla.javascript;
  *
  * <p>Both the name and the concept are borrowed from V8.</p>
  */
-public class ConsString implements CharSequence {
+public class ConsString implements CharSequence, Serializable {
+
+    private static final long serialVersionUID = -8432806714471372570L;
 
     private CharSequence s1, s2;
     private final int length;
@@ -77,6 +81,11 @@ public class ConsString implements CharSequence {
         }
     }
 
+    // Replace with string representation when serializing
+    private Object writeReplace() {
+        return this.toString();
+    }
+    
     public String toString() {
         return depth == 0 ? (String)s1 : flatten();
     }

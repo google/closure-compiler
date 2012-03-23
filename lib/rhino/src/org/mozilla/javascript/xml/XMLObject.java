@@ -49,6 +49,9 @@ import org.mozilla.javascript.*;
  */
 public abstract class XMLObject extends IdScriptableObject
 {
+    
+    static final long serialVersionUID = 8455156490438576500L;
+    
     public XMLObject()
     {
     }

@@ -53,13 +53,13 @@ import java.util.List;
  * For {@code let} declarations, the node position coincides with the
  * first {@link VariableInitializer} child.<p>
  *
- * A standalone variable declaration in a statement context is wrapped with an
- * {@link ExpressionStatement}.
+ * A standalone variable declaration in a statement context returns {@code true}
+ * from its {@link #isStatement()} method.
  */
 public class VariableDeclaration extends AstNode {
 
-    private List<VariableInitializer> variables
-        = new ArrayList<VariableInitializer>();
+    private List<VariableInitializer> variables = new ArrayList<VariableInitializer>();
+    private boolean isStatement;
 
     {
         type = Token.VAR;
@@ -142,6 +142,20 @@ public class VariableDeclaration extends AstNode {
         return type == Token.LET;
     }
 
+    /**
+     * Returns true if this node represents a statement.
+     */
+    public boolean isStatement() {
+        return isStatement;
+    }
+
+    /**
+     * Set or unset the statement flag.
+     */
+    public void setIsStatement(boolean isStatement) {
+        this.isStatement = isStatement;
+    }
+
     private String declTypeName() {
         return Token.typeToName(type).toLowerCase();
     }
@@ -153,7 +167,7 @@ public class VariableDeclaration extends AstNode {
         sb.append(declTypeName());
         sb.append(" ");
         printList(variables, sb);
-        if (!(getParent() instanceof Loop)) {
+        if (isStatement()) {
             sb.append(";\n");
         }
         return sb.toString();

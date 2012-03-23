@@ -24,6 +24,7 @@
  * Contributor(s):
  *   Norris Boyd
  *   Igor Bukanov
+ *   Travis Ennis
  *   Ethan Hugg
  *   Bob Jervis
  *   Terry Lucas
@@ -134,6 +135,8 @@ public final class IRFactory extends Parser
               }
           case Token.FUNCTION:
               return transformFunction((FunctionNode)node);
+          case Token.GENEXPR:
+              return transformGenExpr((GeneratorExpression)node);
           case Token.GETELEM:
               return transformElementGet((ElementGet)node);
           case Token.GETPROP:
@@ -604,6 +607,152 @@ public final class IRFactory extends Parser
         return call;
     }
 
+    private Node transformGenExpr(GeneratorExpression node) {
+        Node pn;
+
+        FunctionNode fn = new FunctionNode();
+        fn.setSourceName(currentScriptOrFn.getNextTempName());
+        fn.setIsGenerator();
+        fn.setFunctionType(FunctionNode.FUNCTION_EXPRESSION);
+        fn.setRequiresActivation();
+
+        int functionType = fn.getFunctionType();
+        int start = decompiler.markFunctionStart(functionType);
+        Node mexpr = decompileFunctionHeader(fn);
+        int index = currentScriptOrFn.addFunction(fn);
+
+        PerFunctionVariables savedVars = new PerFunctionVariables(fn);
+        try {
+            // If we start needing to record much more codegen metadata during
+            // function parsing, we should lump it all into a helper class.
+            Node destructuring = (Node)fn.getProp(Node.DESTRUCTURING_PARAMS);
+            fn.removeProp(Node.DESTRUCTURING_PARAMS);
+
+            int lineno = node.lineno;
+            ++nestingOfFunction;  // only for body, not params
+            Node body = genExprTransformHelper(node);
+
+            if (!fn.isExpressionClosure()) {
+                decompiler.addToken(Token.RC);
+            }
+            fn.setEncodedSourceBounds(start, decompiler.markFunctionEnd(start));
+
+            if (functionType != FunctionNode.FUNCTION_EXPRESSION && !fn.isExpressionClosure()) {
+                // Add EOL only if function is not part of expression
+                // since it gets SEMI + EOL from Statement in that case
+                decompiler.addToken(Token.EOL);
+            }
+
+            if (destructuring != null) {
+                body.addChildToFront(new Node(Token.EXPR_VOID,
+                                              destructuring, lineno));
+            }
+
+            int syntheticType = fn.getFunctionType();
+            pn = initFunction(fn, index, body, syntheticType);
+            if (mexpr != null) {
+                pn = createAssignment(Token.ASSIGN, mexpr, pn);
+                if (syntheticType != FunctionNode.FUNCTION_EXPRESSION) {
+                    pn = createExprStatementNoReturn(pn, fn.getLineno());
+                }
+            }
+        } finally {
+            --nestingOfFunction;
+            savedVars.restore();
+        }
+
+        Node call = createCallOrNew(Token.CALL, pn);
+        call.setLineno(node.getLineno());
+        decompiler.addToken(Token.LP);
+        decompiler.addToken(Token.RP);
+        return call;
+    }
+
+    private Node genExprTransformHelper(GeneratorExpression node) {
+        decompiler.addToken(Token.LP);
+        int lineno = node.getLineno();
+        Node expr = transform(node.getResult());
+
+        List<GeneratorExpressionLoop> loops = node.getLoops();
+        int numLoops = loops.size();
+
+        // Walk through loops, collecting and defining their iterator symbols.
+        Node[] iterators = new Node[numLoops];
+        Node[] iteratedObjs = new Node[numLoops];
+
+        for (int i = 0; i < numLoops; i++) {
+            GeneratorExpressionLoop acl = loops.get(i);
+            decompiler.addName(" ");
+            decompiler.addToken(Token.FOR);
+            decompiler.addToken(Token.LP);
+
+            AstNode iter = acl.getIterator();
+            String name = null;
+            if (iter.getType() == Token.NAME) {
+                name = iter.getString();
+                decompiler.addName(name);
+            } else {
+                // destructuring assignment
+                decompile(iter);
+                name = currentScriptOrFn.getNextTempName();
+                defineSymbol(Token.LP, name, false);
+                expr = createBinary(Token.COMMA,
+                                    createAssignment(Token.ASSIGN,
+                                                     iter,
+                                                     createName(name)),
+                                    expr);
+            }
+            Node init = createName(name);
+            // Define as a let since we want the scope of the variable to
+            // be restricted to the array comprehension
+            defineSymbol(Token.LET, name, false);
+            iterators[i] = init;
+
+            decompiler.addToken(Token.IN);
+            iteratedObjs[i] = transform(acl.getIteratedObject());
+            decompiler.addToken(Token.RP);
+        }
+
+        // generate code for tmpArray.push(body)
+        Node yield = new Node(Token.YIELD, expr, node.getLineno());
+
+        Node body = new Node(Token.EXPR_VOID, yield, lineno);
+
+        if (node.getFilter() != null) {
+            decompiler.addName(" ");
+            decompiler.addToken(Token.IF);
+            decompiler.addToken(Token.LP);
+            body = createIf(transform(node.getFilter()), body, null, lineno);
+            decompiler.addToken(Token.RP);
+        }
+
+        // Now walk loops in reverse to build up the body statement.
+        int pushed = 0;
+        try {
+            for (int i = numLoops-1; i >= 0; i--) {
+                GeneratorExpressionLoop acl = loops.get(i);
+                Scope loop = createLoopNode(null,  // no label
+                                            acl.getLineno());
+                pushScope(loop);
+                pushed++;
+                body = createForIn(Token.LET,
+                                   loop,
+                                   iterators[i],
+                                   iteratedObjs[i],
+                                   body,
+                                   acl.isForEach());
+            }
+        } finally {
+            for (int i = 0; i < pushed; i++) {
+                popScope();
+            }
+        }
+
+        decompiler.addToken(Token.RP);
+
+        return body;
+    }
+
     private Node transformIf(IfStatement n) {
         decompiler.addToken(Token.IF);
         decompiler.addToken(Token.LP);
@@ -811,14 +960,15 @@ public final class IRFactory extends Parser
     }
 
     private Node transformReturn(ReturnStatement node) {
-        if (Boolean.TRUE.equals(node.getProp(Node.EXPRESSION_CLOSURE_PROP))) {
+        boolean expClosure = Boolean.TRUE.equals(node.getProp(Node.EXPRESSION_CLOSURE_PROP));
+        if (expClosure) {
             decompiler.addName(" ");
         } else {
             decompiler.addToken(Token.RETURN);
         }
         AstNode rv = node.getReturnValue();
         Node value = rv == null ? null : transform(rv);
-        decompiler.addEOL(Token.SEMI);
+        if (!expClosure) decompiler.addEOL(Token.SEMI);
         return rv == null
             ? new Node(Token.RETURN, node.getLineno())
             : new Node(Token.RETURN, value, node.getLineno());
@@ -1714,10 +1864,9 @@ public final class IRFactory extends Parser
                 Node ref = child.getFirstChild();
                 child.removeChild(ref);
                 n = new Node(Token.DEL_REF, ref);
-            } else if (childType == Token.CALL) {
-                n = new Node(nodeType, new Node(Token.TRUE), child);
             } else {
-                n = new Node(Token.TRUE);
+                // Always evaluate delete operand, see ES5 11.4.1 & bug #726121
+                n = new Node(nodeType, new Node(Token.TRUE), child);
             }
             return n;
           }
@@ -2180,6 +2329,9 @@ public final class IRFactory extends Parser
               break;
           case Token.GETELEM:
               decompileElementGet((ElementGet) node);
+              break;
+          case Token.THIS:
+              decompiler.addToken(node.getType());
               break;
           default:
               Kit.codeBug("unexpected token: "

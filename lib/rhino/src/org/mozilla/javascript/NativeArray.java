@@ -836,10 +836,14 @@ public class NativeArray extends IdScriptableObject implements List
         try {
             if (!iterating) {
                 cx.iterating.put(thisObj, 0); // stop recursion.
+                // make toSource print null and undefined values in recent versions
+                boolean skipUndefinedAndNull = !toSource
+                        || cx.getLanguageVersion() < Context.VERSION_1_5;
                 for (i = 0; i < length; i++) {
                     if (i > 0) result.append(separator);
-                    Object elem = getElem(cx, thisObj, i);
-                    if (elem == null || elem == Undefined.instance) {
+                    Object elem = getRawElem(thisObj, i);
+                    if (elem == NOT_FOUND || (skipUndefinedAndNull &&
+                            (elem == null || elem == Undefined.instance))) {
                         haslast = false;
                         continue;
                     }
@@ -859,8 +863,7 @@ public class NativeArray extends IdScriptableObject implements List
                         }
 
                     } else {
-                        if (toLocale)
-                        {
+                        if (toLocale) {
                             Callable fun;
                             Scriptable funThis;
                             fun = ScriptRuntime.getPropFunctionAndThis(

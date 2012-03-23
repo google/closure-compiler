@@ -39,6 +39,7 @@ import com.google.javascript.rhino.head.ast.ContinueStatement;
 import com.google.javascript.rhino.head.ast.DoLoop;
 import com.google.javascript.rhino.head.ast.ElementGet;
 import com.google.javascript.rhino.head.ast.EmptyExpression;
+import com.google.javascript.rhino.head.ast.EmptyStatement;
 import com.google.javascript.rhino.head.ast.ExpressionStatement;
 import com.google.javascript.rhino.head.ast.ForInLoop;
 import com.google.javascript.rhino.head.ast.ForLoop;
@@ -90,14 +91,14 @@ class IRFactory {
   private final ErrorReporter errorReporter;
   private final TransformDispatcher transformDispatcher;
 
-  // non-static for thread safety
-  private final Set<String> ALLOWED_DIRECTIVES = Sets.newHashSet("use strict");
+  private static final ImmutableSet<String> ALLOWED_DIRECTIVES =
+      ImmutableSet.of("use strict");
 
-  private static final Set<String> ES5_RESERVED_KEYWORDS =
+  private static final ImmutableSet<String> ES5_RESERVED_KEYWORDS =
       ImmutableSet.of(
           // From Section 7.6.1.2
           "class", "const", "enum", "export", "extends", "import", "super");
-  private static final Set<String> ES5_STRICT_RESERVED_KEYWORDS =
+  private static final ImmutableSet<String> ES5_STRICT_RESERVED_KEYWORDS =
       ImmutableSet.of(
           // From Section 7.6.1.2
           "class", "const", "enum", "export", "extends", "import", "super",
@@ -552,6 +553,12 @@ class IRFactory {
 
     @Override
     Node processEmptyExpression(EmptyExpression exprNode) {
+      Node node = newNode(Token.EMPTY);
+      return node;
+    }
+
+    @Override
+    Node processEmptyStatement(EmptyStatement exprNode) {
       Node node = newNode(Token.EMPTY);
       return node;
     }

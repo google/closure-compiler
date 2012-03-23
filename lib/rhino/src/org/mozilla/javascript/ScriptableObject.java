@@ -87,6 +87,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                                                   ConstProperties
 {
 
+    static final long serialVersionUID = 2829861078851942586L;
+
     /**
      * The empty property attribute.
      *
@@ -2015,13 +2017,13 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         return !isDataDescriptor(desc) && !isAccessorDescriptor(desc);
     }
 
-    protected Scriptable ensureScriptable(Object arg) {
+    protected static Scriptable ensureScriptable(Object arg) {
         if ( !(arg instanceof Scriptable) )
             throw ScriptRuntime.typeError1("msg.arg.not.object", ScriptRuntime.typeof(arg));
         return (Scriptable) arg;
     }
 
-    protected ScriptableObject ensureScriptableObject(Object arg) {
+    protected static ScriptableObject ensureScriptableObject(Object arg) {
         if ( !(arg instanceof ScriptableObject) )
             throw ScriptRuntime.typeError1("msg.arg.not.object", ScriptRuntime.typeof(arg));
         return (ScriptableObject) arg;

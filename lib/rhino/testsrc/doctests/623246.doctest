@@ -1,0 +1,9 @@
+js> var table = {};
+js> table["0"] = 1;
+1
+js> table["+0"]
+js> table["-0"]
+js> table["0"]
+1
+js> table[0]
+1

@@ -40,6 +40,8 @@
 
 package org.mozilla.javascript;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -191,6 +193,11 @@ public class NativeJavaPackage extends ScriptableObject
         return toString();
     }
 
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        this.classLoader = Context.getCurrentContext().getApplicationClassLoader();
+    }
+
     @Override
     public String toString() {
         return "[JavaPackage " + packageName + "]";
@@ -213,6 +220,6 @@ public class NativeJavaPackage extends ScriptableObject
     }
 
     private String packageName;
-    private ClassLoader classLoader;
+    private transient ClassLoader classLoader;
     private Set<String> negativeCache = null;
 }

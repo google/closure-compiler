@@ -29,6 +29,7 @@ import com.google.javascript.rhino.head.ast.ContinueStatement;
 import com.google.javascript.rhino.head.ast.DoLoop;
 import com.google.javascript.rhino.head.ast.ElementGet;
 import com.google.javascript.rhino.head.ast.EmptyExpression;
+import com.google.javascript.rhino.head.ast.EmptyStatement;
 import com.google.javascript.rhino.head.ast.ExpressionStatement;
 import com.google.javascript.rhino.head.ast.ForInLoop;
 import com.google.javascript.rhino.head.ast.ForLoop;
@@ -82,6 +83,7 @@ abstract class TypeSafeDispatcher<T> {
   abstract T processDoLoop(DoLoop loopNode);
   abstract T processElementGet(ElementGet getNode);
   abstract T processEmptyExpression(EmptyExpression exprNode);
+  abstract T processEmptyStatement(EmptyStatement exprNode);
   abstract T processExpressionStatement(ExpressionStatement statementNode);
   abstract T processForInLoop(ForInLoop loopNode);
   abstract T processForLoop(ForLoop loopNode);
@@ -194,7 +196,9 @@ abstract class TypeSafeDispatcher<T> {
       case Token.DO:
         return processDoLoop((DoLoop) node);
       case Token.EMPTY:
-        return processEmptyExpression((EmptyExpression) node);
+        return (node instanceof EmptyExpression) ?
+            processEmptyExpression((EmptyExpression) node) :
+            processEmptyStatement((EmptyStatement) node);
       case Token.EXPR_RESULT:
       case Token.EXPR_VOID:
         if (node instanceof ExpressionStatement) {

@@ -123,7 +123,7 @@ public class NativeJavaTopPackage
         // We want to get a real alias, and not a distinct JavaPackage
         // with the same packageName, so that we share classes and top
         // that are underneath.
-        String[] topNames = { "java", "javax", "org", "com", "edu", "net" };
+        String[] topNames = ScriptRuntime.getTopPackageNames();
         NativeJavaPackage[] topPackages = new NativeJavaPackage[topNames.length];
         for (int i=0; i < topNames.length; i++) {
             topPackages[i] = (NativeJavaPackage)top.get(topNames[i], top);

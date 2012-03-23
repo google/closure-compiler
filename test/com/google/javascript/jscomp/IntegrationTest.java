@@ -1984,8 +1984,6 @@ public class IntegrationTest extends TestCase {
     options.ideMode = true;
     DiagnosticType[] warnings = new DiagnosticType[]{
         RhinoErrorReporter.PARSE_ERROR,
-        RhinoErrorReporter.PARSE_ERROR,
-        RhinoErrorReporter.PARSE_ERROR,
         RhinoErrorReporter.PARSE_ERROR};
     test(options,
         new String[] { "var foo = {bar: function(e) }" },
@@ -2171,7 +2169,7 @@ public class IntegrationTest extends TestCase {
       for (JSError err : compiler.getWarnings()) {
         msg += "Warning:" + err.toString() + "\n";
       }
-      assertEquals("Unexpected warnings or errors.\n "+ msg,
+      assertEquals("Unexpected warnings or errors.\n " + msg,
         expected, actual);
     }
   }

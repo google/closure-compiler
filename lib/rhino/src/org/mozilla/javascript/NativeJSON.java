@@ -323,8 +323,8 @@ final class NativeJSON extends IdScriptableObject
         if (value.equals(Boolean.TRUE)) return "true";
         if (value.equals(Boolean.FALSE)) return "false";
 
-        if (value instanceof String) {
-            return quote((String) value);
+        if (value instanceof CharSequence) {
+            return quote(value.toString());
         }
 
         if (value instanceof Number) {
