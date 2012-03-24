@@ -2021,6 +2021,15 @@ public class IntegrationTest extends TestCase {
          ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
   }
 
+  public void testUnboundedArrayLiteralInfiniteLoop() {
+    CompilerOptions options = createCompilerOptions();
+    options.ideMode = true;
+    test(options,
+         "var x = [1, 2",
+         "var x = [1, 2]",
+         RhinoErrorReporter.PARSE_ERROR);
+  }
+
   public void testProvideRequireSameFile() throws Exception {
     CompilerOptions options = createCompilerOptions();
     options.setDependencyOptions(
