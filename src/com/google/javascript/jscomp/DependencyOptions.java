@@ -106,10 +106,13 @@ public class DependencyOptions implements Serializable {
    * The syntactic form of a symbol depends on the type of dependency
    * primitives we're using. For example, goog.provide('foo.bar')
    * provides the symbol 'foo.bar'.
+   *
+   * @return this for easy chaining.
    */
-  public void setEntryPoints(Collection<String> symbols) {
+  public DependencyOptions setEntryPoints(Collection<String> symbols) {
     entryPoints.clear();
     entryPoints.addAll(symbols);
+    return this;
   }
 
   /** Returns whether re-ordering of files is needed. */

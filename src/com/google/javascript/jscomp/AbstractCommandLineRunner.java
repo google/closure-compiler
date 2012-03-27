@@ -227,9 +227,24 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     createDefineOrTweakReplacements(config.tweak, options, true);
 
     // Dependency options
-    options.setManageClosureDependencies(config.manageClosureDependencies);
-    if (config.closureEntryPoints.size() > 0) {
-      options.setManageClosureDependencies(config.closureEntryPoints);
+    if (config.onlyClosureDependencies) {
+      if (config.closureEntryPoints.isEmpty()) {
+        throw new FlagUsageException("When only_closure_dependencies is "
+          + "on, you must specify at least one closure_entry_point");
+      }
+
+      options.setDependencyOptions(new DependencyOptions()
+          .setDependencyPruning(true)
+          .setDependencySorting(true)
+          .setMoocherDropping(true)
+          .setEntryPoints(config.closureEntryPoints));
+    } else if (config.manageClosureDependencies ||
+        config.closureEntryPoints.size() > 0) {
+      options.setDependencyOptions(new DependencyOptions()
+          .setDependencyPruning(true)
+          .setDependencySorting(true)
+          .setMoocherDropping(false)
+          .setEntryPoints(config.closureEntryPoints));
     }
 
     options.devMode = config.jscompDevMode;
@@ -1878,6 +1893,18 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setManageClosureDependencies(boolean newVal) {
       this.manageClosureDependencies = newVal;
+      return this;
+    }
+
+    private boolean onlyClosureDependencies = false;
+
+    /**
+     * Sets whether to sort files by their goog.provide/require deps,
+     * and prune inputs that are not required, and drop all non-closure
+     * files.
+     */
+    CommandLineConfig setOnlyClosureDependencies(boolean newVal) {
+      this.onlyClosureDependencies = newVal;
       return this;
     }
 

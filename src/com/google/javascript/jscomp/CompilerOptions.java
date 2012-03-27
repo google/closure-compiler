@@ -1275,6 +1275,7 @@ public class CompilerOptions implements Serializable, Cloneable {
    * This supercedes manageClosureDependencies.
    */
   public void setDependencyOptions(DependencyOptions options) {
+    Preconditions.checkNotNull(options);
     this.dependencyOptions = options;
   }
 

@@ -647,6 +647,37 @@ public class CommandLineRunnerTest extends TestCase {
          RhinoErrorReporter.TYPE_PARSE_ERROR);
   }
 
+  public void testOnlyClosureDependenciesEmptyEntryPoints() throws Exception {
+    // Prevents this from trying to load externs.zip
+    args.add("--use_only_custom_externs=true");
+
+    args.add("--only_closure_dependencies=true");
+    try {
+      CommandLineRunner runner = createCommandLineRunner(new String[0]);
+      runner.doRun();
+      fail("Expected FlagUsageException");
+    } catch (FlagUsageException e) {
+      assertTrue(e.getMessage(),
+          e.getMessage().contains("only_closure_dependencies"));
+    }
+  }
+
+  public void testOnlyClosureDependenciesOneEntryPoint() throws Exception {
+    args.add("--only_closure_dependencies=true");
+    args.add("--closure_entry_point=beer");
+    test(new String[] {
+          "goog.require('beer'); var beerRequired = 1;",
+          "goog.provide('beer');\ngoog.require('hops');\nvar beerProvided = 1;",
+          "goog.provide('hops'); var hopsProvided = 1;",
+          "goog.provide('scotch'); var scotchProvided = 1;",
+          "var includeFileWithoutProvides = 1;"
+         },
+         new String[] {
+           "var hops = {}, hopsProvided = 1;",
+           "var beer = {}, beerProvided = 1;"
+         });
+  }
+
   public void testSourceMapExpansion1() {
     args.add("--js_output_file");
     args.add("/path/to/out.js");

@@ -335,6 +335,14 @@ public class CommandLineRunner extends
         + "be included in the compilation.")
     private boolean manage_closure_dependencies = false;
 
+    @Option(name = "--only_closure_dependencies",
+        handler = BooleanOptionHandler.class,
+        usage = "Only include files in the transitive dependency of the "
+        + "entry points (specified by closure_entry_point). Files that do "
+        + "not provide dependencies will be removed. This supercedes"
+        + "manage_closure_dependencies")
+    private boolean only_closure_dependencies = false;
+
     @Option(name = "--closure_entry_point",
         usage = "Entry points to the program. Must be goog.provide'd "
         + "symbols. Any goog.provide'd symbols that are not a transitive "
@@ -689,6 +697,7 @@ public class CommandLineRunner extends
           .setDefine(flags.define)
           .setCharset(flags.charset)
           .setManageClosureDependencies(flags.manage_closure_dependencies)
+          .setOnlyClosureDependencies(flags.only_closure_dependencies)
           .setClosureEntryPoints(flags.closure_entry_point)
           .setOutputManifest(ImmutableList.of(flags.output_manifest))
           .setAcceptConstKeyword(flags.accept_const_keyword)
