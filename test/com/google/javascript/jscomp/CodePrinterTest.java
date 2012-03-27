@@ -1354,6 +1354,13 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var a = { '$\\\\' : 5 };", "var a={\"$\\\\\":5}");
   }
 
+  public void testCommaSpacing() {
+    assertPrint("var a = (b = 5, c = 5);",
+        "var a=(b=5,c=5)");
+    assertPrettyPrint("var a = (b = 5, c = 5);",
+        "var a = (b = 5, c = 5);\n");
+  }
+
   public void testManyCommas() {
     int numCommas = 10000;
     List<String> numbers = Lists.newArrayList("0", "1");
@@ -1368,6 +1375,24 @@ public class CodePrinterTest extends TestCase {
     }
 
     String expected = Joiner.on(",").join(numbers);
+    String actual = printNode(current).replace("\n", "");
+    assertEquals(expected, actual);
+  }
+
+  public void testManyAdds() {
+    int numAdds = 10000;
+    List<String> numbers = Lists.newArrayList("0", "1");
+    Node current = new Node(Token.ADD, Node.newNumber(0), Node.newNumber(1));
+    for (int i = 2; i < numAdds; i++) {
+      current = new Node(Token.ADD, current);
+
+      // 1000 is printed as 1E3, and screws up our test.
+      int num = i % 1000;
+      numbers.add(String.valueOf(num));
+      current.addChildToBack(Node.newNumber(num));
+    }
+
+    String expected = Joiner.on("+").join(numbers);
     String actual = printNode(current).replace("\n", "");
     assertEquals(expected, actual);
   }

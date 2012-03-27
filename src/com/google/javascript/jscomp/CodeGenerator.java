@@ -100,8 +100,6 @@ class CodeGenerator {
           "Bad binary operator \"%s\": expected 2 arguments but got %s",
           opstr, childCount);
       int p = NodeUtil.precedence(type);
-      addExpr(first, p, context);
-      cc.addOp(opstr, true);
 
       // For right-hand-side of operations, only pass context if it's
       // the IN_FOR_INIT_CLAUSE one.
@@ -112,12 +110,16 @@ class CodeGenerator {
       // we can simply generate a * b * c.
       if (last.getType() == type &&
           NodeUtil.isAssociative(type)) {
+        addExpr(first, p, context);
+        cc.addOp(opstr, true);
         addExpr(last, p, rhsContext);
       } else if (NodeUtil.isAssignmentOp(n) && NodeUtil.isAssignmentOp(last)) {
         // Assignments are the only right-associative binary operators
+        addExpr(first, p, context);
+        cc.addOp(opstr, true);
         addExpr(last, p, rhsContext);
       } else {
-        addExpr(last, p + 1, rhsContext);
+        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p + 1);
       }
       return;
     }
@@ -218,26 +220,7 @@ class CodeGenerator {
 
       case Token.COMMA:
         Preconditions.checkState(childCount == 2);
-
-        // We could use addList recursively here, but sometimes we produce
-        // very deeply nested commas and run out of stack space, so we
-        // just unroll the recursion.
-        //
-        // We assume COMMA nodes are left-recursive.
-        Node firstNonComma = n.getFirstChild();
-        while (firstNonComma.getType() == Token.COMMA) {
-          firstNonComma = firstNonComma.getFirstChild();
-        }
-
-        addExpr(firstNonComma, 0, context);
-
-        Node current = firstNonComma;
-        do {
-          current = current.getParent();
-          cc.listSeparator();
-          addExpr(current.getFirstChild().getNext(), 0, Context.OTHER);
-        } while (current != n);
-
+        unrollBinaryOperator(n, Token.COMMA, ",", context, Context.OTHER, 0, 0);
         break;
 
       case Token.NUMBER:
@@ -744,6 +727,31 @@ class CodeGenerator {
     }
 
     cc.endSourceMapping(n);
+  }
+
+  /**
+   * We could use addList recursively here, but sometimes we produce
+   * very deeply nested operators and run out of stack space, so we
+   * just unroll the recursion when possible.
+   *
+   * We assume nodes are left-recursive.
+   */
+  private void unrollBinaryOperator(
+      Node n, int op, String opStr, Context context,
+      Context rhsContext, int leftPrecedence, int rightPrecedence) {
+    Node firstNonOperator = n.getFirstChild();
+    while (firstNonOperator.getType() == op) {
+      firstNonOperator = firstNonOperator.getFirstChild();
+    }
+
+    addExpr(firstNonOperator, leftPrecedence, context);
+
+    Node current = firstNonOperator;
+    do {
+      current = current.getParent();
+      cc.addOp(opStr, true);
+      addExpr(current.getFirstChild().getNext(), rightPrecedence, rhsContext);
+    } while (current != n);
   }
 
   static boolean isSimpleNumber(String s) {
