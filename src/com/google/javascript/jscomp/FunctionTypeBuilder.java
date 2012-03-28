@@ -25,6 +25,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.Scope.Var;
@@ -775,6 +776,9 @@ final class FunctionTypeBuilder {
 
     /** Gets a list of variables in this scope that are escaped. */
     Iterable<String> getEscapedVarNames();
+
+    /** Gets a list of variables whose properties are escaped. */
+    Set<String> getEscapedQualifiedNames();
   }
 
   static class UnknownFunctionContents implements FunctionContents {
@@ -804,12 +808,18 @@ final class FunctionTypeBuilder {
     public Iterable<String> getEscapedVarNames() {
       return ImmutableList.of();
     }
+
+    @Override
+    public Set<String> getEscapedQualifiedNames() {
+      return ImmutableSet.of();
+    }
   }
 
   static class AstFunctionContents implements FunctionContents {
     private final Node n;
     private boolean hasNonEmptyReturns = false;
     private Set<String> escapedVarNames;
+    private Set<String> escapedQualifiedNames;
 
     AstFunctionContents(Node n) {
       this.n = n;
@@ -845,6 +855,19 @@ final class FunctionTypeBuilder {
         escapedVarNames = Sets.newHashSet();
       }
       escapedVarNames.add(name);
+    }
+
+    @Override
+    public Set<String> getEscapedQualifiedNames() {
+      return escapedQualifiedNames == null
+          ? ImmutableSet.<String>of() : escapedQualifiedNames;
+    }
+
+    void recordEscapedQualifiedName(String name) {
+      if (escapedQualifiedNames == null) {
+        escapedQualifiedNames = Sets.newHashSet();
+      }
+      escapedQualifiedNames.add(name);
     }
   }
 }

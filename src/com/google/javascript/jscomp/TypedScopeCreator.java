@@ -1458,7 +1458,7 @@ final class TypedScopeCreator implements ScopeCreator {
       Preconditions.checkArgument(qName != null && ownerName != null);
 
       // Precedence of type information on GETPROPs:
-      // 1) @type annnotation / @enum annotation
+      // 1) @type annotation / @enum annotation
       // 2) ASSIGN to FUNCTION literal
       // 3) @param/@return annotation (with no function literal)
       // 4) ASSIGN to something marked @const
@@ -1605,8 +1605,15 @@ final class TypedScopeCreator implements ScopeCreator {
         if (info != null) {
           inferred = false;
         } else if (!scope.isDeclared(qName, false) &&
-                   n.isUnscopedQualifiedName()) {
-          inferred = false;
+            n.isUnscopedQualifiedName()) {
+
+          // Check if this is assigned in an inner scope.
+          AstFunctionContents contents =
+              getFunctionAnalysisResults(scope.getRootNode());
+          if (contents == null ||
+              !contents.getEscapedQualifiedNames().contains(qName)) {
+            inferred = false;
+          }
         }
       }
       return inferred;
@@ -1944,7 +1951,17 @@ final class TypedScopeCreator implements ScopeCreator {
 
       if (n.isReturn() && n.getFirstChild() != null) {
         data.get(t.getScopeRoot()).recordNonEmptyReturn();
-      } else if (n.isName() && NodeUtil.isLValue(n)) {
+      }
+
+      if (t.getScopeDepth() <= 2) {
+        // We only need to worry about escaped variables at depth 3.
+        // An variable escaped at depth 2 is, by definition, a global variable.
+        // We treat all global variables as escaped by default, so there's
+        // no reason to do this extra computation for them.
+        return;
+      }
+
+      if (n.isName() && NodeUtil.isLValue(n)) {
         String name = n.getString();
         Scope scope = t.getScope();
         Var var = scope.getVar(name);
@@ -1952,6 +1969,18 @@ final class TypedScopeCreator implements ScopeCreator {
           Scope ownerScope = var.getScope();
           if (scope != ownerScope && ownerScope.isLocal()) {
             data.get(ownerScope.getRootNode()).recordEscapedVarName(name);
+          }
+        }
+      } else if (n.isGetProp() && n.isUnscopedQualifiedName() &&
+          NodeUtil.isLValue(n)) {
+        String name = NodeUtil.getRootOfQualifiedName(n).getString();
+        Scope scope = t.getScope();
+        Var var = scope.getVar(name);
+        if (var != null) {
+          Scope ownerScope = var.getScope();
+          if (scope != ownerScope && ownerScope.isLocal()) {
+            data.get(ownerScope.getRootNode())
+                .recordEscapedQualifiedName(n.getQualifiedName());
           }
         }
       }
