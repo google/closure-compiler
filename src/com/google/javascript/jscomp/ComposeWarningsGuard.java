@@ -92,7 +92,7 @@ public class ComposeWarningsGuard extends WarningsGuard {
       }
 
       // Reverse the guards, so that they have the same order in the result.
-      addGuards(composeGuard.guards.descendingSet());
+      addGuards(Lists.newArrayList(composeGuard.guards.descendingSet()));
     } else {
       numberOfAdds++;
       orderOfAddition.put(guard, numberOfAdds);
