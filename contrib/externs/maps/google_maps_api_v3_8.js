@@ -1144,6 +1144,12 @@ google.maps.GroundOverlay.prototype.getMap = function() {};
 
 /**
  * @nosideeffects
+ * @return {number}
+ */
+google.maps.GroundOverlay.prototype.getOpacity = function() {};
+
+/**
+ * @nosideeffects
  * @return {string}
  */
 google.maps.GroundOverlay.prototype.getUrl = function() {};
@@ -1153,6 +1159,12 @@ google.maps.GroundOverlay.prototype.getUrl = function() {};
  * @return {undefined}
  */
 google.maps.GroundOverlay.prototype.setMap = function(map) {};
+
+/**
+ * @param {number} opacity
+ * @return {undefined}
+ */
+google.maps.GroundOverlay.prototype.setOpacity = function(opacity) {};
 
 /**
  * @constructor
@@ -1168,6 +1180,11 @@ google.maps.GroundOverlayOptions.prototype.clickable;
  * @type {google.maps.Map}
  */
 google.maps.GroundOverlayOptions.prototype.map;
+
+/**
+ * @type {number}
+ */
+google.maps.GroundOverlayOptions.prototype.opacity;
 
 /**
  * @param {google.maps.ImageMapTypeOptions|Object.<string>} opts
@@ -1980,6 +1997,11 @@ google.maps.MapOptions.prototype.heading;
  * @type {boolean}
  */
 google.maps.MapOptions.prototype.keyboardShortcuts;
+
+/**
+ * @type {boolean}
+ */
+google.maps.MapOptions.prototype.mapMaker;
 
 /**
  * @type {boolean}
@@ -3402,6 +3424,11 @@ google.maps.StreetViewPanoramaOptions.prototype.addressControlOptions;
 /**
  * @type {boolean}
  */
+google.maps.StreetViewPanoramaOptions.prototype.clickToGo;
+
+/**
+ * @type {boolean}
+ */
 google.maps.StreetViewPanoramaOptions.prototype.disableDoubleClickZoom;
 
 /**
@@ -3969,6 +3996,24 @@ google.maps.geometry.encoding.decodePath = function(encodedPath) {};
  * @return {string}
  */
 google.maps.geometry.encoding.encodePath = function(path) {};
+
+// Namespace
+google.maps.geometry.poly = {};
+
+/**
+ * @param {google.maps.LatLng} point
+ * @param {google.maps.Polygon} polygon
+ * @return {boolean}
+ */
+google.maps.geometry.poly.containsLocation = function(point, polygon) {};
+
+/**
+ * @param {google.maps.LatLng} point
+ * @param {google.maps.Polygon|google.maps.Polyline} poly
+ * @param {number=} opt_tolerance
+ * @return {boolean}
+ */
+google.maps.geometry.poly.isLocationOnEdge = function(point, poly, opt_tolerance) {};
 
 // Namespace
 google.maps.geometry.spherical = {};
