@@ -552,6 +552,9 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
     return null;
   }
 
+  /** Sets the owner function. By default, does nothing. */
+  void setOwnerFunction(FunctionType type) {}
+
   /**
    * Gets the interfaces implemented by the ctor associated with this type.
    * Intended to be overridden by subclasses.

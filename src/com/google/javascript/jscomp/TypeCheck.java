@@ -905,10 +905,13 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         if (type.hasProperty(property) &&
             !type.isPropertyTypeInferred(property) &&
             !propertyIsImplicitCast(type, property)) {
-          validator.expectCanAssignToPropertyOf(
-              t, assign, getJSType(rvalue),
-              type.getPropertyType(property), object, property);
-          return;
+          JSType expectedType = type.getPropertyType(property);
+          if (!expectedType.isUnknownType()) {
+            validator.expectCanAssignToPropertyOf(
+                t, assign, getJSType(rvalue),
+                expectedType, object, property);
+            return;
+          }
         }
       }
     }
@@ -925,6 +928,12 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       Var var = t.getScope().getVar(lvalue.getQualifiedName());
       if (var != null) {
         if (var.isTypeInferred()) {
+          return;
+        }
+
+        if (NodeUtil.getRootOfQualifiedName(lvalue).isThis() &&
+            t.getScope() != var.getScope()) {
+          // Don't look at "this.foo" variables from other scopes.
           return;
         }
 

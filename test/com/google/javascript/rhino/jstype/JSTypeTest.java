@@ -3091,7 +3091,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    */
   public void testFunctionPrototypeAndImplicitPrototype1() {
     FunctionType constructor =
-        registry.createConstructorType(null, null, null, null);
+        registry.createConstructorType("Foo", null, null, null);
     ObjectType instance = constructor.getInstanceType();
 
     // adding one property on the prototype

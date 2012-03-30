@@ -971,6 +971,38 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testPropertyInference9() throws Exception {
+    testTypes(
+        "/** @constructor */ function A() {}" +
+        "/** @return {function(): ?} */ function f() { " +
+        "  return function() {};" +
+        "}" +
+        "var g = f();" +
+        "/** @type {number} */ g.prototype.bar_ = null;",
+        "assignment\n" +
+        "found   : null\n" +
+        "required: number");
+  }
+
+  public void testPropertyInference10() throws Exception {
+    // NOTE(nicksantos): There used to be a bug where a property
+    // on the prototype of one structural function would leak onto
+    // the prototype of other variables with the same structural
+    // function type.
+    testTypes(
+        "/** @constructor */ function A() {}" +
+        "/** @return {function(): ?} */ function f() { " +
+        "  return function() {};" +
+        "}" +
+        "var g = f();" +
+        "/** @type {number} */ g.prototype.bar_ = 1;" +
+        "var h = f();" +
+        "/** @type {string} */ h.prototype.bar_ = 1;",
+        "assignment\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
   public void testNoPersistentTypeInferenceForObjectProperties()
       throws Exception {
     testTypes("/** @param {Object} o\n@param {string} x */\n" +
@@ -6119,6 +6151,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "  x.onload = function() {" +
         "    x.onload = null;" +
         "  };" +
+        "}");
+  }
+
+  public void testQualifiedNameInference12() throws Exception {
+    // We should be able to tell that the two 'this' properties
+    // are different.
+    testTypes(
+        "/** @param {function(this:Object)} x */ function f(x) {}" +
+        "/** @constructor */ function Foo() {" +
+        "  /** @type {number} */ this.bar = 3;" +
+        "  f(function() { this.bar = true; });" +
         "}");
   }
 

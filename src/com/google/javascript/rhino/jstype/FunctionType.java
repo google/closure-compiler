@@ -308,13 +308,23 @@ public class FunctionType extends PrototypeObjectType {
   public ObjectType getPrototype() {
     // lazy initialization of the prototype field
     if (prototypeSlot == null) {
-      setPrototype(
-          new PrototypeObjectType(
-              registry,
-              this.getReferenceName() + ".prototype",
-              registry.getNativeObjectType(OBJECT_TYPE),
-              isNativeObjectType()),
-          null);
+      String refName = getReferenceName();
+      if (refName == null) {
+        // Someone is trying to access the prototype of a structural function.
+        // We don't want to give real properties to this prototype, because
+        // then it would propagate to all structural functions.
+        setPrototype(
+           registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE),
+           null);
+      } else {
+        setPrototype(
+            new PrototypeObjectType(
+                registry,
+                this.getReferenceName() + ".prototype",
+                registry.getNativeObjectType(OBJECT_TYPE),
+                isNativeObjectType()),
+            null);
+      }
     }
     return (ObjectType) prototypeSlot.getType();
   }
@@ -348,13 +358,12 @@ public class FunctionType extends PrototypeObjectType {
     // In the second case, we just use the anonymous object as the prototype.
     if (baseType.hasReferenceName() ||
         isNativeObjectType() ||
-        baseType.isFunctionPrototypeType() ||
-        !(baseType instanceof PrototypeObjectType)) {
+        baseType.isFunctionPrototypeType()) {
 
       baseType = new PrototypeObjectType(
           registry, this.getReferenceName() + ".prototype", baseType);
     }
-    setPrototype((PrototypeObjectType) baseType, propertyNode);
+    setPrototype(baseType, propertyNode);
   }
 
   /**
@@ -362,7 +371,7 @@ public class FunctionType extends PrototypeObjectType {
    * @param prototype the prototype. If this value is {@code null} it will
    *        silently be discarded.
    */
-  boolean setPrototype(PrototypeObjectType prototype, Node propertyNode) {
+  boolean setPrototype(ObjectType prototype, Node propertyNode) {
     if (prototype == null) {
       return false;
     }
@@ -371,8 +380,8 @@ public class FunctionType extends PrototypeObjectType {
       return false;
     }
 
-    PrototypeObjectType oldPrototype = prototypeSlot == null
-        ? null : (PrototypeObjectType) prototypeSlot.getType();
+    ObjectType oldPrototype = prototypeSlot == null
+        ? null : (ObjectType) prototypeSlot.getType();
     boolean replacedPrototype = oldPrototype != null;
 
     this.prototypeSlot = new Property("prototype", prototype, true,
@@ -1061,7 +1070,7 @@ public class FunctionType extends PrototypeObjectType {
       }
 
       if (prototypeSlot != null) {
-        ((PrototypeObjectType) prototypeSlot.getType()).clearCachedValues();
+        ((ObjectType) prototypeSlot.getType()).clearCachedValues();
       }
     }
   }
