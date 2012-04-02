@@ -1603,16 +1603,27 @@ final class TypedScopeCreator implements ScopeCreator {
 
       if (inferred && rhsValue != null && rhsValue.isFunction()) {
         if (info != null) {
-          inferred = false;
+          return false;
         } else if (!scope.isDeclared(qName, false) &&
             n.isUnscopedQualifiedName()) {
 
+          // Check if this is in a conditional block.
+          // Functions assigned in conditional blocks are inferred.
+          for (Node current = n.getParent();
+               !(current.isScript() || current.isFunction());
+               current = current.getParent()) {
+            if (NodeUtil.isControlStructure(current)) {
+              return true;
+            }
+          }
+
           // Check if this is assigned in an inner scope.
+          // Functions assigned in inner scopes are inferred.
           AstFunctionContents contents =
               getFunctionAnalysisResults(scope.getRootNode());
           if (contents == null ||
               !contents.getEscapedQualifiedNames().contains(qName)) {
-            inferred = false;
+            return false;
           }
         }
       }

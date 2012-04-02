@@ -6207,6 +6207,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "}");
   }
 
+  public void testQualifiedNameInference13() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "function f(z) {" +
+        "  var x = new Foo();" +
+        "  if (z) {" +
+        "    x.onload = function() {};" +
+        "  } else {" +
+        "    x.onload = null;" +
+        "  };" +
+        "}");
+  }
+
   public void testSheqRefinedScope() throws Exception {
     Node n = parseAndTypeCheck(
         "/** @constructor */function A() {}\n" +
