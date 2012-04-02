@@ -553,6 +553,11 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   public void matchConstraint(ObjectType constraintObj) {
+    // We only want to match contraints on anonymous types.
+    if (hasReferenceName()) {
+      return;
+    }
+
     // Handle the case where the constraint object is a record type.
     //
     // param constraintObj {{prop: (number|undefined)}}
