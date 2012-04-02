@@ -142,6 +142,7 @@ public class Node implements Cloneable, Serializable {
         case STATIC_SOURCE_FILE:    return "source_file";
         case INPUT_ID:  return "input_id";
         case LENGTH:    return "length";
+        case SLASH_V:   return "slash_v";
         default:
           throw new IllegalStateException("unexpect prop id " + propType);
       }
