@@ -4430,3 +4430,231 @@ google.maps.places.PlacesServiceStatus = {
   ZERO_RESULTS: ''
 };
 
+// Namespace
+google.maps.weather = {};
+
+/**
+ * @extends {google.maps.MVCObject}
+ * @constructor
+ */
+google.maps.weather.CloudLayer = function() {};
+
+/**
+ * @nosideeffects
+ * @return {google.maps.Map}
+ */
+google.maps.weather.CloudLayer.prototype.getMap = function() {};
+
+/**
+ * @param {google.maps.Map} map
+ * @return {undefined}
+ */
+google.maps.weather.CloudLayer.prototype.setMap = function(map) {};
+
+/**
+ * @enum {number|string}
+ */
+google.maps.weather.TemperatureUnit = {
+  CELSIUS: '',
+  FAHRENHEIT: ''
+};
+
+/**
+ * @constructor
+ */
+google.maps.weather.WeatherConditions = function() {};
+
+/**
+ * @type {string}
+ */
+google.maps.weather.WeatherConditions.prototype.day;
+
+/**
+ * @type {string}
+ */
+google.maps.weather.WeatherConditions.prototype.description;
+
+/**
+ * @type {number}
+ */
+google.maps.weather.WeatherConditions.prototype.high;
+
+/**
+ * @type {number}
+ */
+google.maps.weather.WeatherConditions.prototype.low;
+
+/**
+ * @type {string}
+ */
+google.maps.weather.WeatherConditions.prototype.shortDay;
+
+/**
+ * @type {number}
+ */
+google.maps.weather.WeatherConditions.prototype.temperature;
+
+/**
+ * @type {string}
+ */
+google.maps.weather.WeatherConditions.prototype.windDirection;
+
+/**
+ * @type {number}
+ */
+google.maps.weather.WeatherConditions.prototype.windSpeed;
+
+/**
+ * @constructor
+ */
+google.maps.weather.WeatherFeature = function() {};
+
+/**
+ * @type {google.maps.weather.WeatherConditions}
+ */
+google.maps.weather.WeatherFeature.prototype.current;
+
+/**
+ * @type {Array.<google.maps.weather.WeatherForecast>}
+ */
+google.maps.weather.WeatherFeature.prototype.forecast;
+
+/**
+ * @type {string}
+ */
+google.maps.weather.WeatherFeature.prototype.location;
+
+/**
+ * @type {google.maps.weather.TemperatureUnit}
+ */
+google.maps.weather.WeatherFeature.prototype.temperatureUnit;
+
+/**
+ * @type {google.maps.weather.WindSpeedUnit}
+ */
+google.maps.weather.WeatherFeature.prototype.windSpeedUnit;
+
+/**
+ * @constructor
+ */
+google.maps.weather.WeatherForecast = function() {};
+
+/**
+ * @type {string}
+ */
+google.maps.weather.WeatherForecast.prototype.day;
+
+/**
+ * @type {string}
+ */
+google.maps.weather.WeatherForecast.prototype.description;
+
+/**
+ * @type {number}
+ */
+google.maps.weather.WeatherForecast.prototype.high;
+
+/**
+ * @type {number}
+ */
+google.maps.weather.WeatherForecast.prototype.low;
+
+/**
+ * @type {string}
+ */
+google.maps.weather.WeatherForecast.prototype.shortDay;
+
+/**
+ * @param {(google.maps.weather.WeatherLayerOptions|Object.<string>)=} opt_opts
+ * @extends {google.maps.MVCObject}
+ * @constructor
+ */
+google.maps.weather.WeatherLayer = function(opt_opts) {};
+
+/**
+ * @nosideeffects
+ * @return {google.maps.Map}
+ */
+google.maps.weather.WeatherLayer.prototype.getMap = function() {};
+
+/**
+ * @param {google.maps.Map} map
+ * @return {undefined}
+ */
+google.maps.weather.WeatherLayer.prototype.setMap = function(map) {};
+
+/**
+ * @param {google.maps.weather.WeatherLayerOptions|Object.<string>} options
+ * @return {undefined}
+ */
+google.maps.weather.WeatherLayer.prototype.setOptions = function(options) {};
+
+/**
+ * @constructor
+ */
+google.maps.weather.WeatherLayerOptions = function() {};
+
+/**
+ * @type {boolean}
+ */
+google.maps.weather.WeatherLayerOptions.prototype.clickable;
+
+/**
+ * @type {google.maps.weather.LabelColor}
+ */
+google.maps.weather.WeatherLayerOptions.prototype.labelColor;
+
+/**
+ * @type {google.maps.Map}
+ */
+google.maps.weather.WeatherLayerOptions.prototype.map;
+
+/**
+ * @type {boolean}
+ */
+google.maps.weather.WeatherLayerOptions.prototype.suppressInfoWindows;
+
+/**
+ * @type {google.maps.weather.TemperatureUnit}
+ */
+google.maps.weather.WeatherLayerOptions.prototype.temperatureUnits;
+
+/**
+ * @type {google.maps.weather.WindSpeedUnit}
+ */
+google.maps.weather.WeatherLayerOptions.prototype.windSpeedUnits;
+
+/**
+ * @constructor
+ */
+google.maps.weather.WeatherMouseEvent = function() {};
+
+/**
+ * @type {google.maps.weather.WeatherFeature}
+ */
+google.maps.weather.WeatherMouseEvent.prototype.featureDetails;
+
+/**
+ * @type {string}
+ */
+google.maps.weather.WeatherMouseEvent.prototype.infoWindowHtml;
+
+/**
+ * @type {google.maps.LatLng}
+ */
+google.maps.weather.WeatherMouseEvent.prototype.latLng;
+
+/**
+ * @type {google.maps.Size}
+ */
+google.maps.weather.WeatherMouseEvent.prototype.pixelOffset;
+
+/**
+ * @enum {number|string}
+ */
+google.maps.weather.WindSpeedUnit = {
+  KILOMETERS_PER_HOUR: '',
+  METERS_PER_SECOND: '',
+  MILES_PER_HOUR: ''
+};
+
