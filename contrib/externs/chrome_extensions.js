@@ -26,6 +26,11 @@ var chrome = {};
 /** @see http://code.google.com/chrome/extensions/extension.html */
 chrome.extension = {};
 
+/** * @type {!Object.<string,string>|undefined} */
+chrome.extension.lastError;
+/** * @type {boolean|undefined} */
+chrome.extension.inIncognitoContext;
+
 /**
  * @param {string|Object.<string>=} opt_arg1 Either the extensionId to
  *     to connect to, in which case connectInfo params can be passed in the
@@ -42,17 +47,6 @@ chrome.extension.connect = function(opt_arg1, opt_connectInfo) {};
 chrome.extension.getBackgroundPage = function() {};
 
 /**
- * @param {number=} opt_windowId An optional windowId.
- * @return {Array.<Window>} The global JS objects for each content view.
- */
-chrome.extension.getExtensionTabs = function(opt_windowId) {};
-
-/**
- * @return {Array.<Window>} The global JS objects for each toolstrip view.
- */
-chrome.extension.getToolstrips = function() {};
-
-/**
  * @param {string} path A path to a resource within an extension expressed
  *     relative to it's install directory.
  * @return {string} The fully-qualified URL to the resource.
@@ -65,6 +59,16 @@ chrome.extension.getURL = function(path) {};
  * @return {Array.<Window>} The global JS objects for each content view.
  */
 chrome.extension.getViews = function(fetchProperties) {};
+
+/**
+ * @param {function(boolean): void} callback Callback function.
+ */
+chrome.extension.isAllowedFileSchemeAccess = function(callback) {};
+
+/**
+ * @param {function(boolean): void} callback Callback function.
+ */
+chrome.extension.isAllowedIncognitoAccess = function(callback) {};
 
 /**
  * @param {number|*=} opt_arg1 Either the extensionId to send the request to,
@@ -137,16 +141,18 @@ chrome.tabs.executeScript = function(tabId, details, opt_callback) {};
 chrome.tabs.get = function(tabId, callback) {};
 
 /**
- * @param {number?} windowId Window id.
- * @param {function(Array.<Tab>): void} callback Callback.
- */
-chrome.tabs.getAllInWindow = function(windowId, callback) {};
-
-/**
- * @param {number?} windowId Window id.
  * @param {function(Tab): void} callback Callback.
  */
-chrome.tabs.getSelected = function(windowId, callback) {};
+chrome.tabs.getCurrent = function(callback) {};
+
+/**
+ * @param {Object.<string, (number|Array.<number>)>} highlightInfo
+ *     An object with 'windowId' (number) and 'tabs'
+ *     (number or array of numbers) keys.
+ * @param {function(Window): void} callback Callback function invoked
+ *    with each appropriate Window.
+ */
+chrome.tabs.highlight = function(highlightInfo, callback) {};
 
 /**
  * @param {number?} tabId Tab id.
@@ -169,8 +175,18 @@ chrome.tabs.move = function(tabId, moveProperties, opt_callback) {};
  *     'active', 'pinned', 'highlighted', 'status', 'title', 'url', 'windowId',
  *     and 'windowType' keys.
  * @param {function(Array.<Tab>): void=} opt_callback Callback.
+ * @return {!Array.<Tab>}
  */
 chrome.tabs.query = function(queryInfo, opt_callback) {};
+
+/**
+ * @param {number=} opt_tabId Tab id.
+ * @param {Object.<string, boolean>=} opt_reloadProperties An object which
+ *   may have a 'bypassCache' key.
+ * @param {function(): void=} opt_callback The callback function invoked
+ *    after the tab has been reloaded.
+ */
+chrome.tabs.reload = function(opt_tabId, opt_reloadProperties, opt_callback) {};
 
 /**
  * @param {number} tabId Tab id.
@@ -227,6 +243,12 @@ chrome.windows = {};
  * @param {function(ChromeWindow): void=} opt_callback Callback.
  */
 chrome.windows.create = function(createData, opt_callback) {};
+
+/**
+ * @param {string} id Window id.
+ * @param {function(ChromeWindow): void} callback Callback.
+ */
+chrome.windows.get = function(id, callback) {};
 
 /**
  * @param {Object.<string, boolean>?} getInfo May have 'populate' key.
@@ -298,11 +320,6 @@ chrome.pageAction = {};
 chrome.pageAction.hide = function(tabId) {};
 
 /**
- * @param {number} tabId Tab Id.
- */
-chrome.pageAction.show = function(tabId) {};
-
-/**
  * @param {Object} details An object which has 'tabId' and either
  *     'imageData' or 'path'.
  */
@@ -317,6 +334,11 @@ chrome.pageAction.setPopup = function(details) {};
  * @param {Object} details An object which has 'tabId' and 'title'.
  */
 chrome.pageAction.setTitle = function(details) {};
+
+/**
+ * @param {number} tabId Tab Id.
+ */
+chrome.pageAction.show = function(tabId) {};
 
 /** @type {ChromeEvent} */
 chrome.pageAction.onClicked;
@@ -390,6 +412,7 @@ chrome.bookmarks.getChildren = function(id, callback) {};
  * @param {number} numberOfItems The number of items to return.
  * @param {function(Array.<BookmarkTreeNode>): void} callback The
  *     callback function which accepts an array of BookmarkTreeNode.
+ * @return {Array.<BookmarkTreeNode>}
  */
 chrome.bookmarks.getRecent = function(numberOfItems, callback) {};
 
@@ -397,6 +420,7 @@ chrome.bookmarks.getRecent = function(numberOfItems, callback) {};
  * @param {string} id The ID of the root of the subtree to retrieve.
  * @param {function(Array.<BookmarkTreeNode>): void} callback The
  *     callback function which accepts an array of BookmarkTreeNode.
+ * @return {Array.<BookmarkTreeNode>}
  */
 chrome.bookmarks.getSubTree = function(id, callback) {};
 
@@ -453,6 +477,10 @@ chrome.bookmarks.onChildrenReordered;
 /** @type {ChromeEvent} */
 chrome.bookmarks.onCreated;
 /** @type {ChromeEvent} */
+chrome.bookmarks.onImportBegan;
+/** @type {ChromeEvent} */
+chrome.bookmarks.onImportEnded;
+/** @type {ChromeEvent} */
 chrome.bookmarks.onMoved;
 /** @type {ChromeEvent} */
 chrome.bookmarks.onRemoved;
@@ -491,6 +519,7 @@ chrome.contextMenus = {};
 /**
  * @param {!Object} createProperties
  * @param {function()=} opt_callback
+ * @return {number} The id of the newly created window.
  */
 chrome.contextMenus.create = function(createProperties, opt_callback) {};
 
@@ -582,7 +611,9 @@ chrome.experimental.clipboard.executeCut = function(tabId, opt_callback) {};
 chrome.experimental.clipboard.executePaste = function(tabId, opt_callback) {};
 
 
-/** @see http://code.google.com/chrome/extensions/experimental.contextMenu.html */
+/**
+ * @see http://code.google.com/chrome/extensions/experimental.contextMenu.html
+ */
 chrome.experimental.contextMenu = {};
 
 /**
@@ -599,7 +630,9 @@ chrome.experimental.contextMenu.create =
 chrome.experimental.contextMenu.remove = function(menuItemId, opt_callback) {};
 
 
-/** @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/extension_api.json */
+/**
+ * @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/extension_api.json
+ */
 chrome.experimental.extension = {};
 
 /**
@@ -617,7 +650,9 @@ chrome.experimental.infobars = {};
 chrome.experimental.infobars.show = function(details, opt_callback) {};
 
 
-/** @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/extension_api.json */
+/**
+ * @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/extension_api.json
+ */
 chrome.experimental.metrics = {};
 
 /**
@@ -674,7 +709,9 @@ chrome.experimental.metrics.recordLongTime = function(metricName, value) {};
 chrome.experimental.metrics.recordValue = function(metric, value) {};
 
 
-/** @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/extension_api.json */
+/**
+ * @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/extension_api.json
+ */
 chrome.experimental.popup = {};
 
 /**
@@ -738,15 +775,34 @@ chrome.experimental.rlz.getAccessPointRlz = function(accessPoint, callback) {};
 chrome.management = {};
 
 /**
- * @param {function(Array.<ExtensionInfo>): void} callback
- */
-chrome.management.getAll = function(callback) {};
-
-/**
  * @param {string} id
  * @param {function(ExtensionInfo): void} callback
  */
 chrome.management.get = function(id, callback) {};
+
+/**
+ * @param {function(Array.<ExtensionInfo>): void} callback Callback function.
+ * @return {Array.<ExtensionInfo>}
+ */
+chrome.management.getAll = function(callback) {};
+
+/**
+ * @param {string} id The id of an already installed extension.
+ * @param {function(Array.<string>)=} opt_callback Optional callback function.
+ */
+chrome.management.getPermissionWarningsById = function(id, opt_callback) {};
+
+/**
+ * @param {string} manifestStr Extension's manifest JSON string.
+ * @param {function(Array.<string>)=} callback Callback function.
+ */
+chrome.management.getPermissionWarningsByManifest =
+    function(manifestStr, callback) {};
+
+/**
+ * @param {function(Array.<ExtensionInfo>): void} callback Callback function.
+ */
+chrome.management.launchApp = function(id, callback) {};
 
 /**
  * @param {string} id
@@ -760,12 +816,6 @@ chrome.management.setEnabled = function(id, enabled, callback) {};
  * @param {function(): void} callback
  */
 chrome.management.uninstall = function(id, callback) {};
-
-/**
- * @param {string} id
- * @param {function(): void} callback
- */
-chrome.management.launchApp = function(id, callback) {};
 
 /** @type {ChromeEvent} */
 chrome.management.onDisabled;
@@ -853,9 +903,304 @@ chrome.tts.speak = function(utterance, opt_options, opt_callback) {};
 chrome.tts.stop = function() {};
 
 
-// Classes
+/** @see http://code.google.com/chrome/extensions/ttsEngine.html */
+chrome.ttsEngine = {};
+
+/** @type {ChromeEvent} */
+chrome.ttsEngine.onSpeak;
+/** @type {ChromeEvent} */
+chrome.ttsEngine.onStop;
+
+
+/** @see http://code.google.com/chrome/extensions/contentSettings.html */
+chrome.contentSettings = {};
+
+/** @type {!ContentSetting} */
+chrome.contentSettings.cookies;
+/** @type {!ContentSetting} */
+chrome.contentSettings.images;
+/** @type {!ContentSetting} */
+chrome.contentSettings.javascript;
+/** @type {!ContentSetting} */
+chrome.contentSettings.plugins;
+/** @type {!ContentSetting} */
+chrome.contentSettings.popups;
+/** @type {!ContentSetting} */
+chrome.contentSettings.notifications;
+
+
+/** @see http://code.google.com/chrome/extensions/fileBrowserHandle.html */
+chrome.fileBrowserHandle = {};
+
+/** @type {ChromeEvent} */
+chrome.fileBrowserHandle.onExecute;
+
+
+/** @see http://code.google.com/chrome/extensions/history.html */
+chrome.history = {};
 
 /**
+ * @param {Object.<string, string>} details Object with a 'url' key.
+ */
+chrome.history.addUrl = function(details) {};
+
+/**
+ * @param {function(): void} callback Callback function.
+ */
+chrome.history.deleteAll = function(callback) {};
+
+/**
+ * @param {Object.<string, string>} range Object with 'startTime'
+ *     and 'endTime' keys.
+ * @param {function(): void} callback Callback function.
+ */
+chrome.history.deleteRange = function(range, callback) {};
+
+/**
+ * @param {Object.<string, string>} details Object with a 'url' key.
+ */
+chrome.history.deleteUrl = function(details) {};
+
+/**
+ * @param {Object.<string, string>} details Object with a 'url' key.
+ * @param {function(!Array.<!VisitItem>): void} callback Callback function.
+ * @return {!Array.<!VisitItem>}
+ */
+chrome.history.getVisits = function(details, callback) {};
+
+/**
+ * @param {Object.<string, string>} query Object with a 'text' (string)
+ *     key and optional 'startTime' (number), 'endTime' (number) and
+ *     'maxResults' keys.
+ * @param {function(!Array.<!HistoryItem>): void} callback Callback function.
+ * @return {!Array.<!HistoryItem>}
+ */
+chrome.history.search = function(query, callback) {};
+
+/** @type {ChromeEvent} */
+chrome.history.onVisitRemoved;
+/** @type {ChromeEvent} */
+chrome.history.onVisited;
+
+
+/** @see http://code.google.com/chrome/extensions/input.ime.html */
+chrome.input.ime = {};
+
+/**
+ * @param {!Object.<string,number>} parameters An object with a
+ *     'contextID' (number) key.
+ * @param {function(boolean): void} callback Callback function.
+ */
+chrome.input.ime.clearComposition = function(parameters, callback) {};
+
+/**
+ * @param {!Object.<string,(string|number)>} parameters An ojbect with
+ *     'contextID' (number) and 'text' (string) keys.
+ * @param {function(boolean): void} opt_callback Callback function.
+ */
+chrome.input.ime.commitText = function(parameters, opt_callback) {};
+
+/**
+ * @param {!Object.<string,(number|Object.<string,(string|number|boolean))>}
+ *     An object with 'engineID' (string) and 'properties'
+ *     (Object) keyts.
+ * @param {function(boolean): void} opt_callback Callback function.
+ */
+chrome.input.ime.setCandidateWindowProperties =
+    function(parameters, opt_callback) {};
+
+/**
+ * @param {!Object.<string,(number|Object.<string,(string|number))>}
+ *     An object with 'contextID' (number) and 'candidates'
+ *     (array of object) keys.
+ * @param {function(boolean): void} opt_callback Callback function.
+ */
+chrome.input.ime.setCandidates = function(parameters, opt_callback) {};
+
+/**
+ * @param {!Object.<string,(string|number|Object.<string,(string|number))>}
+ *     parameters An object with 'contextID' (number), 'text' (string),
+ *     'selectionStart (number), 'selectEnd' (number), 'cursor' (number),
+ *     and 'segments' (array of object) keys.
+ * @param {function(boolean): void} opt_callback Callback function.
+ */
+chrome.input.ime.setComposition = function(parameters, opt_callback) {};
+
+/**
+ * @param {!Object.<string,number>} parameters An object with
+ *     'contextID' (number) and 'candidateID' (number) keys.
+ * @param {function(boolean): void} opt_callback Callback function.
+ */
+chrome.input.ime.setCursorPosition = function(parameters, opt_callback) {};
+
+/**
+ * @param {!Object.<string,(string|Array.<Object.<string,(string|boolean)>>>}
+ *     parameters An object with 'engineID' (string) and 'items'
+ *     (array of object) keys.
+ * @param {function(): void} opt_callback Callback function.
+ */
+chrome.input.ime.setMenuItems = function(parameters, opt_callback) {};
+
+/**
+ * @param {!Object.<string,(string|Array.<Object.<string,(string|boolean)>>>}
+ *     parameters An object with  'engineID' (string) and 'items'
+ *     (array of object) keys.
+ * @param {function(): void} opt_callback Callback function.
+ */
+chrome.input.ime.updateMenuItems = function(parameters, opt_callback) {};
+
+/** @type {!ChromeEvent} */
+chrome.input.ime.onActivate;
+/** @type {!ChromeEvent} */
+chrome.input.ime.onBlur;
+/** @type {!ChromeEvent} */
+chrome.input.ime.onCandidateClicked;
+/** @type {!ChromeEvent} */
+chrome.input.ime.onDeactivated;
+/** @type {!ChromeEvent} */
+chrome.input.ime.onFocus;
+/** @type {!ChromeEvent} */
+chrome.input.ime.onInputContextUpdate;
+/** @type {!ChromeEvent} */
+chrome.input.ime.onKeyEvent;
+/** @type {!ChromeEvent} */
+chrome.input.ime.onMenuItemActivated;
+
+
+/** @see http://code.google.com/chrome/extensions/pageCapture.html */
+chrome.pageCapture = {};
+
+/**
+ * @param {Object.<string, number>} details Object with a 'tabId' (number) key.
+ * @param {function(Blob=): void} callback Callback function.
+ */
+chrome.pageCapture.saveAsMHTML = function(details, callback) {};
+
+
+/** @see http://code.google.com/chrome/extensions/permissions.html */
+chrome.permissions = {};
+
+/**
+ * @param {!Permissions} permissions Permissions.
+ * @param {function(boolean): void} callback Callback function.
+ */
+chrome.permissions.contains = function(permissions, callback) {};
+
+/**
+ * @param {function(!Permissions): void} callback Callback function.
+ */
+chrome.permissions.getAll = function(callback) {};
+
+/**
+ * @param {!Permissions} permissions Permissions.
+ * @param {function(boolean): void=} opt_callback Callback function.
+ */
+chrome.permissions.remove = function(permissions, opt_callback) {};
+
+/**
+ * @param {!Permissions} permissions Permissions.
+ * @param {function(boolean): void} opt_callback Callback function.
+ */
+chrome.permissions.request = function(permissions, opt_callback) {};
+
+/** @type {!ChromeEvent} */
+chrome.permissions.onAdded;
+/** @type {!ChromeEvent} */
+chrome.permissions.onRemoved;
+
+
+/** @see http://code.google.com/chrome/extensions/privacy.html */
+chrome.privacy = {};
+
+/** @type {!Object.<string,!ChromeSetting>} */
+chrome.privacy.network;
+/** @type {!Object.<string,!ChromeSetting>} */
+chrome.privacy.services;
+/** @type {!Object.<string,!ChromeSetting>} */
+chrome.privacy.websites;
+
+
+/** @see http://code.google.com/chrome/extensions/proxy.html */
+chrome.proxy = {};
+
+/** @type {!Object.<string,!ChromeSetting>} */
+chrome.proxy.settings;
+
+/** @type {ChromeEvent} */
+chrome.proxy.onProxyError;
+
+
+/** @see http://code.google.com/chrome/extensions/types.html */
+chrome.chromeSetting = {};
+
+/** @type {ChromeEvent} */
+chrome.chromeSetting.onChange;
+
+
+/** @see http://code.google.com/chrome/extensions/webNavigation.html */
+chrome.webNavigation = {};
+
+/**
+ * @param {Object} details Object with a 'tabId' (number) key.
+ * @param {function(!Array.<Object.<string, (boolean|number|string)>>)} callback
+ *     Callback function.
+ */
+chrome.webNavigation.getAllFrames = function(details, callback) {};
+
+/**
+ * @param {Object} details Object with 'tabId' (number) and 'frameId' (number)
+ *     keys.
+ * @param {function(Object.<string, (boolean|string)>)} callback
+ *     Callback function.
+ */
+chrome.webNavigation.getFrame = function(details, callback) {};
+
+/** @type {ChromeEvent} */
+chrome.webNavigation.onBeforeNavigate;
+/** @type {ChromeEvent} */
+chrome.webNavigation.onCommitted;
+/** @type {ChromeEvent} */
+chrome.webNavigation.onCompleted;
+/** @type {ChromeEvent} */
+chrome.webNavigation.onCreatedNavigationTarget;
+/** @type {ChromeEvent} */
+chrome.webNavigation.onDOMContentLoaded;
+/** @type {ChromeEvent} */
+chrome.webNavigation.onErrorOccurred;
+/** @type {ChromeEvent} */
+chrome.webNavigation.onReferenceFragmentUpdated;
+
+/** @see http://code.google.com/chrome/extensions/webRequest.html */
+chrome.webRequest = {};
+
+/**
+ * @param {function(): void=} opt_callback Callback function.
+ */
+chrome.webRequest.handlerBehaviorChanged = function(opt_callback) {};
+
+/** @type {!ChromeEvent} */
+chrome.webRequest.onAuthRequired;
+/** @type {!ChromeEvent} */
+chrome.webRequest.onBeforeRedirect;
+/** @type {!ChromeEvent} */
+chrome.webRequest.onBeforeRequest;
+/** @type {!ChromeEvent} */
+chrome.webRequest.onBeforeSendHeaders;
+/** @type {!ChromeEvent} */
+chrome.webRequest.onCompleted;
+/** @type {!ChromeEvent} */
+chrome.webRequest.onErrorOccurred;
+/** @type {!ChromeEvent} */
+chrome.webRequest.onHeadersReceived;
+/** @type {!ChromeEvent} */
+chrome.webRequest.onResponseStarted;
+/** @type {!ChromeEvent} */
+chrome.webRequest.onSendHeaders;
+
+
+// Classes
+
+/**onKeyEvent
  * @see http://code.google.com/chrome/extensions/management.html
  * @constructor
  */
@@ -865,17 +1210,33 @@ ExtensionInfo.prototype.id;
 /** @type {string} */
 ExtensionInfo.prototype.name;
 /** @type {string} */
+ExtensionInfo.prototype.description;
+/** @type {string} */
 ExtensionInfo.prototype.version;
 /** @type {boolean} */
+ExtensionInfo.prototype.mayDisable;
+/** @type {boolean} */
 ExtensionInfo.prototype.enabled;
+/** @type {string} */
+ExtensionInfo.prototype.disabledReason;
 /** @type {boolean} */
 ExtensionInfo.prototype.isApp;
 /** @type {string} */
 ExtensionInfo.prototype.appLaunchUrl;
 /** @type {string} */
+ExtensionInfo.prototype.homePageUrl;
+/** @type {string} */
+ExtensionInfo.prototype.updateUrl;
+/** @type {boolean} */
+ExtensionInfo.prototype.offlineEnabled;
+/** @type {string} */
 ExtensionInfo.prototype.optionsUrl;
 /** @type {Array.<IconInfo>} */
 ExtensionInfo.prototype.icons;
+/** @type {!Array.<string>} */
+ExtensionInfo.prototype.permissions;
+/** @type {!Array.<string>} */
+ExtensionInfo.prototype.hostPermissions;
 
 /**
  * @see http://code.google.com/chrome/extensions/management.html
@@ -899,7 +1260,11 @@ Tab.prototype.index;
 /** @type {number} */
 Tab.prototype.windowId;
 /** @type {boolean} */
-Tab.prototype.selected;
+Tab.prototype.highlighted;
+/** @type {boolean} */
+Tab.prototype.active;
+/** @type {boolean} */
+Tab.prototype.pinned;
 /** @type {string} */
 Tab.prototype.url;
 /** @type {string} */
@@ -908,6 +1273,8 @@ Tab.prototype.title;
 Tab.prototype.favIconUrl;
 /** @type {string} */
 Tab.prototype.status;
+/** @type {boolean} */
+Tab.prototype.incognito;
 
 /**
  * @see http://code.google.com/chrome/extensions/windows.html
@@ -932,6 +1299,8 @@ ChromeWindow.prototype.tabs;
 ChromeWindow.prototype.incognito;
 /** @type {string} */
 ChromeWindow.prototype.type;
+/** @type {string} */
+ChromeWindow.prototype.state;
 
 /**
  * @see http://code.google.com/chrome/extensions/events.html
@@ -954,22 +1323,20 @@ ChromeEvent.prototype.hasListeners = function(callback) {};
 function Port() {}
 /** @type {string} */
 Port.prototype.name;
-/** @type {Tab} */
-Port.prototype.tab;
-/** @type {MessageSender} */
-Port.prototype.sender;
-/** @type {ChromeEvent} */
-Port.prototype.onMessage;
 /** @type {ChromeEvent} */
 Port.prototype.onDisconnect;
+/** @type {ChromeEvent} */
+Port.prototype.onMessage;
+/** @type {MessageSender} */
+Port.prototype.sender;
+
 /**
  * @param {Object.<string>} obj Message object.
  */
 Port.prototype.postMessage = function(obj) {};
-Port.prototype.disconnect = function() {};
 
 /**
- * @see http://code.google.com/chrome/extensions/extension.html#type-MessageSender
+ * @see * http://code.google.com/chrome/extensions/extension.html#type-MessageSender
  * @constructor
  */
 function MessageSender() {}
@@ -1084,3 +1451,262 @@ OnClickData.prototype.frameUrl;
 OnClickData.prototype.selectionText;
 /** @type {string} */
 OnClickData.prototype.editable;
+
+/**
+ * @see http://code.google.com/chrome/extensions/debugger.html#type-Debuggee
+ * @constructor
+ */
+function Debuggee() {}
+/** @type {number} */
+Debuggee.prototype.tabId;
+
+/**
+ * @see http://code.google.com/chrome/extensions/contentSettings.html#type-ResourceIdentifier
+ * @constructor
+ */
+function ResourceIdentifier() {}
+/** @type {string} */
+ResourceIdentifier.prototype.id;
+/** @type {string} */
+ResourceIdentifier.prototype.description;
+
+/**
+ * @see http://code.google.com/chrome/extensions/contentSettings.html#type-ContentSetting
+ * @constructor
+ */
+function ContentSetting() {}
+
+/**
+ * @param {!Object.<string,string>} details Settings details.
+ * @param {function(): void=} opt_callback Callback function.
+ */
+ContentSetting.prototype.clear = function(details, opt_callback) {};
+
+/**
+ * @param {!Object.<string,(string|boolean|ResourceIdentifier)>} details
+ *     Settings details.
+ * @param {function(): void} callback Callback function.
+ */
+ContentSetting.prototype.get = function(details, callback) {};
+
+/**
+ * @param {function(): void} callback Callback function.
+ */
+ContentSetting.prototype.getResourceIdentifiers = function(callback) {};
+
+/**
+ * @param {!Object.<string,(string|ResourceIdentifier)>} details
+ *     Settings details.
+ * @param {function(): void=} opt_callback Callback function.
+ */
+ContentSetting.prototype.set = function(details, opt_callback) {};
+
+/**
+ * @see http://code.google.com/chrome/extensions/history.html#type-HistoryItem
+ * @constructor
+ */
+function HistoryItem() {}
+/** @type {string} */
+HistoryItem.prototype.id;
+/** @type {string} */
+HistoryItem.prototype.url;
+/** @type {string} */
+HistoryItem.prototype.title;
+/** @type {number} */
+HistoryItem.prototype.lastVisitTime;
+/** @type {number} */
+HistoryItem.prototype.visitCount;
+/** @type {number} */
+HistoryItem.prototype.typedCount;
+
+/**
+ * @see http://code.google.com/chrome/extensions/history.html#type-VisitItem
+ * @constructor
+ */
+function VisitItem() {}
+/** @type {string} */
+VisitItem.prototype.id;
+/** @type {string} */
+VisitItem.prototype.visitId;
+/** @type {number} */
+VisitItem.prototype.visitTime;
+/** @type {string} */
+VisitItem.prototype.referringVisitId;
+/** @type {string} */
+VisitItem.prototype.transition;
+
+/**
+ * @see http://code.google.com/chrome/extensions/fileBrowserHandler.html#type-FileHandlerExecuteEventDetails
+ * @constructor
+ */
+function FileHandlerExecuteEventDetails() {}
+/** @type {!Array.<!FileEntry>} */
+FileHandlerExecuteEventDetails.prototype.entries;
+/** @type {number} */
+FileHandlerExecuteEventDetails.prototype.tab_id;
+
+/**
+ * @see http://code.google.com/chrome/extensions/input.ime.html#type-KeyboardEvent
+ * @constructor
+ */
+function KeyboardEvent() {}
+/** @type {string} */
+KeyboardEvent.prototype.type;
+/** @type {string} */
+KeyboardEvent.prototype.requestId;
+/** @type {string} */
+KeyboardEvent.prototype.key;
+/** @type {boolean} */
+KeyboardEvent.prototype.altKey;
+/** @type {boolean} */
+KeyboardEvent.prototype.ctrlKey;
+/** @type {boolean} */
+KeyboardEvent.prototype.shiftKey;
+
+/**
+ * @see http://code.google.com/chrome/extensions/input.ime.html#type-InputContext
+ * @constructor
+ */
+function InputContext() {}
+/** @type {number} */
+InputContext.prototype.contextID;
+/** @type {string} */
+InputContext.prototype.type;
+
+/**
+ * @see http://code.google.com/chrome/extensions/permissions.html#type-Permissions
+ * @constructor
+ */
+function Permissions() {}
+/** @type {!Array.<string>} */
+InputContext.prototype.permissions;
+/** @type {!Array.<string>} */
+InputContext.prototype.origins;
+
+/**
+ * @see http://code.google.com/chrome/extensions/proxy.html#type-ProxyServer
+ * @constructor
+ */
+function ProxyServer() {}
+/** @type {string} */
+ProxyServer.prototype.scheme;
+/** @type {string} */
+ProxyServer.prototype.host;
+/** @type {number} */
+ProxyServer.prototype.port;
+
+/**
+ * @see http://code.google.com/chrome/extensions/proxy.html#type-ProxyRules
+ * @constructor
+ */
+function ProxyRules() {}
+/** @type {ProxyServer} */
+ProxyRules.prototype.singleProxy;
+/** @type {ProxyServer} */
+ProxyRules.prototype.proxyForHttp;
+/** @type {ProxyServer} */
+ProxyRules.prototype.proxyForHttps;
+/** @type {ProxyServer} */
+ProxyRules.prototype.proxyForFtp;
+/** @type {ProxyServer} */
+ProxyRules.prototype.fallbackProxy;
+/** @type {!Array.<string>} */
+ProxyRules.prototype.bypassList;
+
+/**
+ * @see http://code.google.com/chrome/extensions/proxy.html#type-PacScript
+ * @constructor
+ */
+function PacScript() {}
+/** @type {string} */
+PacScript.prototype.url;
+/** @type {string} */
+PacScript.prototype.data;
+/** @type {boolean} */
+PacScript.prototype.mandatory;
+
+/**
+ * @see http://code.google.com/chrome/extensions/proxy.html#type-ProxyConfig
+ * @constructor
+ */
+function ProxyConfig() {}
+/** @type {ProxyRules} */
+ProxyConfig.prototype.rules;
+/** @type {PacScript} */
+ProxyConfig.prototype.pacScript;
+/** @type {string} */
+ProxyConfig.prototype.mode;
+
+/**
+ * @see http://code.google.com/chrome/extensions/types.html#type-ChromeSetting
+ * @constructor
+ */
+function ChromeSetting() {}
+
+/**
+ * @param {Object} details Object with a 'scope' (string) key.
+ * @param {function(): void=} opt_callback Callback function.
+ */
+ChromeSetting.prototype.clear = function(details, opt_callback) {};
+
+/**
+ * @param {Object} details Object with an 'incognito' (boolean) key.
+ * @param {function(Object.<string, *>): void} callback Callback function.
+ */
+ChromeSetting.prototype.get = function(details, callback) {};
+
+/**
+ * @param {Object} details Object with a 'value' (*) key and an optional
+ *     'scope' (string) key.
+ * @param {function(): void=} opt_callback Callback function.
+ */
+ChromeSetting.prototype.set = function(details, opt_callback) {};
+
+/**
+ * @see http://code.google.com/chrome/extensions/webRequest.html#type-RequestFilter
+ * @constructor
+ */
+function RequestFilter() {}
+/** @type {!Array.<string>} */
+RequestFilter.prototype.urls;
+/** @type {!Array.<string>} */
+RequestFilter.prototype.types;
+/** @type {number} */
+RequestFilter.prototype.tabId;
+/** @type {number} */
+RequestFilter.prototype.windowId;
+
+/**
+ * @see http://code.google.com/chrome/extensions/webRequest.html#type-HttpHeaders
+ * @constructor
+ */
+function HttpHeader() {}
+/** @type {string} */
+HttpHeader.prototype.name;
+/** @type {string} */
+HttpHeader.prototype.value;
+/** @type {!Array.<number>} */
+HttpHeader.prototype.binaryValue;
+
+/**
+ * @see http://code.google.com/chrome/extensions/webRequest.html#type-HttpHeaders
+ * @typedef {Array.<!HttpHeader>}
+ */
+var HttpHeaders;
+
+/**
+ * @see http://code.google.com/chrome/extensions/webRequest.html#type-BlockingResponse
+ * @constructor
+ */
+function BlockingResponse() {}
+/** @type {boolean} */
+BlockingResponse.prototype.cancel;
+/** @type {string} */
+BlockingResponse.prototype.redirectUrl;
+/** @type {!HttpHeaders} */
+BlockingResponse.prototype.requestHeaders;
+/** @type {!HttpHeaders} */
+BlockingResponse.prototype.responseHeaders;
+/** @type {Object.<string,string>} */
+BlockingResponse.prototype.authCredentials;
+
