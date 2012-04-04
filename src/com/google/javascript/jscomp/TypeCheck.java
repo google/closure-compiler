@@ -30,6 +30,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -41,9 +42,9 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.HashMap;
 
 /**
  * <p>Checks the types of JS expressions against any declared type

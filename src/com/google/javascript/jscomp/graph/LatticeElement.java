@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.graph;
 
 /**
  * A lattice element.
  *
  */
-interface LatticeElement {
+public interface LatticeElement {
 
 }

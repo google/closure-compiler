@@ -17,9 +17,11 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.StaticScope;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -219,7 +221,7 @@ public interface CodingConvention extends Serializable {
    * @param delegateProxyPrototypes List of delegate proxy prototypes.
    */
   public void defineDelegateProxyPrototypeProperties(
-      JSTypeRegistry registry, Scope scope,
+      JSTypeRegistry registry, StaticScope<JSType> scope,
       List<ObjectType> delegateProxyPrototypes,
       Map<String, String> delegateCallingConventions);
 
@@ -266,8 +268,7 @@ public interface CodingConvention extends Serializable {
    * @param t The node traversal.
    * @param callNode A CALL node.
    */
-  public ObjectLiteralCast getObjectLiteralCast(NodeTraversal t,
-      Node callNode);
+  public ObjectLiteralCast getObjectLiteralCast(Node callNode);
 
   /**
    * Returns the set of AssertionFunction.
@@ -322,9 +323,14 @@ public interface CodingConvention extends Serializable {
     /** Object to cast. */
     final Node objectNode;
 
-    ObjectLiteralCast(String typeName, Node objectNode) {
+    /** Error message */
+    final DiagnosticType diagnosticType;
+
+    ObjectLiteralCast(String typeName, Node objectNode,
+        DiagnosticType diagnosticType) {
       this.typeName = typeName;
       this.objectNode = objectNode;
+      this.diagnosticType = diagnosticType;
     }
   }
 

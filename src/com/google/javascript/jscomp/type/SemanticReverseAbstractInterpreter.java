@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.type;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.base.Function;
+import com.google.javascript.jscomp.CodingConvention;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
@@ -28,8 +31,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.Visitor;
-import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * A reverse abstract interpreter using the semantics of the JavaScript
@@ -37,7 +38,7 @@ import com.google.javascript.rhino.Token;
  * expects the parse tree inputs to be typed.
  *
  */
-class SemanticReverseAbstractInterpreter
+public class SemanticReverseAbstractInterpreter
     extends ChainableReverseAbstractInterpreter {
 
   /**
@@ -115,7 +116,7 @@ class SemanticReverseAbstractInterpreter
   /**
    * Creates a semantic reverse abstract interpreter.
    */
-  SemanticReverseAbstractInterpreter(CodingConvention convention,
+  public SemanticReverseAbstractInterpreter(CodingConvention convention,
       JSTypeRegistry typeRegistry) {
     super(convention, typeRegistry);
   }

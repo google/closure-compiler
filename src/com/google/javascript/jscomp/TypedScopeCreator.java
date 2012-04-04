@@ -1385,15 +1385,20 @@ final class TypedScopeCreator implements ScopeCreator {
       }
 
       ObjectLiteralCast objectLiteralCast =
-          codingConvention.getObjectLiteralCast(t, n);
+          codingConvention.getObjectLiteralCast(n);
       if (objectLiteralCast != null) {
-        ObjectType type = ObjectType.cast(
-            typeRegistry.getType(objectLiteralCast.typeName));
-        if (type != null && type.getConstructor() != null) {
-          setDeferredType(objectLiteralCast.objectNode, type);
+        if (objectLiteralCast.diagnosticType == null) {
+          ObjectType type = ObjectType.cast(
+              typeRegistry.getType(objectLiteralCast.typeName));
+          if (type != null && type.getConstructor() != null) {
+            setDeferredType(objectLiteralCast.objectNode, type);
+          } else {
+            compiler.report(JSError.make(t.getSourceName(), n,
+                    CONSTRUCTOR_EXPECTED));
+          }
         } else {
           compiler.report(JSError.make(t.getSourceName(), n,
-                  CONSTRUCTOR_EXPECTED));
+                  objectLiteralCast.diagnosticType));
         }
       }
     }

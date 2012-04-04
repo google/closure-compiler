@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCal
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.GraphNode;
+import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 

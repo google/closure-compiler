@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.SimpleSlot;
@@ -204,7 +205,8 @@ class LinkedFlowScope implements FlowScope {
    * with stuff that we've inferred in the local flow.
    */
   @Override
-  public void completeScope(Scope scope) {
+  public void completeScope(StaticScope<JSType> staticScope) {
+    Scope scope = (Scope) staticScope;
     for (Iterator<Var> it = scope.getVars(); it.hasNext();) {
       Var var = it.next();
       if (var.isTypeInferred()) {

@@ -17,10 +17,10 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
-
 
 /**
  * Tests for LinkedFlowScope.

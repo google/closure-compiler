@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.graph.LatticeElement;
 
 import java.util.List;
 

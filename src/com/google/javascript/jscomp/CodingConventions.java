@@ -18,8 +18,10 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.StaticScope;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -185,7 +187,7 @@ public class CodingConventions {
 
     @Override
     public void defineDelegateProxyPrototypeProperties(
-        JSTypeRegistry registry, Scope scope,
+        JSTypeRegistry registry, StaticScope<JSType> scope,
         List<ObjectType> delegateProxyPrototypes,
         Map<String, String> delegateCallingConventions) {
       nextConvention.defineDelegateProxyPrototypeProperties(
@@ -218,9 +220,8 @@ public class CodingConventions {
     }
 
     @Override
-    public ObjectLiteralCast getObjectLiteralCast(NodeTraversal t,
-        Node callNode) {
-      return nextConvention.getObjectLiteralCast(t, callNode);
+    public ObjectLiteralCast getObjectLiteralCast(Node callNode) {
+      return nextConvention.getObjectLiteralCast(callNode);
     }
   }
 
@@ -361,7 +362,7 @@ public class CodingConventions {
 
     @Override
     public void defineDelegateProxyPrototypeProperties(
-        JSTypeRegistry registry, Scope scope,
+        JSTypeRegistry registry, StaticScope<JSType> scope,
         List<ObjectType> delegateProxyPrototypes,
         Map<String, String> delegateCallingConventions) {
       // do nothing.
@@ -383,8 +384,7 @@ public class CodingConventions {
     }
 
     @Override
-    public ObjectLiteralCast getObjectLiteralCast(NodeTraversal t,
-        Node callNode) {
+    public ObjectLiteralCast getObjectLiteralCast(Node callNode) {
       return null;
     }
 

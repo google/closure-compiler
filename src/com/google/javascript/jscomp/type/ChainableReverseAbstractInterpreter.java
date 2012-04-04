@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
-
-import com.google.common.base.Preconditions;
+package com.google.javascript.jscomp.type;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -30,6 +28,10 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TY
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
+import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.CodingConvention;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -39,14 +41,12 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.Visitor;
-import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Chainable reverse abstract interpreter providing basic functionality.
  *
  */
-abstract class ChainableReverseAbstractInterpreter
+public abstract class ChainableReverseAbstractInterpreter
     implements ReverseAbstractInterpreter {
   protected final CodingConvention convention;
   final JSTypeRegistry typeRegistry;
@@ -57,7 +57,7 @@ abstract class ChainableReverseAbstractInterpreter
    * Constructs an interpreter, which is the only link in a chain. Interpreters
    * can be appended using {@link #append}.
    */
-  ChainableReverseAbstractInterpreter(CodingConvention convention,
+  public ChainableReverseAbstractInterpreter(CodingConvention convention,
       JSTypeRegistry typeRegistry) {
     Preconditions.checkNotNull(convention);
     this.convention = convention;
@@ -74,7 +74,7 @@ abstract class ChainableReverseAbstractInterpreter
    * @param lastLink a chainable interpreter, with no next link
    * @return the updated last link
    */
-  ChainableReverseAbstractInterpreter append(
+  public ChainableReverseAbstractInterpreter append(
       ChainableReverseAbstractInterpreter lastLink) {
     Preconditions.checkArgument(lastLink.nextLink == null);
     this.nextLink = lastLink;
@@ -85,7 +85,7 @@ abstract class ChainableReverseAbstractInterpreter
   /**
    * Gets the first link of this chain.
    */
-  ChainableReverseAbstractInterpreter getFirst() {
+  public ChainableReverseAbstractInterpreter getFirst() {
     return firstLink;
   }
 

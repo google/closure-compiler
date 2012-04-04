@@ -243,12 +243,12 @@ public class ClosureCodingConventionTest extends TestCase {
 
   private void assertNotObjectLiteralCast(String code) {
     Node n = parseTestCode(code);
-    assertNull(conv.getObjectLiteralCast(null, n.getFirstChild()));
+    assertNull(conv.getObjectLiteralCast(n.getFirstChild()));
   }
 
   private void assertObjectLiteralCast(String code) {
     Node n = parseTestCode(code);
-    assertNotNull(conv.getObjectLiteralCast(null, n.getFirstChild()));
+    assertNotNull(conv.getObjectLiteralCast(n.getFirstChild()));
   }
 
   private void assertNotClassDefining(String code) {

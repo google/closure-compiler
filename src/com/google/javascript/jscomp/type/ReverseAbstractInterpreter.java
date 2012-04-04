@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.type;
 
 import com.google.javascript.rhino.Node;
 
@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Node;
  * the outcome of the computation.</p>
  *
  */
-interface ReverseAbstractInterpreter {
+public interface ReverseAbstractInterpreter {
   /**
    * Calculates a precise version of the scope knowing the outcome of the
    * condition.

@@ -24,8 +24,9 @@ import com.google.javascript.jscomp.DataFlowAnalysis.BranchedForwardDataFlowAnal
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
 import com.google.javascript.jscomp.DataFlowAnalysis.MaxIterationsExceededException;
 import com.google.javascript.jscomp.JoinOp.BinaryJoinOp;
-import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
+import com.google.javascript.jscomp.graph.GraphNode;
+import com.google.javascript.jscomp.graph.LatticeElement;
 
 import junit.framework.TestCase;
 

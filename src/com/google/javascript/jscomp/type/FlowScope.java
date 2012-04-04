@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.type;
 
+import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticScope;
@@ -29,7 +30,7 @@ import com.google.javascript.rhino.jstype.StaticSlot;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-interface FlowScope extends StaticScope<JSType>, LatticeElement {
+public interface FlowScope extends StaticScope<JSType>, LatticeElement {
 
   /**
    * Creates a child of this flow scope, to represent an instruction
@@ -77,5 +78,5 @@ interface FlowScope extends StaticScope<JSType>, LatticeElement {
    * have enough type information. Then fill in that type information
    * with stuff that we've inferred in the local flow.
    */
-  void completeScope(Scope scope);
+  void completeScope(StaticScope<JSType> scope);
 }

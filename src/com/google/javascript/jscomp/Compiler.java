@@ -32,6 +32,10 @@ import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyEx
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
+import com.google.javascript.jscomp.type.ChainableReverseAbstractInterpreter;
+import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
+import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
+import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;

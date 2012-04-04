@@ -295,8 +295,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public ObjectLiteralCast getObjectLiteralCast(NodeTraversal t,
-      Node callNode) {
+  public ObjectLiteralCast getObjectLiteralCast(Node callNode) {
     Preconditions.checkArgument(callNode.isCall());
     Node callName = callNode.getFirstChild();
     if (!"goog.reflect.object".equals(callName.getQualifiedName()) ||
@@ -311,14 +310,11 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
 
     Node objectNode = typeNode.getNext();
     if (!objectNode.isObjectLit()) {
-      // TODO(johnlenz): The coding convention should not be performing checks.
-      t.getCompiler().report(JSError.make(t.getSourceName(), callNode,
-                                          OBJECTLIT_EXPECTED));
-      return null;
+      return new ObjectLiteralCast(null, null, OBJECTLIT_EXPECTED);
     }
 
-    return new ObjectLiteralCast(typeNode.getQualifiedName(),
-                                 typeNode.getNext());
+    return new ObjectLiteralCast(
+        typeNode.getQualifiedName(), typeNode.getNext(), null);
   }
 
   @Override

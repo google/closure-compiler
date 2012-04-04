@@ -16,9 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
+import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
 
 public class ClosureReverseAbstractInterpreterTest extends
     CompilerTypeTestCase {

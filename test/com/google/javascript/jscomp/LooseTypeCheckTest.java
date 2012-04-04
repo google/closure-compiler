@@ -20,6 +20,8 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
+import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;

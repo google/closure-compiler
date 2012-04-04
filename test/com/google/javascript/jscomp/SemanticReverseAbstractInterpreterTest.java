@@ -17,6 +17,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.type.FlowScope;
+import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
+import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;

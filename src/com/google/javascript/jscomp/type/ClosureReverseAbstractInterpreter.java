@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.type;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
@@ -23,12 +23,13 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CodingConvention;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Visitor;
-import com.google.javascript.rhino.Node;
 
 import java.util.Map;
 
@@ -37,7 +38,7 @@ import java.util.Map;
  * {@code goog.isDef}.
  *
  */
-class ClosureReverseAbstractInterpreter
+public class ClosureReverseAbstractInterpreter
     extends ChainableReverseAbstractInterpreter {
 
   /**
@@ -114,7 +115,7 @@ class ClosureReverseAbstractInterpreter
   /**
    * Creates a {@link ClosureReverseAbstractInterpreter}.
    */
-  ClosureReverseAbstractInterpreter(CodingConvention convention,
+  public ClosureReverseAbstractInterpreter(CodingConvention convention,
       final JSTypeRegistry typeRegistry) {
     super(convention, typeRegistry);
     this.restricters =

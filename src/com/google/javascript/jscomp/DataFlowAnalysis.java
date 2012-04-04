@@ -25,7 +25,9 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.Annotation;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
+import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
