@@ -1792,6 +1792,16 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function (this:Date): ?");
   }
 
+  public void testFunctionInference21() throws Exception {
+    testTypes(
+        "var f = function() { throw 'x' };" +
+        "/** @return {boolean} */ var g = f;");
+    testFunctionType(
+        "var f = function() { throw 'x' };",
+        "f",
+        "function (): ?");
+  }
+
   public void testInnerFunction1() throws Exception {
     testTypes(
         "function f() {" +

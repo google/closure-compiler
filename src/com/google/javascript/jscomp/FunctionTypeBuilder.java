@@ -590,10 +590,23 @@ final class FunctionTypeBuilder {
    * Builds the function type, and puts it in the registry.
    */
   FunctionType buildAndRegister() {
-    if (returnType == null &&
-        !contents.mayHaveNonEmptyReturns() && !contents.mayBeFromExterns()) {
-      returnType = typeRegistry.getNativeType(VOID_TYPE);
-      returnTypeInferred = true;
+    if (returnType == null) {
+      // Infer return types.
+      // We need to be extremely conservative about this, because of two
+      // competing needs.
+      // 1) If we infer the return type of f too widely, then we won't be able
+      //    to assign f to other functions.
+      // 2) If we infer the return type of f too narrowly, then we won't be
+      //    able to override f in subclasses.
+      // So we only infer in cases where the user doesn't expect to write
+      // @return annotations--when it's very obvious that the function returns
+      // nothing.
+      if (!contents.mayHaveNonEmptyReturns() &&
+          !contents.mayHaveSingleThrow() &&
+          !contents.mayBeFromExterns()) {
+        returnType = typeRegistry.getNativeType(VOID_TYPE);
+        returnTypeInferred = true;
+      }
     }
 
     if (returnType == null) {
@@ -774,6 +787,9 @@ final class FunctionTypeBuilder {
     /** Returns if a return of a real value (not undefined) appears. */
     boolean mayHaveNonEmptyReturns();
 
+    /** Returns if this consists of a single throw. */
+    boolean mayHaveSingleThrow();
+
     /** Gets a list of variables in this scope that are escaped. */
     Iterable<String> getEscapedVarNames();
 
@@ -801,6 +817,11 @@ final class FunctionTypeBuilder {
 
     @Override
     public boolean mayHaveNonEmptyReturns() {
+      return true;
+    }
+
+    @Override
+    public boolean mayHaveSingleThrow() {
       return true;
     }
 
@@ -842,6 +863,12 @@ final class FunctionTypeBuilder {
 
     void recordNonEmptyReturn() {
       hasNonEmptyReturns = true;
+    }
+
+    @Override
+    public boolean mayHaveSingleThrow() {
+      Node block = n.getLastChild();
+      return block.hasOneChild() && block.getFirstChild().isThrow();
     }
 
     @Override
