@@ -51,7 +51,7 @@ class CleanupPasses extends PassConfig {
   }
 
   @Override
-  State getIntermediateState() {
+  protected State getIntermediateState() {
     return state;
   }
 
@@ -61,7 +61,7 @@ class CleanupPasses extends PassConfig {
   }
 
   @Override
-  void setIntermediateState(State state) {
+  protected void setIntermediateState(State state) {
     this.state = state;
   }
 

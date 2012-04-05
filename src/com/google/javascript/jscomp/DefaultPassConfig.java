@@ -144,7 +144,7 @@ public class DefaultPassConfig extends PassConfig {
   }
 
   @Override
-  State getIntermediateState() {
+  protected State getIntermediateState() {
     return new State(
         cssNames == null ? null : Maps.newHashMap(cssNames),
         exportedNames == null ? null :
@@ -154,7 +154,7 @@ public class DefaultPassConfig extends PassConfig {
   }
 
   @Override
-  void setIntermediateState(State state) {
+  protected void setIntermediateState(State state) {
     this.cssNames = state.cssNames == null ? null :
         Maps.newHashMap(state.cssNames);
     this.exportedNames = state.exportedNames == null ? null :
