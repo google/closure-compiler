@@ -467,40 +467,6 @@ Window.prototype.stop = function() {};
 Window.prototype.unescape = function(escaped) {};
 
 Window.prototype.updateCommands;
-/** @type {?function (Event)} */ Window.prototype.onabort;
-/** @type {?function (Event)} */ Window.prototype.onbeforeunload;
-/** @type {?function (Event)} */ Window.prototype.onblur;
-/** @type {?function (Event)} */ Window.prototype.onchange;
-/** @type {?function (Event)} */ Window.prototype.onclick;
-/** @type {?function (Event)} */ Window.prototype.onclose;
-/** @type {?function (Event)} */ Window.prototype.oncontextmenu;
-/** @type {?function (Event)} */ Window.prototype.ondblclick;
-/** @type {?function (Event)} */ Window.prototype.ondragdrop;
-// onerror has a special signature.
-// See https://developer.mozilla.org/en/DOM/window.onerror
-// and http://msdn.microsoft.com/en-us/library/cc197053(VS.85).aspx
-/** @type {?function (string, string, number)} */
-Window.prototype.onerror;
-/** @type {?function (Event)} */ Window.prototype.onfocus;
-/** @type {?function (Event)} */ Window.prototype.onhashchange;
-/** @type {?function (Event)} */ Window.prototype.onkeydown;
-/** @type {?function (Event)} */ Window.prototype.onkeypress;
-/** @type {?function (Event)} */ Window.prototype.onkeyup;
-/** @type {?function (Event)} */ Window.prototype.onload;
-/** @type {?function (Event)} */ Window.prototype.onmousedown;
-/** @type {?function (Event)} */ Window.prototype.onmousemove;
-/** @type {?function (Event)} */ Window.prototype.onmouseout;
-/** @type {?function (Event)} */ Window.prototype.onmouseover;
-/** @type {?function (Event)} */ Window.prototype.onmouseup;
-/** @type {?function (Event)} */ Window.prototype.onmousewheel;
-/** @type {?function (Event)} */ Window.prototype.onpaint;
-/** @type {?function (Event)} */ Window.prototype.onpopstate;
-/** @type {?function (Event)} */ Window.prototype.onreset;
-/** @type {?function (Event)} */ Window.prototype.onresize;
-/** @type {?function (Event)} */ Window.prototype.onscroll;
-/** @type {?function (Event)} */ Window.prototype.onselect;
-/** @type {?function (Event)} */ Window.prototype.onsubmit;
-/** @type {?function (Event)} */ Window.prototype.onunload;
 
 // properties of Document
 Document.prototype.alinkColor;
@@ -945,29 +911,6 @@ Element.prototype.replaceChild = function(insertedNode, replacedNode) {};
  * @param {boolean=} opt_alignWithTop
  */
 Element.prototype.scrollIntoView = function(opt_alignWithTop) {};
-
-// Event handlers
-/** @type {?function (Event)} */ Element.prototype.oncopy;
-/** @type {?function (Event)} */ Element.prototype.oncut;
-/** @type {?function (Event)} */ Element.prototype.onpaste;
-/** @type {?function (Event)} */ Element.prototype.onbeforeunload;
-/** @type {?function (Event)} */ Element.prototype.onblur;
-/** @type {?function (Event)} */ Element.prototype.onchange;
-/** @type {?function (Event)} */ Element.prototype.onclick;
-/** @type {?function (Event)} */ Element.prototype.oncontextmenu;
-/** @type {?function (Event)} */ Element.prototype.ondblclick;
-/** @type {?function (Event)} */ Element.prototype.onfocus;
-/** @type {?function (Event)} */ Element.prototype.onkeydown;
-/** @type {?function (Event)} */ Element.prototype.onkeypress;
-/** @type {?function (Event)} */ Element.prototype.onkeyup;
-/** @type {?function (Event)} */ Element.prototype.onmousedown;
-/** @type {?function (Event)} */ Element.prototype.onmousemove;
-/** @type {?function (Event)} */ Element.prototype.onmouseout;
-/** @type {?function (Event)} */ Element.prototype.onmouseover;
-/** @type {?function (Event)} */ Element.prototype.onmouseup;
-/** @type {?function (Event)} */ Element.prototype.onmousewheel;
-/** @type {?function (Event)} */ Element.prototype.onresize;
-/** @type {?function (Event)} */ Element.prototype.onscroll;
 
 /** @type {number} */
 HTMLInputElement.prototype.selectionStart;

@@ -636,6 +636,46 @@ Element.prototype.setAttribute = function(name, value) {};
  */
 Element.prototype.setAttributeNode = function(newAttr) {};
 
+// Event handlers
+// The DOM level 3 spec has a good index of these
+// http://www.w3.org/TR/DOM-Level-3-Events/#event-types
+
+/** @type {?function (Event)} */ Element.prototype.onabort;
+/** @type {?function (Event)} */ Element.prototype.onbeforeunload;
+/** @type {?function (Event)} */ Element.prototype.onblur;
+/** @type {?function (Event)} */ Element.prototype.onchange;
+/** @type {?function (Event)} */ Element.prototype.onclick;
+/** @type {?function (Event)} */ Element.prototype.oncompositionstart;
+/** @type {?function (Event)} */ Element.prototype.oncompositionupdate;
+/** @type {?function (Event)} */ Element.prototype.oncompositionend;
+/** @type {?function (Event)} */ Element.prototype.oncontextmenu;
+/** @type {?function (Event)} */ Element.prototype.oncopy;
+/** @type {?function (Event)} */ Element.prototype.oncut;
+/** @type {?function (Event)} */ Element.prototype.ondblclick;
+/** @type {?function (Event)} */ Element.prototype.onerror;
+/** @type {?function (Event)} */ Element.prototype.onfocus;
+/** @type {?function (Event)} */ Element.prototype.onfocusin;
+/** @type {?function (Event)} */ Element.prototype.onfocusout;
+/** @type {?function (Event)} */ Element.prototype.onkeydown;
+/** @type {?function (Event)} */ Element.prototype.onkeypress;
+/** @type {?function (Event)} */ Element.prototype.onkeyup;
+/** @type {?function (Event)} */ Element.prototype.onload;
+/** @type {?function (Event)} */ Element.prototype.onunload;
+/** @type {?function (Event)} */ Element.prototype.onmousedown;
+/** @type {?function (Event)} */ Element.prototype.onmousemove;
+/** @type {?function (Event)} */ Element.prototype.onmouseout;
+/** @type {?function (Event)} */ Element.prototype.onmouseover;
+/** @type {?function (Event)} */ Element.prototype.onmouseup;
+/** @type {?function (Event)} */ Element.prototype.onmousewheel;
+/** @type {?function (Event)} */ Element.prototype.onpaste;
+/** @type {?function (Event)} */ Element.prototype.onreset;
+/** @type {?function (Event)} */ Element.prototype.onresize;
+/** @type {?function (Event)} */ Element.prototype.onscroll;
+/** @type {?function (Event)} */ Element.prototype.onselect;
+/** @type {?function (Event)} */ Element.prototype.onsubmit;
+/** @type {?function (Event)} */ Element.prototype.ontextinput;
+/** @type {?function (Event)} */ Element.prototype.onwheel;
+
 /**
  * @constructor
  * @extends {CharacterData}
@@ -758,3 +798,56 @@ ProcessingInstruction.prototype.data;
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1478689192
  */
 ProcessingInstruction.prototype.target;
+
+
+/**
+ * @constructor
+ * @implements {EventTarget}
+ */
+function Window() {}
+
+/** @override */
+Window.prototype.addEventListener = function(type, listener, useCapture) {};
+
+/** @override */
+Window.prototype.removeEventListener = function(type, listener, useCapture) {};
+
+/** @override */
+Window.prototype.dispatchEvent = function(evt) {};
+
+/** @type {?function (Event)} */ Window.prototype.onabort;
+/** @type {?function (Event)} */ Window.prototype.onbeforeunload;
+/** @type {?function (Event)} */ Window.prototype.onblur;
+/** @type {?function (Event)} */ Window.prototype.onchange;
+/** @type {?function (Event)} */ Window.prototype.onclick;
+/** @type {?function (Event)} */ Window.prototype.onclose;
+/** @type {?function (Event)} */ Window.prototype.oncontextmenu;
+/** @type {?function (Event)} */ Window.prototype.ondblclick;
+/** @type {?function (Event)} */ Window.prototype.ondragdrop;
+// onerror has a special signature.
+// See https://developer.mozilla.org/en/DOM/window.onerror
+// and http://msdn.microsoft.com/en-us/library/cc197053(VS.85).aspx
+/** @type {?function (string, string, number)} */
+Window.prototype.onerror;
+/** @type {?function (Event)} */ Window.prototype.onfocus;
+/** @type {?function (Event)} */ Window.prototype.onhashchange;
+/** @type {?function (Event)} */ Window.prototype.onkeydown;
+/** @type {?function (Event)} */ Window.prototype.onkeypress;
+/** @type {?function (Event)} */ Window.prototype.onkeyup;
+/** @type {?function (Event)} */ Window.prototype.onload;
+/** @type {?function (Event)} */ Window.prototype.onmousedown;
+/** @type {?function (Event)} */ Window.prototype.onmousemove;
+/** @type {?function (Event)} */ Window.prototype.onmouseout;
+/** @type {?function (Event)} */ Window.prototype.onmouseover;
+/** @type {?function (Event)} */ Window.prototype.onmouseup;
+/** @type {?function (Event)} */ Window.prototype.onmousewheel;
+/** @type {?function (Event)} */ Window.prototype.onpaint;
+/** @type {?function (Event)} */ Window.prototype.onpopstate;
+/** @type {?function (Event)} */ Window.prototype.onreset;
+/** @type {?function (Event)} */ Window.prototype.onresize;
+/** @type {?function (Event)} */ Window.prototype.onscroll;
+/** @type {?function (Event)} */ Window.prototype.onselect;
+/** @type {?function (Event)} */ Window.prototype.onsubmit;
+/** @type {?function (Event)} */ Window.prototype.onunload;
+/** @type {?function (Event)} */ Window.prototype.onwheel;
+
