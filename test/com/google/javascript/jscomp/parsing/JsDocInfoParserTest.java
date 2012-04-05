@@ -1275,7 +1275,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
     String comment = "@preserve Foo\nBar\n\nBaz*/";
     parse(comment);
-    assertEquals(" Foo\n Bar\n\n Baz", node.getJSDocInfo().getLicense());
+    assertEquals(" Foo\nBar\n\nBaz", node.getJSDocInfo().getLicense());
   }
 
   public void testParseLicense() throws Exception {
@@ -1283,7 +1283,15 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
     String comment = "@license Foo\nBar\n\nBaz*/";
     parse(comment);
-    assertEquals(" Foo\n Bar\n\n Baz", node.getJSDocInfo().getLicense());
+    assertEquals(" Foo\nBar\n\nBaz", node.getJSDocInfo().getLicense());
+  }
+
+  public void testParseLicenseAscii() throws Exception {
+    Node node = new Node(1);
+    this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
+    String comment = "@license Foo\n *   Bar\n\n  Baz*/";
+    parse(comment);
+    assertEquals(" Foo\n   Bar\n\n  Baz", node.getJSDocInfo().getLicense());
   }
 
   public void testParseLicenseWithAnnotation() throws Exception {
