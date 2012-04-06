@@ -24,8 +24,72 @@
 
 /**
  * @constructor
- * @see http://trac.webkit.org/browser/trunk/WebCore/page/Console.idl
- * @see http://trac.webkit.org/browser/trunk/WebCore/page/Console.cpp
+ * @see http://trac.webkit.org/browser/trunk/Source/WebCore/page/MemoryInfo.idl
+ * @see http://trac.webkit.org/browser/trunk/Source/WebCore/page/MemoryInfo.cpp
+ */
+function MemoryInfo() {};
+
+/** @type {number} */
+MemoryInfo.prototype.totalJSHeapSize;
+
+/** @type {number} */
+MemoryInfo.prototype.usedJSHeapSize;
+
+/** @type {number} */
+MemoryInfo.prototype.jsHeapSizeLimit;
+
+/**
+ * @constructor
+ * @see http://trac.webkit.org/browser/trunk/Source/WebCore/inspector/ScriptProfileNode.idl
+ */
+function ScriptProfileNode() {};
+
+/** @type {string} */
+ScriptProfileNode.prototype.functionName;
+
+/** @type {string} */
+ScriptProfileNode.prototype.url;
+
+/** @type {number} */
+ScriptProfileNode.prototype.lineNumber;
+
+/** @type {number} */
+ScriptProfileNode.prototype.totalTime;
+
+/** @type {number} */
+ScriptProfileNode.prototype.selfTime;
+
+/** @type {number} */
+ScriptProfileNode.prototype.numberOfCalls;
+
+/** @type {Array.<ScriptProfileNode>} */
+ScriptProfileNode.prototype.children;
+
+/** @type {boolean} */
+ScriptProfileNode.prototype.visible;
+
+/** @type {number} */
+ScriptProfileNode.prototype.callUID;
+
+/**
+ * @constructor
+ * @see http://trac.webkit.org/browser/trunk/Source/WebCore/inspector/ScriptProfile.idl
+ */
+function ScriptProfile() {};
+
+/** @type {string} */
+ScriptProfile.prototype.title;
+
+/** @type {number} */
+ScriptProfile.prototype.uid;
+
+/** @type {ScriptProfileNode} */
+ScriptProfile.prototype.head;
+
+/**
+ * @constructor
+ * @see http://trac.webkit.org/browser/trunk/Source/WebCore/page/Console.idl
+ * @see http://trac.webkit.org/browser/trunk/Source/WebCore/page/Console.cpp
  */
 function Console() {};
 
@@ -81,9 +145,17 @@ Console.prototype.trace = function(value) {};
 Console.prototype.count = function(value) {};
 
 /**
+ * @param {*} value
+ */
+Console.prototype.markTimeline = function(value) {};
+
+/**
  * @param {string=} opt_title
  */
 Console.prototype.profile = function(opt_title) {};
+
+/** @type {Array.<ScriptProfile>} */
+Console.prototype.profiles;
 
 Console.prototype.profileEnd = function() {};
 
@@ -97,8 +169,17 @@ Console.prototype.time = function(name) {};
  */
 Console.prototype.timeEnd = function(name) {};
 
+/**
+ * @param {*} value
+ */
+Console.prototype.timeStamp = function(value) {};
+
 Console.prototype.group = function() {};
+
 Console.prototype.groupEnd = function() {};
+
+/** @type {MemoryInfo} */
+Console.prototype.memory;
 
 /** @type {Console} */
 Window.prototype.console;
