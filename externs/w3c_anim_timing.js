@@ -21,18 +21,10 @@
  * @externs
  */
 
-/**
- * @interface
- */
-function FrameRequestCallback() {};
+// TODO(nicksantos): Change {Function} to {function(number)}
 
 /**
- * @param {number} timestamp
- */
-FrameRequestCallback.prototype.sample = function(timestamp) {};
-
-/**
- * @param {FrameRequestCallback|Function} callback
+ * @param {Function} callback
  * @param {Element} element
  * @return {number}
  */
@@ -44,7 +36,7 @@ function requestAnimationFrame(callback, element) {};
 function cancelRequestAnimationFrame(handle) {};
 
 /**
- * @param {FrameRequestCallback|Function} callback
+ * @param {Function} callback
  * @param {Element} element
  * @return {number}
  */
@@ -56,7 +48,7 @@ function webkitRequestAnimationFrame(callback, element) {};
 function webkitCancelRequestAnimationFrame(handle) {};
 
 /**
- * @param {FrameRequestCallback|Function} callback
+ * @param {Function} callback
  * @param {Element} element
  * @return {number}
  */
@@ -66,3 +58,87 @@ function mozRequestAnimationFrame(callback, element) {};
  * @param {number} handle
  */
 function mozCancelRequestAnimationFrame(handle) {};
+
+/**
+ * @param {Function} callback
+ * @param {Element} element
+ * @return {number}
+ */
+function ieRequestAnimationFrame(callback, element) {};
+
+/**
+ * @param {number} handle
+ */
+function ieCancelRequestAnimationFrame(handle) {};
+
+/**
+ * @param {Function} callback
+ * @param {Element} element
+ * @return {number}
+ */
+function oRequestAnimationFrame(callback, element) {};
+
+/**
+ * @param {number} handle
+ */
+function oCancelRequestAnimationFrame(handle) {};
+
+/**
+ * @param {Function} callback
+ * @param {Element} element
+ * @return {number}
+ */
+Window.prototype.requestAnimationFrame = function(callback, element) {};
+
+/**
+ * @param {number} handle
+ */
+Window.prototype.cancelRequestAnimationFrame = function(handle) {};
+
+/**
+ * @param {Function} callback
+ * @param {Element} element
+ * @return {number}
+ */
+Window.prototype.webkitRequestAnimationFrame = function(callback, element) {};
+
+/**
+ * @param {number} handle
+ */
+Window.prototype.webkitCancelRequestAnimationFrame = function(handle) {};
+
+/**
+ * @param {Function} callback
+ * @param {Element} element
+ * @return {number}
+ */
+Window.prototype.mozRequestAnimationFrame = function(callback, element) {};
+
+/**
+ * @param {number} handle
+ */
+Window.prototype.mozCancelRequestAnimationFrame = function(handle) {};
+
+/**
+ * @param {Function} callback
+ * @param {Element} element
+ * @return {number}
+ */
+Window.prototype.ieRequestAnimationFrame = function(callback, element) {};
+
+/**
+ * @param {number} handle
+ */
+Window.prototype.ieCancelRequestAnimationFrame = function(handle) {};
+
+/**
+ * @param {Function} callback
+ * @param {Element} element
+ * @return {number}
+ */
+Window.prototype.oRequestAnimationFrame = function(callback, element) {};
+
+/**
+ * @param {number} handle
+ */
+Window.prototype.oCancelRequestAnimationFrame = function(handle) {};
