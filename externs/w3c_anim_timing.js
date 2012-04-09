@@ -15,20 +15,20 @@
  */
 /**
  * @fileoverview Definitions for timing control for script base animations. The
- *  whole file has been fully type annotated. Created from
- *  http://webstuff.nfshost.com/anim-timing/Overview.html
+ *  whole file has been fully type annotated.
  *
+ * @see http://www.w3.org/TR/animation-timing/
+ * @see http://webstuff.nfshost.com/anim-timing/Overview.html
  * @externs
  */
 
-// TODO(nicksantos): Change {Function} to {function(number)}
-
 /**
- * @param {Function} callback
- * @param {Element} element
+ * @param {function(number)} callback
+ * @param {Element=} opt_element In early versions of this API, the callback
+ *     was invoked only if the element was visible.
  * @return {number}
  */
-function requestAnimationFrame(callback, element) {};
+function requestAnimationFrame(callback, opt_element) {};
 
 /**
  * @param {number} handle
@@ -36,11 +36,11 @@ function requestAnimationFrame(callback, element) {};
 function cancelRequestAnimationFrame(handle) {};
 
 /**
- * @param {Function} callback
- * @param {Element} element
+ * @param {function(number)} callback
+ * @param {Element=} opt_element
  * @return {number}
  */
-function webkitRequestAnimationFrame(callback, element) {};
+function webkitRequestAnimationFrame(callback, opt_element) {};
 
 /**
  * @param {number} handle
@@ -48,11 +48,11 @@ function webkitRequestAnimationFrame(callback, element) {};
 function webkitCancelRequestAnimationFrame(handle) {};
 
 /**
- * @param {Function} callback
- * @param {Element} element
+ * @param {function(number)} callback
+ * @param {Element=} opt_element
  * @return {number}
  */
-function mozRequestAnimationFrame(callback, element) {};
+function mozRequestAnimationFrame(callback, opt_element) {};
 
 /**
  * @param {number} handle
@@ -60,11 +60,11 @@ function mozRequestAnimationFrame(callback, element) {};
 function mozCancelRequestAnimationFrame(handle) {};
 
 /**
- * @param {Function} callback
- * @param {Element} element
+ * @param {function(number)} callback
+ * @param {Element=} opt_element
  * @return {number}
  */
-function ieRequestAnimationFrame(callback, element) {};
+function ieRequestAnimationFrame(callback, opt_element) {};
 
 /**
  * @param {number} handle
@@ -72,11 +72,11 @@ function ieRequestAnimationFrame(callback, element) {};
 function ieCancelRequestAnimationFrame(handle) {};
 
 /**
- * @param {Function} callback
- * @param {Element} element
+ * @param {function(number)} callback
+ * @param {Element=} opt_element
  * @return {number}
  */
-function oRequestAnimationFrame(callback, element) {};
+function oRequestAnimationFrame(callback, opt_element) {};
 
 /**
  * @param {number} handle
@@ -84,11 +84,11 @@ function oRequestAnimationFrame(callback, element) {};
 function oCancelRequestAnimationFrame(handle) {};
 
 /**
- * @param {Function} callback
- * @param {Element} element
+ * @param {function(number)} callback
+ * @param {Element=} opt_element
  * @return {number}
  */
-Window.prototype.requestAnimationFrame = function(callback, element) {};
+Window.prototype.requestAnimationFrame = function(callback, opt_element) {};
 
 /**
  * @param {number} handle
@@ -96,11 +96,11 @@ Window.prototype.requestAnimationFrame = function(callback, element) {};
 Window.prototype.cancelRequestAnimationFrame = function(handle) {};
 
 /**
- * @param {Function} callback
- * @param {Element} element
+ * @param {function(number)} callback
+ * @param {Element=} opt_element
  * @return {number}
  */
-Window.prototype.webkitRequestAnimationFrame = function(callback, element) {};
+Window.prototype.webkitRequestAnimationFrame = function(callback, opt_element) {};
 
 /**
  * @param {number} handle
@@ -108,11 +108,11 @@ Window.prototype.webkitRequestAnimationFrame = function(callback, element) {};
 Window.prototype.webkitCancelRequestAnimationFrame = function(handle) {};
 
 /**
- * @param {Function} callback
- * @param {Element} element
+ * @param {function(number)} callback
+ * @param {Element=} opt_element
  * @return {number}
  */
-Window.prototype.mozRequestAnimationFrame = function(callback, element) {};
+Window.prototype.mozRequestAnimationFrame = function(callback, opt_element) {};
 
 /**
  * @param {number} handle
@@ -120,11 +120,11 @@ Window.prototype.mozRequestAnimationFrame = function(callback, element) {};
 Window.prototype.mozCancelRequestAnimationFrame = function(handle) {};
 
 /**
- * @param {Function} callback
- * @param {Element} element
+ * @param {function(number)} callback
+ * @param {Element=} opt_element
  * @return {number}
  */
-Window.prototype.ieRequestAnimationFrame = function(callback, element) {};
+Window.prototype.ieRequestAnimationFrame = function(callback, opt_element) {};
 
 /**
  * @param {number} handle
@@ -132,11 +132,11 @@ Window.prototype.ieRequestAnimationFrame = function(callback, element) {};
 Window.prototype.ieCancelRequestAnimationFrame = function(handle) {};
 
 /**
- * @param {Function} callback
- * @param {Element} element
+ * @param {function(number)} callback
+ * @param {Element=} opt_element
  * @return {number}
  */
-Window.prototype.oRequestAnimationFrame = function(callback, element) {};
+Window.prototype.oRequestAnimationFrame = function(callback, opt_element) {};
 
 /**
  * @param {number} handle
