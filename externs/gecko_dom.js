@@ -188,7 +188,7 @@ Window.prototype.pageXOffset;
 Window.prototype.pageYOffset;
 
 /**
- * @type {?Window}
+ * @type {!Window}
  * @see https://developer.mozilla.org/en/DOM/window.parent
  */
 Window.prototype.parent;

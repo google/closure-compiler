@@ -405,11 +405,6 @@ Window.prototype.pageXOffset;
 Window.prototype.pageYOffset;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms534326(VS.85).aspx
- */
-Window.prototype.parent;
-
-/**
  * @see https://developer.mozilla.org/en/DOM/window.personalbar
  */
 Window.prototype.personalbar;
