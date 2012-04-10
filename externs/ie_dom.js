@@ -19,6 +19,9 @@
  *  W3C's DOM specification by IE in JScript. This file depends on
  *  w3c_dom2.js. The whole file has NOT been fully type annotated.
  *
+ * When a non-standard extension appears in both Gecko and IE, we put
+ * it in gecko_dom.js
+ *
  * @externs
  */
 
@@ -300,21 +303,6 @@ var window;
 Window.prototype.clipboardData;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms533574(VS.85).aspx
- */
-Window.prototype.closed;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms533717(VS.85).aspx
- */
-Window.prototype.defaultStatus;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms533723(VS.85).aspx
- */
-Window.prototype.dialogArguments;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms533724(VS.85).aspx
  */
 Window.prototype.dialogHeight;
@@ -335,29 +323,9 @@ Window.prototype.dialogTop;
 Window.prototype.dialogWidth;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms533738(VS.85).aspx
- */
-Window.prototype.document;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms535863(VS.85).aspx
  */
 Window.prototype.event;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms533771(VS.85).aspx
- */
-Window.prototype.frameElement;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/Storage#globalStorage
- */
-Window.prototype.globalStorage;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.length
- */
-Window.prototype.length;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/cc197012(VS.85).aspx
@@ -370,49 +338,9 @@ Window.prototype.maxConnectionsPer1_0Server;
 Window.prototype.maxConnectionsPerServer;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms534187(VS.85).aspx
- */
-Window.prototype.name;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms534198(VS.85).aspx
  */
 Window.prototype.offscreenBuffering;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms534309(VS.85).aspx
- */
-Window.prototype.opener;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.outerHeight
- */
-Window.prototype.outerHeight;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.outerWidth
- */
-Window.prototype.outerWidth;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.scrollX
- */
-Window.prototype.pageXOffset;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.scrollY
- */
-Window.prototype.pageYOffset;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.personalbar
- */
-Window.prototype.personalbar;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms534326(VS.85).aspx
- */
-Window.prototype.returnValue;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms534389(VS.85).aspx
@@ -423,42 +351,6 @@ Window.prototype.screenLeft;
  * @see http://msdn.microsoft.com/en-us/library/ms534389(VS.85).aspx
  */
 Window.prototype.screenTop;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.scrollbars
- */
-Window.prototype.scrollbars;
-
-/**
- * @type {!Window}
- * @see http://msdn.microsoft.com/en-us/library/ms534627(VS.85).aspx
- */
-Window.prototype.self;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/cc197020(VS.85).aspx
- */
-Window.prototype.sessionStorage;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms534648(VS.85).aspx
- */
-Window.prototype.status;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.statusbar
- */
-Window.prototype.statusbar;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.toolbar
- */
-Window.prototype.toolbar;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms534687(VS.85).aspx
- */
-Window.prototype.top;
 
 /**
  * @type {function(new:XDomainRequest)}
@@ -475,41 +367,11 @@ Window.prototype.XMLHttpRequest;
 // Functions
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms535933(VS.85).aspx
- */
-Window.prototype.alert;
-
-/**
  * @param {string} event
  * @param {Function} handler
  * @see http://msdn.microsoft.com/en-us/library/ms536343(VS.85).aspx
  */
 Window.prototype.attachEvent;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536347(VS.85).aspx
- */
-Window.prototype.blur;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536353(VS.85).aspx
- */
-Window.prototype.clearInterval;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536357(VS.85).aspx
- */
-Window.prototype.clearTimeout;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536367(VS.85).aspx
- */
-Window.prototype.close;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536376(VS.85).aspx
- */
-Window.prototype.confirm;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536392(VS.85).aspx
@@ -615,24 +477,9 @@ Window.prototype.scrollTo = function(x, y) {};
 Window.prototype.setActive;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms536749(VS.85).aspx
- */
-Window.prototype.setInterval;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536753(VS.85).aspx
- */
-Window.prototype.setTimeout;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms536758(VS.85).aspx
  */
 Window.prototype.showHelp;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536759(VS.85).aspx
- */
-Window.prototype.showModalDialog;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536761(VS.85).aspx
@@ -925,24 +772,9 @@ Document.prototype.loadXML;
 Document.prototype.activeElement;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms533071(VS.85).aspx
- */
-Document.prototype.alinkColor;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms533506(VS.85).aspx
- */
-Document.prototype.bgColor;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms533553(VS.85).aspx
  */
 Document.prototype.charset;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms533687(VS.85).aspx
- */
-Document.prototype.compatMode;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms533693(VS.85).aspx
@@ -955,11 +787,6 @@ Document.prototype.cookie;
 Document.prototype.defaultCharset;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms533720(VS.85).aspx
- */
-Document.prototype.designMode;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms533731(VS.85).aspx
  */
 Document.prototype.dir;
@@ -970,19 +797,9 @@ Document.prototype.dir;
 Document.prototype.documentMode;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms533740(VS.85).aspx
- */
-Document.prototype.domain;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms533747(VS.85).aspx
  */
 Document.prototype.expando;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms533749(VS.85).aspx
- */
-Document.prototype.fgColor;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms533750(VS.85).aspx
@@ -1000,21 +817,6 @@ Document.prototype.fileModifiedDate;
 Document.prototype.fileSize;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms533884(VS.85).aspx
- */
-Document.prototype.implementation;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms533946(VS.85).aspx
- */
-Document.prototype.lastModified;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms534117(VS.85).aspx
- */
-Document.prototype.linkColor;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms534331(VS.85).aspx
  */
 Document.prototype.parentWindow;
@@ -1029,11 +831,6 @@ Document.prototype.protocol;
  * @see http://msdn.microsoft.com/en-us/library/ms534359(VS.85).aspx
  */
 Document.prototype.readyState;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms534365(VS.85).aspx
- */
-Document.prototype.referrer;
 
 /**
  * @type {Selection}
@@ -1057,11 +854,6 @@ Document.prototype.URL;
 Document.prototype.URLUnencoded;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms535139(VS.85).aspx
- */
-Document.prototype.vlinkColor;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms535155(VS.85).aspx
  */
 Document.prototype.XMLDocument;
@@ -1081,31 +873,6 @@ Document.prototype.XSLDocument;
 Document.prototype.attachEvent;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms536361(VS.85).aspx
- */
-Document.prototype.clear;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536369(VS.85).aspx
- */
-Document.prototype.close;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536379(VS.85).aspx
- */
-Document.prototype.createAttribute;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536383(VS.85).aspx
- */
-Document.prototype.createComment;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536387(VS.85).aspx
- */
-Document.prototype.createDocumentFragment;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms536390(VS.85).aspx
  */
 Document.prototype.createEventObject;
@@ -1116,44 +883,14 @@ Document.prototype.createEventObject;
 Document.prototype.createStyleSheet;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms536400(VS.85).aspx
- */
-Document.prototype.createTextNode;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms536411(VS.85).aspx
  */
 Document.prototype.detachEvent;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms536417(VS.85).aspx
- */
-Document.prototype.elementFromPoint;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536419(VS.85).aspx
- */
-Document.prototype.execCommand;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms536425(VS.85).aspx
  */
 Document.prototype.focus;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536437(VS.85).aspx
- */
-Document.prototype.getElementById;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536438(VS.85).aspx
- */
-Document.prototype.getElementsByName;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536439(VS.85).aspx
- */
-Document.prototype.getElementsByTagName;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536447(VS.85).aspx
@@ -1165,36 +902,6 @@ Document.prototype.hasFocus = function() {};
  * @see http://msdn.microsoft.com/en-us/library/ms536614(VS.85).aspx
  */
 Document.prototype.mergeAttributes;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536652(VS.85).aspx
- */
-Document.prototype.open;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536676(VS.85).aspx
- */
-Document.prototype.queryCommandEnabled;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536678(VS.85).aspx
- */
-Document.prototype.queryCommandIndeterm;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536679(VS.85).aspx
- */
-Document.prototype.queryCommandState;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536681(VS.85).aspx
- */
-Document.prototype.queryCommandSupported;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536683(VS.85).aspx
- */
-Document.prototype.queryCommandValue;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536685(VS.85).aspx
@@ -1211,16 +918,6 @@ Document.prototype.releaseCapture;
  */
 Document.prototype.setActive;
 
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536782(VS.85).aspx
- */
-Document.prototype.write;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536783(VS.85).aspx
- */
-Document.prototype.writeln;
-
 
 // collections
 
@@ -1230,29 +927,9 @@ Document.prototype.writeln;
 Document.prototype.all;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms537435(VS.85).aspx
- */
-Document.prototype.anchors;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms537436(VS.85).aspx
- */
-Document.prototype.applets;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms537445(VS.85).aspx
  */
 Document.prototype.childNodes;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms537445(VS.85).aspx
- */
-Document.prototype.embeds;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms537457(VS.85).aspx
- */
-Document.prototype.forms;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms537459(VS.85).aspx
@@ -1265,11 +942,6 @@ Document.prototype.frames;
 Document.prototype.images;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms537465(VS.85).aspx
- */
-Document.prototype.links;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms537470(VS.85).aspx
  */
 Document.prototype.namespaces;
@@ -1278,11 +950,6 @@ Document.prototype.namespaces;
  * @see http://msdn.microsoft.com/en-us/library/ms537487(VS.85).aspx
  */
 Document.prototype.scripts;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms531200(VS.85).aspx
- */
-Document.prototype.styleSheets;
 
 /**
  * @param {string} sUrl

@@ -19,6 +19,9 @@
  *  W3C's DOM specification by Gecko. This file depends on
  *  w3c_dom2.js.
  *
+ * When a non-standard extension appears in both Gecko and IE, we put
+ * it in gecko_dom.js
+ *
  * @externs
  */
 
@@ -199,6 +202,7 @@ Window.prototype.personalbar;
 /** @see https://developer.mozilla.org/en/DOM/window.pkcs11 */
 Window.prototype.pkcs11;
 
+/** @see https://developer.mozilla.org/en/DOM/window */
 Window.prototype.returnValue;
 
 /** @see https://developer.mozilla.org/En/DOM/window.screen */
@@ -404,7 +408,7 @@ Window.prototype.escape = function(regular) {};
 Window.prototype.find;
 
 /** @see https://developer.mozilla.org/en/DOM/window.focus */
-window.focus = function() {};
+Window.prototype.focus = function() {};
 
 /** @see https://developer.mozilla.org/en/DOM/window.forward */
 Window.prototype.forward = function() {};
@@ -450,7 +454,15 @@ Window.prototype.setInterval;
  * @return {number}
  */
 Window.prototype.setTimeout = function(callback, delay, var_args) {};
+
+/**
+ * @param {string} uri
+ * @param {?=} opt_arguments
+ * @param {string=} opt_options
+ * @see https://developer.mozilla.org/en/DOM/window.showModalDialog
+ */
 Window.prototype.showModalDialog;
+
 Window.prototype.sizeToContent;
 
 /**
@@ -469,32 +481,102 @@ Window.prototype.unescape = function(escaped) {};
 Window.prototype.updateCommands;
 
 // properties of Document
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.alinkColor
+ * @type {string}
+ */
 Document.prototype.alinkColor;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.anchors
+ * @type {HTMLCollection}
+ */
 Document.prototype.anchors;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.applets
+ * @type {HTMLCollection}
+ */
 Document.prototype.applets;
 /** @type {boolean} */ Document.prototype.async;
 /** @type {string?} */ Document.prototype.baseURI;
 Document.prototype.baseURIObject;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.bgColor
+ * @type {string}
+ */
 Document.prototype.bgColor;
+
 /** @type {HTMLBodyElement} */ Document.prototype.body;
 Document.prototype.characterSet;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.compatMode
+ * @type {string}
+ */
 Document.prototype.compatMode;
+
 Document.prototype.contentType;
 /** @type {string} */ Document.prototype.cookie;
 Document.prototype.defaultView;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.designMode
+ * @type {string}
+ */
 Document.prototype.designMode;
+
 Document.prototype.documentURIObject;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.domain
+ * @type {string}
+ */
 Document.prototype.domain;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.embeds
+ * @type {HTMLCollection}
+ */
 Document.prototype.embeds;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.fgColor
+ * @type {string}
+ */
 Document.prototype.fgColor;
+
 /** @type {Element} */ Document.prototype.firstChild;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.forms
+ * @type {HTMLCollection}
+ */
 Document.prototype.forms;
+
 /** @type {number} */ Document.prototype.height;
 /** @type {Array} */ Document.prototype.images;
-Document.prototype.implementation;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en/DOM/document.lastModified
+ */
 Document.prototype.lastModified;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en/DOM/document.linkColor
+ */
 Document.prototype.linkColor;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.links
+ * @type {HTMLCollection}
+ */
 Document.prototype.links;
+
 /**
  * @type {!Location}
  * @implicitCast
@@ -504,21 +586,40 @@ Document.prototype.namespaceURI;
 Document.prototype.nodePrincipal;
 Document.prototype.plugins;
 Document.prototype.popupNode;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en/DOM/document.referrer
+ */
 Document.prototype.referrer;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.styleSheets
+ */
 Document.prototype.styleSheets;
+
 /** @type {?string} */ Document.prototype.title;
 Document.prototype.tooltipNode;
 /** @type {string} */ Document.prototype.URL;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en/DOM/document.vlinkColor
+ */
 Document.prototype.vlinkColor;
+
 /** @type {number} */ Document.prototype.width;
 
 // Methods of Document
-Document.prototype.clear;
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.clear
+ */
+Document.prototype.clear = function() {};
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.close
+ */
 Document.prototype.close;
-Document.prototype.createAttribute;
-Document.prototype.createCDATASection;
-Document.prototype.createComment;
-Document.prototype.createDocumentFragment;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.createElementNS
@@ -527,7 +628,6 @@ Document.prototype.createDocumentFragment;
  * @return {!Element}
  */
 Document.prototype.createElementNS = function(namespaceURI, qualifiedName) {};
-Document.prototype.createEntityReference;
 
 /**
  * @param {string} type
@@ -535,9 +635,7 @@ Document.prototype.createEntityReference;
  */
 Document.prototype.createEvent = function(type) {};
 Document.prototype.createNSResolver;
-Document.prototype.createProcessingInstruction;
 /** @return {Range} */ Document.prototype.createRange = function() {};
-Document.prototype.createTextNode;
 Document.prototype.createTreeWalker;
 
 /**
@@ -545,15 +643,25 @@ Document.prototype.createTreeWalker;
  * @param {number} y
  * @return {Element}
  * @nosideeffects
+ * @see https://developer.mozilla.org/en/DOM/document.elementFromPoint
  */
 Document.prototype.elementFromPoint = function(x, y) {};
+
 Document.prototype.evaluate;
+
+/**
+ * @param {string} commandName
+ * @param {?boolean=} opt_showUi
+ * @param {*=} opt_value
+ * @see https://developer.mozilla.org/en/Rich-Text_Editing_in_Mozilla#Executing_Commands
+ */
 Document.prototype.execCommand;
 
 /**
  * @param {string} s id.
  * @return {HTMLElement}
  * @nosideeffects
+ * @see https://developer.mozilla.org/en/DOM/document.getElementById
  */
 Document.prototype.getElementById = function(s) {};
 
@@ -561,6 +669,7 @@ Document.prototype.getElementById = function(s) {};
  * @param {string} name
  * @return {!NodeList}
  * @nosideeffects
+ * @see https://developer.mozilla.org/en/DOM/document.getElementsByClassName
  */
 Document.prototype.getElementsByClassName = function(name) {};
 
@@ -568,6 +677,7 @@ Document.prototype.getElementsByClassName = function(name) {};
  * @param {string} name
  * @return {!NodeList}
  * @nosideeffects
+ * @see https://developer.mozilla.org/en/DOM/document.getElementsByName
  */
 Document.prototype.getElementsByName = function(name) {};
 
@@ -576,6 +686,7 @@ Document.prototype.getElementsByName = function(name) {};
  * @param {string} name
  * @return {!NodeList}
  * @nosideeffects
+ * @see https://developer.mozilla.org/en/DOM/document.getElementsByTagNameNS
  */
 Document.prototype.getElementsByTagNameNS = function(namespace, name) {};
 
@@ -589,13 +700,56 @@ Document.prototype.importNode = function(externalNode, deep) {};
 /** @param {string} uri */
 Document.prototype.load = function(uri) {};
 Document.prototype.loadOverlay;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.open
+ */
 Document.prototype.open;
+
+/**
+ * @see https://developer.mozilla.org/en/Midas
+ * @see http://msdn.microsoft.com/en-us/library/ms536676(VS.85).aspx
+ */
 Document.prototype.queryCommandEnabled;
+
+/**
+ * @see https://developer.mozilla.org/en/Midas
+ * @see http://msdn.microsoft.com/en-us/library/ms536678(VS.85).aspx
+ */
 Document.prototype.queryCommandIndeterm;
+
+/**
+ * @see https://developer.mozilla.org/en/Midas
+ * @see http://msdn.microsoft.com/en-us/library/ms536679(VS.85).aspx
+ */
 Document.prototype.queryCommandState;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.queryCommandSupported
+ * @see http://msdn.microsoft.com/en-us/library/ms536681(VS.85).aspx
+ * @param {string} command
+ * @return {?} Implementation-specific.
+ */
+Document.prototype.queryCommandSupported;
+
+/**
+ * @see https://developer.mozilla.org/en/Midas
+ * @see http://msdn.microsoft.com/en-us/library/ms536683(VS.85).aspx
+ */
 Document.prototype.queryCommandValue;
-Document.prototype.write;
-Document.prototype.writeln;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.write
+ * @param {string} text
+ */
+Document.prototype.write = function(text) {};
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/document.writeln
+ * @param {string} text
+ */
+Document.prototype.writeln = function(text) {};
+
 Document.prototype.ononline;
 Document.prototype.onoffline;
 

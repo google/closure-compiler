@@ -56,12 +56,9 @@
 /** @type {boolean} */ nsIDOMPageTransitionEvent.prototype.persisted;
 
 //Methods
-Event.prototype.initEvent;
 Event.prototype.initKeyEvent;
 Event.prototype.initMouseEvent;
 Event.prototype.initUIEvent;
 Event.prototype.initMessageEvent;
 Event.prototype.preventBubble;
 Event.prototype.preventCapture;
-Event.prototype.preventDefault;
-Event.prototype.stopPropagation;
