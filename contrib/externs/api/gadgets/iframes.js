@@ -19,34 +19,11 @@
  * @externs
  */
 
-
 /**
  * The namespace for most of the APIs.
- * @type {!iframes.Iframes}
- * @suppress {checkTypes} In some crazy locations, this is being used as a
- *     source file.  It needs to be assigned to some object so that the
- *     iframes.Iframes definition doesn't fail.
  */
-var iframes = /** @type {!iframes.Iframes} */ ({});
-
-
-/**
- * The namespace for most of the APIs.
- *
- * This has "|undefined" so that JSCompiler won't optimize out existence checks
- * for win.iframes.
- *
- * @type {!iframes.Iframes|undefined}
- */
-Window.prototype.iframes;
-
-
-/**
- * The type for the Iframes API.
- * @constructor
- */
-iframes.Iframes = function() {};
-
+window.iframes = {};
+var iframes = {};
 
 /**
  * Gets the handler for a given style.
@@ -54,7 +31,7 @@ iframes.Iframes = function() {};
  * @param {string} style
  * @return {Object|Function} The handler for the given style.
  */
-iframes.Iframes.prototype.getHandler = function(style) {};
+iframes.getHandler = function(style) {};
 
 /**
  * Sets the handler for a given style.
@@ -73,14 +50,14 @@ iframes.Iframes.prototype.getHandler = function(style) {};
  *       onready(iframe): called when the iframe is ready.
  *       close(iframe): called to close the iframe.
  */
-iframes.Iframes.prototype.setHandler = function(style, handler) {};
+iframes.setHandler = function(style, handler) {};
 
 /**
  * Gets a deferred-loaded style handler.
  * @param {string} style The name of the style.
  * @return {?function(function())} The deferred loader, if any.
  */
-iframes.Iframes.prototype.getDeferredHandler = function(style) {};
+iframes.getDeferredHandler = function(style) {};
 
 /**
  * Sets a deferred-loaded style handler.
@@ -89,7 +66,7 @@ iframes.Iframes.prototype.getDeferredHandler = function(style) {};
  *     handler, which should call iframes.setHandler for that style.
  *     It then needs to call the callback method passed in.
  */
-iframes.Iframes.prototype.setDeferredHandler = function(style, loader) {};
+iframes.setDeferredHandler = function(style, loader) {};
 
 /**
  * This is an internal class to represent an iframe, not the DOM element.
@@ -208,7 +185,7 @@ iframes.Iframe.prototype.removeCallback = function(type, callback) {};
  * @param {?function(...[*]) : *=} opt_func A optional function, by default
  *     window[name].
  */
-iframes.Iframes.prototype.allow = function(name, opt_func) {};
+iframes.allow = function(name, opt_func) {};
 
 /**
  * Opens an iframe.
@@ -233,8 +210,7 @@ iframes.Iframes.prototype.allow = function(name, opt_func) {};
  *
  * @return {iframes.Iframe} The opened iframe.
  */
-iframes.Iframes.prototype.open = function(
-    url, openParams, params, opt_methods, opt_callback) {};
+iframes.open = function(url, openParams, params, opt_methods, opt_callback) {};
 
 /**
  * Closes this iframe.
@@ -243,7 +219,7 @@ iframes.Iframes.prototype.open = function(
  * @param {?function(...[*]) : *=} opt_callback The callback function after
  *     parent processed the event.
  */
-iframes.Iframes.prototype.close = function(opt_params, opt_callback) {};
+iframes.close = function(opt_params, opt_callback) {};
 
 /**
  * Indicates that this iframe is ready.  The exactly semantic depends on
@@ -259,22 +235,21 @@ iframes.Iframes.prototype.close = function(opt_params, opt_callback) {};
  * @param {?function(...[*]) : *=} opt_callback The callback function after
  *     parent processed the event.
  */
-iframes.Iframes.prototype.ready = function(
-    opt_params, opt_methods, opt_callback) {};
+iframes.ready = function(opt_params, opt_methods, opt_callback) {};
 
 /**
  * Passes the parent's origin and referer to the callback.
  * @param {Function} callback Function
  *     that will get parent info passed to it.
  */
-iframes.Iframes.prototype.getParentInfo = function(callback) {};
+iframes.getParentInfo = function(callback) {};
 
 /**
  * Export browser events to your opener.
  * @param {Array.<string>} events List of events to export. Currently only
  *     supports mouseover and mouseout.
  */
-iframes.Iframes.prototype.propagate = function(events) {};
+iframes.propagate = function(events) {};
 
 /**
  * Asks the parent window to change the width and height of this iframe.
@@ -283,60 +258,46 @@ iframes.Iframes.prototype.propagate = function(events) {};
  *     resized. Use 'height': 'auto' for current window content height.
  */
 
-iframes.Iframes.prototype.resize = function(params) {};
+iframes.resize = function(params) {};
 
 /**
  * @param {Object} params
  * @deprecated
  */
-iframes.Iframes.prototype.resizeMe = function(params) {};
+iframes.resizeMe = function(params) {};
 
 /**
  * @return {string} The full URI for the Google Connect JS bundle.
  */
-iframes.Iframes.prototype.getGoogleConnectJsUri = function() {};
+iframes.getGoogleConnectJsUri = function() {};
 
 /**
  * Allows client to override the Google Connect JS to use.
  * @param {string} version The versioned JS file to use.
  */
-iframes.Iframes.prototype.setGoogleConnectJsVersion = function(version) {};
+iframes.setGoogleConnectJsVersion = function(version) {};
 
 /**
  * Allows the client to use a different JS hint.
  * @param {string} hint The JS hint to use.
  */
-iframes.Iframes.prototype.setJsHint = function(hint) {};
+iframes.setJsHint = function(hint) {};
 
 /**
  * Allows the client to use a different bootstrap hint.
  * @param {string} hint The boostrap hint to use.
  */
-iframes.Iframes.prototype.setBootstrapHint = function(hint) {};
+iframes.setBootstrapHint = function(hint) {};
 
 /**
  * @param {string} version
  * @deprecated
  */
-iframes.Iframes.prototype.setVersionOverride = function(version) {};
+iframes.setVersionOverride = function(version) {};
 
 /**
  * Inside an iframe, the properties of the iframer object are the data and
  * functions provided in iframes.open.
- * @type {!Object|undefined}
  */
-Window.prototype.iframer = {};
-
-/**
- * Inside an iframe, the properties of the iframer object are the data and
- * functions provided in iframes.open.
- * @type {!Object|undefined}
- */
-iframes.Iframes.prototype.iframer = {};
-
-/**
- * Inside an iframe, the properties of the iframer object are the data and
- * functions provided in iframes.open.
- * @type {!Object}
- */
+window.iframer = {};
 var iframer = {};
