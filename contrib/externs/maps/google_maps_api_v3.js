@@ -4019,11 +4019,11 @@ google.maps.geometry.poly.isLocationOnEdge = function(point, poly, opt_tolerance
 google.maps.geometry.spherical = {};
 
 /**
- * @param {Array.<google.maps.LatLng>|google.maps.MVCArray.<google.maps.LatLng>} loop
+ * @param {Array.<google.maps.LatLng>|google.maps.MVCArray.<google.maps.LatLng>} path
  * @param {number=} opt_radius
  * @return {number}
  */
-google.maps.geometry.spherical.computeArea = function(loop, opt_radius) {};
+google.maps.geometry.spherical.computeArea = function(path, opt_radius) {};
 
 /**
  * @param {google.maps.LatLng} from
