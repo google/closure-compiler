@@ -43,12 +43,19 @@ public class JsFileParser extends JsFileLineParser {
   private static final Pattern GOOG_PROVIDE_REQUIRE_PATTERN = Pattern.compile(
       "(?:^|;)\\s*goog\\.(provide|require)\\s*\\((.*?)\\)");
 
+  /** The first non-comment line of base.js */
+  private static final String BASE_JS_START = "var COMPILED = false;";
+
   /** Matchers used in the parsing. */
   private Matcher googMatcher = GOOG_PROVIDE_REQUIRE_PATTERN.matcher("");
 
   /** The info for the file we are currently parsing. */
   private List<String> provides;
   private List<String> requires;
+  private boolean fileHasProvidesOrRequires;
+
+  /** Whether to provide/require the root namespace. */
+  private boolean includeGoogBase = false;
 
   /**
    * Constructor
@@ -57,6 +64,24 @@ public class JsFileParser extends JsFileLineParser {
    */
   public JsFileParser(ErrorManager errorManager) {
     super(errorManager);
+  }
+
+  /**
+   * Sets whether we should create implicit provides and requires of the
+   * root namespace.
+   *
+   * When generating deps files, you do not want this behavior. Deps files
+   * need base.js to run anyway, so they don't need information about it.
+   *
+   * When generating abstract build graphs, you probably do want this behavior.
+   * It will create an implicit dependency of all files with provides/requires
+   * on base.js.
+   *
+   * @return this for easy chaining.
+   */
+  public JsFileParser setIncludeGoogBase(boolean include) {
+    includeGoogBase = include;
+    return this;
   }
 
   /**
@@ -94,6 +119,7 @@ public class JsFileParser extends JsFileLineParser {
       String closureRelativePath, Reader fileContents) {
     provides = Lists.newArrayList();
     requires = Lists.newArrayList();
+    fileHasProvidesOrRequires = false;
 
     logger.fine("Parsing Source: " + filePath);
     doParse(filePath, fileContents);
@@ -110,7 +136,7 @@ public class JsFileParser extends JsFileLineParser {
    */
   @Override
   protected boolean parseLine(String line) throws ParseException {
-    boolean hasProvidesOrRequires = false;
+    boolean lineHasProvidesOrRequires = false;
 
     // Quick sanity check that will catch most cases. This is a performance
     // win for people with a lot of JS.
@@ -119,7 +145,12 @@ public class JsFileParser extends JsFileLineParser {
       // Iterate over the provides/requires.
       googMatcher.reset(line);
       while (googMatcher.find()) {
-        hasProvidesOrRequires = true;
+        lineHasProvidesOrRequires = true;
+
+        if (includeGoogBase && !fileHasProvidesOrRequires) {
+          fileHasProvidesOrRequires = true;
+          requires.add("goog");
+        }
 
         // See if it's a require or provide.
         boolean isRequire = googMatcher.group(1).charAt(0) == 'r';
@@ -138,9 +169,11 @@ public class JsFileParser extends JsFileLineParser {
           provides.add(arg);
         }
       }
+    } else if (includeGoogBase && line.startsWith(BASE_JS_START)) {
+      provides.add("goog");
     }
 
-    return !shortcutMode || hasProvidesOrRequires ||
+    return !shortcutMode || lineHasProvidesOrRequires ||
         CharMatcher.WHITESPACE.matchesAllOf(line);
   }
 }

@@ -51,7 +51,7 @@ public class JsFileParserTest extends TestCase {
    *  -Correct recording of what was parsed.
    */
   public void testParseFile() {
-    final String CONTENTS = "/*"
+    String contents = "/*"
       + "goog.provide('no1');*//*\n"
       + "goog.provide('no2');\n"
       + "*/goog.provide('yes1');\n"
@@ -61,72 +61,92 @@ public class JsFileParserTest extends TestCase {
       + "goog.require(\"bar.data.SuperstarAddStarThreadActionRequestDelegate\"); "
       + "//no new line at eof";
 
-    DependencyInfo EXPECTED = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+    DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
         ImmutableList.of("yes1", "yes2"),
         ImmutableList.of("yes3", "bar.data.SuperstarAddStarThreadActionRequestDelegate"));
 
-    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, CONTENTS);
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
 
-    assertEquals(EXPECTED, result);
-    assertEquals(0, errorManager.getErrorCount());
-    assertEquals(0, errorManager.getWarningCount());
+    assertDeps(expected, result);
   }
 
   public void testMultiplePerLine() {
-    final String CONTENTS = "goog.provide('yes1');goog.provide('yes2');/*"
+    String contents = "goog.provide('yes1');goog.provide('yes2');/*"
         + "goog.provide('no1');*/goog.provide('yes3');//goog.provide('no2');";
 
-    DependencyInfo EXPECTED = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+    DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
         ImmutableList.of("yes1", "yes2", "yes3"), Collections.<String>emptyList());
 
-    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, CONTENTS);
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
 
-    assertEquals(EXPECTED, result);
-    assertEquals(0, errorManager.getErrorCount());
-    assertEquals(0, errorManager.getWarningCount());
+    assertDeps(expected, result);
   }
 
   public void testShortcutMode1() {
     // For efficiency reasons, we stop reading after the ctor.
-    final String CONTENTS = " // hi ! \n /* this is a comment */ "
+    String contents = " // hi ! \n /* this is a comment */ "
         + "goog.provide('yes1');\n /* and another comment */ \n"
         + "goog.provide('yes2'); // include this\n"
         + "function foo() {}\n"
         + "goog.provide('no1');";
 
-    DependencyInfo EXPECTED = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+    DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
         ImmutableList.of("yes1", "yes2"), Collections.<String>emptyList());
-    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, CONTENTS);
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
 
-    assertEquals(EXPECTED, result);
-    assertEquals(0, errorManager.getErrorCount());
-    assertEquals(0, errorManager.getWarningCount());
+    assertDeps(expected, result);
   }
 
   public void testShortcutMode2() {
-    final String CONTENTS = "/** goog.provide('no1'); \n" +
+    String contents = "/** goog.provide('no1'); \n" +
         " * goog.provide('no2');\n */\n"
         + "goog.provide('yes1');\n";
 
-    DependencyInfo EXPECTED = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+    DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
         ImmutableList.of("yes1"), Collections.<String>emptyList());
-    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, CONTENTS);
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
 
-    assertEquals(EXPECTED, result);
-    assertEquals(0, errorManager.getErrorCount());
-    assertEquals(0, errorManager.getWarningCount());
+    assertDeps(expected, result);
   }
 
   public void testShortcutMode3() {
-    final String CONTENTS = "/**\n" +
+    String contents = "/**\n" +
         " * goog.provide('no1');\n */\n"
         + "goog.provide('yes1');\n";
 
-    DependencyInfo EXPECTED = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+    DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
         ImmutableList.of("yes1"), Collections.<String>emptyList());
-    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, CONTENTS);
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
 
-    assertEquals(EXPECTED, result);
+    assertDeps(expected, result);
+  }
+
+  public void testIncludeGoog1() {
+    String contents = "/**\n" +
+        " * the first constant in base.js\n" +
+        " */\n" +
+        "var COMPILED = false;\n";
+
+    DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+        ImmutableList.of("goog"), Collections.<String>emptyList());
+    DependencyInfo result = parser.setIncludeGoogBase(true).parseFile(
+        SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
+  public void testIncludeGoog2() {
+    String contents = "goog.require('bar');";
+
+    DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+        ImmutableList.<String>of(), ImmutableList.of("goog", "bar"));
+    DependencyInfo result = parser.setIncludeGoogBase(true).parseFile(
+        SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
+  /** Asserts the deps match without errors */
+  private void assertDeps(DependencyInfo expected, DependencyInfo actual) {
+    assertEquals(expected, actual);
     assertEquals(0, errorManager.getErrorCount());
     assertEquals(0, errorManager.getWarningCount());
   }

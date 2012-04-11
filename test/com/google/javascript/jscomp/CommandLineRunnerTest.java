@@ -684,9 +684,11 @@ public class CommandLineRunnerTest extends TestCase {
           "goog.provide('beer');\ngoog.require('hops');\nvar beerProvided = 1;",
           "goog.provide('hops'); var hopsProvided = 1;",
           "goog.provide('scotch'); var scotchProvided = 1;",
-          "var includeFileWithoutProvides = 1;"
+          "var includeFileWithoutProvides = 1;",
+          "/** This is base.js */\nvar COMPILED = false;",
          },
          new String[] {
+           "var COMPILED = !1;",
            "var hops = {}, hopsProvided = 1;",
            "var beer = {}, beerProvided = 1;"
          });

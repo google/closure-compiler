@@ -237,8 +237,9 @@ public class CompilerInput
         // this to generate deps files. (We're only using it for
         // symbol dependencies.)
         DependencyInfo info =
-            (new JsFileParser(compiler.getErrorManager())).parseFile(
-                getName(), getName(), getCode());
+            (new JsFileParser(compiler.getErrorManager()))
+            .setIncludeGoogBase(true)
+            .parseFile(getName(), getName(), getCode());
 
         provides.addAll(info.getProvides());
         requires.addAll(info.getRequires());
