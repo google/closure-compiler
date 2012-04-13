@@ -64,12 +64,12 @@ function mozCancelRequestAnimationFrame(handle) {};
  * @param {Element=} opt_element
  * @return {number}
  */
-function ieRequestAnimationFrame(callback, opt_element) {};
+function msRequestAnimationFrame(callback, opt_element) {};
 
 /**
  * @param {number} handle
  */
-function ieCancelRequestAnimationFrame(handle) {};
+function msCancelRequestAnimationFrame(handle) {};
 
 /**
  * @param {function(number)} callback
@@ -124,12 +124,12 @@ Window.prototype.mozCancelRequestAnimationFrame = function(handle) {};
  * @param {Element=} opt_element
  * @return {number}
  */
-Window.prototype.ieRequestAnimationFrame = function(callback, opt_element) {};
+Window.prototype.msRequestAnimationFrame = function(callback, opt_element) {};
 
 /**
  * @param {number} handle
  */
-Window.prototype.ieCancelRequestAnimationFrame = function(handle) {};
+Window.prototype.msCancelRequestAnimationFrame = function(handle) {};
 
 /**
  * @param {function(number)} callback
