@@ -169,8 +169,12 @@ public class JsFileParser extends JsFileLineParser {
           provides.add(arg);
         }
       }
-    } else if (includeGoogBase && line.startsWith(BASE_JS_START)) {
+    } else if (includeGoogBase && line.startsWith(BASE_JS_START) &&
+               provides.isEmpty() && requires.isEmpty()) {
       provides.add("goog");
+
+      // base.js can't provide or require anything else.
+      return false;
     }
 
     return !shortcutMode || lineHasProvidesOrRequires ||

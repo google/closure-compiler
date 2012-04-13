@@ -99,6 +99,9 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
     // no nodes have out-degree 0. I'll leave the proof of this as an exercise
     // to the reader.
     if (sortedList.size() < inputs.size()) {
+      System.err.println("SORTED : " + sortedList);
+      System.err.println("INPUTS : " + inputs);
+
       List<INPUT> subGraph = Lists.newArrayList(inputs);
       subGraph.removeAll(sortedList);
 

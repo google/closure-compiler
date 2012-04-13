@@ -522,6 +522,18 @@ public class CommandLineRunnerTest extends TestCase {
          });
   }
 
+  public void testSourceSortingOn2() {
+    test(new String[] {
+          "goog.provide('a');",
+          "goog.require('a');\n" +
+          "var COMPILED = false;",
+         },
+         new String[] {
+           "var a={};",
+           "var COMPILED=!1"
+         });
+  }
+
   public void testSourceSortingCircularDeps1() {
     args.add("--manage_closure_dependencies=true");
     test(new String[] {

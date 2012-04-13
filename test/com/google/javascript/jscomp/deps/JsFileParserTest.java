@@ -144,6 +144,21 @@ public class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  public void testIncludeGoog3() {
+    // This guy is pretending to provide goog, but he really doesn't.
+    String contents = "goog.provide('x');\n" +
+        "/**\n" +
+        " * the first constant in base.js\n" +
+        " */\n" +
+        "var COMPILED = false;\n";
+
+    DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+        ImmutableList.of("x"), ImmutableList.of("goog"));
+    DependencyInfo result = parser.setIncludeGoogBase(true).parseFile(
+        SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
   /** Asserts the deps match without errors */
   private void assertDeps(DependencyInfo expected, DependencyInfo actual) {
     assertEquals(expected, actual);
