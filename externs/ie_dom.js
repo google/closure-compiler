@@ -1274,7 +1274,6 @@ Navigator.prototype.browserLanguage;
 
 /**
  * @type {boolean}
- * @see
- * http://blogs.msdn.com/b/ie/archive/2011/09/20/touch-input-for-ie10-and-metro-style-apps.aspx
+ * @see http://blogs.msdn.com/b/ie/archive/2011/09/20/touch-input-for-ie10-and-metro-style-apps.aspx
  */
 Navigator.prototype.msPointerEnabled;
