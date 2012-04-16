@@ -25,6 +25,7 @@ import com.google.javascript.rhino.Node;
 public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
   public static final String EXTERN_FUNCTIONS = "" +
+      "var print;\n" +
       "/** @nosideeffects */ function noSFX() {} \n" +
       "                      function hasSFX() {} \n";
 
@@ -192,14 +193,20 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
   public void testInlineExpression8() {
     // The same variable inlined twice.
-    inline("var x = a + b; print(x);      x = a - b; print(x)",
-           "var x;         print(a + b);             print(a - b)");
+    inline(
+        "var a,b;" +
+        "var x = a + b; print(x);      x = a - b; print(x)",
+        "var a,b;" +
+        "var x;         print(a + b);             print(a - b)");
   }
 
   public void testInlineExpression9() {
     // Check for actual control flow sensitivity.
-    inline("var x; if (g) { x= a + b; print(x)    }  x = a - b; print(x)",
-           "var x; if (g) {           print(a + b)}             print(a - b)");
+    inline(
+        "var a,b;" +
+        "var x; if (g) { x= a + b; print(x)    }  x = a - b; print(x)",
+        "var a,b;" +
+        "var x; if (g) {           print(a + b)}             print(a - b)");
   }
 
   public void testInlineExpression10() {
@@ -315,7 +322,12 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   }
 
   public void testInlineAcrossSideEffect1() {
-    inline("var y; var x = noSFX(y); print(x)", "var y;var x;print(noSFX(y))");
+    // This can't be inlined because print() has side-effects and might change
+    // the definition of noSFX.
+    //
+    // noSFX must be both const and pure in order to inline it.
+    noInline("var y; var x = noSFX(y); print(x)");
+    //inline("var y; var x = noSFX(y); print(x)", "var y;var x;print(noSFX(y))");
   }
 
   public void testInlineAcrossSideEffect2() {
@@ -345,8 +357,14 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   }
 
   public void testCanInlineAcrossNoSideEffect() {
-    inline("var y; var x = noSFX(Y), z = noSFX(); noSFX(); noSFX(), print(x)",
-           "var y; var x, z = noSFX(); noSFX(); noSFX(), print(noSFX(Y))");
+    // This can't be inlined because print() has side-effects and might change
+    // the definition of noSFX. We should be able to mark noSFX as const
+    // in some way.
+    noInline(
+        "var y; var x = noSFX(y), z = noSFX(); noSFX(); noSFX(), print(x)");
+    //inline(
+    //    "var y; var x = noSFX(y), z = noSFX(); noSFX(); noSFX(), print(x)",
+    //    "var y; var x, z = noSFX(); noSFX(); noSFX(), print(noSFX(y))");
   }
 
   public void testDependOnOuterScopeVariables() {
@@ -396,6 +414,25 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   public void testNotOkToSkipCheckPathBetweenNodes() {
     noInline("var x; for(x = 1; foo(x);) {}");
     noInline("var x; for(; x = 1;foo(x)) {}");
+  }
+
+  public void testIssue698() {
+    // Most of the flow algorithms operate on Vars. We want to make
+    // sure the algorithm bails out appropriately if it sees
+    // a var that it doesn't know about.
+    inline(
+        "var x = ''; "
+        + "unknown.length < 2 && (unknown='0' + unknown);"
+        + "x = x + unknown; "
+        + "unknown.length < 3 && (unknown='0' + unknown);"
+        + "x = x + unknown; "
+        + "return x;",
+        "var x; "
+        + "unknown.length < 2 && (unknown='0' + unknown);"
+        + "x = '' + unknown; "
+        + "unknown.length < 3 && (unknown='0' + unknown);"
+        + "x = x + unknown; "
+        + "return x;");
   }
 
   private void noInline(String input) {

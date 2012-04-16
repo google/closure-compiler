@@ -154,7 +154,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    (new NodeTraversal(compiler, this)).traverse(root);
+    (new NodeTraversal(compiler, this)).traverseRoots(externs, root);
   }
 
   @Override
@@ -205,6 +205,8 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
             }
 
             Node defNode = reachingDef.getDef(name, cfgNode);
+            // TODO(nicksantos): We need to add some notion of @const outer
+            // scope vars. We can inline those just fine.
             if (defNode != null &&
                 !reachingDef.dependsOnOuterScopeVars(name, cfgNode)) {
               candidates.add(new Candidate(name, defNode, n, cfgNode));
