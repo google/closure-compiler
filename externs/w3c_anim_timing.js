@@ -48,7 +48,8 @@ function webkitRequestAnimationFrame(callback, opt_element) {};
 function webkitCancelRequestAnimationFrame(handle) {};
 
 /**
- * @param {function(number)} callback
+ * @param {?function(number)} callback It's legitimate to pass a null
+ *     callback and listen on the MozBeforePaint event instead.
  * @param {Element=} opt_element
  * @return {number}
  */
@@ -108,7 +109,8 @@ Window.prototype.webkitRequestAnimationFrame = function(callback, opt_element) {
 Window.prototype.webkitCancelRequestAnimationFrame = function(handle) {};
 
 /**
- * @param {function(number)} callback
+ * @param {?function(number)} callback It's legitimate to pass a null
+ *     callback and listen on the MozBeforePaint event instead.
  * @param {Element=} opt_element
  * @return {number}
  */
