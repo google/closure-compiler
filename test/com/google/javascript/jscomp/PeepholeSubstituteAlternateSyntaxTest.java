@@ -1021,6 +1021,14 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   public void testSimpleFunctionCall() {
     test("var a = String(23)", "var a = '' + 23");
     test("var a = String('hello')", "var a = '' + 'hello'");
+    testSame("var a = String(23,45)");
+  }
+
+  public void testSimpleMethodCall() {
+    test("var a = (23).toString()", "var a = '' + 23");
+    test("var a = ('hello').toString()", "var a = '' + 'hello'");
+    test("var a = (b).toString()", "var a = '' + b");
+    testSame("var a = (23).toString(45)");
   }
 
   private static class StringCompareTestCase extends CompilerTestCase {

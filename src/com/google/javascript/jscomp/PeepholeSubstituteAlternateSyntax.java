@@ -208,18 +208,27 @@ class PeepholeSubstituteAlternateSyntax
   private Node tryFoldSimpleFunctionCall(Node n) {
     Preconditions.checkState(n.isCall());
     Node callTarget = n.getFirstChild();
-    if (callTarget != null && callTarget.isName() &&
-          callTarget.getString().equals("String")) {
-      // Fold String(a) to ''+(a) - which allows further optimizations
+    Preconditions.checkNotNull(callTarget);
+    if (callTarget.isName() && callTarget.getString().equals("String")) {
+      // Replace String(a) with ''+a - which allows further optimizations
       Node value = callTarget.getNext();
-      if (value != null) {
-        Node addition = IR.add(
+      if (value != null && value.getNext() == null) {
+        Node replacement = IR.add(
             IR.string("").srcref(callTarget),
             value.detachFromParent());
-        n.getParent().replaceChild(n, addition);
+        n.getParent().replaceChild(n, replacement);
         reportCodeChange();
-        return addition;
+        return replacement;
       }
+    } else if (n.hasOneChild() && NodeUtil.isObjectCallMethod(n, "toString")) {
+      // Replace a.toString() with ''+a - which allows further optimizations
+      Node value = callTarget.getFirstChild();
+      Node replacement = IR.add(
+          IR.string("").srcref(callTarget),
+          value.detachFromParent());
+      n.getParent().replaceChild(n, replacement);
+      reportCodeChange();
+      return replacement;
     }
     return n;
   }
