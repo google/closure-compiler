@@ -148,3 +148,42 @@ Event.prototype.x;
 /** @type {number} */
 Event.prototype.y;
 
+/**
+ * @constructor
+ * @see http://msdn.microsoft.com/en-us/library/windows/apps/hh441257.aspx
+ */
+function MSPointerPoint() {}
+
+/** @type {number} */
+MSPointerPoint.prototype.pointerId;
+
+/** @type {number} */
+MSPointerPoint.prototype.pointerType;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @see http://msdn.microsoft.com/en-us/library/windows/apps/hh441233.aspx
+ */
+function MSPointerEvent() {}
+
+/** @type {number} */
+MSPointerEvent.MSPOINTER_TYPE_MOUSE;
+
+/** @type {number} */
+MSPointerEvent.MSPOINTER_TYPE_PEN;
+
+/** @type {number} */
+MSPointerEvent.MSPOINTER_TYPE_TOUCH;
+
+/**
+ * @return {Array.<MSPointerPoint>}
+ */
+MSPointerEvent.prototype.getPointerList;
+
+/** @type {number} */
+MSPointerEvent.prototype.pointerId;
+
+/** @type {number} */
+MSPointerEvent.prototype.pointerType;
+

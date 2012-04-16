@@ -189,3 +189,11 @@ CSSMatrix.prototype.rotateAxisAngle = function(x, y, z, angle) {};
  * @see http://developer.apple.com/safari/library/documentation/AudioVideo/Reference/WebKitCSSMatrixClassReference/WebKitCSSMatrix/WebKitCSSMatrix.html#//apple_ref/javascript/instm/WebKitCSSMatrix/setMatrixValue
  */
 function WebKitCSSMatrix(matrix) {}
+
+/**
+ * @constructor
+ * @param {string} matrix
+ * @extends {CSSMatrix}
+ * @see http://msdn.microsoft.com/en-us/library/windows/apps/hh453593.aspx
+ */
+function MSCSSMatrix(matrix) {}

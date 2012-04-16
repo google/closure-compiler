@@ -245,3 +245,17 @@ CSSProperties.prototype.MsWritingMode;
 
 /** @type {string} */
 CSSProperties.prototype.MsZoom;
+
+// See: http://msdn.microsoft.com/en-us/library/windows/apps/Hh702466.aspx
+
+/** @type {string} */
+CSSProperties.prototype.msContentZooming;
+
+/** @type {string} */
+CSSProperties.prototype.msTouchAction;
+
+/** @type {string} */
+CSSProperties.prototype.msTransform;
+
+/** @type {string} */
+CSSProperties.prototype.msTransition;

@@ -1271,3 +1271,10 @@ XDomainRequest.prototype.contentType;
  * @see http://msdn.microsoft.com/en-us/library/ms533542(v=vs.85).aspx
  */
 Navigator.prototype.browserLanguage;
+
+/**
+ * @type {boolean}
+ * @see
+ * http://blogs.msdn.com/b/ie/archive/2011/09/20/touch-input-for-ie10-and-metro-style-apps.aspx
+ */
+Navigator.prototype.msPointerEnabled;
