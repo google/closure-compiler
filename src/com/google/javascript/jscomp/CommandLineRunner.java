@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -569,6 +568,30 @@ public class CommandLineRunner extends
     initConfigFromFlags(args, err);
   }
 
+  /**
+   * Split strings into tokens delimited by whitespace, but treat quoted
+   * strings as single tokens. Non-whitespace characters adjacent to quoted
+   * strings will be returned as part of the token. For example, the string
+   * {@code "--js='/home/my project/app.js'"} would be returned as a single
+   * token.
+   *
+   * @param lines strings to tokenize
+   * @return a list of tokens
+   */
+  private List<String> tokenizeKeepingQuotedStrings(List<String> lines) {
+    List<String> tokens = Lists.newArrayList();
+    Pattern tokenPattern =
+        Pattern.compile("(?:[^ \t\f\\x0B'\"]|(?:'[^']*'|\"[^\"]*\"))+");
+
+    for (String line : lines) {
+      Matcher matcher = tokenPattern.matcher(line);
+      while (matcher.find()) {
+        tokens.add(matcher.group(0));
+      }
+    }
+    return tokens;
+  }
+
   private List<String> processArgs(String[] args) {
     // Args4j has a different format that the old command-line parser.
     // So we use some voodoo to get the args into the format that args4j
@@ -599,14 +622,9 @@ public class CommandLineRunner extends
 
   private void processFlagFile(PrintStream err)
             throws CmdLineException, IOException {
-    List<String> argsInFile = Lists.newArrayList();
     File flagFileInput = new File(flags.flag_file);
-    StringTokenizer tokenizer = new StringTokenizer(
-        Files.toString(flagFileInput, Charset.defaultCharset()));
-
-    while (tokenizer.hasMoreTokens()) {
-        argsInFile.add(tokenizer.nextToken());
-    }
+    List<String> argsInFile = tokenizeKeepingQuotedStrings(
+        Files.readLines(flagFileInput, Charset.defaultCharset()));
 
     flags.flag_file = "";
     List<String> processedFileArgs
