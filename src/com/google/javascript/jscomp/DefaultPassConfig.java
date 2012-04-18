@@ -204,6 +204,10 @@ public class DefaultPassConfig extends PassConfig {
       }
       return checks;
     }
+    
+    if (options.jqueryPass) {
+      checks.add(jqueryAliases.makeOneTimePass());
+    }
 
     checks.add(checkSideEffects);
 
@@ -239,10 +243,6 @@ public class DefaultPassConfig extends PassConfig {
 
     if (options.closurePass) {
       checks.add(closurePrimitives.makeOneTimePass());
-    }
-
-    if (options.jqueryPass) {
-      checks.add(jqueryAliases.makeOneTimePass());
     }
 
     if (options.closurePass && options.checkMissingGetCssNameLevel.isOn()) {

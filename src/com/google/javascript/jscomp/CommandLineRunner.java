@@ -687,6 +687,15 @@ public class CommandLineRunner extends
       isConfigValid = false;
       parser.printUsage(err);
     } else {
+      CodingConvention conv;
+      if (flags.third_party) {
+        conv = CodingConventions.getDefault();
+      } else if (flags.process_jquery_primitives) {
+        conv = new JqueryCodingConvention();
+      } else {
+        conv = new ClosureCodingConvention();
+      }
+      
       getCommandLineConfig()
           .setPrintTree(flags.print_tree)
           .setPrintAst(flags.print_ast)
@@ -702,9 +711,7 @@ public class CommandLineRunner extends
           .setVariableMapOutputFile(flags.variable_map_output_file)
           .setCreateNameMapFiles(flags.create_name_map_files)
           .setPropertyMapOutputFile(flags.property_map_output_file)
-          .setCodingConvention(flags.third_party ?
-               CodingConventions.getDefault() :
-               new ClosureCodingConvention())
+          .setCodingConvention(conv)
           .setSummaryDetailLevel(flags.summary_detail_level)
           .setOutputWrapper(flags.output_wrapper)
           .setModuleWrapper(flags.module_wrapper)
@@ -729,7 +736,11 @@ public class CommandLineRunner extends
   @Override
   protected CompilerOptions createOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setCodingConvention(new ClosureCodingConvention());
+    if (flags.process_jquery_primitives) {
+      options.setCodingConvention(new JqueryCodingConvention());
+    } else {
+      options.setCodingConvention(new ClosureCodingConvention());
+    }
     CompilationLevel level = flags.compilation_level;
     level.setOptionsForCompilationLevel(options);
     if (flags.debug) {
@@ -750,10 +761,6 @@ public class CommandLineRunner extends
 
     options.jqueryPass = flags.process_jquery_primitives &&
         CompilationLevel.ADVANCED_OPTIMIZATIONS == level;
-
-    if (flags.process_jquery_primitives) {
-      options.setCodingConvention(new JqueryCodingConvention());
-    }
 
     if (!flags.translationsFile.isEmpty()) {
       try {

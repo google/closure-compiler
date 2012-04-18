@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import java.util.Set;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
@@ -40,7 +41,7 @@ public class JqueryCodingConvention extends CodingConventions.Proxy {
     return "window";
   }
 
-  private final Set<String> propertyTestFunctions = ImmutableSet.of(
+  private final static Set<String> propertyTestFunctions = ImmutableSet.of(
       "jQuery.isPlainObject", "jQuery.isFunction", "jQuery.isNumeric",
       "jQuery.isEmptyObject");
 
@@ -51,19 +52,12 @@ public class JqueryCodingConvention extends CodingConventions.Proxy {
         call.getFirstChild().getQualifiedName());
   }
 
-  private final Set<String> prototypeAliases = ImmutableSet.of(
+  private final static Set<String> prototypeAliases = ImmutableSet.of(
       "jQuery.fn", "jQuerySub.fn");
 
   @Override
-  public boolean isPrototypeAlias(Node n) {
-    if (n.isGetProp()) {
-      if (n.isName() || n.isGetProp() || n.isGetElem()) {
-        return !NodeUtil.isLValue(n) &&
-            prototypeAliases.contains(n.getQualifiedName());
-      } else {
-        return prototypeAliases.contains(n.getQualifiedName());
-      }
-    }
-    return false;
+  public boolean isPrototypeAlias(Node getProp) {
+    Preconditions.checkArgument(getProp.isGetProp());
+    return prototypeAliases.contains(getProp.getQualifiedName());
   }
 }
