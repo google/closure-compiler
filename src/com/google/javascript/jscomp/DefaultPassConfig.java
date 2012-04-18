@@ -204,7 +204,7 @@ public class DefaultPassConfig extends PassConfig {
       }
       return checks;
     }
-    
+
     if (options.jqueryPass) {
       checks.add(jqueryAliases.makeOneTimePass());
     }

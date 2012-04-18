@@ -106,7 +106,7 @@ public class ExpandJqueryAliasesTest extends CompilerTestCase {
     test(setupCode + "jQuery.expandedEach(['a', 'b', 'c']," +
         "function(key, val){ jQuery[val] = key; });",
         setupCode + "(function(){ jQuery.a = 0; })();" +
-        "(function(){ jQuery.b = 1; })();" + 
+        "(function(){ jQuery.b = 1; })();" +
         "(function(){ jQuery.c = 2 })();");
 
     // Test expansion with object literal using 'this' keyword
@@ -120,13 +120,13 @@ public class ExpandJqueryAliasesTest extends CompilerTestCase {
     test(setupCode + "jQuery.expandedEach(['a', 'b', 'c']," +
         "function(key, val){ jQuery[this] = key; });",
         setupCode + "(function(){ jQuery.a = 0; })();" +
-        "(function(){ jQuery.b = 1; })();" + 
+        "(function(){ jQuery.b = 1; })();" +
         "(function(){ jQuery.c = 2 })();");
 
     // test nested function using argument name to shadow callback name
     test(setupCode + "jQuery.expandedEach(['a'], function(key,val) {" +
         "jQuery[val] = key; (function(key) { jQuery[key] = 1;})('test'); })",
-        setupCode + "(function(){ jQuery.a = 0;" + 
+        setupCode + "(function(){ jQuery.a = 0;" +
          "(function(key){ jQuery[key] = 1})('test') })()");
 
     // test nested function using var name to shadow callback name
@@ -134,7 +134,7 @@ public class ExpandJqueryAliasesTest extends CompilerTestCase {
         "jQuery[val] = key; (function(key) { var val = 2;" +
         "jQuery[key] = val;})('test');})",
         setupCode + "(function(){" +
-        "jQuery.a=0;" + 
+        "jQuery.a=0;" +
         "(function(key){var val = 2; jQuery[key] = val;})('test')})()");
 
     // test nested function using function name to shadow callback name

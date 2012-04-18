@@ -301,7 +301,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
     NodeTraversal.traverse(compiler,
         NodeUtil.getFunctionBody(callbackFunction),
-        new FindCallbackArgumentReferences(callbackFunction, 
+        new FindCallbackArgumentReferences(callbackFunction,
             keyNodeReferences, valueNodeReferences,
             objectToLoopOver.isArrayLit()));
 

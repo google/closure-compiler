@@ -695,7 +695,7 @@ public class CommandLineRunner extends
       } else {
         conv = new ClosureCodingConvention();
       }
-      
+
       getCommandLineConfig()
           .setPrintTree(flags.print_tree)
           .setPrintAst(flags.print_ast)
