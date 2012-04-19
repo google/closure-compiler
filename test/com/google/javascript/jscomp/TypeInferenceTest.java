@@ -30,6 +30,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -786,5 +787,23 @@ public class TypeInferenceTest extends TestCase {
             "/** @param {number} b */ set a(b) {} };" +
             "var out = x.a;");
     verify("out", NUMBER_TYPE);
+  }
+
+  public void testCast1() {
+    inFunction("var x = /** @type {Object} */ (this);");
+    verify("x", createNullableType(OBJECT_TYPE));
+  }
+
+  public void testCast2() {
+    inFunction(
+        "/** @return {boolean} */" +
+        "Object.prototype.method = function() { return true; };" +
+        "var x = /** @type {Object} */ (this).method;");
+    verify(
+        "x",
+        registry.createFunctionType(
+            registry.getNativeObjectType(OBJECT_TYPE),
+            registry.getNativeType(BOOLEAN_TYPE),
+            ImmutableList.<JSType>of() /* params */));
   }
 }

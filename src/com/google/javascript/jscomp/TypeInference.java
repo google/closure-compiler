@@ -843,6 +843,11 @@ class TypeInference
   }
 
   private FlowScope narrowScope(FlowScope scope, Node node, JSType narrowed) {
+    if (node.isThis()) {
+      // "this" references don't need to be modelled in the control flow graph.
+      return scope;
+    }
+
     scope = scope.createChildFlowScope();
     if (node.isGetProp()) {
       scope.inferQualifiedSlot(
