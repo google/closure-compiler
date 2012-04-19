@@ -80,6 +80,7 @@ class ReplaceMessages extends JsMessageVisitor {
 
     if (newValue != msgNode) {
       definition.getMessageParentNode().replaceChild(msgNode, newValue);
+      compiler.reportCodeChange();
     }
   }
 
