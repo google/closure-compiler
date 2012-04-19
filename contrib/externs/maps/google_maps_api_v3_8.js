@@ -957,6 +957,21 @@ google.maps.FusionTablesQuery = function() {};
 google.maps.FusionTablesQuery.prototype.from;
 
 /**
+ * @type {number}
+ */
+google.maps.FusionTablesQuery.prototype.limit;
+
+/**
+ * @type {number}
+ */
+google.maps.FusionTablesQuery.prototype.offset;
+
+/**
+ * @type {string}
+ */
+google.maps.FusionTablesQuery.prototype.orderBy;
+
+/**
  * @type {string}
  */
 google.maps.FusionTablesQuery.prototype.select;
@@ -4309,7 +4324,7 @@ google.maps.places.PlaceResult.prototype.formatted_phone_number;
 google.maps.places.PlaceResult.prototype.geometry;
 
 /**
- * @type {string}
+ * @type {Array.<string>}
  */
 google.maps.places.PlaceResult.prototype.html_attributions;
 
@@ -4486,6 +4501,11 @@ google.maps.weather.WeatherConditions.prototype.description;
  * @type {number}
  */
 google.maps.weather.WeatherConditions.prototype.high;
+
+/**
+ * @type {number}
+ */
+google.maps.weather.WeatherConditions.prototype.humidity;
 
 /**
  * @type {number}
