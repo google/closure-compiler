@@ -1106,6 +1106,12 @@ Element.prototype.unselectable;
 function Location() {}
 
 /**
+ * @see http://trac.webkit.org/changeset/113945
+ * @type {DOMStringList}
+ */
+Location.prototype.ancestorOrigins;
+
+/**
  * @see http://msdn.microsoft.com/en-us/library/ms533775(VS.85).aspx
  * @type {string}
  */
@@ -1128,6 +1134,8 @@ Location.prototype.hostname;
  * @type {string}
  */
 Location.prototype.href;
+
+Location.prototype.origin;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms534332(VS.85).aspx
