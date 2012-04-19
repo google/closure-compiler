@@ -534,6 +534,18 @@ public class CommandLineRunnerTest extends TestCase {
          });
   }
 
+  public void testSourceSortingOn3() {
+    args.add("--manage_closure_dependencies=true");
+    test(new String[] {
+          "goog.addDependency('sym', [], []);\nvar x = 3;",
+          "var COMPILED = false;",
+         },
+         new String[] {
+          "var COMPILED = !1;",
+          "var x = 3;"
+         });
+  }
+
   public void testSourceSortingCircularDeps1() {
     args.add("--manage_closure_dependencies=true");
     test(new String[] {
@@ -633,6 +645,16 @@ public class CommandLineRunnerTest extends TestCase {
          });
   }
 
+  public void testSourcePruningOn7() {
+    args.add("--manage_closure_dependencies=true");
+    test(new String[] {
+          "var COMPILED = false;",
+         },
+         new String[] {
+          "var COMPILED = !1;",
+         });
+  }
+
   public void testDependencySortingWhitespaceMode() {
     args.add("--manage_closure_dependencies");
     args.add("--compilation_level=WHITESPACE_ONLY");
@@ -696,7 +718,7 @@ public class CommandLineRunnerTest extends TestCase {
           "goog.provide('beer');\ngoog.require('hops');\nvar beerProvided = 1;",
           "goog.provide('hops'); var hopsProvided = 1;",
           "goog.provide('scotch'); var scotchProvided = 1;",
-          "var includeFileWithoutProvides = 1;",
+          "goog.require('scotch');\nvar includeFileWithoutProvides = 1;",
           "/** This is base.js */\nvar COMPILED = false;",
          },
          new String[] {

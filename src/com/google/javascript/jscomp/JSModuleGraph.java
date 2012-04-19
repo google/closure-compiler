@@ -324,6 +324,11 @@ public class JSModuleGraph {
       for (String entryPoint : depOptions.getEntryPoints()) {
         entryPointInputs.add(sorter.getInputProviding(entryPoint));
       }
+
+      CompilerInput baseJs = sorter.maybeGetInputProviding("goog");
+      if (baseJs != null) {
+        entryPointInputs.add(baseJs);
+      }
     } else {
       entryPointInputs.addAll(inputs);
     }

@@ -121,6 +121,14 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
   }
 
   /**
+   * Return the input that gives us the given symbol, or null.
+   */
+  public INPUT maybeGetInputProviding(String symbol)
+      throws MissingProvideException {
+    return provideMap.get(symbol);
+  }
+
+  /**
    * Returns the first circular dependency found. Expressed as a list of
    * items in reverse dependency order (the second element depends on the
    * first, etc.).

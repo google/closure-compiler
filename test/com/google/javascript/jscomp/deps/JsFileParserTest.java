@@ -159,6 +159,16 @@ public class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  public void testIncludeGoog4() {
+    String contents = "goog.addDependency('foo', [], []);\n";
+
+    DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+        ImmutableList.<String>of(), ImmutableList.of("goog"));
+    DependencyInfo result = parser.setIncludeGoogBase(true).parseFile(
+        SRC_PATH, CLOSURE_PATH, contents);
+    assertDeps(expected, result);
+  }
+
   /** Asserts the deps match without errors */
   private void assertDeps(DependencyInfo expected, DependencyInfo actual) {
     assertEquals(expected, actual);

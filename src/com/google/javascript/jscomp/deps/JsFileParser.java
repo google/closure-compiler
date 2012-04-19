@@ -41,7 +41,7 @@ public class JsFileParser extends JsFileLineParser {
 
   /** Pattern for matching goog.provide(*) and goog.require(*). */
   private static final Pattern GOOG_PROVIDE_REQUIRE_PATTERN = Pattern.compile(
-      "(?:^|;)\\s*goog\\.(provide|require)\\s*\\((.*?)\\)");
+      "(?:^|;)\\s*goog\\.(provide|require|addDependency)\\s*\\((.*?)\\)");
 
   /** The first non-comment line of base.js */
   private static final String BASE_JS_START = "var COMPILED = false;";
@@ -141,7 +141,8 @@ public class JsFileParser extends JsFileLineParser {
     // Quick sanity check that will catch most cases. This is a performance
     // win for people with a lot of JS.
     if (line.indexOf("provide") != -1 ||
-        line.indexOf("require") != -1) {
+        line.indexOf("require") != -1 ||
+        line.indexOf("addDependency") != -1) {
       // Iterate over the provides/requires.
       googMatcher.reset(line);
       while (googMatcher.find()) {
@@ -153,20 +154,25 @@ public class JsFileParser extends JsFileLineParser {
         }
 
         // See if it's a require or provide.
-        boolean isRequire = googMatcher.group(1).charAt(0) == 'r';
-        // Parse the param.
-        String arg = parseJsString(googMatcher.group(2));
+        char firstChar = googMatcher.group(1).charAt(0);
+        boolean isProvide = firstChar == 'p';
+        boolean isRequire = firstChar == 'r';
 
-        // Add the dependency.
-        if (isRequire) {
-          // goog is always implicit.
-          // TODO(nicksantos): I'm pretty sure we don't need this anymore.
-          // Remove this later.
-          if (!"goog".equals(arg)) {
-            requires.add(arg);
+        if (isProvide || isRequire) {
+          // Parse the param.
+          String arg = parseJsString(googMatcher.group(2));
+
+          // Add the dependency.
+          if (isRequire) {
+            // goog is always implicit.
+            // TODO(nicksantos): I'm pretty sure we don't need this anymore.
+            // Remove this later.
+            if (!"goog".equals(arg)) {
+              requires.add(arg);
+            }
+          } else {
+            provides.add(arg);
           }
-        } else {
-          provides.add(arg);
         }
       }
     } else if (includeGoogBase && line.startsWith(BASE_JS_START) &&
