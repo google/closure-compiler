@@ -584,9 +584,10 @@ jQuery.event = function(eventType) {};
  * @constructor
  * @extends {jQuery.event}
  * @param {string} eventType
+ * @param {Object=} properties
  * @return {jQuery.Event}
  */
-jQuery.Event = function(eventType) {};
+jQuery.Event = function(eventType, properties) {};
 
 /**
  * @constructor
@@ -599,9 +600,10 @@ $.event = function(eventType) {};
  * @constructor
  * @extends {jQuery.event}
  * @param {string} eventType
+ * @param {Object=} properties
  * @return {$.Event}
  */
-$.Event = function(eventType) {};
+$.Event = function(eventType, properties) {};
 
 /** @type {Element} */
 jQuery.event.prototype.currentTarget;
