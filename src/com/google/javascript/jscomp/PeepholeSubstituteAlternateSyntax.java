@@ -1539,6 +1539,7 @@ class PeepholeSubstituteAlternateSyntax
     if(!late) {
       return n;
     }
+
     int numElements = n.getChildCount();
     // We save two bytes per element.
     int saving = numElements * 2 - STRING_SPLIT_OVERHEAD;
@@ -1554,12 +1555,8 @@ class PeepholeSubstituteAlternateSyntax
 
     // These delimiters are chars that appears a lot in the program therefore
     // probably have a small Huffman encoding.
-    NEXT_DELIMITER: for (char delimiter : new char[]{',', ' ', ';', '{', '}'}) {
-      for (String cur : strings) {
-        if (cur.indexOf(delimiter) != -1) {
-          continue NEXT_DELIMITER;
-        }
-      }
+    String delimiter = pickDelimiter(strings);
+    if (delimiter != null) {
       String template = Joiner.on(delimiter).join(strings);
       Node call = IR.call(
           IR.getprop(
@@ -1572,6 +1569,37 @@ class PeepholeSubstituteAlternateSyntax
       return call;
     }
     return n;
+  }
+
+  /**
+   * Find a delimiter that does not occur in the given strings
+   * @param strings The strings that must be separated.
+   * @return a delimiter string or null
+   */
+  private String pickDelimiter(String[] strings) {
+    boolean allLength1 = true;
+    for (String s : strings) {
+      if (s.length() != 1) {
+        allLength1 = false;
+        break;
+      }
+    }
+
+    if (allLength1) {
+      return "";
+    }
+
+    String[] delimiters = new String[]{" ", ";", ",", "{", "}", null};
+    int i = 0;
+    NEXT_DELIMITER: for (;delimiters[i] != null; i++) {
+      for (String cur : strings) {
+        if (cur.contains(delimiters[i])) {
+          continue NEXT_DELIMITER;
+        }
+      }
+      break;
+    }
+    return delimiters[i];
   }
 
   private static final Pattern REGEXP_FLAGS_RE = Pattern.compile("^[gmi]*$");

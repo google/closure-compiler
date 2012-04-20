@@ -905,15 +905,22 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     testSame("var x=['1','2','3','4']");
     testSame("var x=['1','2','3','4','5']");
     test("var x=['1','2','3','4','5','6']",
-         "var x='1,2,3,4,5,6'.split(',')");
+         "var x='123456'.split('')");
+    test("var x=['1','2','3','4','5','00']",
+         "var x='1 2 3 4 5 00'.split(' ')");
     test("var x=['1','2','3','4','5','6','7']",
-         "var x='1,2,3,4,5,6,7'.split(',')");
-    test("var x=[',',',',',',',',',',',']",
-         "var x=', , , , , ,'.split(' ')");
-    test("var x=[',',' ',',',',',',',',']",
-         "var x=',; ;,;,;,;,'.split(';')");
-    test("var x=[',',' ',',',',',',',',']",
-         "var x=',; ;,;,;,;,'.split(';')");
+        "var x='1234567'.split('')");
+    test("var x=['1','2','3','4','5','6','00']",
+         "var x='1 2 3 4 5 6 00'.split(' ')");
+    test("var x=[' ,',',',',',',',',',',']",
+         "var x=' ,;,;,;,;,;,'.split(';')");
+    test("var x=[',,',' ',',',',',',',',']",
+         "var x=',,; ;,;,;,;,'.split(';')");
+    test("var x=['a,',' ',',',',',',',',']",
+         "var x='a,; ;,;,;,;,'.split(';')");
+
+    // all possible delimiters used, leave it alone
+    testSame("var x=[',', ' ', ';', '{', '}']");
   }
 
   public void testRemoveElseCause() {
