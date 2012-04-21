@@ -1277,10 +1277,10 @@ public class Compiler extends AbstractCompiler {
         processAMDAndCommonJSModules();
       }
 
-      // Check if inputs need to be rebuilt from modules.
-      boolean staleInputs = false;
+      hoistExterns(externsRoot);
 
       // Check if the sources need to be re-ordered.
+      boolean staleInputs = false;
       if (options.dependencyOptions.needsManagement() &&
           options.closurePass) {
         for (CompilerInput input : inputs) {
@@ -1315,37 +1315,10 @@ public class Compiler extends AbstractCompiler {
         }
       }
 
-      for (CompilerInput input : inputs) {
-        Node n = input.getAstRoot(this);
-
-        // Inputs can have a null AST during initial parse.
-        if (n == null) {
-          continue;
-        }
-
-        if (n.getJSDocInfo() != null) {
-          JSDocInfo info = n.getJSDocInfo();
-          if (info.isExterns()) {
-            // If the input file is explicitly marked as an externs file, then
-            // assume the programmer made a mistake and throw it into
-            // the externs pile anyways.
-            externsRoot.addChildToBack(n);
-            input.setIsExtern(true);
-
-            input.getModule().remove(input);
-
-            externs.add(input);
-            staleInputs = true;
-          } else if (info.isNoCompile()) {
-            input.getModule().remove(input);
-            staleInputs = true;
-          }
-        }
-      }
+      hoistNoCompileFiles();
 
       if (staleInputs) {
-        fillEmptyModules(modules);
-        rebuildInputsFromModules();
+        repartitionInputs();
       }
 
       // Build the AST.
@@ -1383,6 +1356,78 @@ public class Compiler extends AbstractCompiler {
     } finally {
       stopTracer(tracer, "parseInputs");
     }
+  }
+
+  /**
+   * Hoists inputs with the @externs annotation into the externs list.
+   */
+  private void hoistExterns(Node externsRoot) {
+    boolean staleInputs = false;
+    for (CompilerInput input : inputs) {
+      if (options.dependencyOptions.needsManagement() &&
+          options.closurePass) {
+        // If we're doing scanning dependency info anyway, use that
+        // information to skip sources that obviously aren't externs.
+        if (!input.getProvides().isEmpty() || !input.getRequires().isEmpty()) {
+          continue;
+        }
+      }
+
+      Node n = input.getAstRoot(this);
+
+      // Inputs can have a null AST on a parse error.
+      if (n == null) {
+        continue;
+      }
+
+      JSDocInfo info = n.getJSDocInfo();
+      if (info != null && info.isExterns()) {
+        // If the input file is explicitly marked as an externs file, then
+        // assume the programmer made a mistake and throw it into
+        // the externs pile anyways.
+        externsRoot.addChildToBack(n);
+        input.setIsExtern(true);
+
+        input.getModule().remove(input);
+
+        externs.add(input);
+        staleInputs = true;
+      }
+    }
+
+    if (staleInputs) {
+      repartitionInputs();
+    }
+  }
+
+  /**
+   * Hoists inputs with the @nocompiler annotation out of the inputs.
+   */
+  private void hoistNoCompileFiles() {
+    boolean staleInputs = false;
+    for (CompilerInput input : inputs) {
+      Node n = input.getAstRoot(this);
+
+      // Inputs can have a null AST on a parse error.
+      if (n == null) {
+        continue;
+      }
+
+      JSDocInfo info = n.getJSDocInfo();
+      if (info != null && info.isNoCompile()) {
+        input.getModule().remove(input);
+        staleInputs = true;
+      }
+    }
+
+    if (staleInputs) {
+      repartitionInputs();
+    }
+  }
+
+  private void repartitionInputs() {
+    fillEmptyModules(modules);
+    rebuildInputsFromModules();
   }
 
   /**

@@ -655,6 +655,33 @@ public class CommandLineRunnerTest extends TestCase {
          });
   }
 
+  public void testSourcePruningOn8() {
+    args.add("--only_closure_dependencies");
+    args.add("--closure_entry_point=scotch");
+    args.add("--warning_level=VERBOSE");
+    test(new String[] {
+          "/** @externs */\n" +
+          "var externVar;",
+          "goog.provide('scotch'); var x = externVar;"
+         },
+         new String[] {
+           "var scotch = {}, x = externVar;",
+         });
+  }
+
+  public void testNoCompile() {
+    args.add("--warning_level=VERBOSE");
+    test(new String[] {
+          "/** @nocompile */\n" +
+          "goog.provide('x');\n" +
+          "var dupeVar;",
+          "var dupeVar;"
+         },
+         new String[] {
+           "var dupeVar;"
+         });
+  }
+
   public void testDependencySortingWhitespaceMode() {
     args.add("--manage_closure_dependencies");
     args.add("--compilation_level=WHITESPACE_ONLY");
