@@ -212,6 +212,12 @@ public class TypeInferenceTest extends TestCase {
     verifySubtypeOf("y", OBJECT_TYPE);
   }
 
+  public void testIf1a() {
+    assuming("x", createNullableType(OBJECT_TYPE));
+    inFunction("var y = {}; if (x != null) { y = x; }");
+    verifySubtypeOf("y", OBJECT_TYPE);
+  }
+
   public void testIf2() {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction("var y = x; if (x) { y = x; } else { y = {}; }");
@@ -228,6 +234,14 @@ public class TypeInferenceTest extends TestCase {
     JSType startType = createNullableType(OBJECT_TYPE);
     assuming("x", startType);
     inFunction("out1 = x; goog.asserts.assert(x); out2 = x;");
+    verify("out1", startType);
+    verify("out2", OBJECT_TYPE);
+  }
+
+  public void testAssert1a() {
+    JSType startType = createNullableType(OBJECT_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; goog.asserts.assert(x !== null); out2 = x;");
     verify("out1", startType);
     verify("out2", OBJECT_TYPE);
   }
@@ -284,6 +298,32 @@ public class TypeInferenceTest extends TestCase {
     verify("out2", OBJECT_TYPE);
   }
 
+  public void disable_testAssert8() { // Fails, out2 is UNKNOWN
+    JSType startType = createNullableType(OBJECT_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; out2 = goog.asserts.assert(x != null);");
+    verify("out1", startType);
+    verify("out2", BOOLEAN_TYPE);
+  }
+
+  public void testAssert9() {
+    JSType startType = createNullableType(NUMBER_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; out2 = goog.asserts.assert(y = x);");
+    verify("out1", startType);
+    verify("out2", NUMBER_TYPE);
+  }
+
+  public void testAssert10() {
+    JSType startType = createNullableType(OBJECT_TYPE);
+    assuming("x", startType);
+    assuming("y", startType);
+    inFunction("out1 = x; out2 = goog.asserts.assert(x && y); out3 = x;");
+    verify("out1", startType);
+    verify("out2", OBJECT_TYPE);
+    verify("out3", OBJECT_TYPE);
+  }
+
   public void testAssertNumber() {
     JSType startType = createNullableType(ALL_TYPE);
     assuming("x", startType);
@@ -298,6 +338,15 @@ public class TypeInferenceTest extends TestCase {
     assuming("x", startType);
     inFunction("goog.asserts.assertNumber(x + x); out1 = x;");
     verify("out1", startType);
+  }
+
+  public void testAssertNumber3() {
+    // Make sure it ignores expressions.
+    JSType startType = createNullableType(ALL_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; out2 = goog.asserts.assertNumber(x + x);");
+    verify("out1", startType);
+    verify("out2", NUMBER_TYPE);
   }
 
   public void testAssertString() {

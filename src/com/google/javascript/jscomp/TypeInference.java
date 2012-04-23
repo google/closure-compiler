@@ -815,27 +815,23 @@ class TypeInference
     String assertedNodeName = assertedNode.getQualifiedName();
     // Handle assertions that enforce expressions evaluate to true.
     if (assertedType == null) {
-      if (assertedNodeName != null) {
-        JSType type = getJSType(assertedNode);
-        JSType narrowed = type.restrictByNotNullOrUndefined();
-        if (type != narrowed) {
-          scope = narrowScope(scope, assertedNode, narrowed);
-          callNode.setJSType(narrowed);
-        }
-      } else if (assertedNode.isAnd() ||
-                 assertedNode.isOr()) {
-        BooleanOutcomePair conditionOutcomes =
-            traverseWithinShortCircuitingBinOp(assertedNode, scope);
-        scope = reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
-            assertedNode, conditionOutcomes.getOutcomeFlowScope(
-                assertedNode.getType(), true), true);
+      // Handle arbitrary expressions within the assert.
+      scope = reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
+          assertedNode, scope, true);
+      // Build the result of the assertExpression
+      JSType type = getJSType(assertedNode);
+      JSType narrowed = type.restrictByNotNullOrUndefined();
+      if (type != narrowed) {
+        callNode.setJSType(narrowed);
       }
-    } else if (assertedNodeName != null) {
+    } else {
       // Handle assertions that enforce expressions are of a certain type.
       JSType type = getJSType(assertedNode);
       JSType narrowed = type.getGreatestSubtype(getNativeType(assertedType));
       if (type != narrowed) {
-        scope = narrowScope(scope, assertedNode, narrowed);
+        if (assertedNodeName != null) {
+          scope = narrowScope(scope, assertedNode, narrowed);
+        }
         callNode.setJSType(narrowed);
       }
     }
