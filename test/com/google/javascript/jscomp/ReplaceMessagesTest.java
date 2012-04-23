@@ -16,31 +16,41 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Maps;
 import static com.google.javascript.jscomp.JsMessage.Style.RELAX;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
-import static com.google.javascript.jscomp.ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE;
-import com.google.javascript.rhino.Node;
 
-import junit.framework.TestCase;
+import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.JsMessage.Style;
 
 import java.util.Map;
 
 /**
  * Test which checks that replacer works correctly.
  *
- * @author anatol@google.com (Anatol Pomazau)
  */
-public class ReplaceMessagesTest extends TestCase {
+public class ReplaceMessagesTest extends CompilerTestCase {
 
   private Map<String, JsMessage> messages;
-  private Compiler compiler;
+  private Style style = RELAX;
   private boolean strictReplacement;
+
+  @Override
+  protected CompilerPass getProcessor(Compiler compiler) {
+    return new ReplaceMessages(compiler,
+        new SimpleMessageBundle(), false, style, strictReplacement);
+  }
+
+  @Override
+  protected int getNumRepetitions() {
+    // No longer valid on the second run.
+    return 1;
+  }
 
   @Override
   protected void setUp()  {
     messages = Maps.newHashMap();
     strictReplacement = false;
+    style = RELAX;
   }
 
   public void testReplaceSimpleMessage() {
@@ -48,8 +58,9 @@ public class ReplaceMessagesTest extends TestCase {
         .appendStringPart("Hi\nthere")
         .build());
 
-    assertOutputEquals("var MSG_A = goog.getMsg('asdf');",
-        "var MSG_A=\"Hi\\nthere\"");
+    test("/** @desc d */\n" +
+         "var MSG_A = goog.getMsg('asdf');",
+         "var MSG_A=\"Hi\\nthere\"");
   }
 
   public void testNameReplacement()  {
@@ -59,9 +70,9 @@ public class ReplaceMessagesTest extends TestCase {
         .appendStringPart(" ph")
         .build());
 
-    assertOutputEquals(
-        "var MSG_B = goog.getMsg('asdf {$measly}', {measly: x});",
-        "var MSG_B=\"One \"+(x+\" ph\")");
+    test("/** @desc d */\n" +
+         "var MSG_B=goog.getMsg('asdf {$measly}', {measly: x});",
+         "var MSG_B=\"One \"+ (x +\" ph\" )");
   }
 
   public void testGetPropReplacement()  {
@@ -69,9 +80,9 @@ public class ReplaceMessagesTest extends TestCase {
         .appendPlaceholderReference("amount")
         .build());
 
-    assertOutputEquals(
-        "var MSG_C = goog.getMsg('${$amount}', {amount: a.b.amount});",
-        "var MSG_C=a.b.amount");
+    test("/** @desc d */\n" +
+         "var MSG_C = goog.getMsg('${$amount}', {amount: a.b.amount});",
+         "var MSG_C=a.b.amount");
   }
 
   public void testFunctionCallReplacement()  {
@@ -79,9 +90,9 @@ public class ReplaceMessagesTest extends TestCase {
         .appendPlaceholderReference("amount")
         .build());
 
-    assertOutputEquals(
-        "var MSG_D = goog.getMsg('${$amount}', {amount: getAmt()});",
-        "var MSG_D=getAmt()");
+    test("/** @desc d */\n" +
+         "var MSG_D = goog.getMsg('${$amount}', {amount: getAmt()});",
+         "var MSG_D=getAmt()");
   }
 
   public void testMethodCallReplacement()  {
@@ -89,9 +100,9 @@ public class ReplaceMessagesTest extends TestCase {
         .appendPlaceholderReference("amount")
         .build());
 
-    assertOutputEquals(
-        "var MSG_E = goog.getMsg('${$amount}', {amount: obj.getAmt()});",
-        "var MSG_E=obj.getAmt()");
+    test("/** @desc d */\n" +
+         "var MSG_E = goog.getMsg('${$amount}', {amount: obj.getAmt()});",
+         "var MSG_E=obj.getAmt()");
   }
 
   public void testHookReplacement()  {
@@ -101,9 +112,9 @@ public class ReplaceMessagesTest extends TestCase {
         .appendStringPart(".")
         .build());
 
-    assertOutputEquals(
-        "var MSG_F = goog.getMsg('${$amount}', {amount: (a ? b : c)});",
-        "var MSG_F=\"#\"+((a?b:c)+\".\")");
+    test("/** @desc d */\n" +
+         "var MSG_F = goog.getMsg('${$amount}', {amount: (a ? b : c)});",
+         "var MSG_F=\"#\"+((a?b:c)+\".\")");
   }
 
   public void testAddReplacement()  {
@@ -111,9 +122,9 @@ public class ReplaceMessagesTest extends TestCase {
         .appendPlaceholderReference("amount")
         .build());
 
-    assertOutputEquals(
-        "var MSG_G = goog.getMsg('${$amount}', {amount: x + ''});",
-        "var MSG_G=x+\"\"");
+    test("/** @desc d */\n" +
+         "var MSG_G = goog.getMsg('${$amount}', {amount: x + ''});",
+         "var MSG_G=x+\"\"");
   }
 
   public void testPlaceholderValueReferencedTwice()  {
@@ -125,9 +136,9 @@ public class ReplaceMessagesTest extends TestCase {
         .appendPlaceholderReference("jane")
         .build());
 
-    assertOutputEquals(
-        "var MSG_H = goog.getMsg('{$dick}{$jane}', {jane: x, dick: y});",
-        "var MSG_H=y+(\", \"+(y+(\" and \"+x)))");
+    test("/** @desc d */\n" +
+         "var MSG_H = goog.getMsg('{$dick}{$jane}', {jane: x, dick: y});",
+         "var MSG_H=y+(\", \"+(y+(\" and \"+x)))");
   }
 
   public void testPlaceholderNameInLowerCamelCase()  {
@@ -136,9 +147,9 @@ public class ReplaceMessagesTest extends TestCase {
         .appendPlaceholderReference("amtEarned")
         .build());
 
-    assertOutputEquals(
-        "var MSG_I = goog.getMsg('${$amtEarned}', {amtEarned: x});",
-        "var MSG_I=\"Sum: $\"+x");
+    test("/** @desc d */\n" +
+         "var MSG_I = goog.getMsg('${$amtEarned}', {amtEarned: x});",
+         "var MSG_I=\"Sum: $\"+x");
   }
 
   public void testQualifiedMessageName()  {
@@ -148,21 +159,29 @@ public class ReplaceMessagesTest extends TestCase {
         .appendStringPart(" ph")
         .build());
 
-    assertOutputEquals(
-        "a.b.c.MSG_J = goog.getMsg('asdf {$measly}', {measly: x});",
-        "a.b.c.MSG_J=\"One \"+(x+\" ph\")");
+    test("/** @desc d */\n" +
+         "a.b.c.MSG_J = goog.getMsg('asdf {$measly}', {measly: x});",
+         "a.b.c.MSG_J=\"One \"+(x+\" ph\")");
   }
 
   public void testSimpleMessageReplacementMissing()  {
-    assertOutputEquals("var MSG_E = 'd*6a0@z>t';", "var MSG_E=\"d*6a0@z>t\"");
+    style = Style.LEGACY;
+    test("/** @desc d */\n" +
+         "var MSG_E = 'd*6a0@z>t';",
+         "var MSG_E = 'd*6a0@z>t'");
+  }
+
+
+  public void testSimpleMessageReplacementMissingWithNewStyle()  {
+    test("/** @desc d */\n" +
+         "var MSG_E = goog.getMsg('missing');",
+         "var MSG_E = 'missing'");
   }
 
   public void testStrictModeAndMessageReplacementAbsentInBundle()  {
     strictReplacement = true;
-    process("var MSG_E = 'Hello';");
-    assertEquals(1, compiler.getErrors().length);
-    assertEquals(BUNDLE_DOES_NOT_HAVE_THE_MESSAGE,
-        compiler.getErrors()[0].getType());
+    test("var MSG_E = 'Hello';", "var MSG_E = 'Hello';",
+         ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
   }
 
   public void testStrictModeAndMessageReplacementAbsentInNonEmptyBundle()  {
@@ -173,29 +192,29 @@ public class ReplaceMessagesTest extends TestCase {
         .build());
 
     strictReplacement = true;
-    process("var MSG_E = 'Hello';");
-    assertEquals(1, compiler.getErrors().length);
-    assertEquals(BUNDLE_DOES_NOT_HAVE_THE_MESSAGE,
-        compiler.getErrors()[0].getType());
+    test("var MSG_E = 'Hello';", "var MSG_E = 'Hello';",
+        ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
+
   }
 
   public void testFunctionReplacementMissing()  {
-    assertOutputEquals("var MSG_F = function() {return 'asdf'};",
-        "var MSG_F=function(){return\"asdf\"}");
+    style = Style.LEGACY;
+    test("var MSG_F = function() {return 'asdf'};",
+         "var MSG_F = function() {return\"asdf\"}");
   }
 
   public void testFunctionWithParamReplacementMissing()  {
-    assertOutputEquals(
+    style = Style.LEGACY;
+    test(
         "var MSG_G = function(measly) {return 'asdf' + measly};",
         "var MSG_G=function(measly){return\"asdf\"+measly}");
   }
 
   public void testPlaceholderNameInLowerUnderscoreCase()  {
-    process("var MSG_J = goog.getMsg('${$amt_earned}', {amt_earned: x});");
-
-    assertEquals(1, compiler.getErrors().length);
-    JSError error = compiler.getErrors()[0];
-    assertEquals(MESSAGE_TREE_MALFORMED, error.getType());
+    test(
+        "var MSG_J = goog.getMsg('${$amt_earned}', {amt_earned: x});",
+        "var MSG_J = goog.getMsg('${$amt_earned}', {amt_earned: x});",
+        MESSAGE_TREE_MALFORMED);
   }
 
   public void testBadPlaceholderReferenceInReplacement()  {
@@ -203,11 +222,10 @@ public class ReplaceMessagesTest extends TestCase {
         .appendPlaceholderReference("amount")
         .build());
 
-    process("var MSG_K = goog.getMsg('Hi {$jane}', {jane: x});");
-
-    assertEquals(1, compiler.getErrors().length);
-    JSError error = compiler.getErrors()[0];
-    assertEquals(MESSAGE_TREE_MALFORMED, error.getType());
+    test(
+        "var MSG_K = goog.getMsg('Hi {$jane}', {jane: x});",
+        "var MSG_K = goog.getMsg('Hi {$jane}', {jane: x});",
+         MESSAGE_TREE_MALFORMED);
   }
 
 
@@ -215,17 +233,18 @@ public class ReplaceMessagesTest extends TestCase {
     registerMessage(new JsMessage.Builder("MSG_A")
         .appendStringPart("Hi\nthere")
         .build());
-    assertOutputEquals("var MSG_A = 'd*6a0@z>t';",
-        "var MSG_A=\"Hi\\nthere\"");
+    style = Style.LEGACY;
+    test("var MSG_A = 'd*6a0@z>t';",
+         "var MSG_A=\"Hi\\nthere\"");
   }
 
   public void testLegacyStyleNoPlaceholdersFunctionSyntax()  {
     registerMessage(new JsMessage.Builder("MSG_B")
         .appendStringPart("Hi\nthere")
         .build());
-
-    assertOutputEquals("var MSG_B = function() {return 'asdf'};",
-        "var MSG_B=function(){return\"Hi\\nthere\"}");
+    style = Style.LEGACY;
+    test("var MSG_B = function() {return 'asdf'};",
+         "var MSG_B=function(){return\"Hi\\nthere\"}");
   }
 
   public void testLegacyStyleOnePlaceholder()  {
@@ -234,7 +253,8 @@ public class ReplaceMessagesTest extends TestCase {
         .appendPlaceholderReference("measly")
         .appendStringPart(" ph")
         .build());
-    assertOutputEquals(
+    style = Style.LEGACY;
+    test(
         "var MSG_C = function(measly) {return 'asdf' + measly};",
         "var MSG_C=function(measly){return\"One \"+(measly+\" ph\")}");
   }
@@ -245,7 +265,8 @@ public class ReplaceMessagesTest extends TestCase {
         .appendStringPart(" and ")
         .appendPlaceholderReference("jane")
         .build());
-    assertOutputEquals(
+    style = Style.LEGACY;
+    test(
         "var MSG_D = function(jane, dick) {return jane + dick};",
         "var MSG_D=function(jane,dick){return dick+(\" and \"+jane)}");
   }
@@ -255,7 +276,8 @@ public class ReplaceMessagesTest extends TestCase {
         .appendStringPart("Sum: $")
         .appendPlaceholderReference("amtEarned")
         .build());
-    assertOutputEquals(
+    style = Style.LEGACY;
+    test(
         "var MSG_E = function(amtEarned) {return amtEarned + 'x'};",
         "var MSG_E=function(amtEarned){return\"Sum: $\"+amtEarned}");
   }
@@ -267,7 +289,8 @@ public class ReplaceMessagesTest extends TestCase {
         .build());
 
     // Placeholder named in lower-underscore case (discouraged nowadays)
-    assertOutputEquals(
+    style = Style.LEGACY;
+    test(
         "var MSG_F = function(amt_earned) {return amt_earned + 'x'};",
         "var MSG_F=function(amt_earned){return\"Sum: $\"+amt_earned}");
   }
@@ -278,12 +301,9 @@ public class ReplaceMessagesTest extends TestCase {
         .appendPlaceholderReference("chimp")
         .build());
 
-    process("var MSG_B = function(chump) {return chump + 'x'};");
-    assertEquals(1, compiler.getErrors().length);
-    JSError error = compiler.getErrors()[0];
-    assertEquals("Message parse tree malformed. "
-        + "Unrecognized message placeholder referenced: chimp",
-        error.description);
+    test("var MSG_B = function(chump) {return chump + 'x'};",
+         "var MSG_B = function(chump) {return chump + 'x'};",
+         JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
   public void testTranslatedPlaceHolderMissMatch() {
@@ -292,30 +312,9 @@ public class ReplaceMessagesTest extends TestCase {
         .appendStringPart("!")
         .build());
 
-    process("var MSG_A = goog.getMsg('{$a}');");
-    assertEquals(1, compiler.getErrors().length);
-    JSError error = compiler.getErrors()[0];
-    assertEquals(MESSAGE_TREE_MALFORMED, error.getType());
-  }
-
-  private void assertOutputEquals(String input, String output) {
-    String output1 = process(input);
-    JSError[] errors = compiler.getErrors();
-    if (errors.length > 0) {
-      fail(errors[0].description);
-    }
-
-    assertEquals(output, output1);
-  }
-
-  private String process(String input) {
-    compiler = new Compiler();
-    Node root = compiler.parseTestCode(input);
-    JsMessageVisitor visitor = new ReplaceMessages(compiler,
-        new SimpleMessageBundle(), false, RELAX, strictReplacement);
-    visitor.process(null, root);
-
-    return compiler.toSource(root);
+    test("var MSG_A = goog.getMsg('{$a}');",
+         "var MSG_A = goog.getMsg('{$a}');",
+         MESSAGE_TREE_MALFORMED);
   }
 
   private void registerMessage(JsMessage message) {

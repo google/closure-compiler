@@ -79,6 +79,7 @@ class ReplaceMessages extends JsMessageVisitor {
     }
 
     if (newValue != msgNode) {
+      newValue.copyInformationFromForTree(msgNode);
       definition.getMessageParentNode().replaceChild(msgNode, newValue);
       compiler.reportCodeChange();
     }
@@ -105,7 +106,11 @@ class ReplaceMessages extends JsMessageVisitor {
         return origValueNode;
       case Token.STRING:
         // The message is a simple string. Modify the string node.
-        origValueNode.setString(message.toString());
+        String newString = message.toString();
+        if (!origValueNode.getString().equals(newString)) {
+          origValueNode.setString(newString);
+          compiler.reportCodeChange();
+        }
         return origValueNode;
       case Token.ADD:
         // The message is a simple string. Create a string node.
@@ -161,7 +166,13 @@ class ReplaceMessages extends JsMessageVisitor {
         : IR.string("");
     Node newBlockNode = IR.block(IR.returnNode(valueNode));
 
-    functionNode.replaceChild(oldBlockNode, newBlockNode);
+    // TODO(user): checkTreeEqual is overkill. I am in process of rewriting
+    // these functions.
+    if (newBlockNode.checkTreeEquals(oldBlockNode) != null) {
+      newBlockNode.copyInformationFromForTree(oldBlockNode);
+      functionNode.replaceChild(oldBlockNode, newBlockNode);
+      compiler.reportCodeChange();
+    }
   }
 
   /**
