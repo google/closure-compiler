@@ -1143,6 +1143,29 @@ public class IntegrationTest extends TestCase {
     assertNull(lastCompiler.getResult().namedAnonFunctionMap);
   }
 
+  public void testNameAnonymousFunctionsWithVarRemoval() {
+    CompilerOptions options = createCompilerOptions();
+    options.setRemoveUnusedVariables(CompilerOptions.Reach.LOCAL_ONLY);
+    options.setInlineVariables(true);
+    String code = "var f = function longName() {}; var g = function() {};" +
+        "function longerName() {} var i = longerName;";
+    test(options, code,
+         "var f = function() {}; var g = function() {}; " +
+         "var i = function() {};");
+
+    options.anonymousFunctionNaming = AnonymousFunctionNamingPolicy.MAPPED;
+    test(options, code,
+         "var f = function longName() {}; var g = function $() {};" +
+         "var i = function longerName(){};");
+    assertNotNull(lastCompiler.getResult().namedAnonFunctionMap);
+
+    options.anonymousFunctionNaming = AnonymousFunctionNamingPolicy.UNMAPPED;
+    test(options, code,
+         "var f = function longName() {}; var g = function $g$() {};" +
+         "var i = function longerName(){};");
+    assertNull(lastCompiler.getResult().namedAnonFunctionMap);
+  }
+
   public void testExtractPrototypeMemberDeclarations() {
     CompilerOptions options = createCompilerOptions();
     String code = "var f = function() {};";
