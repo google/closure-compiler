@@ -813,27 +813,26 @@ class TypeInference
     }
     JSTypeNative assertedType = assertionFunctionSpec.getAssertedType();
     String assertedNodeName = assertedNode.getQualifiedName();
+
+    JSType narrowed;
     // Handle assertions that enforce expressions evaluate to true.
     if (assertedType == null) {
       // Handle arbitrary expressions within the assert.
       scope = reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
           assertedNode, scope, true);
       // Build the result of the assertExpression
-      JSType type = getJSType(assertedNode);
-      JSType narrowed = type.restrictByNotNullOrUndefined();
-      if (type != narrowed) {
-        callNode.setJSType(narrowed);
-      }
+      narrowed = getJSType(assertedNode).restrictByNotNullOrUndefined();
     } else {
       // Handle assertions that enforce expressions are of a certain type.
       JSType type = getJSType(assertedNode);
-      JSType narrowed = type.getGreatestSubtype(getNativeType(assertedType));
-      if (type != narrowed) {
-        if (assertedNodeName != null) {
-          scope = narrowScope(scope, assertedNode, narrowed);
-        }
-        callNode.setJSType(narrowed);
+      narrowed = type.getGreatestSubtype(getNativeType(assertedType));
+      if (assertedNodeName != null && type.differsFrom(narrowed)) {
+        scope = narrowScope(scope, assertedNode, narrowed);
       }
+    }
+
+    if (getJSType(callNode).differsFrom(narrowed)) {
+      callNode.setJSType(narrowed);
     }
     return scope;
   }

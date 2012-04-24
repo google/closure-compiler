@@ -298,7 +298,7 @@ public class TypeInferenceTest extends TestCase {
     verify("out2", OBJECT_TYPE);
   }
 
-  public void disable_testAssert8() { // Fails, out2 is UNKNOWN
+  public void testAssert8() {
     JSType startType = createNullableType(OBJECT_TYPE);
     assuming("x", startType);
     inFunction("out1 = x; out2 = goog.asserts.assert(x != null);");
@@ -393,6 +393,16 @@ public class TypeInferenceTest extends TestCase {
     JSType startType = createNullableType(ARRAY_TYPE);
     assuming("x", startType);
     inFunction("out1 = x; out2 = goog.asserts.assertObject(x);");
+    verify("out1", startType);
+    verify("out2", ARRAY_TYPE);
+  }
+
+  public void testAssertObject5() {
+    JSType startType = createNullableType(ALL_TYPE);
+    assuming("x", startType);
+    inFunction(
+        "out1 = x;" +
+        "out2 = /** @type {!Array} */ (goog.asserts.assertObject(x));");
     verify("out1", startType);
     verify("out2", ARRAY_TYPE);
   }
