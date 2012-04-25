@@ -171,9 +171,7 @@ class Normalize implements CompilerPass {
         if (lhs.isGetProp() && isMarkedExpose(assign)) {
           exposedProperties.add(lhs.getLastChild().getString());
         }
-      } else if (NodeUtil.isObjectLitKey(n, parent) &&
-          n.isString() &&
-          isMarkedExpose(n)) {
+      } else if (n.isStringKey() && isMarkedExpose(n)) {
         exposedProperties.add(n.getString());
       }
     }
@@ -204,7 +202,7 @@ class Normalize implements CompilerPass {
           n.getParent().replaceChild(n, IR.getelem(obj, prop));
           compiler.reportCodeChange();
         }
-      } else if (n.isString() && NodeUtil.isObjectLitKey(n, parent)) {
+      } else if (n.isStringKey()) {
         String propName = n.getString();
         if (exposedProperties.contains(propName)) {
           n.setQuotedString();
@@ -400,6 +398,7 @@ class Normalize implements CompilerPass {
 
         case Token.NAME:
         case Token.STRING:
+        case Token.STRING_KEY:
         case Token.GETTER_DEF:
         case Token.SETTER_DEF:
           if (!compiler.getLifeCycleStage().isNormalizedObfuscated()) {
@@ -416,6 +415,7 @@ class Normalize implements CompilerPass {
       Preconditions.checkState(
           n.isName()
           || n.isString()
+          || n.isStringKey()
           || n.isGetterDef()
           || n.isSetterDef());
 

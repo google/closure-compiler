@@ -810,6 +810,8 @@ class IRFactory {
         }
 
         Node key = transformAsString(el.getLeft());
+        key.setType(Token.STRING_KEY);
+
         Node value = transform(el.getRight());
         if (el.isGetter()) {
           key.setType(Token.GETTER_DEF);

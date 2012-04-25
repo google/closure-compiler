@@ -177,7 +177,7 @@ public class ParserTest extends BaseJSTypeTestCase {
 
     Node key = n.getFirstChild();
 
-    assertEquals(Token.STRING, key.getType());
+    assertEquals(Token.STRING_KEY, key.getType());
     assertEquals(3, key.getLineno());
     assertEquals(10, key.getCharno());
 
@@ -189,7 +189,7 @@ public class ParserTest extends BaseJSTypeTestCase {
 
     key = key.getNext();
 
-    assertEquals(Token.STRING, key.getType());
+    assertEquals(Token.STRING_KEY, key.getType());
     assertEquals(4, key.getLineno());
     assertEquals(1, key.getCharno());
 
@@ -758,7 +758,7 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertEquals(Token.OBJECTLIT, objectLit.getType());
 
     Node number = objectLit.getFirstChild();
-    assertEquals(Token.STRING, number.getType());
+    assertEquals(Token.STRING_KEY, number.getType());
     assertNotNull(number.getJSDocInfo());
   }
 

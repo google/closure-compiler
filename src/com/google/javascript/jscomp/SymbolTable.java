@@ -1379,7 +1379,7 @@ public final class SymbolTable
         }
 
         tryDefineLexicalQualifiedNameRef(n.getQualifiedName(), n);
-      } else if (NodeUtil.isObjectLitKey(n, parent) && n.isString()) {
+      } else if (n.isStringKey()) {
         JSType owner = parent.getJSType();
         if (owner != null) {
           boolean defined =

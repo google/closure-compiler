@@ -95,7 +95,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
       "SCRIPT 1 [source_file: FileName.js] [length: 11]\n" +
       "    EXPR_RESULT 1 [source_file: FileName.js] [length: 10]\n" +
       "        OBJECTLIT 1 [parenthesized: true] [source_file: FileName.js] [length: 9]\n" +
-      "            STRING 1 1 [quoted: 1] [source_file: FileName.js] [length: 1]\n" +
+      "            STRING_KEY 1 1 [quoted: 1] [source_file: FileName.js] [length: 1]\n" +
       "                TRUE 1 [source_file: FileName.js] [length: 4]\n");
   }
 

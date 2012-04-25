@@ -20,6 +20,8 @@ import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+
 import java.util.List;
 
 /**
@@ -87,6 +89,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
             keyNode = IR.string(NodeUtil.getStringValue(keyNode))
                 .srcref(keyNode);
           }
+          keyNode.setType(Token.STRING_KEY);
           keyNode.setQuotedString();
           objNode.addChildToBack(IR.propdef(keyNode, valueNode));
         }

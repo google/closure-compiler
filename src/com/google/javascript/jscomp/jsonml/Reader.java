@@ -691,9 +691,9 @@ public class Reader {
 
     Node node = null;
     if (name instanceof Number) {
-      node = IR.number(((Number) name).doubleValue());
+      node = IR.stringKey(getStringValue(((Number) name).doubleValue()));
     } else if (name instanceof String) {
-      node = IR.string((String) name);
+      node = IR.stringKey((String) name);
     } else {
       throw new IllegalStateException(
           "The name of the property has invalid type.");
@@ -703,6 +703,17 @@ public class Reader {
     parent.addChildToBack(node);
 
     transformElement(element.getChild(0), node);
+  }
+
+  private static String getStringValue(double value) {
+    long longValue = (long) value;
+
+    // Return "1" instead of "1.0"
+    if (longValue == value) {
+      return Long.toString(longValue);
+    } else {
+      return Double.toString(value);
+    }
   }
 
   /*
@@ -1553,4 +1564,3 @@ public class Reader {
     }
   }
 }
-

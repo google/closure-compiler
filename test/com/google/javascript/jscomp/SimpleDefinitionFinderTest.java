@@ -71,22 +71,22 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
 
     checkDefinitionsInJs(
         "({a : 1}); o.a",
-        ImmutableSet.of("DEF STRING null -> NUMBER",
+        ImmutableSet.of("DEF STRING_KEY null -> NUMBER",
                         "USE GETPROP o.a -> [NUMBER]"));
 
     // TODO(johnlenz): Fix this.
     checkDefinitionsInJs(
       "({'a' : 1}); o['a']",
-      ImmutableSet.<String>of("DEF STRING null -> NUMBER"));
+      ImmutableSet.<String>of("DEF STRING_KEY null -> NUMBER"));
 
     checkDefinitionsInJs(
       "({1 : 1}); o[1]",
-      ImmutableSet.<String>of("DEF STRING null -> NUMBER"));
+      ImmutableSet.<String>of("DEF STRING_KEY null -> NUMBER"));
 
     checkDefinitionsInJs(
         "var a = {b : 1}; a.b",
         ImmutableSet.of("DEF NAME a -> <null>",
-                        "DEF STRING null -> NUMBER",
+                        "DEF STRING_KEY null -> NUMBER",
                         "USE NAME a -> [<null>]",
                         "USE GETPROP a.b -> [NUMBER]"));
   }
@@ -291,7 +291,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
             "DEF GETPROP goog.Enum -> EXTERN <null>",
             "DEF GETPROP goog.HYBRID -> EXTERN <null>",
             "DEF NAME goog -> EXTERN <null>",
-            "DEF STRING null -> EXTERN NUMBER",
+            "DEF STRING_KEY null -> EXTERN NUMBER",
             "USE GETPROP goog.Enum -> [EXTERN <null>]",
             "USE GETPROP goog.Enum.ROADMAP -> [EXTERN NUMBER]",
             "USE GETPROP goog.HYBRID -> [EXTERN <null>, EXTERN NUMBER]",

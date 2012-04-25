@@ -1491,7 +1491,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           case Token.SETTER_DEF:
             continue;
           case Token.GETTER_DEF:
-          case Token.STRING:
+          case Token.STRING_KEY:
             if (value != null && mayHaveSideEffects(value)) {
               // The previously found value had side-effects
               return n;

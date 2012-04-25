@@ -271,7 +271,7 @@ class ProcessTweaks implements CompilerPass {
       Node sourceInformationNode) {
     Node objNode = IR.objectlit().srcref(sourceInformationNode);
     for (Entry<String, Node> entry : compilerDefaultValueOverrides.entrySet()) {
-      Node objKeyNode = IR.string(entry.getKey())
+      Node objKeyNode = IR.stringKey(entry.getKey())
           .copyInformationFrom(sourceInformationNode);
       Node objValueNode = entry.getValue().cloneNode()
           .copyInformationFrom(sourceInformationNode);

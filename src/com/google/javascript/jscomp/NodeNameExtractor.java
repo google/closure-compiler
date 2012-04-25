@@ -72,6 +72,7 @@ class NodeNameExtractor {
       case Token.NAME:
         return node.getString();
       case Token.STRING:
+      case Token.STRING_KEY:
         return TokenStream.isJSIdentifier(node.getString()) ?
             node.getString() : ("__" + nextUniqueInt++);
       case Token.NUMBER:

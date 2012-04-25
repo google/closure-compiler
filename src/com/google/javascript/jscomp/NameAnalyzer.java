@@ -1346,7 +1346,7 @@ final class NameAnalyzer implements CompilerPass {
         } else if (objLitParent.isName()) {
           // This must be a VAR initialization.
           rootNameNode = objLitParent;
-        } else if (objLitParent.isString()) {
+        } else if (objLitParent.isStringKey()) {
           // This must be a object literal key initialization.
           rootNameNode = objLitParent;
         } else {

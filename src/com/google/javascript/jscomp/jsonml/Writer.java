@@ -639,13 +639,9 @@ public class Writer {
       JsonML item;
       Object name;
       switch (key.getType()) {
-        case Token.STRING:
+        case Token.STRING_KEY:
           item = new JsonML(TagType.DataProp);
           name = key.getString();
-          break;
-        case Token.NUMBER:
-          item = new JsonML(TagType.DataProp);
-          name = key.getDouble();
           break;
         case Token.GETTER_DEF:
           item = new JsonML(TagType.GetterProp);

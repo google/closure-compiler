@@ -154,6 +154,7 @@ public class Token {
 
         // JSCompiler introduced tokens
         LABEL_NAME     = 153,
+        STRING_KEY     = 154, // object literal key
 
         // JSDoc-only tokens
         ANNOTATION     = 300,
@@ -211,6 +212,7 @@ public class Token {
           case LABEL_NAME:      return "LABEL_NAME";
           case NUMBER:          return "NUMBER";
           case STRING:          return "STRING";
+          case STRING_KEY:      return "STRING_KEY";
           case NULL:            return "NULL";
           case THIS:            return "THIS";
           case FALSE:           return "FALSE";

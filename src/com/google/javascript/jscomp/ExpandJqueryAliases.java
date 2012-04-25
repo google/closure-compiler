@@ -16,19 +16,20 @@
 
 package com.google.javascript.jscomp;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Logger;
-
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * Replace known jQuery aliases and methods with standard
@@ -213,6 +214,8 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
     while (extendArg.hasChildren()) {
       Node currentProp = extendArg.removeFirstChild();
+      currentProp.setType(Token.STRING);
+
       Node propValue = currentProp.removeFirstChild();
 
       Node newProp;

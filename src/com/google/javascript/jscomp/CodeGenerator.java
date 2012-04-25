@@ -628,13 +628,15 @@ class CodeGenerator {
         }
         break;
 
+      case Token.STRING_KEY:
+        Preconditions.checkState(
+            childCount == 1, "Object lit key must have 1 child");
+        addJsString(n);
+        break;
+
       case Token.STRING:
-        if (childCount !=
-            ((n.getParent() != null &&
-              n.getParent().isObjectLit()) ? 1 : 0)) {
-          throw new IllegalStateException(
-              "Unexpected String children: " + n.getParent().toStringTree());
-        }
+        Preconditions.checkState(
+            childCount == 0, "A string may not have children");
         addJsString(n);
         break;
 
@@ -658,7 +660,7 @@ class CodeGenerator {
           if (c.isGetterDef() || c.isSetterDef()) {
             add(c);
           } else {
-            Preconditions.checkState(c.isString());
+            Preconditions.checkState(c.isStringKey());
             String key = c.getString();
             // Object literal property names don't have to be quoted if they
             // are not JavaScript keywords

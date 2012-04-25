@@ -373,7 +373,8 @@ public class IR {
     Node objectlit = new Node(Token.OBJECTLIT);
     for (Node propdef : propdefs) {
       Preconditions.checkState(
-          propdef.isString() || propdef.isGetterDef() || propdef.isSetterDef());
+          propdef.isStringKey() ||
+          propdef.isGetterDef() || propdef.isSetterDef());
       Preconditions.checkState(propdef.hasOneChild());
       objectlit.addChildToBack(propdef);
     }
@@ -383,7 +384,7 @@ public class IR {
   // TODO(johnlenz): quoted props
 
   public static Node propdef(Node string, Node value) {
-    Preconditions.checkState(string.isString());
+    Preconditions.checkState(string.isStringKey());
     Preconditions.checkState(!string.hasChildren());
     Preconditions.checkState(mayBeExpression(value));
     string.addChildToFront(value);
@@ -412,6 +413,10 @@ public class IR {
 
   public static Node string(String s) {
     return Node.newString(s);
+  }
+
+  public static Node stringKey(String s) {
+    return Node.newString(Token.STRING_KEY, s);
   }
 
   public static Node number(double d) {

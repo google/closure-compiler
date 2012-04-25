@@ -348,7 +348,7 @@ class DefinitionsRemover {
       switch (name.getType()) {
         case Token.SETTER_DEF:
         case Token.GETTER_DEF:
-        case Token.STRING:
+        case Token.STRING_KEY:
           // TODO(johnlenz): return a GETELEM for quoted strings.
           return IR.getprop(
               IR.objectlit(),

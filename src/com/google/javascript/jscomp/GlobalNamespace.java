@@ -318,7 +318,7 @@ class GlobalNamespace
       switch (n.getType()) {
         case Token.GETTER_DEF:
         case Token.SETTER_DEF:
-        case Token.STRING:
+        case Token.STRING_KEY:
           // This may be a key in an object literal declaration.
           name = null;
           if (parent != null && parent.isObjectLit()) {
@@ -327,7 +327,7 @@ class GlobalNamespace
           if (name == null) return;
           isSet = true;
           switch (n.getType()) {
-            case Token.STRING:
+            case Token.STRING_KEY:
               type = getValueType(n.getFirstChild());
               break;
             case Token.GETTER_DEF:
@@ -475,7 +475,7 @@ class GlobalNamespace
           Node lvalue = gramps.getFirstChild();
           name = lvalue.getQualifiedName();
           break;
-        case Token.STRING:
+        case Token.STRING_KEY:
           // OBJLIT
           //   STRING (gramps)
           //     OBJLIT (parent)

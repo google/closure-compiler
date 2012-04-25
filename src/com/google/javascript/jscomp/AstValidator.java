@@ -679,7 +679,7 @@ public class AstValidator implements CompilerPass {
       case Token.SETTER_DEF:
         validateObjectLitSetKey(n);
         return;
-      case Token.STRING:
+      case Token.STRING_KEY:
         validateObjectLitStringKey(n);
         return;
       default:
@@ -721,7 +721,7 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateObjectLitStringKey(Node n) {
-    validateNodeType(Token.STRING, n);
+    validateNodeType(Token.STRING_KEY, n);
     validateChildCount(n, 1);
     validateObjectLiteralKeyName(n);
     validateExpression(n.getFirstChild());

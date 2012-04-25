@@ -1522,11 +1522,13 @@ public class Node implements Cloneable, Serializable {
       if (post1 != post2) {
         return false;
       }
-    } else if (type == Token.STRING) {
-      int quoted1 = this.getIntProp(QUOTED_PROP);
-      int quoted2 = node.getIntProp(QUOTED_PROP);
-      if (quoted1 != quoted2) {
-        return false;
+    } else if (type == Token.STRING || type == Token.STRING_KEY) {
+      if (type == Token.STRING_KEY) {
+        int quoted1 = this.getIntProp(QUOTED_PROP);
+        int quoted2 = node.getIntProp(QUOTED_PROP);
+        if (quoted1 != quoted2) {
+          return false;
+        }
       }
 
       int slashV1 = this.getIntProp(SLASH_V);
@@ -2345,6 +2347,10 @@ public class Node implements Cloneable, Serializable {
 
   public boolean isString() {
     return this.getType() == Token.STRING;
+  }
+
+  public boolean isStringKey() {
+    return this.getType() == Token.STRING_KEY;
   }
 
   public boolean isSwitch() {

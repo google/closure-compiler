@@ -632,8 +632,8 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
       }
       for (Node aNode = objLitNode.getFirstChild(); aNode != null;
            aNode = aNode.getNext()) {
-        if (!aNode.isString()) {
-          throw new MalformedException("STRING node expected as OBJLIT key",
+        if (!aNode.isStringKey()) {
+          throw new MalformedException("STRING_KEY node expected as OBJLIT key",
               aNode);
         }
         String phName = aNode.getString();

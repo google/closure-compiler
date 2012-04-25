@@ -104,7 +104,7 @@ final class CheckGlobalThis implements Callback {
             pType == Token.ASSIGN ||
 
             // object literal keys
-            pType == Token.STRING)) {
+            pType == Token.STRING_KEY)) {
         return false;
       }
 

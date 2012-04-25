@@ -686,7 +686,7 @@ class TypeInference
         objectType.defineInferredProperty(memberName, valueType, name);
 
         // Do normal flow inference if this is a direct property assignment.
-        if (qObjName != null && name.isString()) {
+        if (qObjName != null && name.isStringKey()) {
           String qKeyName = qObjName + "." + memberName;
           Var var = syntacticScope.getVar(qKeyName);
           JSType oldType = var == null ? null : var.getType();

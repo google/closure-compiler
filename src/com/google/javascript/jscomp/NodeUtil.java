@@ -178,6 +178,7 @@ public final class NodeUtil {
     // TODO(user): regex literals as well.
     switch (n.getType()) {
       case Token.STRING:
+      case Token.STRING_KEY:
         return n.getString();
 
       case Token.NAME:
@@ -472,7 +473,7 @@ public final class NodeUtil {
     switch (parent.getType()) {
       case Token.SETTER_DEF:
       case Token.GETTER_DEF:
-      case Token.STRING:
+      case Token.STRING_KEY:
         // Return the name of the literal's key.
         return parent.getString();
       case Token.NUMBER:
@@ -801,6 +802,7 @@ public final class NodeUtil {
       case Token.FALSE:
       case Token.NULL:
       case Token.STRING:
+      case Token.STRING_KEY:
       case Token.SWITCH:
       case Token.TRY:
       case Token.EMPTY:
@@ -1222,6 +1224,7 @@ public final class NodeUtil {
       case Token.OBJECTLIT:
       case Token.REGEXP:
       case Token.STRING:
+      case Token.STRING_KEY:
       case Token.THIS:
       case Token.TRUE:
         return 15;
@@ -2041,8 +2044,7 @@ public final class NodeUtil {
    */
   static boolean isObjectLitKey(Node node, Node parent) {
     switch (node.getType()) {
-      case Token.STRING:
-        return parent.isObjectLit();
+      case Token.STRING_KEY:
       case Token.GETTER_DEF:
       case Token.SETTER_DEF:
         return true;
@@ -2057,7 +2059,7 @@ public final class NodeUtil {
    */
   static String getObjectLitKeyName(Node key) {
     switch (key.getType()) {
-      case Token.STRING:
+      case Token.STRING_KEY:
       case Token.GETTER_DEF:
       case Token.SETTER_DEF:
         return key.getString();

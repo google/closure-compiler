@@ -113,9 +113,9 @@ class AnonymousFunctionNamingCallback
          keyNode = keyNode.getNext()) {
       Node valueNode = keyNode.getFirstChild();
 
-      // Object literal keys may be STRING, GET, SET. Get and Set
-      // are skipped because they can not be named.
-      if (keyNode.isString()) {
+      // Object literal keys may be STRING_KEY, GETTER_DEF, SETTER_DEF.
+      // Get and Set are skipped because they can not be named.
+      if (keyNode.isStringKey()) {
         // concatenate the context and key name to get a new qualified name.
         String name = namer.getCombinedName(context, namer.getName(keyNode));
 

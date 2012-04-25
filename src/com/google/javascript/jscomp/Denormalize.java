@@ -143,7 +143,7 @@ class Denormalize implements CompilerPass, Callback {
 
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
-      if (node.isName() || node.isString()) {
+      if (node.isName() || node.isString() || node.isStringKey()) {
         node.removeProp(Node.IS_CONSTANT_NAME);
       }
     }

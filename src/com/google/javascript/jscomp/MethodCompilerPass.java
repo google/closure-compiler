@@ -160,7 +160,7 @@ abstract class MethodCompilerPass implements CompilerPass {
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             Node value = key.getFirstChild();
             String name = key.getString();
-            if (key.isString()
+            if (key.isStringKey()
                 && value.isFunction()) {
               addSignature(name, value, t.getSourceName());
             } else {
@@ -209,7 +209,7 @@ abstract class MethodCompilerPass implements CompilerPass {
         case Token.OBJECTLIT:
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             switch(key.getType()) {
-              case Token.STRING:
+              case Token.STRING_KEY:
                 addPossibleSignature(key.getString(), key.getFirstChild(), t);
                 break;
               case Token.SETTER_DEF:

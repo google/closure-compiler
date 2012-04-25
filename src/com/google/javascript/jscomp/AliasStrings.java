@@ -130,8 +130,7 @@ class AliasStrings extends AbstractPostOrderCallback
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isString() &&
         !parent.isGetProp() &&
-        !parent.isRegExp() &&
-        !NodeUtil.isObjectLitKey(n, parent)) {
+        !parent.isRegExp()) {
 
       String str = n.getString();
 

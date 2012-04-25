@@ -240,10 +240,11 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       for (Node child = exportedObjectLit.getFirstChild();
            child != null;
            child = child.getNext()) {
-        if (child.isString()) {
+        // TODO: handle getters or setters?
+        if (child.isStringKey()) {
           lit.addChildToBack(
               IR.propdef(
-                  IR.string(child.getString()),
+                  IR.stringKey(child.getString()),
                   IR.number(index++)));
         }
       }

@@ -573,7 +573,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       for (Node key = arg.getFirstChild(); key != null;
           key = key.getNext()) {
         Node value = key.getFirstChild();
-        if (!key.isString()
+        if (!key.isStringKey()
             || value == null
             || !value.isString()) {
           compiler.report(
