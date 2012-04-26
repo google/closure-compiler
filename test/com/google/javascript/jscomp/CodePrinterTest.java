@@ -402,6 +402,10 @@ public class CodePrinterTest extends TestCase {
         parsePrint(js, false, CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD));
   }
 
+  private void assertPrintSame(String js) {
+    assertPrint(js, js);
+  }
+
   // Make sure that the code generator doesn't associate an
   // else clause with the wrong if clause.
   public void testAmbiguousElseClauses() {
@@ -1401,5 +1405,25 @@ public class CodePrinterTest extends TestCase {
     // Negative zero is weird, because we have to be able to distinguish
     // it from positive zero (there are some subtle differences in behavior).
     assertPrint("x- -0", "x- -0.0");
+  }
+
+  public void testStringEscapeSequences() {
+    // From the SingleEscapeCharacter grammar production.
+    assertPrintSame("var x=\"\\b\"");
+    assertPrintSame("var x=\"\\f\"");
+    assertPrintSame("var x=\"\\n\"");
+    assertPrintSame("var x=\"\\r\"");
+    assertPrintSame("var x=\"\\t\"");
+    assertPrintSame("var x=\"\\v\"");
+    assertPrint("var x=\"\\\"\"", "var x='\"'");
+    assertPrint("var x=\"\\\'\"", "var x=\"'\"");
+
+    // Now with regular expressions.
+    assertPrintSame("var x=/\\b/");
+    assertPrintSame("var x=/\\f/");
+    assertPrintSame("var x=/\\n/");
+    assertPrintSame("var x=/\\r/");
+    assertPrintSame("var x=/\\t/");
+    assertPrintSame("var x=/\\v/");
   }
 }
