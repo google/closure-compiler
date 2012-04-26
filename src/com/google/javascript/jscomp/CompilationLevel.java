@@ -106,6 +106,7 @@ public enum CompilationLevel {
     options.setInlineVariables(Reach.LOCAL_ONLY);
     options.flowSensitiveInlineVariables = true;
     options.setInlineFunctions(Reach.LOCAL_ONLY);
+    options.setAssumeClosuresOnlyCaptureReferences(true);
     options.checkGlobalThisLevel = CheckLevel.OFF;
     options.foldConstants = true;
     options.coalesceVariableNames = true;
@@ -165,6 +166,7 @@ public enum CompilationLevel {
     options.smartNameRemoval = true;
     options.inlineConstantVars = true;
     options.setInlineFunctions(Reach.ALL);
+    options.setAssumeClosuresOnlyCaptureReferences(true);
     options.inlineGetters = true;
     options.setInlineVariables(Reach.ALL);
     options.flowSensitiveInlineVariables = true;
