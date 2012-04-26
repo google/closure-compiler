@@ -1627,7 +1627,9 @@ public class IntegrationTest extends TestCase {
     checkUnexpectedErrorsOrWarnings(compiler, 1);
     assertEquals(
         "JSC_PARSE_ERROR. Parse error. " +
-        "getters are not supported in Internet Explorer " +
+        "getters are not supported in older versions of JS. " +
+        "If you are targeting newer versions of JS, " +
+        "set the appropriate language_in option. " +
         "at i0 line 1 : 0",
         compiler.getErrors()[0].toString());
 

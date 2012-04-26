@@ -40,9 +40,10 @@ public class RhinoErrorReporterTest extends TestCase {
 
   public void testTrailingComma() throws Exception {
     String message =
-        "Parse error. Internet Explorer has a non-standard " +
-        "intepretation of trailing commas. Arrays will have the wrong " +
-        "length and objects will not parse at all.";
+        "Parse error. IE8 (and below) will parse trailing commas in " +
+        "array and object literals incorrectly. " +
+        "If you are targeting newer versions of JS, " +
+        "set the appropriate language_in option.";
     assertError(
         "var x = [1,];",
         RhinoErrorReporter.TRAILING_COMMA,

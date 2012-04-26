@@ -80,6 +80,16 @@ import java.util.Set;
  */
 class IRFactory {
 
+  static final String GETTER_ERROR_MESSAGE =
+      "getters are not supported in older versions of JS. " +
+      "If you are targeting newer versions of JS, " +
+      "set the appropriate language_in option.";
+
+  static final String SETTER_ERROR_MESSAGE =
+      "setters are not supported in older versions of JS. " +
+      "If you are targeting newer versions of JS, " +
+      "set the appropriate language_in option.";
+
   static final String SUSPICIOUS_COMMENT_WARNING =
       "Non-JSDoc comment has annotations. " +
       "Did you mean to start it with '/**'?";
@@ -1108,14 +1118,14 @@ class IRFactory {
 
     void reportGetter(AstNode node) {
       errorReporter.error(
-          "getters are not supported in Internet Explorer",
+          GETTER_ERROR_MESSAGE,
           sourceName,
           node.getLineno(), "", 0);
     }
 
     void reportSetter(AstNode node) {
       errorReporter.error(
-          "setters are not supported in Internet Explorer",
+          SETTER_ERROR_MESSAGE,
           sourceName,
           node.getLineno(), "", 0);
     }
