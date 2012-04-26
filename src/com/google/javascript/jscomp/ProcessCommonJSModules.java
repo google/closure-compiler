@@ -23,6 +23,7 @@ import com.google.javascript.rhino.Node;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.regex.Pattern;
 
 /**
  * Rewrites a Common JS module http://wiki.commonjs.org/wiki/Modules/1.1.1
@@ -37,6 +38,7 @@ public class ProcessCommonJSModules implements CompilerPass {
 
   public static final String DEFAULT_FILENAME_PREFIX = "." + File.separator;
 
+  private static final String MODULE_NAME_SEPARATOR = "\\$";
   private static final String MODULE_NAME_PREFIX = "module$";
 
   private final AbstractCompiler compiler;
@@ -81,8 +83,8 @@ public class ProcessCommonJSModules implements CompilerPass {
    */
   public static String toModuleName(String filename) {
     return MODULE_NAME_PREFIX +
-        filename.replaceAll("^\\." + File.separator, "")
-            .replaceAll(File.separator, "\\$")
+        filename.replaceAll("^\\." + Pattern.quote(File.separator), "")
+            .replaceAll(Pattern.quote(File.separator), MODULE_NAME_SEPARATOR)
             .replaceAll("\\.js$", "").replaceAll("-", "_");
   }
 
