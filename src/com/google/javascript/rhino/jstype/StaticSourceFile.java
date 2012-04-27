@@ -68,4 +68,22 @@ public interface StaticSourceFile {
    *         the number of lines in the source.
    */
   int getLineOffset(int lineNumber);
+
+  /**
+   * Gets the 1-based line number of the given source offset.
+   *
+   * @param offset An absolute file offset.
+   * @return The 1-based line number of that offset. The behavior is
+   *     undefined if this offset does not exist in the source file.
+   */
+  int getLineOfOffset(int offset);
+
+  /**
+   * Gets the 0-based column number of the given source offset.
+   *
+   * @param offset An absolute file offset.
+   * @return The 0-based column number of that offset. The behavior is
+   *     undefined if this offset does not exist in the source file.
+   */
+  int getColumnOfOffset(int offset);
 }

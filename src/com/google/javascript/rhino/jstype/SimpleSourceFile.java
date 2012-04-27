@@ -63,6 +63,16 @@ public final class SimpleSourceFile implements StaticSourceFile {
   }
 
   @Override
+  public int getColumnOfOffset(int offset) {
+    return 0;
+  }
+
+  @Override
+  public int getLineOfOffset(int offset) {
+    return 1;
+  }
+
+  @Override
   public int getLineOffset(int line) {
     if (line < 1) {
       throw new IllegalStateException(

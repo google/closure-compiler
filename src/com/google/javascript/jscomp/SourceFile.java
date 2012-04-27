@@ -31,6 +31,7 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 /**
  * An abstract representation of a source file that provides access to
@@ -68,12 +69,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
   // Source Line Information
   private int[] lineOffsets = null;
 
-  // Remember the offset for the previous line query.  If the next line
-  // is after this point, we can start scanning at the previous offset rather
-  // than starting at the beginning of the file.
-  private int lastOffset;
-  private int lastLine;
-
   private String code = null;
 
   /**
@@ -88,16 +83,11 @@ public class SourceFile implements StaticSourceFile, Serializable {
       throw new IllegalArgumentException("a source must have a name");
     }
     this.fileName = fileName;
-    // Starting point: offset 0 is at line 1.
-    this.lastOffset = 0;
-    this.lastLine = 1;
   }
 
   @Override
   public int getLineOffset(int lineno) {
-    if (lineOffsets == null) {
-      findLineOffsets();
-    }
+    findLineOffsets();
     if (lineno < 1 || lineno > lineOffsets.length) {
       throw new IllegalArgumentException(
           "Expected line number between 1 and " + lineOffsets.length +
@@ -108,13 +98,15 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
   /** @return The number of lines in this source file. */
   int getNumLines() {
-    if (lineOffsets == null) {
-      findLineOffsets();
-    }
+    findLineOffsets();
     return lineOffsets.length;
   }
 
+
   private void findLineOffsets() {
+    if (lineOffsets != null) {
+      return;
+    }
     try {
       String[] sourceLines = getCode().split("\n");
       lineOffsets = new int[sourceLines.length];
@@ -194,6 +186,24 @@ public class SourceFile implements StaticSourceFile, Serializable {
     isExternFile = newVal;
   }
 
+  @Override
+  public int getLineOfOffset(int offset) {
+    findLineOffsets();
+    int search = Arrays.binarySearch(lineOffsets, offset);
+    if (search >= 0) {
+      return search + 1; // lines are 1-based.
+    } else {
+      int insertionPoint = -1 * (search + 1);
+      return Math.min(insertionPoint - 1, lineOffsets.length - 1) + 1;
+    }
+  }
+
+  @Override
+  public int getColumnOfOffset(int offset) {
+    int line = getLineOfOffset(offset);
+    return offset - lineOffsets[line - 1];
+  }
+
   /**
    * Gets the source line for the indicated line number.
    *
@@ -203,6 +213,16 @@ public class SourceFile implements StaticSourceFile, Serializable {
    *     or if there was an IO exception.
    */
   public String getLine(int lineNumber) {
+    findLineOffsets();
+    if (lineNumber > lineOffsets.length) {
+      return null;
+    }
+
+    if (lineNumber < 1) {
+      lineNumber = 1;
+    }
+
+    int pos = lineOffsets[lineNumber - 1];
     String js = "";
     try {
       // NOTE(nicksantos): Right now, this is optimized for few warnings.
@@ -212,28 +232,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
     } catch (IOException e) {
       return null;
     }
-
-    int pos = 0;
-    int startLine = 1;
-
-    // If we've saved a previous offset and it's for a line less than the
-    // one we're searching for, then start at that point.
-    if (lineNumber >= lastLine) {
-      pos = lastOffset;
-      startLine = lastLine;
-    }
-
-    for (int n = startLine; n < lineNumber; n++) {
-      int nextpos = js.indexOf('\n', pos);
-      if (nextpos == -1) {
-        return null;
-      }
-      pos = nextpos + 1;
-    }
-
-    // Remember this offset for the next search we do.
-    lastOffset = pos;
-    lastLine = lineNumber;
 
     if (js.indexOf('\n', pos) == -1) {
       // If next new line cannot be found, there are two cases
