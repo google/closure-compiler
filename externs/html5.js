@@ -730,45 +730,45 @@ DOMApplicationCache.prototype.status;
 /**
  * Sent when the update process finishes for the first time; that is, the first
  * time an application cache is saved.
- * @type {EventListener}
+ * @type {?function(!Event)}
  */
 DOMApplicationCache.prototype.oncached;
 
 /**
  * Sent when the cache update process begins.
- * @type {EventListener}
+ * @type {?function(!Event)}
  */
 DOMApplicationCache.prototype.onchecking;
 
 /**
  * Sent when the update process begins downloading resources in the manifest
  * file.
- * @type {EventListener}
+ * @type {?function(!Event)}
  */
 DOMApplicationCache.prototype.ondownloading;
 
 /**
  * Sent when an error occurs.
- * @type {EventListener}
+ * @type {?function(!Event)}
  */
 DOMApplicationCache.prototype.onerror;
 
 /**
  * Sent when the update process finishes but the manifest file does not change.
- * @type {EventListener}
+ * @type {?function(!Event)}
  */
 DOMApplicationCache.prototype.onnoupdate;
 
 /**
  * Sent when each resource in the manifest file begins to download.
- * @type {EventListener}
+ * @type {?function(!Event)}
  */
 DOMApplicationCache.prototype.onprogress;
 
 /**
  * Sent when there is an existing application cache, the update process
  * finishes, and there is a new application cache ready for use.
- * @type {EventListener}
+ * @type {?function(!Event)}
  */
 DOMApplicationCache.prototype.onupdateready;
 
@@ -803,6 +803,12 @@ Window.prototype.importScripts = function(var_args) {};
 var importScripts = function(var_args) {};
 
 /**
+ * @see http://dev.w3.org/html5/postmsg/
+ * @interface
+ */
+function Transferable() {}
+
+/**
  * @see http://dev.w3.org/html5/workers/
  * @constructor
  * @implements {EventTarget}
@@ -833,13 +839,13 @@ WebWorker.prototype.postMessage = function(message) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
- * @type {EventListener}
+ * @type {?function(!Event)}
  */
 WebWorker.prototype.onmessage;
 
 /**
  * Sent when the worker thread encounters an error.
- * @type {EventListener}
+ * @type {?function(!Event)}
  */
 WebWorker.prototype.onerror;
 
@@ -869,17 +875,26 @@ Worker.prototype.terminate = function() {};
 /**
  * Posts a message to the worker thread.
  * @param {*} message
- * @param {Array.<MessagePort>=} opt_ports
+ * @param {Array.<Transferable>=} opt_transfer
  */
-Worker.prototype.postMessage = function(message, opt_ports) {};
+Worker.prototype.postMessage = function(message, opt_transfer) {};
+
+/**
+ * Posts a message to the worker thread.
+ * @param {*} message
+ * @param {Array.<Transferable>=} opt_transfer
+ */
+Worker.prototype.webkitPostMessage = function(message, opt_transfer) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
+ * @type {?function(!Event)}
  */
 Worker.prototype.onmessage = function() {};
 
 /**
  * Sent when the worker thread encounters an error.
+ * @type {?function(!Event)}
  */
 Worker.prototype.onerror = function() {};
 
@@ -911,8 +926,117 @@ SharedWorker.prototype.port;
 
 /**
  * Called on network errors for loading the initial script.
+ * @type {?function(!Event)}
  */
 SharedWorker.prototype.onerror = function() {};
+
+/**
+ * @see http://dev.w3.org/html5/workers/
+ * @interface
+ */
+function WorkerLocation() {}
+
+/** @type {string} */
+WorkerLocation.prototype.protocol;
+
+/** @type {string} */
+WorkerLocation.prototype.host;
+
+/** @type {string} */
+WorkerLocation.prototype.hostname;
+
+/** @type {string} */
+WorkerLocation.prototype.port;
+
+/** @type {string} */
+WorkerLocation.prototype.pathname;
+
+/** @type {string} */
+WorkerLocation.prototype.search;
+
+/** @type {string} */
+WorkerLocation.prototype.hash;
+
+/**
+ * @see http://dev.w3.org/html5/workers/
+ * @interface
+ * @extends {EventTarget}
+ */
+function WorkerGlobalScope() {}
+
+/** @type {WorkerGlobalScope} */
+WorkerGlobalScope.prototype.self;
+
+/** @type {WorkerLocation} */
+WorkerGlobalScope.prototype.location;
+
+/**
+ * Closes the worker represented by this WorkerGlobalScope.
+ */
+WorkerGlobalScope.prototype.close = function() {};
+
+/**
+ * Sent when the worker encounters an error.
+ * @type {?function(!Event)}
+ */
+WorkerGlobalScope.prototype.onerror;
+
+/**
+ * Sent when the worker goes offline.
+ * @type {?function(!Event)}
+ */
+WorkerGlobalScope.prototype.onoffline;
+
+/**
+ * Sent when the worker goes online.
+ * @type {?function(!Event)}
+ */
+WorkerGlobalScope.prototype.ononline;
+
+/**
+ * @see http://dev.w3.org/html5/workers/
+ * @interface
+ * @extends {WorkerGlobalScope}
+ */
+function DedicatedWorkerGlobalScope() {}
+
+/**
+ * Posts a message to creator of this worker.
+ * @param {*} message
+ * @param {Array.<Transferable>=} opt_transfer
+ */
+DedicatedWorkerGlobalScope.prototype.postMessage =
+    function(message, opt_transfer) {};
+
+/**
+ * Posts a message to creator of this worker.
+ * @param {*} message
+ * @param {Array.<Transferable>=} opt_transfer
+ */
+DedicatedWorkerGlobalScope.prototype.webkitPostMessage =
+    function(message, opt_transfer) {};
+
+/**
+ * Sent when the creator posts a message to this worker.
+ * @type {?function(!Event)}
+ */
+DedicatedWorkerGlobalScope.prototype.onmessage = function() {};
+
+/**
+ * @see http://dev.w3.org/html5/workers/
+ * @interface
+ * @extends {WorkerGlobalScope}
+ */
+function SharedWorkerGlobalScope() {}
+
+/** @type {string} */
+SharedWorkerGlobalScope.prototype.name;
+
+/**
+ * Sent when a connection to this worker is opened.
+ * @type {?function(!Event)}
+ */
+SharedWorkerGlobalScope.prototype.onconnect = function() {};
 
 /** @type {Element} */
 HTMLElement.prototype.contextMenu;
@@ -1158,6 +1282,7 @@ MessageChannel.prototype.port2;
  * @see http://dev.w3.org/html5/spec/comms.html#messageport
  * @constructor
  * @implements {EventTarget}
+ * @implements {Transferable}
  */
 function MessagePort() {}
 
@@ -1174,11 +1299,13 @@ MessagePort.prototype.dispatchEvent = function(evt) {};
 
 
 /**
- * Posts a message through the channel, optionally with the given ports.
+ * Posts a message through the channel, optionally with the given
+ * Array of Transferables.
  * @param {*} message
- * @param {Array.<MessagePort>=} opt_ports
+ * @param {Array.<Transferable>=} opt_transfer
  */
-MessagePort.prototype.postMessage = function(message, opt_ports) {};
+MessagePort.prototype.postMessage = function(message, opt_transfer) {
+};
 
 /**
  * Begins dispatching messages received on the port.
@@ -1696,6 +1823,7 @@ HTMLElement.prototype.classList;
  * @param {number} length The length in bytes
  * @constructor
  * @noalias
+ * @implements {Transferable}
  */
 function ArrayBuffer(length) {}
 
