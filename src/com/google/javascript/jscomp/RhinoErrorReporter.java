@@ -58,7 +58,7 @@ class RhinoErrorReporter {
   // A map of Rhino messages to their DiagnosticType.
   private final Map<Pattern, DiagnosticType> typeMap;
 
-  private final AbstractCompiler compiler;
+  final AbstractCompiler compiler;
 
   /**
    * For each message such as "Not a good use of {0}", replace the place
@@ -109,13 +109,13 @@ class RhinoErrorReporter {
     return new OldRhinoErrorReporter(compiler);
   }
 
-  public void warning(String message, String sourceName, int line,
+  void warningAtLine(String message, String sourceName, int line,
       int lineOffset) {
     compiler.report(
         makeError(message, sourceName, line, lineOffset, CheckLevel.WARNING));
   }
 
-  public void error(String message, String sourceName, int line,
+  void errorAtLine(String message, String sourceName, int line,
       int lineOffset) {
     compiler.report(
         makeError(message, sourceName, line, lineOffset, CheckLevel.ERROR));
@@ -143,10 +143,22 @@ class RhinoErrorReporter {
     private OldRhinoErrorReporter(AbstractCompiler compiler) {
       super(compiler);
     }
+
+    @Override
+    public void error(String message, String sourceName, int line,
+        int lineOffset) {
+      super.errorAtLine(message, sourceName, line, lineOffset);
+    }
+
+    @Override
+    public void warning(String message, String sourceName, int line,
+        int lineOffset) {
+      super.warningAtLine(message, sourceName, line, lineOffset);
+    }
   }
 
   private static class NewRhinoErrorReporter extends RhinoErrorReporter
-      implements com.google.javascript.rhino.head.ErrorReporter {
+      implements com.google.javascript.rhino.head.ast.IdeErrorReporter {
 
     private NewRhinoErrorReporter(AbstractCompiler compiler) {
       super(compiler);
@@ -163,13 +175,39 @@ class RhinoErrorReporter {
     @Override
     public void error(String message, String sourceName, int line,
         String sourceLine, int lineOffset) {
-      super.error(message, sourceName, line, lineOffset);
+      super.errorAtLine(message, sourceName, line, lineOffset);
+    }
+
+    @Override
+    public void error(String message, String sourceName,
+        int offset, int length) {
+      int line = 1;
+      int column = 0;
+      SourceFile file = this.compiler.getSourceFileByName(sourceName);
+      if (file != null) {
+        line = file.getLineOfOffset(offset);
+        column = file.getColumnOfOffset(offset);
+      }
+      super.errorAtLine(message, sourceName, line, column);
     }
 
     @Override
     public void warning(String message, String sourceName, int line,
         String sourceLine, int lineOffset) {
-      super.warning(message, sourceName, line, lineOffset);
+      super.warningAtLine(message, sourceName, line, lineOffset);
+    }
+
+    @Override
+    public void warning(String message, String sourceName,
+        int offset, int length) {
+      int line = 1;
+      int column = 0;
+      SourceFile file = this.compiler.getSourceFileByName(sourceName);
+      if (file != null) {
+        line = file.getLineOfOffset(offset);
+        column = file.getColumnOfOffset(offset);
+      }
+      super.errorAtLine(message, sourceName, line, column);
     }
   }
 }

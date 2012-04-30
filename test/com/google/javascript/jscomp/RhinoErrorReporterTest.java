@@ -48,17 +48,24 @@ public class RhinoErrorReporterTest extends TestCase {
         "var x = [1,];",
         RhinoErrorReporter.TRAILING_COMMA,
         message);
-    assertError(
-        "var x = {1: 2,};",
+    JSError error = assertError(
+        "var x = {\n" +
+        "    1: 2,\n" +
+        "};",
         RhinoErrorReporter.TRAILING_COMMA,
         message);
-  }
 
+    assertEquals(2, error.getLineNumber());
+
+    // Rhino uses the "beginning" of the line where the comma appears,
+    // for some odd reason.
+    assertEquals(4, error.getCharno());
+  }
 
   /**
    * Verifies that the compiler emits an error for the given code.
    */
-  private void assertError(
+  private JSError assertError(
       String code, DiagnosticType type, String description) {
     Compiler compiler = new Compiler();
     List<SourceFile> externs = ImmutableList.of();
@@ -72,5 +79,6 @@ public class RhinoErrorReporterTest extends TestCase {
         Iterables.getOnlyElement(Lists.newArrayList(compiler.getErrors()));
     assertEquals(type, error.getType());
     assertEquals(description, error.description);
+    return error;
   }
 }

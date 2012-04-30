@@ -205,6 +205,13 @@ public class JSError {
   }
 
   /**
+   * Get the line number. One-based.
+   */
+  public int getLineNumber() {
+    return lineNumber;
+  }
+
+  /**
    * @return the offset of the region the Error applies to, or -1 if the offset
    *         is unknown.
    */

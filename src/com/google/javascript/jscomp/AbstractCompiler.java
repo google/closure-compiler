@@ -48,9 +48,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   // CompilerPass's constructor.
 
   /**
-   * Looks up an input (possibly an externs input) by name. May return null.
+   * Looks up an input (possibly an externs input) by input id.
+   * May return null.
    */
   public abstract CompilerInput getInput(InputId inputId);
+
+  /**
+   * Looks up a source file by name. May return null.
+   */
+  abstract SourceFile getSourceFileByName(String sourceName);
 
   /**
    * Creates a new externs file.

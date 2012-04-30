@@ -2102,7 +2102,8 @@ public class Compiler extends AbstractCompiler {
     logger.fine(str);
   }
 
-  private SourceFile getSourceFileByName(String sourceName) {
+  @Override
+  SourceFile getSourceFileByName(String sourceName) {
     // Here we assume that the source name is the input name, this
     // is try of javascript parsed from source.
     if (sourceName != null) {
