@@ -123,11 +123,16 @@ class FunctionInjector {
     Node block = NodeUtil.getFunctionBody(fnNode);
 
     // Basic restrictions on functions that can be inlined:
+    // 0) The function is inlinable by convention
     // 1) It contains a reference to itself.
     // 2) It uses its parameters indirectly using "arguments" (it isn't
     //    handled yet.
     // 3) It references "eval". Inline a function containing eval can have
     //    large performance implications.
+
+    if (!compiler.getCodingConvention().isInlinableFunction(fnNode)) {
+      return false;
+    }
 
     final String fnRecursionName = fnNode.getFirstChild().getString();
     Preconditions.checkState(fnRecursionName != null);

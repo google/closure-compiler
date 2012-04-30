@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -158,10 +159,14 @@ public class CodingConventions {
     }
 
     @Override
+    public boolean isInlinableFunction(Node n) {
+      return nextConvention.isInlinableFunction(n);
+    }
+
+    @Override
     public DelegateRelationship getDelegateRelationship(Node callNode) {
       return nextConvention.getDelegateRelationship(callNode);
     }
-
 
     @Override
     public void applyDelegateRelationship(
@@ -334,6 +339,12 @@ public class CodingConventions {
     public void applySingletonGetter(FunctionType functionType,
         FunctionType getterType, ObjectType objectType) {
       // do nothing.
+    }
+
+    @Override
+    public boolean isInlinableFunction(Node n) {
+      Preconditions.checkState(n.isFunction());
+      return true;
     }
 
     @Override

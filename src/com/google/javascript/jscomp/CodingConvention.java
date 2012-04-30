@@ -191,6 +191,14 @@ public interface CodingConvention extends Serializable {
   public void applySingletonGetter(FunctionType functionType,
       FunctionType getterType, ObjectType objectType);
 
+  /**
+   * @return Whether the function is inlinable by convention.
+   */
+  public boolean isInlinableFunction(Node n);
+
+  /**
+   * @return the delegate relationship created by the call or null.
+   */
   public DelegateRelationship getDelegateRelationship(Node callNode);
 
   /**

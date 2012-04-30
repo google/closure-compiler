@@ -16,41 +16,20 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import junit.framework.TestCase;
-
-import java.util.List;
 
 /**
  * Tests for {@link PassFactory}.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class IntegrationTest extends TestCase {
-
-  /** Externs for the test */
-  private final List<SourceFile> DEFAULT_EXTERNS = ImmutableList.of(
-    SourceFile.fromCode("externs",
-        "var arguments;\n"
-        + "/** @constructor */ function Window() {}\n"
-        + "/** @type {string} */ Window.prototype.name;\n"
-        + "/** @type {string} */ Window.prototype.offsetWidth;\n"
-        + "/** @type {Window} */ var window;\n"
-        + "/** @nosideeffects */ function noSideEffects() {}\n"
-        + "/** @constructor\n * @nosideeffects */ function Widget() {}\n"
-        + "/** @modifies {this} */ Widget.prototype.go = function() {};\n"
-        + "/** @return {string} */ var widgetToken = function() {};\n"));
-
-  private List<SourceFile> externs = DEFAULT_EXTERNS;
+public class IntegrationTest extends IntegrationTestCase {
 
   private static final String CLOSURE_BOILERPLATE =
       "/** @define {boolean} */ var COMPILED = false; var goog = {};" +
@@ -58,15 +37,6 @@ public class IntegrationTest extends TestCase {
 
   private static final String CLOSURE_COMPILED =
       "var COMPILED = true; var goog$exportSymbol = function() {};";
-
-  // The most recently used compiler.
-  private Compiler lastCompiler;
-
-  @Override
-  public void setUp() {
-    externs = DEFAULT_EXTERNS;
-    lastCompiler = null;
-  }
 
   public void testBug1949424() {
     CompilerOptions options = createCompilerOptions();
@@ -2107,164 +2077,9 @@ public class IntegrationTest extends TestCase {
     assertEquals(1, compiler.getWarnings().length);
   }
 
-  private void testSame(CompilerOptions options, String original) {
-    testSame(options, new String[] { original });
-  }
-
-  private void testSame(CompilerOptions options, String[] original) {
-    test(options, original, original);
-  }
-
-  /**
-   * Asserts that when compiling with the given compiler options,
-   * {@code original} is transformed into {@code compiled}.
-   */
-  private void test(CompilerOptions options,
-      String original, String compiled) {
-    test(options, new String[] { original }, new String[] { compiled });
-  }
-
-  /**
-   * Asserts that when compiling with the given compiler options,
-   * {@code original} is transformed into {@code compiled}.
-   */
-  private void test(CompilerOptions options,
-      String[] original, String[] compiled) {
-    Compiler compiler = compile(options, original);
-    assertEquals("Expected no warnings or errors\n" +
-        "Errors: \n" + Joiner.on("\n").join(compiler.getErrors()) +
-        "Warnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
-        0, compiler.getErrors().length + compiler.getWarnings().length);
-
-    Node root = compiler.getRoot().getLastChild();
-    Node expectedRoot = parse(compiled, options);
-    String explanation = expectedRoot.checkTreeEquals(root);
-    assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
-        "\nResult: " + compiler.toSource(root) +
-        "\n" + explanation, explanation);
-  }
-
-  /**
-   * Asserts that when compiling with the given compiler options,
-   * there is an error or warning.
-   */
-  private void test(CompilerOptions options,
-      String original, DiagnosticType warning) {
-    test(options, new String[] { original }, warning);
-  }
-
-  private void test(CompilerOptions options,
-      String original, String compiled, DiagnosticType warning) {
-    test(options, new String[] { original }, new String[] { compiled },
-         warning);
-  }
-
-  private void test(CompilerOptions options,
-      String[] original, DiagnosticType warning) {
-    test(options, original, null, warning);
-  }
-
-  /**
-   * Asserts that when compiling with the given compiler options,
-   * there is an error or warning.
-   */
-  private void test(CompilerOptions options,
-      String[] original, String[] compiled, DiagnosticType warning) {
-    Compiler compiler = compile(options, original);
-    checkUnexpectedErrorsOrWarnings(compiler, 1);
-    assertEquals("Expected exactly one warning or error",
-        1, compiler.getErrors().length + compiler.getWarnings().length);
-    if (compiler.getErrors().length > 0) {
-      assertEquals(warning, compiler.getErrors()[0].getType());
-    } else {
-      assertEquals(warning, compiler.getWarnings()[0].getType());
-    }
-
-    if (compiled != null) {
-      Node root = compiler.getRoot().getLastChild();
-      Node expectedRoot = parse(compiled, options);
-      String explanation = expectedRoot.checkTreeEquals(root);
-      assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
-          "\nResult: " + compiler.toSource(root) +
-          "\n" + explanation, explanation);
-    }
-  }
-
-  /**
-   * Asserts that when compiling with the given compiler options,
-   * there is an error or warning.
-   */
-  private void test(CompilerOptions options,
-      String[] original, String[] compiled, DiagnosticType[] warnings) {
-    Compiler compiler = compile(options, original);
-    checkUnexpectedErrorsOrWarnings(compiler, warnings.length);
-
-    if (compiled != null) {
-      Node root = compiler.getRoot().getLastChild();
-      Node expectedRoot = parse(compiled, options);
-      String explanation = expectedRoot.checkTreeEquals(root);
-      assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
-          "\nResult: " + compiler.toSource(root) +
-          "\n" + explanation, explanation);
-    }
-  }
-
-  private void checkUnexpectedErrorsOrWarnings(
-      Compiler compiler, int expected) {
-    int actual = compiler.getErrors().length + compiler.getWarnings().length;
-    if (actual != expected) {
-      String msg = "";
-      for (JSError err : compiler.getErrors()) {
-        msg += "Error:" + err.toString() + "\n";
-      }
-      for (JSError err : compiler.getWarnings()) {
-        msg += "Warning:" + err.toString() + "\n";
-      }
-      assertEquals("Unexpected warnings or errors.\n " + msg,
-        expected, actual);
-    }
-  }
-
-  private Compiler compile(CompilerOptions options, String original) {
-    return compile(options, new String[] { original });
-  }
-
-  private Compiler compile(CompilerOptions options, String[] original) {
-    Compiler compiler = lastCompiler = new Compiler();
-    List<SourceFile> inputs = Lists.newArrayList();
-    for (int i = 0; i < original.length; i++) {
-      inputs.add(SourceFile.fromCode("input" + i, original[i]));
-    }
-    compiler.compileModules(
-        externs, Lists.newArrayList(CompilerTestCase.createModuleChain(original)),
-        options);
-    return compiler;
-  }
-
-  private Node parse(String[] original, CompilerOptions options) {
-    Compiler compiler = new Compiler();
-    List<SourceFile> inputs = Lists.newArrayList();
-    for (int i = 0; i < original.length; i++) {
-      inputs.add(SourceFile.fromCode("input" + i, original[i]));
-    }
-    compiler.init(externs, inputs, options);
-    checkUnexpectedErrorsOrWarnings(compiler, 0);
-    Node all = compiler.parseInputs();
-    checkUnexpectedErrorsOrWarnings(compiler, 0);
-    Node n = all.getLastChild();
-    Node externs = all.getFirstChild();
-
-    (new CreateSyntheticBlocks(
-        compiler, "synStart", "synEnd")).process(externs, n);
-    (new Normalize(compiler, false)).process(externs, n);
-    (MakeDeclaredNamesUnique.getContextualRenameInverter(compiler)).process(
-        externs, n);
-    (new Denormalize(compiler)).process(externs, n);
-    return n;
-  }
-
   /** Creates a CompilerOptions object with google coding conventions. */
-  private CompilerOptions createCompilerOptions() {
+  @Override
+  protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setCodingConvention(new GoogleCodingConvention());
     return options;
