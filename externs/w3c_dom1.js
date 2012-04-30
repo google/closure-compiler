@@ -672,7 +672,7 @@ Element.prototype.setAttributeNode = function(newAttr) {};
 /** @type {?function (Event)} */ Element.prototype.onresize;
 /** @type {?function (Event)} */ Element.prototype.onscroll;
 /** @type {?function (Event)} */ Element.prototype.onselect;
-/** @type {?function (Event)} */ Element.prototype.onsubmit;
+/** @type {?function (Event=)} */ Element.prototype.onsubmit;
 /** @type {?function (Event)} */ Element.prototype.ontextinput;
 /** @type {?function (Event)} */ Element.prototype.onwheel;
 
@@ -847,7 +847,7 @@ Window.prototype.onerror;
 /** @type {?function (Event)} */ Window.prototype.onresize;
 /** @type {?function (Event)} */ Window.prototype.onscroll;
 /** @type {?function (Event)} */ Window.prototype.onselect;
-/** @type {?function (Event)} */ Window.prototype.onsubmit;
+/** @type {?function (Event=)} */ Window.prototype.onsubmit;
 /** @type {?function (Event)} */ Window.prototype.onunload;
 /** @type {?function (Event)} */ Window.prototype.onwheel;
 
