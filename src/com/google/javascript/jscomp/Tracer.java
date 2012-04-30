@@ -967,7 +967,7 @@ final class Tracer {
 
   /** Remove any ThreadTrace associated with the current thread */
   static void clearThreadTrace() {
-    traces.set(null);
+    traces.remove();
   }
 
   /**
