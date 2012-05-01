@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
-import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
+import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 
@@ -96,10 +96,28 @@ class TypeInferencePass implements CompilerPass {
     }
   }
 
-  private class TypeInferringCallback extends AbstractScopedCallback {
+  private class TypeInferringCallback implements ScopedCallback {
     @Override
     public void enterScope(NodeTraversal t) {
-      inferTypes(t, t.getCurrentNode(), t.getScope());
+      Scope scope = t.getScope();
+      Node node = t.getCurrentNode();
+      if (scope.isGlobal()) {
+        inferTypes(t, node, scope);
+      }
+    }
+
+    @Override
+    public void exitScope(NodeTraversal t) {
+      Scope scope = t.getScope();
+      Node node = t.getCurrentNode();
+      if (scope.isLocal()) {
+        inferTypes(t, node, scope);
+      }
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return true;
     }
 
     @Override
