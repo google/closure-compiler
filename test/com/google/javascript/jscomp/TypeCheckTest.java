@@ -1897,7 +1897,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         " var x = 0 || function() {};\n" +
         " function g() { if (goog.isFunction(x)) { x(1); } }" +
         " g();" +
-        "}", null);
+        "}",
+        "Function x: called with 1 argument(s). " +
+        "Function requires at least 0 argument(s) " +
+        "and no more than 0 argument(s).");
   }
 
   public void testInnerFunction7() throws Exception {
@@ -9430,6 +9433,21 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         + " */\n"
         + "function baz(fn, opt_obj) {}\n"
         + "baz(function() { this; }, {});");
+  }
+
+  public void testFunctionLiteralDefinedThisArgument2() throws Exception {
+    testTypes(""
+        + "/** @param {string} x */ function f(x) {}"
+        + "/**\n"
+        + " * @param {?function(this:T, ...)} fn\n"
+        + " * @param {T=} opt_obj\n"
+        + " * @template T\n"
+        + " */\n"
+        + "function baz(fn, opt_obj) {}\n"
+        + "function g() { baz(function() { f(this.length); }, []); }",
+        "actual parameter 1 of f does not match formal parameter\n"
+        + "found   : number\n"
+        + "required: string");
   }
 
   public void testFunctionLiteralUnreadNullThisArgument() throws Exception {
