@@ -1802,6 +1802,24 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function (): ?");
   }
 
+  public void testFunctionInference22() throws Exception {
+    testTypes(
+        "/** @type {!Function} */ var f = function() { g(this); };" +
+        "/** @param {boolean} x */ var g = function(x) {};");
+  }
+
+  public void testFunctionInference23() throws Exception {
+    // We want to make sure that 'prop' isn't declared on all objects.
+    testTypes(
+        "/** @type {!Function} */ var f = function() {\n" +
+        "  /** @type {number} */ this.prop = 3;\n" +
+        "};" +
+        "/**\n" +
+        " * @param {Object} x\n" +
+        " * @return {string}\n" +
+        " */ var g = function(x) { return x.prop; };");
+  }
+
   public void testInnerFunction1() throws Exception {
     testTypes(
         "function f() {" +

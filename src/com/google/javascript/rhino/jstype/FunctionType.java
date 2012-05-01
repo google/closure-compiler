@@ -1018,7 +1018,7 @@ public class FunctionType extends PrototypeObjectType {
   @Override
   public ObjectType getTypeOfThis() {
     return typeOfThis.isNoObjectType() ?
-        registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE) : typeOfThis;
+        registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE) : typeOfThis;
   }
 
   /**
