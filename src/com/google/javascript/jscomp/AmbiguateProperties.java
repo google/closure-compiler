@@ -528,8 +528,10 @@ class AmbiguateProperties implements CompilerPass {
     return objType == null
         || invalidatingTypes.contains(objType)
         || !objType.hasReferenceName()
-        || objType.isUnknownType() /* unresolved types */
-        || objType.isEnumType() || objType.autoboxesTo() != null;
+        || objType.isUnknownType()
+        || objType.isEmptyType() /* unresolved types */
+        || objType.isEnumType()
+        || objType.autoboxesTo() != null;
   }
 
   private Property getProperty(String name) {

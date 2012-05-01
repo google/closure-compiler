@@ -57,6 +57,9 @@ public abstract class CompilerTestCase extends TestCase  {
   /** Whether we check warnings without source information. */
   private boolean allowSourcelessWarnings = false;
 
+  /** True iff closure pass runs before pass being tested. */
+  private boolean closurePassEnabled = false;
+
   /** True iff type checking pass runs before pass being tested. */
   private boolean typeCheckEnabled = false;
 
@@ -247,6 +250,14 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   void disableTypeCheck() {
     typeCheckEnabled  = false;
+  }
+
+  /**
+   * Process closure library primitives.
+   */
+  // TODO(nicksantos): Fix other passes to use this when appropriate.
+  void enableClosurePass() {
+    closurePassEnabled = true;
   }
 
   /**
@@ -751,6 +762,14 @@ public abstract class CompilerTestCase extends TestCase  {
     for (int i = 0; i < numRepetitions; ++i) {
       if (compiler.getErrorCount() == 0) {
         errorManagers[i] = new BlackHoleErrorManager(compiler);
+
+        // Only run process closure primitives once, if asked.
+        if (closurePassEnabled && i == 0) {
+          recentChange.reset();
+          new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, true)
+              .process(null, mainRoot);
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
+        }
 
         // Only run the type checking pass once, if asked.
         // Running it twice can cause unpredictable behavior because duplicate

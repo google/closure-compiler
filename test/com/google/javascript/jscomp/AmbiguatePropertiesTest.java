@@ -31,6 +31,7 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
   private AmbiguateProperties lastPass;
 
   private static final String EXTERNS =
+      "Function.prototype.call=function(){};" +
       "Function.prototype.inherits=function(){};" +
       "prop.toString;" +
       "var google = { gears: { factory: {}, workerPool: {} } };";
@@ -39,6 +40,7 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
     super(EXTERNS);
     enableNormalize();
     enableTypeCheck(CheckLevel.WARNING);
+    enableClosurePass();
   }
 
   @Override
@@ -576,4 +578,23 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
     test(js, output);
   }
 
+  public void testPredeclaredType() {
+    String js =
+        "goog.addDependency('zzz.js', ['goog.Foo'], []);" +
+        "/** @constructor */ " +
+        "function A() {" +
+        "  this.x = 3;" +
+        "}" +
+        "/** @param {goog.Foo} x */" +
+        "function f(x) { x.y = 4; }";
+    String result =
+        "0;" +
+        "/** @constructor */ " +
+        "function A() {" +
+        "  this.a = 3;" +
+        "}" +
+        "/** @param {goog.Foo} x */" +
+        "function f(x) { x.y = 4; }";
+    test(js, result);
+  }
 }
