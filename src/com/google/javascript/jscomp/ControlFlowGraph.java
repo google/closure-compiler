@@ -180,7 +180,9 @@ class ControlFlowGraph<N> extends
         // for(var x = 0; x < 10; x++) { } has a graph that is isomorphic to
         // var x = 0; while(x<10) {  x++; }
         if (NodeUtil.isForIn(parent)) {
-          return n == parent.getLastChild();
+          // TODO(user): Investigate how we should handle the case where
+          // we have a very complex expression inside the FOR-IN header.
+          return n != parent.getFirstChild();
         } else {
           return NodeUtil.getConditionExpression(parent) != n;
         }

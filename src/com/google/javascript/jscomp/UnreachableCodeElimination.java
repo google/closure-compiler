@@ -198,6 +198,13 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
       return;
     }
 
+    // TODO(user): This is a problem with removeNoOpStatements. Everything
+    // every expression in a FOR-IN header looks like side effect free on it's
+    // own.
+    if (NodeUtil.isForIn(parent)) {
+      return;
+    }
+
     switch (n.getType()) {
       // Removing an unreachable DO node is messy because it means we still have
       // to execute one iteration. If the DO's body has breaks in the middle, it
@@ -240,6 +247,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
     if (logger.isLoggable(Level.FINE)) {
       logger.fine("Removing " + n.toString());
     }
+
     NodeUtil.removeChild(n.getParent(), n);
   }
 }

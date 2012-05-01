@@ -381,6 +381,25 @@ public class CoalesceVariableNamesTest extends CompilerTestCase {
         "};");
   }
 
+  public void testForInWithAssignment() {
+    inFunction(
+      "var _f = function (commands) {" +
+          "  var k, v, ref;" +
+          "  for (k in ref = commands) {" +
+          "    v = ref[k];" +
+          "    alert(k + ':' + v);" +
+          "  }" +
+          "}",
+
+      "var _f = function (commands) {" +
+          "  var k,ref;" +
+          "  for (k in ref = commands) {" +
+          "    commands = ref[k];" +
+          "    alert(k + ':' + commands);" +
+          "  }" +
+          "}"
+        );
+  }
 
   public void testUsePseduoNames() {
     usePseudoName = true;

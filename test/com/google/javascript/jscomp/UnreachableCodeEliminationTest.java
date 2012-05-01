@@ -455,4 +455,8 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
     testSame("throw 1; var x; var y;");
     test("throw 1; var x = foo", "var x; throw 1");
   }
+
+  public void testForInLoop() {
+    testSame("for(var x in y) {}");
+  }
 }

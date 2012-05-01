@@ -191,11 +191,16 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         public void visit(NodeTraversal t, Node n, Node parent) {
           if (n.isName()) {
 
+            // n.getParent() isn't null. This just the case where n is the root
+            // node that gatherCb started at.
+            if (parent == null) {
+              return;
+            }
+
             // Make sure that the name node is purely a read.
             if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
-                || parent.isVar() || parent.isInc() ||
-                parent.isDec() || parent.isParamList() ||
-                parent.isCatch()) {
+                || parent.isVar() || parent.isInc() || parent.isDec() ||
+                parent.isParamList() || parent.isCatch()) {
               return;
             }
 

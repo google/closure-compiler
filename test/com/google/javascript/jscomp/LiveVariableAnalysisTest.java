@@ -235,6 +235,14 @@ public class LiveVariableAnalysisTest extends TestCase {
     assertLiveAfterX("var a; while(1) { try {X:a=1;break} finally {a}}", "a");
   }
 
+  public void testForInAssignment() {
+    assertLiveBeforeX("var a,b; for (var y in a = b) { X:a[y] }", "a");
+    // No one refers to b after the first iteration.
+    assertNotLiveBeforeX("var a,b; for (var y in a = b) { X:a[y] }", "b");
+    assertLiveBeforeX("var a,b; for (var y in a = b) { X:a[y] }", "y");
+    assertLiveAfterX("var a,b; for (var y in a = b) { a[y]; X: y();}", "a");
+  }
+
   public void testExceptionThrowingAssignments() {
     assertLiveBeforeX("try{var a; X:a=foo();a} catch(e) {e()}", "a");
     assertLiveBeforeX("try{X:var a=foo();a} catch(e) {e()}", "a");

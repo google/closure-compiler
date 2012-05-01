@@ -684,36 +684,30 @@ public class ControlFlowAnalysisTest extends TestCase {
       "  node1 -> node2 [weight=1];\n" +
       "  node3 [label=\"NAME\"];\n" +
       "  node1 -> node3 [weight=1];\n" +
-      "  node4 [label=\"FOR\"];\n" +
-      "  node1 -> node4 " +
-      "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-      "  node0 -> node4 [weight=1];\n" +
-      "  node5 [label=\"NAME\"];\n" +
-      "  node4 -> node5 [weight=1];\n" +
+      "  node4 [label=\"NAME\"];\n" +
+      "  node1 -> node4 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+      "  node5 [label=\"FOR\"];\n" +
+      "  node0 -> node5 [weight=1];\n" +
       "  node6 [label=\"NAME\"];\n" +
-      "  node4 -> node6 [weight=1];\n" +
+      "  node5 -> node6 [weight=1];\n" +
+      "  node5 -> node4 [weight=1];\n" +
+      "  node4 -> node5 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
       "  node7 [label=\"BLOCK\"];\n" +
-      "  node4 -> node7 [weight=1];\n" +
+      "  node5 -> node7 [weight=1];\n" +
       "  node8 [label=\"EXPR_RESULT\"];\n" +
       "  node7 -> node8 [weight=1];\n" +
       "  node9 [label=\"CALL\"];\n" +
       "  node8 -> node9 [weight=1];\n" +
       "  node10 [label=\"NAME\"];\n" +
       "  node9 -> node10 [weight=1];\n" +
-      "  node8 -> node4 " +
-      "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-      "  node7 -> node8 " +
-      "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+      "  node8 -> node5 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+      "  node7 -> node8 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
       "  node11 [label=\"EMPTY\"];\n" +
-      "  node4 -> node11 " +
-      "[label=\"ON_FALSE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-      "  node4 -> node7 " +
-      "[label=\"ON_TRUE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+      "  node5 -> node11 [label=\"ON_FALSE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+      "  node5 -> node7 [label=\"ON_TRUE\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
       "  node0 -> node11 [weight=1];\n" +
-      "  node11 -> RETURN " +
-      "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-      "  node0 -> node1 " +
-      "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+      "  node11 -> RETURN [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+      "  node0 -> node1 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
       "}\n";
     testCfg(src, expected);
   }
@@ -1271,7 +1265,7 @@ public class ControlFlowAnalysisTest extends TestCase {
             "label: for (var x in y) { " +
             "    if (x) { break label; } else { i++ } x(); }"),
         Lists.newArrayList(
-            Token.SCRIPT, Token.VAR, Token.VAR,
+            Token.SCRIPT, Token.VAR, Token.VAR, Token.NAME,
             Token.FOR, Token.BLOCK,
             Token.IF, Token.BLOCK, Token.BREAK,
             Token.BLOCK, Token.EXPR_RESULT, Token.EXPR_RESULT));

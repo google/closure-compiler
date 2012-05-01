@@ -101,7 +101,8 @@ public class MaybeReachingVariableUseTest extends TestCase {
   }
 
   public void testForIn() {
-    assertMatch("D: var x = []; U: for (var y in x) { }");
+    // Uses within FOR-IN header are hard to test. They are covered
+    // by the tests in the flow sensitive inliner.
     assertNotMatch("D: var x = [], foo; U: for (x in foo) { }");
     assertNotMatch("D: var x = [], foo; for (x in foo) { U:x }");
     assertMatch("var x = [], foo; D: for (x in foo) { U:x }");

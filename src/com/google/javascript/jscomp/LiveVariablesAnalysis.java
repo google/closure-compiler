@@ -209,13 +209,15 @@ class LiveVariablesAnalysis extends
             // for(var x in y) {...}
             lhs = lhs.getLastChild();
           }
+
           if (lhs.isName()) {
             addToSetIfLocal(lhs, kill);
             addToSetIfLocal(lhs, gen);
           } else {
             computeGenKill(lhs, gen, kill, conditional);
           }
-          computeGenKill(rhs, gen, kill, conditional);
+
+          // rhs is executed only once so we don't go into it every loop.
         }
         return;
 

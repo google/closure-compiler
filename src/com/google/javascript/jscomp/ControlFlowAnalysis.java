@@ -420,6 +420,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       Node item = forNode.getFirstChild();
       Node collection = item.getNext();
       Node body = collection.getNext();
+      // The collection behaves like init.
+      createEdge(collection, Branch.UNCOND, forNode);
       // The edge that transfer control to the beginning of the loop body.
       createEdge(forNode, Branch.ON_TRUE, computeFallThrough(body));
       // The edge to end of the loop.
@@ -797,7 +799,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         return computeFallThrough(n.getFirstChild());
       case Token.FOR:
         if (NodeUtil.isForIn(n)) {
-          return n;
+          return n.getFirstChild().getNext();
         }
         return computeFallThrough(n.getFirstChild());
       case Token.LABEL:
