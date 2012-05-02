@@ -1236,8 +1236,8 @@ public final class NodeUtil {
   }
 
   /**
-   * Apply the supplied predicate against the potential
-   * all possible result of the expression.
+   * Apply the supplied predicate against
+   * all possible result Nodes of the expression.
    */
   static boolean valueCheck(Node n, Predicate<Node> p) {
     switch (n.getType()) {
