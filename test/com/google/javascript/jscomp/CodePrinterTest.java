@@ -1418,6 +1418,12 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x=\"\\\"\"", "var x='\"'");
     assertPrint("var x=\"\\\'\"", "var x=\"'\"");
 
+    // From the LineTerminator grammar
+    assertPrint("var x=\"\\u000A\"", "var x=\"\\n\"");
+    assertPrint("var x=\"\\u000D\"", "var x=\"\\r\"");
+    assertPrintSame("var x=\"\\u2028\"");
+    assertPrintSame("var x=\"\\u2029\"");
+
     // Now with regular expressions.
     assertPrintSame("var x=/\\b/");
     assertPrintSame("var x=/\\f/");
@@ -1425,5 +1431,9 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("var x=/\\r/");
     assertPrintSame("var x=/\\t/");
     assertPrintSame("var x=/\\v/");
+    assertPrintSame("var x=/\\u000A/");
+    assertPrintSame("var x=/\\u000D/");
+    assertPrintSame("var x=/\\u2028/");
+    assertPrintSame("var x=/\\u2029/");
   }
 }

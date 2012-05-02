@@ -1042,6 +1042,11 @@ class CodeGenerator {
         case '\\': sb.append(backslashEscape); break;
         case '\"': sb.append(doublequoteEscape); break;
         case '\'': sb.append(singlequoteEscape); break;
+
+        // From LineTerminators (ES5 Section 7.3, Table 3)
+        case '\u2028': sb.append("\\u2028"); break;
+        case '\u2029': sb.append("\\u2029"); break;
+
         case '>':                       // Break --> into --\> or ]]> into ]]\>
           if (i >= 2 &&
               ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
