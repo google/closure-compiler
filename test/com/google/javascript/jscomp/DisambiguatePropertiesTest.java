@@ -1275,21 +1275,19 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   public void testErrorOnProtectedProperty() {
-    String js = "function addSingletonGetter(foo) { foo.foobar = 'a'; };";
+    test("function addSingletonGetter(foo) { foo.foobar = 'a'; };", null,
+         DisambiguateProperties.Warnings.INVALIDATION);
+    assertTrue(getLastCompiler().getErrors()[0].toString().contains("foobar"));
+  }
 
-    Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    compiler.init(ImmutableList.of(SourceFile.fromCode("externs", "")),
-        ImmutableList.of(SourceFile.fromCode("testcode", js)),
-        options);
-
-    Node root = compiler.parseInputs();
-    Node externsRoot = root.getFirstChild();
-    Node mainRoot = externsRoot.getNext();
-    getProcessor(compiler).process(externsRoot, mainRoot);
-
-    assertEquals(1, compiler.getErrors().length);
-    assertTrue(compiler.getErrors()[0].toString().contains("foobar"));
+  public void testMismatchForbiddenInvalidation() {
+    test("/** @constructor */ function F() {}" +
+         "/** @type {number} */ F.prototype.foobar = 3;" +
+         "/** @return {number} */ function g() { return new F(); }",
+         null,
+         DisambiguateProperties.Warnings.INVALIDATION);
+    assertTrue(getLastCompiler().getErrors()[0].toString()
+        .contains("Consider fixing errors"));
   }
 
   public void runFindHighestTypeInChain() {

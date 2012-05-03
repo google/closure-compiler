@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
@@ -73,6 +74,10 @@ import java.util.logging.Logger;
  *
  */
 class DisambiguateProperties<T> implements CompilerPass {
+  // To prevent the logs from filling up, we cap the number of warnings
+  // that we tell the user to fix per-property.
+  private static final int MAX_INVALDIATION_WARNINGS_PER_PROPERTY = 10;
+
   private static final Logger logger = Logger.getLogger(
       DisambiguateProperties.class.getName());
 
@@ -302,10 +307,8 @@ class DisambiguateProperties<T> implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     for (TypeMismatch mis : compiler.getTypeValidator().getMismatches()) {
-      addInvalidatingType(mis.typeA);
-      addInvalidatingType(mis.typeB);
-      recordInvalidationError(mis.typeA, mis.src);
-      recordInvalidationError(mis.typeB, mis.src);
+      addInvalidatingType(mis.typeA, mis.src);
+      addInvalidatingType(mis.typeB, mis.src);
     }
 
     StaticScope<T> scope = typeSystem.getRootScope();
@@ -318,12 +321,6 @@ class DisambiguateProperties<T> implements CompilerPass {
     if (!t.isObject()) {
       return;
     }
-    if (t.isUnionType()) {
-      for (JSType alt : t.toMaybeUnionType().getAlternates()) {
-        recordInvalidationError(alt, error);
-      }
-      return;
-    }
     if (invalidationMap != null) {
       invalidationMap.put(t, error);
     }
@@ -332,19 +329,22 @@ class DisambiguateProperties<T> implements CompilerPass {
   /**
    * Invalidates the given type, so that no properties on it will be renamed.
    */
-  private void addInvalidatingType(JSType type) {
+  private void addInvalidatingType(JSType type, JSError error) {
     type = type.restrictByNotNullOrUndefined();
     if (type.isUnionType()) {
       for (JSType alt : type.toMaybeUnionType().getAlternates()) {
-        addInvalidatingType(alt);
+        addInvalidatingType(alt, error);
       }
     } else if (type.isEnumElementType()) {
-      addInvalidatingType(type.toMaybeEnumElementType().getPrimitiveType());
+      addInvalidatingType(
+          type.toMaybeEnumElementType().getPrimitiveType(), error);
     } else {
       typeSystem.addInvalidatingType(type);
+      recordInvalidationError(type, error);
       ObjectType objType = ObjectType.cast(type);
       if (objType != null && objType.getImplicitPrototype() != null) {
         typeSystem.addInvalidatingType(objType.getImplicitPrototype());
+        recordInvalidationError(objType.getImplicitPrototype(), error);
       }
     }
   }
@@ -459,11 +459,11 @@ class DisambiguateProperties<T> implements CompilerPass {
                     " if you know it's type.";
               }
             } else {
-              StringBuilder sb = new StringBuilder();
-              printErrorLocations(sb, jsType);
-              if (sb.length() != 0) {
-                suggestion = "Consider fixing errors for the following types: ";
-                suggestion += sb.toString();
+              List<String> errors = Lists.newArrayList();
+              printErrorLocations(errors, jsType);
+              if (!errors.isEmpty()) {
+                suggestion = "Consider fixing errors for the following types:\n";
+                suggestion += Joiner.on("\n").join(errors);
               }
             }
           }
@@ -504,25 +504,25 @@ class DisambiguateProperties<T> implements CompilerPass {
       }
     }
 
-    private void printErrorLocations(StringBuilder sb, JSType t) {
-      if (!t.isObject() || t.isAllType() || t.isUnionType()) {
+    private void printErrorLocations(List<String> errors, JSType t) {
+      if (!t.isObject() || t.isAllType()) {
         return;
       }
+
       if (t.isUnionType()) {
         for (JSType alt : t.toMaybeUnionType().getAlternates()) {
-          printErrorLocations(sb, alt);
+          printErrorLocations(errors, alt);
         }
         return;
       }
+
       for (JSError error : invalidationMap.get(t)) {
-        if(sb.length() != 0) {
-          sb.append(", ");
+        if (errors.size() > MAX_INVALDIATION_WARNINGS_PER_PROPERTY) {
+          return;
         }
-        sb.append(t.toString());
-        sb.append(" at ");
-        sb.append(error.sourceName);
-        sb.append(":");
-        sb.append(error.lineNumber);
+
+        errors.add(
+            t.toString() + " at " + error.sourceName + ":" + error.lineNumber);
       }
     }
 
