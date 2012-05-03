@@ -254,13 +254,17 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Inlines constants (symbols that are all CAPS) */
   public boolean inlineConstantVars;
 
-  /** Inlines short functions */
+  /** Inlines global functions */
   public boolean inlineFunctions;
 
-  /** Enhanced function inlining */
+  /** Inlines functions defined in local scopes */
   public boolean inlineLocalFunctions;
 
+  /** More aggressive function inlining */
   boolean assumeClosuresOnlyCaptureReferences;
+
+  /** Inlines properties */
+  boolean inlineProperties;
 
   /** Move code to a deeper module */
   public boolean crossModuleCodeMotion;
@@ -813,6 +817,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     inlineLocalFunctions = false;
     assumeStrictThis = false;
     assumeClosuresOnlyCaptureReferences = false;
+    inlineProperties = false;
     crossModuleCodeMotion = false;
     crossModuleMethodMotion = false;
     inlineGetters = false;
@@ -1160,6 +1165,13 @@ public class CompilerOptions implements Serializable, Cloneable {
       default:
         throw new IllegalStateException("unexpected");
     }
+  }
+
+  /**
+   * Set the function inlining policy for the compiler.
+   */
+  public void setInlineProperties(boolean enable) {
+    inlineProperties = enable;
   }
 
   /**

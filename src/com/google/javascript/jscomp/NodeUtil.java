@@ -3112,6 +3112,48 @@ public final class NodeUtil {
     return true;
   }
 
+  /**
+   * @param n The expression to check.
+   * @return Whether the expression is unconditionally executed in the
+   *     containing execution scope.
+   */
+  static boolean isExpressionUnconditionallyExecuted(Node n) {
+    inspect: do {
+      Node parent = n.getParent();
+      switch (parent.getType()) {
+        case Token.IF:
+        case Token.HOOK:
+        case Token.AND:
+        case Token.OR:
+          if (parent.getFirstChild() != n) {
+            return false;
+          }
+          // other ancestors may be conditional
+          continue inspect;
+        case Token.FOR:
+          if (parent.getFirstChild() != n) {
+            return false;
+          }
+          // other ancestors may be conditional
+          continue inspect;
+        case Token.WHILE:
+        case Token.DO:
+          return false;
+        case Token.TRY:
+          // Consider all code under a try/catch to be conditionally executed.
+          return false;
+        case Token.CASE:
+        case Token.DEFAULT_CASE:
+          return false;
+        case Token.SCRIPT:
+        case Token.FUNCTION:
+          // Done, we've reached the scope root.
+          break inspect;
+      }
+    } while ((n = n.getParent()) != null);
+    return true;
+  }
+
   static Node booleanNode(boolean value) {
     return value ? IR.trueNode() : IR.falseNode();
   }

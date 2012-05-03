@@ -685,6 +685,10 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(inlineFunctions);
     }
 
+    if (options.inlineProperties) {
+      passes.add(inlineProperties);
+    }
+
     boolean runOptimizeCalls = options.optimizeCalls
         || options.optimizeParameters
         || options.optimizeReturns;
@@ -1722,6 +1726,15 @@ public class DefaultPassConfig extends PassConfig {
           options.assumeStrictThis()
               || options.getLanguageIn() == LanguageMode.ECMASCRIPT5_STRICT,
           options.assumeClosuresOnlyCaptureReferences);
+    }
+  };
+
+  /** Inlines constant properties. */
+  final PassFactory inlineProperties =
+      new PassFactory("inlineProperties", false) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new InlineProperties(compiler);
     }
   };
 
