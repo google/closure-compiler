@@ -1706,3 +1706,21 @@ CSSProperties.prototype.boxSizing;
  * @type {string|number}
  */
 CSSProperties.prototype.opacity;
+
+
+// TODO(nicksantos): Delete this when dbeam's CL lands.
+/** @constructor */
+function ClientRect() {}
+
+/** @type {number} */
+ClientRect.prototype.left;
+/** @type {number} */
+ClientRect.prototype.top;
+/** @type {number} */
+ClientRect.prototype.right;
+/** @type {number} */
+ClientRect.prototype.bottom;
+/** @type {number} */
+ClientRect.prototype.width;
+/** @type {number} */
+ClientRect.prototype.height;
