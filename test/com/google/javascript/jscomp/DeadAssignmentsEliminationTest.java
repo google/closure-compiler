@@ -518,4 +518,17 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
             " (f(b = true) || f(b = false)) && (a = b);\n" +
             " return a;");
   }
+
+  public void testForIn() {
+    inFunction("var x = {}; for (var y in x) { y() }");
+    inFunction("var x, y, z; x = {}; z = {}; for (y in x = z) { y() }",
+               "var x, y, z;   ({}); z = {}; for (y in z)     { y() }");
+    inFunction("var x, y, z; x = {}; z = {}; for (y[z=1] in z) { y() }",
+               "var x, y, z;   ({}); z = {}; for (y[z=1] in z) { y() }");
+
+    // "x in z" doesn't overwrite x if z is empty.
+    // TODO(user): If you look outside of just liveness, x = {} is dead.
+    // That probably requires value numbering or SSA to detect that case.
+    inFunction("var x, y, z; x = {}; z = {}; for (x in z) { x() }");
+  }
 }
