@@ -1724,3 +1724,9 @@ ClientRect.prototype.bottom;
 ClientRect.prototype.width;
 /** @type {number} */
 ClientRect.prototype.height;
+
+/**
+ * @return {HTMLCollection}
+ * @see https://developer.mozilla.org/en/DOM/element.getClientRects
+ */
+Element.prototype.getClientRects = function() {};
