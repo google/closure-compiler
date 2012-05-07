@@ -96,3 +96,30 @@
 /** @type {string} */ CSSProperties.prototype.MozUserModify;
 /** @type {string} */ CSSProperties.prototype.MozUserSelect;
 /** @type {string} */ CSSProperties.prototype.MozWindowShadow;
+
+
+// These are non-standard Gecko CSSOM properties on Window.prototype.screen.
+
+/**
+ * @type {number}
+ * @see https://developer.mozilla.org/En/DOM/window.screen.availTop
+ */
+Screen.prototype.availTop;
+
+/**
+ * @type {number}
+ * @see https://developer.mozilla.org/En/DOM/window.screen.availLeft
+ */
+Screen.prototype.availLeft;
+
+/**
+ * @type {number}
+ * @see https://developer.mozilla.org/En/DOM/window.screen.left
+ */
+Screen.prototype.left;
+
+/**
+ * @type {number}
+ * @see https://developer.mozilla.org/En/DOM/window.screen.top
+ */
+Screen.prototype.top;

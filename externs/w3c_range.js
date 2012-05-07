@@ -216,7 +216,7 @@ Range.prototype.detach = function() {};
 function DocumentRange() {}
 
 /**
- * @return Range
+ * @return {Range}
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level2-DocumentRange-method-createRange
  */
 DocumentRange.prototype.createRange = function() {};

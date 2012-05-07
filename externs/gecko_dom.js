@@ -111,18 +111,6 @@ Window.prototype.globalStorage;
 Window.prototype.history;
 
 /**
- * @type {number}
- * @see https://developer.mozilla.org/en/DOM/window.innerHeight
- */
-Window.prototype.innerHeight;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/en/DOM/window.innerWidth
- */
-Window.prototype.innerWidth;
-
-/**
  * Returns the number of frames (either frame or iframe elements) in the
  * window.
  *
@@ -167,30 +155,6 @@ Window.prototype.navigator;
 Window.prototype.opener;
 
 /**
- * @type {number}
- * @see https://developer.mozilla.org/en/DOM/window.outerHeight
- */
-Window.prototype.outerHeight;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/en/DOM/window.outerWidth
- */
-Window.prototype.outerWidth;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/en/DOM/window.pageXOffset
- */
-Window.prototype.pageXOffset;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/en/DOM/window.pageYOffset
- */
-Window.prototype.pageYOffset;
-
-/**
  * @type {!Window}
  * @see https://developer.mozilla.org/en/DOM/window.parent
  */
@@ -204,81 +168,6 @@ Window.prototype.pkcs11;
 
 /** @see https://developer.mozilla.org/en/DOM/window */
 Window.prototype.returnValue;
-
-/** @see https://developer.mozilla.org/En/DOM/window.screen */
-Window.prototype.screen;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.screen.availTop
- */
-Window.prototype.screen.availTop;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.screen.availLeft
- */
-Window.prototype.screen.availLeft;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.screen.availHeight
- */
-Window.prototype.screen.availHeight;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.screen.availWidth
- */
-Window.prototype.screen.availWidth;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.screen.colorDepth
- */
-Window.prototype.screen.colorDepth;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.screen.height
- */
-Window.prototype.screen.height;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.screen.left
- */
-Window.prototype.screen.left;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.screen.pixelDepth
- */
-Window.prototype.screen.pixelDepth;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.screen.top
- */
-Window.prototype.screen.top;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.screen.width
- */
-Window.prototype.screen.width;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.screenX
- */
-Window.prototype.screenX;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.screenY
- */
-Window.prototype.screenY;
 
 /** @see https://developer.mozilla.org/en/DOM/window.scrollbars */
 Window.prototype.scrollbars;
@@ -294,18 +183,6 @@ Window.prototype.scrollMaxX;
  * @see https://developer.mozilla.org/En/DOM/window.scrollMaxY
  */
 Window.prototype.scrollMaxY;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.scrollX
- */
-Window.prototype.scrollX;
-
-/**
- * @type {number}
- * @see https://developer.mozilla.org/En/DOM/window.scrollY
- */
-Window.prototype.scrollY;
 
 /**
  * @type {!Window}
@@ -645,15 +522,6 @@ Document.prototype.createNSResolver;
 /** @return {Range} */ Document.prototype.createRange = function() {};
 Document.prototype.createTreeWalker;
 
-/**
- * @param {number} x
- * @param {number} y
- * @return {Element}
- * @nosideeffects
- * @see https://developer.mozilla.org/en/DOM/document.elementFromPoint
- */
-Document.prototype.elementFromPoint = function(x, y) {};
-
 Document.prototype.evaluate;
 
 /**
@@ -940,10 +808,6 @@ Element.prototype.children;
  * @implicitCast
  */
 Element.prototype.className;
-/** @type {number} */ Element.prototype.clientHeight;
-/** @type {number} */ Element.prototype.clientLeft;
-/** @type {number} */ Element.prototype.clientTop;
-/** @type {number} */ Element.prototype.clientWidth;
 /** @type {string} */ Element.prototype.dir;
 
 /**
@@ -973,19 +837,10 @@ Element.prototype.nodeName;
 Element.prototype.nodePrincipal;
 /** @type {number} */ Element.prototype.nodeType;
 Element.prototype.nodeValue;
-/** @type {number} */ Element.prototype.offsetHeight;
-/** @type {number} */ Element.prototype.offsetLeft;
-/** @type {Element} */ Element.prototype.offsetParent;
-/** @type {number} */ Element.prototype.offsetTop;
-/** @type {number} */ Element.prototype.offsetWidth;
 /** @type {Document} */ Element.prototype.ownerDocument;
 /** @type {Node} */ Element.prototype.parentNode;
 Element.prototype.prefix;
 /** @type {Node} */ Element.prototype.previousSibling;
-/** @type {number} */ Element.prototype.scrollHeight;
-/** @type {number} */ Element.prototype.scrollLeft;
-/** @type {number} */ Element.prototype.scrollTop;
-/** @type {number} */ Element.prototype.scrollWidth;
 /** @type {CSSStyleDeclaration} */ Element.prototype.style;
 /**
  * @type {number}
@@ -1021,13 +876,6 @@ Element.prototype.blur = function() {};
 
 /** @return {undefined} */
 Element.prototype.click = function() {};
-
-/**
- * @return { {top: number, left: number, right: number, bottom: number} }
- * @see https://developer.mozilla.org/En/DOM:element.getBoundingClientRect
- * @nosideeffects
- */
-Element.prototype.getBoundingClientRect = function() {};
 
 /** @return {undefined} */
 Element.prototype.focus = function() {};
@@ -1067,11 +915,6 @@ Element.prototype.removeEventListener = function(type, handler, useCapture) {};
 
 /** @override */
 Element.prototype.replaceChild = function(insertedNode, replacedNode) {};
-
-/**
- * @param {boolean=} opt_alignWithTop
- */
-Element.prototype.scrollIntoView = function(opt_alignWithTop) {};
 
 /** @type {number} */
 HTMLInputElement.prototype.selectionStart;

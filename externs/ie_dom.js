@@ -451,27 +451,6 @@ Window.prototype.resizeBy = function(width, height) {};
 Window.prototype.resizeTo = function(width, height) {};
 
 /**
- * @param {number} x
- * @param {number} y
- * @see http://msdn.microsoft.com/en-us/library/ms536726(VS.85).aspx
- */
-Window.prototype.scroll = function(x, y) {};
-
-/**
- * @param {number} x
- * @param {number} y
- * @see http://msdn.microsoft.com/en-us/library/ms536728(VS.85).aspx
- */
-Window.prototype.scrollBy = function(x, y) {};
-
-/**
- * @param {number} x
- * @param {number} y
- * @see http://msdn.microsoft.com/en-us/library/ms536731(VS.85).aspx
- */
-Window.prototype.scrollTo = function(x, y) {};
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms536738(VS.85).aspx
  */
 Window.prototype.setActive;

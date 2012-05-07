@@ -19,6 +19,10 @@
  *  The whole file has been fully type annotated.
  *  http://www.w3.org/TR/DOM-Level-2-Style/css.html
  * @externs
+ *
+ * TODO(nicksantos): When there are no more occurrences of w3c_range.js and
+ * gecko_dom.js being included directly in BUILD files, bug dbeam to split the
+ * bottom part of this file into a separate externs.
  */
 
 /**
@@ -1708,25 +1712,473 @@ CSSProperties.prototype.boxSizing;
 CSSProperties.prototype.opacity;
 
 
-// TODO(nicksantos): Delete this when dbeam's CL lands.
-/** @constructor */
-function ClientRect() {}
+/**
+ * TODO(dbeam): Put this in separate file named w3c_cssom.js.
+ * Externs for the CSSOM View Module.
+ * @see http://www.w3.org/TR/cssom-view/
+ */
 
-/** @type {number} */
-ClientRect.prototype.left;
-/** @type {number} */
-ClientRect.prototype.top;
-/** @type {number} */
-ClientRect.prototype.right;
-/** @type {number} */
-ClientRect.prototype.bottom;
-/** @type {number} */
-ClientRect.prototype.width;
-/** @type {number} */
-ClientRect.prototype.height;
+// http://www.w3.org/TR/cssom-view/#extensions-to-the-window-interface
 
 /**
- * @return {HTMLCollection}
- * @see https://developer.mozilla.org/en/DOM/element.getClientRects
+ * @param {string} media_query_list
+ * @return {MediaQueryList}
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-matchmedia
+ */
+Window.prototype.matchMedia = function(media_query_list) {};
+
+/**
+ * @type {Screen}
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-screen
+ */
+Window.prototype.screen;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-innerwidth
+ */
+Window.prototype.innerWidth;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-innerheight
+ */
+Window.prototype.innerHeight;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-scrollx
+ */
+Window.prototype.scrollX;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-pagexoffset
+ */
+Window.prototype.pageXOffset;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-scrolly
+ */
+Window.prototype.scrollY;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-pageyoffset
+ */
+Window.prototype.pageYOffset;
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-scroll
+ */
+Window.prototype.scroll = function(x, y) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-scrollto
+ */
+Window.prototype.scrollTo = function(x, y) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-scrollby
+ */
+Window.prototype.scrollBy = function(x, y) {};
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-screenx
+ */
+Window.prototype.screenX;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-screeny
+ */
+Window.prototype.screenY;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-outerwidth
+ */
+Window.prototype.outerWidth;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-window-outerheight
+ */
+Window.prototype.outerHeight;
+
+/**
+ * @constructor
+ * @see http://www.w3.org/TR/cssom-view/#mediaquerylist
+ */
+function MediaQueryList() {}
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/cssom-view/#dom-mediaquerylist-media
+ */
+MediaQueryList.prototype.media;
+
+/**
+ * @type {boolean}
+ * @see http://www.w3.org/TR/cssom-view/#dom-mediaquerylist-matches
+ */
+MediaQueryList.prototype.matches;
+
+/**
+ * @param {MediaQueryListListener} listener
+ * @see http://www.w3.org/TR/cssom-view/#dom-mediaquerylist-addlistener
+ */
+MediaQueryList.prototype.addListener = function(listener) {};
+
+/**
+ * @param {MediaQueryListListener} listener
+ * @see http://www.w3.org/TR/cssom-view/#dom-mediaquerylist-removelistener
+ */
+MediaQueryList.prototype.removeListener = function(listener) {};
+
+/**
+ * @constructor
+ * @see http://www.w3.org/TR/cssom-view/#mediaquerylistlistener
+ */
+function MediaQueryListListener() {}
+
+/**
+ * @param {MediaQueryList} mql
+ */
+MediaQueryListListener.prototype.handleChange = function(mql) {};
+
+/**
+ * @constructor
+ * @see http://www.w3.org/TR/cssom-view/#screen
+ */
+function Screen() {}
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-screen-availwidth
+ */
+Screen.prototype.availWidth;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-screen-availheight
+ */
+Screen.prototype.availHeight;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-screen-width
+ */
+Screen.prototype.width;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-screen-height
+ */
+Screen.prototype.height;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-screen-colordepth
+ */
+Screen.prototype.colorDepth;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-screen-pixeldepth
+ */
+Screen.prototype.pixelDepth;
+
+
+// http://www.w3.org/TR/cssom-view/#extensions-to-the-document-interface
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {?Element}
+ * @see http://www.w3.org/TR/cssom-view/#dom-document-elementfrompoint
+ */
+Document.prototype.elementFromPoint = function(x, y) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {CaretPosition}
+ * @see http://www.w3.org/TR/cssom-view/#dom-document-caretpositionfrompoint
+ */
+Document.prototype.caretPositionFromPoint = function(x, y) {};
+
+
+/**
+ * @constructor
+ * @see http://www.w3.org/TR/cssom-view/#caretposition
+ */
+function CaretPosition() {}
+
+/**
+ * @type {Node}
+ * @see http://www.w3.org/TR/cssom-view/#dom-caretposition-offsetnode
+ */
+CaretPosition.prototype.offsetNode;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-caretposition-offset
+ */
+CaretPosition.prototype.offset;
+
+
+// http://www.w3.org/TR/cssom-view/#extensions-to-the-element-interface
+
+/**
+ * @return {ClientRectList}
+ * @see http://www.w3.org/TR/cssom-view/#dom-element-getclientrects
  */
 Element.prototype.getClientRects = function() {};
+
+/**
+ * @return {ClientRect}
+ * @see http://www.w3.org/TR/cssom-view/#dom-element-getboundingclientrect
+ */
+Element.prototype.getBoundingClientRect = function() {};
+
+/**
+ * @param {boolean=} opt_top
+ * @see http://www.w3.org/TR/cssom-view/#dom-element-scrollintoview
+ */
+Element.prototype.scrollIntoView = function(opt_top) {};
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-element-scrolltop
+ */
+Element.prototype.scrollTop;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-element-scrollleft
+ */
+Element.prototype.scrollLeft;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-element-scrollwidth
+ */
+Element.prototype.scrollWidth;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-element-scrollheight
+ */
+Element.prototype.scrollHeight;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-element-clienttop
+ */
+Element.prototype.clientTop;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-element-clientleft
+ */
+Element.prototype.clientLeft;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-element-clientwidth
+ */
+Element.prototype.clientWidth;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-element-clientheight
+ */
+Element.prototype.clientHeight;
+
+// http://www.w3.org/TR/cssom-view/#extensions-to-the-htmlelement-interface
+
+/**
+ * @type {Element}
+ * @see http://www.w3.org/TR/cssom-view/#dom-htmlelement-offsetparent
+ */
+HTMLElement.prototype.offsetParent;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-htmlelement-offsettop
+ */
+HTMLElement.prototype.offsetTop;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-htmlelement-offsetleft
+ */
+HTMLElement.prototype.offsetLeft;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-htmlelement-offsetwidth
+ */
+HTMLElement.prototype.offsetWidth;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-htmlelement-offsetheight
+ */
+HTMLElement.prototype.offsetHeight;
+
+
+// http://www.w3.org/TR/cssom-view/#extensions-to-the-range-interface
+
+/**
+ * @return {ClientRectList}
+ * @see http://www.w3.org/TR/cssom-view/#dom-range-getclientrects
+ */
+Range.prototype.getClientRects = function() {};
+
+/**
+ * @return {ClientRect}
+ * @see http://www.w3.org/TR/cssom-view/#dom-range-getboundingclientrect
+ */
+Range.prototype.getBoundingClientRect = function() {};
+
+
+// http://www.w3.org/TR/cssom-view/#extensions-to-the-mouseevent-interface
+
+// MouseEvent: screen{X,Y} and client{X,Y} are in DOM Level 2/3 Event as well,
+// so it seems like a specification issue. I've emailed www-style@w3.org in
+// hopes of resolving the conflict, but in the mean time they can live here
+// (http://lists.w3.org/Archives/Public/www-style/2012May/0039.html).
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-screenx
+ */
+//MouseEvent.prototype.screenX;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-screeny
+ */
+//MouseEvent.prototype.screenY;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-pagex
+ */
+MouseEvent.prototype.pageX;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-pagey
+ */
+MouseEvent.prototype.pageY;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-clientx
+ */
+//MouseEvent.prototype.clientX;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-clienty
+ */
+//MouseEvent.prototype.clientY;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-x
+ */
+MouseEvent.prototype.x;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-y
+ */
+MouseEvent.prototype.y;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-offsetx
+ */
+MouseEvent.prototype.offsetX;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-offsety
+ */
+MouseEvent.prototype.offsetY;
+
+
+// http://www.w3.org/TR/cssom-view/#rectangles
+
+/**
+ * @constructor
+ * @see http://www.w3.org/TR/cssom-view/#the-clientrectlist-interface
+ */
+function ClientRectList() {}
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-clientrectlist-length
+ */
+ClientRectList.prototype.length;
+
+/**
+ * @param {number} index
+ * @return {ClientRect}
+ * @see http://www.w3.org/TR/cssom-view/#dom-clientrectlist-item
+ */
+ClientRectList.prototype.item = function(index) {};
+
+/**
+ * @constructor
+ * @see http://www.w3.org/TR/cssom-view/#the-clientrect-interface
+ */
+function ClientRect() {}
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-clientrect-top
+ */
+ClientRect.prototype.top;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-clientrect-right
+ */
+ClientRect.prototype.right;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-clientrect-bottom
+ */
+ClientRect.prototype.bottom;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-clientrect-left
+ */
+ClientRect.prototype.left;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-clientrect-width
+ */
+ClientRect.prototype.width;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/cssom-view/#dom-clientrect-height
+ */
+ClientRect.prototype.height;
