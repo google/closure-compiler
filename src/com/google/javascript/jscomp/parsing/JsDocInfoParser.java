@@ -336,8 +336,7 @@ public final class JsDocInfoParser {
                     token = eatTokensUntilEOL(token);
                   }
 
-                  if (!jsdocBuilder.recordFileOverview(fileOverview) ||
-                      fileOverviewJSDocInfo != null) {
+                  if (!jsdocBuilder.recordFileOverview(fileOverview)) {
                     parser.addParserWarning("msg.jsdoc.fileoverview.extra",
                         stream.getLineno(), stream.getCharno());
                   }

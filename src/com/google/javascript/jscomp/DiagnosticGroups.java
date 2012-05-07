@@ -27,11 +27,17 @@ import java.util.Map;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class DiagnosticGroups {
+  static final DiagnosticType UNUSED =
+      DiagnosticType.warning("JSC_UNUSED", "{0}");
 
   public DiagnosticGroups() {}
 
   private final static Map<String, DiagnosticGroup> groupsByName =
       Maps.newHashMap();
+
+  static DiagnosticGroup registerDeprecatedGroup(String name) {
+    return registerGroup(name, new DiagnosticGroup(name, UNUSED));
+  }
 
   static DiagnosticGroup registerGroup(String name,
       DiagnosticGroup group) {
@@ -118,8 +124,7 @@ public class DiagnosticGroups {
           TypeValidator.INVALID_CAST);
 
   public static DiagnosticGroup FILEOVERVIEW_JSDOC =
-      DiagnosticGroups.registerGroup("fileoverviewTags",
-          RhinoErrorReporter.EXTRA_FILEOVERVIEW);
+      DiagnosticGroups.registerDeprecatedGroup("fileoverviewTags");
 
   public static DiagnosticGroup STRICT_MODULE_DEP_CHECK =
       DiagnosticGroups.registerGroup("strictModuleDepCheck",

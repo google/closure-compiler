@@ -37,11 +37,8 @@ class RhinoErrorReporter {
   static final DiagnosticType TYPE_PARSE_ERROR =
       DiagnosticType.warning("JSC_TYPE_PARSE_ERROR", "{0}");
 
-  // A special-cased error, so that it can be configured via the
+  // Special-cased errors, so that they can be configured via the
   // warnings API.
-  static final DiagnosticType EXTRA_FILEOVERVIEW =
-      DiagnosticType.warning("JSC_EXTRA_FILEOVERVIEW", "Parse error. {0}");
-
   static final DiagnosticType TRAILING_COMMA =
       DiagnosticType.error("JSC_TRAILING_COMMA",
           "Parse error. IE8 (and below) will parse trailing commas in " +
@@ -73,12 +70,6 @@ class RhinoErrorReporter {
   private RhinoErrorReporter(AbstractCompiler compiler) {
     this.compiler = compiler;
     typeMap = ImmutableMap.of(
-
-        // Extra @fileoverview
-        replacePlaceHolders(
-            ScriptRuntime.getMessage0("msg.jsdoc.fileoverview.extra")),
-        EXTRA_FILEOVERVIEW,
-
         // Trailing comma
         replacePlaceHolders(
             com.google.javascript.rhino.head.ScriptRuntime
