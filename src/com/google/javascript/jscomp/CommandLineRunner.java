@@ -275,6 +275,12 @@ public class CommandLineRunner extends
     private CompilationLevel compilation_level =
         CompilationLevel.SIMPLE_OPTIMIZATIONS;
 
+    @Option(name = "--use_types_for_optimization",
+        usage = "Experimental: perform additional optimizations " +
+        "based on available information.  Inaccurate type annotations " +
+        "may result in incorrect results.")
+    private boolean use_types_for_optimization = false;
+
     @Option(name = "--warning_level",
         usage = "Specifies the warning level to use. Options: " +
         "QUIET, DEFAULT, VERBOSE")
@@ -741,10 +747,16 @@ public class CommandLineRunner extends
     } else {
       options.setCodingConvention(new ClosureCodingConvention());
     }
+
     CompilationLevel level = flags.compilation_level;
     level.setOptionsForCompilationLevel(options);
+
     if (flags.debug) {
       level.setDebugOptionsForCompilationLevel(options);
+    }
+
+    if (flags.use_types_for_optimization) {
+      level.setTypeBasedOptimizationOptions(options);
     }
 
     if (flags.generate_exports) {

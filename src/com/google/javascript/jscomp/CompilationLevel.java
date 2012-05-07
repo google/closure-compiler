@@ -189,4 +189,22 @@ public enum CompilationLevel {
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
         CheckLevel.WARNING);
   }
+
+  /**
+   * Enable additional optimizations that use type information.
+   * @param options The CompilerOptions object to set the options on.
+   */
+  public void setTypeBasedOptimizationOptions(CompilerOptions options) {
+    switch (this) {
+      case ADVANCED_OPTIMIZATIONS:
+        options.inferTypes = true;
+        options.disambiguateProperties = true;
+        options.ambiguateProperties = true;
+        options.inlineProperties = true;
+        break;
+      case SIMPLE_OPTIMIZATIONS:
+        // TODO(johnlenz): enable peephole type based optimization.
+        break;
+    }
+  }
 }

@@ -99,7 +99,8 @@ public class CommandLineRunnerTest extends TestCase {
         + "/** @type {Window} */ var window;"
         + "/** @constructor */ function Element() {}"
         + "Element.prototype.offsetWidth;"
-        + "/** @nosideeffects */ function noSideEffects() {}")
+        + "/** @nosideeffects */ function noSideEffects() {}\n"
+        + "/** @param {...*} x */ function alert(x) {}\n")
   );
 
   private List<SourceFile> externs;
@@ -187,6 +188,21 @@ public class CommandLineRunnerTest extends TestCase {
         "var b = goog.c.b(a, {a: 1}),c;" +
         "for (c in b) { b[c].call(b); }" +
         "window.Foo = a;");
+  }
+
+  public void testTypedAdvanced() {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    args.add("--use_types_for_optimization");
+    test(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "Foo.prototype.handle1 = function(x, y) { alert(y); };\n" +
+        "/** @constructor */\n" +
+        "function Bar() {}\n" +
+        "Bar.prototype.handle1 = function(x, y) {};\n" +
+        "new Foo().handle1(1, 2);\n" +
+        "new Bar().handle1(1, 2);\n",
+        "alert(2)");
   }
 
   public void testTypeCheckingOnWithVerbose() {
