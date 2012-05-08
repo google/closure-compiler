@@ -292,7 +292,6 @@ public interface CodingConvention extends Serializable {
    * returns information on the cast. By default, always returns null. Meant
    * to be overridden by subclasses.
    *
-   * @param t The node traversal.
    * @param callNode A CALL node.
    */
   public ObjectLiteralCast getObjectLiteralCast(Node callNode);

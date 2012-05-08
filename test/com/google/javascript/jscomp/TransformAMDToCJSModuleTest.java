@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 /**
- * Unit tests for {@link TransformAMDToCJSModules}
+ * Unit tests for {@link TransformAMDToCJSModule}
  */
 public class TransformAMDToCJSModuleTest extends CompilerTestCase {
 

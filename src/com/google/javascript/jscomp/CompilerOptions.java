@@ -37,6 +37,7 @@ import java.util.Set;
 public class CompilerOptions implements Serializable, Cloneable {
 
   // Unused. For people using reflection to circumvent access control.
+  @SuppressWarnings("unused")
   private boolean manageClosureDependencies = false;
 
   // A common enum for compiler passes that can run either globally or locally.

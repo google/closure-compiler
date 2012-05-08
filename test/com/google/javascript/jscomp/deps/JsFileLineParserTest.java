@@ -91,11 +91,13 @@ public class JsFileLineParserTest extends TestCase {
       super(errorManager);
     }
 
+    @Override
     boolean parseLine(String line) {
       sb.append(line);
       return true;
     }
 
+    @Override
     public String toString() {
       return sb.toString();
     }

@@ -31,6 +31,7 @@ public interface ErrorManager extends ErrorHandler {
    * @param level the reporting level
    * @param error the error to report
    */
+  @Override
   void report(CheckLevel level, JSError error);
 
   /**

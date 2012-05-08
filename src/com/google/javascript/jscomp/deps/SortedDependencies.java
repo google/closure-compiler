@@ -123,8 +123,7 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
   /**
    * Return the input that gives us the given symbol, or null.
    */
-  public INPUT maybeGetInputProviding(String symbol)
-      throws MissingProvideException {
+  public INPUT maybeGetInputProviding(String symbol) {
     return provideMap.get(symbol);
   }
 

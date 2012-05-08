@@ -512,6 +512,7 @@ class PrototypeObjectType extends ObjectType {
     return nativeType;
   }
 
+  @Override
   void setOwnerFunction(FunctionType type) {
     Preconditions.checkState(ownerFunction == null || type == null);
     ownerFunction = type;
