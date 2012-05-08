@@ -889,23 +889,22 @@ class TypeInference
    * "bound" function by looking at the number of parameters in the call site.
    */
   private void updateBind(Node n, FunctionType fnType) {
-    // TODO(nicksantos): Use the coding convention, so that we get goog.bind
-    // for free.
-    Node calledFn = n.getFirstChild();
-    boolean looksLikeBind = calledFn.isGetProp()
-        && calledFn.getLastChild().getString().equals("bind");
-    if (!looksLikeBind) {
+    CodingConvention.Bind bind =
+        compiler.getCodingConvention().describeFunctionBind(n, true);
+    if (bind == null) {
       return;
     }
 
-    Node callTarget = calledFn.getFirstChild();
-    FunctionType callTargetFn = getJSType(callTarget)
+    FunctionType callTargetFn = getJSType(bind.target)
         .restrictByNotNullOrUndefined().toMaybeFunctionType();
     if (callTargetFn == null) {
       return;
     }
 
-    n.setJSType(callTargetFn.getBindReturnType(n.getChildCount() - 1));
+    n.setJSType(
+        callTargetFn.getBindReturnType(
+            // getBindReturnType expects the 'this' argument to be included.
+            bind.getBoundParameterCount() + 1));
   }
 
   /**

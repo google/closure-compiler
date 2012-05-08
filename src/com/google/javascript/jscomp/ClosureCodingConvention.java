@@ -354,14 +354,11 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public Bind describeFunctionBind(Node n) {
-    Bind result = super.describeFunctionBind(n);
+  public Bind describeFunctionBind(Node n, boolean useTypeInfo) {
+    Bind result = super.describeFunctionBind(n, useTypeInfo);
     if (result != null) {
       return result;
     }
-
-    // It would be nice to be able to identify a fn.bind call
-    // but that requires knowing the type of "fn".
 
     if (!n.isCall()) {
       return null;

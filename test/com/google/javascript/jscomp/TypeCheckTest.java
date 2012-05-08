@@ -6699,10 +6699,22 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testGoogBind1() throws Exception {
-    // We currently do not support goog.bind natively.
     testClosureTypes(
         "var goog = {}; goog.bind = function(var_args) {};" +
         "/** @type {function(number): boolean} */" +
+        "function f(x, y) { return true; }" +
+        "f(goog.bind(f, null, 'x')());",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
+  public void testGoogBind2() throws Exception {
+    // TODO(nicksantos): We do not currently type-check the arguments
+    // of the goog.bind.
+    testClosureTypes(
+        "var goog = {}; goog.bind = function(var_args) {};" +
+        "/** @type {function(boolean): boolean} */" +
         "function f(x, y) { return true; }" +
         "f(goog.bind(f, null, 'x')());",
         null);

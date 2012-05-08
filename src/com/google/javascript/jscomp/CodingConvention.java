@@ -243,6 +243,13 @@ public interface CodingConvention extends Serializable {
    */
   public Bind describeFunctionBind(Node n);
 
+  /**
+   * A Bind instance or null.
+   * @param useTypeInfo If we believe type information is reliable enough
+   *     to use to figure out what the bind function is.
+   */
+  public Bind describeFunctionBind(Node n, boolean useTypeInfo);
+
   public static class Bind {
     // The target of the bind action
     final Node target;
@@ -255,6 +262,18 @@ public interface CodingConvention extends Serializable {
       this.target = target;
       this.thisValue = thisValue;
       this.parameters = parameters;
+    }
+
+    /**
+     * The number of parameters bound (not including the 'this' value).
+     */
+    int getBoundParameterCount() {
+      if (parameters == null) {
+        return 0;
+      }
+      Node paramParent = parameters.getParent();
+      return paramParent.getChildCount() -
+          paramParent.getIndexOfChild(parameters);
     }
   }
 

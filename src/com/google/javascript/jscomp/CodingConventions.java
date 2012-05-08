@@ -211,7 +211,12 @@ public class CodingConventions {
 
     @Override
     public Bind describeFunctionBind(Node n) {
-      return nextConvention.describeFunctionBind(n);
+      return describeFunctionBind(n, false);
+    }
+
+    @Override
+    public Bind describeFunctionBind(Node n, boolean useTypeInfo) {
+      return nextConvention.describeFunctionBind(n, useTypeInfo);
     }
 
     @Override
@@ -406,9 +411,11 @@ public class CodingConventions {
 
     @Override
     public Bind describeFunctionBind(Node n) {
-      // It would be nice to be able to identify a fn.bind call
-      // but that requires knowing the type of "fn".
+      return describeFunctionBind(n, false);
+    }
 
+    @Override
+    public Bind describeFunctionBind(Node n, boolean useTypeInfo) {
       if (!n.isCall()) {
         return null;
       }
@@ -429,13 +436,21 @@ public class CodingConventions {
       }
 
       if (callTarget.isGetProp()
-          && callTarget.getLastChild().getString().equals("bind")
-          && callTarget.getFirstChild().isFunction()) {
-        // (function(){}).bind(self, args...);
-        Node fn = callTarget.getFirstChild();
-        Node thisValue = callTarget.getNext();
-        Node parameters = safeNext(thisValue);
-        return new Bind(fn, thisValue, parameters);
+          && callTarget.getLastChild().getString().equals("bind")) {
+        Node maybeFn = callTarget.getFirstChild();
+        JSType maybeFnType = maybeFn.getJSType();
+        FunctionType fnType = null;
+        if (useTypeInfo && maybeFnType != null) {
+          fnType = maybeFnType.restrictByNotNullOrUndefined()
+              .toMaybeFunctionType();
+        }
+
+        if (fnType != null || maybeFn.isFunction()) {
+          // (function(){}).bind(self, args...);
+          Node thisValue = callTarget.getNext();
+          Node parameters = safeNext(thisValue);
+          return new Bind(maybeFn, thisValue, parameters);
+        }
       }
 
       return null;
