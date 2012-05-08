@@ -74,7 +74,7 @@ gadgets.rpc.ACK;
 /**
  * @param {?string} targetId The id of the target gadget, null for container.
  * @param {string} serviceName The RPC service to call.
- * @param {function(...[*]) : void=} opt_callback Function called when the RPC
+ * @param {!Function=} opt_callback Function called when the RPC
  *     completes.
  * @param {...*} var_args Variable arguments that are passed to the RPC handler.
  */
@@ -113,13 +113,13 @@ gadgets.rpc.receive = function(fragment) {};
 
 /**
  * @param {string} serviceName The RPC service to register a handler for.
- * @param {function(...[*]) : *} handler Handler for an RPC call, return
+ * @param {!Function} handler Handler for an RPC call, return
  *     value will be sent back to the caller.
  */
 gadgets.rpc.register = function(serviceName, handler) {};
 
 /**
- * @param {function(...[*]) : *} handler Handler for unknown RPC calls,
+ * @param {!Function} handler Handler for unknown RPC calls,
  *     return value will be sent back to the caller.
  */
 gadgets.rpc.registerDefault = function(handler) {};
