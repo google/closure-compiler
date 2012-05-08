@@ -3114,10 +3114,10 @@ public final class NodeUtil {
 
   /**
    * @param n The expression to check.
-   * @return Whether the expression is unconditionally executed in the
+   * @return Whether the expression is unconditionally executed only once in the
    *     containing execution scope.
    */
-  static boolean isExpressionUnconditionallyExecuted(Node n) {
+  static boolean isExecutedExactlyOnce(Node n) {
     inspect: do {
       Node parent = n.getParent();
       switch (parent.getType()) {
@@ -3131,8 +3131,14 @@ public final class NodeUtil {
           // other ancestors may be conditional
           continue inspect;
         case Token.FOR:
-          if (parent.getFirstChild() != n) {
-            return false;
+          if (NodeUtil.isForIn(parent)) {
+            if (parent.getChildAtIndex(1) != n) {
+              return false;
+            }
+          } else {
+            if (parent.getFirstChild() != n) {
+              return false;
+            }
           }
           // other ancestors may be conditional
           continue inspect;
@@ -3141,7 +3147,10 @@ public final class NodeUtil {
           return false;
         case Token.TRY:
           // Consider all code under a try/catch to be conditionally executed.
-          return false;
+          if (!hasFinally(parent) || parent.getLastChild() != n) {
+            return false;
+          }
+          continue inspect;
         case Token.CASE:
         case Token.DEFAULT_CASE:
           return false;

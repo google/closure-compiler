@@ -256,7 +256,7 @@ public class InlineProperties implements CompilerPass {
       if (!props.containsKey(propName)
           && !isInvalidatingType(type)
           && NodeUtil.isImmutableValue(value)
-          && NodeUtil.isExpressionUnconditionallyExecuted(value)) {
+          && NodeUtil.isExecutedExactlyOnce(value)) {
         props.put(propName, new PropertyInfo(type, value));
         return true;
       }
