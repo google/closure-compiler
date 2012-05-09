@@ -1350,6 +1350,8 @@ Tab.prototype.id;
 Tab.prototype.index;
 /** @type {number} */
 Tab.prototype.windowId;
+//** @type {number} */
+Tab.prototype.openerTabId;
 /** @type {boolean} */
 Tab.prototype.highlighted;
 /** @type {boolean} */
