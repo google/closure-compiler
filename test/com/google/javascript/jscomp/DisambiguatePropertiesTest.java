@@ -130,6 +130,15 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(true, js, js, "{a=[[Foo.prototype]]}");
   }
 
+  public void testPrototypeAndInstance2() {
+    String js = ""
+        + "/** @constructor */ function Foo() {}\n"
+        + "Foo.prototype.a = 0;\n"
+        + "new Foo().a = 0;";
+    testSets(false, js, js, "{a=[[Foo.prototype]]}");
+    testSets(true, js, js, "{a=[[Foo.prototype]]}");
+  }
+
   public void testTwoTypes1() {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
