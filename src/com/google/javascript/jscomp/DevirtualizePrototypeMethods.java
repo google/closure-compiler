@@ -110,27 +110,65 @@ class DevirtualizePrototypeMethods
     if (parent == null) {
       return false;
     }
-
     Node gramp = parent.getParent();
-    if ((gramp == null) ||
-        (parent.getFirstChild() != node) ||
-        !NodeUtil.isExprAssign(gramp)) {
+    if (gramp == null) {
       return false;
     }
 
-    Node functionNode = parent.getLastChild();
-    if ((functionNode == null) || !functionNode.isFunction()) {
+    if (node.isGetProp()) {
+      if (parent.getFirstChild() != node) {
+        return false;
+      }
+
+      if (!NodeUtil.isExprAssign(gramp)) {
+        return false;
+      }
+
+      Node functionNode = parent.getLastChild();
+      if ((functionNode == null) || !functionNode.isFunction()) {
+        return false;
+      }
+
+      Node nameNode = node.getFirstChild();
+      return nameNode.isGetProp() &&
+          nameNode.getLastChild().getString().equals("prototype");
+    } else if (node.isStringKey()) {
+      Preconditions.checkState(parent.isObjectLit());
+
+      if (!gramp.isAssign()) {
+        return false;
+      }
+
+      if (gramp.getLastChild() != parent) {
+        return false;
+      }
+
+      Node greatGramp = gramp.getParent();
+      if (greatGramp == null || !greatGramp.isExprResult()) {
+        return false;
+      }
+
+      Node functionNode = node.getFirstChild();
+      if ((functionNode == null) || !functionNode.isFunction()) {
+        return false;
+      }
+
+      Node target = gramp.getFirstChild();
+      return target.isGetProp() &&
+          target.getLastChild().getString().equals("prototype");
+    } else {
       return false;
     }
+  }
 
-    if (!node.isGetProp()) {
-      return false;
+  private String getMethodName(Node node) {
+    if (node.isGetProp()) {
+      return node.getLastChild().getString();
+    } else if (node.isStringKey()) {
+      return node.getString();
+    } else {
+      throw new IllegalStateException("unexpected");
     }
-
-    Node nameNode = node.getFirstChild();
-    return nameNode.isGetProp() &&
-        nameNode.getLastChild().getString().equals("prototype");
-
   }
 
   /**
@@ -153,7 +191,6 @@ class DevirtualizePrototypeMethods
    */
   private void rewriteDefinitionIfEligible(DefinitionSite defSite,
                                            SimpleDefinitionFinder defFinder) {
-
     if (defSite.inExterns ||
         !defSite.inGlobalScope ||
         !isEligibleDefinition(defFinder, defSite)) {
@@ -161,9 +198,6 @@ class DevirtualizePrototypeMethods
     }
 
     Node node = defSite.node;
-
-    // TODO(user) support rewritting methods defined as part of
-    // object literals.
     if (!isPrototypeMethodDefinition(node)) {
       return;
     }
@@ -184,7 +218,7 @@ class DevirtualizePrototypeMethods
     // method names.
     // Whatever scheme we use should not break stable renaming.
     String newMethodName = getRewrittenMethodName(
-        node.getLastChild().getString());
+        getMethodName(node));
     rewriteDefinition(node, newMethodName);
     rewriteCallSites(defFinder, defSite.definition, newMethodName);
   }
@@ -197,7 +231,7 @@ class DevirtualizePrototypeMethods
    * - Refer to a function that takes a fixed number of arguments.
    * - Function must not be exported.
    * - Function must be used at least once.
-   * - Property is never accesed outside a function call context.
+   * - Property is never accessed outside a function call context.
    * - The definition under consideration must be the only possible
    *   choice at each call site.
    * - Definition must happen in a module loaded before the first use.
@@ -244,7 +278,6 @@ class DevirtualizePrototypeMethods
         return false;
       }
 
-      // Multiple definitions prevent rewrite.
       Node nameNode = site.node;
 
       // Don't rewrite methods called in functions that can't be specialized
@@ -255,6 +288,7 @@ class DevirtualizePrototypeMethods
         return false;
       }
 
+      // Multiple definitions prevent rewrite.
       Collection<Definition> singleSiteDefinitions =
           defFinder.getDefinitionsReferencedAt(nameNode);
       if (singleSiteDefinitions.size() > 1) {
@@ -320,21 +354,43 @@ class DevirtualizePrototypeMethods
    *   var b = function(self, a, b, c) {...}
    */
   private void rewriteDefinition(Node node, String newMethodName) {
+    boolean isObjLitDefKey = node.isStringKey();
+
     Node parent = node.getParent();
-    Node functionNode = parent.getLastChild();
-    Node expr = parent.getParent();
-    Node block = expr.getParent();
 
-    Node newNameNode = IR.name(newMethodName)
-        .copyInformationFrom(parent.getFirstChild());
+    Node refNode = isObjLitDefKey ? node : parent.getFirstChild();
+    Node newNameNode = IR.name(newMethodName).copyInformationFrom(refNode);
+    Node newVarNode = IR.var(newNameNode).copyInformationFrom(refNode);
 
-    if (specializationState != null) {
-      specializationState.reportRemovedFunction(functionNode, block);
+    Node functionNode;
+    if (!isObjLitDefKey) {
+      Preconditions.checkState(parent.isAssign());
+      functionNode = parent.getLastChild();
+      Node expr = parent.getParent();
+      Node block = expr.getParent();
+      parent.removeChild(functionNode);
+      newNameNode.addChildToFront(functionNode);
+      block.replaceChild(expr, newVarNode);
+
+      if (specializationState != null) {
+        specializationState.reportRemovedFunction(functionNode, block);
+      }
+    } else {
+      Preconditions.checkState(parent.isObjectLit());
+      functionNode = node.getFirstChild();
+      Node assign = parent.getParent();
+      Node expr = assign.getParent();
+      Node block = expr.getParent();
+
+      node.removeChild(functionNode);
+      parent.removeChild(node);
+      newNameNode.addChildToFront(functionNode);
+      block.addChildAfter(newVarNode, expr);
+
+      if (specializationState != null) {
+        specializationState.reportRemovedFunction(functionNode, block);
+      }
     }
-
-    parent.removeChild(functionNode);
-    newNameNode.addChildToFront(functionNode);
-    block.replaceChild(expr, IR.var(newNameNode));
 
     // add extra argument
     String self = newMethodName + "$self";

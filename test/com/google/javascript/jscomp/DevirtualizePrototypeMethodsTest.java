@@ -302,9 +302,13 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
          "JSCompiler_StaticMethods_foo(o)");
   }
 
-  public void testNoRewritePrototypeObjectLiterals1() throws Exception {
-    testSame(semicolonJoin(NoRewritePrototypeObjectLiteralsTestInput.OBJ_LIT,
-                           NoRewritePrototypeObjectLiteralsTestInput.CALL));
+  public void testRewritePrototypeObjectLiterals1() throws Exception {
+    test(semicolonJoin(NoRewritePrototypeObjectLiteralsTestInput.OBJ_LIT,
+                       NoRewritePrototypeObjectLiteralsTestInput.CALL),
+         "a.prototype={};" +
+         "var JSCompiler_StaticMethods_foo=" +
+         "function(JSCompiler_StaticMethods_foo$self){};" +
+         "JSCompiler_StaticMethods_foo(o)");
   }
 
   public void testNoRewritePrototypeObjectLiterals2() throws Exception {
@@ -466,13 +470,18 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   public void testRewriteImplementedMethodInObj() throws Exception {
-    // This isn't currently supported, but could be.
     String source = newlineJoin(
         "function a(){}",
         "a.prototype = {foo: function(args) {return args}};",
         "var o = new a;",
         "o.foo()");
-    testSame(source);
+    test(source,
+        "function a(){}" +
+        "a.prototype={};" +
+        "var JSCompiler_StaticMethods_foo=" +
+        "function(JSCompiler_StaticMethods_foo$self,args){return args};" +
+        "var o=new a;" +
+        "JSCompiler_StaticMethods_foo(o)");
   }
 
   public void testNoRewriteGet1() throws Exception {
