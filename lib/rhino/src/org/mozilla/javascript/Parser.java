@@ -2608,7 +2608,7 @@ public class Parser
         if (!compilerEnv.isXmlAvailable()) {
             int maybeName = nextToken();
             if (maybeName != Token.NAME &&
-                !(compilerEnv.isAllowKeywordAsObjectPropertyName()
+                !(compilerEnv.isReservedKeywordAsIdentifier()
                 && TokenStream.isKeyword(ts.getString()))) {
               reportError("msg.no.name.after.dot");
             }
@@ -3209,9 +3209,20 @@ public class Parser
                   int ppos = ts.tokenBeg;
                   consumeToken();
 
-                  if ((peekToken() != Token.COLON
-                      && ("get".equals(propertyName)
-                          || "set".equals(propertyName))))
+                  // This code path needs to handle both destructuring object
+                  // literals like:
+                  // var {get, b} = {get: 1, b: 2};
+                  // and getters like:
+                  // var x = {get 1() { return 2; };
+                  // So we check a whitelist of tokens to check if we're at the
+                  // first case. (Because of keywords, the second case may be
+                  // many tokens.)
+                  int peeked = peekToken();
+                  boolean maybeGetterOrSetter =
+                      "get".equals(propertyName)
+                      || "set".equals(propertyName);
+                  if (maybeGetterOrSetter
+                      && peeked != Token.COMMA && peeked != Token.COLON && peeked != Token.RC)
                   {
                       boolean isGet = "get".equals(propertyName);
                       entryKind = isGet ? GET_ENTRY : SET_ENTRY;

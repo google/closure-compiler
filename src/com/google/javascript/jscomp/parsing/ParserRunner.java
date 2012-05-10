@@ -122,7 +122,6 @@ public class ParserRunner {
     boolean acceptEs5 =
         config.isIdeMode || config.languageMode != LanguageMode.ECMASCRIPT3;
     compilerEnv.setReservedKeywordAsIdentifier(acceptEs5);
-    compilerEnv.setAllowKeywordAsObjectPropertyName(acceptEs5);
 
     compilerEnv.setAllowMemberExprAsFunctionName(false);
     compilerEnv.setIdeMode(config.isIdeMode);

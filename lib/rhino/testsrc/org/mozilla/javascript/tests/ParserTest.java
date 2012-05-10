@@ -3,6 +3,7 @@ package org.mozilla.javascript.tests;
 import org.mozilla.javascript.ast.*;
 
 import org.mozilla.javascript.CompilerEnvirons;
+import org.mozilla.javascript.Context;
 import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.Parser;
 import org.mozilla.javascript.Token;
@@ -15,12 +16,12 @@ import java.io.StringReader;
 import java.util.List;
 
 public class ParserTest extends TestCase {
-    boolean allowKeywordsAsObjectLiteralsKeys = false;
+    CompilerEnvirons environment;
 
     @Override
     protected void setUp() throws Exception {
       super.setUp();
-      allowKeywordsAsObjectLiteralsKeys = false;
+      environment = new CompilerEnvirons();
     }
 
     public void testAutoSemiColonBetweenNames() {
@@ -1124,7 +1125,7 @@ public class ParserTest extends TestCase {
     }
 
     public void testParseObjectLiteral1() {
-      allowKeywordsAsObjectLiteralsKeys = true;
+      environment.setReservedKeywordAsIdentifier(true);
 
       parse("({a:1});");
       parse("({'a':1});");
@@ -1147,17 +1148,29 @@ public class ParserTest extends TestCase {
 
     public void testParseObjectLiteral2() {
       // keywords, fail
+      environment.setReservedKeywordAsIdentifier(false);
       expectParseErrors("({function:1});",
           new String[] { "invalid property id" });
 
-      allowKeywordsAsObjectLiteralsKeys = true;
+      environment.setReservedKeywordAsIdentifier(true);
 
       // keywords ok
       parse("({function:1});");
     }
 
+    public void testParseObjectLiteral3() {
+      environment.setLanguageVersion(Context.VERSION_1_8);
+      environment.setReservedKeywordAsIdentifier(true);
+      parse("var {get} = {get:1};");
+
+      environment.setReservedKeywordAsIdentifier(false);
+      parse("var {get} = {get:1};");
+      expectParseErrors("var {get} = {if:1};",
+          new String[] { "invalid property id" });
+    }
+
     public void testParseKeywordPropertyAccess() {
-      allowKeywordsAsObjectLiteralsKeys = true;
+      environment.setReservedKeywordAsIdentifier(true);
 
       // keywords ok
       parse("({function:1}).function;");
@@ -1181,10 +1194,6 @@ public class ParserTest extends TestCase {
     private AstRoot parse(
         String string, final String [] errors, final String [] warnings,
         boolean jsdoc) {
-        CompilerEnvirons environment = new CompilerEnvirons();
-        environment.setReservedKeywordAsIdentifier(
-            allowKeywordsAsObjectLiteralsKeys);
-
         TestErrorReporter testErrorReporter =
             new TestErrorReporter(errors, warnings) {
           @Override
@@ -1222,8 +1231,6 @@ public class ParserTest extends TestCase {
     }
 
     private AstRoot parseAsReader(String string) throws IOException {
-        CompilerEnvirons environment = new CompilerEnvirons();
-
         TestErrorReporter testErrorReporter = new TestErrorReporter(null, null);
         environment.setErrorReporter(testErrorReporter);
 
