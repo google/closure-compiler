@@ -86,22 +86,22 @@ class InlineObjectLiterals implements CompilerPass {
         Var v = it.next();
 
         if (isVarInlineForbidden(v)) {
-            continue;
+          continue;
         }
 
         ReferenceCollection referenceInfo = referenceMap.getReferences(v);
 
         if (isInlinableObject(referenceInfo.references)) {
-            // Blacklist the object itself, as well as any other values
-            // that it refers to, since they will have been moved around.
-            staleVars.add(v);
+          // Blacklist the object itself, as well as any other values
+          // that it refers to, since they will have been moved around.
+          staleVars.add(v);
 
-            Reference declaration = referenceInfo.references.get(0);
-            Reference init = referenceInfo.getInitializingReference();
+          Reference declaration = referenceInfo.references.get(0);
+          Reference init = referenceInfo.getInitializingReference();
 
-            // Split up the object into individual variables if the object
-            // is never referenced directly in full.
-            splitObject(v, declaration, init, referenceInfo);
+          // Split up the object into individual variables if the object
+          // is never referenced directly in full.
+          splitObject(v, declaration, init, referenceInfo);
         }
       }
     }
@@ -154,6 +154,7 @@ class InlineObjectLiterals implements CompilerPass {
      */
     private boolean isInlinableObject(List<Reference> refs) {
       boolean ret = false;
+      Set<String> validProperties = Sets.newHashSet();
       for (Reference ref : refs) {
         Node name = ref.getNode();
         Node parent = ref.getParent();
@@ -168,6 +169,23 @@ class InlineObjectLiterals implements CompilerPass {
           if (gramps.isCall()
               && gramps.getFirstChild() == parent) {
             return false;
+          }
+
+          // NOTE(nicksantos): This pass's object-splitting algorithm has
+          // a blind spot. It assumes that if a property isn't defined on an
+          // object, then the value is undefined. This is not true, because
+          // Object.prototype can have arbitrary properties on it.
+          //
+          // We short-circuit this problem by bailing out if we see a reference
+          // to a property that isn't defined on the object literal. This
+          // isn't a perfect algorithm, but it should catch most cases.
+          String propName = parent.getLastChild().getString();
+          if (!validProperties.contains(propName)) {
+            if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
+              validProperties.add(propName);
+            } else {
+              return false;
+            }
           }
           continue;
         }
@@ -203,6 +221,9 @@ class InlineObjectLiterals implements CompilerPass {
             // ES5 get/set not supported.
             return false;
           }
+
+          validProperties.add(child.getString());
+
           Node childVal = child.getFirstChild();
           // Check if childVal is the parent of any of the passed in
           // references, as that is how self-referential assignments

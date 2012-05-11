@@ -172,14 +172,7 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
          "JSCompiler_object_inline_a_0=a,JSCompiler_object_inline_b_1=b,true;" +
          "if(JSCompiler_object_inline_a_0) g(JSCompiler_object_inline_b_1)");
     testLocal("var x = {}; var b = f(); x = {a:a, b:b}; if(x.a) g(x.b) + x.c",
-         "var JSCompiler_object_inline_a_0;" +
-         "var JSCompiler_object_inline_b_1;" +
-         "var JSCompiler_object_inline_c_2;" +
-         "var b=f();" +
-         "JSCompiler_object_inline_a_0=a,JSCompiler_object_inline_b_1=b," +
-         "  JSCompiler_object_inline_c_2=void 0,true;" +
-         "if(JSCompiler_object_inline_a_0) " +
-         "  g(JSCompiler_object_inline_b_1) + JSCompiler_object_inline_c_2");
+         "var x = {}; var b = f(); x = {a:a, b:b}; if(x.a) g(x.b) + x.c");
     testLocal("var x; var b = f(); x = {a:a, b:b}; x.c = c; if(x.a) g(x.b) + x.c",
          "var JSCompiler_object_inline_a_0;" +
          "var JSCompiler_object_inline_b_1;" +
@@ -220,14 +213,7 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
 
   public void testObject12() {
     testLocal("var a; a = {x:1, y:2}; f(a.x, a.y2);",
-         "var JSCompiler_object_inline_x_0;" +
-         "var JSCompiler_object_inline_y_1;" +
-         "var JSCompiler_object_inline_y2_2;" +
-         "JSCompiler_object_inline_x_0=1," +
-         "JSCompiler_object_inline_y_1=2," +
-         "JSCompiler_object_inline_y2_2=void 0," +
-         "true;" +
-         "f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y2_2);");
+        "var a; a = {x:1, y:2}; f(a.x, a.y2);");
   }
 
   public void testObject13() {
@@ -300,14 +286,7 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
       "}");
 
     testLocal("var a; while (1) { f(a.x, a.y); a = {x:1, y:1};}",
-      "var JSCompiler_object_inline_x_0;" +
-      "var JSCompiler_object_inline_y_1;" +
-      "for(;1;) {" +
-      " f(JSCompiler_object_inline_x_0,JSCompiler_object_inline_y_1);" +
-      " JSCompiler_object_inline_x_0=1," +
-      " JSCompiler_object_inline_y_1=1," +
-      " true" +
-      "}");
+        "var a; while (1) { f(a.x, a.y); a = {x:1, y:1};}");
   }
 
   public void testObject23() {
@@ -359,6 +338,14 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
   public void testBug545() {
     testLocal("var a = {}", "");
     testLocal("var a; a = {}", "true");
+  }
+
+  public void testIssue724() {
+    testSameLocal(
+        "var getType; getType = {};" +
+        "return functionToCheck && " +
+        "   getType.toString.apply(functionToCheck) === " +
+        "   '[object Function]';");
   }
 
   private final String LOCAL_PREFIX = "function local(){";
