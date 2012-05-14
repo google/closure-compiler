@@ -257,13 +257,17 @@ abstract class CodeConsumer {
         }
       }
       if (exp > 2) {
-        add(Long.toString(mantissa) + "E" + Integer.toString(exp));
+        addConstant(Long.toString(mantissa) + "E" + Integer.toString(exp));
       } else {
-        add(Long.toString(value));
+        addConstant(Long.toString(value));
       }
     } else {
-      add(String.valueOf(x));
+      addConstant(String.valueOf(x));
     }
+  }
+
+  void addConstant(String newcode) {
+    add(newcode);
   }
 
   static boolean isNegativeZero(double x) {

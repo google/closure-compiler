@@ -550,7 +550,7 @@ class CodeGenerator {
 
       case Token.NULL:
         Preconditions.checkState(childCount == 0);
-        add("null");
+        cc.addConstant("null");
         break;
 
       case Token.THIS:
@@ -560,12 +560,12 @@ class CodeGenerator {
 
       case Token.FALSE:
         Preconditions.checkState(childCount == 0);
-        add("false");
+        cc.addConstant("false");
         break;
 
       case Token.TRUE:
         Preconditions.checkState(childCount == 0);
-        add("true");
+        cc.addConstant("true");
         break;
 
       case Token.CONTINUE:

@@ -2164,6 +2164,18 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "}");
   }
 
+  public void testIssue728() {
+    String f = "var f = function() { return false; };";
+    StringBuilder calls = new StringBuilder();
+    StringBuilder folded = new StringBuilder();
+    for (int i = 0; i < 30; i++) {
+      calls.append("if (!f()) alert('x');");
+      folded.append("if (!false) alert('x');");
+    }
+
+    test(f + calls, folded.toString());
+  }
+
   public void testAnonymous1() {
     assumeMinimumCapture = false;
     test("(function(){var a=10;(function(){var b=a;a++;alert(b)})()})();",

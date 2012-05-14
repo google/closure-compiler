@@ -46,11 +46,13 @@ public class InlineCostEstimatorTest extends TestCase {
 
   public void testCost() {
     checkCost("1", "1");
+    checkCost("true", "1");
+    checkCost("false", "1");
     checkCost("a", "xx");
     checkCost("a + b", "xx+xx");
     checkCost("foo()", "xx()");
     checkCost("foo(a,b)", "xx(xx,xx)");
-    checkCost("10 + foo(a,b)", "10+xx(xx,xx)");
+    checkCost("10 + foo(a,b)", "0+xx(xx,xx)");
     checkCost("1 + foo(a,b)", "1+xx(xx,xx)");
     checkCost("a ? 1 : 0", "xx?1:0");
     checkCost("a.b", "xx.xx");

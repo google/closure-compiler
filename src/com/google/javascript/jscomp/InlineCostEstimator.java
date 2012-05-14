@@ -94,5 +94,14 @@ class InlineCostEstimator {
     void addIdentifier(String identifier) {
       add(ESTIMATED_IDENTIFIER);
     }
+
+    /**
+     * Constants (true, false, null) are considered basically free,
+     * because it's likely that they will get folded when we're done.
+     */
+    @Override
+    void addConstant(String newcode) {
+      add("0");
+    }
   }
 }
