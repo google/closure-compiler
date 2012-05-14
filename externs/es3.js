@@ -159,7 +159,7 @@ function parseFloat(num) {}
  * leader, then pass {@code undefined} as the base.
  *
  * @param {*} num
- * @param {number} base
+ * @param {number|undefined} base
  * @return {number}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Functions/parseInt
