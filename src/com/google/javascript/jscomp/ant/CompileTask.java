@@ -56,6 +56,7 @@ import java.util.logging.Level;
  */
 public final class CompileTask
     extends Task {
+  private CompilerOptions.LanguageMode languageIn;
   private WarningLevel warningLevel;
   private boolean debugOptions;
   private String encoding = "UTF-8";
@@ -77,6 +78,7 @@ public final class CompileTask
   private final List<Warning> warnings;
 
   public CompileTask() {
+    this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT3;
     this.warningLevel = WarningLevel.DEFAULT;
     this.debugOptions = false;
     this.compilationLevel = CompilationLevel.SIMPLE_OPTIMIZATIONS;
@@ -93,6 +95,24 @@ public final class CompileTask
     this.sourceFileLists = Lists.newLinkedList();
     this.sourcePaths = Lists.newLinkedList();
     this.warnings = Lists.newLinkedList();
+  }
+
+  /**
+   * Set the language to which input sources conform.
+   * @param value The name of the language.
+   *     (ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT).
+   */
+  public void setLanguageIn(String value) {
+    if (value.equals("ECMASCRIPT5_STRICT") || value.equals("ES5_STRICT")) {
+      this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT;
+    } else if (value.equals("ECMASCRIPT5") || value.equals("ES5")) {
+      this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT5;
+    } else if (value.equals("ECMASCRIPT3") || value.equals("ES3")) {
+      this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT3;
+    } else {
+      throw new BuildException(
+          "Unrecognized 'languageIn' option value (" + value + ")");
+    }
   }
 
   /**
@@ -284,6 +304,8 @@ public final class CompileTask
     options.prettyPrint = this.prettyPrint;
     options.printInputDelimiter = this.printInputDelimiter;
     options.generateExports = this.generateExports;
+
+    options.setLanguageIn(this.languageIn);
 
     this.warningLevel.setOptionsForWarningLevel(options);
     options.setManageClosureDependencies(manageDependencies);
