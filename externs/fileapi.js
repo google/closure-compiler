@@ -861,3 +861,46 @@ DOMURL.prototype.createObjectURL = function(blob) {};
  * @param {string} url
  */
 DOMURL.prototype.revokeObjectURL = function(url) {};
+
+/**
+ * @see https://developers.google.com/chrome/whitepapers/storage
+ * @constructor
+ */
+function StorageInfo() {}
+
+/**
+ * @see https://developers.google.com/chrome/whitepapers/storage
+ * @type {number}
+ * */
+StorageInfo.prototype.TEMPORARY = 0;
+
+/**
+ * @see https://developers.google.com/chrome/whitepapers/storage
+ * @type {number}
+ */
+StorageInfo.prototype.PERSISTENT = 1;
+
+/**
+ * @see https://developers.google.com/chrome/whitepapers/storage#requestQuota
+ * @param {number} type
+ * @param {number} size
+ * @param {function(number)} successCallback
+ * @param {function(!DOMException)=} errorCallback
+ */
+StorageInfo.prototype.requestQuota = function(type, size, successCallback,
+    errorCallback) {};
+
+/**
+ * @see https://developers.google.com/chrome/whitepapers/storage#queryUsageAndQuota
+ * @param {number} type
+ * @param {function(number, number)} successCallback
+ * @param {function(!DOMException)=} errorCallback
+ */
+StorageInfo.prototype.queryUsageAndQuota = function(type, successCallback,
+    errorCallback) {};
+
+/**
+ * @see https://developers.google.com/chrome/whitepapers/storage
+ * @type {!StorageInfo}
+ */
+Window.prototype.webkitStorageInfo;
