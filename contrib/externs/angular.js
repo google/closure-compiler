@@ -40,7 +40,7 @@ angular.bind = function(self, fn, args) {};
 
 /**
  * @param {Element} element
- * @param {Array<string|Function>=} opt_modules
+ * @param {Array.<string|Function>=} opt_modules
  * @return {function()}
  */
 angular.bootstrap = function(element, opt_modules) {};
