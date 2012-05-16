@@ -17,6 +17,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+
+import java.util.List;
 
 /**
  * Control whether warnings should be restricted or suppressed for specified
@@ -36,8 +39,7 @@ public class ShowByPathWarningsGuard extends WarningsGuard {
     EXCLUDE;  // Suppress warnings within the path.
   }
 
-  private final String[] paths;
-  private final ShowType showType;
+  private final ByPathWarningsGuard warningsGuard;
 
   public ShowByPathWarningsGuard(String checkWarningsOnlyForPath) {
     this(checkWarningsOnlyForPath, ShowType.INCLUDE);
@@ -54,27 +56,21 @@ public class ShowByPathWarningsGuard extends WarningsGuard {
   public ShowByPathWarningsGuard(String[] paths, ShowType showType) {
     Preconditions.checkArgument(paths != null);
     Preconditions.checkArgument(showType != null);
-    this.paths = paths;
-    this.showType = showType;
+    List<String> pathList = Lists.newArrayList(paths);
+    if (showType == ShowType.INCLUDE) {
+      warningsGuard = ByPathWarningsGuard.exceptPath(pathList, CheckLevel.OFF);
+    } else {
+      warningsGuard = ByPathWarningsGuard.forPath(pathList, CheckLevel.OFF);
+    }
   }
 
   @Override
   public CheckLevel level(JSError error) {
-    final String errorPath = error.sourceName;
-    if (error.getDefaultLevel() != CheckLevel.ERROR && errorPath != null) {
-      boolean inPath = false;
-      for (String path : paths) {
-        inPath |= errorPath.contains(path);
-      }
-      if (inPath ^ (showType == ShowType.INCLUDE)) {
-        return CheckLevel.OFF;
-      }
-    }
-    return null;
+    return warningsGuard.level(error);
   }
 
   @Override
   protected int getPriority() {
-    return WarningsGuard.Priority.FILTER_BY_PATH.value; // applied first
+    return warningsGuard.getPriority();
   }
 }
