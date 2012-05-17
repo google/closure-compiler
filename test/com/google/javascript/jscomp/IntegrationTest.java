@@ -1687,6 +1687,33 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, code, result);
   }
 
+  public void testIssue730() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS
+        .setOptionsForCompilationLevel(options);
+
+    String code =
+        "/** @constructor */function A() {this.foo = 0; Object.seal(this);}\n" +
+        "/** @constructor */function B() {this.a = new A();}\n" +
+        "B.prototype.dostuff = function() {this.a.foo++;alert('hi');}\n" +
+        "new B().dostuff();\n";
+
+    test(options,
+        code,
+        "function a(){this.b=0;Object.seal(this)}" +
+        "(new function(){this.a=new a}).a.b++;" +
+        "alert(\"hi\")");
+
+    options.removeUnusedClassProperties = true;
+
+    // This is still a problem when removeUnusedClassProperties are enabled.
+    test(options,
+        code,
+        "function a(){Object.seal(this)}" +
+        "(new function(){this.a=new a}).a.b++;" +
+        "alert(\"hi\")");
+  }
+
   public void testCoaleseVariables() {
     CompilerOptions options = createCompilerOptions();
 

@@ -142,4 +142,19 @@ public class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
     test("this.y = 1;alert(Object.keys(this))",
          "1;alert(Object.keys(this))");
   }
+
+  public void testIssue730() {
+    // Partial removal of properties can causes problems if the object is
+    // sealed.
+    // TODO(johnlenz): should we not allow partial removals?
+    test(
+        "function A() {this.foo = 0;}\n" +
+        "function B() {this.a = new A();}\n" +
+        "B.prototype.dostuff = function() {this.a.foo++;alert('hi');}\n" +
+        "new B().dostuff();\n",
+        "function A(){0}" +
+        "function B(){this.a=new A}" +
+        "B.prototype.dostuff=function(){this.a.foo++;alert(\"hi\")};" +
+        "new B().dostuff();");
+  }
 }

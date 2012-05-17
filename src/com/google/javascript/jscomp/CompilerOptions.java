@@ -318,6 +318,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Tells AnalyzePrototypeProperties it can remove externed props. */
   public boolean removeUnusedPrototypePropertiesInExterns;
 
+  /** Removes unused member properties */
+  public boolean removeUnusedClassProperties;
+
   /** Removes unused variables */
   public boolean removeUnusedVars;
 
@@ -829,6 +832,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     extractPrototypeMemberDeclarations = false;
     removeUnusedPrototypeProperties = false;
     removeUnusedPrototypePropertiesInExterns = false;
+    removeUnusedClassProperties = false;
     removeUnusedVars = false;
     removeUnusedLocalVars = false;
     aliasExternals = false;
@@ -915,6 +919,21 @@ public class CompilerOptions implements Serializable, Cloneable {
     // Debugging
     aliasHandler = NULL_ALIAS_TRANSFORMATION_HANDLER;
     errorHandler = null;
+  }
+
+  /**
+   * @return Whether to attempt to remove unused class properties
+   */
+  public boolean isRemoveUnusedClassProperties() {
+    return removeUnusedClassProperties;
+  }
+
+  /**
+   * @param removeUnusedClassProperties Whether to attempt to remove
+   *      unused class properties
+   */
+  public void setRemoveUnusedClassProperties(boolean removeUnusedClassProperties) {
+    this.removeUnusedClassProperties = removeUnusedClassProperties;
   }
 
   /**

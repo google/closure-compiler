@@ -44,7 +44,9 @@ abstract class IntegrationTestCase extends TestCase {
         + "/** @constructor\n * @nosideeffects */ function Widget() {}\n"
         + "/** @modifies {this} */ Widget.prototype.go = function() {};\n"
         + "/** @return {string} */ var widgetToken = function() {};\n"
-        + "function alert(x) {}"));
+        + "function alert(x) {}"
+        + "function Object() {}"
+        + "Object.seal;"));
 
   protected List<SourceFile> externs = DEFAULT_EXTERNS;
 
