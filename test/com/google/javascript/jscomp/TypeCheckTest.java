@@ -7618,6 +7618,22 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "use @override to override it");
   }
 
+  public void testInheritanceCheck17() throws Exception {
+    // Make sure this warning still works, even when there's no
+    // @override tag.
+    reportMissingOverrides = CheckLevel.OFF;
+    testTypes(
+        "var goog = {};" +
+        "/** @constructor */goog.Super = function() {};" +
+        "/** @param {number} x */ goog.Super.prototype.foo = function(x) {};" +
+        "/** @constructor\n @extends {goog.Super} */goog.Sub = function() {};" +
+        "/** @param {string} x */ goog.Sub.prototype.foo = function(x) {};",
+        "mismatch of the foo property type and the type of the property it " +
+        "overrides from superclass goog.Super\n" +
+        "original: function (this:goog.Super, number): undefined\n" +
+        "override: function (this:goog.Sub, string): undefined");
+  }
+
   public void testInterfacePropertyOverride1() throws Exception {
     testTypes(
         "/** @interface */function Super() {};" +

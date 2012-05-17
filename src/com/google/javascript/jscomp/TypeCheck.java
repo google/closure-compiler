@@ -1092,7 +1092,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       }
     }
 
-    if (!declaredOverride && !superClassHasProperty
+    if (!declaredOverride
+        && !superClassHasProperty
         && !superInterfacesHasProperty) {
       // nothing to do here, it's just a plain new property
       return;
@@ -1108,10 +1109,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           HIDDEN_SUPERCLASS_PROPERTY, propertyName,
           topInstanceType.toString()));
     }
-    if (!declaredOverride) {
-      // there's no @override to check
-      return;
-    }
+
     // @override is present and we have to check that it is ok
     if (superClassHasProperty) {
       // there is a superclass implementation
