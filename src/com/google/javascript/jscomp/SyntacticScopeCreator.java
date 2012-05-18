@@ -194,7 +194,7 @@ class SyntacticScopeCreator implements ScopeCreator {
         Scope s, String name, Node n, CompilerInput input) {
       Node parent = n.getParent();
 
-      // Don't allow multiple variables to be declared at the top level scope
+      // Don't allow multiple variables to be declared at the top-level scope
       if (scope.isGlobal()) {
         Scope.Var origVar = scope.getVar(name);
         Node origParent = origVar.getParentNode();

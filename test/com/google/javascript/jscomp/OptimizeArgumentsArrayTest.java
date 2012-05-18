@@ -137,7 +137,7 @@ public class OptimizeArgumentsArrayTest extends CompilerTestCase {
 
   public void testInnerFunctionsAfterArguments() {
     // This caused a bug earlier due to incorrect push and pop of the arguments
-    // accesss stack.
+    // access stack.
     test("function f(  ) { arguments[0]; function b() { function c() { }} }",
          "function f(p0) {           p0; function b() { function c() { }} }");
   }

@@ -162,7 +162,7 @@ final class ParallelCompilerPass implements CompilerPass {
         // re-throw it and investigate the cause.
         result.exceptions.add(e);
         // One of our thread was interrupted, we'll make the current thread to
-        // be interrupted so any callers that is interested in cancellable
+        // be interrupted so any caller that is interested in cancelable
         // execution can cancel.
         Thread.currentThread().interrupt();
       }

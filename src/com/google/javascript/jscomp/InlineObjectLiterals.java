@@ -146,7 +146,7 @@ class InlineObjectLiterals implements CompilerPass {
 
     /**
      * Counts the number of direct (full) references to an object.
-     * Specifically we check for references of the following type:
+     * Specifically, we check for references of the following type:
      * <pre>
      *   x;
      *   x.fn();
@@ -206,7 +206,7 @@ class InlineObjectLiterals implements CompilerPass {
           return false;
         }
 
-        // Make sure that the value is not self-refential. IOW,
+        // Make sure that the value is not self-referential. IOW,
         // disallow things like x = {b: x.a}.
         //
         // TODO: Only exclude unorderable self-referential

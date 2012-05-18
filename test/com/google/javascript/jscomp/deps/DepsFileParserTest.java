@@ -62,7 +62,7 @@ public class DepsFileParserTest extends TestCase {
         + "/* blah */goog.addDependency(\"yes2\", [], [])/* blah*/\n"
         + "goog.addDependency('yes3', ['a','b'], ['c']); // goog.addDependency('no3', [], []);\n"
         + "// goog.addDependency('no4', [], []);\n"
-        + "goog.addDependency(\"yes4\", [], [ \"a\",'b' , 'c' ]); //no new line at eof";
+        + "goog.addDependency(\"yes4\", [], [ \"a\",'b' , 'c' ]); //no new line at EOF";
 
     List<DependencyInfo> result = parser.parseFile(SRC_PATH, CONTENTS);
     ImmutableList<DependencyInfo> EXPECTED = ImmutableList.<DependencyInfo>of(

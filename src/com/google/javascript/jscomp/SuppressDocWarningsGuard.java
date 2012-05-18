@@ -30,16 +30,16 @@ import java.util.Map;
 class SuppressDocWarningsGuard extends WarningsGuard {
   private static final long serialVersionUID = 1L;
 
-  /** Warnings guards for each suppressable warnings group, indexed by name. */
+  /** Warnings guards for each suppressible warnings group, indexed by name. */
   private final Map<String, DiagnosticGroupWarningsGuard> suppressors =
       Maps.newHashMap();
 
   /**
-   * The suppressable groups, indexed by name.
+   * The suppressible groups, indexed by name.
    */
-  SuppressDocWarningsGuard(Map<String, DiagnosticGroup> suppressableGroups) {
+  SuppressDocWarningsGuard(Map<String, DiagnosticGroup> suppressibleGroups) {
     for (Map.Entry<String, DiagnosticGroup> entry :
-             suppressableGroups.entrySet()) {
+             suppressibleGroups.entrySet()) {
       suppressors.put(
           entry.getKey(),
           new DiagnosticGroupWarningsGuard(

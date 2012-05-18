@@ -35,7 +35,7 @@ public class InlineSimpleMethodsTest extends CompilerTestCase {
 
   /**
    * Helper for tests that expects definitions to remain unchanged, such
-   * that {@code definitions+js} is coverted to {@code definitions+expected}.
+   * that {@code definitions+js} is converted to {@code definitions+expected}.
    */
   private void testWithPrefix(String definitions, String js, String expected) {
     test(definitions + js, definitions + expected);

@@ -368,7 +368,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
 
   private void testDebugStrings(String js, String expected,
                                 String[] substitutedStrings) {
-    // Verify that the strings are substituted correctly in the js code.
+    // Verify that the strings are substituted correctly in the JS code.
     test(js, expected);
 
     List<Result> results = pass.getResult();

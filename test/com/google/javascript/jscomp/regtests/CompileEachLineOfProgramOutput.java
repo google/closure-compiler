@@ -105,7 +105,7 @@ public class CompileEachLineOfProgramOutput {
     System.out.println(
         "Usage: pass in a program to execute (with arguments)");
     System.out.println(
-        "The program is expected to produce js programs to stdout, " +
+        "The program is expected to produce JS programs to stdout, " +
         "one per line");
   }
 }

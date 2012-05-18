@@ -269,7 +269,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
         (node.isAnd()) || (node.isOr()),
         "Expected: AND or OR, Got: %s", Token.name(node.getType()));
 
-    // keep whole expression if rhs of the branching expression
+    // keep whole expression if RHS of the branching expression
     // contains a call.
     Node left = node.getFirstChild();
     Node right = left.getNext();

@@ -50,7 +50,7 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = 'abcdefbe'.lastIndexOf('b')", "x = 6");
     fold("x = 'abcdefbe'.lastIndexOf('b', 5)", "x = 1");
 
-    // Both elements must be string. Dont do anything if either one is not
+    // Both elements must be strings. Don't do anything if either one is not
     // string.
     fold("x = 'abc1def'.indexOf(1)", "x = 3");
     fold("x = 'abcNaNdef'.indexOf(NaN)", "x = 3");
@@ -58,7 +58,7 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = 'abcnulldef'.indexOf(null)", "x = 3");
     fold("x = 'abctruedef'.indexOf(true)", "x = 3");
 
-    // The following testcase fails with JSC_PARSE_ERROR. Hence omitted.
+    // The following test case fails with JSC_PARSE_ERROR. Hence omitted.
     // foldSame("x = 1.indexOf('bcd');");
     foldSame("x = NaN.indexOf('bcd')");
     foldSame("x = undefined.indexOf('bcd')");

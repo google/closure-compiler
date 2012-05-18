@@ -107,7 +107,7 @@ public class JSModule implements DependencyInfo, Serializable {
 
   /**
    * Adds a source code input to this module. Call only if the input might
-   * already be associated with a module. Otherwise use
+   * already be associated with a module. Otherwise, use
    * add(CompilerInput input).
    */
   void addAndOverrideModule(CompilerInput input) {

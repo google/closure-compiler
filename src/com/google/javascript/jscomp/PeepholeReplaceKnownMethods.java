@@ -174,12 +174,12 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
   }
 
   /**
-   * @return The uppered string Node.
+   * @return The upped string Node.
    */
   private Node tryFoldStringToUpperCase(Node subtree, Node stringNode) {
     // From Rhino, NativeString.java. See ECMA 15.5.4.12
-    String uppered = stringNode.getString().toUpperCase(ROOT_LOCALE);
-    Node replacement = IR.string(uppered);
+    String upped = stringNode.getString().toUpperCase(ROOT_LOCALE);
+    Node replacement = IR.string(upped);
     subtree.getParent().replaceChild(subtree, replacement);
     reportCodeChange();
     return replacement;
@@ -320,7 +320,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
         return n;
       }
       // Make sure that the parsed number matches the original string
-      // This prevents rounding differences between the java implementation
+      // This prevents rounding differences between the Java implementation
       // and native script.
       if (!normalizeNumericString(stringVal).equals(normalizedNewVal)) {
         return n;

@@ -28,7 +28,7 @@ import java.util.Deque;
 import java.util.List;
 
 /**
- * CodePrinter prints out js code in either pretty format or compact format.
+ * CodePrinter prints out JS code in either pretty format or compact format.
  *
  * @see CodeGenerator
  */
@@ -405,12 +405,12 @@ class CodePrinter {
     // The CompactCodePrinter tries to emit just enough newlines to stop there
     // being lines longer than the threshold.  Since the output is going to be
     // gzipped, it makes sense to try to make the newlines appear in similar
-    // contexts so that GZIP can encode them for 'free'.
+    // contexts so that gzip can encode them for 'free'.
     //
     // This version tries to break the lines at 'preferred' places, which are
-    // between the top-level forms.  This works because top level forms tend to
-    // be more uniform than arbitary legal contexts.  Better compression would
-    // probably require explicit modelling of the gzip algorithm.
+    // between the top-level forms.  This works because top-level forms tend to
+    // be more uniform than arbitrary legal contexts.  Better compression would
+    // probably require explicit modeling of the gzip algorithm.
 
     private final boolean lineBreak;
     private final boolean preferLineBreakAtEndOfFile;
@@ -679,7 +679,7 @@ class CodePrinter {
   }
 
   /**
-   * Converts a tree to js code
+   * Converts a tree to JS code
    */
   private static String toSource(Node root, Format outputFormat,
                                  boolean lineBreak,  boolean preferEndOfFileBreak,

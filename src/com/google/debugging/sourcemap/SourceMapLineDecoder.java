@@ -151,7 +151,7 @@ class SourceMapLineDecoder {
     }
 
     boolean hasNext() {
-      return  current < content.length() -1;
+      return current < content.length() -1;
     }
   }
 }

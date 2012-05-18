@@ -455,7 +455,7 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
   }
 
   /**
-   * Compare an array entry's column value to the taget column value.
+   * Compare an array entry's column value to the target column value.
    */
   private int compareEntry(ArrayList<Entry> entries, int entry, int target) {
     return entries.get(entry).getGeneratedColumn() - target;
@@ -566,7 +566,7 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
 
     @Override
     public boolean hasNext() {
-      return  current < length;
+      return current < length;
     }
   }
 

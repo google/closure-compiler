@@ -31,7 +31,7 @@ import java.util.Set;
  * <p>Currently does the following:</p>
  *
  * <ul>
- *   <li> Instead  of setting abstract methods to a function that throws an
+ *   <li> Instead of setting abstract methods to a function that throws an
  *        informative error, this pass allows some binary size reduction by
  *        removing these methods altogether for production builds.</li>
  *   <li> Remove calls to assertion functions (like goog.asserts.assert).

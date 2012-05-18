@@ -47,7 +47,7 @@ class AstParallelizer {
   private final boolean includeRoot;
 
   // Maps to place holder to the original function.
-  private final List<DettachPoint> detachPointList;
+  private final List<DetachPoint> detachPointList;
 
   /**
    * Constructor.
@@ -57,7 +57,7 @@ class AstParallelizer {
    *     This is <b>very</b> important for performance as we do not want to
    *     traverse too much just looking for subtree.
    * @param placeHolderProvider Specify what type of node should be place as
-   *     a temporary place holder for where the subtree is dettached.
+   *     a temporary place holder for where the subtree is detached.
    * @param root The AST itself.
    * @param includeRoot Should we include the root inside the forest returned
    *     by {{@link #split()}.
@@ -138,14 +138,14 @@ class AstParallelizer {
   /**
    * Remembers the split point for use in {@link #join()}.
    */
-  private void recordSplitPoint(Node placeHolder, Node before, Node orginal) {
-    detachPointList.add(new DettachPoint(placeHolder, before, orginal));
+  private void recordSplitPoint(Node placeHolder, Node before, Node original) {
+    detachPointList.add(new DetachPoint(placeHolder, before, original));
   }
 
   /**
    * Splits the AST into subtree at different levels. The subtrees itself are
-   * usually not valid javascript but they are all subtreess of some valid
-   * javascript.
+   * usually not valid JavaScript but they are all subtrees of some valid
+   * JavaScript.
    */
   public List<Node> split() {
     if (includeRoot) {
@@ -186,7 +186,7 @@ class AstParallelizer {
   public void join() {
     // Revert in a reverse order to undo the detachment.
     while (!detachPointList.isEmpty()) {
-      DettachPoint entry = detachPointList.remove(detachPointList.size() - 1);
+      DetachPoint entry = detachPointList.remove(detachPointList.size() - 1);
       entry.reattach();
     }
   }
@@ -196,10 +196,10 @@ class AstParallelizer {
    * Normally a Map from Node -> Node is sufficient, however, if we also
    * remember the node before the place holder, we can avoid using
    * {@link Node#replaceChild(Node, Node)} which requires a linear search of
-   * the before node. May be someday we should get a prev pointer for this
+   * the before node. Maybe someday we should get a prev pointer for this
    * purpose.
    */
-  private static class DettachPoint {
+  private static class DetachPoint {
 
     // The place holder to remember where the original node was.
     private Node placeHolder;
@@ -210,10 +210,10 @@ class AstParallelizer {
     // The root of the subtree to be temporary detached.
     private Node original;
 
-    private DettachPoint(Node placeHolder, Node before, Node orginal) {
+    private DetachPoint(Node placeHolder, Node before, Node original) {
       this.placeHolder = placeHolder;
       this.before = before;
-      this.original = orginal;
+      this.original = original;
     }
 
     public void reattach() {

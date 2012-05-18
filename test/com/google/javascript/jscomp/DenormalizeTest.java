@@ -83,7 +83,7 @@ public class DenormalizeTest extends CompilerTestCase {
 
   public void testInOperatorNotInsideFor() {
     // in operators shouldn't be moved into for loops.
-    // Some Javascript interpreters (such as the NetFront Access browser
+    // Some JavaScript interpreters (such as the NetFront Access browser
     // embedded in the PlayStation 3) will not parse an in operator in
     // a for loop, even if it's protected by parentheses.
 

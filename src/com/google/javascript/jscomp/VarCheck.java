@@ -111,7 +111,7 @@ class VarCheck extends AbstractPostOrderCallback implements
     Preconditions.checkState(scriptRoot.isScript());
     NodeTraversal t = new NodeTraversal(compiler, this);
     // Note we use the global scope to prevent wrong "undefined-var errors" on
-    // variables that are defined in other js files.
+    // variables that are defined in other JS files.
     t.traverseWithScope(scriptRoot,
         SyntacticScopeCreator.generateUntypedTopScope(compiler));
     // TODO(bashir) Check if we need to createSynthesizedExternVar like process.
@@ -211,7 +211,7 @@ class VarCheck extends AbstractPostOrderCallback implements
 
     // Mark the variable as constant if it matches the coding convention
     // for constant vars.
-    // NOTE(nicksantos): honestly, i'm not sure how much this matters.
+    // NOTE(nicksantos): honestly, I'm not sure how much this matters.
     // AFAIK, all people who use the CONST coding convention also
     // compile with undeclaredVars as errors. We have some test
     // cases for this configuration though, and it makes them happier.

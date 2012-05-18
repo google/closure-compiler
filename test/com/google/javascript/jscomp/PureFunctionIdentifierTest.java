@@ -126,7 +126,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
       " */\n" +
       "externObj3.prototype.propWithStubBefore = function(s) {};" +
 
-      // useless jsdoc
+      // useless JsDoc
       "/**\n" +
       " * @see {foo}\n" +
       " */\n" +
@@ -159,7 +159,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
       " */\n" +
       "externObj4.prototype.propWithStubAfterWithJSDoc = function(s) {};" +
 
-      // useless jsdoc
+      // useless JsDoc
       "/**\n" +
       " * @see {foo}\n" +
       " */\n" +
@@ -252,7 +252,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     // it does not have global side-effects with "this" is
     // a known local value.
     // TODO(johnlenz): "f" is side-effect free but we need
-    // to propagate that "externObjSEThisMethod" is modifing
+    // to propagate that "externObjSEThisMethod" is modifying
     // a local object.
     checkMarkedCalls(
         "function f() {" +
@@ -714,7 +714,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   public void testLocalizedSideEffects3() throws Exception {
-    // A local that might be assigned a gobal value and whose properties
+    // A local that might be assigned a global value and whose properties
     // are modified must be considered a global side-effect.
     checkMarkedCalls("var g = {foo:1}; function f() {var x = g; x.foo++}" +
                      "f()",

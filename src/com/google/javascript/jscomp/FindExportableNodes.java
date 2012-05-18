@@ -37,7 +37,7 @@ import java.util.LinkedHashMap;
  * FOO = BAR = 5;
  * and
  * var FOO = BAR = 5;
- * are not supported because the annotation is ambigous to whether it applies
+ * are not supported because the annotation is ambiguous to whether it applies
  * to all the variables or only the first one.
  *
  */

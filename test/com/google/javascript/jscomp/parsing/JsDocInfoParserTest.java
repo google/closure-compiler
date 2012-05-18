@@ -1120,8 +1120,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseExtendsInvalidName() throws Exception {
-    // This looks bad, but for the time being it should be ok, as
-    // we will not find a type with this name in the js parsed tree.
+    // This looks bad, but for the time being it should be OK, as
+    // we will not find a type with this name in the JS parsed tree.
     // If this is fixed in the future, change this test to check for a
     // warning/error message.
     assertTypeEquals(

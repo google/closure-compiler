@@ -341,8 +341,8 @@ class IRFactory {
    *
    * @param node The JsDoc Comment node to parse.
    * @param irNode
-   * @return A JSDocInfoParser. Will contain either fileoverview jsdoc, or
-   *     normal jsdoc, or no jsdoc (if the method parses to the wrong level).
+   * @return A JsDocInfoParser. Will contain either fileoverview JsDoc, or
+   *     normal JsDoc, or no JsDoc (if the method parses to the wrong level).
    */
   private JsDocInfoParser createJsDocInfoParser(Comment node, Node irNode) {
     String comment = node.getValue();
@@ -462,7 +462,7 @@ class IRFactory {
      * Parse the directives, encode them in the AST, and remove their nodes.
      *
      * For information on ES5 directives, see section 14.1 of
-     * Ecma-262, Edition 5.
+     * ECMA-262, Edition 5.
      *
      * It would be nice if Rhino would eventually take care of this for
      * us, but right now their directive-processing is a one-off.

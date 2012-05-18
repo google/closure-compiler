@@ -449,7 +449,7 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(crossModuleCodeMotion);
     }
 
-    // Method devirtualization benefits from property disambiguiation so
+    // Method devirtualization benefits from property disambiguation so
     // it should run after that pass but before passes that do
     // optimizations based on global names (like cross module code motion
     // and inline functions).  Smart Name Removal does better if run before
@@ -868,7 +868,7 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /** Generates exports for functions associated with JSUnit. */
+  /** Generates exports for functions associated with JsUnit. */
   final PassFactory exportTestFunctions =
       new PassFactory("exportTestFunctions", true) {
     @Override
@@ -1349,7 +1349,7 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /** Inserts runtime type assertions for debugging. */
+  /** Inserts run-time type assertions for debugging. */
   final PassFactory runtimeTypeCheck =
       new PassFactory("runtimeTypeCheck", true) {
     @Override

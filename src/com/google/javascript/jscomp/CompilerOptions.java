@@ -228,7 +228,7 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public String checkMissingGetCssNameBlacklist;
 
-  /** Checks that the synctactic restrictions of Caja are met. */
+  /** Checks that the syntactic restrictions of Caja are met. */
   boolean checkCaja;
 
   public void setCheckCaja(boolean check) {
@@ -273,7 +273,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Merge two variables together as one. */
   public boolean coalesceVariableNames;
 
-  /** Move methds to a deeper module */
+  /** Move methods to a deeper module */
   public boolean crossModuleMethodMotion;
 
   /** Inlines trivial getters */
@@ -517,11 +517,11 @@ public class CompilerOptions implements Serializable, Cloneable {
   // Special-purpose alterations
   //--------------------------------
 
-  /** Inserts runtime type assertions for debugging. */
+  /** Inserts run-time type assertions for debugging. */
   boolean runtimeTypeCheck;
 
   /**
-   * A JS function to be used for logging runtime type assertion
+   * A JS function to be used for logging run-time type assertion
    * failures. It will be passed the warning as a string and the
    * faulty expression as arguments.
    */
@@ -596,7 +596,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Replacements for tweaks. Will be Boolean, Numbers, or Strings */
   private Map<String, Object> tweakReplacements;
 
-  /** Move top level function declarations to the top */
+  /** Move top-level function declarations to the top */
   public boolean moveFunctionDeclarations;
 
   /** Instrumentation template to use with #recordFunctionInformation */
@@ -638,13 +638,13 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** List of properties that we report invalidation errors for. */
   Map<String, CheckLevel> propertyInvalidationErrors;
 
-  /** Transform AMD to Common JS modules. */
+  /** Transform AMD to CommonJS modules. */
   boolean transformAMDToCJSModules = false;
 
-  /** Rewrite Common JS modules so that they can be concatenated together. */
+  /** Rewrite CommonJS modules so that they can be concatenated together. */
   boolean processCommonJSModules = false;
 
-  /** Common JS module prefix. */
+  /** CommonJS module prefix. */
   String commonJSModulePathPrefix =
       ProcessCommonJSModules.DEFAULT_FILENAME_PREFIX;
 
@@ -662,7 +662,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Prefer line breaks at end of file */
   public boolean preferLineBreakAtEndOfFile;
 
-  /** Prints a separator comment before each js script */
+  /** Prints a separator comment before each JS script */
   public boolean printInputDelimiter;
 
   /** The string to use as the separator for printInputDelimiter */
@@ -1276,9 +1276,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
-   * Enable runtime type checking, which adds JS type assertions for debugging.
+   * Enable run-time type checking, which adds JS type assertions for debugging.
    *
-   * @param logFunction A JS function to be used for logging runtime type
+   * @param logFunction A JS function to be used for logging run-time type
    *     assertion failures.
    */
   public void enableRuntimeTypeCheck(String logFunction) {
@@ -1304,7 +1304,7 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /**
    * Sets dependency options. See the DependencyOptions class for more info.
-   * This supercedes manageClosureDependencies.
+   * This supersedes manageClosureDependencies.
    */
   public void setDependencyOptions(DependencyOptions options) {
     Preconditions.checkNotNull(options);
@@ -1901,14 +1901,14 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
-   * Activates transformation of AMD to CJS modules.
+   * Activates transformation of AMD to CommonJS modules.
    */
   public void setTransformAMDToCJSModules(boolean transformAMDToCJSModules) {
     this.transformAMDToCJSModules = transformAMDToCJSModules;
   }
 
   /**
-   * Rewrites CommonJS modulee so that modules can be concatenated together,
+   * Rewrites CommonJS modules so that modules can be concatenated together,
    * by renaming all globals to avoid conflicting with other modules.
    */
   public void setProcessCommonJSModules(boolean processCommonJSModules) {
@@ -1916,7 +1916,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
-   * Sets a path prefix for Common JS modules.
+   * Sets a path prefix for CommonJS modules.
    */
   public void setCommonJSModulePathPrefix(String commonJSModulePathPrefix) {
     this.commonJSModulePathPrefix = commonJSModulePathPrefix;
@@ -1929,7 +1929,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** When to do the extra sanity checks */
   public static enum LanguageMode {
     /**
-     * Tranditional JavaScript
+     * Traditional JavaScript
      */
     ECMASCRIPT3,
 
@@ -1993,7 +1993,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
-   * A Role Specific Interface for JsCompiler that represents a data holder
+   * A Role Specific Interface for JS Compiler that represents a data holder
    * object which is used to store goog.scope alias code changes to code made
    * during a compile. There is no guarantee that individual alias changes are
    * invoked in the order they occur during compilation, so implementations
@@ -2030,11 +2030,11 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
-   * A Role Specific Interface for the JsCompiler to report aliases used to
+   * A Role Specific Interface for the JS Compiler to report aliases used to
    * change the code during a compile.
    * <p>
    * While aliases defined by goog.scope are expected to by only 1 per file, and
-   * the only top level structure in the file, this is not enforced.
+   * the only top-level structure in the file, this is not enforced.
    */
   public interface AliasTransformation {
 

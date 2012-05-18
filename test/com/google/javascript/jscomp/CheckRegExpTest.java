@@ -46,7 +46,7 @@ public class CheckRegExpTest extends CompilerTestCase {
     testReference("new RegExp();", false);
     testReference("var x = new RegExp();", false);
 
-    // Checking for RegExp instances is ok, as well.
+    // Checking for RegExp instances is OK, as well.
     testReference("x instanceof RegExp;", false);
 
     // Any other reference isn't

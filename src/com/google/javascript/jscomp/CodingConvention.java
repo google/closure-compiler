@@ -129,13 +129,13 @@ public interface CodingConvention extends Serializable {
 
   /**
    * Convenience method for determining provided dependencies amongst different
-   * js scripts.
+   * JS scripts.
    */
   public String extractClassNameIfProvide(Node node, Node parent);
 
   /**
    * Convenience method for determining required dependencies amongst different
-   * js scripts.
+   * JS scripts.
    */
   public String extractClassNameIfRequire(Node node, Node parent);
 

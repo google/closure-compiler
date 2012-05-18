@@ -101,7 +101,7 @@ public class CheckSideEffectsTest extends CompilerTestCase {
   }
 
   public void testJSDocComments() {
-    test("function A() { /** This is a jsdoc comment */ this.foo; }", ok);
+    test("function A() { /** This is a JsDoc comment */ this.foo; }", ok);
     test("function A() { /* This is a normal comment */ this.foo; }",
          "function A() { " +
          " /* This is a normal comment */ JSCOMPILER_PRESERVE(this.foo); }", e);

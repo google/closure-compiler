@@ -212,7 +212,7 @@ public final class CompileTask
   }
 
   /**
-   * Set print input delimitter formatting option
+   * Set print input delimiter formatting option
    */
   public void setPrintInputDelimiter(boolean print) {
     this.printInputDelimiter = print;
@@ -332,7 +332,7 @@ public final class CompileTask
 
   /**
    * Creates a new {@code <define/>} nested element. Supports name and value
-   * attribtues.
+   * attributes.
    */
   public Parameter createDefine() {
     Parameter param = new Parameter();
@@ -516,7 +516,7 @@ public final class CompileTask
       throw new BuildException(e);
     }
 
-    log("Compiled javascript written to " + this.outputFile.getAbsolutePath(),
+    log("Compiled JavaScript written to " + this.outputFile.getAbsolutePath(),
         Project.MSG_DEBUG);
   }
 

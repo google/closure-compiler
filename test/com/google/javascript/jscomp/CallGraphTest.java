@@ -384,7 +384,7 @@ public class CallGraphTest extends CompilerTestCase {
    * and propagating over it.
    */
   public void testGetDirectedGraph_backwardOnBackward() {
-    // For this test we create a simple callback that when, applied until a
+    // For this test we create a simple callback that, when applied until a
     // fixedpoint, computes whether a function is "poisoned" by an extern.
     // A function is poisoned if it calls an extern or if it calls another
     // poisoned function.
@@ -445,7 +445,7 @@ public class CallGraphTest extends CompilerTestCase {
    * and propagating over it.
    */
   public void testGetDirectedGraph_backwardOnForward() {
-    // For this test we create a simple callback that when, applied until a
+    // For this test we create a simple callback that, when applied until a
     // fixedpoint, computes whether a function is "poisoned" by an extern.
     // A function is poisoned if it calls an extern or if it calls another
     // poisoned function.
@@ -506,7 +506,7 @@ public class CallGraphTest extends CompilerTestCase {
    * and propagating over it.
    */
   public void testGetDirectedGraph_forwardOnForward() {
-    // For this test we create a simple callback that when, applied until a
+    // For this test we create a simple callback that, when applied until a
     // fixedpoint, computes whether a function is reachable from an initial
     // set of "root" nodes.
 
@@ -582,7 +582,7 @@ public class CallGraphTest extends CompilerTestCase {
    * and propagating over it.
    */
   public void testGetDirectedGraph_forwardOnBackward() {
-    // For this test we create a simple callback that when, applied until a
+    // For this test we create a simple callback that, when applied until a
     // fixedpoint, computes whether a function is reachable from an initial
     // set of "root" nodes.
 

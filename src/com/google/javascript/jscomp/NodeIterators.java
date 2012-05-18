@@ -223,7 +223,7 @@ class NodeIterators {
           return;
         }
 
-        // Don't advance past a refrence to the variable that we're trying
+        // Don't advance past a reference to the variable that we're trying
         // to inline.
         Node curNode = iterator.current();
         if (curNode.isName() &&

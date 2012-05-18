@@ -34,7 +34,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
- * Unit test for the Compiler DisambiguateProprties pass.
+ * Unit test for the Compiler DisambiguateProperties pass.
  *
  */
 public class DisambiguatePropertiesTest extends CompilerTestCase {
@@ -783,7 +783,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
       + "/** @type {Buz|Foo} */ var d;\n"
       + "b.a = 5; c.a = 6; d.a = 7;";
 
-    // We are testing the skipping of multiple types caused by unioning with
+    // We are testing the skipping of multiple types caused by unionizing with
     // extern types.
     testSets(false, externs, js, output, "{a=[[T1], [T2]]}");
   }
@@ -1361,7 +1361,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
-  /** Sorts the map and converts to a string for comparision purposes. */
+  /** Sorts the map and converts to a string for comparison purposes. */
   private <T> String mapToString(Multimap<String, Collection<T>> map) {
     TreeMap<String, String> retMap = Maps.newTreeMap();
     for (String key : map.keySet()) {

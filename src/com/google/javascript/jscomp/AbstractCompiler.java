@@ -262,7 +262,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract void setHasRegExpGlobalReferences(boolean references);
 
   /**
-   * @return Whether the AST constains references to the RegExp global object
+   * @return Whether the AST contains references to the RegExp global object
    *     properties.
    */
   abstract boolean hasRegExpGlobalReferences();

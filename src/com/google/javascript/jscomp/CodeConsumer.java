@@ -226,7 +226,7 @@ abstract class CodeConsumer {
       append(" ");
     }
 
-    // Allow formating around the operator.
+    // Allow formatting around the operator.
     appendOp(op, binOp);
 
     // Line breaking after an operator is always safe. Line breaking before an

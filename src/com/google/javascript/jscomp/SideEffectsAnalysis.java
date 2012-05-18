@@ -82,7 +82,7 @@ import java.util.Set;
    * Constructs a new SideEffectsAnalysis with the given location abstraction.
    *
    * @param compiler A compiler instance
-   * @param locationAbstractionMode The location abstration to use. {@code
+   * @param locationAbstractionMode The location abstraction to use. {@code
    *    DEGENERATE} will use {@link DegenerateLocationAbstraction} while
    *    {@code VISIBILITY_BASED} will use {@link VisibilityLocationAbstraction}
    *
@@ -420,7 +420,7 @@ import java.util.Set;
   public abstract static class AbstractMotionEnvironment {
 
     /**
-     * Calculates the set of nodes that this environment represnts.
+     * Calculates the set of nodes that this environment represents.
      */
     public abstract Set<Node> calculateEnvironment();
   }
@@ -492,7 +492,7 @@ import java.util.Set;
     /**
      * A low-level concrete environment that allows the client to specify
      * the environment nodes directly. Clients may wish to use this environment
-     * if none  of the higher-level environments fit their needs.
+     * if none of the higher-level environments fit their needs.
      */
   public static class RawMotionEnvironment
       extends AbstractMotionEnvironment {

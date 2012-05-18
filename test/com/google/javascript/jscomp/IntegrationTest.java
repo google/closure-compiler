@@ -1881,7 +1881,7 @@ public class IntegrationTest extends IntegrationTestCase {
     options.computeFunctionSideEffects = false;
     options.removeUnusedVars = true;
 
-    // If we do splits too early, it would add a sideeffect to x.
+    // If we do splits too early, it would add a side-effect to x.
     test(options,
       "var x=['1','2','3','4','5','6','7']",
       "");
@@ -1905,7 +1905,7 @@ public class IntegrationTest extends IntegrationTestCase {
       test(options,
            "var x = 3; function f() { return x + z; }",
            "function f() { return x + z; }");
-      fail("Expected runtime exception");
+      fail("Expected run-time exception");
     } catch (RuntimeException e) {
       assertTrue(e.getMessage().indexOf("Unexpected variable x") != -1);
     }

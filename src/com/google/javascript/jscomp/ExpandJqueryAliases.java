@@ -76,7 +76,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
     this.compiler = compiler;
     this.convention = compiler.getCodingConvention();
 
-    // All of the "early" peephole optimzations.
+    // All of the "early" peephole optimizations.
     // These passes should make the code easier to analyze.
     // Passes, such as StatementFusion, are omitted for this reason.
     final boolean late = false;
@@ -232,7 +232,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
     }
 
     // Check to see if the return value is used. If not, replace the original
-    // call with new block. Otherwise wrap the statements in an
+    // call with new block. Otherwise, wrap the statements in an
     // immediately-called anonymous function.
     if (n.getParent().isExprResult()) {
       Node parent = n.getParent();

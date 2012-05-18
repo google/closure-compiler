@@ -48,7 +48,7 @@ import java.util.Set;
  * all is said and done.
  *
  * This pass currently does the following:
- * 1) Simplifies the AST by splitting var statements, moving initializiers
+ * 1) Simplifies the AST by splitting var statements, moving initializers
  *    out of for loops, and converting whiles to fors.
  * 2) Moves hoisted functions to the top of function scopes.
  * 3) Rewrites unhoisted named function declarations to be var declarations.
@@ -130,7 +130,7 @@ class Normalize implements CompilerPass {
     // It is important that removeDuplicateDeclarations runs after
     // MakeDeclaredNamesUnique in order for catch block exception names to be
     // handled properly. Specifically, catch block exception names are
-    // only valid within the catch block, but our currect Scope logic
+    // only valid within the catch block, but our current Scope logic
     // has no concept of this and includes it in the containing function
     // (or global scope). MakeDeclaredNamesUnique makes the catch exception
     // names unique so that removeDuplicateDeclarations() will properly handle
@@ -140,7 +140,7 @@ class Normalize implements CompilerPass {
     //      var e = 1; // f scope 'e'
     //   }
     // otherwise 'var e = 1' would be rewritten as 'e = 1'.
-    // TODO(johnlenz): Introduce a seperate scope for catch nodes.
+    // TODO(johnlenz): Introduce a separate scope for catch nodes.
     removeDuplicateDeclarations(externs, root);
     new PropagateConstantAnnotationsOverVars(compiler, assertOnChange)
         .process(externs, root);
@@ -241,7 +241,7 @@ class Normalize implements CompilerPass {
         }
 
         JSDocInfo info = null;
-        // Find the JSDocInfo for a top level variable.
+        // Find the JSDocInfo for a top-level variable.
         Var var = t.getScope().getVar(n.getString());
         if (var != null) {
           info = var.getJSDocInfo();
@@ -659,7 +659,7 @@ class Normalize implements CompilerPass {
           Preconditions.checkNotNull(previous);
           functionBody.removeChildAfter(previous);
 
-          // Readd the function at the top of the function body (after any
+          // Read the function at the top of the function body (after any
           // previous declarations).
           insertAfter = addToFront(functionBody, current, insertAfter);
           reportCodeChange("Move function declaration not at top of function");
@@ -732,7 +732,7 @@ class Normalize implements CompilerPass {
       if (v != null && v.getParentNode().isCatch()) {
         // Redeclaration of a catch expression variable is hard to model
         // without support for "with" expressions.
-        // The EcmaScript spec (section 12.14), declares that a catch
+        // The ECMAScript spec (section 12.14), declares that a catch
         // "catch (e) {}" is handled like "with ({'e': e}) {}" so that
         // "var e" would refer to the scope variable, but any following
         // reference would still refer to "e" of the catch expression.

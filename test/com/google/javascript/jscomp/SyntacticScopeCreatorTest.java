@@ -28,7 +28,7 @@ import junit.framework.TestCase;
 public class SyntacticScopeCreatorTest extends TestCase {
 
   /**
-   * Helper to create a top level scope from a javascript string
+   * Helper to create a top-level scope from a JavaScript string
    */
   private static Scope getScope(String js) {
     Compiler compiler = new Compiler();
@@ -123,7 +123,7 @@ public class SyntacticScopeCreatorTest extends TestCase {
   }
 
   /**
-   * Parse the supplied js and create the global SyntaticScope object.
+   * Parse the supplied JS and create the global SyntaticScope object.
    * @return The error count.
    */
   private int createGlobalScopeHelper(String js) {

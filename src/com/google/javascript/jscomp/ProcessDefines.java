@@ -284,7 +284,7 @@ class ProcessDefines implements CompilerPass {
     }
 
     @Override
-    public  void visit(NodeTraversal t, Node n, Node parent) {
+    public void visit(NodeTraversal t, Node n, Node parent) {
       RefInfo refInfo = allRefInfo.get(n);
       if (refInfo != null) {
         Ref ref = refInfo.ref;
@@ -356,7 +356,7 @@ class ProcessDefines implements CompilerPass {
           // ReplaceOverriddenVars keeps a call graph of all functions and
           // which functions/variables that they reference, and tries
           // to statically determine which functions are "safe" and which
-          // are not. But this would be overkill, expecially because
+          // are not. But this would be overkill, especially because
           // the intended use of defines is with config_files, where
           // all the defines are at the top of the bundle.
           for (DefineInfo info : assignableDefines.values()) {

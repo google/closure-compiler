@@ -148,7 +148,7 @@ class DefinitionsRemover {
 
   /**
    * Represents an name-only external definition.  The definition's
-   * rhs is missing.
+   * RHS is missing.
    */
   abstract static class IncompleteDefinition extends Definition {
     private static final Set<Integer> ALLOWED_TYPES =
@@ -190,7 +190,7 @@ class DefinitionsRemover {
 
   /**
    * Represents an name-only external definition.  The definition's
-   * rhs is missing.
+   * RHS is missing.
    */
   static final class ExternalNameOnlyDefinition extends IncompleteDefinition {
 
@@ -206,7 +206,7 @@ class DefinitionsRemover {
   }
 
   /**
-   * Represents a function formal parameter. The definition's rhs is missing.
+   * Represents a function formal parameter. The definition's RHS is missing.
    */
   static final class FunctionArgumentDefinition extends IncompleteDefinition {
     FunctionArgumentDefinition(Node function,
@@ -264,7 +264,7 @@ class DefinitionsRemover {
   }
 
   /**
-   * Represents a function expression that acts as a rhs.  The defined
+   * Represents a function expression that acts as a RHS.  The defined
    * name is only reachable from within the function.
    */
   static final class FunctionExpressionDefinition extends FunctionDefinition {

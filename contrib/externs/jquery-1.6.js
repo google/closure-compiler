@@ -215,7 +215,7 @@ jQuery.browser;
 $.browser;
 
 /**
- * This type is used interally to define the jQuery.browser subtype
+ * This type is used internally to define the jQuery.browser subtype
  * @constructor
  * @private
  */
@@ -1792,7 +1792,7 @@ jQuery.support;
 $.support;
 
 /**
- * This type is used interally to define the jQuery.support subtype
+ * This type is used internally to define the jQuery.support subtype
  * @constructor
  * @private
  */

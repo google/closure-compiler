@@ -33,12 +33,12 @@ import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 /**
- * Inserts runtime type assertions.
+ * Inserts run-time type assertions.
  *
  * <p>We add markers to user-defined interfaces and classes in order to check if
  * an object conforms to that type.
  *
- * <p>For each function, we insert a runtime type assertion for each parameter
+ * <p>For each function, we insert a run-time type assertion for each parameter
  * and return value for which the compiler has a type.
  *
  * <p>The JavaScript code which implements the type assertions is in
@@ -91,7 +91,7 @@ class RuntimeTypeCheck implements CompilerPass {
    * {@code C.prototype['instance_of__C']}, and for each interface I it
    * implements , we add {@code C.prototype['implements__I']}.
    *
-   * <p>Since interfaces are not a runtime JS concept, we use these markers to
+   * <p>Since interfaces are not a run-time JS concept, we use these markers to
    * recognize an interface implementation at runtime. We also use markers for
    * user-defined classes, so that we can easily recognize them independently of
    * which module they are defined in and whether the module is loaded.
@@ -203,7 +203,7 @@ class RuntimeTypeCheck implements CompilerPass {
   }
 
   /**
-   * Insert calls to the runtime type checking function {@code checkType}, which
+   * Insert calls to the run-time type checking function {@code checkType}, which
    * takes an expression to check and a list of checkers (one of which must
    * match). It returns the expression back to facilitate checking of return
    * values. We have checkers for value types, class types (user-defined and

@@ -974,7 +974,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // as is the functions can have "extraneous" bits.
 
     // For getter and setter property definitions the
-    // rvalue type != the property type.
+    // r-value type != the property type.
     Node rvalue = key.getFirstChild();
     JSType rightType = NodeUtil.getObjectLitKeyTypeFromValueType(
         key, getJSType(rvalue));
@@ -1026,7 +1026,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   /**
-   * Returns true if any type in the chain has an implictCast annotation for
+   * Returns true if any type in the chain has an implicitCast annotation for
    * the given property.
    */
   private boolean propertyIsImplicitCast(ObjectType type, String prop) {
@@ -1586,7 +1586,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
       }
 
-      // Functions with explcit 'this' types must be called in a GETPROP
+      // Functions with explicit 'this' types must be called in a GETPROP
       // or GETELEM.
       if (functionType.isOrdinaryFunction() &&
           !functionType.getTypeOfThis().isUnknownType() &&

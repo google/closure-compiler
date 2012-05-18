@@ -72,13 +72,13 @@ class NameReferenceGraph extends
   // The following are some implicit nodes of the graph.
 
   // If we have a call site that we absolutely have no idea what variable it
-  // it calls or reference, we'd point it to UKNOWN.
+  // it calls or reference, we'd point it to UNKNOWN.
   final Name UNKNOWN;
 
   // Represents the "main" global block as well as externs.
   final Name MAIN;
 
-  // The implict "window" object.
+  // The implicit "window" object.
   final Name WINDOW;
 
   final AbstractCompiler compiler;
@@ -325,7 +325,7 @@ class NameReferenceGraph extends
       // TODO(user) We'll be able to remove the check for call or apply once
       // the name graph handles those call. The issue for now is that those
       // calls aren't edges in the graph, so we don't have enough information to
-      // know ifit's safe to change the method's signature.
+      // know if it's safe to change the method's signature.
       return !(isExtern() ||
           !isCallable() ||
           isAliased() ||

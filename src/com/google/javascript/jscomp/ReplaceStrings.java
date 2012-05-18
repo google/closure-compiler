@@ -138,7 +138,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
     this.registry = compiler.getTypeRegistry();
     this.nameGenerator = createNameGenerator(reservedNames);
 
-    // Intialize the map of functions to inspect for renaming canidates.
+    // Initialize the map of functions to inspect for renaming candidates.
     parseConfiguration(functionsToInspect);
   }
 

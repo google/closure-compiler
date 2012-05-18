@@ -43,7 +43,7 @@ import java.util.Set;
  *
  */
 // TODO(nicksantos): Unify all the JSDocInfo stuff into one package, instead of
-// spreading it across mutliple packages.
+// spreading it across multiple packages.
 public final class JsDocInfoParser {
 
   private final JsDocTokenStream stream;
@@ -99,7 +99,7 @@ public final class JsDocInfoParser {
   /**
    * Sets the JsDocBuilder for the file-level (root) node of this parse. The
    * parser uses the builder to append any preserve annotations it encounters
-   * in jsdoc comments.
+   * in JsDoc comments.
    *
    * @param fileLevelJsDocBuilder
    */
@@ -1405,7 +1405,7 @@ public final class JsDocInfoParser {
           if (token == JsDocToken.EOC ||
               token == JsDocToken.EOF ||
               // When we're capturing a license block, annotations
-              // in the block are ok.
+              // in the block are OK.
               (token == JsDocToken.ANNOTATION &&
                option != WhitespaceOption.PRESERVE)) {
             String multilineText = builder.toString();
@@ -2011,7 +2011,7 @@ public final class JsDocInfoParser {
 
         boolean isPipe = token == JsDocToken.PIPE;
         if (isPipe && match(JsDocToken.PIPE)) {
-          // We support double pipes for backwards compatiblity.
+          // We support double pipes for backwards compatibility.
           next();
         }
         skipEOLs();
@@ -2023,7 +2023,7 @@ public final class JsDocInfoParser {
       }
 
       union.addChildToBack(expr);
-      // We support commas for backwards compatiblity.
+      // We support commas for backwards compatibility.
     } while (match(JsDocToken.PIPE, JsDocToken.COMMA));
 
     if (alternate == null) {

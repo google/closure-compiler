@@ -208,7 +208,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Sets options based on the configurations set flags API.
    * Called during the run() run() method.
-   * If you want to ignore the flags API, or intepret flags your own way,
+   * If you want to ignore the flags API, or interpret flags your own way,
    * then you should override this method.
    */
   protected void setRunOptions(CompilerOptions options)
@@ -440,7 +440,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Creates js source code inputs from a list of files.
+   * Creates JS source code inputs from a list of files.
    */
   private List<SourceFile> createSourceInputs(List<String> files)
       throws FlagUsageException, IOException {
@@ -458,7 +458,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Creates js extern inputs from a list of files.
+   * Creates JS extern inputs from a list of files.
    */
   private List<SourceFile> createExternInputs(List<String> files)
       throws FlagUsageException, IOException {
@@ -478,7 +478,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * @param specs A list of module specifications, not null or empty. The spec
    *        format is: <code>name:num-js-files[:[dep,...][:]]</code>. Module
    *        names must not contain the ':' character.
-   * @param jsFiles A list of js file paths, not null
+   * @param jsFiles A list of JS file paths, not null
    * @return An array of module objects
    */
   List<JSModule> createJsModules(
@@ -523,11 +523,11 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
       // We will allow modules of zero input.
       if (numJsFiles < 0) {
-        throw new FlagUsageException("Invalid js file count '" + parts[1]
+        throw new FlagUsageException("Invalid JS file count '" + parts[1]
             + "' for module: " + name);
       }
       if (nextJsFileIndex + numJsFiles > totalNumJsFiles) {
-        throw new FlagUsageException("Not enough js files specified. Expected "
+        throw new FlagUsageException("Not enough JS files specified. Expected "
             + (nextJsFileIndex + numJsFiles - totalNumJsFiles)
             + " more in module:" + name);
       }
@@ -559,7 +559,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     if (nextJsFileIndex < totalNumJsFiles) {
-      throw new FlagUsageException("Too many js files specified. Expected "
+      throw new FlagUsageException("Too many JS files specified. Expected "
           + nextJsFileIndex + " but found " + totalNumJsFiles);
     }
 
@@ -1060,9 +1060,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * The placeholder will expand to a different value depending on
    * the current output mode. There are three scenarios:
    *
-   * 1) Single js output, single extra output: sub in jsOutputPath.
-   * 2) Multiple js output, single extra output: sub in the base module name.
-   * 3) Multiple js output, multiple extra output: sub in the module output
+   * 1) Single JS output, single extra output: sub in jsOutputPath.
+   * 2) Multiple JS output, single extra output: sub in the base module name.
+   * 3) Multiple JS output, multiple extra output: sub in the module output
    *    file.
    *
    * Passing a JSModule to this function automatically triggers case #3.
@@ -1122,7 +1122,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Converts a file name into a Ouputstream.
+   * Converts a file name into a Outputstream.
    * Returns null if the file name is null.
    */
   protected OutputStream filenameToOutputStream(String fileName)
@@ -1628,7 +1628,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     private final List<String> externs = Lists.newArrayList();
 
     /**
-     * The file containing javascript externs. You may specify multiple.
+     * The file containing JavaScript externs. You may specify multiple.
      */
     CommandLineConfig setExterns(List<String> externs) {
       this.externs.clear();
@@ -1639,7 +1639,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     private final List<String> js = Lists.newArrayList();
 
     /**
-     * The javascript filename. You may specify multiple.
+     * The JavaScript filename. You may specify multiple.
      */
     CommandLineConfig setJs(List<String> js) {
       this.js.clear();
@@ -1660,10 +1660,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     private final List<String> module = Lists.newArrayList();
 
     /**
-     * A javascript module specification. The format is
+     * A JavaScript module specification. The format is
      * <name>:<num-js-files>[:[<dep>,...][:]]]. Module names must be
      * unique. Each dep is the name of a module that this module
-     * depends on. Modules must be listed in dependency order, and js
+     * depends on. Modules must be listed in dependency order, and JS
      * source files must be listed in the corresponding order. Where
      * --module flags occur in relation to --js flags is unimportant
      */
@@ -1769,7 +1769,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     private final List<String> moduleWrapper = Lists.newArrayList();
 
     /**
-     * An output wrapper for a javascript module (optional). See the flag
+     * An output wrapper for a JavaScript module (optional). See the flag
      * description for formatting requirements.
      */
     CommandLineConfig setModuleWrapper(List<String> moduleWrapper) {
@@ -1781,7 +1781,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     private String moduleOutputPathPrefix = "";
 
     /**
-     * Prefix for filenames of compiled js modules.
+     * Prefix for filenames of compiled JS modules.
      * <module-name>.js will be appended to this prefix. Directories
      * will be created as needed. Use with --module
      */
@@ -1961,7 +1961,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     /**
      * Sets whether to accept input files as ECMAScript5 compliant.
-     * Otherwise input files are treated as ECMAScript3 compliant.
+     * Otherwise, input files are treated as ECMAScript3 compliant.
      */
     CommandLineConfig setLanguageIn(String languageIn) {
       this.languageIn = languageIn;
@@ -1992,7 +1992,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     private boolean transformAMDToCJSModules = false;
 
     /**
-     * Set whether to transform AMD to Common JS modules.
+     * Set whether to transform AMD to CommonJS modules.
      */
     CommandLineConfig setTransformAMDToCJSModules(
         boolean transformAMDToCJSModules) {
@@ -2003,7 +2003,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     private boolean processCommonJSModules = false;
 
     /**
-     * Sets whether to process Common JS modules.
+     * Sets whether to process CommonJS modules.
      */
     CommandLineConfig setProcessCommonJSModules(
         boolean processCommonJSModules) {
@@ -2016,7 +2016,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         ProcessCommonJSModules.DEFAULT_FILENAME_PREFIX;
 
     /**
-     * Sets the Common JS module path prefix.
+     * Sets the CommonJS module path prefix.
      */
     CommandLineConfig setCommonJSModulePathPrefix(
         String commonJSModulePathPrefix) {

@@ -37,12 +37,12 @@ import java.util.List;
 public class ControlFlowAnalysisTest extends TestCase {
 
   /**
-   * Given an input in Javascript, test if the control flow analysis
+   * Given an input in JavaScript, test if the control flow analysis
    * creates the proper control flow graph by comparing the expected
    * Dot file output.
    *
-   * @param input Input Javascript.
-   * @param expected Expected Graphvis Dot file.
+   * @param input Input JavaScript.
+   * @param expected Expected Graphviz Dot file.
    */
   private void testCfg(String input, String expected) {
     testCfg(input, expected, true);
@@ -215,9 +215,9 @@ public class ControlFlowAnalysisTest extends TestCase {
   }
 
   /**
-   * Given an input in Javascript, get a control flow graph for it.
+   * Given an input in JavaScript, get a control flow graph for it.
    *
-   * @param input Input Javascript.
+   * @param input Input JavaScript.
    */
   private ControlFlowGraph<Node> createCfg(String input,
       boolean runSynBlockPass) {
@@ -239,12 +239,12 @@ public class ControlFlowAnalysisTest extends TestCase {
   }
 
   /**
-   * Given an input in Javascript, test if the control flow analysis
+   * Given an input in JavaScript, test if the control flow analysis
    * creates the proper control flow graph by comparing the expected
    * Dot file output.
    *
-   * @param input Input Javascript.
-   * @param expected Expected Graphvis Dot file.
+   * @param input Input JavaScript.
+   * @param expected Expected Graphviz Dot file.
    * @param shouldTraverseFunctions Whether to traverse functions when
    *    constructing the CFG (true by default). Passed in to the
    *    constructor of {@link ControlFlowAnalysis}.

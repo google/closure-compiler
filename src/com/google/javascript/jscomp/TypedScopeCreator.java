@@ -315,7 +315,7 @@ final class TypedScopeCreator implements ScopeCreator {
     declareNativeFunctionType(s, URI_ERROR_FUNCTION_TYPE);
     declareNativeValueType(s, "undefined", VOID_TYPE);
 
-    // ActiveXObject is unqiuely special, because it can be used to construct
+    // ActiveXObject is uniquely special, because it can be used to construct
     // any type (the type that it creates is related to the arguments you
     // pass to it).
     declareNativeValueType(s, "ActiveXObject", NO_OBJECT_TYPE);
@@ -395,7 +395,7 @@ final class TypedScopeCreator implements ScopeCreator {
       implements NodeTraversal.Callback {
 
     /**
-     * The scope that we're builidng.
+     * The scope that we're building.
      */
     final Scope scope;
 
@@ -652,7 +652,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * @param objLitType The type of the OBJECTLIT node. This might be a named
      *     type, because of the lends annotation.
      * @param declareOnOwner If true, declare properties on the objLitType as
-     *     well. If false, the caller should take crae of this.
+     *     well. If false, the caller should take care of this.
      */
     void processObjectLitProperties(
         Node objLit, ObjectType objLitType,
@@ -712,7 +712,7 @@ final class TypedScopeCreator implements ScopeCreator {
     }
 
     /**
-     * Asserts that it's ok to define this node's name.
+     * Asserts that it's OK to define this node's name.
      * The node should have a source name and be of the specified type.
      */
     void assertDefinitionNode(Node n, int type) {
@@ -756,7 +756,7 @@ final class TypedScopeCreator implements ScopeCreator {
     void defineFunctionLiteral(Node n, Node parent) {
       assertDefinitionNode(n, Token.FUNCTION);
 
-      // Determine the name and JSDocInfo and lvalue for the function.
+      // Determine the name and JSDocInfo and l-value for the function.
       // Any of these may be null.
       Node lValue = NodeUtil.getBestLValue(n);
       JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
@@ -822,7 +822,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * This handles two cases that are semantically very different, but
      * are not mutually exclusive:
      * - A function literal that needs a type attached to it.
-     * - An assignment expression with function-type info in the jsdoc.
+     * - An assignment expression with function-type info in the JsDoc.
      *
      * All parameters are optional, and we will do the best we can to create
      * a function type.
@@ -972,7 +972,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * This handles two cases that are semantically very different, but
      * are not mutually exclusive:
      * - An object literal that needs an enum type attached to it.
-     * - An assignment expression with an enum tag in the jsdoc.
+     * - An assignment expression with an enum tag in the JsDoc.
      *
      * This function will always create an enum type, so only call it if
      * you're sure that's what you want.
@@ -1056,7 +1056,7 @@ final class TypedScopeCreator implements ScopeCreator {
     void defineSlot(Node n, Node parent, JSType type, boolean inferred) {
       Preconditions.checkArgument(inferred || type != null);
 
-      // Only allow declarations of NAMEs and qualfied names.
+      // Only allow declarations of NAMEs and qualified names.
       // Object literal keys will have to compute their names themselves.
       if (n.isName()) {
         Preconditions.checkArgument(
@@ -1467,7 +1467,7 @@ final class TypedScopeCreator implements ScopeCreator {
       // 5) ASSIGN to anything else
       //
       // 1, 3, and 4 are declarations, 5 is inferred, and 2 is a declaration iff
-      // the function has jsdoc or has not been declared before.
+      // the function has JsDoc or has not been declared before.
       //
       // FUNCTION literals are special because TypedScopeCreator is very smart
       // about getting as much type information as possible for them.
@@ -1584,7 +1584,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * of this, but there are some really pathological cases as well).
      *
      * The current algorithm checks if either the declaration has
-     * jsdoc type information, or @const with a known type,
+     * JsDoc type information, or @const with a known type,
      * or a function literal with a name we haven't seen before.
      */
     private boolean isQualifiedNameInferred(
@@ -1648,7 +1648,7 @@ final class TypedScopeCreator implements ScopeCreator {
     }
 
     /**
-     * Resolve any stub delcarations to unknown types if we could not
+     * Resolve any stub declarations to unknown types if we could not
      * find types for them during traversal.
      */
     void resolveStubDeclarations() {
@@ -1836,7 +1836,7 @@ final class TypedScopeCreator implements ScopeCreator {
    */
   private final class LocalScopeBuilder extends AbstractScopeBuilder {
     /**
-     * @param scope The scope that we're builidng.
+     * @param scope The scope that we're building.
      */
     private LocalScopeBuilder(Scope scope) {
       super(scope);

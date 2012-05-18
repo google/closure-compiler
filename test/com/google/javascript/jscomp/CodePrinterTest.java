@@ -174,7 +174,7 @@ public class CodePrinterTest extends TestCase {
 
     assertPrint("/--> <\\/script>/g", "/--\\> <\\/script>/g");
 
-    // Break HTML start comments. Certain versions of Webkit
+    // Break HTML start comments. Certain versions of WebKit
     // begin an HTML comment when they see this.
     assertPrint("'<!-- I am a string -->'", "\"<\\!-- I am a string --\\>\"");
 
@@ -249,7 +249,7 @@ public class CodePrinterTest extends TestCase {
     // Function declaration.
     assertPrint("function f(){}", "function f(){}");
 
-    // Make sure we don't treat non-latin character escapes as raw strings.
+    // Make sure we don't treat non-Latin character escapes as raw strings.
     assertPrint("({ 'a': 4, '\\u0100': 4 })", "({\"a\":4,\"\\u0100\":4})");
     assertPrint("({ a: 4, '\\u0100': 4 })", "({a:4,\"\\u0100\":4})");
 
@@ -397,7 +397,7 @@ public class CodePrinterTest extends TestCase {
   }
 
   private void assertPrint(String js, String expected) {
-    parse(expected); // validate the expected string is valid js
+    parse(expected); // validate the expected string is valid JS
     assertEquals(expected,
         parsePrint(js, false, CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD));
   }

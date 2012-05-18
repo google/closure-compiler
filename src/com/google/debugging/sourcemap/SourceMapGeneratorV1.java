@@ -306,7 +306,7 @@ public class SourceMapGeneratorV1 implements SourceMapGenerator {
   @Override
   public void appendTo(Appendable out, String name) throws IOException {
     // Write the mappings out to the file. The format of the generated
-    // source map is three sections, each deliminated by a magic comment.
+    // source map is three sections, each delimited by a magic comment.
     //
     // The first section contains an array for each line of the generated
     // code, where each element in the array is the ID of the mapping which

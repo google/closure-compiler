@@ -168,12 +168,12 @@ public class AliasExternalsTest extends CompilerTestCase {
    * Test combined usage of aliasable and unaliasable global lists.
    */
   public void testAliasableAndUnaliasableGlobals() {
-    // Only aliasable provided - ok
+    // Only aliasable provided - OK
     aliasableGlobals = "foo,bar";
     unaliasableGlobals = "";
     test("var x;", "var x;");
 
-    // Only unaliasable provided - ok
+    // Only unaliasable provided - OK
     aliasableGlobals = "";
     unaliasableGlobals = "baz,qux";
     test("var x;", "var x;");
@@ -250,7 +250,7 @@ public class AliasExternalsTest extends CompilerTestCase {
 
   /**
    * Test for modifying both parent and child, as all replacements
-   * are on a single pass and modfiying both involves being careful with
+   * are on a single pass and modifying both involves being careful with
    * references.
    */
   public void testParentChild() {

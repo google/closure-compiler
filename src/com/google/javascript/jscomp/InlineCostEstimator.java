@@ -33,14 +33,14 @@ class InlineCostEstimator {
   }
 
   /**
-   * Determines the size of the js code.
+   * Determines the size of the JS code.
    */
   static int getCost(Node root) {
     return getCost(root, Integer.MAX_VALUE);
   }
 
   /**
-   * Determines the estimated size of the js snippet represented by the node.
+   * Determines the estimated size of the JS snippet represented by the node.
    */
   static int getCost(Node root, int costThreshhold) {
     CompiledSizeEstimator estimator = new CompiledSizeEstimator(costThreshhold);

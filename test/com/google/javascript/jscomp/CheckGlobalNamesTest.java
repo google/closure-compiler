@@ -98,7 +98,7 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
   }
 
   public void testRefToPropertyOfAliasedName() {
-    // this is ok, because "a" was aliased
+    // this is OK, because "a" was aliased
     testSame(NAMES + "alert(a); alert(a.x);");
   }
 

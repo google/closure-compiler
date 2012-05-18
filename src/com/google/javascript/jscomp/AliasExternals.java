@@ -38,7 +38,7 @@ import java.util.Set;
 /**
  * <p>AliasExternals provides wrappers and aliases for external globals and
  * properties to that they can be referenced by their full name only once
- * intead of in all use sites.</p>
+ * instead of in all use sites.</p>
  *
  * <p>The property alias pass creates function wrappers for properties that need
  * to be accessed externally. These function wrappers are then used by all
@@ -46,13 +46,13 @@ import java.util.Set;
  * RenamePrototypes step.</p>
  *
  * <p>Properties that are accessed externally are either system functions
- * (i.e. window.document), or used by javascript embedded on a page.</p>
+ * (i.e. window.document), or used by JavaScript embedded on a page.</p>
  *
- * <p>Properties that are rvalues are changed to use array notation with
+ * <p>Properties that are r-values are changed to use array notation with
  * a string that has been defined separately and can be compressed
  * i.e. document.window -> document[PROP_window].</p>
  *
- * <p>Properties that are lvalues and can be renamed are renamed to
+ * <p>Properties that are l-values and can be renamed are renamed to
  * SETPROP_prop. I.e. node.innerHTML = '&lt;div&gt;Hello&lt;/div&gt;' ->
  * SETPROP_innerHTML(node, '&lt;div&gt;hello&lt;/div&gt;').</p>
  *
@@ -135,7 +135,7 @@ class AliasExternals implements CompilerPass {
       // meaning inside function bodies and should not be aliased at a global
       // level.
       "arguments",
-      // Eval should not be aliased, per the ECMA 262 spec section 15.1.2.1
+      // Eval should not be aliased, per the ECMA-262 spec section 15.1.2.1
       "eval",
       // "NodeFilter" is not defined in IE and throws an error if you try to
       // do var foo = NodeFilter.
@@ -332,7 +332,7 @@ class AliasExternals implements CompilerPass {
       parentNode.removeChild(propDest);
 
       // Create the call GETPROP_prop() node, using the old propSrc as the
-      // one paremeter to GETPROP_prop() call.
+      // one parameter to GETPROP_prop() call.
       Node callName = IR.name(
           getMutatorFor(propNameNode.getString()));
       Node call = IR.call( callName, propSrc, propDest);
@@ -481,7 +481,7 @@ class AliasExternals implements CompilerPass {
   }
 
   /**
-   * Gets references to all of the replacable nodes, as well
+   * Gets references to all of the replaceable nodes, as well
    * as counting the usage for each property name.
    */
   private final class PropertyGatherer extends AbstractPostOrderCallback {
@@ -507,7 +507,7 @@ class AliasExternals implements CompilerPass {
 
     /**
      * Logic for when a getprop can be replaced.
-     * Can't alias a call to eval per ECMA 262 spec section 15.1.2.1
+     * Can't alias a call to eval per ECMA-262 spec section 15.1.2.1
      * Can't be an assign -> no a.b = c;
      * Can't be inc or dec -> no a.b++; or a.b--;
      * Must be a GETPROP (NODE, A) where A is a reserved name
@@ -638,7 +638,7 @@ class AliasExternals implements CompilerPass {
   }
 
   /**
-   * Gets references to all of the replacable nodes, as well as counting the
+   * Gets references to all of the replaceable nodes, as well as counting the
    * usage for each global.
    */
   private final class GlobalGatherer extends AbstractPostOrderCallback {

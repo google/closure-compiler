@@ -118,7 +118,7 @@ abstract class AbstractPeepholeOptimization {
   }
 
   /**
-   * @return Whether the source code version is EcmaScript 5 or later.
+   * @return Whether the source code version is ECMAScript 5 or later.
    *     Workarounds for quirks in browsers that do not support ES5 can be
    *     ignored when this is true.
    */

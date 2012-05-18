@@ -89,7 +89,7 @@ public class InlineVariablesConstantsTest extends CompilerTestCase {
 
   public void testInlineConditionallyDefinedConstant1() {
     // Note that inlining conditionally defined constants can change the
-    // runtime behavior of code (e.g. when y is true and x is false in the
+    // run-time behavior of code (e.g. when y is true and x is false in the
     // example below). We inline them anyway because if the code author didn't
     // want one inlined, he/she could define it as a non-const variable instead.
     test("if (x) var ABC = 2; if (y) f(ABC);",

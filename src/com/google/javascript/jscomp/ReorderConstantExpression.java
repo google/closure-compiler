@@ -31,7 +31,7 @@ class ReorderConstantExpression extends AbstractPeepholeOptimization {
   // to follow our naming convention.
   @Override
   Node optimizeSubtree(Node subtree) {
-    // if the operator is symertric
+    // if the operator is symmetric
     if (NodeUtil.isSymmetricOperation(subtree)
         || NodeUtil.isRelationalOperation(subtree)) {
       // right value is immutable and left is not

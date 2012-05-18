@@ -23,7 +23,7 @@ package com.google.debugging.sourcemap;
 public class SourceMapSection {
 
   /**
-   * A url for a valid source map file that represents a section of a generate
+   * A URL for a valid source map file that represents a section of a generate
    * source file such as when multiple files are concatenated together.
    */
   private final String value;
@@ -37,7 +37,7 @@ public class SourceMapSection {
   }
 
   /**
-   * @param sectionUrl The url for the partial sourcemap
+   * @param sectionUrl The URL for the partial source map
    * @param line The number of lines into the file where the represented section
    *    starts.
    * @param column The number of characters into the line where the represented

@@ -136,7 +136,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
   }
 
   /**
-   * Finds the occurence of "this" in the provided property tree and replaces
+   * Finds the occurrence of "this" in the provided property tree and replaces
    * it with replacement
    */
   private static void replaceThis(Node expectedGetprop, Node replacement) {

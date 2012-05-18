@@ -46,7 +46,7 @@ import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 /**
- * RenameProperties renames properties (including methods) of all Javascript
+ * RenameProperties renames properties (including methods) of all JavaScript
  * objects. This includes prototypes, functions, object literals, etc.
  *
  * <p> If provided a VariableMap of previously used names, it tries to reuse
@@ -55,7 +55,7 @@ import javax.annotation.Nullable;
  * <p> To prevent a property from getting renamed you may extern it (add it to
  * your externs file) or put it in quotes.
  *
- * <p> To avoid runtime Javascript errors, use quotes when accessing properties
+ * <p> To avoid run-time JavaScript errors, use quotes when accessing properties
  * that are defined using quotes.
  *
  * <pre>

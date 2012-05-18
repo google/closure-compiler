@@ -32,7 +32,7 @@ import java.util.List;
 
 /**
  * Rewrites prototyped methods calls as static calls that take "this"
- * as their first argument.  This tranformation simplifies the call
+ * as their first argument.  This transformation simplifies the call
  * graph so smart name removal, cross module code motion and other
  * passes can do more.
  *
@@ -174,8 +174,8 @@ class DevirtualizePrototypeMethods
   /**
    * @returns The new name for a rewritten method.
    */
-  private String getRewrittenMethodName(String orginalMethodName) {
-    return "JSCompiler_StaticMethods_" + orginalMethodName;
+  private String getRewrittenMethodName(String originalMethodName) {
+    return "JSCompiler_StaticMethods_" + originalMethodName;
   }
 
   /**

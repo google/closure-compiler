@@ -28,8 +28,8 @@ import java.io.IOException;
 public interface SourceMapSupplier {
 
   /**
-   * @param url The url of the source map.
-   * @return The contents of the map associated with the url
+   * @param url The URL of the source map.
+   * @return The contents of the map associated with the URL
    * @throws IOException
    */
   String getSourceMap(String url) throws IOException;

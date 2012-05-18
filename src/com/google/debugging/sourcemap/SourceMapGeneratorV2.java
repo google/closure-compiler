@@ -249,7 +249,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    * Line 1: The entire file is a single JSON object
    * Line 2: File revision (always the first entry in the object)
    * Line 3: The name of the file that this source map is associated with.
-   * Line 4: The number of lines represented in the sourcemap.
+   * Line 4: The number of lines represented in the source map.
    * Line 5: "lineMaps" field is a JSON array, where each entry represents a
    *     line in the generated text.
    * Line 6: A line entry, representing a series of line segments, where each

@@ -31,11 +31,11 @@ import com.google.javascript.rhino.jstype.JSType;
  *
  * Currently only Token.TYPEOF is folded -- in the future it may be possible to
  * fold Token.INSTANCEOF as well. Another possibility is folding when
- * non-nullable objects are used in boolean logic, such as:
+ * non-nullable objects are used in Boolean logic, such as:
  * "if (x) {" or "(!x) ? a : b" or "x && foo()"
  *
  * TODO(dcc): Support folding Token.INSTANCEOF and non-nullable objects
- * in boolean logic.
+ * in Boolean logic.
  *
  * @author dcc@google.com (Devin Coughlin)
  */
@@ -53,7 +53,7 @@ class PeepholeFoldWithTypes extends AbstractPeepholeOptimization {
 
   /**
    * Folds "typeof expression" based on the JSType of "expression" if the
-   * expression  has no side effects.
+   * expression has no side effects.
    *
    * <p>E.g.,
    * <pre>

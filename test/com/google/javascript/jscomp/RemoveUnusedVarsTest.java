@@ -529,7 +529,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     test("var b=function(c,d,e){return d};b(1,2,3);b(new x(),4,new x())",
          "var b=function(c,d){return d};b(0,2);b(new x(),4,new x())");
 
-    // Recursive calls are ok.
+    // Recursive calls are OK.
     test("var b=function(c,d){b(1,2);return d};b(3,4);b(5,6)",
          "var b=function(d){b(2);return d};b(4);b(6)");
 

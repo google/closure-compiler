@@ -203,7 +203,7 @@ class ReplaceMessages extends JsMessageVisitor {
           String arg = node.getString();
 
           // We ignore the case here because the transconsole only supports
-          // uppercase placeholder names, but function arguments in javascript
+          // uppercase placeholder names, but function arguments in JavaScript
           // code can have mixed case.
           if (arg.equalsIgnoreCase(phRef.getName())) {
             partNode = IR.name(arg);

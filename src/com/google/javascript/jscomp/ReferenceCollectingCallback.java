@@ -72,7 +72,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
   private final Behavior behavior;
 
   /**
-   * Javascript compiler to use in traversing.
+   * JavaScript compiler to use in traversing.
    */
   private final AbstractCompiler compiler;
 
@@ -174,7 +174,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
   }
 
   /**
-   * Updates block statck and invokes any additional behavior.
+   * Updates block stack and invokes any additional behavior.
    */
   @Override
   public void exitScope(NodeTraversal t) {
@@ -218,7 +218,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
           //   BLOCK
           //     CATCH
           //   BLOCK
-          // Note that there is an explcit CATCH token but no explicit
+          // Note that there is an explicit CATCH token but no explicit
           // FINALLY token. For simplicity, we consider each BLOCK
           // a separate basic BLOCK.
           return true;
@@ -305,7 +305,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
      *
      * Notice that if this function returns false, this doesn't imply that the
      * variable is used before it's assigned. It just means that we don't
-     * have enough information to make a definitive judgement.
+     * have enough information to make a definitive judgment.
      */
     protected boolean isWellDefined() {
       int size = references.size();

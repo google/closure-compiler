@@ -138,7 +138,7 @@ class ExpressionDecomposer {
    * into IF statements.
    *
    * The following terms are used:
-   *    expressionRoot: The top level node before which the any extracted
+   *    expressionRoot: The top-level node before which the any extracted
    *                    expressions should be placed before.
    *    nonconditionalExpr: The node that will be extracted either expres.
    *
@@ -197,7 +197,7 @@ class ExpressionDecomposer {
         // Now handle the call expression
         if (isExpressionTreeUnsafe(functionExpression, state.sideEffects)
             && functionExpression.getFirstChild() != grandchild) {
-          // TODO(johnlenz): In Internet Explorer, non-javascript objects such
+          // TODO(johnlenz): In Internet Explorer, non-JavaScript objects such
           // as DOM objects can not be decomposed.
           Preconditions.checkState(allowObjectCallDecomposing(),
               "Object method calls can not be decomposed.");
@@ -572,7 +572,7 @@ class ExpressionDecomposer {
   private String tempNamePrefix = "JSCompiler_temp";
 
   /**
-   * Allow the temp name to be overriden to make tests more readable.
+   * Allow the temp name to be overridden to make tests more readable.
    */
   @VisibleForTesting
   public void setTempNamePrefix(String tempNamePrefix) {
@@ -704,7 +704,7 @@ class ExpressionDecomposer {
   /**
    * Walk the AST from the call site to the expression root and verify that
    * the portions of the expression that are evaluated before the call are:
-   * 1) Unaffected by the the side-efects, if any, of the call.
+   * 1) Unaffected by the the side-effects, if any, of the call.
    * 2) That there are no side-effects, that may influence the call.
    *
    * For example, if x has side-effects:
@@ -794,7 +794,7 @@ class ExpressionDecomposer {
           // need to be preserved. Like so:
           //   var t1 = x, t2 = x.m, t3 = f();
           //   t2.call(t1, t3);
-          // As IE doesn't support the call to these non-javascript objects
+          // As IE doesn't support the call to these non-JavaScript objects
           // methods in this way. We can't do this.
           // We don't currently distinguish between these types of objects
           // in the extern definitions and if we did we would need accurate

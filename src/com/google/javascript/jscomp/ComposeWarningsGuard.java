@@ -33,7 +33,7 @@ import java.util.TreeSet;
  * 2) errors with key JSC_BAR should be marked as warning
  * 3) the rest should be reported as error
  *
- * This class is designed for such behaviour.
+ * This class is designed for such behavior.
  *
  * @author anatol@google.com (Anatol Pomazau)
  */

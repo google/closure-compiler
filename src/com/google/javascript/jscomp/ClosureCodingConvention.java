@@ -173,7 +173,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   /**
-   * Exctracts X from goog.provide('X'), if the applied Node is goog.
+   * Extracts X from goog.provide('X'), if the applied Node is goog.
    *
    * @return The extracted class name, or null.
    */
@@ -183,7 +183,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   /**
-   * Exctracts X from goog.require('X'), if the applied Node is goog.
+   * Extracts X from goog.require('X'), if the applied Node is goog.
    *
    * @return The extracted class name, or null.
    */

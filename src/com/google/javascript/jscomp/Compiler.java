@@ -66,7 +66,7 @@ import java.util.regex.Matcher;
  * <li>checks for undefined variables
  * <li>performs optimizations such as constant folding and constants inlining
  * <li>renames variables (to short names)
- * <li>outputs compact javascript code
+ * <li>outputs compact JavaScript code
  * </ul>
  *
  * External variables are declared in 'externs' files. For instance, the file
@@ -607,8 +607,8 @@ public class Compiler extends AbstractCompiler {
   static <T> T runCallable(
       final Callable<T> callable, boolean useLargeStackThread, boolean trace) {
 
-    // Under JRE 1.6, the jscompiler overflows the stack when running on some
-    // large or complex js code. Here we start a new thread with a larger
+    // Under JRE 1.6, the JS Compiler overflows the stack when running on some
+    // large or complex JS code. Here we start a new thread with a larger
     // stack in order to let the compiler do its thing, without having to
     // increase the stack size for *every* thread (which is what -Xss does).
     // Might want to add thread pool support for clients that compile a lot.
@@ -1245,7 +1245,7 @@ public class Compiler extends AbstractCompiler {
       jsRoot.detachChildren();
     }
 
-    // Parse main js sources.
+    // Parse main JS sources.
     jsRoot = IR.block();
     jsRoot.setIsSyntheticBlock(true);
 
@@ -1553,7 +1553,7 @@ public class Compiler extends AbstractCompiler {
   //------------------------------------------------------------------------
 
   /**
-   * Converts the main parse tree back to js code.
+   * Converts the main parse tree back to JS code.
    */
   public String toSource() {
     return runInCompilerThread(new Callable<String>() {
@@ -1579,7 +1579,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
-   * Converts the parse tree for each input back to js code.
+   * Converts the parse tree for each input back to JS code.
    */
   public String[] toSourceArray() {
     return runInCompilerThread(new Callable<String[]>() {
@@ -1605,7 +1605,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
-   * Converts the parse tree for a module back to js code.
+   * Converts the parse tree for a module back to JS code.
    */
   public String toSource(final JSModule module) {
     return runInCompilerThread(new Callable<String>() {
@@ -1632,7 +1632,7 @@ public class Compiler extends AbstractCompiler {
 
 
   /**
-   * Converts the parse tree for each input in a module back to js code.
+   * Converts the parse tree for each input in a module back to JS code.
    */
   public String[] toSourceArray(final JSModule module) {
     return runInCompilerThread(new Callable<String[]>() {
@@ -1663,7 +1663,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
-   * Writes out js code from a root node. If printing input delimiters, this
+   * Writes out JS code from a root node. If printing input delimiters, this
    * method will attach a comment to the start of the text indicating which
    * input the output derived from. If there were any preserve annotations
    * within the root's source, they will also be printed in a block comment
@@ -2015,7 +2015,7 @@ public class Compiler extends AbstractCompiler {
 
   /**
    * The warning classes that are available from the command-line, and
-   * are suppressable by the {@code @suppress} annotation.
+   * are suppressible by the {@code @suppress} annotation.
    */
   protected DiagnosticGroups getDiagnosticGroups() {
     return new DiagnosticGroups();
@@ -2105,7 +2105,7 @@ public class Compiler extends AbstractCompiler {
   @Override
   SourceFile getSourceFileByName(String sourceName) {
     // Here we assume that the source name is the input name, this
-    // is try of javascript parsed from source.
+    // is try of JavaScript parsed from source.
     if (sourceName != null) {
       CompilerInput input = inputsById.get(new InputId(sourceName));
       if (input != null) {

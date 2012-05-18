@@ -98,7 +98,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
   private final Map<String, NameInfo> propertyNameInfo = Maps.newHashMap();
 
   // All the NameInfo for global functions, hashed by the name of the
-  // gloval variable that it's assigned to.
+  // global variable that it's assigned to.
   private final Map<String, NameInfo> varNameInfo = Maps.newHashMap();
 
   /**

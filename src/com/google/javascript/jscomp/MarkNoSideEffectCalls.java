@@ -59,7 +59,7 @@ class MarkNoSideEffectCalls implements CompilerPass {
     SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
     defFinder.process(externs, root);
 
-    // Gather the list of function nodes that have @nosideeffect annotations.
+    // Gather the list of function nodes that have @nosideeffects annotations.
     // For use by SetNoSideEffectCallProperty.
     NodeTraversal.traverse(
         compiler, externs, new GatherNoSideEffectFunctions(true));
@@ -71,7 +71,7 @@ class MarkNoSideEffectCalls implements CompilerPass {
   }
 
   /**
-   * Determines if the type of the value of the rhs expression can
+   * Determines if the type of the value of the RHS expression can
    * be a function node.
    */
   private static boolean definitionTypeContainsFunctionType(Definition def) {

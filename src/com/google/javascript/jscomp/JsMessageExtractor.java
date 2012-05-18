@@ -92,7 +92,7 @@ public class JsMessageExtractor {
   }
 
   /**
-   * Extracts js messages from javascript code.
+   * Extracts JS messages from JavaScript code.
    */
   public Collection<JsMessage> extractMessages(SourceFile... inputs)
       throws IOException {
@@ -101,13 +101,13 @@ public class JsMessageExtractor {
 
 
   /**
-   * Extracts js messages from javascript code.
+   * Extracts JS messages from JavaScript code.
    *
-   * @param inputs  the javascript source code inputs
+   * @param inputs  the JavaScript source code inputs
    * @return the extracted messages collection
-   * @throws IOException if there is a problem reading the js code
-   * @throws RuntimeException if there are problems parsing the js code or the
-   *     js messages, or if two messages have the same key
+   * @throws IOException if there is a problem reading the JS code
+   * @throws RuntimeException if there are problems parsing the JS code or the
+   *     JS messages, or if two messages have the same key
    */
   public <T extends SourceFile> Collection<JsMessage> extractMessages(
       Iterable<T> inputs) throws IOException {
@@ -121,7 +121,7 @@ public class JsMessageExtractor {
     ExtractMessagesVisitor extractCompilerPass =
         new ExtractMessagesVisitor(compiler);
     for (SourceFile input : inputs) {
-      // Parse the js files individually, to prevent out-of-memory
+      // Parse the JS files individually, to prevent out-of-memory
       // problems.
       Node root = new JsAst(input).getAstRoot(compiler);
 

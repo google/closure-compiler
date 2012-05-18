@@ -282,7 +282,7 @@ class GlobalNamespace
     }
 
     /**
-     * Builds a global namepsace, but only visits nodes that match the
+     * Builds a global namespace, but only visits nodes that match the
      * given filter.
      */
     BuildGlobalNamespace(Predicate<Node> nodeFilter) {
@@ -502,7 +502,7 @@ class GlobalNamespace
     /**
      * Gets the type of a value or simple expression.
      *
-     * @param n An rvalue in an assignment or variable declaration (not null)
+     * @param n An r-value in an assignment or variable declaration (not null)
      * @return A {@link Name.Type}
      */
     Name.Type getValueType(Node n) {
@@ -530,7 +530,7 @@ class GlobalNamespace
     }
 
     /**
-     * Updates our respresentation of the global namespace to reflect an
+     * Updates our representation of the global namespace to reflect an
      * assignment to a global name in global scope.
      *
      * @param t The traversal
@@ -605,7 +605,7 @@ class GlobalNamespace
     }
 
     /**
-     * Updates our respresentation of the global namespace to reflect an
+     * Updates our representation of the global namespace to reflect an
      * assignment to a global name in a local scope.
      *
      * @param t The traversal
@@ -632,7 +632,7 @@ class GlobalNamespace
     }
 
     /**
-     * Updates our respresentation of the global namespace to reflect a read
+     * Updates our representation of the global namespace to reflect a read
      * of a global name.
      *
      * @param t The traversal
@@ -750,7 +750,7 @@ class GlobalNamespace
     }
 
     /**
-     * Updates our respresentation of the global namespace to reflect a read
+     * Updates our representation of the global namespace to reflect a read
      * of a global name.
      *
      * @param t The current node traversal
@@ -768,7 +768,7 @@ class GlobalNamespace
     }
 
     /**
-     * Updates our respresentation of the global namespace to reflect a read
+     * Updates our representation of the global namespace to reflect a read
      * of a global name's longest prefix before the "prototype" property if the
      * name includes the "prototype" property. Does nothing otherwise.
      *

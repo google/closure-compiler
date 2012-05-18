@@ -549,7 +549,7 @@ class InlineVariables implements CompilerPass {
       // rather than the context of the window.
       //   var a = b.c;
       //   f(a)
-      // is ok.
+      // is OK.
       Node value = initialization.getAssignedValue();
       Preconditions.checkState(value != null);
       if (value.isGetProp()

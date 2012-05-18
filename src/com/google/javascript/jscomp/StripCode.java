@@ -27,7 +27,7 @@ import com.google.javascript.rhino.Token;
 import java.util.Set;
 
 /**
- * A pass for stripping a list of provided Javascript object types.
+ * A pass for stripping a list of provided JavaScript object types.
  *
  * The stripping strategy is as follows:
  *   - Provide: 1) a list of types that should be stripped, and 2) a list of
@@ -94,7 +94,7 @@ class StripCode implements CompilerPass {
   // -------------------------------------------------------------------------
 
   /**
-   * A callback that strips debug code from a Javascript parse tree.
+   * A callback that strips debug code from a JavaScript parse tree.
    */
   private class Strip extends AbstractPostOrderCallback {
 
@@ -141,7 +141,7 @@ class StripCode implements CompilerPass {
 
     /**
      * Removes declarations of any variables whose names are strip names or
-     * whose whose rvalues are static method calls on strip types. Builds a set
+     * whose whose r-values are static method calls on strip types. Builds a set
      * of removed variables so that all references to them can be removed.
      *
      * @param t The traversal
@@ -180,7 +180,7 @@ class StripCode implements CompilerPass {
                                                Node parent) {
       switch (parent.getType()) {
         case Token.VAR:
-          // This is a variable decalaration, not a reference.
+          // This is a variable declaration, not a reference.
           break;
 
         case Token.GETPROP:
@@ -217,14 +217,14 @@ class StripCode implements CompilerPass {
                 replaceWithEmpty(gramps, greatGramps);
                 compiler.reportCodeChange();
               } else {
-                // Substitute the rvalue for the assignment.
+                // Substitute the r-value for the assignment.
                 Node rvalue = n.getNext();
                 parent.removeChild(rvalue);
                 gramps.replaceChild(parent, rvalue);
                 compiler.reportCodeChange();
               }
             } else {
-              // The var reference is the rvalue. Replace it with null.
+              // The var reference is the r-value. Replace it with null.
               replaceWithNull(n, parent);
               compiler.reportCodeChange();
             }
@@ -274,7 +274,7 @@ class StripCode implements CompilerPass {
     }
 
     /**
-     * Eliminates an assignment if the lvalue is:
+     * Eliminates an assignment if the l-value is:
      *  - A field name that's a strip name
      *  - A qualified name that begins with a strip type
      *
@@ -285,8 +285,8 @@ class StripCode implements CompilerPass {
     void maybeEliminateAssignmentByLvalueName(NodeTraversal t, Node n,
                                               Node parent) {
       // ASSIGN
-      //   lvalue
-      //   rvalue
+      //   l-value
+      //   r-value
       Node lvalue = n.getFirstChild();
       if (nameEndsWithFieldNameToStrip(lvalue) ||
           qualifiedNameBeginsWithStripType(lvalue)) {
@@ -551,10 +551,10 @@ class StripCode implements CompilerPass {
     }
 
     /**
-     * Gets whether a Javascript identifier is the name of a variable or
+     * Gets whether a JavaScript identifier is the name of a variable or
      * property that should be stripped.
      *
-     * @param name A Javascript identifier
+     * @param name A JavaScript identifier
      * @return Whether {@code name} is a name that triggers removal
      */
     boolean isStripName(String name) {

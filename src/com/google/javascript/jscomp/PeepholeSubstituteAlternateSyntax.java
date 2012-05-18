@@ -61,7 +61,7 @@ class PeepholeSubstituteAlternateSyntax
   /**
    * @param late When late is false, this mean we are currently running before
    * most of the other optimizations. In this case we would avoid optimizations
-   * that would make the code harder to analyze (such as using string spliting,
+   * that would make the code harder to analyze (such as using string splitting,
    * merging statements with commas, etc). When this is true, we would
    * do anything to minimize for size.
    */
@@ -189,7 +189,7 @@ class PeepholeSubstituteAlternateSyntax
         Node fixedIfCondition = IR.not(ifCondition)
             .srcref(ifCondition);
 
-        // Ok, join the IF expression with the FOR expression
+        // OK, join the IF expression with the FOR expression
         Node forCondition = NodeUtil.getConditionExpression(n);
         if (forCondition.isEmpty()) {
           n.replaceChild(forCondition, fixedIfCondition);
@@ -1151,7 +1151,7 @@ class PeepholeSubstituteAlternateSyntax
               // It only occurs when both of expressions are not NOT expressions
               if (!leftParent.isNot()
                   && !rightParent.isNot()) {
-                // If an expression has higher precendence than && or ||,
+                // If an expression has higher precedence than && or ||,
                 // but lower precedence than NOT, an additional () is needed
                 // Thus we do not preceed
                 int op_precedence = NodeUtil.precedence(first.getType());
@@ -1464,8 +1464,8 @@ class PeepholeSubstituteAlternateSyntax
         && pattern.getString().length() < 100
 
         && (null == flags || flags.isString())
-        // don't escape patterns with unicode escapes since Safari behaves badly
-        // (read can't parse or crashes) on regex literals with unicode escapes
+        // don't escape patterns with Unicode escapes since Safari behaves badly
+        // (read can't parse or crashes) on regex literals with Unicode escapes
         && (isEcmaScript5OrGreater()
             || !containsUnicodeEscape(pattern.getString()))) {
 
@@ -1597,10 +1597,10 @@ class PeepholeSubstituteAlternateSyntax
 
   /**
    * are the given flags valid regular expression flags?
-   * Javascript recognizes several suffix flags for regular expressions,
+   * JavaScript recognizes several suffix flags for regular expressions,
    * 'g' - global replace, 'i' - case insensitive, 'm' - multi-line.
-   * They are case insensitive, and javascript does not recognize the extended
-   * syntax mode, single-line mode, or expression replacement mode from perl5.
+   * They are case insensitive, and JavaScript does not recognize the extended
+   * syntax mode, single-line mode, or expression replacement mode from Perl 5.
    */
   private static boolean areValidRegexpFlags(String flags) {
     return REGEXP_FLAGS_RE.matcher(flags).matches();
@@ -1614,8 +1614,8 @@ class PeepholeSubstituteAlternateSyntax
    * 'new RegExp('foobar','g')' with '/foobar/g' may change the behavior of
    * the program if the RegExp is used inside a loop, for example.
    * <p>
-   * EmcaScript 5 explicitly disallows pooling of regular expression literals so
-   * in EcmaScript 5, {@code /foo/g} and {@code new RegExp('foo', 'g')} are
+   * ECMAScript 5 explicitly disallows pooling of regular expression literals so
+   * in ECMAScript 5, {@code /foo/g} and {@code new RegExp('foo', 'g')} are
    * equivalent.
    * From section 7.8.5:
    * "Then each time the literal is evaluated, a new object is created as if by
@@ -1697,7 +1697,7 @@ class PeepholeSubstituteAlternateSyntax
   }
 
   /**
-   * true if the javascript string would contain a unicode escape when written
+   * true if the JavaScript string would contain a Unicode escape when written
    * out as the body of a regular expression literal.
    */
   static boolean containsUnicodeEscape(String s) {
@@ -1708,7 +1708,7 @@ class PeepholeSubstituteAlternateSyntax
         ++nSlashes;
       }
       // if there are an even number of slashes before the \ u then it is a
-      // unicode literal.
+      // Unicode literal.
       if (0 == (nSlashes & 1)) { return true; }
     }
     return false;

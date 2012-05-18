@@ -86,7 +86,7 @@ class Denormalize implements CompilerPass, Callback {
         Node name = n.getFirstChild();
         if (!name.hasChildren()
             && forVar.getString().equals(name.getString())) {
-          // Ok, the names match, and the var declaration does not have an
+          // OK, the names match, and the var declaration does not have an
           // initializer. Move it into the loop.
           parent.removeChild(n);
           forNode.replaceChild(forVar, n);
@@ -97,8 +97,8 @@ class Denormalize implements CompilerPass, Callback {
         && nextSibling.getFirstChild().isEmpty()) {
 
       // Does the current node contain an in operator?  If so, embedding
-      // the expression in a for loop can cause some Javascript parsers (such
-      // as the Playstation 3's browser based on Access's NetFront
+      // the expression in a for loop can cause some JavaScript parsers (such
+      // as the PlayStation 3's browser based on Access's NetFront
       // browser) to fail to parse the code.
       // See bug 1778863 for details.
       if (NodeUtil.containsType(n, Token.IN)) {

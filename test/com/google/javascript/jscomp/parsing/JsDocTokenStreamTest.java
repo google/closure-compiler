@@ -206,7 +206,7 @@ public class JsDocTokenStreamTest extends TestCase {
   }
 
   public void testJsDocTokenization14() throws Exception {
-    // Since ES4 type parsing only requires to parse an ellispis when it is
+    // Since ES4 type parsing only requires to parse an ellipsis when it is
     // followed by a comma (,) we are allowing this case to parse this way.
     // This is a simplification of the tokenizer, but the extra complexity is
     // never used.

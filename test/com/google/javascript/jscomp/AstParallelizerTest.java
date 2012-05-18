@@ -103,8 +103,8 @@ public class AstParallelizerTest extends TestCase {
    */
   private void splitFunctions(String input, String ... output) {
     Compiler compiler = new Compiler();
-    Node orginal = compiler.parseTestCode(input);
-    Node root = orginal.cloneTree();
+    Node original = compiler.parseTestCode(input);
+    Node root = original.cloneTree();
     AstParallelizer parallelizer =
       AstParallelizer.createNewFunctionLevelAstParallelizer(root, true);
     List<Node> forest = parallelizer.split();
@@ -116,7 +116,7 @@ public class AstParallelizerTest extends TestCase {
     }
 
     parallelizer.join();
-    assertTrue(orginal.isEquivalentTo(root));
+    assertTrue(original.isEquivalentTo(root));
   }
 
   private void splitFiles(String[] input) {
@@ -130,8 +130,8 @@ public class AstParallelizerTest extends TestCase {
     compiler.init(
         ImmutableList.<SourceFile>of(), files, new CompilerOptions());
     compiler.parse();
-    Node orginal = compiler.getRoot();
-    Node root = orginal.cloneTree();
+    Node original = compiler.getRoot();
+    Node root = original.cloneTree();
 
     AstParallelizer parallelizer =
       AstParallelizer.createNewFileLevelAstParallelizer(root);
@@ -144,6 +144,6 @@ public class AstParallelizerTest extends TestCase {
     }
 
     parallelizer.join();
-    assertTrue(orginal.isEquivalentTo(root));
+    assertTrue(original.isEquivalentTo(root));
   }
 }

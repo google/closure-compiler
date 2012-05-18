@@ -275,7 +275,7 @@ class OptimizeParameters
   }
 
   /**
-   * Detemine which parameter use the same expression.
+   * Determine which parameters use the same expression.
    * @return Whether any parameter was found that can be updated.
    */
   private boolean findFixedParameters(List<Parameter> parameters, Node cur) {
@@ -536,7 +536,7 @@ class OptimizeParameters
     if (formalArgPtr != null) {
       call.removeChild(formalArgPtr);
       // The value in the parameter object is the one that is being moved into
-      // function definition leave that one's references.  For everthing else,
+      // function definition leave that one's references.  For everything else,
       // remove any references.
       if (p.getArg() != formalArgPtr) {
         removedNodes.add(formalArgPtr);

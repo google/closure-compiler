@@ -803,7 +803,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = ''.length", "x = 0");
     fold("x = '123'.length", "x = 3");
 
-    // Test unicode escapes are accounted for.
+    // Test Unicode escapes are accounted for.
     fold("x = '123\u01dc'.length", "x = 4");
   }
 
@@ -883,7 +883,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x=y*x", "x*=y");
     fold("x.y=x.y+z", "x.y+=z");
     foldSame("next().x = next().x + 1");
-    // This is ok, really.
+    // This is OK, really.
     fold("({a:1}).a = ({a:1}).a + 1", "({a:1}).a = 2");
   }
 
@@ -904,7 +904,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldSame("x=y*x");
     foldSame("x.y=x.y+z");
     foldSame("next().x = next().x + 1");
-    // This is ok, really.
+    // This is OK, really.
     fold("({a:1}).a = ({a:1}).a + 1", "({a:1}).a = 2");
   }
 

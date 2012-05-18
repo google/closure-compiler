@@ -35,7 +35,7 @@ public class MaybeReachingVariableUseTest extends TestCase {
   private List<Node> uses = null;
 
   /*
-   * The test cases consist of a short code snipplet that has an instruction
+   * The test cases consist of a short code snippet that has an instruction
    * labeled with D and one or more with label starting with U. When assertMatch
    * is called, the test suite verifies that all the uses with label starting
    * with U is reachable to the definition label at D.

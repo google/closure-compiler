@@ -69,7 +69,7 @@ public abstract class CompilerTestCase extends TestCase  {
   /** Whether the Normalize pass runs before pass being tested. */
   private boolean normalizeEnabled = false;
 
-  /** Whether the expected js strings should be normalized. */
+  /** Whether the expected JS strings should be normalized. */
   private boolean normalizeExpected = false;
 
   /** Whether to check that all line number information is preserved. */
@@ -275,7 +275,7 @@ public abstract class CompilerTestCase extends TestCase  {
    * after running it.
    *
    * @param normalizeExpected Whether to perform normalization on the
-   * expected js result.
+   * expected JS result.
    * @see Normalize
    */
   protected void enableNormalize(boolean normalizeExpected) {
@@ -952,7 +952,7 @@ public abstract class CompilerTestCase extends TestCase  {
   }
 
   /**
-   * Parses expected js inputs and returns the root of the parse tree.
+   * Parses expected JS inputs and returns the root of the parse tree.
    */
   protected Node parseExpectedJs(String[] expected) {
     Compiler compiler = createCompiler();

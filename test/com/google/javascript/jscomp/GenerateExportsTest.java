@@ -82,7 +82,7 @@ public class GenerateExportsTest extends CompilerTestCase {
   }
 
   /**
-   * Nested assignments are ambigous and therefore not supported.
+   * Nested assignments are ambiguous and therefore not supported.
    * @see FindExportableNodes
    */
   public void testNestedVarAssign() {
@@ -91,7 +91,7 @@ public class GenerateExportsTest extends CompilerTestCase {
   }
 
   /**
-   * Nested assignments are ambigous and therefore not supported.
+   * Nested assignments are ambiguous and therefore not supported.
    * @see FindExportableNodes
    */
   public void testNestedAssign() {

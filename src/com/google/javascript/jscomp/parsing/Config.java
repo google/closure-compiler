@@ -36,12 +36,12 @@ public class Config {
   }
 
   /**
-   * Whether to parse the descriptions of jsdoc comments.
+   * Whether to parse the descriptions of JsDoc comments.
    */
   final boolean parseJsDocDocumentation;
 
   /**
-   * Whether we're in ide mode.
+   * Whether we're in IDE mode.
    */
   final boolean isIdeMode;
 

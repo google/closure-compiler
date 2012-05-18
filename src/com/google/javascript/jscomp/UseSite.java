@@ -20,7 +20,7 @@ import com.google.javascript.rhino.Node;
 
 /**
  * Information about the context in which a Definition is used.
- * Includes the refering node, and context in which the reference
+ * Includes the referring node, and context in which the reference
  * occurs - including the module in which the reference appears.
  *
  */

@@ -100,7 +100,7 @@ public class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testInc1() {
-    // Increments and Decrements are handled similiarly to compound assignments
+    // Increments and Decrements are handled similarly to compound assignments
     // but need a placeholder value when replaced.
     test("this.x++", "0");
     testSame("x = (this.x++)");
@@ -112,7 +112,7 @@ public class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testInc2() {
-    // Increments and Decrements are handled similiarly to compound assignments
+    // Increments and Decrements are handled similarly to compound assignments
     // but need a placeholder value when replaced.
     test("this.a++, f()", "0, f()");
     test("x = (this.a++, f())", "x = (0, f())");

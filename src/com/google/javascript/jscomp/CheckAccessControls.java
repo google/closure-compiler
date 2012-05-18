@@ -566,7 +566,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   }
 
   /**
-   * Returns whether it's currently ok to access deprecated names and
+   * Returns whether it's currently OK to access deprecated names and
    * properties.
    *
    * There are 3 exceptions when we're allowed to use a deprecated

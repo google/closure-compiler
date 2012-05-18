@@ -335,7 +335,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         }
       }
 
-      // Validate the top level of the goog.scope block.
+      // Validate the top-level of the goog.scope block.
       if (t.getScopeDepth() == 2) {
         if (aliasVar != null && NodeUtil.isLValue(n)) {
           if (aliasVar.getNode() == n) {

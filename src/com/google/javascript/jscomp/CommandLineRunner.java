@@ -133,12 +133,12 @@ public class CommandLineRunner extends
     private String logging_level = Level.WARNING.getName();
 
     @Option(name = "--externs",
-        usage = "The file containing javascript externs. You may specify"
+        usage = "The file containing JavaScript externs. You may specify"
         + " multiple")
     private List<String> externs = Lists.newArrayList();
 
     @Option(name = "--js",
-        usage = "The javascript filename. You may specify multiple")
+        usage = "The JavaScript filename. You may specify multiple")
     private List<String> js = Lists.newArrayList();
 
     @Option(name = "--js_output_file",
@@ -147,10 +147,10 @@ public class CommandLineRunner extends
     private String js_output_file = "";
 
     @Option(name = "--module",
-        usage = "A javascript module specification. The format is "
+        usage = "A JavaScript module specification. The format is "
         + "<name>:<num-js-files>[:[<dep>,...][:]]]. Module names must be "
         + "unique. Each dep is the name of a module that this module "
-        + "depends on. Modules must be listed in dependency order, and js "
+        + "depends on. Modules must be listed in dependency order, and JS "
         + "source files must be listed in the corresponding order. Where "
         + "--module flags occur in relation to --js flags is unimportant")
     private List<String> module = Lists.newArrayList();
@@ -205,7 +205,7 @@ public class CommandLineRunner extends
     private String output_wrapper = "";
 
     @Option(name = "--module_wrapper",
-        usage = "An output wrapper for a javascript module (optional). "
+        usage = "An output wrapper for a JavaScript module (optional). "
         + "The format is <name>:<wrapper>. The module name must correspond "
         + "with a module specified using --module. The wrapper must "
         + "contain %s as the code placeholder. The %basename% placeholder can "
@@ -213,7 +213,7 @@ public class CommandLineRunner extends
     private List<String> module_wrapper = Lists.newArrayList();
 
     @Option(name = "--module_output_path_prefix",
-        usage = "Prefix for filenames of compiled js modules. "
+        usage = "Prefix for filenames of compiled JS modules. "
         + "<module-name>.js will be appended to this prefix. Directories "
         + "will be created as needed. Use with --module")
     private String module_output_path_prefix = "./";
@@ -308,11 +308,11 @@ public class CommandLineRunner extends
     private List<FormattingOption> formatting = Lists.newArrayList();
 
     @Option(name = "--process_common_js_modules",
-        usage = "Process Common JS modules to a concatenable form.")
+        usage = "Process CommonJS modules to a concatenable form.")
     private boolean process_common_js_modules = false;
 
     @Option(name = "--common_js_module_path_prefix",
-        usage = "Path prefix to be removed from Common JS module names.")
+        usage = "Path prefix to be removed from CommonJS module names.")
     private String common_js_path_prefix =
         ProcessCommonJSModules.DEFAULT_FILENAME_PREFIX;
 
@@ -322,7 +322,7 @@ public class CommandLineRunner extends
     private String common_js_entry_module;
 
     @Option(name = "--transform_amd_modules",
-        usage = "Transform AMD to Common JS modules.")
+        usage = "Transform AMD to CommonJS modules.")
     private boolean transform_amd_modules = false;
 
     @Option(name = "--process_closure_primitives",
@@ -344,7 +344,7 @@ public class CommandLineRunner extends
         handler = BooleanOptionHandler.class,
         usage = "Only include files in the transitive dependency of the "
         + "entry points (specified by closure_entry_point). Files that do "
-        + "not provide dependencies will be removed. This supercedes"
+        + "not provide dependencies will be removed. This supersedes"
         + "manage_closure_dependencies")
     private boolean only_closure_dependencies = false;
 
@@ -368,7 +368,7 @@ public class CommandLineRunner extends
         usage = "Prints out a list of all the files in the compilation. "
         + "If --manage_closure_dependencies is on, this will not include "
         + "files that got dropped because they were not required. "
-        + "The %outname% placeholder expands to the js output file. "
+        + "The %outname% placeholder expands to the JS output file. "
         + "If you're using modularization, using %outname% will create "
         + "a manifest for each module.")
     private String output_manifest = "";

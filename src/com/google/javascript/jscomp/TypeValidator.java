@@ -136,7 +136,7 @@ class TypeValidator {
    * Gets a list of type violations.
    *
    * For each violation, one element is the expected type and the other is
-   * the type that is actually found. Order is not signficant.
+   * the type that is actually found. Order is not significant.
    */
   Iterable<TypeMismatch> getMismatches() {
     return mismatches;
@@ -343,7 +343,7 @@ class TypeValidator {
    */
   boolean expectCanAssignToPropertyOf(NodeTraversal t, Node n, JSType rightType,
       JSType leftType, Node owner, String propName) {
-    // The NoType check is a hack to make typedefs work ok.
+    // The NoType check is a hack to make typedefs work OK.
     if (!leftType.isNoType() && !rightType.canAssignTo(leftType)) {
       if (bothIntrinsics(rightType, leftType)) {
         // We have a superior warning for this mistake, which gives you
@@ -591,7 +591,7 @@ class TypeValidator {
   }
 
   /**
-   * Expect that the peroperty in an interface that this type implements is
+   * Expect that the property in an interface that this type implements is
    * implemented and correctly typed.
    */
   private void expectInterfaceProperty(NodeTraversal t, Node n,

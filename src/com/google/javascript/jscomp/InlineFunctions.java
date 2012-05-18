@@ -261,7 +261,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
 
         // verify the function meets all the requirements.
         // TODO(johnlenz): Minimum requirement checks are about 5% of the
-        // runtime cost of this pass.
+        // run-time cost of this pass.
         if (!isCandidateFunction(fn)) {
           // It doesn't meet the requirements.
           fs.setInline(false);
@@ -1010,7 +1010,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     /** Gets the function node */
     public Node getFunctionNode();
 
-    /** Removes itself from the javascript */
+    /** Removes itself from the JavaScript */
     public void remove();
 
     public Node getDeclaringBlock();
@@ -1081,7 +1081,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
 
     public FunctionExpression(Node fn, int index) {
       this.fn = fn;
-      // A number is not a valid function javascript indentifier
+      // A number is not a valid function JavaScript identifier
       // so we don't need to worry about collisions.
       this.fakeName = String.valueOf(index);
     }

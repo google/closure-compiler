@@ -525,7 +525,7 @@ class TypeInference
       if (!objectType.isPropertyTypeDeclared(propName)) {
         // We do not want a "stray" assign to define an inferred property
         // for every object of this type in the program. So we use a heuristic
-        // approach to determine whether to infer the propery.
+        // approach to determine whether to infer the property.
         //
         // 1) If the property is already defined, join it with the previously
         //    inferred type.
@@ -839,7 +839,7 @@ class TypeInference
 
   private FlowScope narrowScope(FlowScope scope, Node node, JSType narrowed) {
     if (node.isThis()) {
-      // "this" references don't need to be modelled in the control flow graph.
+      // "this" references don't need to be modeled in the control flow graph.
       return scope;
     }
 
@@ -868,7 +868,7 @@ class TypeInference
    *
    * However, there are a few special syntactic forms where we do some
    * some half-assed backwards type-inference, because programmers
-   * expect it in this day and age. To take an example from java,
+   * expect it in this day and age. To take an example from Java,
    * <code>
    * List<String> x = Lists.newArrayList();
    * </code>

@@ -87,7 +87,7 @@ public enum WarningLevel {
   }
 
   /**
-   * Add all the check pass that are possibly relevant to a non googler.
+   * Add all the check pass that are possibly relevant to a non-googler.
    * @param options The CompilerOptions object to set the options on.
    */
   private static void addVerboseWarnings(CompilerOptions options) {

@@ -262,7 +262,7 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
    * Line 1: The entire file is a single JSON object
    * Line 2: File revision (always the first entry in the object)
    * Line 3: The name of the file that this source map is associated with.
-   * Line 4: The number of lines represented in the sourcemap.
+   * Line 4: The number of lines represented in the source map.
    * Line 5: An optional source root, useful for relocating source files on a
    *     server or removing repeated prefix values in the "sources" entry.
    * Line 6: A list of sources used by the "mappings" entry relative to the

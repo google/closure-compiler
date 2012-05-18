@@ -245,7 +245,7 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
 
   public void testDeadPartiallyWithinTheExpression() {
-    // Sadly, this is not covered. We don't suspect this would happend too
+    // Sadly, this is not covered. We don't suspect this would happen too
     // often.
     inFunction("var x; x = 100, x = 101; print(x);");
   }

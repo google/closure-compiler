@@ -136,7 +136,7 @@ class AliasStrings extends AbstractPostOrderCallback
 
       // "undefined" is special-cased, since it needs to be used when JS code
       // is unloading and therefore variable references aren't available.
-      // This is because of a bug in FireFox.
+      // This is because of a bug in Firefox.
       if ("undefined".equals(str)) {
         return;
       }

@@ -360,7 +360,7 @@ public final class NodeUtil {
       return null;
     }
 
-    // FireFox and IE treat the "Infinity" differently. FireFox is case
+    // Firefox and IE treat the "Infinity" differently. Firefox is case
     // insensitive, but IE treats "infinity" as NaN.  So leave it alone.
     if (s.equals("infinity")
         || s.equals("-infinity")
@@ -395,7 +395,7 @@ public final class NodeUtil {
   static TernaryValue isStrWhiteSpaceChar(int c) {
     switch (c) {
       case '\u000B': // <VT>
-        return TernaryValue.UNKNOWN;  // IE says "no", EcmaScript says "yes"
+        return TernaryValue.UNKNOWN;  // IE says "no", ECMAScript says "yes"
       case ' ': // <SP>
       case '\n': // <LF>
       case '\r': // <CR>
@@ -574,7 +574,7 @@ public final class NodeUtil {
    * </code>
    * If it is evaluated in a different scope, then it
    * captures a different variable. Even if the function did not read
-   * any captured vairables directly, it would still fail this definition,
+   * any captured variables directly, it would still fail this definition,
    * because it affects the lifecycle of variables in the enclosing scope.
    *
    * However, a function literal with respect to a particular scope is
@@ -660,7 +660,7 @@ public final class NodeUtil {
         return isValidDefineValue(val.getFirstChild(), defines)
             && isValidDefineValue(val.getLastChild(), defines);
 
-      // Uniary operators are valid if the child is valid.
+      // Unary operators are valid if the child is valid.
       case Token.NOT:
       case Token.NEG:
       case Token.POS:
@@ -931,7 +931,7 @@ public final class NodeUtil {
   /**
    * Do calls to this constructor have side effects?
    *
-   * @param callNode - construtor call node
+   * @param callNode - constructor call node
    */
   static boolean constructorCallHasSideEffects(Node callNode) {
     return constructorCallHasSideEffects(callNode, null);
@@ -1017,9 +1017,9 @@ public final class NodeUtil {
         return false;
       }
 
-      // Math.floor has no sideeffects.
+      // Math.floor has no side-effects.
       // TODO(nicksantos): This is a terrible terrible hack, until
-      // I create a definitionprovider that understands namespacing.
+      // I create a definitionProvider that understands namespacing.
       if (nameNode.getFirstChild().isName()) {
         if ("Math.floor".equals(nameNode.getQualifiedName())) {
           return false;
@@ -1340,7 +1340,7 @@ public final class NodeUtil {
       case Token.GT:
       case Token.LE:
       case Token.GE:
-      // Queryies
+      // Queries
       case Token.IN:
       case Token.INSTANCEOF:
       // Inversion
@@ -1754,7 +1754,7 @@ public final class NodeUtil {
         // A finally can only be removed if there is a catch.
         parent.removeChild(node);
       } else {
-        // Otherwise only its children can be removed.
+        // Otherwise, only its children can be removed.
         node.detachChildren();
       }
     } else if (node.isCatch()) {
@@ -2015,7 +2015,7 @@ public final class NodeUtil {
    * We treat "var x;" as a pseudo-L-value, which kind of makes sense if you
    * treat it as "assignment to 'undefined' at the top of the scope". But if
    * we're honest with ourselves, it doesn't make sense, and we only do this
-   * because it makes sense to treat this as synactically similar to
+   * because it makes sense to treat this as syntactically similar to
    * "var x = 0;".
    *
    * @param n The node
@@ -2327,7 +2327,7 @@ public final class NodeUtil {
   }
 
   /**
-   * Sets the debug information (source file info and orignal name)
+   * Sets the debug information (source file info and original name)
    * on the given node.
    *
    * @param node The node on which to set the debug information.
@@ -2419,7 +2419,7 @@ public final class NodeUtil {
         // no Unicode escaped characters - some browsers are less tolerant
         // of Unicode characters that might be valid according to the
         // language spec.
-        // Note that by this point, unicode escapes have been converted
+        // Note that by this point, Unicode escapes have been converted
         // to UTF-16 characters, so we're only searching for character
         // values, not escapes.
         isLatin(name);
@@ -2706,35 +2706,35 @@ public final class NodeUtil {
   }
 
   /**
-   * A pre-order traversal, calling Vistor.visit for each child matching
+   * A pre-order traversal, calling Visitor.visit for each child matching
    * the predicate.
    */
   static void visitPreOrder(Node node,
-                     Visitor vistor,
+                     Visitor visitor,
                      Predicate<Node> traverseChildrenPred) {
-    vistor.visit(node);
+    visitor.visit(node);
 
     if (traverseChildrenPred.apply(node)) {
       for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
-        visitPreOrder(c, vistor, traverseChildrenPred);
+        visitPreOrder(c, visitor, traverseChildrenPred);
       }
     }
   }
 
   /**
-   * A post-order traversal, calling Vistor.visit for each child matching
+   * A post-order traversal, calling Visitor.visit for each child matching
    * the predicate.
    */
   static void visitPostOrder(Node node,
-                     Visitor vistor,
+                     Visitor visitor,
                      Predicate<Node> traverseChildrenPred) {
     if (traverseChildrenPred.apply(node)) {
       for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
-        visitPostOrder(c, vistor, traverseChildrenPred);
+        visitPostOrder(c, visitor, traverseChildrenPred);
       }
     }
 
-    vistor.visit(node);
+    visitor.visit(node);
   }
 
   /**
@@ -2783,7 +2783,7 @@ public final class NodeUtil {
    *     IS_CONSTANT_NAME property.
    * <li>The normalize pass renames any variable with the IS_CONSTANT_NAME
    *     annotation and that is initialized to a constant value with
-   *     a variable name inlucding $$constant.
+   *     a variable name including $$constant.
    * <li>Return true here if the variable includes $$constant in its name.
    * </ol>
    *

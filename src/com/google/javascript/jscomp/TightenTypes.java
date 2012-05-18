@@ -736,7 +736,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
           if (parent.isCatch() && parent.getFirstChild() == n) {
             // The variable in a catch statement gets defined in the scope of
             // the catch block. We approximate that, as does the normal type
-            // sytem, by declaring a variable for it in the scope in which the
+            // system, by declaring a variable for it in the scope in which the
             // catch is declared.
             scope.declareSlot(n.getString(), n,
                 createUnionWithSubTypes(
@@ -1367,7 +1367,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
   }
 
   /**
-   * A simple class used to pair a concrete type and a js type.  Used to
+   * A simple class used to pair a concrete type and a JS type.  Used to
    * memoize the results of a "createTypeIntersection" call.
    */
   static class ConcreteJSTypePair {

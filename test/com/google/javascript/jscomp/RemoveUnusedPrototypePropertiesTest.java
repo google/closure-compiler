@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 /**
- * Tessts for {@link RemoveUnusedPrototypeProperties}.
+ * Tests for {@link RemoveUnusedPrototypeProperties}.
  *
  * @author nicksantos@google.com (Nick Santos)
  */

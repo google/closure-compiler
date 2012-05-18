@@ -155,8 +155,8 @@ class JsDocTokenStream {
           // fall through
 
         default: {
-          // recognize a jsdoc string but discard last . if it is followed by
-          // a non-jsdoc comment char, e.g. Array.<
+          // recognize a JsDoc string but discard last . if it is followed by
+          // a non-JsDoc comment char, e.g. Array.<
           int c1 = c;
           addToString(c);
           int c2 = getChar();

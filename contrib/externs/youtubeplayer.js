@@ -15,7 +15,7 @@
  */
 
 /**
- * Public api calls.
+ * Public API calls.
  * @link http://code.google.com/apis/youtube/js_api_reference.html
  * @externs
  */

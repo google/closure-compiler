@@ -30,7 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Base class for classes that parse Javascript sources on a line-by-line basis. Strips comments
+ * Base class for classes that parse JavaScript sources on a line-by-line basis. Strips comments
  * from files and records all parsing errors.
  *
  * @author agrieve@google.com (Andrew Grieve)
@@ -109,7 +109,7 @@ public abstract class JsFileLineParser {
 
   /**
    * Performs the line-by-line parsing of the given fileContents. This method
-   * strips out Javascript comments and then uses the abstract parseLine()
+   * strips out JavaScript comments and then uses the abstract parseLine()
    * method to do the line parsing.
    *
    * @param filePath The path to the file being parsed. Used for reporting parse
@@ -220,8 +220,8 @@ public abstract class JsFileLineParser {
   }
 
   /**
-   * Parses a Javascript array of string literals. (eg: ['a', 'b', "c"]).
-   * @param input A string containing an Javascript array of string literals.
+   * Parses a JavaScript array of string literals. (eg: ['a', 'b', "c"]).
+   * @param input A string containing a JavaScript array of string literals.
    * @return A list of parsed string literals.
    * @throws ParseException Thrown if there is a syntax error with the input.
    */

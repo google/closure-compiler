@@ -39,7 +39,7 @@ class TransformAMDToCJSModule implements CompilerPass {
   final static DiagnosticType NON_TOP_LEVEL_STATEMENT_DEFINE_ERROR =
       DiagnosticType.error(
             "NON_TOP_LEVEL_STATEMENT_DEFINE",
-            "The define function must be called as a top level statement.");
+            "The define function must be called as a top-level statement.");
   final static DiagnosticType REQUIREJS_PLUGINS_NOT_SUPPORTED_WARNING =
     DiagnosticType.warning(
           "REQUIREJS_PLUGINS_NOT_SUPPORTED",
@@ -66,7 +66,7 @@ class TransformAMDToCJSModule implements CompilerPass {
 
   /**
    * The modules "exports", "require" and "module" are virtual in terms of
-   * existing implicitly in CJS.
+   * existing implicitly in CommonJS.
    */
   private boolean isVirtualModuleName(String moduleName) {
     return "exports".equals(moduleName) || "require".equals(moduleName) ||
@@ -205,7 +205,7 @@ class TransformAMDToCJSModule implements CompilerPass {
         }
       } else {
         // ignore exports, require and module (because they are implicit
-        // in CJS);
+        // in CommonJS);
         if (isVirtualModuleName(aliasName)) {
           return;
         }
@@ -260,7 +260,7 @@ class TransformAMDToCJSModule implements CompilerPass {
   }
 
   /**
-   * Rewrites the return statement of the callback to be an assingment to
+   * Rewrites the return statement of the callback to be an assignment to
    * module.exports.
    */
   private class DefineCallbackReturnCallback extends

@@ -389,7 +389,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       Preconditions.checkState(executingCase.isDefaultCase()
           || executingCase.isCase());
       // We only expect a DEFAULT case if the case we are checking is the
-      // DEFAULT case.  Otherwise we assume the DEFAULT case has already
+      // DEFAULT case.  Otherwise, we assume the DEFAULT case has already
       // been removed.
       Preconditions.checkState(caseNode == executingCase
           || !executingCase.isDefaultCase());
@@ -405,7 +405,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
             case Token.VAR:
               if (blockChild.hasOneChild()
                   && blockChild.getFirstChild().getFirstChild() == null) {
-                // Variable declarations without initializations are ok.
+                // Variable declarations without initializations are OK.
                 continue;
               }
               return false;

@@ -123,7 +123,7 @@ public class JsonMLAst implements SourceAst {
    * Returns a JsonML element with the specified number from the tree in
    * pre-order walk.
    *
-   * @return n-th node or null if the node does not exists
+   * @return nth node or null if the node does not exists
    */
   public JsonML getElementPreOrder(int n) {
     Preconditions.checkState(jsonml != null);

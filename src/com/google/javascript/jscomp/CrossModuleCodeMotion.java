@@ -196,7 +196,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
 
   /**
    * return true if the node has any form of conditional in its ancestry
-   * TODO(nicksantos) keep track of the conditionals in the ancestory, so
+   * TODO(nicksantos) keep track of the conditionals in the ancestry, so
    * that we don't have to recrawl it.
    */
   private boolean hasConditionalAncestor(Node n) {
@@ -314,7 +314,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
   }
 
   /**
-   * Determines whether the given NAME node belongs to a delcaration that
+   * Determines whether the given NAME node belongs to a declaration that
    * can be moved across modules. If it is, registers it properly.
    *
    * There are four types of movable declarations:

@@ -86,7 +86,7 @@ class RescopeGlobalSymbols implements CompilerPass {
     // single symbol by:
     // (If necessary the 3 traversals could be combined. They are left
     // separate for readability reasons.)
-    // 1. turning global named function statements into var assigments.
+    // 1. turning global named function statements into var assignments.
     NodeTraversal.traverse(compiler, root,
         new RewriteGlobalFunctionStatementsToVarAssignmentsCallback());
     // 2. rewriting all references to be property accesses of the single symbol.
@@ -171,7 +171,7 @@ class RescopeGlobalSymbols implements CompilerPass {
       }
       // When the globalSymbolNamespace is used as a local variable name
       // add suffix to avoid shadowing the namespace. Also add a suffix
-      // if a name starts with the name of the globalSymbolnamespace and
+      // if a name starts with the name of the globalSymbolNamespace and
       // the suffix.
       if (!var.isExtern() && (name.equals(globalSymbolNamespace) ||
           name.indexOf(globalSymbolNamespace + DISAMBIGUATION_SUFFIX) == 0)) {
@@ -210,7 +210,7 @@ class RescopeGlobalSymbols implements CompilerPass {
   }
 
   /**
-   * Removes every occurence of var that declares a global variable.
+   * Removes every occurrence of var that declares a global variable.
    *
    * <pre>var NS.a = 1, NS.b = 2;</pre>
    * becomes

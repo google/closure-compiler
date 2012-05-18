@@ -208,7 +208,7 @@ public class XtbMessageBundle implements MessageBundle {
 
   /**
    * A secure EntityResolver that returns an empty string in response to
-   * any attempt to resolve an external entitity. The class is used by our
+   * any attempt to resolve an external entity. The class is used by our
    * secure version of the internal saxon SAX parser.
    */
   private static final class SecureEntityResolver implements EntityResolver {

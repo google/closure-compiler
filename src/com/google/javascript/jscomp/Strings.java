@@ -29,7 +29,7 @@ class Strings {
   /**
    * If this given string is of length {@code maxLength} or less, it will
    * be returned as-is.
-   * Otherwise it will be trucated to {@code maxLength}, regardless of whether
+   * Otherwise, it will be truncated to {@code maxLength}, regardless of whether
    * there are any space characters in the String. If an ellipsis is requested
    * to be appended to the truncated String, the String will be truncated so
    * that the ellipsis will also fit within maxLength.
@@ -58,7 +58,7 @@ class Strings {
    * Normalizes {@code index} such that it respects Unicode character
    * boundaries in {@code str}.
    *
-   * <p>If {@code index} is the low surrogate of a unicode character,
+   * <p>If {@code index} is the low surrogate of a Unicode character,
    * the method returns {@code index - 1}. Otherwise, {@code index} is
    * returned.
    *
@@ -89,7 +89,7 @@ class Strings {
    * as defined by {@link Character#isHighSurrogate} and
    * {@link Character#isLowSurrogate}.
    *
-   * <p>If {@code begin} or {@code end} are the low surrogate of a unicode
+   * <p>If {@code begin} or {@code end} are the low surrogate of a Unicode
    * character, it will be offset by -1.
    *
    * <p>This behavior guarantees that
@@ -106,7 +106,7 @@ class Strings {
    * @param begin the beginning index, inclusive
    * @param end the ending index, exclusive
    * @return the specified substring, possibly adjusted in order to not
-   *   split unicode surrogate pairs
+   *   split Unicode surrogate pairs
    * @throws IndexOutOfBoundsException if the {@code begin} is negative,
    *   or {@code end} is larger than the length of {@code str}, or
    *   {@code begin} is larger than {@code end}

@@ -145,7 +145,7 @@ class CheckMissingReturn implements ScopedCallback {
   /**
    * Determines if the given scope should explicitly return. All functions
    * with non-void or non-unknown return types must have explicit returns.
-   * @return If a return type is expected, returns it. Otherwise returns null.
+   * @return If a return type is expected, returns it. Otherwise, returns null.
    */
   private JSType explicitReturnExpected(Node scope) {
     FunctionType scopeType = JSType.toMaybeFunctionType(scope.getJSType());

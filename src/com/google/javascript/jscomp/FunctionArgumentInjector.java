@@ -382,7 +382,7 @@ class FunctionArgumentInjector {
         loopsEntered++;
       }
 
-      // If we have found all the paremeters, don't bother looking
+      // If we have found all the parameters, don't bother looking
       // at the children.
       return !(sideEffectSeen
           && parameters.size() == parametersReferenced.size());

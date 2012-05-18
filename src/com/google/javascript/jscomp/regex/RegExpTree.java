@@ -356,7 +356,7 @@ public abstract class RegExpTree {
             //     /[^\0-`{-\uffff]/i
             // which matches nothing because the information about whether the
             // ^ is present has been lost during optimizations and charset
-            // unioning as in /[...]|[^...]/.
+            // unionizing as in /[...]|[^...]/.
             ranges = CaseCanonicalize.expandToAllMatched(ranges);
           }
         }
@@ -370,7 +370,7 @@ public abstract class RegExpTree {
       }
 
       /**
-       * Parses an escape to a codepoint.
+       * Parses an escape to a code point.
        * Some of the characters parsed here have special meanings in various
        * contexts, so contexts must filter those instead.
        * E.g. '\b' means a different thing inside a charset than without.
@@ -436,7 +436,7 @@ public abstract class RegExpTree {
             }
             return new BackReference(possibleGroupIndex);
           } else {
-            // \1 - \7 are octal escaps if there is no such group.
+            // \1 - \7 are octal escapes if there is no such group.
             // \8 and \9 are the literal characters '8' and '9' if there
             // is no such group.
             return new Text(Character.toString(
@@ -1336,7 +1336,7 @@ public abstract class RegExpTree {
     final CharRanges ranges;
     /**
      * Code units that were mentioned explicitly and that might be matched by
-     * a group according to EcmaScript 5 but would not because of specification
+     * a group according to ECMAScript 5 but would not because of specification
      * violations in IE.
      */
     final CharRanges ieExplicits;

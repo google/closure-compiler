@@ -40,7 +40,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Scope contains information about a variable scope in javascript.
+ * Scope contains information about a variable scope in JavaScript.
  * Scopes can be nested, a scope points back to its parent scope.
  * A Scope contains information about variables defined in that scope.
  * <p>
@@ -229,7 +229,7 @@ public class Scope
 
     /**
      * Returns {@code true} if the variable is declared as a define.
-     * A variable is a define if it is annotaed by {@code @define}.
+     * A variable is a define if it is annotated by {@code @define}.
      */
     public boolean isDefine() {
       return isDefine;

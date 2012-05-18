@@ -282,7 +282,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
     /**
      * @return <@code true> if the sum of all the extraction instance gain
-     * outweights the overhead of the temp variable declaration.
+     * outweighs the overhead of the temp variable declaration.
      */
     private boolean shouldExtract() {
       return totalDelta < 0;

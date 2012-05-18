@@ -239,7 +239,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
       case Token.FUNCTION:
         // If this is a declaration of a provided named function, this is an
-        // error. Hosited functions will explode if the're provided.
+        // error. Hoisted functions will explode if they're provided.
         if (t.inGlobalScope() &&
             !NodeUtil.isFunctionExpression(n)) {
           String name = n.getFirstChild().getString();
@@ -852,7 +852,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     /**
      * Record function declaration, variable declaration or assignment that
      * refers to the same name as the provide statement.  Give preference to
-     * declarations; if no declation exists record a reference to an
+     * declarations; if no declaration exists, record a reference to an
      * assignment so it repurposed later.
      */
     void addDefinition(Node node, JSModule module) {

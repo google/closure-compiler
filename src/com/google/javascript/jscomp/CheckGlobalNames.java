@@ -177,7 +177,7 @@ class CheckGlobalNames implements CompilerPass {
    * must be initialized with its full qualified name.
    */
   private static boolean propertyMustBeInitializedByFullName(Name name) {
-    // If an object literal in the global namespace  is never aliased,
+    // If an object literal in the global namespace is never aliased,
     // then all of its properties must be defined using its full qualified
     // name. This implies that its properties must all be in the global
     // namespace as well.

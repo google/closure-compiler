@@ -490,7 +490,7 @@ public class NormalizeTest extends CompilerTestCase {
   }
 
   public void testRenamingConstantProperties() {
-    // In order to detecte that foo.BAR is a constant, we need collapse
+    // In order to detect that foo.BAR is a constant, we need collapse
     // properties to run first so that we can tell if the initial value is
     // non-null and immutable.
     new WithCollapse().testConstantProperties();

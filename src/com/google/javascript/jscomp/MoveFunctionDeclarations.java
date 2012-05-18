@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * Moves top level function declarations to the top.
+ * Moves top-level function declarations to the top.
  *
  * Enable this pass if a try catch block wraps the output after compilation,
  * and the output runs on Firefox because function declarations are only

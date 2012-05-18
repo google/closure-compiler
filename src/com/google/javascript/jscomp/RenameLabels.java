@@ -40,7 +40,7 @@ import java.util.Map;
  * Additionally, labels names are only within the statements include in the
  * label and do not cross function boundaries. This means that it is possible to
  * create one label name that is used for labels at any given depth of label
- * nesting. Typically, the name "a" will be used for all top level labels, "b"
+ * nesting. Typically, the name "a" will be used for all top-level labels, "b"
  * for the next nested label, and so on. For example:
  *
  * <code>

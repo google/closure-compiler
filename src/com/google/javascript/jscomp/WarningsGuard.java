@@ -30,13 +30,13 @@ import java.io.Serializable;
  *   - return null. Does not know what to do with it. Lets the other guard
  *       decide what to do with it.
  *
- * Although the interface is very simple it allows you easyly customize what
+ * Although the interface is very simple, it allows you easily customize what
  * warnings you are interested in.
  *
  * For example there are could be several implementations:
  *   StrictGuard - {return ERROR}. All warnings should be treat as errors.
  *   SilentGuard - {if (WARNING) return OFF}. Suppress all warnings but still
- *     fail if js has errors.
+ *     fail if JS has errors.
  *   WhitelistGuard (if !whitelistErrors.contains(error) return ERROR) return
  *     error if it does not present in the whitelist.
  *

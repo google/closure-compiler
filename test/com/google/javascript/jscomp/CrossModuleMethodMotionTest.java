@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 /**
- * Tessts for {@link CrossModuleMethodMotion}.
+ * Tests for {@link CrossModuleMethodMotion}.
  *
  * @author nicksantos@google.com (Nick Santos)
  */

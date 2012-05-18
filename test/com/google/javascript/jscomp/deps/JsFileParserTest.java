@@ -59,7 +59,7 @@ public class JsFileParserTest extends TestCase {
       + "goog.require('yes3'); // goog.provide('no3');\n"
       + "// goog.provide('no4');\n"
       + "goog.require(\"bar.data.SuperstarAddStarThreadActionRequestDelegate\"); "
-      + "//no new line at eof";
+      + "//no new line at EOF";
 
     DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
         ImmutableList.of("yes1", "yes2"),

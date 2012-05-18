@@ -64,7 +64,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
    */
   @Override
   protected int getNumRepetitions() {
-    // Some inlining can only be done in mutliple passes.
+    // Some inlining can only be done in multiple passes.
     return 3;
   }
 
@@ -725,7 +725,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testShadowVariables5() {
-    // Can't yet inline mulitple statements functions into expressions
+    // Can't yet inline multiple statements functions into expressions
     // (though some are possible using the COMMA operator).
     allowBlockInlining = false;
     testSame("var a=0;" +
@@ -820,7 +820,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testShadowVariables14() {
-    // There is a colision even though it is not read.
+    // There is a collision even though it is not read.
     test("var a=0;var b=1;" +
          "function foo(){return a+b}" +
          "function _bar(){var c=foo(),b;alert(c)}",
@@ -958,7 +958,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testCostBasedInlining8() {
-    // Verify mutiple references in the same statement:
+    // Verify multiple references in the same statement:
     // Here "f" is not known to be removable, as it is a used as parameter
     // and is not known to be side-effect free.  The first call to f() can
     // not be inlined on the first pass (as the call to f() as a parameter
@@ -1083,7 +1083,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testCostBasedInliningComplex8() {
-    // Verify mutiple references in the same statement.
+    // Verify multiple references in the same statement.
     testSame("function _f(a){1+a+a}" +
              "a=_f(1)+_f(1)");
   }

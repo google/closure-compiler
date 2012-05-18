@@ -106,7 +106,7 @@ class SanityCheck implements CompilerPass {
   }
 
   /**
-   * Sanity checks the AST. This is by verifing the normalization passes do
+   * Sanity checks the AST. This is by verifying the normalization passes do
    * nothing.
    */
   private void sanityCheckNormalization(Node externs, Node root) {

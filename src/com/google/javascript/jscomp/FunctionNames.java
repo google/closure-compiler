@@ -23,7 +23,7 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
- * Extract a list of all function nodes defined in a javascript
+ * Extract a list of all function nodes defined in a JavaScript
  * program, assigns them globally unique ids and computes their fully
  * qualified names.  Function names are derived from the property they
  * are assigned to and the scope they are defined in.  For instance,

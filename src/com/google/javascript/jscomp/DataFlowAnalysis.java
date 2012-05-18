@@ -542,7 +542,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
    * variable local not to our definition of scope.</li>
    * <li>Exported variables as they can be needed after the script terminates.
    * </li>
-   * <li>Names of named functions because in javascript, <i>function foo(){}</i>
+   * <li>Names of named functions because in JavaScript, <i>function foo(){}</i>
    * does not kill <i>foo</i> in the dataflow.</li>
    */
   static void computeEscaped(final Scope jsScope, final Set<Var> escaped,

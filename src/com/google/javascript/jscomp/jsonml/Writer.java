@@ -358,7 +358,7 @@ public class Writer {
 
         break;
       case Token.NAME:
-        // caja treats calls to eval in a special way
+        // Caja treats calls to eval in a special way
         if (child.getString().equals("eval")) {
           element = new JsonML(TagType.EvalExpr);
         } else {
@@ -518,7 +518,7 @@ public class Writer {
     currentParent.appendChild(element);
     if (op.equals("++")) {
       element.setAttribute(TagAttr.OP, "++");
-    } else { // op.euals("--")
+    } else { // op.equals("--")
       element.setAttribute(TagAttr.OP, "--");
     }
 
@@ -552,7 +552,7 @@ public class Writer {
     Node child = node.getFirstChild();
     element.setAttribute(TagAttr.LABEL, child.getString());
 
-    // the second child represents labelled content
+    // the second child represents labeled content
     child = child.getNext();
     processNode(child, element);
   }
@@ -821,7 +821,7 @@ public class Writer {
     }
   }
 
-  private void processDirectives(Node node, JsonML currectParent) {
+  private void processDirectives(Node node, JsonML currentParent) {
     Set<String> directives = node.getDirectives();
 
     if (directives == null) {
@@ -832,7 +832,7 @@ public class Writer {
       JsonML element = new JsonML(TagType.PrologueDecl);
       element.setAttribute(TagAttr.DIRECTIVE, directive);
       element.setAttribute(TagAttr.VALUE, directive);
-      currectParent.appendChild(element);
+      currentParent.appendChild(element);
     }
   }
 

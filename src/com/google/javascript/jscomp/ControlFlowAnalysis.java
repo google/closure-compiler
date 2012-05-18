@@ -783,13 +783,13 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     if (nextSibling != null) {
       return computeFallThrough(nextSibling);
     } else {
-      // If there are no more siblings, control is transfered up the AST.
+      // If there are no more siblings, control is transferred up the AST.
       return computeFollowNode(fromNode, parent, cfa);
     }
   }
 
   /**
-   * Computes the destination node of n when we want to fallthough into the
+   * Computes the destination node of n when we want to fallthrough into the
    * subtree of n. We don't always create a CFG edge into n itself because of
    * DOs and FORs.
    */

@@ -378,7 +378,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
     // cases, specifically:
     //  - functions with recursive definitions
     //  - functions defined in object literals
-    //  - functions defined in array litersals
+    //  - functions defined in array literals
     // Here we defined a set of known function declaration that are 'ok'.
 
     // Some projects seem to actually define "JSCompiler_renameProperty"

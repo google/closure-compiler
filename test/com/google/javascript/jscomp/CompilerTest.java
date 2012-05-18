@@ -92,10 +92,10 @@ public class CompilerTest extends TestCase {
   }
 
   public void testLocalUndefined() throws Exception {
-    // Some javascript libraries like to create a local instance of "undefined",
+    // Some JavaScript libraries like to create a local instance of "undefined",
     // to ensure that other libraries don't try to overwrite it.
     //
-    // Most of the time, this is ok, because normalization will rename
+    // Most of the time, this is OK, because normalization will rename
     // that variable to undefined$$1. But this won't happen if they don't
     // include the default externs.
     //

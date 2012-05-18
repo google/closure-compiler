@@ -103,7 +103,7 @@ public abstract class PassFactory {
   HotSwapCompilerPass getHotSwapPass(AbstractCompiler compiler) {
     // TODO(bashir): If in future most of PassFactory's in DefaultPassConfig
     // turns out to be DefaultPassConfig.HotSwapPassFactory, we should probably
-    // change the implementaion here by the one in HotSwapPassFactory.
+    // change the implementation here by the one in HotSwapPassFactory.
     return null;
   }
 }

@@ -43,7 +43,7 @@ import java.util.List;
  */
 class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
-  // The arguments object as described by ECMA script version 3
+  // The arguments object as described by ECMAScript version 3
   // section 10.1.8
   private static final String ARGUMENTS = "arguments";
 

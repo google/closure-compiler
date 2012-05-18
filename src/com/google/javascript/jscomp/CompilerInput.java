@@ -232,7 +232,7 @@ public class CompilerInput
     } else {
       // Otherwise, look at the source code.
       if (!generatedDependencyInfoFromSource) {
-        // Note: it's ok to use getName() instead of
+        // Note: it's OK to use getName() instead of
         // getPathRelativeToClosureBase() here because we're not using
         // this to generate deps files. (We're only using it for
         // symbol dependencies.)

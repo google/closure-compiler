@@ -719,7 +719,7 @@ final class FunctionTypeBuilder {
   }
 
   /**
-   * Determines whether the given jsdoc info declares a function type.
+   * Determines whether the given JsDoc info declares a function type.
    */
   static boolean isFunctionTypeDeclaration(JSDocInfo info) {
     return info.getParameterCount() > 0 ||
@@ -749,7 +749,7 @@ final class FunctionTypeBuilder {
   /**
    * Check whether a type is resolvable in the future
    * If this has a supertype that hasn't been resolved yet, then we can assume
-   * this type will be ok once the super type resolves.
+   * this type will be OK once the super type resolves.
    * @param objectType
    * @return true if objectType is resolvable in the future
    */

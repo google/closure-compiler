@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 
 /**
- * Container class that holds information about jsmessage source.
+ * Container class that holds information about JS message source.
  *
  * This class is specific to our JsMessage syntax. Allows you to use the
  * new-style or the old-style messages.
@@ -45,7 +45,7 @@ class JsMessageDefinition {
   private final Node visitingNode;
 
   /**
-   * Constructs js message definition.
+   * Constructs JS message definition.
    *
    * @param visitingNode Node that is visited by
    *     {@link JsMessageVisitor}. Take into

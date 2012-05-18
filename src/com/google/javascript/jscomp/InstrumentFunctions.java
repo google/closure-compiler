@@ -68,7 +68,7 @@ class InstrumentFunctions implements CompilerPass {
   private final List<String> declarationsToRemove;
 
   /**
-   * Creates an intrument functions compiler pass.
+   * Creates an instrument functions compiler pass.
    *
    * @param compiler          The JSCompiler
    * @param functionNames     Assigned function identifiers.

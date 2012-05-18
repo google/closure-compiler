@@ -64,7 +64,7 @@ class FunctionRewriter implements CompilerPass {
 
     Multimap<Reducer, Reduction> reductionMap = HashMultimap.create();
 
-    // Accumulate possible reductions in the reduction multi map.  They
+    // Accumulate possible reductions in the reduction multi-map.  They
     // will be applied in the loop below.
     NodeTraversal.traverse(compiler, root,
                            new ReductionGatherer(reducers, reductionMap));
@@ -195,7 +195,7 @@ class FunctionRewriter implements CompilerPass {
    */
   abstract static class Reducer {
     /**
-     * @return js source for helper methods used by this reduction.
+     * @return JS source for helper methods used by this reduction.
      */
     abstract String getHelperSource();
 
@@ -436,7 +436,7 @@ class FunctionRewriter implements CompilerPass {
      *   function(<args>) {return this.<name>}
      * and returns <name> if a match is found.
      *
-     * @return STRING node that is the rhs of a this property get; or null.
+     * @return STRING node that is the RHS of a this property get; or null.
      */
     private Node getGetPropertyName(Node functionNode) {
       Node value = maybeGetSingleReturnRValue(functionNode);
@@ -497,7 +497,7 @@ class FunctionRewriter implements CompilerPass {
      *   function(<value>, <rest>) {this.<name> = <value>}
      * and returns <name> if a match is found.
      *
-     * @return STRING node that is the rhs of a this property get; or null.
+     * @return STRING node that is the RHS of a this property get; or null.
      */
     private Node getSetPropertyName(Node functionNode) {
       Node body = functionNode.getLastChild();

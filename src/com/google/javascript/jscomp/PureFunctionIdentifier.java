@@ -347,7 +347,7 @@ class PureFunctionIdentifier implements CompilerPass {
         }
       }
 
-      // Handle special cases (Math, RegEx)
+      // Handle special cases (Math, RegExp)
       if (callNode.isCall()) {
         Preconditions.checkState(compiler != null);
         if (!NodeUtil.functionCallHasSideEffects(callNode, compiler)) {
@@ -365,7 +365,7 @@ class PureFunctionIdentifier implements CompilerPass {
   }
 
   /**
-   * Gather list of functions, functions with @nosideeffect
+   * Gather list of functions, functions with @nosideeffects
    * annotations, call sites, and functions that may mutate variables
    * not defined in the local scope.
    */
@@ -515,7 +515,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
     /**
      * Record information about the side effects caused by an
-     * assigment or mutating unary operator.
+     * assignment or mutating unary operator.
      *
      * If the operation modifies this or taints global state, mark the
      * enclosing function as having those side effects.
@@ -565,12 +565,12 @@ class PureFunctionIdentifier implements CompilerPass {
           }
         }
       } else {
-        // TODO(johnlenz): track down what is inserting NULL on the lhs
+        // TODO(johnlenz): track down what is inserting NULL on the LHS
         // of an assign.
 
-        // The only valid lhs expressions are NAME, GETELEM, or GETPROP.
+        // The only valid LHS expressions are NAME, GETELEM, or GETPROP.
         // throw new IllegalStateException(
-        //     "Unexpected lhs expression:" + lhs.toStringTree()
+        //     "Unexpected LHS expression:" + lhs.toStringTree()
         //    + ", parent: " + op.toStringTree() );
         sideEffectInfo.setTaintsUnknown();
       }
@@ -580,7 +580,7 @@ class PureFunctionIdentifier implements CompilerPass {
      * Record information about a call site.
      */
     private void visitCall(FunctionInformation sideEffectInfo, Node node) {
-      // Handle special cases (Math, RegEx)
+      // Handle special cases (Math, RegExp)
       if (node.isCall()
           && !NodeUtil.functionCallHasSideEffects(node, compiler)) {
         return;
@@ -745,7 +745,7 @@ class PureFunctionIdentifier implements CompilerPass {
       public boolean apply(Node value) {
         switch (value.getType()) {
           case Token.ASSIGN:
-            // The assignment might cause an alias, look at the lhs.
+            // The assignment might cause an alias, look at the LHS.
             return false;
           case Token.THIS:
             // TODO(johnlenz): maybe redirect this to be a tainting list for 'this'.
@@ -800,7 +800,7 @@ class PureFunctionIdentifier implements CompilerPass {
           Node objectNode = getCallThisObject(callSite);
           if (objectNode != null && objectNode.isName()
               && !isCallOrApply(callSite)) {
-            // Exclude ".call" and ".apply" as the value may still be may be
+            // Exclude ".call" and ".apply" as the value may still be
             // null or undefined. We don't need to worry about this with a
             // direct method call because null and undefined don't have any
             // properties.

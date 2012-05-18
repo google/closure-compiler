@@ -334,7 +334,7 @@ class CodeGenerator {
         if (!n.isQuotedString() &&
             TokenStream.isJSIdentifier(name) &&
             // do not encode literally any non-literal characters that were
-            // unicode escaped.
+            // Unicode escaped.
             NodeUtil.isLatin(name)) {
           add(name);
         } else {
@@ -380,7 +380,7 @@ class CodeGenerator {
           }
 
           // Prefer to break lines in between top-level statements
-          // because top level statements are more homogeneous.
+          // because top-level statements are more homogeneous.
           if (preferLineBreaks) {
             cc.notePreferredLineBreak();
           }
@@ -668,7 +668,7 @@ class CodeGenerator {
                 !TokenStream.isKeyword(key) &&
                 TokenStream.isJSIdentifier(key) &&
                 // do not encode literally any non-literal characters that
-                // were unicode escaped.
+                // were Unicode escaped.
                 NodeUtil.isLatin(key)) {
               add(key);
             } else {
@@ -948,7 +948,7 @@ class CodeGenerator {
     }
   }
 
-  /** Outputs a js string, using the optimal (single/double) quote character */
+  /** Outputs a JS string, using the optimal (single/double) quote character */
   private void addJsString(Node n) {
     String s = n.getString();
     boolean useSlashV = n.getBooleanProp(Node.SLASH_V);
@@ -1012,7 +1012,7 @@ class CodeGenerator {
     return regexpEscape(s, null);
   }
 
-  /** Helper to escape javascript string as well as regular expression */
+  /** Helper to escape JavaScript string as well as regular expression */
   private static String strEscape(
       String s, char quote,
       String doublequoteEscape,
@@ -1084,15 +1084,15 @@ class CodeGenerator {
               appendHexJavaScriptRepresentation(sb, c);
             }
           } else {
-            // No charsetEncoder provided - pass straight latin characters
+            // No charsetEncoder provided - pass straight Latin characters
             // through, and escape the rest.  Doing the explicit character
             // check is measurably faster than using the CharsetEncoder.
             if (c > 0x1f && c < 0x7f) {
               sb.append(c);
             } else {
-              // Other characters can be misinterpreted by some js parsers,
+              // Other characters can be misinterpreted by some JS parsers,
               // or perhaps mangled by proxies along the way,
-              // so we play it safe and unicode escape them.
+              // so we play it safe and Unicode escape them.
               appendHexJavaScriptRepresentation(sb, c);
             }
           }
@@ -1108,7 +1108,7 @@ class CodeGenerator {
       return s;
     }
 
-    // Now going through the string to escape non-latin characters if needed.
+    // Now going through the string to escape non-Latin characters if needed.
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < s.length(); i++) {
       char c = s.charAt(i);
@@ -1210,19 +1210,19 @@ class CodeGenerator {
   }
 
   /**
-   * Returns a javascript representation of the character in a hex escaped
+   * Returns a JavaScript representation of the character in a hex escaped
    * format.
    *
-   * @param codePoint The codepoint to append.
+   * @param codePoint The code point to append.
    * @param out The buffer to which the hex representation should be appended.
    */
   private static void appendHexJavaScriptRepresentation(
       int codePoint, Appendable out)
       throws IOException {
     if (Character.isSupplementaryCodePoint(codePoint)) {
-      // Handle supplementary unicode values which are not representable in
-      // javascript.  We deal with these by escaping them as two 4B sequences
-      // so that they will round-trip properly when sent from java to javascript
+      // Handle supplementary Unicode values which are not representable in
+      // JavaScript.  We deal with these by escaping them as two 4B sequences
+      // so that they will round-trip properly when sent from Java to JavaScript
       // and back.
       char[] surrogates = Character.toChars(codePoint);
       appendHexJavaScriptRepresentation(surrogates[0], out);

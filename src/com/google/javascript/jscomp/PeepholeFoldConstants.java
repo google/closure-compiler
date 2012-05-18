@@ -603,7 +603,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Expressions such as [foo() + 'a' + 'b'] generate parse trees
    * where no node has two const children ((foo() + 'a') + 'b'), so
    * tryFoldAdd() won't fold it -- tryFoldLeftChildAdd() will (for Strings).
-   * Specifically it folds Add exprssions where:
+   * Specifically, it folds Add expressions where:
    *  - The left child is also and add expression
    *  - The right child is a constant value
    *  - The left child's right child is a STRING constant.
@@ -710,7 +710,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     double result;
 
     // TODO(johnlenz): Handle NaN with unknown value. BIT ops convert NaN
-    // to zero so this is a little akward here.
+    // to zero so this is a little awkward here.
 
     Double lValObj = NodeUtil.getNumberValue(left);
     if (lValObj == null) {
@@ -779,7 +779,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Expressions such as [foo() * 10 * 20] generate parse trees
    * where no node has two const children ((foo() * 10) * 20), so
    * performArithmeticOp() won't fold it -- tryFoldLeftChildOp() will.
-   * Specifically it folds associative expressions where:
+   * Specifically, it folds associative expressions where:
    *  - The left child is also an associative expression of the same time.
    *  - The right child is a constant NUMBER constant.
    *  - The left child's right child is a NUMBER constant.
@@ -1152,7 +1152,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   /** Returns whether two JS strings are equal. */
   private TernaryValue areStringsEqual(String a, String b) {
     // In JS, browsers parse \v differently. So do not consider strings
-    // equal if one containts \v.
+    // equal if one contains \v.
     if (a.indexOf('\u000B') != -1 ||
         b.indexOf('\u000B') != -1) {
       return TernaryValue.UNKNOWN;

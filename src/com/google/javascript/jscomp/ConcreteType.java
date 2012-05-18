@@ -316,7 +316,7 @@ abstract class ConcreteType implements LatticeElement {
     @Override ConcreteFunctionType toFunction() { return this; }
 
     /**
-     * Returns the slot representing that a call to it occured.  This is
+     * Returns the slot representing that a call to it occurred.  This is
      * assigned a type if the function is called.  This ensures that the body of
      * the function is processed even if it has no arguments or if the arguments
      * do not take any concrete types as arguments.
@@ -453,7 +453,7 @@ abstract class ConcreteType implements LatticeElement {
     /** Stores the normal type information for this instance. */
     public final ObjectType instanceType;
 
-    /** The tyep information for the implicit prototype of this type, if any. */
+    /** The type information for the implicit prototype of this type, if any. */
     private ConcreteInstanceType prototype;
 
     /**
@@ -644,7 +644,7 @@ abstract class ConcreteType implements LatticeElement {
 
   /**
    * Represents an opaque singleton type that is different from any other.
-   * This is used by DisambiguteProperties to rename GETPROP nodes that are
+   * This is used by DisambiguateProperties to rename GETPROP nodes that are
    * never reached in the TightenTypes flow analysis. This helps subsequent
    * passes remove unreferenced properties and functions.  ID passed to the
    * constructor should be unique per-instance as it is used for generating

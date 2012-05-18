@@ -67,7 +67,7 @@ import java.util.Set;
  * TODO(nicksantos): In the initial implementation of this pass, it was
  * important to understand namespaced names (e.g., that a.b is distinct from
  * a.b.c). Now that this pass comes after CollapseProperties, this is no longer
- * necessary. For now, I've changed so that {@code refernceParentNames}
+ * necessary. For now, I've changed so that {@code referenceParentNames}
  * creates a two-way reference between a.b and a.b.c, so that they're
  * effectively the same name. When someone has the time, we should completely
  * rip out all the logic that understands namespaces.
@@ -560,7 +560,7 @@ final class NameAnalyzer implements CompilerPass {
 
   /**
    * Create JsName objects for variable and function declarations in
-   * the global scope before computing name references.  In javascript
+   * the global scope before computing name references.  In JavaScript
    * it is legal to refer to variable and function names before the
    * actual declaration.
    */
@@ -1035,7 +1035,7 @@ final class NameAnalyzer implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new FindReferences());
 
     // Create bi-directional references between parent names and their
-    // descendents. This may create new names.
+    // descendants. This may create new names.
     referenceParentNames();
 
     // If we modify the property of an alias, make sure that modification
@@ -1612,7 +1612,7 @@ final class NameAnalyzer implements CompilerPass {
    * Replace n with a simpler expression, while preserving program
    * behavior.
    *
-   * If the n's value is used, replace it with its rhs; otherwise
+   * If the n's value is used, replace it with its RHS; otherwise
    * replace it with the subexpressions that have side effects.
    */
   private void replaceWithRhs(Node parent, Node n) {
@@ -1699,14 +1699,14 @@ final class NameAnalyzer implements CompilerPass {
   /**
    * Determine if the parent reads the value of a child expression
    * directly.  This is true children used in predicates, RETURN
-   * statements and, rhs of variable declarations and assignments.
+   * statements and, RHS of variable declarations and assignments.
    *
    * In the case of:
    * if (a) b else c
    *
    * This method returns true for "a", and false for "b" and "c": the
    * IF expression does something special based on "a"'s value.  "b"
-   * and "c" are effectivelly outputs.  Same logic applies to FOR,
+   * and "c" are effectively outputs.  Same logic applies to FOR,
    * WHILE and DO loop predicates.  AND/OR/HOOK expressions are
    * syntactic sugar for IF statements; therefore this method returns
    * true for the predicate and false otherwise.
@@ -1767,11 +1767,11 @@ final class NameAnalyzer implements CompilerPass {
         // process body
         return getRhsSubexpressions(n.getFirstChild());
       case Token.FUNCTION:
-        // function nodes have no rhs
+        // function nodes have no RHS
         return Collections.emptyList();
       case Token.NAME:
         {
-          // parent is a var node.  rhs is first child
+          // parent is a var node.  RHS is the first child
           Node rhs = n.getFirstChild();
           if (rhs != null) {
             return Lists.newArrayList(rhs);
@@ -1781,7 +1781,7 @@ final class NameAnalyzer implements CompilerPass {
         }
       case Token.ASSIGN:
         {
-          // add lhs and rhs expressions - lhs may be a complex expression
+          // add LHS and RHS expressions - LHS may be a complex expression
           Node lhs = n.getFirstChild();
           Node rhs = lhs.getNext();
           return Lists.newArrayList(lhs, rhs);

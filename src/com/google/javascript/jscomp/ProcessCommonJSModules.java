@@ -26,7 +26,7 @@ import java.net.URISyntaxException;
 import java.util.regex.Pattern;
 
 /**
- * Rewrites a Common JS module http://wiki.commonjs.org/wiki/Modules/1.1.1
+ * Rewrites a CommonJS module http://wiki.commonjs.org/wiki/Modules/1.1.1
  * into a form that can be safely concatenated.
  * Does not add a function around the module body but instead adds suffixes
  * to global variables to avoid conflicts.

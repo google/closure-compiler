@@ -97,7 +97,7 @@ public class GoogleJsMessageIdGenerator implements IdGenerator {
     }
 
     /**
-     * Generate fingerprint of "str". Equivalent to utf-encoding "str" into
+     * Generate fingerprint of "str". Equivalent to UTF-encoding "str" into
      * bytes and then fingerprinting those bytes.
      */
     private static long fingerprint(String str) {
@@ -215,7 +215,7 @@ public class GoogleJsMessageIdGenerator implements IdGenerator {
 
   /**
    * Generates fingerprint for an English message using the FP package.
-   * This supercedes the message id generation using C fingerprint
+   * This supersedes the message id generation using C fingerprint
    * functions and JNI.  This is slower than the C implementation (
    * we're talking about microseconds here) but it avoids using JNI and
    * shared libraries.<p>

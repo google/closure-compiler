@@ -419,7 +419,7 @@ public class ExpressionDecomposerTest extends TestCase {
         "y = (temp_const$$0.a = temp_const$$1 + foo()) + goo().a");
   }
 
-  // Test mulitple levels
+  // Test multiple levels
   public void testExposePlusEquals5() {
     helperExposeExpression(
         "var x = {}; goo().a.b += foo() + 1",

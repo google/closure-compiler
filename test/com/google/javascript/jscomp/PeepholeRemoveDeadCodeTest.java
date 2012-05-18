@@ -241,7 +241,7 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   public void testRemoveUselessOps() {
     // There are four place where expression results are discarded:
-    //  - a top level expression EXPR_RESULT
+    //  - a top-level expression EXPR_RESULT
     //  - the LHS of a COMMA
     //  - the FOR init expression
     //  - the FOR increment expression
@@ -513,7 +513,7 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   public void testComplex5() {
-    // can't simplify lhs of short circuit statements with side effects
+    // can't simplify LHS of short circuit statements with side effects
     testSame("(a() ? 1 : 1 + c()) && foo()");
   }
 

@@ -34,7 +34,7 @@ class ControlFlowGraph<N> extends
 
   /**
    * A special node marked by the node value key null to a singleton
-   * "return" when control is transfered outside of the current control flow
+   * "return" when control is transferred outside of the current control flow
    * graph.
    */
   private final DiGraphNode<N, ControlFlowGraph.Branch> implicitReturn;
@@ -96,7 +96,7 @@ class ControlFlowGraph<N> extends
    * {@code null}. See {@link ControlFlowGraph#getOptionalNodeComparator}.
    * @param isForward Whether the comparator sorts the nodes in the direction of
    *    the flow.
-   * @return a comparator or null (in particular, if not overriden)
+   * @return a comparator or null (in particular, if not overridden)
    */
   public Comparator<DiGraphNode<N, Branch>> getOptionalNodeComparator(
       boolean isForward) {

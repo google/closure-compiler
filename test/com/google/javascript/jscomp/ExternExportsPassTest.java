@@ -34,7 +34,7 @@ public class ExternExportsPassTest extends TestCase {
 
   /**
    * ExternExportsPass relies on type information to emit JSDoc annotations for
-   * exported externs. However, the user can disable typechecking and still
+   * exported externs. However, the user can disable type checking and still
    * ask for externs to be exported. Set this flag to enable or disable checking
    * of types during a test.
    */
@@ -444,7 +444,7 @@ public class ExternExportsPassTest extends TestCase {
   }
 
   /**
-   * Compiles the passed in javascript with the passed in externs and returns
+   * Compiles the passed in JavaScript with the passed in externs and returns
    * the new externs exported by the this pass.
    *
    * @param js the source to be compiled

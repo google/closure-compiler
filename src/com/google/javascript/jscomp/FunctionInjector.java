@@ -588,11 +588,11 @@ class FunctionInjector {
     final boolean assumeMinimumCapture = this.assumeMinimumCapture;
 
     // Note: functions that contain function definitions are filtered out
-    // in isCanidateFunction.
+    // in isCandidateFunction.
 
     // TODO(johnlenz): Determining if the called function contains VARs
     // or if the caller contains inner functions accounts for 20% of the
-    // runtime cost of this pass.
+    // run-time cost of this pass.
 
     // Don't inline functions with var declarations into a scope with inner
     // functions as the new vars would leak into the inner function and

@@ -116,7 +116,7 @@ class SpecializeModule implements CompilerPass {
    *
    * 4) For each module that directly depends on the initial module, add
    * fixups for the specialized and removed functions. Right now we add
-   * fixups for for every function that was specialzed or removed -- we could
+   * fixups for for every function that was specialized or removed -- we could
    * be smarter about this and for each dependent module only add the functions
    * that it needs.
    *
@@ -158,7 +158,7 @@ class SpecializeModule implements CompilerPass {
       }
     } while(specializationState.hasChanged());
 
-    // We must always add dummy variables before replacing the orginal module.
+    // We must always add dummy variables before replacing the original module.
     addDummyVarDeclarationsToInitialModule(module);
     replaceOriginalModuleInputsWithSpecialized();
     addOriginalFunctionVersionsToDependentModules(module);

@@ -98,7 +98,7 @@ public abstract class SourceMapTestCase extends TestCase {
   }
 
   /**
-   * Finds the all the __XX__ tokens in the given Javascript
+   * Finds the all the __XX__ tokens in the given JavaScript
    * string.
    */
   private Map<String, Token> findTokens(Map<String, String> inputs) {
@@ -112,7 +112,7 @@ public abstract class SourceMapTestCase extends TestCase {
   }
 
   /**
-   * Finds the all the __XX__ tokens in the given Javascript
+   * Finds the all the __XX__ tokens in the given JavaScript
    * string.
    */
   private Map<String, Token> findTokens(String src) {
@@ -124,7 +124,7 @@ public abstract class SourceMapTestCase extends TestCase {
   }
 
   /**
-   * Finds the all the __XX__ tokens in the given Javascript
+   * Finds the all the __XX__ tokens in the given JavaScript
    * string.
    */
   private Map<String, Token> findTokens(

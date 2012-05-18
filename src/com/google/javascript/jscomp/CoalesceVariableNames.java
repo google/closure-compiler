@@ -182,7 +182,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         Var iVar = i.next();
 
         // Look for all the variables that can be merged (in the graph by now)
-        // and it is merged with the current coalscedVar.
+        // and it is merged with the current coalescedVar.
         if (colorings.peek().getGraph().getNode(iVar) != null &&
             coalescedVar.equals(colorings.peek().getPartitionSuperNode(iVar))) {
           allMergedNames.add(iVar.name);

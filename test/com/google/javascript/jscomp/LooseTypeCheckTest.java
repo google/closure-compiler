@@ -1254,7 +1254,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   public void testScoping11() throws Exception {
     // named anonymous functions create a binding in their body only
-    // the return is wrong but the assignment is ok since the type of b is ?
+    // the return is wrong but the assignment is OK since the type of b is ?
     testTypes(
         "/** @return {number} */var a = function b(){ return b };",
         "inconsistent return type\n" +
@@ -1340,7 +1340,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testFunctionArguments13() throws Exception {
-    // verifying that the argument type have non-inferrable types
+    // verifying that the argument type have non-inferable types
     testTypes(
         "/** @return {boolean} */ function u() { return true; }" +
         "/** @param {boolean} b\n@return {?boolean} */" +
@@ -5024,7 +5024,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   public void testCast15() throws Exception {
     // This fixes a bug where a type cast on an object literal
-    // would cause a runtime cast exception if the node was visited
+    // would cause a run-time cast exception if the node was visited
     // more than once.
     //
     // Some code assumes that an object literal must have a object type,
@@ -5348,7 +5348,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
     // still the same type as the one on the variable
     assertTrue(googGetpropFoo2Type == googScopeType);
 
-    // goog.foo type on the left of the top level GETPROP node
+    // goog.foo type on the left of the top-level GETPROP node
     // (under second ASSIGN)
     JSType googFooGetprop2Type = getpropFoo2.getJSType();
     assertTrue("goog.foo incorrectly annotated in goog.foo.bar selection",
@@ -5942,29 +5942,29 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   //public void testWarningOnInterfacePrototype() throws Exception {
   //  testTypes("/** @interface */ u.T = function() {};\n" +
   //      "/** @return {number} */ u.T.prototype = function() { };",
-  //      "cannot reference an interface ouside of its definition");
+  //      "cannot reference an interface outside of its definition");
   //}
   //
   //public void testBadPropertyOnInterface1() throws Exception {
   //  testTypes("/** @interface */ u.T = function() {};\n" +
   //      "/** @return {number} */ u.T.f = function() { return 1;};",
-  //      "cannot reference an interface ouside of its definition");
+  //      "cannot reference an interface outside of its definition");
   //}
   //
   //public void testBadPropertyOnInterface2() throws Exception {
   //  testTypes("/** @interface */ function T() {};\n" +
   //      "/** @return {number} */ T.f = function() { return 1;};",
-  //      "cannot reference an interface ouside of its definition");
+  //      "cannot reference an interface outside of its definition");
   //}
   //
   //public void testBadPropertyOnInterface3() throws Exception {
   //  testTypes("/** @interface */ u.T = function() {}; u.T.x",
-  //      "cannot reference an interface ouside of its definition");
+  //      "cannot reference an interface outside of its definition");
   //}
   //
   //public void testBadPropertyOnInterface4() throws Exception {
   //  testTypes("/** @interface */ function T() {}; T.x;",
-  //      "cannot reference an interface ouside of its definition");
+  //      "cannot reference an interface outside of its definition");
   //}
 
   public void testAnnotatedPropertyOnInterface1() throws Exception {

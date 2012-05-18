@@ -96,7 +96,7 @@ public class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testOverridden() {
-    // Test that the alias doesn't get unaliased when it's overriden by a
+    // Test that the alias doesn't get unaliased when it's overridden by a
     // parameter.
     testScopedNoChanges(
         "var g = goog;", "goog.x = function(g) {g.z()};");
@@ -582,7 +582,7 @@ public class ScopedAliasesTest extends CompilerTestCase {
             for (Node typeNode : info.getTypeNodes()) {
               expectedTypes.add(typeNode);
             }
-            assertEquals("Wrong number of jsdoc types",
+            assertEquals("Wrong number of JsDoc types",
                 expectedTypes.size(), actualTypes.size());
             for (int i = 0; i < expectedTypes.size(); i++) {
               assertNull(

@@ -752,7 +752,7 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
     // When the dest module is empty, it might try to move the code to the
     // one of the modules that the empty module depends on. In some cases
     // this might ended up to be the same module as the definition of the code.
-    // When that happens, CrossMooduleCodeMotion might report a code change
+    // When that happens, CrossModuleCodeMotion might report a code change
     // while nothing is moved. This should not be a problem if we know all
     // modules are non-empty.
     JSModule m1 = new JSModule("m1");

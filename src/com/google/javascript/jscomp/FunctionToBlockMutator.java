@@ -300,7 +300,7 @@ class FunctionToBlockMutator {
 
   /**
    *  Convert returns to assignments and breaks, as needed.
-   *  For example, with a lableName of 'foo':
+   *  For example, with a labelName of 'foo':
    *    {
    *      return a;
    *    }

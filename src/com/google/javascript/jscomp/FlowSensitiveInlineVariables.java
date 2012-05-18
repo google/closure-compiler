@@ -135,7 +135,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
     candidates = Lists.newLinkedList();
 
     // Using the forward reaching definition search to find all the inline
-    // candiates
+    // candidates
     new NodeTraversal(compiler, new GatherCandiates()).traverse(
         t.getScopeRoot().getLastChild());
 
@@ -169,7 +169,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
   /**
    * Gathers a list of possible candidates for inlining based only on
    * information from {@link MustBeReachingVariableDef}. The list will be stored
-   * in {@code candidiates} and the validity of each inlining Candidate should
+   * in {@code candidates} and the validity of each inlining Candidate should
    * be later verified with {@link Candidate#canInline()} when
    * {@link MaybeReachingVariableUse} has been performed.
    */
@@ -317,7 +317,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         return false;
       }
 
-      // We give up inling stuff with R-Value that has GETPROP, GETELEM,
+      // We give up inlining stuff with R-Value that has GETPROP, GETELEM,
       // or anything that creates a new object.
       // Example:
       // var x = a.b.c; j.c = 1; print(x);

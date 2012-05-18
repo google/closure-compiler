@@ -119,7 +119,7 @@ public class JsFunctionParser extends JsFileLineParser {
   }
 
   /**
-   * Parses a line of javascript, extracting dependency information.
+   * Parses a line of JavaScript, extracting dependency information.
    */
   @Override
   protected boolean parseLine(String line) throws ParseException {

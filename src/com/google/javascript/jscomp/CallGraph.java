@@ -107,7 +107,7 @@ public class CallGraph implements CompilerPass {
   /**
    * Creates a call graph object supporting the specified lookups.
    *
-   * At leats one (and possibly both) of computeForwardGraph and
+   * At least one (and possibly both) of computeForwardGraph and
    * computeBackwardGraph must be true.
    *
    * @param compiler The compiler
@@ -194,7 +194,7 @@ public class CallGraph implements CompilerPass {
 
           String functionName = function.getName();
           // Anonymous functions will have null names,
-          // so it is important to  handle that correctly here
+          // so it is important to handle that correctly here
           if (functionName != null && desiredName != null) {
             return desiredName.equals(functionName);
           } else {

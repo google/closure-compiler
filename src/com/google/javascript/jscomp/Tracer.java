@@ -118,7 +118,7 @@ import javax.annotation.Nullable;
  * </pre>
  * where myTracingStatistic implements the {@link TracingStatistic} interface.
  * The class com.google.monitoring.tracing.TracingStatistics contains
- * several useful statistics such as cpu time, wait time, and memory usage.
+ * several useful statistics such as CPU time, wait time, and memory usage.
  * If you add your own tracing statistics, the output is not quite as pretty,
  * but includes additional useful information.
 
@@ -141,7 +141,7 @@ import javax.annotation.Nullable;
  * It uses threads to identify requests. It is fine to have multiple
  * requests traced in multiple simultaneous threads but it is not ok
  * to have any given request traced in multiple threads. (the results
- * will be scattered accross reports).
+ * will be scattered across reports).
  *
  * Java objects do not support destructors (as in C++) so Tracer is not robust
  * when exceptions are thrown. Each Tracer object should be wrapped in a
@@ -150,7 +150,7 @@ import javax.annotation.Nullable;
  *
  * <p>A thread must call {@link Tracer#initCurrentThreadTrace()} to enable the
  * Tracer logging, otherwise Tracer does nothing.  The requirement to call
- * {@code initCurrentThreadTrace} avoids the situtation where Tracer is called
+ * {@code initCurrentThreadTrace} avoids the situation where Tracer is called
  * without the explicit knowledge of the application authors because they
  * happen to use a class in another package that uses Tracer. If {@link
  * Tracer#logCurrentThreadTrace} is called without calling {@link
@@ -229,7 +229,7 @@ final class Tracer {
    * Create and start a tracer.
    * Both type and comment may be null. See class comment for usage.
    *
-   * @param type The type for totalling
+   * @param type The type for totaling
    * @param comment Comment about this tracer
    */
   Tracer(@Nullable String type, @Nullable String comment) {
@@ -658,7 +658,7 @@ final class Tracer {
      * @param prevEventTime The time of the previous event which appears at
      *     the left most part of the trace line.
      * @param indent The indentation to put before the tracer to show the
-     *     hieararchy.
+     *     hierarchy.
      * @param digitsColWidth How many characters the digits should use.
      * @return The formatted string.
      */

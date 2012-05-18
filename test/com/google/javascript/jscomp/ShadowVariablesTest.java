@@ -22,7 +22,7 @@ package com.google.javascript.jscomp;
  *
  */
 public class ShadowVariablesTest extends CompilerTestCase{
-  // Use psedo names to make test easier to read.
+  // Use pseudo names to make test easier to read.
   private boolean generatePseudoNames = false;
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -133,7 +133,7 @@ public class ShadowVariablesTest extends CompilerTestCase{
 
   public void testShadowLotsOfScopes2() {
     generatePseudoNames = true;
-    // 'y' does't have a candidate to shadow due to upward referencing.
+    // 'y' doesn't have a candidate to shadow due to upward referencing.
     test("var  g   = function( x  ) { return function( y  ) " +
          " {return function() {return function() {  x   }}}}",
          "var $g$$ = function($x$$) { return function($y$$) " +
@@ -152,7 +152,7 @@ public class ShadowVariablesTest extends CompilerTestCase{
 
   public void testShadowLotsOfScopes3() {
     generatePseudoNames = true;
-    // 'y' does't have a candidate to shadow due to upward referencing.
+    // 'y' doesn't have a candidate to shadow due to upward referencing.
     test("var  g   = function( x  ) { return function() " +
         " {return function() {return function() {  x   }; var  y   }}}",
         "var $g$$ = function($x$$) { return function() " +

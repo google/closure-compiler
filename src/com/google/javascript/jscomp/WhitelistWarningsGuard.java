@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
  * An extension of {@code WarningsGuard} that provides functionality to maintain
  * a list of warnings (white-list). It is subclasses' responsibility to decide
  * what to do with the white-list by implementing the {@code level} function.
- * Warnings are defined by the name of the js file and the first line of
+ * Warnings are defined by the name of the JS file and the first line of
  * warnings description.
  *
  * @author anatol@google.com (Anatol Pomazau)
@@ -56,7 +56,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
    * of each white-list string is:
    * <file-name>:  <warning-description>
    *
-   * @param whiteList The set of js-warnings that are white-listed. This is
+   * @param whiteList The set of JS-warnings that are white-listed. This is
    *     expected to have similar format as {@code formatWarning(JSError)}.
    */
   public WhitelistWarningsGuard(Set<String> whiteList) {

@@ -30,7 +30,7 @@ import java.util.List;
  * pass looks for results that are complete unused and rewrite then to be:
  *   "return x()" -->"x(); return"
  * , but it can easily be
- * expanded to look for use context to avoid unneed type coersion:
+ * expanded to look for use context to avoid unneeded type coercion:
  *   - "return x.toString()" --> "return x"
  *   - "return !!x" --> "return x"
  * @author johnlenz@google.com (John Lenz)

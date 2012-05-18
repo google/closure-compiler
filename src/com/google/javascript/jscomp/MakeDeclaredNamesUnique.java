@@ -49,7 +49,7 @@ class MakeDeclaredNamesUnique
   // the arguments declaration.
   public static final String ARGUMENTS = "arguments";
 
-  // The name stack is similiar to how we model scopes but handles some
+  // The name stack is similar to how we model scopes but handles some
   // additional cases that are not handled by the current Scope object.
   // Specifically, a Scope currently has only two concepts of scope (global,
   // and function local).  But there are in reality a couple of additional
@@ -77,7 +77,7 @@ class MakeDeclaredNamesUnique
     Node declarationRoot = t.getScopeRoot();
     Renamer renamer;
     if (nameStack.isEmpty()) {
-      // If the contextual renamer is being used the starting context can not
+      // If the contextual renamer is being used, the starting context can not
       // be a function.
       Preconditions.checkState(
           !declarationRoot.isFunction() ||
@@ -163,7 +163,7 @@ class MakeDeclaredNamesUnique
         if (newName != null) {
           Renamer renamer = nameStack.peek();
           if (renamer.stripConstIfReplaced()) {
-            // TODO(johnlenz): Do we need to do anything about the javadoc?
+            // TODO(johnlenz): Do we need to do anything about the Javadoc?
             n.removeProp(Node.IS_CONSTANT_NAME);
           }
           n.setString(newName);
@@ -335,7 +335,7 @@ class MakeDeclaredNamesUnique
 
     /**
      * For the Var declared in the current scope determine if it is possible
-     * to revert the name to its orginal form without conflicting with other
+     * to revert the name to its original form without conflicting with other
      * values.
      */
     void handleScopeVar(Var v) {

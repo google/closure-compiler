@@ -140,7 +140,7 @@ public class LiveVariableAnalysisTest extends TestCase {
     assertLiveBeforeX("var a;X:1?a=1:1;a()", "a");
 
     // Unfortunately, we cannot prove the following because we assume there is
-    // no control flow within a hook (ie: no joins / set unions).
+    // no control flow within a hook (i.e. no joins / set unions).
     // assertNotLiveAfterX("var a;X:1?a=1:a=2;a", "a");
     assertLiveBeforeX("var a,b;X:b=1?a:2", "a");
   }

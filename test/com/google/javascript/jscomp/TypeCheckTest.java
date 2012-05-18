@@ -1491,7 +1491,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testScoping11() throws Exception {
     // named function expressions create a binding in their body only
-    // the return is wrong but the assignment is ok since the type of b is ?
+    // the return is wrong but the assignment is OK since the type of b is ?
     testTypes(
         "/** @return {number} */var a = function b(){ return b };",
         "inconsistent return type\n" +
@@ -1592,7 +1592,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testFunctionArguments13() throws Exception {
-    // verifying that the argument type have non-inferrable types
+    // verifying that the argument type have non-inferable types
     testTypes(
         "/** @return {boolean} */ function u() { return true; }" +
         "/** @param {boolean} b\n@return {?boolean} */" +
@@ -3191,7 +3191,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testBackwardsTypedefUse8() throws Exception {
-    // Tehnically, this isn't quite right, because the JS runtime
+    // Technically, this isn't quite right, because the JS runtime
     // will coerce null -> the global object. But we'll punt on that for now.
     testTypes(
         "/** @param {!Array} x */ function g(x) {}" +
@@ -5298,7 +5298,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "  for (var i = 0; i < 10; i++) {" +
         "    f(y);" +
         "    if (y != null) {" +
-        "      // y is None the first time it goes thru this branch\n" +
+        "      // y is None the first time it goes through this branch\n" +
         "    } else {" +
         "      y = {};" +
         "    }" +
@@ -6824,7 +6824,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testCast15() throws Exception {
     // This fixes a bug where a type cast on an object literal
-    // would cause a runtime cast exception if the node was visited
+    // would cause a run-time cast exception if the node was visited
     // more than once.
     //
     // Some code assumes that an object literal must have a object type,
@@ -7221,7 +7221,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     // still the same type as the one on the variable
     assertTrue(googGetpropFoo2Type == googScopeType);
 
-    // goog.foo type on the left of the top level GETPROP node
+    // goog.foo type on the left of the top-level GETPROP node
     // (under second ASSIGN)
     JSType googFooGetprop2Type = getpropFoo2.getJSType();
     assertTrue("goog.foo incorrectly annotated in goog.foo.bar selection",
@@ -7976,23 +7976,23 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   //public void testBadPropertyOnInterface1() throws Exception {
   //  testTypes("/** @interface */ u.T = function() {};\n" +
   //      "/** @return {number} */ u.T.f = function() { return 1;};",
-  //      "cannot reference an interface ouside of its definition");
+  //      "cannot reference an interface outside of its definition");
   //}
   //
   //public void testBadPropertyOnInterface2() throws Exception {
   //  testTypes("/** @interface */ function T() {};\n" +
   //      "/** @return {number} */ T.f = function() { return 1;};",
-  //      "cannot reference an interface ouside of its definition");
+  //      "cannot reference an interface outside of its definition");
   //}
   //
   //public void testBadPropertyOnInterface3() throws Exception {
   //  testTypes("/** @interface */ u.T = function() {}; u.T.x",
-  //      "cannot reference an interface ouside of its definition");
+  //      "cannot reference an interface outside of its definition");
   //}
   //
   //public void testBadPropertyOnInterface4() throws Exception {
   //  testTypes("/** @interface */ function T() {}; T.x;",
-  //      "cannot reference an interface ouside of its definition");
+  //      "cannot reference an interface outside of its definition");
   //}
 
   public void testAnnotatedPropertyOnInterface1() throws Exception {
@@ -8702,7 +8702,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     // Notice that the error message is slightly different than
     // the one for testTypeDef4, even though they should be the same.
     // This is an implementation detail necessary for NamedTypes work out
-    // ok, and it should change if NamedTypes ever go away.
+    // OK, and it should change if NamedTypes ever go away.
     testTypes(
         "/** @param {AB} x */ function f(x) {}" +
         "/** @constructor */ function A() {}" +

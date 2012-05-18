@@ -195,7 +195,7 @@ class PrepareAst implements CompilerPass {
 
     /**
      * In the AST that Rhino gives us, it needs to make a distinction
-     * between jsdoc on the object literal node and jsdoc on the object literal
+     * between JsDoc on the object literal node and JsDoc on the object literal
      * value. For example,
      * <pre>
      * var x = {

@@ -1039,7 +1039,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testDeclaredObjectLitProperty6() throws Exception {
-    testSame("var x = {/** This is jsdoc */ prop: function(){}};");
+    testSame("var x = {/** This is JsDoc */ prop: function(){}};");
     Var prop = globalScope.getVar("x.prop");
     JSType propType = prop.getType();
     assertEquals("function (): undefined", propType.toString());

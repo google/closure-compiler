@@ -194,7 +194,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
     Node parent = n.getParent();
     if (n.isEmpty() ||
         (n.isBlock() && !n.hasChildren())) {
-      // Not always trivial to remove, let FoldContants work its magic later.
+      // Not always trivial to remove, let FoldConstants work its magic later.
       return;
     }
 

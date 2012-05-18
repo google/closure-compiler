@@ -34,7 +34,7 @@ class Util {
     return escapeString(s, '"',  "\\\"", "\'", "\\\\", null);
   }
 
-  /** Helper to escape javascript string as well as regular expression */
+  /** Helper to escape JavaScript string as well as regular expression */
   static String escapeString(String s, char quote,
                           String doublequoteEscape,
                           String singlequoteEscape,
@@ -88,15 +88,15 @@ class Util {
               appendCharAsHex(sb, c);
             }
           } else {
-            // No charsetEncoder provided - pass straight latin characters
+            // No charsetEncoder provided - pass straight Latin characters
             // through, and escape the rest.  Doing the explicit character
             // check is measurably faster than using the CharsetEncoder.
             if (c > 0x1f && c <= 0x7f) {
               sb.append(c);
             } else {
-              // Other characters can be misinterpreted by some js parsers,
+              // Other characters can be misinterpreted by some JS parsers,
               // or perhaps mangled by proxies along the way,
-              // so we play it safe and unicode escape them.
+              // so we play it safe and Unicode escape them.
               appendCharAsHex(sb, c);
             }
           }
@@ -121,18 +121,18 @@ class Util {
   }
 
   /**
-   * Returns a javascript representation of the character in a hex escaped
+   * Returns a JavaScript representation of the character in a hex escaped
    * format.
    * @param out The buffer to which the hex representation should be appended.
-   * @param codePoint The codepoint to append.
+   * @param codePoint The code point to append.
    */
   private static void appendHexJavaScriptRepresentation(
       Appendable out, int codePoint)
       throws IOException {
     if (Character.isSupplementaryCodePoint(codePoint)) {
-      // Handle supplementary unicode values which are not representable in
-      // javascript.  We deal with these by escaping them as two 4B sequences
-      // so that they will round-trip properly when sent from java to javascript
+      // Handle supplementary Unicode values which are not representable in
+      // JavaScript.  We deal with these by escaping them as two 4B sequences
+      // so that they will round-trip properly when sent from Java to JavaScript
       // and back.
       char[] surrogates = Character.toChars(codePoint);
       appendHexJavaScriptRepresentation(out, surrogates[0]);

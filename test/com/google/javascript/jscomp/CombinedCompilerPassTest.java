@@ -131,7 +131,7 @@ public class CombinedCompilerPassTest extends TestCase  {
 
   /**
    * Collection of data for a traversal test. Contains the traversal callback
-   * and the exepcted pre- and post-order traversal results.
+   * and the expected pre- and post-order traversal results.
    */
   private static class TestHelper {
     private ConcatTraversal traversal;

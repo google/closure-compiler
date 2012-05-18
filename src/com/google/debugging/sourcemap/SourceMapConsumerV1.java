@@ -131,7 +131,7 @@ public class SourceMapConsumerV1 implements SourceMapConsumer {
    * Parses the first section of the source map file that has character
    * mappings.
    * @param parser The parser to use
-   * @param lineCount The number of lines in the generated js
+   * @param lineCount The number of lines in the generated JS
    * @return The max id found in the file
    */
   private int parseCharacterMap(
@@ -228,7 +228,7 @@ public class SourceMapConsumerV1 implements SourceMapConsumer {
 
   /**
    * Parse the file mappings section of the source map file.  This maps the
-   * ids to the filename, line number and colunm number in the original
+   * ids to the filename, line number and column number in the original
    * files.
    * @param parser The parser to get the data from.
    * @param maxID The maximum id found in the character mapping section.
@@ -423,7 +423,7 @@ public class SourceMapConsumerV1 implements SourceMapConsumer {
    * Keeps track of the information about the line in a more compact way.  It
    * represents a fragment of the line starting at a specific index and then
    * looks at offsets from that index stored as a byte, this dramatically
-   * reduces the memory usuage of this array.
+   * reduces the memory usage of this array.
    */
   private static final class LineFragment {
     private final int startIndex;
@@ -466,7 +466,7 @@ public class SourceMapConsumerV1 implements SourceMapConsumer {
 
   /**
    * Keeps track of data about the source file itself.  This is contains a list
-   * of line offsetsand columns to track down where exactly a line falls into
+   * of line offsets and columns to track down where exactly a line falls into
    * the data.
    */
   private static final class SourceFile {

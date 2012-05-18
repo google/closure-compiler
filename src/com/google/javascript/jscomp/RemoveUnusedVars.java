@@ -33,7 +33,7 @@ import java.util.*;
 
 /**
  * Garbage collection for variable and function definitions. Basically performs
- * a mark-and-sweep type algorithm over the javascript parse tree.
+ * a mark-and-sweep type algorithm over the JavaScript parse tree.
  *
  * For each scope:
  * (1) Scan the variable/function declarations at that scope.
@@ -315,7 +315,7 @@ class RemoveUnusedVars
   }
 
   /**
-   * Traverses a function, which creates a new scope in javascript.
+   * Traverses a function, which creates a new scope in JavaScript.
    *
    * Note that CATCH blocks also create a new scope, but only for the
    * catch variable. Declarations within the block actually belong to the

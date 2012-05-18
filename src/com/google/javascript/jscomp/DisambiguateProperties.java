@@ -668,7 +668,7 @@ class DisambiguateProperties<T> implements CompilerPass {
     T getType(StaticScope<T> scope, Node node, String prop);
 
     /**
-     * Returns true if a field reference on this type will invalidiate all
+     * Returns true if a field reference on this type will invalidate all
      * references to that field as candidates for renaming. This is true if the
      * type is unknown or all-inclusive, as variables with such a type could be
      * references to any object.
@@ -855,7 +855,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       }
 
       // We look up the prototype chain to find the highest place (if any) that
-      // this appears.  This will make references to overriden properties look
+      // this appears.  This will make references to overridden properties look
       // like references to the initial property, so they are renamed alike.
       ObjectType foundType = null;
       ObjectType objType = ObjectType.cast(type);

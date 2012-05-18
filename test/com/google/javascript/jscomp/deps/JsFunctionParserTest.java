@@ -62,7 +62,7 @@ public class JsFunctionParserTest extends TestCase {
       + "// goog.provide('no4');\n"
       + "goog.require(\""
       + "bar.data.SuperstarAddStarThreadActionRequestDelegate\"); "
-      + "//no new line at eof";
+      + "//no new line at EOF";
 
     Collection<SymbolInfo> symbols = parser.parseFile(SRC_PATH, CONTENTS);
 

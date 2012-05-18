@@ -101,7 +101,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
       if (gramps.isCall() &&
           parent == gramps.getFirstChild()) {
         // Semantically, a direct call to eval is different from an indirect
-        // call to an eval. See Ecma-262 S15.1.2.1. So it's ok for the first
+        // call to an eval. See ECMA-262 S15.1.2.1. So it's OK for the first
         // expression to a comma to be a no-op if it's used to indirect
         // an eval.
         if (n == parent.getFirstChild() &&
@@ -131,7 +131,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
         // Fall through and look for warnings for the 1st and 3rd child
         // of a for.
       } else {
-        return;  // it might be ok to not have a side-effect
+        return;  // it might be OK to not have a side-effect
       }
     }
 

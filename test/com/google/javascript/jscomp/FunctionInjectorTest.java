@@ -240,7 +240,7 @@ public class FunctionInjectorTest extends TestCase {
   }
 
   public void testCanInlineReferenceToFunction24() {
-    // ... this is ok, because it doesn't introduce a new global name.
+    // ... this is OK, because it doesn't introduce a new global name.
     helperCanInlineReferenceToFunction(CanInlineResult.YES,
         "function foo(a){return a;}; " +
         "function x() { foo(x++); }",

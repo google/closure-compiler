@@ -282,7 +282,7 @@ public class JsMessage {
   }
 
   /**
-   * Contains functionality for creating js messages. Generates authoritative
+   * Contains functionality for creating JS messages. Generates authoritative
    * keys and fingerprints for a message that must stay constant over time.
    *
    * This implementation correctly processes unnamed messages and creates a key
@@ -363,7 +363,7 @@ public class JsMessage {
       return this;
     }
 
-    /** Returns the message registred placeholders */
+    /** Returns the message registered placeholders */
     public Set<String> getPlaceholders() {
       return placeholders;
     }
@@ -481,7 +481,7 @@ public class JsMessage {
         0x2b992ddfa23249d6L; // part of pi, arbitrary
 
     /** Hash constant (64 bit) */
-    private  static final long CONSTANT64 =
+    private static final long CONSTANT64 =
         0xe08c1d668b756f82L; // part of golden ratio, arbitrary
 
 

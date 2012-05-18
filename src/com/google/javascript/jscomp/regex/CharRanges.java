@@ -124,7 +124,7 @@ final class CharRanges {
     //     If bit is greater than all elements, then idx will be past the end of
     //     the array, and will be even since ranges.length is even.
     //
-    //     Otherwise bit must be in the space between two runs, so not
+    //     Otherwise, bit must be in the space between two runs, so not
     //     contained.
     //
     //     In all cases, oddness is equivalent to containedness.

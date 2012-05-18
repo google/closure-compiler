@@ -19,7 +19,7 @@ package com.google.javascript.jscomp.regex;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Implements the EcmaScript 5
+ * Implements the ECMAScript 5
  * <a href="http://es5.github.com/#Canonicalize">Canonicalize</a> operation
  * used to specify how case-insensitive regular expressions match.
  *
@@ -50,7 +50,7 @@ public final class CaseCanonicalize {
 
   // Below are tables that implement the Canonicalize operation.
   // We cannot use java.lang.Character.toUpperCase since that is based on
-  // a more modern version of Unicode than that required by the EcmaScript spec.
+  // a more modern version of Unicode than that required by the ECMAScript spec.
 
   /**
    * Set of code units that are case-insensitively equivalent to some other
@@ -204,7 +204,7 @@ public final class CaseCanonicalize {
   }
 
   /**
-   * Returns the case canonical version of the given code-unit.  EcmaScript 5
+   * Returns the case canonical version of the given code-unit.  ECMAScript 5
    * explicitly says that code-units are to be treated as their code-point
    * equivalent, even surrogates.
    */

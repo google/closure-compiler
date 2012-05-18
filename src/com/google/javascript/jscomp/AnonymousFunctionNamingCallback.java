@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Token;
  * Visitor that performs naming operations on anonymous functions by
  * means of the FunctionNamer interface.  Anonymous functions are
  * named based on context.  For example, the anonymous function on the
- * rhs based on the property at the lhs of the assignment operator.
+ * RHS based on the property at the LHS of the assignment operator.
  *
  * goog.string.htmlEscape = function(str) {
  * }

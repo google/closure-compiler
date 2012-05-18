@@ -131,7 +131,7 @@ public class JsFileParser extends JsFileLineParser {
   }
 
   /**
-   * Parses a line of javascript, extracting goog.provide and goog.require
+   * Parses a line of JavaScript, extracting goog.provide and goog.require
    * information.
    */
   @Override

@@ -16,7 +16,7 @@
 
 
 /**
- * @fileoverview Provides the boilerplate code for runtime type checking.
+ * @fileoverview Provides the boilerplate code for run-time type checking.
  *
  */
 
@@ -33,7 +33,7 @@ $jscomp.typecheck.suspendChecking = false;
 
 
 /**
- * Log and possibly format the runtime type check warning. This
+ * Log and possibly format the run-time type check warning. This
  * function is customized at compile-time.
  *
  * @param {string} warning the warning to log.

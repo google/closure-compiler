@@ -29,7 +29,7 @@ public class AstValidator implements CompilerPass {
 
   // Possible enhancements:
   // * verify NAME, LABEL_NAME, GETPROP property name and unquoted
-  // object-literal keys are valid javascript identifiers.
+  // object-literal keys are valid JavaScript identifiers.
   // * optionally verify every node has source location information.
   // * optionally verify every node has an assigned JSType
   //
@@ -162,7 +162,7 @@ public class AstValidator implements CompilerPass {
         validateChildless(n);
         return;
 
-      // General uniary ops
+      // General unary ops
       case Token.DELPROP:
       case Token.POS:
       case Token.NEG:

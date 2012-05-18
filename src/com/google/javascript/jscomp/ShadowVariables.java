@@ -91,7 +91,7 @@ class ShadowVariables implements CompilerPass {
   /**
    * @param assignments Map of old variable names to its assignment Objects.
    * @param varsByFrequency Sorted variable assignments by Frequency.
-   * @param pseudoNameMap The current psedo name map so this pass can update
+   * @param pseudoNameMap The current pseudo name map so this pass can update
    *     it accordingly.
    */
   ShadowVariables(

@@ -79,10 +79,10 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
   /**
    * Pattern for unnamed messages.
    * <p>
-   * All jsmessages in js code should have unique name but messages in generated
-   * code (i.e. from soy template) could have duplicated message names. Later we
-   * replace the message names with ids constructed as a hash of the message
-   * content.
+   * All JS messages in JS code should have unique name but messages in
+   * generated code (i.e. from soy template) could have duplicated message names.
+   * Later we replace the message names with ids constructed as a hash of the
+   * message content.
    * <p>
    * <link href="http://code.google.com/p/closure-templates/">
    * Soy</link> generates messages with names MSG_UNNAMED_<NUMBER> . This
@@ -96,7 +96,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
   static final String HIDDEN_DESC_PREFIX = "@hidden";
 
-  // For old-style js messages
+  // For old-style JS messages
   private static final String DESC_SUFFIX = "_HELP";
 
   private final boolean needToCheckDuplications;
@@ -124,7 +124,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
   private final CheckLevel checkLevel;
 
   /**
-   * Creates js message visitor.
+   * Creates JS message visitor.
    *
    * @param compiler the compiler instance
    * @param needToCheckDuplications whether to check duplicated messages in
@@ -146,7 +146,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
         ? CheckLevel.ERROR : CheckLevel.WARNING;
 
     // TODO(anatol): add flag that decides whether to process UNNAMED messages.
-    // Some projects would not want such functionality (unnamed) as they dont
+    // Some projects would not want such functionality (unnamed) as they don't
     // use SOY templates.
   }
 
@@ -282,7 +282,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
    *
    * @param sourceName the source file name
    * @param msgName the name of the message
-   * @param msgNode the node that represents js message
+   * @param msgNode the node that represents JS message
    */
   private void checkIfMessageDuplicated(String sourceName, String msgName,
       Node msgNode) {
@@ -298,18 +298,18 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
   }
 
   /**
-   * Creates a {@link JsMessage} for a js message defined using a js variable
+   * Creates a {@link JsMessage} for a JS message defined using a JS variable
    * declaration (e.g <code>var MSG_X = ...;</code>).
    *
    * @param builder the message builder
-   * @param nameNode a NAME node for a js message variable
+   * @param nameNode a NAME node for a JS message variable
    * @param parentNode a VAR node, parent of {@code nameNode}
    * @param grandParentNode the grandparent of {@code nameNode}. This node is
    *        only used to get meta data about the message that might be
    *        surrounding it (e.g. a message description). This argument may be
    *        null if the meta data is not needed.
    * @throws MalformedException if {@code varNode} does not
-   *         correspond to a valid js message VAR node
+   *         correspond to a valid JS message VAR node
    */
   private void extractMessageFromVariable(
       Builder builder, Node nameNode, Node parentNode,
@@ -340,14 +340,14 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
   }
 
   /**
-   * Creates a {@link JsMessage} for a js message defined using an assignment to
+   * Creates a {@link JsMessage} for a JS message defined using an assignment to
    * a qualified name (e.g <code>a.b.MSG_X = goog.getMsg(...);</code>).
    *
    * @param builder the message builder
-   * @param getPropNode a GETPROP node in a js message assignment
+   * @param getPropNode a GETPROP node in a JS message assignment
    * @param assignNode an ASSIGN node, parent of {@code getPropNode}.
    * @throws MalformedException if {@code getPropNode} does not
-   *         correspond to a valid js message node
+   *         correspond to a valid JS message node
    */
   private void extractMessageFromProperty(
       Builder builder, Node getPropNode, Node assignNode)
@@ -443,8 +443,8 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
   }
 
   /**
-   * Returns the string value associated with a node representing a js string or
-   * several js strings added together (e.g. {@code 'str'} or {@code 's' + 't' +
+   * Returns the string value associated with a node representing a JS string or
+   * several JS strings added together (e.g. {@code 'str'} or {@code 's' + 't' +
    * 'r'}).
    *
    * @param node the node from where we extract the string
@@ -677,7 +677,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
    * Appends the message parts in a JS message value extracted from the given
    * text node.
    *
-   * @param builder the js message builder to append parts to
+   * @param builder the JS message builder to append parts to
    * @param node the node with string literal that contains the message text
    * @throws MalformedException if {@code value} contains a reference to
    *         an unregistered placeholder
@@ -723,11 +723,11 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
 
   /**
-   * Processes found js message. Several examples of "standard" processing
+   * Processes found JS message. Several examples of "standard" processing
    * routines are:
    * <ol>
-   * <li>extract all js messages
-   * <li>replace js messages with localized versions for some specific language
+   * <li>extract all JS messages
+   * <li>replace JS messages with localized versions for some specific language
    * <li>check that messages have correct syntax and present in localization
    *     bundle
    * </ol>
@@ -740,7 +740,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
       JsMessageDefinition definition);
 
   /**
-   * Returns whether the given js identifier is a valid js message name.
+   * Returns whether the given JS identifier is a valid JS message name.
    */
   boolean isMessageName(String identifier, boolean isNewStyleMessage) {
     return identifier.startsWith(MSG_PREFIX) &&

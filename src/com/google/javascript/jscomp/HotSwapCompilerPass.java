@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Node;
  * should implement this interface.
  * <p>
  * It is assumed that {@code Node} argument of {@code hotSwapScript} is the root
- * of a sub-tree in AST that represents a js file and so is of type {@code
+ * of a sub-tree in AST that represents a JS file and so is of type {@code
  * Token.SCRIPT}.
  *
  * @author bashir@google.com (Bashir Sadjad)

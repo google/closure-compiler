@@ -60,12 +60,12 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   /**
-   * Tests that the given Javascript code has a @deprecated marker
+   * Tests that the given JavaScript code has a @deprecated marker
    * somewhere in it which raises an error. Also tests that the
-   * deprecated marker works with a message. The Javascript should
+   * deprecated marker works with a message. The JavaScript should
    * have a JsDoc of the form "@deprecated %s\n".
    *
-   * @param js The Javascript code to parse and test.
+   * @param js The JavaScript code to parse and test.
    * @param reason A simple deprecation reason string, used for testing
    *    the addition of a deprecation reason to the @deprecated tag.
    * @param error The deprecation error expected when no reason is given.
@@ -418,7 +418,7 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testNoPrivateAccessForProperties7() {
-    // It's ok to override a private property with a non-private property
+    // It's OK to override a private property with a non-private property
     // in the same file, but you'll get yelled at when you try to use it.
     test(new String[] {
       "/** @constructor */ function Foo() {} " +

@@ -48,12 +48,12 @@ import javax.annotation.Nullable;
  * For custom prototype property names that lack leading and trailing
  * underscores:
  * - To always rename these, use aggressive renaming.
- * - If aggresive renaming is off, we use a heuristic to decide whether to
- *   rename (to avoid most built-in js methods). We rename if the original name
+ * - If aggressive renaming is off, we use a heuristic to decide whether to
+ *   rename (to avoid most built-in JS methods). We rename if the original name
  *   contains at least one character that is not a lowercase letter.
  *
  * When a property name is used both in a prototype definition and as an object
- * literal key, we rename it only if it satisifies both renaming policies.
+ * literal key, we rename it only if it satisfies both renaming policies.
  *
  */
 class RenamePrototypes implements CompilerPass {

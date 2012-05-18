@@ -500,7 +500,7 @@ public class NodeUtilTest extends TestCase {
     assertMutableState(false, "a");
     assertMutableState(true, "[b, c [d, [e]]]");
     assertMutableState(true, "({a: x, b: y, c: z})");
-    // Note: RegEx objects are not immutable,  for instance, the exec
+    // Note: RegExp objects are not immutable,  for instance, the exec
     // method maintains state for "global" searches.
     assertMutableState(true, "/abc/gi");
     assertMutableState(false, "'a'");
@@ -1319,7 +1319,7 @@ public class NodeUtilTest extends TestCase {
     assertEquals(
         Double.POSITIVE_INFINITY,
         NodeUtil.getNumberValue(getNode("'+Infinity'")));
-    // FireFox treats "infinity" as "Infinity", IE treats it as NaN
+    // Firefox treats "infinity" as "Infinity", IE treats it as NaN
     assertEquals(null, NodeUtil.getNumberValue(getNode("'-infinity'")));
     assertEquals(null, NodeUtil.getNumberValue(getNode("'infinity'")));
     assertEquals(null, NodeUtil.getNumberValue(getNode("'+infinity'")));
@@ -1411,7 +1411,7 @@ public class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isNumericResult(getNode("a().b()")));
     assertFalse(NodeUtil.isNumericResult(getNode("new a()")));
 
-    // Definitely not numberic
+    // Definitely not numeric
     assertFalse(NodeUtil.isNumericResult(getNode("([1,2])")));
     assertFalse(NodeUtil.isNumericResult(getNode("({a:1})")));
 

@@ -297,7 +297,7 @@ public final class SymbolTable
   }
 
   /**
-   * Gets the symbol for the given constuctor or interface.
+   * Gets the symbol for the given constructor or interface.
    */
   public Symbol getSymbolDeclaredBy(FunctionType fn) {
     Preconditions.checkState(fn.isConstructor() || fn.isInterface());
@@ -710,7 +710,7 @@ public final class SymbolTable
                   true,
                   root.scope,
                   currentNode,
-                  null /* jsdoc info */);
+                  null /* JsDoc info */);
             }
 
             if (namespace != null) {
@@ -789,7 +789,7 @@ public final class SymbolTable
    * in different ways. For example, "A.superClass_.foo" and B.prototype.foo".
    *
    * This resolves that ambiguity by pruning the duplicates.
-   * If we have a lexical symbol with a constructor in its proeprty
+   * If we have a lexical symbol with a constructor in its property
    * chain, then we assume there's also a property path to this symbol.
    * In other words, we can remove "A.superClass_.foo" because it's rooted
    * at "A", and we built a property scope for "A" above.
@@ -818,7 +818,7 @@ public final class SymbolTable
   }
 
   /**
-   * Create symbols and references for all properites of types in
+   * Create symbols and references for all properties of types in
    * this symbol table.
    *
    * This gets a little bit tricky, because of the way this symbol table
@@ -826,7 +826,7 @@ public final class SymbolTable
    * have:
    *
    * <code>
-   * SymbolTable symbolTale = for("var x = new Foo();");
+   * SymbolTable symbolTable = for("var x = new Foo();");
    * Symbol x = symbolTable.getGlobalScope().getSlot("x");
    * Symbol type = symbolTable.getAllSymbolsForType(x.getType()).get(0);
    * </code>
@@ -872,8 +872,8 @@ public final class SymbolTable
         Symbol param = getParameterInFunction(sym, name);
         if (param == null) {
           // There is no reference to this parameter in the actual JavaScript
-          // code, so we'll try to create a special jsdoc-only symbol in
-          // a jsdoc-only scope.
+          // code, so we'll try to create a special JsDoc-only symbol in
+          // a JsDoc-only scope.
           SourcePosition<Node> typePos = marker.getType();
           JSType type = null;
           if (typePos != null) {

@@ -1,7 +1,7 @@
 // Copyright 2008 Google Inc. All Rights Reserved.
 // Author: avd@google.com (Antonio Vicente)
 //
-// Provides jscompiler with parameters for the instrumentation pass
+// Provides JS Compiler with parameters for the instrumentation pass
 
 syntax = "proto2";
 
