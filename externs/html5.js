@@ -460,6 +460,12 @@ function ImageData() {}
 /** @type {CanvasPixelArray} */
 ImageData.prototype.data;
 
+/** @type {number} */
+ImageData.prototype.width;
+
+/** @type {number} */
+ImageData.prototype.height;
+
 /**
  * @constructor
  */
