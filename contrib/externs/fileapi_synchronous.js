@@ -122,6 +122,22 @@ FileSystemSync.prototype.name;
 FileSystemSync.prototype.root;
 
 /**
+ * @see http://www.w3.org/TR/file-system-api/#widl-LocalFileSystemSync-requestFileSystemSync-FileSystemSync-unsigned-short-type-unsigned-long-long-size
+ * @param {number} type
+ * @param {number} size
+ * @return {!FileSystemSync}
+ */
+function requestFileSystemSync(type, size) {}
+
+/**
+ * @see http://www.w3.org/TR/file-system-api/#widl-LocalFileSystemSync-requestFileSystemSync-FileSystemSync-unsigned-short-type-unsigned-long-long-size
+ * @param {number} type
+ * @param {number} size
+ * @return {!FileSystemSync}
+ */
+function webkitRequestFileSystemSync(type, size) {}
+
+/**
  * @see http://www.w3.org/TR/file-system-api/#the-entrysync-interface
  * @constructor
  */
