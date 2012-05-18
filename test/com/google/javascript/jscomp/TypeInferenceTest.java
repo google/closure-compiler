@@ -44,6 +44,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.testing.Asserts;
 
 import junit.framework.TestCase;
 
@@ -128,7 +129,7 @@ public class TypeInferenceTest extends TestCase {
   }
 
   private void verify(String name, JSType type) {
-    assertEquals(type, getType(name));
+    Asserts.assertTypeEquals(type, getType(name));
   }
 
   private void verify(String name, JSTypeNative type) {
@@ -864,5 +865,28 @@ public class TypeInferenceTest extends TestCase {
             registry.getNativeObjectType(OBJECT_TYPE),
             registry.getNativeType(BOOLEAN_TYPE),
             ImmutableList.<JSType>of() /* params */));
+  }
+
+  public void testBackwardsInferenceCall() {
+    inFunction(
+        "/** @param {{foo: (number|undefined)}} x */" +
+        "function f(x) {}" +
+        "var y = {};" +
+        "f(y);");
+
+    assertEquals("{foo: (number|undefined)}", getType("y").toString());
+  }
+
+  public void testBackwardsInferenceNew() {
+    inFunction(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @param {{foo: (number|undefined)}} x\n" +
+        " */" +
+        "function F(x) {}" +
+        "var y = {};" +
+        "new F(y);");
+
+    assertEquals("{foo: (number|undefined)}", getType("y").toString());
   }
 }

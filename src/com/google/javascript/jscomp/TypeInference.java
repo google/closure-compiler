@@ -1033,9 +1033,9 @@ class TypeInference
   }
 
   private FlowScope traverseNew(Node n, FlowScope scope) {
-    Node constructor = n.getFirstChild();
-    scope = traverse(constructor, scope);
+    scope = traverseChildren(n, scope);
 
+    Node constructor = n.getFirstChild();
     JSType constructorType = constructor.getJSType();
     JSType type = null;
     if (constructorType != null) {
@@ -1052,14 +1052,11 @@ class TypeInference
         }
         if (ct != null && ct.isConstructor()) {
           type = ct.getInstanceType();
+          backwardsInferenceFromCallSite(n, ct);
         }
       }
     }
     n.setJSType(type);
-
-    for (Node arg = constructor.getNext(); arg != null; arg = arg.getNext()) {
-      scope = traverse(arg, scope);
-    }
     return scope;
   }
 
