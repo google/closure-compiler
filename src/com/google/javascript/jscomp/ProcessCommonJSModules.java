@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -23,6 +24,7 @@ import com.google.javascript.rhino.Node;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -123,6 +125,7 @@ public class ProcessCommonJSModules implements CompilerPass {
       AbstractPostOrderCallback {
 
     private int scriptNodeCount = 0;
+    private Set<String> modulesWithExports = Sets.newHashSet();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -202,6 +205,10 @@ public class ProcessCommonJSModules implements CompilerPass {
      */
     private void emitOptionalModuleExportsOverride(Node script,
         String moduleName) {
+      if (!modulesWithExports.contains(moduleName)) {
+        return;
+      }
+
       Node moduleExportsProp = IR.getprop(IR.name(moduleName),
           IR.string("module$exports"));
       script.addChildToBack(IR.ifNode(
@@ -222,6 +229,7 @@ public class ProcessCommonJSModules implements CompilerPass {
       Node exports = prop.getChildAtIndex(1);
       exports.putProp(Node.ORIGINALNAME_PROP, "exports");
       exports.setString("module$exports");
+      modulesWithExports.add(moduleName);
     }
 
     /**

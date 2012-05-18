@@ -1046,9 +1046,7 @@ public class CommandLineRunnerTest extends TestCase {
     args.add("--common_js_entry_module=foo/bar");
     setFilename(0, "foo/bar.js");
     test("exports.test = 1",
-        "var module$foo$bar={test:1}; " +
-        "module$foo$bar.module$exports && " +
-        "(module$foo$bar=module$foo$bar.module$exports)");
+        "var module$foo$bar={test:1};");
   }
 
   public void testTransformAMDAndProcessCJS() {
@@ -1057,9 +1055,7 @@ public class CommandLineRunnerTest extends TestCase {
     args.add("--common_js_entry_module=foo/bar");
     setFilename(0, "foo/bar.js");
     test("define({foo: 1})",
-        "var module$foo$bar={}, module$foo$bar={foo:1}; " +
-        "module$foo$bar.module$exports && " +
-        "(module$foo$bar=module$foo$bar.module$exports)");
+        "var module$foo$bar={}, module$foo$bar={foo:1};");
   }
 
   /* Helper functions */
