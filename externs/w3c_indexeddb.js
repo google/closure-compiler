@@ -274,14 +274,14 @@ webkitIDBRequest.DONE;
 IDBRequest.prototype.readyState;
 
 /**
- * @type {function(Event)}
+ * @type {function(!Event)}
  */
-IDBRequest.prototype.onsuccess = function() {};
+IDBRequest.prototype.onsuccess = function(e) {};
 
 /**
- * @type {function(Event)}
+ * @type {function(!Event)}
  */
-IDBRequest.prototype.onerror = function() {};
+IDBRequest.prototype.onerror = function(e) {};
 
 /**
  * @type {*}
