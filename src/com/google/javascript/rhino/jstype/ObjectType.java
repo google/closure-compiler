@@ -262,7 +262,7 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
   public abstract ObjectType getImplicitPrototype();
 
   /**
-   * Defines a property whose type is synthesized (i.e. not inferred).
+   * Defines a property whose type is explicitly declared by the programmer.
    * @param propertyName the property's name
    * @param type the type
    * @param propertyNode the node corresponding to the declaration of property
@@ -280,6 +280,16 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
     registry.registerPropertyOnType(propertyName, this);
 
     return result;
+  }
+
+  /**
+   * Defines a property whose type is on a synthesized object. These objects
+   * don't actually exist in the user's program. They're just used for
+   * bookkeeping in the type system.
+   */
+  public final boolean defineSynthesizedProperty(String propertyName,
+      JSType type, Node propertyNode) {
+    return defineProperty(propertyName, type, false, propertyNode);
   }
 
   /**

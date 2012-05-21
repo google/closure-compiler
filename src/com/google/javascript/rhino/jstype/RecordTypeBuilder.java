@@ -51,11 +51,17 @@ import java.util.HashMap;
  */
 public class RecordTypeBuilder {
   private boolean isEmpty = true;
+  private boolean isDeclared = true;
   private final JSTypeRegistry registry;
   private final HashMap<String, RecordProperty> properties = Maps.newHashMap();
 
   public RecordTypeBuilder(JSTypeRegistry registry) {
     this.registry = registry;
+  }
+
+  /** See the comments on RecordType about synthetic types. */
+  void setSynthesized(boolean synthesized) {
+    isDeclared = !synthesized;
   }
 
   /**
@@ -86,7 +92,8 @@ public class RecordTypeBuilder {
        return registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE);
     }
 
-    return registry.createRecordType(Collections.unmodifiableMap(properties));
+    return new RecordType(
+        registry, Collections.unmodifiableMap(properties), isDeclared);
   }
 
   static class RecordProperty {

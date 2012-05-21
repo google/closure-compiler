@@ -65,19 +65,30 @@ class RecordType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;
 
   private final SortedMap<String, JSType> properties = Maps.newTreeMap();
+  private final boolean declared;
   private boolean isFrozen = false;
+
+  RecordType(JSTypeRegistry registry, Map<String, RecordProperty> properties) {
+    this(registry, properties, true);
+  }
 
   /**
    * Creates a record type.
    *
    * @param registry The type registry under which this type lives.
    * @param properties A map of all the properties of this record type.
+   * @param declared Whether this is a declared or synthesized type.
+   *     A synthesized record type is just used for bookkeeping
+   *     in the type system. A declared record type was actually used in the
+   *     user's program.
    * @throws IllegalStateException if the {@code RecordProperty} associated
    *         with a property is null.
    */
-  RecordType(JSTypeRegistry registry, Map<String, RecordProperty> properties) {
+  RecordType(JSTypeRegistry registry, Map<String, RecordProperty> properties,
+      boolean declared) {
     super(registry, null, null);
     setPrettyPrint(true);
+    this.declared = declared;
 
     for (String property : properties.keySet()) {
       RecordProperty prop = properties.get(property);
@@ -85,11 +96,22 @@ class RecordType extends PrototypeObjectType {
         throw new IllegalStateException(
             "RecordProperty associated with a property should not be null!");
       }
-      defineDeclaredProperty(property, prop.getType(), prop.getPropertyNode());
+      if (declared) {
+        defineDeclaredProperty(
+            property, prop.getType(), prop.getPropertyNode());
+      } else {
+        defineSynthesizedProperty(
+            property, prop.getType(), prop.getPropertyNode());
+      }
     }
 
     // Freeze the record type.
     isFrozen = true;
+  }
+
+  /** @return Is this synthesized for internal bookkeeping? */
+  boolean isSynthetic() {
+    return !declared;
   }
 
   @Override
@@ -141,6 +163,7 @@ class RecordType extends PrototypeObjectType {
     if (that.isRecordType()) {
       RecordType thatRecord = that.toMaybeRecordType();
       RecordTypeBuilder builder = new RecordTypeBuilder(registry);
+      builder.setSynthesized(true);
 
       // The greatest subtype consists of those *unique* properties of both
       // record types. If any property conflicts, then the NO_TYPE type

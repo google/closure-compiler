@@ -691,7 +691,15 @@ public class JSTypeRegistry implements Serializable {
     if (typesIndexedByProperty.containsKey(propertyName)) {
       for (JSType alt :
                typesIndexedByProperty.get(propertyName).getAlternates()) {
-        if (!alt.getGreatestSubtype(type).isEmptyType()) {
+        JSType greatestSubtype = alt.getGreatestSubtype(type);
+        if (!greatestSubtype.isEmptyType()) {
+          // We've found a type with this property. Now we just have to make
+          // sure it's not a type used for internal bookkeeping.
+          RecordType maybeRecordType = greatestSubtype.toMaybeRecordType();
+          if (maybeRecordType != null && maybeRecordType.isSynthetic()) {
+            continue;
+          }
+
           return true;
         }
       }
