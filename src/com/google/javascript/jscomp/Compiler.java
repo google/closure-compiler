@@ -53,6 +53,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
@@ -85,6 +86,9 @@ public class Compiler extends AbstractCompiler {
   static final DiagnosticType MISSING_ENTRY_ERROR = DiagnosticType.error(
       "JSC_MISSING_ENTRY_ERROR",
       "required entry point \"{0}\" never provided");
+
+  private static final String CONFIG_RESOURCE =
+      "com.google.javascript.jscomp.parsing.ParserConfig";
 
   CompilerOptions options = null;
 
@@ -2474,5 +2478,17 @@ public class Compiler extends AbstractCompiler {
     return Normalize.parseAndNormalizeSyntheticCode(
         this, originalCode,
         String.format("jscomp_%s_", resourceName));
+  }
+
+  /** Returns the compiler version baked into the jar. */
+  public static String getReleaseVersion() {
+    ResourceBundle config = ResourceBundle.getBundle(CONFIG_RESOURCE);
+    return config.getString("compiler.version");
+  }
+
+  /** Returns the compiler date baked into the jar. */
+  public static String getReleaseDate() {
+    ResourceBundle config = ResourceBundle.getBundle(CONFIG_RESOURCE);
+    return config.getString("compiler.date");
   }
 }

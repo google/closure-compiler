@@ -43,7 +43,6 @@ import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -554,9 +553,6 @@ public class CommandLineRunner extends
 
   private final Flags flags = new Flags();
 
-  private static final String configResource =
-      "com.google.javascript.jscomp.parsing.ParserConfig";
-
   private boolean isConfigValid = false;
 
   /**
@@ -669,11 +665,10 @@ public class CommandLineRunner extends
     }
 
     if (flags.version) {
-      ResourceBundle config = ResourceBundle.getBundle(configResource);
       err.println(
           "Closure Compiler (http://code.google.com/closure/compiler)\n" +
-          "Version: " + config.getString("compiler.version") + "\n" +
-          "Built on: " + config.getString("compiler.date"));
+          "Version: " + Compiler.getReleaseVersion() + "\n" +
+          "Built on: " + Compiler.getReleaseDate());
       err.flush();
     }
 
