@@ -48,7 +48,7 @@ import java.util.logging.Logger;
  */
 public class DepsGenerator {
 
-  enum InclusionStrategy {
+  public static enum InclusionStrategy {
     ALWAYS,
     WHEN_IN_SRCS,
     DO_NOT_DUPLICATE
