@@ -37,7 +37,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
-import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -73,6 +72,7 @@ public class TypeInferenceTest extends TestCase {
   public void setUp() {
     compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
+    options.setClosurePass(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     compiler.initOptions(options);
     registry = compiler.getTypeRegistry();
@@ -108,8 +108,7 @@ public class TypeInferenceTest extends TestCase {
     cfa.process(null, n);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
     // Create a simple reverse abstract interpreter.
-    ReverseAbstractInterpreter rai = new SemanticReverseAbstractInterpreter(
-        compiler.getCodingConvention(), registry);
+    ReverseAbstractInterpreter rai = compiler.getReverseAbstractInterpreter();
     // Do the type inference by data-flow analysis.
     TypeInference dfa = new TypeInference(compiler, cfg, rai, assumedScope,
         ASSERTION_FUNCTION_MAP);
@@ -422,6 +421,28 @@ public class TypeInferenceTest extends TestCase {
     inFunction("out1 = x; goog.asserts.assertInstanceof(x); out2 = x;");
     verify("out1", startType);
     verifySubtypeOf("out2", OBJECT_TYPE);
+  }
+
+  public void testAssertWithIsDef() {
+    JSType startType = createNullableType(NUMBER_TYPE);
+    assuming("x", startType);
+    inFunction(
+        "out1 = x;" +
+        "goog.asserts.assert(goog.isDefAndNotNull(x));" +
+        "out2 = x;");
+    verify("out1", startType);
+    verify("out2", NUMBER_TYPE);
+  }
+
+  public void testAssertWithNotIsNull() {
+    JSType startType = createNullableType(NUMBER_TYPE);
+    assuming("x", startType);
+    inFunction(
+        "out1 = x;" +
+        "goog.asserts.assert(!goog.isNull(x));" +
+        "out2 = x;");
+    verify("out1", startType);
+    verify("out2", NUMBER_TYPE);
   }
 
   public void testReturn1() {
