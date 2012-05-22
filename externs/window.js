@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Java Script Builtins for windows properties.
+ * @fileoverview JavaScript Built-Ins for windows properties.
  *
  * @externs
  */

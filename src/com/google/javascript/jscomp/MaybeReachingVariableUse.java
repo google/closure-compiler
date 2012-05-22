@@ -53,7 +53,7 @@ class MaybeReachingVariableUse extends
     this.jsScope = jsScope;
     this.escaped = Sets.newHashSet();
 
-    // TODO(user): May be comute it somewhere else and re-use the escape
+    // TODO(user): Maybe compute it somewhere else and re-use the escape
     // local set here.
     computeEscaped(jsScope, escaped, compiler);
   }

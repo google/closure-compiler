@@ -121,7 +121,7 @@ function GearsDesktop() {}
 
 /**
  * @param {string} name The name of the shortcut.
- * @param {string} url The url for the shortcut.
+ * @param {string} url The URL for the shortcut.
  * @param {Object} icons The icon set to use for the shortcut.
  * @param {string=} opt_description The description of the shortcut.
  */

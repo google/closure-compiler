@@ -575,7 +575,7 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
 
   /**
    * Gets the interfaces extended by the interface associated with this type.
-   * Intended to be overriden by subclasses.
+   * Intended to be overridden by subclasses.
    */
   public Iterable<ObjectType> getCtorExtendedInterfaces() {
     return ImmutableSet.of();

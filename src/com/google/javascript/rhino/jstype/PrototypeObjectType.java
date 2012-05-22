@@ -75,7 +75,7 @@ class PrototypeObjectType extends ObjectType {
   private final boolean nativeType;
 
   // NOTE(nicksantos): The implicit prototype can change over time.
-  // Modelling this is a bear. Always call getImplicitPrototype(), because
+  // Modeling this is a bear. Always call getImplicitPrototype(), because
   // some subclasses override this to do special resolution handling.
   private ObjectType implicitPrototypeFallback;
 
@@ -240,7 +240,7 @@ class PrototypeObjectType extends ObjectType {
         name, type, inferred, propertyNode);
     Property oldProp = properties.get(name);
     if (oldProp != null) {
-      // This is to keep previously inferred jsdoc info, e.g., in a
+      // This is to keep previously inferred JsDoc info, e.g., in a
       // replaceScript scenario.
       newProp.setJSDocInfo(oldProp.getJSDocInfo());
     }
@@ -554,7 +554,7 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   public void matchConstraint(ObjectType constraintObj) {
-    // We only want to match contraints on anonymous types.
+    // We only want to match constraints on anonymous types.
     if (hasReferenceName()) {
       return;
     }

@@ -48,7 +48,7 @@ package com.google.javascript.rhino.jstype;
  * <p>A ternary value expression evaluates to {@link #TRUE} or
  * {@link #FALSE} only if all replacements of {@link #UNKNOWN} in this
  * expression yield the same result. Therefore, the ternary logic coincides
- * with typical boolean logic if the {@link #UNKNOWN} value is not
+ * with typical Boolean logic if the {@link #UNKNOWN} value is not
  * present in an expression.</p>
  *
  * @see <a href="http://en.wikipedia.org/wiki/Ternary_logic">Ternary Logic</a>

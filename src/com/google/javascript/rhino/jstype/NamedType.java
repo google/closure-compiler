@@ -51,7 +51,7 @@ import java.util.List;
  * A {@code NamedType} is a named reference to some other type.  This provides
  * a convenient mechanism for implementing forward references to types; a
  * {@code NamedType} can be used as a placeholder until its reference is
- * resolved.  It is also useful for representing type names in jsdoc type
+ * resolved.  It is also useful for representing type names in JsDoc type
  * annotations, some of which may never be resolved (as they may refer to
  * types in host systems not yet supported by JSCompiler, such as the JVM.)<p>
  *

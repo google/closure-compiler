@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * @fileoverview Definitions for W3C's WebStorage specificiation.
+ * @fileoverview Definitions for W3C's WebStorage specification.
  * This file depends on html5.js.
  * @externs
  */

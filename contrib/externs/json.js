@@ -21,7 +21,7 @@
  */
 
 // This cannot go into the COMMON externs because it conflicts with the pure
-// Javascript implementations of the API.
+// JavaScript implementations of the API.
 
 var JSON = {};
 
@@ -36,6 +36,6 @@ JSON.parse = function(jsonStr, opt_reviver) {};
  * @param {*} jsonObj Input object.
  * @param {(Array.<string>|(function(string, *) : *)|null)=} opt_replacer
  * @param {(number|string)=} opt_space
- * @return {string} json string which represents jsonObj.
+ * @return {string} JSON string which represents jsonObj.
  */
 JSON.stringify = function(jsonObj, opt_replacer, opt_space) {};

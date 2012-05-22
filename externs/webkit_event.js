@@ -16,7 +16,7 @@
 
 /**
  * @fileoverview Definitions for all the extensions over W3C's
- *  event specification by webkit. This file depends on w3c_event.js.
+ *  event specification by WebKit. This file depends on w3c_event.js.
  *  All the provided definitions have been type annotated
  *
  * @externs
