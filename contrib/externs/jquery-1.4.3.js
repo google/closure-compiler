@@ -84,7 +84,7 @@ jQuery.dequeue = function(elem, queueName) {};
 
 /**
  * @param {Object} collection
- * @param {function(number,*)} callback
+ * @param {function(number, ?)} callback
  * @return {Object}
  */
 jQuery.each = function(collection, callback) {};

@@ -520,7 +520,7 @@ jQuery.prototype.die = function(arg1, handler) {};
 
 /**
  * @param {Object} collection
- * @param {function(number,*)} callback
+ * @param {function(number, ?)} callback
  * @return {Object}
  */
 jQuery.each = function(collection, callback) {};
@@ -533,7 +533,7 @@ jQuery.prototype.each = function(fnc) {};
 
 /**
  * @param {Object} collection
- * @param {function(number,*)} callback
+ * @param {function(number, ?)} callback
  * @return {Object}
  */
 $.each = function(collection, callback) {};
