@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
 
 /**
  * Rewrites an AMD module https://github.com/amdjs/amdjs-api/wiki/AMD to a
- * CommonJS module. See {@link ProcessCommonJSModules} for follow up processing
+ * Common JS module. See {@link ProcessCommonJSModules} for follow up processing
  * step.
  */
 class TransformAMDToCJSModule implements CompilerPass {

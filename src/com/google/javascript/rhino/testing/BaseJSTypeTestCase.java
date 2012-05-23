@@ -429,9 +429,9 @@ public abstract class BaseJSTypeTestCase extends TestCase {
 
   /**
    * A definition of all extern types. This should be kept in sync with
-   * javascript/externs/es3.js. This is used to check that the built-in types
+   * javascript/externs/es3.js. This is used to check that the builtin types
    * declared in {@link JSTypeRegistry} have the same type as that in the
-   * externs. It can also be used for any tests that want to use built-in types
+   * externs. It can also be used for any tests that want to use builtin types
    * in their externs.
    */
   public static final String ALL_NATIVE_EXTERN_TYPES =

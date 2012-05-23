@@ -43,8 +43,8 @@ package com.google.javascript.rhino.jstype;
  * An object type with a declared default element type, such as
  * <code>Array.<string></code>.
  *
- * // TODO(user): Define the subtyping relation for parametrized types. Also,
- * take parametrized type into account for equality.
+ * // TODO(user): Define the subtyping relation for parameterized types. Also,
+ * take parameterized type into account for equality.
  *
  */
 final class ParameterizedType extends ProxyObjectType {

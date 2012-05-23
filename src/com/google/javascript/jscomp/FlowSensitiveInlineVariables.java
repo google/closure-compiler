@@ -89,7 +89,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         }
 
         // TODO(user): We only care about calls to functions that
-        // passes one of the dependent variable to a non-side-effect free
+        // passes one of the dependent variable to a non-sideeffect free
         // function.
         if (n.isCall() && NodeUtil.functionCallHasSideEffects(n)) {
           return true;
@@ -289,7 +289,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
       }
 
 
-      // TODO(user): Side-effect is OK sometimes. As long as there are no
+      // TODO(user): Side-effect is ok sometimes. As long as there are no
       // side-effect function down all paths to the use. Once we have all the
       // side-effect analysis tool.
       if (NodeUtil.mayHaveSideEffects(def.getLastChild())) {

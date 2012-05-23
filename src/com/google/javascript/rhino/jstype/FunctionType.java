@@ -110,7 +110,7 @@ public class FunctionType extends PrototypeObjectType {
   private List<ObjectType> implementedInterfaces = ImmutableList.of();
 
   /**
-   * The interfaces directly extended by this function (for interfaces)
+   * The interfaces directly extendeded by this function (for interfaces)
    * It is only relevant for constructors. May not be {@code null}.
    */
   private List<ObjectType> extendedInterfaces = ImmutableList.of();
@@ -531,7 +531,7 @@ public class FunctionType extends PrototypeObjectType {
         // Define the "apply" function lazily.
         FunctionParamBuilder builder = new FunctionParamBuilder(registry);
 
-        // ECMA-262 says that apply's second argument must be an Array
+        // Ecma-262 says that apply's second argument must be an Array
         // or an arguments object. We don't model the arguments object,
         // so let's just be forgiving for now.
         // TODO(nicksantos): Model the Arguments object.
@@ -637,7 +637,7 @@ public class FunctionType extends PrototypeObjectType {
    * Because sup() and inf() share a lot of logic for functions, we use
    * a single helper.
    * @param leastSuper If true, compute the supremum of {@code this} with
-   *     {@code that}. Otherwise, compute the infimum.
+   *     {@code that}. Otherwise compute the infimum.
    * @return The least supertype or greatest subtype.
    */
   FunctionType supAndInfHelper(FunctionType that, boolean leastSuper) {
@@ -914,7 +914,7 @@ public class FunctionType extends PrototypeObjectType {
   private void appendVarArgsString(StringBuilder builder, JSType paramType,
       boolean forAnnotations) {
     if (paramType.isUnionType()) {
-      // Remove the optionality from the var arg.
+      // Remove the optionalness from the var arg.
       paramType = paramType.toMaybeUnionType().getRestrictedUnion(
           registry.getNativeType(JSTypeNative.VOID_TYPE));
     }
@@ -926,7 +926,7 @@ public class FunctionType extends PrototypeObjectType {
   private void appendOptionalArgString(
       StringBuilder builder, JSType paramType, boolean forAnnotations) {
     if (paramType.isUnionType()) {
-      // Remove the optionality from the var arg.
+      // Remove the optionalness from the var arg.
       paramType = paramType.toMaybeUnionType().getRestrictedUnion(
           registry.getNativeType(JSTypeNative.VOID_TYPE));
     }
@@ -1111,7 +1111,7 @@ public class FunctionType extends PrototypeObjectType {
     //
     // TODO(nicksantos): Handle this correctly if we have a UnionType.
     //
-    // TODO(nicksantos): In ES3, the run-time coerces "null" to the global
+    // TODO(nicksantos): In ES3, the runtime coerces "null" to the global
     // activation object. In ES5, it leaves it as null. Just punt on this
     // issue for now by coercing out null. This is complicated by the
     // fact that when most people write @this {Foo}, they really don't

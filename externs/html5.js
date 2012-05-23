@@ -347,7 +347,7 @@ CanvasRenderingContext2D.prototype.putImageData = function(imagedata, dx, dy,
     opt_dirtyX, opt_dirtyY, opt_dirtyWidth, opt_dirtyHeight) {};
 
 /**
- * Note: WebKit only
+ * Note: Webkit only
  * @param {number|string=} opt_a
  * @param {number=} opt_b
  * @param {number=} opt_c
@@ -359,7 +359,7 @@ CanvasRenderingContext2D.prototype.putImageData = function(imagedata, dx, dy,
 CanvasRenderingContext2D.prototype.setFillColor;
 
 /**
- * Note: WebKit only
+ * Note: Webkit only
  * @param {number|string=} opt_a
  * @param {number=} opt_b
  * @param {number=} opt_c
@@ -652,11 +652,11 @@ HTMLImageElement.prototype.crossOrigin;
  * The postMessage method (as defined by HTML5 spec and implemented in FF3).
  * @param {*} message
  * @param {string|Array} targetOrigin The target origin in the 2-argument
- *     version of this function. WebKit seems to have implemented this
+ *     version of this function. Webkit seems to have implemented this
  *     function wrong in the 3-argument version so that ports is the
  *     second argument.
  * @param {string|Array=} ports An optional array of ports or the target
- *     origin. WebKit seems to have implemented this
+ *     origin. Webkit seems to have implemented this
  *     function wrong in the 3-argument version so that targetOrigin is the
  *     third argument.
  * @see http://dev.w3.org/html5/postmsg/#dom-window-postmessage

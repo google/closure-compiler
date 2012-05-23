@@ -46,7 +46,7 @@ import com.google.javascript.rhino.Node;
 
 /**
  * The arrow type is an internal type that models the functional arrow type
- * seen in typical functional programming languages.  It is used solely for
+ * seen in typical functional programming languages.  It is used soley for
  * separating the management of the arrow type from the complex
  * {@link FunctionType} that models JavaScript's notion of functions.
  */
@@ -160,7 +160,7 @@ final class ArrowType extends JSType {
       }
     }
 
-    // "that" can't be a supertype, because it's missing a required argument.
+    // "that" can't be a supertype, because it's missing a required arguement.
     if (thisParam != null
         && !thisParam.isOptionalArg() && !thisParam.isVarArgs()
         && thatParam == null) {

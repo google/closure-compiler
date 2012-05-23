@@ -181,7 +181,7 @@ public class TokenStream {
                 break partial;
             case 12: X="synchronized";id=true; break partial;
             }
-            // partial match validate the entire string the one possibility
+            // patial match validate the entire string the one possiblity
             if (X!=null && X!=s && !X.equals(s)) return false;
         }
         return id;

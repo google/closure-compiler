@@ -56,7 +56,7 @@ import java.util.TreeSet;
 /**
  * The {@code UnionType} implements a common JavaScript idiom in which the
  * code is specifically designed to work with multiple input types.  Because
- * JavaScript always knows the run-time type of an object value, this is safer
+ * JavaScript always knows the runtime type of an object value, this is safer
  * than a C union.<p>
  *
  * For instance, values of the union type {@code (String,boolean)} can be of

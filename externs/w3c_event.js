@@ -138,11 +138,11 @@ function CustomEvent() {}
 /**
  * @param {string} eventType
  * @param {boolean} bubbles
- * @param {boolean} cancelable
+ * @param {boolean} cancellable
  * @param {*} detail
  */
 CustomEvent.prototype.initCustomEvent = function(
-    eventType, bubbles, cancelable, detail) {};
+    eventType, bubbles, cancellable, detail) {};
 
 /**
  * @type {*}

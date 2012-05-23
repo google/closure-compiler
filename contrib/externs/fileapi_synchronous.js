@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * @fileoverview Definitions for objects in the synchronous File API, File
+ * @fileoverview Definitions for objects in the syncrhonous File API, File
  * Writer API, and File System API. Details of the API are at:
  * http://www.w3.org/TR/FileAPI/
  * http://www.w3.org/TR/file-writer-api/

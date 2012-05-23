@@ -1206,7 +1206,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
 
     // Keep all function types, as restricting to instantiated types will only
     // keep instance types.
-    // TODO(user): only keep functions that match the JS type.
+    // TODO(user): only keep functions that match the js type.
     for (ConcreteFunctionType functionType : concreteType.getFunctions()) {
       ret = ret.unionWith(functionType);
     }

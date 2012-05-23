@@ -290,7 +290,7 @@ final class MustBeReachingVariableDef extends
             Node obj = n.getFirstChild().getFirstChild();
             if (obj.isName() && "arguments".equals(obj.getString())) {
               // TODO(user): More accuracy can be introduced
-              // i.e. We know exactly what arguments[x] is if x is a constant
+              // ie: We know exactly what arguments[x] is if x is a constant
               // number.
               escapeParameters(output);
             }

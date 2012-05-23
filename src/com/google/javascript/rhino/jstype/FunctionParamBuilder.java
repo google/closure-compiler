@@ -73,7 +73,7 @@ public class FunctionParamBuilder {
   /**
    * Add optional parameters of the given type to the end of the param list.
    * @param types Types for each optional parameter. The builder will make them
-   *     undefine-able.
+   *     undefineable.
    * @return False if this is called after var args are added.
    */
   public boolean addOptionalParams(JSType ...types) {

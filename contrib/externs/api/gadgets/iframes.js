@@ -213,7 +213,7 @@ iframes.Iframes.prototype.allow = function(name, opt_func) {};
 /**
  * Opens an iframe.
  *
- * WARNING: This API takes ownership of all object parameters and will
+ * WARNING: This api takes ownership of all object parameters and will
  * modify them. Make a copy if you want to reuse them.
  *
  * @param {string} url The URL of the iframe to be opened.
@@ -226,7 +226,7 @@ iframes.Iframes.prototype.allow = function(name, opt_func) {};
  * @param {Object|function(...[*]) : *=} opt_methods: Functions to passed to
  *     the iframe. All properties should be functions. If no 'callback'
  *     argument is provided and the argument in this position is a function
- *     instead of an object, it is considered as the next parameter
+ *     instead of an object, it is considered as the  next parameter
  *     'callback', not this parameter 'methods'.
  * @param {?function(...[*]) : *=} opt_callback: a callback function called
  *     when the iframe is closed.
@@ -254,7 +254,7 @@ iframes.Iframes.prototype.close = function(opt_params, opt_callback) {};
  * @param {Object|function(...[*]) : *=} opt_methods: Functions to passed to
  *     the iframe. All properties should be functions. If no 'callback'
  *     argument is provided and the argument in this position is a function
- *     instead of an object, it is considered as the next parameter
+ *     instead of an object, it is considered as the  next parameter
  *     'callback', not this parameter 'methods'.
  * @param {?function(...[*]) : *=} opt_callback The callback function after
  *     parent processed the event.
@@ -310,7 +310,7 @@ iframes.Iframes.prototype.setJsHint = function(hint) {};
 
 /**
  * Allows the client to use a different bootstrap hint.
- * @param {string} hint The bootstrap hint to use.
+ * @param {string} hint The boostrap hint to use.
  */
 iframes.Iframes.prototype.setBootstrapHint = function(hint) {};
 

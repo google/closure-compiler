@@ -15,8 +15,8 @@
  */
 
 /**
- * @fileoverview JavaScript Built-Ins that are not
- * part of any specifications but are
+ * @fileoverview Java Script Builtins that are not
+ * part of any specificiations but are
  * still needed in some project's build.
  * @externs
  *

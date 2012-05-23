@@ -15,12 +15,12 @@
  */
 
 /**
- * @fileoverview Externs file for OAuth2 specific functionality in OpenSocial
+ * @fileoverview Externs file for Oauth2 specific funcitonality in OpenSocial
  * gadget libraries.
  * @externs
  */
 
-// Namespace for OAuth2
+// Namespace for oauth2
 var oauth2 = {};
 
 

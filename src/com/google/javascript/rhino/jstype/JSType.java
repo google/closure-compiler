@@ -768,7 +768,7 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * When computing infima, we may get a situation like
+   * When computing infimums, we may get a situation like
    * inf(Type1, Type2)
    * where both types are unresolved, so they're technically
    * subtypes of one another.
@@ -1175,8 +1175,8 @@ public abstract class JSType implements Serializable {
    * Modify this type so that it matches the specified type.
    *
    * This is useful for reverse type-inference, where we want to
-   * infer that an object literal matches its constraint (much like
+   * infer that an object literal matches its contraint (much like
    * how the java compiler does reverse-inference to figure out generics).
    */
-  public void matchConstraint(ObjectType constraint) {}
+  public void matchConstraint(ObjectType contraint) {}
 }

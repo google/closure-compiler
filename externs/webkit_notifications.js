@@ -124,7 +124,7 @@ NotificationCenter.prototype.checkPermission = function() {};
 NotificationCenter.prototype.requestPermission = function(opt_callback) {};
 
 /**
- * WebKit browsers expose the NotificationCenter API through
+ * Webkit browsers expose the NotificationCenter API through
  * window.webkitNotifications.
  * @type {NotificationCenter}
  */

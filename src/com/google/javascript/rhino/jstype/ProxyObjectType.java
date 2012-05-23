@@ -421,7 +421,7 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public void matchConstraint(ObjectType constraint) {
-    referencedType.matchConstraint(constraint);
+  public void matchConstraint(ObjectType contraint) {
+    referencedType.matchConstraint(contraint);
   }
 }

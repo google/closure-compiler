@@ -23,7 +23,7 @@
  */
 
 /**
- * XMLSerializer can be used to convert DOM subtree or DOM document into text.
+ * MLSerializer can be used to convert DOM subtree or DOM document into text.
  * XMLSerializer is available to unprivileged scripts.
  *
  * XMLSerializer is mainly useful for applications and extensions based on

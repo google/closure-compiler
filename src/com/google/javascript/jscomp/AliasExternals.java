@@ -72,18 +72,18 @@ import java.util.Set;
  * <p>Globals are aliased by inserting code like "var GLOBAL_window = window;"
  * and then replacing all other uses of "window" with "GLOBAL_window."</p>
  *
- * <p>Globals that are l-values are not aliased.</p>
+ * <p>Globals that are lvalues are not aliased.</p>
  *
  */
 class AliasExternals implements CompilerPass {
 
-  /** Number of times a property needs to be accessed in order to alias */
+  /** Number of times a proprety needs to be accessed in order to alias */
   private static final int DEFAULT_REQUIRED_USAGE = 4;
 
   /** Number of times a property must be referenced in order to be aliased */
   private int requiredUsage = DEFAULT_REQUIRED_USAGE;
 
-  /** Minimum property size to be worth renaming */
+  /** Minimium property size to be worth renaming */
   private static final int MIN_PROP_SIZE = 4;
 
   /**

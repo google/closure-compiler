@@ -1021,7 +1021,7 @@ chrome.input.ime = {};
 chrome.input.ime.clearComposition = function(parameters, callback) {};
 
 /**
- * @param {!Object.<string,(string|number)>} parameters An object with
+ * @param {!Object.<string,(string|number)>} parameters An ojbect with
  *     'contextID' (number) and 'text' (string) keys.
  * @param {function(boolean): void=} opt_callback Callback function.
  */
@@ -1030,7 +1030,7 @@ chrome.input.ime.commitText = function(parameters, opt_callback) {};
 /**
  * @param {!Object.<string,(number|Object.<string,(string|number|boolean)>)>}
  *     parameters An object with 'engineID' (string) and 'properties'
- *     (Object) keys.
+ *     (Object) keyts.
  * @param {function(boolean): void=} opt_callback Callback function.
  */
 chrome.input.ime.setCandidateWindowProperties =
@@ -1198,14 +1198,14 @@ chrome.webNavigation.onErrorOccurred;
 chrome.webNavigation.onReferenceFragmentUpdated;
 
 /**
- * Most event listeners for WebRequest take extra arguments.
+ * Most event listeners for WebRequest take extra agruments.
  * @see http://code.google.com/chrome/extensions/webRequest.html.
  * @constructor
  */
 function WebRequestEvent() {}
 
 /**
- * @param {function(!Object): void} listener Listener function.
+ * @param {function(!Object): void} listener Listener funciton.
  * @param {!RequestFilter} filter A set of filters that restrict
  *     the events that will be sent to this listener.
  * @param {Array.<string>=} opt_extraInfoSpec Array of extra information
@@ -1238,7 +1238,7 @@ WebRequestEvent.prototype.hasListeners = function(listener) {};
 function WebRequestOnErrorOccurredEvent() {}
 
 /**
- * @param {function(!Object): void} listener Listener function.
+ * @param {function(!Object): void} listener Listener funciton.
  * @param {!RequestFilter} filter A set of filters that restrict
  *     the events that will be sent to this listener.
  */

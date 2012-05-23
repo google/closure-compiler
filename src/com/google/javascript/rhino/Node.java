@@ -766,7 +766,7 @@ public class Node implements Cloneable, Serializable {
 
   /**
    * Clone the properties from the provided node without copying
-   * the property object.  The receiving node may not have any
+   * the property object.  The recieving node may not have any
    * existing properties.
    * @param other The node to clone properties from.
    * @return this node.
@@ -1230,7 +1230,7 @@ public class Node implements Cloneable, Serializable {
   // Iteration
 
   /**
-   * <p>Return an iterable object that iterates over this node's children.
+   * <p>Return an iterable object that iterates over this nodes's children.
    * The iterator does not support the optional operation
    * {@link Iterator#remove()}.</p>
    *
@@ -1247,7 +1247,7 @@ public class Node implements Cloneable, Serializable {
   }
 
   /**
-   * <p>Return an iterable object that iterates over this node's siblings.
+   * <p>Return an iterable object that iterates over this nodes's siblings.
    * The iterator does not support the optional operation
    * {@link Iterator#remove()}.</p>
    *
@@ -1840,9 +1840,9 @@ public class Node implements Cloneable, Serializable {
   /**
    * An inner class that provides back-door access to the license
    * property of the JSDocInfo property for this node. This is only
-   * meant to be used for top-level script nodes where the
+   * meant to be used for top level script nodes where the
    * {@link com.google.javascript.jscomp.parsing.JsDocInfoParser} needs to
-   * be able to append directly to the top-level node, not just the
+   * be able to append directly to the top level node, not just the
    * current node.
    */
   public class FileLevelJsDocBuilder {

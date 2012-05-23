@@ -1811,7 +1811,7 @@ final class TypedScopeCreator implements ScopeCreator {
       }
 
       // TODO(nicksantos|user): This is a terrible, terrible hack
-      // to bail out on recursive typedefs. We'll eventually need
+      // to bail out on recusive typedefs. We'll eventually need
       // to handle these properly.
       typeRegistry.declareType(typedef, getNativeType(UNKNOWN_TYPE));
 

@@ -26,7 +26,7 @@
  */
 
 // TODO(nicksantos): Rewrite all the DOM interfaces as interfaces, instead
-// of kludging them as an inheritance hierarchy.
+// of kluding them as an inheritance hierarchy.
 
 /**
  * @constructor

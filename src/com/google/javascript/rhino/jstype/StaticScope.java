@@ -45,7 +45,7 @@ import com.google.javascript.rhino.Node;
  * The {@code StaticScope} interface must be implemented by any object that
  * defines variables for the purposes of static analysis.  It is distinguished
  * from the {@code Scriptable} class that Rhino normally uses to represent a
- * run-time scope.
+ * runtime scope.
  *
  * @param <T> The type of information stored about the slot
  */
