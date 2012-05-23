@@ -392,7 +392,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   /**
-   * Tests the behavior of the Bottom Object yype.
+   * Tests the behavior of the Bottom Object type.
    */
   public void testNoObjectType() throws Exception {
     // isXxx
@@ -2741,7 +2741,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   /**
-   * Tests the getGreastestSubtype method for record types.
+   * Tests the getGreatestSubtype method for record types.
    */
   public void testRecordTypeGreatestSubType1() {
     RecordTypeBuilder builder = new RecordTypeBuilder(registry);
@@ -3119,7 +3119,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals(NATIVE_PROPERTIES_COUNT + 1, instance.getPropertiesCount());
   }
 
-  /** Tests assigning jsdoc on a prototype property. */
+  /** Tests assigning JsDoc on a prototype property. */
   public void testJSDocOnPrototypeProperty() throws Exception {
     subclassCtor.setPropertyJSDocInfo("prototype", new JSDocInfo());
     assertNull(subclassCtor.getOwnPropertyJSDocInfo("prototype"));
@@ -4668,7 +4668,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(CHECKED_UNKNOWN_TYPE, expected);
   }
 
-  /** Tests the subclass of an unresolve named type */
+  /** Tests the subclass of an unresolved named type */
   public void testSubclassOfUnresolvedNamedType() {
     assertTrue(subclassOfUnresolvedNamedType.isUnknownType());
   }

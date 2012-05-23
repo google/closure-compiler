@@ -7893,7 +7893,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "found   : function (string): undefined\n" +
         "required: function (boolean): undefined");
     // TODO(user): suppress {duplicate} currently also silence the
-    // redefining type error in the TypeValidator. May be it needs
+    // redefining type error in the TypeValidator. Maybe it needs
     // a new suppress name instead?
   }
 

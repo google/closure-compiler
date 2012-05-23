@@ -21,7 +21,7 @@
  *
  * If you make changes to this file, notice that every property appears
  * twice: once as an uppercase name and once as a lowercase name.
- * Webkit allows both. The uppercase version is preferred.
+ * WebKit allows both. The uppercase version is preferred.
  *
  * @externs
  * @author nicksantos@google.com (Nick Santos)
@@ -181,7 +181,7 @@ CSSProperties.prototype.WebkitMatchNearestMailBlockquoteColor;
 /** @type {string} */ CSSProperties.prototype.WebkitUserSelect;
 /** @type {string} */ CSSProperties.prototype.WebkitWritingMode;
 
-// Webkit also adds bindings for the lowercase versions of these properties.
+// WebKit also adds bindings for the lowercase versions of these properties.
 // The uppercase version is preferred.
 
 /** @type {string} */ CSSProperties.prototype.webkitAnimation;

@@ -16,7 +16,7 @@
 
 
 /**
- * @fileoverview Externs needed for silverlight.
+ * @fileoverview Externs needed for Silverlight.
  * @externs
  * @author nicksantos@google.com (Nick Santos)
  */

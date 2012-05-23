@@ -51,7 +51,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 /**
- * This is the class that implements the runtime.
+ * This is the class that implements the run-time.
  *
  */
 
@@ -65,7 +65,7 @@ public class ScriptRuntime {
 
     // It is public so NativeRegExp can access it .
     public static boolean isJSLineTerminator(int c) {
-        // Optimization for faster check for eol character:
+        // Optimization for faster check for EOL character:
         // they do not have 0xDFD0 bits set
         if ((c & 0xDFD0) != 0) {
             return false;
@@ -322,7 +322,7 @@ public class ScriptRuntime {
 
     /**
      * If str is a decimal presentation of Uint32 value, return it as long.
-     * Othewise return -1L;
+     * Otherwise, return -1L;
      */
     public static long testUint32String(String str) {
         // The length of the decimal string representation of
@@ -372,7 +372,7 @@ public class ScriptRuntime {
         return getMessage(messageId, arguments);
     }
 
-    /* OPT there's a noticable delay for the first error!  Maybe it'd
+    /* OPT there's a noticeable delay for the first error!  Maybe it'd
      * make sense to use a ListResourceBundle instead of a properties
      * file to avoid (synchronized) text parsing.
      */
@@ -382,7 +382,7 @@ public class ScriptRuntime {
 
         Locale locale = Locale.getDefault();
 
-        // ResourceBundle does cacheing.
+        // ResourceBundle does caching.
         ResourceBundle rb = ResourceBundle.getBundle(defaultResource, locale);
 
         String formatString;

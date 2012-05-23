@@ -340,7 +340,7 @@ class DefinitionsRemover {
     @Override
     public Node getLValue() {
       // TODO(user) revisit: object literal definitions are an example
-      // of definitions whose lhs doesn't correspond to a node that
+      // of definitions whose LHS doesn't correspond to a node that
       // exists in the AST.  We will have to change the return type of
       // getLValue sooner or later in order to provide this added
       // flexibility.

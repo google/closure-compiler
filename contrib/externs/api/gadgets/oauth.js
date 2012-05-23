@@ -15,14 +15,14 @@
  */
 
 /**
- * @fileoverview Externs file for Oauth specific functionality in the OpenSocial
+ * @fileoverview Externs file for OAuth specific functionality in the OpenSocial
  * gadget libraries. Note this may not be comprehensive.
  * @see http://code.google.com/apis/gadgets/docs/oauth.html
  * @externs
  */
 
 
-// Namespace for oauth
+// Namespace for OAuth
 gadgets.oauth = {};
 
 

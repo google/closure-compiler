@@ -799,7 +799,7 @@ public class JSTypeRegistry implements Serializable {
 
   /**
    * Tells the type system that {@code type} implements interface {@code
-   * InterfaceInstance}.
+   * interfaceInstance}.
    * {@code inter} must be an ObjectType for the instance of the interface as it
    * could be a named type and not yet have the constructor.
    */
@@ -918,7 +918,7 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * Flushes out the current resolved and unresovled Named Types from
+   * Flushes out the current resolved and unresolved Named Types from
    * the type registry.  This is intended to be used ONLY before a
    * compile is run.
    */
@@ -987,7 +987,7 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * Creates a nullabel and undefine-able value of the given type.
+   * Creates a nullable and undefine-able value of the given type.
    * @return The union of the type and null and undefined.
    */
   public JSType createOptionalNullableType(JSType type) {
@@ -1007,7 +1007,7 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * Creates a union type whose variants are the builtin types specified
+   * Creates a union type whose variants are the built-in types specified
    * by the arguments.
    */
   public JSType createUnionType(JSTypeNative... variants) {

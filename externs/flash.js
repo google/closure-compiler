@@ -59,7 +59,7 @@ HTMLObjectElement.prototype.IsPlaying = function() {};
  * Loads the movie identified by {@code url} to the layer specified by {@code
  * layerNumber}.
  * @param {number} layerNumber The layer number.
- * @param {string} url The movie url.
+ * @param {string} url The movie URL.
  */
 HTMLObjectElement.prototype.LoadMovie = function(layerNumber, url) {};
 

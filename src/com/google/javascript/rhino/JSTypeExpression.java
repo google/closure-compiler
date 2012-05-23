@@ -47,7 +47,7 @@ import java.io.Serializable;
 
 
 /**
- * Represents a type expression as a miniture Rhino AST, so that the
+ * Represents a type expression as a miniature Rhino AST, so that the
  * type expression can be evaluated later.
  *
  * @author nicksantos@google.com (Nick Santos)

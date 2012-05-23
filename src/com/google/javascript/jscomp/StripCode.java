@@ -44,7 +44,7 @@ import java.util.Set;
 class StripCode implements CompilerPass {
 
   // TODO(user): Try eliminating the need for a list of strip names by instead
-  // recording which field names are assigned to debug types in each js input.
+  // recording which field names are assigned to debug types in each JS input.
   private final AbstractCompiler compiler;
   private final Set<String> stripTypes;
   private final Set<String> stripNameSuffixes;

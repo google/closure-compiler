@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Definitions for w3c IndexedDB API. In Chrome all the IndexedDB
+ * @fileoverview Definitions for W3C's IndexedDB API. In Chrome all the IndexedDB
  * classes are prefixed with 'webkit'. In order to access constants and static
  * methods of these classes they must be duplicated with the prefix here.
  * @see http://www.w3.org/TR/IndexedDB/
@@ -429,7 +429,7 @@ IDBObjectStore.prototype.add = function(value, key) {};
 IDBObjectStore.prototype.remove = function(key) {};
 
 /**
- * @param {*} key The key of the document to retreive.
+ * @param {*} key The key of the document to retrieve.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBObjectStore.prototype.get = function(key) {};
@@ -451,7 +451,7 @@ IDBObjectStore.prototype.openCursor = function(range, direction) {};
 IDBObjectStore.prototype.createIndex = function(name, keyPath, opt_paramters) {};
 
 /**
- * @param {string} name The name of the index to retreive.
+ * @param {string} name The name of the index to retrieve.
  * @return {!IDBIndex} The IDBIndex object.
  */
 IDBObjectStore.prototype.index = function(name) {};
@@ -517,13 +517,13 @@ IDBIndex.prototype.openCursor = function(range, direction) {};
 IDBIndex.prototype.openKeyCursor = function(range, direction) {};
 
 /**
- * @param {*} key The id of the object to retreive.
+ * @param {*} key The id of the object to retrieve.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBIndex.prototype.get = function(key) {};
 
 /**
- * @param {*} key The id of the object to retreive.
+ * @param {*} key The id of the object to retrieve.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBIndex.prototype.getKey = function(key) {};
@@ -711,7 +711,7 @@ IDBTransaction.prototype.mode;
 IDBTransaction.prototype.db;
 
 /**
- * @param {string} name The name of the object store to retreive.
+ * @param {string} name The name of the object store to retrieve.
  * @return {!IDBObjectStore} The object store.
  */
 IDBTransaction.prototype.objectStore = function(name) {};
