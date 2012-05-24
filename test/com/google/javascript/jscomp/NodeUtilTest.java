@@ -1567,6 +1567,7 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testGetNearestFunctionName() {
+    testFunctionName("(function() {})()", null);
     testFunctionName("function a() {}", "a");
     testFunctionName("(function a() {})", "a");
     testFunctionName("({a:function () {}})", "a");

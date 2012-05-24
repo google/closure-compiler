@@ -382,6 +382,17 @@ public class NodeTest extends TestCase {
     assertTrue(string.getSourceOffset() < 0);
   }
 
+  public void testQualifiedName() {
+    assertNull(IR.name("").getQualifiedName());
+    assertEquals("a", IR.name("a").getQualifiedName());
+    assertEquals(
+        "a.b", IR.getprop(IR.name("a"), IR.string("b")).getQualifiedName());
+    assertEquals(
+        "this.b", IR.getprop(IR.thisNode(), IR.string("b")).getQualifiedName());
+    assertNull(
+        IR.getprop(IR.call(IR.name("a")), IR.string("b")).getQualifiedName());
+  }
+
   private static Node getVarRef(String name) {
     return Node.newString(Token.NAME, name);
   }

@@ -428,13 +428,13 @@ public final class NodeUtil {
    * @return the function's name, or {@code null} if it has no name
    */
   static String getFunctionName(Node n) {
+    Preconditions.checkState(n.isFunction());
     Node parent = n.getParent();
-    String name = n.getFirstChild().getString();
     switch (parent.getType()) {
       case Token.NAME:
         // var name = function() ...
         // var name2 = function name1() ...
-        return parent.getString();
+        return parent.getQualifiedName();
 
       case Token.ASSIGN:
         // qualified.name = function() ...
@@ -443,7 +443,8 @@ public final class NodeUtil {
 
       default:
         // function name() ...
-        return name != null && name.length() != 0 ? name : null;
+        String name = n.getFirstChild().getQualifiedName();
+        return name;
     }
   }
 
@@ -463,6 +464,10 @@ public final class NodeUtil {
    * @return the function's name, or {@code null} if it has no name
    */
   public static String getNearestFunctionName(Node n) {
+    if (!n.isFunction()) {
+      return null;
+    }
+
     String name = getFunctionName(n);
     if (name != null) {
       return name;
@@ -1921,6 +1926,7 @@ public final class NodeUtil {
    * looking for references to the "arguments" var_args object.
    */
   static boolean isVarArgsFunction(Node function) {
+    // TODO(johnlenz): rename this function
     Preconditions.checkArgument(function.isFunction());
     return isNameReferenced(
         function.getLastChild(),
