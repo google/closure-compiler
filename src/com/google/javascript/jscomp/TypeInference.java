@@ -811,7 +811,8 @@ class TypeInference
     if (assertedNode == null) {
       return scope;
     }
-    JSTypeNative assertedType = assertionFunctionSpec.getAssertedType();
+    JSType assertedType = assertionFunctionSpec.getAssertedType(
+        callNode, registry);
     String assertedNodeName = assertedNode.getQualifiedName();
 
     JSType narrowed;
@@ -825,7 +826,7 @@ class TypeInference
     } else {
       // Handle assertions that enforce expressions are of a certain type.
       JSType type = getJSType(assertedNode);
-      narrowed = type.getGreatestSubtype(getNativeType(assertedType));
+      narrowed = type.getGreatestSubtype(assertedType);
       if (assertedNodeName != null && type.differsFrom(narrowed)) {
         scope = narrowScope(scope, assertedNode, narrowed);
       }

@@ -415,12 +415,28 @@ public class TypeInferenceTest extends TestCase {
     verifySubtypeOf("out2", ARRAY_TYPE);
   }
 
-  public void testAssertInstanceof() {
+  public void testAssertInstanceof1() {
     JSType startType = createNullableType(ALL_TYPE);
     assuming("x", startType);
     inFunction("out1 = x; goog.asserts.assertInstanceof(x); out2 = x;");
     verify("out1", startType);
     verifySubtypeOf("out2", OBJECT_TYPE);
+  }
+
+  public void testAssertInstanceof2() {
+    JSType startType = createNullableType(ALL_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; goog.asserts.assertInstanceof(x, String); out2 = x;");
+    verify("out1", startType);
+    verifySubtypeOf("out2", STRING_OBJECT_TYPE);
+  }
+
+  public void testAssertInstanceof3() {
+    JSType startType = registry.getNativeType(UNKNOWN_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; goog.asserts.assertInstanceof(x, String); out2 = x;");
+    verify("out1", startType);
+    verifySubtypeOf("out2", STRING_OBJECT_TYPE);
   }
 
   public void testAssertWithIsDef() {

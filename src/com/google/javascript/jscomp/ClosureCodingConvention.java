@@ -22,7 +22,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.Collection;
@@ -346,10 +348,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
             JSTypeNative.OBJECT_TYPE),
         new AssertionFunctionSpec("goog.asserts.assertArray",
             JSTypeNative.ARRAY_TYPE),
-        // TODO(agrieve): It would be better if this could make the first
-        // parameter the type of the second parameter.
-        new AssertionFunctionSpec("goog.asserts.assertInstanceof",
-            JSTypeNative.OBJECT_TYPE)
+        new AssertInstanceofSpec("goog.asserts.assertInstanceof")
     );
   }
 
@@ -400,4 +399,37 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
     }
     return null;
   }
+
+  /**
+   * A function that will throw an exception when if the value is not
+   * an instanceof a specific type.
+   */
+  public static class AssertInstanceofSpec extends AssertionFunctionSpec {
+    public AssertInstanceofSpec(String functionName) {
+      super(functionName, JSTypeNative.OBJECT_TYPE);
+    }
+
+    /**
+     * Returns the type for a type assertion, or null if the function asserts
+     * that the node must not be null or undefined.
+     */
+    @Override
+    public JSType getAssertedType(Node call, JSTypeRegistry registry) {
+      if (call.getChildCount() > 2) {
+        Node constructor = call.getFirstChild().getNext().getNext();
+        if (constructor != null) {
+          JSType ownerType = constructor.getJSType();
+          if (ownerType != null
+              && ownerType.isFunctionType()
+              && ownerType.isConstructor()) {
+            FunctionType functionType = ((FunctionType) ownerType);
+            return functionType.getInstanceType();
+          }
+        }
+      }
+      return super.getAssertedType(call, registry);
+    }
+  }
+
+
 }

@@ -366,8 +366,8 @@ public interface CodingConvention extends Serializable {
    *   -One or more of its parameters are not of a certain type.
    */
   public class AssertionFunctionSpec {
-    private final String functionName;
-    private final JSTypeNative assertedType;
+    protected final String functionName;
+    protected final JSTypeNative assertedType;
 
     public AssertionFunctionSpec(String functionName) {
       this(functionName, null);
@@ -396,8 +396,8 @@ public interface CodingConvention extends Serializable {
      * Returns the type for a type assertion, or null if the function asserts
      * that the node must not be null or undefined.
      */
-    public JSTypeNative getAssertedType() {
-      return assertedType;
+    public JSType getAssertedType(Node call, JSTypeRegistry registry) {
+      return assertedType != null ? registry.getNativeType(assertedType) : null;
     }
   }
 }
