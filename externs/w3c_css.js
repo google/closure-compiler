@@ -1845,15 +1845,10 @@ MediaQueryList.prototype.addListener = function(listener) {};
 MediaQueryList.prototype.removeListener = function(listener) {};
 
 /**
- * @constructor
+ * @typedef {(function(!MediaQueryList) : void)}
  * @see http://www.w3.org/TR/cssom-view/#mediaquerylistlistener
  */
-function MediaQueryListListener() {}
-
-/**
- * @param {MediaQueryList} mql
- */
-MediaQueryListListener.prototype.handleChange = function(mql) {};
+var MediaQueryListListener;
 
 /**
  * @constructor
