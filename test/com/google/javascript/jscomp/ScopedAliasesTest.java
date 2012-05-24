@@ -313,18 +313,18 @@ public class ScopedAliasesTest extends CompilerTestCase {
         " * @constructor\n" +
         " */\n" +
         "foo.Foo = function() {};" +
-        "/** @param {Foo.Bar} x */ function actual(x) {3}" +
+        "/** @param {Foo.Bar} x */ foo.Foo.actual = function(x) {3};" +
         "var Foo = foo.Foo;" +
         "/** @constructor */ Foo.Bar = function() {};" +
-        "/** @param {foo.Foo.Bar} x */ function expected(x) {}",
+        "/** @param {foo.Foo.Bar} x */ foo.Foo.expected = function(x) {};",
 
         "/**\n" +
         " * @constructor\n" +
         " */\n" +
         "foo.Foo = function() {};" +
-        "/** @param {foo.Foo.Bar} x */ function actual(x) {3}" +
+        "/** @param {foo.Foo.Bar} x */ foo.Foo.actual = function(x) {3};" +
         "/** @constructor */ foo.Foo.Bar = function() {};" +
-        "/** @param {foo.Foo.Bar} x */ function expected(x) {}");
+        "/** @param {foo.Foo.Bar} x */ foo.Foo.expected = function(x) {};");
     verifyTypes();
   }
 
@@ -409,6 +409,8 @@ public class ScopedAliasesTest extends CompilerTestCase {
     testScopedFailure("var x = goog['dom']",
         ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
     testScopedFailure("var x = goog.dom, y = 10",
+        ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
+    testScopedFailure("function f() {}",
         ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
   }
 
