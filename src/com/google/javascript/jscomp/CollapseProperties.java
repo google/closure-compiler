@@ -694,6 +694,9 @@ class CollapseProperties implements CompilerPass {
         nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
 
+      if (info != null) {
+        varNode.setJSDocInfo(info);
+      }
       varNode.addChildToBack(nameNode);
       nameNode.addChildToFront(rvalue);
       varParent.replaceChild(gramps, varNode);

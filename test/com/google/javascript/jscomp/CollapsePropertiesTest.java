@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_THIS;
 
+import com.google.javascript.rhino.Node;
+
 /**
  * Tests for {@link CollapseProperties}.
  *
@@ -1466,5 +1468,19 @@ public class CollapsePropertiesTest extends CompilerTestCase {
         "delete x.foo;",
         null,
         CollapseProperties.NAMESPACE_REDEFINED_WARNING);
+  }
+
+  public void testPreserveConstructorDoc() {
+    test("var foo = {};" +
+         "/** @constructor */\n" +
+         "foo.bar = function() {}",
+         "var foo$bar = function() {}");
+
+    Node root = getLastCompiler().getRoot();
+
+    Node fooBarNode = findQualifiedNameNode("foo$bar", root);
+    Node varNode = fooBarNode.getParent();
+    assertTrue(varNode.isVar());
+    assertTrue(varNode.getJSDocInfo().isConstructor());
   }
 }
