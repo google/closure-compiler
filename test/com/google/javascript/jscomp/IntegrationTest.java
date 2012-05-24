@@ -2122,6 +2122,23 @@ public class IntegrationTest extends IntegrationTestCase {
     assertEquals(1, compiler.getWarnings().length);
   }
 
+  public void testInlineProperties() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel level = CompilationLevel.ADVANCED_OPTIMIZATIONS;
+    level.setOptionsForCompilationLevel(options);
+    level.setTypeBasedOptimizationOptions(options);
+
+    String code = "" +
+        "var ns = {};\n" +
+        "/** @constructor */\n" +
+        "ns.C = function () {this.someProperty = 1}\n" +
+        "alert(new ns.C().someProperty + new ns.C().someProperty);\n";
+    assertTrue(options.inlineProperties);
+    assertTrue(options.collapseProperties);
+    // CollapseProperties used to prevent inlining this property.
+    test(options, code, "alert(2);");
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {
