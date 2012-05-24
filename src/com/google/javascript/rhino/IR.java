@@ -100,26 +100,49 @@ public class IR {
   }
 
   public static Node block(Node ... stmts) {
-    Node block = new Node(Token.BLOCK);
+    Node block = block();
     for (Node stmt : stmts) {
       Preconditions.checkState(mayBeStatement(stmt));
       block.addChildToBack(stmt);
     }
     return block;
+  }
+
+  public static Node block(List<Node> stmts) {
+    Node paramList = block();
+    for (Node stmt : stmts) {
+      Preconditions.checkState(mayBeStatement(stmt));
+      paramList.addChildToBack(stmt);
+    }
+    return paramList;
   }
 
   private static Node blockUnchecked(Node stmt) {
     return new Node(Token.BLOCK, stmt);
   }
 
-  public static Node script(Node ... stmts) {
+  public static Node script() {
     // TODO(johnlenz): finish setting up the SCRIPT node
     Node block = new Node(Token.SCRIPT);
+    return block;
+  }
+
+  public static Node script(Node ... stmts) {
+    Node block = script();
     for (Node stmt : stmts) {
-      Preconditions.checkState(mayBeStatement(stmt));
+      Preconditions.checkState(mayBeStatementNoReturn(stmt));
       block.addChildToBack(stmt);
     }
     return block;
+  }
+
+  public static Node script(List<Node> stmts) {
+    Node paramList = script();
+    for (Node stmt : stmts) {
+      Preconditions.checkState(mayBeStatementNoReturn(stmt));
+      paramList.addChildToBack(stmt);
+    }
+    return paramList;
   }
 
   public static Node var(Node name, Node value) {
@@ -473,7 +496,7 @@ public class IR {
    * It isn't possible to always determine if a detached node is a expression,
    * so make a best guess.
    */
-  private static boolean mayBeStatement(Node n) {
+  private static boolean mayBeStatementNoReturn(Node n) {
     switch (n.getType()) {
       case Token.EMPTY:
       case Token.FUNCTION:
@@ -491,7 +514,6 @@ public class IR {
       case Token.FOR:
       case Token.IF:
       case Token.LABEL:
-      case Token.RETURN:
       case Token.SWITCH:
       case Token.THROW:
       case Token.TRY:
@@ -503,6 +525,17 @@ public class IR {
       default:
         return false;
     }
+  }
+
+  /**
+   * It isn't possible to always determine if a detached node is a expression,
+   * so make a best guess.
+   */
+  private static boolean mayBeStatement(Node n) {
+    if (!mayBeStatementNoReturn(n)) {
+      return n.isReturn();
+    }
+    return true;
   }
 
   /**
