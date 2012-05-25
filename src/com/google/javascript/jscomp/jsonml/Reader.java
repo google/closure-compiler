@@ -1059,7 +1059,6 @@ public class Reader {
     insertExprResultState = true;
 
     Node script = IR.script();
-    script.setIsSyntheticBlock(true);
     parent.addChildToBack(script);
 
     for (JsonML child : element.getChildren()) {

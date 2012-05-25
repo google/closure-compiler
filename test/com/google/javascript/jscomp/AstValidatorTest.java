@@ -72,8 +72,6 @@ public class AstValidatorTest extends CompilerTestCase {
   public void testValidScript() {
     Node n = new Node(Token.SCRIPT);
     expectInvalid(n, Check.SCRIPT);
-    n.setIsSyntheticBlock(true);
-    expectInvalid(n, Check.SCRIPT);
     n.setInputId(new InputId("something_input"));
     n.putProp(Node.SOURCENAME_PROP, "something");
     expectValid(n, Check.SCRIPT);

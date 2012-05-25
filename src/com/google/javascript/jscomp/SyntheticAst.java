@@ -49,7 +49,6 @@ public class SyntheticAst implements SourceAst {
   public void clearAst() {
     root = IR.script();
     root.setInputId(inputId);
-    root.setIsSyntheticBlock(true);
     root.setStaticSourceFile(sourceFile);
   }
 

@@ -82,7 +82,6 @@ public class AstValidator implements CompilerPass {
 
   public void validateScript(Node n) {
     validateNodeType(Token.SCRIPT, n);
-    validateIsSynthetic(n);
     validateHasSourceName(n);
     validateHasInputId(n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {

@@ -77,7 +77,6 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
     Node script = externs.getLastChild();
     if (script == null || !script.isScript()) {
       script = IR.script();
-      script.setIsSyntheticBlock(true);
       externs.addChildToBack(script);
     }
     script.addChildToBack(declarationStmt);

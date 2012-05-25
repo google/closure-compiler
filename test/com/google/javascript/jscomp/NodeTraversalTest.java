@@ -36,7 +36,6 @@ public class NodeTraversalTest extends TestCase {
       new PruningCallback(ImmutableSet.of(Token.SCRIPT, Token.VAR), true);
 
     Node script = new Node(Token.SCRIPT);
-    script.setIsSyntheticBlock(true);
     assertTrue(include.shouldTraverse(null, script, null));
     assertTrue(include.shouldTraverse(null, new Node(Token.VAR), null));
     assertFalse(include.shouldTraverse(null, new Node(Token.NAME), null));
@@ -48,7 +47,6 @@ public class NodeTraversalTest extends TestCase {
       new PruningCallback(ImmutableSet.of(Token.SCRIPT, Token.VAR), false);
 
     Node script = new Node(Token.SCRIPT);
-    script.setIsSyntheticBlock(true);
     assertFalse(include.shouldTraverse(null, script, null));
     assertFalse(include.shouldTraverse(null, new Node(Token.VAR), null));
     assertTrue(include.shouldTraverse(null, new Node(Token.NAME), null));

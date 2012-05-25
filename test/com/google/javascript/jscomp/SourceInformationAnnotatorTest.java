@@ -36,7 +36,6 @@ public class SourceInformationAnnotatorTest extends CompilerTestCase {
 
   public void testPreserveAnnotatedName() {
     Node root = new Node(Token.SCRIPT);
-    root.setIsSyntheticBlock(true);
     Node name = Node.newString("foo");
     name.putProp(Node.ORIGINALNAME_PROP, "bar");
     root.addChildToBack(name);

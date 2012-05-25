@@ -460,7 +460,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     // Remove any useless children
     for (Node c = n.getFirstChild(); c != null; ) {
       Node next = c.getNext();  // save c.next, since 'c' may be removed
-      if (!mayHaveSideEffects(c) && !c.isSyntheticBlock()) {
+      if (!isUnremovableNode(c) && !mayHaveSideEffects(c)) {
         // TODO(johnlenz): determine what this is actually removing. Candidates
         //    include: EMPTY nodes, control structures without children
         //    (removing infinite loops), empty try blocks.  What else?
@@ -483,6 +483,13 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
 
     return n;
+  }
+
+  /**
+   * Some nodes unremovable node don't have side-effects.
+   */
+  private boolean isUnremovableNode(Node n) {
+    return (n.isBlock() && n.isSyntheticBlock()) || n.isScript();
   }
 
   // TODO(johnlenz): Consider moving this to a separate peephole pass.

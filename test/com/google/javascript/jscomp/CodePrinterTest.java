@@ -45,7 +45,6 @@ public class CodePrinterTest extends TestCase {
       CompilerPass typeResolver = passConfig.resolveTypes.create(compiler);
       Node externs = new Node(Token.SCRIPT);
       externs.setInputId(new InputId("externs"));
-      externs.setIsSyntheticBlock(true);
       Node externAndJsRoot = new Node(Token.BLOCK, externs, n);
       externAndJsRoot.setIsSyntheticBlock(true);
       typeResolver.process(externs, n);
