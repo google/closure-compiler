@@ -845,7 +845,7 @@ WebWorker.prototype.postMessage = function(message) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
- * @type {?function(!Event)}
+ * @type {?function(!MessageEvent)}
  */
 WebWorker.prototype.onmessage;
 
@@ -894,7 +894,7 @@ Worker.prototype.webkitPostMessage = function(message, opt_transfer) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
- * @type {?function(!Event)}
+ * @type {?function(!MessageEvent)}
  */
 Worker.prototype.onmessage = function() {};
 
@@ -1024,7 +1024,7 @@ DedicatedWorkerGlobalScope.prototype.webkitPostMessage =
 
 /**
  * Sent when the creator posts a message to this worker.
- * @type {?function(!Event)}
+ * @type {?function(!MessageEvent)}
  */
 DedicatedWorkerGlobalScope.prototype.onmessage = function() {};
 

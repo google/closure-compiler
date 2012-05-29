@@ -276,49 +276,49 @@ GestureEvent.prototype.initGestureEvent = function(type, canBubble, cancelable,
 /**
  * Specifies the JavaScript method to invoke when the system cancels tracking
  * for the touch.
- * @param {Event} e
+ * @param {!TouchEvent} e
  */
 Element.prototype.ontouchcancel = function(e) {};
 
 /**
  * Specifies the JavaScript method to invoke when a given event lifts from the
  * surface.
- * @param {Event} e
+ * @param {!TouchEvent} e
  */
 Element.prototype.ontouchend = function(e) {};
 
 /**
  * Specifies the JavaScript method to invoke when a finger for a given event
  * moves on the surface.
- * @param {Event} e
+ * @param {!TouchEvent} e
  */
 Element.prototype.ontouchmove = function(e) {};
 
 /**
  * Specifies the JavaScript method to invoke when a finger for a given event
  * touches the surface.
- * @param {Event} e
+ * @param {!TouchEvent} e
  */
 Element.prototype.ontouchstart = function(e) {};
 
 /**
  * Specifies the JavaScript method to invoke when a gesture is started by
  * two or more fingers touching the surface.
- * @param {Event} e
+ * @param {!GestureEvent} e
  */
 Element.prototype.ongesturestart = function(e) {};
 
 /**
  * Specifies the JavaScript method to invoke when fingers are moved during a
  * gesture.
- * @param {Event} e
+ * @param {!GestureEvent} e
  */
 Element.prototype.ongesturechange = function(e) {};
 
 /**
  * Specifies the JavaScript method to invoke when a gesture ends (when there are
  * 0 or 1 fingers touching the surface).
- * @param {Event} e
+ * @param {!GestureEvent} e
  */
 Element.prototype.ongestureend = function(e) {};
 
