@@ -420,7 +420,7 @@ public class TypeInferenceTest extends TestCase {
     assuming("x", startType);
     inFunction("out1 = x; goog.asserts.assertInstanceof(x); out2 = x;");
     verify("out1", startType);
-    verifySubtypeOf("out2", OBJECT_TYPE);
+    verify("out2", OBJECT_TYPE);
   }
 
   public void testAssertInstanceof2() {
@@ -428,7 +428,7 @@ public class TypeInferenceTest extends TestCase {
     assuming("x", startType);
     inFunction("out1 = x; goog.asserts.assertInstanceof(x, String); out2 = x;");
     verify("out1", startType);
-    verifySubtypeOf("out2", STRING_OBJECT_TYPE);
+    verify("out2", STRING_OBJECT_TYPE);
   }
 
   public void testAssertInstanceof3() {
@@ -436,7 +436,24 @@ public class TypeInferenceTest extends TestCase {
     assuming("x", startType);
     inFunction("out1 = x; goog.asserts.assertInstanceof(x, String); out2 = x;");
     verify("out1", startType);
-    verifySubtypeOf("out2", STRING_OBJECT_TYPE);
+    verify("out2", UNKNOWN_TYPE);
+  }
+
+  public void testAssertInstanceof4() {
+    JSType startType = registry.getNativeType(STRING_OBJECT_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; goog.asserts.assertInstanceof(x, Object); out2 = x;");
+    verify("out1", startType);
+    verify("out2", STRING_OBJECT_TYPE);
+  }
+
+  public void testAssertInstanceof5() {
+    JSType startType = registry.getNativeType(ALL_TYPE);
+    assuming("x", startType);
+    inFunction(
+        "out1 = x; goog.asserts.assertInstanceof(x, String); var r = x;");
+    verify("out1", startType);
+    verify("x", STRING_OBJECT_TYPE);
   }
 
   public void testAssertWithIsDef() {
@@ -778,6 +795,21 @@ public class TypeInferenceTest extends TestCase {
     assuming("x", OBJECT_TYPE);
     inFunction("var y = null; if (x instanceof String); else y = x;");
     verify("y", createNullableType(OBJECT_TYPE));
+  }
+
+  public void testInstanceOf6() {
+    // Here we are using "instanceof" to restrict the unknown type to
+    // the type of the instance.  This has the following problems:
+    //   1) The type may actually be any sub-type
+    //   2) The type may implement any interface
+    // After the instanceof we will require casts for methods that require
+    // sub-type or unrelated interfaces which would not have been required
+    // before.
+    JSType startType = registry.getNativeType(UNKNOWN_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; if (x instanceof String) out2 = x;");
+    verify("out1", startType);
+    verify("out2", STRING_OBJECT_TYPE);
   }
 
   public void testFlattening() {
