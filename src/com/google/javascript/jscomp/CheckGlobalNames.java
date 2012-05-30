@@ -112,10 +112,6 @@ class CheckGlobalNames implements CompilerPass {
     // we're looking through each reference, check all the module dependencies.
     Ref declaration = name.getDeclaration();
     Name parent = name.parent;
-    boolean singleGlobalParentDecl =
-        parent != null &&
-        parent.getDeclaration() != null &&
-        parent.localSets == 0;
 
     JSModuleGraph moduleGraph = compiler.getModuleGraph();
     for (Ref ref : name.getRefs()) {
@@ -126,16 +122,32 @@ class CheckGlobalNames implements CompilerPass {
           !moduleGraph.dependsOn(
               ref.getModule(), declaration.getModule())) {
         reportBadModuleReference(name, ref);
-      } else if (ref.scope.isGlobal() &&
-          singleGlobalParentDecl &&
-          parent.getDeclaration().preOrderIndex > ref.preOrderIndex) {
-        compiler.report(
-            JSError.make(ref.source.getName(), ref.node,
-                NAME_DEFINED_LATE_WARNING,
-                name.getFullName(),
-                parent.getFullName(),
-                parent.getDeclaration().source.getName(),
-                String.valueOf(parent.getDeclaration().node.getLineno())));
+      } else {
+        // Check for late references.
+        if (ref.scope.isGlobal()) {
+          // Prototype references are special, because in our reference graph,
+          // A.prototype counts as a reference to A.
+          boolean isPrototypeGet = (ref.type == Ref.Type.PROTOTYPE_GET);
+          Name owner = isPrototypeGet ? name : parent;
+          boolean singleGlobalParentDecl =
+              owner != null &&
+              owner.getDeclaration() != null &&
+              owner.localSets == 0;
+
+          if (singleGlobalParentDecl &&
+              owner.getDeclaration().preOrderIndex > ref.preOrderIndex) {
+            String refName = isPrototypeGet
+                ? name.getFullName() + ".prototype"
+                : name.getFullName();
+            compiler.report(
+                JSError.make(ref.source.getName(), ref.node,
+                    NAME_DEFINED_LATE_WARNING,
+                    refName,
+                    owner.getFullName(),
+                    owner.getDeclaration().source.getName(),
+                    String.valueOf(owner.getDeclaration().node.getLineno())));
+          }
+        }
       }
     }
   }
