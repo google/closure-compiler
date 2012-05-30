@@ -64,6 +64,13 @@ final class ParameterizedType extends ProxyObjectType {
   }
 
   @Override
+  public boolean isEquivalentTo(JSType that) {
+    return (super.isEquivalentTo(that)
+        && JSType.isEquivalent(
+            parameterType, that.toObjectType().getParameterType()));
+  }
+
+  @Override
   String toStringHelper(boolean forAnnotations) {
     String result = super.toStringHelper(forAnnotations);
     return parameterType.isUnknownType() ?
