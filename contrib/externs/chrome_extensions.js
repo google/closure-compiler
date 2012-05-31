@@ -1394,6 +1394,8 @@ ChromeWindow.prototype.incognito;
 ChromeWindow.prototype.type;
 /** @type {string} */
 ChromeWindow.prototype.state;
+/** @type {boolean} */
+ChromeWindow.prototype.alwaysOnTop;
 
 /**
  * @see http://code.google.com/chrome/extensions/events.html
@@ -1804,4 +1806,3 @@ BlockingResponse.prototype.requestHeaders;
 BlockingResponse.prototype.responseHeaders;
 /** @type {Object.<string,string>} */
 BlockingResponse.prototype.authCredentials;
-
