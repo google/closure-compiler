@@ -1813,6 +1813,7 @@ DOMTokenList.prototype.toggle = function(token) {};
 /**
  * @return {string} A stringified representation of CSS classes.
  * @nosideeffects
+ * @override
  */
 DOMTokenList.prototype.toString = function() {};
 
