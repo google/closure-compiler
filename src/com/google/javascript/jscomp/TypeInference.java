@@ -947,7 +947,7 @@ class TypeInference
   private void updateTypeOfThisOnClosure(Node n, FunctionType fnType) {
     // TODO(user): Make the template logic more general.
 
-    if (fnType.getTemplateTypeName() == null) {
+    if (fnType.getTemplateTypeNames().isEmpty()) {
       return;
     }
 

@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -124,12 +125,13 @@ public class FunctionType extends PrototypeObjectType {
   /**
    * The template type name. May be {@code null}.
    */
-  private String templateTypeName;
+  private final ImmutableList<String> templateTypeNames;
 
   /** Creates an instance for a function that might be a constructor. */
   FunctionType(JSTypeRegistry registry, String name, Node source,
       ArrowType arrowType, ObjectType typeOfThis,
-      String templateTypeName,  boolean isConstructor, boolean nativeType) {
+      ImmutableList<String> templateTypeNames,
+      boolean isConstructor, boolean nativeType) {
     super(registry, name,
         registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
         nativeType);
@@ -149,7 +151,8 @@ public class FunctionType extends PrototypeObjectType {
           registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
     }
     this.call = arrowType;
-    this.templateTypeName = templateTypeName;
+    this.templateTypeNames = templateTypeNames != null
+        ? templateTypeNames : ImmutableList.<String>of();
   }
 
   /** Creates an instance for a function that is an interface. */
@@ -165,6 +168,7 @@ public class FunctionType extends PrototypeObjectType {
     this.call = new ArrowType(registry, new Node(Token.PARAM_LIST), null);
     this.kind = Kind.INTERFACE;
     this.typeOfThis = new InstanceObjectType(registry, this);
+    this.templateTypeNames = ImmutableList.of();
   }
 
   /** Creates an instance for a function that is an interface. */
@@ -1092,8 +1096,8 @@ public class FunctionType extends PrototypeObjectType {
   /**
    * Gets the template type name.
    */
-  public String getTemplateTypeName() {
-    return templateTypeName;
+  public ImmutableList<String> getTemplateTypeNames() {
+    return templateTypeNames;
   }
 
   @Override

@@ -93,7 +93,7 @@ public class JSDocInfo implements Serializable {
     List<JSTypeExpression> implementedInterfaces = null;
     Map<String, JSTypeExpression> parameters = null;
     List<JSTypeExpression> thrownTypes = null;
-    String templateTypeName = null;
+    ImmutableList<String> templateTypeNames = null;
 
     // Other information
     String description = null;
@@ -903,16 +903,16 @@ public class JSDocInfo implements Serializable {
    * Declares a template type name. Template type names are described using the
    * {@code @template} annotation.
    *
-   * @param templateTypeName the template type name.
+   * @param templateTypeNames the template type name.
    */
-  boolean declareTemplateTypeName(String templateTypeName) {
+  boolean declareTemplateTypeNames(List<String> templateTypeNames) {
     lazyInitInfo();
 
-    if (info.templateTypeName != null) {
+    if (info.templateTypeNames != null) {
       return false;
     }
 
-    info.templateTypeName = templateTypeName;
+    info.templateTypeNames = ImmutableList.copyOf(templateTypeNames);
     return true;
   }
 
@@ -1425,11 +1425,11 @@ public class JSDocInfo implements Serializable {
   }
 
   /** Gets the template type name. */
-  public String getTemplateTypeName() {
-    if (info == null) {
-      return null;
+  public ImmutableList<String> getTemplateTypeNames() {
+    if (info == null || info.templateTypeNames == null) {
+      return ImmutableList.of();
     }
-    return info.templateTypeName;
+    return info.templateTypeNames;
   }
 
   /**

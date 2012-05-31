@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -774,13 +775,15 @@ public final class JsDocInfoParser {
 
                 case TEMPLATE:
                   ExtractionInfo templateInfo = extractSingleLineBlock();
-                  String templateTypeName = templateInfo.string;
+                  List<String> names = Lists.newArrayList(
+                      Splitter.on(',')
+                          .trimResults()
+                          .split(templateInfo.string));
 
-                  if (templateTypeName.length() == 0) {
+                  if (names.size() == 0 || names.get(0).length() == 0) {
                     parser.addTypeWarning("msg.jsdoc.templatemissing",
                           stream.getLineno(), stream.getCharno());
-                  } else if (!jsdocBuilder.recordTemplateTypeName(
-                      templateTypeName)) {
+                  } else if (!jsdocBuilder.recordTemplateTypeNames(names)) {
                     parser.addTypeWarning("msg.jsdoc.template.at.most.once",
                         stream.getLineno(), stream.getCharno());
                   }

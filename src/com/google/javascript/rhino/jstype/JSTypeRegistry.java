@@ -155,10 +155,7 @@ public class JSTypeRegistry implements Serializable {
   private boolean lastGeneration = true;
 
   // The template type name.
-  private String templateTypeName;
-
-  // The template type.
-  private TemplateType templateType;
+  private Map<String, TemplateType> templateTypes = Maps.newHashMap();
 
   private final boolean tolerateUndefinedValues;
 
@@ -873,7 +870,8 @@ public class JSTypeRegistry implements Serializable {
   public JSType getType(String jsTypeName) {
     // TODO(user): Push every local type name out of namesToTypes so that
     // NamedType#resolve is correct.
-    if (jsTypeName.equals(templateTypeName)) {
+    TemplateType templateType = templateTypes.get(jsTypeName);
+    if (templateType != null) {
       return templateType;
     }
     return namesToTypes.get(jsTypeName);
@@ -1675,16 +1673,17 @@ public class JSTypeRegistry implements Serializable {
   /**
    * Sets the template type name.
    */
-  public void setTemplateTypeName(String name) {
-    templateTypeName = name;
-    templateType = new TemplateType(this, name);
+  public void setTemplateTypeNames(List<String> names) {
+    Preconditions.checkNotNull(names);
+    for (String name : names) {
+      templateTypes.put(name, new TemplateType(this, name));
+    }
   }
 
   /**
    * Clears the template type name.
    */
-  public void clearTemplateTypeName() {
-    templateTypeName = null;
-    templateType = null;
+  public void clearTemplateTypeNames() {
+    templateTypes.clear();
   }
 }

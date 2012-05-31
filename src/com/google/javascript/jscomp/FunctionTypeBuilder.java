@@ -84,7 +84,7 @@ final class FunctionTypeBuilder {
   private boolean isConstructor = false;
   private boolean isInterface = false;
   private Node parametersNode = null;
-  private String templateTypeName = null;
+  private ImmutableList<String> templateTypeNames = ImmutableList.of();
 
   static final DiagnosticType EXTENDS_WITHOUT_TYPEDEF = DiagnosticType.warning(
       "JSC_EXTENDS_WITHOUT_TYPEDEF",
@@ -309,7 +309,7 @@ final class FunctionTypeBuilder {
       returnTypeInferred = false;
     }
 
-    if (templateTypeName != null &&
+    if (!templateTypeNames.isEmpty() &&
         returnType != null &&
         returnType.restrictByNotNullOrUndefined().isTemplateType()) {
       reportError(TEMPLATE_TYPE_EXPECTED, fnName);
@@ -467,7 +467,7 @@ final class FunctionTypeBuilder {
         parameterType = typeRegistry.getNativeType(UNKNOWN_TYPE);
       }
 
-      if (templateTypeName != null &&
+      if (!templateTypeNames.isEmpty() &&
           parameterType.restrictByNotNullOrUndefined().isTemplateType()) {
         if (foundTemplateType) {
           reportError(TEMPLATE_TYPE_DUPLICATED, fnName);
@@ -492,7 +492,7 @@ final class FunctionTypeBuilder {
       }
     }
 
-    if (templateTypeName != null && !foundTemplateType) {
+    if (!templateTypeNames.isEmpty() && !foundTemplateType) {
       reportError(TEMPLATE_TYPE_EXPECTED, fnName);
     }
 
@@ -538,8 +538,8 @@ final class FunctionTypeBuilder {
    */
   FunctionTypeBuilder inferTemplateTypeName(@Nullable JSDocInfo info) {
     if (info != null) {
-      templateTypeName = info.getTemplateTypeName();
-      typeRegistry.setTemplateTypeName(templateTypeName);
+      templateTypeNames = info.getTemplateTypeNames();
+      typeRegistry.setTemplateTypeNames(templateTypeNames);
     }
     return this;
   }
@@ -635,7 +635,7 @@ final class FunctionTypeBuilder {
           .withParamsNode(parametersNode)
           .withReturnType(returnType, returnTypeInferred)
           .withTypeOfThis(thisType)
-          .withTemplateName(templateTypeName)
+          .withTemplateNames(templateTypeNames)
           .build();
       maybeSetBaseType(fnType);
     }
@@ -648,7 +648,7 @@ final class FunctionTypeBuilder {
       fnType.setExtendedInterfaces(extendedInterfaces);
     }
 
-    typeRegistry.clearTemplateTypeName();
+    typeRegistry.clearTemplateTypeNames();
 
     return fnType;
   }

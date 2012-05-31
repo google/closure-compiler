@@ -2426,6 +2426,10 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. @template tag at most once");
   }
 
+  public void testParserWithTwoTemplates() {
+    parse("@template T,V */");
+  }
+
   public void testWhitelistedNewAnnotations() {
     parse("@foobar */",
         "illegal use of unknown JSDoc tag \"foobar\"; ignoring it");
