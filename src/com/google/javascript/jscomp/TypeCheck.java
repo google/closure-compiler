@@ -594,36 +594,43 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case Token.EQ:
-      case Token.NE: {
-        leftType = getJSType(n.getFirstChild());
-        rightType = getJSType(n.getLastChild());
-
-        JSType leftTypeRestricted = leftType.restrictByNotNullOrUndefined();
-        JSType rightTypeRestricted = rightType.restrictByNotNullOrUndefined();
-        TernaryValue result =
-            leftTypeRestricted.testForEquality(rightTypeRestricted);
-        if (result != TernaryValue.UNKNOWN) {
-          if (n.isNE()) {
-            result = result.not();
-          }
-          report(t, n, DETERMINISTIC_TEST, leftType.toString(),
-              rightType.toString(), result.toString());
-        }
-        ensureTyped(t, n, BOOLEAN_TYPE);
-        break;
-      }
-
+      case Token.NE:
       case Token.SHEQ:
       case Token.SHNE: {
         leftType = getJSType(n.getFirstChild());
         rightType = getJSType(n.getLastChild());
 
+        // We do not want to warn about explicit comparisons to VOID. People
+        // often do this if they think their type annotations screwed up.
+        //
+        // We do want to warn about cases where people compare things like
+        // (Array|null) == (Function|null)
+        // because it probably means they screwed up.
+        //
+        // This heuristic here is not perfect, but should catch cases we
+        // care about without too many false negatives.
         JSType leftTypeRestricted = leftType.restrictByNotNullOrUndefined();
         JSType rightTypeRestricted = rightType.restrictByNotNullOrUndefined();
-        if (!leftTypeRestricted.canTestForShallowEqualityWith(
-                rightTypeRestricted)) {
-          report(t, n, DETERMINISTIC_TEST_NO_RESULT, leftType.toString(),
-              rightType.toString());
+
+        TernaryValue result = TernaryValue.UNKNOWN;
+        if (n.getType() == Token.EQ || n.getType() == Token.NE) {
+          result = leftTypeRestricted.testForEquality(
+              rightTypeRestricted);
+          if (n.isNE()) {
+            result = result.not();
+          }
+        } else {
+          // SHEQ or SHNE
+          if (!leftTypeRestricted.canTestForShallowEqualityWith(
+                  rightTypeRestricted)) {
+            result = n.getType() == Token.SHEQ ?
+                TernaryValue.FALSE : TernaryValue.TRUE;
+          }
+        }
+
+        if (result != TernaryValue.UNKNOWN) {
+          report(t, n, DETERMINISTIC_TEST, leftType.toString(),
+              rightType.toString(), result.toString());
         }
         ensureTyped(t, n, BOOLEAN_TYPE);
         break;

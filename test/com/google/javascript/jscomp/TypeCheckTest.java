@@ -2647,7 +2647,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/**@type number*/var a;" +
         "/**@type !Date */var b;" +
         "if (a!==b) {}",
-        "condition always evaluates to the same value\n" +
+        "condition always evaluates to true\n" +
         "left : number\n" +
         "right: Date");
   }
@@ -2731,6 +2731,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "condition always evaluates to false\n" +
         "left : function (): undefined\n" +
         "right: boolean");
+  }
+
+  public void testComparison14() throws Exception {
+    testTypes("/** @type {function((Array|string), Object): number} */" +
+        "function f(x, y) { return x === y; }",
+        "inconsistent return type\n" +
+        "found   : boolean\n" +
+        "required: number");
   }
 
   public void testDeleteOperator1() throws Exception {
@@ -8489,7 +8497,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "  function g() { x = 'y'; } g(); " +
         "  return x === 3;" +
         "}",
-        "condition always evaluates to the same value\n" +
+        "condition always evaluates to false\n" +
         "left : (null|string)\n" +
         "right: number");
   }
