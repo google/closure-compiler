@@ -1324,7 +1324,7 @@ MessagePort.prototype.start = function() {};
 MessagePort.prototype.close = function() {};
 
 /**
- * @type {?function(MessageEvent)}
+ * @type {?function(!MessageEvent)}
  */
 MessagePort.prototype.onmessage;
 
