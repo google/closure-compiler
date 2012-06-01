@@ -412,10 +412,4 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     ProxyObjectType type = new ProxyObjectType(registry, OBJECT_TYPE);
     assertTrue(type == type.collapseUnion());
   }
-
-  public void testShallowEquality() {
-    assertTrue(
-        registry.createUnionType(ARRAY_TYPE, STRING_TYPE)
-        .canTestForShallowEqualityWith(OBJECT_TYPE));
-  }
 }

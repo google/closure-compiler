@@ -2189,7 +2189,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
     testTypes("/**@type number*/var a;" +
         "/**@type !Date */var b;" +
         "if (a!==b) {}",
-        "condition always evaluates to true\n" +
+        "condition always evaluates to the same value\n" +
         "left : number\n" +
         "right: Date");
   }
@@ -6398,7 +6398,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "  function g() { x = 'y'; } g(); " +
         "  return x === 3;" +
         "}",
-        "condition always evaluates to false\n" +
+        "condition always evaluates to the same value\n" +
         "left : (null|string|undefined)\n" +
         "right: number");
   }

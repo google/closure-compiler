@@ -651,10 +651,7 @@ public abstract class JSType implements Serializable {
    * ECMA-262 specification.<p>
    */
   public final boolean canTestForShallowEqualityWith(JSType that) {
-    if (isEmptyType() || that.isEmptyType()) {
-      return isSubtype(that) || that.isSubtype(this);
-    }
-    return !getGreatestSubtype(that).isEmptyType();
+    return this.isSubtype(that) || that.isSubtype(this);
   }
 
   /**
