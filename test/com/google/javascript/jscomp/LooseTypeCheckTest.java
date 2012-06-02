@@ -2707,7 +2707,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @extends {base}\n * @constructor */function derived() {}\n" +
         "derived.inherits(base);",
         "(new derived).constructor",
-        "function (new:derived, ...[?]): ?");
+        "function (new:derived): undefined");
   }
 
   public void testGoodExtends8() throws Exception {

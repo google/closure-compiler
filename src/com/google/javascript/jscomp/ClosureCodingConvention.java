@@ -63,15 +63,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
       childCtor.defineDeclaredProperty("superClass_",
           parentCtor.getPrototype(), childCtor.getSource());
       childCtor.getPrototype().defineDeclaredProperty("constructor",
-          // Notice that constructor functions do not need to be covariant
-          // on the superclass.
-          // So if G extends F, new G() and new F() can accept completely
-          // different argument types, but G.prototype.constructor needs
-          // to be covariant on F.prototype.constructor.
-          // To get around this, we just turn off type-checking on arguments
-          // and return types of G.prototype.constructor.
-          childCtor.cloneWithoutArrowType(),
-          childCtor.getSource());
+          childCtor, childCtor.getSource());
     }
   }
 

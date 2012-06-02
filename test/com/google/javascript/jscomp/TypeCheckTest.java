@@ -3310,7 +3310,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @extends {base}\n * @constructor */function derived() {}\n" +
         "derived.inherits(base);",
         "(new derived).constructor",
-        "function (new:derived, ...[?]): ?");
+        "function (new:derived): undefined");
   }
 
   public void testGoodExtends8() throws Exception {
@@ -3411,17 +3411,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "  goog.inherits(f, NewType);" +
         "  (new NewType());" +
         "}");
-  }
-
-  public void testGoodExtends17() throws Exception {
-    testFunctionType(
-        "Function.prototype.inherits = function(x) {};" +
-        "/** @constructor */function base() {}\n" +
-        "/** @param {number} x */ base.prototype.bar = function(x) {};\n" +
-        "/** @extends {base}\n * @constructor */function derived() {}\n" +
-        "derived.inherits(base);",
-        "(new derived).constructor.prototype.bar",
-        "function (this:base, number): undefined");
   }
 
   public void testBadExtends1() throws Exception {
