@@ -1762,7 +1762,7 @@ google.maps.MVCObject.prototype.notify = function(key) {};
 
 /**
  * @param {string} key
- * @param {*} value
+ * @param {?} value
  * @return {undefined}
  */
 google.maps.MVCObject.prototype.set = function(key, value) {};
@@ -2276,6 +2276,7 @@ google.maps.MapTypeRegistry = function() {};
  * @param {string} id
  * @param {google.maps.MapType} mapType
  * @return {undefined}
+ * @override
  */
 google.maps.MapTypeRegistry.prototype.set = function(id, mapType) {};
 
