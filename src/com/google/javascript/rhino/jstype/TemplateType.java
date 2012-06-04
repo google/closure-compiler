@@ -69,4 +69,9 @@ public class TemplateType extends ProxyObjectType {
   public boolean isTemplateType() {
     return true;
   }
+
+  @Override
+  public <T> T visit(Visitor<T> visitor) {
+    return visitor.caseTemplateType(this);
+  }
 }

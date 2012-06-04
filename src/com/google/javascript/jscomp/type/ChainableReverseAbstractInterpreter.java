@@ -39,6 +39,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.Visitor;
 
@@ -248,6 +249,11 @@ public abstract class ChainableReverseAbstractInterpreter
       public JSType caseVoidType() {
         return null;
       }
+
+      @Override
+      public JSType caseTemplateType(TemplateType templateType) {
+        return caseObjectType(templateType);
+      }
     };
 
 
@@ -326,6 +332,11 @@ public abstract class ChainableReverseAbstractInterpreter
       public JSType caseVoidType() {
         return getNativeType(VOID_TYPE);
       }
+
+      @Override
+      public JSType caseTemplateType(TemplateType templateType) {
+        return caseObjectType(templateType);
+      }
     };
 
   /**
@@ -393,6 +404,11 @@ public abstract class ChainableReverseAbstractInterpreter
       } else {
         return type;
       }
+    }
+
+    @Override
+    public JSType caseTemplateType(TemplateType templateType) {
+      return caseObjectType(templateType);
     }
   }
 
