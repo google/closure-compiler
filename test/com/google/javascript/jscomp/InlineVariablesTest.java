@@ -1058,4 +1058,10 @@ public class InlineVariablesTest extends CompilerTestCase {
     test(externs, code, code, null, null);
   }
 
+  public void testBug6598844() {
+    testSame(
+        "function F() { this.a = 0; }" +
+        "F.prototype.inc = function() { this.a++; return 10; };" +
+        "F.prototype.bar = function() { var val = inc(); this.a += val; };");
+  }
 }

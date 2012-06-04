@@ -190,6 +190,22 @@ public class CommandLineRunnerTest extends TestCase {
         "window.Foo = a;");
   }
 
+  public void testInlineVariables() {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    test(
+        "/** @constructor */ function F() { this.a = 0; }" +
+        "F.prototype.inc = function() { this.a++; return 10; };" +
+        "F.prototype.bar = function() { " +
+        "  var c = 3; var val = inc(); this.a += val + c;" +
+        "};" +
+        "window['f'] = new F();" +
+        "window['f']['bar'] = window['f'].bar;",
+        "function a(){ this.a = 0; }" +
+        "a.prototype.b = function(){ var b=inc(); this.a += b + 3; };" +
+        "window.f = new a;" +
+        "window.f.bar = window.f.b");
+  }
+
   public void testTypedAdvanced() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
     args.add("--use_types_for_optimization");

@@ -187,7 +187,7 @@ class NodeIterators {
     }
 
     /**
-     * @param iterator The to use while inspecting the node
+     * @param iterator The iterator to use while inspecting the node
      *     beginning with the deepest ancestor.
      */
     private LocalVarMotion(Node nameNode, FunctionlessLocalScope iterator) {
@@ -243,27 +243,32 @@ class NodeIterators {
       int type = nextNode.getType();
 
       if (valueHasSideEffects) {
-        // Reject anything that might read state, i.e. any NAME that is not
-        // newly redeclared or an assignment to a simple name.
+        // Reject anything that might read state
+        boolean readsState = false;
 
-        if (type == Token.NAME && !varName.equals(nextNode.getString())) {
-          boolean blocked = false;
-          if (nextParent == null) {
-            blocked = true;
-          } else {
-            boolean assignsName = (nextParent.isAssign()
-                    && nextNode == nextParent.getFirstChild());
-            boolean isVarDeclaration = (nextParent.isVar());
+        if (// Any read of a different variable.
+            (nextNode.isName() && !varName.equals(nextNode.getString())) ||
+            // Any read of a property.
+            (nextNode.isGetProp() || nextNode.isGetElem())) {
 
-            if (!assignsName && !isVarDeclaration) {
-              blocked = true;
-            }
+          // If this is a simple assign, we'll be ok.
+          if (nextParent == null ||
+              !NodeUtil.isVarOrSimpleAssignLhs(nextNode, nextParent)) {
+            readsState = true;
           }
 
-          if (blocked) {
-            lookAhead = null;
-            return;
-          }
+        } else if (nextNode.isCall() || nextNode.isNew()) {
+          // This isn't really an important case. In most cases when we use
+          // CALL or NEW, we're invoking it on a NAME or a GETPROP. And in the
+          // few cases where we're not, it's because we have an anonymous
+          // function that escapes the variable we're worried about. But we
+          // include this for completeness.
+          readsState = true;
+        }
+
+        if (readsState) {
+          lookAhead = null;
+          return;
         }
       }
 
