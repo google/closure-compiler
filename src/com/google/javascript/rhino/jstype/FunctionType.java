@@ -1195,4 +1195,14 @@ public class FunctionType extends PrototypeObjectType {
       return type.toDebugHashCodeString();
     }
   }
+
+  /** Create a new constructor with the parameters and return type stripped. */
+  public FunctionType cloneWithoutArrowType() {
+    FunctionType result = new FunctionType(
+        registry, getReferenceName(), source,
+        registry.createArrowType(null, null), getInstanceType(),
+        null, true, false);
+    result.setPrototypeBasedOn(getInstanceType());
+    return result;
+  }
 }
