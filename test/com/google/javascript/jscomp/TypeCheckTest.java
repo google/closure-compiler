@@ -2647,7 +2647,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/**@type number*/var a;" +
         "/**@type !Date */var b;" +
         "if (a!==b) {}",
-        "condition always evaluates to the same value\n" +
+        "condition always evaluates to true\n" +
         "left : number\n" +
         "right: Date");
   }
@@ -2731,6 +2731,37 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "condition always evaluates to false\n" +
         "left : function (): undefined\n" +
         "right: boolean");
+  }
+
+  public void testComparison14() throws Exception {
+    testTypes("/** @type {function((Array|string), Object): number} */" +
+        "function f(x, y) { return x === y; }",
+        "inconsistent return type\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
+  public void testComparison15() throws Exception {
+    testClosureTypes(
+        CLOSURE_DEFS +
+        "/** @constructor */ function F() {}" +
+        "/**\n" +
+        " * @param {number} x\n" +
+        " * @constructor\n" +
+        " * @extends {F}\n" +
+        " */\n" +
+        "function G(x) {}\n" +
+        "goog.inherits(G, F);\n" +
+        "/**\n" +
+        " * @param {number} x\n" +
+        " * @constructor\n" +
+        " * @extends {G}\n" +
+        " */\n" +
+        "function H(x) {}\n" +
+        "goog.inherits(H, G);\n" +
+        "/** @param {G} x */" +
+        "function f(x) { return x.constructor === H; }",
+        null);
   }
 
   public void testDeleteOperator1() throws Exception {
@@ -8489,7 +8520,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "  function g() { x = 'y'; } g(); " +
         "  return x === 3;" +
         "}",
-        "condition always evaluates to the same value\n" +
+        "condition always evaluates to false\n" +
         "left : (null|string)\n" +
         "right: number");
   }

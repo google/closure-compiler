@@ -651,7 +651,17 @@ public abstract class JSType implements Serializable {
    * ECMA-262 specification.<p>
    */
   public final boolean canTestForShallowEqualityWith(JSType that) {
-    return this.isSubtype(that) || that.isSubtype(this);
+    if (isEmptyType() || that.isEmptyType()) {
+      return isSubtype(that) || that.isSubtype(this);
+    }
+
+    JSType inf = getGreatestSubtype(that);
+    return !inf.isEmptyType() ||
+        // Our getGreatestSubtype relation on functions is pretty bad.
+        // Let's just say it's always ok to compare two functions.
+        // Once the TODO in FunctionType is fixed, we should be able to
+        // remove this.
+        inf == registry.getNativeType(JSTypeNative.LEAST_FUNCTION_TYPE);
   }
 
   /**
