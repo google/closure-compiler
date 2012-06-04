@@ -1654,7 +1654,7 @@ google.maps.MVCObject.prototype.notify = function(key) {};
 
 /**
  * @param {string} key
- * @param {?} value
+ * @param {*} value
  * @return {undefined}
  */
 google.maps.MVCObject.prototype.set = function(key, value) {};
@@ -2135,7 +2135,6 @@ google.maps.MapTypeRegistry = function() {};
  * @param {string} id
  * @param {google.maps.MapType} mapType
  * @return {undefined}
- * @override
  */
 google.maps.MapTypeRegistry.prototype.set = function(id, mapType) {};
 
@@ -3411,7 +3410,7 @@ google.maps.event = function() {};
 /**
  * @param {Object} instance
  * @param {string} eventName
- * @param {function(...[?])} handler
+ * @param {function(...[*])} handler
  * @param {boolean=} capture
  * @return {google.maps.MapsEventListener}
  */
@@ -3420,7 +3419,7 @@ google.maps.event.addDomListener = function(instance, eventName, handler, captur
 /**
  * @param {Object} instance
  * @param {string} eventName
- * @param {function(...[?])} handler
+ * @param {function(...[*])} handler
  * @param {boolean=} capture
  * @return {google.maps.MapsEventListener}
  */
@@ -3429,7 +3428,7 @@ google.maps.event.addDomListenerOnce = function(instance, eventName, handler, ca
 /**
  * @param {Object} instance
  * @param {string} eventName
- * @param {function(...[?])} handler
+ * @param {function(...[*])} handler
  * @return {google.maps.MapsEventListener}
  */
 google.maps.event.addListener = function(instance, eventName, handler) {};
@@ -3437,7 +3436,7 @@ google.maps.event.addListener = function(instance, eventName, handler) {};
 /**
  * @param {Object} instance
  * @param {string} eventName
- * @param {function(...[?])} handler
+ * @param {function(...[*])} handler
  * @return {google.maps.MapsEventListener}
  */
 google.maps.event.addListenerOnce = function(instance, eventName, handler) {};
