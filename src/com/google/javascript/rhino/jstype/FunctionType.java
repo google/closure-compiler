@@ -317,7 +317,7 @@ public class FunctionType extends PrototypeObjectType {
         // Someone is trying to access the prototype of a structural function.
         // We don't want to give real properties to this prototype, because
         // then it would propagate to all structural functions.
-        setPrototype(
+        setPrototypeNoCheck(
            registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE),
            null);
       } else {
@@ -383,7 +383,11 @@ public class FunctionType extends PrototypeObjectType {
     if (isConstructor() && prototype == getInstanceType()) {
       return false;
     }
+    return setPrototypeNoCheck(prototype, propertyNode);
+  }
 
+  /** Set the prototype without doing any sanity checks. */
+  private boolean setPrototypeNoCheck(ObjectType prototype, Node propertyNode) {
     ObjectType oldPrototype = prototypeSlot == null
         ? null : (ObjectType) prototypeSlot.getType();
     boolean replacedPrototype = oldPrototype != null;
