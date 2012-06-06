@@ -41,13 +41,10 @@ package com.google.javascript.rhino.jstype;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 public class ParameterizedTypeTest extends BaseJSTypeTestCase {
-  private NamedType unresolvedNamedType;
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    unresolvedNamedType =
-        new NamedType(registry, "not.resolved.named.type", null, -1, -1);
   }
 
   protected ParameterizedType createParameterizedType(
@@ -86,5 +83,23 @@ public class ParameterizedTypeTest extends BaseJSTypeTestCase {
     assertFalse(arrOfString.isEquivalentTo(ARRAY_TYPE));
     assertFalse(arrOfString.isEquivalentTo(arrOfNumber));
     assertFalse(arrOfNumber.isEquivalentTo(arrOfString));
+  }
+
+  public void testPrint1() throws Exception {
+    ParameterizedType arrOfString = createParameterizedType(
+        ARRAY_TYPE, STRING_TYPE);
+    assertEquals("Array.<string>", arrOfString.toString());
+  }
+
+  public void testPrint2() throws Exception {
+    ParameterizedType arrOfTemplateType = createParameterizedType(
+        ARRAY_TYPE, new TemplateType(registry, "T"));
+    assertEquals("Array.<T>", arrOfTemplateType.toString());
+  }
+
+  public void testPrint3() throws Exception {
+    ParameterizedType arrOfUnknown = createParameterizedType(
+        ARRAY_TYPE, UNKNOWN_TYPE);
+    assertEquals("Array.<?>", arrOfUnknown.toString());
   }
 }

@@ -73,9 +73,7 @@ public final class ParameterizedType extends ProxyObjectType {
   @Override
   String toStringHelper(boolean forAnnotations) {
     String result = super.toStringHelper(forAnnotations);
-    return parameterType.isUnknownType() ?
-        result :
-        (result + ".<" + parameterType.toStringHelper(forAnnotations) + ">");
+    return result + ".<" + parameterType.toStringHelper(forAnnotations) + ">";
   }
 
   @Override

@@ -265,4 +265,11 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         " function (...[?]): boolean",
         fn.getPropertyType("bind").toString());
   }
+
+  public void testPrint() {
+    FunctionType fn = new FunctionBuilder(registry)
+      .withTypeOfThis(new TemplateType(registry, "T"))
+      .withReturnType(BOOLEAN_TYPE).build();
+    assertEquals("function (this:T, ...[?]): boolean", fn.toString());
+  }
 }

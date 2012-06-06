@@ -877,7 +877,7 @@ public class FunctionType extends PrototypeObjectType {
     StringBuilder b = new StringBuilder(32);
     b.append("function (");
     int paramNum = call.parameters.getChildCount();
-    boolean hasKnownTypeOfThis = !typeOfThis.isUnknownType();
+    boolean hasKnownTypeOfThis = !(typeOfThis instanceof UnknownType);
     if (hasKnownTypeOfThis) {
       if (isConstructor()) {
         b.append("new:");
