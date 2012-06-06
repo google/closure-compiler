@@ -5708,9 +5708,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSDocInfo privateInfo = new JSDocInfo();
     privateInfo.setVisibility(Visibility.PRIVATE);
 
-    sup.defineProperty("X", NUMBER_TYPE, false, null);
+    sup.defineProperty("X", NUMBER_TYPE, true, null);
     sup.setPropertyJSDocInfo("X", privateInfo);
 
+    sub.defineProperty("X", NUMBER_TYPE, true, null);
     sub.setPropertyJSDocInfo("X", deprecated);
 
     assertFalse(sup.getOwnPropertyJSDocInfo("X").isDeprecated());

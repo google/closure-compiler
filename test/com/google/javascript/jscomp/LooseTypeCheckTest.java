@@ -5598,9 +5598,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */goog.Super = function() {};" +
         "goog.Super.prototype.foo = 3;" +
         "/** @constructor\n @extends {goog.Super} */goog.Sub = function() {};" +
-        "goog.Sub.prototype.foo = 5;",
-        "property foo already defined on superclass goog.Super; " +
-        "use @override to override it");
+        "goog.Sub.prototype.foo = 5;");
   }
 
   public void testInheritanceCheck8() throws Exception {
@@ -5700,11 +5698,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */goog.Super = function() {};" +
         "goog.Super.prototype.foo = 3;" +
         "/** @constructor\n @extends {goog.Super} */goog.Sub = function() {};" +
-        "/** @override */goog.Sub.prototype.foo = \"some string\";",
-        "mismatch of the foo property type and the type of the property it " +
-        "overrides from superclass goog.Super\n" +
-        "original: number\n" +
-        "override: string");
+        "/** @override */goog.Sub.prototype.foo = \"some string\";");
   }
 
   public void testInheritanceCheck13() throws Exception {

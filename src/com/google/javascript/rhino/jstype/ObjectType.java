@@ -301,7 +301,12 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
    */
   public final boolean defineInferredProperty(String propertyName,
       JSType type, Node propertyNode) {
+    StaticSlot<JSType> originalSlot = getSlot(propertyName);
     if (hasProperty(propertyName)) {
+      if (isPropertyTypeDeclared(propertyName)) {
+        // We never want to hide a declared property with an inferred property.
+        return true;
+      }
       JSType originalType = getPropertyType(propertyName);
       type = originalType == null ? type :
           originalType.getLeastSupertype(type);

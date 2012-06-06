@@ -1064,12 +1064,20 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     FunctionType superClass = ctorType.getSuperClassConstructor();
     boolean superClassHasProperty = superClass != null &&
         superClass.getInstanceType().hasProperty(propertyName);
+    boolean superClassHasDeclaredProperty = superClass != null &&
+        superClass.getInstanceType().isPropertyTypeDeclared(propertyName);
+
     // For interface
-    boolean superInterfacesHasProperty = false;
+    boolean superInterfaceHasProperty = false;
+    boolean superInterfaceHasDeclaredProperty = false;
     if (ctorType.isInterface()) {
       for (ObjectType interfaceType : ctorType.getExtendedInterfaces()) {
-        superInterfacesHasProperty =
-          superInterfacesHasProperty || interfaceType.hasProperty(propertyName);
+        superInterfaceHasProperty =
+            superInterfaceHasProperty ||
+            interfaceType.hasProperty(propertyName);
+        superInterfaceHasDeclaredProperty =
+            superInterfaceHasDeclaredProperty ||
+            interfaceType.isPropertyTypeDeclared(propertyName);
       }
     }
     boolean declaredOverride = info != null && info.isOverride();
@@ -1085,11 +1093,14 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         FunctionType interfaceType =
             implementedInterface.toObjectType().getConstructor();
         Preconditions.checkNotNull(interfaceType);
+
         boolean interfaceHasProperty =
             interfaceType.getPrototype().hasProperty(propertyName);
-        foundInterfaceProperty = foundInterfaceProperty || interfaceHasProperty;
-        if (reportMissingOverride.isOn() && !declaredOverride &&
-            interfaceHasProperty) {
+        foundInterfaceProperty = foundInterfaceProperty ||
+            interfaceHasProperty;
+        if (reportMissingOverride.isOn()
+            && !declaredOverride
+            && interfaceHasProperty) {
           // @override not present, but the property does override an interface
           // property
           compiler.report(t.makeError(n, reportMissingOverride,
@@ -1101,15 +1112,21 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     if (!declaredOverride
         && !superClassHasProperty
-        && !superInterfacesHasProperty) {
+        && !superInterfaceHasProperty) {
       // nothing to do here, it's just a plain new property
       return;
     }
 
-    JSType topInstanceType = superClassHasProperty ?
+    ObjectType topInstanceType = superClassHasDeclaredProperty ?
         superClass.getTopMostDefiningType(propertyName) : null;
-    if (reportMissingOverride.isOn() && ctorType.isConstructor() &&
-        !declaredOverride && superClassHasProperty) {
+    boolean declaredLocally =
+        ctorType.isConstructor() &&
+        (ctorType.getPrototype().hasOwnProperty(propertyName) ||
+         ctorType.getInstanceType().hasOwnProperty(propertyName));
+    if (reportMissingOverride.isOn()
+        && !declaredOverride
+        && superClassHasDeclaredProperty
+        && declaredLocally) {
       // @override not present, but the property does override a superclass
       // property
       compiler.report(t.makeError(n, reportMissingOverride,
@@ -1118,7 +1135,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     // @override is present and we have to check that it is ok
-    if (superClassHasProperty) {
+    if (superClassHasDeclaredProperty) {
       // there is a superclass implementation
       JSType superClassPropType =
           superClass.getInstanceType().getPropertyType(propertyName);
@@ -1128,12 +1145,12 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                 propertyName, topInstanceType.toString(),
                 superClassPropType.toString(), propertyType.toString()));
       }
-    } else if (superInterfacesHasProperty) {
+    } else if (superInterfaceHasDeclaredProperty) {
       // there is an super interface property
       for (ObjectType interfaceType : ctorType.getExtendedInterfaces()) {
         if (interfaceType.hasProperty(propertyName)) {
           JSType superPropertyType =
-            interfaceType.getPropertyType(propertyName);
+              interfaceType.getPropertyType(propertyName);
           if (!propertyType.canAssignTo(superPropertyType)) {
             topInstanceType = interfaceType.getConstructor().
                 getTopMostDefiningType(propertyName);
@@ -1145,7 +1162,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           }
         }
       }
-    } else if (!foundInterfaceProperty) {
+    } else if (!foundInterfaceProperty
+        && !superClassHasProperty
+        && !superInterfaceHasProperty) {
       // there is no superclass nor interface implementation
       compiler.report(
           t.makeError(n, UNKNOWN_OVERRIDE,

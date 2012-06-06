@@ -4975,6 +4975,45 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "SubFoo.prototype.bar = [];");
   }
 
+  // overridden property 3 is in another cl.
+
+  public void testOverriddenProperty4() throws Exception {
+    // These properties aren't declared, so there should be no warning.
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype.bar = null;" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() {}" +
+        "SubFoo.prototype.bar = 3;");
+  }
+
+  public void testOverriddenProperty5() throws Exception {
+    // An override should be OK if the superclass property wasn't declared.
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype.bar = null;" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() {}" +
+        "/** @override */ SubFoo.prototype.bar = 3;");
+  }
+
+  public void testOverriddenProperty6() throws Exception {
+    // The override keyword shouldn't be neccessary if the subclass property
+    // is inferred.
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @type {?number} */ Foo.prototype.bar = null;" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() {}" +
+        "SubFoo.prototype.bar = 3;");
+  }
+
   public void testThis2() throws Exception {
     testTypes("var goog = {};" +
         "/** @constructor */goog.A = function(){" +
@@ -7523,9 +7562,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */goog.Super = function() {};" +
         "goog.Super.prototype.foo = 3;" +
         "/** @constructor\n @extends {goog.Super} */goog.Sub = function() {};" +
-        "goog.Sub.prototype.foo = 5;",
-        "property foo already defined on superclass goog.Super; " +
-        "use @override to override it");
+        "goog.Sub.prototype.foo = 5;");
   }
 
   public void testInheritanceCheck8() throws Exception {
@@ -7625,11 +7662,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */goog.Super = function() {};" +
         "goog.Super.prototype.foo = 3;" +
         "/** @constructor\n @extends {goog.Super} */goog.Sub = function() {};" +
-        "/** @override */goog.Sub.prototype.foo = \"some string\";",
-        "mismatch of the foo property type and the type of the property it " +
-        "overrides from superclass goog.Super\n" +
-        "original: number\n" +
-        "override: string");
+        "/** @override */goog.Sub.prototype.foo = \"some string\";");
   }
 
   public void testInheritanceCheck13() throws Exception {
