@@ -47,7 +47,7 @@ package com.google.javascript.rhino.jstype;
  * take parameterized type into account for equality.
  *
  */
-final class ParameterizedType extends ProxyObjectType {
+public final class ParameterizedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
   final JSType parameterType;
@@ -76,5 +76,10 @@ final class ParameterizedType extends ProxyObjectType {
     return parameterType.isUnknownType() ?
         result :
         (result + ".<" + parameterType.toStringHelper(forAnnotations) + ">");
+  }
+
+  @Override
+  public <T> T visit(Visitor<T> visitor) {
+    return visitor.caseParameterizedType(this);
   }
 }
