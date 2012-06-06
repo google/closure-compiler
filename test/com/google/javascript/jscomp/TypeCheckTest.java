@@ -4975,7 +4975,22 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "SubFoo.prototype.bar = [];");
   }
 
-  // overridden property 3 is in another cl.
+  public void testOverriddenProperty3() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {" +
+        "}" +
+        "/** @type {string} */ Foo.prototype.data;" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() {}" +
+        "/** @type {string|Object} \n @override */ " +
+        "SubFoo.prototype.data = null;",
+        "mismatch of the data property type and the type " +
+        "of the property it overrides from superclass Foo\n" +
+        "original: string\n" +
+        "override: (Object|null|string)");
+  }
 
   public void testOverriddenProperty4() throws Exception {
     // These properties aren't declared, so there should be no warning.

@@ -875,33 +875,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
       }
 
-      // Inheritance checks for prototype properties.
-      //
-      // TODO(nicksantos): This isn't the right place to do this check. We
-      // really want to do this when we're looking at the constructor.
-      // We'd find all its properties and make sure they followed inheritance
-      // rules, like we currently do for @implements to make sure
-      // all the methods are implemented.
-      //
-      // As-is, this misses many other ways to override a property.
-      //
-      // object.prototype.property = ...;
-      if (object.isGetProp()) {
-        Node object2 = object.getFirstChild();
-        String property2 = NodeUtil.getStringValue(object.getLastChild());
-
-        if ("prototype".equals(property2)) {
-          JSType jsType = getJSType(object2);
-          if (jsType.isFunctionType()) {
-            FunctionType functionType = jsType.toMaybeFunctionType();
-            if (functionType.isConstructor() || functionType.isInterface()) {
-              checkDeclaredPropertyInheritance(
-                  t, assign, functionType, property, info, getJSType(rvalue));
-            }
-          }
-        }
-      }
-
       // The generic checks for 'object.property' when 'object' is known,
       // and 'property' is declared on it.
       // object.property = ...;
@@ -916,10 +889,17 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             validator.expectCanAssignToPropertyOf(
                 t, assign, getJSType(rvalue),
                 expectedType, object, property);
+            checkPropertyInheritanceOnGetpropAssign(
+                t, assign, object, property, info, expectedType);
             return;
           }
         }
       }
+
+      // If we couldn't get the property type with normal object property
+      // lookups, then check inheritance anyway with the unknown type.
+      checkPropertyInheritanceOnGetpropAssign(
+          t, assign, object, property, info, getNativeType(UNKNOWN_TYPE));
     }
 
     // Check qualified name sets to 'object' and 'object.property'.
@@ -957,6 +937,37 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ensureTyped(t, assign, rightType);
     } else {
       ensureTyped(t, assign);
+    }
+  }
+
+  private void checkPropertyInheritanceOnGetpropAssign(
+      NodeTraversal t, Node assign, Node object, String property,
+      JSDocInfo info, JSType propertyType) {
+    // Inheritance checks for prototype properties.
+    //
+    // TODO(nicksantos): This isn't the right place to do this check. We
+    // really want to do this when we're looking at the constructor.
+    // We'd find all its properties and make sure they followed inheritance
+    // rules, like we currently do for @implements to make sure
+    // all the methods are implemented.
+    //
+    // As-is, this misses many other ways to override a property.
+    //
+    // object.prototype.property = ...;
+    if (object.isGetProp()) {
+      Node object2 = object.getFirstChild();
+      String property2 = NodeUtil.getStringValue(object.getLastChild());
+
+      if ("prototype".equals(property2)) {
+        JSType jsType = getJSType(object2);
+        if (jsType.isFunctionType()) {
+          FunctionType functionType = jsType.toMaybeFunctionType();
+          if (functionType.isConstructor() || functionType.isInterface()) {
+            checkDeclaredPropertyInheritance(
+                t, assign, functionType, property, info, propertyType);
+          }
+        }
+      }
     }
   }
 
