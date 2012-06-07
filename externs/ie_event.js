@@ -176,14 +176,8 @@ MSPointerEvent.MSPOINTER_TYPE_PEN;
 /** @type {number} */
 MSPointerEvent.MSPOINTER_TYPE_TOUCH;
 
-/**
- * @return {Array.<MSPointerPoint>}
- */
-MSPointerEvent.prototype.getPointerList;
-
 /** @type {number} */
 MSPointerEvent.prototype.pointerId;
 
 /** @type {number} */
 MSPointerEvent.prototype.pointerType;
-
