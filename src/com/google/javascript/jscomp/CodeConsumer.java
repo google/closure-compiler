@@ -246,7 +246,9 @@ abstract class CodeConsumer {
       add(" ");
     }
 
-    if ((long) x == x && !negativeZero) {
+    if (negativeZero) {
+      addConstant("-0");
+    } else if ((long) x == x) {
       long value = (long) x;
       long mantissa = value;
       int exp = 0;
@@ -259,10 +261,17 @@ abstract class CodeConsumer {
       if (exp > 2) {
         addConstant(Long.toString(mantissa) + "E" + Integer.toString(exp));
       } else {
-        addConstant(Long.toString(value));
+        long valueAbs = Math.abs(value);
+        if (Long.toHexString(valueAbs).length() + 2 <
+            Long.toString(valueAbs).length()) {
+          addConstant((value < 0 ? "-" : "") + "0x" +
+              Long.toHexString(valueAbs));
+        } else {
+          addConstant(Long.toString(value));
+        }
       }
     } else {
-      addConstant(String.valueOf(x));
+      addConstant(String.valueOf(x).replace(".0E", "E"));
     }
   }
 

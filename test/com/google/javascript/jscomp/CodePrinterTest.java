@@ -1144,7 +1144,9 @@ public class CodePrinterTest extends TestCase {
     assertPrintNumber("1E5", 100000.0);
     assertPrintNumber("100000.1", 100000.1);
 
-    assertPrintNumber("1.0E-6", 0.000001);
+    assertPrintNumber("1E-6", 0.000001);
+    assertPrintNumber("-0x38d7ea4c68001", -0x38d7ea4c68001L);
+    assertPrintNumber("0x38d7ea4c68001", 0x38d7ea4c68001L);
   }
 
   // Make sure to test as both a String and a Node, because
@@ -1339,7 +1341,7 @@ public class CodePrinterTest extends TestCase {
   }
 
   public void testIssue582() {
-    assertPrint("var x = -0.0;", "var x=-0.0");
+    assertPrint("var x = -0.0;", "var x=-0");
   }
 
   public void testIssue601() {
@@ -1403,7 +1405,7 @@ public class CodePrinterTest extends TestCase {
   public void testMinusNegativeZero() {
     // Negative zero is weird, because we have to be able to distinguish
     // it from positive zero (there are some subtle differences in behavior).
-    assertPrint("x- -0", "x- -0.0");
+    assertPrint("x- -0", "x- -0");
   }
 
   public void testStringEscapeSequences() {
