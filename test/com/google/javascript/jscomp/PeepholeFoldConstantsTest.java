@@ -771,6 +771,10 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
         PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
     fold("x = [10, 20][2]",     "",
         PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
+
+    foldSame("x = [foo(), 0][1]");
+    fold("x = [0, foo()][1]", "x = foo()");
+    foldSame("x = [0, foo()][0]");
   }
 
   public void testFoldComplex() {
