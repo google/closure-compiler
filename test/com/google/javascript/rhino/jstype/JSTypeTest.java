@@ -5757,6 +5757,49 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             googBar));
   }
 
+  public void testIsTemplatedType() throws Exception {
+    assertTrue(
+        new TemplateType(registry, "T")
+            .hasAnyTemplate());
+    assertFalse(
+        ARRAY_TYPE
+            .hasAnyTemplate());
+
+    assertTrue(
+        registry.createParameterizedType(
+            ARRAY_TYPE, new TemplateType(registry, "T"))
+            .hasAnyTemplate());
+    assertFalse(
+        registry.createParameterizedType(
+            ARRAY_TYPE, STRING_TYPE)
+            .hasAnyTemplate());
+
+    assertTrue(
+        new FunctionBuilder(registry)
+            .withReturnType(new TemplateType(registry, "T"))
+            .build()
+            .hasAnyTemplate());
+    assertTrue(
+        new FunctionBuilder(registry)
+            .withTypeOfThis(new TemplateType(registry, "T"))
+            .build()
+            .hasAnyTemplate());
+    assertFalse(
+        new FunctionBuilder(registry)
+            .withReturnType(STRING_TYPE)
+            .build()
+            .hasAnyTemplate());
+
+    assertTrue(
+        registry.createUnionType(
+            NULL_TYPE, new TemplateType(registry, "T"), STRING_TYPE)
+            .hasAnyTemplate());
+    assertFalse(
+        registry.createUnionType(
+            NULL_TYPE, ARRAY_TYPE, STRING_TYPE)
+            .hasAnyTemplate());
+  }
+
   private static boolean containsType(
       Iterable<? extends JSType> types, JSType type) {
     for (JSType alt : types) {

@@ -288,4 +288,23 @@ final class ArrowType extends JSType {
   String toStringHelper(boolean forAnnotations) {
     return super.toString();
   }
+
+  @Override
+  public boolean hasAnyTemplateInternal() {
+    return returnType.hasAnyTemplate()
+        || hasTemplatedParameterType();
+  }
+
+  private boolean hasTemplatedParameterType() {
+    if (parameters != null) {
+      for (Node paramNode = parameters.getFirstChild();
+           paramNode != null; paramNode = paramNode.getNext()) {
+        JSType type = paramNode.getJSType();
+        if (type != null && type.hasAnyTemplate()) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 }

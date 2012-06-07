@@ -424,4 +424,14 @@ class ProxyObjectType extends ObjectType {
   public void matchConstraint(ObjectType constraint) {
     referencedType.matchConstraint(constraint);
   }
+
+  @Override
+  public boolean isTemplateType() {
+    return referencedType.isTemplateType();
+  }
+
+  @Override
+  public boolean hasAnyTemplateInternal() {
+    return referencedType.hasAnyTemplate();
+  }
 }

@@ -593,4 +593,14 @@ public class UnionType extends JSType {
       alternate.matchConstraint(constraintObj);
     }
   }
+
+  @Override
+  public boolean hasAnyTemplateInternal() {
+    for (JSType alternate : alternates) {
+      if (alternate.hasAnyTemplate()) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

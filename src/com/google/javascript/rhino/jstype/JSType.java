@@ -70,6 +70,8 @@ public abstract class JSType implements Serializable {
   private boolean resolved = false;
   private JSType resolveResult = null;
 
+  private boolean inTemplatedCheckVisit = false;
+
   public static final String UNKNOWN_NAME =
       "Unknown class name";
 
@@ -327,6 +329,22 @@ public abstract class JSType implements Serializable {
   }
 
   public boolean isTemplateType() {
+    return false;
+  }
+
+  public boolean hasAnyTemplate() {
+    if (!this.inTemplatedCheckVisit) {
+      this.inTemplatedCheckVisit = true;
+      boolean result = hasAnyTemplateInternal();
+      this.inTemplatedCheckVisit = false;
+      return result;
+    } else {
+      // prevent infinite recursion, this is "not yet".
+      return false;
+    }
+  }
+
+  boolean hasAnyTemplateInternal() {
     return false;
   }
 

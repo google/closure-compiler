@@ -1205,4 +1205,11 @@ public class FunctionType extends PrototypeObjectType {
     result.setPrototypeBasedOn(getInstanceType());
     return result;
   }
+
+  @Override
+  public boolean hasAnyTemplateInternal() {
+    return !getTemplateTypeNames().isEmpty()
+        || typeOfThis.hasAnyTemplate()
+        || call.hasAnyTemplate();
+  }
 }

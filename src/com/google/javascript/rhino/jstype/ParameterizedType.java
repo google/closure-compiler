@@ -80,4 +80,9 @@ public final class ParameterizedType extends ProxyObjectType {
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseParameterizedType(this);
   }
+
+  @Override
+  public boolean hasAnyTemplateInternal() {
+    return super.hasAnyTemplate() || parameterType.hasAnyTemplate();
+  }
 }
