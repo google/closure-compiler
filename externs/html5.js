@@ -1573,7 +1573,7 @@ WebSocket.prototype.onclose;
 
 /**
  * Transmits data using the connection.
- * @param {string|ArrayBuffer} data
+ * @param {string} data
  * @return {boolean}
  */
 WebSocket.prototype.send = function(data) {};
@@ -1582,11 +1582,6 @@ WebSocket.prototype.send = function(data) {};
  * Closes the Web Socket connection or connection attempt, if any.
  */
 WebSocket.prototype.close = function() {};
-
-/**
- * @type {string} Sets the type of data (blob or arraybuffer) for binary data. 
- */
-WebSocket.prototype.binaryType;
 
 // HTML5 History
 /**
@@ -2306,31 +2301,58 @@ HTMLFormElement.prototype.novalidate;
 /** @constructor */
 function ValidityState() {}
 
-/** @type {boolean} */
+/**
+ * @const
+ * @type {boolean}
+ */
 ValidityState.prototype.customError;
 
-/** @type {boolean} */
+/**
+ * @const
+ * @type {boolean}
+ */
 ValidityState.prototype.patternMismatch;
 
-/** @type {boolean} */
+/**
+ * @const
+ * @type {boolean}
+ */
 ValidityState.prototype.rangeOverflow;
 
-/** @type {boolean} */
+/**
+ * @const
+ * @type {boolean}
+ */
 ValidityState.prototype.rangeUnderflow;
 
-/** @type {boolean} */
+/**
+ * @const
+ * @type {boolean}
+ */
 ValidityState.prototype.stepMismatch;
 
-/** @type {boolean} */
+/**
+ * @const
+ * @type {boolean}
+ */
 ValidityState.prototype.typeMismatch;
 
-/** @type {boolean} */
+/**
+ * @const
+ * @type {boolean}
+ */
 ValidityState.prototype.tooLong;
 
-/** @type {boolean} */
+/**
+ * @const
+ * @type {boolean}
+ */
 ValidityState.prototype.valid;
 
-/** @type {boolean} */
+/**
+ * @const
+ * @type {boolean}
+ */
 ValidityState.prototype.valueMissing;
 
 
@@ -2341,9 +2363,12 @@ HTMLButtonElement.prototype.autofocus;
  * @const
  * @type {NodeList}
  */
-HTMLButtonElement.prototype.labels;
+HTMLButtonElement.prototype.lables;
 
-/** @type {string} */
+/**
+ * @const
+ * @type {boolean}
+ */
 HTMLButtonElement.prototype.validationMessage;
 
 /**
@@ -2371,9 +2396,12 @@ HTMLInputElement.prototype.formNoValidate;
  * @const
  * @type {NodeList}
  */
-HTMLInputElement.prototype.labels;
+HTMLInputElement.prototype.lables;
 
-/** @type {string} */
+/**
+ * @const
+ * @type {boolean}
+ */
 HTMLInputElement.prototype.validationMessage;
 
 /**
@@ -2398,9 +2426,12 @@ HTMLSelectElement.prototype.autofocus;
  * @const
  * @type {NodeList}
  */
-HTMLSelectElement.prototype.labels;
+HTMLSelectElement.prototype.lables;
 
-/** @type {string} */
+/**
+ * @const
+ * @type {boolean}
+ */
 HTMLSelectElement.prototype.validationMessage;
 
 /**
@@ -2425,9 +2456,12 @@ HTMLTextAreaElement.prototype.autofocus;
  * @const
  * @type {NodeList}
  */
-HTMLTextAreaElement.prototype.labels;
+HTMLTextAreaElement.prototype.lables;
 
-/** @type {string} */
+/**
+ * @const
+ * @type {boolean}
+ */
 HTMLTextAreaElement.prototype.validationMessage;
 
 /**

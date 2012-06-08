@@ -255,13 +255,9 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = parseInt('0xA', 16)", "x = 10");
     fold("x = parseInt('07', 8)", "x = 7");
     fold("x = parseInt('08')", "x = 8");
-    fold("x = parseInt('0')", "x = 0");
-    fold("x = parseFloat('0')", "x = 0");
     fold("x = parseFloat('1.23')", "x = 1.23");
     fold("x = parseFloat('1.2300')", "x = 1.23");
     fold("x = parseFloat(' 0.3333')", "x = 0.3333");
-    fold("x = parseFloat('0100')", "x = 100");
-    fold("x = parseFloat('0100.000')", "x = 100");
 
     //Mozilla Dev Center test cases
     fold("x = parseInt(' 0xF', 16)", "x = 15");
@@ -289,7 +285,6 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
     //Invalid calls
     foldSame("x = parseInt('0xa', 10)");
-    foldSame("x = parseInt('')");
 
     enableEcmaScript5(false);
     foldSame("x = parseInt('08')");

@@ -328,8 +328,42 @@ public abstract class JSType implements Serializable {
     return null;
   }
 
-  public boolean isTemplateType() {
-    return false;
+  public final boolean isParameterizedType() {
+    return toMaybeParameterizedType() != null;
+  }
+
+  /**
+   * Downcasts this to a ParameterizedType, or returns null if this is not
+   * a function.
+   */
+  public ParameterizedType toMaybeParameterizedType() {
+    return null;
+  }
+
+  /**
+   * Null-safe version of toMaybeParameterizedType().
+   */
+  public static ParameterizedType toMaybeParameterizedType(JSType type) {
+    return type == null ? null : type.toMaybeParameterizedType();
+  }
+
+  public final boolean isTemplateType() {
+    return toMaybeTemplateType() != null;
+  }
+
+  /**
+   * Downcasts this to a TemplateType, or returns null if this is not
+   * a function.
+   */
+  public TemplateType toMaybeTemplateType() {
+    return null;
+  }
+
+  /**
+   * Null-safe version of toMaybeTemplateType().
+   */
+  public static TemplateType toMaybeTemplateType(JSType type) {
+    return type == null ? null : type.toMaybeTemplateType();
   }
 
   public boolean hasAnyTemplate() {

@@ -195,21 +195,11 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     }
 
     int startIndex = 0, endIndex = input.length() - 1;
-    
-    // Remove leading zeros
-    while (startIndex < input.length() && input.charAt(startIndex) == '0' &&
-        input.charAt(startIndex) != '.') {
+    while (startIndex < input.length() && input.charAt(startIndex) == '0') {
       startIndex++;
     }
-    
-    // Remove trailing zeros only after the decimal
-    if (input.indexOf('.') >= 0) {
-      while (endIndex >= 0 && input.charAt(endIndex) == '0') {
-        endIndex--;
-      }
-      if (input.charAt(endIndex) == '.') {
-        endIndex--;
-      }
+    while (endIndex >= 0 && input.charAt(endIndex) == '0') {
+      endIndex--;
     }
     if (startIndex >= endIndex) {
       return input;
@@ -288,16 +278,10 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
       }
 
       stringVal = NodeUtil.trimJsWhiteSpace(stringVal);
-      if (stringVal.length() == 0) {
-        return n;
-      }
     }
 
     Node newNode;
-    if (stringVal.equals("0")) {
-      // Special case for parseInt("0") or parseFloat("0")
-      newNode = IR.number(0);
-    } else if (isParseInt) {
+    if (isParseInt) {
       if (radix == 0 || radix == 16) {
         if (stringVal.length() > 1 &&
             stringVal.substring(0, 2).equalsIgnoreCase("0x")) {

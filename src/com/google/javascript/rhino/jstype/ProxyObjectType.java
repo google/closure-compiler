@@ -426,8 +426,13 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public boolean isTemplateType() {
-    return referencedType.isTemplateType();
+  public ParameterizedType toMaybeParameterizedType() {
+    return referencedType.toMaybeParameterizedType();
+  }
+
+  @Override
+  public TemplateType toMaybeTemplateType() {
+    return referencedType.toMaybeTemplateType();
   }
 
   @Override

@@ -66,8 +66,8 @@ public class TemplateType extends ProxyObjectType {
   }
 
   @Override
-  public boolean isTemplateType() {
-    return true;
+  public TemplateType toMaybeTemplateType() {
+    return this;
   }
 
   @Override
