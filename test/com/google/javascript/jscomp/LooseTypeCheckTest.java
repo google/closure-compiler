@@ -6884,63 +6884,6 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         compiler.getWarnings()[0].description);
   }
 
-  public void testBadTemplateType1() throws Exception {
-    testTypes(
-        "/**\n" +
-        "* @param {T} x\n" +
-        "* @param {T} y\n" +
-        "* @param {function(this:T, ...)} z\n" +
-        "* @template T\n" +
-        "*/\n" +
-        "function f(x, y, z) {}\n" +
-        "f(this, this, function() { this });",
-        FunctionTypeBuilder.TEMPLATE_TYPE_DUPLICATED.format());
-  }
-
-  public void testBadTemplateType2() throws Exception {
-    testTypes(
-        "/**\n" +
-        "* @param {T} x\n" +
-        "* @param {function(this:T, ...)} y\n" +
-        "* @template T\n" +
-        "*/\n" +
-        "function f(x, y) {}\n" +
-        "f(0, function() {});",
-        TypeInference.TEMPLATE_TYPE_NOT_OBJECT_TYPE.format("number"));
-  }
-
-  public void testBadTemplateType3() throws Exception {
-    testTypes(
-        "/**\n" +
-        " * @param {T} x\n" +
-        " * @template T\n" +
-        "*/\n" +
-        "function f(x) {}\n" +
-        "f(this);",
-        TypeInference.TEMPLATE_TYPE_OF_THIS_EXPECTED.format());
-  }
-
-  public void testBadTemplateType4() throws Exception {
-    testTypes(
-        "/**\n" +
-        "* @template T\n" +
-        "*/\n" +
-        "function f() {}\n" +
-        "f();",
-        FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format());
-  }
-
-  public void testBadTemplateType5() throws Exception {
-    testTypes(
-        "/**\n" +
-        "* @template T\n" +
-        "* @return {T}\n" +
-        "*/\n" +
-        "function f() {}\n" +
-        "f();",
-        FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format());
-  }
-
   private void checkObjectType(ObjectType objectType, String propertyName,
         JSType expectedType) {
     assertTrue("Expected " + objectType.getReferenceName() +

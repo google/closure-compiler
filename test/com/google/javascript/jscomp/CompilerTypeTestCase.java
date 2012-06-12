@@ -42,6 +42,20 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
       "goog.isString = function(x) {};" +
       "goog.isObject = function(x) {};" +
       "goog.isDefAndNotNull = function(x) {};" +
+      "goog.array = {};" +
+      // simplified ArrayLike definition
+      "/**\n" +
+      " * @typedef {Array|{length: number}}\n" +
+      " */\n" +
+      "goog.array.ArrayLike;" +
+      "/**\n" +
+      " * @param {Array.<T>|{length:number}} arr\n" +
+      " * @param {function(this:S, T, number, goog.array.ArrayLike):boolean} f\n" +
+      " * @param {S=} opt_obj\n" +
+      " * @return {!Array.<T>}\n" +
+      " * @template T,S\n" +
+      " */" +
+      "goog.array.filter = function(arr, f, opt_obj){};" +
       "goog.asserts = {};" +
       "/** @return {*} */ goog.asserts.assert = function(x) { return x; };";
 

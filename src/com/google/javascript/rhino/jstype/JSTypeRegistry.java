@@ -533,7 +533,7 @@ public class JSTypeRegistry implements Serializable {
 
     // least function type, i.e. (All...) -> NoType
     FunctionType LEAST_FUNCTION_TYPE =
-        createFunctionType(NO_TYPE, true, ALL_TYPE);
+        createNativeFunctionTypeWithVarArgs(NO_TYPE, ALL_TYPE);
     registerNativeType(JSTypeNative.LEAST_FUNCTION_TYPE, LEAST_FUNCTION_TYPE);
 
     // the 'this' object in the global scope
@@ -546,7 +546,7 @@ public class JSTypeRegistry implements Serializable {
 
     // greatest function type, i.e. (NoType...) -> All
     FunctionType GREATEST_FUNCTION_TYPE =
-      createFunctionType(ALL_TYPE, true, NO_TYPE);
+        createNativeFunctionTypeWithVarArgs(ALL_TYPE, NO_TYPE);
     registerNativeType(JSTypeNative.GREATEST_FUNCTION_TYPE,
         GREATEST_FUNCTION_TYPE);
 
@@ -971,9 +971,15 @@ public class JSTypeRegistry implements Serializable {
    * @return the union of the type and the Null type
    */
   public JSType createDefaultObjectUnion(JSType type) {
-    return shouldTolerateUndefinedValues()
+    if (type.isTemplateType()) {
+      // Template types represent the substituted type exactly and should
+      // not be wrapped.
+      return type;
+    } else {
+      return shouldTolerateUndefinedValues()
         ? createOptionalNullableType(type)
         : createNullableType(type);
+    }
   }
 
   /**
@@ -1091,6 +1097,19 @@ public class JSTypeRegistry implements Serializable {
   public FunctionType createFunctionTypeWithVarArgs(
       JSType returnType, JSType... parameterTypes) {
     return createFunctionType(
+        returnType, createParametersWithVarArgs(parameterTypes));
+  }
+
+  /**
+   * Creates a function type. The last parameter type of the function is
+   * considered a variable length argument.
+   *
+   * @param returnType the function's return type
+   * @param parameterTypes the parameters' types
+   */
+  private FunctionType createNativeFunctionTypeWithVarArgs(
+      JSType returnType, JSType... parameterTypes) {
+    return createNativeFunctionType(
         returnType, createParametersWithVarArgs(parameterTypes));
   }
 
@@ -1287,6 +1306,15 @@ public class JSTypeRegistry implements Serializable {
     return new FunctionBuilder(this)
         .withParamsNode(parameters)
         .withReturnType(returnType)
+        .build();
+  }
+
+  private FunctionType createNativeFunctionType(
+      JSType returnType, Node parameters) {
+    return new FunctionBuilder(this)
+        .withParamsNode(parameters)
+        .withReturnType(returnType)
+        .forNativeType()
         .build();
   }
 

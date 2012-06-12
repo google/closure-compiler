@@ -309,11 +309,6 @@ final class FunctionTypeBuilder {
       returnTypeInferred = false;
     }
 
-    if (!templateTypeNames.isEmpty() &&
-        returnType != null &&
-        returnType.restrictByNotNullOrUndefined().isTemplateType()) {
-      reportError(TEMPLATE_TYPE_EXPECTED, fnName);
-    }
     return this;
   }
 
@@ -467,13 +462,6 @@ final class FunctionTypeBuilder {
         parameterType = typeRegistry.getNativeType(UNKNOWN_TYPE);
       }
 
-      if (!templateTypeNames.isEmpty() &&
-          parameterType.restrictByNotNullOrUndefined().isTemplateType()) {
-        if (foundTemplateType) {
-          reportError(TEMPLATE_TYPE_DUPLICATED, fnName);
-        }
-        foundTemplateType = true;
-      }
       warnedAboutArgList |= addParameter(
           builder, parameterType, warnedAboutArgList,
           isOptionalParam,
@@ -490,10 +478,6 @@ final class FunctionTypeBuilder {
         builder.newParameterFromNode(oldParameterType);
         oldParameterType = oldParameterType.getNext();
       }
-    }
-
-    if (!templateTypeNames.isEmpty() && !foundTemplateType) {
-      reportError(TEMPLATE_TYPE_EXPECTED, fnName);
     }
 
     for (String inexistentName : allJsDocParams) {

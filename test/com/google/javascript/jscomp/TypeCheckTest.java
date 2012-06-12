@@ -9483,7 +9483,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         false);
   }
 
-  public void testBadTemplateType1() throws Exception {
+  public void testTemplateType1() throws Exception {
     testTypes(
         "/**\n" +
         "* @param {T} x\n" +
@@ -9492,11 +9492,12 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "* @template T\n" +
         "*/\n" +
         "function f(x, y, z) {}\n" +
-        "f(this, this, function() { this });",
-        FunctionTypeBuilder.TEMPLATE_TYPE_DUPLICATED.format());
+        "f(this, this, function() { this });");
   }
 
-  public void testBadTemplateType2() throws Exception {
+  public void testTemplateType2() throws Exception {
+    // "this" types need to be coerced for ES3 style function or left
+    // allow for ES5-strict methods.
     testTypes(
         "/**\n" +
         "* @param {T} x\n" +
@@ -9504,22 +9505,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "* @template T\n" +
         "*/\n" +
         "function f(x, y) {}\n" +
-        "f(0, function() {});",
-        TypeInference.TEMPLATE_TYPE_NOT_OBJECT_TYPE.format("number"));
+        "f(0, function() {});");
   }
 
-  public void testBadTemplateType3() throws Exception {
-    testTypes(
-        "/**\n" +
-        " * @param {T} x\n" +
-        " * @template T\n" +
-        "*/\n" +
-        "function f(x) {}\n" +
-        "f(this);",
-        TypeInference.TEMPLATE_TYPE_OF_THIS_EXPECTED.format());
-  }
-
-  public void testBadTemplateType4() throws Exception {
+  public void disable_testBadTemplateType4() throws Exception {
+    // TODO(johnlenz): Add a check for useless of template types.
+    // Unless there are at least two references to a Template type in
+    // a definition it isn't useful.
     testTypes(
         "/**\n" +
         "* @template T\n" +
@@ -9529,7 +9521,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format());
   }
 
-  public void testBadTemplateType5() throws Exception {
+  public void disable_testBadTemplateType5() throws Exception {
+    // TODO(johnlenz): Add a check for useless of template types.
+    // Unless there are at least two references to a Template type in
+    // a definition it isn't useful.
     testTypes(
         "/**\n" +
         "* @template T\n" +
@@ -9540,7 +9535,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format());
   }
 
-  public void testFunctionLiteralUndefinedThisArgument() throws Exception {
+  public void disable_testFunctionLiteralUndefinedThisArgument()
+      throws Exception {
+    // TODO(johnlenz): this was a weird error.  We should add a general
+    // restriction on what is accepted for T. Something like:
+    // "@template T of {Object|string}" or some such.
     testTypes(""
         + "/**\n"
         + " * @param {function(this:T, ...)?} fn\n"
@@ -9999,6 +9998,100 @@ public class TypeCheckTest extends CompilerTypeTestCase {
             " super interfaces Int1 and Int4",
             "Interface Int5 has a property foo with incompatible types in its" +
             " super interfaces Int0 and Int4"});
+  }
+
+  public void testGenerics1() throws Exception {
+    String FN_DECL = "/** \n" +
+        " * @param {T} x \n" +
+        " * @param {function(T):T} y \n" +
+        " * @template T\n" +
+        " */ \n" +
+        "function f(x,y) { return y(x); }\n";
+
+    testTypes(
+        FN_DECL +
+        "/** @type {string} */" +
+        "var out;" +
+        "/** @type {string} */" +
+        "var result = f('hi', function(x){ out = x; return x; });");
+
+    testTypes(
+        FN_DECL +
+        "/** @type {string} */" +
+        "var out;" +
+        "var result = f(0, function(x){ out = x; return x; });",
+        "assignment\n" +
+        "found   : number\n" +
+        "required: string");
+
+    testTypes(
+        FN_DECL +
+        "var out;" +
+        "/** @type {string} */" +
+        "var result = f(0, function(x){ out = x; return x; });",
+        "assignment\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void disable_testBackwardsInferenceGoogArrayFilter1()
+      throws Exception {
+    // TODO(johnlenz): this doesn't fail because any Array is regarded as
+    // a subtype of any other array regardless of the type parameter.
+    testClosureTypes(
+        CLOSURE_DEFS +
+        "/** @type {Array.<string>} */" +
+        "var arr;\n" +
+        "/** @type {Array.<number>} */" +
+        "var result = goog.array.filter(" +
+        "   arr," +
+        "   function(item,index,src) {return false;});",
+        "assignment\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
+  public void testBackwardsInferenceGoogArrayFilter2() throws Exception {
+    testClosureTypes(
+        CLOSURE_DEFS +
+        "/** @type {number} */" +
+        "var out;" +
+        "/** @type {Array.<string>} */" +
+        "var arr;\n" +
+        "var out4 = goog.array.filter(" +
+        "   arr," +
+        "   function(item,index,src) {out = item;});",
+        "assignment\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
+  public void testBackwardsInferenceGoogArrayFilter3() throws Exception {
+    testClosureTypes(
+        CLOSURE_DEFS +
+        "/** @type {string} */" +
+        "var out;" +
+        "/** @type {Array.<string>} */ var arr;\n" +
+        "var result = goog.array.filter(" +
+        "   arr," +
+        "   function(item,index,src) {out = index;});",
+        "assignment\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void testBackwardsInferenceGoogArrayFilter4() throws Exception {
+    testClosureTypes(
+        CLOSURE_DEFS +
+        "/** @type {string} */" +
+        "var out;" +
+        "/** @type {Array.<string>} */ var arr;\n" +
+        "var out4 = goog.array.filter(" +
+        "   arr," +
+        "   function(item,index,srcArr) {out = srcArr;});",
+        "assignment\n" +
+        "found   : (null|{length: number})\n" +
+        "required: string");
   }
 
   private void testTypes(String js) throws Exception {
