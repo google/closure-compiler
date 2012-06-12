@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for jQuery 1.7.1
+ * @fileoverview Externs for jQuery 1.7.2
  *
  * Note that some functions use different return types depending on the number
  * of parameters passed in. In these cases, you may need to annotate the type
@@ -563,8 +563,8 @@ $.Deferred = function(opt_fn) {};
  * @param {function()=} alwaysCallbacks2
  * @return {jQuery.deferred}
  */
-jQuery.deferred.prototype.always =
-    function(alwaysCallbacks, alwaysCallbacks2) {};
+jQuery.deferred.prototype.always
+    = function(alwaysCallbacks, alwaysCallbacks2) {};
 
 /**
  * @param {function()} doneCallbacks
@@ -685,7 +685,6 @@ jQuery.prototype.delegate = function(selector, arg2, arg3, handler) {};
 /**
  * @param {Element} elem
  * @param {string=} queueName
- * @return {!jQuery}
  */
 jQuery.dequeue = function(elem, queueName) {};
 
@@ -698,7 +697,6 @@ jQuery.prototype.dequeue = function(queueName) {};
 /**
  * @param {Element} elem
  * @param {string=} queueName
- * @return {!jQuery}
  */
 $.dequeue = function(elem, queueName) {};
 
@@ -718,7 +716,7 @@ jQuery.prototype.die = function(arg1, handler) {};
 
 /**
  * @param {Object} collection
- * @param {function(number, ?)} callback
+ * @param {function(number,?)} callback
  * @return {Object}
  */
 jQuery.each = function(collection, callback) {};
@@ -731,7 +729,7 @@ jQuery.prototype.each = function(fnc) {};
 
 /**
  * @param {Object} collection
- * @param {function(number, ?)} callback
+ * @param {function(number,?)} callback
  * @return {Object}
  */
 $.each = function(collection, callback) {};
@@ -748,7 +746,6 @@ jQuery.prototype.end = function() {};
 /**
  * @param {number} arg1
  * @return {!jQuery}
- * @nosideeffects
  */
 jQuery.prototype.eq = function(arg1) {};
 
@@ -932,10 +929,7 @@ jQuery.prototype.filter = function(arg1) {};
  */
 jQuery.prototype.find = function(arg1) {};
 
-/**
- * @return {!jQuery}
- * @nosideeffects
- */
+/** @return {!jQuery} */
 jQuery.prototype.first = function() {};
 
 /** @see http://docs.jquery.com/Plugins/Authoring */
@@ -1373,10 +1367,7 @@ jQuery.prototype.keypress = function(arg1, handler) {};
  */
 jQuery.prototype.keyup = function(arg1, handler) {};
 
-/**
- * @return {!jQuery}
- * @nosideeffects
- */
+/** @return {!jQuery} */
 jQuery.prototype.last = function() {};
 
 /** @type {number} */
@@ -1961,7 +1952,6 @@ jQuery.prototype.size = function() {};
  * @param {number} start
  * @param {number=} end
  * @return {!jQuery}
- * @nosideeffects
  */
 jQuery.prototype.slice = function(start, end) {};
 
@@ -2209,16 +2199,18 @@ jQuery.prototype.unwrap = function() {};
 jQuery.prototype.val = function(arg1) {};
 
 /**
- * @param {jQuery.deferred} deferreds
+ * @param {jQuery.deferred} deferred
+ * @param {...jQuery.deferred} deferreds
  * @return {jQuery.Promise}
  */
-jQuery.when = function(deferreds) {};
+jQuery.when = function(deferred, deferreds) {};
 
 /**
- * @param {jQuery.deferred} deferreds
+ * @param {jQuery.deferred} deferred
+ * @param {...jQuery.deferred} deferreds
  * @return {jQuery.Promise}
  */
-$.when = function(deferreds) {};
+$.when = function(deferred, deferreds) {};
 
 /**
  * @param {(string|number|function(number,number))=} arg1
