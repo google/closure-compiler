@@ -32,7 +32,9 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
   private boolean injectNamespace = false;
 
   public CheckGlobalNamesTest() {
-    super("function alert() {}");
+    super("function alert() {}" +
+          "/** @constructor */ function Object(){}" +
+          "Object.prototype.hasOwnProperty = function() {};");
   }
 
   @Override
@@ -44,7 +46,7 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
         @Override
         public void process(Node externs, Node js) {
           checkGlobalNames.injectNamespace(
-              new GlobalNamespace(compiler, js))
+              new GlobalNamespace(compiler, externs, js))
               .process(externs, js);
         }
       };
@@ -266,5 +268,14 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
         "  default: x.y.z = {}; " +
         "  case (x.y = {}): break;" +
         "}", NAME_DEFINED_LATE_WARNING);
+  }
+
+  public void testObjectPrototypeProperties() {
+    testSame("var x = {}; var y = x.hasOwnProperty('z');");
+  }
+
+  public void testCustomObjectPrototypeProperties() {
+    testSame("Object.prototype.seal = function() {};" +
+        "var x = {}; x.seal();");
   }
 }

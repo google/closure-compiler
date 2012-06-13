@@ -1249,7 +1249,7 @@ public class DefaultPassConfig extends PassConfig {
           // Create a global namespace for analysis by check passes.
           // Note that this class does all heavy computation lazily,
           // so it's OK to create it here.
-          namespaceForChecks = new GlobalNamespace(compiler, jsRoot);
+          namespaceForChecks = new GlobalNamespace(compiler, externs, jsRoot);
           new CheckGlobalNames(compiler, options.checkGlobalNamesLevel)
               .injectNamespace(namespaceForChecks).process(externs, jsRoot);
         }

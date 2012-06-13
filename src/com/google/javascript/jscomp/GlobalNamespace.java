@@ -96,6 +96,10 @@ class GlobalNamespace
     this.root = root;
   }
 
+  boolean hasExternsRoot() {
+    return externsRoot != null;
+  }
+
   @Override
   public Node getRootNode() {
     return root.getParent();
@@ -107,12 +111,13 @@ class GlobalNamespace
   }
 
   @Override
-  public StaticSlot<JSType> getSlot(String name) {
+  public Name getSlot(String name) {
     return getOwnSlot(name);
   }
 
   @Override
-  public StaticSlot<JSType> getOwnSlot(String name) {
+  public Name getOwnSlot(String name) {
+    ensureGenerated();
     return nameMap.get(name);
   }
 
@@ -892,7 +897,7 @@ class GlobalNamespace
     int totalGets = 0;
     int callGets = 0;
     int deleteProps = 0;
-    boolean inExterns;
+    final boolean inExterns;
 
     JSDocInfo docInfo = null;
 

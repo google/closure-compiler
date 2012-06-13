@@ -16,11 +16,15 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+
+import java.util.Set;
 
 /**
  * Checks references to undefined properties of global variables.
@@ -33,6 +37,8 @@ class CheckGlobalNames implements CompilerPass {
   private final CheckLevel level;
 
   private GlobalNamespace namespace = null;
+  private final Set<String> objectPrototypeProps = Sets.newHashSet();
+  private final Set<String> functionPrototypeProps = Sets.newHashSet();
 
   // Warnings
   static final DiagnosticType UNDEFINED_NAME_WARNING = DiagnosticType.warning(
@@ -63,20 +69,47 @@ class CheckGlobalNames implements CompilerPass {
    * can be re-used for multiple check passes. Returns this for easy chaining.
    */
   CheckGlobalNames injectNamespace(GlobalNamespace namespace) {
+    Preconditions.checkArgument(namespace.hasExternsRoot());
     this.namespace = namespace;
     return this;
   }
 
   @Override
   public void process(Node externs, Node root) {
-    // TODO(nicksantos): Let CollapseProperties and CheckGlobalNames
-    // share a namespace.
     if (namespace == null) {
-      namespace = new GlobalNamespace(compiler, root);
+      namespace = new GlobalNamespace(compiler, externs, root);
     }
 
+    // Find prototype properties that will affect our analysis.
+    Preconditions.checkState(namespace.hasExternsRoot());
+    findPrototypeProps("Object", objectPrototypeProps);
+    findPrototypeProps("Function", functionPrototypeProps);
+
     for (Name name : namespace.getNameForest()) {
+      // Skip extern names. Externs are often not runnable as real code,
+      // and will do things like:
+      // var x;
+      // x.method;
+      // which this check forbids.
+      if (name.inExterns) {
+        continue;
+      }
+
       checkDescendantNames(name, name.globalSets + name.localSets > 0);
+    }
+  }
+
+  private void findPrototypeProps(String type, Set<String> props) {
+    Name slot = namespace.getSlot(type);
+    if (slot != null) {
+      for (Ref ref : slot.getRefs()) {
+        if (ref.type == Ref.Type.PROTOTYPE_GET) {
+          Node fullName = ref.getNode().getParent().getParent();
+          if (fullName.isGetProp()) {
+            props.add(fullName.getLastChild().getString());
+          }
+        }
+      }
     }
   }
 
@@ -188,7 +221,7 @@ class CheckGlobalNames implements CompilerPass {
    * Checks whether the given name is a property, and whether that property
    * must be initialized with its full qualified name.
    */
-  private static boolean propertyMustBeInitializedByFullName(Name name) {
+  private boolean propertyMustBeInitializedByFullName(Name name) {
     // If an object literal in the global namespace is never aliased,
     // then all of its properties must be defined using its full qualified
     // name. This implies that its properties must all be in the global
@@ -197,7 +230,10 @@ class CheckGlobalNames implements CompilerPass {
     // The same is not true for FUNCTION and OTHER types, because their
     // implicit prototypes have properties that are not captured by the global
     // namespace.
+    //
+    // This comment will be fixed in a subsequent cl.
     return name.parent != null && name.parent.aliasingGets == 0 &&
-        name.parent.type == Name.Type.OBJECTLIT;
+        name.parent.type == Name.Type.OBJECTLIT &&
+        !objectPrototypeProps.contains(name.getBaseName());
   }
 }
