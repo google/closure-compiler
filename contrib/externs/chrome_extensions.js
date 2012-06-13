@@ -193,10 +193,10 @@ chrome.tabs.query = function(queryInfo, opt_callback) {};
 chrome.tabs.reload = function(opt_tabId, opt_reloadProperties, opt_callback) {};
 
 /**
- * @param {number} tabId Tab id.
+ * @param {number|Array.<number>} tabIds A tab ID or an array of tab IDs.
  * @param {function(Tab): void=} opt_callback Callback.
  */
-chrome.tabs.remove = function(tabId, opt_callback) {};
+chrome.tabs.remove = function(tabIds, opt_callback) {};
 
 /**
  * @param {number} tabId Tab id.
