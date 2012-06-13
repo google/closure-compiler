@@ -18,7 +18,9 @@
  * @fileoverview Definitions for W3C's Navigation Timing specification.
  *
  * Created from
- * http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html
+ * @see http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html
+ * @see http://w3c-test.org/webperf/specs/ResourceTiming
+ * @see http://www.w3.org/TR/performance-timeline
  *
  * @externs
  */
@@ -48,6 +50,32 @@ function PerformanceTiming() {}
 /** @type {number} */ PerformanceTiming.prototype.loadEventEnd;
 
 /** @constructor */
+function PerformanceEntry() {}
+/** @type {string} */ PerformanceEntry.prototype.name;
+/** @type {string} */ PerformanceEntry.prototype.entryType;
+/** @type {number} */ PerformanceEntry.prototype.startTime;
+/** @type {number} */ PerformanceEntry.prototype.duration;
+
+/**
+ * @constructor
+ * @extends {PerformanceEntry}
+ */
+function PerformanceResourceTiming() {}
+/** @type {number} */ PerformanceResourceTiming.prototype.redirectStart;
+/** @type {number} */ PerformanceResourceTiming.prototype.redirectEnd;
+/** @type {number} */ PerformanceResourceTiming.prototype.fetchStart;
+/** @type {number} */ PerformanceResourceTiming.prototype.domainLookupStart;
+/** @type {number} */ PerformanceResourceTiming.prototype.domainLookupEnd;
+/** @type {number} */ PerformanceResourceTiming.prototype.connectStart;
+/** @type {number} */ PerformanceResourceTiming.prototype.connectEnd;
+/** @type {number} */
+PerformanceResourceTiming.prototype.secureConnectionStart;
+/** @type {number} */ PerformanceResourceTiming.prototype.requestStart;
+/** @type {number} */ PerformanceResourceTiming.prototype.responseStart;
+/** @type {number} */ PerformanceResourceTiming.prototype.responseEnd;
+/** @type {string} */ PerformanceResourceTiming.prototype.initiatorType;
+
+/** @constructor */
 function PerformanceNavigation() {}
 /** @type {number} */ PerformanceNavigation.prototype.TYPE_NAVIGATE = 0;
 /** @type {number} */ PerformanceNavigation.prototype.TYPE_RELOAD = 1;
@@ -67,6 +95,43 @@ function PerformanceMemory() {}
 function Performance() {}
 /** @type {PerformanceTiming} */ Performance.prototype.timing;
 /** @type {PerformanceNavigation} */ Performance.prototype.navigation;
+
+/**
+ * Clears the buffer used to store the current list of
+ * PerformanceResourceTiming resources.
+ * @return {undefined}
+ */
+Performance.prototype.clearResourceTimings = function() {};
+
+/**
+ * Set the maximum number of PerformanceResourceTiming resources that may be
+ * stored in the buffer.
+ * @param {number} maxSize
+ */
+Performance.prototype.setResourceTimingBufferSize = function(maxSize) {};
+
+/**
+ * @return {Array.<PerformanceEntry>} PerformanceEntry list in chronological
+ *     order with respect to startTime.
+ */
+Performance.prototype.getEntries = function() {};
+
+/**
+ * @param {string} entryType The entryType used to filter the list.
+ * @return {Array.<PerformanceEntry>} PerformanceEntry list in chronological
+ *     order with respect to startTime.
+ */
+Performance.prototype.getEntriesByType = function(entryType) {};
+
+/**
+ * @param {string} name The same value for the name attribute of
+ *     PerformanceEntry.
+ * @param {string=} opt_entryType The same value for the entryType attribute of
+ *     PerformanceEntry.
+ * @return {Array.<PerformanceEntry>} PerformanceEntry list in chronological
+ *     order with respect to startTime.
+ */
+Performance.prototype.getEntriesByName = function(name, opt_entryType) {};
 
 // Only available in WebKit, and only with the --enable-memory-info flag.
 /** @type {PerformanceMemory} */ Performance.prototype.memory;
