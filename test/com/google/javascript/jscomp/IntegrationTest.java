@@ -2139,6 +2139,34 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, code, "alert(2);");
   }
 
+  public void testCheckConstants1() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
+    level.setOptionsForCompilationLevel(options);
+    WarningLevel warnings = WarningLevel.QUIET;
+    warnings.setOptionsForWarningLevel(options);
+
+    String code = "" +
+        "var foo; foo();\n" +
+        "/** @const */\n" +
+        "var x = 1; foo(); x = 2;\n";
+    test(options, code, code);
+  }
+
+  public void testCheckConstants2() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
+    level.setOptionsForCompilationLevel(options);
+    WarningLevel warnings = WarningLevel.DEFAULT;
+    warnings.setOptionsForWarningLevel(options);
+
+    String code = "" +
+        "var foo;\n" +
+        "/** @const */\n" +
+        "var x = 1; foo(); x = 2;\n";
+    test(options, code, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {

@@ -77,7 +77,7 @@ public class DiagnosticGroups {
   // to parser/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, ambiguousFunctionDecl, checkRegExp, " +
-      "checkTypes, checkVars, constantProperty, deprecated, " +
+      "checkTypes, checkVars, const, constantProperty, deprecated, " +
       "duplicateMessage, " +
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
       "internetExplorerChecks, invalidCasts, missingProperties, " +

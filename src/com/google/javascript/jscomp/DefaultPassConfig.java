@@ -413,9 +413,9 @@ public class DefaultPassConfig extends PassConfig {
 
     // Constant checking must be done after property collapsing because
     // property collapsing can introduce new constants (e.g. enum values).
-    if (options.inlineConstantVars) {
-      passes.add(checkConsts);
-    }
+    // TODO(johnlenz): make checkConsts namespace aware so it can be run
+    // as during the checks phase.
+    passes.add(checkConsts);
 
     // The Caja library adds properties to Object.prototype, which breaks
     // most for-in loops.  This adds a check to each loop that skips
