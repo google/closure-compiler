@@ -84,6 +84,8 @@ class CheckGlobalNames implements CompilerPass {
     Preconditions.checkState(namespace.hasExternsRoot());
     findPrototypeProps("Object", objectPrototypeProps);
     findPrototypeProps("Function", functionPrototypeProps);
+    objectPrototypeProps.addAll(
+        compiler.getCodingConvention().getIndirectlyDeclaredProperties());
 
     for (Name name : namespace.getNameForest()) {
       // Skip extern names. Externs are often not runnable as real code,

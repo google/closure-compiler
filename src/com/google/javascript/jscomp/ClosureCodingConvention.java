@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -30,7 +31,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-
 
 /**
  * This describes the Closure-specific JavaScript coding conventions.
@@ -44,12 +44,21 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
       "JSC_REFLECT_OBJECTLIT_EXPECTED",
       "Object literal expected as second argument");
 
+  private final Set<String> indirectlyDeclaredProperties;
+
   public ClosureCodingConvention() {
     this(CodingConventions.getDefault());
   }
 
   public ClosureCodingConvention(CodingConvention wrapped) {
     super(wrapped);
+
+    Set<String> props = Sets.newHashSet(
+        "superClass_",
+        "instance_",
+        "getInstance");
+    props.addAll(wrapped.getIndirectlyDeclaredProperties());
+    indirectlyDeclaredProperties = ImmutableSet.copyOf(props);
   }
 
   /**
@@ -59,6 +68,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   @Override
   public void applySubclassRelationship(FunctionType parentCtor,
       FunctionType childCtor, SubclassType type) {
+    super.applySubclassRelationship(parentCtor, childCtor, type);
     if (type == SubclassType.INHERITS) {
       childCtor.defineDeclaredProperty("superClass_",
           parentCtor.getPrototype(), childCtor.getSource());
@@ -83,6 +93,10 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
    */
   @Override
   public SubclassRelationship getClassesDefinedByCall(Node callNode) {
+    SubclassRelationship relationship =
+        super.getClassesDefinedByCall(callNode);
+    if (relationship != null) return relationship;
+
     Node callName = callNode.getFirstChild();
     SubclassType type = typeofClassDefiningName(callName);
     if (type != null) {
@@ -168,7 +182,8 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
 
   @Override
   public boolean isSuperClassReference(String propertyName) {
-    return "superClass_".equals(propertyName);
+    return "superClass_".equals(propertyName) ||
+        super.isSuperClassReference(propertyName);
   }
 
   /**
@@ -255,7 +270,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
         return typeNames;
       }
     }
-    return null;
+    return super.identifyTypeDeclarationCall(n);
   }
 
   @Override
@@ -272,7 +287,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
     if (!("goog.addSingletonGetter".equals(callName) ||
           "goog$addSingletonGetter".equals(callName)) ||
         callNode.getChildCount() != 2) {
-      return null;
+      return super.getSingletonGetterClassName(callNode);
     }
 
     return callArg.getNext().getQualifiedName();
@@ -281,6 +296,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   @Override
   public void applySingletonGetter(FunctionType functionType,
       FunctionType getterType, ObjectType objectType) {
+    super.applySingletonGetter(functionType, getterType, objectType);
     functionType.defineDeclaredProperty("getInstance", getterType,
         functionType.getSource());
     functionType.defineDeclaredProperty("instance_", objectType,
@@ -301,12 +317,18 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   public boolean isPropertyTestFunction(Node call) {
     Preconditions.checkArgument(call.isCall());
     return propertyTestFunctions.contains(
-        call.getFirstChild().getQualifiedName());
+        call.getFirstChild().getQualifiedName()) ||
+        super.isPropertyTestFunction(call);
   }
 
   @Override
   public ObjectLiteralCast getObjectLiteralCast(Node callNode) {
     Preconditions.checkArgument(callNode.isCall());
+    ObjectLiteralCast proxyCast = super.getObjectLiteralCast(callNode);
+    if (proxyCast != null) {
+      return proxyCast;
+    }
+
     Node callName = callNode.getFirstChild();
     if (!"goog.reflect.object".equals(callName.getQualifiedName()) ||
         callNode.getChildCount() != 3) {
@@ -399,6 +421,11 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
     }
 
     return null;
+  }
+
+  @Override
+  public Collection<String> getIndirectlyDeclaredProperties() {
+    return indirectlyDeclaredProperties;
   }
 
   private Node safeNext(Node n) {

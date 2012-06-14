@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -232,6 +233,11 @@ public class CodingConventions {
     @Override
     public ObjectLiteralCast getObjectLiteralCast(Node callNode) {
       return nextConvention.getObjectLiteralCast(callNode);
+    }
+
+    @Override
+    public Collection<String> getIndirectlyDeclaredProperties() {
+      return nextConvention.getIndirectlyDeclaredProperties();
     }
   }
 
@@ -454,6 +460,11 @@ public class CodingConventions {
       }
 
       return null;
+    }
+
+    @Override
+    public Collection<String> getIndirectlyDeclaredProperties() {
+      return ImmutableList.of();
     }
 
     private Node safeNext(Node n) {

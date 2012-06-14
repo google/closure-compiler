@@ -301,4 +301,16 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
   public void testFunctionPrototypeProperties() {
     testSame("var x = {}; var y = x.hasOwnProperty('z');");
   }
+
+  public void testIndirectlyDeclaredProperties() {
+    testSame(
+        "Function.prototype.inherits = function(ctor) {" +
+        "  this.superClass_ = ctor;" +
+        "};" +
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype.bar = function() {};" +
+        "/** @constructor */ function SubFoo() {}" +
+        "SubFoo.inherits(Foo);" +
+        "SubFoo.superClass_.bar();");
+  }
 }
