@@ -34,7 +34,9 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
   public CheckGlobalNamesTest() {
     super("function alert() {}" +
           "/** @constructor */ function Object(){}" +
-          "Object.prototype.hasOwnProperty = function() {};");
+          "Object.prototype.hasOwnProperty = function() {};" +
+          "/** @constructor */ function Function(){}" +
+          "Function.prototype.call = function() {};");
   }
 
   @Override
@@ -270,6 +272,23 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
         "}", NAME_DEFINED_LATE_WARNING);
   }
 
+  public void testOkGlobalDeclExpr() {
+    testSame("var x = {}; /** @type {string} */ x.foo;");
+  }
+
+  public void testBadInterfacePropRef() {
+    testSame(
+        "/** @interface */ function F() {}" +
+         "F.bar();",
+         UNDEFINED_NAME_WARNING);
+  }
+
+  public void testInterfaceFunctionPropRef() {
+    testSame(
+        "/** @interface */ function F() {}" +
+         "F.call(); F.hasOwnProperty('z');");
+  }
+
   public void testObjectPrototypeProperties() {
     testSame("var x = {}; var y = x.hasOwnProperty('z');");
   }
@@ -277,5 +296,9 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
   public void testCustomObjectPrototypeProperties() {
     testSame("Object.prototype.seal = function() {};" +
         "var x = {}; x.seal();");
+  }
+
+  public void testFunctionPrototypeProperties() {
+    testSame("var x = {}; var y = x.hasOwnProperty('z');");
   }
 }

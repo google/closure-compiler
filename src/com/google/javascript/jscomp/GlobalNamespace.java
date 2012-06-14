@@ -563,50 +563,30 @@ class GlobalNamespace
             currentPreOrderIndex++);
         nameObj.addRef(get);
         Ref.markTwins(set, get);
-      } else if (isConstructorOrEnumDeclaration(n, parent)) {
+      } else if (isTypeDeclaration(n, parent)) {
         // Names with a @constructor or @enum annotation are always collapsed
-        nameObj.setIsClassOrEnum();
+        nameObj.setDeclaredType();
       }
     }
 
     /**
      * Determines whether a set operation is a constructor or enumeration
-     * declaration. The set operation may either be an assignment to a name,
-     * a variable declaration, or an object literal key mapping.
+     * or interface declaration. The set operation may either be an assignment
+     * to a name, a variable declaration, or an object literal key mapping.
      *
      * @param n The node that represents the name being set
      * @param parent Parent node of {@code n} (an ASSIGN, VAR, or OBJLIT node)
      * @return Whether the set operation is either a constructor or enum
      *     declaration
      */
-    private boolean isConstructorOrEnumDeclaration(Node n, Node parent) {
-      JSDocInfo info;
-      int valueNodeType;
-      switch (parent.getType()) {
-        case Token.ASSIGN:
-          info = parent.getJSDocInfo();
-          valueNodeType = n.getNext().getType();
-          break;
-        case Token.VAR:
-          info = n.getJSDocInfo();
-          if (info == null) {
-            info = parent.getJSDocInfo();
-          }
-          Node valueNode = n.getFirstChild();
-          valueNodeType = valueNode != null ? valueNode.getType() : Token.VOID;
-          break;
-        default:
-          if (NodeUtil.isFunctionDeclaration(parent)) {
-            info = parent.getJSDocInfo();
-            valueNodeType = Token.FUNCTION;
-            break;
-          }
-          return false;
-      }
+    private boolean isTypeDeclaration(Node n, Node parent) {
+      Node valueNode = NodeUtil.getRValueOfLValue(n);
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
       // Heed the annotations only if they're sensibly used.
-      return info != null &&
-             (info.isConstructor() && valueNodeType == Token.FUNCTION ||
-              info.hasEnumParameterType() && valueNodeType == Token.OBJECTLIT);
+      return info != null && valueNode != null &&
+             (info.isConstructor() && valueNode.isFunction() ||
+              info.isInterface() && valueNode.isFunction() ||
+              info.hasEnumParameterType() && valueNode.isObjectLit());
     }
 
     /**
@@ -889,8 +869,8 @@ class GlobalNamespace
     private List<Ref> refs;
 
     Type type;
-    private boolean isClassOrEnum = false;
-    private boolean hasClassOrEnumDescendant = false;
+    private boolean declaredType = false;
+    private boolean hasDeclaredTypeDescendant = false;
     int globalSets = 0;
     int localSets = 0;
     int aliasingGets = 0;
@@ -1059,7 +1039,7 @@ class GlobalNamespace
     }
 
     boolean canCollapse() {
-      return !inExterns && !isGetOrSetDefinition() && (isClassOrEnum ||
+      return !inExterns && !isGetOrSetDefinition() && (declaredType ||
           (parent == null || parent.canCollapseUnannotatedChildNames()) &&
           (globalSets > 0 || localSets > 0) &&
           deleteProps == 0);
@@ -1083,7 +1063,7 @@ class GlobalNamespace
         return false;
       }
 
-      if (isClassOrEnum) {
+      if (declaredType) {
         return true;
       }
 
@@ -1110,12 +1090,16 @@ class GlobalNamespace
       return globalSets == 0 && localSets > 0;
     }
 
-    void setIsClassOrEnum() {
-      isClassOrEnum = true;
+    void setDeclaredType() {
+      declaredType = true;
       for (Name ancestor = parent; ancestor != null;
            ancestor = ancestor.parent) {
-        ancestor.hasClassOrEnumDescendant = true;
+        ancestor.hasDeclaredTypeDescendant = true;
       }
+    }
+
+    boolean isDeclaredType() {
+      return declaredType;
     }
 
     /**
@@ -1127,7 +1111,7 @@ class GlobalNamespace
      * considered namespaces.
      */
     boolean isNamespace() {
-      return hasClassOrEnumDescendant && type == Type.OBJECTLIT;
+      return hasDeclaredTypeDescendant && type == Type.OBJECTLIT;
     }
 
     /**

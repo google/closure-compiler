@@ -3058,6 +3058,20 @@ public final class NodeUtil {
     return null;
   }
 
+  /** Gets the r-value of a node returned by getBestLValue. */
+  static Node getRValueOfLValue(Node n) {
+    Node parent = n.getParent();
+    switch (parent.getType()) {
+      case Token.ASSIGN:
+        return n.getNext();
+      case Token.VAR:
+        return n.getFirstChild();
+      case Token.FUNCTION:
+        return parent;
+    }
+    return null;
+  }
+
   /** Get the owner of the given l-value node. */
   static Node getBestLValueOwner(@Nullable Node lValue) {
     if (lValue == null || lValue.getParent() == null) {

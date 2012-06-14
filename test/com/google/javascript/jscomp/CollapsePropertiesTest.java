@@ -1278,6 +1278,11 @@ public class CollapsePropertiesTest extends CompilerTestCase {
          "function Map() {} var Map$foo = 3; Map;");
   }
 
+  public void testPropertyOnGlobalInterface() {
+    test("/** @interface */ function Map() {} Map.foo = 3; Map;",
+         "function Map() {} var Map$foo = 3; Map;");
+  }
+
   public void testPropertyOnGlobalFunction() {
     testSame("function Map() {} Map.foo = 3; Map;");
   }

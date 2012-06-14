@@ -148,8 +148,13 @@ class CheckGlobalNames implements CompilerPass {
 
     JSModuleGraph moduleGraph = compiler.getModuleGraph();
     for (Ref ref : name.getRefs()) {
+      // Don't worry about global exprs.
+      boolean isGlobalExpr = ref.getNode().getParent().isExprResult();
+
       if (!isDefined && !isTypedef(ref)) {
-        reportRefToUndefinedName(name, ref);
+        if (!isGlobalExpr) {
+          reportRefToUndefinedName(name, ref);
+        }
       } else if (declaration != null &&
           ref.getModule() != declaration.getModule() &&
           !moduleGraph.dependsOn(
@@ -222,18 +227,37 @@ class CheckGlobalNames implements CompilerPass {
    * must be initialized with its full qualified name.
    */
   private boolean propertyMustBeInitializedByFullName(Name name) {
-    // If an object literal in the global namespace is never aliased,
-    // then all of its properties must be defined using its full qualified
-    // name. This implies that its properties must all be in the global
-    // namespace as well.
+    // If an object or function literal in the global namespace is never
+    // aliased, then its properties can only come from one of 2 places:
+    // 1) From its prototype chain, or
+    // 2) From an assignment to its fully qualified name.
+    // If we assume #1 is not the case, then #2 implies that its
+    // properties must all be modeled in the GlobalNamespace as well.
     //
-    // The same is not true for FUNCTION and OTHER types, because their
-    // implicit prototypes have properties that are not captured by the global
-    // namespace.
+    // We assume that for global object literals and types (constructors and
+    // interfaces), we can find all the properties inherited from the prototype
+    // chain of functions and objects.
     //
-    // This comment will be fixed in a subsequent cl.
-    return name.parent != null && name.parent.aliasingGets == 0 &&
-        name.parent.type == Name.Type.OBJECTLIT &&
-        !objectPrototypeProps.contains(name.getBaseName());
+    // We could improve this check by classifying aliasing gets. For example,
+    // goog.inherits is an aliasing get that adds a known set of properties.
+    if (name.parent == null || name.parent.aliasingGets > 0) {
+      return false;
+    }
+
+    if (objectPrototypeProps.contains(name.getBaseName())) {
+      return false;
+    }
+
+    if (name.parent.type == Name.Type.OBJECTLIT) {
+      return true;
+    }
+
+    if (name.parent.type == Name.Type.FUNCTION &&
+        name.parent.isDeclaredType() &&
+        !functionPrototypeProps.contains(name.getBaseName())) {
+      return true;
+    }
+
+    return false;
   }
 }
