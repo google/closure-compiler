@@ -24,13 +24,23 @@ import com.google.common.collect.ImmutableSet;
  *
  */
 public class ReplaceIdGeneratorsTest extends CompilerTestCase {
+
+  public boolean generatePseudoNames = false;
+
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new ReplaceIdGenerators(
         compiler,
         new ImmutableSet.Builder<String>()
-        .add("goog.events.getUniqueId")
-        .add("goog.place.getUniqueId").build());
+            .add("goog.events.getUniqueId")
+        .add("goog.place.getUniqueId").build(),
+        generatePseudoNames);
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    generatePseudoNames = false;
   }
 
   @Override
@@ -40,7 +50,8 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   public void testBackwardCompat() {
     test("foo.bar = goog.events.getUniqueId('foo_bar')",
-         "foo.bar = 'a'");
+         "foo.bar = 'a'",
+         "foo.bar = 'foo_bar$0'");
   }
 
   public void testSimple() {
@@ -48,7 +59,10 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
          "foo.bar = foo.getUniqueId('foo_bar')",
 
          "foo.getUniqueId = function() {};" +
-         "foo.bar = 'a'");
+         "foo.bar = 'a'",
+
+         "foo.getUniqueId = function() {};" +
+         "foo.bar = 'foo_bar$0'");
 
     test("/** @idGenerator */ goog.events.getUniqueId = function() {};" +
         "foo1 = goog.events.getUniqueId('foo1');" +
@@ -56,7 +70,11 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
         "goog.events.getUniqueId = function() {};" +
         "foo1 = 'a';" +
-        "foo1 = 'b';");
+        "foo1 = 'b';",
+
+        "goog.events.getUniqueId = function() {};" +
+        "foo1 = 'foo1$0';" +
+        "foo1 = 'foo1$1';");
   }
 
   public void testSimpleConsistent() {
@@ -64,7 +82,10 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
          "foo.bar = id('foo_bar')",
 
          "id = function() {};" +
-         "foo.bar = 'a'");
+         "foo.bar = 'a'",
+
+         "id = function() {};" +
+         "foo.bar = 'foo_bar$0'");
 
     test("/** @consistentIdGenerator */ id = function() {};" +
          "f1 = id('f1');" +
@@ -72,7 +93,11 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
          "id = function() {};" +
          "f1 = 'a';" +
-         "f1 = 'a'");
+         "f1 = 'a'",
+
+         "id = function() {};" +
+         "f1 = 'f1$0';" +
+         "f1 = 'f1$0'");
 
     test("/** @consistentIdGenerator */ id = function() {};" +
         "f1 = id('f1');" +
@@ -82,7 +107,12 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "id = function() {};" +
         "f1 = 'a';" +
         "f1 = 'a';" +
-        "f1 = 'a'");
+        "f1 = 'a'",
+
+        "id = function() {};" +
+        "f1 = 'f1$0';" +
+        "f1 = 'f1$0';" +
+        "f1 = 'f1$0'");
   }
 
   public void testVar() {
@@ -90,7 +120,10 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
          "foo.bar = id('foo_bar')",
 
          "var id = function() {};" +
-         "foo.bar = 'a'");
+         "foo.bar = 'a'",
+
+         "var id = function() {};" +
+         "foo.bar = 'foo_bar$0'");
   }
 
   public void testObjLit() {
@@ -98,7 +131,10 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
          "foo.bar = {a: get.id('foo_bar')}",
 
          "get.id = function() {};" +
-         "foo.bar = {a: 'a'}");
+         "foo.bar = {a: 'a'}",
+
+         "get.id = function() {};" +
+         "foo.bar = {a: 'foo_bar$0'}");
   }
 
   public void testTwoGenerators() {
@@ -114,7 +150,14 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
          "f1 = 'a';" +
          "f2 = 'b';" +
          "f3 = 'a';" +
-         "f4 = 'b';");
+         "f4 = 'b';",
+
+         "var id1 = function() {};" +
+         "var id2 = function() {};" +
+         "f1 = '1$0';" +
+         "f2 = '1$1';" +
+         "f3 = '1$0';" +
+         "f4 = '1$1';");
   }
 
   public void testTwoMixedGenerators() {
@@ -130,7 +173,14 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
          "f1 = 'a';" +
          "f2 = 'b';" +
          "f3 = 'a';" +
-         "f4 = 'a';");
+         "f4 = 'a';",
+
+         "var id1 = function() {};" +
+         "var id2 = function() {};" +
+         "f1 = '1$0';" +
+         "f2 = '1$1';" +
+         "f3 = '1$0';" +
+         "f4 = '1$0';");
   }
 
   public void testLocalCall() {
@@ -148,7 +198,10 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "function fb() {foo.bar = id('foo_bar')}",
 
         "var id = function() {};" +
-        "function fb() {foo.bar = 'a'}");
+        "function fb() {foo.bar = 'a'}",
+
+        "var id = function() {};" +
+        "function fb() {foo.bar = 'foo_bar$0'}");
   }
 
   public void testConflictingIdGenerator() {
@@ -160,6 +213,16 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "if (x) {foo.bar = id('foo_bar')}",
 
         "var id = function() {};" +
-        "if (x) {foo.bar = 'a'}");
+        "if (x) {foo.bar = 'a'}",
+
+        "var id = function() {};" +
+        "if (x) {foo.bar = 'foo_bar$0'}");
+  }
+
+  private void test(String code, String expected, String expectedPseudo) {
+    generatePseudoNames = false;
+    test(code, expected);
+    generatePseudoNames = true;
+    test(code, expectedPseudo);
   }
 }

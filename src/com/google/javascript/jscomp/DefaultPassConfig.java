@@ -1367,7 +1367,8 @@ public class DefaultPassConfig extends PassConfig {
       return new CompilerPass() {
         @Override public void process(Node externs, Node root) {
           ReplaceIdGenerators pass =
-              new ReplaceIdGenerators(compiler, options.idGenerators);
+              new ReplaceIdGenerators(
+                  compiler, options.idGenerators, options.generatePseudoNames);
           pass.process(externs, root);
           idGeneratorMap = pass.getIdGeneratorMap();
         }

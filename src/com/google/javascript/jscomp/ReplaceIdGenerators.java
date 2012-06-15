@@ -50,14 +50,19 @@ class ReplaceIdGenerators implements CompilerPass {
           "Id generator can only be consistent or inconsistent");
 
   private final AbstractCompiler compiler;
-  private final Map<String, NameGenerator> nameGenerators;
-  private final Map<String, NameGenerator> consistNameGenerators;
+  private final Map<String, NameSupplier> nameGenerators;
+  private final Map<String, NameSupplier> consistNameGenerators;
   private final Map<String, Map<String, String>> consistNameMap;
 
   private final Map<String, List<Replacement>> idGeneratorMaps;
 
-  public ReplaceIdGenerators(AbstractCompiler compiler, Set<String> idGens) {
+  private final boolean generatePseudoNames;
+
+  public ReplaceIdGenerators(
+      AbstractCompiler compiler, Set<String> idGens,
+      boolean generatePseudoNames) {
     this.compiler = compiler;
+    this.generatePseudoNames = generatePseudoNames;
     nameGenerators = Maps.newLinkedHashMap();
     consistNameGenerators = Maps.newLinkedHashMap();
     idGeneratorMaps = Maps.newLinkedHashMap();
@@ -65,10 +70,38 @@ class ReplaceIdGenerators implements CompilerPass {
 
     if (idGens != null) {
       for(String gen : idGens) {
-        nameGenerators.put(gen,
-            new NameGenerator(Collections.<String>emptySet(), "", null));
+        nameGenerators.put(gen, createNameSupplier());
         idGeneratorMaps.put(gen, Lists.<Replacement>newLinkedList());
       }
+    }
+  }
+
+  private static interface NameSupplier {
+    String getName(String name);
+  }
+
+  private static class ObfuscatedNameSuppier implements NameSupplier {
+    private final NameGenerator generator =
+        new NameGenerator(Collections.<String>emptySet(), "", null);
+    @Override
+    public String getName(String name) {
+      return generator.generateNextName();
+    }
+  }
+
+  private static class PseudoNameSuppier implements NameSupplier {
+    private int counter = 0;
+    @Override
+    public String getName(String name) {
+      return name + "$" + counter++;
+    }
+  }
+
+  private NameSupplier createNameSupplier() {
+    if (generatePseudoNames) {
+      return new PseudoNameSuppier();
+    } else {
+      return new ObfuscatedNameSuppier();
     }
   }
 
@@ -105,12 +138,10 @@ class ReplaceIdGenerators implements CompilerPass {
       // TODO(user): Error on function that has both. Or redeclartion
       // on the same function.
       if (doc.isConsistentIdGenerator()) {
-        consistNameGenerators.put(name,
-            new NameGenerator(Collections.<String>emptySet(), "", null));
+        consistNameGenerators.put(name, createNameSupplier());
         consistNameMap.put(name, Maps.<String, String>newLinkedHashMap());
       } else {
-        nameGenerators.put(name,
-          new NameGenerator(Collections.<String>emptySet(), "", null));
+        nameGenerators.put(name, createNameSupplier());
       }
       idGeneratorMaps.put(name, Lists.<Replacement>newArrayList());
     }
@@ -133,7 +164,7 @@ class ReplaceIdGenerators implements CompilerPass {
 
       String callName = n.getFirstChild().getQualifiedName();
       boolean consistent = false;
-      NameGenerator nameGenerator = nameGenerators.get(callName);
+      NameSupplier nameGenerator = nameGenerators.get(callName);
       if (nameGenerator == null) {
         nameGenerator = consistNameGenerators.get(callName);
         consistent = true;
@@ -172,11 +203,11 @@ class ReplaceIdGenerators implements CompilerPass {
         Map<String, String> entry = consistNameMap.get(callName);
         rename = entry.get(id.getString());
         if (rename == null) {
-          rename = nameGenerator.generateNextName();
+          rename = nameGenerator.getName(id.getString());
           entry.put(id.getString(), rename);
         }
       } else {
-        rename = nameGenerator.generateNextName();
+        rename = nameGenerator.getName(id.getString());
       }
 
       parent.replaceChild(n, IR.string(rename));
