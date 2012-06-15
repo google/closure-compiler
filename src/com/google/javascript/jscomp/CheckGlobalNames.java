@@ -34,6 +34,7 @@ import java.util.Set;
 class CheckGlobalNames implements CompilerPass {
 
   private final AbstractCompiler compiler;
+  private final CodingConvention convention;
   private final CheckLevel level;
 
   private GlobalNamespace namespace = null;
@@ -61,6 +62,7 @@ class CheckGlobalNames implements CompilerPass {
    */
   CheckGlobalNames(AbstractCompiler compiler, CheckLevel level) {
     this.compiler = compiler;
+    this.convention = compiler.getCodingConvention();
     this.level = level;
   }
 
@@ -85,7 +87,7 @@ class CheckGlobalNames implements CompilerPass {
     findPrototypeProps("Object", objectPrototypeProps);
     findPrototypeProps("Function", functionPrototypeProps);
     objectPrototypeProps.addAll(
-        compiler.getCodingConvention().getIndirectlyDeclaredProperties());
+        convention.getIndirectlyDeclaredProperties());
 
     for (Name name : namespace.getNameForest()) {
       // Skip extern names. Externs are often not runnable as real code,
@@ -239,10 +241,31 @@ class CheckGlobalNames implements CompilerPass {
     // We assume that for global object literals and types (constructors and
     // interfaces), we can find all the properties inherited from the prototype
     // chain of functions and objects.
-    //
-    // We could improve this check by classifying aliasing gets. For example,
-    // goog.inherits is an aliasing get that adds a known set of properties.
-    if (name.parent == null || name.parent.aliasingGets > 0) {
+    if (name.parent == null) {
+      return false;
+    }
+
+    boolean parentIsAliased = false;
+    if (name.parent.aliasingGets > 0) {
+      for (Ref ref : name.parent.getRefs()) {
+        if (ref.type == Ref.Type.ALIASING_GET) {
+          Node aliaser = ref.getNode().getParent();
+
+          // We don't need to worry about known aliased, because
+          // they're already covered by the getIndirectlyDeclaredProperties
+          // call at the top.
+          boolean isKnownAlias =
+              aliaser.isCall() &&
+              (convention.getClassesDefinedByCall(aliaser) != null ||
+               convention.getSingletonGetterClassName(aliaser) != null);
+          if (!isKnownAlias) {
+            parentIsAliased = true;
+          }
+        }
+      }
+    }
+
+    if (parentIsAliased) {
       return false;
     }
 

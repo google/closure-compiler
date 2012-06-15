@@ -313,4 +313,27 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
         "SubFoo.inherits(Foo);" +
         "SubFoo.superClass_.bar();");
   }
+
+  public void testGoogInheritsAlias() {
+    testSame(
+        "Function.prototype.inherits = function(ctor) {" +
+        "  this.superClass_ = ctor;" +
+        "};" +
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype.bar = function() {};" +
+        "/** @constructor */ function SubFoo() {}" +
+        "SubFoo.inherits(Foo);" +
+        "SubFoo.superClass_.bar();");
+  }
+
+  public void testGoogInheritsAlias2() {
+    testSame(
+        CompilerTypeTestCase.CLOSURE_DEFS +
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype.bar = function() {};" +
+        "/** @constructor */ function SubFoo() {}" +
+        "goog.inherits(SubFoo, Foo);" +
+        "SubFoo.superClazz();",
+         UNDEFINED_NAME_WARNING);
+  }
 }
