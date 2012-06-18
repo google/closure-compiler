@@ -21,8 +21,6 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
-import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenamer;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -298,14 +296,24 @@ class FunctionInjector {
      * Used for a call site for which there does not exist a method
      * to inline it.
      */
-    UNSUPPORTED,
+    UNSUPPORTED() {
+      @Override
+      public void prepare(FunctionInjector injector, Node callNode) {
+        throw new IllegalStateException("unexpected");
+      }
+    },
 
     /**
      * A call as a statement. For example: "foo();".
      *   EXPR_RESULT
      *     CALL
      */
-    SIMPLE_CALL,
+    SIMPLE_CALL() {
+      @Override
+      public void prepare(FunctionInjector injector, Node callNode) {
+        // Nothing to do.
+      }
+    },
 
     /**
      * An assignment, where the result of the call is assigned to a simple
@@ -315,8 +323,12 @@ class FunctionInjector {
      *     CALL
      *       FOO
      */
-    SIMPLE_ASSIGNMENT,
-
+    SIMPLE_ASSIGNMENT() {
+      @Override
+      public void prepare(FunctionInjector injector, Node callNode) {
+        // Nothing to do.
+      }
+    },
     /**
      * An var declaration and initialization, where the result of the call is
      * assigned to the declared name
@@ -326,8 +338,12 @@ class FunctionInjector {
      *       CALL
      *         FOO
      */
-    VAR_DECL_SIMPLE_ASSIGNMENT,
-
+    VAR_DECL_SIMPLE_ASSIGNMENT() {
+      @Override
+      public void prepare(FunctionInjector injector, Node callNode) {
+        // Nothing to do.
+      }
+    },
     /**
      * An arbitrary expression, the root of which is a EXPR_RESULT, IF,
      * RETURN, SWITCH or VAR.  The call must be the first side-effect in
@@ -341,14 +357,36 @@ class FunctionInjector {
      *   "foo() ? 1:0"
      *   "foo() && x"
      */
-    EXPRESSION,
+    EXPRESSION() {
+      @Override
+      public void prepare(FunctionInjector injector, Node callNode) {
+        injector.getDecomposer().moveExpression(callNode);
+
+        // Reclassify after move
+        CallSiteType callSiteType = injector.classifyCallSite(callNode);
+        Preconditions.checkState(this != callSiteType);
+        callSiteType.prepare(injector, callNode);
+      }
+    },
 
     /**
      * An arbitrary expression, the root of which is a EXPR_RESULT, IF,
      * RETURN, SWITCH or VAR.  Where the call is not the first side-effect in
      * the expression.
      */
-    DECOMPOSABLE_EXPRESSION,
+    DECOMPOSABLE_EXPRESSION() {
+      @Override
+      public void prepare(FunctionInjector injector, Node callNode) {
+        injector.getDecomposer().maybeExposeExpression(callNode);
+
+        // Reclassify after decomposition
+        CallSiteType callSiteType = injector.classifyCallSite(callNode);
+        Preconditions.checkState(this != callSiteType);
+        callSiteType.prepare(injector, callNode);
+      }
+    };
+
+    public abstract void prepare(FunctionInjector injector, Node callNode);
   }
 
   /**
@@ -374,7 +412,7 @@ class FunctionInjector {
         && grandParent.hasOneChild()) {
       // This is a var declaration.  Example: "var x = foo();"
       // TODO(johnlenz): Should we be checking for constants on the
-      // left-hand-side of the assignments (and handling them as EXPRESSION?
+      // left-hand-side of the assignments and handling them as EXPRESSION?
       return CallSiteType.VAR_DECL_SIMPLE_ASSIGNMENT;
     } else {
       Node expressionRoot = ExpressionDecomposer.findExpressionRoot(callNode);
@@ -394,6 +432,20 @@ class FunctionInjector {
     }
 
     return CallSiteType.UNSUPPORTED;
+  }
+
+  private ExpressionDecomposer getDecomposer() {
+    return new ExpressionDecomposer(
+        compiler, safeNameIdSupplier, knownConstants);
+  }
+
+  /**
+   * If required, rewrite the statement containing the call expression.
+   * @see ExpressionDecomposer#canExposeExpression
+   */
+  void maybePrepareCall(Node callNode) {
+    CallSiteType callSiteType = classifyCallSite(callNode);
+    callSiteType.prepare(this, callNode);
   }
 
   /**
@@ -433,16 +485,12 @@ class FunctionInjector {
         break;
 
       case EXPRESSION:
-        resultName = getUniqueResultName();
-        // The intermediary result has a default value of "undefined", so
-        // we only need to set the implicit return value if we are in a loop
-        // and the variable maybe reused.
-        needsDefaultReturnResult = isCallInLoop;
-        break;
+        throw new IllegalStateException(
+            "Movable expressions must be moved before inlining.");
 
       case DECOMPOSABLE_EXPRESSION:
         throw new IllegalStateException(
-            "Decomposable expressions must decomposed before inlining.");
+            "Decomposable expressions must be decomposed before inlining.");
 
       default:
         throw new IllegalStateException("Unexpected call site type.");
@@ -481,30 +529,6 @@ class FunctionInjector {
         grandParent.replaceChild(parent, newBlock);
         break;
 
-      case EXPRESSION:
-        // TODO(johnlenz): Maybe change this so that movable and decomposable
-        // expressions are handled the same way: The call is moved and
-        // then handled by one the three basic cases, rather than
-        // introducing a new case.
-        Node injectionPoint = ExpressionDecomposer.findInjectionPoint(callNode);
-        Preconditions.checkNotNull(injectionPoint);
-        Node injectionPointParent = injectionPoint.getParent();
-        Preconditions.checkNotNull(injectionPointParent);
-        Preconditions.checkState(
-            NodeUtil.isStatementBlock(injectionPointParent));
-
-        // Declare the intermediate result name.
-        newBlock.addChildrenToFront(
-            NodeUtil.newVarNode(resultName, null)
-                 .copyInformationFromForTree(callNode));
-        // Inline the function before the selected injection point (before
-        // the call).
-        injectionPointParent.addChildBefore(newBlock, injectionPoint);
-        // Replace the call site with a reference to the intermediate
-        // result name.
-        parent.replaceChild(callNode, IR.name(resultName));
-        break;
-
       default:
         throw new IllegalStateException("Unexpected call site type.");
     }
@@ -538,7 +562,7 @@ class FunctionInjector {
 
   enum CanInlineResult {
     YES,
-    AFTER_DECOMPOSITION,
+    AFTER_PREPARATION,
     NO
   }
 
@@ -561,7 +585,8 @@ class FunctionInjector {
     }
 
     if (!allowDecomposition
-        && callSiteType == CallSiteType.DECOMPOSABLE_EXPRESSION) {
+        && (callSiteType == CallSiteType.DECOMPOSABLE_EXPRESSION
+            || callSiteType == CallSiteType.EXPRESSION)) {
       return CanInlineResult.NO;
     }
 
@@ -570,8 +595,9 @@ class FunctionInjector {
       return CanInlineResult.NO;
     }
 
-    if (callSiteType == CallSiteType.DECOMPOSABLE_EXPRESSION)  {
-      return CanInlineResult.AFTER_DECOMPOSITION;
+    if (callSiteType == CallSiteType.DECOMPOSABLE_EXPRESSION
+        || callSiteType == CallSiteType.EXPRESSION) {
+      return CanInlineResult.AFTER_PREPARATION;
     } else {
       return CanInlineResult.YES;
     }
@@ -719,14 +745,6 @@ class FunctionInjector {
     }
 
     return CanInlineResult.YES;
-  }
-
-  /**
-   * Parameter names will be name unique when at a later time.
-   */
-  private String getUniqueResultName() {
-    return "JSCompiler_inline_result"
-        + ContextualRenamer.UNIQUE_ID_SEPARATOR + safeNameIdSupplier.get();
   }
 
   /**

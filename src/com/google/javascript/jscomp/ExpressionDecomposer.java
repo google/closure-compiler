@@ -75,7 +75,7 @@ class ExpressionDecomposer {
    * @param expression The expression to be exposed.
    * @see #canExposeExpression
    */
-  void maybeDecomposeExpression(Node expression) {
+  void maybeExposeExpression(Node expression) {
     // If the expression needs to exposed.
     int i = 0;
     while (DecompositionType.DECOMPOSABLE == canExposeExpression(expression)) {
@@ -110,7 +110,7 @@ class ExpressionDecomposer {
    * @see #canExposeExpression
    */
   void moveExpression(Node expression) {
-    String resultName = getTempValueName();  // Should this be constant?
+    String resultName = getResultValueName();
     Node injectionPoint = findInjectionPoint(expression);
     Preconditions.checkNotNull(injectionPoint);
     Node injectionPointParent = injectionPoint.getParent();
@@ -570,13 +570,14 @@ class ExpressionDecomposer {
   }
 
   private String tempNamePrefix = "JSCompiler_temp";
+  private String resultNamePrefix = "JSCompiler_inline_result";
 
   /**
    * Allow the temp name to be overridden to make tests more readable.
    */
   @VisibleForTesting
-  public void setTempNamePrefix(String tempNamePrefix) {
-    this.tempNamePrefix = tempNamePrefix;
+  public void setTempNamePrefix(String prefix) {
+    this.tempNamePrefix = prefix;
   }
 
   /**
@@ -585,6 +586,22 @@ class ExpressionDecomposer {
   private String getTempValueName(){
     return tempNamePrefix + ContextualRenamer.UNIQUE_ID_SEPARATOR
         + safeNameIdSupplier.get();
+  }
+
+  /**
+   * Allow the temp name to be overridden to make tests more readable.
+   */
+  @VisibleForTesting
+  public void setResultNamePrefix(String prefix) {
+    this.resultNamePrefix = prefix;
+  }
+
+  /**
+   * Create a unique name for call results.
+   */
+  private String getResultValueName() {
+    return resultNamePrefix
+        + ContextualRenamer.UNIQUE_ID_SEPARATOR + safeNameIdSupplier.get();
   }
 
   /**

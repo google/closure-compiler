@@ -248,8 +248,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "var d=b()+foo()",
 
          "var JSCompiler_temp_const$$0 = c;\n" +
-         "{\n" +
          "var JSCompiler_inline_result$$1;\n" +
+         "{\n" +
          "var x$$inline_2;\n" +
          "JSCompiler_inline_result$$1 = " +
          "    function(a$$inline_3){ return a$$inline_3+1 };\n" +
@@ -299,8 +299,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
          "function _x() { \n" +
          "  var JSCompiler_temp_const$$0 = c;\n" +
-         "  {\n" +
          "  var JSCompiler_inline_result$$1;\n" +
+         "  {\n" +
          "  var x$$inline_2;\n" +
          "  JSCompiler_inline_result$$1 = " +
          "      function(a$$inline_3) {return a$$inline_3+1};\n" +
@@ -417,8 +417,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test("var window = {}; function foo(){window.bar++; return 3;}" +
         "var x = {y: 1, z: foo(2)};",
         "var window={};" +
+        "var JSCompiler_inline_result$$0;" +
         "{" +
-        "  var JSCompiler_inline_result$$0;" +
         "  window.bar++;" +
         "  JSCompiler_inline_result$$0 = 3;" +
         "}" +
@@ -430,8 +430,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "var x = {y: alert(), z: foo(2)};",
         "var window = {};" +
         "var JSCompiler_temp_const$$0 = alert();" +
+        "var JSCompiler_inline_result$$1;" +
         "{" +
-        " var JSCompiler_inline_result$$1;" +
         " window.bar++;" +
         " JSCompiler_inline_result$$1 = 3;}" +
         "var x = {" +
@@ -446,8 +446,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "var window = {};" +
         "var JSCompiler_temp_const$$1 = alert();" +
         "var JSCompiler_temp_const$$0 = alert2();" +
+        "var JSCompiler_inline_result$$2;" +
         "{" +
-        " var JSCompiler_inline_result$$2;" +
         " window.bar++;" +
         " JSCompiler_inline_result$$2 = 3;}" +
         "var x = {" +
@@ -1357,26 +1357,30 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   public void testComplexInlineInExpresssions2() {
     test("function f(){a()}c=z=f()",
-         "{var JSCompiler_inline_result$$0;a();}" +
+         "var JSCompiler_inline_result$$0;" +
+         "{a();JSCompiler_inline_result$$0=void 0;}" +
          "c=z=JSCompiler_inline_result$$0");
   }
 
   public void testComplexInlineInExpresssions3() {
     test("function f(){a()}c=z=f()",
-        "{var JSCompiler_inline_result$$0;a();}" +
+        "var JSCompiler_inline_result$$0;" +
+        "{a();JSCompiler_inline_result$$0=void 0;}" +
         "c=z=JSCompiler_inline_result$$0");
   }
 
   public void testComplexInlineInExpresssions4() {
     test("function f(){a()}if(z=f());",
-        "{var JSCompiler_inline_result$$0;a();}" +
+        "var JSCompiler_inline_result$$0;" +
+        "{a();JSCompiler_inline_result$$0=void 0;}" +
         "if(z=JSCompiler_inline_result$$0);");
   }
 
   public void testComplexInlineInExpresssions5() {
     test("function f(){a()}if(z.y=f());",
          "var JSCompiler_temp_const$$0=z;" +
-         "{var JSCompiler_inline_result$$1;a()}" +
+         "var JSCompiler_inline_result$$1;" +
+         "{a();JSCompiler_inline_result$$1=void 0;}" +
          "if(JSCompiler_temp_const$$0.y=JSCompiler_inline_result$$1);");
   }
 
@@ -1544,7 +1548,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test("function f(){a=1;return 1} var x = 1; x += f()",
         "var x = 1;" +
         "var JSCompiler_temp_const$$0 = x;" +
-        "{var JSCompiler_inline_result$$1; a=1;" +
+        "var JSCompiler_inline_result$$1;" +
+        "{a=1;" +
         " JSCompiler_inline_result$$1=1}" +
         "x = JSCompiler_temp_const$$0 + JSCompiler_inline_result$$1;");
   }
@@ -1559,8 +1564,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
               "return ret\n" +
            "}()\n" +
         ");",
-        "{" +
         "var JSCompiler_inline_result$$0;" +
+        "{" +
         "var ret$$inline_1={};\n" +
         "ret$$inline_1[ONE]='a';\n" +
         "ret$$inline_1[TWO]='b';\n" +
@@ -1682,8 +1687,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test(
         "((function(){var a; return function(){foo()}})())();",
 
-        "{var JSCompiler_inline_result$$0;" +
-        "var a$$inline_1;" +
+        "var JSCompiler_inline_result$$0;" +
+        "{var a$$inline_1;" +
         "JSCompiler_inline_result$$0=function(){foo()};}" +
         "JSCompiler_inline_result$$0()");
 
@@ -1997,8 +2002,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test("function f() { if (x()) return y() }\n" +
          "while(1){ var m = f() || z() }",
          "for(;1;) {" +
+         "  var JSCompiler_inline_result$$0;" +
          "  {" +
-         "    var JSCompiler_inline_result$$0;" +
          "    JSCompiler_inline_label_f_1: {" +
          "      if(x()) {" +
          "        JSCompiler_inline_result$$0 = y();" +
@@ -2095,8 +2100,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "HangoutStarter.prototype.launchHangout = function() { " +
         "  var self$$2 = a.b;" +
         "  var JSCompiler_temp_const$$0 = goog.Uri;" +
-        "  {" +
         "  var JSCompiler_inline_result$$1;" +
+        "  {" +
         "  var self$$inline_2 = self$$2;" +
         "  if (!self$$inline_2.domServices_) {" +
         "    self$$inline_2.domServices_ = goog$component$DomServices.get(" +
@@ -2342,6 +2347,30 @@ public class InlineFunctionsTest extends CompilerTestCase {
              "f();"
             }
          );
+  }
+  
+  public void test6671158() {
+    test(
+        "function f() {return g()}" +
+        "function Y(a){a.loader_()}" +
+        "function _Z(){}" +
+        "function _X() { new _Z(a,b, Y(singleton), f()) }",
+
+        "function _Z(){}" +
+        "function _X(){" +
+        "  var JSCompiler_temp_const$$2=_Z;" +
+        "  var JSCompiler_temp_const$$1=a;" +
+        "  var JSCompiler_temp_const$$0=b;" +
+        "  var JSCompiler_inline_result$$3;" +
+        "  {" +
+        "    singleton.loader_();" +
+        "    JSCompiler_inline_result$$3=void 0;" +
+        "  }" +
+        "  new JSCompiler_temp_const$$2(" +
+        "    JSCompiler_temp_const$$1," +
+        "    JSCompiler_temp_const$$0," +
+        "    JSCompiler_inline_result$$3," +
+        "    g())}");
   }
 
 }

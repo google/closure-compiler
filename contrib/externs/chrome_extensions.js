@@ -309,12 +309,6 @@ chrome.windows.onRemoved;
  */
 chrome.windows.WINDOW_ID_NONE;
 
-/**
- * @see http://code.google.com/chrome/extensions/windows.html#property-WINDOW_ID_CURRENT
- * @type {number}
- */
-chrome.windows.WINDOW_ID_CURRENT;
-
 /** @see http://code.google.com/chrome/extensions/i18n.html */
 chrome.i18n = {};
 

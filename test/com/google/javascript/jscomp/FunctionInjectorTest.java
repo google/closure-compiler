@@ -161,7 +161,7 @@ public class FunctionInjectorTest extends TestCase {
     // "foo" is not known to be side-effect free, it might change the value
     // of "x", so it can't be inlined.
     helperCanInlineReferenceToFunction(
-        CanInlineResult.AFTER_DECOMPOSITION,
+        CanInlineResult.AFTER_PREPARATION,
         "function foo(){return true;}; var x; x=x+foo();",
         "foo", INLINE_BLOCK, true);
   }
@@ -467,34 +467,34 @@ public class FunctionInjectorTest extends TestCase {
 
   public void testCanInlineReferenceToFunctionInExpression1() {
     // Call in if condition
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; " +
         "function x() { if (foo(1)) throw 'test'; }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testCanInlineReferenceToFunctionInExpression2() {
     // Call in return expression
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; " +
         "function x() { return foo(1); }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testCanInlineReferenceToFunctionInExpression3() {
     // Call in switch expression
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; " +
         "function x() { switch(foo(1)) { default:break; } }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testCanInlineReferenceToFunctionInExpression4() {
     // Call in hook condition
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; " +
         "function x() {foo(1)?0:1 }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testCanInlineReferenceToFunctionInExpression5() {
@@ -508,7 +508,7 @@ public class FunctionInjectorTest extends TestCase {
  public void testCanInlineReferenceToFunctionInExpression5a() {
     // Call in hook side-effect free condition
     helperCanInlineReferenceToFunction(
-        CanInlineResult.AFTER_DECOMPOSITION,
+        CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; " +
         "function x() {true?foo(1):1 }",
         "foo", INLINE_BLOCK, true);
@@ -516,10 +516,10 @@ public class FunctionInjectorTest extends TestCase {
 
   public void testCanInlineReferenceToFunctionInExpression6() {
     // Call in expression statement "condition"
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; " +
         "function x() {foo(1) && 1 }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testCanInlineReferenceToFunctionInExpression7() {
@@ -533,7 +533,7 @@ public class FunctionInjectorTest extends TestCase {
   public void testCanInlineReferenceToFunctionInExpression7a() {
     // Call in expression statement after side-effect free "condition"
     helperCanInlineReferenceToFunction(
-        CanInlineResult.AFTER_DECOMPOSITION,
+        CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; " +
         "function x() {1 && foo(1) }",
         "foo", INLINE_BLOCK, true);
@@ -541,18 +541,18 @@ public class FunctionInjectorTest extends TestCase {
 
   public void testCanInlineReferenceToFunctionInExpression8() {
     // Call in expression statement after side-effect free operator
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; " +
         "function x() {1 + foo(1) }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testCanInlineReferenceToFunctionInExpression9() {
     // Call in VAR expression.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; " +
         "function x() {var b = 1 + foo(1)}",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testCanInlineReferenceToFunctionInExpression10() {
@@ -566,7 +566,7 @@ public class FunctionInjectorTest extends TestCase {
   public void testCanInlineReferenceToFunctionInExpression10a() {
     // Call in assignment expression.
     helperCanInlineReferenceToFunction(
-        CanInlineResult.AFTER_DECOMPOSITION,
+        CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; " +
         "function x() {var b; b += 1 + foo(1) }",
         "foo", INLINE_BLOCK, true);
@@ -581,17 +581,17 @@ public class FunctionInjectorTest extends TestCase {
 //   }
 
   public void testCanInlineReferenceToFunctionInExpression12() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; " +
         "function x() {var a,b,c; a = b = c = foo(1) }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testCanInlineReferenceToFunctionInExpression13() {
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; " +
         "function x() {var a,b,c; a = b = c = 1 + foo(1) }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testCanInlineReferenceToFunctionInExpression14() {
@@ -609,7 +609,7 @@ public class FunctionInjectorTest extends TestCase {
   public void testCanInlineReferenceToFunctionInExpression14a() {
     // ... foo can be inlined despite possible changes to "c".
     helperCanInlineReferenceToFunction(
-        CanInlineResult.AFTER_DECOMPOSITION,
+        CanInlineResult.AFTER_PREPARATION,
         "var a = {}, b = {}, c;" +
         "a.test = 'a';" +
         "b.test = 'b';" +
@@ -660,10 +660,10 @@ public class FunctionInjectorTest extends TestCase {
 
   public void testCanInlineReferenceToFunctionInExpression18() {
     // Call in within a call
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
         "function foo(){return _g();}; " +
         "function x() {1 + foo()() }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testCanInlineReferenceToFunctionInExpression19() {
@@ -681,7 +681,7 @@ public class FunctionInjectorTest extends TestCase {
     // change the value of "_g" which would unfortunately change the behavior,
     // so we can't inline here.
     helperCanInlineReferenceToFunction(
-        CanInlineResult.AFTER_DECOMPOSITION,
+        CanInlineResult.AFTER_PREPARATION,
         "function foo(){return a;}; " +
         "function x() {1 + _g(foo()) }",
         "foo", INLINE_BLOCK, true);
@@ -713,7 +713,7 @@ public class FunctionInjectorTest extends TestCase {
     // Note: This could be changed be inlined if we in some way make "z"
     // as not escaping from the local scope.
     helperCanInlineReferenceToFunction(
-        CanInlineResult.AFTER_DECOMPOSITION,
+        CanInlineResult.AFTER_PREPARATION,
         "var z = {};" +
         "function foo(a){z = {};return true;}; " +
         "function x() { z.gack = foo(1) }",
@@ -731,7 +731,7 @@ public class FunctionInjectorTest extends TestCase {
   public void testCanInlineReferenceToFunctionInExpression22a() {
     // ... foo() is after a side-effect
     helperCanInlineReferenceToFunction(
-        CanInlineResult.AFTER_DECOMPOSITION,
+        CanInlineResult.AFTER_PREPARATION,
         "function foo(){return a;}; " +
         "function x() {1 + _g(_a(), foo()) }",
         "foo", INLINE_BLOCK, true);
@@ -748,7 +748,7 @@ public class FunctionInjectorTest extends TestCase {
   public void testCanInlineReferenceToFunctionInExpression23a() {
     // ... foo() is after a side-effect
     helperCanInlineReferenceToFunction(
-        CanInlineResult.AFTER_DECOMPOSITION,
+        CanInlineResult.AFTER_PREPARATION,
         "function foo(){return a;}; " +
         "function x() {1 + _g(_a(), foo.call(this)) }",
         "foo", INLINE_BLOCK, true);
@@ -1038,10 +1038,10 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() { if (foo(1)) throw 'test'; }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result$$0; " +
-        "JSCompiler_inline_result$$0=true;}" +
+        "function x() { var JSCompiler_inline_result$$0; " +
+        "{JSCompiler_inline_result$$0=true;}" +
         "if (JSCompiler_inline_result$$0) throw 'test'; }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testInlineReferenceInExpression2() {
@@ -1050,10 +1050,10 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() { return foo(1); }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result$$0; " +
-        "JSCompiler_inline_result$$0=true;}" +
+        "function x() { var JSCompiler_inline_result$$0; " +
+        "{JSCompiler_inline_result$$0=true;}" +
         "return JSCompiler_inline_result$$0; }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testInlineReferenceInExpression3() {
@@ -1062,10 +1062,10 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() { switch(foo(1)) { default:break; } }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result$$0; " +
-        "JSCompiler_inline_result$$0=true;}" +
+        "function x() { var JSCompiler_inline_result$$0; " +
+        "{JSCompiler_inline_result$$0=true;}" +
         "switch(JSCompiler_inline_result$$0) { default:break; } }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testInlineReferenceInExpression4() {
@@ -1074,10 +1074,10 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {foo(1)?0:1 }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result$$0; " +
-        "JSCompiler_inline_result$$0=true;}" +
+        "function x() { var JSCompiler_inline_result$$0; " +
+        "{JSCompiler_inline_result$$0=true;}" +
         "JSCompiler_inline_result$$0?0:1 }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testInlineReferenceInExpression5() {
@@ -1086,10 +1086,10 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {foo(1)&&1 }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result$$0; " +
-        "JSCompiler_inline_result$$0=true;}" +
+        "function x() { var JSCompiler_inline_result$$0; " +
+        "{JSCompiler_inline_result$$0=true;}" +
         "JSCompiler_inline_result$$0&&1 }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testInlineReferenceInExpression6() {
@@ -1098,10 +1098,10 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {1 + foo(1) }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result$$0; " +
-        "JSCompiler_inline_result$$0=true;}" +
+        "function x() { var JSCompiler_inline_result$$0; " +
+        "{JSCompiler_inline_result$$0=true;}" +
         "1 + JSCompiler_inline_result$$0 }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testInlineReferenceInExpression7() {
@@ -1110,10 +1110,10 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {foo(1) && 1 }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result$$0; " +
-        "JSCompiler_inline_result$$0=true;}" +
+        "function x() { var JSCompiler_inline_result$$0; " +
+        "{JSCompiler_inline_result$$0=true;}" +
         "JSCompiler_inline_result$$0&&1 }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testInlineReferenceInExpression8() {
@@ -1122,10 +1122,10 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {1 + foo(1) }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result$$0; " +
-        "JSCompiler_inline_result$$0=true;}" +
+        "function x() { var JSCompiler_inline_result$$0;" +
+        "{JSCompiler_inline_result$$0=true;}" +
         "1 + JSCompiler_inline_result$$0 }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testInlineReferenceInExpression9() {
@@ -1134,10 +1134,12 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {var b = 1 + foo(1)}",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result$$0; " +
-        "JSCompiler_inline_result$$0=true;}" +
-        "var b = 1 + JSCompiler_inline_result$$0 }",
-        "foo", INLINE_BLOCK);
+        "function x() { " +
+        "var JSCompiler_inline_result$$0;" +
+        "{JSCompiler_inline_result$$0=true;}" +
+        "var b = 1 + JSCompiler_inline_result$$0 " +
+        "}",
+        "foo", INLINE_BLOCK, true);
   }
 
 // TODO(nicksantos): Re-enable with side-effect detection.
@@ -1160,18 +1162,28 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {a:foo(1)?0:1 }",
         "function foo(a){return true;}; " +
-        "function x() { a:{{var JSCompiler_inline_result$$0; " +
-        "JSCompiler_inline_result$$0=true;}" +
-        "JSCompiler_inline_result$$0?0:1 }}",
-        "foo", INLINE_BLOCK);
+        "function x() {" +
+        "  a:{" +
+        "    var JSCompiler_inline_result$$0; " +
+        "    {JSCompiler_inline_result$$0=true;}" +
+        "    JSCompiler_inline_result$$0?0:1 " +
+        "  }" +
+        "}",
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testInlineReferenceInExpression12() {
     helperInlineReferenceToFunction(
-        "function foo(a){return true;}; " +
-        "function x() {1?foo(1):1 }",
-        "function foo(a){return true;}; " +
-        "function x() { if(1) { {true;} } else { 1 }}",
+        "function foo(a){return true;}" +
+        "function x() { 1?foo(1):1; }",
+        "function foo(a){return true}" +
+        "function x() {" +
+        "  if(1) {" +
+        "    {true;}" +
+        "  } else {" +
+        "    1;" +
+        "  }" +
+        "}",
         "foo", INLINE_BLOCK, true);
   }
 
@@ -1202,8 +1214,8 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){z = {};return true;}; " +
         "function x() {" +
             "var JSCompiler_temp_const$$0=z;" +
+            "var JSCompiler_inline_result$$1;" +
             "{" +
-             "var JSCompiler_inline_result$$1;" +
              "z= {};" +
              "JSCompiler_inline_result$$1 = true;" +
             "}" +
@@ -1222,8 +1234,8 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){z = {};return true;}; " +
         "function x() {" +
             "var JSCompiler_temp_const$$0=z;" +
+            "var JSCompiler_inline_result$$1;" +
             "{" +
-             "var JSCompiler_inline_result$$1;" +
              "z= {};" +
              "JSCompiler_inline_result$$1 = true;" +
             "}" +
@@ -1243,8 +1255,8 @@ public class FunctionInjectorTest extends TestCase {
         "function x() {" +
             "var JSCompiler_temp_const$$1=z;" +
             "var JSCompiler_temp_const$$0=bar();" +
+            "var JSCompiler_inline_result$$2;" +
             "{" +
-             "var JSCompiler_inline_result$$2;" +
              "z= {};" +
              "JSCompiler_inline_result$$2 = true;" +
             "}" +
@@ -1264,8 +1276,8 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){z = {};return true;}; " +
         "function x() {" +
             "var JSCompiler_temp_const$$0=z.y.x;" +
+            "var JSCompiler_inline_result$$1;" +
             "{" +
-             "var JSCompiler_inline_result$$1;" +
              "z= {};" +
              "JSCompiler_inline_result$$1 = true;" +
             "}" +
@@ -1281,10 +1293,10 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(){return _g;}; " +
         "function x() {1 + foo()() }",
         "function foo(){return _g;}; " +
-        "function x() { {var JSCompiler_inline_result$$0; " +
-        "JSCompiler_inline_result$$0=_g;}" +
+        "function x() { var JSCompiler_inline_result$$0;" +
+        "{JSCompiler_inline_result$$0=_g;}" +
         "1 + JSCompiler_inline_result$$0() }",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
 // TODO(nicksantos): Re-enable with side-effect detection.
@@ -1296,7 +1308,7 @@ public class FunctionInjectorTest extends TestCase {
 //         "function x() { {var JSCompiler_inline_result$$0; " +
 //         "JSCompiler_inline_result$$0=true;}" +
 //         "1 + _g(JSCompiler_inline_result$$0) }",
-//         "foo", INLINE_BLOCK);
+//         "foo", INLINE_BLOCK, true);
 //   }
 
   public void testInlineAssignmentToConstant() {
@@ -1307,10 +1319,11 @@ public class FunctionInjectorTest extends TestCase {
 
         "function foo(){return _g;}; " +
         "function x() {" +
-        "  {var JSCompiler_inline_result$$0; JSCompiler_inline_result$$0=_g;}" +
+        "  var JSCompiler_inline_result$$0;" +
+        "  {JSCompiler_inline_result$$0=_g;}" +
         "  var CONSTANT_RESULT = JSCompiler_inline_result$$0;" +
         "}",
-        "foo", INLINE_BLOCK);
+        "foo", INLINE_BLOCK, true);
   }
 
   public void testBug1897706() {
@@ -1461,13 +1474,14 @@ public class FunctionInjectorTest extends TestCase {
         if (decompose) {
           assertTrue("canInlineReferenceToFunction " +
               "should be CAN_INLINE_AFTER_DECOMPOSITION",
-              CanInlineResult.AFTER_DECOMPOSITION == canInline);
+              CanInlineResult.AFTER_PREPARATION == canInline);
 
           Set<String> knownConstants = Sets.newHashSet();
+          ExpressionDecomposer decomposer = new ExpressionDecomposer(
+              compiler, compiler.getUniqueNameIdSupplier(), knownConstants);
           injector.setKnownConstants(knownConstants);
-          new ExpressionDecomposer(
-              compiler, compiler.getUniqueNameIdSupplier(), knownConstants)
-                  .maybeDecomposeExpression(n);
+          injector.maybePrepareCall(n);
+
           assertTrue("canInlineReferenceToFunction " +
               "should be CAN_INLINE",
               CanInlineResult.YES != canInline);

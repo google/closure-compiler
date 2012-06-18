@@ -184,77 +184,77 @@ public class ExpressionDecomposerTest extends TestCase {
         "HangoutStarter.prototype.launchHangout = function() {" +
         "  var self=a.b;" +
         "  var temp_const$$0=goog.Uri;" +
-        "  var temp$$0=getDomServices_(self);" +
-        "  var myUrl=new temp_const$$0(temp$$0.getDomHelper()." +
+        "  var result$$0=getDomServices_(self);" +
+        "  var myUrl=new temp_const$$0(result$$0.getDomHelper()." +
         "      getWindow().location.href)}");
   }
 
   public void testMoveExpression1() {
     // There isn't a reason to do this, but it works.
-    helperMoveExpression("foo()", "foo", "var temp$$0 = foo(); temp$$0;");
+    helperMoveExpression("foo()", "foo", "var result$$0 = foo(); result$$0;");
   }
 
   public void testMoveExpression2() {
     helperMoveExpression(
         "x = foo()",
         "foo",
-        "var temp$$0 = foo(); x = temp$$0;");
+        "var result$$0 = foo(); x = result$$0;");
   }
 
   public void testMoveExpression3() {
     helperMoveExpression(
         "var x = foo()",
         "foo",
-        "var temp$$0 = foo(); var x = temp$$0;");
+        "var result$$0 = foo(); var x = result$$0;");
   }
 
   public void testMoveExpression4() {
     helperMoveExpression(
         "if(foo()){}",
         "foo",
-        "var temp$$0 = foo(); if (temp$$0);");
+        "var result$$0 = foo(); if (result$$0);");
   }
 
   public void testMoveExpression5() {
     helperMoveExpression(
         "switch(foo()){}",
         "foo",
-        "var temp$$0 = foo(); switch(temp$$0){}");
+        "var result$$0 = foo(); switch(result$$0){}");
   }
 
   public void testMoveExpression6() {
     helperMoveExpression(
         "switch(1 + foo()){}",
         "foo",
-        "var temp$$0 = foo(); switch(1 + temp$$0){}");
+        "var result$$0 = foo(); switch(1 + result$$0){}");
   }
 
   public void testMoveExpression7() {
     helperMoveExpression(
         "function f(){ return foo();}",
         "foo",
-        "function f(){ var temp$$0 = foo(); return temp$$0;}");
+        "function f(){ var result$$0 = foo(); return result$$0;}");
   }
 
   public void testMoveExpression8() {
     helperMoveExpression(
         "x = foo() && 1",
         "foo",
-        "var temp$$0 = foo(); x = temp$$0 && 1");
+        "var result$$0 = foo(); x = result$$0 && 1");
   }
 
   public void testMoveExpression9() {
     helperMoveExpression(
         "x = foo() || 1",
         "foo",
-        "var temp$$0 = foo(); x = temp$$0 || 1");
+        "var result$$0 = foo(); x = result$$0 || 1");
   }
 
   public void testMoveExpression10() {
     helperMoveExpression(
         "x = foo() ? 0 : 1",
         "foo",
-        "var temp$$0 = foo(); x = temp$$0 ? 0 : 1");
+        "var result$$0 = foo(); x = result$$0 ? 0 : 1");
   }
 
   /* Decomposition tests. */
@@ -446,12 +446,12 @@ public class ExpressionDecomposerTest extends TestCase {
     helperMoveExpression(
         "var x = {get a() {}, b: foo()};",
         "foo",
-        "var temp$$0=foo();var x = {get a() {}, b: temp$$0};");
+        "var result$$0=foo();var x = {get a() {}, b: result$$0};");
 
     helperMoveExpression(
         "var x = {set a(p) {}, b: foo()};",
         "foo",
-        "var temp$$0=foo();var x = {set a(p) {}, b: temp$$0};");
+        "var result$$0=foo();var x = {set a(p) {}, b: result$$0};");
   }
 
   /** Test case helpers. */
@@ -552,6 +552,7 @@ public class ExpressionDecomposerTest extends TestCase {
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(), knownConstants);
     decomposer.setTempNamePrefix("temp");
+    decomposer.setResultNamePrefix("result");
     Node expectedRoot = parse(compiler, expectedResult);
     Node tree = parse(compiler, code);
     assertNotNull(tree);
@@ -597,6 +598,7 @@ public class ExpressionDecomposerTest extends TestCase {
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(), knownConstants);
     decomposer.setTempNamePrefix("temp");
+    decomposer.setResultNamePrefix("result");
     Node expectedRoot = parse(compiler, expectedResult);
     Node tree = parse(compiler, code);
     assertNotNull(tree);

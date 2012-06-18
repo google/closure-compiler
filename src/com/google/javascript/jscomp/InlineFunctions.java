@@ -535,7 +535,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       if (result != CanInlineResult.NO) {
         // Yeah!
         boolean decompose =
-          (result == CanInlineResult.AFTER_DECOMPOSITION);
+          (result == CanInlineResult.AFTER_PREPARATION);
         fs.addReference(new Reference(callNode, module, mode, decompose));
         return true;
       }
@@ -743,7 +743,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
    */
   private void resolveInlineConflictsForFunction(FunctionState fs) {
     // Functions that aren't referenced don't cause conflicts.
-    if (!fs.hasReferences()) {
+    if (!fs.hasReferences() || !fs.canInline()) {
       return;
     }
 
@@ -808,7 +808,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       if (fs.canInline()) {
         for (Reference ref : fs.getReferences()) {
           if (ref.requiresDecomposition) {
-            decomposer.maybeDecomposeExpression(ref.callNode);
+            injector.maybePrepareCall(ref.callNode);
           }
         }
       }
