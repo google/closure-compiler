@@ -27,10 +27,12 @@
 
 
 /**
- * @see http://www.w3.org/TR/FileAPI/#dfn-Blob
+ * @see http://dev.w3.org/2006/webapi/FileAPI/#dfn-Blob
+ * @param {Array.<ArrayBufferView|Blob|string>=} opt_blobParts
+ * @param {Object=} opt_options
  * @constructor
  */
-function Blob() {}
+function Blob(opt_blobParts, opt_options) {}
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-size
