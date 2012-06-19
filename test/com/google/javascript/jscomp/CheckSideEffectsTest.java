@@ -68,6 +68,10 @@ public class CheckSideEffectsTest extends CompilerTestCase {
          "var a, b; a = 5, JSCOMPILER_PRESERVE(b == 6)", e);
     test("var a, b; a = (5, 6)",
          "var a, b; a = (JSCOMPILER_PRESERVE(5), 6)", e);
+    test("var a, b; a = (bar(), 6, 7)",
+         "var a, b; a = (bar(), JSCOMPILER_PRESERVE(6), 7)", e);
+    test("var a, b; a = (bar(), bar(), 7, 8)",
+         "var a, b; a = (bar(), bar(), JSCOMPILER_PRESERVE(7), 8)", e);
     test("var a, b; a = (b = 7, 6)", ok);
     test("function x(){}\nfunction f(a, b){}\nf(1,(x(), 2));", ok);
     test("function x(){}\nfunction f(a, b){}\nf(1,(2, 3));",
@@ -83,6 +87,8 @@ public class CheckSideEffectsTest extends CompilerTestCase {
          "for(JSCOMPILER_PRESERVE(void 0); true; foo()) { bar() }", e);
     test("for(foo(); true; void 0) { bar() }",
          "for(foo(); true; JSCOMPILER_PRESERVE(void 0)) { bar() }", e);
+    test("for(foo(); true; (1, bar())) { bar() }",
+         "for(foo(); true; (JSCOMPILER_PRESERVE(1), bar())) { bar() }", e);
 
     test("for(foo in bar) { foo() }", ok);
     test("for (i = 0; el = el.previousSibling; i++) {}", ok);
