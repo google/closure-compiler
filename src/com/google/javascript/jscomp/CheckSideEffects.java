@@ -95,23 +95,58 @@ final class CheckSideEffects extends AbstractPostOrderCallback
       return;
     }
 
-    // Do not try to remove a block or an expr result. We already handle
-    // these cases when we visit the child, and the peephole passes will
-    // fix up the tree in more clever ways when these are removed.
-    if (n.isExprResult() || n.isBlock()) {
-      return;
+    int pt = parent.getType();
+    if (pt == Token.COMMA) {
+      Node gramps = parent.getParent();
+      if (gramps.isCall() &&
+          parent == gramps.getFirstChild()) {
+        // Semantically, a direct call to eval is different from an indirect
+        // call to an eval. See ECMA-262 S15.1.2.1. So it's OK for the first
+        // expression to a comma to be a no-op if it's used to indirect
+        // an eval.
+        if (n == parent.getFirstChild() &&
+            parent.getChildCount() == 2 &&
+            n.getNext().isName() &&
+            "eval".equals(n.getNext().getString())) {
+          return;
+        }
+      }
+
+      if (n == parent.getLastChild()) {
+        for (Node an : parent.getAncestors()) {
+          int ancestorType = an.getType();
+          if (ancestorType == Token.COMMA)
+            continue;
+          if (ancestorType != Token.EXPR_RESULT &&
+              ancestorType != Token.BLOCK)
+            return;
+          else
+            break;
+        }
+      }
+    } else if (pt != Token.EXPR_RESULT && pt != Token.BLOCK) {
+      if (pt == Token.FOR && parent.getChildCount() == 4 &&
+          (n == parent.getFirstChild() ||
+           n == parent.getFirstChild().getNext().getNext())) {
+        // Fall through and look for warnings for the 1st and 3rd child
+        // of a for.
+      } else {
+        return;  // it might be OK to not have a side-effect
+      }
     }
 
-    // This no-op statement was there so that JSDoc information could
-    // be attached to the name. This check should not complain about it.
-    if (n.isQualifiedName() && n.getJSDocInfo() != null) {
-      return;
-    }
-
-    boolean isResultUsed = NodeUtil.isExpressionResultUsed(n);
     boolean isSimpleOp = NodeUtil.isSimpleOperatorType(n.getType());
-    if (!isResultUsed &&
-        (isSimpleOp || !NodeUtil.mayHaveSideEffects(n, t.getCompiler()))) {
+    if (isSimpleOp ||
+        !NodeUtil.mayHaveSideEffects(n, t.getCompiler())) {
+      if (n.isQualifiedName() && n.getJSDocInfo() != null) {
+        // This no-op statement was there so that JSDoc information could
+        // be attached to the name. This check should not complain about it.
+        return;
+      } else if (n.isExprResult()) {
+        // we already reported the problem when we visited the child.
+        return;
+      }
+
       String msg = "This code lacks side-effects. Is there a bug?";
       if (n.isString()) {
         msg = "Is there a missing '+' on the previous line?";
