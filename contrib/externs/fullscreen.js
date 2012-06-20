@@ -47,8 +47,10 @@ Document.prototype.mozFullScreenElement;
 /** @type {boolean} */
 Document.prototype.mozFullScreenEnabled;
 
-// Chrome 18 implementation.
+// Chrome 21 implementation.
 Element.prototype.webkitRequestFullScreen = function() {};
+
+Element.prototype.webkitRequestFullscreen = function() {};
 
 /** @type {boolean} */
 Document.prototype.webkitIsFullScreen;
