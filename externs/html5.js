@@ -2445,3 +2445,34 @@ HTMLTextAreaElement.prototype.checkValidity = function() {};
 
 /** @param {string} message */
 HTMLTextAreaElement.prototype.setCustomValidity = function(message) {};
+
+/**
+ * @constructor
+ * @extends {HTMLElement}
+ * @see http://www.w3.org/TR/html5/the-embed-element.html#htmlembedelement
+ */
+function HTMLEmbedElement() {}
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/html5/dimension-attributes.html#dom-dim-width
+ */
+HTMLEmbedElement.prototype.width;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/html5/dimension-attributes.html#dom-dim-height
+ */
+HTMLEmbedElement.prototype.height;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/html5/the-embed-element.html#dom-embed-src
+ */
+HTMLEmbedElement.prototype.src;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/html5/the-embed-element.html#dom-embed-type
+ */
+HTMLEmbedElement.prototype.type;
