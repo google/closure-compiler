@@ -190,6 +190,8 @@ public class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = Lists.newArrayList();
 
+    checks.add(createEmptyPass("beforeStandardChecks"));
+
     if (options.closurePass) {
       checks.add(closureGoogScopeAliases);
     }
