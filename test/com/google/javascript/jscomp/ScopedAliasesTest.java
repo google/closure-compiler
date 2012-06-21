@@ -174,6 +174,62 @@ public class ScopedAliasesTest extends CompilerTestCase {
          "OtherPopup.newMethod = function() { return new OtherPopup(); };");
   }
 
+  public void testShadowedScopedVar() {
+    test("var goog = {};" +
+         "goog.bar = {};" +
+         "goog.scope(function() {" +
+         "  var bar = goog.bar;" +
+         // This is bogus, because when the aliases are expanded, goog will
+         // shadow goog.bar.
+         "  bar.newMethod = function(goog) { return goog + bar; };" +
+         "});",
+         "var goog={};" +
+         "goog.bar={};" +
+         "goog.bar.newMethod=function(goog$$1){return goog$$1 + goog.bar}");
+  }
+
+  public void testShadowedScopedVarTwoScopes() {
+    test("var goog = {};" +
+         "goog.bar = {};" +
+         "goog.scope(function() {" +
+         "  var bar = goog.bar;" +
+         "  bar.newMethod = function(goog, a) { return bar + a; };" +
+         "});" +
+         "goog.scope(function() {" +
+         "  var bar = goog.bar;" +
+         "  bar.newMethod2 = function(goog, b) { return bar + b; };" +
+         "});",
+         "var goog={};" +
+         "goog.bar={};" +
+         "goog.bar.newMethod=function(goog$$1, a){return goog.bar + a};" +
+         "goog.bar.newMethod2=function(goog$$1, b){return goog.bar + b};");
+  }
+
+  public void testUsingObjectLiteralToEscapeScoping() {
+    // There are many ways to shoot yourself in the foot with goog.scope
+    // and make the compiler generate bad code. We generally don't care.
+    //
+    // We only try to protect against accidental mis-use, not deliberate
+    // mis-use.
+    test(
+        "var goog = {};" +
+        "goog.bar = {};" +
+        "goog.scope(function() {" +
+        "  var bar = goog.bar;" +
+        "  var baz = goog.bar.baz;" +
+        "  goog.foo = function() {" +
+        "    goog.bar = {baz: 3};" +
+        "    return baz;" +
+        "  };" +
+        "});",
+        "var goog = {};" +
+        "goog.bar = {};" +
+        "goog.foo = function(){" +
+        "  goog.bar = {baz:3};" +
+        "  return goog.bar.baz;" +
+        "};");
+  }
+
   private void testTypes(String aliases, String code) {
     testScopedNoChanges(aliases, code);
     verifyTypes();

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
 import com.google.javascript.jscomp.Scope.Var;
@@ -29,6 +30,7 @@ import com.google.javascript.rhino.Token;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -192,6 +194,19 @@ class ScopedAliases implements HotSwapCompilerPass {
     // This map is temporary and cleared for each scope.
     private final Map<String, Var> aliases = Maps.newHashMap();
 
+    // Suppose you create an alias.
+    // var x = goog.x;
+    // As a side-effect, this means you can shadow the namespace 'goog'
+    // in inner scopes. When we inline the namespaces, we have to rename
+    // these shadows.
+    //
+    // Fortunately, we already have a name uniquifier that runs during tree
+    // normalization (before optimizations). We run it here on a limited
+    // set of variables, but only as a last resort (because this will screw
+    // up warning messages downstream).
+    private final Set<String> forbiddenLocals = Sets.newHashSet();
+    private boolean hasNamespaceShadows = false;
+
     private boolean hasErrors = false;
 
     private AliasTransformation transformation = null;
@@ -229,9 +244,16 @@ class ScopedAliases implements HotSwapCompilerPass {
 
     @Override
     public void exitScope(NodeTraversal t) {
+      if (t.getScopeDepth() > 2) {
+        findNamespaceShadows(t);
+      }
+
       if (t.getScopeDepth() == 2) {
+        renameNamespaceShadows(t);
         aliases.clear();
+        forbiddenLocals.clear();
         transformation = null;
+        hasNamespaceShadows = false;
       }
     }
 
@@ -284,6 +306,14 @@ class ScopedAliases implements HotSwapCompilerPass {
           String qualifiedName =
               aliasVar.getInitialValue().getQualifiedName();
           transformation.addAlias(name, qualifiedName);
+
+          int rootIndex = qualifiedName.indexOf(".");
+          if (rootIndex != -1) {
+            String qNameRoot = qualifiedName.substring(0, rootIndex);
+            if (!aliases.containsKey(qNameRoot)) {
+              forbiddenLocals.add(qNameRoot);
+            }
+          }
         } else if (v.isBleedingFunction()) {
           // Bleeding functions already get a BAD_PARAMETERS error, so just
           // do nothing.
@@ -294,6 +324,41 @@ class ScopedAliases implements HotSwapCompilerPass {
           // TODO(robbyw): Support using locals for private variables.
           report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
         }
+      }
+    }
+
+    /** Find out if there are any local shadows of namespaces. */
+    private void findNamespaceShadows(NodeTraversal t) {
+      if (hasNamespaceShadows) {
+        return;
+      }
+
+      Scope scope = t.getScope();
+      for (Var v : scope.getVarIterable()) {
+        if (forbiddenLocals.contains(v.getName())) {
+          hasNamespaceShadows = true;
+          return;
+        }
+      }
+    }
+
+    /**
+     * Rename any local shadows of namespaces.
+     * This should be a very rare occurrence, so only do this traversal
+     * if we know that we need it.
+     */
+    private void renameNamespaceShadows(NodeTraversal t) {
+      if (hasNamespaceShadows) {
+        MakeDeclaredNamesUnique.Renamer renamer =
+            new MakeDeclaredNamesUnique.WhitelistedRenamer(
+                new MakeDeclaredNamesUnique.ContextualRenamer(),
+                forbiddenLocals);
+        for (String s : forbiddenLocals) {
+          renamer.addDeclaredName(s);
+        }
+        MakeDeclaredNamesUnique uniquifier =
+            new MakeDeclaredNamesUnique(renamer);
+        NodeTraversal.traverse(compiler, t.getScopeRoot(), uniquifier);
       }
     }
 

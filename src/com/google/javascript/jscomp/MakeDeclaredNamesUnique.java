@@ -591,4 +591,34 @@ class MakeDeclaredNamesUnique
     }
   }
 
+  /** Only rename things that match the whitelist. Wraps another renamer. */
+  static class WhitelistedRenamer implements Renamer {
+    private Renamer delegate;
+    private Set<String> whitelist;
+
+    WhitelistedRenamer(Renamer delegate, Set<String> whitelist) {
+      this.delegate = delegate;
+      this.whitelist = whitelist;
+    }
+
+    @Override public void addDeclaredName(String name) {
+      if (whitelist.contains(name)) {
+        delegate.addDeclaredName(name);
+      }
+    }
+
+    @Override public String getReplacementName(String oldName) {
+      return whitelist.contains(oldName)
+          ? delegate.getReplacementName(oldName) : null;
+    }
+
+    @Override public boolean stripConstIfReplaced() {
+      return delegate.stripConstIfReplaced();
+    }
+
+    @Override public Renamer forChildScope() {
+      return new WhitelistedRenamer(delegate.forChildScope(), whitelist);
+    }
+  }
+
 }
