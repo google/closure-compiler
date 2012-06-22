@@ -83,6 +83,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
   protected JSType NUMBER_STRING_BOOLEAN;
   protected JSType NUMBER_TYPE;
   protected FunctionType OBJECT_FUNCTION_TYPE;
+  protected JSType NULL_VOID;
   protected JSType OBJECT_NUMBER_STRING;
   protected JSType OBJECT_NUMBER_STRING_BOOLEAN;
   protected JSType OBJECT_PROTOTYPE;
@@ -172,6 +173,8 @@ public abstract class BaseJSTypeTestCase extends TestCase {
         registry.getNativeType(JSTypeNative.NUMBER_TYPE);
     OBJECT_FUNCTION_TYPE =
         registry.getNativeFunctionType(JSTypeNative.OBJECT_FUNCTION_TYPE);
+    NULL_VOID =
+        registry.getNativeType(JSTypeNative.NULL_VOID);
     OBJECT_NUMBER_STRING =
         registry.getNativeType(JSTypeNative.OBJECT_NUMBER_STRING);
     OBJECT_NUMBER_STRING_BOOLEAN =

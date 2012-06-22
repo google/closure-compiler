@@ -144,6 +144,11 @@ public enum JSTypeNative {
   GREATEST_FUNCTION_TYPE,
 
   /**
+   * (null, void)
+   */
+  NULL_VOID,
+
+  /**
    * (Object,number,string)
    */
   OBJECT_NUMBER_STRING,

@@ -462,6 +462,11 @@ public class JSTypeRegistry implements Serializable {
     registerNativeType(
         JSTypeNative.STRING_OBJECT_TYPE, STRING_OBJECT_TYPE);
 
+    // (null,void)
+    JSType NULL_VOID =
+        createUnionType(NULL_TYPE, VOID_TYPE);
+    registerNativeType(JSTypeNative.NULL_VOID, NULL_VOID);
+
     // (Object,string,number)
     JSType OBJECT_NUMBER_STRING =
         createUnionType(OBJECT_TYPE, NUMBER_TYPE, STRING_TYPE);
