@@ -88,8 +88,7 @@ class RemoveUnusedClassProperties
      switch (n.getType()) {
        case Token.GETPROP: {
          String propName = n.getLastChild().getString();
-         if (inExterns || isPinningPropertyUse(n) ||
-             compiler.getCodingConvention().isExported(propName)) {
+         if (inExterns || isPinningPropertyUse(n)) {
            used.add(propName);
          } else {
            // This is a definition of a property but it is only removable

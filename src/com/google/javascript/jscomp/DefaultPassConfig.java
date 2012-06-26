@@ -737,7 +737,7 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(removeUnusedPrototypeProperties);
     }
 
-    if (options.removeUnusedClassProperties) {
+    if (options.removeUnusedClassProperties && !isInliningForbidden()) {
       passes.add(removeUnusedClassProperties);
     }
 
