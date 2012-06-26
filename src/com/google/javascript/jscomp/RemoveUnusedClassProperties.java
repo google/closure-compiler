@@ -86,9 +86,11 @@ class RemoveUnusedClassProperties
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
      switch (n.getType()) {
-       case Token.GETPROP:
-         if (inExterns || isPinningPropertyUse(n)) {
-           used.add(n.getLastChild().getString());
+       case Token.GETPROP: {
+         String propName = n.getLastChild().getString();
+         if (inExterns || isPinningPropertyUse(n) ||
+             compiler.getCodingConvention().isExported(propName)) {
+           used.add(propName);
          } else {
            // This is a definition of a property but it is only removable
            // if it is defined on "this".
@@ -97,6 +99,7 @@ class RemoveUnusedClassProperties
            }
          }
          break;
+       }
 
        case Token.CALL:
          // Look for properties referenced through "JSCompiler_propertyRename".
