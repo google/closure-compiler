@@ -23,8 +23,22 @@
 
 /**
  * @constructor
+ * @implements {EventTarget}
+ * @param {string} url
+ * @param {Object=} opt_eventSourceInitDict
  */
-function EventSource() {}
+function EventSource(url, opt_eventSourceInitDict) {}
+
+/** @override */
+EventSource.prototype.addEventListener = function(
+    type, listener, useCapture) {};
+
+/** @override */
+EventSource.prototype.removeEventListener = function(
+    type, listener, useCapture) {};
+
+/** @override */
+EventSource.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @type {string}
