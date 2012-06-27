@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import javax.annotation.Nullable;
-
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -289,7 +288,7 @@ class StripCode implements CompilerPass {
       //   l-value
       //   r-value
       Node lvalue = n.getFirstChild();
-      if (nameContainsFieldNameToStrip(lvalue) ||
+      if (nameEndsWithFieldNameToStrip(lvalue) ||
           qualifiedNameBeginsWithStripType(lvalue)) {
 
         // Limit to EXPR_RESULT because it is not
@@ -322,7 +321,7 @@ class StripCode implements CompilerPass {
       // EXPR_RESULT
       //   expression
       Node expression = n.getFirstChild();
-      if (nameContainsFieldNameToStrip(expression) ||
+      if (nameEndsWithFieldNameToStrip(expression) ||
           qualifiedNameBeginsWithStripType(expression)) {
         if (parent.isExprResult()) {
           Node gramps = parent.getParent();
@@ -397,7 +396,7 @@ class StripCode implements CompilerPass {
            n.isNew()) &&
           n.hasChildren() &&
           (qualifiedNameBeginsWithStripType(n.getFirstChild()) ||
-              nameContainsFieldNameToStrip(n.getFirstChild()));
+              nameEndsWithFieldNameToStrip(n.getFirstChild()));
     }
 
     /**
@@ -497,21 +496,25 @@ class StripCode implements CompilerPass {
       }
 
       Node callee = function.getFirstChild();
-      return nameContainsFieldNameToStrip(callee) ||
-          nameContainsFieldNameToStrip(function) ||
+      return nameEndsWithFieldNameToStrip(callee) ||
+          nameEndsWithFieldNameToStrip(function) ||
           qualifiedNameBeginsWithStripType(function) ||
           actsOnStripType(t, n);
     }
 
     /**
-     * @return Whether the node is a name contains a property that should be
-     *     stripped
+     * Gets whether a name ends with a field name that should be stripped. For
+     * example, this function would return true when passed "this.logger" or
+     * "a.b.c.myLogger" if "logger" is a strip name.
+     *
+     * @param n A node (typically a GETPROP node)
+     * @return Whether the name ends with a field name that should be stripped
      */
-    boolean nameContainsFieldNameToStrip(@Nullable Node n) {
+    boolean nameEndsWithFieldNameToStrip(@Nullable Node n) {
       if (n != null && n.isGetProp()) {
         Node propNode = n.getLastChild();
-        return isStripName(propNode.getString())
-            || nameContainsFieldNameToStrip(n.getFirstChild());
+        return propNode != null && propNode.isString() &&
+               isStripName(propNode.getString());
       }
       return false;
     }
