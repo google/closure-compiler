@@ -923,7 +923,15 @@ final class TypedScopeCreator implements ScopeCreator {
                 info, ownerType.getOwnerFunction().getInstanceType());
             searchedForThisType = true;
           } else if (ownerNode != null && ownerNode.isThis()) {
-            builder.inferThisType(info, ownerNode.getJSType());
+            // If 'this' has a type, use that instead.
+            // This is a hack, necessary because CollectProperties (below)
+            // doesn't run with the scope that it's building,
+            // so scope.getTypeOfThis() will be wrong.
+            JSType injectedThisType = ownerNode.getJSType();
+            builder.inferThisType(
+                info,
+                injectedThisType == null ?
+                scope.getTypeOfThis() : injectedThisType);
             searchedForThisType = true;
           }
 

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_INSTANCE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
@@ -42,6 +43,7 @@ import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.testing.Asserts;
 
@@ -57,7 +59,8 @@ public class TypeInferenceTest extends TestCase {
 
   private Compiler compiler;
   private JSTypeRegistry registry;
-  private Map<String,JSType> assumptions;
+  private Map<String, JSType> assumptions;
+  private JSType assumedThisType;
   private FlowScope returnScope;
   private static final Map<String, AssertionFunctionSpec>
       ASSERTION_FUNCTION_MAP = Maps.newHashMap();
@@ -80,6 +83,10 @@ public class TypeInferenceTest extends TestCase {
     returnScope = null;
   }
 
+  private void assumingThisType(JSType type) {
+    assumedThisType = type;
+  }
+
   private void assuming(String name, JSType type) {
     assumptions.put(name, type);
   }
@@ -90,7 +97,11 @@ public class TypeInferenceTest extends TestCase {
 
   private void inFunction(String js) {
     // Parse the body of the function.
-    Node root = compiler.parseTestCode("(function() {" + js + "});");
+    String thisBlock = assumedThisType == null
+        ? ""
+        : "/** @this {" + assumedThisType + "} */";
+    Node root = compiler.parseTestCode(
+        "(" + thisBlock + " function() {" + js + "});");
     assertEquals("parsing error: " +
         Joiner.on(", ").join(compiler.getErrors()),
         0, compiler.getErrorCount());
@@ -101,7 +112,7 @@ public class TypeInferenceTest extends TestCase {
     Scope assumedScope = scopeCreator.createScope(
         n, scopeCreator.createScope(root, null));
     for (Map.Entry<String,JSType> entry : assumptions.entrySet()) {
-      assumedScope.declare(entry.getKey(), null, entry.getValue(), null);
+      assumedScope.declare(entry.getKey(), null, entry.getValue(), null, false);
     }
     // Create the control graph.
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
@@ -228,6 +239,33 @@ public class TypeInferenceTest extends TestCase {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction("var y = 1; if (x) { y = x; }");
     verify("y", createUnionType(OBJECT_TYPE, NUMBER_TYPE));
+  }
+
+  public void testPropertyInference1() {
+    ObjectType thisType = registry.createAnonymousObjectType();
+    thisType.defineDeclaredProperty("foo",
+        createUndefinableType(STRING_TYPE), null);
+    assumingThisType(thisType);
+    inFunction("var y = 1; if (this.foo) { y = this.foo; }");
+    verify("y", createUnionType(NUMBER_TYPE, STRING_TYPE));
+  }
+
+  public void testPropertyInference2() {
+    ObjectType thisType = registry.createAnonymousObjectType();
+    thisType.defineDeclaredProperty("foo",
+        createUndefinableType(STRING_TYPE), null);
+    assumingThisType(thisType);
+    inFunction("var y = 1; this.foo = 'x'; y = this.foo;");
+    verify("y", STRING_TYPE);
+  }
+
+  public void testPropertyInference3() {
+    ObjectType thisType = registry.createAnonymousObjectType();
+    thisType.defineDeclaredProperty("foo",
+        createUndefinableType(STRING_TYPE), null);
+    assumingThisType(thisType);
+    inFunction("var y = 1; this.foo = x; y = this.foo;");
+    verify("y", CHECKED_UNKNOWN_TYPE);
   }
 
   public void testAssert1() {

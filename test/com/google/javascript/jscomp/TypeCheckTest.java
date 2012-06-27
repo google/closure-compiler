@@ -5954,6 +5954,26 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Property name2 never defined on rec");
   }
 
+  public void testIssue765() throws Exception {
+    testTypes(
+        "/** @constructor */" +
+        "var AnotherType = function (parent) {" +
+        "    /** @param {string} stringParameter Description... */" +
+        "    this.doSomething = function (stringParameter) {};" +
+        "};" +
+        "/** @constructor */" +
+        "var YetAnotherType = function () {" +
+        "    this.field = new AnotherType(self);" +
+        "    this.testfun=function(stringdata) {" +
+        "        this.field.doSomething(null);" +
+        "    };" +
+        "};",
+        "actual parameter 1 of AnotherType.doSomething " +
+        "does not match formal parameter\n" +
+        "found   : null\n" +
+        "required: string");
+  }
+
   /**
    * Tests that the || operator is type checked correctly, that is of
    * the type of the first argument or of the second argument. See

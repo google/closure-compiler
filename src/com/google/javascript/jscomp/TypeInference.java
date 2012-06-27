@@ -1196,30 +1196,39 @@ class TypeInference
 
   private JSType getPropertyType(JSType objType, String propName,
       Node n, FlowScope scope) {
+    // We often have a couple of different types to choose from for the
+    // property. Ordered by accuracy, we have
+    // 1) A locally inferred qualified name (which is in the FlowScope)
+    // 2) A globally declared qualified name (which is in the FlowScope)
+    // 3) A property on the owner type (which is on objType)
+    // 4) A name in the type registry (as a last resort)
+    JSType unknownType = getNativeType(UNKNOWN_TYPE);
+    JSType propertyType = null;
+    boolean isLocallyInferred = false;
+
     // Scopes sometimes contain inferred type info about qualified names.
     String qualifiedName = n.getQualifiedName();
     StaticSlot<JSType> var = scope.getSlot(qualifiedName);
     if (var != null) {
       JSType varType = var.getType();
       if (varType != null) {
-        if (varType.equals(getNativeType(UNKNOWN_TYPE)) &&
-            var != syntacticScope.getSlot(qualifiedName)) {
-          // If the type of this qualified name has been checked in this scope,
-          // then use CHECKED_UNKNOWN_TYPE instead to indicate that.
-          return getNativeType(CHECKED_UNKNOWN_TYPE);
-        } else {
-          return varType;
+        boolean isDeclared = !var.isTypeInferred();
+        isLocallyInferred = (var != syntacticScope.getSlot(qualifiedName));
+        if (isDeclared || isLocallyInferred) {
+          propertyType = varType;
         }
       }
     }
 
-    JSType propertyType = null;
-    if (objType != null) {
-      propertyType = objType.findPropertyType(propName);
+    if (propertyType == null && objType != null) {
+      JSType foundType = objType.findPropertyType(propName);
+      if (foundType != null) {
+        propertyType = foundType;
+      }
     }
 
-    if ((propertyType == null || propertyType.isUnknownType()) &&
-        qualifiedName != null) {
+    if ((propertyType == null || propertyType.isUnknownType())
+        && qualifiedName != null) {
       // If we find this node in the registry, then we can infer its type.
       ObjectType regType = ObjectType.cast(registry.getType(qualifiedName));
       if (regType != null) {
@@ -1227,7 +1236,15 @@ class TypeInference
       }
     }
 
-    return propertyType;
+    if (propertyType == null) {
+      return getNativeType(UNKNOWN_TYPE);
+    } else if (propertyType.equals(unknownType) && isLocallyInferred) {
+      // If the type has been checked in this scope,
+      // then use CHECKED_UNKNOWN_TYPE instead to indicate that.
+      return getNativeType(CHECKED_UNKNOWN_TYPE);
+    } else {
+      return propertyType;
+    }
   }
 
   private BooleanOutcomePair traverseOr(Node n, FlowScope scope) {
