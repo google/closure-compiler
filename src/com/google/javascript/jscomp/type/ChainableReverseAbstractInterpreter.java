@@ -169,6 +169,10 @@ public abstract class ChainableReverseAbstractInterpreter
         scope.inferQualifiedSlot(node, qualifiedName, origType, type);
         break;
 
+      case Token.THIS:
+        // "this" references aren't currently modeled in the CFG.
+        break;
+
       default:
         throw new IllegalArgumentException("Node cannot be refined. \n" +
             node.toStringTree());
