@@ -664,14 +664,6 @@ chrome.experimental.extension = {};
  */
 chrome.experimental.extension.getPopupView = function() {};
 
-/** @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/experimental.identity.json */
-chrome.experimental.identity = {};
-
-/**
- * @param {function(string)} callback
- */
-chrome.experimental.identity.getAuthToken = function(callback) {};
-
 /** @see http://code.google.com/chrome/extensions/experimental.infobars.html */
 chrome.experimental.infobars = {};
 
