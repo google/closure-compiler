@@ -556,9 +556,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Processes jQuery aliases */
   public boolean jqueryPass;
 
-  /** Rewrite new Date(goog.now()) to new Date().  */
-  boolean rewriteNewDateGoogNow;
-
   /** Remove goog.abstractMethod assignments. */
   boolean removeAbstractMethods;
 
@@ -877,7 +874,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     removeTryCatchFinally = false;
     closurePass = false;
     jqueryPass = false;
-    rewriteNewDateGoogNow = true;
     removeAbstractMethods = true;
     removeClosureAsserts = false;
     stripTypes = Collections.emptySet();
@@ -1234,8 +1230,8 @@ public class CompilerOptions implements Serializable, Cloneable {
         Lists.newArrayList(functionDescriptors);
   }
 
+  @Deprecated
   public void setRewriteNewDateGoogNow(boolean rewrite) {
-    this.rewriteNewDateGoogNow = rewrite;
   }
 
   public void setRemoveAbstractMethods(boolean remove) {

@@ -917,8 +917,7 @@ public class DefaultPassConfig extends PassConfig {
       final ProcessClosurePrimitives pass = new ProcessClosurePrimitives(
           compiler,
           preprocessorSymbolTable,
-          options.brokenClosureRequiresLevel,
-          options.rewriteNewDateGoogNow);
+          options.brokenClosureRequiresLevel);
 
       return new HotSwapCompilerPass() {
         @Override
