@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -165,18 +166,24 @@ class ScopedAliases implements HotSwapCompilerPass {
   }
 
   private class AliasedTypeNode implements AliasUsage {
-    private final Node aliasReference;
+    private final Node typeReference;
+    private final Node aliasDefinition;
+    private final String aliasName;
 
-    private final String correctedType;
-
-    AliasedTypeNode(Node aliasReference, String correctedType) {
-      this.aliasReference = aliasReference;
-      this.correctedType = correctedType;
+    AliasedTypeNode(Node typeReference, Node aliasDefinition,
+        String aliasName) {
+      this.typeReference = typeReference;
+      this.aliasDefinition = aliasDefinition;
+      this.aliasName = aliasName;
     }
 
     @Override
     public void applyAlias() {
-      aliasReference.setString(correctedType);
+      String typeName = typeReference.getString();
+      String aliasExpanded =
+          Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
+      Preconditions.checkState(typeName.startsWith(aliasName));
+      typeReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
     }
   }
 
@@ -464,8 +471,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         Var aliasVar = aliases.get(baseName);
         if (aliasVar != null) {
           Node aliasedNode = aliasVar.getInitialValue();
-          aliasUsages.add(new AliasedTypeNode(typeNode,
-              aliasedNode.getQualifiedName() + name.substring(endIndex)));
+          aliasUsages.add(new AliasedTypeNode(typeNode, aliasedNode, baseName));
         }
       }
 

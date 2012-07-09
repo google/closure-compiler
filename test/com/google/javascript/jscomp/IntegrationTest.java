@@ -1861,6 +1861,30 @@ public class IntegrationTest extends IntegrationTestCase {
         "");
   }
 
+  public void testIssue772() throws Exception {
+    CompilerOptions options = createCompilerOptions();
+    options.closurePass = true;
+    options.checkTypes = true;
+    test(
+        options,
+        "/** @const */ var a = {};" +
+        "/** @const */ a.b = {};" +
+        "/** @const */ a.b.c = {};" +
+        "goog.scope(function() {" +
+        "  var b = a.b;" +
+        "  var c = b.c;" +
+        "  /** @typedef {string} */" +
+        "  c.MyType;" +
+        "  /** @param {c.MyType} x The variable. */" +
+        "  c.myFunc = function(x) {};" +
+        "});",
+        "/** @const */ var a = {};" +
+        "/** @const */ a.b = {};" +
+        "/** @const */ a.b.c = {};" +
+        "a.b.c.MyType;" +
+        "a.b.c.myFunc = function(x) {};");
+  }
+
   public void testCodingConvention() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());

@@ -403,6 +403,14 @@ public class ScopedAliasesTest extends CompilerTestCase {
         + "/** @param draggable */ types.expected;");
   }
 
+  public void testIssue772() {
+    testTypes(
+        "var b = a.b;" +
+        "var c = b.c;",
+        "/** @param {c.MyType} x */ types.actual;" +
+        "/** @param {a.b.c.MyType} x */ types.expected;");
+  }
+
   // TODO(robbyw): What if it's recursive?  var goog = goog.dom;
 
   // FAILURE CASES
