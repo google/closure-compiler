@@ -61,6 +61,13 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     inline("var x = 1; x = x + 1", "var x; x = 1 + 1");
   }
 
+  public void testSimpleForIn() {
+    inline("var a,b,x = a in b; x",
+           "var a,b,x; a in b");
+    noInline("var a, b; var x = a in b; print(1); x");
+    noInline("var a,b,x = a in b; delete a[b]; x");
+  }
+
   public void testExported() {
     noInline("var _x = 1; print(_x)");
   }

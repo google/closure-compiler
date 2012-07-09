@@ -406,6 +406,8 @@ public class NodeUtilTest extends TestCase {
     assertSideEffect(false, "({}||[]).foo = 2;");
     assertSideEffect(false, "(true ? {} : []).foo = 2;");
     assertSideEffect(false, "({},[]).foo = 2;");
+
+    assertSideEffect(true, "delete a.b");
   }
 
   public void testObjectMethodSideEffects() {
