@@ -1015,6 +1015,12 @@ Element.prototype.innerText;
 Element.prototype.isContentEditable;
 
 /**
+ * @param {number} pointerId Id of the pointer that is assign to the element.
+ * @see http://msdn.microsoft.com/en-us/library/ie/hh771882(v=vs.85).aspx
+ */
+Element.prototype.msSetPointerCapture = function(pointerId) {};
+
+/**
  * @type {?function(Event)}
  * @see http://msdn.microsoft.com/en-us/library/ms536903(v=vs.85).aspx
  */
