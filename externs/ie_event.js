@@ -181,3 +181,61 @@ MSPointerEvent.prototype.pointerId;
 
 /** @type {number} */
 MSPointerEvent.prototype.pointerType;
+
+/**
+ * @constructor
+ * @see http://msdn.microsoft.com/en-us/library/ie/hh968249(v=vs.85).aspx
+ */
+function MSGesture() {}
+
+/**
+ * @type {Element}
+ */
+MSGesture.prototype.target;
+
+/**
+ * @param {number} pointerId
+ */
+MSGesture.prototype.addPointer = function(pointerId) {};
+
+MSGesture.prototype.stop = function() {};
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @see http://msdn.microsoft.com/en-us/library/ie/hh772076(v=vs.85).aspx
+ */
+function MSGestureEvent() {}
+
+/** @type {number} */
+MSGestureEvent.prototype.expansion;
+
+/** @type {!MSGesture} */
+MSGestureEvent.prototype.gestureObject;
+
+/** @type {number} */
+MSGestureEvent.prototype.hwTimestamp;
+
+/** @type {number} */
+MSGestureEvent.prototype.rotation;
+
+/** @type {number} */
+MSGestureEvent.prototype.scale;
+
+/** @type {number} */
+MSGestureEvent.prototype.translationX;
+
+/** @type {number} */
+MSGestureEvent.prototype.translationY;
+
+/** @type {number} */
+MSGestureEvent.prototype.velocityAngular;
+
+/** @type {number} */
+MSGestureEvent.prototype.velocityExpansion;
+
+/** @type {number} */
+MSGestureEvent.prototype.velocityX;
+
+/** @type {number} */
+MSGestureEvent.prototype.velocityY;
