@@ -3952,7 +3952,17 @@ google.maps.TransitVehicle = function() {};
 /**
  * @type {string}
  */
+google.maps.TransitVehicle.prototype.icon;
+
+/**
+ * @type {string}
+ */
 google.maps.TransitVehicle.prototype.local_icon;
+
+/**
+ * @type {string}
+ */
+google.maps.TransitVehicle.prototype.name;
 
 /**
  * @enum {number|string}
@@ -4761,6 +4771,11 @@ google.maps.places.PlaceSearchRequest.prototype.name;
 google.maps.places.PlaceSearchRequest.prototype.radius;
 
 /**
+ * @type {google.maps.places.RankBy}
+ */
+google.maps.places.PlaceSearchRequest.prototype.rankBy;
+
+/**
  * @type {Array.<string>}
  */
 google.maps.places.PlaceSearchRequest.prototype.types;
@@ -4787,6 +4802,13 @@ google.maps.places.PlacesService.prototype.getDetails = function(request, callba
 google.maps.places.PlacesService.prototype.search = function(request, callback) {};
 
 /**
+ * @param {google.maps.places.TextSearchRequest|Object.<string>} request
+ * @param {function(Array.<google.maps.places.PlaceResult>, google.maps.places.PlacesServiceStatus)} callback
+ * @return {undefined}
+ */
+google.maps.places.PlacesService.prototype.textSearch = function(request, callback) {};
+
+/**
  * @enum {number|string}
  */
 google.maps.places.PlacesServiceStatus = {
@@ -4797,6 +4819,39 @@ google.maps.places.PlacesServiceStatus = {
   UNKNOWN_ERROR: '',
   ZERO_RESULTS: ''
 };
+
+/**
+ * @enum {number|string}
+ */
+google.maps.places.RankBy = {
+  DISTANCE: '',
+  PROMINENCE: ''
+};
+
+/**
+ * @constructor
+ */
+google.maps.places.TextSearchRequest = function() {};
+
+/**
+ * @type {google.maps.LatLngBounds}
+ */
+google.maps.places.TextSearchRequest.prototype.bounds;
+
+/**
+ * @type {google.maps.LatLng}
+ */
+google.maps.places.TextSearchRequest.prototype.location;
+
+/**
+ * @type {string}
+ */
+google.maps.places.TextSearchRequest.prototype.query;
+
+/**
+ * @type {number}
+ */
+google.maps.places.TextSearchRequest.prototype.radius;
 
 // Namespace
 google.maps.visualization = {};
