@@ -869,6 +869,12 @@ public class CommandLineRunner extends
   public static List<SourceFile> getDefaultExterns() throws IOException {
     InputStream input = CommandLineRunner.class.getResourceAsStream(
         "/externs.zip");
+    if (input == null) {
+      // In some environments, the externs.zip is relative to this class.
+      input = CommandLineRunner.class.getResourceAsStream("externs.zip");
+    }
+    Preconditions.checkNotNull(input);
+
     ZipInputStream zip = new ZipInputStream(input);
     Map<String, SourceFile> externsMap = Maps.newHashMap();
     for (ZipEntry entry = null; (entry = zip.getNextEntry()) != null; ) {
