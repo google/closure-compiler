@@ -1155,6 +1155,19 @@ chrome.proxy.settings;
 chrome.proxy.onProxyError;
 
 
+/** @see http://code.google.com/chrome/extensions/storage.html */
+chrome.storage = {};
+
+/** @type {!StorageArea} */
+chrome.storage.sync;
+
+/** @type {!StorageArea} */
+chrome.storage.local;
+
+/** @type {!StorageChangeEvent} */
+chrome.storage.onChanged;
+
+
 /** @see http://code.google.com/chrome/extensions/types.html */
 chrome.chromeSetting = {};
 
@@ -1731,6 +1744,85 @@ ProxyConfig.prototype.rules;
 ProxyConfig.prototype.pacScript;
 /** @type {string} */
 ProxyConfig.prototype.mode;
+
+
+/**
+ * The event listener for Storage receives an Object mapping each
+ * key that changed to its corresponding StorageChange for that item.
+ *
+ * @see http://code.google.com/chrome/extensions/storage.html
+ * @constructor
+ */
+function StorageChangeEvent() {}
+
+/**
+ * @param {function(!Object.<string, !StorageChange>, string)} callback
+ *    Listener will receive an object that maps each key to its StorageChange,
+ *    and the namespace ("sync" or "local") of the storage area the changes
+ *    are for.
+ */
+StorageChangeEvent.prototype.addListener = function(callback) {};
+
+/** @param {function(!Object.<string, !StorageChange>, string)} callback */
+StorageChangeEvent.prototype.removeListener = function(callback) {};
+
+/** @param {function(!Object.<string, !StorageChange>, string)} callback */
+StorageChangeEvent.prototype.hasListener = function(callback) {};
+
+/** @param {function(!Object.<string, !StorageChange>, string)} callback */
+StorageChangeEvent.prototype.hasListeners = function(callback) {};
+
+
+/**
+ * @see http://code.google.com/chrome/extensions/storage.html#type-StorageChange
+ * @constructor
+ */
+function StorageChange() {}
+/** @type {?} */
+StorageChange.prototype.oldValue;
+/** @type {?} */
+StorageChange.prototype.newValue;
+
+
+/**
+ * @see http://code.google.com/chrome/extensions/storage.html#type-StorageArea
+ * @constructor
+ */
+function StorageArea() {}
+
+/**
+ * @param {function()=} opt_callback callback on success, or on failure.
+ */
+StorageArea.prototype.clear = function(opt_callback) {};
+
+/**
+ * @param {(string|Array.<string>|Object.<string>)} keys
+ *    A single key to get, list of keys to get, or a dictionary
+ *    specifying default values (see description of the
+ *    object). An empty list or object will return an empty
+ *    result object. Pass in null to get the entire contents of storage.
+ * @param {!function(Object.<string>)} callback
+ *    Callback with storage items, or on failure.
+ */
+StorageArea.prototype.get = function(keys, callback) {};
+
+/**
+ * @param {(string|Array.<string>)} keys
+ *    A single key or a list of keys for items to remove.
+ * @param {function(Object.<string>)=} opt_callback
+ *    Callback on success, or on failure.
+ */
+StorageArea.prototype.remove = function(keys, opt_callback) {};
+
+/**
+ * @param {!Object.<string>} keys
+ *    Object specifying items to augment storage
+ *    with. Values that cannot be serialized (functions, etc) will be ignored.
+ * @param {function(Object.<string>)=} opt_callback
+ *    Callback with storage items, or on failure.
+ */
+StorageArea.prototype.set = function(keys, opt_callback) {};
+
 
 /**
  * @see http://code.google.com/chrome/extensions/types.html#type-ChromeSetting
