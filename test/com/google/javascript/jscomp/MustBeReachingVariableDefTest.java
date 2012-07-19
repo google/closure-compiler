@@ -125,22 +125,22 @@ public class MustBeReachingVariableDefTest extends TestCase {
 
   public void testFunctionParams1() {
     computeDefUse("if (param2) { D: param1 = 1; U: param1 }");
-    assertSame(def, defUse.getDef("param1", use));
+    assertSame(def, defUse.getDefNode("param1", use));
   }
 
   public void testFunctionParams2() {
     computeDefUse("if (param2) { D: param1 = 1} U: param1");
-    assertNotSame(def, defUse.getDef("param1", use));
+    assertNotSame(def, defUse.getDefNode("param1", use));
   }
 
   public void testArgumentsObjectModifications() {
     computeDefUse("D: param1 = 1; arguments[0] = 2; U: param1");
-    assertNotSame(def, defUse.getDef("param1", use));
+    assertNotSame(def, defUse.getDefNode("param1", use));
   }
 
   public void testArgumentsObjectEscaped() {
     computeDefUse("D: param1 = 1; var x = arguments; x[0] = 2; U: param1");
-    assertNotSame(def, defUse.getDef("param1", use));
+    assertNotSame(def, defUse.getDefNode("param1", use));
   }
 
   public void testArgumentsObjectEscapedDependents() {
@@ -152,7 +152,7 @@ public class MustBeReachingVariableDefTest extends TestCase {
    */
   private void assertMatch(String src) {
     computeDefUse(src);
-    assertSame(def, defUse.getDef("x", use));
+    assertSame(def, defUse.getDefNode("x", use));
   }
 
   /**
@@ -160,7 +160,7 @@ public class MustBeReachingVariableDefTest extends TestCase {
    */
   private void assertNotMatch(String src) {
     computeDefUse(src);
-    assertNotSame(def, defUse.getDef("x", use));
+    assertNotSame(def, defUse.getDefNode("x", use));
   }
 
   /**

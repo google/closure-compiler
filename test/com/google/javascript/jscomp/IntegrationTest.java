@@ -1840,7 +1840,8 @@ public class IntegrationTest extends IntegrationTestCase {
         "  a = a + 'y';\n" +
         "  return a;\n" +
         "}",
-        "function f(a) {return a + 'xy'}");
+        // This should eventually get inlined completely.
+        "function f(a) { a += 'x'; return a += 'y'; }");
   }
 
   public void testIssue284() {
