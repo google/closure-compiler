@@ -159,6 +159,31 @@ YouTubePlayer.prototype.getPlayerState = function() {};
 
 
 /**
+ * Returns the current playback rate setting of the player.
+ * @return {number} The current playback rate setting of the player.
+ */
+YouTubePlayer.prototype.getPlaybackRate = function() {};
+
+
+/**
+ * Sets the playback rate for the player based on the rate suggested by the
+ * user. The actually applied rate is the closest supported rate that lies
+ * between 1.0 and the suggested rate (inclusive). 1.0 will always be one
+ * of the supported playback rates.
+ * @param {number} suggestedRate The playback rate suggested by the user.
+ */
+YouTubePlayer.prototype.setPlaybackRate = function(suggestedRate) {};
+
+
+/**
+ * Gets an array of playback rates supported by the video player, sorted in
+ * ascending order. This array is guaranteed to have the entry 1.0.
+ * @return {Array.<number>} Playback rates supported by the player.
+ */
+YouTubePlayer.prototype.getAvailablePlaybackRates = function() {};
+
+
+/**
  * @return {string} The current quality the player has loaded or is playing.
  */
 YouTubePlayer.prototype.getPlaybackQuality = function() {};
