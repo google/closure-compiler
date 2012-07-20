@@ -793,7 +793,14 @@ class IRFactory {
 
     @Override
     Node processNewExpression(NewExpression exprNode) {
-      return processFunctionCall(exprNode);
+      Node node = newNode(transformTokenType(exprNode.getType()), transform(exprNode.getTarget()));
+      for (AstNode child : exprNode.getArguments()) {
+        node.addChildToBack(transform(child));
+      }
+      node.setLineno(exprNode.getLineno());
+      node.setCharno(position2charno(exprNode.getAbsolutePosition()));
+      maybeSetLengthFrom(node, exprNode);
+      return node;
     }
 
     @Override

@@ -862,6 +862,25 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     assertNodePosition(2, 0, 1, bNameComponent);
   }
 
+  public void testNewLocation() {
+    Node root = newParse(
+        "new c();\n");
+
+    Node exprStmt = root.getFirstChild();
+    Node newExpr = exprStmt.getFirstChild();
+    assertNodePosition(1, 0, 7, newExpr);
+  }
+
+  public void testNewLocationMultiLine() {
+    Node root = newParse(
+        "new   \n" +
+        "c();\n");
+
+    Node exprStmt = root.getFirstChild();
+    Node newExpr = exprStmt.getFirstChild();
+    assertNodePosition(1, 0, 10, newExpr);
+  }
+
   public void testLinenoDeclaration() {
     Node root = newParse(
         "a.\n" +
