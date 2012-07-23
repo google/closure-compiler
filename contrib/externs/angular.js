@@ -166,7 +166,116 @@ angular.isUndefined = function(value) {};
 angular.lowercase = function(s) {};
 
 angular.mock = {};
-angular.module = {};
+
+/**
+ * @param {string} name
+ * @param {Array.<string>=} opt_requires
+ * @param {Function=} opt_configFn
+ * @return {angular.Module}
+ */
+angular.module = function(name, opt_requires, opt_configFn) {};
+
+/**
+ * @typedef {{
+ *   config: function((Function|Array.<string|Function>)):angular.Module,
+ *   constant: function(string, *):angular.Module,
+ *   controller:
+ *       function(string, (Function|Array.<string|Function>)):angular.Module,
+ *   directive:
+ *       function(string, (Function|Array.<string|Function>)):angular.Module,
+ *   factory:
+ *       function(string, (Function|Array.<string|Function>)):angular.Module,
+ *   filter:
+ *       function(string, (Function|Array.<string|Function>)):angular.Module,
+ *   name: string,
+ *   provider:
+ *       function(string, (Function|Array.<string|Function>)):angular.Module,
+ *   requires: Array.<string>,
+ *   run: function(Function):angular.Module,
+ *   service:
+ *       function(string, (Function|Array.<string|Function>)):angular.Module,
+ *   value: function(string, *):angular.Module
+ *   }}
+ */
+angular.Module;
+
+/**
+ * @param {Function} configFn
+ * @return {angular.Module}
+ */
+angular.Module.config = function(configFn) {};
+
+/**
+ * @param {string} name
+ * @param {*} object
+ * @return {angular.Module}
+ */
+angular.Module.constant = function(name, object) {};
+
+/**
+ * @param {string} name
+ * @param {Function} constructor
+ * @return {angular.Module}
+ */
+angular.Module.controller = function(name, constructor) {};
+
+/**
+ * @param {string} name
+ * @param {Function} directiveFactory
+ * @return {angular.Module}
+ */
+angular.Module.directive = function(name, directiveFactory) {};
+
+/**
+ * @param {string} name
+ * @param {Function} providerFunction
+ * @return {angular.Module}
+ */
+angular.Module.factory = function(name, providerFunction) {};
+
+/**
+ * @param {string} name
+ * @param {Function} filterFactory
+ * @return {angular.Module}
+ */
+angular.Module.filter = function(name, filterFactory) {};
+
+/**
+ * @param {string} name
+ * @param {Function} providerType
+ * @return {angular.Module}
+ */
+angular.Module.provider = function(name, providerType) {};
+
+/**
+ * @param {Function} initializationFn
+ * @return {angular.Module}
+ */
+angular.Module.run = function(initializationFn) {};
+
+/**
+ * @param {string} name
+ * @param {Function} constructor
+ * @return {angular.Module}
+ */
+angular.Module.service = function(name, constructor) {};
+
+/**
+ * @param {string} name
+ * @param {*} object
+ * @return {angular.Module}
+ */
+angular.Module.value = function(name, object) {};
+
+/**
+ * @type {string}
+ */
+angular.Module.name = '';
+
+/**
+ * @type {Array.<string>}
+ */
+angular.Module.requires;
 
 angular.noop = function() {};
 
