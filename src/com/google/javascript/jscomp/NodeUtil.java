@@ -392,7 +392,7 @@ public final class NodeUtil {
   /**
    * Copied from Rhino's ScriptRuntime
    */
-  static TernaryValue isStrWhiteSpaceChar(int c) {
+  public static TernaryValue isStrWhiteSpaceChar(int c) {
     switch (c) {
       case '\u000B': // <VT>
         return TernaryValue.UNKNOWN;  // IE says "no", ECMAScript says "yes"
