@@ -1974,7 +1974,6 @@ google.maps.Map.prototype.setTilt = function(tilt) {};
 google.maps.Map.prototype.setZoom = function(zoom) {};
 
 /**
- * @extends {google.maps.MVCObject}
  * @constructor
  */
 google.maps.MapCanvasProjection = function() {};
@@ -2850,15 +2849,9 @@ google.maps.Point.prototype.equals = function(other) {};
 google.maps.Point.prototype.toString = function() {};
 
 /**
- * @extends {google.maps.MouseEvent}
  * @constructor
  */
 google.maps.PolyMouseEvent = function() {};
-
-/**
- * @type {number}
- */
-google.maps.PolyMouseEvent.prototype.edge;
 
 /**
  * @type {number}
@@ -4806,7 +4799,7 @@ google.maps.places.PlacesService.prototype.getDetails = function(request, callba
                google.maps.places.PlaceSearchPagination)} callback
  * @return {undefined}
  */
-google.maps.places.PlacesService.prototype.nearbySearch = function(request, callback) {};
+google.maps.places.PlacesService.prototype.search = function(request, callback) {};
 
 /**
  * @param {google.maps.places.TextSearchRequest|Object.<string>} request
