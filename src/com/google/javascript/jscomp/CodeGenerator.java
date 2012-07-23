@@ -882,10 +882,9 @@ class CodeGenerator {
 
   private void addExpr(Node n, int minPrecedence, Context context) {
     if ((NodeUtil.precedence(n.getType()) < minPrecedence) ||
-        ((context == Context.IN_FOR_INIT_CLAUSE) &&
-        (n.isIn()))){
+        ((context == Context.IN_FOR_INIT_CLAUSE) && n.isIn())){
       add("(");
-      add(n, clearContextForNoInOperator(context));
+      add(n, Context.OTHER);
       add(")");
     } else {
       add(n, context);
@@ -1183,17 +1182,6 @@ class CodeGenerator {
   private  Context getContextForNoInOperator(Context context) {
     return (context == Context.IN_FOR_INIT_CLAUSE
         ? Context.IN_FOR_INIT_CLAUSE : Context.OTHER);
-  }
-
-  /**
-   * If we're in a IN_FOR_INIT_CLAUSE, (and thus can't permit in operators
-   * in the expression), but have added parentheses, the expressions within
-   * the parens have no limits.  Clear the context flag  Be safe and don't
-   * clear the flag if it held another value.
-   */
-  private  Context clearContextForNoInOperator(Context context) {
-    return (context == Context.IN_FOR_INIT_CLAUSE
-        ? Context.OTHER : context);
   }
 
   /**

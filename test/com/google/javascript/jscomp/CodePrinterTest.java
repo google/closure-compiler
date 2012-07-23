@@ -1211,6 +1211,7 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x=({x:1})", "var x={x:1}");
     assertPrint("var x={'x':1}", "var x={\"x\":1}");
     assertPrint("var x={1:1}", "var x={1:1}");
+    assertPrint("({},42)+0", "({},42)+0");
   }
 
   public void testObjectLit2() {
