@@ -15,10 +15,18 @@
  */
 
 /**
- * @fileoverview Externs for Angular 1
+ * @fileoverview Externs for Angular 1.
  *
  * TODO: Mocks.
  * TODO: Modules.
+ * TODO: Remaining Services.
+ * TODO: Resolve two issues with angular.$http
+ *         1) angular.$http cannot be declared as a callable type.
+ *            Its helper methods should be used instead.
+ *         2) angular.$http.delete cannot be added as an extern
+ *            as it is a reserved keyword.
+ *            Its use is potentially not supported in IE.
+ *            It may be aliased as 'remove' in a future version.
  *
  * @see http://angularjs.org/
  * @externs
@@ -162,53 +170,70 @@ angular.module = {};
 
 angular.noop = function() {};
 
-angular.scope = {};
+/**
+ * @typedef {{
+ *   $apply: function((string|function())=):*,
+ *   $broadcast: function(string, ...[*]),
+ *   $destroy: function(),
+ *   $digest: function(),
+ *   $emit: function(string, ...[*]),
+ *   $eval: function((string|function())=, Object=):*,
+ *   $evalAsync: function((string|function())=),
+ *   $id: number,
+ *   $new: function():Object,
+ *   $on: function(string, function(angular.Scope.Event)):function(),
+ *   $watch: function(
+ *       (string|function()),
+ *       (function(*, *, angular.Scope)|string)=, boolean=):function()
+ *   }}
+ */
+angular.Scope;
 
 /**
  * @param {(string|function())=} exp
  * @return {*}
  */
-angular.scope.$apply = function(exp) {};
+angular.Scope.$apply = function(exp) {};
 
 /**
  * @param {string} name
  * @param {...*} args
  */
-angular.scope.$broadcast = function(name, args) {};
+angular.Scope.$broadcast = function(name, args) {};
 
-angular.scope.$destroy = function() {};
+angular.Scope.$destroy = function() {};
 
-angular.scope.$digest = function() {};
+angular.Scope.$digest = function() {};
 
 /**
  * @param {string} name
  * @param {...*} args
  */
-angular.scope.$emit = function(name, args) {};
+angular.Scope.$emit = function(name, args) {};
 
 /**
  * @param {(string|function())=} exp
  * @param {Object=} locals
  * @return {*}
  */
-angular.scope.$eval = function(exp, locals) {};
+angular.Scope.$eval = function(exp, locals) {};
 
 /**
  * @param {(string|function())=} exp
  */
-angular.scope.$evalAsync = function(exp) {};
+angular.Scope.$evalAsync = function(exp) {};
 
 /**
  * @return {Object}
  */
-angular.scope.$new = function() {};
+angular.Scope.$new = function() {};
 
 /**
  * @param {string} name
- * @param {function(Object)} listener
+ * @param {function(angular.Scope.Event)} listener
  * @return {function()}
  */
-angular.scope.$on = function(name, listener) {};
+angular.Scope.$on = function(name, listener) {};
 
 /**
  * @param {string|function()} exp
@@ -216,7 +241,35 @@ angular.scope.$on = function(name, listener) {};
  * @param {boolean=} opt_objectEquality
  * @return {function()}
  */
-angular.scope.$watch = function(exp, opt_listener, opt_objectEquality) {};
+angular.Scope.$watch = function(exp, opt_listener, opt_objectEquality) {};
+
+/**
+ * @typedef {{
+ *   currentScope: angular.Scope,
+ *   defaultPrevented: boolean,
+ *   name: string,
+ *   preventDefault: function(),
+ *   stopPropagation: function(),
+ *   targetScope: angular.Scope
+ *   }}
+ */
+angular.Scope.Event;
+
+/** @type {angular.Scope} */
+angular.Scope.Event.currentScope;
+
+/** @type {boolean} */
+angular.Scope.Event.defaultPrevented;
+
+/** @type {string} */
+angular.Scope.Event.name;
+
+angular.Scope.Event.preventDefault = function() {};
+
+angular.Scope.Event.stopPropagation = function() {};
+
+/** @type {angular.Scope} */
+angular.Scope.Event.targetScope;
 
 /**
  * @param {Object|Array|Date|string|number} obj
@@ -260,3 +313,256 @@ angular.version.dot = 0;
  * @type {string}
  */
 angular.version.codeName = '';
+
+/******************************************************************************
+ * $http Service
+ *****************************************************************************/
+
+/**
+ * @param {string} cacheId
+ * @param {angular.$cacheFactory.Options=} opt_options
+ * @return {angular.$cacheFactory.Cache}
+ */
+angular.$cacheFactory = function(cacheId, opt_options) {};
+
+/** @typedef {{capacity: (number|undefined)}} */
+angular.$cacheFactory.Options;
+
+/**
+ * @typedef {{
+ *   info: function():angular.$cacheFactory.Cache.Info,
+ *   put: function(string, *),
+ *   get: function(string):*,
+ *   remove: function(string),
+ *   removeAll: function(),
+ *   destroy: function()
+ *   }}
+ */
+angular.$cacheFactory.Cache;
+
+/**
+ * @typedef {{
+ *   id: string,
+ *   size: number,
+ *   options: angular.$cacheFactory.Options
+ *   }}
+ */
+angular.$cacheFactory.Cache.Info;
+
+/**
+ * This is a typedef because the closure compiler does not allow
+ * defining a type that is a function with properties.
+ * If you are trying to use the $http service as a function, try
+ * using one of the helper functions instead.
+ * @typedef {{
+ *   delete: function(string, angular.$http.Config=):angular.$http.HttpPromise,
+ *   get: function(string, angular.$http.Config=):angular.$http.HttpPromise,
+ *   head: function(string, angular.$http.Config=):angular.$http.HttpPromise,
+ *   jsonp: function(string, angular.$http.Config=):angular.$http.HttpPromise,
+ *   post: function(string, *, angular.$http.Config=):angular.$http.HttpPromise,
+ *   put: function(string, *, angular.$http.Config=):angular.$http.HttpPromise,
+ *   defaults: angular.$http.Config,
+ *   pendingRequests: Array.<angular.$http.Config>
+ *   }}
+ */
+angular.$http;
+
+/**
+ * @typedef {{
+ *   cache: (boolean|angular.$cacheFactory.Cache|undefined),
+ *   data: (string|Object|undefined),
+ *   headers: (Object|undefined),
+ *   method: (string|undefined),
+ *   params: (Object.<(string|Object)>|undefined),
+ *   timeout: (number|undefined),
+ *   transformRequest:
+ *       (function((string|Object), Object):(string|Object)|
+ *       Array.<function((string|Object), Object):(string|Object)>|undefined),
+ *   url: (string|undefined),
+ *   withCredentials: (boolean|undefined)
+ *   }}
+ */
+angular.$http.Config;
+
+/* This extern is currently incomplete as delete is a reserved word.
+ * *param {string} url
+ * *param {angular.$http.Config=} config
+ * *return {angular.$http.HttpPromise}
+ */
+//angular.$http.delete = function(url, config) {};
+
+/**
+ * @param {string} url
+ * @param {angular.$http.Config=} config
+ * @return {angular.$http.HttpPromise}
+ */
+angular.$http.get = function(url, config) {};
+
+/**
+ * @param {string} url
+ * @param {angular.$http.Config=} config
+ * @return {angular.$http.HttpPromise}
+ */
+angular.$http.head = function(url, config) {};
+
+/**
+ * @param {string} url
+ * @param {angular.$http.Config=} config
+ * @return {angular.$http.HttpPromise}
+ */
+angular.$http.jsonp = function(url, config) {};
+
+/**
+ * @param {string} url
+ * @param {*} data
+ * @param {angular.$http.Config=} config
+ * @return {angular.$http.HttpPromise}
+ */
+angular.$http.post = function(url, data, config) {};
+
+/**
+ * @param {string} url
+ * @param {*} data
+ * @param {angular.$http.Config=} config
+ * @return {angular.$http.HttpPromise}
+ */
+angular.$http.put = function(url, data, config) {};
+
+/**
+ * @type {angular.$http.Config}
+ */
+angular.$http.defaults;
+
+/**
+ * @type {Array.<angular.$http.Config>}
+ * @const
+ */
+angular.$http.pendingRequests;
+
+/**
+ * @typedef {{
+ *   then: function(function(*), function(*)=): angular.$http.HttpPromise,
+ *   success: function(
+ *       function((string|Object), number, function(string):string, Object)),
+ *   error: function(
+ *       function((string|Object), number, function(string):string, Object))
+ *   }}
+ */
+angular.$http.HttpPromise;
+
+/**
+ * @param {function(*)} successCallback
+ * @param {function(*)=} opt_errorCallback
+ * @return {angular.$http.HttpPromise}
+ */
+angular.$http.HttpPromise.then = function(
+    successCallback, opt_errorCallback) {};
+
+/**
+ * @param {function((string|Object), number,
+ *         function(string):string, Object)} callback
+ */
+angular.$http.HttpPromise.success = function(callback) {};
+
+/**
+ * @param {function((string|Object), number,
+ *         function(string):string, Object)} callback
+ */
+angular.$http.HttpPromise.error = function(callback) {};
+
+/******************************************************************************
+ * $q Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   all: function(Array.<angular.$q.Promise>): angular.$q.Promise,
+ *   defer: function():angular.$q.Deferred,
+ *   reject: function():angular.$q.Promise,
+ *   when: function(*):angular.$q.Promise
+ *   }}
+ */
+angular.$q;
+
+/**
+ * @param {Array.<angular.$q.Promise>} promises
+ * @return {angular.$q.Promise}
+ */
+angular.$q.all = function(promises) {};
+
+/**
+ * @return {angular.$q.Deferred}
+ */
+angular.$q.defer = function() {};
+
+/**
+ * @return {angular.$q.Promise}
+ */
+angular.$q.reject = function() {};
+
+/**
+ * @param {*} value
+ * @return {angular.$q.Promise}
+ */
+angular.$q.when = function(value) {};
+
+/**
+ * @typedef {{
+ *   resolve: function(*),
+ *   reject: function(*),
+ *   promise: angular.$q.Promise
+ *   }}
+ */
+angular.$q.Deferred;
+
+/** @param {*} value */
+angular.$q.Deferred.resolve = function(value) {};
+
+/** @param {*} reason */
+angular.$q.Deferred.reject = function(reason) {};
+
+/** @type {angular.$q.Promise} */
+angular.$q.Deferred.promise;
+
+/**
+ * @typedef {{then: function(function(*), function(*)=): angular.$q.Promise}}
+ */
+angular.$q.Promise;
+
+/**
+ * @param {function(*)} successCallback
+ * @param {function(*)=} opt_errorCallback
+ * @return {angular.$q.Promise}
+ */
+angular.$q.Promise.then = function(successCallback, opt_errorCallback) {};
+
+/******************************************************************************
+ * $routeProvider Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   otherwise:
+ *       function(angular.$routeProvider.Params): angular.$routeProvider,
+ *   when:
+ *       function(
+ *           string, angular.$routeProvider.Params): angular.$routeProvider
+ *   }}
+ */
+angular.$routeProvider;
+
+/**
+ * @param {angular.$routeProvider.Params} params
+ */
+angular.$routeProvider.otherwise = function(params) {};
+
+/**
+ * @param {string} path
+ * @param {angular.$routeProvider.Params} route
+ */
+angular.$routeProvider.when = function(path, route) {};
+
+/**
+ * @typedef {Object.<string, *>}
+ */
+angular.$routeProvider.Params;
