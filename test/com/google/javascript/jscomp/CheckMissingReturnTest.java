@@ -191,6 +191,12 @@ public class CheckMissingReturnTest extends CompilerTestCase {
     testNotMissing("if (a) { return 1} else { while (1) {return 1} }");
   }
 
+  public void testIssue779() {
+    testNotMissing(
+        "var a = f(); try { alert(); if (a > 0) return 1; }" +
+        "finally { a = 5; } return 2;");
+  }
+
   private static String createFunction(String returnType, String body) {
     return "/** @return {" + returnType + "} */ function foo() {" + body + "}";
   }

@@ -113,7 +113,15 @@ class ControlFlowGraph<N> extends
     ON_FALSE,
     /** Unconditional branch. */
     UNCOND,
-    /** Exception related. */
+    /**
+     * Exception-handling code paths.
+     * Conflates two kind of control flow passing:
+     * - An exception is thrown, and falls into a catch or finally block
+     * - During exception handling, a finally block finishes and control
+     *   passes to the next finally block.
+     * In theory, we need 2 different edge types. In practice, we
+     * can just treat them as "the edges we can't really optimize".
+     */
     ON_EX,
     /** Possible folded-away template */
     SYN_BLOCK;

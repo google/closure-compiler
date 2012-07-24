@@ -1104,7 +1104,7 @@ public class ControlFlowAnalysisTest extends TestCase {
     // BREAK to FINALLY.
     assertCrossEdge(cfg, Token.BREAK, Token.BLOCK, Branch.UNCOND);
     // FINALLY to FINALLY.
-    assertCrossEdge(cfg, Token.BLOCK, Token.BLOCK, Branch.UNCOND);
+    assertCrossEdge(cfg, Token.BLOCK, Token.BLOCK, Branch.ON_EX);
     assertCrossEdge(cfg, Token.WHILE, Token.BLOCK, Branch.ON_FALSE);
     assertReturnEdge(cfg, Token.BLOCK);
   }
@@ -1115,7 +1115,7 @@ public class ControlFlowAnalysisTest extends TestCase {
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertCrossEdge(cfg, Token.THROW, Token.BLOCK, Branch.ON_EX);
     assertCrossEdge(cfg, Token.VAR, Token.BLOCK, Branch.UNCOND);
-    assertCrossEdge(cfg, Token.IF, Token.BLOCK, Branch.UNCOND);
+    assertCrossEdge(cfg, Token.IF, Token.BLOCK, Branch.ON_EX);
   }
 
   public void testReturn() {
