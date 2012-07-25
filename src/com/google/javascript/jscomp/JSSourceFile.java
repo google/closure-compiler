@@ -32,8 +32,11 @@ import java.nio.charset.Charset;
  *
  * @author nicksantos@google.com (Nick Santos)
  * @author moedinger@google.com (Andrew Moedinger)
+ * @deprecated JSSourceFile is an empty wrapper around SourceFile. Just
+ *     use SourceFile directly.
  */
 // TODO(nicksantos): Delete this file.
+@Deprecated
 public class JSSourceFile extends SourceFile implements Serializable {
   private static final long serialVersionUID = 1L;
 

@@ -310,7 +310,9 @@ public class Compiler extends AbstractCompiler {
 
   /**
    * Initializes the instance state needed for a compile job.
+   * @deprecated Convert your arrays to lists and use the list-based API.
    */
+  @Deprecated
   public void init(JSSourceFile[] externs, JSSourceFile[] inputs,
       CompilerOptions options) {
     init(Lists.<JSSourceFile>newArrayList(externs),
@@ -335,7 +337,9 @@ public class Compiler extends AbstractCompiler {
   /**
    * Initializes the instance state needed for a compile job if the sources
    * are in modules.
+   * @deprecated Convert your arrays to lists and use the list-based API.
    */
+  @Deprecated
   public void init(JSSourceFile[] externs, JSModule[] modules,
       CompilerOptions options) {
     initModules(Lists.<SourceFile>newArrayList(externs),
@@ -506,11 +510,20 @@ public class Compiler extends AbstractCompiler {
      return compile(Lists.newArrayList(extern), Lists.newArrayList(input), options);
   }
 
+  /**
+   * @deprecated Convert your arrays to lists and use the list-based API.
+   */
+  @Deprecated
   public Result compile(
       SourceFile extern, JSSourceFile[] input, CompilerOptions options) {
      return compile(Lists.newArrayList(extern), Lists.newArrayList(input), options);
   }
 
+  /**
+   * @deprecated Convert your arrays to lists and use the list-based
+   *     compileModules method.
+   */
+  @Deprecated
   public Result compile(
       JSSourceFile extern, JSModule[] modules, CompilerOptions options) {
      return compileModules(
@@ -519,7 +532,10 @@ public class Compiler extends AbstractCompiler {
 
   /**
    * Compiles a list of inputs.
+   * @deprecated Convert your arrays to lists and use the list-based compile
+   *     method.
    */
+  @Deprecated
   public Result compile(JSSourceFile[] externs,
                         JSSourceFile[] inputs,
                         CompilerOptions options) {
@@ -551,7 +567,10 @@ public class Compiler extends AbstractCompiler {
 
   /**
    * Compiles a list of modules.
+   * @deprecated Convert your arrays to lists and use the list-based
+   *     compileModules method.
    */
+  @Deprecated
   public Result compile(JSSourceFile[] externs,
                         JSModule[] modules,
                         CompilerOptions options) {

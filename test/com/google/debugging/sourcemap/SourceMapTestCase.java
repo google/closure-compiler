@@ -16,12 +16,13 @@
 
 package com.google.debugging.sourcemap;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.JSSourceFile;
 import com.google.javascript.jscomp.Result;
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMap.DetailLevel;
 
@@ -29,6 +30,7 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -47,9 +49,8 @@ public abstract class SourceMapTestCase extends TestCase {
   }
 
 
-  static final JSSourceFile[] EXTERNS = {
-      JSSourceFile.fromCode("externs", "")
-  };
+  static final List<SourceFile> EXTERNS = ImmutableList.of(
+      SourceFile.fromCode("externs", ""));
 
   protected DetailLevel detailLevel = SourceMap.DetailLevel.ALL;
 
@@ -287,12 +288,13 @@ public abstract class SourceMapTestCase extends TestCase {
     // Turn on IDE mode to get rid of optimizations.
     options.ideMode = true;
 
-    JSSourceFile[] inputs = { JSSourceFile.fromCode(fileName1, js1) };
+    List<SourceFile> inputs =
+        ImmutableList.of(SourceFile.fromCode(fileName1, js1));
 
     if (js2 != null && fileName2 != null) {
-      JSSourceFile[] multiple =  { JSSourceFile.fromCode(fileName1, js1),
-                                   JSSourceFile.fromCode(fileName2, js2) };
-      inputs = multiple;
+      inputs = ImmutableList.of(
+          SourceFile.fromCode(fileName1, js1),
+          SourceFile.fromCode(fileName2, js2));
     }
 
     Result result = compiler.compile(EXTERNS, inputs, options);

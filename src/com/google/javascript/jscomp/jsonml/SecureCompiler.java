@@ -17,17 +17,18 @@
 package com.google.javascript.jscomp.jsonml;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerInput;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.JSModule;
-import com.google.javascript.jscomp.JSSourceFile;
 import com.google.javascript.jscomp.Result;
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
-import com.google.javascript.jscomp.CompilerOptions.Reach;
 
 import java.util.ArrayList;
 
@@ -111,9 +112,9 @@ public class SecureCompiler {
     JSModule module = new JSModule("[[jsonmlmodule]]");
     module.add(input);
 
-    Result result = compiler.compile(
-        new JSSourceFile[] {},
-        new JSModule[] { module },
+    Result result = compiler.compileModules(
+        ImmutableList.<SourceFile>of(),
+        ImmutableList.of(module),
         options);
 
     report = generateReport(result);
