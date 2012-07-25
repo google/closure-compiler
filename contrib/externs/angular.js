@@ -190,7 +190,7 @@ angular.module = function(name, opt_requires, opt_configFn) {};
  *   provider:
  *       function(string, (Function|Array.<string|Function>)):angular.Module,
  *   requires: Array.<string>,
- *   run: function(Function):angular.Module,
+ *   run: function(function()):angular.Module,
  *   service:
  *       function(string, (Function|Array.<string|Function>)):angular.Module,
  *   value: function(string, *):angular.Module
@@ -199,7 +199,7 @@ angular.module = function(name, opt_requires, opt_configFn) {};
 angular.Module;
 
 /**
- * @param {Function} configFn
+ * @param {Function|Array.<string|Function>} configFn
  * @return {angular.Module}
  */
 angular.Module.config = function(configFn) {};
@@ -213,48 +213,48 @@ angular.Module.constant = function(name, object) {};
 
 /**
  * @param {string} name
- * @param {Function} constructor
+ * @param {Function|Array.<string|Function>} constructor
  * @return {angular.Module}
  */
 angular.Module.controller = function(name, constructor) {};
 
 /**
  * @param {string} name
- * @param {Function} directiveFactory
+ * @param {Function|Array.<string|Function>} directiveFactory
  * @return {angular.Module}
  */
 angular.Module.directive = function(name, directiveFactory) {};
 
 /**
  * @param {string} name
- * @param {Function} providerFunction
+ * @param {Function|Array.<string|Function>} providerFunction
  * @return {angular.Module}
  */
 angular.Module.factory = function(name, providerFunction) {};
 
 /**
  * @param {string} name
- * @param {Function} filterFactory
+ * @param {Function|Array.<string|Function>} filterFactory
  * @return {angular.Module}
  */
 angular.Module.filter = function(name, filterFactory) {};
 
 /**
  * @param {string} name
- * @param {Function} providerType
+ * @param {Function|Array.<string|Function>} providerType
  * @return {angular.Module}
  */
 angular.Module.provider = function(name, providerType) {};
 
 /**
- * @param {Function} initializationFn
+ * @param {function()} initializationFn
  * @return {angular.Module}
  */
 angular.Module.run = function(initializationFn) {};
 
 /**
  * @param {string} name
- * @param {Function} constructor
+ * @param {Function|Array.<string|Function>} constructor
  * @return {angular.Module}
  */
 angular.Module.service = function(name, constructor) {};
@@ -749,6 +749,54 @@ angular.$q.Promise;
 angular.$q.Promise.then = function(successCallback, opt_errorCallback) {};
 
 /******************************************************************************
+ * $route Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   reload: function(),
+ *   current: angular.$route.Route,
+ *   routes: Array.<angular.$route.Route>
+ * }}
+ */
+angular.$route;
+
+/** @type {function()} */
+angular.$route.reload = function() {};
+
+/** @type {angular.$route.Route} */
+angular.$route.current;
+
+/** @type {Array.<angular.$route.Route>} */
+angular.$route.routes;
+
+/**
+ * @typedef {{
+ *   $route: angular.$routeProvider.Params,
+ *   locals: Object.<string, *>,
+ *   params: Object.<string, string>,
+ *   pathParams: Object.<string, string>,
+ *   scope: Object.<string, *>
+ * }}
+ */
+angular.$route.Route;
+
+/** @type {angular.$routeProvider.Params} */
+angular.$route.Route.$route;
+
+/** @type {Object.<string, *>} */
+angular.$route.Route.locals;
+
+/** @type {Object.<string, string>} */
+angular.$route.Route.params;
+
+/** @type {Object.<string, string>} */
+angular.$route.Route.pathParams;
+
+/** @type {Object.<string, *>} */
+angular.$route.Route.scope;
+
+/******************************************************************************
  * $routeProvider Service
  *****************************************************************************/
 
@@ -765,16 +813,50 @@ angular.$routeProvider;
 
 /**
  * @param {angular.$routeProvider.Params} params
+ * @return {angular.$routeProvider}
  */
 angular.$routeProvider.otherwise = function(params) {};
 
 /**
  * @param {string} path
  * @param {angular.$routeProvider.Params} route
+ * @return {angular.$routeProvider}
  */
 angular.$routeProvider.when = function(path, route) {};
 
 /**
- * @typedef {Object.<string, *>}
+ * @typedef {{
+ *   controller: (Function|Array.<string|Function>|undefined),
+ *   template: (string|undefined),
+ *   templateUrl: (string|undefined),
+ *   resolve: (Object.<string, (
+ *       string|Function|Array.<string|Function>|angular.$q.Promise
+ *       )>|undefined),
+ *   redirectTo: (string|function()|undefined),
+ *   reloadOnSearch: (boolean|undefined)
+ *   }}
  */
 angular.$routeProvider.Params;
+
+/** @type {Function|Array.<string|Function>} */
+angular.$routeProvider.Params.controller;
+
+/** @type {string} */
+angular.$routeProvider.Params.template;
+
+/** @type {string} */
+angular.$routeProvider.Params.templateUrl;
+
+/**
+ * @type {
+ *   Object.<string, (
+ *       string|Function|Array.<string|Function>|angular.$q.Promise
+ *       )>}
+ */
+angular.$routeProvider.Params.resolve;
+
+/** @type {string|function()} */
+angular.$routeProvider.Params.redirectTo;
+
+/** @type {boolean} */
+angular.$routeProvider.Params.reloadOnSearch;
