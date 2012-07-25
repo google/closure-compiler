@@ -493,12 +493,13 @@ angular.$http;
  */
 angular.$http.Config;
 
-/* This extern is currently incomplete as delete is a reserved word.
- * *param {string} url
- * *param {angular.$http.Config=} config
- * *return {angular.$http.HttpPromise}
- */
-//angular.$http.delete = function(url, config) {};
+// /**
+//  * This extern is currently incomplete as delete is a reserved word.
+//  * @param {string} url
+//  * @param {angular.$http.Config=} config
+//  * @return {angular.$http.HttpPromise}
+//  */
+// angular.$http.delete = function(url, config) {};
 
 /**
  * @param {string} url
@@ -578,6 +579,40 @@ angular.$http.HttpPromise.success = function(callback) {};
  *         function(string):string, Object)} callback
  */
 angular.$http.HttpPromise.error = function(callback) {};
+
+/******************************************************************************
+ * $log Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   error: function(...[*]),
+ *   info: function(...[*]),
+ *   log: function(...[*]),
+ *   warn: function(...[*])
+ *   }}
+ */
+angular.$log;
+
+/**
+ * @param {...*} var_args
+ */
+angular.$log.error = function(var_args) {};
+
+/**
+ * @param {...*} var_args
+ */
+angular.$log.info = function(var_args) {};
+
+/**
+ * @param {...*} var_args
+ */
+angular.$log.log = function(var_args) {};
+
+/**
+ * @param {...*} var_args
+ */
+angular.$log.warn = function(var_args) {};
 
 /******************************************************************************
  * $q Service
