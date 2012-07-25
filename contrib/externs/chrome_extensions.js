@@ -1346,6 +1346,10 @@ chrome.input.ime.onKeyEvent;
 chrome.input.ime.onMenuItemActivated;
 
 
+/** namespace */
+chrome.mediaGalleries = {};
+
+
 /**
  * @param {?{interactive: (string|undefined)}} details Whether the request
  *     should be interactive if permissions haven't been granted yet.
