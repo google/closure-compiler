@@ -18,7 +18,6 @@
  * @fileoverview Externs for Angular 1.
  *
  * TODO: Mocks.
- * TODO: Modules.
  * TODO: Remaining Services.
  * TODO: Resolve two issues with angular.$http
  *         1) angular.$http cannot be declared as a callable type.
@@ -55,10 +54,10 @@ angular.bootstrap = function(element, opt_modules) {};
 
 /**
  * @param {*} source
- * @param {(Object|Array)=} dest
+ * @param {(Object|Array)=} opt_dest
  * @return {*}
  */
-angular.copy = function(source, dest) {};
+angular.copy = function(source, opt_dest) {};
 
 /**
  * @param {string|Element} element
@@ -299,10 +298,10 @@ angular.noop = function() {};
 angular.Scope;
 
 /**
- * @param {(string|function())=} exp
+ * @param {(string|function())=} opt_exp
  * @return {*}
  */
-angular.Scope.$apply = function(exp) {};
+angular.Scope.$apply = function(opt_exp) {};
 
 /**
  * @param {string} name
@@ -321,16 +320,16 @@ angular.Scope.$digest = function() {};
 angular.Scope.$emit = function(name, args) {};
 
 /**
- * @param {(string|function())=} exp
- * @param {Object=} locals
+ * @param {(string|function())=} opt_exp
+ * @param {Object=} opt_locals
  * @return {*}
  */
-angular.Scope.$eval = function(exp, locals) {};
+angular.Scope.$eval = function(opt_exp, opt_locals) {};
 
 /**
- * @param {(string|function())=} exp
+ * @param {(string|function())=} opt_exp
  */
-angular.Scope.$evalAsync = function(exp) {};
+angular.Scope.$evalAsync = function(opt_exp) {};
 
 /**
  * @return {Object}
@@ -382,10 +381,10 @@ angular.Scope.Event.targetScope;
 
 /**
  * @param {Object|Array|Date|string|number} obj
- * @param {boolean=} pretty
+ * @param {boolean=} opt_pretty
  * @return {string}
  */
-angular.toJson = function(obj, pretty) {};
+angular.toJson = function(obj, opt_pretty) {};
 
 /**
  * @param {string} s
@@ -496,47 +495,47 @@ angular.$http.Config;
 // /**
 //  * This extern is currently incomplete as delete is a reserved word.
 //  * @param {string} url
-//  * @param {angular.$http.Config=} config
+//  * @param {angular.$http.Config=} opt_config
 //  * @return {angular.$http.HttpPromise}
 //  */
-// angular.$http.delete = function(url, config) {};
+// angular.$http.delete = function(url, opt_config) {};
 
 /**
  * @param {string} url
- * @param {angular.$http.Config=} config
+ * @param {angular.$http.Config=} opt_config
  * @return {angular.$http.HttpPromise}
  */
-angular.$http.get = function(url, config) {};
+angular.$http.get = function(url, opt_config) {};
 
 /**
  * @param {string} url
- * @param {angular.$http.Config=} config
+ * @param {angular.$http.Config=} opt_config
  * @return {angular.$http.HttpPromise}
  */
-angular.$http.head = function(url, config) {};
+angular.$http.head = function(url, opt_config) {};
 
 /**
  * @param {string} url
- * @param {angular.$http.Config=} config
+ * @param {angular.$http.Config=} opt_config
  * @return {angular.$http.HttpPromise}
  */
-angular.$http.jsonp = function(url, config) {};
-
-/**
- * @param {string} url
- * @param {*} data
- * @param {angular.$http.Config=} config
- * @return {angular.$http.HttpPromise}
- */
-angular.$http.post = function(url, data, config) {};
+angular.$http.jsonp = function(url, opt_config) {};
 
 /**
  * @param {string} url
  * @param {*} data
- * @param {angular.$http.Config=} config
+ * @param {angular.$http.Config=} opt_config
  * @return {angular.$http.HttpPromise}
  */
-angular.$http.put = function(url, data, config) {};
+angular.$http.post = function(url, data, opt_config) {};
+
+/**
+ * @param {string} url
+ * @param {*} data
+ * @param {angular.$http.Config=} opt_config
+ * @return {angular.$http.HttpPromise}
+ */
+angular.$http.put = function(url, data, opt_config) {};
 
 /**
  * @type {angular.$http.Config}
@@ -579,6 +578,75 @@ angular.$http.HttpPromise.success = function(callback) {};
  *         function(string):string, Object)} callback
  */
 angular.$http.HttpPromise.error = function(callback) {};
+
+/******************************************************************************
+ * $location Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   absUrl: function():string,
+ *   hash: function(string=):string,
+ *   host: function():string,
+ *   path: function(string=):string,
+ *   port: function():number,
+ *   protocol: function():string,
+ *   replace: function(),
+ *   search: function((string|Object.<string,string>)=, string=):string,
+ *   url: function(string=):string
+ *   }}
+ */
+angular.$location;
+
+/**
+ * @return {string}
+ */
+angular.$location.absUrl = function() {};
+
+/**
+ * @param {string=} opt_hash
+ * @return {string}
+ */
+angular.$location.hash = function(opt_hash) {};
+
+/**
+ * @return {string}
+ */
+angular.$location.host = function() {};
+
+/**
+ * @param {string=} opt_path
+ * @return {string}
+ */
+angular.$location.path = function(opt_path) {};
+
+/**
+ * @return {number}
+ */
+angular.$location.port = function() {};
+
+/**
+ * @return {string}
+ */
+angular.$location.protocol = function() {};
+
+/**
+ * @type {function()}
+ */
+angular.$location.replace = function() {};
+
+/**
+ * @param {(string|Object.<string, string>)=} opt_search
+ * @param {string=} opt_paramValue
+ * @return {string}
+ */
+angular.$location.search = function(opt_search, opt_paramValue) {};
+
+/**
+ * @param {string=} opt_url
+ * @return {string}
+ */
+angular.$location.url = function(opt_url) {};
 
 /******************************************************************************
  * $log Service
