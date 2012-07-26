@@ -178,7 +178,9 @@ public class Compiler extends AbstractCompiler {
       DiagnosticType.error("JSC_OPTIMIZE_LOOP_ERROR",
           "Exceeded max number of code motion iterations: {0}");
 
-  private static final long COMPILER_STACK_SIZE = 1048576L;
+  // We use many recursive algorithms that use O(d) memory in the depth
+  // of the tree.
+  private static final long COMPILER_STACK_SIZE = (1 << 21); // About 2MB
 
 
   /**
