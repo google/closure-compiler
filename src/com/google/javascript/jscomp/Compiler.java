@@ -56,6 +56,10 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -136,9 +140,6 @@ public class Compiler extends AbstractCompiler {
    */
   private int uniqueNameId = 0;
 
-  /** Whether to use threads. */
-  private boolean useThreads = true;
-
   /**
    * Whether to assume there are references to the RegExp Global object
    * properties.
@@ -181,6 +182,31 @@ public class Compiler extends AbstractCompiler {
   // We use many recursive algorithms that use O(d) memory in the depth
   // of the tree.
   private static final long COMPILER_STACK_SIZE = (1 << 21); // About 2MB
+
+  /**
+   * Under JRE 1.6, the JS Compiler overflows the stack when running on some
+   * large or complex JS code. When threads are available, we run all compile
+   * jobs on a separate thread with a larger stack.
+   *
+   * That way, we don't have to increase the stack size for *every* thread
+   * (which is what -Xss does).
+   *
+   * TODO(nicksantos): Add thread pool support for clients that compile a lot.
+   */
+  private ExecutorService compilerExecutor =
+      Executors.newCachedThreadPool(new ThreadFactory() {
+    @Override public Thread newThread(Runnable r) {
+      return new Thread(null, r, "jscompiler", COMPILER_STACK_SIZE);
+    }
+  });
+
+  /**
+   * Use a dedicated compiler thread per Compiler instance.
+   */
+  private Thread compilerThread = null;
+
+  /** Whether to use threads. */
+  private boolean useThreads = true;
 
 
   /**
@@ -620,58 +646,51 @@ public class Compiler extends AbstractCompiler {
     useThreads = false;
   }
 
-  private <T> T runInCompilerThread(final Callable<T> callable) {
-    return runCallable(callable, useThreads, options.tracer.isOn());
-  }
-
-  static <T> T runCallableWithLargeStack(final Callable<T> callable) {
-    return runCallable(callable, true, false);
-  }
-
   @SuppressWarnings("unchecked")
-  static <T> T runCallable(
-      final Callable<T> callable, boolean useLargeStackThread, boolean trace) {
-
-    // Under JRE 1.6, the JS Compiler overflows the stack when running on some
-    // large or complex JS code. Here we start a new thread with a larger
-    // stack in order to let the compiler do its thing, without having to
-    // increase the stack size for *every* thread (which is what -Xss does).
-    // Might want to add thread pool support for clients that compile a lot.
-
-    final boolean dumpTraceReport = trace;
-    final Object[] result = new Object[1];
+  <T> T runInCompilerThread(final Callable<T> callable) {
+    final boolean dumpTraceReport = options != null && options.tracer.isOn();
+    T result = null;
     final Throwable[] exception = new Throwable[1];
-    Runnable runnable = new Runnable() {
+    Callable<T> bootCompilerThread = new Callable<T>() {
       @Override
-      public void run() {
+      public T call() {
         try {
+          compilerThread = Thread.currentThread();
           if (dumpTraceReport) {
             Tracer.initCurrentThreadTrace();
           }
-          result[0] = callable.call();
+          return callable.call();
         } catch (Throwable e) {
           exception[0] = e;
         } finally {
+          compilerThread = null;
           if (dumpTraceReport) {
             Tracer.logAndClearCurrentThreadTrace();
           }
         }
+        return null;
       }
     };
 
-    if (useLargeStackThread) {
-      Thread th = new Thread(null, runnable, "jscompiler", COMPILER_STACK_SIZE);
-      th.start();
-      while (true) {
-        try {
-          th.join();
-          break;
-        } catch (InterruptedException ignore) {
-          // ignore
-        }
+    Preconditions.checkState(
+        compilerThread == null || compilerThread == Thread.currentThread(),
+        "Please do not share the Compiler across threads");
+
+    // If the compiler thread is available, use it.
+    if (useThreads && compilerThread == null) {
+      try {
+        result = compilerExecutor.submit(bootCompilerThread).get();
+      } catch (InterruptedException e) {
+        throw Throwables.propagate(e);
+      } catch (ExecutionException e) {
+        throw Throwables.propagate(e);
       }
     } else {
-      runnable.run();
+      try {
+        result = callable.call();
+      } catch (Exception e) {
+        exception[0] = e;
+      }
     }
 
     // Pass on any exception caught by the runnable object.
@@ -679,7 +698,7 @@ public class Compiler extends AbstractCompiler {
       throw new RuntimeException(exception[0]);
     }
 
-    return (T) result[0];
+    return result;
   }
 
   private void compileInternal() {
