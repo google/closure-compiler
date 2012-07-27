@@ -35,6 +35,21 @@
  */
 KeyboardEvent.prototype.initKeyboardEvent = function(typeArg, canBubbleArg, cancelableArg, viewArg, keyIdentifierArg, keyLocationArg, modifiersList) {};
 
+/** @type {string} */
+KeyboardEvent.prototype['char'];
+
+/** @type {string} */
+KeyboardEvent.prototype.key;
+
+/** @type {number} */
+KeyboardEvent.prototype.location;
+
+/** @type {boolean} */
+KeyboardEvent.prototype.repeat;
+
+/** @type {string} */
+KeyboardEvent.prototype.locale;
+
 /** @type {boolean} */
 Event.prototype.defaultPrevented;
 
