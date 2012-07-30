@@ -918,7 +918,8 @@ final class TypedScopeCreator implements ScopeCreator {
 
           // Infer the context type.
           boolean searchedForThisType = false;
-          if (ownerType != null && ownerType.isFunctionPrototypeType()) {
+          if (ownerType != null && ownerType.isFunctionPrototypeType() &&
+              ownerType.getOwnerFunction().hasInstanceType()) {
             builder.inferThisType(
                 info, ownerType.getOwnerFunction().getInstanceType());
             searchedForThisType = true;

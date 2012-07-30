@@ -108,6 +108,26 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals(Lists.newArrayList(foo), registry.getTypesWithProperty("Bar"));
   }
 
+  public void testPrototypePropertyMethodWithoutAnnotation() {
+    testSame("var Foo = function Foo() {};" +
+             "var proto = Foo.prototype = {" +
+             "   bar: function(a, b){}" +
+             "};" +
+             "proto.baz = function(c) {};" +
+             "(function() { proto.baz = function() {}; })();");
+    ObjectType foo = (ObjectType) findNameType("Foo", globalScope);
+    assertTrue(foo.hasProperty("prototype"));
+
+    ObjectType fooProto = (ObjectType) foo.getPropertyType("prototype");
+    assertTrue(fooProto.hasProperty("bar"));
+    assertEquals("function (?, ?): undefined",
+        fooProto.getPropertyType("bar").toString());
+
+    assertTrue(fooProto.hasProperty("baz"));
+    assertEquals("function (?): undefined",
+        fooProto.getPropertyType("baz").toString());
+  }
+
   public void testEnumProperty() {
     testSame("var foo = {}; /** @enum */ foo.Bar = {XXX: 'xxx'};");
     ObjectType foo = (ObjectType) findNameType("foo", globalScope);
