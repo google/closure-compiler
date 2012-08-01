@@ -1003,4 +1003,22 @@ public class TypeInferenceTest extends TestCase {
     inFunction("var out = 3; if (goog.isNull(this)) out = this;");
     verify("out", createUnionType(OBJECT_TYPE, NUMBER_TYPE));
   }
+
+  public void testRecordInference() {
+    inFunction(
+        "/** @param {{a: (boolean|undefined)}|{b: (string|undefined)}} x */" +
+        "function f(x) {}" +
+        "var out = {};" +
+        "f(out);");
+    assertEquals("{a: (boolean|undefined), b: (string|undefined)}",
+        getType("out").toString());
+  }
+
+  public void testIssue785() {
+    inFunction("/** @param {string|{prop: (string|undefined)}} x */" +
+               "function f(x) {}" +
+               "var out = {};" +
+               "f(out);");
+    assertEquals("{prop: (string|undefined)}", getType("out").toString());
+  }
 }

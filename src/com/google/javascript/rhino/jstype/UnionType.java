@@ -588,9 +588,9 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public void matchConstraint(ObjectType constraintObj) {
+  public void matchConstraint(JSType constraint) {
     for (JSType alternate : alternates) {
-      alternate.matchConstraint(constraintObj);
+      alternate.matchConstraint(constraint);
     }
   }
 

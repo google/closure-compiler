@@ -1172,11 +1172,7 @@ class TypeInference
       return;
     }
 
-    ObjectType constraintObj =
-        ObjectType.cast(constraint.restrictByNotNullOrUndefined());
-    if (constraintObj != null) {
-      type.matchConstraint(constraintObj);
-    }
+    type.matchConstraint(constraint);
   }
 
   /**

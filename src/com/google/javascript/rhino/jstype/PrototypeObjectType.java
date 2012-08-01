@@ -553,7 +553,7 @@ class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public void matchConstraint(ObjectType constraintObj) {
+  public void matchConstraint(JSType constraint) {
     // We only want to match constraints on anonymous types.
     if (hasReferenceName()) {
       return;
@@ -561,25 +561,36 @@ class PrototypeObjectType extends ObjectType {
 
     // Handle the case where the constraint object is a record type.
     //
-    // param constraintObj {{prop: (number|undefined)}}
-    // function f(constraintObj) {}
+    // param constraint {{prop: (number|undefined)}}
+    // function f(constraint) {}
     // f({});
     //
     // We want to modify the object literal to match the constraint, by
     // taking any each property on the record and trying to match
     // properties on this object.
-    if (constraintObj.isRecordType()) {
-      for (String prop : constraintObj.getOwnPropertyNames()) {
-        JSType propType = constraintObj.getPropertyType(prop);
-        if (!isPropertyTypeDeclared(prop)) {
-          JSType typeToInfer = propType;
-          if (!hasProperty(prop)) {
-            typeToInfer = getNativeType(JSTypeNative.VOID_TYPE)
-                .getLeastSupertype(propType);
-          }
-          defineInferredProperty(prop, typeToInfer, null);
+    if (constraint.isRecordType()) {
+      matchRecordTypeConstraint(constraint.toObjectType());
+    } else if (constraint.isUnionType()) {
+      for (JSType alt : constraint.toMaybeUnionType().getAlternates()) {
+        if (alt.isRecordType()) {
+          matchRecordTypeConstraint(alt.toObjectType());
         }
       }
     }
   }
+
+  public void matchRecordTypeConstraint(ObjectType constraintObj) {
+    for (String prop : constraintObj.getOwnPropertyNames()) {
+      JSType propType = constraintObj.getPropertyType(prop);
+      if (!isPropertyTypeDeclared(prop)) {
+        JSType typeToInfer = propType;
+        if (!hasProperty(prop)) {
+          typeToInfer = getNativeType(JSTypeNative.VOID_TYPE)
+              .getLeastSupertype(propType);
+        }
+        defineInferredProperty(prop, typeToInfer, null);
+      }
+    }
+  }
+
 }

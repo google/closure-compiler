@@ -1240,5 +1240,5 @@ public abstract class JSType implements Serializable {
    * infer that an object literal matches its constraint (much like
    * how the java compiler does reverse-inference to figure out generics).
    */
-  public void matchConstraint(ObjectType constraint) {}
+  public void matchConstraint(JSType constraint) {}
 }
