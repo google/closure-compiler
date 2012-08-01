@@ -472,13 +472,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case Token.PARAM_LIST:
-        // If this is under a FUNCTION node, it is a parameter list and can be
-        // ignored here.
-        if (!parent.isFunction()) {
-          ensureTyped(t, n, getJSType(n.getFirstChild()));
-        } else {
-          typeable = false;
-        }
+        typeable = false;
         break;
 
       case Token.COMMA:
@@ -544,7 +538,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case Token.NEW:
         visitNew(t, n);
-        typeable = true;
         break;
 
       case Token.CALL:
@@ -744,8 +737,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case Token.WITH: {
         Node child = n.getFirstChild();
         childType = getJSType(child);
-        validator.expectObject(
-            t, child, childType, "with requires an object");
+        validator.expectObject(t, child, childType, "with requires an object");
         typeable = false;
         break;
       }
@@ -1708,14 +1700,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param n The node being visited.
    */
   private void visitReturn(NodeTraversal t, Node n) {
-    Node function = t.getEnclosingFunction();
-
-    // This is a misplaced return, but the real JS will fail to compile,
-    // so let it go.
-    if (function == null) {
-      return;
-    }
-    JSType jsType = getJSType(function);
+    JSType jsType = getJSType(t.getEnclosingFunction());
 
     if (jsType.isFunctionType()) {
       FunctionType functionType = jsType.toMaybeFunctionType();
