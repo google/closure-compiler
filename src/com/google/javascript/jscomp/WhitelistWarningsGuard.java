@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
@@ -46,7 +47,7 @@ import java.util.regex.Pattern;
  */
 public class WhitelistWarningsGuard extends WarningsGuard {
   /** The set of white-listed warnings, same format as {@code formatWarning}. */
-  private final Set<String> whiteList;
+  private final Set<String> whitelist;
 
   /** Pattern to match line number in error descriptions. */
   private static final Pattern LINE_NUMBER = Pattern.compile(":\\d+");
@@ -54,13 +55,22 @@ public class WhitelistWarningsGuard extends WarningsGuard {
   /**
    * This class depends on an input set that contains the white-list. The format
    * of each white-list string is:
-   * <file-name>:  <warning-description>
+   * <file-name>:<line-number>?  <warning-description>
    *
-   * @param whiteList The set of JS-warnings that are white-listed. This is
+   * @param whitelist The set of JS-warnings that are white-listed. This is
    *     expected to have similar format as {@code formatWarning(JSError)}.
    */
-  public WhitelistWarningsGuard(Set<String> whiteList) {
-    this.whiteList = whiteList;
+  public WhitelistWarningsGuard(Set<String> whitelist) {
+    Preconditions.checkNotNull(whitelist);
+    this.whitelist = normalizeWhitelist(whitelist);
+  }
+
+  private static Set<String> normalizeWhitelist(Set<String> whitelist) {
+    Set<String> result = Sets.newHashSet();
+    for (String match : whitelist) {
+      result.add(LINE_NUMBER.matcher(match).replaceFirst(":"));
+    }
+    return ImmutableSet.copyOf(result);
   }
 
   @Override
@@ -82,7 +92,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
    * @return whether the given warning is white-listed or not.
    */
   protected boolean containWarning(String formattedWarning) {
-    return whiteList.contains(formattedWarning);
+    return whitelist.contains(formattedWarning);
   }
 
   @Override
@@ -182,8 +192,13 @@ public class WhitelistWarningsGuard extends WarningsGuard {
 
     /**
      * Sets whether line number are recorded in the whitelist.
-     * This means that if lines are added below the warning, the warning
-     * will need to be fixed or the whitelist will need to be regenerated.
+     *
+     * The line numbers are not used by the compiler. The whitelist will still
+     * match any line in the file. This ensures that unrelated changes in
+     * the file don't make the build fail.
+     *
+     * The line numbers are only there to make it easier for humans to find
+     * the problem.
      */
     public WhitelistBuilder setWithLineNumber(boolean line) {
       this.withLineNumber = line;

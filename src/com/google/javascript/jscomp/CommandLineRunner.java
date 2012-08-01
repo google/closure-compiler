@@ -400,6 +400,12 @@ public class CommandLineRunner extends
         usage = "A file containing additional command-line options.")
     private String flag_file = "";
 
+    @Option(name = "--warnings_whitelist_file",
+        usage = "A file containing warnings to suppress. Each line should be " +
+            "of the form\n" +
+            "<file-name>:<line-number>?  <warning-description>")
+    private String warnings_whitelist_file = "";
+
     @Argument
     private List<String> arguments = Lists.newArrayList();
 
@@ -730,7 +736,8 @@ public class CommandLineRunner extends
           .setLanguageIn(flags.language_in)
           .setProcessCommonJSModules(flags.process_common_js_modules)
           .setCommonJSModulePathPrefix(flags.common_js_path_prefix)
-          .setTransformAMDToCJSModules(flags.transform_amd_modules);
+          .setTransformAMDToCJSModules(flags.transform_amd_modules)
+          .setWarningsWhitelistFile(flags.warnings_whitelist_file);
     }
   }
 

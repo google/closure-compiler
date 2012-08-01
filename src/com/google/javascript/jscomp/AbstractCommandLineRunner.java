@@ -221,6 +221,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       }
     }
 
+    if (!config.warningsWhitelistFile.isEmpty()) {
+      options.addWarningsGuard(
+          WhitelistWarningsGuard.fromFile(
+              new File(config.warningsWhitelistFile)));
+    }
+
     createDefineOrTweakReplacements(config.define, options, false);
 
     options.setTweakProcessing(config.tweakProcessing);
@@ -2024,6 +2030,15 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
+    private String warningsWhitelistFile = "";
+
+    /**
+     * Sets a whitelist file that suppresses warnings.
+     */
+    CommandLineConfig setWarningsWhitelistFile(String fileName) {
+      this.warningsWhitelistFile = fileName;
+      return this;
+    }
   }
 
   /**
