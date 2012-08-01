@@ -114,6 +114,9 @@ class TypeValidator {
         "original: {2}\n" +
         "override: {3}");
 
+  static final DiagnosticType UNKNOWN_TYPEOF_VALUE =
+      DiagnosticType.warning("JSC_UNKNOWN_TYPEOF_VALUE", "unknown type: {0}");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       INVALID_CAST,
       TYPE_MISMATCH_WARNING,
@@ -121,7 +124,8 @@ class TypeValidator {
       DUP_VAR_DECLARATION,
       HIDDEN_PROPERTY_MISMATCH,
       INTERFACE_METHOD_NOT_IMPLEMENTED,
-      HIDDEN_INTERFACE_PROPERTY_MISMATCH);
+      HIDDEN_INTERFACE_PROPERTY_MISMATCH,
+      UNKNOWN_TYPEOF_VALUE);
 
   TypeValidator(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -150,6 +154,10 @@ class TypeValidator {
   // expectCondition(NodeTraversal t, Node n, ...);
   // If there is a mismatch, the {@code expect} method should issue
   // a warning and attempt to correct the mismatch, when possible.
+
+  void expectValidTypeofName(NodeTraversal t, Node n, String found) {
+    report(JSError.make(t.getSourceName(), n, UNKNOWN_TYPEOF_VALUE, found));
+  }
 
   /**
    * Expect the type to be an object, or a type convertible to object. If the

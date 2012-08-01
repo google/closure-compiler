@@ -7077,6 +7077,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/**@return {void}*/function foo(){ var a = typeof foo(); }");
   }
 
+  public void testTypeof2() throws Exception {
+    testTypes("function f(){ if (typeof 123 == 'numbr') return 321; }",
+              "unknown type: numbr");
+  }
+
   public void testConstructorType1() throws Exception {
     testTypes("/**@constructor*/function Foo(){}" +
         "/**@type{!Foo}*/var f = new Date();",

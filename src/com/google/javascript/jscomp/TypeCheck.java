@@ -597,8 +597,19 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case Token.NE:
       case Token.SHEQ:
       case Token.SHNE: {
-        leftType = getJSType(n.getFirstChild());
-        rightType = getJSType(n.getLastChild());
+        left = n.getFirstChild();
+        right = n.getLastChild();
+
+        if (left.isTypeOf()) {
+          if (right.isString()) {
+            checkTypeofString(t, right, right.getString());
+          }
+        } else if (right.isTypeOf() && left.isString()) {
+          checkTypeofString(t, left, left.getString());
+        }
+
+        leftType = getJSType(left);
+        rightType = getJSType(right);
 
         // We do not want to warn about explicit comparisons to VOID. People
         // often do this if they think their type annotations screwed up.
@@ -614,8 +625,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
         TernaryValue result = TernaryValue.UNKNOWN;
         if (n.getType() == Token.EQ || n.getType() == Token.NE) {
-          result = leftTypeRestricted.testForEquality(
-              rightTypeRestricted);
+          result = leftTypeRestricted.testForEquality(rightTypeRestricted);
           if (n.isNE()) {
             result = result.not();
           }
@@ -807,6 +817,13 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     checkNoTypeCheckSection(n, false);
+  }
+
+  private void checkTypeofString(NodeTraversal t, Node n, String s) {
+    if (!(s.equals("number") || s.equals("string") || s.equals("boolean") ||
+          s.equals("undefined") || s.equals("function") || s.equals("object"))){
+      validator.expectValidTypeofName(t, n, s);
+    }
   }
 
   /**
