@@ -1519,7 +1519,8 @@ function WebRequestEvent() {}
 
 
 /**
- * @param {function(!Object): void} listener Listener function.
+ * @param {function(!Object): void|!BlockingResponse} listener Listener
+ *     function.
  * @param {!RequestFilter} filter A set of filters that restrict
  *     the events that will be sent to this listener.
  * @param {Array.<string>=} opt_extraInfoSpec Array of extra information
@@ -1530,19 +1531,22 @@ WebRequestEvent.prototype.addListener =
 
 
 /**
- * @param {function(!Object): void} listener Listener function.
+ * @param {function(!Object): void|!BlockingResponse} listener Listener
+ *     function.
  */
 WebRequestEvent.prototype.removeListener = function(listener) {};
 
 
 /**
- * @param {function(!Object): void} listener Listener function.
+ * @param {function(!Object): void|!BlockingResponse} listener Listener
+ *     function.
  */
 WebRequestEvent.prototype.hasListener = function(listener) {};
 
 
 /**
- * @param {function(!Object): void} listener Listener function.
+ * @param {function(!Object): void|!BlockingResponse} listener Listener
+ *     function.
  */
 WebRequestEvent.prototype.hasListeners = function(listener) {};
 
