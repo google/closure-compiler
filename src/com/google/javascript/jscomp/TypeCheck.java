@@ -813,7 +813,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   private void checkTypeofString(NodeTraversal t, Node n, String s) {
     if (!(s.equals("number") || s.equals("string") || s.equals("boolean") ||
-          s.equals("undefined") || s.equals("function") || s.equals("object"))){
+          s.equals("undefined") || s.equals("function") ||
+          s.equals("object") || s.equals("unknown"))) {
       validator.expectValidTypeofName(t, n, s);
     }
   }
