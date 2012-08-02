@@ -208,10 +208,6 @@ abstract class IntegrationTestCase extends TestCase {
 
     (new CreateSyntheticBlocks(
         compiler, "synStart", "synEnd")).process(externs, n);
-    (new Normalize(compiler, false)).process(externs, n);
-    (MakeDeclaredNamesUnique.getContextualRenameInverter(compiler)).process(
-        externs, n);
-    (new Denormalize(compiler)).process(externs, n);
     return n;
   }
 

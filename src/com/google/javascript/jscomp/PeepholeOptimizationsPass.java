@@ -121,8 +121,11 @@ class PeepholeOptimizationsPass
 
     int visits = 0;
     do {
-      for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
+      Node c = node.getFirstChild();
+      while(c != null) {
+        Node next = c.getNext();
         traverse(c);
+        c = next;
       }
 
       visit(node);
