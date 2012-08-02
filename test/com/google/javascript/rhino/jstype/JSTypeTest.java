@@ -5260,7 +5260,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
 
-    assertTypeEquals(UNKNOWN_TYPE,
+    assertTypeEquals(CHECKED_UNKNOWN_TYPE,
         UNKNOWN_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
     assertTypeEquals(UNKNOWN_TYPE,
         UNKNOWN_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));

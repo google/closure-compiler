@@ -5993,6 +5993,20 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testIssue783() throws Exception {
+    testTypes(
+        "/** @constructor */" +
+        "var Type = function () {" +
+        "  /** @type {Type} */" +
+        "  this.me_ = this;" +
+        "};" +
+        "Type.prototype.doIt = function() {" +
+        "  var me = this.me_;" +
+        "  for (var i = 0; i < me.unknownProp; i++) {}" +
+        "};",
+        "Property unknownProp never defined on Type");
+  }
+
   /**
    * Tests that the || operator is type checked correctly, that is of
    * the type of the first argument or of the second argument. See
@@ -9098,17 +9112,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty20() throws Exception {
-    // NOTE(nicksantos): In the else branch, we know that x.foo is a
-    // CHECKED_UNKNOWN (UNKNOWN restricted to a falsey value). We could
-    // do some more sophisticated analysis here. Obviously, if x.foo is false,
-    // then x.foo cannot possibly be called. For example, you could imagine a
-    // VagueType that was like UnknownType, but had some constraints on it
-    // so that we knew it could never be a function.
-    //
-    // For now, we just punt on this issue.
     testTypes(
         "/** @param {Object} x */" +
-        "function f(x) { if (x.foo) { } else { x.foo(); } }");
+        "function f(x) { if (x.foo) { } else { x.foo(); } }",
+        "Property foo never defined on Object");
   }
 
   public void testMissingProperty21() throws Exception {

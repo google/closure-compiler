@@ -6712,20 +6712,6 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "Property foo never defined on Object");
   }
 
-  public void testMissingProperty20() throws Exception {
-    // NOTE(nicksantos): In the else branch, we know that x.foo is a
-    // CHECKED_UNKNOWN (UNKNOWN restricted to a falsey value). We could
-    // do some more sophisticated analysis here. Obviously, if x.foo is false,
-    // then x.foo cannot possibly be called. For example, you could imagine a
-    // VagueType that was like UnknownType, but had some constraints on it
-    // so that we knew it could never be a function.
-    //
-    // For now, we just punt on this issue.
-    testTypes(
-        "/** @param {Object} x */" +
-        "function f(x) { if (x.foo) { } else { x.foo(); } }");
-  }
-
   public void testMissingProperty21() throws Exception {
     testTypes(
         "/** @param {Object} x */" +

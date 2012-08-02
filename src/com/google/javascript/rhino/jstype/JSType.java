@@ -880,6 +880,10 @@ public abstract class JSType implements Serializable {
    * method of types to get the restricted type.
    */
   public JSType getRestrictedTypeGivenToBooleanOutcome(boolean outcome) {
+    if (outcome && this == getNativeType(JSTypeNative.UNKNOWN_TYPE)) {
+      return getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
+    }
+
     BooleanLiteralSet literals = getPossibleToBooleanOutcomes();
     if (literals.contains(outcome)) {
       return this;
