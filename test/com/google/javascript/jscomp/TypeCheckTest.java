@@ -9308,6 +9308,16 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function f(x) { if (x.impossible) x.impossible(); }");
   }
 
+
+  public void testMissingProperty42() throws Exception {
+    testTypes(
+        "/** @param {Object} x */" +
+        "function f(x) { " +
+        "  if (typeof x.impossible == 'undefined') throw Error();" +
+        "  return x.impossible;" +
+        "}");
+  }
+
   public void testReflectObject1() throws Exception {
     testClosureTypes(
         "var goog = {}; goog.reflect = {}; " +

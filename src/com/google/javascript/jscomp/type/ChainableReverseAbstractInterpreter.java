@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.type;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
@@ -378,7 +379,7 @@ public abstract class ChainableReverseAbstractInterpreter
 
     @Override
     public JSType caseUnknownType() {
-      return caseTopType(getNativeType(UNKNOWN_TYPE));
+      return caseTopType(getNativeType(CHECKED_UNKNOWN_TYPE));
     }
 
     @Override
@@ -669,7 +670,7 @@ public abstract class ChainableReverseAbstractInterpreter
     if (type == null) {
       if (resultEqualsValue) {
         JSType result = getNativeTypeForTypeOf(value);
-        return result == null ? getNativeType(UNKNOWN_TYPE) : result;
+        return result == null ? getNativeType(CHECKED_UNKNOWN_TYPE) : result;
       } else {
         return null;
       }

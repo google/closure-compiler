@@ -1021,4 +1021,12 @@ public class TypeInferenceTest extends TestCase {
                "f(out);");
     assertEquals("{prop: (string|undefined)}", getType("out").toString());
   }
+
+  public void testAssertTypeofProp() {
+    assuming("x", createNullableType(OBJECT_TYPE));
+    inFunction(
+        "goog.asserts.assert(typeof x.prop != 'undefined');" +
+        "out = x.prop;");
+    verify("out", CHECKED_UNKNOWN_TYPE);
+  }
 }
