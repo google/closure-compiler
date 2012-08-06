@@ -1981,15 +1981,17 @@ google.maps.MapCanvasProjection = function() {};
 
 /**
  * @param {google.maps.Point} pixel
+ * @param {boolean=} opt_nowrap
  * @return {google.maps.LatLng}
  */
-google.maps.MapCanvasProjection.prototype.fromContainerPixelToLatLng = function(pixel) {};
+google.maps.MapCanvasProjection.prototype.fromContainerPixelToLatLng = function(pixel, opt_nowrap) {};
 
 /**
  * @param {google.maps.Point} pixel
+ * @param {boolean=} opt_nowrap
  * @return {google.maps.LatLng}
  */
-google.maps.MapCanvasProjection.prototype.fromDivPixelToLatLng = function(pixel) {};
+google.maps.MapCanvasProjection.prototype.fromDivPixelToLatLng = function(pixel, opt_nowrap) {};
 
 /**
  * @param {google.maps.LatLng} latLng
