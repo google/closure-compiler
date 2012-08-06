@@ -289,7 +289,7 @@ angular.noop = function() {};
  *   $evalAsync: function((string|function())=),
  *   $id: number,
  *   $new: function():Object,
- *   $on: function(string, function(angular.Scope.Event)):function(),
+ *   $on: function(string, function(angular.Scope.Event, ...[*])):function(),
  *   $watch: function(
  *       (string|function()),
  *       (function(*, *, angular.Scope)|string)=, boolean=):function()
@@ -338,7 +338,7 @@ angular.Scope.$new = function() {};
 
 /**
  * @param {string} name
- * @param {function(angular.Scope.Event)} listener
+ * @param {function(angular.Scope.Event, ...[*])} listener
  * @return {function()}
  */
 angular.Scope.$on = function(name, listener) {};
@@ -494,6 +494,8 @@ angular.$http.Config;
 
 // /**
 //  * This extern is currently incomplete as delete is a reserved word.
+//  * To use delete, index $http.
+//  * Example: $http['delete'](url, opt_config);
 //  * @param {string} url
 //  * @param {angular.$http.Config=} opt_config
 //  * @return {angular.$http.HttpPromise}
@@ -860,3 +862,21 @@ angular.$routeProvider.Params.redirectTo;
 
 /** @type {boolean} */
 angular.$routeProvider.Params.reloadOnSearch;
+
+/******************************************************************************
+ * $timeout Service
+ *****************************************************************************/
+
+/**
+ * @typedef {function(function(), number=, boolean=):angular.$q.Promise}
+ */
+angular.$timeout;
+
+// /**
+//  * This extern is incomplete. $timeout cannot be a function with properties.
+//  * To use cancel, index $timeout.
+//  * Example: $timeout['cancel'](promise);
+//  * @param {angular.$q.Promise=} opt_promise
+//  * @return {boolean}
+//  */
+// angular.$timeout.cancel = function(opt_promise) {};
