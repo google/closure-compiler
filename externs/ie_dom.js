@@ -84,6 +84,13 @@ XMLDOMDocument.prototype.readyState;
 XMLDOMDocument.prototype.resolveExternals;
 
 /**
+ * @see http://msdn.microsoft.com/en-us/library/ms760290(v=vs.85).aspx
+ * @param {string} name
+ * @param {*} value
+ */
+XMLDOMDocument.prototype.setProperty = function(name, value) {};
+
+/**
  * @type {string}
  * @see http://msdn.microsoft.com/en-us/library/ms767669(VS.85).aspx
  */
