@@ -136,11 +136,5 @@ Performance.prototype.getEntriesByName = function(name, opt_entryType) {};
 // Only available in WebKit, and only with the --enable-memory-info flag.
 /** @type {PerformanceMemory} */ Performance.prototype.memory;
 
-/** @return {number} */
-Performance.prototype.now = function() {};
-
-/** @return {number} */
-Performance.prototype.webkitNow = function() {};
-
 /** @type {Performance} */
 Window.prototype.performance;

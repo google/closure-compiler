@@ -120,7 +120,11 @@ public class Scope
     /** The enclosing scope */
     final Scope scope;
 
+    /** @see isMarkedEscaped */
     private boolean markedEscaped = false;
+
+    /** @see isMarkedAssignedExactlyOnce */
+    private boolean markedAssignedExactlyOnce = false;
 
     /**
      * Creates a variable.
@@ -185,7 +189,7 @@ public class Scope
 
     /**
      * Whether this is a bleeding function (an anonymous named function
-     * that bleeds into the inner scope.
+     * that bleeds into the inner scope).
      */
     public boolean isBleedingFunction() {
       return NodeUtil.isFunctionExpression(getParentNode());
@@ -333,7 +337,12 @@ public class Scope
       return "Scope.Var " + name + "{" + type + "}";
     }
 
-    /** Record that this is escaped by an inner scope. */
+    /**
+     * Record that this is escaped by an inner scope.
+     *
+     * In other words, it's assigned in an inner scope so that it's much harder
+     * to make assertions about its value at a given point.
+     */
     void markEscaped() {
       markedEscaped = true;
     }
@@ -344,6 +353,24 @@ public class Scope
      */
     boolean isMarkedEscaped() {
       return markedEscaped;
+    }
+
+    /**
+     * Record that this is assigned exactly once..
+     *
+     * In other words, it's assigned in an inner scope so that it's much harder
+     * to make assertions about its value at a given point.
+     */
+    void markAssignedExactlyOnce() {
+      markedAssignedExactlyOnce = true;
+    }
+
+    /**
+     * Whether this is assigned exactly once.
+     * Notice that not all scope creators record this information.
+     */
+    boolean isMarkedAssignedExactlyOnce() {
+      return markedAssignedExactlyOnce;
     }
   }
 
@@ -524,12 +551,12 @@ public class Scope
   }
 
   @Override
-  public StaticSlot<JSType> getSlot(String name) {
+  public Var getSlot(String name) {
     return getVar(name);
   }
 
   @Override
-  public StaticSlot<JSType> getOwnSlot(String name) {
+  public Var getOwnSlot(String name) {
     return vars.get(name);
   }
 
