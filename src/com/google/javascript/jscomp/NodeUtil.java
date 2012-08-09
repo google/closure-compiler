@@ -1912,15 +1912,6 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns whether this is a bleeding function (an anonymous named function
-   * that bleeds into the inner scope).
-   */
-  static boolean isBleedingFunctionName(Node n) {
-    return n.isName() && !n.getString().isEmpty() &&
-        isFunctionExpression(n.getParent());
-  }
-
-  /**
    * Determines if a node is a function expression that has an empty body.
    *
    * @param node a node

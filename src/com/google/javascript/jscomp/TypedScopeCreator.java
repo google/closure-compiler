@@ -51,7 +51,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -1872,15 +1871,6 @@ final class TypedScopeCreator implements ScopeCreator {
           Preconditions.checkState(v.getScope() == scope);
           v.markEscaped();
         }
-
-        for (Multiset.Entry<String> entry :
-                 contents.getAssignedNameCounts().entrySet()) {
-          Var v = scope.getVar(entry.getElement());
-          Preconditions.checkState(v.getScope() == scope);
-          if (entry.getCount() == 1) {
-            v.markAssignedExactlyOnce();
-          }
-        }
       }
     }
 
@@ -1991,31 +1981,20 @@ final class TypedScopeCreator implements ScopeCreator {
         data.get(t.getScopeRoot()).recordNonEmptyReturn();
       }
 
-      if (t.getScopeDepth() <= 1) {
-        // The first-order function analyzer looks at two types of variables:
-        //
-        // 1) Local variables that are assigned in inner scopes ("escaped vars")
-        //
-        // 2) Local variables that are assigned more than once.
-        //
+      if (t.getScopeDepth() <= 2) {
+        // We only need to worry about escaped variables at depth 3.
+        // An variable escaped at depth 2 is, by definition, a global variable.
         // We treat all global variables as escaped by default, so there's
         // no reason to do this extra computation for them.
         return;
       }
 
-      if (n.isName() && NodeUtil.isLValue(n) &&
-          // Be careful of bleeding functions, which create variables
-          // in the inner scope, not the scope where the name appears.
-          !NodeUtil.isBleedingFunctionName(n)) {
+      if (n.isName() && NodeUtil.isLValue(n)) {
         String name = n.getString();
         Scope scope = t.getScope();
         Var var = scope.getVar(name);
         if (var != null) {
           Scope ownerScope = var.getScope();
-          if (ownerScope.isLocal()) {
-            data.get(ownerScope.getRootNode()).recordAssignedName(name);
-          }
-
           if (scope != ownerScope && ownerScope.isLocal()) {
             data.get(ownerScope.getRootNode()).recordEscapedVarName(name);
           }

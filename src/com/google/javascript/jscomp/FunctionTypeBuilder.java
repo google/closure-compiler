@@ -24,12 +24,9 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
@@ -782,9 +779,6 @@ final class FunctionTypeBuilder {
 
     /** Gets a list of variables whose properties are escaped. */
     Set<String> getEscapedQualifiedNames();
-
-    /** Gets the number of times each variable has been assigned. */
-    Multiset<String> getAssignedNameCounts();
   }
 
   static class UnknownFunctionContents implements FunctionContents {
@@ -824,11 +818,6 @@ final class FunctionTypeBuilder {
     public Set<String> getEscapedQualifiedNames() {
       return ImmutableSet.of();
     }
-
-    @Override
-    public Multiset<String> getAssignedNameCounts() {
-      return ImmutableMultiset.of();
-    }
   }
 
   static class AstFunctionContents implements FunctionContents {
@@ -836,7 +825,6 @@ final class FunctionTypeBuilder {
     private boolean hasNonEmptyReturns = false;
     private Set<String> escapedVarNames;
     private Set<String> escapedQualifiedNames;
-    private final Multiset<String> assignedVarNames = HashMultiset.create();
 
     AstFunctionContents(Node n) {
       this.n = n;
@@ -891,15 +879,6 @@ final class FunctionTypeBuilder {
         escapedQualifiedNames = Sets.newHashSet();
       }
       escapedQualifiedNames.add(name);
-    }
-
-    @Override
-    public Multiset<String> getAssignedNameCounts() {
-      return assignedVarNames;
-    }
-
-    void recordAssignedName(String name) {
-      assignedVarNames.add(name);
     }
   }
 }

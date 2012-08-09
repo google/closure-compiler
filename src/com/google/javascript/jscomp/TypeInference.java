@@ -609,33 +609,19 @@ class TypeInference
         // There are two situations where we don't want to use type information
         // from the scope, even if we have it.
 
-        // 1) The var is escaped and assigned in an inner scope, e.g.,
+        // 1) The var is escaped in a weird way, e.g.,
         // function f() { var x = 3; function g() { x = null } (x); }
         boolean isInferred = var.isTypeInferred();
         boolean unflowable = isInferred &&
             isUnflowable(syntacticScope.getVar(varName));
 
         // 2) We're reading type information from another scope for an
-        // inferred variable. That variable is assigned more than once,
-        // and we can't know which type we're getting.
-        //
-        // var t = null; function f() { (t); } doStuff(); t = {};
-        //
-        // Notice that this heuristic isn't perfect. For example, you might
-        // have:
-        //
-        // function f() { (t); } f(); var t = 3;
-        //
-        // In this case, we would infer the first reference to t as
-        // type {number}, even though it's undefined.
-        boolean nonLocalInferredSlot = false;
-        if (isInferred && syntacticScope.isLocal()) {
-          Var maybeOuterVar = syntacticScope.getParent().getVar(varName);
-          if (var == maybeOuterVar &&
-              !maybeOuterVar.isMarkedAssignedExactlyOnce()) {
-            nonLocalInferredSlot = true;
-          }
-        }
+        // inferred variable.
+        // var t = null; function f() { (t); }
+        boolean nonLocalInferredSlot =
+            isInferred &&
+            syntacticScope.getParent() != null &&
+            var == syntacticScope.getParent().getSlot(varName);
 
         if (!unflowable && !nonLocalInferredSlot) {
           type = var.getType();
