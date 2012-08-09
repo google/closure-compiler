@@ -1130,7 +1130,7 @@ final class TypedScopeCreator implements ScopeCreator {
         newVar = validator.expectUndeclaredVariable(
             sourceName, input, n, parent, oldVar, variableName, type);
       } else {
-        if (!inferred) {
+        if (type != null) {
           setDeferredType(n, type);
         }
 
@@ -1921,6 +1921,8 @@ final class TypedScopeCreator implements ScopeCreator {
     private void declareArguments(Node functionNode) {
       Node astParameters = functionNode.getFirstChild().getNext();
       Node body = astParameters.getNext();
+      boolean isFnTypeInferred = functionNode.getBooleanProp(
+          Node.INFERRED_FUNCTION);
       FunctionType functionType =
           JSType.toMaybeFunctionType(functionNode.getJSType());
       if (functionType != null) {
@@ -1930,7 +1932,7 @@ final class TypedScopeCreator implements ScopeCreator {
           for (Node astParameter : astParameters.children()) {
             if (jsDocParameter != null) {
               defineSlot(astParameter, functionNode,
-                  jsDocParameter.getJSType(), false);
+                  jsDocParameter.getJSType(), isFnTypeInferred);
               jsDocParameter = jsDocParameter.getNext();
             } else {
               defineSlot(astParameter, functionNode, null, true);

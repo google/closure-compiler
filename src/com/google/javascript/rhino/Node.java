@@ -107,7 +107,9 @@ public class Node implements Cloneable, Serializable {
       SLASH_V            = 54,    // Whether a STRING node contains a \v
                                   // vertical tab escape. This is a total hack.
                                   // See comments in IRFactory about this.
-      LAST_PROP          = 54;
+      INFERRED_FUNCTION  = 55,    // Marks a function whose parameter types
+                                  // have been inferred.
+      LAST_PROP          = 55;
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -143,6 +145,7 @@ public class Node implements Cloneable, Serializable {
         case INPUT_ID:  return "input_id";
         case LENGTH:    return "length";
         case SLASH_V:   return "slash_v";
+        case INFERRED_FUNCTION:   return "inferred";
         default:
           throw new IllegalStateException("unexpect prop id " + propType);
       }

@@ -9580,6 +9580,24 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "f(0, function() {});");
   }
 
+  public void testTemplateType3() throws Exception {
+    testTypes(
+        "/**" +
+        " * @param {T} v\n" +
+        " * @param {function(T)} f\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function call(v, f) { f.call(null, v); }" +
+        "/** @type {string} */ var s;" +
+        "call(3, function(x) {" +
+        " x = true;" +
+        " s = x;" +
+        "});",
+        "assignment\n" +
+        "found   : boolean\n" +
+        "required: string");
+  }
+
   public void disable_testBadTemplateType4() throws Exception {
     // TODO(johnlenz): Add a check for useless of template types.
     // Unless there are at least two references to a Template type in

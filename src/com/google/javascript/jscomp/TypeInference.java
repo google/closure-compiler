@@ -935,6 +935,7 @@ class TypeInference
             iArgumentType.isFunctionType() &&
             iArgument.getJSDocInfo() == null) {
           iArgument.setJSType(restrictedParameter);
+          iArgument.putBooleanProp(Node.INFERRED_FUNCTION, true);
         }
       }
       i++;
