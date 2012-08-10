@@ -1077,7 +1077,8 @@ PluginArray.prototype.item = function(index) {};
  */
 PluginArray.prototype.namedItem = function(name) {};
 
-PluginArray.prototype.refresh = function() {};
+/** @param {boolean=} reloadDocuments */
+PluginArray.prototype.refresh = function(reloadDocuments) {};
 
 /** @constructor */
 function MimeTypeArray() {}
