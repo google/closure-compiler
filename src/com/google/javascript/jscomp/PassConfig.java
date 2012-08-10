@@ -68,6 +68,12 @@ public abstract class PassConfig {
     topScope = typedScopeCreator.createScope(root, null);
   }
 
+  void clearTypedScope() {
+    internalScopeCreator = null;
+    typedScopeCreator = null;
+    topScope = null;
+  }
+
   /**
    * Regenerates the top scope potentially only for a sub-tree of AST and then
    * copies information for the old global scope.

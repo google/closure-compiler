@@ -278,7 +278,8 @@ class PhaseOptimizer implements CompilerPass {
   }
 
   /**
-   * Delegates to a PassFactory for processing.
+   * Wraps every pass factory as a pass, to ensure that we don't
+   * keep references to passes and their data structures.
    */
   private class PassFactoryDelegate extends NamedPass {
     private final AbstractCompiler myCompiler;

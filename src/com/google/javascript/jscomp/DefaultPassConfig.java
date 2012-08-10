@@ -278,6 +278,12 @@ public class DefaultPassConfig extends PassConfig {
       } else {
         checks.add(inferJsDocInfo.makeOneTimePass());
       }
+
+      // We assume that only IDE-mode clients will try to query the
+      // typed scope creator after the compile job.
+      if (!options.ideMode && !options.saveDataStructures) {
+        checks.add(clearTypedScopePass.makeOneTimePass());
+      }
     }
 
     if (options.checkUnreachableCode.isOn() ||
@@ -1112,6 +1118,15 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
+  /** Clears the typed scope when we're done. */
+  final PassFactory clearTypedScopePass =
+      new PassFactory("clearTypedScopePass", false) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new ClearTypedScope();
+    }
+  };
+
   /** Runs type inference. */
   final HotSwapPassFactory inferTypes =
       new HotSwapPassFactory("inferTypes", false) {
@@ -1236,6 +1251,14 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     public void hotSwapScript(Node scriptRoot, Node originalRoot) {
       patchGlobalTypedScope(compiler, scriptRoot);
+    }
+  }
+
+  /** A compiler pass that clears the global scope. */
+  class ClearTypedScope implements CompilerPass {
+    @Override
+    public void process(Node externs, Node root) {
+      clearTypedScope();
     }
   }
 
