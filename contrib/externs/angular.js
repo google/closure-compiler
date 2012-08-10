@@ -289,7 +289,7 @@ angular.noop = function() {};
  *   $evalAsync: function((string|function())=),
  *   $id: number,
  *   $new: function():Object,
- *   $on: function(string, function(angular.Scope.Event, ...[*])):function(),
+ *   $on: function(string, function(angular.Scope.Event, ...[?])):function(),
  *   $watch: function(
  *       (string|function()),
  *       (function(*, *, angular.Scope)|string)=, boolean=):function()
@@ -338,7 +338,7 @@ angular.Scope.$new = function() {};
 
 /**
  * @param {string} name
- * @param {function(angular.Scope.Event, ...[*])} listener
+ * @param {function(angular.Scope.Event, ...[?])} listener
  * @return {function()}
  */
 angular.Scope.$on = function(name, listener) {};
