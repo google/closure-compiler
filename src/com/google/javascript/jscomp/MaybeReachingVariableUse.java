@@ -22,6 +22,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
@@ -145,8 +146,24 @@ class MaybeReachingVariableUse extends
   @Override
   ReachingUses flowThrough(Node n, ReachingUses input) {
     ReachingUses output = new ReachingUses(input);
-    computeMayUse(n, n, output, false);
+
+    // If there's an ON_EX edge, this cfgNode may or may not get executed.
+    // We can express this concisely by just pretending this happens in
+    // a conditional.
+    boolean conditional = hasExceptionHandler(n);
+    computeMayUse(n, n, output, conditional);
+
     return output;
+  }
+
+  private boolean hasExceptionHandler(Node cfgNode) {
+    List<DiGraphEdge<Node, Branch>> branchEdges = getCfg().getOutEdges(cfgNode);
+    for (DiGraphEdge<Node, Branch> edge : branchEdges) {
+      if (edge.getValue() == Branch.ON_EX) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private void computeMayUse(

@@ -500,6 +500,24 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "function f(x) { var a    ; var b = x; var c    ; x = 3; return b; }");
   }
 
+  public void testIssue794a() {
+    noInline(
+        "var x = 1; " +
+        "try { x += someFunction(); } catch (e) {}" +
+        "x += 1;" +
+        "try { x += someFunction(); } catch (e) {}" +
+        "return x;");
+  }
+
+  public void testIssue794b() {
+    noInline(
+        "var x = 1; " +
+        "try { x = x + someFunction(); } catch (e) {}" +
+        "x = x + 1;" +
+        "try { x = x + someFunction(); } catch (e) {}" +
+        "return x;");
+  }
+
   private void noInline(String input) {
     inline(input, input);
   }

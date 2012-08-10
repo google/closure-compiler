@@ -108,6 +108,13 @@ public class MaybeReachingVariableUseTest extends TestCase {
     assertMatch("var x = [], foo; D: for (x in foo) { U:x }");
   }
 
+  public void testTryCatch() {
+    assertMatch(
+        "D: var x = 1; " +
+        "try { U: var y = foo() + x; } catch (e) {} " +
+        "U: var z = x;");
+  }
+
   /**
    * The def of x at D: may be used by the read of x at U:.
    */
