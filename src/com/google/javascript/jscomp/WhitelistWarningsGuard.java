@@ -18,7 +18,10 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
@@ -29,9 +32,9 @@ import com.google.javascript.jscomp.CheckLevel;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.util.HashSet;
+import java.io.Reader;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -46,6 +49,8 @@ import java.util.regex.Pattern;
  * @author bashir@google.com (Bashir Sadjad)
  */
 public class WhitelistWarningsGuard extends WarningsGuard {
+  private static final Splitter LINE_SPLITTER = Splitter.on("\n");
+
   /** The set of white-listed warnings, same format as {@code formatWarning}. */
   private final Set<String> whitelist;
 
@@ -56,6 +61,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
    * This class depends on an input set that contains the white-list. The format
    * of each white-list string is:
    * <file-name>:<line-number>?  <warning-description>
+   * # <optional-comment>
    *
    * @param whitelist The set of JS-warnings that are white-listed. This is
    *     expected to have similar format as {@code formatWarning(JSError)}.
@@ -65,10 +71,23 @@ public class WhitelistWarningsGuard extends WarningsGuard {
     this.whitelist = normalizeWhitelist(whitelist);
   }
 
+  /**
+   * Loads legacy warnings list from the set of strings. During development line
+   * numbers are changed very often - we just cut them and compare without ones.
+   *
+   * @return known legacy warnings without line numbers.
+   */
   private static Set<String> normalizeWhitelist(Set<String> whitelist) {
     Set<String> result = Sets.newHashSet();
-    for (String match : whitelist) {
-      result.add(LINE_NUMBER.matcher(match).replaceFirst(":"));
+    for (String line : whitelist) {
+      String trimmed = line.trim();
+      if (trimmed.isEmpty() || trimmed.charAt(0) == '#') {
+        // strip out empty lines and comments.
+        continue;
+      }
+
+      // Strip line number for matching.
+      result.add(LINE_NUMBER.matcher(trimmed).replaceFirst(":"));
     }
     return ImmutableSet.copyOf(result);
   }
@@ -106,10 +125,8 @@ public class WhitelistWarningsGuard extends WarningsGuard {
   }
 
   /**
-   * Loads legacy warnings list from the file. As during development line
-   * numbers are changed very often - we just cut it and compare without ones.
-   *
-   * @return known legacy warnings without line numbers.
+   * Loads legacy warnings list from the file.
+   * @return The lines of the file.
    */
   public static Set<String> loadWhitelistedJsWarnings(File file) {
     return loadWhitelistedJsWarnings(
@@ -117,28 +134,30 @@ public class WhitelistWarningsGuard extends WarningsGuard {
   }
 
   /**
-   * Loads legacy warnings list from the file. As during development line
-   * numbers are changed very often - we just cut it and compare without ones.
-   *
-   * @return known legacy warnings without line numbers.
+   * Loads legacy warnings list from the file.
+   * @return The lines of the file.
    */
   protected static Set<String> loadWhitelistedJsWarnings(
-      InputSupplier<InputStreamReader> supplier) {
-    Preconditions.checkNotNull(supplier);
-
-    Set<String> result = new HashSet<String>();
-
+      InputSupplier<? extends Reader> supplier) {
     try {
-      for (String line : CharStreams.readLines(supplier)) {
-        line = line.trim();
-        if (line.isEmpty() || line.charAt(0) == '#') {
-          continue;
-        }
-
-        result.add(line);
-      }
+      return loadWhitelistedJsWarnings(supplier.getInput());
     } catch (IOException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Loads legacy warnings list from the file.
+   * @return The lines of the file.
+   */
+  // TODO(nicksantos): This is a weird API.
+  static Set<String> loadWhitelistedJsWarnings(Reader reader)
+      throws IOException {
+    Preconditions.checkNotNull(reader);
+    Set<String> result = Sets.newHashSet();
+
+    for (String line : CharStreams.readLines(reader)) {
+      result.add(line);
     }
 
     return result;
@@ -148,18 +167,27 @@ public class WhitelistWarningsGuard extends WarningsGuard {
     return formatWarning(error, false);
   }
 
-  public static String formatWarning(JSError error, boolean withLineNumber) {
+  /**
+   * @param withMetaData If true, include metadata that's useful to humans
+   *     This metadata won't be used for matching the warning.
+   */
+  public static String formatWarning(JSError error, boolean withMetaData) {
     StringBuilder sb = new StringBuilder();
     sb.append(error.sourceName).append(":");
-    if (withLineNumber) {
+    if (withMetaData) {
       sb.append(error.lineNumber);
     }
-    String descriptionFirstLine = getFirstLine(error.description);
-    if (!withLineNumber) {
-      descriptionFirstLine =
-          LINE_NUMBER.matcher(descriptionFirstLine).replaceAll(":");
+    List<String> lines = ImmutableList.copyOf(
+        LINE_SPLITTER.split(error.description));
+    sb.append("  ").append(lines.get(0));
+
+    // Add the rest of the message as a comment.
+    if (withMetaData) {
+      for (int i = 1; i < lines.size(); i++) {
+        sb.append("\n# ").append(lines.get(i));
+      }
+      sb.append("\n");
     }
-    sb.append("  ").append(descriptionFirstLine);
 
     return sb.toString();
   }
@@ -176,7 +204,6 @@ public class WhitelistWarningsGuard extends WarningsGuard {
     private final Set<JSError> warnings = Sets.newLinkedHashSet();
     private String productName = null;
     private String generatorTarget = null;
-    private boolean withLineNumber = false;
 
     /** Fill in your product name to get a fun message! */
     public WhitelistBuilder setProductName(String name) {
@@ -190,18 +217,9 @@ public class WhitelistWarningsGuard extends WarningsGuard {
       return this;
     }
 
-    /**
-     * Sets whether line number are recorded in the whitelist.
-     *
-     * The line numbers are not used by the compiler. The whitelist will still
-     * match any line in the file. This ensures that unrelated changes in
-     * the file don't make the build fail.
-     *
-     * The line numbers are only there to make it easier for humans to find
-     * the problem.
-     */
+    /** We now always record the line number. */
+    @Deprecated
     public WhitelistBuilder setWithLineNumber(boolean line) {
-      this.withLineNumber = line;
       return this;
     }
 
@@ -241,19 +259,22 @@ public class WhitelistWarningsGuard extends WarningsGuard {
       Multimap<DiagnosticType, String> warningsByType = TreeMultimap.create();
       for (JSError warning : warnings) {
         warningsByType.put(
-            warning.getType(), formatWarning(warning, withLineNumber));
+            warning.getType(),
+            formatWarning(warning, true /* withLineNumber */));
       }
 
       for (DiagnosticType type : warningsByType.keySet()) {
         out.append("\n# Warning ")
             .append(type.key)
             .append(": ")
-            .println(getFirstLine(type.format.toPattern()));
+            .println(Iterables.get(
+                LINE_SPLITTER.split(type.format.toPattern()), 0));
 
         for (String warning : warningsByType.get(type)) {
           out.println(warning);
         }
       }
+      out.flush();
     }
   }
 }

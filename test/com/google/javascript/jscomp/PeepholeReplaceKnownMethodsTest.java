@@ -205,19 +205,9 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = 'a b c d e'.split(' ', 1)", "x = ['a']");
     fold("x = 'a b c d e'.split(' ', 3)", "x = ['a','b','c']");
     fold("x = 'a b c d e'.split(null, 1)", "x = ['a b c d e']");
-    fold("x = 'aaaaa'.split('a')", "x = ['', '', '', '', '', '']");
-    fold("x = 'xyx'.split('x')", "x = ['', 'y', '']");
-    
-    // Empty separator
+    fold("x = 'aaaaa'.split('a')", "x = ['', '', '', '', '']");
     fold("x = 'abcde'.split('')", "x = ['a','b','c','d','e']");
     fold("x = 'abcde'.split('', 3)", "x = ['a','b','c']");
-    
-    // Empty separator AND empty string
-    fold("x = ''.split('')", "x = []");
-    
-    // Separator equals string
-    fold("x = 'aaa'.split('aaa')", "x = ['','']");
-    fold("x = ' '.split(' ')", "x = ['','']");
 
     foldSame("x = 'abcde'.split(/ /)");
     foldSame("x = 'abcde'.split(' ', -1)");
