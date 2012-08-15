@@ -691,7 +691,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
       return -1;
     }
 
-    return matchIndex + separator.length();
+    return matchIndex;
   }
 
   /**
@@ -699,42 +699,43 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
    */
   private String[] jsSplit(String stringValue, String separator, int limit) {
     Preconditions.checkArgument(limit >= 0);
+    Preconditions.checkArgument(stringValue != null);
 
     // For limits of 0, return an empty array
     if (limit == 0) {
       return new String[0];
     }
 
-    /* If a separator is not specified, return the entire string as
-     * the only element of an array.
-     */
+    // If a separator is not specified, return the entire string as
+    // the only element of an array.
     if (separator == null) {
       return new String[] {stringValue};
     }
 
     List<String> splitStrings = Lists.newArrayList();
 
-    /* If an empty string is specified for the separator, split apart each
-     * character of the string.
-     */
+    // If an empty string is specified for the separator, split apart each
+    // character of the string.
     if (separator.length() == 0) {
       for (int i = 0; i < stringValue.length() && i < limit; i++) {
         splitStrings.add(stringValue.substring(i, i + 1));
       }
     } else {
-      int startIndex = 0, matchEndIndex;
-      while ((matchEndIndex =
+      int startIndex = 0, matchIndex;    
+      while ((matchIndex =
           jsSplitMatch(stringValue, startIndex, separator)) >= 0 &&
           splitStrings.size() < limit) {
-        if (separator.length() == 0) {
-          matchEndIndex++;
-        }
-        splitStrings.add(stringValue.substring(startIndex,
-            matchEndIndex - separator.length()));
-        startIndex = matchEndIndex;
+        splitStrings.add(stringValue.substring(startIndex, matchIndex));
+
+        startIndex = matchIndex + separator.length();
       }
-      if (startIndex < stringValue.length() && splitStrings.size() < limit) {
-        splitStrings.add(stringValue.substring(startIndex));
+
+      if (splitStrings.size() < limit) {
+        if (startIndex < stringValue.length()) {
+          splitStrings.add(stringValue.substring(startIndex));
+        } else {
+          splitStrings.add("");
+        }
       }
     }
 
