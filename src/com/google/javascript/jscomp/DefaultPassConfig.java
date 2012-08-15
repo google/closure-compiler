@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -340,6 +341,8 @@ public class DefaultPassConfig extends PassConfig {
         !options.nameReferenceReportPath.isEmpty()) {
       checks.add(printNameReferenceReport);
     }
+
+    checks.add(createEmptyPass("afterStandardChecks"));
 
     assertAllOneTimePasses(checks);
     return checks;
