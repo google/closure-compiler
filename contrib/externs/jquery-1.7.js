@@ -2033,6 +2033,12 @@ jQuery.support.cssFloat;
 $.support.cssFloat;
 
 /** @type {boolean} */
+jQuery.support.fixedPosition;
+
+/** @type {boolean} */
+$.support.fixedPosition;
+
+/** @type {boolean} */
 jQuery.support.hrefNormalized;
 
 /** @type {boolean} */
