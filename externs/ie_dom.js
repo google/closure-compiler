@@ -1028,6 +1028,12 @@ Element.prototype.isContentEditable;
 Element.prototype.msSetPointerCapture = function(pointerId) {};
 
 /**
+ * @param {number} pointerId
+ * @see http://msdn.microsoft.com/en-us/library/ie/hh771880.aspx
+ */
+Element.prototype.msReleasePointerCapture = function(pointerId) {};
+
+/**
  * @type {?function(Event)}
  * @see http://msdn.microsoft.com/en-us/library/ms536903(v=vs.85).aspx
  */
