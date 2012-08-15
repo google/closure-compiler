@@ -1457,11 +1457,12 @@ google.maps.KmlFeatureData.prototype.name;
 google.maps.KmlFeatureData.prototype.snippet;
 
 /**
+ * @param {string} url
  * @param {(google.maps.KmlLayerOptions|Object.<string>)=} opt_opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
-google.maps.KmlLayer = function(opt_opts) {};
+google.maps.KmlLayer = function(url, opt_opts) {};
 
 /**
  * @nosideeffects
@@ -1498,12 +1499,6 @@ google.maps.KmlLayer.prototype.getUrl = function() {};
  * @return {undefined}
  */
 google.maps.KmlLayer.prototype.setMap = function(map) {};
-
-/**
- * @param {string} url
- * @return {undefined}
- */
-google.maps.KmlLayer.prototype.setUrl = function(url) {};
 
 /**
  * @constructor
@@ -1554,11 +1549,6 @@ google.maps.KmlLayerOptions.prototype.preserveViewport;
  * @type {boolean}
  */
 google.maps.KmlLayerOptions.prototype.suppressInfoWindows;
-
-/**
- * @type {string}
- */
-google.maps.KmlLayerOptions.prototype.url;
 
 /**
  * @enum {number|string}
