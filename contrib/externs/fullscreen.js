@@ -36,6 +36,8 @@ Document.prototype.exitFullscreen = function() {};
 // Firefox 10 implementation.
 Element.prototype.mozRequestFullScreen = function() {};
 
+Element.prototype.mozRequestFullScreenWithKeys = function() {};
+
 /** @type {boolean} */
 Document.prototype.mozFullScreen;
 
@@ -48,9 +50,21 @@ Document.prototype.mozFullScreenElement;
 Document.prototype.mozFullScreenEnabled;
 
 // Chrome 21 implementation.
-Element.prototype.webkitRequestFullScreen = function() {};
+/**
+ * The current fullscreen element for the document is set to this element.
+ * Valid only for Webkit browsers.
+ * @param {number=} opt_allowKeyboardInput Whether keyboard input is desired.
+ *     Should use ALLOW_KEYBOARD_INPUT constant.
+ */
+Element.prototype.webkitRequestFullScreen = function(opt_allowKeyboardInput) {};
 
-Element.prototype.webkitRequestFullscreen = function() {};
+/**
+ * The current fullscreen element for the document is set to this element.
+ * Valid only for Webkit browsers.
+ * @param {number=} opt_allowKeyboardInput Whether keyboard input is desired.
+ *     Should use ALLOW_KEYBOARD_INPUT constant.
+ */
+Element.prototype.webkitRequestFullscreen = function(opt_allowKeyboardInput) {};
 
 /** @type {boolean} */
 Document.prototype.webkitIsFullScreen;
