@@ -2503,3 +2503,78 @@ HTMLEmbedElement.prototype.src;
  * @see http://www.w3.org/TR/html5/the-embed-element.html#dom-embed-type
  */
 HTMLEmbedElement.prototype.type;
+
+// Fullscreen APIs.
+
+/** 
+ * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-element-requestfullscreen 
+ */
+Element.prototype.requestFullscreen = function() {};
+
+/** 
+ * @type {boolean} 
+ * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-document-fullscreenenabled
+ */
+Document.prototype.fullscreenEnabled;
+
+/** 
+ * @type {Element} 
+ * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-document-fullscreenelement
+ */
+Document.prototype.fullscreenElement;
+
+/**
+ * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-document-exitfullscreen
+ */
+Document.prototype.exitFullscreen = function() {};
+
+// Externs definitions of browser current implementations.
+// Firefox 10 implementation.
+Element.prototype.mozRequestFullScreen = function() {};
+
+Element.prototype.mozRequestFullScreenWithKeys = function() {};
+
+/** @type {boolean} */
+Document.prototype.mozFullScreen;
+
+Document.prototype.mozCancelFullScreen = function() {};
+
+/** @type {Element} */
+Document.prototype.mozFullScreenElement;
+
+/** @type {boolean} */
+Document.prototype.mozFullScreenEnabled;
+
+// Chrome 21 implementation.
+/**
+ * The current fullscreen element for the document is set to this element.
+ * Valid only for Webkit browsers.
+ * @param {number=} opt_allowKeyboardInput Whether keyboard input is desired.
+ *     Should use ALLOW_KEYBOARD_INPUT constant.
+ */
+Element.prototype.webkitRequestFullScreen = function(opt_allowKeyboardInput) {};
+
+/**
+ * The current fullscreen element for the document is set to this element.
+ * Valid only for Webkit browsers.
+ * @param {number=} opt_allowKeyboardInput Whether keyboard input is desired.
+ *     Should use ALLOW_KEYBOARD_INPUT constant.
+ */
+Element.prototype.webkitRequestFullscreen = function(opt_allowKeyboardInput) {};
+
+/** @type {boolean} */
+Document.prototype.webkitIsFullScreen;
+
+Document.prototype.webkitCancelFullScreen = function() {};
+
+/** @type {Element} */
+Document.prototype.webkitCurrentFullScreenElement;
+
+/** @type {boolean} */
+Document.prototype.webkitFullScreenKeyboardInputAllowed;
+
+/** @type {number} */
+Element.ALLOW_KEYBOARD_INPUT = 1;
+
+/** @type {number} */
+Element.prototype.ALLOW_KEYBOARD_INPUT = 1;
