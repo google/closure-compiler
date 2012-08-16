@@ -34,36 +34,6 @@
 Function.prototype.bind = function(selfObj, var_args) {};
 
 
-/*
- * JSON API.
- */
-
-/**
- * @see https://developer.mozilla.org/En/Using_native_JSON
- */
-Window.prototype.JSON = {};
-
-
-/**
- * @param {string} text
- * @param {(function(string, *) : *)=} opt_reviver
- * @return {*}
- * @see http://ejohn.org/blog/ecmascript-5-strict-mode-json-and-more/
- */
-Window.prototype.JSON.parse = function(text, opt_reviver) {};
-
-
-/**
- * @param {*} value
- * @param {(Array.<string>|(function(string, *) : *)|null)=} opt_replacer
- * @param {(number|string)=} opt_space
- * @return {string}
- * @see http://ejohn.org/blog/ecmascript-5-strict-mode-json-and-more/
- */
-Window.prototype.JSON.stringify =
-    function(value, opt_replacer, opt_space) {};
-
-
 /**
  * @return {string}
  * @nosideeffects
