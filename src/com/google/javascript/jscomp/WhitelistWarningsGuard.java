@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -204,6 +205,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
     private final Set<JSError> warnings = Sets.newLinkedHashSet();
     private String productName = null;
     private String generatorTarget = null;
+    private String headerNote = null;
 
     /** Fill in your product name to get a fun message! */
     public WhitelistBuilder setProductName(String name) {
@@ -214,6 +216,12 @@ public class WhitelistWarningsGuard extends WarningsGuard {
     /** Fill in instructions on how to generate this whitelist. */
     public WhitelistBuilder setGeneratorTarget(String name) {
       this.generatorTarget = name;
+      return this;
+    }
+
+    /** A note to include at the top of the whitelist file. */
+    public WhitelistBuilder setNote(String note) {
+      this.headerNote  = note;
       return this;
     }
 
@@ -254,6 +262,12 @@ public class WhitelistWarningsGuard extends WarningsGuard {
       if (generatorTarget != null) {
         out.append("# When you fix any of these warnings, run "
             + generatorTarget + " task.\n");
+      }
+      
+      if (headerNote != null) {
+        out.append("# "
+            + Joiner.on("\n# ").join(Splitter.on("\n").split(headerNote))
+            + "\n");
       }
 
       Multimap<DiagnosticType, String> warningsByType = TreeMultimap.create();
