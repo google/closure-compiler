@@ -34,6 +34,9 @@ Window.prototype.mozIndexedDB;
 Window.prototype.webkitIndexedDB;
 
 /** @type {IDBFactory} */
+Window.prototype.msIndexedDB;
+
+/** @type {IDBFactory} */
 Window.prototype.indexedDB;
 
 /**
@@ -232,9 +235,20 @@ Window.prototype.webkitIDBRequest;
 
 /**
  * @constructor
+ * @implements {EventTarget}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBRequest
  */
 function IDBRequest() {}
+
+/** @override */
+IDBRequest.prototype.addEventListener = function(type, listener, useCapture) {};
+
+/** @override */
+IDBRequest.prototype.removeEventListener =
+    function(type, listener, useCapture) {};
+
+/** @override */
+IDBRequest.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @constructor
