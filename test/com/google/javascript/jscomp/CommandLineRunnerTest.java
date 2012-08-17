@@ -1001,6 +1001,15 @@ public class CommandLineRunnerTest extends TestCase {
     test("var x = f.function", RhinoErrorReporter.PARSE_ERROR);
   }
 
+  public void testES5ChecksByDefault() {
+    testSame("var x = 3; delete x;");
+  }
+
+  public void testES5ChecksInVerbose() {
+    args.add("--warning_level=VERBOSE");
+    test("function f(x) { delete x; }", StrictModeCheck.DELETE_VARIABLE);
+  }
+
   public void testES5() {
     args.add("--language_in=ECMASCRIPT5");
     test("var x = f.function", "var x = f.function");
@@ -1011,6 +1020,7 @@ public class CommandLineRunnerTest extends TestCase {
     args.add("--language_in=ECMASCRIPT5_STRICT");
     test("var x = f.function", "'use strict';var x = f.function");
     test("var let", RhinoErrorReporter.PARSE_ERROR);
+    test("function f(x) { delete x; }", StrictModeCheck.DELETE_VARIABLE);
   }
 
   public void testES5StrictUseStrict() {
