@@ -112,7 +112,5 @@ public enum WarningLevel {
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setWarningLevel(
         DiagnosticGroups.DEPRECATED, CheckLevel.WARNING);
-    options.setWarningLevel(
-        DiagnosticGroups.ES5_STRICT, CheckLevel.WARNING);
   }
 }
