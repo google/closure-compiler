@@ -39,11 +39,14 @@
 
 package com.google.javascript.rhino.testing;
 
+import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticScope;
 
 import junit.framework.Assert;
+
+import java.util.Iterator;
 
 /**
  * Helper methods for making assertions about the validity of types.
@@ -69,8 +72,6 @@ public class Asserts {
     JSType resolvedType = type.resolve(t, scope);
     assertTypeEquals("JSType#resolve should not affect object equality",
         type, resolvedType);
-    Assert.assertEquals("JSType#resolve should not affect hash codes",
-        type.hashCode(), resolvedType.hashCode());
     return resolvedType;
   }
 
@@ -97,6 +98,12 @@ public class Asserts {
 
   public static void assertTypeEquals(String message, JSType a, JSType b) {
     Assert.assertTrue(
+        "Both types must be null, or both must be non-null " + a + "," + b,
+        (a == null) == (b == null));
+    if (a == null) {
+      return;
+    }
+    Assert.assertTrue(
         message +
         (message.isEmpty() ? "" : "\n") +
         "Expected: " + a + "\n" +
@@ -108,6 +115,16 @@ public class Asserts {
         "Expected: " + b + "\n" +
         "Actual  : " + a,
         b.isEquivalentTo(a));
+  }
+
+  public static <T extends JSType, S extends JSType> void
+      assertTypeCollectionEquals(Iterable<T> a, Iterable<S> b) {
+    Assert.assertEquals(Iterables.size(a), Iterables.size(b));
+    Iterator<T> aIterator = a.iterator();
+    Iterator<S> bIterator = b.iterator();
+    while (aIterator.hasNext()) {
+      assertTypeEquals(aIterator.next(), bIterator.next());
+    }
   }
 
   /**

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.rhino.testing.Asserts.assertTypeEquals;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.Scope.Var;
@@ -28,6 +30,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.testing.Asserts;
 
 import java.util.Arrays;
 import java.util.List;
@@ -51,28 +54,28 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         CodingConventions.getDefault()).createInitialScope(
             new Node(Token.BLOCK));
 
-    assertEquals(ARRAY_FUNCTION_TYPE, s.getVar("Array").getType());
-    assertEquals(BOOLEAN_OBJECT_FUNCTION_TYPE,
+    assertTypeEquals(ARRAY_FUNCTION_TYPE, s.getVar("Array").getType());
+    assertTypeEquals(BOOLEAN_OBJECT_FUNCTION_TYPE,
         s.getVar("Boolean").getType());
-    assertEquals(DATE_FUNCTION_TYPE, s.getVar("Date").getType());
-    assertEquals(ERROR_FUNCTION_TYPE, s.getVar("Error").getType());
-    assertEquals(EVAL_ERROR_FUNCTION_TYPE,
+    assertTypeEquals(DATE_FUNCTION_TYPE, s.getVar("Date").getType());
+    assertTypeEquals(ERROR_FUNCTION_TYPE, s.getVar("Error").getType());
+    assertTypeEquals(EVAL_ERROR_FUNCTION_TYPE,
         s.getVar("EvalError").getType());
-    assertEquals(NUMBER_OBJECT_FUNCTION_TYPE,
+    assertTypeEquals(NUMBER_OBJECT_FUNCTION_TYPE,
         s.getVar("Number").getType());
-    assertEquals(OBJECT_FUNCTION_TYPE, s.getVar("Object").getType());
-    assertEquals(RANGE_ERROR_FUNCTION_TYPE,
+    assertTypeEquals(OBJECT_FUNCTION_TYPE, s.getVar("Object").getType());
+    assertTypeEquals(RANGE_ERROR_FUNCTION_TYPE,
         s.getVar("RangeError").getType());
-    assertEquals(REFERENCE_ERROR_FUNCTION_TYPE,
+    assertTypeEquals(REFERENCE_ERROR_FUNCTION_TYPE,
         s.getVar("ReferenceError").getType());
-    assertEquals(REGEXP_FUNCTION_TYPE, s.getVar("RegExp").getType());
-    assertEquals(STRING_OBJECT_FUNCTION_TYPE,
+    assertTypeEquals(REGEXP_FUNCTION_TYPE, s.getVar("RegExp").getType());
+    assertTypeEquals(STRING_OBJECT_FUNCTION_TYPE,
         s.getVar("String").getType());
-    assertEquals(SYNTAX_ERROR_FUNCTION_TYPE,
+    assertTypeEquals(SYNTAX_ERROR_FUNCTION_TYPE,
         s.getVar("SyntaxError").getType());
-    assertEquals(TYPE_ERROR_FUNCTION_TYPE,
+    assertTypeEquals(TYPE_ERROR_FUNCTION_TYPE,
         s.getVar("TypeError").getType());
-    assertEquals(URI_ERROR_FUNCTION_TYPE,
+    assertTypeEquals(URI_ERROR_FUNCTION_TYPE,
         s.getVar("URIError").getType());
   }
 
@@ -4025,7 +4028,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     TypeCheckResult p =
         parseAndTypeCheckWithScope("/** @type {(string,null)} */var a = null");
 
-    assertEquals(createUnionType(STRING_TYPE, NULL_TYPE),
+    assertTypeEquals(createUnionType(STRING_TYPE, NULL_TYPE),
         p.scope.getVar("a").getType());
   }
 
@@ -4036,14 +4039,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testVar3() throws Exception {
     TypeCheckResult p = parseAndTypeCheckWithScope("var a = 3;");
 
-    assertEquals(NUMBER_TYPE, p.scope.getVar("a").getType());
+    assertTypeEquals(NUMBER_TYPE, p.scope.getVar("a").getType());
   }
 
   public void testVar4() throws Exception {
     TypeCheckResult p = parseAndTypeCheckWithScope(
         "var a = 3; a = 'string';");
 
-    assertEquals(createUnionType(STRING_TYPE, NUMBER_TYPE),
+    assertTypeEquals(createUnionType(STRING_TYPE, NUMBER_TYPE),
         p.scope.getVar("a").getType());
   }
 
@@ -5598,25 +5601,25 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testNumberNode() throws Exception {
     Node n = typeCheck(Node.newNumber(0));
 
-    assertEquals(NUMBER_TYPE, n.getJSType());
+    assertTypeEquals(NUMBER_TYPE, n.getJSType());
   }
 
   public void testStringNode() throws Exception {
     Node n = typeCheck(Node.newString("hello"));
 
-    assertEquals(STRING_TYPE, n.getJSType());
+    assertTypeEquals(STRING_TYPE, n.getJSType());
   }
 
   public void testBooleanNodeTrue() throws Exception {
     Node trueNode = typeCheck(new Node(Token.TRUE));
 
-    assertEquals(BOOLEAN_TYPE, trueNode.getJSType());
+    assertTypeEquals(BOOLEAN_TYPE, trueNode.getJSType());
   }
 
   public void testBooleanNodeFalse() throws Exception {
     Node falseNode = typeCheck(new Node(Token.FALSE));
 
-    assertEquals(BOOLEAN_TYPE, falseNode.getJSType());
+    assertTypeEquals(BOOLEAN_TYPE, falseNode.getJSType());
   }
 
   public void testUndefinedNode() throws Exception {
@@ -5626,7 +5629,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     p.addChildToBack(Node.newNumber(5));
     typeCheck(p);
 
-    assertEquals(VOID_TYPE, n.getJSType());
+    assertTypeEquals(VOID_TYPE, n.getJSType());
   }
 
   public void testNumberAutoboxing() throws Exception {
@@ -6543,7 +6546,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     TypeCheckResult p = parseAndTypeCheckWithScope("var a = new Array();");
     Var a = p.scope.getVar("a");
 
-    assertEquals(ARRAY_TYPE, a.getType());
+    assertTypeEquals(ARRAY_TYPE, a.getType());
   }
 
   public void testNew13() throws Exception {
@@ -6602,23 +6605,23 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testName1() throws Exception {
-    assertEquals(VOID_TYPE, testNameNode("undefined"));
+    assertTypeEquals(VOID_TYPE, testNameNode("undefined"));
   }
 
   public void testName2() throws Exception {
-    assertEquals(OBJECT_FUNCTION_TYPE, testNameNode("Object"));
+    assertTypeEquals(OBJECT_FUNCTION_TYPE, testNameNode("Object"));
   }
 
   public void testName3() throws Exception {
-    assertEquals(ARRAY_FUNCTION_TYPE, testNameNode("Array"));
+    assertTypeEquals(ARRAY_FUNCTION_TYPE, testNameNode("Array"));
   }
 
   public void testName4() throws Exception {
-    assertEquals(DATE_FUNCTION_TYPE, testNameNode("Date"));
+    assertTypeEquals(DATE_FUNCTION_TYPE, testNameNode("Date"));
   }
 
   public void testName5() throws Exception {
-    assertEquals(REGEXP_FUNCTION_TYPE, testNameNode("RegExp"));
+    assertTypeEquals(REGEXP_FUNCTION_TYPE, testNameNode("RegExp"));
   }
 
   /**
@@ -7422,7 +7425,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         googFooGetprop2ObjectType.hasProperty("foo"));
     assertTrue("bar property not present on goog.foo type",
         googFooGetprop2ObjectType.hasProperty("bar"));
-    assertEquals("bar property on goog.foo type incorrectly inferred",
+    assertTypeEquals("bar property on goog.foo type incorrectly inferred",
         NUMBER_TYPE, googFooGetprop2ObjectType.getPropertyType("bar"));
   }
 
@@ -7492,9 +7495,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
     JSType functionAType = js1Node.getFirstChild().getJSType();
     assertEquals("function (): undefined", functionAType.toString());
-    assertEquals(UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE,
         U2U_FUNCTION_TYPE.getPropertyType("m1"));
-    assertEquals(UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE,
         U2U_FUNCTION_TYPE.getPropertyType("m2"));
   }
 
@@ -7549,7 +7552,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testValueTypeBuiltInPrototypePropertyType() throws Exception {
     Node node = parseAndTypeCheck("\"x\".charAt(0)");
-    assertEquals(STRING_TYPE, node.getFirstChild().getFirstChild().getJSType());
+    assertTypeEquals(STRING_TYPE, node.getFirstChild().getFirstChild().getJSType());
   }
 
   public void testDeclareBuiltInConstructor() throws Exception {
@@ -7558,7 +7561,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     Node node = parseAndTypeCheck(
         "/** @constructor */ var String = function(opt_str) {};\n" +
         "(new String(\"x\")).charAt(0)");
-    assertEquals(STRING_TYPE, node.getLastChild().getFirstChild().getJSType());
+    assertTypeEquals(STRING_TYPE, node.getLastChild().getFirstChild().getJSType());
   }
 
   public void testExtendBuiltInType1() throws Exception {
@@ -7571,7 +7574,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "String.prototype.substr = function(start, opt_length) {};\n";
     Node n1 = parseAndTypeCheck(externs + "(new String(\"x\")).substr(0,1);");
-    assertEquals(STRING_TYPE, n1.getLastChild().getFirstChild().getJSType());
+    assertTypeEquals(STRING_TYPE, n1.getLastChild().getFirstChild().getJSType());
   }
 
   public void testExtendBuiltInType2() throws Exception {
@@ -7584,7 +7587,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "String.prototype.substr = function(start, opt_length) {};\n";
     Node n2 = parseAndTypeCheck(externs + "\"x\".substr(0,1);");
-    assertEquals(STRING_TYPE, n2.getLastChild().getFirstChild().getJSType());
+    assertTypeEquals(STRING_TYPE, n2.getLastChild().getFirstChild().getJSType());
   }
 
   public void testExtendFunction1() throws Exception {
@@ -7592,7 +7595,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function() { return 1; };\n" +
         "(new Function()).f();");
     JSType type = n.getLastChild().getLastChild().getJSType();
-    assertEquals(NUMBER_TYPE, type);
+    assertTypeEquals(NUMBER_TYPE, type);
   }
 
   public void testExtendFunction2() throws Exception {
@@ -7600,7 +7603,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function() { return 1; };\n" +
         "(function() {}).f();");
     JSType type = n.getLastChild().getLastChild().getJSType();
-    assertEquals(NUMBER_TYPE, type);
+    assertTypeEquals(NUMBER_TYPE, type);
   }
 
   public void testInheritanceCheck1() throws Exception {
@@ -8022,11 +8025,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     // value's type
     ObjectType objectType =
         (ObjectType) objectNode.getJSType();
-    assertEquals(NUMBER_TYPE, objectType.getPropertyType("m1"));
-    assertEquals(STRING_TYPE, objectType.getPropertyType("m2"));
+    assertTypeEquals(NUMBER_TYPE, objectType.getPropertyType("m1"));
+    assertTypeEquals(STRING_TYPE, objectType.getPropertyType("m2"));
 
     // variable's type
-    assertEquals(objectType, nameNode.getJSType());
+    assertTypeEquals(objectType, nameNode.getJSType());
   }
 
   public void testObjectLiteralDeclaration1() throws Exception {
@@ -8118,7 +8121,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     // ECMA-262 15.9.2: When Date is called as a function rather than as a
     // constructor, it returns a string.
     Node n = parseAndTypeCheck("Date()");
-    assertEquals(STRING_TYPE, n.getFirstChild().getFirstChild().getJSType());
+    assertTypeEquals(STRING_TYPE, n.getFirstChild().getFirstChild().getJSType());
   }
 
   // According to ECMA-262, Error & Array function calls are equivalent to
@@ -8126,13 +8129,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testCallErrorConstructorAsFunction() throws Exception {
     Node n = parseAndTypeCheck("Error('x')");
-    assertEquals(ERROR_TYPE,
+    assertTypeEquals(ERROR_TYPE,
                  n.getFirstChild().getFirstChild().getJSType());
   }
 
   public void testCallArrayConstructorAsFunction() throws Exception {
     Node n = parseAndTypeCheck("Array()");
-    assertEquals(ARRAY_TYPE,
+    assertTypeEquals(ARRAY_TYPE,
                  n.getFirstChild().getFirstChild().getJSType());
   }
 
@@ -8466,7 +8469,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertTrue(type instanceof ObjectType);
     ObjectType objectType = (ObjectType) type;
     assertFalse(objectType.hasProperty("x"));
-    assertEquals(
+    Asserts.assertTypeCollectionEquals(
         Lists.newArrayList(objectType),
         registry.getTypesWithProperty("x"));
   }
@@ -8478,11 +8481,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     Scope s = ns.scope;
     JSType type = n.getLastChild().getLastChild().getJSType();
     assertFalse(type.isUnknownType());
-    assertEquals(type, OBJECT_TYPE);
+    assertTypeEquals(type, OBJECT_TYPE);
     assertTrue(type instanceof ObjectType);
     ObjectType objectType = (ObjectType) type;
     assertFalse(objectType.hasProperty("x"));
-    assertEquals(
+    Asserts.assertTypeCollectionEquals(
         Lists.newArrayList(OBJECT_TYPE),
         registry.getTypesWithProperty("x"));
   }
@@ -9464,13 +9467,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testDeclaredNativeTypeEquality() throws Exception {
     Node n = parseAndTypeCheck("/** @constructor */ function Object() {};");
-    assertEquals(registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),
+    assertTypeEquals(registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),
                  n.getFirstChild().getJSType());
   }
 
   public void testUndefinedVar() throws Exception {
     Node n = parseAndTypeCheck("var undefined;");
-    assertEquals(registry.getNativeType(JSTypeNative.VOID_TYPE),
+    assertTypeEquals(registry.getNativeType(JSTypeNative.VOID_TYPE),
                  n.getFirstChild().getFirstChild().getJSType());
   }
 
@@ -9483,7 +9486,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         + "for (; (i + a) < b; ++i) {}}");
 
     // check the type of the add node for i + f
-    assertEquals(registry.getNativeType(JSTypeNative.NUMBER_TYPE),
+    assertTypeEquals(registry.getNativeType(JSTypeNative.NUMBER_TYPE),
         n.getFirstChild().getLastChild().getLastChild().getFirstChild()
         .getNext().getFirstChild().getJSType());
   }
@@ -9504,7 +9507,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         + "}");
 
     // check the type of afoo when referenced
-    assertEquals(registry.createNullableType(registry.getType("Foo")),
+    assertTypeEquals(registry.createNullableType(registry.getType("Foo")),
         n.getLastChild().getLastChild().getLastChild().getLastChild()
         .getLastChild().getLastChild().getJSType());
   }
@@ -9942,7 +9945,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertTrue("Expected " + objectType.getReferenceName() +
         " to have property " +
         propertyName, objectType.hasProperty(propertyName));
-    assertEquals("Expected " + objectType.getReferenceName() +
+    assertTypeEquals("Expected " + objectType.getReferenceName() +
         "'s property " +
         propertyName + " to have type " + expectedType,
         expectedType, objectType.getPropertyType(propertyName));

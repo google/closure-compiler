@@ -188,7 +188,7 @@ public abstract class ChainableReverseAbstractInterpreter
       @Override
       public JSType caseEnumElementType(EnumElementType enumElementType) {
         JSType type = enumElementType.getPrimitiveType().visit(this);
-        if (type != null && enumElementType.getPrimitiveType().equals(type)) {
+        if (type != null && enumElementType.getPrimitiveType().isEquivalentTo(type)) {
           return enumElementType;
         } else {
           return type;
@@ -276,7 +276,8 @@ public abstract class ChainableReverseAbstractInterpreter
       @Override
       public JSType caseEnumElementType(EnumElementType enumElementType) {
         JSType type = enumElementType.getPrimitiveType().visit(this);
-        if (type != null && enumElementType.getPrimitiveType().equals(type)) {
+        if (type != null &&
+            enumElementType.getPrimitiveType().isEquivalentTo(type)) {
           return enumElementType;
         } else {
           return type;
@@ -415,7 +416,8 @@ public abstract class ChainableReverseAbstractInterpreter
       // create a subtype of MyEnum restricted by string. In any case,
       // this should catch the common case.
       JSType type = enumElementType.getPrimitiveType().visit(this);
-      if (type != null && enumElementType.getPrimitiveType().equals(type)) {
+      if (type != null &&
+          enumElementType.getPrimitiveType().isEquivalentTo(type)) {
         return enumElementType;
       } else {
         return type;

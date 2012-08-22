@@ -4741,9 +4741,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     registry.declareType("typeA", realA);
     registry.declareType("typeB", realB);
 
-    assertEquals(a.hashCode(), realA.hashCode());
     assertTypeEquals(a, realA);
-    assertEquals(b.hashCode(), realB.hashCode());
     assertTypeEquals(b, realB);
 
     a.resolve(null, null);
@@ -4751,9 +4749,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertTrue(a.isResolved());
     assertTrue(b.isResolved());
-    assertEquals(a.hashCode(), realA.hashCode());
     assertTypeEquals(a, realA);
-    assertEquals(b.hashCode(), realB.hashCode());
     assertTypeEquals(b, realB);
 
     JSType resolvedA = Asserts.assertValidResolve(a);
@@ -4775,7 +4771,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     NamedType b = new NamedType(registry, "typeA", "source", 1, 0);
     registry.forwardDeclareType("typeA");
 
-    assertEquals(a.hashCode(), b.hashCode());
     assertTypeEquals(a, b);
 
     a.resolve(null, EMPTY_SCOPE);
@@ -4783,7 +4778,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(a.isResolved());
     assertFalse(b.isResolved());
 
-    assertEquals(a.hashCode(), b.hashCode());
     assertTypeEquals(a, b);
 
     assertFalse(a.isEquivalentTo(UNKNOWN_TYPE));

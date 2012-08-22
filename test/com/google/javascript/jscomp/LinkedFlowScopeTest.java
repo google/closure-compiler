@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.rhino.testing.Asserts.assertTypeEquals;
+
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.rhino.Node;
@@ -74,17 +76,17 @@ public class LinkedFlowScopeTest extends CompilerTypeTestCase {
     FlowScope childB = localEntry.createChildFlowScope();
     childB.inferSlotType("localB", BOOLEAN_TYPE);
 
-    assertEquals(STRING_TYPE, childAB.getSlot("localB").getType());
-    assertEquals(BOOLEAN_TYPE, childB.getSlot("localB").getType());
+    assertTypeEquals(STRING_TYPE, childAB.getSlot("localB").getType());
+    assertTypeEquals(BOOLEAN_TYPE, childB.getSlot("localB").getType());
     assertNull(childB.getSlot("localA").getType());
 
     FlowScope joined = join(childB, childAB);
-    assertEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
+    assertTypeEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
         joined.getSlot("localB").getType());
     assertNull(joined.getSlot("localA").getType());
 
     joined = join(childAB, childB);
-    assertEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
+    assertTypeEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
         joined.getSlot("localB").getType());
     assertNull(joined.getSlot("localA").getType());
 
@@ -99,17 +101,17 @@ public class LinkedFlowScopeTest extends CompilerTypeTestCase {
     FlowScope childB = localEntry.createChildFlowScope();
     childB.inferSlotType("globalB", BOOLEAN_TYPE);
 
-    assertEquals(STRING_TYPE, childA.getSlot("localA").getType());
-    assertEquals(BOOLEAN_TYPE, childB.getSlot("globalB").getType());
+    assertTypeEquals(STRING_TYPE, childA.getSlot("localA").getType());
+    assertTypeEquals(BOOLEAN_TYPE, childB.getSlot("globalB").getType());
     assertNull(childB.getSlot("localB").getType());
 
     FlowScope joined = join(childB, childA);
-    assertEquals(STRING_TYPE, joined.getSlot("localA").getType());
-    assertEquals(BOOLEAN_TYPE, joined.getSlot("globalB").getType());
+    assertTypeEquals(STRING_TYPE, joined.getSlot("localA").getType());
+    assertTypeEquals(BOOLEAN_TYPE, joined.getSlot("globalB").getType());
 
     joined = join(childA, childB);
-    assertEquals(STRING_TYPE, joined.getSlot("localA").getType());
-    assertEquals(BOOLEAN_TYPE, joined.getSlot("globalB").getType());
+    assertTypeEquals(STRING_TYPE, joined.getSlot("localA").getType());
+    assertTypeEquals(BOOLEAN_TYPE, joined.getSlot("globalB").getType());
 
     assertEquals("Join should be symmetric",
         join(childB, childA), join(childA, childB));
@@ -126,15 +128,15 @@ public class LinkedFlowScopeTest extends CompilerTypeTestCase {
     childA.inferSlotType("localD", BOOLEAN_TYPE);
 
     FlowScope joined = join(childB, childA);
-    assertEquals(createUnionType(STRING_TYPE, NUMBER_TYPE),
+    assertTypeEquals(createUnionType(STRING_TYPE, NUMBER_TYPE),
         joined.getSlot("localC").getType());
-    assertEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
+    assertTypeEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
         joined.getSlot("localD").getType());
 
     joined = join(childA, childB);
-    assertEquals(createUnionType(STRING_TYPE, NUMBER_TYPE),
+    assertTypeEquals(createUnionType(STRING_TYPE, NUMBER_TYPE),
         joined.getSlot("localC").getType());
-    assertEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
+    assertTypeEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
         joined.getSlot("localD").getType());
 
     assertEquals("Join should be symmetric",
@@ -213,24 +215,24 @@ public class LinkedFlowScopeTest extends CompilerTypeTestCase {
   private void verifyLongChains(FlowScope chainA, FlowScope chainB) {
     FlowScope joined = join(chainA, chainB);
     for (int i = 0; i < LONG_CHAIN_LENGTH; i++) {
-      assertEquals(
+      assertTypeEquals(
           i % 2 == 0 ? NUMBER_TYPE : BOOLEAN_TYPE,
           chainA.getSlot("local" + i).getType());
-      assertEquals(
+      assertTypeEquals(
           i % 3 == 0 ? STRING_TYPE : BOOLEAN_TYPE,
           chainB.getSlot("local" + i).getType());
 
       JSType joinedSlotType = joined.getSlot("local" + i).getType();
       if (i % 6 == 0) {
-        assertEquals(createUnionType(STRING_TYPE, NUMBER_TYPE), joinedSlotType);
+        assertTypeEquals(createUnionType(STRING_TYPE, NUMBER_TYPE), joinedSlotType);
       } else if (i % 2 == 0) {
-        assertEquals(createUnionType(NUMBER_TYPE, BOOLEAN_TYPE),
+        assertTypeEquals(createUnionType(NUMBER_TYPE, BOOLEAN_TYPE),
             joinedSlotType);
       } else if (i % 3 == 0) {
-        assertEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
+        assertTypeEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
             joinedSlotType);
       } else {
-        assertEquals(BOOLEAN_TYPE, joinedSlotType);
+        assertTypeEquals(BOOLEAN_TYPE, joinedSlotType);
       }
     }
 
@@ -250,17 +252,17 @@ public class LinkedFlowScopeTest extends CompilerTypeTestCase {
     childABC.inferSlotType("localA", BOOLEAN_TYPE);
 
     assertNull(childABC.findUniqueRefinedSlot(childABC));
-    assertEquals(BOOLEAN_TYPE,
+    assertTypeEquals(BOOLEAN_TYPE,
         childABC.findUniqueRefinedSlot(childAB).getType());
     assertNull(childABC.findUniqueRefinedSlot(childA));
     assertNull(childABC.findUniqueRefinedSlot(localEntry));
 
-    assertEquals(STRING_TYPE,
+    assertTypeEquals(STRING_TYPE,
         childAB.findUniqueRefinedSlot(childA).getType());
-    assertEquals(STRING_TYPE,
+    assertTypeEquals(STRING_TYPE,
         childAB.findUniqueRefinedSlot(localEntry).getType());
 
-    assertEquals(NUMBER_TYPE,
+    assertTypeEquals(NUMBER_TYPE,
         childA.findUniqueRefinedSlot(localEntry).getType());
   }
 

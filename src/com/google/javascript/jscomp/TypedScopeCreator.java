@@ -1155,7 +1155,7 @@ final class TypedScopeCreator implements ScopeCreator {
           // We don't want to look at empty function types.
           !type.isEmptyType()) {
         if ((fnType.isConstructor() || fnType.isInterface()) &&
-            !fnType.equals(getNativeType(U2U_CONSTRUCTOR_TYPE))) {
+            !fnType.isEquivalentTo(getNativeType(U2U_CONSTRUCTOR_TYPE))) {
           // Declare var.prototype in the scope chain.
           FunctionType superClassCtor = fnType.getSuperClassConstructor();
           ObjectType.Property prototypeSlot = fnType.getSlot("prototype");
@@ -1184,7 +1184,7 @@ final class TypedScopeCreator implements ScopeCreator {
               n, prototypeSlot.getType(), input,
               /* declared iff there's an explicit supertype */
               superClassCtor == null ||
-              superClassCtor.getInstanceType().equals(
+              superClassCtor.getInstanceType().isEquivalentTo(
                   getNativeType(OBJECT_TYPE)));
 
           // Make sure the variable is initialized to something if

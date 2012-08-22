@@ -799,7 +799,8 @@ class TypeInference
       FunctionType fnType = functionType.toMaybeFunctionType();
       n.setJSType(fnType.getReturnType());
       backwardsInferenceFromCallSite(n, fnType);
-    } else if (functionType.equals(getNativeType(CHECKED_UNKNOWN_TYPE))) {
+    } else if (functionType.isEquivalentTo(
+        getNativeType(CHECKED_UNKNOWN_TYPE))) {
       n.setJSType(getNativeType(CHECKED_UNKNOWN_TYPE));
     }
 
@@ -1249,7 +1250,7 @@ class TypeInference
 
     if (propertyType == null) {
       return getNativeType(UNKNOWN_TYPE);
-    } else if (propertyType.equals(unknownType) && isLocallyInferred) {
+    } else if (propertyType.isEquivalentTo(unknownType) && isLocallyInferred) {
       // If the type has been checked in this scope,
       // then use CHECKED_UNKNOWN_TYPE instead to indicate that.
       return getNativeType(CHECKED_UNKNOWN_TYPE);

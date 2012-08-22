@@ -38,6 +38,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.testing.Asserts;
 
 import java.util.Deque;
 
@@ -92,9 +93,10 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame("function Foo() {}; Foo.bar;");
     ObjectType foo = (ObjectType) globalScope.getVar("Foo").getType();
     assertFalse(foo.hasProperty("bar"));
-    assertEquals(registry.getNativeType(UNKNOWN_TYPE),
+    Asserts.assertTypeEquals(registry.getNativeType(UNKNOWN_TYPE),
         foo.getPropertyType("bar"));
-    assertEquals(Lists.newArrayList(foo), registry.getTypesWithProperty("bar"));
+    Asserts.assertTypeCollectionEquals(
+        Lists.newArrayList(foo), registry.getTypesWithProperty("bar"));
   }
 
   public void testConstructorProperty() {
@@ -105,7 +107,8 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
     JSType fooBar = foo.getPropertyType("Bar");
     assertEquals("function (new:foo.Bar): undefined", fooBar.toString());
-    assertEquals(Lists.newArrayList(foo), registry.getTypesWithProperty("Bar"));
+    Asserts.assertTypeCollectionEquals(
+        Lists.newArrayList(foo), registry.getTypesWithProperty("Bar"));
   }
 
   public void testPrototypePropertyMethodWithoutAnnotation() {
@@ -137,7 +140,8 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
     JSType fooBar = foo.getPropertyType("Bar");
     assertEquals("enum{foo.Bar}", fooBar.toString());
-    assertEquals(Lists.newArrayList(foo), registry.getTypesWithProperty("Bar"));
+    Asserts.assertTypeCollectionEquals(
+        Lists.newArrayList(foo), registry.getTypesWithProperty("Bar"));
   }
 
   public void testInferredProperty1() {
@@ -287,7 +291,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertEquals("Foo.<number>",
         registry.getType("FooAlias").toString());
-    assertEquals(registry.getType("FooAlias"),
+    Asserts.assertTypeEquals(registry.getType("FooAlias"),
         registry.getType("Foo"));
 
     ObjectType f = (ObjectType) findNameType("f", globalScope);
@@ -302,7 +306,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertEquals("goog.Foo.<number>",
         registry.getType("goog.FooAlias").toString());
-    assertEquals(registry.getType("goog.Foo"),
+    Asserts.assertTypeEquals(registry.getType("goog.Foo"),
         registry.getType("goog.FooAlias"));
   }
 
@@ -347,7 +351,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         goog.getPropertyType("foo").toString());
     assertTrue(goog.isPropertyTypeDeclared("foo"));
 
-    assertEquals(globalScope.getVar("goog.foo").getType(),
+    Asserts.assertTypeEquals(globalScope.getVar("goog.foo").getType(),
         goog.getPropertyType("foo"));
   }
 
@@ -364,7 +368,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         goog.getPropertyType("foo").toString());
     assertTrue(goog.isPropertyTypeDeclared("foo"));
 
-    assertEquals(lastLocalScope.getVar("goog.foo").getType(),
+    Asserts.assertTypeEquals(lastLocalScope.getVar("goog.foo").getType(),
         goog.getPropertyType("foo"));
   }
 
@@ -461,11 +465,11 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals(
         getNativeObjectType(OBJECT_TYPE).getPropertiesCount() + 3,
         instanceType.getPropertiesCount());
-    assertEquals(getNativeType(NUMBER_TYPE),
+    Asserts.assertTypeEquals(getNativeType(NUMBER_TYPE),
         instanceType.getPropertyType("m1"));
-    assertEquals(getNativeType(BOOLEAN_TYPE),
+    Asserts.assertTypeEquals(getNativeType(BOOLEAN_TYPE),
         instanceType.getPropertyType("m2"));
-    assertEquals(getNativeType(STRING_TYPE),
+    Asserts.assertTypeEquals(getNativeType(STRING_TYPE),
         instanceType.getPropertyType("m3"));
 
     // Verify the prototype chain.
@@ -523,7 +527,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("function (this:I): undefined",
         iPrototype.getPropertyType("baz").toString());
 
-    assertEquals(iPrototype, globalScope.getVar("I.prototype").getType());
+    Asserts.assertTypeEquals(iPrototype, globalScope.getVar("I.prototype").getType());
   }
 
   public void testPropertiesOnInterface2() throws Exception {
@@ -636,8 +640,8 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     ObjectType externInstance = ((FunctionType) e).getInstanceType();
     assertTrue(externInstance.hasOwnProperty("one"));
     assertTrue(externInstance.isPropertyTypeDeclared("one"));
-    assertTypeEquals("function (): number",
-        externInstance.getPropertyType("one"));
+    assertEquals("function (): number",
+        externInstance.getPropertyType("one").toString());
 
     JSType n = globalScope.getVar("Normal").getType();
     ObjectType normalInstance = ((FunctionType) n).getInstanceType();
@@ -665,7 +669,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
     ObjectType obj = globalScope.getVar("Object").getType().dereference();
     assertTrue(obj.hasOwnProperty("one"));
-    assertTypeEquals("number", obj.getPropertyType("one"));
+    assertEquals("number", obj.getPropertyType("one").toString());
   }
 
   public void testTypedStubsInExterns() {
@@ -737,7 +741,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         (FunctionType) (globalScope.getVar("Window").getType());
     assertEquals("global this", x.toString());
     assertTrue(x.isSubtype(windowCtor.getInstanceType()));
-    assertFalse(x.equals(windowCtor.getInstanceType()));
+    assertFalse(x.isEquivalentTo(windowCtor.getInstanceType()));
     assertTrue(x.hasProperty("alert"));
   }
 
@@ -752,7 +756,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         (FunctionType) (globalScope.getVar("Window").getType());
     assertEquals("global this", x.toString());
     assertTrue(x.isSubtype(windowCtor.getInstanceType()));
-    assertFalse(x.equals(windowCtor.getInstanceType()));
+    assertFalse(x.isEquivalentTo(windowCtor.getInstanceType()));
     assertTrue(x.hasProperty("alert"));
   }
 
@@ -803,7 +807,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @constructor */ var Foo = function() {};" +
         "/** @constructor */ var FooAlias = Foo;");
     assertEquals("Foo", registry.getType("FooAlias").toString());
-    assertEquals(registry.getType("Foo"), registry.getType("FooAlias"));
+    Asserts.assertTypeEquals(registry.getType("Foo"), registry.getType("FooAlias"));
   }
 
   public void testNamespacedConstructorAlias() {
@@ -812,7 +816,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @constructor */ goog.Foo = function() {};" +
         "/** @constructor */ goog.FooAlias = goog.Foo;");
     assertEquals("goog.Foo", registry.getType("goog.FooAlias").toString());
-    assertEquals(registry.getType("goog.Foo"),
+    Asserts.assertTypeEquals(registry.getType("goog.Foo"),
         registry.getType("goog.FooAlias"));
   }
 

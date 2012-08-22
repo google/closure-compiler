@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.testing.Asserts;
 
 public class ClosureReverseAbstractInterpreterTest extends
     CompilerTypeTestCase {
@@ -163,12 +164,14 @@ public class ClosureReverseAbstractInterpreterTest extends
         new ClosureReverseAbstractInterpreter(convention, registry);
 
     // trueScope
-    assertEquals(trueType,
+    Asserts.assertTypeEquals(
+        trueType,
         rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, true)
         .getSlot("a").getType());
 
     // falseScope
-    assertEquals(falseType,
+    Asserts.assertTypeEquals(
+        falseType,
         rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, false)
         .getSlot("a").getType());
   }

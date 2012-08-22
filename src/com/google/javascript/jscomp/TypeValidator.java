@@ -469,8 +469,8 @@ class TypeValidator {
     FunctionType subCtor = subObject.getConstructor();
     ObjectType declaredSuper =
         subObject.getImplicitPrototype().getImplicitPrototype();
-    if (!declaredSuper.equals(superObject)) {
-      if (declaredSuper.equals(getNativeType(OBJECT_TYPE))) {
+    if (!declaredSuper.isEquivalentTo(superObject)) {
+      if (declaredSuper.isEquivalentTo(getNativeType(OBJECT_TYPE))) {
         registerMismatch(superObject, declaredSuper, report(
             t.makeError(n, MISSING_EXTENDS_TAG_WARNING, subObject.toString())));
       } else {
@@ -569,7 +569,7 @@ class TypeValidator {
         // tag, or if the original declaration was a stub.
         if (!(allowDupe ||
               var.getParentNode().isExprResult()) ||
-            !newType.equals(varType)) {
+            !newType.isEquivalentTo(varType)) {
           report(JSError.make(sourceName, n, DUP_VAR_DECLARATION,
               variableName, newType.toString(), var.getInputName(),
               String.valueOf(var.nameNode.getLineno()),
@@ -817,8 +817,10 @@ class TypeValidator {
     @Override public boolean equals(Object object) {
       if (object instanceof TypeMismatch) {
         TypeMismatch that = (TypeMismatch) object;
-        return (that.typeA.equals(this.typeA) && that.typeB.equals(this.typeB))
-            || (that.typeB.equals(this.typeA) && that.typeA.equals(this.typeB));
+        return (that.typeA.isEquivalentTo(this.typeA)
+                && that.typeB.isEquivalentTo(this.typeB))
+            || (that.typeB.isEquivalentTo(this.typeA)
+                && that.typeA.isEquivalentTo(this.typeB));
       }
       return false;
     }

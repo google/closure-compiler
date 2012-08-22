@@ -68,8 +68,8 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     UnionType stringOrNull =
         (UnionType) createUnionType(STRING_OBJECT_TYPE, NULL_TYPE);
 
-    assertEquals(nullOrString, stringOrNull);
-    assertEquals(stringOrNull, nullOrString);
+    Asserts.assertTypeEquals(nullOrString, stringOrNull);
+    Asserts.assertTypeEquals(stringOrNull, nullOrString);
 
     assertTypeCanAssignToItself(createUnionType(VOID_TYPE, NUMBER_TYPE));
     assertTypeCanAssignToItself(
@@ -80,11 +80,11 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     UnionType nullOrUnknown =
         (UnionType) createUnionType(NULL_TYPE, unresolvedNamedType);
     assertTrue(nullOrUnknown.isUnknownType());
-    assertEquals(nullOrUnknown, NULL_TYPE.getLeastSupertype(nullOrUnknown));
-    assertEquals(nullOrUnknown, nullOrUnknown.getLeastSupertype(NULL_TYPE));
-    assertEquals(UNKNOWN_TYPE,
+    Asserts.assertTypeEquals(nullOrUnknown, NULL_TYPE.getLeastSupertype(nullOrUnknown));
+    Asserts.assertTypeEquals(nullOrUnknown, nullOrUnknown.getLeastSupertype(NULL_TYPE));
+    Asserts.assertTypeEquals(UNKNOWN_TYPE,
         NULL_TYPE.getGreatestSubtype(nullOrUnknown));
-    assertEquals(UNKNOWN_TYPE,
+    Asserts.assertTypeEquals(UNKNOWN_TYPE,
         nullOrUnknown.getGreatestSubtype(NULL_TYPE));
 
     assertTrue(NULL_TYPE.differsFrom(nullOrUnknown));
@@ -95,11 +95,11 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     assertTrue(unresolvedNamedType.isSubtype(nullOrUnknown));
     assertTrue(nullOrUnknown.isSubtype(NULL_TYPE));
 
-    assertEquals(unresolvedNamedType,
+    Asserts.assertTypeEquals(unresolvedNamedType,
         nullOrUnknown.restrictByNotNullOrUndefined());
 
     // findPropertyType
-    assertEquals(NUMBER_TYPE, nullOrString.findPropertyType("length"));
+    Asserts.assertTypeEquals(NUMBER_TYPE, nullOrString.findPropertyType("length"));
     assertEquals(null, nullOrString.findPropertyType("lengthx"));
 
     Asserts.assertResolvesToSame(nullOrString);
@@ -109,7 +109,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
    * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
    */
   public void testGreatestSubtypeUnionTypes1() {
-    assertEquals(NULL_TYPE, createNullableType(STRING_TYPE).getGreatestSubtype(
+    Asserts.assertTypeEquals(NULL_TYPE, createNullableType(STRING_TYPE).getGreatestSubtype(
             createNullableType(NUMBER_TYPE)));
   }
 
@@ -120,7 +120,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   public void testGreatestSubtypeUnionTypes2() {
     UnionType evalUriError =
         (UnionType) createUnionType(EVAL_ERROR_TYPE, URI_ERROR_TYPE);
-    assertEquals(evalUriError,
+    Asserts.assertTypeEquals(evalUriError,
         evalUriError.getGreatestSubtype(ERROR_TYPE));
   }
 
@@ -135,9 +135,9 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     // (null,undefined)
     UnionType nullUndefined =
         (UnionType) createUnionType(VOID_TYPE, NULL_TYPE);
-    assertEquals(nullUndefined,
+    Asserts.assertTypeEquals(nullUndefined,
         nullUndefined.getGreatestSubtype(nullableOptionalNumber));
-    assertEquals(nullUndefined,
+    Asserts.assertTypeEquals(nullUndefined,
         nullableOptionalNumber.getGreatestSubtype(nullUndefined));
   }
 
@@ -147,7 +147,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   public void testGreatestSubtypeUnionTypes4() throws Exception {
     UnionType errUnion = (UnionType) createUnionType(
         NULL_TYPE, EVAL_ERROR_TYPE, URI_ERROR_TYPE);
-    assertEquals(createUnionType(EVAL_ERROR_TYPE, URI_ERROR_TYPE),
+    Asserts.assertTypeEquals(createUnionType(EVAL_ERROR_TYPE, URI_ERROR_TYPE),
         errUnion.getGreatestSubtype(ERROR_TYPE));
   }
 
@@ -156,7 +156,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
    */
   public void testGreatestSubtypeUnionTypes5() throws Exception {
     JSType errUnion = createUnionType(EVAL_ERROR_TYPE, URI_ERROR_TYPE);
-    assertEquals(NO_OBJECT_TYPE,
+    Asserts.assertTypeEquals(NO_OBJECT_TYPE,
         errUnion.getGreatestSubtype(STRING_OBJECT_TYPE));
   }
 
@@ -274,13 +274,13 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
 
   public void testGetRestrictedUnion1() throws Exception {
     UnionType numStr = (UnionType) createUnionType(NUMBER_TYPE, STRING_TYPE);
-    assertEquals(STRING_TYPE, numStr.getRestrictedUnion(NUMBER_TYPE));
+    Asserts.assertTypeEquals(STRING_TYPE, numStr.getRestrictedUnion(NUMBER_TYPE));
   }
 
   public void testGetRestrictedUnion2() throws Exception {
     UnionType numStr = (UnionType) createUnionType(
         NULL_TYPE, EVAL_ERROR_TYPE, URI_ERROR_TYPE);
-    assertEquals(NULL_TYPE, numStr.getRestrictedUnion(ERROR_TYPE));
+    Asserts.assertTypeEquals(NULL_TYPE, numStr.getRestrictedUnion(ERROR_TYPE));
   }
 
   public void testIsEquivalentTo() {

@@ -1348,7 +1348,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // properties where we've checked that it exists, or for properties on
     // objects that aren't in this binary).
     JSType propType = getJSType(n);
-    if (propType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
+    if (propType.isEquivalentTo(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
       childType = childType.autobox();
       ObjectType objectType = ObjectType.cast(childType);
       if (objectType != null) {
@@ -1356,7 +1356,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // much stricter, and so that we can use hasProperty (which is much
         // faster in most cases).
         if (!objectType.hasProperty(propName) ||
-            objectType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
+            objectType.isEquivalentTo(
+                typeRegistry.getNativeType(UNKNOWN_TYPE))) {
           if (objectType instanceof EnumType) {
             report(t, n, INEXISTENT_ENUM_ELEMENT, propName);
           } else {

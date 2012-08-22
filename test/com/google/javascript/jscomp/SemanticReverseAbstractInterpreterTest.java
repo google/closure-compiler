@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.rhino.testing.Asserts.assertTypeEquals;
+
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -57,12 +59,12 @@ public class SemanticReverseAbstractInterpreterTest
     // true outcome.
     FlowScope informedTrue = interpreter.
         getPreciserScopeKnowingConditionOutcome(condition, blind, true);
-    assertEquals(STRING_TYPE, getVarType(informedTrue, "a"));
+    assertTypeEquals(STRING_TYPE, getVarType(informedTrue, "a"));
 
     // false outcome.
     FlowScope informedFalse = interpreter.
         getPreciserScopeKnowingConditionOutcome(condition, blind, false);
-    assertEquals(createNullableType(STRING_TYPE),
+    assertTypeEquals(createNullableType(STRING_TYPE),
         getVarType(informedFalse, "a"));
   }
 
@@ -78,13 +80,13 @@ public class SemanticReverseAbstractInterpreterTest
     // true outcome.
     FlowScope informedTrue = interpreter.
         getPreciserScopeKnowingConditionOutcome(condition, blind, true);
-    assertEquals(createNullableType(STRING_TYPE),
+    assertTypeEquals(createNullableType(STRING_TYPE),
         getVarType(informedTrue, "a"));
 
     // false outcome.
     FlowScope informedFalse = interpreter.
         getPreciserScopeKnowingConditionOutcome(condition, blind, false);
-    assertEquals(STRING_TYPE, getVarType(informedFalse, "a"));
+    assertTypeEquals(STRING_TYPE, getVarType(informedFalse, "a"));
   }
 
   /**
@@ -529,14 +531,14 @@ public class SemanticReverseAbstractInterpreterTest
     FlowScope informedTrue = interpreter.
         getPreciserScopeKnowingConditionOutcome(condition, blind, true);
     for (TypedName p : trueOutcome) {
-      assertEquals(p.name, p.type, getVarType(informedTrue, p.name));
+      assertTypeEquals(p.name, p.type, getVarType(informedTrue, p.name));
     }
 
     // false outcome.
     FlowScope informedFalse = interpreter.
         getPreciserScopeKnowingConditionOutcome(condition, blind, false);
     for (TypedName p : falseOutcome) {
-      assertEquals(p.type, getVarType(informedFalse, p.name));
+      assertTypeEquals(p.type, getVarType(informedFalse, p.name));
     }
   }
 
