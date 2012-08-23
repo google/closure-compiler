@@ -135,9 +135,9 @@ Console.prototype.dir = function(value) {};
 Console.prototype.dirxml = function(var_args) {};
 
 /**
- * @param {*} value
+ * @return {undefined}
  */
-Console.prototype.trace = function(value) {};
+Console.prototype.trace = function() {};
 
 /**
  * @param {*} value
