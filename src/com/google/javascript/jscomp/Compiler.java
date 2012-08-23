@@ -190,10 +190,8 @@ public class Compiler extends AbstractCompiler {
    *
    * That way, we don't have to increase the stack size for *every* thread
    * (which is what -Xss does).
-   *
-   * TODO(nicksantos): Add thread pool support for clients that compile a lot.
    */
-  private ExecutorService compilerExecutor =
+  private static final ExecutorService compilerExecutor =
       Executors.newCachedThreadPool(new ThreadFactory() {
     @Override public Thread newThread(Runnable r) {
       return new Thread(null, r, "jscompiler", COMPILER_STACK_SIZE);
