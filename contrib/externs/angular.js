@@ -864,6 +864,24 @@ angular.$routeProvider.Params.redirectTo;
 angular.$routeProvider.Params.reloadOnSearch;
 
 /******************************************************************************
+ * $interpolateProvider Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   startSymbol: function(string),
+ *   endSymbol: function(string)
+ *   }}
+ */
+angular.$interpolateProvider;
+
+/** @type {function(string)} */
+angular.$interpolateProvider.startSymbol;
+
+/** @type {function(string)} */
+angular.$interpolateProvider.endSymbol;
+
+/******************************************************************************
  * $timeout Service
  *****************************************************************************/
 
