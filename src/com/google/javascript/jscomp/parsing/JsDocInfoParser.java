@@ -261,6 +261,24 @@ public final class JsDocInfoParser {
                   token = eatTokensUntilEOL();
                   continue retry;
 
+                case STRUCT:
+                  if (!jsdocBuilder.recordStruct()) {
+                    parser.addTypeWarning("msg.jsdoc.incompat.type",
+                                          stream.getLineno(),
+                                          stream.getCharno());
+                  }
+                  token = eatTokensUntilEOL();
+                  continue retry;
+
+                case DICT:
+                  if (!jsdocBuilder.recordDict()) {
+                    parser.addTypeWarning("msg.jsdoc.incompat.type",
+                                          stream.getLineno(),
+                                          stream.getCharno());
+                  }
+                  token = eatTokensUntilEOL();
+                  continue retry;
+
                 case CONSTRUCTOR:
                   if (!jsdocBuilder.recordConstructor()) {
                     if (jsdocBuilder.isInterfaceRecorded()) {

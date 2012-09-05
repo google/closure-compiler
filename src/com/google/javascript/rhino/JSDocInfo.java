@@ -318,6 +318,9 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_IDGEN         = 0x00080000;
   private static final int MASK_EXPOSE        = 0x00100000; // @expose
 
+  private static final int MASK_STRUCT        = 0x00200000;
+  private static final int MASK_DICT          = 0x00400000;
+
   // 3 bit type field stored in the top 3 bits of the most significant
   // nibble.
   private static final int MASK_TYPEFIELD    = 0xE0000000; // 1110...
@@ -347,6 +350,14 @@ public class JSDocInfo implements Serializable {
 
   void setConstructor(boolean value) {
     setFlag(value, MASK_CONSTRUCTOR);
+  }
+
+  void setStruct() {
+    setFlag(true, MASK_STRUCT);
+  }
+
+  void setDict() {
+    setFlag(true, MASK_DICT);
   }
 
   void setDefine(boolean value) {
@@ -448,6 +459,22 @@ public class JSDocInfo implements Serializable {
    */
   public boolean isConstructor() {
     return getFlag(MASK_CONSTRUCTOR);
+  }
+
+  /**
+   * Returns whether the {@code @struct} annotation is present on this
+   * {@link JSDocInfo}.
+   */
+  public boolean makesStructs() {
+    return getFlag(MASK_STRUCT);
+  }
+
+  /**
+   * Returns whether the {@code @dict} annotation is present on this
+   * {@link JSDocInfo}.
+   */
+  public boolean makesDicts() {
+    return getFlag(MASK_DICT);
   }
 
   /**

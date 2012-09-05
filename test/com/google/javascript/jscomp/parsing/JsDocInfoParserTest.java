@@ -2416,6 +2416,66 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "type annotation incompatible with other annotations");
   }
 
+  public void testTypeTagConflict15() throws Exception {
+    parse("/**\n" +
+          " * @struct\n" +
+          " * @struct\n" +
+          " */\n" +
+          "function StrStr() {}",
+          "Bad type annotation. " +
+          "type annotation incompatible with other annotations");
+  }
+
+  public void testTypeTagConflict16() throws Exception {
+    parse("/**\n" +
+          " * @struct\n" +
+          " * @interface\n" +
+          " */\n" +
+          "function StrIntf() {}",
+          "Bad type annotation. " +
+          "type annotation incompatible with other annotations");
+  }
+
+  public void testTypeTagConflict17() throws Exception {
+    parse("/**\n" +
+          " * @interface\n" +
+          " * @struct\n" +
+          " */\n" +
+          "function StrIntf() {}",
+          "Bad type annotation. " +
+          "type annotation incompatible with other annotations");
+  }
+
+  public void testTypeTagConflict18() throws Exception {
+    parse("/**\n" +
+          " * @dict\n" +
+          " * @dict\n" +
+          " */\n" +
+          "function DictDict() {}",
+          "Bad type annotation. " +
+          "type annotation incompatible with other annotations");
+  }
+
+  public void testTypeTagConflict19() throws Exception {
+    parse("/**\n" +
+          " * @dict\n" +
+          " * @interface\n" +
+          " */\n" +
+          "function DictDict() {}",
+          "Bad type annotation. " +
+          "type annotation incompatible with other annotations");
+  }
+
+  public void testTypeTagConflict20() throws Exception {
+    parse("/**\n" +
+          " * @interface\n" +
+          " * @dict\n" +
+          " */\n" +
+          "function DictDict() {}",
+          "Bad type annotation. " +
+          "type annotation incompatible with other annotations");
+  }
+
   public void testParserWithTemplateTypeNameMissing() {
     parse("@template */",
         "Bad type annotation. @template tag missing type name");

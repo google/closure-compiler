@@ -32,6 +32,7 @@ enum Annotation {
   DEFINE,
   DEPRECATED,
   DESC,
+  DICT,
   ENUM,
   EXTENDS,
   EXTERNS,
@@ -65,6 +66,7 @@ enum Annotation {
   RETURN,
   SEE,
   SUPPRESS,
+  STRUCT,
   TEMPLATE,
   THIS,
   THROWS,
@@ -83,6 +85,7 @@ enum Annotation {
       put("define", Annotation.DEFINE).
       put("deprecated", Annotation.DEPRECATED).
       put("desc", Annotation.DESC).
+      put("dict", Annotation.DICT).
       put("enum", Annotation.ENUM).
       put("export", Annotation.EXPORT).
       put("expose", Annotation.EXPOSE).
@@ -117,6 +120,7 @@ enum Annotation {
       put("return", Annotation.RETURN).
       put("returns", Annotation.RETURN).
       put("see", Annotation.SEE).
+      put("struct", Annotation.STRUCT).
       put("suppress", Annotation.SUPPRESS).
       put("template", Annotation.TEMPLATE).
       put("this", Annotation.THIS).
