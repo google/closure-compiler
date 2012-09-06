@@ -805,6 +805,22 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
     }
   }
 
+  /**
+   * Checks a node's type.
+   *
+   * @throws MalformedException if the node is null or the wrong type
+   */
+  protected void checkNode(@Nullable Node node, int type) throws MalformedException {
+    if (node == null) {
+      throw new MalformedException(
+          "Expected node type " + type + "; found: null", node);
+    }
+    if (node.getType() != type) {
+      throw new MalformedException(
+          "Expected node type " + type + "; found: " + node.getType(), node);
+    }
+  }
+
   static class MalformedException extends Exception {
     private static final long serialVersionUID = 1L;
 

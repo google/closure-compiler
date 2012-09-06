@@ -317,8 +317,11 @@ public class DefaultPassConfig extends PassConfig {
     // If you want to customize the compiler to use a different i18n pass,
     // you can create a PassConfig that calls replacePassFactory
     // to replace this.
-    checks.add(options.messageBundle != null ?
-        replaceMessages : createEmptyPass("replaceMessages"));
+    if (options.replaceMessagesWithChromeI18n) {
+      checks.add(replaceMessagesForChrome);
+    } else if (options.messageBundle != null) {
+      checks.add(replaceMessages);
+    }
 
     if (options.getTweakProcessing().isOn()) {
       checks.add(processTweaks);
@@ -968,6 +971,19 @@ public class DefaultPassConfig extends PassConfig {
           JsMessage.Style.getFromParams(true, false),
           /* if we can't find a translation, don't worry about it. */
           false);
+    }
+  };
+
+  final PassFactory replaceMessagesForChrome =
+      new PassFactory("replaceMessages", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      return new ReplaceMessagesForChrome(compiler,
+          new GoogleJsMessageIdGenerator(null),
+          /* warn about message dupes */
+          true,
+          /* allow messages with goog.getMsg */
+          JsMessage.Style.getFromParams(true, false));
     }
   };
 

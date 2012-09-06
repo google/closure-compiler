@@ -337,22 +337,6 @@ class ReplaceMessages extends JsMessageVisitor {
   }
 
   /**
-   * Checks a node's type.
-   *
-   * @throws MalformedException if the node is null or the wrong type
-   */
-  private void checkNode(@Nullable Node node, int type) throws MalformedException {
-    if (node == null) {
-      throw new MalformedException(
-          "Expected node type " + type + "; found: null", node);
-    }
-    if (node.getType() != type) {
-      throw new MalformedException(
-          "Expected node type " + type + "; found: " + node.getType(), node);
-    }
-  }
-
-  /**
    * Checks that a node is a valid string expression (either a string literal
    * or a concatenation of string literals).
    *

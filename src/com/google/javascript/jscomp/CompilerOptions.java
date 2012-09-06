@@ -519,6 +519,24 @@ public class CompilerOptions implements Serializable, Cloneable {
   // Special-purpose alterations
   //--------------------------------
 
+  /**
+   * Replace UI strings with chrome.i18n.getMessage calls.
+   * Used by Chrome extensions/apps.
+   */
+  boolean replaceMessagesWithChromeI18n;
+
+  public void setReplaceMessagesWithChromeI18n(
+      boolean replaceMessagesWithChromeI18n) {
+    if (replaceMessagesWithChromeI18n &&
+        messageBundle != null &&
+        !(messageBundle instanceof EmptyMessageBundle)) {
+      throw new RuntimeException("When replacing messages with " +
+          "chrome.i18n.getMessage, a message bundle should not be specified.");
+    }
+
+    this.replaceMessagesWithChromeI18n = replaceMessagesWithChromeI18n;
+  }
+
   /** Inserts run-time type assertions for debugging. */
   boolean runtimeTypeCheck;
 
