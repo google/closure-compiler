@@ -181,7 +181,8 @@ angular.module = function(name, opt_requires, opt_configFn) {};
  *   controller:
  *       function(string, (Function|Array.<string|Function>)):angular.Module,
  *   directive:
- *       function(string, (Function|Array.<string|Function>)):angular.Module,
+ *       (function(string, (Function|Array.<string|Function>)):angular.Module|
+ *       function(!Object.<(Function|Array.<string|Function>)>):angular.Module),
  *   factory:
  *       function(string, (Function|Array.<string|Function>)):angular.Module,
  *   filter:
@@ -649,6 +650,32 @@ angular.$location.search = function(opt_search, opt_paramValue) {};
  * @return {string}
  */
 angular.$location.url = function(opt_url) {};
+
+/******************************************************************************
+ * $locationProvider Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   hashPrefix:
+ *       function(string=): (string|angular.$locationProvider),
+ *   html5Mode:
+ *       function(boolean=): (boolean|angular.$locationProvider)
+ *   }}
+ */
+angular.$locationProvider;
+
+/**
+ * @param {string=} prefix
+ * @return {string|angular.$locationProvider}
+ */
+angular.$locationProvider.hashPrefix = function(prefix) {};
+
+/**
+ * @param {boolean=} enabled
+ * @return {boolean|angular.$locationProvider}
+ */
+angular.$locationProvider.html5mode = function(enabled) {};
 
 /******************************************************************************
  * $log Service
