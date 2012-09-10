@@ -73,6 +73,12 @@ Blob.prototype.webkitSlice = function(start, end) {};
 Blob.prototype.mozSlice = function(start, end) {};
 
 /**
+ * @see http://dev.w3.org/2006/webapi/FileAPI/#dfn-Blob
+ * @type {function(new:Blob, Array.<ArrayBufferView|Blob|string>=, Object=)}
+ */
+Window.prototype.Blob;
+
+/**
  * @see http://www.w3.org/TR/file-writer-api/#the-blobbuilder-interface
  * @constructor
  */
