@@ -509,9 +509,23 @@ History.prototype.length;
 History.prototype.forward = function() {};
 
 /**
+ * @type {boolean}
+ * @implicitCast
+ * @see http://msdn.microsoft.com/en-us/library/ie/ms533072(v=vs.85).aspx
+ */
+HTMLFrameElement.prototype.allowTransparency;
+
+/**
  * @see http://msdn.microsoft.com/en-us/library/ms533692(VS.85).aspx
  */
 HTMLFrameElement.prototype.contentWindow;
+
+/**
+ * @type {boolean}
+ * @implicitCast
+ * @see http://msdn.microsoft.com/en-us/library/ie/ms533072(v=vs.85).aspx
+ */
+HTMLIFrameElement.prototype.allowTransparency;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms533692(VS.85).aspx
