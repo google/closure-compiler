@@ -484,7 +484,7 @@ TextMetrics.prototype.width;
  */
 function ImageData() {}
 
-/** @type {CanvasPixelArray} */
+/** @type {Uint8ClampedArray} */
 ImageData.prototype.data;
 
 /** @type {number} */
@@ -492,11 +492,6 @@ ImageData.prototype.width;
 
 /** @type {number} */
 ImageData.prototype.height;
-
-/**
- * @constructor
- */
-function CanvasPixelArray() {}
 
 /**
  * @constructor
@@ -1994,6 +1989,15 @@ Uint8ClampedArray.prototype.set = function(array, opt_offset) {};
  * @return {!Uint8ClampedArray}
  */
 Uint8ClampedArray.prototype.subarray = function(begin, opt_end) {};
+
+
+/**
+ * @typedef {Uint8ClampedArray}
+ * @deprecated CanvasPixelArray has been replaced by Uint8ClampedArray
+ *     in the latest spec.
+ * @see http://www.w3.org/TR/2dcontext/#imagedata
+ */
+var CanvasPixelArray;
 
 
 /**
