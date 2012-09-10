@@ -300,7 +300,7 @@ File.prototype.name;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-lastModifiedDate
- * @type {string}
+ * @type {Date}
  */
 File.prototype.lastModifiedDate;
 
