@@ -178,6 +178,11 @@ google.maps.CircleOptions.prototype.strokeColor;
 google.maps.CircleOptions.prototype.strokeOpacity;
 
 /**
+ * @type {google.maps.StrokePosition}
+ */
+google.maps.CircleOptions.prototype.strokePosition;
+
+/**
  * @type {number}
  */
 google.maps.CircleOptions.prototype.strokeWeight;
@@ -3006,6 +3011,11 @@ google.maps.PolygonOptions.prototype.strokeColor;
 google.maps.PolygonOptions.prototype.strokeOpacity;
 
 /**
+ * @type {google.maps.StrokePosition}
+ */
+google.maps.PolygonOptions.prototype.strokePosition;
+
+/**
  * @type {number}
  */
 google.maps.PolygonOptions.prototype.strokeWeight;
@@ -3265,6 +3275,11 @@ google.maps.RectangleOptions.prototype.strokeColor;
  * @type {number}
  */
 google.maps.RectangleOptions.prototype.strokeOpacity;
+
+/**
+ * @type {google.maps.StrokePosition}
+ */
+google.maps.RectangleOptions.prototype.strokePosition;
 
 /**
  * @type {number}
@@ -3673,6 +3688,15 @@ google.maps.StreetViewTileData.prototype.worldSize;
  * @return {string}
  */
 google.maps.StreetViewTileData.prototype.getTileUrl = function(pano, tileZoom, tileX, tileY) {};
+
+/**
+ * @enum {number|string}
+ */
+google.maps.StrokePosition = {
+  CENTER: '',
+  INSIDE: '',
+  OUTSIDE: ''
+};
 
 /**
  * @param {Array.<google.maps.MapTypeStyle>} styles
@@ -4501,6 +4525,15 @@ google.maps.geometry.spherical.computeLength = function(path, opt_radius) {};
  * @return {google.maps.LatLng}
  */
 google.maps.geometry.spherical.computeOffset = function(from, distance, heading, opt_radius) {};
+
+/**
+ * @param {google.maps.LatLng} to
+ * @param {number} distance
+ * @param {number} heading
+ * @param {number=} opt_radius
+ * @return {google.maps.LatLng}
+ */
+google.maps.geometry.spherical.computeOffsetOrigin = function(to, distance, heading, opt_radius) {};
 
 /**
  * @param {Array.<google.maps.LatLng>|google.maps.MVCArray.<google.maps.LatLng>} loop
