@@ -249,6 +249,32 @@ public abstract class JSType implements Serializable {
   }
 
   /**
+   * Returns true iff {@code this} can be a {@code struct}.
+   * UnionType overrides the method, assume {@code this} is not a union here.
+   */
+  public boolean isStruct() {
+    if (isObject()) {
+      FunctionType ctor = toObjectType().getConstructor();
+      // getConstructor can return an *interface* type, so it's not safe to
+      // assume that makesStructs is only called on constructors.
+      return ctor != null && ctor.makesStructs();
+    }
+    return false;
+  }
+
+  /**
+   * Returns true iff {@code this} can be a {@code dict}.
+   * UnionType overrides the method, assume {@code this} is not a union here.
+   */
+  public boolean isDict() {
+    if (isObject()) {
+      FunctionType ctor = toObjectType().getConstructor();
+      return ctor != null && ctor.makesDicts();
+    }
+    return false;
+  }
+
+  /**
    * Downcasts this to a UnionType, or returns null if this is not a UnionType.
    *
    * Named in honor of Haskell's Maybe type constructor.
@@ -579,16 +605,16 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * Gets the type to which this type auto-boxes.
+   * Turn a scalar type to the corresponding object type.
    *
-   * @return the auto-boxed type or {@code null} if this type does not auto-box
+   * @return the auto-boxed type or {@code null} if this type is not a scalar.
    */
   public JSType autoboxesTo() {
     return null;
   }
 
   /**
-   * Gets the type to which this type unboxes.
+   * Turn an object type to its corresponding scalar type.
    *
    * @return the unboxed type or {@code null} if this type does not unbox.
    */
@@ -598,10 +624,9 @@ public abstract class JSType implements Serializable {
 
   /**
    * Casts this to an ObjectType, or returns null if this is not an ObjectType.
-   *
-   * Does not change the underlying JS type. If you want to simulate JS
-   * autoboxing or dereferencing, you should use autoboxesTo() or dereference().
-   * Those methods may change the underlying JS type.
+   * If this is a scalar type, it will *not* be converted to an object type.
+   * If you want to simulate JS autoboxing or dereferencing, you should use
+   * autoboxesTo() or dereference().
    */
   public ObjectType toObjectType() {
     return this instanceof ObjectType ? (ObjectType) this : null;
@@ -610,7 +635,8 @@ public abstract class JSType implements Serializable {
   /**
    * Dereference a type for property access.
    *
-   * Autoboxes the type, and filters null/undefined, and returns the result.
+   * Filters null/undefined and autoboxes the resulting type.
+   * Never returns null.
    */
   public JSType autobox() {
     JSType restricted = restrictByNotNullOrUndefined();
@@ -621,11 +647,11 @@ public abstract class JSType implements Serializable {
   /**
    * Dereference a type for property access.
    *
-   * Autoboxes the type, filters null/undefined, and returns the result
+   * Filters null/undefined, autoboxes the resulting type, and returns it
    * iff it's an object.
    */
   public final ObjectType dereference() {
-    return ObjectType.cast(autobox());
+    return autobox().toObjectType();
   }
 
   /**
@@ -1082,12 +1108,12 @@ public abstract class JSType implements Serializable {
     if (thatType.isUnknownType()) {
       return true;
     }
-    // equality
-    if (thisType.isEquivalentTo(thatType)) {
-      return true;
-    }
     // all type
     if (thatType.isAllType()) {
+      return true;
+    }
+    // equality
+    if (thisType.isEquivalentTo(thatType)) {
       return true;
     }
     // unions

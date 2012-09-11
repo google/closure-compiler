@@ -85,6 +85,8 @@ final class FunctionTypeBuilder {
   private ObjectType baseType = null;
   private ObjectType thisType = null;
   private boolean isConstructor = false;
+  private boolean makesStructs = false;
+  private boolean makesDicts = false;
   private boolean isInterface = false;
   private Node parametersNode = null;
   private ImmutableList<String> templateTypeNames = ImmutableList.of();
@@ -105,6 +107,10 @@ final class FunctionTypeBuilder {
       DiagnosticType.warning(
           "JSC_IMPLEMENTS_WITHOUT_CONSTRUCTOR",
           "@implements used without @constructor or @interface for {0}");
+
+  static final DiagnosticType CONSTRUCTOR_REQUIRED =
+      DiagnosticType.warning("JSC_CONSTRUCTOR_REQUIRED",
+                             "{0} used without @constructor for {1}");
 
   static final DiagnosticType VAR_ARGS_MUST_BE_LAST = DiagnosticType.warning(
       "JSC_VAR_ARGS_MUST_BE_LAST",
@@ -322,7 +328,15 @@ final class FunctionTypeBuilder {
   FunctionTypeBuilder inferInheritance(@Nullable JSDocInfo info) {
     if (info != null) {
       isConstructor = info.isConstructor();
+      makesStructs = info.makesStructs();
+      makesDicts = info.makesDicts();
       isInterface = info.isInterface();
+
+      if (makesStructs && !isConstructor) {
+        reportWarning(CONSTRUCTOR_REQUIRED, "@struct", fnName);
+      } else if (makesDicts && !isConstructor) {
+        reportWarning(CONSTRUCTOR_REQUIRED, "@dict", fnName);
+      }
 
       // base type
       if (info.hasBaseType()) {
@@ -349,7 +363,7 @@ final class FunctionTypeBuilder {
           }
         }
       } else if (info.getImplementedInterfaceCount() > 0) {
-        reportWarning(IMPLEMENTS_WITHOUT_CONSTRUCTOR, fnName);
+        reportWarning(CONSTRUCTOR_REQUIRED, "@implements", fnName);
       }
 
       // extended interfaces (for interface only)
@@ -664,6 +678,11 @@ final class FunctionTypeBuilder {
         fnName, contents.getSourceNode(), parametersNode, returnType);
     JSType existingType = typeRegistry.getType(fnName);
 
+    if (makesStructs) {
+      fnType.setStruct();
+    } else if (makesDicts) {
+      fnType.setDict();
+    }
     if (existingType != null) {
       boolean isInstanceObject = existingType.isInstanceType();
       if (isInstanceObject || fnName.equals("Function")) {
