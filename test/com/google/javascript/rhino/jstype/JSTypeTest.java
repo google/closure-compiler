@@ -230,6 +230,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(U2U_CONSTRUCTOR_TYPE.isStringValueType());
     assertFalse(U2U_CONSTRUCTOR_TYPE.isEnumType());
     assertFalse(U2U_CONSTRUCTOR_TYPE.isUnionType());
+    assertFalse(U2U_CONSTRUCTOR_TYPE.isStruct());
+    assertFalse(U2U_CONSTRUCTOR_TYPE.isDict());
     assertFalse(U2U_CONSTRUCTOR_TYPE.isAllType());
     assertFalse(U2U_CONSTRUCTOR_TYPE.isVoidType());
     assertTrue(U2U_CONSTRUCTOR_TYPE.isConstructor());
@@ -416,6 +418,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NO_OBJECT_TYPE.isStringValueType());
     assertFalse(NO_OBJECT_TYPE.isEnumType());
     assertFalse(NO_OBJECT_TYPE.isUnionType());
+    assertFalse(NO_OBJECT_TYPE.isStruct());
+    assertFalse(NO_OBJECT_TYPE.isDict());
     assertFalse(NO_OBJECT_TYPE.isAllType());
     assertFalse(NO_OBJECT_TYPE.isVoidType());
     assertTrue(NO_OBJECT_TYPE.isConstructor());
@@ -557,6 +561,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NO_TYPE.isStringValueType());
     assertFalse(NO_TYPE.isEnumType());
     assertFalse(NO_TYPE.isUnionType());
+    assertFalse(NO_TYPE.isStruct());
+    assertFalse(NO_TYPE.isDict());
     assertFalse(NO_TYPE.isAllType());
     assertFalse(NO_TYPE.isVoidType());
     assertTrue(NO_TYPE.isConstructor());
@@ -689,6 +695,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NO_RESOLVED_TYPE.isStringValueType());
     assertFalse(NO_RESOLVED_TYPE.isEnumType());
     assertFalse(NO_RESOLVED_TYPE.isUnionType());
+    assertFalse(NO_RESOLVED_TYPE.isStruct());
+    assertFalse(NO_RESOLVED_TYPE.isDict());
     assertFalse(NO_RESOLVED_TYPE.isAllType());
     assertFalse(NO_RESOLVED_TYPE.isVoidType());
     assertTrue(NO_RESOLVED_TYPE.isConstructor());
@@ -828,6 +836,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ARRAY_TYPE.isStringValueType());
     assertFalse(ARRAY_TYPE.isEnumType());
     assertFalse(ARRAY_TYPE.isUnionType());
+    assertFalse(ARRAY_TYPE.isStruct());
+    assertFalse(ARRAY_TYPE.isDict());
     assertFalse(ARRAY_TYPE.isAllType());
     assertFalse(ARRAY_TYPE.isVoidType());
     assertFalse(ARRAY_TYPE.isConstructor());
@@ -978,6 +988,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(UNKNOWN_TYPE.isStringValueType());
     assertFalse(UNKNOWN_TYPE.isEnumType());
     assertFalse(UNKNOWN_TYPE.isUnionType());
+    assertFalse(UNKNOWN_TYPE.isStruct());
+    assertFalse(UNKNOWN_TYPE.isDict());
     assertTrue(UNKNOWN_TYPE.isUnknownType());
     assertFalse(UNKNOWN_TYPE.isVoidType());
     assertFalse(UNKNOWN_TYPE.isConstructor());
@@ -1086,6 +1098,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ALL_TYPE.isStringValueType());
     assertFalse(ALL_TYPE.isEnumType());
     assertFalse(ALL_TYPE.isUnionType());
+    assertFalse(ALL_TYPE.isStruct());
+    assertFalse(ALL_TYPE.isDict());
     assertTrue(ALL_TYPE.isAllType());
     assertFalse(ALL_TYPE.isVoidType());
     assertFalse(ALL_TYPE.isConstructor());
@@ -1216,6 +1230,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(OBJECT_TYPE.isStringValueType());
     assertFalse(OBJECT_TYPE.isEnumType());
     assertFalse(OBJECT_TYPE.isUnionType());
+    assertFalse(OBJECT_TYPE.isStruct());
+    assertFalse(OBJECT_TYPE.isDict());
     assertFalse(OBJECT_TYPE.isAllType());
     assertFalse(OBJECT_TYPE.isVoidType());
     assertFalse(OBJECT_TYPE.isConstructor());
@@ -1365,6 +1381,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_OBJECT_TYPE.isStringValueType());
     assertFalse(NUMBER_OBJECT_TYPE.isEnumType());
     assertFalse(NUMBER_OBJECT_TYPE.isUnionType());
+    assertFalse(NUMBER_OBJECT_TYPE.isStruct());
+    assertFalse(NUMBER_OBJECT_TYPE.isDict());
     assertFalse(NUMBER_OBJECT_TYPE.isAllType());
     assertFalse(NUMBER_OBJECT_TYPE.isVoidType());
     assertFalse(NUMBER_OBJECT_TYPE.isConstructor());
@@ -1502,6 +1520,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_TYPE.isStringValueType());
     assertFalse(NUMBER_TYPE.isEnumType());
     assertFalse(NUMBER_TYPE.isUnionType());
+    assertFalse(NUMBER_TYPE.isStruct());
+    assertFalse(NUMBER_TYPE.isDict());
     assertFalse(NUMBER_TYPE.isAllType());
     assertFalse(NUMBER_TYPE.isVoidType());
     assertFalse(NUMBER_TYPE.isConstructor());
@@ -1625,6 +1645,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NULL_TYPE.isStringValueType());
     assertFalse(NULL_TYPE.isEnumType());
     assertFalse(NULL_TYPE.isUnionType());
+    assertFalse(NULL_TYPE.isStruct());
+    assertFalse(NULL_TYPE.isDict());
     assertFalse(NULL_TYPE.isAllType());
     assertFalse(NULL_TYPE.isVoidType());
     assertFalse(NULL_TYPE.isConstructor());
@@ -1777,6 +1799,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(DATE_TYPE.isStringValueType());
     assertFalse(DATE_TYPE.isEnumType());
     assertFalse(DATE_TYPE.isUnionType());
+    assertFalse(DATE_TYPE.isStruct());
+    assertFalse(DATE_TYPE.isDict());
     assertFalse(DATE_TYPE.isAllType());
     assertFalse(DATE_TYPE.isVoidType());
     assertFalse(DATE_TYPE.isConstructor());
@@ -1988,6 +2012,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(REGEXP_TYPE.isStringValueType());
     assertFalse(REGEXP_TYPE.isEnumType());
     assertFalse(REGEXP_TYPE.isUnionType());
+    assertFalse(REGEXP_TYPE.isStruct());
+    assertFalse(REGEXP_TYPE.isDict());
     assertFalse(REGEXP_TYPE.isAllType());
     assertFalse(REGEXP_TYPE.isVoidType());
 
@@ -2139,6 +2165,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(STRING_OBJECT_TYPE.isStringValueType());
     assertFalse(STRING_OBJECT_TYPE.isEnumType());
     assertFalse(STRING_OBJECT_TYPE.isUnionType());
+    assertFalse(STRING_OBJECT_TYPE.isStruct());
+    assertFalse(STRING_OBJECT_TYPE.isDict());
     assertFalse(STRING_OBJECT_TYPE.isAllType());
     assertFalse(STRING_OBJECT_TYPE.isVoidType());
     assertFalse(STRING_OBJECT_TYPE.isConstructor());
@@ -2300,6 +2328,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(STRING_TYPE.isStringValueType());
     assertFalse(STRING_TYPE.isEnumType());
     assertFalse(STRING_TYPE.isUnionType());
+    assertFalse(STRING_TYPE.isStruct());
+    assertFalse(STRING_TYPE.isDict());
     assertFalse(STRING_TYPE.isAllType());
     assertFalse(STRING_TYPE.isVoidType());
     assertFalse(STRING_TYPE.isConstructor());
@@ -3198,6 +3228,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(BOOLEAN_TYPE.isStringValueType());
     assertFalse(BOOLEAN_TYPE.isEnumType());
     assertFalse(BOOLEAN_TYPE.isUnionType());
+    assertFalse(BOOLEAN_TYPE.isStruct());
+    assertFalse(BOOLEAN_TYPE.isDict());
     assertFalse(BOOLEAN_TYPE.isAllType());
     assertFalse(BOOLEAN_TYPE.isVoidType());
     assertFalse(BOOLEAN_TYPE.isConstructor());
@@ -3303,6 +3335,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(BOOLEAN_OBJECT_TYPE.isStringValueType());
     assertFalse(BOOLEAN_OBJECT_TYPE.isEnumType());
     assertFalse(BOOLEAN_OBJECT_TYPE.isUnionType());
+    assertFalse(BOOLEAN_OBJECT_TYPE.isStruct());
+    assertFalse(BOOLEAN_OBJECT_TYPE.isDict());
     assertFalse(BOOLEAN_OBJECT_TYPE.isAllType());
     assertFalse(BOOLEAN_OBJECT_TYPE.isVoidType());
     assertFalse(BOOLEAN_OBJECT_TYPE.isConstructor());
@@ -3411,6 +3445,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(enumType.isStringValueType());
     assertTrue(enumType.isEnumType());
     assertFalse(enumType.isUnionType());
+    assertFalse(enumType.isStruct());
+    assertFalse(enumType.isDict());
     assertFalse(enumType.isAllType());
     assertFalse(enumType.isVoidType());
     assertFalse(enumType.isConstructor());
@@ -3521,6 +3557,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(elementsType.isStringValueType());
     assertFalse(elementsType.isEnumType());
     assertFalse(elementsType.isUnionType());
+    assertFalse(elementsType.isStruct());
+    assertFalse(elementsType.isDict());
     assertFalse(elementsType.isAllType());
     assertFalse(elementsType.isVoidType());
     assertFalse(elementsType.isConstructor());

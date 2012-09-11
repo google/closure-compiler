@@ -188,6 +188,16 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public boolean isStruct() {
+    return referencedType.isStruct();
+  }
+
+  @Override
+  public boolean isDict() {
+    return referencedType.isDict();
+  }
+
+  @Override
   public boolean isNativeObjectType() {
     return referencedObjType == null
         ? false : referencedObjType.isNativeObjectType();
