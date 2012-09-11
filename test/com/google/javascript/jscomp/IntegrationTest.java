@@ -1977,6 +1977,18 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, code, "_.x$FOO = 5; _.x$bar = 3;");
   }
 
+  public void testRenamePrefixNamespaceProtectSideEffects() {
+    String code = "var x = null; try { +x.FOO; } catch (e) {}";
+
+    CompilerOptions options = createCompilerOptions();
+    testSame(options, code);
+
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(
+        options);
+    options.renamePrefixNamespace = "_";
+    test(options, code, "_.x = null; try { +_.x.FOO; } catch (e) {}");
+  }
+
   public void testRenamePrefixNamespaceActivatesMoveFunctionDeclarations() {
     CompilerOptions options = createCompilerOptions();
     String code = "var x = f; function f() { return 3; }";

@@ -667,6 +667,8 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(nameUnmappedAnonymousFunctions);
     }
 
+    passes.add(stripSideEffectProtection);
+
     if (options.renamePrefixNamespace != null) {
       if (!GLOBAL_SYMBOL_NAMESPACE_PATTERN.matcher(
           options.renamePrefixNamespace).matches()) {
@@ -676,8 +678,6 @@ public class DefaultPassConfig extends PassConfig {
       }
       passes.add(rescopeGlobalSymbols);
     }
-
-    passes.add(stripSideEffectProtection);
 
     // Safety checks
     passes.add(sanityCheckAst);
