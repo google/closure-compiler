@@ -267,26 +267,6 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public boolean isStruct() {
-    for (JSType typ : getAlternates()) {
-      if (typ.isStruct()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  @Override
-  public boolean isDict() {
-    for (JSType typ : getAlternates()) {
-      if (typ.isDict()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  @Override
   public JSType getLeastSupertype(JSType that) {
     if (!that.isUnknownType() && !that.isUnionType()) {
       for (JSType alternate : alternates) {

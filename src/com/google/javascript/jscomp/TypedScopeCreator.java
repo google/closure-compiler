@@ -465,7 +465,8 @@ final class TypedScopeCreator implements ScopeCreator {
     }
 
     @Override
-    public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    public final boolean shouldTraverse(NodeTraversal t, Node n,
+        Node parent) {
       inputId = t.getInputId();
       if (n.isFunction() ||
           n.isScript()) {
@@ -914,6 +915,7 @@ final class TypedScopeCreator implements ScopeCreator {
               .inferTemplateTypeName(info)
               .inferReturnType(info)
               .inferInheritance(info);
+
 
           // Infer the context type.
           boolean searchedForThisType = false;

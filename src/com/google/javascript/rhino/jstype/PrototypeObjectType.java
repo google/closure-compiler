@@ -462,17 +462,18 @@ class PrototypeObjectType extends ObjectType {
     // Find all the interfaces implemented by this class and compare each one
     // to the interface instance.
     ObjectType thatObj = that.toObjectType();
-    FunctionType thatCtor = thatObj == null ? null : thatObj.getConstructor();
-
-    if (getConstructor() != null && getConstructor().isInterface()) {
-      for (ObjectType thisInterface : getCtorExtendedInterfaces()) {
+    ObjectType thatCtor = thatObj == null ? null : thatObj.getConstructor();
+    if (thatCtor != null && thatCtor.isInterface()) {
+      Iterable<ObjectType> thisInterfaces = getCtorImplementedInterfaces();
+      for (ObjectType thisInterface : thisInterfaces) {
         if (thisInterface.isSubtype(that)) {
           return true;
         }
       }
-    } else if (thatCtor != null && thatCtor.isInterface()) {
-      Iterable<ObjectType> thisInterfaces = getCtorImplementedInterfaces();
-      for (ObjectType thisInterface : thisInterfaces) {
+    }
+
+    if (getConstructor() != null && getConstructor().isInterface()) {
+      for (ObjectType thisInterface : getCtorExtendedInterfaces()) {
         if (thisInterface.isSubtype(that)) {
           return true;
         }

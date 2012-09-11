@@ -117,10 +117,6 @@ class TypeValidator {
   static final DiagnosticType UNKNOWN_TYPEOF_VALUE =
       DiagnosticType.warning("JSC_UNKNOWN_TYPEOF_VALUE", "unknown type: {0}");
 
-  static final DiagnosticType ILLEGAL_PROPERTY_ACCESS =
-      DiagnosticType.warning("JSC_ILLEGAL_PROPERTY_ACCESS",
-                             "Cannot do {0} access on a {1}");
-
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       INVALID_CAST,
       TYPE_MISMATCH_WARNING,
@@ -129,8 +125,7 @@ class TypeValidator {
       HIDDEN_PROPERTY_MISMATCH,
       INTERFACE_METHOD_NOT_IMPLEMENTED,
       HIDDEN_INTERFACE_PROPERTY_MISMATCH,
-      UNKNOWN_TYPEOF_VALUE,
-      ILLEGAL_PROPERTY_ACCESS);
+      UNKNOWN_TYPEOF_VALUE);
 
   TypeValidator(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -320,13 +315,9 @@ class TypeValidator {
    * @param indexType The type inside the brackets of the GETELEM.
    */
   void expectIndexMatch(NodeTraversal t, Node n, JSType objType,
-                        JSType indexType) {
+      JSType indexType) {
     Preconditions.checkState(n.isGetElem());
     Node indexNode = n.getLastChild();
-    if (objType.isStruct()) {
-      report(JSError.make(t.getSourceName(), indexNode,
-                          ILLEGAL_PROPERTY_ACCESS, "'[]'", "struct"));
-    }
     if (objType.isUnknownType()) {
       expectStringOrNumber(t, indexNode, indexType, "property access");
     } else {

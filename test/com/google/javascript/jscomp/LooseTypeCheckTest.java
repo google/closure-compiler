@@ -2895,7 +2895,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testBadImplements2() throws Exception {
     testTypes("/** @interface */function Disposable() {}\n" +
         "/** @implements {Disposable}\n */function f() {}",
-        "@implements used without @constructor for f");
+        "@implements used without @constructor or @interface for f");
   }
 
   public void testBadImplements3() throws Exception {
@@ -2921,13 +2921,15 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testBadInterfaceExtends2() throws Exception {
     testTypes("/** @constructor */function A() {}\n" +
         "/** @interface \n * @extends {A} */function B() {}",
-        "B cannot extend this type; interfaces can only extend interfaces");
+        "B cannot extend this type; a constructor can only extend objects " +
+        "and an interface can only extend interfaces");
   }
 
   public void testBadInterfaceExtends3() throws Exception {
     testTypes("/** @interface */function A() {}\n" +
         "/** @constructor \n * @extends {A} */function B() {}",
-        "B cannot extend this type; constructors can only extend constructors");
+        "B cannot extend this type; a constructor can only extend objects " +
+        "and an interface can only extend interfaces");
   }
 
   public void testBadInterfaceExtends4() throws Exception {

@@ -1137,7 +1137,7 @@ public class JSTypeRegistry implements Serializable {
    * @param returnType the function's return type
    * @param parameterTypes the parameters' types
    */
-  private FunctionType createConstructorTypeWithVarArgs(
+  public FunctionType createConstructorTypeWithVarArgs(
       JSType returnType, JSType... parameterTypes) {
     return createConstructorType(
         null, null, createParametersWithVarArgs(parameterTypes), returnType);

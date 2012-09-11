@@ -3681,7 +3681,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testBadImplements2() throws Exception {
     testTypes("/** @interface */function Disposable() {}\n" +
         "/** @implements {Disposable}\n */function f() {}",
-        "@implements used without @constructor for f");
+        "@implements used without @constructor or @interface for f");
   }
 
   public void testBadImplements3() throws Exception {
@@ -3737,13 +3737,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testBadInterfaceExtends2() throws Exception {
     testTypes("/** @constructor */function A() {}\n" +
         "/** @interface \n * @extends {A} */function B() {}",
-        "B cannot extend this type; interfaces can only extend interfaces");
+        "B cannot extend this type; a constructor can only extend objects " +
+        "and an interface can only extend interfaces");
   }
 
   public void testBadInterfaceExtends3() throws Exception {
     testTypes("/** @interface */function A() {}\n" +
         "/** @constructor \n * @extends {A} */function B() {}",
-        "B cannot extend this type; constructors can only extend constructors");
+        "B cannot extend this type; a constructor can only extend objects " +
+        "and an interface can only extend interfaces");
   }
 
   public void testBadInterfaceExtends4() throws Exception {
@@ -3921,157 +3923,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Foo.prototype.bar = function() {" +
         "  if (this.x == null) { this.initX(); alert(this.x.foo); }" +
         "};");
-  }
-
-  public void testGetpropDict1() throws Exception {
-    testTypes("/**\n" +
-              " * @constructor\n" +
-              " * @dict\n" +
-              " */" +
-              "function Dict1(){ this['prop'] = 123; }" +
-              "/** @param{Dict1} x */" +
-              "function takesDict(x) { return x.prop; }",
-              "Cannot do '.' access on a dict");
-  }
-
-  public void testGetpropDict2() throws Exception {
-    testTypes("/**\n" +
-              " * @constructor\n" +
-              " * @dict\n" +
-              " */" +
-              "function Dict1(){ this['prop'] = 123; }" +
-              "/**\n" +
-              " * @constructor\n" +
-              " * @extends {Dict1}\n" +
-              " */" +
-              "function Dict1kid(){ this['prop'] = 123; }" +
-              "/** @param{Dict1kid} x */" +
-              "function takesDict(x) { return x.prop; }",
-              "Cannot do '.' access on a dict");
-  }
-
-  public void testGetpropDict3() throws Exception {
-    testTypes("/**\n" +
-              " * @constructor\n" +
-              " * @dict\n" +
-              " */" +
-              "function Dict1() { this['prop'] = 123; }" +
-              "/** @constructor */" +
-              "function NonDict() { this.prop = 321; }" +
-              "/** @param{(NonDict|Dict1)} x */" +
-              "function takesDict(x) { return x.prop; }",
-              "Cannot do '.' access on a dict");
-  }
-
-  public void testGetpropDict4() throws Exception {
-    testTypes("/**\n" +
-              " * @constructor\n" +
-              " * @dict\n" +
-              " */" +
-              "function Dict1() { this['prop'] = 123; }" +
-              "/**\n" +
-              " * @constructor\n" +
-              " * @struct\n" +
-              " */" +
-              "function Struct1() { this.prop = 123; }" +
-              "/** @param{(Struct1|Dict1)} x */" +
-              "function takesNothing(x) { return x.prop; }",
-              "Cannot do '.' access on a dict");
-  }
-
-  public void testGetpropDict5() throws Exception {
-    testTypes("/**\n" +
-              " * @constructor\n" +
-              " * @dict\n" +
-              " */" +
-              "function Dict1(){ this.prop = 123; }",
-              "Cannot do '.' access on a dict");
-  }
-
-  public void testGetelemStruct1() throws Exception {
-    testTypes("/**\n" +
-              " * @constructor\n" +
-              " * @struct\n" +
-              " */" +
-              "function Struct1(){ this.prop = 123; }" +
-              "/** @param{Struct1} x */" +
-              "function takesStruct(x) {" +
-              "  var z = x;" +
-              "  return z['prop'];" +
-              "}",
-              "Cannot do '[]' access on a struct");
-  }
-
-  public void testGetelemStruct2() throws Exception {
-    testTypes("/**\n" +
-              " * @constructor\n" +
-              " * @struct\n" +
-              " */" +
-              "function Struct1(){ this.prop = 123; }" +
-              "/**\n" +
-              " * @constructor\n" +
-              " * @extends {Struct1}" +
-              " */" +
-              "function Struct1kid(){ this.prop = 123; }" +
-              "/** @param{Struct1kid} x */" +
-              "function takesStruct2(x) { return x['prop']; }",
-              "Cannot do '[]' access on a struct");
-  }
-
-  public void testGetelemStruct3() throws Exception {
-    testTypes("/**\n" +
-              " * @constructor\n" +
-              " * @struct\n" +
-              " */" +
-              "function Struct1(){ this.prop = 123; }" +
-              "/**\n" +
-              " * @constructor\n" +
-              " * @extends {Struct1}\n" +
-              " */" +
-              "function Struct1kid(){ this.prop = 123; }" +
-              "var x = (new Struct1kid())['prop'];",
-              "Cannot do '[]' access on a struct");
-  }
-
-  public void testGetelemStruct4() throws Exception {
-    testTypes("/**\n" +
-              " * @constructor\n" +
-              " * @struct\n" +
-              " */" +
-              "function Struct1() { this.prop = 123; }" +
-              "/** @constructor */" +
-              "function NonStruct() { this.prop = 321; }" +
-              "/** @param{(NonStruct|Struct1)} x */" +
-              "function takesStruct(x) { return x['prop']; }",
-              "Cannot do '[]' access on a struct");
-  }
-
-  public void testGetelemStruct5() throws Exception {
-    testTypes("/**\n" +
-              " * @constructor\n" +
-              " * @struct\n" +
-              " */" +
-              "function Struct1() { this.prop = 123; }" +
-              "/**\n" +
-              " * @constructor\n" +
-              " * @dict\n" +
-              " */" +
-              "function Dict1() { this['prop'] = 123; }" +
-              "/** @param{(Struct1|Dict1)} x */" +
-              "function takesNothing(x) { return x['prop']; }",
-              "Cannot do '[]' access on a struct");
-  }
-
-  public void testGetelemStruct6() throws Exception {
-    // By casting Bar to Foo, the illegal bracket access is not detected
-    testTypes("/** @interface */ function Foo(){}\n" +
-              "/**\n" +
-              " * @constructor\n" +
-              " * @struct\n" +
-              " * @implements {Foo}\n" +
-              " */" +
-              "function Bar(){ this.x = 123; }\n" +
-              "var z = /** @type {Foo} */(new Bar)['x'];");
   }
 
   public void testArrayAccess1() throws Exception {
@@ -7370,42 +7221,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "}");
   }
 
-  public void testConstructorType10() throws Exception {
-    testTypes("/** @constructor */" +
-              "function NonStr() {}" +
-              "/**\n" +
-              " * @constructor\n" +
-              " * @struct\n" +
-              " * @extends{NonStr}\n" +
-              " */" +
-              "function NonStrKid() {}",
-              "NonStrKid cannot extend this type; " +
-              "structs can only extend structs");
-  }
-
-  public void testConstructorType11() throws Exception {
-    testTypes("/** @constructor */" +
-              "function NonDict() {}" +
-              "/**\n" +
-              " * @constructor\n" +
-              " * @dict\n" +
-              " * @extends{NonDict}\n" +
-              " */" +
-              "function NonDictKid() {}",
-              "NonDictKid cannot extend this type; " +
-              "dicts can only extend dicts");
-  }
-
-  public void testBadStruct() throws Exception {
-    testTypes("/** @struct */function Struct1() {}",
-              "@struct used without @constructor for Struct1");
-  }
-
-  public void testBadDict() throws Exception {
-    testTypes("/** @dict */function Dict1() {}",
-              "@dict used without @constructor for Dict1");
-  }
-
   public void testAnonymousPrototype1() throws Exception {
     testTypes(
         "var ns = {};" +
@@ -10056,7 +9871,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @desc description @ return {string} x */" +
         "/** @interface \n @extends {Int0} \n @extends {Int1} */" +
         "function Int2() {};",
-        "Int2 cannot extend this type; interfaces can only extend interfaces");
+        "Int2 cannot extend this type; a constructor can only extend " +
+        "objects and an interface can only extend interfaces");
   }
 
   public void testMultipleExtendsInterface6() throws Exception {

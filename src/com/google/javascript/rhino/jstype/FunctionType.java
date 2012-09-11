@@ -72,9 +72,6 @@ public class FunctionType extends PrototypeObjectType {
     INTERFACE
   }
 
-  // relevant only for constructors
-  private enum PropAccess { ANY, STRUCT, DICT }
-
   /**
    * {@code [[Call]]} property.
    */
@@ -96,11 +93,6 @@ public class FunctionType extends PrototypeObjectType {
    * function.
    */
   private final Kind kind;
-
-  /**
-   * Whether the instances are structs, dicts, or unrestricted.
-   */
-  private PropAccess propAccess;
 
   /**
    * The type of {@code this} in the scope of this function.
@@ -137,9 +129,9 @@ public class FunctionType extends PrototypeObjectType {
 
   /** Creates an instance for a function that might be a constructor. */
   FunctionType(JSTypeRegistry registry, String name, Node source,
-               ArrowType arrowType, ObjectType typeOfThis,
-               ImmutableList<String> templateTypeNames,
-               boolean isConstructor, boolean nativeType) {
+      ArrowType arrowType, ObjectType typeOfThis,
+      ImmutableList<String> templateTypeNames,
+      boolean isConstructor, boolean nativeType) {
     super(registry, name,
         registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
         nativeType);
@@ -149,13 +141,11 @@ public class FunctionType extends PrototypeObjectType {
         Token.FUNCTION == source.getType());
     Preconditions.checkNotNull(arrowType);
     this.source = source;
+    this.kind = isConstructor ? Kind.CONSTRUCTOR : Kind.ORDINARY;
     if (isConstructor) {
-      this.kind = Kind.CONSTRUCTOR;
-      this.propAccess = PropAccess.ANY;
       this.typeOfThis = typeOfThis != null ?
           typeOfThis : new InstanceObjectType(registry, this, nativeType);
     } else {
-      this.kind = Kind.ORDINARY;
       this.typeOfThis = typeOfThis != null ?
           typeOfThis :
           registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
@@ -206,54 +196,6 @@ public class FunctionType extends PrototypeObjectType {
   @Override
   public boolean isOrdinaryFunction() {
     return kind == Kind.ORDINARY;
-  }
-
-  /**
-   * When a class B inherits from A and A is annotated as a struct, then B
-   * automatically gets the annotation, even if B's constructor is not
-   * explicitly annotated.
-   */
-  public boolean makesStructs() {
-    if (!isConstructor()) {
-      return false;
-    }
-    if (propAccess == PropAccess.STRUCT) {
-      return true;
-    }
-    FunctionType superc = getSuperClassConstructor();
-    if (superc != null && superc.makesStructs()) {
-      setStruct();
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * When a class B inherits from A and A is annotated as a dict, then B
-   * automatically gets the annotation, even if B's constructor is not
-   * explicitly annotated.
-   */
-  public boolean makesDicts() {
-    if (!isConstructor()) {
-      return false;
-    }
-    if (propAccess == PropAccess.DICT) {
-      return true;
-    }
-    FunctionType superc = getSuperClassConstructor();
-    if (superc != null && superc.makesDicts()) {
-      setDict();
-      return true;
-    }
-    return false;
-  }
-
-  public void setStruct() {
-    propAccess = PropAccess.STRUCT;
-  }
-
-  public void setDict() {
-    propAccess = PropAccess.DICT;
   }
 
   @Override
