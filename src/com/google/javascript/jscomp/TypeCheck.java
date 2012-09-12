@@ -1309,14 +1309,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     Node objNode = n.getFirstChild();
     JSType childType = getJSType(objNode);
 
-    // Do this first b/c we want to check even when the getprop is an lvalue
     if (childType.isDict()) {
       report(t, property, TypeValidator.ILLEGAL_PROPERTY_ACCESS, "'.'", "dict");
-    } else if (n.getJSType() != null && parent.isAssign()) {
-      // GETPROP nodes have an assigned type on their node by the scope creator
-      // if this is an enum declaration. The only namespaced enum declarations
-      // that we allow are of the form object.name = ...;
-      return;
     } else if (validator.expectNotNullOrUndefined(t, n, childType,
         "No properties on this expression", getNativeType(OBJECT_TYPE))) {
       checkPropertyAccess(childType, property.getString(), t, n);

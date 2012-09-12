@@ -3923,6 +3923,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testGetprop4() throws Exception {
+    testTypes("var x = null; x.prop = 3;",
+        "No properties on this expression\n" +
+        "found   : null\n" +
+        "required: Object");
+  }
+
   public void testGetpropDict1() throws Exception {
     testTypes("/**\n" +
               " * @constructor\n" +
@@ -6175,6 +6182,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Property unknownProp never defined on Type");
   }
 
+  public void testIssue810() throws Exception {
+    testTypes(
+        "/** @constructor */" +
+        "var Type = function () {" +
+        "};" +
+        "Type.prototype.doIt = function(obj) {" +
+        "  this.prop = obj.unknownProp;" +
+        "};",
+        "Property unknownProp never defined on obj");
+  }
+
   /**
    * Tests that the || operator is type checked correctly, that is of
    * the type of the first argument or of the second argument. See
@@ -7434,19 +7452,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAnonymousType1() throws Exception {
-    testTypes("function f() {}" +
+    testTypes("function f() { return {}; }" +
         "/** @constructor */\n" +
         "f().bar = function() {};");
   }
 
   public void testAnonymousType2() throws Exception {
-    testTypes("function f() {}" +
+    testTypes("function f() { return {}; }" +
         "/** @interface */\n" +
         "f().bar = function() {};");
   }
 
   public void testAnonymousType3() throws Exception {
-    testTypes("function f() {}" +
+    testTypes("function f() { return {}; }" +
         "/** @enum */\n" +
         "f().bar = {FOO: 1};");
   }

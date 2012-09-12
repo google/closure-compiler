@@ -5183,19 +5183,19 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAnonymousType1() throws Exception {
-    testTypes("function f() {}" +
+    testTypes("function f() { return {}; }" +
         "/** @constructor */\n" +
         "f().bar = function() {};");
   }
 
   public void testAnonymousType2() throws Exception {
-    testTypes("function f() {}" +
+    testTypes("function f() { return {}; }" +
         "/** @interface */\n" +
         "f().bar = function() {};");
   }
 
   public void testAnonymousType3() throws Exception {
-    testTypes("function f() {}" +
+    testTypes("function f() { return {}; }" +
         "/** @enum */\n" +
         "f().bar = {FOO: 1};");
   }
