@@ -174,7 +174,10 @@ Console.prototype.timeEnd = function(name) {};
  */
 Console.prototype.timeStamp = function(value) {};
 
-Console.prototype.group = function() {};
+/**
+ * @param {...*} var_args
+ */
+Console.prototype.group = function(var_args) {};
 
 Console.prototype.groupEnd = function() {};
 
