@@ -1965,6 +1965,14 @@ public class IntegrationTest extends IntegrationTestCase {
         "function f() {}");
   }
 
+  public void testRenamePrefix() {
+    String code = "var x = {}; function f(y) {}";
+    CompilerOptions options = createCompilerOptions();
+    options.renamePrefix = "G_";
+    options.variableRenaming = VariableRenamingPolicy.ALL;
+    test(options, code, "var G_={}; function G_a(a) {}");
+  }
+
   public void testRenamePrefixNamespace() {
     String code =
         "var x = {}; x.FOO = 5; x.bar = 3;";
