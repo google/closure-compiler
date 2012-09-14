@@ -303,6 +303,7 @@
       <fileset dir="${build.dir}" includes="externs.zip" />
       <zipfileset src="${lib.dir}/args4j.jar"/>
       <zipfileset src="${lib.dir}/guava.jar"/>
+      <zipfileset src="${lib.dir}/json.jar"/>
       <zipfileset src="${lib.dir}/jsr305.jar"/>
       <zipfileset src="${lib.dir}/protobuf-java.jar"/>
 

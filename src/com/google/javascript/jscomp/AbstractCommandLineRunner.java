@@ -32,6 +32,8 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.PerformanceTracker.Stats;
+import com.google.javascript.jscomp.deps.SortedDependencies;
+import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
@@ -744,6 +746,19 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       } else {
         result = compiler.compile(externs, inputs, options);
       }
+      if (options.processCommonJSModules) {
+        // For CommonJS modules constructs modules from actual inputs.
+        modules = Lists.newArrayList(compiler.getDegenerateModuleGraph()
+            .getAllModules());
+        // The module graph constructor expects modules to be already sorted.
+        try {
+          SortedDependencies<JSModule> sorter =
+              new SortedDependencies<JSModule>(modules);
+          modules = sorter.getDependenciesOf(modules, true);
+        } catch (CircularDependencyException e) {
+          throw Throwables.propagate(e);
+        }
+      }
     }
 
     int errCode = processResults(result, modules, options);
@@ -805,8 +820,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       // Output the manifest and bundle files if requested.
       outputManifest();
       outputBundle();
+      outputModuleGraphJson();
       return 0;
     } else if (result.success) {
+      outputModuleGraphJson();
       if (modules == null) {
         writeOutput(
             jsOutput, compiler, compiler.toSource(), config.outputWrapper,
@@ -1419,6 +1436,27 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
+   * Creates a file containing the current module graph in JSON serialization.
+   */
+  private void outputModuleGraphJson() throws IOException {
+    if (config.outputModuleDependencies != null &&
+        config.outputModuleDependencies != "") {
+      Writer out = fileNameToOutputWriter2(config.outputModuleDependencies);
+      printModuleGraphJsonTo(compiler.getDegenerateModuleGraph(), out);
+      out.close();
+    }
+  }
+
+  /**
+   * Prints the current module graph as JSON.
+   */
+  @VisibleForTesting
+  void printModuleGraphJsonTo(JSModuleGraph graph,
+      Appendable out) throws IOException {
+    out.append(compiler.getDegenerateModuleGraph().toJson().toString());
+  }
+
+  /**
    * Prints a set of modules to the manifest or bundle file.
    */
   @VisibleForTesting
@@ -1940,6 +1978,18 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         }
       }
       this.outputManifests = ImmutableList.copyOf(this.outputManifests);
+      return this;
+    }
+
+    private String outputModuleDependencies = null;
+
+    /**
+     * Sets whether a JSON file representing the dependencies between modules
+     * should be created.
+     */
+    CommandLineConfig setOutputModuleDependencies(String
+        outputModuleDependencies) {
+      this.outputModuleDependencies = outputModuleDependencies;
       return this;
     }
 
