@@ -2036,10 +2036,13 @@ public final class NodeUtil {
    * @param n The node
    * @return True if n is an L-value.
    */
-  static boolean isLValue(Node n) {
+  public static boolean isLValue(Node n) {
     Preconditions.checkArgument(n.isName() || n.isGetProp() ||
         n.isGetElem());
     Node parent = n.getParent();
+    if (parent == null) {
+      return false;
+    }
     return (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
         || (NodeUtil.isForIn(parent) && parent.getFirstChild() == n)
         || parent.isVar()
