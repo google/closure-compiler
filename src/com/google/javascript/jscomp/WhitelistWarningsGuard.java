@@ -56,7 +56,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
   private final Set<String> whitelist;
 
   /** Pattern to match line number in error descriptions. */
-  private static final Pattern LINE_NUMBER = Pattern.compile(":\\d+");
+  private static final Pattern LINE_NUMBER = Pattern.compile(":-?\\d+");
 
   /**
    * This class depends on an input set that contains the white-list. The format
