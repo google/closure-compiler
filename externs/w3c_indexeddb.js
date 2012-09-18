@@ -373,7 +373,7 @@ IDBDatabase.prototype.setVersion = function(version) {};
 
 /**
  * @param {Array.<string>} storeNames The stores to open in this transaction.
- * @param {number=} mode The mode for opening the object stores.
+ * @param {(number|string)=} mode The mode for opening the object stores.
  * @return {!IDBTransaction} The IDBRequest object.
  */
 IDBDatabase.prototype.transaction = function(storeNames, mode) {};
@@ -450,7 +450,7 @@ IDBObjectStore.prototype.get = function(key) {};
 
 /**
  * @param {IDBKeyRange=} range The range of the cursor.
- * @param {number=} direction The direction of cursor enumeration.
+ * @param {(number|string)=} direction The direction of cursor enumeration.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBObjectStore.prototype.openCursor = function(range, direction) {};
@@ -518,14 +518,14 @@ IDBIndex.prototype.unique;
 
 /**
  * @param {IDBKeyRange=} range The range of the cursor.
- * @param {number=} direction The direction of cursor enumeration.
+ * @param {(number|string)=} direction The direction of cursor enumeration.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBIndex.prototype.openCursor = function(range, direction) {};
 
 /**
  * @param {IDBKeyRange=} range The range of the cursor.
- * @param {number=} direction The direction of cursor enumeration.
+ * @param {(number|string)=} direction The direction of cursor enumeration.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBIndex.prototype.openKeyCursor = function(range, direction) {};
