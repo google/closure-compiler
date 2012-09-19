@@ -946,8 +946,29 @@ final class NameAnalyzer implements CompilerPass {
     private boolean maybeRecordAlias(
         String name, Node parent,
         NameInformation referring, String referringName) {
+      // A common type of reference is
+      // function F() {}
+      // F.prototype.bar = goog.nullFunction;
+      //
+      // In this specific case, we do not want a reference to goog.nullFunction
+      // to preserve F.
+      //
+      // In the general case, the user could do something like
+      // function F() {}
+      // F.prototype.bar = goog.nullFunction;
+      // F.prototype.bar.baz = 3;
+      // where it would not be safe to remove F.
+      //
+      // So we do not treat this alias as a backdoor for people to mutate the
+      // original object. We think that this heuristic will always be
+      // OK in real code.
+      boolean isPrototypePropAssignment =
+          parent.isAssign()
+          && NodeUtil.isPrototypeProperty(parent.getFirstChild());
+
       if ((parent.isName() ||
           parent.isAssign()) &&
+          !isPrototypePropAssignment &&
           referring != null &&
           scopes.get(parent) == referring) {
         recordAlias(referringName, name);

@@ -1640,6 +1640,15 @@ public class NameAnalyzerTest extends CompilerTestCase {
     test("var x = {}; x.a.prototype = 1", "");
   }
 
+  public void testRemovePrototypeAliases() {
+    test(
+        "function g() {}" +
+        "function F() {} F.prototype.bar = g;" +
+        "window.g = g;",
+        "function g() {}" +
+        "window.g = g;");
+  }
+
   public void testIssue284() {
     test(
         "var goog = {};" +
