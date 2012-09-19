@@ -180,6 +180,10 @@ public interface CodingConvention extends Serializable {
    * returns the name of the class with the singleton getter. By default, always
    * returns null. Meant to be overridden by subclasses.
    *
+   * addSingletonGetter needs a coding convention because in the general case,
+   * it can't be inlined. The function inliner sees that it creates an alias
+   * to the given class in an inner closure, and bails out.
+   *
    * @param callNode A CALL node.
    */
   public String getSingletonGetterClassName(Node callNode);

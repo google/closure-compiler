@@ -614,6 +614,13 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     testSame("({set s(a) {}})");
   }
 
+  public void testRemoveSingletonClass1() {
+    test("function goog$addSingletonGetter(a){}" +
+        "/**@constructor*/function a(){}" +
+        "goog$addSingletonGetter(a);",
+        "");
+  }
+
   public void testRemoveInheritedClass1() {
     test("function goog$inherits(){}" +
         "/**@constructor*/function a(){}" +
