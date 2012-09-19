@@ -58,6 +58,10 @@
   <property name="jsonml-classes.dir" value = "${build.dir}/jsonml-classes" />
   <property name="jsonml-jarfile" value="${build.dir}/secure_compiler.jar" />
 
+  <property name="webservice.dir" value="${basedir}/src/com/google/javascript/jscomp/webservice" />
+  <property name="webservice-classes.dir" value = "${build.dir}/webservice-classes" />
+  <property name="webservice-jarfile" value="${build.dir}/webservice.jar" />
+
   <!-- The following server is used to deploy releases to maven central via Sonatypes
        publishing service which runs on oss.sonatype.org.
 
@@ -254,7 +258,7 @@
     </javac>
     <javac srcdir="${src.dir}"
            destdir="${classes.dir}"
-           excludes=".svn,**/jsonml/**,**/testing/**"
+           excludes=".svn,**/jsonml/**,**/webservice/**,**/testing/**"
            debug="${javac.debug}">
       <classpath refid="srcclasspath.path" />
     </javac>
@@ -463,15 +467,39 @@
     </javac>
   </target>
 
-   <target name="jsonml-jar"
-           description="package the compiler and JsonML classes"
-           depends="jsonml-compile, compile">
-    <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
-    <jar destfile="${jsonml-jarfile}" update="true">
-      <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
-      <zipfileset src="${buildlib.dir}/rhino.jar"/>
-      <fileset dir="${classes.dir}" />
-      <fileset dir="${jsonml-classes.dir}" />
-    </jar>
-   </target>
+  <target name="jsonml-jar"
+          description="package the compiler and JsonML classes"
+          depends="jsonml-compile, compile">
+   <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
+   <jar destfile="${jsonml-jarfile}" update="true">
+     <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
+     <zipfileset src="${buildlib.dir}/rhino.jar"/>
+     <fileset dir="${classes.dir}" />
+     <fileset dir="${jsonml-classes.dir}" />
+   </jar>
+  </target>
+
+  <target name="webservice-compile"
+          description="compile the source code of classes from the webservice package"
+          depends="compile">
+    <mkdir dir="${webservice-classes.dir}" />
+    <javac srcdir="${webservice.dir}"
+           destdir="${webservice-classes.dir}"
+           excludes=".svn"
+           debug="${javac.debug}">
+      <classpath refid="jsonml-classpath.path" />
+    </javac>
+  </target>
+
+  <target name="webservice-jar"
+          description="package the compiler and Webservice classes"
+          depends="webservice-compile, compile">
+   <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
+   <jar destfile="${webservice-jarfile}" update="true">
+     <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
+     <zipfileset src="${buildlib.dir}/rhino.jar"/>
+     <fileset dir="${classes.dir}" />
+     <fileset dir="${webservice-classes.dir}" />
+   </jar>
+  </target>
 </project>
