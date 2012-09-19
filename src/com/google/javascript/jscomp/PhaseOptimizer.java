@@ -66,6 +66,9 @@ class PhaseOptimizer implements CompilerPass {
   private String currentPassName = null;
   private PassFactory sanityCheck = null;
 
+  private double progress = 0.0;
+  private double progressStep = 0.0;
+
   // The following static properties are only used for computing optimal
   // phase orderings. They should not be touched by normal compiler runs.
   private static boolean randomizeLoops = false;
@@ -176,19 +179,16 @@ class PhaseOptimizer implements CompilerPass {
    */
   @Override
   public void process(Node externs, Node root) {
-    double progress = 0.0;
-    double progressStep = 0.0;
+    progress = 0.0;
+    progressStep = 0.0;
     if (progressRange != null) {
       progressStep = (progressRange.maxValue - progressRange.initialValue)
           / passes.size();
       progress = progressRange.initialValue;
     }
+
     for (CompilerPass pass : passes) {
       pass.process(externs, root);
-      if (progressRange != null) {
-        progress += progressStep;
-        compiler.setProgress(progress);
-      }
       if (hasHaltingErrors()) {
         return;
       }
@@ -212,6 +212,12 @@ class PhaseOptimizer implements CompilerPass {
 
     String passToCheck = currentPassName;
     try {
+      if (progressRange == null) {
+        compiler.setProgress(-1, currentPassName);
+      } else {
+        progress += progressStep;
+        compiler.setProgress(progress, currentPassName);
+      }
       stopTracer(currentTracer, currentPassName);
       currentPassName = null;
       currentTracer = null;

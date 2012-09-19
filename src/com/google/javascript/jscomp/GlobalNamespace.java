@@ -21,7 +21,9 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -33,6 +35,7 @@ import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.jstype.StaticSymbolTable;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1269,6 +1272,64 @@ class GlobalNamespace
 
     static Ref createRefForTesting(Type type) {
       return new Ref(type, -1);
+    }
+  }
+
+
+  /**
+   * An experimental compiler pass for tracking what symbols were added/removed
+   * at each stage of compilation.
+   *
+   * When "global namespace tracker" mode is on, we rebuild the global namespace
+   * after each pass, and diff it against the last namespace built.
+   */
+  static class Tracker implements CompilerPass {
+    private final AbstractCompiler compiler;
+    private final PrintStream stream;
+    private final Predicate<String> isInterestingSymbol;
+
+    private Set<String> previousSymbolsInTree = ImmutableSet.of();
+
+    /**
+       @param stream The stream to print logs to.
+     * @param isInterestingSymbol A predicate to determine which symbols
+     *     we care about.
+     */
+    Tracker(AbstractCompiler compiler, PrintStream stream,
+        Predicate<String> isInterestingSymbol) {
+      this.compiler = compiler;
+      this.stream = stream;
+      this.isInterestingSymbol = isInterestingSymbol;
+    }
+
+    @Override public void process(Node externs, Node root) {
+      GlobalNamespace namespace = new GlobalNamespace(compiler, externs, root);
+
+      Set<String> currentSymbols = Sets.newTreeSet();
+      for (String name : namespace.getNameIndex().keySet()) {
+        if (isInterestingSymbol.apply(name)) {
+          currentSymbols.add(name);
+        }
+      }
+
+      String passName = compiler.getLastPassName();
+      if (passName == null) {
+        passName = "[Unknown pass]";
+      }
+
+      for (String sym : currentSymbols) {
+        if (!previousSymbolsInTree.contains(sym)) {
+          stream.println(String.format("%s: Added by %s", sym, passName));
+        }
+      }
+
+      for (String sym : previousSymbolsInTree) {
+        if (!currentSymbols.contains(sym)) {
+          stream.println(String.format("%s: Removed by %s", sym, passName));
+        }
+      }
+
+      previousSymbolsInTree = currentSymbols;
     }
   }
 }

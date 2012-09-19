@@ -174,7 +174,7 @@ public class PhaseOptimizerTest extends TestCase {
   public void testProgress() {
     final List<Double> progressList = Lists.newArrayList();
     compiler = new Compiler() {
-      @Override void setProgress(double p) {
+      @Override void setProgress(double p, String name) {
         progressList.add(p);
       }
     };

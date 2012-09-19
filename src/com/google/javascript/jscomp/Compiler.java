@@ -23,6 +23,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.io.CharStreams;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -220,6 +221,7 @@ public class Compiler extends AbstractCompiler {
   private GlobalVarReferenceMap globalRefMap = null;
 
   private volatile double progress = 0.0;
+  private String lastPassName;
 
   /**
    * Creates a Compiler that reports errors and warnings to its logger.
@@ -700,11 +702,11 @@ public class Compiler extends AbstractCompiler {
   }
 
   private void compileInternal() {
-    setProgress(0.0);
+    setProgress(0.0, null);
     parse();
     // 15 percent of the work is assumed to be for parsing (based on some
     // minimal analysis on big JS projects, of course this depends on options)
-    setProgress(0.15);
+    setProgress(0.15, "parse");
     if (hasErrors()) {
       return;
     }
@@ -743,7 +745,7 @@ public class Compiler extends AbstractCompiler {
     if (options.devMode == DevMode.START_AND_END) {
       runSanityCheck();
     }
-    setProgress(1.0);
+    setProgress(1.0, "recordFunctionInformation");
   }
 
   public void parse() {
@@ -2381,11 +2383,15 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
-  void setProgress(double newProgress) {
+  String getLastPassName() {
+    return lastPassName;
+  }
+
+  @Override
+  void setProgress(double newProgress, String passName) {
+    this.lastPassName = passName;
     if (newProgress > 1.0) {
       progress = 1.0;
-    } else if (newProgress < 0.0) {
-      progress = 0.0;
     } else {
       progress = newProgress;
     }

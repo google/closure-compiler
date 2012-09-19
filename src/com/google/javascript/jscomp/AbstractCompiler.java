@@ -29,6 +29,8 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 /**
  * An abstract compiler, to help remove the circular dependency of
  * passes on JSCompiler.
@@ -345,8 +347,18 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   public abstract double getProgress();
 
-  /** Sets the progress to a certain value in [0,1] range. */
-  abstract void setProgress(double progress);
+  /**
+   * Gets the last pass name set by setProgress.
+   */
+  abstract String getLastPassName();
+
+  /**
+   * Sets the progress percentage as well as the name of the last pass that
+   * ran (if available).
+   * @param progress A precentage expressed as a double in the range [0, 1].
+   *     Use -1 if you just want to set the last pass name.
+   */
+  abstract void setProgress(double progress, @Nullable String lastPassName);
 
   /**
    * The subdir js/ contains libraries of code that we inject
