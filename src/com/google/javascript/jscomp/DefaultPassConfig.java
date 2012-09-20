@@ -979,7 +979,7 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(final AbstractCompiler compiler) {
       return new ReplaceMessagesForChrome(compiler,
-          new GoogleJsMessageIdGenerator(null),
+          new GoogleJsMessageIdGenerator(options.tcProjectId),
           /* warn about message dupes */
           true,
           /* allow messages with goog.getMsg */

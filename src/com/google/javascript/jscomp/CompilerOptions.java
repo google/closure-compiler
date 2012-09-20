@@ -524,9 +524,11 @@ public class CompilerOptions implements Serializable, Cloneable {
    * Used by Chrome extensions/apps.
    */
   boolean replaceMessagesWithChromeI18n;
+  String tcProjectId;
 
   public void setReplaceMessagesWithChromeI18n(
-      boolean replaceMessagesWithChromeI18n) {
+      boolean replaceMessagesWithChromeI18n,
+      String tcProjectId) {
     if (replaceMessagesWithChromeI18n &&
         messageBundle != null &&
         !(messageBundle instanceof EmptyMessageBundle)) {
@@ -535,6 +537,16 @@ public class CompilerOptions implements Serializable, Cloneable {
     }
 
     this.replaceMessagesWithChromeI18n = replaceMessagesWithChromeI18n;
+    this.tcProjectId = tcProjectId;
+  }
+
+  /**
+   * @deprecated Use {@link #setReplaceMessagesWithChromeI18n(boolean, String)}.
+   */
+  @Deprecated
+  public void setReplaceMessagesWithChromeI18n(
+      boolean replaceMessagesWithChromeI18n) {
+    setReplaceMessagesWithChromeI18n(replaceMessagesWithChromeI18n, null);
   }
 
   /** Inserts run-time type assertions for debugging. */
