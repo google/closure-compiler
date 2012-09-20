@@ -1066,6 +1066,12 @@ Element.prototype.onmouseenter;
 Element.prototype.onmouseleave;
 
 /**
+ * @type {?function(Event)}
+ * @see http://msdn.microsoft.com/en-us/library/ms536969(VS.85).aspx
+ */
+Element.prototype.onselectstart;
+
+/**
  * @see http://msdn.microsoft.com/en-us/library/aa752326(VS.85).aspx
  */
 Element.prototype.outerHTML;
