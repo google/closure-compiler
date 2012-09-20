@@ -263,6 +263,10 @@ chrome.tabs.onActiveChanged;
 
 
 /** @type {ChromeEvent} */
+chrome.tabs.onActivated;
+
+
+/** @type {ChromeEvent} */
 chrome.tabs.onAttached;
 
 
@@ -276,6 +280,10 @@ chrome.tabs.onDetached;
 
 /** @type {ChromeEvent} */
 chrome.tabs.onHighlightChanged;
+
+
+/** @type {ChromeEvent} */
+chrome.tabs.onHighlighted;
 
 
 /** @type {ChromeEvent} */
