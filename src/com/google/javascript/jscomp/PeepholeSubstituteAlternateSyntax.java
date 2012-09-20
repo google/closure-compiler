@@ -551,7 +551,7 @@ class PeepholeSubstituteAlternateSyntax
   boolean isPure(Node n) {
     return n == null
         || (!NodeUtil.canBeSideEffected(n)
-            && !NodeUtil.mayHaveSideEffects(n));
+            && !mayHaveSideEffects(n));
   }
 
   /**

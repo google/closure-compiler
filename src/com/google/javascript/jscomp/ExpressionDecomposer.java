@@ -148,7 +148,7 @@ class ExpressionDecomposer {
         subExpression, expressionRoot);
     // Before extraction, record whether there are side-effect
     boolean hasFollowingSideEffects = NodeUtil.mayHaveSideEffects(
-        nonconditionalExpr);
+        nonconditionalExpr, compiler);
 
     Node exprInjectionPoint = findInjectionPoint(nonconditionalExpr);
     DecompositionState state = new DecompositionState();
@@ -747,7 +747,8 @@ class ExpressionDecomposer {
   private DecompositionType isSubexpressionMovable(
       Node expressionRoot, Node subExpression) {
     boolean requiresDecomposition = false;
-    boolean seenSideEffects = NodeUtil.mayHaveSideEffects(subExpression);
+    boolean seenSideEffects = NodeUtil.mayHaveSideEffects(
+        subExpression, compiler);
 
     Node child = subExpression;
     for (Node parent : child.getAncestors()) {
@@ -889,7 +890,7 @@ class ExpressionDecomposer {
     } else {
       // The function called doesn't have side-effects but check to see if there
       // are side-effects that that may affect it.
-      return NodeUtil.mayHaveSideEffects(n);
+      return NodeUtil.mayHaveSideEffects(n, compiler);
     }
   }
 }

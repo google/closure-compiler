@@ -91,12 +91,14 @@ class InlineSimpleMethods extends MethodCompilerPass {
               logger.fine("Inlining property accessor: " + callName);
               inlinePropertyReturn(parent, callNode, returned);
             } else if (NodeUtil.isLiteralValue(returned, false) &&
-              !NodeUtil.mayHaveSideEffects(callNode.getFirstChild())) {
+              !NodeUtil.mayHaveSideEffects(
+                  callNode.getFirstChild(), compiler)) {
               logger.fine("Inlining constant accessor: " + callName);
               inlineConstReturn(parent, callNode, returned);
             }
           } else if (isEmptyMethod(firstDefinition) &&
-              !NodeUtil.mayHaveSideEffects(callNode.getFirstChild())) {
+              !NodeUtil.mayHaveSideEffects(
+                  callNode.getFirstChild(), compiler)) {
             logger.fine("Inlining empty method: " + callName);
             inlineEmptyMethod(t, parent, callNode);
           }
@@ -267,7 +269,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
     for (Node currentChild = call.getFirstChild().getNext();
          currentChild != null;
          currentChild = currentChild.getNext()) {
-      if (NodeUtil.mayHaveSideEffects(currentChild)) {
+      if (NodeUtil.mayHaveSideEffects(currentChild, compiler)) {
         return true;
       }
     }

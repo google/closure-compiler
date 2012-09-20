@@ -723,7 +723,7 @@ class FunctionInjector {
           // Check for arguments that are evaluated more than once.
           // Note: Unlike block inlining, there it is not possible that a
           // parameter reference will be in a loop.
-          if (NodeUtil.mayEffectMutableState(cArg)
+          if (NodeUtil.mayEffectMutableState(cArg, compiler)
               && NodeUtil.getNameReferenceCount(
                   block, fnParam.getString()) > 1) {
             return CanInlineResult.NO;
@@ -737,7 +737,7 @@ class FunctionInjector {
       // For every call argument check for side-effects, even if there
       // isn't a named parameter to match.
       if (cArg != null) {
-        if (NodeUtil.mayHaveSideEffects(cArg)) {
+        if (NodeUtil.mayHaveSideEffects(cArg, compiler)) {
           return CanInlineResult.NO;
         }
         cArg = cArg.getNext();

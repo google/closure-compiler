@@ -242,7 +242,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
       return processShortCircuitExpression(node);
     }
 
-    if (!NodeUtil.nodeTypeMayHaveSideEffects(node)) {
+    if (!NodeUtil.nodeTypeMayHaveSideEffects(node, compiler)) {
       return true;
     } else {
 
@@ -273,7 +273,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
     // contains a call.
     Node left = node.getFirstChild();
     Node right = left.getNext();
-    if (NodeUtil.mayHaveSideEffects(right)) {
+    if (NodeUtil.mayHaveSideEffects(right, compiler)) {
       accumulator.keepSimplifiedShortCircuitExpression(node);
       return false;
     } else {
@@ -293,8 +293,10 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
     Node condition = node.getFirstChild();
     Node ifBranch = condition.getNext();
     Node elseBranch = ifBranch.getNext();
-    boolean thenHasSideEffects = NodeUtil.mayHaveSideEffects(ifBranch);
-    boolean elseHasSideEffects = NodeUtil.mayHaveSideEffects(elseBranch);
+    boolean thenHasSideEffects = NodeUtil.mayHaveSideEffects(
+        ifBranch, compiler);
+    boolean elseHasSideEffects = NodeUtil.mayHaveSideEffects(
+        elseBranch, compiler);
     if (thenHasSideEffects || elseHasSideEffects) {
       accumulator.keepSimplifiedHookExpression(
           node, thenHasSideEffects, elseHasSideEffects);

@@ -232,7 +232,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         }
         break;
       default:
-        if (!NodeUtil.nodeTypeMayHaveSideEffects(n)) {
+        if (!nodeTypeMayHaveSideEffects(n)) {
           // This is the meat of this function. The node itself doesn't generate
           // any side-effects but preserve any side-effects in the children.
           Node resultList = null;

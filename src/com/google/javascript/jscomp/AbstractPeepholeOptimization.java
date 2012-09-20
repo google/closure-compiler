@@ -118,6 +118,17 @@ abstract class AbstractPeepholeOptimization {
   }
 
   /**
+   * Returns true if the current node's type implies side effects.
+   *
+   * This is a non-recursive version of the may have side effects
+   * check; used to check wherever the current node's type is one of
+   * the reason's why a subtree has side effects.
+   */
+  boolean nodeTypeMayHaveSideEffects(Node n) {
+    return NodeUtil.nodeTypeMayHaveSideEffects(n, compiler);
+  }
+
+  /**
    * @return Whether the source code version is ECMAScript 5 or later.
    *     Workarounds for quirks in browsers that do not support ES5 can be
    *     ignored when this is true.

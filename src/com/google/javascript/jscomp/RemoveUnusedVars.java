@@ -263,7 +263,7 @@ class RemoveUnusedVars
         if (parent.isVar()) {
           Node value = n.getFirstChild();
           if (value != null && var != null && isRemovableVar(var) &&
-              !NodeUtil.mayHaveSideEffects(value)) {
+              !NodeUtil.mayHaveSideEffects(value, compiler)) {
             // If the var is unreferenced and creating its value has no side
             // effects, then we can create a continuation for it instead
             // of traversing immediately.
@@ -836,7 +836,7 @@ class RemoveUnusedVars
         // foreach iterations have 3 children. Leave them alone.
       } else if (toRemove.isVar() &&
           nameNode.hasChildren() &&
-          NodeUtil.mayHaveSideEffects(nameNode.getFirstChild())) {
+          NodeUtil.mayHaveSideEffects(nameNode.getFirstChild(), compiler)) {
         // If this is a single var declaration, we can at least remove the
         // declaration itself and just leave the value, e.g.,
         // var a = foo(); => foo();

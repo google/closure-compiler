@@ -141,7 +141,7 @@ public class PeepholeCollectPropertyAssignments
 
     Node rhs = lhs.getNext();
     // with a value that cannot change the values of the variables,
-    if (NodeUtil.mayHaveSideEffects(rhs)
+    if (mayHaveSideEffects(rhs)
         || NodeUtil.canBeSideEffected(rhs)) {
       return false;
     }

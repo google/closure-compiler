@@ -43,7 +43,7 @@ public class StatementFusion extends AbstractPeepholeOptimization {
     return n;
   }
 
-  private static boolean canFuseIntoOneStatement(Node block) {
+  private boolean canFuseIntoOneStatement(Node block) {
     // Fold only statement block. NOT scripts block.
     if (!block.isBlock()) {
       return false;
@@ -76,7 +76,7 @@ public class StatementFusion extends AbstractPeepholeOptimization {
       case Token.FOR:
         return NodeUtil.isForIn(last) &&
             // Avoid cases where we have for(var x = foo() in a) { ....
-            !NodeUtil.mayHaveSideEffects(last.getFirstChild());
+            !mayHaveSideEffects(last.getFirstChild());
     }
 
     return false;
