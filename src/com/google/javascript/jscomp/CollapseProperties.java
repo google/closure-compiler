@@ -963,7 +963,7 @@ class CollapseProperties implements CompilerPass {
       // Encode '$' in a property as '$0'. Because '0' cannot be the
       // start of an identifier, this will never conflict with our
       // encoding from '.' -> '$'.
-      prop = prop.replaceAll("\\$", "\\$0");
+      prop = prop.replace("$", "$0");
     }
     return root + '$' + prop;
   }
