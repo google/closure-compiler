@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
@@ -37,8 +36,11 @@ import java.util.regex.Pattern;
  * ordering.
  */
 public class ProcessCommonJSModules implements CompilerPass {
+  // According to the spec, the forward slash should be the delimite on
+  // all platforms.
+  private static final String MODULE_SLASH = "/";
 
-  public static final String DEFAULT_FILENAME_PREFIX = "." + File.separator;
+  public static final String DEFAULT_FILENAME_PREFIX = "." + MODULE_SLASH;
 
   private static final String MODULE_NAME_SEPARATOR = "\\$";
   private static final String MODULE_NAME_PREFIX = "module$";
@@ -55,8 +57,8 @@ public class ProcessCommonJSModules implements CompilerPass {
   ProcessCommonJSModules(AbstractCompiler compiler, String filenamePrefix,
       boolean reportDependencies) {
     this.compiler = compiler;
-    this.filenamePrefix = filenamePrefix.endsWith(File.separator) ?
-        filenamePrefix : filenamePrefix + File.separator;
+    this.filenamePrefix = filenamePrefix.endsWith(MODULE_SLASH) ?
+        filenamePrefix : filenamePrefix + MODULE_SLASH;
     this.reportDependencies = reportDependencies;
   }
 
@@ -85,8 +87,8 @@ public class ProcessCommonJSModules implements CompilerPass {
    */
   public static String toModuleName(String filename) {
     return MODULE_NAME_PREFIX +
-        filename.replaceAll("^\\." + Pattern.quote(File.separator), "")
-            .replaceAll(Pattern.quote(File.separator), MODULE_NAME_SEPARATOR)
+        filename.replaceAll("^\\." + Pattern.quote(MODULE_SLASH), "")
+            .replaceAll(Pattern.quote(MODULE_SLASH), MODULE_NAME_SEPARATOR)
             .replaceAll("\\.js$", "").replaceAll("-", "_");
   }
 
@@ -99,8 +101,8 @@ public class ProcessCommonJSModules implements CompilerPass {
     requiredFilename = requiredFilename.replaceAll("\\.js$", "");
     currentFilename = currentFilename.replaceAll("\\.js$", "");
 
-    if (requiredFilename.startsWith("." + File.separator) ||
-        requiredFilename.startsWith(".." + File.separator)) {
+    if (requiredFilename.startsWith("." + MODULE_SLASH) ||
+        requiredFilename.startsWith(".." + MODULE_SLASH)) {
       try {
         requiredFilename = (new URI(currentFilename)).resolve(new URI(requiredFilename))
             .toString();
