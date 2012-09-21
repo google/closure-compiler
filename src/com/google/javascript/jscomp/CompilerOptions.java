@@ -540,15 +540,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.tcProjectId = tcProjectId;
   }
 
-  /**
-   * @deprecated Use {@link #setReplaceMessagesWithChromeI18n(boolean, String)}.
-   */
-  @Deprecated
-  public void setReplaceMessagesWithChromeI18n(
-      boolean replaceMessagesWithChromeI18n) {
-    setReplaceMessagesWithChromeI18n(replaceMessagesWithChromeI18n, null);
-  }
-
   /** Inserts run-time type assertions for debugging. */
   boolean runtimeTypeCheck;
 
