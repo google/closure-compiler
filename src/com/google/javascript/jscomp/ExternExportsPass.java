@@ -491,7 +491,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
         }
 
         if (parent.isAssign() || parent.isVar()) {
-          definitionMap.put(n.getQualifiedName(), parent);
+          definitionMap.put(name, parent);
         }
 
         // Only handle function calls. This avoids assignments
@@ -500,11 +500,11 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
           return;
         }
 
-        if (exportPropertyFunctionNames.contains(n.getQualifiedName())) {
+        if (exportPropertyFunctionNames.contains(name)) {
           handlePropertyExport(parent);
         }
 
-        if (exportSymbolFunctionNames.contains(n.getQualifiedName())) {
+        if (exportSymbolFunctionNames.contains(name)) {
           handleSymbolExport(parent);
         }
     }
@@ -545,7 +545,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
     // Confirm the arguments are the expected types. If they are not,
     // then we have an export that we cannot statically identify.
-    if (objectArg.getQualifiedName() == null) {
+    if (!objectArg.isQualifiedName()) {
       return;
     }
 

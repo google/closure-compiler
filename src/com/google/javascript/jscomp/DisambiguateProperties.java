@@ -449,12 +449,12 @@ class DisambiguateProperties<T> implements CompilerPass {
           String suggestion = "";
           if (type instanceof JSType) {
             JSType jsType = (JSType) type;
-            String qName = n.getFirstChild().getQualifiedName();
             if (jsType.isAllType() || jsType.isUnknownType()) {
               if (n.getFirstChild().isThis()) {
                 suggestion = "The \"this\" object is unknown in the function,"+
                     "consider using @this";
               } else {
+                String qName = n.getFirstChild().getQualifiedName();
                 suggestion = "Consider casting " + qName +
                     " if you know it's type.";
               }

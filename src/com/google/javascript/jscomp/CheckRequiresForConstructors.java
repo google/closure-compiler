@@ -186,10 +186,9 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
 
     private void visitNewNode(NodeTraversal t, Node n) {
       Node qNameNode = n.getFirstChild();
-      String qName = qNameNode.getQualifiedName();
 
       // If the ctor is something other than a qualified name, ignore it.
-      if (qName == null || qName.isEmpty()) {
+      if (!qNameNode.isQualifiedName()) {
         return;
       }
 
