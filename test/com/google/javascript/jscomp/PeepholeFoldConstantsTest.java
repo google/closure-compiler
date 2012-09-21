@@ -577,6 +577,12 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = '' + []", "x = ''");      // cannot fold (but nice if we can)
   }
 
+  public void testIssue821() {
+    foldSame("var a =(Math.random()>0.5? '1' : 2 ) + 3 + 4;");
+    foldSame("var a = ((Math.random() ? 0 : 1) ||" +
+             "(Math.random()>0.5? '1' : 2 )) + 3 + 4;");
+  }
+
   public void testFoldConstructor() {
     fold("x = this[new String('a')]", "x = this['a']");
     fold("x = ob[new String(12)]", "x = ob['12']");

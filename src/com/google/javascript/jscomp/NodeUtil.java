@@ -1258,18 +1258,39 @@ public final class NodeUtil {
    * Apply the supplied predicate against
    * all possible result Nodes of the expression.
    */
-  static boolean valueCheck(Node n, Predicate<Node> p) {
+  static boolean allResultsMatch(Node n, Predicate<Node> p) {
     switch (n.getType()) {
       case Token.ASSIGN:
       case Token.COMMA:
-        return valueCheck(n.getLastChild(), p);
+        return allResultsMatch(n.getLastChild(), p);
       case Token.AND:
       case Token.OR:
-        return valueCheck(n.getFirstChild(), p)
-            && valueCheck(n.getLastChild(), p);
+        return allResultsMatch(n.getFirstChild(), p)
+            && allResultsMatch(n.getLastChild(), p);
       case Token.HOOK:
-        return valueCheck(n.getFirstChild().getNext(), p)
-            && valueCheck(n.getLastChild(), p);
+        return allResultsMatch(n.getFirstChild().getNext(), p)
+            && allResultsMatch(n.getLastChild(), p);
+      default:
+        return p.apply(n);
+    }
+  }
+
+  /**
+   * Apply the supplied predicate against
+   * all possible result Nodes of the expression.
+   */
+  static boolean anyResultsMatch(Node n, Predicate<Node> p) {
+    switch (n.getType()) {
+      case Token.ASSIGN:
+      case Token.COMMA:
+        return anyResultsMatch(n.getLastChild(), p);
+      case Token.AND:
+      case Token.OR:
+        return anyResultsMatch(n.getFirstChild(), p)
+            || anyResultsMatch(n.getLastChild(), p);
+      case Token.HOOK:
+        return anyResultsMatch(n.getFirstChild().getNext(), p)
+            || anyResultsMatch(n.getLastChild(), p);
       default:
         return p.apply(n);
     }
@@ -1289,7 +1310,7 @@ public final class NodeUtil {
    * Returns true if the result of node evaluation is always a number
    */
   static boolean isNumericResult(Node n) {
-    return valueCheck(n, NUMBERIC_RESULT_PREDICATE);
+    return allResultsMatch(n, NUMBERIC_RESULT_PREDICATE);
   }
 
   static boolean isNumericResultHelper(Node n) {
@@ -1342,7 +1363,7 @@ public final class NodeUtil {
    * @return Whether the result of node evaluation is always a boolean
    */
   static boolean isBooleanResult(Node n) {
-    return valueCheck(n, BOOLEAN_RESULT_PREDICATE);
+    return allResultsMatch(n, BOOLEAN_RESULT_PREDICATE);
   }
 
   static boolean isBooleanResultHelper(Node n) {
@@ -1393,7 +1414,7 @@ public final class NodeUtil {
 
   static boolean mayBeString(Node n, boolean recurse) {
     if (recurse) {
-      return valueCheck(n, MAY_BE_STRING_PREDICATE);
+      return anyResultsMatch(n, MAY_BE_STRING_PREDICATE);
     } else {
       return mayBeStringHelper(n);
     }
