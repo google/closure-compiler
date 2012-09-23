@@ -1303,3 +1303,9 @@ Navigator.prototype.browserLanguage;
  * @see http://blogs.msdn.com/b/ie/archive/2011/09/20/touch-input-for-ie10-and-metro-style-apps.aspx
  */
 Navigator.prototype.msPointerEnabled;
+
+/**
+ * @type {number}
+ * @see http://msdn.microsoft.com/en-us/library/ms533721(v=vs.85).aspx
+ */
+Screen.prototype.deviceXDPI;
