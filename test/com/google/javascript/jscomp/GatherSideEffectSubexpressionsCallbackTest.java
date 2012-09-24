@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.CopySideEffectSubexpressions;
+import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.GetReplacementSideEffectSubexpressions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -161,8 +161,8 @@ public class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
                                                    List<String> expected) {
     Compiler compiler = new Compiler();
     List<Node> replacements = Lists.newArrayList();
-    CopySideEffectSubexpressions accumulator =
-        new CopySideEffectSubexpressions(compiler, replacements);
+    GetReplacementSideEffectSubexpressions accumulator =
+        new GetReplacementSideEffectSubexpressions(compiler, replacements);
     accumulator.keepSimplifiedShortCircuitExpression(root);
 
     List<String> actual = Lists.newArrayList();
@@ -178,8 +178,8 @@ public class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
                                            List<String> expected) {
     Compiler compiler = new Compiler();
     List<Node> replacements = Lists.newArrayList();
-    CopySideEffectSubexpressions accumulator =
-        new CopySideEffectSubexpressions(compiler, replacements);
+    GetReplacementSideEffectSubexpressions accumulator =
+        new GetReplacementSideEffectSubexpressions(compiler, replacements);
     accumulator.keepSimplifiedHookExpression(root,
                                              thenHasSideEffects,
                                              elseHasSideEffects);

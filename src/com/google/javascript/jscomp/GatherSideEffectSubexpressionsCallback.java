@@ -82,8 +82,11 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
   /**
    * Populates the provided replacement list by appending copies of
    * subtrees that have side effects.
+   *
+   * It is OK if this class tears up the original tree, because
+   * we're going to throw the tree out anyway.
    */
-  static final class CopySideEffectSubexpressions
+  static final class GetReplacementSideEffectSubexpressions
       implements SideEffectAccumulator {
     private final AbstractCompiler compiler;
     private final List<Node> replacements;
@@ -94,8 +97,8 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
      * @param compiler - the AbstractCompiler
      * @param replacements - list to accumulate into
      */
-    CopySideEffectSubexpressions(AbstractCompiler compiler,
-                                 List<Node> replacements) {
+    GetReplacementSideEffectSubexpressions(AbstractCompiler compiler,
+        List<Node> replacements) {
       this.compiler = compiler;
       this.replacements = replacements;
     }
@@ -107,7 +110,10 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
 
     @Override
     public void keepSubTree(Node original) {
-      replacements.add(original.cloneTree());
+      if (original.getParent() != null) {
+        original.detachFromParent();
+      }
+      replacements.add(original);
     }
 
     @Override
@@ -118,11 +124,10 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
       Node left = original.getFirstChild();
       Node right = left.getNext();
       Node simplifiedRight = simplifyShortCircuitBranch(right);
-
-      Node simplified = original.cloneNode();
-      simplified.addChildToBack(left.cloneTree());
-      simplified.addChildToBack(simplifiedRight);
-      replacements.add(simplified);
+      original.detachChildren();
+      original.addChildToBack(left);
+      original.addChildToBack(simplifiedRight);
+      keepSubTree(original);
     }
 
     @Override
@@ -135,18 +140,19 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
       Node thenBranch = condition.getNext();
       Node elseBranch = thenBranch.getNext();
       if (thenHasSideEffects && elseHasSideEffects) {
-        Node simplified = hook.cloneNode();
-        simplified.addChildToBack(condition.cloneTree());
-        simplified.addChildToBack(simplifyShortCircuitBranch(thenBranch));
-        simplified.addChildToBack(simplifyShortCircuitBranch(elseBranch));
-        replacements.add(simplified);
+        hook.detachChildren();
+        hook.addChildToBack(condition);
+        hook.addChildToBack(simplifyShortCircuitBranch(thenBranch));
+        hook.addChildToBack(simplifyShortCircuitBranch(elseBranch));
+        keepSubTree(hook);
       } else if (thenHasSideEffects || elseHasSideEffects) {
         int type = thenHasSideEffects ? Token.AND : Token.OR;
         Node body = thenHasSideEffects ? thenBranch : elseBranch;
         Node simplified = new Node(
-            type, condition.cloneTree(), simplifyShortCircuitBranch(body))
+            type, condition.detachFromParent(),
+            simplifyShortCircuitBranch(body))
             .copyInformationFrom(hook);
-        replacements.add(simplified);
+        keepSubTree(simplified);
       } else {
         throw new IllegalArgumentException(
             "keepSimplifiedHookExpression must keep at least 1 branch");
@@ -159,7 +165,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
           compiler, node,
           new GatherSideEffectSubexpressionsCallback(
               compiler,
-              new CopySideEffectSubexpressions(compiler, parts)));
+              new GetReplacementSideEffectSubexpressions(compiler, parts)));
 
       Node ret = null;
       for (Node part : parts) {

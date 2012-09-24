@@ -921,6 +921,19 @@ public class NameAnalyzerTest extends CompilerTestCase {
         "}; new Bar().func();");
   }
 
+  public void testDoNotChangeLocalScopeReferencedLocalScopedInstanceOf2() {
+    test(
+        "function Foo() {}" +
+        "var createAxis = function(f) { return window.passThru(f); };" +
+        "var axis = createAxis(function(test) {" +
+        "  return test instanceof Foo;" +
+        "});",
+        "var createAxis = function(f) { return window.passThru(f); };" +
+        "createAxis(function(test) {" +
+        "  return false;" +
+        "});");
+  }
+
   public void testDoNotChangeInstanceOfGetElem() {
     testSame("var goog = {};" +
         "function f(obj, name) {" +

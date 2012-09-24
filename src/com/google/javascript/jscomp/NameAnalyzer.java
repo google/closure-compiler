@@ -23,7 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
-import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.CopySideEffectSubexpressions;
+import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.GetReplacementSideEffectSubexpressions;
 import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.SideEffectAccumulator;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -361,7 +361,7 @@ final class NameAnalyzer implements CompilerPass {
       } else {
         // ... name.prototype.foo = function() { ... } ...
         changeProxy.replaceWith(gramps, parent,
-                                parent.getLastChild().cloneTree());
+                                parent.getLastChild().detachFromParent());
       }
     }
   }
@@ -376,31 +376,28 @@ final class NameAnalyzer implements CompilerPass {
     /** The CALL node */
     Node node;
 
-    /** The parent of {@code node} */
-    Node parent;
-
-    /** The parent of {@code parent} */
-    Node gramps;
-
     /**
      * Create a special reference node.
      *
      * @param name The name
      * @param node The CALL node
-     * @param parent The parent of {@code node}
-     * @param gramps The parent of {@code parent}
      */
-    SpecialReferenceNode(JsName name, Node node, Node parent,
-        Node gramps) {
+    SpecialReferenceNode(JsName name, Node node) {
       this.name = name;
       this.node = node;
-      this.parent = parent;
-      this.gramps = gramps;
     }
 
     @Override
     public JsName name() {
       return name;
+    }
+
+    Node getParent() {
+      return node.getParent();
+    }
+
+    Node getGramps() {
+      return node.getParent() == null ? null : node.getParent().getParent();
     }
   }
 
@@ -419,17 +416,17 @@ final class NameAnalyzer implements CompilerPass {
      * @param parent The parent of {@code node}
      * @param gramps The parent of {@code parent}
      */
-    ClassDefiningFunctionNode(JsName name, Node node, Node parent,
-        Node gramps) {
-      super(name, node, parent, gramps);
+    ClassDefiningFunctionNode(JsName name, Node node) {
+      super(name, node);
       Preconditions.checkState(node.isCall());
     }
 
     @Override
     public void remove() {
       Preconditions.checkState(node.isCall());
+      Node parent = getParent();
       if (parent.isExprResult()) {
-        changeProxy.removeChild(gramps, parent);
+        changeProxy.removeChild(getGramps(), parent);
       } else {
         changeProxy.replaceWith(parent, node, IR.voidNode(IR.number(0)));
       }
@@ -451,15 +448,15 @@ final class NameAnalyzer implements CompilerPass {
      *     node.
      * @param gramps The parent of {@code parent}.
      */
-    InstanceOfCheckNode(JsName name, Node node, Node parent, Node gramps) {
-      super(name, node, parent, gramps);
+    InstanceOfCheckNode(JsName name, Node node) {
+      super(name, node);
       Preconditions.checkState(node.isQualifiedName());
-      Preconditions.checkState(parent.isInstanceOf());
+      Preconditions.checkState(getParent().isInstanceOf());
     }
 
     @Override
     public void remove() {
-      changeProxy.replaceWith(gramps, parent, IR.falseNode());
+      changeProxy.replaceWith(getGramps(), getParent(), IR.falseNode());
     }
   }
 
@@ -633,8 +630,7 @@ final class NameAnalyzer implements CompilerPass {
         NameInformation ns = createNameInformation(t, nameNode, n);
         if (ns != null && ns.onlyAffectsClassDef) {
           JsName name = getName(ns.name, true);
-          refNodes.add(new ClassDefiningFunctionNode(
-              name, n, parent, parent.getParent()));
+          refNodes.add(new ClassDefiningFunctionNode(name, n));
         }
       }
     }
@@ -849,9 +845,7 @@ final class NameAnalyzer implements CompilerPass {
           // Don't cover GETELEMs with a global root node.
           n.isQualifiedName()) {
         JsName checkedClass = getName(nameInfo.name, true);
-        refNodes.add(
-            new InstanceOfCheckNode(
-                checkedClass, n, parent, parent.getParent()));
+        refNodes.add(new InstanceOfCheckNode(checkedClass, n));
         checkedClass.hasInstanceOfReference = true;
         return;
       }
@@ -1619,7 +1613,8 @@ final class NameAnalyzer implements CompilerPass {
         compiler, n,
         new GatherSideEffectSubexpressionsCallback(
             compiler,
-            new CopySideEffectSubexpressions(compiler, subexpressions)));
+            new GetReplacementSideEffectSubexpressions(
+                compiler, subexpressions)));
 
     List<Node> replacements =
         Lists.newArrayListWithExpectedSize(subexpressions.size());
