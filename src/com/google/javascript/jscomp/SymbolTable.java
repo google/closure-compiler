@@ -434,12 +434,19 @@ public final class SymbolTable
     if (scope.isGlobalScope()) {
       builder.append(
           String.format("'%s' : in global scope:\n", symbol.getName()));
-    } else {
+    } else if (scope.getRootNode() != null) {
       builder.append(
           String.format("'%s' : in scope %s:%d\n",
               symbol.getName(),
               scope.getRootNode().getSourceFileName(),
               scope.getRootNode().getLineno()));
+    } else if (scope.getSymbolForScope() != null) {
+      builder.append(
+          String.format("'%s' : in scope %s\n", symbol.getName(),
+              scope.getSymbolForScope().getName()));
+    } else {
+      builder.append(
+          String.format("'%s' : in unknown scope\n", symbol.getName()));
     }
 
     int refCount = 0;
@@ -767,7 +774,10 @@ public final class SymbolTable
       return true;
     }
 
-    // Cosntructors/prototypes
+    // Constructors/prototypes
+    // Should this check for
+    // (type.isNominalConstructor() || type.isFunctionPrototypeType())
+    // ?
     if (sym.getName().equals(type.getReferenceName())) {
       return true;
     }
@@ -809,6 +819,7 @@ public final class SymbolTable
         if (owner != null
             && owner.getType() != null
             && (owner.getType().isNominalConstructor() ||
+                owner.getType().isFunctionPrototypeType() ||
                 owner.getType().isEnumType())) {
           removeSymbol(s);
           continue nextSymbol;

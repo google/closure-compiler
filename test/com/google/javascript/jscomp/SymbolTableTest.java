@@ -862,6 +862,38 @@ public class SymbolTableTest extends TestCase {
     assertEquals(Foo, dom.getPropertyScope().getSlot("Foo"));
   }
 
+  public void testConstructorAlias() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ var Foo = function() {};\n" +
+        "/** desc */ Foo.prototype.bar = function() {};\n" +
+        "/** @constructor */ var FooAlias = Foo;\n" +
+        "/** desc */ FooAlias.prototype.baz = function() {};\n");
+
+    Symbol foo = getGlobalVar(table, "Foo");
+    Symbol fooAlias = getGlobalVar(table, "FooAlias");
+    Symbol bar = getGlobalVar(table, "Foo.prototype.bar");
+    Symbol baz = getGlobalVar(table, "Foo.prototype.baz");
+    Symbol bazAlias = getGlobalVar(table, "FooAlias.prototype.baz");
+
+    assertNotNull(foo);
+    assertNotNull(fooAlias);
+    assertNotNull(bar);
+    assertNotNull(baz);
+    assertNull(bazAlias);
+
+    Symbol barScope = table.getSymbolForScope(table.getScope(bar));
+    assertNotNull(barScope);
+
+    Symbol bazScope = table.getSymbolForScope(table.getScope(baz));
+    assertNotNull(bazScope);
+
+    Symbol fooPrototype = foo.getPropertyScope().getSlot("prototype");
+    assertNotNull(fooPrototype);
+
+    assertEquals(fooPrototype, barScope);
+    assertEquals(fooPrototype, bazScope);
+  }
+
   public void testSymbolForScopeOfNatives() throws Exception {
     SymbolTable table = createSymbolTable("");
 
@@ -950,7 +982,9 @@ public class SymbolTableTest extends TestCase {
 
       Symbol scope = table.getSymbolForScope(table.getScope(sym));
       assertTrue(
-          "The symbol's scope is a zombie scope that shouldn't exist: " + sym,
+          "The symbol's scope is a zombie scope that shouldn't exist.\n" +
+          "Symbol: " + sym + "\n" +
+          "Scope: " + table.getScope(sym),
           scope == null || allSymbols.contains(scope));
     }
 
