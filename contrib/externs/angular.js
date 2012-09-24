@@ -100,7 +100,7 @@ angular.identity = function(arg) {};
 
 /**
  * @param {Array.<string|Function>} modules
- * @return {function()}
+ * @return {angular.$injector}
  */
 angular.injector = function(modules) {};
 
@@ -281,7 +281,7 @@ angular.noop = function() {};
 
 /**
  * @typedef {{
- *   $apply: function((string|function())=):*,
+ *   $apply: function((string|function(angular.Scope))=):*,
  *   $broadcast: function(string, ...[*]),
  *   $destroy: function(),
  *   $digest: function(),
@@ -289,7 +289,7 @@ angular.noop = function() {};
  *   $eval: function((string|function())=, Object=):*,
  *   $evalAsync: function((string|function())=),
  *   $id: number,
- *   $new: function():Object,
+ *   $new: function():angular.Scope,
  *   $on: function(string, function(angular.Scope.Event, ...[?])):function(),
  *   $watch: function(
  *       (string|function()),
@@ -299,7 +299,7 @@ angular.noop = function() {};
 angular.Scope;
 
 /**
- * @param {(string|function())=} opt_exp
+ * @param {(string|function(angular.Scope))=} opt_exp
  * @return {*}
  */
 angular.Scope.$apply = function(opt_exp) {};
@@ -333,7 +333,7 @@ angular.Scope.$eval = function(opt_exp, opt_locals) {};
 angular.Scope.$evalAsync = function(opt_exp) {};
 
 /**
- * @return {Object}
+ * @return {angular.Scope}
  */
 angular.Scope.$new = function() {};
 
@@ -422,6 +422,17 @@ angular.version.dot = 0;
  * @type {string}
  */
 angular.version.codeName = '';
+
+/******************************************************************************
+ * $compile Service
+ *****************************************************************************/
+
+/**
+ * @typedef {
+ *   function((string|Element), function(angular.Scope, Function=)=, number=):
+ *       function(angular.Scope, function(Object, angular.Scope=)=):Object}
+ */
+angular.$compile;
 
 /******************************************************************************
  * $http Service
@@ -581,6 +592,66 @@ angular.$http.HttpPromise.success = function(callback) {};
  *         function(string):string, Object)} callback
  */
 angular.$http.HttpPromise.error = function(callback) {};
+
+/******************************************************************************
+ * $injector Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   annotate: function((Function|Array.<string|Function>)):Array.<string>,
+ *   get: function(string):*,
+ *   instantiate: function(Function, Object=):Object,
+ *   invoke: function(
+ *       (Function|Array.<string|Function>), Object=, Object=):*
+ *   }}
+ */
+angular.$injector;
+
+/**
+ * @param {(Function|Array.<string|Function>)} fn
+ * @return {Array.<string>}
+ */
+angular.$injector.annotate = function(fn) {};
+
+/**
+ * @param {string} name
+ * @return {*}
+ */
+angular.$injector.get = function(name) {};
+
+/**
+ * @param {Function} type
+ * @param {Object=} opt_locals
+ * @return {Object}
+ */
+angular.$injector.instantiate = function(type, opt_locals) {};
+
+/**
+ * @param {(Function|Array.<string|Function>)} fn
+ * @param {Object=} opt_self
+ * @param {Object=} opt_locals
+ * @return {*}
+ */
+angular.$injector.invoke = function(fn, opt_self, opt_locals) {};
+
+/******************************************************************************
+ * $interpolateProvider Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   startSymbol: function(string),
+ *   endSymbol: function(string)
+ *   }}
+ */
+angular.$interpolateProvider;
+
+/** @type {function(string)} */
+angular.$interpolateProvider.startSymbol;
+
+/** @type {function(string)} */
+angular.$interpolateProvider.endSymbol;
 
 /******************************************************************************
  * $location Service
@@ -889,24 +960,6 @@ angular.$routeProvider.Params.redirectTo;
 
 /** @type {boolean} */
 angular.$routeProvider.Params.reloadOnSearch;
-
-/******************************************************************************
- * $interpolateProvider Service
- *****************************************************************************/
-
-/**
- * @typedef {{
- *   startSymbol: function(string),
- *   endSymbol: function(string)
- *   }}
- */
-angular.$interpolateProvider;
-
-/** @type {function(string)} */
-angular.$interpolateProvider.startSymbol;
-
-/** @type {function(string)} */
-angular.$interpolateProvider.endSymbol;
 
 /******************************************************************************
  * $timeout Service
