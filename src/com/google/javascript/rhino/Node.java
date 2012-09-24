@@ -82,7 +82,6 @@ public class Node implements Cloneable, Serializable {
                                   // EMPTY nodes.
       ORIGINALNAME_PROP  = 40,    // The original name of the node, before
                                   // renaming.
-      BRACELESS_TYPE     = 41,    // The type syntax without curly braces.
       SIDE_EFFECT_FLAGS  = 42,    // Function or constructor call side effect
                                   // flags
       // Coding convention props
@@ -117,7 +116,6 @@ public class Node implements Cloneable, Serializable {
 
   private static final String propToString(int propType) {
       switch (propType) {
-        case BRACELESS_TYPE:     return "braceless_type";
         case VAR_ARGS_NAME:      return "var_args_name";
         case SOURCENAME_PROP:    return "sourcename";
 

@@ -452,9 +452,6 @@ public final class JsDocInfoParser {
                     charno = stream.getCharno();
 
                     typeNode = wrapNode(Token.BANG, typeNode);
-                    if (typeNode != null && !matchingRc) {
-                      typeNode.putBooleanProp(Node.BRACELESS_TYPE, true);
-                    }
                     type = createJSTypeExpression(typeNode);
 
                     if (annotation == Annotation.EXTENDS) {
@@ -856,9 +853,6 @@ public final class JsDocInfoParser {
 
                   if (annotation == Annotation.THIS) {
                     typeNode = wrapNode(Token.BANG, typeNode);
-                    if (typeNode != null && token != JsDocToken.LC) {
-                      typeNode.putBooleanProp(Node.BRACELESS_TYPE, true);
-                    }
                   }
                   type = createJSTypeExpression(typeNode);
 
@@ -1169,10 +1163,6 @@ public final class JsDocInfoParser {
       typeNode = parseTypeNameAnnotation(token);
     } else {
       typeNode = parseTypeExpressionAnnotation(token);
-    }
-
-    if (typeNode != null && !matchingLC) {
-      typeNode.putBooleanProp(Node.BRACELESS_TYPE, true);
     }
 
     if (typeNode != null) {
