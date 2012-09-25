@@ -1027,7 +1027,8 @@ public class NodeUtilTest extends TestCase {
   public void testGetSourceName() {
     Node n = new Node(Token.BLOCK);
     Node parent = new Node(Token.BLOCK, n);
-    parent.putProp(Node.SOURCENAME_PROP, "foo");
+    parent.setSourceFileForTesting("foo");
+
     assertEquals("foo", NodeUtil.getSourceName(n));
   }
 

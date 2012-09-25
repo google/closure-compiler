@@ -95,7 +95,7 @@ public class GlobalVarReferenceMapTest extends TestCase {
     globalMap.put(globalScope.getVar(VAR3), var3TempRefs);
     map.updateGlobalVarReferences(globalMap, root);
     scriptRoot.setInputId(INPUT2.getInputId());
-    scriptRoot.putProp(Node.SOURCENAME_PROP, INPUT2.getName());
+    scriptRoot.setSourceFileForTesting(INPUT2.getName());
   }
 
   /** Tests whether the global variable references are set/reset properly. */

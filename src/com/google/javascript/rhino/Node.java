@@ -65,9 +65,6 @@ public class Node implements Cloneable, Serializable {
   private static final long serialVersionUID = 1L;
 
   public static final int
-      // TODO(nicksantos): Remove this prop.
-      SOURCENAME_PROP   = 16,
-
       JSDOC_INFO_PROP   = 29,     // contains a TokenStream.JSDocInfo object
       VAR_ARGS_NAME     = 30,     // the name node is a variable length
                                   // argument placeholder.
@@ -116,7 +113,6 @@ public class Node implements Cloneable, Serializable {
   private static final String propToString(int propType) {
       switch (propType) {
         case VAR_ARGS_NAME:      return "var_args_name";
-        case SOURCENAME_PROP:    return "sourcename";
 
         case JSDOC_INFO_PROP:    return "jsdoc_info";
 
@@ -806,10 +802,6 @@ public class Node implements Cloneable, Serializable {
   }
 
   public Object getProp(int propType) {
-    if (propType == SOURCENAME_PROP) {
-      return getSourceFileName();
-    }
-
     PropListItem item = lookupProperty(propType);
     if (item == null) {
       return null;
@@ -842,12 +834,6 @@ public class Node implements Cloneable, Serializable {
   }
 
   public void putProp(int propType, Object value) {
-    if (propType == SOURCENAME_PROP) {
-      putProp(
-          STATIC_SOURCE_FILE, new SimpleSourceFile((String) value, false));
-      return;
-    }
-
     removeProp(propType);
     if (value != null) {
       propListHead = createProp(propType, value, propListHead);
@@ -1734,9 +1720,6 @@ public class Node implements Cloneable, Serializable {
 
     if (getProp(STATIC_SOURCE_FILE) == null) {
       putProp(STATIC_SOURCE_FILE, other.getProp(STATIC_SOURCE_FILE));
-      sourcePosition = other.sourcePosition;
-    } else if (getProp(SOURCENAME_PROP) == null) {
-      putProp(SOURCENAME_PROP, other.getProp(SOURCENAME_PROP));
       sourcePosition = other.sourcePosition;
     }
 

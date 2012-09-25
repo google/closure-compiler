@@ -20,6 +20,7 @@ import com.google.javascript.jscomp.AstValidator.ViolationHandler;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.SimpleSourceFile;
 
 
 /**
@@ -73,7 +74,7 @@ public class AstValidatorTest extends CompilerTestCase {
     Node n = new Node(Token.SCRIPT);
     expectInvalid(n, Check.SCRIPT);
     n.setInputId(new InputId("something_input"));
-    n.putProp(Node.SOURCENAME_PROP, "something");
+    n.setStaticSourceFile(new SimpleSourceFile("something", false));
     expectValid(n, Check.SCRIPT);
     expectInvalid(n, Check.STATEMENT);
     expectInvalid(n, Check.EXPRESSION);
