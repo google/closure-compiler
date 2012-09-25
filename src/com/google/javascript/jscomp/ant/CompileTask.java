@@ -265,6 +265,7 @@ public final class CompileTask
     this.sourcePaths.add(list);
   }
 
+  @Override
   public void execute() {
     if (this.outputFile == null) {
       throw new BuildException("outputFile attribute must be set");

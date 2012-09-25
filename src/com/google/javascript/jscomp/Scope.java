@@ -111,10 +111,10 @@ public class Scope
     /** The enclosing scope */
     final Scope scope;
 
-    /** @see isMarkedEscaped */
+    /** @see #isMarkedEscaped */
     private boolean markedEscaped = false;
 
-    /** @see isMarkedAssignedExactlyOnce */
+    /** @see #isMarkedAssignedExactlyOnce */
     private boolean markedAssignedExactlyOnce = false;
 
     /**

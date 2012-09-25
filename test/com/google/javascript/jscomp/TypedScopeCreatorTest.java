@@ -1528,8 +1528,4 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
   private ObjectType getNativeObjectType(JSTypeNative type) {
     return (ObjectType) registry.getNativeType(type);
   }
-
-  private void assertTypeEquals(String s, JSType type) {
-    assertEquals(s, type.toString());
-  }
 }

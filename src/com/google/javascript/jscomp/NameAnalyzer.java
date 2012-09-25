@@ -413,8 +413,6 @@ final class NameAnalyzer implements CompilerPass {
      *
      * @param name The name
      * @param node The CALL node
-     * @param parent The parent of {@code node}
-     * @param gramps The parent of {@code parent}
      */
     ClassDefiningFunctionNode(JsName name, Node node) {
       super(name, node);
@@ -444,9 +442,6 @@ final class NameAnalyzer implements CompilerPass {
      *
      * @param name The name
      * @param node The qualified name node
-     * @param parent The parent of {@code node}, this should be an instanceof
-     *     node.
-     * @param gramps The parent of {@code parent}.
      */
     InstanceOfCheckNode(JsName name, Node node) {
       super(name, node);

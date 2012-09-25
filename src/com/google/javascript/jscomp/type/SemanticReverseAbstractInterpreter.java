@@ -400,7 +400,7 @@ public class SemanticReverseAbstractInterpreter
   }
 
   /**
-   * @see maybeRestrictName
+   * @see #maybeRestrictName
    */
   private FlowScope maybeRestrictTwoNames(
       FlowScope blindScope,
