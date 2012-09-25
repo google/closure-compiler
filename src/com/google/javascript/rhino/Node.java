@@ -82,8 +82,6 @@ public class Node implements Cloneable, Serializable {
                                   // flags
       // Coding convention props
       IS_CONSTANT_NAME   = 43,    // The variable or property is constant.
-      IS_OPTIONAL_PARAM  = 44,    // The parameter is optional.
-      IS_VAR_ARGS_PARAM  = 45,    // The parameter is a var_args.
       IS_NAMESPACE       = 46,    // The variable creates a namespace.
       IS_DISPATCHER      = 47,    // The function is a dispatcher function,
                                   // probably generated from Java code, and
@@ -126,8 +124,6 @@ public class Node implements Cloneable, Serializable {
         case SIDE_EFFECT_FLAGS:  return "side_effect_flags";
 
         case IS_CONSTANT_NAME:   return "is_constant_name";
-        case IS_OPTIONAL_PARAM:  return "is_optional_param";
-        case IS_VAR_ARGS_PARAM:  return "is_var_args_param";
         case IS_NAMESPACE:       return "is_namespace";
         case IS_DISPATCHER:      return "is_dispatcher";
         case DIRECTIVES:         return "directives";

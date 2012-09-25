@@ -60,6 +60,7 @@ class GenerateExports implements CompilerPass {
     Map<String, GenerateNodeContext> exports = findExportableNodes
         .getExports();
 
+    CodingConvention convention = compiler.getCodingConvention();
     for (Map.Entry<String, GenerateNodeContext> entry : exports.entrySet()) {
       String export = entry.getKey();
       GenerateNodeContext context = entry.getValue();
@@ -93,25 +94,25 @@ class GenerateExports implements CompilerPass {
         // exportSymbol(publicPath, object);
         call = IR.call(
             NodeUtil.newQualifiedNameNode(
-                compiler.getCodingConvention(), exportSymbolFunction,
+                convention, exportSymbolFunction,
                 context.getNode(), export),
             IR.string(export),
             NodeUtil.newQualifiedNameNode(
-                compiler.getCodingConvention(), export,
+                convention, export,
                 context.getNode(), export));
       } else {
         // exportProperty(object, publicName, symbol);
         String property = getPropertyName(node);
         call = IR.call(
             NodeUtil.newQualifiedNameNode(
-                compiler.getCodingConvention(), exportPropertyFunction,
+                convention, exportPropertyFunction,
                 context.getNode(), exportPropertyFunction),
             NodeUtil.newQualifiedNameNode(
-                compiler.getCodingConvention(), parent,
+                convention, parent,
                 context.getNode(), exportPropertyFunction),
             IR.string(property),
             NodeUtil.newQualifiedNameNode(
-                compiler.getCodingConvention(), export,
+                convention, export,
                 context.getNode(), exportPropertyFunction));
       }
 
@@ -121,7 +122,6 @@ class GenerateExports implements CompilerPass {
       // It's important that any class-building calls (goog.inherits)
       // come right after the class definition, so move the export after that.
       Node insertionPoint = context.getContextNode().getNext();
-      CodingConvention convention = compiler.getCodingConvention();
       while (insertionPoint != null &&
           NodeUtil.isExprCall(insertionPoint) &&
           convention.getClassesDefinedByCall(
@@ -140,7 +140,7 @@ class GenerateExports implements CompilerPass {
 
   private void annotate(Node node) {
     NodeTraversal.traverse(
-        compiler, node, new PrepareAst.PrepareAnnotations(compiler));
+        compiler, node, new PrepareAst.PrepareAnnotations());
   }
 
   /**

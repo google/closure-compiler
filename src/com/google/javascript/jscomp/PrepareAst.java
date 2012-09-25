@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -64,11 +62,11 @@ class PrepareAst implements CompilerPass {
       // performed.
       if (externs != null) {
         NodeTraversal.traverse(
-            compiler, externs, new PrepareAnnotations(compiler));
+            compiler, externs, new PrepareAnnotations());
       }
       if (root != null) {
         NodeTraversal.traverse(
-            compiler, root, new PrepareAnnotations(compiler));
+            compiler, root, new PrepareAnnotations());
       }
     }
   }
@@ -120,10 +118,7 @@ class PrepareAst implements CompilerPass {
   static class PrepareAnnotations
       implements NodeTraversal.Callback {
 
-    private final CodingConvention convention;
-
-    PrepareAnnotations(AbstractCompiler compiler) {
-      this.convention = compiler.getCodingConvention();
+    PrepareAnnotations() {
     }
 
     @Override
@@ -142,7 +137,6 @@ class PrepareAst implements CompilerPass {
           break;
 
         case Token.FUNCTION:
-          annotateFunctions(n, parent);
           annotateDispatchers(n, parent);
           break;
       }
@@ -214,33 +208,6 @@ class PrepareAst implements CompilerPass {
       if (key.getJSDocInfo() != null &&
           value.isFunction()) {
         value.setJSDocInfo(key.getJSDocInfo());
-      }
-    }
-
-    /**
-     * Annotate optional and var_arg function parameters.
-     */
-    private void annotateFunctions(Node n, Node parent) {
-      JSDocInfo fnInfo = NodeUtil.getFunctionJSDocInfo(n);
-
-      // Compute which function parameters are optional and
-      // which are var_args.
-      Node args = n.getFirstChild().getNext();
-      for (Node arg = args.getFirstChild();
-           arg != null;
-           arg = arg.getNext()) {
-        String argName = arg.getString();
-        JSTypeExpression typeExpr = fnInfo == null ?
-            null : fnInfo.getParameterType(argName);
-
-        if (convention.isOptionalParameter(arg) ||
-            typeExpr != null && typeExpr.isOptionalArg()) {
-          arg.putBooleanProp(Node.IS_OPTIONAL_PARAM, true);
-        }
-        if (convention.isVarArgsParameter(arg) ||
-            typeExpr != null && typeExpr.isVarArgs()) {
-          arg.putBooleanProp(Node.IS_VAR_ARGS_PARAM, true);
-        }
       }
     }
   }
