@@ -39,7 +39,7 @@ var angular = {};
 
 /**
  * @param {Object} self
- * @param {function()} fn
+ * @param {Function} fn
  * @param {...*} args
  * @return {function()}
  */
@@ -820,18 +820,18 @@ angular.$q.when = function(value) {};
 
 /**
  * @typedef {{
- *   resolve: function(*),
- *   reject: function(*),
+ *   resolve: function(*=),
+ *   reject: function(*=),
  *   promise: angular.$q.Promise
  *   }}
  */
 angular.$q.Deferred;
 
-/** @param {*} value */
-angular.$q.Deferred.resolve = function(value) {};
+/** @param {*=} opt_value */
+angular.$q.Deferred.resolve = function(opt_value) {};
 
-/** @param {*} reason */
-angular.$q.Deferred.reject = function(reason) {};
+/** @param {*=} opt_reason */
+angular.$q.Deferred.reject = function(opt_reason) {};
 
 /** @type {angular.$q.Promise} */
 angular.$q.Deferred.promise;
