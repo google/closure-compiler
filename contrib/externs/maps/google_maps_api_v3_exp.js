@@ -1237,6 +1237,11 @@ google.maps.GroundOverlayOptions.prototype.opacity;
 google.maps.IconSequence = function() {};
 
 /**
+ * @type {boolean}
+ */
+google.maps.IconSequence.prototype.fixedRotation;
+
+/**
  * @type {google.maps.Symbol}
  */
 google.maps.IconSequence.prototype.icon;
