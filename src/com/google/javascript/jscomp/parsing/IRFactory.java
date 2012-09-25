@@ -867,7 +867,6 @@ class IRFactory {
     @Override
     Node processParenthesizedExpression(ParenthesizedExpression exprNode) {
       Node node = transform(exprNode.getExpression());
-      node.putProp(Node.PARENTHESIZED_PROP, Boolean.TRUE);
       return node;
     }
 

@@ -72,7 +72,6 @@ public class Node implements Cloneable, Serializable {
       VAR_ARGS_NAME     = 30,     // the name node is a variable length
                                   // argument placeholder.
       INCRDECR_PROP      = 32,    // pre or post type of increment/decrement
-      PARENTHESIZED_PROP = 35,    // expression is parenthesized
       QUOTED_PROP        = 36,    // set to indicate a quoted object lit key
       OPT_ARG_NAME       = 37,    // The name node is an optional argument.
       SYNTHETIC_BLOCK_PROP = 38,  // A synthetic block. Used to make
@@ -122,7 +121,6 @@ public class Node implements Cloneable, Serializable {
         case JSDOC_INFO_PROP:    return "jsdoc_info";
 
         case INCRDECR_PROP:      return "incrdecr";
-        case PARENTHESIZED_PROP: return "parenthesized";
         case QUOTED_PROP:        return "quoted";
         case OPT_ARG_NAME:       return "opt_arg";
 
