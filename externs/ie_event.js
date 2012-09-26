@@ -183,6 +183,39 @@ MSPointerEvent.prototype.pointerId;
 MSPointerEvent.prototype.pointerType;
 
 /**
+ * @param {string} typeArg
+ * @param {boolean} canBubbleArg
+ * @param {boolean} cancelableArg
+ * @param {Window} viewArg
+ * @param {number} detailArg
+ * @param {number} screenXArg
+ * @param {number} screenYArg
+ * @param {number} clientXArg
+ * @param {number} clientYArg
+ * @param {boolean} ctrlKeyArg
+ * @param {boolean} altKeyArg
+ * @param {boolean} shiftKeyArg
+ * @param {boolean} metaKeyArg
+ * @param {number} buttonArg
+ * @param {Element} relatedTargetArg
+ * @param {number} offsetXArg
+ * @param {number} offsetYArg
+ * @param {number} widthArg
+ * @param {number} heightArg
+ * @param {number} pressure
+ * @param {number} rotation
+ * @param {number} tiltX
+ * @param {number} tiltY
+ * @param {number} pointerIdArg
+ * @param {number} pointerType
+ * @param {number} hwTimestampArg
+ * @param {boolean} isPrimary
+ * @return {undefined}
+ * @see http://msdn.microsoft.com/en-us/library/windows/apps/hh441246.aspx
+ */
+MSPointerEvent.prototype.initPointerEvent;
+
+/**
  * @constructor
  * @see http://msdn.microsoft.com/en-us/library/ie/hh968249(v=vs.85).aspx
  */
@@ -239,3 +272,31 @@ MSGestureEvent.prototype.velocityX;
 
 /** @type {number} */
 MSGestureEvent.prototype.velocityY;
+
+/**
+ * @param {string} typeArg
+ * @param {boolean} canBubbleArg
+ * @param {boolean} cancelableArg
+ * @param {Window} viewArg
+ * @param {number} detailArg
+ * @param {number} screenXArg
+ * @param {number} screenYArg
+ * @param {number} clientXArg
+ * @param {number} clientYArg
+ * @param {number} offsetXArg
+ * @param {number} offsetYArg
+ * @param {number} translationXArg
+ * @param {number} translationYArg
+ * @param {number} scaleArg
+ * @param {number} expansionArg
+ * @param {number} rotationArg
+ * @param {number} velocityXArg
+ * @param {number} velocityYArg
+ * @param {number} velocityExpansionArg
+ * @param {number} velocityAngularArg
+ * @param {number} hwTimestampArg
+ * @param {EventTarget} relatedTargetArg
+ * @return {undefined}
+ * @see http://msdn.microsoft.com/en-us/library/windows/apps/hh441187.aspx
+ */
+MSGestureEvent.prototype.initGestureEvent;
