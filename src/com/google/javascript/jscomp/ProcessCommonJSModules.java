@@ -114,9 +114,14 @@ public class ProcessCommonJSModules implements CompilerPass {
   }
 
   private String normalizeSourceName(String filename) {
+    // The DOS command shell will normalize "/" to "\", so we have to
+    // wrestle it back.
+    filename = filename.replace("\\", "/");
+
     if (filename.indexOf(filenamePrefix) == 0) {
       filename = filename.substring(filenamePrefix.length());
     }
+
     return filename;
   }
 
@@ -176,8 +181,7 @@ public class ProcessCommonJSModules implements CompilerPass {
       Preconditions.checkArgument(scriptNodeCount == 1,
           "ProcessCommonJSModules supports only one invocation per " +
           "CompilerInput / script node");
-      String moduleName = guessCJSModuleName(normalizeSourceName(script
-          .getSourceFileName()));
+      String moduleName = guessCJSModuleName(script.getSourceFileName());
       script.addChildToFront(IR.var(IR.name(moduleName), IR.objectlit())
           .copyInformationFromForTree(script));
       if (reportDependencies) {
