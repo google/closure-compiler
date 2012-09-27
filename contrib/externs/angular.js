@@ -60,7 +60,7 @@ angular.bootstrap = function(element, opt_modules) {};
 angular.copy = function(source, opt_dest) {};
 
 /**
- * @param {string|Element} element
+ * @param {string|Element|NodeList|{length: number}} element
  * @return {Object}
  */
 angular.element = function(element) {};
