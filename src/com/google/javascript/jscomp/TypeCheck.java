@@ -229,6 +229,10 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "JSC_EXPECTED_THIS_TYPE",
           "\"{0}\" must be called with a \"this\" type");
 
+  static final DiagnosticType IN_USED_WITH_STRUCT =
+      DiagnosticType.warning("JSC_IN_USED_WITH_STRUCT",
+                             "Cannot use the IN operator with structs");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       DETERMINISTIC_TEST,
       DETERMINISTIC_TEST_NO_RESULT,
@@ -258,6 +262,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ILLEGAL_IMPLICIT_CAST,
       INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
       EXPECTED_THIS_TYPE,
+      IN_USED_WITH_STRUCT,
       RhinoErrorReporter.TYPE_PARSE_ERROR,
       TypedScopeCreator.UNKNOWN_LENDS,
       TypedScopeCreator.LENDS_ON_NON_OBJECT,
@@ -669,10 +674,14 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case Token.IN:
-        validator.expectObject(t, n, getJSType(n.getLastChild()),
-                               "'in' requires an object");
         left = n.getFirstChild();
+        right = n.getLastChild();
+        rightType = getJSType(right);
         validator.expectString(t, left, getJSType(left), "left side of 'in'");
+        validator.expectObject(t, n, rightType, "'in' requires an object");
+        if (rightType.isStruct()) {
+          report(t, right, IN_USED_WITH_STRUCT);
+        }
         ensureTyped(t, n, BOOLEAN_TYPE);
         break;
 
@@ -760,9 +769,18 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       // These nodes require data flow analysis.
       case Token.DO:
-      case Token.FOR:
       case Token.IF:
       case Token.WHILE:
+        typeable = false;
+        break;
+
+      case Token.FOR:
+        if (NodeUtil.isForIn(n)) {
+          Node obj = n.getChildAtIndex(1);
+          if (getJSType(obj).isStruct()) {
+            report(t, obj, IN_USED_WITH_STRUCT);
+          }
+        }
         typeable = false;
         break;
 

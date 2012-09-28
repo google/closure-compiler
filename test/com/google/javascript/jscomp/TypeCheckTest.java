@@ -4079,6 +4079,26 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               "var z = /** @type {Foo} */(new Bar)['x'];");
   }
 
+  public void testInOnStruct() throws Exception {
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */" +
+              "function Foo() {}\n" +
+              "if ('prop' in (new Foo())) {}",
+              "Cannot use the IN operator with structs");
+  }
+
+  public void testForinOnStruct() throws Exception {
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */" +
+              "function Foo() {}\n" +
+              "for (var prop in (new Foo())) {}",
+              "Cannot use the IN operator with structs");
+  }
+
   public void testArrayAccess1() throws Exception {
     testTypes("var a = []; var b = a['hi'];");
   }
