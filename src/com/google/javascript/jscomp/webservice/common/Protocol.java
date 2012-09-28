@@ -62,6 +62,7 @@ public class Protocol {
     BUILD_DEBUG("debug"),
     CHARSET("charset"),
     LANGUAGE("language"),
+    USE_TYPES_FOR_OPTIMIZATIONS("use_types_for_optimization"),
 
     // Old ROBOCOMP urls.
     RAWJS("rawjs"),
