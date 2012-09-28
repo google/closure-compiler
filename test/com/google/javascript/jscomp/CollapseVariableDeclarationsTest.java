@@ -42,6 +42,12 @@ public class CollapseVariableDeclarationsTest extends CompilerTestCase {
          "var a=1,b=2,c=3,d=4;");
   }
 
+  public void testIssue820() throws Exception {
+    // Don't redeclare function parameters, this is incompatible with
+    // strict mode.
+    testSame("function f(a){ var b=1; a=2; var c; }");
+  }
+
   public void testIfElseVarDeclarations() throws Exception {
     testSame("if (x) var a = 1; else var b = 2;");
   }
