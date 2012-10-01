@@ -317,6 +317,71 @@ public class ReplaceMessagesTest extends CompilerTestCase {
          MESSAGE_TREE_MALFORMED);
   }
 
+  public void testBadFallbackSyntax1() {
+    test("/** @desc d */\n" +
+         "var MSG_A = goog.getMsg('asdf');" +
+         "var x = goog.getMsgWithFallback(MSG_A);", null,
+         JsMessageVisitor.BAD_FALLBACK_SYNTAX);
+  }
+
+  public void testBadFallbackSyntax2() {
+    test("var x = goog.getMsgWithFallback('abc', 'bcd');", null,
+         JsMessageVisitor.BAD_FALLBACK_SYNTAX);
+  }
+
+  public void testBadFallbackSyntax3() {
+    test("/** @desc d */\n" +
+         "var MSG_A = goog.getMsg('asdf');" +
+         "var x = goog.getMsgWithFallback(MSG_A, y);", null,
+         JsMessageVisitor.FALLBACK_ARG_ERROR);
+  }
+
+  public void testBadFallbackSyntax4() {
+    test("/** @desc d */\n" +
+         "var MSG_A = goog.getMsg('asdf');" +
+         "var x = goog.getMsgWithFallback(y, MSG_A);", null,
+         JsMessageVisitor.FALLBACK_ARG_ERROR);
+  }
+
+  public void testUseFallback() {
+    registerMessage(new JsMessage.Builder("MSG_B")
+        .appendStringPart("translated")
+        .build());
+    test("/** @desc d */\n" +
+         "var MSG_A = goog.getMsg('msg A');" +
+         "/** @desc d */\n" +
+         "var MSG_B = goog.getMsg('msg B');" +
+         "var x = goog.getMsgWithFallback(MSG_A, MSG_B);",
+         "var MSG_A = 'msg A';" +
+         "var MSG_B = 'translated';" +
+         "var x = MSG_B;");
+  }
+
+  public void testFallbackEmptyBundle() {
+    test("/** @desc d */\n" +
+         "var MSG_A = goog.getMsg('msg A');" +
+         "/** @desc d */\n" +
+         "var MSG_B = goog.getMsg('msg B');" +
+         "var x = goog.getMsgWithFallback(MSG_A, MSG_B);",
+         "var MSG_A = 'msg A';" +
+         "var MSG_B = 'msg B';" +
+         "var x = MSG_A;");
+  }
+
+  public void testNoUseFallback() {
+    registerMessage(new JsMessage.Builder("MSG_A")
+        .appendStringPart("translated")
+        .build());
+    test("/** @desc d */\n" +
+         "var MSG_A = goog.getMsg('msg A');" +
+         "/** @desc d */\n" +
+         "var MSG_B = goog.getMsg('msg B');" +
+         "var x = goog.getMsgWithFallback(MSG_A, MSG_B);",
+         "var MSG_A = 'translated';" +
+         "var MSG_B = 'msg B';" +
+         "var x = MSG_A;");
+  }
+
   private void registerMessage(JsMessage message) {
     messages.put(message.getKey(), message);
   }
@@ -330,7 +395,7 @@ public class ReplaceMessagesTest extends CompilerTestCase {
 
     @Override
     public Iterable<JsMessage> getAllMessages() {
-      throw new UnsupportedOperationException();
+      return messages.values();
     }
 
     @Override

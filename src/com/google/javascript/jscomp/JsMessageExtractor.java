@@ -74,7 +74,7 @@ public class JsMessageExtractor {
     }
 
     @Override
-    protected void processJsMessage(JsMessage message,
+    void processJsMessage(JsMessage message,
         JsMessageDefinition definition) {
       if (!message.isExternal()) {
         messages.add(message);

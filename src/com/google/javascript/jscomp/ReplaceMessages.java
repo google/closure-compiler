@@ -16,13 +16,14 @@
 
 package com.google.javascript.jscomp;
 
-import javax.annotation.Nullable;
-
+import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Iterator;
+
+import javax.annotation.Nullable;
 
 /**
  * ReplaceMessages replaces user-visible messages with alternatives.
@@ -48,7 +49,19 @@ class ReplaceMessages extends JsMessageVisitor {
   }
 
   @Override
-  protected void processJsMessage(JsMessage message,
+  void processMessageFallback(
+      Node callNode, JsMessage message1, JsMessage message2) {
+    boolean isEmptyBundle = Iterables.isEmpty(bundle.getAllMessages());
+    boolean isFirstMessageTranslated =
+        (bundle.getMessage(message1.getId()) != null);
+    Node replacementNode = isFirstMessageTranslated || isEmptyBundle ?
+        callNode.getChildAtIndex(1) : callNode.getChildAtIndex(2);
+    callNode.getParent().replaceChild(callNode,
+        replacementNode.detachFromParent());
+  }
+
+  @Override
+  void processJsMessage(JsMessage message,
       JsMessageDefinition definition) {
 
     // Get the replacement.

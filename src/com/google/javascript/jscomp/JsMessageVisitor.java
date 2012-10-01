@@ -16,11 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.JsMessage.Builder;
-import static com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -40,6 +42,8 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
     implements CompilerPass {
 
   private static final String MSG_FUNCTION_NAME = "goog.getMsg";
+  private static final String MSG_FALLBACK_FUNCTION_NAME =
+      "goog.getMsgWithFallback";
 
   static final DiagnosticType MESSAGE_HAS_NO_DESCRIPTION =
       DiagnosticType.warning("JSC_MSG_HAS_NO_DESCRIPTION",
@@ -70,6 +74,17 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
   static final DiagnosticType MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX =
       DiagnosticType.error("JSC_MSG_NOT_INITIALIZED_USING_NEW_SYNTAX",
           "message not initialized using " + MSG_FUNCTION_NAME);
+
+  static final DiagnosticType BAD_FALLBACK_SYNTAX =
+      DiagnosticType.error("JSC_MSG_BAD_FALLBACK_SYNTAX",
+          String.format(
+              "Bad syntax. " +
+              "Expected syntax: goog.getMsgWithFallback(MSG_1, MSG_2)",
+              MSG_FALLBACK_FUNCTION_NAME));
+
+  static final DiagnosticType FALLBACK_ARG_ERROR =
+      DiagnosticType.error("JSC_MSG_FALLBACK_ARG_ERROR",
+          "Could not find message entry for fallback argument {0}");
 
   private static final String PH_JS_PREFIX = "{$";
   private static final String PH_JS_SUFFIX = "}";
@@ -109,6 +124,9 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
    * use it for tracking duplicated message ids in the source code.
    */
   private final Map<String, MessageLocation> messageNames =
+      Maps.newHashMap();
+
+  private final Map<Var, JsMessage> unnamedMessages =
       Maps.newHashMap();
 
   /**
@@ -196,8 +214,11 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
         break;
       case Token.CALL:
         // goog.getMsg()
-        if (MSG_FUNCTION_NAME.equals(node.getFirstChild().getQualifiedName())) {
+        String fnName = node.getFirstChild().getQualifiedName();
+        if (MSG_FUNCTION_NAME.equals(fnName)) {
           googMsgNodes.put(node, traversal.getSourceName());
+        } else if (MSG_FALLBACK_FUNCTION_NAME.equals(fnName)) {
+          visitFallbackFunctionCall(traversal, node);
         }
         return;
       default:
@@ -250,8 +271,10 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
     if (needToCheckDuplications
         && !isUnnamedMsg
         && !extractedMessage.isExternal()) {
-      checkIfMessageDuplicated(traversal.getSourceName(), messageKey, msgNode);
+      checkIfMessageDuplicated(extractedMessage, messageKey, msgNode);
     }
+    trackMessage(traversal, extractedMessage,
+        messageKey, msgNode, isUnnamedMsg);
 
     if (extractedMessage.isEmpty()) {
       // value of the message is an empty string. Translators do not like it.
@@ -277,6 +300,43 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
   }
 
   /**
+   * Track a message for later retrieval.
+   *
+   * This is used for tracking duplicates, and for figuring out message
+   * fallback. Not all message types are trackable, because that would
+   * require a more sophisticated analysis. e.g.,
+   * function f(s) { s.MSG_UNNAMED_X = 'Some untrackable message'; }
+   */
+  private void trackMessage(
+      NodeTraversal t, JsMessage message, String msgName,
+      Node msgNode, boolean isUnnamedMessage) {
+    if (!isUnnamedMessage) {
+      MessageLocation location = new MessageLocation(message, msgNode);
+      messageNames.put(msgName, location);
+    } else if (msgNode.isName()) {
+      Var var = t.getScope().getVar(msgName);
+      if (var != null) {
+        unnamedMessages.put(var, message);
+      }
+    }
+  }
+
+  /** Get a previously tracked message. */
+  private JsMessage getTrackedMessage(NodeTraversal t, String msgName) {
+    boolean isUnnamedMessage = isUnnamedMessageName(msgName);
+    if (!isUnnamedMessage) {
+      MessageLocation location = messageNames.get(msgName);
+      return location == null ? null : location.message;
+    } else {
+      Var var = t.getScope().getVar(msgName);
+      if (var != null) {
+        return unnamedMessages.get(var);
+      }
+    }
+    return null;
+  }
+
+  /**
    * Checks if message already processed. If so - it generates 'message
    * duplicated' compiler error.
    *
@@ -284,16 +344,13 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
    * @param msgName the name of the message
    * @param msgNode the node that represents JS message
    */
-  private void checkIfMessageDuplicated(String sourceName, String msgName,
+  private void checkIfMessageDuplicated(JsMessage message, String msgName,
       Node msgNode) {
     if (messageNames.containsKey(msgName)) {
       MessageLocation location = messageNames.get(msgName);
-      compiler.report(JSError.make(sourceName, msgNode, MESSAGE_DUPLICATE_KEY,
-          msgName, location.sourceName, Integer.toString(location.lineNo)));
-    } else {
-      MessageLocation location =
-          new MessageLocation(sourceName, msgNode.getLineno());
-      messageNames.put(msgName, location);
+      compiler.report(JSError.make(msgNode, MESSAGE_DUPLICATE_KEY,
+          msgName, location.messageNode.getSourceFileName(),
+          Integer.toString(location.messageNode.getLineno())));
     }
   }
 
@@ -721,6 +778,37 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
     }
   }
 
+  /** Visit a call to goog.getMsgWithFallback. */
+  private void visitFallbackFunctionCall(NodeTraversal t, Node call) {
+    // Check to make sure the function call looks like:
+    // goog.getMsgWithFallback(MSG_1, MSG_2);
+    if (call.getChildCount() != 3 ||
+        !call.getChildAtIndex(1).isName() ||
+        !call.getChildAtIndex(2).isName()) {
+      compiler.report(t.makeError(call, BAD_FALLBACK_SYNTAX));
+      return;
+    }
+
+    Node firstArg = call.getChildAtIndex(1);
+    JsMessage firstMessage = getTrackedMessage(t, firstArg.getString());
+    if (firstMessage == null) {
+      compiler.report(
+          t.makeError(firstArg, FALLBACK_ARG_ERROR, firstArg.getString()));
+      return;
+    }
+
+    Node secondArg = firstArg.getNext();
+    JsMessage secondMessage = getTrackedMessage(
+        t, call.getChildAtIndex(2).getString());
+    if (secondMessage == null) {
+      compiler.report(
+          t.makeError(secondArg, FALLBACK_ARG_ERROR, secondArg.getString()));
+      return;
+    }
+
+    processMessageFallback(call, firstMessage, secondMessage);
+  }
+
 
   /**
    * Processes found JS message. Several examples of "standard" processing
@@ -738,6 +826,15 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
    */
   abstract void processJsMessage(JsMessage message,
       JsMessageDefinition definition);
+
+  /**
+   * Processes the goog.getMsgWithFallback primitive.
+   * goog.getMsgWithFallback(MSG_1, MSG_2);
+   *
+   * By default, does nothing.
+   */
+  void processMessageFallback(Node callNode, JsMessage message1,
+      JsMessage message2) {}
 
   /**
    * Returns whether the given JS identifier is a valid JS message name.
@@ -837,12 +934,12 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
   }
 
   private static class MessageLocation {
-    private final String sourceName;
-    private final int lineNo;
+    private final JsMessage message;
+    private final Node messageNode;
 
-    private MessageLocation(String sourceName, int lineNo) {
-      this.sourceName = sourceName;
-      this.lineNo = lineNo;
+    private MessageLocation(JsMessage message, Node messageNode) {
+      this.message = message;
+      this.messageNode = messageNode;
     }
   }
 }
