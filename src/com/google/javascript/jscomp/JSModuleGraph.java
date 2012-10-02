@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
@@ -40,10 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * A {@link JSModule} dependency graph that assigns a depth to each module and
@@ -133,44 +128,6 @@ public class JSModuleGraph {
    */
   JSModule getRootModule() {
     return Iterables.getOnlyElement(modulesByDepth.get(0));
-  }
-
-  /**
-   * Returns a JSON representation of the JSModuleGraph. Specifically a
-   * JSONArray of "Modules" where each module has a
-   * - "name"
-   * - "dependencies" (list of module names)
-   * - "transitive-dependencies" (list of module names, deepest first)
-   * - "inputs" (list of file names)
-   * @return List of module JSONObjects.
-   */
-  JSONArray toJson() {
-    JSONArray modules = new JSONArray();
-    for (JSModule module : getAllModules()) {
-      JSONObject node = new JSONObject();
-      try {
-        node.put("name", module.getName());
-        JSONArray deps = new JSONArray();
-        node.put("dependencies", deps);
-        for (JSModule m : module.getDependencies()) {
-          deps.put(m.getName());
-        }
-        JSONArray transitiveDeps = new JSONArray();
-        node.put("transitive-dependencies", transitiveDeps);
-        for (JSModule m : getTransitiveDepsDeepestFirst(module)) {
-          transitiveDeps.put(m.getName());
-        }
-        JSONArray inputs = new JSONArray();
-        node.put("inputs", inputs);
-        for (CompilerInput input : module.getInputs()) {
-          inputs.put(input.getSourceFile().getOriginalPath());
-        }
-        modules.put(node);
-      } catch(JSONException e) {
-        Throwables.propagate(e);
-      }
-    }
-    return modules;
   }
 
   /**

@@ -372,10 +372,6 @@ public class CommandLineRunner extends
         + "a manifest for each module.")
     private String output_manifest = "";
 
-    @Option(name = "--output_module_dependencies",
-        usage = "Prints out a JSON file of dependencies between modules.")
-    private String output_module_dependencies = "";
-
     @Option(name = "--accept_const_keyword",
         usage = "Allows usage of const keyword.")
     private boolean accept_const_keyword = false;
@@ -736,7 +732,6 @@ public class CommandLineRunner extends
           .setOnlyClosureDependencies(flags.only_closure_dependencies)
           .setClosureEntryPoints(flags.closure_entry_point)
           .setOutputManifest(ImmutableList.of(flags.output_manifest))
-          .setOutputModuleDependencies(flags.output_module_dependencies)
           .setAcceptConstKeyword(flags.accept_const_keyword)
           .setLanguageIn(flags.language_in)
           .setProcessCommonJSModules(flags.process_common_js_modules)

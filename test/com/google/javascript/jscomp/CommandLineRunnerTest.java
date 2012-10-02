@@ -904,17 +904,6 @@ public class CommandLineRunnerTest extends TestCase {
         builder.toString());
   }
 
-  public void testOutputModuleGraphJson() throws Exception {
-    useModules = ModulePattern.STAR;
-    testSame(new String[] {
-        "var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
-
-    StringBuilder builder = new StringBuilder();
-    lastCommandLineRunner.printModuleGraphJsonTo(
-        lastCompiler.getModuleGraph(), builder);
-    assertTrue(builder.toString().indexOf("transitive-dependencies") != -1);
-  }
-
   public void testVersionFlag() {
     args.add("--version");
     testSame("");
