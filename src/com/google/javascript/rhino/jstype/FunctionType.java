@@ -531,11 +531,15 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   public void setImplementedInterfaces(List<ObjectType> implementedInterfaces) {
-    // Records this type for each implemented interface.
-    for (ObjectType type : implementedInterfaces) {
-      registry.registerTypeImplementingInterface(this, type);
+    if (isConstructor()) {
+      // Records this type for each implemented interface.
+      for (ObjectType type : implementedInterfaces) {
+        registry.registerTypeImplementingInterface(this, type);
+      }
+      this.implementedInterfaces = ImmutableList.copyOf(implementedInterfaces);
+    } else {
+      throw new UnsupportedOperationException();
     }
-    this.implementedInterfaces = ImmutableList.copyOf(implementedInterfaces);
   }
 
   /**

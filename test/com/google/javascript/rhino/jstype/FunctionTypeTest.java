@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
@@ -271,5 +272,17 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
       .withTypeOfThis(new TemplateType(registry, "T"))
       .withReturnType(BOOLEAN_TYPE).build();
     assertEquals("function (this:T, ...[?]): boolean", fn.toString());
+  }
+
+  public void testSetImplementsOnInterface() {
+    FunctionType iface = registry.createInterfaceType("I", null);
+    FunctionType subIface = registry.createInterfaceType("SubI", null);
+    try {
+      subIface.setImplementedInterfaces(
+          ImmutableList.of(iface.getInstanceType()));
+      fail("Expected exception");
+    } catch (UnsupportedOperationException e) {
+      // OK
+    }
   }
 }

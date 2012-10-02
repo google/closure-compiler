@@ -1586,11 +1586,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                           "interface", functionPrivateName));
         }
       }
-      // Interface cannot implement any interfaces
-      if (functionType.hasImplementedInterfaces()) {
-        compiler.report(t.makeError(n,
-            CONFLICTING_IMPLEMENTED_TYPE, functionPrivateName));
-      }
+
       // Check whether the extended interfaces have any conflicts
       if (functionType.getExtendedInterfacesCount() > 1) {
         // Only check when extending more than one interfaces

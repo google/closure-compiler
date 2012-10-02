@@ -352,21 +352,27 @@ final class FunctionTypeBuilder {
         }
       }
 
-      // implemented interfaces
-      if (isConstructor || isInterface) {
-        implementedInterfaces = Lists.newArrayList();
-        for (JSTypeExpression t : info.getImplementedInterfaces()) {
-          JSType maybeInterType = t.evaluate(scope, typeRegistry);
-          if (maybeInterType != null &&
-              maybeInterType.setValidator(new ImplementedTypeValidator())) {
-            implementedInterfaces.add((ObjectType) maybeInterType);
+      // Implemented interfaces (for constructors only).
+      if (info.getImplementedInterfaceCount() > 0) {
+        if (isConstructor) {
+          implementedInterfaces = Lists.newArrayList();
+          for (JSTypeExpression t : info.getImplementedInterfaces()) {
+            JSType maybeInterType = t.evaluate(scope, typeRegistry);
+            if (maybeInterType != null &&
+                maybeInterType.setValidator(new ImplementedTypeValidator())) {
+              implementedInterfaces.add((ObjectType) maybeInterType);
+            }
           }
+        } else if (isInterface) {
+          reportWarning(
+              TypeCheck.CONFLICTING_IMPLEMENTED_TYPE, fnName);
+        } else {
+          reportWarning(CONSTRUCTOR_REQUIRED, "@implements", fnName);
         }
-      } else if (info.getImplementedInterfaceCount() > 0) {
-        reportWarning(CONSTRUCTOR_REQUIRED, "@implements", fnName);
       }
 
-      // extended interfaces (for interface only)
+      // extended interfaces (for interfaces only)
+      // We've already emitted a warning if this is not an interface.
       if (isInterface) {
         extendedInterfaces = Lists.newArrayList();
         for (JSTypeExpression t : info.getExtendedInterfaces()) {
