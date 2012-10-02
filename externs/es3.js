@@ -280,20 +280,22 @@ Object.prototype.__noSuchMethod__ = function(fun) {};
  * Points to an object's context.  For top-level objects, this is the e.g. window.
  * Mozilla-only.
  *
- * @return {Object}
+ * @type {Object}
  * @deprecated
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/parent
  */
-Object.prototype.__parent__ = function(fun) {};
+Object.prototype.__parent__;
 
 /**
  * Points to the object which was used as prototype when the object was instantiated.
  * Mozilla-only.
  *
- * @return {Object}
+ * Will be null on Object.prototype.
+ *
+ * @type {Object}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/proto
  */
-Object.prototype.__proto__ = function(fun) {};
+Object.prototype.__proto__;
 
 /**
  * Determine whether the specified property in an object can be enumerated by a
