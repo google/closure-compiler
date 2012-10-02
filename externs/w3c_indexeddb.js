@@ -346,7 +346,7 @@ IDBDatabase.prototype.description;
 IDBDatabase.prototype.version;
 
 /**
- * @type {Array.<string>}
+ * @type {DOMStringList}
  * @const
  */
 IDBDatabase.prototype.objectStoreNames;
