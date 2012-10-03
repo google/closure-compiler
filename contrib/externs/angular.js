@@ -191,7 +191,7 @@ angular.module = function(name, opt_requires, opt_configFn) {};
  *   provider:
  *       function(string, (Function|Array.<string|Function>)):angular.Module,
  *   requires: Array.<string>,
- *   run: function(function()):angular.Module,
+ *   run: function((Function|Array.<string|Function>)):angular.Module,
  *   service:
  *       function(string, (Function|Array.<string|Function>)):angular.Module,
  *   value: function(string, *):angular.Module
@@ -248,7 +248,7 @@ angular.Module.filter = function(name, filterFactory) {};
 angular.Module.provider = function(name, providerType) {};
 
 /**
- * @param {function()} initializationFn
+ * @param {Function|Array.<string|Function>} initializationFn
  * @return {angular.Module}
  */
 angular.Module.run = function(initializationFn) {};
