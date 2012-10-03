@@ -1119,6 +1119,61 @@ Element.prototype.unselectable;
 
 /**
  * @constructor
+ * @see http://msdn.microsoft.com/en-us/library/aa752462(v=vs.85).aspx
+ */
+function HTMLFiltersCollection() {}
+
+/**
+ * @see http://msdn.microsoft.com/en-us/library/aa752463(v=vs.85).aspx
+ * @type {number}
+ */
+HTMLFiltersCollection.prototype.length;
+
+/**
+ * @see http://msdn.microsoft.com/en-us/library/ms537452(v=vs.85).aspx
+ * @type {HTMLFiltersCollection}
+ */
+Element.prototype.filters;
+
+/**
+ * @constructor
+ * @see http://msdn.microsoft.com/en-us/library/ms532853(v=vs.85).aspx
+ */
+function HTMLFilter() {}
+
+/**
+ * @see http://msdn.microsoft.com/en-us/library/ms532954(v=vs.85).aspx
+ */
+HTMLFilter.prototype.apply = function() {};
+
+/**
+ * @constructor
+ * @extends {HTMLFilter}
+ * @see http://msdn.microsoft.com/en-us/library/ms532967(v=vs.85).aspx
+ */
+function AlphaFilter() {}
+
+/**
+ * @see http://msdn.microsoft.com/en-us/library/ms532910(v=vs.85).aspx
+ * @type {number}
+ */
+AlphaFilter.prototype.Opacity;
+
+/**
+ * @constructor
+ * @extends {HTMLFilter}
+ * @see http://msdn.microsoft.com/en-us/library/ms532969(v=vs.85).aspx
+ */
+function AlphaImageLoaderFilter() {}
+
+/**
+ * @see http://msdn.microsoft.com/en-us/library/ms532920(v=vs.85).aspx
+ * @type {string}
+ */
+AlphaImageLoaderFilter.prototype.sizingMethod;
+
+/**
+ * @constructor
  * @see http://msdn.microsoft.com/en-us/library/ms535866(VS.85).aspx
  */
 function Location() {}
