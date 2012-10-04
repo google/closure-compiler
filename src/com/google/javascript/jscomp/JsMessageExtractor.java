@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.javascript.rhino.Node;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -51,11 +50,21 @@ public class JsMessageExtractor {
 
   private final JsMessage.Style style;
   private final JsMessage.IdGenerator idGenerator;
+  private final CompilerOptions options;
 
-  public JsMessageExtractor(JsMessage.IdGenerator idGenerator,
+  public JsMessageExtractor(
+      JsMessage.IdGenerator idGenerator,
       JsMessage.Style style) {
+    this(idGenerator, style, new CompilerOptions());
+  }
+
+  public JsMessageExtractor(
+      JsMessage.IdGenerator idGenerator,
+      JsMessage.Style style,
+      CompilerOptions options) {
     this.idGenerator = idGenerator;
     this.style = style;
+    this.options = options;
   }
 
   /**
@@ -116,17 +125,13 @@ public class JsMessageExtractor {
     compiler.init(
         ImmutableList.<SourceFile>of(),
         Lists.newArrayList(inputs),
-        new CompilerOptions());
+        options);
+    compiler.parseInputs();
 
     ExtractMessagesVisitor extractCompilerPass =
         new ExtractMessagesVisitor(compiler);
-    for (SourceFile input : inputs) {
-      // Parse the JS files individually, to prevent out-of-memory
-      // problems.
-      Node root = new JsAst(input).getAstRoot(compiler);
-
-      // Traverse the returned nodes and extract messages.
-      extractCompilerPass.process(null, root);
+    if (compiler.getErrors().length == 0) {
+      extractCompilerPass.process(null, compiler.getRoot());
     }
 
     JSError[] errors = compiler.getErrors();

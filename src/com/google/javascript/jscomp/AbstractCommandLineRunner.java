@@ -206,6 +206,36 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   protected void initOptionsFromFlags(CompilerOptions options) {}
 
   /**
+   * A helper function for creating the dependency options object.
+   */
+  static DependencyOptions createDependencyOptions(
+      boolean manageClosureDependencies,
+      boolean onlyClosureDependencies,
+      List<String> closureEntryPoints)
+      throws FlagUsageException {
+    if (onlyClosureDependencies) {
+      if (closureEntryPoints.isEmpty()) {
+        throw new FlagUsageException("When only_closure_dependencies is "
+          + "on, you must specify at least one closure_entry_point");
+      }
+
+      return new DependencyOptions()
+          .setDependencyPruning(true)
+          .setDependencySorting(true)
+          .setMoocherDropping(true)
+          .setEntryPoints(closureEntryPoints);
+    } else if (manageClosureDependencies ||
+        closureEntryPoints.size() > 0) {
+      return new DependencyOptions()
+          .setDependencyPruning(true)
+          .setDependencySorting(true)
+          .setMoocherDropping(false)
+          .setEntryPoints(closureEntryPoints);
+    }
+    return null;
+  }
+
+  /**
    * Sets options based on the configurations set flags API.
    * Called during the run() run() method.
    * If you want to ignore the flags API, or interpret flags your own way,
@@ -232,25 +262,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.setTweakProcessing(config.tweakProcessing);
     createDefineOrTweakReplacements(config.tweak, options, true);
 
-    // Dependency options
-    if (config.onlyClosureDependencies) {
-      if (config.closureEntryPoints.isEmpty()) {
-        throw new FlagUsageException("When only_closure_dependencies is "
-          + "on, you must specify at least one closure_entry_point");
-      }
-
-      options.setDependencyOptions(new DependencyOptions()
-          .setDependencyPruning(true)
-          .setDependencySorting(true)
-          .setMoocherDropping(true)
-          .setEntryPoints(config.closureEntryPoints));
-    } else if (config.manageClosureDependencies ||
-        config.closureEntryPoints.size() > 0) {
-      options.setDependencyOptions(new DependencyOptions()
-          .setDependencyPruning(true)
-          .setDependencySorting(true)
-          .setMoocherDropping(false)
-          .setEntryPoints(config.closureEntryPoints));
+    DependencyOptions depOptions = createDependencyOptions(
+        config.manageClosureDependencies,
+        config.onlyClosureDependencies,
+        config.closureEntryPoints);
+    if (depOptions != null) {
+      options.setDependencyOptions(depOptions);
     }
 
     options.devMode = config.jscompDevMode;
