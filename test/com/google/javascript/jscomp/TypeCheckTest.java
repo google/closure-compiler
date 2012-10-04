@@ -5848,6 +5848,34 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: boolean");
   }
 
+  public void testIssue61() throws Exception {
+    testTypes(
+        "var ns = {};" +
+        "(function() {" +
+        "  /** @param {string} b */" +
+        "  ns.a = function(b) {};" +
+        "})();" +
+        "function d() {" +
+        "  ns.a(123);" +
+        "}",
+        "actual parameter 1 of ns.a does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void testIssue61b() throws Exception {
+    testTypes(
+        "var ns = {};" +
+        "(function() {" +
+        "  /** @param {string} b */" +
+        "  ns.a = function(b) {};" +
+        "})();" +
+        "ns.a(123);",
+        "actual parameter 1 of ns.a does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
   public void testIssue86() throws Exception {
     testTypes(
         "/** @interface */ function I() {}" +
@@ -6517,11 +6545,12 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testQualifiedNameInference6() throws Exception {
     testTypes(
-        "var ns = {}; " +
+        "/** @const */ var ns = {}; " +
         "/** @param {number} x */ ns.foo = function(x) {};" +
         "(function() { " +
         "    ns.foo = function(x) {};" +
-        "    ns.foo(true); })();",
+        "    ns.foo(true); " +
+        "})();",
         "actual parameter 1 of ns.foo does not match formal parameter\n" +
         "found   : boolean\n" +
         "required: number");
@@ -6542,7 +6571,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testQualifiedNameInference8() throws Exception {
-    testTypes(
+    // We may need to reshuffle name resolution order so that the @param
+    // type resolves correctly.
+    testClosureTypesMultipleWarnings(
         "var ns = {}; " +
         "(function() { " +
         "  /** @constructor \n * @param {number} x */ " +
@@ -6550,7 +6581,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "})();" +
         "/** @param {ns.Foo} x */ function f(x) {}" +
         "f(new ns.Foo(true));",
-        "Bad type annotation. Unknown type ns.Foo");
+        Lists.newArrayList(
+            "Bad type annotation. Unknown type ns.Foo",
+            "actual parameter 1 of ns.Foo does not match formal parameter\n" +
+            "found   : boolean\n" +
+            "required: number"));
   }
 
   public void testQualifiedNameInference9() throws Exception {
@@ -9746,7 +9781,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testTypeCheckStandaloneAST() throws Exception {
     Node n = compiler.parseTestCode("function Foo() { }");
     typeCheck(n);
-    TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
+    MemoizedScopeCreator scopeCreator = new MemoizedScopeCreator(
+        new TypedScopeCreator(compiler));
     Scope topScope = scopeCreator.createScope(n, null);
 
     Node second = compiler.parseTestCode("new Foo");

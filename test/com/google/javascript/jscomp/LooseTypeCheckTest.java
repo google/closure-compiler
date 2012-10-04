@@ -6848,7 +6848,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testTypeCheckStandaloneAST() throws Exception {
     Node n = compiler.parseTestCode("function Foo() { }");
     typeCheck(n);
-    TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
+    MemoizedScopeCreator scopeCreator =
+        new MemoizedScopeCreator(new TypedScopeCreator(compiler));
     Scope topScope = scopeCreator.createScope(n, null);
 
     Node second = compiler.parseTestCode("new Foo");

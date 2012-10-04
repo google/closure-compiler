@@ -20,7 +20,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.jscomp.ScopeCreator;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -67,7 +66,7 @@ public class InferJSDocInfoTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        ScopeCreator scopeCreator =
+        MemoizedScopeCreator scopeCreator =
             new MemoizedScopeCreator(new TypedScopeCreator(compiler));
         Scope topScope = scopeCreator.createScope(root.getParent(), null);
         (new TypeInferencePass(

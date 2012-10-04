@@ -1162,7 +1162,7 @@ public class DefaultPassConfig extends PassConfig {
         }
         @Override
         public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-          makeTypeInference(compiler).inferTypes(scriptRoot);
+          makeTypeInference(compiler).inferAllScopes(scriptRoot);
         }
       };
     }

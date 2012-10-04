@@ -78,6 +78,9 @@ class TypeInference
   private final FlowScope bottomScope;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
 
+  // For convenience
+  private final ObjectType unknownType;
+
   TypeInference(AbstractCompiler compiler, ControlFlowGraph<Node> cfg,
                 ReverseAbstractInterpreter reverseInterpreter,
                 Scope functionScope,
@@ -86,7 +89,11 @@ class TypeInference
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
     this.reverseInterpreter = reverseInterpreter;
+    this.unknownType = registry.getNativeObjectType(UNKNOWN_TYPE);
+
     this.syntacticScope = functionScope;
+    inferArguments(functionScope);
+
     this.functionScope = LinkedFlowScope.createEntryLattice(functionScope);
     this.assertionFunctionsMap = assertionFunctionsMap;
 
@@ -105,7 +112,40 @@ class TypeInference
     }
 
     this.bottomScope = LinkedFlowScope.createEntryLattice(
-        new Scope(functionScope.getRootNode(), functionScope.getTypeOfThis()));
+        Scope.createLatticeBottom(functionScope.getRootNode()));
+  }
+
+  /**
+   * Infers all of a function's arguments if their types aren't declared.
+   */
+  private void inferArguments(Scope functionScope) {
+    Node functionNode = functionScope.getRootNode();
+    Node astParameters = functionNode.getFirstChild().getNext();
+    FunctionType functionType =
+        JSType.toMaybeFunctionType(functionNode.getJSType());
+    if (functionType != null) {
+      Node parameterTypes = functionType.getParametersNode();
+      if (parameterTypes != null) {
+        Node parameterTypeNode = parameterTypes.getFirstChild();
+        for (Node astParameter : astParameters.children()) {
+          if (parameterTypeNode == null) {
+            return;
+          }
+
+          Var var = functionScope.getVar(astParameter.getString());
+          Preconditions.checkNotNull(var);
+          if (var.isTypeInferred() &&
+              var.getType() == unknownType &&
+              parameterTypeNode.getJSType() != null) {
+            JSType newType = parameterTypeNode.getJSType();
+            var.setType(newType);
+            astParameter.setJSType(newType);
+          }
+
+          parameterTypeNode = parameterTypeNode.getNext();
+        }
+      }
+    }
   }
 
   @Override
@@ -494,7 +534,7 @@ class TypeInference
         String qualifiedName = left.getQualifiedName();
         if (qualifiedName != null) {
           scope.inferQualifiedSlot(left, qualifiedName,
-              leftType == null ? getNativeType(UNKNOWN_TYPE) : leftType,
+              leftType == null ? unknownType : leftType,
               resultType);
         }
 
@@ -640,7 +680,7 @@ class TypeInference
         if (!unflowable && !nonLocalInferredSlot) {
           type = var.getType();
           if (type == null) {
-            type = getNativeType(UNKNOWN_TYPE);
+            type = unknownType;
           }
         }
       }
@@ -692,7 +732,7 @@ class TypeInference
         JSType valueType = NodeUtil.getObjectLitKeyTypeFromValueType(
             name, rawValueType);
         if (valueType == null) {
-          valueType = getNativeType(UNKNOWN_TYPE);
+          valueType = unknownType;
         }
         objectType.defineInferredProperty(memberName, valueType, name);
 
@@ -707,11 +747,11 @@ class TypeInference
           }
 
           scope.inferQualifiedSlot(name, qKeyName,
-              oldType == null ? getNativeType(UNKNOWN_TYPE) : oldType,
+              oldType == null ? unknownType : oldType,
               valueType);
         }
       } else {
-        n.setJSType(getNativeType(UNKNOWN_TYPE));
+        n.setJSType(unknownType);
       }
     }
     return scope;
@@ -725,17 +765,17 @@ class TypeInference
     JSType leftType = left.getJSType();
     JSType rightType = right.getJSType();
 
-    JSType type = getNativeType(UNKNOWN_TYPE);
+    JSType type = unknownType;
     if (leftType != null && rightType != null) {
       boolean leftIsUnknown = leftType.isUnknownType();
       boolean rightIsUnknown = rightType.isUnknownType();
       if (leftIsUnknown && rightIsUnknown) {
-        type = getNativeType(UNKNOWN_TYPE);
+        type = unknownType;
       } else if ((!leftIsUnknown && leftType.isString()) ||
                  (!rightIsUnknown && rightType.isString())) {
         type = getNativeType(STRING_TYPE);
       } else if (leftIsUnknown || rightIsUnknown) {
-        type = getNativeType(UNKNOWN_TYPE);
+        type = unknownType;
       } else if (isAddedAsNumber(leftType) && isAddedAsNumber(rightType)) {
         type = getNativeType(NUMBER_TYPE);
       } else {
@@ -950,7 +990,6 @@ class TypeInference
             iArgumentType.isFunctionType() &&
             iArgument.getJSDocInfo() == null) {
           iArgument.setJSType(restrictedParameter);
-          iArgument.putBooleanProp(Node.INFERRED_FUNCTION, true);
         }
       }
       i++;
@@ -1115,7 +1154,7 @@ class TypeInference
     if (constructorType != null) {
       constructorType = constructorType.restrictByNotNullOrUndefined();
       if (constructorType.isUnknownType()) {
-        type = getNativeType(UNKNOWN_TYPE);
+        type = unknownType;
       } else {
         FunctionType ct = constructorType.toMaybeFunctionType();
         if (ct == null && constructorType instanceof FunctionType) {
@@ -1214,7 +1253,6 @@ class TypeInference
     // 2) A globally declared qualified name (which is in the FlowScope)
     // 3) A property on the owner type (which is on objType)
     // 4) A name in the type registry (as a last resort)
-    JSType unknownType = getNativeType(UNKNOWN_TYPE);
     JSType propertyType = null;
     boolean isLocallyInferred = false;
 
@@ -1249,7 +1287,7 @@ class TypeInference
     }
 
     if (propertyType == null) {
-      return getNativeType(UNKNOWN_TYPE);
+      return unknownType;
     } else if (propertyType.isEquivalentTo(unknownType) && isLocallyInferred) {
       // If the type has been checked in this scope,
       // then use CHECKED_UNKNOWN_TYPE instead to indicate that.
@@ -1473,7 +1511,7 @@ class TypeInference
       // halting the compilation but we should log this and analyze to track
       // down why it happens. This is not critical and will be resolved over
       // time as the type checker is extended.
-      return getNativeType(UNKNOWN_TYPE);
+      return unknownType;
     } else {
       return jsType;
     }

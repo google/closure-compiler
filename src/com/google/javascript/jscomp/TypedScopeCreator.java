@@ -148,6 +148,9 @@ final class TypedScopeCreator implements ScopeCreator {
   private final Map<Node, AstFunctionContents> functionAnalysisResults =
       Maps.newHashMap();
 
+  // For convenience
+  private final ObjectType unknownType;
+
   /**
    * Defer attachment of types to nodes until all type names
    * have been resolved. Then, we can resolve the type and attach it.
@@ -183,6 +186,7 @@ final class TypedScopeCreator implements ScopeCreator {
     this.codingConvention = codingConvention;
     this.typeRegistry = compiler.getTypeRegistry();
     this.typeParsingErrorReporter = typeRegistry.getErrorReporter();
+    this.unknownType = typeRegistry.getNativeObjectType(UNKNOWN_TYPE);
   }
 
   /**
@@ -197,6 +201,15 @@ final class TypedScopeCreator implements ScopeCreator {
     Scope newScope = null;
     AbstractScopeBuilder scopeBuilder = null;
     if (parent == null) {
+      JSType globalThis =
+          typeRegistry.getNativeObjectType(JSTypeNative.GLOBAL_THIS);
+
+      // Mark the main root, the externs root, and the src root
+      // with the global this type.
+      root.setJSType(globalThis);
+      root.getFirstChild().setJSType(globalThis);
+      root.getLastChild().setJSType(globalThis);
+
       // Run a first-order analysis over the syntax tree.
       (new FirstOrderFunctionAnalyzer(compiler, functionAnalysisResults))
           .process(root.getFirstChild(), root.getLastChild());
@@ -298,7 +311,7 @@ final class TypedScopeCreator implements ScopeCreator {
     NodeTraversal.traverse(
         compiler, root, new DiscoverEnumsAndTypedefs(typeRegistry));
 
-    Scope s = new Scope(root, compiler);
+    Scope s = Scope.createGlobalScope(root);
     declareNativeFunctionType(s, ARRAY_FUNCTION_TYPE);
     declareNativeFunctionType(s, BOOLEAN_OBJECT_FUNCTION_TYPE);
     declareNativeFunctionType(s, DATE_FUNCTION_TYPE);
@@ -613,7 +626,7 @@ final class TypedScopeCreator implements ScopeCreator {
         } else {
           type = lendsVar.getType();
           if (type == null) {
-            type = typeRegistry.getNativeType(UNKNOWN_TYPE);
+            type = unknownType;
           }
           if (!type.isSubtype(typeRegistry.getNativeType(OBJECT_TYPE))) {
             compiler.report(
@@ -791,8 +804,7 @@ final class TypedScopeCreator implements ScopeCreator {
       JSType type = getDeclaredType(sourceName, info, name, value);
       if (type == null) {
         // The variable's type will be inferred.
-        type = name.isFromExterns() ?
-            getNativeType(UNKNOWN_TYPE) : null;
+        type = name.isFromExterns() ? unknownType : null;
       }
       defineSlot(name, var, type);
     }
@@ -900,17 +912,16 @@ final class TypedScopeCreator implements ScopeCreator {
             }
           }
 
-          FunctionType overriddenPropType = null;
+          FunctionType overriddenType = null;
           if (ownerType != null && propName != null) {
-            overriddenPropType =
-                findOverriddenFunction(ownerType, propName);
+            overriddenType = findOverriddenFunction(ownerType, propName);
           }
 
           FunctionTypeBuilder builder =
               new FunctionTypeBuilder(name, compiler, errorRoot, sourceName,
                   scope)
               .setContents(getFunctionAnalysisResults(fnRoot))
-              .inferFromOverriddenFunction(overriddenPropType, parametersNode)
+              .inferFromOverriddenFunction(overriddenType, parametersNode)
               .inferTemplateTypeName(info)
               .inferReturnType(info)
               .inferInheritance(info);
@@ -1686,7 +1697,6 @@ final class TypedScopeCreator implements ScopeCreator {
         // If we see a stub property, make sure to register this property
         // in the type registry.
         ObjectType ownerType = getObjectSlot(ownerName);
-        ObjectType unknownType = typeRegistry.getNativeObjectType(UNKNOWN_TYPE);
         defineSlot(n, parent, unknownType, true);
 
         if (ownerType != null &&
@@ -1832,7 +1842,7 @@ final class TypedScopeCreator implements ScopeCreator {
       // TODO(nicksantos|user): This is a terrible, terrible hack
       // to bail out on recursive typedefs. We'll eventually need
       // to handle these properly.
-      typeRegistry.declareType(typedef, getNativeType(UNKNOWN_TYPE));
+      typeRegistry.declareType(typedef, unknownType);
 
       JSType realType = info.getTypedefType().evaluate(scope, typeRegistry);
       if (realType == null) {
@@ -1934,8 +1944,6 @@ final class TypedScopeCreator implements ScopeCreator {
     private void declareArguments(Node functionNode) {
       Node astParameters = functionNode.getFirstChild().getNext();
       Node body = astParameters.getNext();
-      boolean isFnTypeInferred = functionNode.getBooleanProp(
-          Node.INFERRED_FUNCTION);
       FunctionType functionType =
           JSType.toMaybeFunctionType(functionNode.getJSType());
       if (functionType != null) {
@@ -1943,12 +1951,17 @@ final class TypedScopeCreator implements ScopeCreator {
         if (jsDocParameters != null) {
           Node jsDocParameter = jsDocParameters.getFirstChild();
           for (Node astParameter : astParameters.children()) {
+            JSType paramType = jsDocParameter == null ?
+                unknownType : jsDocParameter.getJSType();
+            if (paramType == null) {
+              paramType = unknownType;
+            }
+
+            defineSlot(astParameter, functionNode, paramType,
+                // inferred iff this is the unknown type.
+                unknownType == paramType);
             if (jsDocParameter != null) {
-              defineSlot(astParameter, functionNode,
-                  jsDocParameter.getJSType(), isFnTypeInferred);
               jsDocParameter = jsDocParameter.getNext();
-            } else {
-              defineSlot(astParameter, functionNode, null, true);
             }
           }
         }

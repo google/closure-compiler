@@ -365,7 +365,7 @@ public class LiveVariableAnalysisTest extends TestCase {
     script.setInputId(new InputId("test"));
     assertEquals(0, compiler.getErrorCount());
     Scope scope = new SyntacticScopeCreator(compiler).createScope(
-        n, new Scope(script, compiler));
+        n, Scope.createGlobalScope(script));
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     cfa.process(null, n);
     ControlFlowGraph<Node> cfg = cfa.getCfg();

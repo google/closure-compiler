@@ -278,7 +278,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private final JSTypeRegistry typeRegistry;
   private Scope topScope;
 
-  private ScopeCreator scopeCreator;
+  private MemoizedScopeCreator scopeCreator;
 
   private final CheckLevel reportMissingOverride;
   private final CheckLevel reportUnknownTypes;
@@ -303,7 +303,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ReverseAbstractInterpreter reverseInterpreter,
       JSTypeRegistry typeRegistry,
       Scope topScope,
-      ScopeCreator scopeCreator,
+      MemoizedScopeCreator scopeCreator,
       CheckLevel reportMissingOverride,
       CheckLevel reportUnknownTypes) {
     this.compiler = compiler;

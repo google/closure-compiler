@@ -68,7 +68,7 @@ class SyntacticScopeCreator implements ScopeCreator {
   public Scope createScope(Node n, Scope parent) {
     inputId = null;
     if (parent == null) {
-      scope = new Scope(n, compiler);
+      scope = Scope.createGlobalScope(n);
     } else {
       scope = new Scope(parent, n);
     }

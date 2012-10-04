@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollect
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.ObjectType;
 
 import junit.framework.TestCase;
 
@@ -51,7 +50,7 @@ public class GlobalVarReferenceMapTest extends TestCase {
       Lists.newArrayList(INPUT1, INPUT2, INPUT3), Lists.newArrayList(EXTERN1));
   private final Map<Var, ReferenceCollection> globalMap = Maps.newHashMap();
   private final Node root = new Node(Token.BLOCK);
-  private final Scope globalScope = new Scope(root, (ObjectType) null);
+  private final Scope globalScope = Scope.createGlobalScope(root);
   private Node scriptRoot = new Node(Token.SCRIPT);
 
   // In the initial setUp we have 3 references to var1 (one in each input) and
@@ -179,7 +178,7 @@ public class GlobalVarReferenceMapTest extends TestCase {
   }
 
   public void testUpdateReferencesWithGlobalScope() {
-    Scope newGlobalScope = new Scope(root, (ObjectType) null);
+    Scope newGlobalScope = Scope.createGlobalScope(root);
     map.updateReferencesWithGlobalScope(newGlobalScope);
     ReferenceCollection references =
         map.getReferences(globalScope.getVar(VAR1));

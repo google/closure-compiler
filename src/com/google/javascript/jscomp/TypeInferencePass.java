@@ -38,12 +38,12 @@ class TypeInferencePass implements CompilerPass {
   private final AbstractCompiler compiler;
   private final ReverseAbstractInterpreter reverseInterpreter;
   private Scope topScope;
-  private ScopeCreator scopeCreator;
+  private MemoizedScopeCreator scopeCreator;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
 
   TypeInferencePass(AbstractCompiler compiler,
       ReverseAbstractInterpreter reverseInterpreter,
-      Scope topScope, ScopeCreator scopeCreator) {
+      Scope topScope, MemoizedScopeCreator scopeCreator) {
     this.compiler = compiler;
     this.reverseInterpreter = reverseInterpreter;
     this.topScope = topScope;
@@ -70,17 +70,43 @@ class TypeInferencePass implements CompilerPass {
     Preconditions.checkState(
         externsRoot == null || externsAndJs.hasChild(externsRoot));
 
-    inferTypes(externsAndJs);
+    inferAllScopes(externsAndJs);
   }
 
   /** Entry point for type inference when running over part of the tree. */
-  void inferTypes(Node node) {
-    NodeTraversal inferTypes = new NodeTraversal(
-        compiler, new TypeInferringCallback(), scopeCreator);
-    inferTypes.traverseWithScope(node, topScope);
+  void inferAllScopes(Node node) {
+    // Type analysis happens in two major phases.
+    // 1) Finding all the symbols.
+    // 2) Propagating all the inferred types.
+    //
+    // The order of this analysis is non-obvious. In a complete inference
+    // system, we may need to backtrack arbitrarily far. But the compile-time
+    // costs would be unacceptable.
+    //
+    // We do one pass where we do typed scope creation for all scopes
+    // in pre-order.
+    //
+    // Then we do a second pass where we do all type inference
+    // (type propagation) in pre-order.
+    //
+    // We use a memoized scope creator so that we never create a scope
+    // more than once.
+    //
+    // This will allow us to handle cases like:
+    // var ns = {};
+    // (function() { /** JSDoc */ ns.method = function() {}; })();
+    // ns.method();
+    // In this code, we need to build the symbol table for the inner scope in
+    // order to propagate the type of ns.method in the outer scope.
+    (new NodeTraversal(
+        compiler, new FirstScopeBuildingCallback(), scopeCreator))
+        .traverseWithScope(node, topScope);
+    (new NodeTraversal(
+        compiler, new SecondScopeBuildingCallback(), scopeCreator))
+        .traverseWithScope(node, topScope);
   }
 
-  void inferTypes(NodeTraversal t, Node n, Scope scope) {
+  void inferScope(Node n, Scope scope) {
     TypeInference typeInference =
         new TypeInference(
             compiler, computeCfg(n), reverseInterpreter, scope,
@@ -92,14 +118,26 @@ class TypeInferencePass implements CompilerPass {
       compiler.getTypeRegistry().resolveTypesInScope(scope);
 
     } catch (DataFlowAnalysis.MaxIterationsExceededException e) {
-      compiler.report(t.makeError(n, DATAFLOW_ERROR));
+      compiler.report(JSError.make(n.getSourceFileName(), n, DATAFLOW_ERROR));
     }
   }
 
-  private class TypeInferringCallback extends AbstractScopedCallback {
+  private class FirstScopeBuildingCallback extends AbstractScopedCallback {
     @Override
     public void enterScope(NodeTraversal t) {
-      inferTypes(t, t.getCurrentNode(), t.getScope());
+      t.getScope();
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      // Do nothing
+    }
+  }
+
+  private class SecondScopeBuildingCallback extends AbstractScopedCallback {
+    @Override
+    public void enterScope(NodeTraversal t) {
+      inferScope(t.getScope().getRootNode(), t.getScope());
     }
 
     @Override

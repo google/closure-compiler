@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -59,9 +57,6 @@ public class Scope
   private final Scope parent;
   private final int depth;
   private final Node rootNode;
-
-  /** The type of {@code this} in the current scope. */
-  private final ObjectType thisType;
 
   /** Whether this is a bottom scope for the purposes of type inference. */
   private final boolean isBottom;
@@ -394,40 +389,29 @@ public class Scope
 
     this.parent = parent;
     this.rootNode = rootNode;
-    JSType nodeType = rootNode.getJSType();
-    if (nodeType != null && nodeType.isFunctionType()) {
-      thisType = nodeType.toMaybeFunctionType().getTypeOfThis();
-    } else {
-      thisType = parent.thisType;
-    }
     this.isBottom = false;
     this.depth = parent.depth + 1;
-  }
-
-
-  /**
-   * Creates a global Scope.
-   * @param rootNode  Typically the global BLOCK node.
-   */
-  Scope(Node rootNode, AbstractCompiler compiler) {
-    this.parent = null;
-    this.rootNode = rootNode;
-    thisType = compiler.getTypeRegistry().getNativeObjectType(GLOBAL_THIS);
-    this.isBottom = false;
-    this.depth = 0;
   }
 
   /**
    * Creates a empty Scope (bottom of the lattice).
    * @param rootNode Typically a FUNCTION node or the global BLOCK node.
-   * @param thisType the type of {@code this} in this scope
+   * @param isBottom Whether this is the bottom of a lattice. Otherwise,
+   *     it must be a global scope.
    */
-  Scope(Node rootNode, ObjectType thisType) {
+  private Scope(Node rootNode, boolean isBottom) {
     this.parent = null;
     this.rootNode = rootNode;
-    this.thisType = thisType;
-    this.isBottom = true;
+    this.isBottom = isBottom;
     this.depth = 0;
+  }
+
+  static Scope createGlobalScope(Node rootNode) {
+    return new Scope(rootNode, false);
+  }
+
+  static Scope createLatticeBottom(Node rootNode) {
+    return new Scope(rootNode, true);
   }
 
   /** The depth of the scope. The global scope has depth 0. */
@@ -471,7 +455,17 @@ public class Scope
    */
   @Override
   public ObjectType getTypeOfThis() {
-    return thisType;
+    if (isGlobal()) {
+      return ObjectType.cast(rootNode.getJSType());
+    }
+
+    Preconditions.checkState(rootNode.isFunction());
+    JSType nodeType = rootNode.getJSType();
+    if (nodeType != null && nodeType.isFunctionType()) {
+      return nodeType.toMaybeFunctionType().getTypeOfThis();
+    } else {
+      return parent.getTypeOfThis();
+    }
   }
 
   /**

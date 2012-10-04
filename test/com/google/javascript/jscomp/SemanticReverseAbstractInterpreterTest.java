@@ -42,7 +42,7 @@ public class SemanticReverseAbstractInterpreterTest
   }
 
   public FlowScope newScope() {
-    Scope globalScope = new Scope(new Node(Token.EMPTY), compiler);
+    Scope globalScope = Scope.createGlobalScope(new Node(Token.EMPTY));
     functionScope = new Scope(globalScope, new Node(Token.EMPTY));
     return LinkedFlowScope.createEntryLattice(functionScope);
   }
