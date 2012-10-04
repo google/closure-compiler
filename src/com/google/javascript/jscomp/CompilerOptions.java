@@ -1968,7 +1968,21 @@ public class CompilerOptions implements Serializable, Cloneable {
     /**
      * Nitpicky, shiny new JavaScript
      */
-    ECMASCRIPT5_STRICT,
+    ECMASCRIPT5_STRICT;
+
+    public static LanguageMode fromString(String value) {
+      if (value.equals("ECMASCRIPT5_STRICT") ||
+          value.equals("ES5_STRICT")) {
+        return CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT;
+      } else if (value.equals("ECMASCRIPT5") ||
+          value.equals("ES5")) {
+        return CompilerOptions.LanguageMode.ECMASCRIPT5;
+      } else if (value.equals("ECMASCRIPT3") ||
+                 value.equals("ES3")) {
+        return CompilerOptions.LanguageMode.ECMASCRIPT3;
+      }
+      return null;
+    }
   }
 
   /** When to do the extra sanity checks */
