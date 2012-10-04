@@ -817,17 +817,17 @@ Window.prototype.webkitResolveLocalFileSystemURI = function(uri, successCallback
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-createObjectURL
- * @param {!Blob} blob
+ * @param {!Object} obj
  * @return {string}
  */
-function createObjectURL(blob) {};
+function createObjectURL(obj) {};
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-createObjectURL
- * @param {!Blob} blob
+ * @param {!Object} obj
  * @return {string}
  */
-Window.prototype.createObjectURL = function(blob) {};
+Window.prototype.createObjectURL = function(obj) {};
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-revokeObjectURL
@@ -862,10 +862,10 @@ Window.prototype.webkitURL;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-createObjectURL
- * @param {!Blob} blob
+ * @param {!Object} obj
  * @return {string}
  */
-DOMURL.prototype.createObjectURL = function(blob) {};
+DOMURL.prototype.createObjectURL = function(obj) {};
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-revokeObjectURL
