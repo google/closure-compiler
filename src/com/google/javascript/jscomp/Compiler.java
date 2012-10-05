@@ -1407,8 +1407,7 @@ public class Compiler extends AbstractCompiler {
   private void hoistExterns(Node externsRoot) {
     boolean staleInputs = false;
     for (CompilerInput input : inputs) {
-      if (options.dependencyOptions.needsManagement() &&
-          options.closurePass) {
+      if (options.dependencyOptions.needsManagement()) {
         // If we're doing scanning dependency info anyway, use that
         // information to skip sources that obviously aren't externs.
         if (!input.getProvides().isEmpty() || !input.getRequires().isEmpty()) {
