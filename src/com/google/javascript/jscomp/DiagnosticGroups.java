@@ -131,6 +131,10 @@ public class DiagnosticGroups {
           VarCheck.STRICT_MODULE_DEP_ERROR,
           CheckGlobalNames.STRICT_MODULE_DEP_QNAME);
 
+  public static DiagnosticGroup VIOLATED_MODULE_DEP =
+      DiagnosticGroups.registerGroup("violatedModuleDep",
+          VarCheck.VIOLATED_MODULE_DEP_ERROR);
+
   public static DiagnosticGroup EXTERNS_VALIDATION =
       DiagnosticGroups.registerGroup("externsValidation",
           VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR,
