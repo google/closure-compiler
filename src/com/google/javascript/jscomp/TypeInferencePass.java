@@ -137,7 +137,10 @@ class TypeInferencePass implements CompilerPass {
   private class SecondScopeBuildingCallback extends AbstractScopedCallback {
     @Override
     public void enterScope(NodeTraversal t) {
-      inferScope(t.getScope().getRootNode(), t.getScope());
+      // Only infer the entry root, rather than the scope root.
+      // This ensures that incremental compilation only touches the root
+      // that's been swapped out.
+      inferScope(t.getCurrentNode(), t.getScope());
     }
 
     @Override
