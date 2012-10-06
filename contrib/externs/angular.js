@@ -666,7 +666,7 @@ angular.$interpolateProvider.endSymbol;
  *   port: function():number,
  *   protocol: function():string,
  *   replace: function(),
- *   search: function((string|Object.<string,string>)=, string=):string,
+ *   search: function((string|Object.<string,string>)=, ?string=):string,
  *   url: function(string=):string
  *   }}
  */
@@ -711,7 +711,7 @@ angular.$location.replace = function() {};
 
 /**
  * @param {(string|Object.<string, string>)=} opt_search
- * @param {string=} opt_paramValue
+ * @param {?string=} opt_paramValue
  * @return {string}
  */
 angular.$location.search = function(opt_search, opt_paramValue) {};
