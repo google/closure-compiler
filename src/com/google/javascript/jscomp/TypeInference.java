@@ -121,6 +121,12 @@ class TypeInference
   private void inferArguments(Scope functionScope) {
     Node functionNode = functionScope.getRootNode();
     Node astParameters = functionNode.getFirstChild().getNext();
+    Node iifeArgumentNode = null;
+
+    if (NodeUtil.isCallOrNewTarget(functionNode)) {
+      iifeArgumentNode = functionNode.getNext();
+    }
+
     FunctionType functionType =
         JSType.toMaybeFunctionType(functionNode.getJSType());
     if (functionType != null) {
@@ -128,21 +134,30 @@ class TypeInference
       if (parameterTypes != null) {
         Node parameterTypeNode = parameterTypes.getFirstChild();
         for (Node astParameter : astParameters.children()) {
-          if (parameterTypeNode == null) {
-            return;
-          }
-
           Var var = functionScope.getVar(astParameter.getString());
           Preconditions.checkNotNull(var);
           if (var.isTypeInferred() &&
-              var.getType() == unknownType &&
-              parameterTypeNode.getJSType() != null) {
-            JSType newType = parameterTypeNode.getJSType();
-            var.setType(newType);
-            astParameter.setJSType(newType);
+              var.getType() == unknownType) {
+            JSType newType = null;
+
+            if (iifeArgumentNode != null) {
+              newType = iifeArgumentNode.getJSType();
+            } else if (parameterTypeNode != null) {
+              newType = parameterTypeNode.getJSType();
+            }
+
+            if (newType != null) {
+              var.setType(newType);
+              astParameter.setJSType(newType);
+            }
           }
 
-          parameterTypeNode = parameterTypeNode.getNext();
+          if (parameterTypeNode != null) {
+            parameterTypeNode = parameterTypeNode.getNext();
+          }
+          if (iifeArgumentNode != null) {
+            iifeArgumentNode = iifeArgumentNode.getNext();
+          }
         }
       }
     }

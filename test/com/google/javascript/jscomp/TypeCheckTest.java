@@ -5848,6 +5848,25 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: boolean");
   }
 
+  public void testIIFE1() throws Exception {
+    testTypes(
+        "var namespace = {};" +
+        "/** @type {number} */ namespace.prop = 3;" +
+        "(function(ns) {" +
+        "  ns.prop = true;" +
+        "})(namespace);",
+        "assignment to property prop of ns\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
+  public void testNotIIFE1() throws Exception {
+    testTypes(
+        "/** @param {number} x */ function f(x) {}" +
+        "/** @param {...?} x */ function g(x) {}" +
+        "g(function(y) { f(y); }, true);");
+  }
+
   public void testIssue61() throws Exception {
     testTypes(
         "var ns = {};" +

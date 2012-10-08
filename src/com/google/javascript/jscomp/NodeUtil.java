@@ -2999,6 +2999,16 @@ public final class NodeUtil {
       call.getFirstChild().getNext(), index);
   }
 
+  /**
+   * Returns whether this is a target of a call or new.
+   */
+  static boolean isCallOrNewTarget(Node target) {
+    Node parent = target.getParent();
+    return parent != null
+        && NodeUtil.isCallOrNew(parent)
+        && parent.getFirstChild() == target;
+  }
+
   private static boolean isToStringMethodCall(Node call) {
     Node getNode = call.getFirstChild();
     if (isGet(getNode)) {
