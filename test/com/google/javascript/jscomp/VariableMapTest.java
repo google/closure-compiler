@@ -24,12 +24,34 @@ import junit.framework.TestCase;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Tests for {@link VariableMap}.
  *
  */
 public class VariableMapTest extends TestCase {
+
+  public void testCycle1() throws ParseException {
+    cycleTest(ImmutableMap.of("AAA", "a", "BBB", "b"));
+    cycleTest(ImmutableMap.of("AA:AA", "a", "BB:BB", "b"));
+    cycleTest(ImmutableMap.of("AAA", "a:a", "BBB", "b:b"));
+  }
+
+  public void cycleTest(Map<String, String> map) throws ParseException {
+    VariableMap in = new VariableMap(map);
+    String serialized = new String(in.toBytes(), Charsets.UTF_8);
+    VariableMap out = VariableMap.fromBytes(serialized.getBytes());
+    assertMapsEquals(in.toMap(), out.toMap());
+  }
+
+  public void assertMapsEquals(
+      Map<String, String> expected, Map<String, String> result) {
+    assertEquals(expected.size(), result.size());
+    for (String key : expected.keySet()) {
+      assertEquals(expected.get(key), result.get(key));
+    }
+  }
 
   public void testToBytes() {
     VariableMap vm = new VariableMap(ImmutableMap.of("AAA", "a", "BBB", "b"));
