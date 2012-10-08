@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
@@ -120,9 +121,9 @@ public class VariableMap {
     Writer writer = new OutputStreamWriter(baos, Charsets.UTF_8);
     try {
       for (Map.Entry<String, String> entry : map.entrySet()) {
-        writer.write(entry.getKey());
+        writer.write(escape(entry.getKey()));
         writer.write(SEPARATOR);
-        writer.write(entry.getValue());
+        writer.write(escape(entry.getValue()));
         writer.write('\n');
       }
       writer.close();
@@ -152,13 +153,47 @@ public class VariableMap {
     Map<String, String> map = new HashMap<String, String>();
 
     for (String line : lines) {
-      int pos = line.lastIndexOf(SEPARATOR);
+      int pos = findIndexOfChar(line, SEPARATOR);
       if (pos <= 0 || pos == line.length() - 1) {
         throw new ParseException("Bad line: " + line, 0);
       }
-      map.put(line.substring(0, pos), line.substring(pos + 1));
+      map.put(
+          unescape(line.substring(0, pos)),
+          unescape(line.substring(pos + 1)));
     }
     return new VariableMap(map);
+  }
+
+  private static String escape(String value) {
+    return value.replace("\\", "\\\\")
+        .replace(":", "\\:")
+        .replace("\n", "\\n");
+  }
+
+  private static int findIndexOfChar(String value, char stopChar) {
+    int len = value.length();
+    for (int i=0; i<len; i++) {
+      char c = value.charAt(i);
+      if (c == '\\' && ++i < len) {
+        c = value.charAt(i);
+      } else if (c == stopChar){
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  private static String unescape(CharSequence value) {
+    StringBuilder sb = new StringBuilder();
+    int len = value.length();
+    for (int i=0; i<len; i++) {
+      char c = value.charAt(i);
+      if (c == '\\' && ++i < len) {
+        c = value.charAt(i);
+      }
+      sb.append(c);
+    }
+    return sb.toString();
   }
 
   /**
@@ -169,5 +204,10 @@ public class VariableMap {
    */
   public static VariableMap fromMap(Map<String, String> map) {
     return new VariableMap(Maps.newHashMap(map));
+  }
+
+  @VisibleForTesting
+  Map<String, String> toMap() {
+    return map;
   }
 }

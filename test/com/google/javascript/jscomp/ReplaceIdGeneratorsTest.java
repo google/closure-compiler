@@ -25,16 +25,19 @@ import com.google.common.collect.ImmutableSet;
  */
 public class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
-  public boolean generatePseudoNames = false;
+  private boolean generatePseudoNames = false;
+  private ReplaceIdGenerators lastPass = null;
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new ReplaceIdGenerators(
+    lastPass = new ReplaceIdGenerators(
         compiler,
         new ImmutableSet.Builder<String>()
             .add("goog.events.getUniqueId")
-        .add("goog.place.getUniqueId").build(),
+            .add("goog.place.getUniqueId")
+            .build(),
         generatePseudoNames);
+    return lastPass;
   }
 
   @Override
@@ -52,6 +55,23 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
     test("foo.bar = goog.events.getUniqueId('foo_bar')",
          "foo.bar = 'a'",
          "foo.bar = 'foo_bar$0'");
+  }
+
+  public void testSerialization() {
+    testMap("var x = goog.events.getUniqueId('xxx');\n" +
+            "var y = goog.events.getUniqueId('yyy');\n",
+
+            "var x = 'a';\n" +
+            "var y = 'b';\n",
+
+            "[goog.events.getUniqueId]\n" +
+            "\n" +
+            "a:testcode:1\n" +
+            "b:testcode:2\n" +
+            "\n" +
+            "[goog.place.getUniqueId]\n" +
+            "\n" +
+            "\n");
   }
 
   public void testSimple() {
@@ -217,6 +237,11 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
         "var id = function() {};" +
         "if (x) {foo.bar = 'foo_bar$0'}");
+  }
+
+  private void testMap(String code, String expected, String expectedMap) {
+    test(code, expected);
+    assertEquals(expectedMap, lastPass.getIdGeneratorMap());
   }
 
   private void test(String code, String expected, String expectedPseudo) {
