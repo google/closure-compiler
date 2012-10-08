@@ -1854,8 +1854,9 @@ public class Node implements Cloneable, Serializable {
   /**
    * Sets the {@link JSDocInfo} attached to this node.
    */
-  public void setJSDocInfo(JSDocInfo info) {
+  public Node setJSDocInfo(JSDocInfo info) {
       putProp(JSDOC_INFO_PROP, info);
+      return this;
   }
 
   /**

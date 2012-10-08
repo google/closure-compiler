@@ -2206,6 +2206,68 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, code, "alert(2);");
   }
 
+  public void testGoogDefineClass1() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel level = CompilationLevel.ADVANCED_OPTIMIZATIONS;
+    level.setOptionsForCompilationLevel(options);
+    level.setTypeBasedOptimizationOptions(options);
+
+    String code = "" +
+        "var ns = {};\n" +
+        "ns.C = goog.defineClass(null, {\n" +
+        "  /** @constructor */\n" +
+        "  constructor: function () {this.someProperty = 1}\n" +
+        "});\n" +
+        "alert(new ns.C().someProperty + new ns.C().someProperty);\n";
+    assertTrue(options.inlineProperties);
+    assertTrue(options.collapseProperties);
+    // CollapseProperties used to prevent inlining this property.
+    test(options, code, "alert(2);");
+  }
+
+  public void testGoogDefineClass2() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel level = CompilationLevel.ADVANCED_OPTIMIZATIONS;
+    level.setOptionsForCompilationLevel(options);
+    level.setTypeBasedOptimizationOptions(options);
+
+    String code = "" +
+        "var C = goog.defineClass(null, {\n" +
+        "  /** @constructor */\n" +
+        "  constructor: function () {this.someProperty = 1}\n" +
+        "});\n" +
+        "alert(new C().someProperty + new C().someProperty);\n";
+    assertTrue(options.inlineProperties);
+    assertTrue(options.collapseProperties);
+    // CollapseProperties used to prevent inlining this property.
+    test(options, code, "alert(2);");
+  }
+
+  public void testGoogDefineClass3() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel level = CompilationLevel.ADVANCED_OPTIMIZATIONS;
+    level.setOptionsForCompilationLevel(options);
+    level.setTypeBasedOptimizationOptions(options);
+    WarningLevel warnings = WarningLevel.VERBOSE;
+    warnings.setOptionsForWarningLevel(options);
+
+    String code = "" +
+        "var C = goog.defineClass(null, {\n" +
+        "  /** @constructor */\n" +
+        "  constructor: function () {\n" +
+        "    /** @type {number} */\n" +
+        "    this.someProperty = 1},\n" +
+        "  /** @param {string} a */\n" +
+        "  someMethod: function (a) {}\n" +
+        "});" +
+        "var x = new C();\n" +
+        "x.someMethod(x.someProperty);\n";
+    assertTrue(options.inlineProperties);
+    assertTrue(options.collapseProperties);
+    // CollapseProperties used to prevent inlining this property.
+    test(options, code, TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
   public void testCheckConstants1() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;

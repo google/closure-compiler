@@ -195,6 +195,7 @@ public class DefaultPassConfig extends PassConfig {
 
     if (options.closurePass) {
       checks.add(closureGoogScopeAliases);
+      checks.add(closureRewriteGoogClass);
     }
 
     if (options.nameAnonymousFunctionsOnly) {
@@ -997,6 +998,15 @@ public class DefaultPassConfig extends PassConfig {
           compiler,
           preprocessorSymbolTable,
           options.getAliasTransformationHandler());
+    }
+  };
+
+  /** Rewrites goog.class */
+  final HotSwapPassFactory closureRewriteGoogClass =
+      new HotSwapPassFactory("closureRewriteGoogClass", true) {
+    @Override
+    protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
+      return new ClosureRewriteClass(compiler);
     }
   };
 
