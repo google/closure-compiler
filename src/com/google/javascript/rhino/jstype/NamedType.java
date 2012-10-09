@@ -172,30 +172,6 @@ class NamedType extends ProxyObjectType {
     return true;
   }
 
-  /**
-   * Two named types are equivalent if they are the same {@code
-   * ObjectType} object.  This is complicated by the fact that isEquivalent
-   * is sometimes called before we have a chance to resolve the type
-   * names.
-   *
-   * @return {@code true} iff {@code that} == {@code this} or {@code that}
-   *         is a {@link NamedType} whose reference is the same as ours,
-   *         or {@code that} is the type we reference.
-   */
-  @Override
-  public boolean isEquivalentTo(JSType that) {
-    if (this == that) {
-      return true;
-    }
-
-    ObjectType objType = ObjectType.cast(that);
-    if (objType != null) {
-      return objType.isNominalType() &&
-          reference.equals(objType.getReferenceName());
-    }
-    return false;
-  }
-
   @Override
   public int hashCode() {
     return reference.hashCode();

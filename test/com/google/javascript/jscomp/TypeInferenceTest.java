@@ -574,6 +574,26 @@ public class TypeInferenceTest extends TestCase {
     verifySubtypeOf("y", OBJECT_TYPE);
   }
 
+  public void testFor5() {
+    assuming("y", parameterize(
+        getNativeObjectType(ARRAY_TYPE), getNativeType(NUMBER_TYPE)));
+    inFunction(
+        "var x = null; for (var i = 0; i < y.length; i++) { x = y[i]; }");
+    verify("x", createNullableType(NUMBER_TYPE));
+    verify("i", NUMBER_TYPE);
+  }
+
+  public void testFor6() {
+    assuming("y", getNativeObjectType(ARRAY_TYPE));
+    inFunction(
+        "var x = null;" +
+        "for (var i = 0; i < y.length; i++) { " +
+        " if (y[i] == 'z') { x = y[i]; } " +
+        "}");
+    verify("x", getNativeType(UNKNOWN_TYPE));
+    verify("i", NUMBER_TYPE);
+  }
+
   public void testSwitch1() {
     assuming("x", NUMBER_TYPE);
     inFunction("var y = null; switch(x) {\n" +
@@ -1028,5 +1048,17 @@ public class TypeInferenceTest extends TestCase {
         "goog.asserts.assert(typeof x.prop != 'undefined');" +
         "out = x.prop;");
     verify("out", CHECKED_UNKNOWN_TYPE);
+  }
+
+  private ObjectType getNativeObjectType(JSTypeNative t) {
+    return registry.getNativeObjectType(t);
+  }
+
+  private JSType getNativeType(JSTypeNative t) {
+    return registry.getNativeType(t);
+  }
+
+  private JSType parameterize(ObjectType objType, JSType t) {
+    return registry.createParameterizedType(objType, t);
   }
 }

@@ -47,6 +47,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.ParameterizedType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 
 import junit.framework.TestCase;
@@ -586,5 +587,9 @@ public abstract class BaseJSTypeTestCase extends TestCase {
 
   protected final void assertTypeNotEquals(String msg, JSType a, JSType b) {
     Asserts.assertTypeNotEquals(msg, a, b);
+  }
+
+  protected final ParameterizedType parameterize(ObjectType objType, JSType t) {
+    return registry.createParameterizedType(objType, t);
   }
 }

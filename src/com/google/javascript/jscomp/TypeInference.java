@@ -897,9 +897,7 @@ class TypeInference
       }
     }
 
-    if (getJSType(callNode).differsFrom(narrowed)) {
-      callNode.setJSType(narrowed);
-    }
+    callNode.setJSType(narrowed);
     return scope;
   }
 
@@ -1216,6 +1214,7 @@ class TypeInference
     Node objNode = n.getFirstChild();
     Node property = n.getLastChild();
     scope = traverseChildren(n, scope);
+
     n.setJSType(
         getPropertyType(
             objNode.getJSType(), property.getString(), n, scope));

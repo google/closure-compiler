@@ -239,7 +239,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
 
   public void testIsEquivalentTo() {
     FunctionType type = new FunctionBuilder(registry).build();
-    assertFalse(type.isEquivalentTo(null));
+    assertFalse(type.equals(null));
     assertTrue(type.isEquivalentTo(type));
   }
 

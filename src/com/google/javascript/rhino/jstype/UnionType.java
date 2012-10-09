@@ -330,30 +330,22 @@ public class UnionType extends JSType {
    * Two union types are equal if they have the same number of alternates
    * and all alternates are equal.
    */
-  @Override
-  public boolean isEquivalentTo(JSType object) {
-    if (object == null) {
+  boolean checkUnionEquivalenceHelper(
+      UnionType that, boolean tolerateUnknowns) {
+    if (!tolerateUnknowns && alternates.size() != that.alternates.size()) {
       return false;
     }
-    if (object.isUnionType()) {
-      UnionType that = object.toMaybeUnionType();
-      if (alternates.size() != that.alternates.size()) {
+    for (JSType alternate : that.alternates) {
+      if (!hasAlternate(alternate, tolerateUnknowns)) {
         return false;
       }
-      for (JSType alternate : that.alternates) {
-        if (!hasAlternate(alternate)) {
-          return false;
-        }
-      }
-      return true;
-    } else {
-      return false;
     }
+    return true;
   }
 
-  private boolean hasAlternate(JSType type) {
+  private boolean hasAlternate(JSType type, boolean tolerateUnknowns) {
     for (JSType alternate : alternates) {
-      if (alternate.isEquivalentTo(type)) {
+      if (alternate.checkEquivalenceHelper(type, tolerateUnknowns)) {
         return true;
       }
     }

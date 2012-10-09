@@ -1779,6 +1779,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NULL_TYPE.getGreatestSubtype(
             createUnionType(forwardDeclaredNamedType, NULL_TYPE)));
     assertFalse(NULL_TYPE.isNominalConstructor());
+
+    assertTrue(NULL_TYPE.differsFrom(UNKNOWN_TYPE));
   }
 
   /**

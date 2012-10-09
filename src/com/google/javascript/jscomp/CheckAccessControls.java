@@ -486,7 +486,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
           // private access is always allowed in the same file.
           return;
         } else if (visibility == Visibility.PRIVATE &&
-            (currentClass == null || ownerType.differsFrom(currentClass))) {
+            (currentClass == null || !ownerType.isEquivalentTo(currentClass))) {
           if (docInfo.isConstructor() &&
               isValidPrivateConstructorAccess(parent)) {
             return;

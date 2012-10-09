@@ -116,11 +116,6 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public boolean isEquivalentTo(JSType that) {
-    return this == that;
-  }
-
-  @Override
   public int hashCode() {
     return System.identityHashCode(this);
   }

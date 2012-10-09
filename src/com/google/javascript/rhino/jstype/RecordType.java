@@ -114,25 +114,16 @@ class RecordType extends PrototypeObjectType {
     return !declared;
   }
 
-  @Override
-  public boolean isEquivalentTo(JSType other) {
-    if (!other.isRecordType()) {
-      return false;
-    }
-
-    // Compare properties.
-    RecordType otherRecord = other.toMaybeRecordType();
-    if (otherRecord == this) {
-      return true;
-    }
-
+  boolean checkRecordEquivalenceHelper(
+      RecordType otherRecord, boolean tolerateUnknowns) {
     Set<String> keySet = properties.keySet();
     Map<String, JSType> otherProps = otherRecord.properties;
     if (!otherProps.keySet().equals(keySet)) {
       return false;
     }
     for (String key : keySet) {
-      if (!otherProps.get(key).isEquivalentTo(properties.get(key))) {
+      if (!otherProps.get(key).checkEquivalenceHelper(
+              properties.get(key), tolerateUnknowns)) {
         return false;
       }
     }

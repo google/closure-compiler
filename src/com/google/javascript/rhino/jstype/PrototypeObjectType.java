@@ -486,7 +486,7 @@ class PrototypeObjectType extends ObjectType {
       // to avoid guessing.
       return true;
     }
-    return this.isImplicitPrototype(thatObj);
+    return thatObj != null && this.isImplicitPrototype(thatObj);
   }
 
   private boolean implicitPrototypeChainIsUnknown() {

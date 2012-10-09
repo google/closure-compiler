@@ -285,7 +285,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
 
   public void testIsEquivalentTo() {
     UnionType type = (UnionType) createUnionType(NUMBER_TYPE, STRING_TYPE);
-    assertFalse(type.isEquivalentTo(null));
+    assertFalse(type.equals(null));
     assertTrue(type.isEquivalentTo(type));
   }
 
