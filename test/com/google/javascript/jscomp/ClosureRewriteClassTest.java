@@ -20,6 +20,9 @@ import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_DESCRI
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_MODIFIERS_NOT_VALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_STATICS_NOT_VALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_SUPER_CLASS_NOT_VALID;
+import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_TARGET_INVALID;
+import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_UNEXPECTED_PARAMS;
+
 
 /**
  * Unit tests for ClosureRewriteGoogClass
@@ -36,6 +39,11 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     this.enableEcmaScript5(false);
+  }
+
+  @Override
+  protected int getNumRepetitions() {
+    return 1;
   }
 
   public void testBasic1() {
@@ -56,6 +64,31 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
 
         "var x = {};" +
         "{x.y = function() {};}");
+  }
+
+  public void testInnerClass1() {
+    test(
+        "var x = goog.defineClass(some.Super, {\n" +
+        "  constructor: function(){\n" +
+        "    this.foo = 1;\n" +
+        "  },\n" +
+        "  statics: {\n" +
+        "    inner: goog.defineClass(x,{\n" +
+        "      constructor: function(){\n" +
+        "        this.bar = 1;\n" +
+        "      }\n" +
+        "    })\n" +
+        "  }\n" +
+        "});",
+
+        "{" +
+        "var x=function(){this.foo=1};" +
+        "goog.inherits(x,some.Super);" +
+        "{" +
+        "x.inner=function(){this.bar=1};" +
+        "goog.inherits(x.inner,x);" +
+        "}" +
+        "}");
   }
 
   public void testComplete1() {
@@ -197,5 +230,27 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "  constructor: function(){}" +
         "}, foo);",
         GOOG_CLASS_MODIFIERS_NOT_VALID, true);
+  }
+
+  public void testInvalid6() {
+    testSame(
+        "var x = goog.defineClass(null, {" +
+        "  constructor: function(){}" +
+        "}, [], null);",
+        GOOG_CLASS_UNEXPECTED_PARAMS, true);
+  }
+
+  public void testInvalid7() {
+    testSame(
+        "goog.defineClass();",
+        GOOG_CLASS_TARGET_INVALID, true);
+
+    testSame(
+        "var x = goog.defineClass() || null;",
+        GOOG_CLASS_TARGET_INVALID, true);
+
+    testSame(
+        "({foo: goog.defineClass()});",
+        GOOG_CLASS_TARGET_INVALID, true);
   }
 }
