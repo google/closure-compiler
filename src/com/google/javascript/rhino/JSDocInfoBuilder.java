@@ -719,7 +719,7 @@ final public class JSDocInfoBuilder {
 
   /**
    * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isStruct()} flag set to {@code true}.
+   * {@link JSDocInfo#makesStructs()} flag set to {@code true}.
    *
    * @return {@code true} if the struct was recorded and {@code false}
    * if it was already defined or it was incompatible with the existing flags
@@ -736,7 +736,7 @@ final public class JSDocInfoBuilder {
 
   /**
    * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isDict()} flag set to {@code true}.
+   * {@link JSDocInfo#makesDicts()} flag set to {@code true}.
    *
    * @return {@code true} if the dict was recorded and {@code false}
    * if it was already defined or it was incompatible with the existing flags

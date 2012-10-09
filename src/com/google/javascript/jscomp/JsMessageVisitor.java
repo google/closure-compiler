@@ -271,7 +271,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
     if (needToCheckDuplications
         && !isUnnamedMsg
         && !extractedMessage.isExternal()) {
-      checkIfMessageDuplicated(extractedMessage, messageKey, msgNode);
+      checkIfMessageDuplicated(messageKey, msgNode);
     }
     trackMessage(traversal, extractedMessage,
         messageKey, msgNode, isUnnamedMsg);
@@ -340,12 +340,10 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
    * Checks if message already processed. If so - it generates 'message
    * duplicated' compiler error.
    *
-   * @param sourceName the source file name
    * @param msgName the name of the message
    * @param msgNode the node that represents JS message
    */
-  private void checkIfMessageDuplicated(JsMessage message, String msgName,
-      Node msgNode) {
+  private void checkIfMessageDuplicated(String msgName, Node msgNode) {
     if (messageNames.containsKey(msgName)) {
       MessageLocation location = messageNames.get(msgName);
       compiler.report(JSError.make(msgNode, MESSAGE_DUPLICATE_KEY,
