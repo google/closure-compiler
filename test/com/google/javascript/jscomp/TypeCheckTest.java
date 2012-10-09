@@ -5860,6 +5860,66 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testIIFE2() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "(function(ctor) {" +
+        "  /** @type {boolean} */ ctor.prop = true;" +
+        "})(Foo);" +
+        "/** @return {number} */ function f() { return Foo.prop; }",
+        "inconsistent return type\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
+  public void testIIFE3() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "(function(ctor) {" +
+        "  /** @type {boolean} */ ctor.prop = true;" +
+        "})(Foo);" +
+        "/** @param {number} x */ function f(x) {}" +
+        "f(Foo.prop);",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
+  public void testIIFE4() throws Exception {
+    testTypes(
+        "/** @const */ var namespace = {};" +
+        "(function(ns) {" +
+        "  /**\n" +
+        "   * @constructor\n" +
+        "   * @param {number} x\n" +
+        "   */\n" +
+        "   ns.Ctor = function(x) {};" +
+        "})(namespace);" +
+        "new namespace.Ctor(true);",
+        "actual parameter 1 of namespace.Ctor " +
+        "does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
+  public void testIIFE5() throws Exception {
+    // TODO(nicksantos): This behavior is currently incorrect.
+    // To handle this case properly, we'll need to change how we handle
+    // type resolution.
+    testTypes(
+        "/** @const */ var namespace = {};" +
+        "(function(ns) {" +
+        "  /**\n" +
+        "   * @constructor\n" +
+        "   */\n" +
+        "   ns.Ctor = function() {};" +
+        "   /** @type {boolean} */ ns.Ctor.prototype.bar = true;" +
+        "})(namespace);" +
+        "/** @param {namespace.Ctor} x\n" +
+        "  * @return {number} */ function f(x) { return x.bar; }",
+        "Bad type annotation. Unknown type namespace.Ctor");
+  }
+
   public void testNotIIFE1() throws Exception {
     testTypes(
         "/** @param {number} x */ function f(x) {}" +

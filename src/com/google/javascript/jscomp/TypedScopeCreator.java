@@ -1943,6 +1943,12 @@ final class TypedScopeCreator implements ScopeCreator {
      */
     private void declareArguments(Node functionNode) {
       Node astParameters = functionNode.getFirstChild().getNext();
+      Node iifeArgumentNode = null;
+
+      if (NodeUtil.isCallOrNewTarget(functionNode)) {
+        iifeArgumentNode = functionNode.getNext();
+      }
+
       Node body = astParameters.getNext();
       FunctionType functionType =
           JSType.toMaybeFunctionType(functionNode.getJSType());
@@ -1953,15 +1959,29 @@ final class TypedScopeCreator implements ScopeCreator {
           for (Node astParameter : astParameters.children()) {
             JSType paramType = jsDocParameter == null ?
                 unknownType : jsDocParameter.getJSType();
+            boolean inferred = paramType == null || paramType == unknownType;
+
+            if (iifeArgumentNode != null && inferred) {
+              String argumentName = iifeArgumentNode.getQualifiedName();
+              Var argumentVar =
+                  argumentName == null || scope.getParent() == null
+                  ? null : scope.getParent().getVar(argumentName);
+              if (argumentVar != null && !argumentVar.isTypeInferred()) {
+                paramType = argumentVar.getType();
+              }
+            }
+
             if (paramType == null) {
               paramType = unknownType;
             }
 
-            defineSlot(astParameter, functionNode, paramType,
-                // inferred iff this is the unknown type.
-                unknownType == paramType);
+            defineSlot(astParameter, functionNode, paramType, inferred);
+
             if (jsDocParameter != null) {
               jsDocParameter = jsDocParameter.getNext();
+            }
+            if (iifeArgumentNode != null) {
+              iifeArgumentNode = iifeArgumentNode.getNext();
             }
           }
         }
