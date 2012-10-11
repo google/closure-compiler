@@ -23,7 +23,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -38,7 +37,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
   // Errors
   static final DiagnosticType GOOG_CLASS_TARGET_INVALID = DiagnosticType.error(
       "JSC_GOOG_CLASS_TARGET_INVALID",
-      "Unsupported goog.defineClass expression.");
+      "Unsupported class definition expression.");
 
   static final DiagnosticType GOOG_CLASS_SUPER_CLASS_NOT_VALID = DiagnosticType.error(
       "JSC_GOOG_CLASS_SUPER_CLASS_NOT_VALID",
@@ -52,17 +51,13 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       "JSC_GOOG_CLASS_CONSTRUCTOR_MISING",
       "The constructor expression is missing for the class descriptor");
 
-  static final DiagnosticType GOOG_CLASS_MODIFIERS_NOT_VALID = DiagnosticType.error(
-      "JSC_CLASS_MODIFIERS_NOT_VALID",
-      "The class modifier list must be an array literal");
-
   static final DiagnosticType GOOG_CLASS_STATICS_NOT_VALID = DiagnosticType.error(
       "JSC_GOOG_CLASS_STATICS_NOT_VALID",
-      "The class statics descriptor must be an object literal");
+      "The class statics descriptor must be an object or function literal");
 
   static final DiagnosticType GOOG_CLASS_UNEXPECTED_PARAMS = DiagnosticType.error(
       "JSC_GOOG_CLASS_UNEXPECTED_PARAMS",
-      "The call to goog.defineClass has too many arguments.");
+      "The class definition has too many arguments.");
 
   private final AbstractCompiler compiler;
 
@@ -93,8 +88,8 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
   private boolean validateUsage(Node n) {
     // There are only three valid usage patterns for of goog.defineClass
-    //   var x = googDefineClass
-    //   ... = googDefineClass
+    //   var ClassName = googDefineClass
+    //   namespace.ClassName = googDefineClass
     //   and within an objectlit, used by the goog.defineClass.
     Node parent = n.getParent();
     switch (parent.getType()) {
@@ -168,7 +163,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     final MemberDefinition constructor;
     final List<MemberDefinition> staticProps;
     final List<MemberDefinition> props;
-    final List<Node>  modifiers;
+    final Node classModifier;
 
     ClassDefinition(
         Node name,
@@ -176,13 +171,13 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
         MemberDefinition constructor,
         List<MemberDefinition> staticProps,
         List<MemberDefinition> props,
-        List<Node> modifiers) {
+        Node classModifier) {
       this.name = name;
       this.superClass = superClass;
       this.constructor = constructor;
       this.staticProps = staticProps;
       this.props = props;
-      this.modifiers = modifiers;
+      this.classModifier = classModifier;
     }
   }
 
@@ -214,7 +209,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     }
 
     int paramCount = callNode.getChildCount() -1;
-    if (paramCount > 3) {
+    if (paramCount > 2) {
       compiler.report(JSError.make(callNode, GOOG_CLASS_UNEXPECTED_PARAMS));
       return null;
     }
@@ -227,35 +222,39 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     }
     JSDocInfo info = NodeUtil.getBestJSDocInfo(constructor);
 
-    Node statics = extractProperty(description, "statics");
-    if (statics != null
-        && !(statics.isObjectLit() && validateObjLit(statics))) {
-      compiler.report(JSError.make(statics, GOOG_CLASS_STATICS_NOT_VALID));
-      return null;
+    Node classModifier = null;
+    Node statics = null;
+    Node staticsProp = extractProperty(description, "statics");
+    if (staticsProp != null) {
+      if (staticsProp.isObjectLit() && validateObjLit(staticsProp)) {
+        statics = staticsProp;
+      } else if (staticsProp.isFunction()) {
+        classModifier = staticsProp;
+      } else {
+        compiler.report(
+            JSError.make(staticsProp, GOOG_CLASS_STATICS_NOT_VALID));
+        return null;
+      }
     }
+
     if (statics == null) {
       statics = IR.objectlit();
     }
 
-    Node modifiers = NodeUtil.getArgumentForCallOrNew(callNode, 2);
-    if (modifiers != null && !modifiers.isArrayLit()) {
-      compiler.report(JSError.make(modifiers, GOOG_CLASS_MODIFIERS_NOT_VALID));
-      return null;
-    }
-    if (modifiers == null) {
-      modifiers = IR.arraylit();
-    }
-
     // Ok, now rip apart the definition into its component pieces.
-    maybeDetach(constructor.getParent());  // remove the property node.
+    // Remove the "special" property key nodes.
+    maybeDetach(constructor.getParent());
     maybeDetach(statics.getParent());
+    if (classModifier != null) {
+      maybeDetach(classModifier.getParent());
+    }
     ClassDefinition def = new ClassDefinition(
         targetName,
         maybeDetach(superClass),
         new MemberDefinition(info, null, maybeDetach(constructor)),
         objectLitToList(maybeDetach(statics)),
         objectLitToList(description),
-        arrayNodeToList(modifiers));
+        maybeDetach(classModifier));
     return def;
   }
 
@@ -300,18 +299,6 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     }
     objlit.detachChildren();
     return result;
-  }
-
-  private List<Node> arrayNodeToList(Node arr) {
-    Preconditions.checkState(arr == null || arr.isArrayLit());
-
-    if (arr == null) {
-      return Collections.<Node>emptyList();
-    } else {
-      List<Node> result = Lists.newArrayList(arr.children());
-      arr.detachChildren();
-      return result;
-    }
   }
 
   private void rewriteGoogDefineClass(Node exprRoot, ClassDefinition cls) {
@@ -375,16 +362,16 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       maybeRewriteClassDefinition(block.getLastChild());
     }
 
-    for (Node modifier : cls.modifiers) {
+    if (cls.classModifier != null) {
       // example: modifier(ctr)
       block.addChildToBack(
           IR.exprResult(
-              fixupFreeCall(IR.call(
-                  modifier,
-                  cls.name.cloneTree())
-                  .srcref(modifier)))
-              .srcref(modifier));
-
+              fixupFreeCall(
+                  IR.call(
+                      cls.classModifier,
+                      cls.name.cloneTree())
+                      .srcref(cls.classModifier)))
+              .srcref(cls.classModifier));
     }
 
     exprRoot.getParent().replaceChild(exprRoot, block);
@@ -397,9 +384,8 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
   }
 
   private Node fixupFreeCall(Node call) {
-    if (call.getFirstChild().isName()) {
-      call.putBooleanProp(Node.FREE_CALL, true);
-    }
+    Preconditions.checkState(call.isCall());
+    call.putBooleanProp(Node.FREE_CALL, true);
     return call;
   }
 
@@ -407,7 +393,11 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
    * @return Whether the call represents a class definition.
    */
   private boolean isGoogDefineClass(Node value) {
-    return value != null && value.isCall()
-        && "goog.defineClass".equals(value.getFirstChild().getQualifiedName());
+    if (value != null && value.isCall()) {
+      String targetName = value.getFirstChild().getQualifiedName();
+      return ("goog.defineClass".equals(targetName) ||
+              "goog.labs.classdef.defineClass".equals(targetName));
+    }
+    return false;
   }
 }

@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_MISING;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_DESCRIPTOR_NOT_VALID;
-import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_MODIFIERS_NOT_VALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_STATICS_NOT_VALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_SUPER_CLASS_NOT_VALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_TARGET_INVALID;
@@ -66,6 +65,15 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "{x.y = function() {};}");
   }
 
+  public void testBasic3() {
+    test(
+        "var x = goog.labs.classdef.defineClass(null, {\n" +
+        "  constructor: function(){}\n" +
+        "});",
+
+        "{var x = function() {};}");
+  }
+
   public void testInnerClass1() {
     test(
         "var x = goog.defineClass(some.Super, {\n" +
@@ -104,7 +112,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "  },\n" +
         "  anotherProp: 1,\n" +
         "  aMethod: function() {}\n" +
-        "}, [goog.addSingletonGetter, seal]);",
+        "});",
 
         "{" +
         "var x=function(){this.foo=1};" +
@@ -113,8 +121,6 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "x.PROP2=2;" +
         "x.prototype.anotherProp=1;" +
         "x.prototype.aMethod=function(){};" +
-        "goog.addSingletonGetter(x);" +
-        "seal(x);" +
         "}");
   }
 
@@ -131,7 +137,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "  },\n" +
         "  anotherProp: 1,\n" +
         "  aMethod: function() {}\n" +
-        "}, [goog.addSingletonGetter, seal]);",
+        "});",
 
         "{\n" +
         "/** @constructor */\n" +
@@ -142,11 +148,37 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "x.y.PROP2=2;\n" +
         "x.y.prototype.anotherProp=1;" +
         "x.y.prototype.aMethod=function(){};" +
-        "goog.addSingletonGetter(x.y);" +
-        "seal(x.y);" +
         "}");
   }
 
+  public void testClassWithStaticInitFn() {
+    test(
+        "x.y = goog.defineClass(some.Super, {\n" +
+        "  constructor: function(){\n" +
+        "    this.foo = 1;\n" +
+        "  },\n" +
+        "  statics: function(cls) {\n" +
+        "    cls.prop1 = 1;\n" +
+        "    /** @const */\n" +
+        "    cls.PROP2 = 2;\n" +
+        "  },\n" +
+        "  anotherProp: 1,\n" +
+        "  aMethod: function() {}\n" +
+        "});",
+
+        "{\n" +
+        "/** @constructor */\n" +
+        "x.y=function(){this.foo=1};\n" +
+        "goog.inherits(x.y,some.Super);" +
+        "x.y.prototype.anotherProp=1;" +
+        "x.y.prototype.aMethod=function(){};" +
+        "(function(cls) {" +
+        "  cls.prop1=1;\n" +
+        "  /** @const */\n" +
+        "  cls.PROP2=2;" +
+        "})(x.y);\n" +
+        "}");
+  }
 
   public void testInvalid1() {
     testSame(
@@ -224,23 +256,10 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "var x = goog.defineClass(null, {" +
         "  constructor: function(){}" +
         "}, null);",
-        GOOG_CLASS_MODIFIERS_NOT_VALID, true);
-    testSame(
-        "var x = goog.defineClass(null, {" +
-        "  constructor: function(){}" +
-        "}, foo);",
-        GOOG_CLASS_MODIFIERS_NOT_VALID, true);
-  }
-
-  public void testInvalid6() {
-    testSame(
-        "var x = goog.defineClass(null, {" +
-        "  constructor: function(){}" +
-        "}, [], null);",
         GOOG_CLASS_UNEXPECTED_PARAMS, true);
   }
 
-  public void testInvalid7() {
+  public void testInvalid6() {
     testSame(
         "goog.defineClass();",
         GOOG_CLASS_TARGET_INVALID, true);
