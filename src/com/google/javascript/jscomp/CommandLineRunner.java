@@ -151,7 +151,9 @@ public class CommandLineRunner extends
         + "unique. Each dep is the name of a module that this module "
         + "depends on. Modules must be listed in dependency order, and JS "
         + "source files must be listed in the corresponding order. Where "
-        + "--module flags occur in relation to --js flags is unimportant")
+        + "--module flags occur in relation to --js flags is unimportant. "
+        + "Provide the value 'auto' to trigger module creation from CommonJS"
+        + "modules.")
     private List<String> module = Lists.newArrayList();
 
     @Option(name = "--variable_map_input_file",
@@ -371,6 +373,10 @@ public class CommandLineRunner extends
         + "If you're using modularization, using %outname% will create "
         + "a manifest for each module.")
     private String output_manifest = "";
+
+    @Option(name = "--output_module_dependencies",
+        usage = "Prints out a JSON file of dependencies between modules.")
+    private String output_module_dependencies = "";
 
     @Option(name = "--accept_const_keyword",
         usage = "Allows usage of const keyword.")
@@ -732,6 +738,7 @@ public class CommandLineRunner extends
           .setOnlyClosureDependencies(flags.only_closure_dependencies)
           .setClosureEntryPoints(flags.closure_entry_point)
           .setOutputManifest(ImmutableList.of(flags.output_manifest))
+          .setOutputModuleDependencies(flags.output_module_dependencies)
           .setAcceptConstKeyword(flags.accept_const_keyword)
           .setLanguageIn(flags.language_in)
           .setProcessCommonJSModules(flags.process_common_js_modules)

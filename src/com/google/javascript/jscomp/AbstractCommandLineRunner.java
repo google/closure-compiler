@@ -52,8 +52,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Level;
 
 /**
@@ -211,6 +211,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   static DependencyOptions createDependencyOptions(
       boolean manageClosureDependencies,
       boolean onlyClosureDependencies,
+      boolean processCommonJSModules,
       List<String> closureEntryPoints)
       throws FlagUsageException {
     if (onlyClosureDependencies) {
@@ -224,7 +225,14 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
           .setDependencySorting(true)
           .setMoocherDropping(true)
           .setEntryPoints(closureEntryPoints);
-    } else if (manageClosureDependencies ||
+    } else if (processCommonJSModules) {
+      return new DependencyOptions()
+        .setDependencyPruning(false)
+        .setDependencySorting(true)
+        .setMoocherDropping(false)
+        .setEntryPoints(closureEntryPoints);
+    }
+    else if (manageClosureDependencies ||
         closureEntryPoints.size() > 0) {
       return new DependencyOptions()
           .setDependencyPruning(true)
@@ -265,6 +273,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     DependencyOptions depOptions = createDependencyOptions(
         config.manageClosureDependencies,
         config.onlyClosureDependencies,
+        config.processCommonJSModules,
         config.closureEntryPoints);
     if (depOptions != null) {
       options.setDependencyOptions(depOptions);
@@ -742,6 +751,14 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     List<String> jsFiles = config.js;
     List<String> moduleSpecs = config.module;
+
+    boolean createCommonJsModules = false;
+    if (options.processCommonJSModules) {
+      if (moduleSpecs.size() == 1 && "auto".equals(moduleSpecs.get(0))) {
+        createCommonJsModules = true;
+        moduleSpecs.remove(0);
+      }
+    }
     if (!moduleSpecs.isEmpty()) {
       modules = createJsModules(moduleSpecs, jsFiles);
       if (config.skipNormalOutputs) {
@@ -756,6 +773,11 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       } else {
         result = compiler.compile(externs, inputs, options);
       }
+    }
+    if (createCommonJsModules) {
+      // For CommonJS modules construct modules from actual inputs.
+      modules = Lists.newArrayList(compiler.getDegenerateModuleGraph()
+          .getAllModules());
     }
 
     int errCode = processResults(result, modules, options);
@@ -817,8 +839,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       // Output the manifest and bundle files if requested.
       outputManifest();
       outputBundle();
+      outputModuleGraphJson();
       return 0;
     } else if (result.success) {
+      outputModuleGraphJson();
       if (modules == null) {
         writeOutput(
             jsOutput, compiler, compiler.toSource(), config.outputWrapper,
@@ -1431,6 +1455,27 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
+   * Creates a file containing the current module graph in JSON serialization.
+   */
+  private void outputModuleGraphJson() throws IOException {
+    if (config.outputModuleDependencies != null &&
+        config.outputModuleDependencies != "") {
+      Writer out = fileNameToOutputWriter2(config.outputModuleDependencies);
+      printModuleGraphJsonTo(compiler.getDegenerateModuleGraph(), out);
+      out.close();
+    }
+  }
+
+  /**
+   * Prints the current module graph as JSON.
+   */
+  @VisibleForTesting
+  void printModuleGraphJsonTo(JSModuleGraph graph,
+      Appendable out) throws IOException {
+    out.append(compiler.getDegenerateModuleGraph().toJson().toString());
+  }
+
+  /**
    * Prints a set of modules to the manifest or bundle file.
    */
   @VisibleForTesting
@@ -1952,6 +1997,18 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         }
       }
       this.outputManifests = ImmutableList.copyOf(this.outputManifests);
+      return this;
+    }
+
+    private String outputModuleDependencies = null;
+
+    /**
+     * Sets whether a JSON file representing the dependencies between modules
+     * should be created.
+     */
+    CommandLineConfig setOutputModuleDependencies(String
+        outputModuleDependencies) {
+      this.outputModuleDependencies = outputModuleDependencies;
       return this;
     }
 

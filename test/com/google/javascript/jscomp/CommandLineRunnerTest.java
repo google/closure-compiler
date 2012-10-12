@@ -904,6 +904,17 @@ public class CommandLineRunnerTest extends TestCase {
         builder.toString());
   }
 
+  public void testOutputModuleGraphJson() throws Exception {
+    useModules = ModulePattern.STAR;
+    testSame(new String[] {
+        "var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
+
+    StringBuilder builder = new StringBuilder();
+    lastCommandLineRunner.printModuleGraphJsonTo(
+        lastCompiler.getModuleGraph(), builder);
+    assertTrue(builder.toString().indexOf("transitive-dependencies") != -1);
+  }
+
   public void testVersionFlag() {
     args.add("--version");
     testSame("");
@@ -1068,20 +1079,46 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testProcessCJS() {
+    useStringComparison = true;
     args.add("--process_common_js_modules");
     args.add("--common_js_entry_module=foo/bar");
     setFilename(0, "foo/bar.js");
+    String expected = "var module$foo$bar={test:1};";
+    test("exports.test = 1", expected);
+    assertEquals(expected + "\n", outReader.toString());
+  }
+
+  public void testProcessCJSWithModuleOutput() {
+    useStringComparison = true;
+    args.add("--process_common_js_modules");
+    args.add("--common_js_entry_module=foo/bar");
+    args.add("--module=auto");
+    setFilename(0, "foo/bar.js");
     test("exports.test = 1",
         "var module$foo$bar={test:1};");
+    // With modules=auto no direct output is created.
+    assertEquals("", outReader.toString());
   }
 
   public void testTransformAMDAndProcessCJS() {
+    useStringComparison = true;
     args.add("--transform_amd_modules");
     args.add("--process_common_js_modules");
     args.add("--common_js_entry_module=foo/bar");
     setFilename(0, "foo/bar.js");
     test("define({foo: 1})",
-        "var module$foo$bar={}, module$foo$bar={foo:1};");
+        "var module$foo$bar={},module$foo$bar={foo:1};");
+  }
+
+  public void testModuleJSON() {
+    useStringComparison = true;
+    args.add("--transform_amd_modules");
+    args.add("--process_common_js_modules");
+    args.add("--common_js_entry_module=foo/bar");
+    args.add("--output_module_dependencies=test.json");
+    setFilename(0, "foo/bar.js");
+    test("define({foo: 1})",
+        "var module$foo$bar={},module$foo$bar={foo:1};");
   }
 
   /* Helper functions */

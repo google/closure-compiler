@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.parsing.Config;
@@ -1527,7 +1528,16 @@ public class Compiler extends AbstractCompiler {
             options.dependencyOptions, inputs)) {
           modules.add(modulesByInput.get(input));
         }
+        JSModule root = new JSModule("root");
+        for (JSModule m : modules) {
+          m.addDependency(root);
+        }
+        modules.add(0, root);
+        SortedDependencies<JSModule> sorter =
+          new SortedDependencies<JSModule>(modules);
+        modules = sorter.getDependenciesOf(modules, true);
         this.modules = modules;
+
         this.moduleGraph = new JSModuleGraph(modules);
       } catch (Exception e) {
         Throwables.propagate(e);

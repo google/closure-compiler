@@ -16,6 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import java.util.List;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 /**
  * Unit tests for {@link ProcessCommonJSModules}
  */
@@ -133,5 +138,49 @@ public class ProcessCommonJSModulesTest extends CompilerTestCase {
         pass.guessCJSModuleName("foo\\baz.js"));
     assertEquals("module$bar$baz",
         pass.guessCJSModuleName("foo\\bar\\baz.js"));
+  }
+
+  public void testSortInputs() throws Exception {
+    SourceFile a = SourceFile.fromCode("a.js",
+            "require('b');require('c')");
+    SourceFile b = SourceFile.fromCode("b.js",
+            "require('d')");
+    SourceFile c = SourceFile.fromCode("c.js",
+            "require('d')");
+    SourceFile d = SourceFile.fromCode("d.js", "1;");
+
+    assertSortedInputs(
+        ImmutableList.of(d, b, c, a),
+        ImmutableList.of(a, b, c, d));
+    assertSortedInputs(
+        ImmutableList.of(d, b, c, a),
+        ImmutableList.of(d, b, c, a));
+    assertSortedInputs(
+        ImmutableList.of(d, c, b, a),
+        ImmutableList.of(d, c, b, a));
+    assertSortedInputs(
+        ImmutableList.of(d, b, c, a),
+        ImmutableList.of(d, a, b, c));
+  }
+
+  private void assertSortedInputs(
+      List<SourceFile> expected, List<SourceFile> shuffled)
+      throws Exception {
+    Compiler compiler = new Compiler(System.err);
+    compiler.initCompilerOptionsIfTesting();
+    compiler.getOptions().setProcessCommonJSModules(true);
+    compiler.getOptions().dependencyOptions.setEntryPoints(
+        Lists.newArrayList(ProcessCommonJSModules.toModuleName("a")));
+    compiler.compile(Lists.newArrayList(SourceFile.fromCode("externs.js", "")),
+        shuffled, compiler.getOptions());
+
+    List<SourceFile> result = Lists.newArrayList();
+    for (JSModule m : compiler.getModuleGraph().getAllModules()) {
+      for (CompilerInput i : m.getInputs()) {
+        result.add(i.getSourceFile());
+      }
+    }
+
+    assertEquals(expected, result);
   }
 }

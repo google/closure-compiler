@@ -24,6 +24,10 @@ import junit.framework.*;
 
 import java.util.*;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * Tests for {@link JSModuleGraph}
  *
@@ -233,6 +237,24 @@ public class JSModuleGraphTest extends TestCase {
     List<CompilerInput> results = graph.manageDependencies(
         depOptions, inputs);
     assertTrue(results.isEmpty());
+  }
+
+  public void testToJson() throws JSONException {
+    JSONArray modules = graph.toJson();
+    assertEquals(6, modules.length());
+    for (int i = 0; i < modules.length(); i++) {
+      JSONObject m = modules.getJSONObject(i);
+      assertNotNull(m.getString("name"));
+      assertNotNull(m.getJSONArray("dependencies"));
+      assertNotNull(m.getJSONArray("transitive-dependencies"));
+      assertNotNull(m.getJSONArray("inputs"));
+    }
+    JSONObject m = modules.getJSONObject(3);
+    assertEquals("D", m.getString("name"));
+    assertEquals("[\"B\"]", m.getJSONArray("dependencies").toString());
+    assertEquals(2,
+        m.getJSONArray("transitive-dependencies").length());
+    assertEquals("[]", m.getJSONArray("inputs").toString());
   }
 
   private List<CompilerInput> setUpManageDependenciesTest() {
