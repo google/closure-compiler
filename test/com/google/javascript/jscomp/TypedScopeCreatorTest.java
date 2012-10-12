@@ -1133,6 +1133,61 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("number", findNameType("f", lastLocalScope).toString());
   }
 
+  public void testTemplateType9() {
+    testSame(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/**\n" +
+        " * @this {T}\n" +
+        " * @return {T}\n" +
+        " * @template T\n" +
+        " */\n" +
+        "Foo.prototype.method = function() {};\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */\n" +
+        "function Bar() {}\n" +
+        "\n" +
+        "var g = new Bar().method();\n");
+    assertEquals("Bar", findNameType("g", globalScope).toString());
+  }
+
+  public void testTemplateType10() {
+    // NOTE: we would like the type within the function to remain "Foo"
+    // we can handle this by support template type like "T extends Foo"
+    // to provide a "minimum" type for "Foo" within the function body.
+    testSame(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "\n" +
+        "/**\n" +
+        " * @this {T}\n" +
+        " * @return {T} fn\n" +
+        " * @template T\n" +
+        " */\n" +
+        "Foo.prototype.method = function() {var g = this;};\n");
+    assertEquals("T", findNameType("g", lastLocalScope).toString());
+  }
+
+  public void testTemplateType11() {
+    testSame(
+        "/**\n" +
+        " * @this {T}\n" +
+        " * @return {T} fn\n" +
+        " * @template T\n" +
+        " */\n" +
+        "var method = function() {};\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " */\n" +
+        "function Bar() {}\n" +
+        "\n" +
+        "var g = method().call(new Bar());\n");
+    // NOTE: we would like this to be "Bar"
+    assertEquals("?", findNameType("g", globalScope).toString());
+  }
+
   public void testClosureParameterTypesWithoutJSDoc() {
     testSame(
         "/**\n" +

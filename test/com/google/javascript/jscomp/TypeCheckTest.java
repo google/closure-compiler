@@ -9923,6 +9923,33 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         false);
   }
 
+  public void testTemplatedThisType1() throws Exception {
+    testTypes(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/**\n" +
+        " * @this {T}\n" +
+        " * @return {T}\n" +
+        " * @template T\n" +
+        " */\n" +
+        "Foo.prototype.method = function() {};\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */\n" +
+        "function Bar() {}\n" +
+        "var g = new Bar().method();\n" +
+        "/**\n" +
+        " * @param {number} a\n" +
+        " */\n" +
+        "function compute(a) {};\n" +
+        "compute(g);\n",
+
+        "actual parameter 1 of compute does not match formal parameter\n" +
+        "found   : Bar\n" +
+        "required: number");
+  }
+
   public void testTemplateType1() throws Exception {
     testTypes(
         "/**\n" +

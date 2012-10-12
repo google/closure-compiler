@@ -1011,16 +1011,27 @@ class TypeInference
 
   private Map<TemplateType, JSType> inferTemplateTypesFromParameters(
       FunctionType fnType, Node call) {
-    if (fnType.getTemplateTypeNames().isEmpty()
-        || !call.hasMoreThanOneChild()) {
+    if (fnType.getTemplateTypeNames().isEmpty()) {
       return Collections.emptyMap();
     }
 
     Map<TemplateType, JSType> resolvedTypes = Maps.newIdentityHashMap();
-    maybeResolveTemplateTypeFromNodes(
-        fnType.getParameters(),
-        call.getChildAtIndex(1).siblings(),
-        resolvedTypes);
+
+    Node callTarget = call.getFirstChild();
+    if (NodeUtil.isGet(callTarget)) {
+      Node obj = callTarget.getFirstChild();
+      maybeResolveTemplatedType(
+          fnType.getTypeOfThis(),
+          getJSType(obj),
+          resolvedTypes);
+    }
+
+    if (call.hasMoreThanOneChild()) {
+      maybeResolveTemplateTypeFromNodes(
+          fnType.getParameters(),
+          call.getChildAtIndex(1).siblings(),
+          resolvedTypes);
+    }
     return resolvedTypes;
   }
 
@@ -1045,6 +1056,10 @@ class TypeInference
           .collapseUnion()
           .toMaybeFunctionType();
       if (argFunctionType != null && argFunctionType.isSubtype(paramType)) {
+        // infer from return type of the function type
+        maybeResolveTemplatedType(
+            paramFunctionType.getTypeOfThis(),
+            argFunctionType.getTypeOfThis(), resolvedTypes);
         // infer from return type of the function type
         maybeResolveTemplatedType(
             paramFunctionType.getReturnType(),
