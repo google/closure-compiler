@@ -382,6 +382,20 @@ public class ReplaceMessagesTest extends CompilerTestCase {
          "var x = MSG_A;");
   }
 
+  public void testNoUseFallback2() {
+    registerMessage(new JsMessage.Builder("MSG_C")
+        .appendStringPart("translated")
+        .build());
+    test("/** @desc d */\n" +
+         "var MSG_A = goog.getMsg('msg A');" +
+         "/** @desc d */\n" +
+         "var MSG_B = goog.getMsg('msg B');" +
+         "var x = goog.getMsgWithFallback(MSG_A, MSG_B);",
+         "var MSG_A = 'msg A';" +
+         "var MSG_B = 'msg B';" +
+         "var x = MSG_A;");
+  }
+
   private void registerMessage(JsMessage message) {
     messages.put(message.getKey(), message);
   }

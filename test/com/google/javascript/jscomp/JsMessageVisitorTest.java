@@ -514,12 +514,7 @@ public class JsMessageVisitorTest extends TestCase {
         "(function () {/** @desc Hello2 */ var MSG_HELLO = goog.getMsg('a')})");
 
     assertEquals(0, compiler.getWarningCount());
-
-    String errors = Joiner.on("\n").join(compiler.getErrors());
-    assertEquals("There should be one error. " + errors,
-        1, compiler.getErrorCount());
-    assertEquals(errors, JsMessageVisitor.MESSAGE_DUPLICATE_KEY,
-        compiler.getErrors()[0].getType());
+    assertOneError(JsMessageVisitor.MESSAGE_DUPLICATE_KEY);
   }
 
   public void testNoDuplicateErrorOnExternMessage() {
@@ -528,6 +523,23 @@ public class JsMessageVisitorTest extends TestCase {
         "var MSG_EXTERNAL_2 = goog.getMsg('a')})" +
         "(function () {/** @desc Hello2 */ " +
         "var MSG_EXTERNAL_2 = goog.getMsg('a')})");
+  }
+
+  public void testErrorWhenUsingMsgPrefixWithFallback() {
+    extractMessages(
+        "/** @desc Hello */ var MSG_HELLO_1 = goog.getMsg('hello');\n" +
+        "/** @desc Hello */ var MSG_HELLO_2 = goog.getMsg('hello');\n" +
+        "/** @desc Hello */ " +
+        "var MSG_HELLO_3 = goog.getMsgWithFallback(MSG_HELLO_1, MSG_HELLO_2);");
+    assertOneError(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
+  }
+
+  private void assertOneError(DiagnosticType type) {
+    String errors = Joiner.on("\n").join(compiler.getErrors());
+    assertEquals("There should be one error. " + errors,
+        1, compiler.getErrorCount());
+    JSError error = compiler.getErrors()[0];
+    assertEquals(type, error.getType());
   }
 
   private void extractMessagesSafely(String input) {

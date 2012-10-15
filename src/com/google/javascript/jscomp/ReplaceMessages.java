@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -51,11 +50,13 @@ class ReplaceMessages extends JsMessageVisitor {
   @Override
   void processMessageFallback(
       Node callNode, JsMessage message1, JsMessage message2) {
-    boolean isEmptyBundle = Iterables.isEmpty(bundle.getAllMessages());
     boolean isFirstMessageTranslated =
         (bundle.getMessage(message1.getId()) != null);
-    Node replacementNode = isFirstMessageTranslated || isEmptyBundle ?
-        callNode.getChildAtIndex(1) : callNode.getChildAtIndex(2);
+    boolean isSecondMessageTranslated =
+        (bundle.getMessage(message2.getId()) != null);
+    Node replacementNode =
+        isSecondMessageTranslated && !isFirstMessageTranslated ?
+        callNode.getChildAtIndex(2) : callNode.getChildAtIndex(1);
     callNode.getParent().replaceChild(callNode,
         replacementNode.detachFromParent());
   }
