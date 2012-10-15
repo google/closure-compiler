@@ -35,28 +35,28 @@ import junit.framework.TestCase;
 public class ParallelCompilerPassTest extends TestCase {
 
   public void testNoFunction() {
-    replace("\"foo\"");
+    replace("'foo'");
     replace("var foo");
   }
 
   public void testOneFunction() {
-    replace("\"foo\";function foo(){\"foo\"}");
+    replace("'foo';function foo(){'foo'}");
   }
 
   public void testTwoFunctions() {
-    replace("\"foo\";function f1(){\"foo\"}function f2(){\"foo\"}");
+    replace("'foo';function f1(){'foo'}function f2(){'foo'}");
   }
 
   public void testInnerFunctions() {
-    replace("\"foo\";function f1(){\"foo\";function f2(){\"foo\"}}");
+    replace("'foo';function f1(){'foo';function f2(){'foo'}}");
   }
 
   public void testManyFunctions() {
-    StringBuilder sb = new StringBuilder("\"foo\";");
+    StringBuilder sb = new StringBuilder("'foo';");
     for (int i = 0; i < 20; i++) {
       sb.append("function f");
       sb.append(i);
-      sb.append("(){\"foo\"}");
+      sb.append("(){'foo'}");
     }
     replace(sb.toString());
   }

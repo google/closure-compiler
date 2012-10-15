@@ -63,6 +63,19 @@ class CodeGenerator {
     this(consumer, null);
   }
 
+  private static boolean preferDoubleQuotesCompatFlag = true;
+
+  /**
+   * We want to prefer single quotes for strings.
+   * This ensures that if the code has to be bundled in a JSON blob, we do
+   * less escaping (see issue 836 for more info)
+   * However, many tests we're written when we prefered double-quotes,
+   * so we add a compat flag to make sure these tests still pass.
+   */
+  public static void setPreferDoubleQuotesCompatFlag(boolean newVal) {
+    preferDoubleQuotesCompatFlag = newVal;
+  }
+
   /**
    * Insert a ECMASCRIPT 5 strict annotation.
    */
@@ -976,13 +989,15 @@ class CodeGenerator {
 
     String doublequote, singlequote;
     char quote;
-    if (singleq < doubleq) {
-      // more double quotes so escape the single quotes
+    if (preferDoubleQuotesCompatFlag ?
+        (singleq < doubleq) : (singleq <= doubleq)) {
+      // more double quotes so enclose in single quotes.
+      // If there's a tie, and the compat flag is off, we use single quotes.
       quote = '\'';
       doublequote = "\"";
       singlequote = "\\\'";
     } else {
-      // more single quotes so escape the doubles
+      // more single quotes so enclose in doubles
       quote = '\"';
       doublequote = "\\\"";
       singlequote = "\'";

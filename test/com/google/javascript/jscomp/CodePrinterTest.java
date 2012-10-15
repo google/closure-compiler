@@ -28,6 +28,10 @@ import junit.framework.TestCase;
 import java.util.List;
 
 public class CodePrinterTest extends TestCase {
+  public CodePrinterTest() {
+    CodeGenerator.setPreferDoubleQuotesCompatFlag(false);
+  }
+
   static Node parse(String js) {
     return parse(js, false);
   }
@@ -128,12 +132,12 @@ public class CodePrinterTest extends TestCase {
     assertPrint("a instanceof b", "a instanceof b");
     assertPrint("typeof(a)", "typeof a");
     assertPrint(
-        "var foo = x ? { a : 1 } : {a: 3, b:4, \"default\": 5, \"foo-bar\": 6}",
-        "var foo=x?{a:1}:{a:3,b:4,\"default\":5,\"foo-bar\":6}");
+        "var foo = x ? { a : 1 } : {a: 3, b:4, 'default': 5, 'foo-bar': 6}",
+        "var foo=x?{a:1}:{a:3,b:4,'default':5,'foo-bar':6}");
 
     // Safari: needs ';' at the end of a throw statement
     assertPrint("function foo(){throw 'error';}",
-        "function foo(){throw\"error\";}");
+        "function foo(){throw'error';}");
     // Safari 3 needs a "{" around a single function
     assertPrint("if (true) function foo(){return}",
         "if(true){function foo(){return}}");
@@ -163,19 +167,19 @@ public class CodePrinterTest extends TestCase {
         "var a,b,c;a*=b-=c");
 
     // Break scripts
-    assertPrint("'<script>'", "\"<script>\"");
-    assertPrint("'</script>'", "\"<\\/script>\"");
-    assertPrint("\"</script> </SCRIPT>\"", "\"<\\/script> <\\/SCRIPT>\"");
+    assertPrint("'<script>'", "'<script>'");
+    assertPrint("'</script>'", "'<\\/script>'");
+    assertPrint("\"</script> </SCRIPT>\"", "'<\\/script> <\\/SCRIPT>'");
 
-    assertPrint("'-->'", "\"--\\>\"");
-    assertPrint("']]>'", "\"]]\\>\"");
-    assertPrint("' --></script>'", "\" --\\><\\/script>\"");
+    assertPrint("'-->'", "'--\\>'");
+    assertPrint("']]>'", "']]\\>'");
+    assertPrint("' --></script>'", "' --\\><\\/script>'");
 
     assertPrint("/--> <\\/script>/g", "/--\\> <\\/script>/g");
 
     // Break HTML start comments. Certain versions of WebKit
     // begin an HTML comment when they see this.
-    assertPrint("'<!-- I am a string -->'", "\"<\\!-- I am a string --\\>\"");
+    assertPrint("'<!-- I am a string -->'", "'<\\!-- I am a string --\\>'");
 
     // Precedence
     assertPrint("a ? delete b[0] : 3", "a?delete b[0]:3");
@@ -186,25 +190,25 @@ public class CodePrinterTest extends TestCase {
     // simple new
     assertPrint("new A", "new A");
     assertPrint("new A()", "new A");
-    assertPrint("new A('x')", "new A(\"x\")");
+    assertPrint("new A('x')", "new A('x')");
 
     // calling instance method directly after new
     assertPrint("new A().a()", "(new A).a()");
     assertPrint("(new A).a()", "(new A).a()");
 
     // this case should be fixed
-    assertPrint("new A('y').a()", "(new A(\"y\")).a()");
+    assertPrint("new A('y').a()", "(new A('y')).a()");
 
     // internal class
     assertPrint("new A.B", "new A.B");
     assertPrint("new A.B()", "new A.B");
-    assertPrint("new A.B('z')", "new A.B(\"z\")");
+    assertPrint("new A.B('z')", "new A.B('z')");
 
     // calling instance method directly after new internal class
     assertPrint("(new A.B).a()", "(new A.B).a()");
     assertPrint("new A.B().a()", "(new A.B).a()");
     // this case should be fixed
-    assertPrint("new A.B('w').a()", "(new A.B(\"w\")).a()");
+    assertPrint("new A.B('w').a()", "(new A.B('w')).a()");
 
     // Operators: make sure we don't convert binary + and unary + into ++
     assertPrint("x + +y", "x+ +y");
@@ -221,7 +225,7 @@ public class CodePrinterTest extends TestCase {
     assertPrint("({})", "({})");
     assertPrint("var x = {};", "var x={}");
     assertPrint("({}).x", "({}).x");
-    assertPrint("({})['x']", "({})[\"x\"]");
+    assertPrint("({})['x']", "({})['x']");
     assertPrint("({}) instanceof Object", "({})instanceof Object");
     assertPrint("({}) || 1", "({})||1");
     assertPrint("1 || ({})", "1||{}");
@@ -249,13 +253,13 @@ public class CodePrinterTest extends TestCase {
     assertPrint("function f(){}", "function f(){}");
 
     // Make sure we don't treat non-Latin character escapes as raw strings.
-    assertPrint("({ 'a': 4, '\\u0100': 4 })", "({\"a\":4,\"\\u0100\":4})");
-    assertPrint("({ a: 4, '\\u0100': 4 })", "({a:4,\"\\u0100\":4})");
+    assertPrint("({ 'a': 4, '\\u0100': 4 })", "({'a':4,'\\u0100':4})");
+    assertPrint("({ a: 4, '\\u0100': 4 })", "({a:4,'\\u0100':4})");
 
     // Test if statement and for statements with single statements in body.
     assertPrint("if (true) { alert();}", "if(true)alert()");
-    assertPrint("if (false) {} else {alert(\"a\");}",
-        "if(false);else alert(\"a\")");
+    assertPrint("if (false) {} else {alert('a');}",
+        "if(false);else alert('a')");
     assertPrint("for(;;) { alert();};", "for(;;)alert()");
 
     assertPrint("do { alert(); } while(true);",
@@ -367,28 +371,28 @@ public class CodePrinterTest extends TestCase {
     // Check for in expression in for's init expression.
     // Check alone, with + (higher precedence), with ?: (lower precedence),
     // and with conditional.
-    assertPrint("var a={}; for (var i = (\"length\" in a); i;) {}",
-        "var a={};for(var i=(\"length\"in a);i;);");
-    assertPrint("var a={}; for (var i = (\"length\" in a) ? 0 : 1; i;) {}",
-        "var a={};for(var i=(\"length\"in a)?0:1;i;);");
-    assertPrint("var a={}; for (var i = (\"length\" in a) + 1; i;) {}",
-        "var a={};for(var i=(\"length\"in a)+1;i;);");
-    assertPrint("var a={};for (var i = (\"length\" in a|| \"size\" in a);;);",
-        "var a={};for(var i=(\"length\"in a)||(\"size\"in a);;);");
-    assertPrint("var a={};for (var i = a || a || (\"size\" in a);;);",
-        "var a={};for(var i=a||a||(\"size\"in a);;);");
+    assertPrint("var a={}; for (var i = ('length' in a); i;) {}",
+        "var a={};for(var i=('length'in a);i;);");
+    assertPrint("var a={}; for (var i = ('length' in a) ? 0 : 1; i;) {}",
+        "var a={};for(var i=('length'in a)?0:1;i;);");
+    assertPrint("var a={}; for (var i = ('length' in a) + 1; i;) {}",
+        "var a={};for(var i=('length'in a)+1;i;);");
+    assertPrint("var a={};for (var i = ('length' in a|| 'size' in a);;);",
+        "var a={};for(var i=('length'in a)||('size'in a);;);");
+    assertPrint("var a={};for (var i = a || a || ('size' in a);;);",
+        "var a={};for(var i=a||a||('size'in a);;);");
 
     // Test works with unary operators and calls.
-    assertPrint("var a={}; for (var i = -(\"length\" in a); i;) {}",
-        "var a={};for(var i=-(\"length\"in a);i;);");
+    assertPrint("var a={}; for (var i = -('length' in a); i;) {}",
+        "var a={};for(var i=-('length'in a);i;);");
     assertPrint("var a={};function b_(p){ return p;};" +
-        "for(var i=1,j=b_(\"length\" in a);;) {}",
+        "for(var i=1,j=b_('length' in a);;) {}",
         "var a={};function b_(p){return p}" +
-            "for(var i=1,j=b_(\"length\"in a);;);");
+            "for(var i=1,j=b_('length'in a);;);");
 
     // Test we correctly handle an in operator in the test clause.
-    assertPrint("var a={}; for (;(\"length\" in a);) {}",
-        "var a={};for(;\"length\"in a;);");
+    assertPrint("var a={}; for (;('length' in a);) {}",
+        "var a={};for(;'length'in a;);");
   }
 
   public void testLiteralProperty() {
@@ -481,15 +485,15 @@ public class CodePrinterTest extends TestCase {
   public void testPreferLineBreakAtEndOfFile() {
     // short final line, no previous break, do nothing
     assertLineBreakAtEndOfFile(
-        "\"1234567890\";",
-        "\"1234567890\"",
-        "\"1234567890\"");
+        "'1234567890';",
+        "'1234567890'",
+        "'1234567890'");
 
     // short final line, shift previous break to end
     assertLineBreakAtEndOfFile(
-        "\"123456789012345678901234567890\";\"1234567890\"",
-        "\"123456789012345678901234567890\";\n\"1234567890\"",
-        "\"123456789012345678901234567890\"; \"1234567890\";\n");
+        "'123456789012345678901234567890';'1234567890'",
+        "'123456789012345678901234567890';\n'1234567890'",
+        "'123456789012345678901234567890'; '1234567890';\n");
     assertLineBreakAtEndOfFile(
         "var12345678901234567890123456 instanceof Object;",
         "var12345678901234567890123456 instanceof\nObject",
@@ -497,15 +501,15 @@ public class CodePrinterTest extends TestCase {
 
     // long final line, no previous break, add a break at end
     assertLineBreakAtEndOfFile(
-        "\"1234567890\";\"12345678901234567890\";",
-        "\"1234567890\";\"12345678901234567890\"",
-        "\"1234567890\";\"12345678901234567890\";\n");
+        "'1234567890';'12345678901234567890';",
+        "'1234567890';'12345678901234567890'",
+        "'1234567890';'12345678901234567890';\n");
 
     // long final line, previous break, add a break at end
     assertLineBreakAtEndOfFile(
-        "\"123456789012345678901234567890\";\"12345678901234567890\";",
-        "\"123456789012345678901234567890\";\n\"12345678901234567890\"",
-        "\"123456789012345678901234567890\";\n\"12345678901234567890\";\n");
+        "'123456789012345678901234567890';'12345678901234567890';",
+        "'123456789012345678901234567890';\n'12345678901234567890'",
+        "'123456789012345678901234567890';\n'12345678901234567890';\n");
   }
 
   private void assertLineBreakAtEndOfFile(String js,
@@ -528,13 +532,13 @@ public class CodePrinterTest extends TestCase {
     assertPrettyPrint("if (1) {}",
         "if(1) {\n" +
         "}\n");
-    assertPrettyPrint("if (1) {alert(\"\");}",
+    assertPrettyPrint("if (1) {alert('');}",
         "if(1) {\n" +
-        "  alert(\"\")\n" +
+        "  alert('')\n" +
         "}\n");
-    assertPrettyPrint("if (1)alert(\"\");",
+    assertPrettyPrint("if (1)alert('');",
         "if(1) {\n" +
-        "  alert(\"\")\n" +
+        "  alert('')\n" +
         "}\n");
     assertPrettyPrint("if (1) {alert();alert();}",
         "if(1) {\n" +
@@ -799,7 +803,7 @@ public class CodePrinterTest extends TestCase {
         + " */\n"
         + "a.Foo.prototype.foo = function(foo) {\n  return 3\n};\n"
         + "/** @type {string} */\n"
-        + "a.Foo.prototype.bar = \"\";\n");
+        + "a.Foo.prototype.bar = '';\n");
   }
 
   public void testTypeAnnotationsImplements() {
@@ -927,7 +931,7 @@ public class CodePrinterTest extends TestCase {
   public void testEnumAnnotation1() {
     assertTypeAnnotations(
         "/** @enum {string} */ var Enum = {FOO: 'x', BAR: 'y'};",
-        "/** @enum {string} */\nvar Enum = {FOO:\"x\", BAR:\"y\"};\n");
+        "/** @enum {string} */\nvar Enum = {FOO:'x', BAR:'y'};\n");
   }
 
   public void testEnumAnnotation2() {
@@ -936,7 +940,7 @@ public class CodePrinterTest extends TestCase {
         "/** @enum {string} */ goog.Enum = {FOO: 'x', BAR: 'y'};" +
         "/** @const */ goog.Enum2 = goog.x ? {} : goog.Enum;",
         "var goog = goog || {};\n" +
-        "/** @enum {string} */\ngoog.Enum = {FOO:\"x\", BAR:\"y\"};\n" +
+        "/** @enum {string} */\ngoog.Enum = {FOO:'x', BAR:'y'};\n" +
         "/** @type {(Object|{})} */\ngoog.Enum2 = goog.x ? {} : goog.Enum;\n");
   }
 
@@ -966,15 +970,15 @@ public class CodePrinterTest extends TestCase {
   public void testFunctionWithCall() {
     assertPrint(
         "var user = new function() {"
-        + "alert(\"foo\")}",
+        + "alert('foo')}",
         "var user=new function(){"
-        + "alert(\"foo\")}");
+        + "alert('foo')}");
     assertPrint(
         "var user = new function() {"
-        + "this.name = \"foo\";"
+        + "this.name = 'foo';"
         + "this.local = function(){alert(this.name)};}",
         "var user=new function(){"
-        + "this.name=\"foo\";"
+        + "this.name='foo';"
         + "this.local=function(){alert(this.name)}}");
   }
 
@@ -986,10 +990,10 @@ public class CodePrinterTest extends TestCase {
 
     // operators, and two breaks
     assertLineLength(
-        "\"foo\"+\"bar,baz,bomb\"+\"whee\"+\";long-string\"\n+\"aaa\"",
-        "\"foo\"+\"bar,baz,bomb\"+" +
-        "\n\"whee\"+\";long-string\"+" +
-        "\n\"aaa\"");
+        "'foo'+'bar,baz,bomb'+'whee'+';long-string'\n+'aaa'",
+        "'foo'+'bar,baz,bomb'+" +
+        "\n'whee'+';long-string'+" +
+        "\n'aaa'");
 
     // assignment
     assertLineLength("var abazaba=1234",
@@ -1007,14 +1011,14 @@ public class CodePrinterTest extends TestCase {
         "\nvar b=a");
 
     // don't break strings
-    assertLineLength("var a=\"foo,{bar};baz\";var b=a",
-        "var a=\"foo,{bar};baz\";" +
+    assertLineLength("var a='foo,{bar};baz';var b=a",
+        "var a='foo,{bar};baz';" +
         "\nvar b=a");
 
     // don't break before post inc/dec
-    assertLineLength("var a=\"a\";a++;var b=\"bbb\";",
-        "var a=\"a\";a++;\n" +
-        "var b=\"bbb\"");
+    assertLineLength("var a='a';a++;var b='bbb';",
+        "var a='a';a++;\n" +
+        "var b='bbb'");
   }
 
   private void assertLineLength(String js, String expected) {
@@ -1033,7 +1037,7 @@ public class CodePrinterTest extends TestCase {
     testReparse("function foo(a) { return a + 4; }");
     testReparse("function foo() { return; }");
     testReparse("var a = function(a, b) { foo(); return a + b; }");
-    testReparse("b = [3, 4, 'paul', \"Buchhe it\",,5];");
+    testReparse("b = [3, 4, 'paul', 'Buchhe it',,5];");
     testReparse("v = (5, 6, 7, 8)");
     testReparse("d = 34.0; x = 0; y = .3; z = -22");
     testReparse("d = -x; t = !x + ~y;");
@@ -1162,15 +1166,15 @@ public class CodePrinterTest extends TestCase {
   }
 
   public void testDirectEval() {
-    assertPrint("eval('1');", "eval(\"1\")");
+    assertPrint("eval('1');", "eval('1')");
   }
 
   public void testIndirectEval() {
     Node n = parse("eval('1');");
-    assertPrintNode("eval(\"1\")", n);
+    assertPrintNode("eval('1')", n);
     n.getFirstChild().getFirstChild().getFirstChild().putBooleanProp(
         Node.DIRECT_EVAL, false);
-    assertPrintNode("(0,eval)(\"1\")", n);
+    assertPrintNode("(0,eval)('1')", n);
   }
 
   public void testFreeCall1() {
@@ -1203,13 +1207,13 @@ public class CodePrinterTest extends TestCase {
         new Node(Token.EXPR_RESULT, Node.newString("f")),
         new Node(Token.EXPR_RESULT, Node.newString("g")));
     String result = new CodePrinter.Builder(ast).setPrettyPrint(true).build();
-    assertEquals("\"f\";\n\"g\";\n", result);
+    assertEquals("'f';\n'g';\n", result);
   }
 
   public void testObjectLit() {
     assertPrint("({x:1})", "({x:1})");
     assertPrint("var x=({x:1})", "var x={x:1}");
-    assertPrint("var x={'x':1}", "var x={\"x\":1}");
+    assertPrint("var x={'x':1}", "var x={'x':1}");
     assertPrint("var x={1:1}", "var x={1:1}");
     assertPrint("({},42)+0", "({},42)+0");
   }
@@ -1217,8 +1221,8 @@ public class CodePrinterTest extends TestCase {
   public void testObjectLit2() {
     assertPrint("var x={1:1}", "var x={1:1}");
     assertPrint("var x={'1':1}", "var x={1:1}");
-    assertPrint("var x={'1.0':1}", "var x={\"1.0\":1}");
-    assertPrint("var x={1.5:1}", "var x={\"1.5\":1}");
+    assertPrint("var x={'1.0':1}", "var x={'1.0':1}");
+    assertPrint("var x={1.5:1}", "var x={'1.5':1}");
 
   }
 
@@ -1231,15 +1235,15 @@ public class CodePrinterTest extends TestCase {
                 "var x={3000000001:1}");
     assertPrint("var x={'6000000001':1}",  // More than 32 bits
                 "var x={6000000001:1}");
-    assertPrint("var x={\"12345678901234567\":1}",  // More than 53 bits
-                "var x={\"12345678901234567\":1}");
+    assertPrint("var x={'12345678901234567':1}",  // More than 53 bits
+                "var x={'12345678901234567':1}");
   }
 
   public void testObjectLit4() {
     // More than 128 bits.
     assertPrint(
-        "var x={\"123456789012345671234567890123456712345678901234567\":1}",
-        "var x={\"123456789012345671234567890123456712345678901234567\":1}");
+        "var x={'123456789012345671234567890123456712345678901234567':1}",
+        "var x={'123456789012345671234567890123456712345678901234567':1}");
   }
 
   public void testGetter() {
@@ -1251,15 +1255,15 @@ public class CodePrinterTest extends TestCase {
 
     assertPrint(
       "var x = {get 'a'() {return 1}}",
-      "var x={get \"a\"(){return 1}}");
+      "var x={get 'a'(){return 1}}");
 
     assertPrint(
       "var x = {get 1() {return 1}}",
       "var x={get 1(){return 1}}");
 
     assertPrint(
-      "var x = {get \"()\"() {return 1}}",
-      "var x={get \"()\"(){return 1}}");
+      "var x = {get '()'() {return 1}}",
+      "var x={get '()'(){return 1}}");
   }
 
   public void testSetter() {
@@ -1270,15 +1274,15 @@ public class CodePrinterTest extends TestCase {
 
     assertPrint(
       "var x = {get 'a'() {return 1}}",
-      "var x={get \"a\"(){return 1}}");
+      "var x={get 'a'(){return 1}}");
 
     assertPrint(
       "var x = {set 1(y) {return 1}}",
       "var x={set 1(y){return 1}}");
 
     assertPrint(
-      "var x = {set \"(x)\"(y) {return 1}}",
-      "var x={set \"(x)\"(y){return 1}}");
+      "var x = {set '(x)'(y) {return 1}}",
+      "var x={set '(x)'(y){return 1}}");
   }
 
   public void testNegCollapse() {
@@ -1302,16 +1306,16 @@ public class CodePrinterTest extends TestCase {
   }
 
   public void testZero() {
-    assertPrint("var x ='\\0';", "var x=\"\\x00\"");
-    assertPrint("var x ='\\x00';", "var x=\"\\x00\"");
-    assertPrint("var x ='\\u0000';", "var x=\"\\x00\"");
-    assertPrint("var x ='\\u00003';", "var x=\"\\x003\"");
+    assertPrint("var x ='\\0';", "var x='\\x00'");
+    assertPrint("var x ='\\x00';", "var x='\\x00'");
+    assertPrint("var x ='\\u0000';", "var x='\\x00'");
+    assertPrint("var x ='\\u00003';", "var x='\\x003'");
   }
 
   public void testUnicode() {
-    assertPrint("var x ='\\x0f';", "var x=\"\\u000f\"");
-    assertPrint("var x ='\\x68';", "var x=\"h\"");
-    assertPrint("var x ='\\x7f';", "var x=\"\\u007f\"");
+    assertPrint("var x ='\\x0f';", "var x='\\u000f'");
+    assertPrint("var x ='\\x68';", "var x='h'");
+    assertPrint("var x ='\\x7f';", "var x='\\u007f'");
   }
 
   public void testUnicodeKeyword() {
@@ -1328,17 +1332,17 @@ public class CodePrinterTest extends TestCase {
 
   public void testNumericKeys() {
     assertPrint("var x = {010: 1};", "var x={8:1}");
-    assertPrint("var x = {'010': 1};", "var x={\"010\":1}");
+    assertPrint("var x = {'010': 1};", "var x={'010':1}");
 
     assertPrint("var x = {0x10: 1};", "var x={16:1}");
-    assertPrint("var x = {'0x10': 1};", "var x={\"0x10\":1}");
+    assertPrint("var x = {'0x10': 1};", "var x={'0x10':1}");
 
     // I was surprised at this result too.
-    assertPrint("var x = {.2: 1};", "var x={\"0.2\":1}");
-    assertPrint("var x = {'.2': 1};", "var x={\".2\":1}");
+    assertPrint("var x = {.2: 1};", "var x={'0.2':1}");
+    assertPrint("var x = {'.2': 1};", "var x={'.2':1}");
 
-    assertPrint("var x = {0.2: 1};", "var x={\"0.2\":1}");
-    assertPrint("var x = {'0.2': 1};", "var x={\"0.2\":1}");
+    assertPrint("var x = {0.2: 1};", "var x={'0.2':1}");
+    assertPrint("var x = {'0.2': 1};", "var x={'0.2':1}");
   }
 
   public void testIssue582() {
@@ -1346,9 +1350,9 @@ public class CodePrinterTest extends TestCase {
   }
 
   public void testIssue601() {
-    assertPrint("'\\v' == 'v'", "\"\\v\"==\"v\"");
-    assertPrint("'\\u000B' == '\\v'", "\"\\x0B\"==\"\\v\"");
-    assertPrint("'\\x0B' == '\\v'", "\"\\x0B\"==\"\\v\"");
+    assertPrint("'\\v' == 'v'", "'\\v'=='v'");
+    assertPrint("'\\u000B' == '\\v'", "'\\x0B'=='\\v'");
+    assertPrint("'\\x0B' == '\\v'", "'\\x0B'=='\\v'");
   }
 
   public void testIssue620() {
@@ -1357,7 +1361,7 @@ public class CodePrinterTest extends TestCase {
   }
 
   public void testIssue5746867() {
-    assertPrint("var a = { '$\\\\' : 5 };", "var a={\"$\\\\\":5}");
+    assertPrint("var a = { '$\\\\' : 5 };", "var a={'$\\\\':5}");
   }
 
   public void testCommaSpacing() {
@@ -1411,20 +1415,20 @@ public class CodePrinterTest extends TestCase {
 
   public void testStringEscapeSequences() {
     // From the SingleEscapeCharacter grammar production.
-    assertPrintSame("var x=\"\\b\"");
-    assertPrintSame("var x=\"\\f\"");
-    assertPrintSame("var x=\"\\n\"");
-    assertPrintSame("var x=\"\\r\"");
-    assertPrintSame("var x=\"\\t\"");
-    assertPrintSame("var x=\"\\v\"");
+    assertPrintSame("var x='\\b'");
+    assertPrintSame("var x='\\f'");
+    assertPrintSame("var x='\\n'");
+    assertPrintSame("var x='\\r'");
+    assertPrintSame("var x='\\t'");
+    assertPrintSame("var x='\\v'");
     assertPrint("var x=\"\\\"\"", "var x='\"'");
     assertPrint("var x=\"\\\'\"", "var x=\"'\"");
 
     // From the LineTerminator grammar
-    assertPrint("var x=\"\\u000A\"", "var x=\"\\n\"");
-    assertPrint("var x=\"\\u000D\"", "var x=\"\\r\"");
-    assertPrintSame("var x=\"\\u2028\"");
-    assertPrintSame("var x=\"\\u2029\"");
+    assertPrint("var x='\\u000A'", "var x='\\n'");
+    assertPrint("var x='\\u000D'", "var x='\\r'");
+    assertPrintSame("var x='\\u2028'");
+    assertPrintSame("var x='\\u2029'");
 
     // Now with regular expressions.
     assertPrintSame("var x=/\\b/");

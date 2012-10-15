@@ -82,9 +82,9 @@ public class CreateSyntheticBlocksTest extends CompilerTestCase {
   }
 
   public void testFoldWithMarkers2() {
-    testSame("function f(){startMarker(\"FOO\");startMarker(\"BAR\");" +
-             "if(x)return;endMarker(\"BAR\");y();if(a)return;" +
-             "endMarker(\"FOO\");b()}");
+    testSame("function f(){startMarker('FOO');startMarker('BAR');" +
+             "if(x)return;endMarker('BAR');y();if(a)return;" +
+             "endMarker('FOO');b()}");
   }
 
   public void testUnmatchedStartMarker() {

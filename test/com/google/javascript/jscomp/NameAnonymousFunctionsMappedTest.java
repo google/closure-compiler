@@ -83,11 +83,11 @@ public class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     test("function a() {} a.prototype['XXX'] = function() { return 1; };",
          "function a() {} " +
          "a.prototype['XXX'] = function $() { return 1; };");
-    assertMapping("$", "a.prototype[\"XXX\"]");
+    assertMapping("$", "a.prototype['XXX']");
     test("function a() {} a.prototype['\\n'] = function() { return 1; };",
          "function a() {} " +
          "a.prototype['\\n'] = function $() { return 1; };");
-    assertMapping("$", "a.prototype[\"\\n\"]");
+    assertMapping("$", "a.prototype['\\n']");
   }
 
   public void testAssignmentToPrototype4() {
@@ -102,7 +102,7 @@ public class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     test("function a() {} a['prototype'].b = function() { return 1; };",
          "function a() {} " +
          "a['prototype'].b = function $() { return 1; };");
-    assertMapping("$", "a[\"prototype\"].b");
+    assertMapping("$", "a['prototype'].b");
   }
 
 
@@ -117,7 +117,7 @@ public class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     test("document.getElementById('x').onClick = function() {};",
          "document.getElementById('x').onClick = " +
          "function $() {};");
-    assertMapping("$", "document.getElementById(\"x\").onClick");
+    assertMapping("$", "document.getElementById('x').onClick");
   }
 
   public void testAssignmentToPropertyOfArrayElement() {
@@ -126,7 +126,7 @@ public class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$", "a.b[0].c");
     test("var a = {b: {'c': {}}}; a.b['c'].d = function() {};",
          "var a = {b: {'c': {}}}; a.b['c'].d = function $() {};");
-    assertMapping("$", "a.b[\"c\"].d");
+    assertMapping("$", "a.b['c'].d");
     test("var a = {b: {'c': {}}}; a.b[x()].d = function() {};",
          "var a = {b: {'c': {}}}; a.b[x()].d = function $() {};");
     assertMapping("$", "a.b[x()].d");
@@ -137,13 +137,13 @@ public class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
          "function f() { win['x' + this.id] = function $(a){}; }");
 
     // TODO - could probably do a better job encoding these
-    assertMapping("$", "win[\"x\"+this.id]");
+    assertMapping("$", "win['x'+this.id]");
   }
 
   public void testGetElemWithDashes() {
     test("var foo = {}; foo['-'] = function() {};",
          "var foo = {}; foo['-'] = function $() {};");
-    assertMapping("$", "foo[\"-\"]");
+    assertMapping("$", "foo['-']");
   }
 
   public void testDuplicateNames() {

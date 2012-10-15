@@ -137,6 +137,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     this.config = new CommandLineConfig();
     this.jsOutput = Preconditions.checkNotNull(out);
     this.err = Preconditions.checkNotNull(err);
+    CodeGenerator.setPreferDoubleQuotesCompatFlag(false);
   }
 
   /**
