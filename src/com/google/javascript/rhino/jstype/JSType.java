@@ -143,6 +143,11 @@ public abstract class JSType implements Serializable {
     return displayName != null && !displayName.isEmpty();
   }
 
+  /** Checks whether the property pname is present on the object. */
+  public boolean hasProperty(String pname) {
+    return false;
+  }
+
   public boolean isNoType() {
     return false;
   }

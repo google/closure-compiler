@@ -587,23 +587,17 @@ class TypeInference
         // 4) If this is a stub, define it.
         // 5) Otherwise, do not define the type, but declare it in the registry
         //    so that we can use it for missing property checks.
-        if (objectType.hasProperty(propName) ||
-            !objectType.isInstanceType()) {
+        if (objectType.hasProperty(propName) || !objectType.isInstanceType()) {
           if ("prototype".equals(propName)) {
-            objectType.defineDeclaredProperty(
-                propName, rightType, getprop);
+            objectType.defineDeclaredProperty(propName, rightType, getprop);
           } else {
-            objectType.defineInferredProperty(
-                propName, rightType, getprop);
+            objectType.defineInferredProperty(propName, rightType, getprop);
           }
+        } else if (getprop.getFirstChild().isThis() &&
+                   getJSType(syntacticScope.getRootNode()).isConstructor()) {
+          objectType.defineInferredProperty(propName, rightType, getprop);
         } else {
-          if (getprop.getFirstChild().isThis() &&
-              getJSType(syntacticScope.getRootNode()).isConstructor()) {
-            objectType.defineInferredProperty(
-                propName, rightType, getprop);
-          } else {
-            registry.registerPropertyOnType(propName, objectType);
-          }
+          registry.registerPropertyOnType(propName, objectType);
         }
       }
     }

@@ -353,6 +353,16 @@ public class UnionType extends JSType {
   }
 
   @Override
+  public boolean hasProperty(String pname) {
+    for (JSType alternate : alternates) {
+      if (alternate.hasProperty(pname)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
   public int hashCode() {
     return this.hashcode;
   }

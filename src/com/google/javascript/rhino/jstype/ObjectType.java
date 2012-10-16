@@ -406,12 +406,6 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
   public abstract JSType getPropertyType(String propertyName);
 
   /**
-   * Checks whether the property whose name is given is present on the
-   * object.
-   */
-  public abstract boolean hasProperty(String propertyName);
-
-  /**
    * Checks whether the property whose name is given is present directly on
    * the object.  Returns false even if it is declared on a supertype.
    */

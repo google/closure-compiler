@@ -3928,6 +3928,118 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: Object");
   }
 
+  public void testSetprop1() throws Exception {
+    // Create property on struct in the constructor
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() { this.x = 123; }");
+  }
+
+  public void testSetprop2() throws Exception {
+    // Create property on struct outside the constructor
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() {}\n" +
+              "(new Foo()).x = 123;",
+              "Cannot add a property to a struct instance " +
+              "after it is constructed.");
+  }
+
+  public void testSetprop3() throws Exception {
+    // Create property on struct outside the constructor
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() {}\n" +
+              "(function() { (new Foo()).x = 123; })();",
+              "Cannot add a property to a struct instance " +
+              "after it is constructed.");
+  }
+
+  public void testSetprop4() throws Exception {
+    // Assign to existing property of struct outside the constructor
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() { this.x = 123; }\n" +
+              "(new Foo()).x = \"asdf\";");
+  }
+
+  public void testSetprop5() throws Exception {
+    // Create a property on union that includes a struct
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() {}\n" +
+              "(true ? new Foo() : {}).x = 123;",
+              "Cannot add a property to a struct instance " +
+              "after it is constructed.");
+  }
+
+  public void testSetprop6() throws Exception {
+    // Create property on struct in another constructor
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() {}\n" +
+              "/**\n" +
+              " * @constructor\n" +
+              " * @param{Foo} f\n" +
+              " */\n" +
+              "function Bar(f) { f.x = 123; }",
+              "Cannot add a property to a struct instance " +
+              "after it is constructed.");
+  }
+
+  public void testSetprop7() throws Exception {
+    //Bug b/c we require THIS when creating properties on structs for simplicity
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() {\n" +
+              "  var t = this;\n" +
+              "  t.x = 123;\n" +
+              "}",
+              "Cannot add a property to a struct instance " +
+              "after it is constructed.");
+  }
+
+  public void testSetprop8() throws Exception {
+    // Create property on struct using DEC
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() {}\n" +
+              "(new Foo()).x--;",
+              new String[] {
+                "Property x never defined on Foo",
+                "Cannot add a property to a struct instance " +
+                "after it is constructed."
+              });
+  }
+
+  public void testSetprop9() throws Exception {
+    // Create property on struct using ASSIGN_ADD
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() {}\n" +
+              "(new Foo()).x += 123;",
+              "Cannot add a property to a struct instance " +
+              "after it is constructed.");
+  }
+
   public void testGetpropDict1() throws Exception {
     testTypes("/**\n" +
               " * @constructor\n" +

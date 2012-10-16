@@ -233,6 +233,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.warning("JSC_IN_USED_WITH_STRUCT",
                              "Cannot use the IN operator with structs");
 
+  static final DiagnosticType ILLEGAL_PROPERTY_CREATION =
+      DiagnosticType.warning("JSC_ILLEGAL_PROPERTY_CREATION",
+                             "Cannot add a property to a struct instance " +
+                             "after it is constructed.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       DETERMINISTIC_TEST,
       DETERMINISTIC_TEST_NO_RESULT,
@@ -263,6 +268,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
       EXPECTED_THIS_TYPE,
       IN_USED_WITH_STRUCT,
+      ILLEGAL_PROPERTY_CREATION,
       RhinoErrorReporter.TYPE_PARSE_ERROR,
       TypedScopeCreator.UNKNOWN_LENDS,
       TypedScopeCreator.LENDS_ON_NON_OBJECT,
@@ -556,8 +562,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case Token.DEC:
       case Token.INC:
         left = n.getFirstChild();
-        validator.expectNumber(
-            t, left, getJSType(left), "increment/decrement");
+        checkPropCreation(t, left);
+        validator.expectNumber(t, left, getJSType(left), "increment/decrement");
         ensureTyped(t, n, NUMBER_TYPE);
         break;
 
@@ -712,6 +718,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case Token.ASSIGN_SUB:
       case Token.ASSIGN_ADD:
       case Token.ASSIGN_MUL:
+        checkPropCreation(t, n.getFirstChild());
+        // fall through
+
       case Token.LSH:
       case Token.RSH:
       case Token.URSH:
@@ -867,7 +876,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (lvalue.isGetProp()) {
       Node object = lvalue.getFirstChild();
       JSType objectJsType = getJSType(object);
-      String property = lvalue.getLastChild().getString();
+      Node property = lvalue.getLastChild();
+      String pname = property.getString();
 
       // the first name in this getprop refers to an interface
       // we perform checks in addition to the ones below
@@ -875,17 +885,18 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         JSType jsType = getJSType(object.getFirstChild());
         if (jsType.isInterface() &&
             object.getLastChild().getString().equals("prototype")) {
-          visitInterfaceGetprop(t, assign, object, property, lvalue, rvalue);
+          visitInterfaceGetprop(t, assign, object, pname, lvalue, rvalue);
         }
       }
 
       checkEnumAlias(t, info, rvalue);
+      checkPropCreation(t, lvalue);
 
       // Prototype assignments are special, because they actually affect
       // the definition of a class. These are mostly validated
       // during TypedScopeCreator, and we only look for the "dumb" cases here.
       // object.prototype = ...;
-      if (property.equals("prototype")) {
+      if (pname.equals("prototype")) {
         if (objectJsType != null && objectJsType.isFunctionType()) {
           FunctionType functionType = objectJsType.toMaybeFunctionType();
           if (functionType.isConstructor()) {
@@ -903,16 +914,16 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ObjectType type = ObjectType.cast(
           objectJsType.restrictByNotNullOrUndefined());
       if (type != null) {
-        if (type.hasProperty(property) &&
-            !type.isPropertyTypeInferred(property) &&
-            !propertyIsImplicitCast(type, property)) {
-          JSType expectedType = type.getPropertyType(property);
+        if (type.hasProperty(pname) &&
+            !type.isPropertyTypeInferred(pname) &&
+            !propertyIsImplicitCast(type, pname)) {
+          JSType expectedType = type.getPropertyType(pname);
           if (!expectedType.isUnknownType()) {
             validator.expectCanAssignToPropertyOf(
                 t, assign, getJSType(rvalue),
-                expectedType, object, property);
+                expectedType, object, pname);
             checkPropertyInheritanceOnGetpropAssign(
-                t, assign, object, property, info, expectedType);
+                t, assign, object, pname, info, expectedType);
             return;
           }
         }
@@ -921,7 +932,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // If we couldn't get the property type with normal object property
       // lookups, then check inheritance anyway with the unknown type.
       checkPropertyInheritanceOnGetpropAssign(
-          t, assign, object, property, info, getNativeType(UNKNOWN_TYPE));
+          t, assign, object, pname, info, getNativeType(UNKNOWN_TYPE));
     }
 
     // Check qualified name sets to 'object' and 'object.property'.
@@ -959,6 +970,22 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ensureTyped(t, assign, rightType);
     } else {
       ensureTyped(t, assign);
+    }
+  }
+
+  /** Check that we don't create new properties on structs. */
+  private void checkPropCreation(NodeTraversal t, Node lvalue) {
+    if (lvalue.isGetProp()) {
+      Node obj = lvalue.getFirstChild();
+      Node prop = lvalue.getLastChild();
+      JSType objType = getJSType(obj);
+      String pname = prop.getString();
+      if (objType.isStruct() && !objType.hasProperty(pname)) {
+        if (!(obj.isThis() &&
+              getJSType(t.getScope().getRootNode()).isConstructor())) {
+          report(t, prop, ILLEGAL_PROPERTY_CREATION);
+        }
+      }
     }
   }
 
@@ -1539,7 +1566,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       FunctionType baseConstructor = functionType.getSuperClassConstructor();
       if (baseConstructor != getNativeType(OBJECT_FUNCTION_TYPE) &&
           baseConstructor != null &&
-          baseConstructor.isInterface() && functionType.isConstructor()) {
+          baseConstructor.isInterface()) {
         compiler.report(
             t.makeError(n, CONFLICTING_EXTENDED_TYPE,
                         "constructor", functionPrivateName));
