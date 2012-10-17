@@ -460,6 +460,35 @@ public class SemanticReverseAbstractInterpreterTest
   }
 
   @SuppressWarnings("unchecked")
+  public void testTypeof3() {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.EQ,
+        new Node(Token.TYPEOF, createVar(
+            blind, "a", OBJECT_NUMBER_STRING_BOOLEAN)),
+        Node.newString("function"),
+        Sets.newHashSet(
+            new TypedName("a", U2U_CONSTRUCTOR_TYPE)),
+        Sets.newHashSet(
+            new TypedName("a", OBJECT_NUMBER_STRING_BOOLEAN)));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testTypeof4() {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.EQ,
+        new Node(Token.TYPEOF, createVar(
+            blind, "a", createUnionType(
+                U2U_CONSTRUCTOR_TYPE,NUMBER_STRING_BOOLEAN))),
+        Node.newString("function"),
+        Sets.newHashSet(
+            new TypedName("a", U2U_CONSTRUCTOR_TYPE)),
+        Sets.newHashSet(
+            new TypedName("a", NUMBER_STRING_BOOLEAN)));
+  }
+
+  @SuppressWarnings("unchecked")
   public void testInstanceOf() {
     FlowScope blind = newScope();
     testBinop(blind,
