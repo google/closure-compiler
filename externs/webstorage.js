@@ -21,7 +21,7 @@
 
 /**
  * @interface
- * @see http://www.w3.org/TR/2009/WD-webstorage-20091029/#the-storage-interface
+ * @see http://www.w3.org/TR/2011/CR-webstorage-20111208/#the-storage-interface
  */
 function Storage() {}
 
@@ -39,13 +39,13 @@ Storage.prototype.key = function(index) {};
 
 /**
  * @param {string} key
- * @return {*}
+ * @return {?string}
  */
 Storage.prototype.getItem = function(key) {};
 
 /**
  * @param {string} key
- * @param {*} data
+ * @param {string} data
  * @return {void}
  */
 Storage.prototype.setItem = function(key, data) {};
@@ -63,7 +63,7 @@ Storage.prototype.clear = function() {};
 
 /**
  * @interface
- * @see http://www.w3.org/TR/2009/WD-webstorage-20091029/#the-sessionstorage-attribute
+ * @see http://www.w3.org/TR/2011/CR-webstorage-20111208/#the-sessionstorage-attribute
  */
 function WindowSessionStorage() {}
 
@@ -81,7 +81,7 @@ Window.prototype.sessionStorage;
 
 /**
  * @interface
- * @see http://www.w3.org/TR/2009/WD-webstorage-20091029/#the-localstorage-attribute
+ * @see http://www.w3.org/TR/2011/CR-webstorage-20111208/#the-localstorage-attribute
  */
 function WindowLocalStorage() {}
 
@@ -99,7 +99,7 @@ Window.prototype.localStorage;
 
 /**
  * This is the storage event interface.
- * @see http://www.w3.org/TR/2009/WD-webstorage-20091029/#the-storage-event
+ * @see http://www.w3.org/TR/2011/CR-webstorage-20111208/#the-storage-event
  * @extends {Event}
  * @constructor
  */
@@ -111,12 +111,12 @@ function StorageEvent() {}
 StorageEvent.prototype.key;
 
 /**
- * @type {*}
+ * @type {?string}
  */
 StorageEvent.prototype.oldValue;
 
 /**
- * @type {*}
+ * @type {?string}
  */
 StorageEvent.prototype.newValue;
 
@@ -126,7 +126,7 @@ StorageEvent.prototype.newValue;
 StorageEvent.prototype.url;
 
 /**
- * @type {Storage}
+ * @type {?Storage}
  */
 StorageEvent.prototype.storageArea;
 
@@ -135,10 +135,10 @@ StorageEvent.prototype.storageArea;
  * @param {boolean} canBubbleArg
  * @param {boolean} cancelableArg
  * @param {string} keyArg
- * @param {*} oldValueArg
- * @param {*} newValueArg
+ * @param {?string} oldValueArg
+ * @param {?string} newValueArg
  * @param {string} urlArg
- * @param {Storage} storageAreaArg
+ * @param {?Storage} storageAreaArg
  * @return {void}
  */
 StorageEvent.prototype.initStorageEvent = function(typeArg, canBubbleArg,
