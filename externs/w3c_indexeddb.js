@@ -850,3 +850,35 @@ IDBKeyRange.bound = function(left, right, openLeft, openRight) {};
  * @return {!IDBKeyRange} The key range.
  */
 webkitIDBKeyRange.bound = function(left, right, openLeft, openRight) {};
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBVersionChangeEvent
+ */
+function IDBVersionChangeEvent() {}
+
+/**
+ * @type {number}
+ * @const
+ */
+IDBVersionChangeEvent.prototype.oldVersion;
+
+/**
+ * @type {?number}
+ * @const
+ */
+IDBVersionChangeEvent.prototype.newVersion;
+
+/**
+ * @constructor
+ * @extends {IDBVersionChangeEvent}
+ * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBVersionChangeEvent
+ */
+function webkitIDBVersionChangeEvent() {}
+
+/**
+ * @type {string}
+ * @const
+ */
+webkitIDBVersionChangeEvent.prototype.version;
