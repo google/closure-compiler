@@ -56,6 +56,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 
+import javax.annotation.Nullable;
+
 /**
  * Implementations of AbstractCommandLineRunner translate flags into Java
  * API calls on the Compiler. AbstractCompiler contains common flags and logic
@@ -125,7 +127,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   // Bookkeeping to measure optimal phase orderings.
   private static final int NUM_RUNS_TO_DETERMINE_OPTIMAL_ORDER = 100;
 
-  private static final String OUTPUT_WRAPPER_MARKER = "%output%";
+  private static final String OUTPUT_MARKER = "%output%";
+  private static final String OUTPUT_MARKER_JS_STRING = "%output|jsstring%";
 
   private final RunTimeStats runTimeStats = new RunTimeStats();
 
@@ -669,7 +672,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     String baseName = new File(fileName).getName();
     writeOutput(out, compiler, compiler.toSource(m),
         parsedModuleWrappers.get(m.getName()).replace("%basename%", baseName),
-        "%s");
+        "%s", null);
   }
 
   /**
@@ -677,7 +680,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * wrapper that contains a placeholder where the code should be inserted.
    */
   static void writeOutput(Appendable out, Compiler compiler, String code,
-      String wrapper, String codePlaceholder) throws IOException {
+      String wrapper, String codePlaceholder,
+      @Nullable Function<String, String> escaper)
+      throws IOException {
     int pos = wrapper.indexOf(codePlaceholder);
     if (pos != -1) {
       String prefix = "";
@@ -687,7 +692,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         out.append(prefix);
       }
 
-      out.append(code);
+      out.append(escaper == null ? code : escaper.apply(code));
 
       int suffixStart = pos + codePlaceholder.length();
       if (suffixStart != wrapper.length()) {
@@ -845,55 +850,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     } else if (result.success) {
       outputModuleGraphJson();
       if (modules == null) {
-        writeOutput(
-            jsOutput, compiler, compiler.toSource(), config.outputWrapper,
-            OUTPUT_WRAPPER_MARKER);
+        outputSingleBinary();
 
         // Output the source map if requested.
         outputSourceMap(options, config.jsOutputFile);
       } else {
-        parsedModuleWrappers = parseModuleWrappers(
-            config.moduleWrapper, modules);
-        maybeCreateDirsForPath(config.moduleOutputPathPrefix);
-
-        // If the source map path is in fact a pattern for each
-        // module, create a stream per-module. Otherwise, create
-        // a single source map.
-        Writer mapOut = null;
-
-        if (!shouldGenerateMapPerModule(options)) {
-          mapOut = fileNameToOutputWriter2(expandSourceMapPath(options, null));
-        }
-
-        for (JSModule m : modules) {
-          if (shouldGenerateMapPerModule(options)) {
-            mapOut = fileNameToOutputWriter2(expandSourceMapPath(options, m));
-          }
-
-          Writer writer =
-              fileNameToLegacyOutputWriter(getModuleOutputFileName(m));
-
-          if (options.sourceMapOutputPath != null) {
-            compiler.getSourceMap().reset();
-          }
-
-          writeModuleOutput(writer, m);
-
-          if (options.sourceMapOutputPath != null) {
-            compiler.getSourceMap().appendTo(mapOut, m.getName());
-          }
-
-          writer.close();
-
-          if (shouldGenerateMapPerModule(options) && mapOut != null) {
-            mapOut.close();
-            mapOut = null;
-          }
-        }
-
-        if (mapOut != null) {
-          mapOut.close();
-        }
+        outputModuleBinaryAndSourceMaps(modules, options);
       }
 
       // Output the externs if required.
@@ -918,6 +880,71 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     // return 0 if no errors, the error count otherwise
     return Math.min(result.errors.length, 0x7f);
+  }
+
+  Function<String, String> getJavascriptEscaper() {
+    throw new UnsupportedOperationException(
+        "SourceCodeEscapers is not in the standard release of Guava yet :(");
+  }
+
+  void outputSingleBinary() throws IOException {
+    Function<String, String> escaper = null;
+    String marker = OUTPUT_MARKER;
+    if (config.outputWrapper.contains(OUTPUT_MARKER_JS_STRING)) {
+      marker = OUTPUT_MARKER_JS_STRING;
+      escaper = getJavascriptEscaper();
+    }
+
+    writeOutput(
+        jsOutput, compiler, compiler.toSource(), config.outputWrapper,
+        marker, escaper);
+  }
+
+  private void outputModuleBinaryAndSourceMaps(
+      List<JSModule> modules, B options)
+      throws FlagUsageException, IOException {
+    parsedModuleWrappers = parseModuleWrappers(
+        config.moduleWrapper, modules);
+    maybeCreateDirsForPath(config.moduleOutputPathPrefix);
+
+    // If the source map path is in fact a pattern for each
+    // module, create a stream per-module. Otherwise, create
+    // a single source map.
+    Writer mapOut = null;
+
+    if (!shouldGenerateMapPerModule(options)) {
+      mapOut = fileNameToOutputWriter2(expandSourceMapPath(options, null));
+    }
+
+    for (JSModule m : modules) {
+      if (shouldGenerateMapPerModule(options)) {
+        mapOut = fileNameToOutputWriter2(expandSourceMapPath(options, m));
+      }
+
+      Writer writer =
+          fileNameToLegacyOutputWriter(getModuleOutputFileName(m));
+
+      if (options.sourceMapOutputPath != null) {
+        compiler.getSourceMap().reset();
+      }
+
+      writeModuleOutput(writer, m);
+
+      if (options.sourceMapOutputPath != null) {
+        compiler.getSourceMap().appendTo(mapOut, m.getName());
+      }
+
+      writer.close();
+
+      if (shouldGenerateMapPerModule(options) && mapOut != null) {
+        mapOut.close();
+        mapOut = null;
+      }
+    }
+
+    if (mapOut != null) {
+      mapOut.close();
+    }
   }
 
   private void outputTracerReport() {
@@ -1823,7 +1850,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     /**
      * Interpolate output into this string at the place denoted
-     *  by the marker token %output%. See --output_wrapper_marker
+     * by the marker token %output%, or %output|jsstring%
      */
     CommandLineConfig setOutputWrapper(String outputWrapper) {
       this.outputWrapper = outputWrapper;

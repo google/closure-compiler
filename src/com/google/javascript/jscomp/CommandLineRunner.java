@@ -202,7 +202,8 @@ public class CommandLineRunner extends
 
     @Option(name = "--output_wrapper",
         usage = "Interpolate output into this string at the place denoted"
-        + " by the marker token %output%. See --output_wrapper_marker")
+        + " by the marker token %output%. Use marker token %output|jsstring%"
+        + " to do js string escaping on the output.")
     private String output_wrapper = "";
 
     @Option(name = "--module_wrapper",
