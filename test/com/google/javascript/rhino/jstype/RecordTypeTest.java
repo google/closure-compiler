@@ -109,4 +109,73 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
     Asserts.assertTypeEquals(
         aSupC, proxyRecordA.getLeastSupertype(proxyRecordC));
   }
+
+  public void testSubtypeWithUnknowns() throws Exception {
+    JSType recordA = new RecordTypeBuilder(registry)
+        .addProperty("a", NUMBER_TYPE, null)
+        .build();
+    JSType recordB = new RecordTypeBuilder(registry)
+        .addProperty("a", UNKNOWN_TYPE, null)
+        .build();
+    assertTrue(recordA.isSubtype(recordB));
+    assertTrue(recordB.isSubtype(recordA));
+  }
+
+  public void testSubtypeWithUnknowns2() throws Exception {
+    JSType recordA = new RecordTypeBuilder(registry)
+        .addProperty("a",
+            new FunctionBuilder(registry)
+            .withReturnType(NUMBER_TYPE)
+            .build(),
+            null)
+        .build();
+    JSType recordB = new RecordTypeBuilder(registry)
+        .addProperty("a",
+            new FunctionBuilder(registry)
+            .withReturnType(UNKNOWN_TYPE)
+            .build(),
+            null)
+        .build();
+    assertTrue(recordA.isSubtype(recordB));
+    assertTrue(recordB.isSubtype(recordA));
+  }
+
+  public void testSubtypeWithFunctionProps() throws Exception {
+    JSType recordA = new RecordTypeBuilder(registry)
+        .addProperty("a",
+            new FunctionBuilder(registry)
+            .withReturnType(NUMBER_TYPE)
+            .build(),
+            null)
+        .build();
+    JSType recordB = new RecordTypeBuilder(registry)
+        .addProperty("a",
+            new FunctionBuilder(registry)
+            .withReturnType(STRING_TYPE)
+            .build(),
+            null)
+        .build();
+    assertFalse(recordA.isSubtype(recordB));
+    assertFalse(recordB.isSubtype(recordA));
+  }
+
+  public void testSubtypeWithManyProps() throws Exception {
+    JSType recordA = new RecordTypeBuilder(registry)
+        .addProperty("a", NUMBER_TYPE, null)
+        .addProperty("b", NUMBER_TYPE, null)
+        .build();
+    JSType recordB = new RecordTypeBuilder(registry)
+        .addProperty("a", NUMBER_TYPE, null)
+        .addProperty("b", STRING_TYPE, null)
+        .build();
+    JSType recordC = new RecordTypeBuilder(registry)
+        .addProperty("a", NUMBER_TYPE, null)
+        .addProperty("b",
+            registry.createUnionType(NUMBER_TYPE, STRING_TYPE), null)
+        .build();
+    assertFalse(recordA.isSubtype(recordB));
+    assertFalse(recordB.isSubtype(recordA));
+    assertFalse(recordC.isSubtype(recordB));
+    assertFalse(recordB.isSubtype(recordC));
+  }
 }

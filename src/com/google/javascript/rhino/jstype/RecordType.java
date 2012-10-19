@@ -115,7 +115,7 @@ class RecordType extends PrototypeObjectType {
   }
 
   boolean checkRecordEquivalenceHelper(
-      RecordType otherRecord, boolean tolerateUnknowns) {
+      RecordType otherRecord, EquivalenceMethod eqMethod) {
     Set<String> keySet = properties.keySet();
     Map<String, JSType> otherProps = otherRecord.properties;
     if (!otherProps.keySet().equals(keySet)) {
@@ -123,7 +123,7 @@ class RecordType extends PrototypeObjectType {
     }
     for (String key : keySet) {
       if (!otherProps.get(key).checkEquivalenceHelper(
-              properties.get(key), tolerateUnknowns)) {
+              properties.get(key), eqMethod)) {
         return false;
       }
     }
@@ -161,7 +161,7 @@ class RecordType extends PrototypeObjectType {
       // is returned.
       for (String property : properties.keySet()) {
         if (thatRecord.hasProperty(property) &&
-            !thatRecord.getPropertyType(property).isEquivalentTo(
+            !thatRecord.getPropertyType(property).isInvariant(
                 getPropertyType(property))) {
           return registry.getNativeObjectType(JSTypeNative.NO_TYPE);
         }
@@ -201,8 +201,7 @@ class RecordType extends PrototypeObjectType {
           JSType altPropType = alt.getPropertyType(propName);
           if (altPropType != null && !alt.isEquivalentTo(this) &&
               alt.isSubtype(that) &&
-              (propType.isUnknownType() || altPropType.isUnknownType() ||
-                  altPropType.isEquivalentTo(propType))) {
+              propType.isInvariant(altPropType)) {
             builder.addAlternate(alt);
           }
         }
@@ -265,15 +264,17 @@ class RecordType extends PrototypeObjectType {
 
       JSType propA = typeA.getPropertyType(property);
       JSType propB = typeB.getPropertyType(property);
-      if (!propA.isUnknownType() && !propB.isUnknownType()) {
-        if (typeA.isPropertyTypeDeclared(property)) {
-          if (!propA.isEquivalentTo(propB)) {
-            return false;
-          }
-        } else {
-          if (!propA.isSubtype(propB)) {
-            return false;
-          }
+      if (typeA.isPropertyTypeDeclared(property)) {
+        // If one declared property isn't invariant,
+        // then the whole record isn't covariant.
+        if (!propA.isInvariant(propB)) {
+          return false;
+        }
+      } else {
+        // If one inferred property isn't a subtype,
+        // then the whole record isn't covariant.
+        if (!propA.isSubtype(propB)) {
+          return false;
         }
       }
     }

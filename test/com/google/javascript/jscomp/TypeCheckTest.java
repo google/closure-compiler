@@ -6420,16 +6420,12 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testIssue791() throws Exception {
-    // TODO(nicksantos): This warning is wrong, and should be fixed.
     testTypes(
         "/** @param {{func: function()}} obj */" +
         "function test1(obj) {}" +
         "var fnStruc1 = {};" +
         "fnStruc1.func = function() {};" +
-        "test1(fnStruc1);",
-        "actual parameter 1 of test1 does not match formal parameter\n" +
-        "found   : {func: function (): undefined}\n" +
-        "required: {func: function (): ?}");
+        "test1(fnStruc1);");
   }
 
   public void testIssue810() throws Exception {

@@ -331,21 +331,22 @@ public class UnionType extends JSType {
    * and all alternates are equal.
    */
   boolean checkUnionEquivalenceHelper(
-      UnionType that, boolean tolerateUnknowns) {
-    if (!tolerateUnknowns && alternates.size() != that.alternates.size()) {
+      UnionType that, EquivalenceMethod eqMethod) {
+    if (eqMethod == EquivalenceMethod.IDENTITY
+        && alternates.size() != that.alternates.size()) {
       return false;
     }
     for (JSType alternate : that.alternates) {
-      if (!hasAlternate(alternate, tolerateUnknowns)) {
+      if (!hasAlternate(alternate, eqMethod)) {
         return false;
       }
     }
     return true;
   }
 
-  private boolean hasAlternate(JSType type, boolean tolerateUnknowns) {
+  private boolean hasAlternate(JSType type, EquivalenceMethod eqMethod) {
     for (JSType alternate : alternates) {
-      if (alternate.checkEquivalenceHelper(type, tolerateUnknowns)) {
+      if (alternate.checkEquivalenceHelper(type, eqMethod)) {
         return true;
       }
     }

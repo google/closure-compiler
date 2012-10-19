@@ -789,7 +789,7 @@ public class FunctionType extends PrototypeObjectType {
   private FunctionType tryMergeFunctionPiecewise(
       FunctionType other, boolean leastSuper) {
     Node newParamsNode = null;
-    if (call.hasEqualParameters(other.call, false)) {
+    if (call.hasEqualParameters(other.call, EquivalenceMethod.IDENTITY)) {
       newParamsNode = call.parameters;
     } else {
       // If the parameters are not equal, don't try to merge them.
@@ -887,7 +887,7 @@ public class FunctionType extends PrototypeObjectType {
    * have signatures, two interfaces are equal if their names match.
    */
   boolean checkFunctionEquivalenceHelper(
-      FunctionType that, boolean tolerateUnknowns) {
+      FunctionType that, EquivalenceMethod eqMethod) {
     if (isConstructor()) {
       if (that.isConstructor()) {
         return this == that;
@@ -905,8 +905,8 @@ public class FunctionType extends PrototypeObjectType {
     }
 
     return typeOfThis.checkEquivalenceHelper(
-        that.typeOfThis, tolerateUnknowns) &&
-        call.checkArrowEquivalenceHelper(that.call, tolerateUnknowns);
+        that.typeOfThis, eqMethod) &&
+        call.checkArrowEquivalenceHelper(that.call, eqMethod);
   }
 
   @Override
@@ -915,7 +915,8 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   public boolean hasEqualCallType(FunctionType otherType) {
-    return this.call.checkArrowEquivalenceHelper(otherType.call, false);
+    return this.call.checkArrowEquivalenceHelper(
+        otherType.call, EquivalenceMethod.IDENTITY);
   }
 
   /**

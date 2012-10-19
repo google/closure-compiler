@@ -174,7 +174,7 @@ final class ArrowType extends JSType {
    * @return True if our parameter spec is equal to {@code that}'s parameter
    *     spec.
    */
-  boolean hasEqualParameters(ArrowType that, boolean tolerateUnknowns) {
+  boolean hasEqualParameters(ArrowType that, EquivalenceMethod eqMethod) {
     Node thisParam = parameters.getFirstChild();
     Node otherParam = that.parameters.getFirstChild();
     while (thisParam != null && otherParam != null) {
@@ -184,7 +184,7 @@ final class ArrowType extends JSType {
         // Both parameter lists give a type for this param, it should be equal
         if (otherParamType != null &&
             !thisParamType.checkEquivalenceHelper(
-                otherParamType, tolerateUnknowns)) {
+                otherParamType, eqMethod)) {
           return false;
         }
       } else {
@@ -201,12 +201,12 @@ final class ArrowType extends JSType {
   }
 
   boolean checkArrowEquivalenceHelper(
-      ArrowType that, boolean tolerateUnknowns) {
+      ArrowType that, EquivalenceMethod eqMethod) {
     // Please keep this method in sync with the hashCode() method below.
-    if (!returnType.checkEquivalenceHelper(that.returnType, tolerateUnknowns)) {
+    if (!returnType.checkEquivalenceHelper(that.returnType, eqMethod)) {
       return false;
     }
-    return hasEqualParameters(that, tolerateUnknowns);
+    return hasEqualParameters(that, eqMethod);
   }
 
   @Override
