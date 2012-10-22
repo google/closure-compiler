@@ -315,13 +315,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.sourceMapFormat = config.sourceMapFormat;
 
     if (!config.variableMapInputFile.equals("")) {
-      options.inputVariableMapSerialized =
-          VariableMap.load(config.variableMapInputFile).toBytes();
+      options.inputVariableMap =
+          VariableMap.load(config.variableMapInputFile);
     }
 
     if (!config.propertyMapInputFile.equals("")) {
-      options.inputPropertyMapSerialized =
-          VariableMap.load(config.propertyMapInputFile).toBytes();
+      options.inputPropertyMap =
+          VariableMap.load(config.propertyMapInputFile);
     }
 
     if (config.languageIn.length() > 0) {

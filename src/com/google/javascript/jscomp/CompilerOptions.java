@@ -501,10 +501,10 @@ public class CompilerOptions implements Serializable, Cloneable {
   public AnonymousFunctionNamingPolicy anonymousFunctionNaming;
 
   /** Serialized input variable renaming map. */
-  public byte[] inputVariableMapSerialized;
+  VariableMap inputVariableMap;
 
   /** Serialized input property renaming map. */
-  public byte[] inputPropertyMapSerialized;
+  VariableMap inputPropertyMap;
 
   /** Whether to export test functions. */
   public boolean exportTestFunctions;
@@ -1763,12 +1763,24 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.anonymousFunctionNaming = anonymousFunctionNaming;
   }
 
-  public void setInputVariableMapSerialized(byte[] inputVariableMapSerialized) {
-    this.inputVariableMapSerialized = inputVariableMapSerialized;
+  @Deprecated
+  public void setInputVariableMapSerialized(byte[] inputVariableMapSerialized)
+      throws ParseException {
+    this.inputVariableMap = VariableMap.fromBytes(inputVariableMapSerialized);
   }
 
-  public void setInputPropertyMapSerialized(byte[] inputPropertyMapSerialized) {
-    this.inputPropertyMapSerialized = inputPropertyMapSerialized;
+  public void setInputVariableMap(VariableMap inputVariableMap) {
+    this.inputVariableMap = inputVariableMap;
+  }
+
+  @Deprecated
+  public void setInputPropertyMapSerialized(byte[] inputPropertyMapSerialized)
+      throws ParseException {
+    this.inputPropertyMap = VariableMap.fromBytes(inputPropertyMapSerialized);
+  }
+
+  public void setInputPropertyMap(VariableMap inputPropertyMap) {
+    this.inputPropertyMap = inputPropertyMap;
   }
 
   public void setExportTestFunctions(boolean exportTestFunctions) {
@@ -1871,9 +1883,8 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.replaceStringsReservedStrings = replaceStringsReservedStrings;
   }
 
-  public void setReplaceStringsInputMapSerialized(byte[] serializedMap)
-      throws ParseException {
-    this.replaceStringsInputMap = VariableMap.fromBytes(serializedMap);
+  public void setReplaceStringsInputMap(VariableMap serializedMap) {
+    this.replaceStringsInputMap = serializedMap;
   }
 
   public void setPrettyPrint(boolean prettyPrint) {

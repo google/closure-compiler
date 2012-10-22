@@ -33,7 +33,6 @@ import com.google.javascript.rhino.Node;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -70,14 +69,6 @@ public class DefaultPassConfig extends PassConfig {
   static final DiagnosticType REPORT_PATH_IO_ERROR =
       DiagnosticType.error("JSC_REPORT_PATH_IO_ERROR",
           "Error writing compiler report to {0}");
-
-  private static final DiagnosticType INPUT_MAP_PROP_PARSE =
-      DiagnosticType.error("JSC_INPUT_MAP_PROP_PARSE",
-          "Input property map parse error: {0}");
-
-  private static final DiagnosticType INPUT_MAP_VAR_PARSE =
-      DiagnosticType.error("JSC_INPUT_MAP_VAR_PARSE",
-          "Input variable map parse error: {0}");
 
   private static final DiagnosticType NAME_REF_GRAPH_FILE_ERROR =
       DiagnosticType.error("JSC_NAME_REF_GRAPH_FILE_ERROR",
@@ -2065,17 +2056,7 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("renameProperties", true) {
     @Override
     protected CompilerPass createInternal(final AbstractCompiler compiler) {
-      VariableMap map = null;
-      if (options.inputPropertyMapSerialized != null) {
-        try {
-          map = VariableMap.fromBytes(options.inputPropertyMapSerialized);
-        } catch (ParseException e) {
-          return new ErrorPass(compiler,
-              JSError.make(INPUT_MAP_PROP_PARSE, e.getMessage()));
-        }
-      }
-
-      final VariableMap prevPropertyMap = map;
+      final VariableMap prevPropertyMap = options.inputPropertyMap;
       return new CompilerPass() {
         @Override public void process(Node externs, Node root) {
           propertyMap = runPropertyRenaming(
@@ -2121,17 +2102,7 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("renameVars", true) {
     @Override
     protected CompilerPass createInternal(final AbstractCompiler compiler) {
-      VariableMap map = null;
-      if (options.inputVariableMapSerialized != null) {
-        try {
-          map = VariableMap.fromBytes(options.inputVariableMapSerialized);
-        } catch (ParseException e) {
-          return new ErrorPass(compiler,
-              JSError.make(INPUT_MAP_VAR_PARSE, e.getMessage()));
-        }
-      }
-
-      final VariableMap prevVariableMap = map;
+      final VariableMap prevVariableMap = options.inputVariableMap;
       return new CompilerPass() {
         @Override public void process(Node externs, Node root) {
           variableMap = runVariableRenaming(
