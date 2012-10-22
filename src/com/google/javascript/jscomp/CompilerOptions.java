@@ -25,6 +25,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
 import java.io.Serializable;
+import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -651,9 +652,12 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /** Configuration strings */
   List<String> replaceStringsFunctionDescriptions;
+
   String replaceStringsPlaceholderToken;
   // A list of strings that should not be used as replacements
   Set<String> replaceStringsReservedStrings;
+  // A previous map of replacements to strings.
+  VariableMap replaceStringsInputMap;
 
   /** List of properties that we report invalidation errors for. */
   Map<String, CheckLevel> propertyInvalidationErrors;
@@ -1865,6 +1869,11 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setReplaceStringsReservedStrings(Set<String> replaceStringsReservedStrings) {
     this.replaceStringsReservedStrings = replaceStringsReservedStrings;
+  }
+
+  public void setReplaceStringsInputMapSerialized(byte[] serializedMap)
+      throws ParseException {
+    this.replaceStringsInputMap = VariableMap.fromBytes(serializedMap);
   }
 
   public void setPrettyPrint(boolean prettyPrint) {

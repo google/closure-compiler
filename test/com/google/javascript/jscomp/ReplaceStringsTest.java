@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.ReplaceStrings.Result;
@@ -32,6 +33,7 @@ import java.util.Set;
 public class ReplaceStringsTest extends CompilerTestCase {
   private ReplaceStrings pass;
   private Set<String> reserved;
+  private VariableMap previous;
 
   private final static String EXTERNS =
     "var goog = {};\n" +
@@ -67,6 +69,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
     super.enableLineNumberCheck(false);
     super.enableTypeCheck(CheckLevel.OFF);
     reserved = Collections.emptySet();
+    previous = null;
   }
 
   @Override
@@ -77,7 +80,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
         "goog.debug.Logger.getLogger(?)",
         "goog.debug.Logger.prototype.info(?)"
         );
-    pass = new ReplaceStrings(compiler, "`", names, reserved);
+    pass = new ReplaceStrings(compiler, "`", names, reserved, previous);
 
     return new CompilerPass() {
         @Override
@@ -95,11 +98,42 @@ public class ReplaceStringsTest extends CompilerTestCase {
     return 1;
   }
 
+  public void testStable1() {
+    previous = VariableMap.fromMap(ImmutableMap.of("previous","xyz"));
+    testDebugStrings(
+        "Error('xyz');",
+        "Error('previous');",
+        (new String[] { "previous", "xyz" }));
+    reserved = ImmutableSet.of("a", "b", "previous");
+    testDebugStrings(
+        "Error('xyz');",
+        "Error('c');",
+        (new String[] { "c", "xyz" }));
+  }
+
+  public void testStable2() {
+    // Two things happen here:
+    // 1) a previously used name "a" is not used for another string, "b" is
+    // chosen instead.
+    // 2) a previously used name "a" is dropped from the output map if
+    // it isn't used.
+    previous = VariableMap.fromMap(ImmutableMap.of("a","unused"));
+    testDebugStrings(
+        "Error('xyz');",
+        "Error('b');",
+        (new String[] { "b", "xyz" }));
+  }
+
   public void testThrowError1() {
     testDebugStrings(
         "throw Error('xyz');",
         "throw Error('a');",
         (new String[] { "a", "xyz" }));
+    previous = VariableMap.fromMap(ImmutableMap.of("previous","xyz"));
+    testDebugStrings(
+        "throw Error('xyz');",
+        "throw Error('previous');",
+        (new String[] { "previous", "xyz" }));
   }
 
   public void testThrowError2() {

@@ -1440,7 +1440,8 @@ public class DefaultPassConfig extends PassConfig {
               compiler,
               options.replaceStringsPlaceholderToken,
               options.replaceStringsFunctionDescriptions,
-              options.replaceStringsReservedStrings);
+              options.replaceStringsReservedStrings,
+              options.replaceStringsInputMap);
           pass.process(externs, root);
           stringMap = pass.getStringMap();
         }
