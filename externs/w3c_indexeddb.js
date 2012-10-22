@@ -47,14 +47,14 @@ function IDBFactory() {}
 
 /**
  * @param {string} name The name of the database to open.
- * @param {string=} opt_description The description of the database.
- * @return {!IDBRequest} The IDBRequest object.
+ * @param {number=} opt_version The version at which to open the database.
+ * @return {!IDBOpenDBRequest} The IDBRequest object.
  */
-IDBFactory.prototype.open = function(name, opt_description) {};
+IDBFactory.prototype.open = function(name, opt_version) {};
 
 /**
  * @param {string} name The name of the database to delete.
- * @return {!IDBRequest} The IDBRequest object.
+ * @return {!IDBOpenDBRequest} The IDBRequest object.
  */
 IDBFactory.prototype.deleteDatabase = function(name) {};
 
@@ -332,12 +332,12 @@ Window.prototype.IDBOpenDBRequest;
 function IDBOpenDBRequest() {}
 
 /**
- * @type {function(!Event)}
+ * @type {function(!IDBVersionChangeEvent)}
  */
 IDBOpenDBRequest.prototype.onblocked = function(e) {};
 
 /**
- * @type {function(!Event)}
+ * @type {function(!IDBVersionChangeEvent)}
  */
 IDBOpenDBRequest.prototype.onupgradeneeded = function(e) {};
 
