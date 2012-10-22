@@ -1930,6 +1930,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (info != null) {
       if (info.hasType()) {
         JSType infoType = info.getType().evaluate(t.getScope(), typeRegistry);
+        // remove cast check here.
         validator.expectCanCast(t, n, infoType, type);
         type = infoType;
       }

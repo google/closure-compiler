@@ -500,10 +500,13 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Give anonymous functions names for easier debugging */
   public AnonymousFunctionNamingPolicy anonymousFunctionNaming;
 
-  /** Serialized input variable renaming map. */
+  /** Input anonymous function renaming map. */
+  VariableMap inputAnonymousFunctionNamingMap;
+
+  /** Input variable renaming map. */
   VariableMap inputVariableMap;
 
-  /** Serialized input property renaming map. */
+  /** Input property renaming map. */
   VariableMap inputPropertyMap;
 
   /** Whether to export test functions. */
@@ -1761,6 +1764,10 @@ public class CompilerOptions implements Serializable, Cloneable {
   public void setAnonymousFunctionNaming(
       AnonymousFunctionNamingPolicy anonymousFunctionNaming) {
     this.anonymousFunctionNaming = anonymousFunctionNaming;
+  }
+
+  public void setInputAnonymousFunctionNamingMap(VariableMap inputMap) {
+    this.inputAnonymousFunctionNamingMap = inputMap;
   }
 
   @Deprecated

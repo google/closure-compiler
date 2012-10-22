@@ -450,6 +450,8 @@ class TypeInference
       if (info != null && info.hasType()) {
         JSType castType = info.getType().evaluate(syntacticScope, registry);
 
+        // validate cast here
+
         // A stubbed type cast on a qualified name should take
         // effect for all subsequent accesses of that name,
         // so treat it the same as an assign to that name.

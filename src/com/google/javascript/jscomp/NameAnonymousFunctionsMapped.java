@@ -50,16 +50,22 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final NameGenerator nameGenerator;
+  private final VariableMap previousMap;
   private final Map<String, String> renameMap;
 
   private int namedCount = 0;
   private int bytesUsed = 0;
 
-  NameAnonymousFunctionsMapped(AbstractCompiler compiler) {
+  NameAnonymousFunctionsMapped(
+      AbstractCompiler compiler, VariableMap previousMap) {
     this.compiler = compiler;
-    nameGenerator = new NameGenerator(
-        Collections.<String>emptySet(), PREFIX_STRING, null);
-    renameMap = Maps.newHashMap();
+    Set<String> reserved =
+        previousMap != null ?
+            previousMap.getNewNameToOriginalNameMap().keySet() :
+            Collections.<String>emptySet();
+    this.nameGenerator = new NameGenerator(reserved, PREFIX_STRING, null);
+    this.previousMap = previousMap;
+    this.renameMap = Maps.newHashMap();
   }
 
   @Override
@@ -99,14 +105,26 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
     @Override
     public final void setFunctionName(String name, Node fnNode) {
       Node fnNameNode = fnNode.getFirstChild();
-      String newName = renameMap.get(name);
-      if (newName == null) {
-        newName = nameGenerator.generateNextName();
-        renameMap.put(name, newName);
-      }
+      String newName = getAlternateName(name);
       fnNameNode.setString(newName);
       namedCount++;
       bytesUsed += newName.length();
+    }
+
+    String getAlternateName(String name) {
+      String newName = renameMap.get(name);
+      if (newName == null) {
+        // Use the previously used name, if possible.
+        if (previousMap != null) {
+          newName = previousMap.lookupNewName(name);
+        }
+        if (newName == null) {
+          // otherwise generate a new name.
+          newName = nameGenerator.generateNextName();
+        }
+        renameMap.put(name, newName);
+      }
+      return newName;
     }
 
     @Override

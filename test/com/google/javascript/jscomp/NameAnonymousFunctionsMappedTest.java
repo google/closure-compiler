@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * Test cases for {@link NameAnonymousFunctionsMapped}.
  *
@@ -24,6 +26,7 @@ public class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
   private static final String EXTERNS = "var document;";
 
   private NameAnonymousFunctionsMapped pass;
+  private VariableMap previous;
 
   public NameAnonymousFunctionsMappedTest() {
     super(EXTERNS);
@@ -35,8 +38,14 @@ public class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
   }
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    previous = null;
+  }
+
+  @Override
   public CompilerPass getProcessor(Compiler compiler) {
-    return pass = new NameAnonymousFunctionsMapped(compiler);
+    return pass = new NameAnonymousFunctionsMapped(compiler, previous);
   }
 
   private void assertMapping(String... pairs) {
@@ -50,10 +59,30 @@ public class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
         functionMap.getNewNameToOriginalNameMap().size());
   }
 
-  public void testSimpleVarAssignment() {
+  public void testSimpleVarAssignment1() {
     test("var a = function() { return 1; }",
          "var a = function $() { return 1; }");
     assertMapping("$", "a");
+  }
+
+  public void testSimpleVarAssignment2() {
+    previous = VariableMap.fromMap(ImmutableMap.<String,String>of(
+        "a", "previous"));
+
+    test("var a = function() { return 1; }",
+         "var a = function previous() { return 1; }");
+
+    assertMapping("previous", "a");
+  }
+
+  public void testSimpleVarAssignment3() {
+    previous = VariableMap.fromMap(ImmutableMap.<String,String>of(
+        "unused", "$"));
+
+    test("var fn = function() { return 1; }",
+         "var fn = function $a() { return 1; }");
+
+    assertMapping("$a", "fn");
   }
 
   public void testAssignmentToProperty() {

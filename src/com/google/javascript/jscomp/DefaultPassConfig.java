@@ -1950,7 +1950,8 @@ public class DefaultPassConfig extends PassConfig {
       return new CompilerPass() {
         @Override public void process(Node externs, Node root) {
           NameAnonymousFunctionsMapped naf =
-              new NameAnonymousFunctionsMapped(compiler);
+              new NameAnonymousFunctionsMapped(
+                  compiler, options.inputAnonymousFunctionNamingMap);
           naf.process(externs, root);
           anonymousFunctionNameMap = naf.getFunctionMap();
         }
