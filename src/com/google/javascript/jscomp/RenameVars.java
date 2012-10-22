@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -527,7 +528,7 @@ final class RenameVars implements CompilerPass {
    * Gets the variable map.
    */
   VariableMap getVariableMap() {
-    return new VariableMap(renameMap);
+    return new VariableMap(ImmutableMap.copyOf(renameMap));
   }
 
   /**

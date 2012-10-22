@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
 
 import java.util.*;
@@ -30,7 +31,7 @@ public class RenameVarsTest extends CompilerTestCase {
   private String prefix = DEFAULT_PREFIX;
 
   private VariableMap previouslyUsedMap =
-      new VariableMap(new HashMap<String, String>());
+      new VariableMap(ImmutableMap.<String, String>of());
   private RenameVars renameVars;
   private boolean withClosurePass = false;
   private boolean localRenamingOnly = false;
@@ -68,7 +69,7 @@ public class RenameVarsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    previouslyUsedMap = new VariableMap(new HashMap<String, String>());
+    previouslyUsedMap = new VariableMap(ImmutableMap.<String, String>of());
     prefix = DEFAULT_PREFIX;
     withClosurePass = false;
     localRenamingOnly = false;
@@ -560,12 +561,12 @@ public class RenameVarsTest extends CompilerTestCase {
   private VariableMap makeVariableMap(String... keyValPairs) {
     Preconditions.checkArgument(keyValPairs.length % 2 == 0);
 
-    Map<String, String> renameMap = new HashMap<String, String>();
+    ImmutableMap.Builder<String, String> renameMap = ImmutableMap.builder();
     for (int i = 0; i < keyValPairs.length; i += 2) {
       renameMap.put(keyValPairs[i], keyValPairs[i + 1]);
     }
 
-    return new VariableMap(renameMap);
+    return new VariableMap(renameMap.build());
   }
 
   private static void assertVariableMapsEqual(VariableMap a, VariableMap b) {

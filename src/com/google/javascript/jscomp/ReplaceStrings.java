@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -182,12 +183,12 @@ class ReplaceStrings extends AbstractPostOrderCallback
 
   // Get the list of replaces as a VariableMap
   VariableMap getStringMap() {
-    Map<String, String> map = Maps.newHashMap();
+    ImmutableMap.Builder<String, String> map = ImmutableMap.builder();
     for (Result result : Iterables.filter(results.values(), USED_RESULTS)) {
       map.put(result.replacement, result.original);
     }
 
-    VariableMap stringMap = new VariableMap(map);
+    VariableMap stringMap = new VariableMap(map.build());
     return stringMap;
   }
 

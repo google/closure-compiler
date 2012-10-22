@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -120,6 +121,6 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
    * @return A mapping from original names to new names
    */
   VariableMap getFunctionMap() {
-    return new VariableMap(renameMap);
+    return new VariableMap(ImmutableMap.copyOf(renameMap));
   }
 }

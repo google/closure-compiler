@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -355,13 +356,13 @@ class RenameProperties implements CompilerPass {
    * @return A mapping from original names to new names
    */
   VariableMap getPropertyMap() {
-    Map<String, String> map = new HashMap<String, String>();
+    ImmutableMap.Builder<String, String> map = ImmutableMap.builder();
     for (Property p : propertyMap.values()) {
       if (p.newName != null) {
         map.put(p.oldName, p.newName);
       }
     }
-    return new VariableMap(map);
+    return new VariableMap(map.build());
   }
 
   // -------------------------------------------------------------------------

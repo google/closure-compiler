@@ -38,7 +38,8 @@ public class VariableMapTest extends TestCase {
     cycleTest(ImmutableMap.of("AAA", "a:a", "BBB", "b:b"));
   }
 
-  public void cycleTest(Map<String, String> map) throws ParseException {
+  public void cycleTest(ImmutableMap<String, String> map)
+      throws ParseException {
     VariableMap in = new VariableMap(map);
     String serialized = new String(in.toBytes(), Charsets.UTF_8);
     VariableMap out = VariableMap.fromBytes(serialized.getBytes());

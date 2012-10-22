@@ -189,8 +189,7 @@ public class PerformanceTracker {
   }
 
   public ImmutableMap<String, Long> getRuntimeRecord() {
-    ImmutableMap.Builder<String, Long> builder =
-        new ImmutableMap.Builder<String, Long>();
+    ImmutableMap.Builder<String, Long> builder = ImmutableMap.builder();
     for (Map.Entry<String, Stats> entry : summary.entrySet()) {
       builder.put(entry.getKey(), entry.getValue().runtime);
     }
@@ -206,8 +205,7 @@ public class PerformanceTracker {
   }
 
   public ImmutableMap<String, Integer> getCodeSizeRecord() {
-    ImmutableMap.Builder<String, Integer> builder =
-      new ImmutableMap.Builder<String, Integer>();
+    ImmutableMap.Builder<String, Integer> builder = ImmutableMap.builder();
     for (Map.Entry<String, Stats> entry : summary.entrySet()) {
       builder.put(entry.getKey(), entry.getValue().diff);
     }
@@ -215,8 +213,7 @@ public class PerformanceTracker {
   }
 
   public ImmutableMap<String, Integer> getZippedCodeSizeRecord() {
-    ImmutableMap.Builder<String, Integer> builder =
-      new ImmutableMap.Builder<String, Integer>();
+    ImmutableMap.Builder<String, Integer> builder = ImmutableMap.builder();
     for (Map.Entry<String, Stats> entry : summary.entrySet()) {
       builder.put(entry.getKey(), entry.getValue().gzDiff);
     }
