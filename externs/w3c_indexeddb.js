@@ -321,6 +321,26 @@ IDBRequest.prototype.source;
  */
 IDBRequest.prototype.transaction;
 
+/** @type {function(new:IDBOpenDBRequest)} */
+Window.prototype.IDBOpenDBRequest;
+
+/**
+ * @constructor
+ * @extends {IDBRequest}
+ * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBOpenDBRequest
+ */
+function IDBOpenDBRequest() {}
+
+/**
+ * @type {function(!Event)}
+ */
+IDBOpenDBRequest.prototype.onblocked = function(e) {};
+
+/**
+ * @type {function(!Event)}
+ */
+IDBOpenDBRequest.prototype.onupgradeneeded = function(e) {};
+
 /**
  * @constructor
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBDatabase
