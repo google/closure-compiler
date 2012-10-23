@@ -63,7 +63,7 @@ public class JSTypeRegistryTest extends TestCase {
 
   public void testGetDeclaredType() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    JSType type = typeRegistry.createAnonymousObjectType();
+    JSType type = typeRegistry.createAnonymousObjectType(null);
     String name = "Foo";
     typeRegistry.declareType(name, type);
     assertTypeEquals(type, typeRegistry.getType(name));
@@ -76,7 +76,7 @@ public class JSTypeRegistryTest extends TestCase {
 
   public void testGetDeclaredTypeInNamespace() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    JSType type = typeRegistry.createAnonymousObjectType();
+    JSType type = typeRegistry.createAnonymousObjectType(null);
     String name = "a.b.Foo";
     typeRegistry.declareType(name, type);
     assertTypeEquals(type, typeRegistry.getType(name));
@@ -103,12 +103,12 @@ public class JSTypeRegistryTest extends TestCase {
   public void testTypeAsNamespace() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
 
-    JSType type = typeRegistry.createAnonymousObjectType();
+    JSType type = typeRegistry.createAnonymousObjectType(null);
     String name = "a.b.Foo";
     typeRegistry.declareType(name, type);
     assertTypeEquals(type, typeRegistry.getType(name));
 
-    type = typeRegistry.createAnonymousObjectType();
+    type = typeRegistry.createAnonymousObjectType(null);
     name = "a.b.Foo.Bar";
     typeRegistry.declareType(name, type);
     assertTypeEquals(type, typeRegistry.getType(name));
@@ -144,7 +144,8 @@ public class JSTypeRegistryTest extends TestCase {
 
     // Subclass of named type is still unresolved, even though the named type is
     // now present in the registry.
-    typeRegistry.declareType("Foo", typeRegistry.createAnonymousObjectType());
+    typeRegistry.declareType("Foo",
+                             typeRegistry.createAnonymousObjectType(null));
     typeRegistry.resolveTypesInScope(scope);
     assertTrue(subNamed.isUnknownType());
 
@@ -187,7 +188,8 @@ public class JSTypeRegistryTest extends TestCase {
 
     // Subclass of named type is still unresolved, even though the named type is
     // now present in the registry.
-    typeRegistry.declareType("Foo", typeRegistry.createAnonymousObjectType());
+    typeRegistry.declareType("Foo",
+                             typeRegistry.createAnonymousObjectType(null));
     typeRegistry.resolveTypesInScope(scope);
     assertTrue(functionType.getReturnType().isUnknownType());
 

@@ -150,7 +150,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     googSubSubBar.setPrototypeBasedOn(googSubBar.getInstanceType());
     googSubSubBarInst = googSubSubBar.getInstanceType();
 
-    final ObjectType googObject = registry.createAnonymousObjectType();
+    final ObjectType googObject = registry.createAnonymousObjectType(null);
     googObject.defineDeclaredProperty("Bar", googBar, null);
 
     namedGoogBar.resolve(null, new AbstractStaticScope<JSType>() {
@@ -2712,17 +2712,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     builder.addProperty("a", googSubBarInst, null);
     JSType record = builder.build();
 
-    ObjectType subtypeProp = registry.createAnonymousObjectType();
+    ObjectType subtypeProp = registry.createAnonymousObjectType(null);
     subtypeProp.defineInferredProperty("a", googSubSubBarInst, null);
     assertTrue(subtypeProp.isSubtype(record));
     assertFalse(record.isSubtype(subtypeProp));
 
-    ObjectType supertypeProp = registry.createAnonymousObjectType();
+    ObjectType supertypeProp = registry.createAnonymousObjectType(null);
     supertypeProp.defineInferredProperty("a", googBarInst, null);
     assertFalse(supertypeProp.isSubtype(record));
     assertFalse(record.isSubtype(supertypeProp));
 
-    ObjectType declaredSubtypeProp = registry.createAnonymousObjectType();
+    ObjectType declaredSubtypeProp = registry.createAnonymousObjectType(null);
     declaredSubtypeProp.defineDeclaredProperty("a", googSubSubBarInst,
         null);
     assertFalse(declaredSubtypeProp.isSubtype(record));
@@ -3144,7 +3144,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     ObjectType instance = constructor.getInstanceType();
 
     // replacing the prototype
-    ObjectType prototype = registry.createAnonymousObjectType();
+    ObjectType prototype = registry.createAnonymousObjectType(null);
     prototype.defineDeclaredProperty("foo", DATE_TYPE, null);
     constructor.defineDeclaredProperty("prototype", prototype, null);
 
@@ -3754,7 +3754,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * Tests how properties are counted for object types.
    */
   public void testObjectTypePropertiesCount() throws Exception {
-    ObjectType sup = registry.createAnonymousObjectType();
+    ObjectType sup = registry.createAnonymousObjectType(null);
     int nativeProperties = sup.getPropertiesCount();
 
     sup.defineDeclaredProperty("a", DATE_TYPE, null);
@@ -3816,7 +3816,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * Tests that properties are correctly counted even when shadowing occurs.
    */
   public void testObjectTypePropertiesCountWithShadowing() {
-    ObjectType sup = registry.createAnonymousObjectType();
+    ObjectType sup = registry.createAnonymousObjectType(null);
     int nativeProperties = sup.getPropertiesCount();
 
     sup.defineDeclaredProperty("a", OBJECT_TYPE, null);
@@ -5109,7 +5109,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ALL_TYPE,
         createNullableType(OBJECT_TYPE),
         OBJECT_TYPE,
-        registry.createAnonymousObjectType(),
+        registry.createAnonymousObjectType(null),
         registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
         registry.getNativeType(JSTypeNative.NO_TYPE));
     verifySubtypeChain(typeChain);
@@ -5117,7 +5117,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testAnonymousEnumElementChain() throws Exception {
     ObjectType enumElemType = registry.createEnumType(
-        "typeB", null, registry.createAnonymousObjectType()).getElementsType();
+        "typeB", null,
+        registry.createAnonymousObjectType(null)).getElementsType();
     List<JSType> typeChain = Lists.newArrayList(
         ALL_TYPE,
         createNullableType(OBJECT_TYPE),
@@ -5567,7 +5568,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    */
   public void testCreateAnonymousObjectType() throws Exception {
     // anonymous
-    ObjectType anonymous = registry.createAnonymousObjectType();
+    ObjectType anonymous = registry.createAnonymousObjectType(null);
     assertTypeEquals(OBJECT_TYPE, anonymous.getImplicitPrototype());
     assertNull(anonymous.getReferenceName());
     assertEquals("{}", anonymous.toString());
@@ -5580,7 +5581,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    */
   public void testCreateAnonymousObjectType2() throws Exception {
     // anonymous
-    ObjectType anonymous = registry.createAnonymousObjectType();
+    ObjectType anonymous = registry.createAnonymousObjectType(null);
     anonymous.defineDeclaredProperty(
         "a", NUMBER_TYPE, null);
     anonymous.defineDeclaredProperty(
@@ -5655,7 +5656,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    */
   public void testHasOwnProperty() throws Exception {
     ObjectType sup =
-        registry.createObjectType(registry.createAnonymousObjectType());
+        registry.createObjectType(registry.createAnonymousObjectType(null));
     ObjectType sub = registry.createObjectType(sup);
 
     sup.defineProperty("base", null, false, null);
@@ -5704,7 +5705,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testGetPropertyNames() throws Exception {
     ObjectType sup =
-        registry.createObjectType(registry.createAnonymousObjectType());
+        registry.createObjectType(registry.createAnonymousObjectType(null));
     ObjectType sub = registry.createObjectType(sup);
 
     sup.defineProperty("base", null, false, null);
@@ -5733,7 +5734,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testGetAndSetJSDocInfoWithObjectTypes() throws Exception {
     ObjectType sup =
-        registry.createObjectType(registry.createAnonymousObjectType());
+        registry.createObjectType(registry.createAnonymousObjectType(null));
     ObjectType sub = registry.createObjectType(sup);
 
     JSDocInfo deprecated = new JSDocInfo();

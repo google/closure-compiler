@@ -54,6 +54,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ScriptRuntime;
 import com.google.javascript.rhino.Token;
@@ -1363,11 +1364,12 @@ public class JSTypeRegistry implements Serializable {
 
   /**
    * Create an anonymous object type.
+   * @param info Used to mark object literals as structs; can be {@code null}
    */
-  public ObjectType createAnonymousObjectType() {
-    PrototypeObjectType type =
-        new PrototypeObjectType(this, null, null);
+  public ObjectType createAnonymousObjectType(JSDocInfo info) {
+    PrototypeObjectType type = new PrototypeObjectType(this, null, null);
     type.setPrettyPrint(true);
+    type.setJSDocInfo(info);
     return type;
   }
 

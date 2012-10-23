@@ -961,7 +961,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     private Node createNamespaceLiteral() {
       Node objlit = IR.objectlit();
       objlit.setJSType(
-          compiler.getTypeRegistry().createAnonymousObjectType());
+          compiler.getTypeRegistry().createAnonymousObjectType(null));
       return objlit;
     }
 

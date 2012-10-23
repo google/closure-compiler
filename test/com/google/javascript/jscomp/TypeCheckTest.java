@@ -4036,6 +4036,26 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               " */\n" +
               "function Foo() {}\n" +
               "(new Foo()).x += 123;",
+              new String[] {
+                "Property x never defined on Foo",
+                "Cannot add a property to a struct instance " +
+                "after it is constructed."
+              });
+  }
+
+  public void testSetprop10() throws Exception {
+    // Create property on object literal that is a struct
+    testTypes("/** \n" +
+              " * @constructor \n" +
+              " * @struct \n" +
+              " */ \n" +
+              "function Square(side) { \n" +
+              "  this.side = side; \n" +
+              "} \n" +
+              "Square.prototype = /** @struct */ {\n" +
+              "  area: function() { return this.side * this.side; }\n" +
+              "};\n" +
+              "Square.prototype.id = function(x) { return x; };\n",
               "Cannot add a property to a struct instance " +
               "after it is constructed.");
   }

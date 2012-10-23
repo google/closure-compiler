@@ -242,7 +242,7 @@ public class TypeInferenceTest extends TestCase {
   }
 
   public void testPropertyInference1() {
-    ObjectType thisType = registry.createAnonymousObjectType();
+    ObjectType thisType = registry.createAnonymousObjectType(null);
     thisType.defineDeclaredProperty("foo",
         createUndefinableType(STRING_TYPE), null);
     assumingThisType(thisType);
@@ -251,7 +251,7 @@ public class TypeInferenceTest extends TestCase {
   }
 
   public void testPropertyInference2() {
-    ObjectType thisType = registry.createAnonymousObjectType();
+    ObjectType thisType = registry.createAnonymousObjectType(null);
     thisType.defineDeclaredProperty("foo",
         createUndefinableType(STRING_TYPE), null);
     assumingThisType(thisType);
@@ -260,7 +260,7 @@ public class TypeInferenceTest extends TestCase {
   }
 
   public void testPropertyInference3() {
-    ObjectType thisType = registry.createAnonymousObjectType();
+    ObjectType thisType = registry.createAnonymousObjectType(null);
     thisType.defineDeclaredProperty("foo",
         createUndefinableType(STRING_TYPE), null);
     assumingThisType(thisType);

@@ -259,10 +259,15 @@ public abstract class JSType implements Serializable {
    */
   public boolean isStruct() {
     if (isObject()) {
-      FunctionType ctor = toObjectType().getConstructor();
-      // getConstructor can return an *interface* type, so it's not safe to
-      // assume that makesStructs is only called on constructors.
-      return ctor != null && ctor.makesStructs();
+      ObjectType objType = toObjectType();
+      FunctionType ctor = objType.getConstructor();
+      // This test is true for object literals
+      if (ctor == null) {
+        JSDocInfo info = objType.getJSDocInfo();
+        return info != null && info.makesStructs();
+      } else {
+        return ctor.makesStructs();
+      }
     }
     return false;
   }

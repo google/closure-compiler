@@ -616,8 +616,7 @@ final class TypedScopeCreator implements ScopeCreator {
       // Handle the @lends annotation.
       JSType type = null;
       JSDocInfo info = objectLit.getJSDocInfo();
-      if (info != null &&
-          info.getLendsName() != null) {
+      if (info != null && info.getLendsName() != null) {
         String lendsName = info.getLendsName();
         Var lendsVar = scope.getVar(lendsName);
         if (lendsVar == null) {
@@ -649,7 +648,7 @@ final class TypedScopeCreator implements ScopeCreator {
       }
 
       if (type == null) {
-        type = typeRegistry.createAnonymousObjectType();
+        type = typeRegistry.createAnonymousObjectType(info);
       }
 
       setDeferredType(objectLit, type);

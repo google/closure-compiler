@@ -43,7 +43,7 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 public class PrototypeObjectTypeTest extends BaseJSTypeTestCase {
 
   public void testToString() {
-    ObjectType type = registry.createAnonymousObjectType();
+    ObjectType type = registry.createAnonymousObjectType(null);
     assertEquals("{}", type.toString());
 
     type.defineDeclaredProperty("foo", NUMBER_TYPE, null);

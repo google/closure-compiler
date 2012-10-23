@@ -566,12 +566,21 @@ class TypeInference
    */
   private void ensurePropertyDefined(Node getprop, JSType rightType) {
     String propName = getprop.getLastChild().getString();
-    JSType nodeType = getJSType(getprop.getFirstChild());
+    Node obj = getprop.getFirstChild();
+    JSType nodeType = getJSType(obj);
     ObjectType objectType = ObjectType.cast(
         nodeType.restrictByNotNullOrUndefined());
     if (objectType == null) {
       registry.registerPropertyOnType(propName, nodeType);
     } else {
+      // Don't add the property to @struct objects outside a constructor
+      if (nodeType.isStruct() && !objectType.hasProperty(propName)) {
+        if (!(obj.isThis() &&
+              getJSType(syntacticScope.getRootNode()).isConstructor())) {
+          return;
+        }
+      }
+
       if (ensurePropertyDeclaredHelper(getprop, objectType)) {
         return;
       }
@@ -595,7 +604,7 @@ class TypeInference
           } else {
             objectType.defineInferredProperty(propName, rightType, getprop);
           }
-        } else if (getprop.getFirstChild().isThis() &&
+        } else if (obj.isThis() &&
                    getJSType(syntacticScope.getRootNode()).isConstructor()) {
           objectType.defineInferredProperty(propName, rightType, getprop);
         } else {
