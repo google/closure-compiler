@@ -393,7 +393,7 @@ public class CommandLineRunnerTest extends TestCase {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
     useStringComparison = true;
     test("eval('1'); var x = eval; x('2');",
-         "eval('1');(0,eval)('2');");
+         "eval(\"1\");(0,eval)(\"2\");");
   }
 
   public void testIssue115() {

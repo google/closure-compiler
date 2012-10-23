@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 public class InlineSimpleMethodsTest extends CompilerTestCase {
 
   public InlineSimpleMethodsTest() {
-    super();
+    super("", false);
   }
 
   @Override
@@ -183,7 +183,7 @@ public class InlineSimpleMethodsTest extends CompilerTestCase {
     testWithPrefix("function Foo(){}" +
         "Foo.prototype.bar=function(a){};",
         "var x=new Foo; x.bar();",
-        "var x=new Foo;        ;");
+        "var x=new Foo");
   }
 
   public void testEmptyMethodInlineWithSideEffects() {
@@ -285,7 +285,7 @@ public class InlineSimpleMethodsTest extends CompilerTestCase {
 
   public void testIssue2508576_3() {
     // Anonymous object definition without side-effect should be removed.
-    test("({a:function(){},b:alert}).a(\"a\");", ";");
+    test("({a:function(){},b:alert}).a(\"a\")", "");
   }
 
   public void testAnonymousGet() {
