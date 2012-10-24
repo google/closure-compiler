@@ -71,7 +71,7 @@ public class TemplateType extends ProxyObjectType {
   }
 
   @Override
-  public boolean hasAnyTemplateInternal() {
+  public boolean hasAnyTemplateTypesInternal() {
     return true;
   }
 

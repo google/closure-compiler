@@ -271,7 +271,7 @@ public class JSTypeRegistry implements Serializable {
     // use each other's results, so at least one of them will get null
     // instead of an actual type; however, this seems to be benign.
     PrototypeObjectType TOP_LEVEL_PROTOTYPE =
-        new PrototypeObjectType(this, null, null, true);
+        new PrototypeObjectType(this, null, null, true, null, null);
     registerNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE, TOP_LEVEL_PROTOTYPE);
 
     // Object
@@ -592,6 +592,9 @@ public class JSTypeRegistry implements Serializable {
   }
 
   private void register(JSType type, String name) {
+    Preconditions.checkArgument(
+        !name.contains("<"), "Type names cannot contain template annotations.");
+
     namesToTypes.put(name, type);
 
     // Add all the namespaces in which this name lives.
@@ -1128,7 +1131,7 @@ public class JSTypeRegistry implements Serializable {
   public FunctionType createConstructorType(
       JSType returnType, JSType... parameterTypes) {
     return createConstructorType(
-        null, null, createParameters(parameterTypes), returnType);
+        null, null, createParameters(parameterTypes), returnType, null);
   }
 
   /**
@@ -1141,7 +1144,8 @@ public class JSTypeRegistry implements Serializable {
   private FunctionType createConstructorTypeWithVarArgs(
       JSType returnType, JSType... parameterTypes) {
     return createConstructorType(
-        null, null, createParametersWithVarArgs(parameterTypes), returnType);
+        null, null, createParametersWithVarArgs(parameterTypes), returnType,
+        null);
   }
 
   /**
@@ -1397,7 +1401,7 @@ public class JSTypeRegistry implements Serializable {
    */
   ObjectType createNativeAnonymousObjectType() {
     PrototypeObjectType type =
-        new PrototypeObjectType(this, null, null, true);
+        new PrototypeObjectType(this, null, null, true, null, null);
     type.setPrettyPrint(true);
     return type;
   }
@@ -1412,12 +1416,13 @@ public class JSTypeRegistry implements Serializable {
    *     to indicate that the parameter types are unknown.
    * @param returnType the function's return type or {@code null} to indicate
    *     that the return type is unknown.
+   * @param templateKeys the templatized type keys for the class.
    */
   public FunctionType createConstructorType(String name, Node source,
-      Node parameters, JSType returnType) {
+      Node parameters, JSType returnType, ImmutableList<String> templateKeys) {
     return new FunctionType(this, name, source,
         createArrowType(parameters, returnType), null,
-        null, true, false);
+        templateKeys, true, false);
   }
 
   /**
@@ -1436,6 +1441,27 @@ public class JSTypeRegistry implements Serializable {
   public ParameterizedType createParameterizedType(
       ObjectType objectType, JSType parameterType) {
     return new ParameterizedType(this, objectType, parameterType);
+  }
+
+  /**
+   * Creates a templatized instance of the specified type.
+   * @param baseType the type to be templatized.
+   * @param templatizedTypes a list of the template JSTypes. Will be matched by
+   *     list order to the template keys specified in the constructor function.
+   */
+  public JSType createTemplatizedType(
+      JSType baseType, ImmutableList<JSType> templatizedTypes) {
+    // Only instance object types can currently be templatized; extend this
+    // logic when more types can be templatized.
+    if (baseType instanceof InstanceObjectType) {
+      ObjectType baseObjType = baseType.toObjectType();
+      return new InstanceObjectType(
+          this, baseObjType.getConstructor(), baseObjType.isNativeObjectType(),
+          templatizedTypes);
+    } else {
+      throw new IllegalArgumentException(
+          "Only instance object types can be templatized");
+    }
   }
 
   /**

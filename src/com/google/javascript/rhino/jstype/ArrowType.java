@@ -287,8 +287,8 @@ final class ArrowType extends JSType {
   }
 
   @Override
-  public boolean hasAnyTemplateInternal() {
-    return returnType.hasAnyTemplate()
+  public boolean hasAnyTemplateTypesInternal() {
+    return returnType.hasAnyTemplateTypes()
         || hasTemplatedParameterType();
   }
 
@@ -297,7 +297,7 @@ final class ArrowType extends JSType {
       for (Node paramNode = parameters.getFirstChild();
            paramNode != null; paramNode = paramNode.getNext()) {
         JSType type = paramNode.getJSType();
-        if (type != null && type.hasAnyTemplate()) {
+        if (type != null && type.hasAnyTemplateTypes()) {
           return true;
         }
       }

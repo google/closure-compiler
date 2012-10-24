@@ -54,8 +54,8 @@ import com.google.javascript.rhino.jstype.ArrowType;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
 import com.google.javascript.rhino.testing.Asserts;
-import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.AbstractStaticScope;
+import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
 
 import java.util.HashMap;
@@ -133,7 +133,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         Lists.<ObjectType>newArrayList(interfaceInstType));
     subInterfaceInstType = subInterfaceType.getInstanceType();
 
-    googBar = registry.createConstructorType("goog.Bar", null, null, null);
+    googBar = registry.createConstructorType(
+        "goog.Bar", null, null, null, null);
     googBar.getPrototype().defineDeclaredProperty("date", DATE_TYPE,
         null);
     googBar.setImplementedInterfaces(
@@ -141,12 +142,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     googBarInst = googBar.getInstanceType();
 
     googSubBar = registry.createConstructorType(
-        "googSubBar", null, null, null);
+        "googSubBar", null, null, null, null);
     googSubBar.setPrototypeBasedOn(googBar.getInstanceType());
     googSubBarInst = googSubBar.getInstanceType();
 
     googSubSubBar = registry.createConstructorType(
-        "googSubSubBar", null, null, null);
+        "googSubSubBar", null, null, null, null);
     googSubSubBar.setPrototypeBasedOn(googSubBar.getInstanceType());
     googSubSubBarInst = googSubSubBar.getInstanceType();
 
@@ -358,7 +359,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.
         canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
-    assertTrue( U2U_CONSTRUCTOR_TYPE.
+    assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.
         canTestForShallowEqualityWith(VOID_TYPE));
@@ -3123,7 +3124,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    */
   public void testFunctionPrototypeAndImplicitPrototype1() {
     FunctionType constructor =
-        registry.createConstructorType("Foo", null, null, null);
+        registry.createConstructorType("Foo", null, null, null, null);
     ObjectType instance = constructor.getInstanceType();
 
     // adding one property on the prototype
@@ -4775,7 +4776,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     NamedType b = new NamedType(registry, "typeB", "source", 1, 0);
 
     ObjectType realA = registry.createConstructorType(
-        "typeA", null, null, null).getInstanceType();
+        "typeA", null, null, null, null).getInstanceType();
     ObjectType realB = registry.createEnumType(
         "typeB", null, NUMBER_TYPE).getElementsType();
     registry.declareType("typeA", realA);
@@ -5061,9 +5062,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testConstructorWithArgSubtypeChain() throws Exception {
     FunctionType googBarArgConstructor = registry.createConstructorType(
-        "barArg", null, registry.createParameters(googBar), null);
+        "barArg", null, registry.createParameters(googBar), null, null);
     FunctionType googSubBarArgConstructor = registry.createConstructorType(
-        "subBarArg", null, registry.createParameters(googSubBar), null);
+        "subBarArg", null, registry.createParameters(googSubBar), null, null);
 
     List<JSType> typeChain = Lists.newArrayList(
         registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
@@ -5089,7 +5090,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testInterfaceInheritanceSubtypeChain() throws Exception {
     FunctionType tempType =
-      registry.createConstructorType("goog.TempType", null, null, null);
+      registry.createConstructorType("goog.TempType", null, null, null, null);
     tempType.setImplementedInterfaces(
         Lists.<ObjectType>newArrayList(subInterfaceInstType));
     List<JSType> typeChain = Lists.newArrayList(
@@ -5382,13 +5383,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testGoodSetPrototypeBasedOn() {
-    FunctionType fun = registry.createConstructorType("fun", null, null, null);
+    FunctionType fun = registry.createConstructorType(
+        "fun", null, null, null, null);
     fun.setPrototypeBasedOn(unresolvedNamedType);
     assertTrue(fun.getInstanceType().isUnknownType());
   }
 
   public void testLateSetPrototypeBasedOn() {
-    FunctionType fun = registry.createConstructorType("fun", null, null, null);
+    FunctionType fun = registry.createConstructorType(
+        "fun", null, null, null, null);
     assertFalse(fun.getInstanceType().isUnknownType());
 
     fun.setPrototypeBasedOn(unresolvedNamedType);
@@ -5795,44 +5798,97 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testIsTemplatedType() throws Exception {
     assertTrue(
         new TemplateType(registry, "T")
-            .hasAnyTemplate());
+            .hasAnyTemplateTypes());
     assertFalse(
         ARRAY_TYPE
-            .hasAnyTemplate());
+            .hasAnyTemplateTypes());
 
     assertTrue(
         registry.createParameterizedType(
             ARRAY_TYPE, new TemplateType(registry, "T"))
-            .hasAnyTemplate());
+            .hasAnyTemplateTypes());
     assertFalse(
         registry.createParameterizedType(
             ARRAY_TYPE, STRING_TYPE)
-            .hasAnyTemplate());
+            .hasAnyTemplateTypes());
 
     assertTrue(
         new FunctionBuilder(registry)
             .withReturnType(new TemplateType(registry, "T"))
             .build()
-            .hasAnyTemplate());
+            .hasAnyTemplateTypes());
     assertTrue(
         new FunctionBuilder(registry)
             .withTypeOfThis(new TemplateType(registry, "T"))
             .build()
-            .hasAnyTemplate());
+            .hasAnyTemplateTypes());
     assertFalse(
         new FunctionBuilder(registry)
             .withReturnType(STRING_TYPE)
             .build()
-            .hasAnyTemplate());
+            .hasAnyTemplateTypes());
 
     assertTrue(
         registry.createUnionType(
             NULL_TYPE, new TemplateType(registry, "T"), STRING_TYPE)
-            .hasAnyTemplate());
+            .hasAnyTemplateTypes());
     assertFalse(
         registry.createUnionType(
             NULL_TYPE, ARRAY_TYPE, STRING_TYPE)
-            .hasAnyTemplate());
+            .hasAnyTemplateTypes());
+  }
+
+  public void testTemplatizedType() throws Exception {
+    FunctionType templatizedCtor = registry.createConstructorType(
+        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of("A", "B"));
+    JSType templatizedInstance = registry.createTemplatizedType(
+        templatizedCtor.getInstanceType(),
+        ImmutableList.of(NUMBER_TYPE, STRING_TYPE));
+
+    assertTrue(templatizedInstance.isTemplatized());
+    assertTrue(templatizedInstance.hasTemplatizedType("A"));
+    assertTrue(templatizedInstance.hasTemplatizedType("B"));
+    assertFalse(templatizedInstance.hasTemplatizedType("C"));
+
+    assertEquals(NUMBER_TYPE, templatizedInstance.getTemplatizedType("A"));
+    assertEquals(STRING_TYPE, templatizedInstance.getTemplatizedType("B"));
+    assertEquals(UNKNOWN_TYPE, templatizedInstance.getTemplatizedType("C"));
+
+    assertEquals("TestingType.<number,string>", templatizedInstance.toString());
+  }
+
+  public void testPartiallyTemplatizedType() throws Exception {
+    FunctionType templatizedCtor = registry.createConstructorType(
+        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of("A", "B"));
+    JSType templatizedInstance = registry.createTemplatizedType(
+        templatizedCtor.getInstanceType(),
+        ImmutableList.of(NUMBER_TYPE));
+
+    assertTrue(templatizedInstance.isTemplatized());
+    assertTrue(templatizedInstance.hasTemplatizedType("A"));
+    assertTrue(templatizedInstance.hasTemplatizedType("B"));
+    assertFalse(templatizedInstance.hasTemplatizedType("C"));
+
+    assertEquals(NUMBER_TYPE, templatizedInstance.getTemplatizedType("A"));
+    assertEquals(UNKNOWN_TYPE, templatizedInstance.getTemplatizedType("B"));
+    assertEquals(UNKNOWN_TYPE, templatizedInstance.getTemplatizedType("C"));
+
+    assertEquals("TestingType.<number,?>", templatizedInstance.toString());
+  }
+
+  public void testInvalidTemplatizedType() throws Exception {
+    FunctionType templatizedCtor = registry.createConstructorType(
+        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of("A", "B"));
+
+    boolean exceptionThrown = false;
+    try {
+      JSType templatizedInstance = registry.createTemplatizedType(
+          templatizedCtor.getInstanceType(),
+          ImmutableList.of(NUMBER_TYPE, STRING_TYPE, BOOLEAN_TYPE));
+    } catch (IllegalArgumentException e) {
+      exceptionThrown = true;
+    }
+    assertTrue(exceptionThrown);
   }
 
   private static boolean containsType(

@@ -80,7 +80,7 @@ public final class ParameterizedType extends ProxyObjectType {
   }
 
   @Override
-  public boolean hasAnyTemplateInternal() {
-    return super.hasAnyTemplate() || parameterType.hasAnyTemplate();
+  public boolean hasAnyTemplateTypesInternal() {
+    return super.hasAnyTemplateTypes() || parameterType.hasAnyTemplateTypes();
   }
 }

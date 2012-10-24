@@ -130,19 +130,14 @@ public class FunctionType extends PrototypeObjectType {
    */
   private List<FunctionType> subTypes;
 
-  /**
-   * The template type name. May be {@code null}.
-   */
-  private final ImmutableList<String> templateTypeNames;
-
   /** Creates an instance for a function that might be a constructor. */
   FunctionType(JSTypeRegistry registry, String name, Node source,
                ArrowType arrowType, ObjectType typeOfThis,
-               ImmutableList<String> templateTypeNames,
+               ImmutableList<String> templateKeys,
                boolean isConstructor, boolean nativeType) {
     super(registry, name,
         registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
-        nativeType);
+        nativeType, templateKeys, null);
     setPrettyPrint(true);
 
     Preconditions.checkArgument(source == null ||
@@ -153,7 +148,7 @@ public class FunctionType extends PrototypeObjectType {
       this.kind = Kind.CONSTRUCTOR;
       this.propAccess = PropAccess.ANY;
       this.typeOfThis = typeOfThis != null ?
-          typeOfThis : new InstanceObjectType(registry, this, nativeType);
+          typeOfThis : new InstanceObjectType(registry, this, nativeType, null);
     } else {
       this.kind = Kind.ORDINARY;
       this.typeOfThis = typeOfThis != null ?
@@ -161,8 +156,6 @@ public class FunctionType extends PrototypeObjectType {
           registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
     }
     this.call = arrowType;
-    this.templateTypeNames = templateTypeNames != null
-        ? templateTypeNames : ImmutableList.<String>of();
   }
 
   /** Creates an instance for a function that is an interface. */
@@ -178,7 +171,6 @@ public class FunctionType extends PrototypeObjectType {
     this.call = new ArrowType(registry, new Node(Token.PARAM_LIST), null);
     this.kind = Kind.INTERFACE;
     this.typeOfThis = new InstanceObjectType(registry, this);
-    this.templateTypeNames = ImmutableList.of();
   }
 
   /** Creates an instance for a function that is an interface. */
@@ -384,7 +376,7 @@ public class FunctionType extends PrototypeObjectType {
                 registry,
                 this.getReferenceName() + ".prototype",
                 registry.getNativeObjectType(OBJECT_TYPE),
-                isNativeObjectType()),
+                isNativeObjectType(), null, null),
             null);
       }
     }
@@ -904,8 +896,7 @@ public class FunctionType extends PrototypeObjectType {
       return false;
     }
 
-    return typeOfThis.checkEquivalenceHelper(
-        that.typeOfThis, eqMethod) &&
+    return typeOfThis.checkEquivalenceHelper(that.typeOfThis, eqMethod) &&
         call.checkArrowEquivalenceHelper(that.call, eqMethod);
   }
 
@@ -1157,13 +1148,6 @@ public class FunctionType extends PrototypeObjectType {
     return prototypeSlot != null || super.hasCachedValues();
   }
 
-  /**
-   * Gets the template type name.
-   */
-  public ImmutableList<String> getTemplateTypeNames() {
-    return templateTypeNames;
-  }
-
   @Override
   JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
     setResolvedTypeInternal(this);
@@ -1267,9 +1251,9 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   @Override
-  public boolean hasAnyTemplateInternal() {
-    return !getTemplateTypeNames().isEmpty()
-        || typeOfThis.hasAnyTemplate()
-        || call.hasAnyTemplate();
+  public boolean hasAnyTemplateTypesInternal() {
+    return !getTemplateKeys().isEmpty()
+        || typeOfThis.hasAnyTemplateTypes()
+        || call.hasAnyTemplateTypes();
   }
 }

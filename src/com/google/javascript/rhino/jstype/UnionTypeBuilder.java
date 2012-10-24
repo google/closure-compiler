@@ -173,8 +173,8 @@ class UnionTypeBuilder implements Serializable {
               current.isUnknownType() ||
               alternate.isNoResolvedType() ||
               current.isNoResolvedType() ||
-              alternate.hasAnyTemplate() ||
-              current.hasAnyTemplate()) {
+              alternate.hasAnyTemplateTypes() ||
+              current.hasAnyTemplateTypes()) {
             if (alternate.isEquivalentTo(current)) {
               // Alternate is unnecessary.
               return this;

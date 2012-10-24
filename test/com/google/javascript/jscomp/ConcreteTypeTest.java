@@ -213,8 +213,8 @@ public class ConcreteTypeTest extends TestCase {
 
     JSType[] paramTypes = new JSType[paramNames.length];
     Arrays.fill(paramTypes, unknownType);
-    decl.setJSType(
-        typeRegistry.createConstructorType(name, decl, args, unknownType));
+    decl.setJSType(typeRegistry.createConstructorType(
+        name, decl, args, unknownType, null));
 
     return new ConcreteFunctionType(factory, decl, null);
   }

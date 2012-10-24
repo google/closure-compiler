@@ -40,6 +40,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
@@ -145,7 +146,15 @@ public class ModificationVisitor implements Visitor<JSType> {
 
   @Override
   public JSType caseObjectType(ObjectType objType) {
-    return objType;
+    if (objType.isTemplatized()) {
+      ImmutableList.Builder<JSType> builder = ImmutableList.builder();
+      for (JSType templatizedType : objType.getTemplatizedTypes()) {
+        builder.add(templatizedType.visit(this));
+      }
+      return registry.createTemplatizedType(objType, builder.build());
+    } else {
+      return objType;
+    }
   }
 
   @Override

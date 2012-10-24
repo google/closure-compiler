@@ -57,7 +57,7 @@ public final class FunctionBuilder {
   private Node parametersNode = null;
   private JSType returnType = null;
   private ObjectType typeOfThis = null;
-  private ImmutableList<String> templateTypeNames = ImmutableList.of();
+  private ImmutableList<String> templateKeys = ImmutableList.of();
   private boolean inferredReturnType = false;
   private boolean isConstructor = false;
   private boolean isNativeType = false;
@@ -119,9 +119,9 @@ public final class FunctionBuilder {
   }
 
   /** Set the template name. */
-  public FunctionBuilder withTemplateNames(
-      ImmutableList<String> templateTypeNames) {
-    this.templateTypeNames = templateTypeNames;
+  public FunctionBuilder withTemplateKeys(
+      ImmutableList<String> templateKeys) {
+    this.templateKeys = templateKeys;
     return this;
   }
 
@@ -150,7 +150,7 @@ public final class FunctionBuilder {
     this.parametersNode = otherType.getParametersNode();
     this.returnType = otherType.getReturnType();
     this.typeOfThis = otherType.getTypeOfThis();
-    this.templateTypeNames = otherType.getTemplateTypeNames();
+    this.templateKeys = otherType.getTemplateKeys();
     this.isConstructor = otherType.isConstructor();
     this.isNativeType = otherType.isNativeObjectType();
     return this;
@@ -160,6 +160,6 @@ public final class FunctionBuilder {
   public FunctionType build() {
     return new FunctionType(registry, name, sourceNode,
         new ArrowType(registry, parametersNode, returnType, inferredReturnType),
-        typeOfThis, templateTypeNames, isConstructor, isNativeType);
+        typeOfThis, templateKeys, isConstructor, isNativeType);
   }
 }

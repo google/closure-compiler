@@ -103,16 +103,18 @@ class PrototypeObjectType extends ObjectType {
    */
   PrototypeObjectType(JSTypeRegistry registry, String className,
       ObjectType implicitPrototype) {
-    this(registry, className, implicitPrototype, false);
+    this(registry, className, implicitPrototype, false, null, null);
   }
 
   /**
-   * Creates an object type, allowing specification of the implicit prototype
-   * when creating native objects.
+   * Creates an object type, allowing specification of the implicit prototype,
+   * whether the object is native, and any templatized types.
    */
   PrototypeObjectType(JSTypeRegistry registry, String className,
-      ObjectType implicitPrototype, boolean nativeType) {
-    super(registry);
+      ObjectType implicitPrototype, boolean nativeType,
+      ImmutableList<String> templateKeys,
+      ImmutableList<JSType> templatizedTypes) {
+    super(registry, templateKeys, templatizedTypes);
     this.properties = Maps.newTreeMap();
     this.className = className;
     this.nativeType = nativeType;

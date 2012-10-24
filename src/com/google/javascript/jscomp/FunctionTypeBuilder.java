@@ -642,7 +642,7 @@ final class FunctionTypeBuilder {
           .withParamsNode(parametersNode)
           .withReturnType(returnType, returnTypeInferred)
           .withTypeOfThis(thisType)
-          .withTemplateNames(templateTypeNames)
+          .withTemplateKeys(templateTypeNames)
           .build();
       maybeSetBaseType(fnType);
     }
@@ -681,7 +681,7 @@ final class FunctionTypeBuilder {
    */
   private FunctionType getOrCreateConstructor() {
     FunctionType fnType = typeRegistry.createConstructorType(
-        fnName, contents.getSourceNode(), parametersNode, returnType);
+        fnName, contents.getSourceNode(), parametersNode, returnType, null);
     JSType existingType = typeRegistry.getType(fnName);
 
     if (makesStructs) {

@@ -438,7 +438,7 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public boolean hasAnyTemplateInternal() {
-    return referencedType.hasAnyTemplate();
+  public boolean hasAnyTemplateTypesInternal() {
+    return referencedType.hasAnyTemplateTypes();
   }
 }

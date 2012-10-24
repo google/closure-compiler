@@ -49,7 +49,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
   public void testNamedTypeProperties() {
     NamedType namedA = new NamedType(registry, "TypeA", "source", 1, 0);
     FunctionType ctorA = registry.createConstructorType(
-        "TypeA", null, null, null);
+        "TypeA", null, null, null, null);
     ObjectType typeA = ctorA.getInstanceType();
 
     namedA.defineDeclaredProperty("foo", NUMBER_TYPE, null);

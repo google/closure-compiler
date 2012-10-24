@@ -175,7 +175,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
 
   public void testCtorWithPrototypeSet() {
     FunctionType ctor = registry.createConstructorType(
-        "Foo", null, null, null);
+        "Foo", null, null, null, null);
     assertFalse(ctor.getInstanceType().isUnknownType());
 
     Node node = new Node(Token.OBJECTLIT);

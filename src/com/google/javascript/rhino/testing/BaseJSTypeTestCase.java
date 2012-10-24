@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.testing;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionBuilder;
@@ -60,7 +61,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
   protected ObjectType NO_OBJECT_TYPE;
   protected ObjectType NO_TYPE;
   protected ObjectType NO_RESOLVED_TYPE;
-  protected JSType ARRAY_FUNCTION_TYPE;
+  protected FunctionType ARRAY_FUNCTION_TYPE;
   protected ObjectType ARRAY_TYPE;
   protected JSType BOOLEAN_OBJECT_FUNCTION_TYPE;
   protected ObjectType BOOLEAN_OBJECT_TYPE;
@@ -129,7 +130,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
     NO_RESOLVED_TYPE =
         registry.getNativeObjectType(JSTypeNative.NO_RESOLVED_TYPE);
     ARRAY_FUNCTION_TYPE =
-        registry.getNativeType(JSTypeNative.ARRAY_FUNCTION_TYPE);
+        registry.getNativeFunctionType(JSTypeNative.ARRAY_FUNCTION_TYPE);
     ARRAY_TYPE =
         registry.getNativeObjectType(JSTypeNative.ARRAY_TYPE);
     BOOLEAN_OBJECT_FUNCTION_TYPE =
@@ -406,6 +407,11 @@ public abstract class BaseJSTypeTestCase extends TestCase {
 
   protected JSType createOptionalType(JSType type) {
     return registry.createOptionalType(type);
+  }
+
+  protected JSType createTemplatizedType(
+      JSType baseType, ImmutableList<JSType> templatizedTypes) {
+    return registry.createTemplatizedType(baseType, templatizedTypes);
   }
 
   /**

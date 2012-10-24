@@ -206,11 +206,11 @@ public class ClosureCodingConventionTest extends TestCase {
 
     Node nodeA = new Node(Token.FUNCTION);
     FunctionType ctorA = registry.createConstructorType("A", nodeA,
-        new Node(Token.PARAM_LIST), null);
+        new Node(Token.PARAM_LIST), null, null);
 
     Node nodeB = new Node(Token.FUNCTION);
     FunctionType ctorB = registry.createConstructorType("B", nodeB,
-        new Node(Token.PARAM_LIST), null);
+        new Node(Token.PARAM_LIST), null, null);
 
     conv.applySubclassRelationship(ctorA, ctorB, SubclassType.INHERITS);
 

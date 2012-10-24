@@ -1459,7 +1459,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
           FunctionType delegateProxy = typeRegistry.createConstructorType(
               delegateBaseObject.getReferenceName() + DELEGATE_PROXY_SUFFIX,
-              null, null, null);
+              null, null, null, null);
           delegateProxy.setPrototypeBasedOn(delegateBaseObject);
 
           codingConvention.applyDelegateRelationship(

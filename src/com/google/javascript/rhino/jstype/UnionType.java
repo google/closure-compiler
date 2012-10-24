@@ -618,9 +618,9 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public boolean hasAnyTemplateInternal() {
+  public boolean hasAnyTemplateTypesInternal() {
     for (JSType alternate : alternates) {
-      if (alternate.hasAnyTemplate()) {
+      if (alternate.hasAnyTemplateTypes()) {
         return true;
       }
     }
