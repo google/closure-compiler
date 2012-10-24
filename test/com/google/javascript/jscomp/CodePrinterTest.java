@@ -72,46 +72,63 @@ public class CodePrinterTest extends TestCase {
   }
 
   String parsePrint(String js, boolean prettyprint, int lineThreshold) {
-    return new CodePrinter.Builder(parse(js)).setPrettyPrint(prettyprint)
-        .setLineLengthThreshold(lineThreshold).build();
+    CompilerOptions options = new CompilerOptions();
+    options.setPrettyPrint(prettyprint);
+    options.setLineLengthThreshold(lineThreshold);
+    return new CodePrinter.Builder(parse(js)).setCompilerOptions(options)
+        .build();
   }
 
   String parsePrint(String js, boolean prettyprint, boolean lineBreak,
       int lineThreshold) {
-    return new CodePrinter.Builder(parse(js)).setPrettyPrint(prettyprint)
-        .setLineLengthThreshold(lineThreshold).setLineBreak(lineBreak).build();
+    CompilerOptions options = new CompilerOptions();
+    options.setPrettyPrint(prettyprint);
+    options.setLineLengthThreshold(lineThreshold);
+    options.setLineBreak(lineBreak);
+    return new CodePrinter.Builder(parse(js)).setCompilerOptions(options)
+        .build();
   }
 
   String parsePrint(String js, boolean prettyprint, boolean lineBreak,
       boolean preferLineBreakAtEof, int lineThreshold) {
-    return new CodePrinter.Builder(parse(js, true)).setPrettyPrint(prettyprint)
-        .setLineLengthThreshold(lineThreshold).setLineBreak(lineBreak)
-        .setPreferLineBreakAtEndOfFile(preferLineBreakAtEof)
+    CompilerOptions options = new CompilerOptions();
+    options.setPrettyPrint(prettyprint);
+    options.setLineLengthThreshold(lineThreshold);
+    options.setPreferLineBreakAtEndOfFile(preferLineBreakAtEof);
+    options.setLineBreak(lineBreak);
+    return new CodePrinter.Builder(parse(js)).setCompilerOptions(options)
         .build();
   }
 
   String parsePrint(String js, boolean prettyprint, boolean lineBreak,
       int lineThreshold, boolean outputTypes) {
-    return new CodePrinter.Builder(parse(js, true)).setPrettyPrint(prettyprint)
+    CompilerOptions options = new CompilerOptions();
+    options.setPrettyPrint(prettyprint);
+    options.setLineLengthThreshold(lineThreshold);
+    options.setLineBreak(lineBreak);
+    return new CodePrinter.Builder(parse(js, true)).setCompilerOptions(options)
         .setOutputTypes(outputTypes)
-        .setLineLengthThreshold(lineThreshold).setLineBreak(lineBreak)
         .build();
   }
 
   String parsePrint(String js, boolean prettyprint, boolean lineBreak,
                     int lineThreshold, boolean outputTypes,
                     boolean tagAsStrict) {
-    return new CodePrinter.Builder(parse(js, true)).setPrettyPrint(prettyprint)
+    CompilerOptions options = new CompilerOptions();
+    options.setPrettyPrint(prettyprint);
+    options.setLineLengthThreshold(lineThreshold);
+    options.setLineBreak(lineBreak);
+    return new CodePrinter.Builder(parse(js, true)).setCompilerOptions(options)
         .setOutputTypes(outputTypes)
-        .setLineLengthThreshold(lineThreshold).setLineBreak(lineBreak)
         .setTagAsStrict(tagAsStrict)
         .build();
   }
 
 
   String printNode(Node n) {
-    return new CodePrinter.Builder(n).setLineLengthThreshold(
-        CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD).build();
+    CompilerOptions options = new CompilerOptions();
+    options.setLineLengthThreshold(CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD);
+    return new CodePrinter.Builder(n).setCompilerOptions(options).build();
   }
 
   void assertPrintNode(String expectedJs, Node ast) {
@@ -959,8 +976,7 @@ public class CodePrinterTest extends TestCase {
 
     assertEquals(
         "x- -4",
-        new CodePrinter.Builder(n).setLineLengthThreshold(
-            CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD).build());
+        printNode(n));
   }
 
   public void testFunctionWithCall() {

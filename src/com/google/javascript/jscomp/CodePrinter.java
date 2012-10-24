@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -544,17 +545,9 @@ class CodePrinter {
 
   static class Builder {
     private final Node root;
-    private boolean prettyPrint = false;
-    private boolean lineBreak = false;
-    private boolean preferLineBreakAtEndOfFile = false;
+    private CompilerOptions options = new CompilerOptions();
     private boolean outputTypes = false;
-    private int lineLengthThreshold = DEFAULT_LINE_LENGTH_THRESHOLD;
     private SourceMap sourceMap = null;
-    private SourceMap.DetailLevel sourceMapDetailLevel =
-        SourceMap.DetailLevel.ALL;
-    // Specify a charset to use when outputting source code.  If null,
-    // then just output ASCII.
-    private Charset outputCharset = null;
     private boolean tagAsStrict;
 
     /**
@@ -566,11 +559,23 @@ class CodePrinter {
     }
 
     /**
+     * Sets the output options from compiler options.
+     */
+    Builder setCompilerOptions(CompilerOptions options) {
+      try {
+        this.options = (CompilerOptions) options.clone();
+      } catch (CloneNotSupportedException e) {
+        throw Throwables.propagate(e);
+      }
+      return this;
+    }
+
+    /**
      * Sets whether pretty printing should be used.
      * @param prettyPrint If true, pretty printing will be used.
      */
     Builder setPrettyPrint(boolean prettyPrint) {
-      this.prettyPrint = prettyPrint;
+      options.prettyPrint = prettyPrint;
       return this;
     }
 
@@ -579,18 +584,7 @@ class CodePrinter {
      * @param lineBreak If true, line breaking is done automatically.
      */
     Builder setLineBreak(boolean lineBreak) {
-      this.lineBreak = lineBreak;
-      return this;
-    }
-
-    /**
-     * Sets whether line breaking is preferred at end of file. This is useful
-     * if JS serving code needs a place to insert code, such as script tags,
-     * without interfering with source maps.
-     * @param lineBreakAtEnd If true, prefer line breaking at end of file.
-     */
-    Builder setPreferLineBreakAtEndOfFile(boolean lineBreakAtEnd) {
-      this.preferLineBreakAtEndOfFile = lineBreakAtEnd;
+      options.lineBreak = lineBreak;
       return this;
     }
 
@@ -604,17 +598,6 @@ class CodePrinter {
     }
 
     /**
-     * Sets the line length threshold that will be used to determine
-     * when to break lines, if line breaking is on.
-     *
-     * @param threshold The line length threshold.
-     */
-    Builder setLineLengthThreshold(int threshold) {
-      this.lineLengthThreshold = threshold;
-      return this;
-    }
-
-    /**
      * Sets the source map to which to write the metadata about
      * the generated source code.
      *
@@ -622,24 +605,6 @@ class CodePrinter {
      */
     Builder setSourceMap(SourceMap sourceMap) {
       this.sourceMap = sourceMap;
-      return this;
-    }
-
-    /**
-     * @param level The detail level to use.
-     */
-    Builder setSourceMapDetailLevel(SourceMap.DetailLevel level) {
-      Preconditions.checkState(level != null);
-      this.sourceMapDetailLevel = level;
-      return this;
-    }
-
-    /**
-     * Set the charset to use when determining what characters need to be
-     * escaped in the output.
-     */
-    Builder setOutputCharset(Charset outCharset) {
-      this.outputCharset = outCharset;
       return this;
     }
 
@@ -662,13 +627,11 @@ class CodePrinter {
 
       Format outputFormat = outputTypes
           ? Format.TYPED
-          : prettyPrint
+          : options.prettyPrint
               ? Format.PRETTY
               : Format.COMPACT;
 
-      return toSource(root, outputFormat, lineBreak, preferLineBreakAtEndOfFile,
-          lineLengthThreshold, sourceMap, sourceMapDetailLevel, outputCharset,
-          tagAsStrict);
+      return toSource(root, outputFormat, options, sourceMap, tagAsStrict);
     }
   }
 
@@ -682,26 +645,28 @@ class CodePrinter {
    * Converts a tree to JS code
    */
   private static String toSource(Node root, Format outputFormat,
-                                 boolean lineBreak,  boolean preferEndOfFileBreak,
-                                 int lineLengthThreshold,
-                                 SourceMap sourceMap,
-                                 SourceMap.DetailLevel sourceMapDetailLevel,
-                                 Charset outputCharset,
-                                 boolean tagAsStrict) {
-    Preconditions.checkState(sourceMapDetailLevel != null);
+      CompilerOptions options, SourceMap sourceMap,  boolean tagAsStrict) {
+    Preconditions.checkState(options.sourceMapDetailLevel != null);
 
     boolean createSourceMap = (sourceMap != null);
+    Charset outputCharset = options.outputCharset == null ? null :
+        Charset.forName(options.outputCharset);
     MappedCodePrinter mcp =
         outputFormat == Format.COMPACT
         ? new CompactCodePrinter(
-            lineBreak, preferEndOfFileBreak, lineLengthThreshold,
-            createSourceMap, sourceMapDetailLevel)
+            options.lineBreak,
+            options.preferLineBreakAtEndOfFile,
+            options.lineLengthThreshold,
+            createSourceMap,
+            options.sourceMapDetailLevel)
         : new PrettyCodePrinter(
-            lineLengthThreshold, createSourceMap, sourceMapDetailLevel);
+            options.lineLengthThreshold,
+            createSourceMap,
+            options.sourceMapDetailLevel);
     CodeGenerator cg =
         outputFormat == Format.TYPED
         ? new TypedCodeGenerator(mcp, outputCharset)
-        : new CodeGenerator(mcp, outputCharset);
+        : new CodeGenerator(mcp, outputCharset, options.preferSingleQuotes);
 
     if (tagAsStrict) {
       cg.tagAsStrict();

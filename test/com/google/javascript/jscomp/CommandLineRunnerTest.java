@@ -1100,6 +1100,15 @@ public class CommandLineRunnerTest extends TestCase {
     assertEquals("", outReader.toString());
   }
 
+  public void testFormattingSingleQuote() {
+    testSame("var x = '';");
+    assertEquals("var x=\"\";", lastCompiler.toSource());
+
+    args.add("--formatting=SINGLE_QUOTES");
+    testSame("var x = '';");
+    assertEquals("var x='';", lastCompiler.toSource());
+  }
+
   public void testTransformAMDAndProcessCJS() {
     useStringComparison = true;
     args.add("--transform_amd_modules");
@@ -1236,7 +1245,7 @@ public class CommandLineRunnerTest extends TestCase {
 
   private Compiler compile(String[] original) {
     CommandLineRunner runner = createCommandLineRunner(original);
-    assertTrue(runner.shouldRunCompiler());
+    assertTrue(new String(errReader.toByteArray()), runner.shouldRunCompiler());
     Supplier<List<SourceFile>> inputsSupplier = null;
     Supplier<List<JSModule>> modulesSupplier = null;
 

@@ -222,7 +222,7 @@ public class PerformanceTracker {
 
   private final CodeSizeEstimatePrinter estimateCodeSize(Node root) {
     CodeSizeEstimatePrinter cp = new CodeSizeEstimatePrinter(trackGzippedSize);
-    CodeGenerator cg = new CodeGenerator(cp);
+    CodeGenerator cg = new CodeGenerator(cp, null, false);
     cg.add(root);
     return cp;
   }

@@ -45,8 +45,11 @@ class CodeGenerator {
 
   private final CharsetEncoder outputCharsetEncoder;
 
+  private final boolean preferSingleQuotes;
+
   CodeGenerator(
-      CodeConsumer consumer, Charset outputCharset) {
+      CodeConsumer consumer, Charset outputCharset,
+      boolean preferSingleQuotes) {
     cc = consumer;
     if (outputCharset == null || outputCharset == Charsets.US_ASCII) {
       // If we want our default (pretending to be UTF-8, but escaping anything
@@ -57,10 +60,7 @@ class CodeGenerator {
     } else {
       this.outputCharsetEncoder = outputCharset.newEncoder();
     }
-  }
-
-  CodeGenerator(CodeConsumer consumer) {
-    this(consumer, null);
+    this.preferSingleQuotes = preferSingleQuotes;
   }
 
   /**
@@ -976,8 +976,9 @@ class CodeGenerator {
 
     String doublequote, singlequote;
     char quote;
-    if (singleq < doubleq) {
-      // more double quotes so escape the single quotes
+    if (preferSingleQuotes ?
+        (singleq <= doubleq) : (singleq < doubleq)) {
+      // more double quotes so enclose in single quotes.
       quote = '\'';
       doublequote = "\"";
       singlequote = "\\\'";

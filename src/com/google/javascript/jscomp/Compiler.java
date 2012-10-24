@@ -49,7 +49,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Serializable;
-import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -1799,19 +1798,10 @@ public class Compiler extends AbstractCompiler {
    */
   private String toSource(Node n, SourceMap sourceMap, boolean firstOutput) {
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
-    builder.setPrettyPrint(options.prettyPrint);
-    builder.setLineBreak(options.lineBreak);
-    builder.setPreferLineBreakAtEndOfFile(options.preferLineBreakAtEndOfFile);
+    builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
-    builder.setSourceMapDetailLevel(options.sourceMapDetailLevel);
     builder.setTagAsStrict(firstOutput &&
         options.getLanguageOut() == LanguageMode.ECMASCRIPT5_STRICT);
-    builder.setLineLengthThreshold(options.lineLengthThreshold);
-
-    Charset charset = options.outputCharset != null ?
-        Charset.forName(options.outputCharset) : null;
-    builder.setOutputCharset(charset);
-
     return builder.build();
   }
 

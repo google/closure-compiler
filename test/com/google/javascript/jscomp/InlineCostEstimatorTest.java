@@ -35,8 +35,10 @@ public class InlineCostEstimatorTest extends TestCase {
   }
 
   static String minimize(String js) {
+    CompilerOptions options = new CompilerOptions();
+    options.setLineLengthThreshold(Integer.MAX_VALUE);
     return new CodePrinter.Builder(parse(js)).
-        setLineLengthThreshold(Integer.MAX_VALUE).
+        setCompilerOptions(options).
         build();
   }
 

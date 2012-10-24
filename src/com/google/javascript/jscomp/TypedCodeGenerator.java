@@ -33,7 +33,7 @@ import java.util.Set;
  */
 class TypedCodeGenerator extends CodeGenerator {
   TypedCodeGenerator(CodeConsumer consumer, Charset outputCharset) {
-    super(consumer, outputCharset);
+    super(consumer, outputCharset, false);
   }
 
   @Override

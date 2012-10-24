@@ -306,7 +306,7 @@ public class CommandLineRunner extends
     @Option(name = "--formatting",
         usage = "Specifies which formatting options, if any, should be "
         + "applied to the output JS. Options: "
-        + "PRETTY_PRINT, PRINT_INPUT_DELIMITER")
+        + "PRETTY_PRINT, PRINT_INPUT_DELIMITER, SINGLE_QUOTES")
     private List<FormattingOption> formatting = Lists.newArrayList();
 
     @Option(name = "--process_common_js_modules",
@@ -548,6 +548,7 @@ public class CommandLineRunner extends
   private static enum FormattingOption {
     PRETTY_PRINT,
     PRINT_INPUT_DELIMITER,
+    SINGLE_QUOTES
     ;
 
     private void applyToOptions(CompilerOptions options) {
@@ -557,6 +558,9 @@ public class CommandLineRunner extends
           break;
         case PRINT_INPUT_DELIMITER:
           options.printInputDelimiter = true;
+          break;
+        case SINGLE_QUOTES:
+          options.setPreferSingleQuotes(true);
           break;
         default:
           throw new RuntimeException("Unknown formatting option: " + this);

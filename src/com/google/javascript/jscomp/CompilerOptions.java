@@ -695,6 +695,17 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** The string to use as the separator for printInputDelimiter */
   public String inputDelimiter = "// Input %num%";
 
+  boolean preferSingleQuotes;
+
+  /**
+   * Normally, when there are an equal number of single and double quotes
+   * in a string, the compiler will use double quotes. Set this to true
+   * to prefer single quotes.
+   */
+  public void setPreferSingleQuotes(boolean enabled) {
+    this.preferSingleQuotes = enabled;
+  }
+
   String reportPath;
 
   /** Where to save a report of global name usage */
