@@ -173,3 +173,5 @@ function setInterval(callback, delay) {}
  * @see https://msdn.microsoft.com/en-us/library/ms536753(VS.85).aspx
  */
 function setTimeout(callback, delay) {}
+
+var i;
