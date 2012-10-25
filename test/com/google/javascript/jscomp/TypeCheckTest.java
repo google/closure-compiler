@@ -4060,6 +4060,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               "after it is constructed.");
   }
 
+  public void testSetprop11() throws Exception {
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() {}\n" +
+              "function Bar() {}\n" +
+              "Bar.prototype = new Foo();\n" +
+              "Bar.prototype.someprop = 123;\n",
+              "Cannot add a property to a struct instance " +
+              "after it is constructed.");
+  }
+
   public void testGetpropDict1() throws Exception {
     testTypes("/**\n" +
               " * @constructor\n" +
@@ -4122,6 +4135,18 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               " * @dict\n" +
               " */" +
               "function Dict1(){ this.prop = 123; }",
+              "Cannot do '.' access on a dict");
+  }
+
+  public void testGetpropDict6() throws Exception {
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @dict\n" +
+              " */\n" +
+              "function Foo() {}\n" +
+              "function Bar() {}\n" +
+              "Bar.prototype = new Foo();\n" +
+              "Bar.prototype.someprop = 123;\n",
               "Cannot do '.' access on a dict");
   }
 
@@ -4209,6 +4234,18 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               " */" +
               "function Bar(){ this.x = 123; }\n" +
               "var z = /** @type {Foo} */(new Bar)['x'];");
+  }
+
+  public void testGetelemStruct7() throws Exception {
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() {}\n" +
+              "function Bar() {}\n" +
+              "Bar.prototype = new Foo();\n" +
+              "Bar.prototype['someprop'] = 123;\n",
+              "Cannot do '[]' access on a struct");
   }
 
   public void testInOnStruct() throws Exception {

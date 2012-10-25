@@ -321,7 +321,7 @@ class PrototypeObjectType extends ObjectType {
 
     JSType propertyType = getPropertyType(propertyName);
     ObjectType nativeType =
-        this.isFunctionType() ?
+        isFunctionType() ?
         registry.getNativeObjectType(JSTypeNative.FUNCTION_PROTOTYPE) :
         registry.getNativeObjectType(JSTypeNative.OBJECT_PROTOTYPE);
     JSType nativePropertyType = nativeType.getPropertyType(propertyName);
@@ -488,7 +488,7 @@ class PrototypeObjectType extends ObjectType {
       // to avoid guessing.
       return true;
     }
-    return thatObj != null && this.isImplicitPrototype(thatObj);
+    return thatObj != null && isImplicitPrototype(thatObj);
   }
 
   private boolean implicitPrototypeChainIsUnknown() {

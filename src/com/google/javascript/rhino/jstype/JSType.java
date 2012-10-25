@@ -231,7 +231,7 @@ public abstract class JSType implements Serializable {
    * @return {@code this &lt;: (String, string)}
    */
   public final boolean isString() {
-    return this.isSubtype(
+    return isSubtype(
         getNativeType(JSTypeNative.STRING_VALUE_OR_OBJECT_TYPE));
   }
 
@@ -240,7 +240,7 @@ public abstract class JSType implements Serializable {
    * @return {@code this &lt;: (Number, number)}
    */
   public final boolean isNumber() {
-    return this.isSubtype(
+    return isSubtype(
         getNativeType(JSTypeNative.NUMBER_VALUE_OR_OBJECT_TYPE));
   }
 
@@ -295,6 +295,12 @@ public abstract class JSType implements Serializable {
   public boolean isStruct() {
     if (isObject()) {
       ObjectType objType = toObjectType();
+      ObjectType iproto = objType.getImplicitPrototype();
+      // For the case when a @struct constructor is assigned to a function's
+      // prototype property
+      if (iproto != null && iproto.isStruct()) {
+        return true;
+      }
       FunctionType ctor = objType.getConstructor();
       // This test is true for object literals
       if (ctor == null) {
@@ -313,7 +319,14 @@ public abstract class JSType implements Serializable {
    */
   public boolean isDict() {
     if (isObject()) {
-      FunctionType ctor = toObjectType().getConstructor();
+      ObjectType objType = toObjectType();
+      ObjectType iproto = objType.getImplicitPrototype();
+      // For the case when a @dict constructor is assigned to a function's
+      // prototype property
+      if (iproto != null && iproto.isDict()) {
+        return true;
+      }
+      FunctionType ctor = objType.getConstructor();
       return ctor != null && ctor.makesDicts();
     }
     return false;
@@ -656,17 +669,17 @@ public abstract class JSType implements Serializable {
     }
 
     if (isUnionType() && that.isUnionType()) {
-      return this.toMaybeUnionType().checkUnionEquivalenceHelper(
+      return toMaybeUnionType().checkUnionEquivalenceHelper(
           that.toMaybeUnionType(), eqMethod);
     }
 
     if (isFunctionType() && that.isFunctionType()) {
-      return this.toMaybeFunctionType().checkFunctionEquivalenceHelper(
+      return toMaybeFunctionType().checkFunctionEquivalenceHelper(
           that.toMaybeFunctionType(), eqMethod);
     }
 
     if (isRecordType() && that.isRecordType()) {
-      return this.toMaybeRecordType().checkRecordEquivalenceHelper(
+      return toMaybeRecordType().checkRecordEquivalenceHelper(
           that.toMaybeRecordType(), eqMethod);
     }
 
@@ -824,10 +837,7 @@ public abstract class JSType implements Serializable {
    * of {@code that}.<p>
    */
   public boolean canAssignTo(JSType that) {
-    if (this.isSubtype(that)) {
-      return true;
-    }
-    return false;
+    return isSubtype(that);
   }
 
   /**
@@ -887,7 +897,7 @@ public abstract class JSType implements Serializable {
    * Algorithm (11.9.3, page 55&ndash;56) of the ECMA-262 specification.<p>
    */
   public final boolean canTestForEqualityWith(JSType that) {
-    return this.testForEquality(that).equals(UNKNOWN);
+    return testForEquality(that).equals(UNKNOWN);
   }
 
   /**
@@ -972,7 +982,7 @@ public abstract class JSType implements Serializable {
    * Tests whether this type is nullable.
    */
   public boolean isNullable() {
-    return this.isSubtype(getNativeType(JSTypeNative.NULL_TYPE));
+    return isSubtype(getNativeType(JSTypeNative.NULL_TYPE));
   }
 
   /**
@@ -1182,7 +1192,7 @@ public abstract class JSType implements Serializable {
     }
 
     // other types
-    switch (this.testForEquality(that)) {
+    switch (testForEquality(that)) {
       case FALSE:
         return new TypePair(null, null);
 
@@ -1215,7 +1225,7 @@ public abstract class JSType implements Serializable {
     }
 
     // other types
-    switch (this.testForEquality(that)) {
+    switch (testForEquality(that)) {
       case TRUE:
         JSType noType = getNativeType(JSTypeNative.NO_TYPE);
         return new TypePair(noType, noType);
@@ -1262,8 +1272,8 @@ public abstract class JSType implements Serializable {
     // Other types.
     // There are only two types whose shallow inequality is deterministically
     // true -- null and undefined. We can just enumerate them.
-    if (this.isNullType() && that.isNullType() ||
-        this.isVoidType() && that.isVoidType()) {
+    if (isNullType() && that.isNullType() ||
+        isVoidType() && that.isVoidType()) {
       return new TypePair(null, null);
     } else {
       return new TypePair(this, that);
@@ -1455,7 +1465,7 @@ public abstract class JSType implements Serializable {
    * around type-identity.
    */
   public String toDebugHashCodeString() {
-    return "{" + this.hashCode() + "}";
+    return "{" + hashCode() + "}";
   }
 
   /**
