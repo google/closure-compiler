@@ -27,6 +27,7 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   private boolean generatePseudoNames = false;
   private ReplaceIdGenerators lastPass = null;
+  private String previousMappings = null;
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -36,7 +37,8 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
             .add("goog.events.getUniqueId")
             .add("goog.place.getUniqueId")
             .build(),
-        generatePseudoNames);
+        generatePseudoNames,
+        previousMappings);
     return lastPass;
   }
 
@@ -44,6 +46,7 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     generatePseudoNames = false;
+    previousMappings = null;
   }
 
   @Override
@@ -57,7 +60,7 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
          "foo.bar = 'foo_bar$0'");
   }
 
-  public void testSerialization() {
+  public void testSerialization1() {
     testMap("var x = goog.events.getUniqueId('xxx');\n" +
             "var y = goog.events.getUniqueId('yyy');\n",
 
@@ -66,12 +69,93 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
             "[goog.events.getUniqueId]\n" +
             "\n" +
-            "a:testcode:1\n" +
-            "b:testcode:2\n" +
-            "\n" +
-            "[goog.place.getUniqueId]\n" +
-            "\n" +
+            "a:testcode:1:32\n" +
+            "b:testcode:2:32\n" +
             "\n");
+  }
+
+  public void testSerialization2() {
+    testMap("/** @consistentIdGenerator */ id = function() {};" +
+         "f1 = id('f1');" +
+         "f1 = id('f1')",
+
+         "id = function() {};" +
+         "f1 = 'a';" +
+         "f1 = 'a'",
+
+         "[id]\n" +
+         "\n" +
+         "a:f1\n" +
+         "\n");
+  }
+
+  public void testReusePreviousSerialization1() {
+    previousMappings =
+        "[goog.events.getUniqueId]\n" +
+        "\n" +
+        "previous1:testcode:1:32\n" +
+        "previous2:testcode:2:32\n" +
+        "\n" +
+        "[goog.place.getUniqueId]\n" +
+        "\n" +
+        "\n";
+    testMap("var x = goog.events.getUniqueId('xxx');\n" +
+            "var y = goog.events.getUniqueId('yyy');\n",
+
+            "var x = 'previous1';\n" +
+            "var y = 'previous2';\n",
+
+            "[goog.events.getUniqueId]\n" +
+            "\n" +
+            "previous1:testcode:1:32\n" +
+            "previous2:testcode:2:32\n" +
+            "\n");
+  }
+
+  public void testReusePreviousSerialization2() {
+    previousMappings =
+        "[goog.events.getUniqueId]\n" +
+        "\n" +
+        "a:testcode:1:32\n" +
+        "b:testcode:2:32\n" +
+        "\n" +
+        "[goog.place.getUniqueId]\n" +
+        "\n" +
+        "\n";
+    testMap(
+        "var x = goog.events.getUniqueId('xxx');\n" +
+        "\n" + // new line to change location
+        "var y = goog.events.getUniqueId('yyy');\n",
+
+        "var x = 'a';\n" +
+        "var y = 'c';\n",
+
+        "[goog.events.getUniqueId]\n" +
+        "\n" +
+        "a:testcode:1:32\n" +
+        "c:testcode:3:32\n" +
+        "\n");
+  }
+
+  public void testReusePreviousSerializationConsistent1() {
+    previousMappings =
+        "[id]\n" +
+        "\n" +
+        "a:f1\n" +
+        "\n";
+    testMap(
+        "/** @consistentIdGenerator */ id = function() {};" +
+        "f1 = id('f1');" +
+        "f1 = id('f1')",
+
+        "id = function() {};" +
+        "f1 = 'a';" +
+        "f1 = 'a'",
+
+        "[id]\n" +
+        "\n" +
+        "a:f1\n" +
+        "\n");
   }
 
   public void testSimple() {
@@ -241,7 +325,7 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   private void testMap(String code, String expected, String expectedMap) {
     test(code, expected);
-    assertEquals(expectedMap, lastPass.getIdGeneratorMap());
+    assertEquals(expectedMap, lastPass.getSerializedIdMappings());
   }
 
   private void test(String code, String expected, String expectedPseudo) {

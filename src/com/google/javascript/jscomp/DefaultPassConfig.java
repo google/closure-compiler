@@ -1349,7 +1349,8 @@ public class DefaultPassConfig extends PassConfig {
   final PassFactory garbageCollectChecks =
       new HotSwapPassFactory("garbageCollectChecks", true) {
     @Override
-    protected HotSwapCompilerPass createInternal(final AbstractCompiler compiler) {
+    protected HotSwapCompilerPass createInternal(
+        final AbstractCompiler compiler) {
       return new HotSwapCompilerPass() {
         @Override
         public void process(Node externs, Node jsRoot) {
@@ -1412,9 +1413,10 @@ public class DefaultPassConfig extends PassConfig {
         @Override public void process(Node externs, Node root) {
           ReplaceIdGenerators pass =
               new ReplaceIdGenerators(
-                  compiler, options.idGenerators, options.generatePseudoNames);
+                  compiler, options.idGenerators, options.generatePseudoNames,
+                  options.idGeneratorsMapSerialized);
           pass.process(externs, root);
-          idGeneratorMap = pass.getIdGeneratorMap();
+          idGeneratorMap = pass.getSerializedIdMappings();
         }
       };
     }

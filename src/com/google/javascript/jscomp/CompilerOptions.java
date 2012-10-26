@@ -653,6 +653,13 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Id generators to replace. */
   Set<String> idGenerators;
 
+  /**
+   * A previous map of ids (serialized to a string by a previous compile).
+   * This will be used as a hint during the ReplaceIdGenerators pass, which
+   * will attempt to reuse the same ids.
+   */
+  String idGeneratorsMapSerialized;
+
   /** Configuration strings */
   List<String> replaceStringsFunctionDescriptions;
 
@@ -1178,6 +1185,15 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setIdGenerators(Set<String> idGenerators) {
     this.idGenerators = Sets.newHashSet(idGenerators);
+  }
+
+  /**
+   * A previous map of ids (serialized to a string by a previous compile).
+   * This will be used as a hint during the ReplaceIdGenerators pass, which
+   * will attempt to reuse the same ids.
+   */
+  public void setIdGeneratorsMap(String previousMappings) {
+    this.idGeneratorsMapSerialized = previousMappings;
   }
 
   /**
