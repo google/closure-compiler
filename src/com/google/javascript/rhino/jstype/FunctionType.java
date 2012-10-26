@@ -374,7 +374,7 @@ public class FunctionType extends PrototypeObjectType {
         setPrototype(
             new PrototypeObjectType(
                 registry,
-                this.getReferenceName() + ".prototype",
+                getReferenceName() + ".prototype",
                 registry.getNativeObjectType(OBJECT_TYPE),
                 isNativeObjectType(), null, null),
             null);
@@ -413,9 +413,8 @@ public class FunctionType extends PrototypeObjectType {
     if (baseType.hasReferenceName() ||
         isNativeObjectType() ||
         baseType.isFunctionPrototypeType()) {
-
       baseType = new PrototypeObjectType(
-          registry, this.getReferenceName() + ".prototype", baseType);
+          registry, getReferenceName() + ".prototype", baseType);
     }
     setPrototype(baseType, propertyNode);
   }
@@ -685,7 +684,7 @@ public class FunctionType extends PrototypeObjectType {
             objType.isEquivalentTo(prototypeSlot.getType())) {
           return true;
         }
-        this.setPrototypeBasedOn(objType, propertyNode);
+        setPrototypeBasedOn(objType, propertyNode);
         return true;
       } else {
         return false;
@@ -736,7 +735,7 @@ public class FunctionType extends PrototypeObjectType {
 
       // Check for the degenerate case, but double check
       // that there's not a cycle.
-      boolean isSubtypeOfThat = this.isSubtype(that);
+      boolean isSubtypeOfThat = isSubtype(that);
       boolean isSubtypeOfThis = that.isSubtype(this);
       if (isSubtypeOfThat && !isSubtypeOfThis) {
         return leastSuper ? that : this;
@@ -861,7 +860,7 @@ public class FunctionType extends PrototypeObjectType {
     FunctionType ctor = this;
 
     if (isInterface()) {
-      return getTopDefiningInterface(this.getInstanceType(), propertyName);
+      return getTopDefiningInterface(getInstanceType(), propertyName);
     }
 
     ObjectType topInstanceType = null;
@@ -1009,7 +1008,7 @@ public class FunctionType extends PrototypeObjectType {
         // Any function can be assigned to an interface function.
         return true;
       }
-      if (this.isInterface()) {
+      if (isInterface()) {
         // An interface function cannot be assigned to anything.
         return false;
       }
@@ -1022,7 +1021,7 @@ public class FunctionType extends PrototypeObjectType {
       // TODO(nicksantos): fix this.
       boolean treatThisTypesAsCovariant =
         // If either one of these is a ctor, skip 'this' checking.
-        this.isConstructor() || other.isConstructor() ||
+        isConstructor() || other.isConstructor() ||
 
         // An interface 'this'-type is non-restrictive.
         // In practical terms, if C implements I, and I has a method m,

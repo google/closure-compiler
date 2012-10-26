@@ -903,6 +903,12 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             JSType rvalueType = rvalue.getJSType();
             validator.expectObject(t, rvalue, rvalueType,
                 OVERRIDING_PROTOTYPE_WITH_NON_OBJECT);
+            // Only assign structs to the prototype of a @struct constructor
+            if (functionType.makesStructs() && !rvalueType.isStruct()) {
+              String funName = functionType.getTypeOfThis().toString();
+              compiler.report(t.makeError(assign, CONFLICTING_EXTENDED_TYPE,
+                                          "struct", funName));
+            }
             return;
           }
         }
@@ -1571,13 +1577,12 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             t.makeError(n, CONFLICTING_EXTENDED_TYPE,
                         "constructor", functionPrivateName));
       } else {
-        if (baseConstructor != getNativeType(OBJECT_FUNCTION_TYPE) &&
-            baseConstructor != null) {
-          if (functionType.makesStructs() && !baseConstructor.makesStructs()) {
+        if (baseConstructor != getNativeType(OBJECT_FUNCTION_TYPE)) {
+          ObjectType proto = functionType.getPrototype();
+          if (functionType.makesStructs() && !proto.isStruct()) {
             compiler.report(t.makeError(n, CONFLICTING_EXTENDED_TYPE,
                                         "struct", functionPrivateName));
-          } else if (functionType.makesDicts() &&
-                     !baseConstructor.makesDicts()) {
+          } else if (functionType.makesDicts() && !proto.isDict()) {
             compiler.report(t.makeError(n, CONFLICTING_EXTENDED_TYPE,
                                         "dict", functionPrivateName));
           }

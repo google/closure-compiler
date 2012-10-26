@@ -7724,6 +7724,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               "dicts can only extend dicts");
   }
 
+  public void testConstructorType12() throws Exception {
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Bar() {}\n" +
+              "Bar.prototype = {};\n",
+              "Bar cannot extend this type; " +
+              "structs can only extend structs");
+  }
+
   public void testBadStruct() throws Exception {
     testTypes("/** @struct */function Struct1() {}",
               "@struct used without @constructor for Struct1");
