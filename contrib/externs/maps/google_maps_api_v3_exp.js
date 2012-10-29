@@ -2634,6 +2634,11 @@ google.maps.MarkerImage.prototype.url;
 google.maps.MarkerOptions = function() {};
 
 /**
+ * @type {google.maps.Point}
+ */
+google.maps.MarkerOptions.prototype.anchorPoint;
+
+/**
  * @type {google.maps.Animation}
  */
 google.maps.MarkerOptions.prototype.animation;
@@ -5106,6 +5111,21 @@ google.maps.places.PredictionTerm.prototype.value;
  * @constructor
  */
 google.maps.places.QueryAutocompletePrediction = function() {};
+
+/**
+ * @type {string}
+ */
+google.maps.places.QueryAutocompletePrediction.prototype.description;
+
+/**
+ * @type {Array.<google.maps.places.PredictionSubstring>}
+ */
+google.maps.places.QueryAutocompletePrediction.prototype.matched_substrings;
+
+/**
+ * @type {Array.<google.maps.places.PredictionTerm>}
+ */
+google.maps.places.QueryAutocompletePrediction.prototype.terms;
 
 /**
  * @constructor
