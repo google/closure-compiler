@@ -4150,6 +4150,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               "Cannot do '.' access on a dict");
   }
 
+  public void testGetpropDict7() throws Exception {
+    testTypes("(/** @dict */ {x: 123}).x = 321;",
+              "Cannot do '.' access on a dict");
+  }
+
   public void testGetelemStruct1() throws Exception {
     testTypes("/**\n" +
               " * @constructor\n" +

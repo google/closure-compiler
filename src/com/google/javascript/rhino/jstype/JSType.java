@@ -327,7 +327,13 @@ public abstract class JSType implements Serializable {
         return true;
       }
       FunctionType ctor = objType.getConstructor();
-      return ctor != null && ctor.makesDicts();
+      // This test is true for object literals
+      if (ctor == null) {
+        JSDocInfo info = objType.getJSDocInfo();
+        return info != null && info.makesDicts();
+      } else {
+        return ctor.makesDicts();
+      }
     }
     return false;
   }
