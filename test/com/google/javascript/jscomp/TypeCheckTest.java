@@ -6206,11 +6206,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testIssue380() throws Exception {
     testTypes(
-        "/** @type { function(string): {innerHTML: string} } */" +
-        "document.getElementById;" +
+        "/** @type { function(string): {innerHTML: string} } */\n" +
+        "document.getElementById;\n" +
         "var list = /** @type {!Array.<string>} */ ['hello', 'you'];\n" +
         "list.push('?');\n" +
-        "document.getElementById('node').innerHTML = list.toString();");
+        "document.getElementById('node').innerHTML = list.toString();",
+        // Parse warning, but still applied.
+        "Type annotations are not allowed here. " +
+        "Are you missing parentheses?");
   }
 
   public void testIssue483() throws Exception {
@@ -6512,7 +6515,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function foo(opt_f) {" +
         "  /** @type {Function} */" +
         "  return opt_f || function () {};" +
-        "}");
+        "}",
+        "Type annotations are not allowed here. Are you missing parentheses?");
   }
 
   /**
@@ -7515,14 +7519,29 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testCast17() throws Exception {
     // Mostly verifying that rhino actually understands these JsDocs.
     testTypes("/** @constructor */ function Foo() {} \n" +
-        "/** @type {Foo} */ var x = /** @type {Foo} */ ({})");
+        "/** @type {Foo} */ var x = /** @type {Foo} */ (y)");
 
     testTypes("/** @constructor */ function Foo() {} \n" +
-        "/** @type {Foo} */ var x = (/** @type {Foo} */ {})");
+        "/** @type {Foo} */ var x = (/** @type {Foo} */ y)");
+
+    // Mostly verifying that rhino actually understands these JsDocs.
+    testTypes("/** @constructor */ function Foo() {} \n" +
+        "/** @type {Foo} */ var x = /** @type {Foo} */ ({})");
+  }
+
+  public void testCast18() throws Exception {
+    // Mostly verifying that legacy annotations are applied
+    // despite the parser warning.
+    testTypes("/** @constructor */ function Foo() {} \n" +
+        "/** @type {Foo} */ var x = (/** @type {Foo} */ {})",
+        "Type annotations are not allowed here. " +
+        "Are you missing parentheses?");
 
     // Not really encourage because of possible ambiguity but it works.
     testTypes("/** @constructor */ function Foo() {} \n" +
-        "/** @type {Foo} */ var x = /** @type {Foo} */ {}");
+        "/** @type {Foo} */ var x = /** @type {Foo} */ {}",
+        "Type annotations are not allowed here. " +
+        "Are you missing parentheses?");
   }
 
   public void testNestedCasts() throws Exception {
@@ -7858,7 +7877,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testUnknownConstructorInstanceType2() throws Exception {
-    testTypes("function g(f) { return /** @type Array */ new f(); }");
+    testTypes("function g(f) { return /** @type Array */(new f()); }");
   }
 
   public void testUnknownConstructorInstanceType3() throws Exception {
@@ -8509,7 +8528,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @extends {base} \n @interface */ var Int = function() {}\n" +
         "/** @type {{bar : !Function}} */ var x; \n" +
         "/** @type {!Function} */ base.prototype.bar = abstractMethod; \n" +
-        "/** @type {Int} */ foo;\n" +
+        "/** @type {Int} */ var foo;\n" +
         "foo.bar();");
   }
 

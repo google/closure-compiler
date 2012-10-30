@@ -80,7 +80,8 @@ public class DiagnosticGroups {
       "checkTypes, checkVars, const, constantProperty, deprecated, " +
       "duplicateMessage, " +
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
-      "internetExplorerChecks, invalidCasts, missingProperties, " +
+      "internetExplorerChecks, invalidCasts, misplacedTypeAnnotation, " +
+      "missingProperties, " +
       "nonStandardJsDocs, strictModuleDepCheck, typeInvalidation, " +
       "undefinedNames, undefinedVars, unknownDefines, uselessCode, " +
       "visibility";
@@ -228,6 +229,10 @@ public class DiagnosticGroups {
   public static DiagnosticGroup DUPLICATE_MESSAGE =
       DiagnosticGroups.registerGroup("duplicateMessage",
           JsMessageVisitor.MESSAGE_DUPLICATE_KEY);
+
+  public static DiagnosticGroup MISPLACED_TYPE_ANNOTATION =
+      DiagnosticGroups.registerGroup("misplacedTypeAnnotation",
+          RhinoErrorReporter.MISPLACED_TYPE_ANNOTATION);
 
   /**
    * Adds warning levels by name.

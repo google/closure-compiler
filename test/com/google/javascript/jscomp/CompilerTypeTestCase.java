@@ -84,6 +84,8 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
+    options.setWarningLevel(
+        DiagnosticGroups.MISPLACED_TYPE_ANNOTATION, CheckLevel.WARNING);
     options.setCodingConvention(getCodingConvention());
     return options;
   }

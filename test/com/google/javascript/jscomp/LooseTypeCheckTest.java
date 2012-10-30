@@ -4262,7 +4262,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "function foo(opt_f) {" +
         "  /** @type {Function} */" +
         "  return opt_f || function () {};" +
-        "}");
+        "}",
+        "Type annotations are not allowed here. Are you missing parentheses?");
   }
 
   /**
@@ -5045,11 +5046,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @type {Foo} */ var x = /** @type {Foo} */ ({})");
 
     testTypes("/** @constructor */ function Foo() {} \n" +
-        "/** @type {Foo} */ var x = (/** @type {Foo} */ {})");
-
-    // Not really encourage because of possible ambiguity but it works.
-    testTypes("/** @constructor */ function Foo() {} \n" +
-        "/** @type {Foo} */ var x = /** @type {Foo} */ {}");
+        "/** @type {Foo} */ var x = (/** @type {Foo} */ y)");
   }
 
   public void testNestedCasts() throws Exception {
@@ -5261,7 +5258,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testUnknownConstructorInstanceType2() throws Exception {
-    testTypes("function g(f) { return /** @type Array */ new f(); }");
+    testTypes("function g(f) { return /** @type Array */ (new f()); }");
   }
 
   public void testUnknownConstructorInstanceType3() throws Exception {

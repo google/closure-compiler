@@ -50,7 +50,12 @@ class RhinoErrorReporter {
       DiagnosticType.error("JSC_DUPLICATE_PARAM", "Parse error. {0}");
 
   static final DiagnosticType BAD_JSDOC_ANNOTATION =
-    DiagnosticType.warning("JSC_BAD_JSDOC_ANNOTATION", "Parse error. {0}");
+      DiagnosticType.warning("JSC_BAD_JSDOC_ANNOTATION", "Parse error. {0}");
+
+  static final DiagnosticType MISPLACED_TYPE_ANNOTATION =
+      DiagnosticType.disabled("JSC_MISPLACED_TYPE_ANNOTATION",
+          "Type annotations are not allowed here. " +
+          "Are you missing parentheses?");
 
   // A map of Rhino messages to their DiagnosticType.
   private final Map<Pattern, DiagnosticType> typeMap;
@@ -86,9 +91,13 @@ class RhinoErrorReporter {
         replacePlaceHolders(ScriptRuntime.getMessage0("msg.bad.jsdoc.tag")),
         BAD_JSDOC_ANNOTATION,
 
+        Pattern.compile("^Type annotations are not allowed here.*"),
+        MISPLACED_TYPE_ANNOTATION,
+
         // Type annotation errors.
         Pattern.compile("^Bad type annotation.*"),
-        TYPE_PARSE_ERROR);
+        TYPE_PARSE_ERROR
+        );
   }
 
   public static com.google.javascript.rhino.head.ErrorReporter
