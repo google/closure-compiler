@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 /**
  *
  */
@@ -65,13 +69,13 @@ public class Bug687669Test {
         assertEquals("L1:\n  ;\n", toSource("L1:;"));
         assertEquals("L1:\n  ;\na = 1;\n", toSource("L1:; a=1;"));
 
-        assertEquals("if (1) \n;\n", toSource("if(1);"));
-        assertEquals("if (1) \n;\na = 1;\n", toSource("if(1); a=1;"));
+        assertEquals("if (1) \n  ;\n", toSource("if(1);"));
+        assertEquals("if (1) \n  ;\na = 1;\n", toSource("if(1); a=1;"));
 
-        assertEquals("if (1) \na = 1;\n", toSource("if(1)a=1;"));
-        assertEquals("if (1) \na = 1;\na = 1;\n", toSource("if(1)a=1; a=1;"));
+        assertEquals("if (1) \n  a = 1;\n", toSource("if(1)a=1;"));
+        assertEquals("if (1) \n  a = 1;\na = 1;\n", toSource("if(1)a=1; a=1;"));
 
-        assertEquals("if (1) \n;\n;\n;\n;\n", toSource("if(1);;;;"));
+        assertEquals("if (1) \n  ;\n;\n;\n;\n", toSource("if(1);;;;"));
     }
 
 }

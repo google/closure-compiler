@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.javascript.commonjs.module.provider;
 
 import java.io.File;
@@ -48,9 +52,9 @@ public abstract class ModuleSourceProviderBase implements
         return loadFromFallbackLocations(moduleId, validator);
     }
 
-    public ModuleSource loadSource(URI uri, Object validator)
+    public ModuleSource loadSource(URI uri, URI base, Object validator)
             throws IOException, URISyntaxException {
-        return loadFromUri(uri, null, validator);
+        return loadFromUri(uri, base, validator);
     }
 
     private ModuleSource loadFromPathArray(String moduleId,

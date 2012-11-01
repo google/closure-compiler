@@ -109,7 +109,7 @@
              classname="com.tonicsystems.jarjar.JarJarTask"
              classpath="lib/jarjar.jar"/>
     <jarjar destfile="${buildlib.dir}/rhino.jar" update="true">
-      <zipfileset src="${buildlib.dir}/rhino1_7R4pre/js.jar"/>
+      <zipfileset src="${buildlib.dir}/rhino1_7R5pre/js.jar"/>
       <rule pattern="org.mozilla.javascript.**"
             result="com.google.javascript.rhino.head.@1"/>
     </jarjar>

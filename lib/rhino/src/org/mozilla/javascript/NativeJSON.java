@@ -1,42 +1,8 @@
 /* -*- Mode: java; tab-width: 4; indent-tabs-mode: 1; c-basic-offset: 4 -*-
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Rhino code, released
- * May 6, 1999.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1997-1999
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Norris Boyd
- *   Matthew Crumley
- *   Raphael Speyer
- *
- * Alternatively, the contents of this file may be used under the terms of
- * the GNU General Public License Version 2 or later (the "GPL"), in which
- * case the provisions of the GPL are applicable instead of those above. If
- * you wish to allow use of your version of this file only under the terms of
- * the GPL and not to allow others to use your version of this file under the
- * MPL, indicate your decision by deleting the provisions above and replacing
- * them with the notice and other provisions required by the GPL. If you do
- * not delete the provisions above, a recipient may use your version of this
- * file under either the MPL or the GPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.javascript;
 
@@ -53,7 +19,7 @@ import java.util.LinkedList;
  * This class implements the JSON native object.
  * See ECMA 15.12.
  */
-final class NativeJSON extends IdScriptableObject
+public final class NativeJSON extends IdScriptableObject
 {
     static final long serialVersionUID = -4567599697595654984L;
 
@@ -168,13 +134,25 @@ final class NativeJSON extends IdScriptableObject
         if (property instanceof Scriptable) {
             Scriptable val = ((Scriptable) property);
             if (val instanceof NativeArray) {
-                int len = (int) ((NativeArray) val).getLength();
-                for (int i = 0; i < len; i++) {
-                    Object newElement = walk(cx, scope, reviver, val, i);
-                    if (newElement == Undefined.instance) {
-                      val.delete(i);
+                long len = ((NativeArray) val).getLength();
+                for (long i = 0; i < len; i++) {
+                    // indices greater than MAX_INT are represented as strings
+                    if (i > Integer.MAX_VALUE) {
+                        String id = Long.toString(i);
+                        Object newElement = walk(cx, scope, reviver, val, id);
+                        if (newElement == Undefined.instance) {
+                            val.delete(id);
+                        } else {
+                            val.put(id, val, newElement);
+                        }
                     } else {
-                      val.put(i, val, newElement);
+                        int idx = (int) i;
+                        Object newElement = walk(cx, scope, reviver, val, idx);
+                        if (newElement == Undefined.instance) {
+                            val.delete(idx);
+                        } else {
+                            val.put(idx, val, newElement);
+                        }
                     }
                 }
             } else {
@@ -420,9 +398,14 @@ final class NativeJSON extends IdScriptableObject
         state.indent = state.indent + state.gap;
         List<Object> partial = new LinkedList<Object>();
 
-        int len = (int) value.getLength();
-        for (int index = 0; index < len; index++) {
-            Object strP = str(index, value, state);
+        long len = value.getLength();
+        for (long index = 0; index < len; index++) {
+            Object strP;
+            if (index > Integer.MAX_VALUE) {
+                strP = str(Long.toString(index), value, state);
+            } else {
+                strP = str((int) index, value, state);
+            }
             if (strP == Undefined.instance) {
                 partial.add("null");
             } else {

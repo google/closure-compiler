@@ -1,15 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
 <project name="testsrc" basedir="..">
   <!--
     Location of mozilla/js/tests directory
   -->
-  <property name="test.library.dir" location="../tests" />
+  <property name="test.library.dir" location="${build.dir}/tests" />
   <property name="test.jstests.jar" location="${test.library.dir}/src/jstests.jar" />
 
   <!--
     URL from which junit.jar can be retrieved
   -->
-  <property name="test.junit.url" value="http://mirrors.ibiblio.org/pub/mirrors/maven2/junit/junit/4.5/junit-4.5.jar"/>
+  <property name="test.junit.url" value="http://repo1.maven.org/maven2/junit/junit/4.10/junit-4.10.jar"/>
+
+  <!--
+    URL from which emma.jar can be retrieved
+  -->
+  <property name="test.emma.url" value="http://repo1.maven.org/maven2/emma/emma/2.1.5320/emma-2.1.5320.jar"/>
+
+  <!--
+    URL from which emma_ant.jar can be retrieved
+  -->
+  <property name="test.emma_ant.url" value="http://repo1.maven.org/maven2/emma/emma_ant/2.1.5320/emma_ant-2.1.5320.jar"/>
 
   <!--
     Destination to which testing classes should be built
@@ -32,13 +46,13 @@
   <property name="test.vm.mx" value="256m" />
 
   <target name="get-junit">
-	<mkdir dir="lib"/>
-	<get src="${test.junit.url}" dest="lib/junit.jar" usetimestamp="true"/>
+    <mkdir dir="lib"/>
+    <get src="${test.junit.url}" dest="lib/junit.jar" usetimestamp="true"/>
   </target>
 
   <target name="junit-compile">
     <mkdir dir="${test.classes}" />
-	<antcall target="get-junit"/>
+    <antcall target="get-junit"/>
     <javac
       destdir="${test.classes}" debug="true"
       target="${target-jvm}"
@@ -79,6 +93,8 @@
          <exclude name="**/*.java build.xml"/>
        </fileset>
     </copy>
+    <gunzip src="testsrc/tests.tar.gz" dest="${build.dir}/tests.tar"/>
+    <untar src="${build.dir}/tests.tar" dest="build"/>
   </target>
   	
   <target name="clean">
@@ -86,8 +102,8 @@
   </target>
 
   <target name="coverage-instrument">
-    <get src="http://mirrors.ibiblio.org/pub/mirrors/maven2/emma/emma/2.0.5312/emma-2.0.5312.jar" dest="lib/emma.jar" usetimestamp="true"/>
-    <get src="http://mirrors.ibiblio.org/pub/mirrors/maven2/emma/emma_ant/2.0.5312/emma_ant-2.0.5312.jar" dest="lib/emma_ant.jar" usetimestamp="true"/>
+    <get src="${test.emma.url}" dest="lib/emma.jar" usetimestamp="true"/>
+    <get src="${test.emma_ant.url}" dest="lib/emma_ant.jar" usetimestamp="true"/>
     <property name="coverage.dir" location="${build.dir}/coverage"/>
     <property name="coverage.classes.dir" location="${build.dir}/coverage/classes"/>
     <mkdir dir="${coverage.classes.dir}"/>
@@ -118,6 +134,10 @@
       <sysproperty key="mozilla.js.tests" value="${test.library.dir}" />
       <sysproperty key="mozilla.js.tests.timeout" value="${test.timeout}" />
       <sysproperty key="emma.coverage.out.file" value="${coverage.outfile}"/>
+      <!-- mozilla test cases are locale dependent! -->
+      <sysproperty key="user.language" value="en"/>
+      <sysproperty key="user.country" value="US"/>
+      <sysproperty key="user.timezone" value="America/Los_Angeles"/>
       <classpath>
         <pathelement location="${xbean.jar}"/>
         <pathelement location="${jsr173.jar}"/>
@@ -133,6 +153,9 @@
         <fileset dir="${test.classes}" includes="**/StandardTests.class"/>
       </batchtest>
       <formatter type="xml"/>
+      <assertions>
+        <enable/>
+      </assertions>
     </junit>
     <mkdir dir="build/test/report"/>
     <junitreport todir="build/test/report">
@@ -192,8 +215,19 @@
   <target name="copy-source">
     <mkdir dir="${dist.dir}/testsrc"/>
     <copy todir="${dist.dir}/testsrc">
-      <fileset dir="testsrc"
-        includes="**/*.java,**/*.js,**/*.jstest,**/*.properties,**/*.xml,**/*.html,**/*.skip" />
+      <fileset dir="testsrc">
+        <include name="**/*.java"/>
+        <include name="**/*.js"/>
+        <include name="**/*.jstest"/>
+        <include name="**/*.doctest"/>
+        <include name="**/*.properties"/>
+        <include name="**/*.xml"/>
+        <include name="**/*.html"/>
+        <include name="**/*.jar"/>
+        <include name="*.skip"/>
+        <include name="*.tests"/>
+        <include name="tests.tar.gz"/>
+      </fileset>
     </copy>
   </target>
 </project>

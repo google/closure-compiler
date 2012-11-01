@@ -75,8 +75,8 @@ public class ComplianceTest extends TestCase
     throws URISyntaxException
     {
         return new Require(cx, scope, new StrongCachingModuleScriptProvider(
-                new UrlModuleSourceProvider(Collections.singleton(new URI(
-                        "file:" + dir.getAbsolutePath().replace(File.separatorChar,'/') + "/")),
+                new UrlModuleSourceProvider(
+                        Collections.singleton(dir.getAbsoluteFile().toURI()),
                         Collections.singleton(new URI(ComplianceTest.class.getResource(".").toExternalForm() + "/")))),
                         null, null, false);
     }

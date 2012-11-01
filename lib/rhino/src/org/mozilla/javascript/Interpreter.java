@@ -1,48 +1,8 @@
 /* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Rhino code, released
- * May 6, 1999.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1997-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Patrick Beard
- *   Norris Boyd
- *   Igor Bukanov
- *   Ethan Hugg
- *   Bob Jervis
- *   Terry Lucas
- *   Roger Lawrence
- *   Milen Nankov
- *   Hannes Wallnoefer
- *
- * Alternatively, the contents of this file may be used under the terms of
- * the GNU General Public License Version 2 or later (the "GPL"), in which
- * case the provisions of the GPL are applicable instead of those above. If
- * you wish to allow use of your version of this file only under the terms of
- * the GPL and not to allow others to use your version of this file under the
- * MPL, indicate your decision by deleting the provisions above and replacing
- * them with the notice and other provisions required by the GPL. If you do
- * not delete the provisions above, a recipient may use your version of this
- * file under either the MPL or the GPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.javascript;
 
@@ -55,6 +15,8 @@ import org.mozilla.javascript.ast.FunctionNode;
 import org.mozilla.javascript.ast.ScriptNode;
 import org.mozilla.javascript.ScriptRuntime.NoSuchMethodShim;
 import org.mozilla.javascript.debug.DebugFrame;
+
+import static org.mozilla.javascript.UniqueTag.DOUBLE_MARK;
 
 public final class Interpreter extends Icode implements Evaluator
 {
@@ -105,7 +67,6 @@ public final class Interpreter extends Icode implements Evaluator
         boolean isContinuationsTopFrame;
 
         Scriptable thisObj;
-        Scriptable[] scriptRegExps;
 
 // The values that change during interpretation
 
@@ -921,7 +882,7 @@ public final class Interpreter extends Icode implements Evaluator
         // It is also used for continuation restart in which case
         // it holds ContinuationJump
 
-        final Object DBL_MRK = UniqueTag.DOUBLE_MARK;
+        final Object DBL_MRK = DOUBLE_MARK;
         final Object undefined = Undefined.instance;
 
         final boolean instructionCounting = (cx.instructionThreshold != 0);
@@ -1068,96 +1029,18 @@ switch (op) {
     case Token.LE :
     case Token.GT :
     case Token.LT : {
-        --stackTop;
-        Object rhs = stack[stackTop + 1];
-        Object lhs = stack[stackTop];
-        boolean valBln;
-      object_compare:
-        {
-          number_compare:
-            {
-                double rDbl, lDbl;
-                if (rhs == DBL_MRK) {
-                    rDbl = sDbl[stackTop + 1];
-                    lDbl = stack_double(frame, stackTop);
-                } else if (lhs == DBL_MRK) {
-                    rDbl = ScriptRuntime.toNumber(rhs);
-                    lDbl = sDbl[stackTop];
-                } else {
-                    break number_compare;
-                }
-                switch (op) {
-                  case Token.GE:
-                    valBln = (lDbl >= rDbl);
-                    break object_compare;
-                  case Token.LE:
-                    valBln = (lDbl <= rDbl);
-                    break object_compare;
-                  case Token.GT:
-                    valBln = (lDbl > rDbl);
-                    break object_compare;
-                  case Token.LT:
-                    valBln = (lDbl < rDbl);
-                    break object_compare;
-                  default:
-                    throw Kit.codeBug();
-                }
-            }
-            switch (op) {
-              case Token.GE:
-                valBln = ScriptRuntime.cmp_LE(rhs, lhs);
-                break;
-              case Token.LE:
-                valBln = ScriptRuntime.cmp_LE(lhs, rhs);
-                break;
-              case Token.GT:
-                valBln = ScriptRuntime.cmp_LT(rhs, lhs);
-                break;
-              case Token.LT:
-                valBln = ScriptRuntime.cmp_LT(lhs, rhs);
-                break;
-              default:
-                throw Kit.codeBug();
-            }
-        }
-        stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
+        stackTop = doCompare(frame, op, stack, sDbl, stackTop);
         continue Loop;
     }
     case Token.IN :
     case Token.INSTANCEOF : {
-        Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        --stackTop;
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        boolean valBln;
-        if (op == Token.IN) {
-            valBln = ScriptRuntime.in(lhs, rhs, cx);
-        } else {
-            valBln = ScriptRuntime.instanceOf(lhs, rhs, cx);
-        }
-        stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
+        stackTop = doInOrInstanceof(cx, op, stack, sDbl, stackTop);
         continue Loop;
     }
     case Token.EQ :
     case Token.NE : {
         --stackTop;
-        boolean valBln;
-        Object rhs = stack[stackTop + 1];
-        Object lhs = stack[stackTop];
-        if (rhs == DBL_MRK) {
-            if (lhs == DBL_MRK) {
-                valBln = (sDbl[stackTop] == sDbl[stackTop + 1]);
-            } else {
-                valBln = ScriptRuntime.eqNumber(sDbl[stackTop + 1], lhs);
-            }
-        } else {
-            if (lhs == DBL_MRK) {
-                valBln = ScriptRuntime.eqNumber(sDbl[stackTop], rhs);
-            } else {
-                valBln = ScriptRuntime.eq(lhs, rhs);
-            }
-        }
+        boolean valBln = doEquals(stack, sDbl, stackTop);
         valBln ^= (op == Token.NE);
         stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
         continue Loop;
@@ -1165,7 +1048,7 @@ switch (op) {
     case Token.SHEQ :
     case Token.SHNE : {
         --stackTop;
-        boolean valBln = shallowEquals(stack, sDbl, stackTop);
+        boolean valBln = doShallowEquals(stack, sDbl, stackTop);
         valBln ^= (op == Token.SHNE);
         stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
         continue Loop;
@@ -1280,31 +1163,11 @@ switch (op) {
     case Token.BITXOR :
     case Token.LSH :
     case Token.RSH : {
-        int lIntValue = stack_int32(frame, stackTop-1);
-        int rIntValue = stack_int32(frame, stackTop);
-        stack[--stackTop] = DBL_MRK;
-        switch (op) {
-          case Token.BITAND:
-            lIntValue &= rIntValue;
-            break;
-          case Token.BITOR:
-            lIntValue |= rIntValue;
-            break;
-          case Token.BITXOR:
-            lIntValue ^= rIntValue;
-            break;
-          case Token.LSH:
-            lIntValue <<= rIntValue;
-            break;
-          case Token.RSH:
-            lIntValue >>= rIntValue;
-            break;
-        }
-        sDbl[stackTop] = lIntValue;
+        stackTop = doBitOp(frame, op, stack, sDbl, stackTop);
         continue Loop;
     }
     case Token.URSH : {
-        double lDbl = stack_double(frame, stackTop-1);
+        double lDbl = stack_double(frame, stackTop - 1);
         int rIntValue = stack_int32(frame, stackTop) & 0x1F;
         stack[--stackTop] = DBL_MRK;
         sDbl[stackTop] = ScriptRuntime.toUint32(lDbl) >>> rIntValue;
@@ -1322,31 +1185,13 @@ switch (op) {
     }
     case Token.ADD :
         --stackTop;
-        do_add(stack, sDbl, stackTop, cx);
+        doAdd(stack, sDbl, stackTop, cx);
         continue Loop;
     case Token.SUB :
     case Token.MUL :
     case Token.DIV :
     case Token.MOD : {
-        double rDbl = stack_double(frame, stackTop);
-        --stackTop;
-        double lDbl = stack_double(frame, stackTop);
-        stack[stackTop] = DBL_MRK;
-        switch (op) {
-          case Token.SUB:
-            lDbl -= rDbl;
-            break;
-          case Token.MUL:
-            lDbl *= rDbl;
-            break;
-          case Token.DIV:
-            lDbl /= rDbl;
-            break;
-          case Token.MOD:
-            lDbl %= rDbl;
-            break;
-        }
-        sDbl[stackTop] = lDbl;
+        stackTop = doArithmetic(frame, op, stack, sDbl, stackTop);
         continue Loop;
     }
     case Token.NOT :
@@ -1379,12 +1224,7 @@ switch (op) {
     }
     case Token.DELPROP :
     case Icode_DELNAME : {
-        Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        --stackTop;
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.delete(lhs, rhs, cx, op == Icode_DELNAME);
+        stackTop = doDelName(cx, op, stack, sDbl, stackTop);
         continue Loop;
     }
     case Token.GETPROPNOWARN : {
@@ -1405,8 +1245,7 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.setObjectProp(lhs, stringReg, rhs,
-                                                      cx);
+        stack[stackTop] = ScriptRuntime.setObjectProp(lhs, stringReg, rhs, cx);
         continue Loop;
     }
     case Icode_PROP_INC_DEC : {
@@ -1418,52 +1257,15 @@ switch (op) {
         continue Loop;
     }
     case Token.GETELEM : {
-        --stackTop;
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) {
-            lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        }
-        Object value;
-        Object id = stack[stackTop + 1];
-        if (id != DBL_MRK) {
-            value = ScriptRuntime.getObjectElem(lhs, id, cx, frame.scope);
-        } else {
-            double d = sDbl[stackTop + 1];
-            value = ScriptRuntime.getObjectIndex(lhs, d, cx);
-        }
-        stack[stackTop] = value;
+        stackTop = doGetElem(cx, frame, stack, sDbl, stackTop);
         continue Loop;
     }
     case Token.SETELEM : {
-        stackTop -= 2;
-        Object rhs = stack[stackTop + 2];
-        if (rhs == DBL_MRK) {
-            rhs = ScriptRuntime.wrapNumber(sDbl[stackTop + 2]);
-        }
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) {
-            lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        }
-        Object value;
-        Object id = stack[stackTop + 1];
-        if (id != DBL_MRK) {
-            value = ScriptRuntime.setObjectElem(lhs, id, rhs, cx);
-        } else {
-            double d = sDbl[stackTop + 1];
-            value = ScriptRuntime.setObjectIndex(lhs, d, rhs, cx);
-        }
-        stack[stackTop] = value;
+        stackTop = doSetElem(cx, stack, sDbl, stackTop);
         continue Loop;
     }
     case Icode_ELEM_INC_DEC: {
-        Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        --stackTop;
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.elemIncrDecr(lhs, rhs, cx,
-                                                     iCode[frame.pc]);
-        ++frame.pc;
+        stackTop = doElemIncDec(cx, frame, iCode, stack, sDbl, stackTop);
         continue Loop;
     }
     case Token.GET_REF : {
@@ -1539,38 +1341,7 @@ switch (op) {
         if (instructionCounting) {
             cx.instructionCount += INVOCATION_COST;
         }
-        int callType = iCode[frame.pc] & 0xFF;
-        boolean isNew =  (iCode[frame.pc + 1] != 0);
-        int sourceLine = getIndex(iCode, frame.pc + 2);
-
-        // indexReg: number of arguments
-        if (isNew) {
-            // stack change: function arg0 .. argN -> newResult
-            stackTop -= indexReg;
-
-            Object function = stack[stackTop];
-            if (function == DBL_MRK)
-                function = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-            Object[] outArgs = getArgsArray(
-                                   stack, sDbl, stackTop + 1, indexReg);
-            stack[stackTop] = ScriptRuntime.newSpecial(
-                                  cx, function, outArgs, frame.scope, callType);
-        } else {
-            // stack change: function thisObj arg0 .. argN -> result
-            stackTop -= 1 + indexReg;
-
-            // Call code generation ensure that stack here
-            // is ... Callable Scriptable
-            Scriptable functionThis = (Scriptable)stack[stackTop + 1];
-            Callable function = (Callable)stack[stackTop];
-            Object[] outArgs = getArgsArray(
-                                   stack, sDbl, stackTop + 2, indexReg);
-            stack[stackTop] = ScriptRuntime.callSpecial(
-                                  cx, function, functionThis, outArgs,
-                                  frame.scope, frame.thisObj, callType,
-                                  frame.idata.itsSourceFile, sourceLine);
-        }
-        frame.pc += 4;
+        stackTop = doCallSpecial(cx, frame, stack, sDbl, stackTop, iCode, indexReg);
         continue Loop;
     }
     case Token.CALL :
@@ -1789,82 +1560,25 @@ switch (op) {
         indexReg = iCode[frame.pc++];
         // fallthrough
     case Token.SETCONSTVAR :
-        if (!frame.useActivation) {
-            if ((varAttributes[indexReg] & ScriptableObject.READONLY) == 0) {
-                throw Context.reportRuntimeError1("msg.var.redecl",
-                                                  frame.idata.argNames[indexReg]);
-            }
-            if ((varAttributes[indexReg] & ScriptableObject.UNINITIALIZED_CONST)
-                != 0)
-            {
-                vars[indexReg] = stack[stackTop];
-                varAttributes[indexReg] &= ~ScriptableObject.UNINITIALIZED_CONST;
-                varDbls[indexReg] = sDbl[stackTop];
-            }
-        } else {
-            Object val = stack[stackTop];
-            if (val == DBL_MRK) val = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-            stringReg = frame.idata.argNames[indexReg];
-            if (frame.scope instanceof ConstProperties) {
-                ConstProperties cp = (ConstProperties)frame.scope;
-                cp.putConst(stringReg, frame.scope, val);
-            } else
-                throw Kit.codeBug();
-        }
+        stackTop = doSetConstVar(frame, stack, sDbl, stackTop, vars, varDbls,
+                                 varAttributes, indexReg);
         continue Loop;
     case Icode_SETVAR1:
         indexReg = iCode[frame.pc++];
         // fallthrough
     case Token.SETVAR :
-        if (!frame.useActivation) {
-            if ((varAttributes[indexReg] & ScriptableObject.READONLY) == 0) {
-                vars[indexReg] = stack[stackTop];
-                varDbls[indexReg] = sDbl[stackTop];
-            }
-        } else {
-            Object val = stack[stackTop];
-            if (val == DBL_MRK) val = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-            stringReg = frame.idata.argNames[indexReg];
-            frame.scope.put(stringReg, frame.scope, val);
-        }
+        stackTop = doSetVar(frame, stack, sDbl, stackTop, vars, varDbls,
+                            varAttributes, indexReg);
         continue Loop;
     case Icode_GETVAR1:
         indexReg = iCode[frame.pc++];
         // fallthrough
     case Token.GETVAR :
-        ++stackTop;
-        if (!frame.useActivation) {
-            stack[stackTop] = vars[indexReg];
-            sDbl[stackTop] = varDbls[indexReg];
-        } else {
-            stringReg = frame.idata.argNames[indexReg];
-            stack[stackTop] = frame.scope.get(stringReg, frame.scope);
-        }
+        stackTop = doGetVar(frame, stack, sDbl, stackTop, vars, varDbls, indexReg);
         continue Loop;
     case Icode_VAR_INC_DEC : {
-        // indexReg : varindex
-        ++stackTop;
-        int incrDecrMask = iCode[frame.pc];
-        if (!frame.useActivation) {
-            stack[stackTop] = DBL_MRK;
-            Object varValue = vars[indexReg];
-            double d;
-            if (varValue == DBL_MRK) {
-                d = varDbls[indexReg];
-            } else {
-                d = ScriptRuntime.toNumber(varValue);
-                vars[indexReg] = DBL_MRK;
-            }
-            double d2 = ((incrDecrMask & Node.DECR_FLAG) == 0)
-                        ? d + 1.0 : d - 1.0;
-            varDbls[indexReg] = d2;
-            sDbl[stackTop] = ((incrDecrMask & Node.POST_FLAG) == 0) ? d2 : d;
-        } else {
-            String varName = frame.idata.argNames[indexReg];
-            stack[stackTop] = ScriptRuntime.nameIncrDecr(frame.scope, varName,
-                                                         cx, incrDecrMask);
-        }
-        ++frame.pc;
+        stackTop = doVarIncDec(cx, frame, stack, sDbl, stackTop,
+                               vars, varDbls, indexReg);
         continue Loop;
     }
     case Icode_ZERO :
@@ -1960,25 +1674,12 @@ switch (op) {
     }
     case Token.REF_MEMBER: {
         //indexReg: flags
-        Object elem = stack[stackTop];
-        if (elem == DBL_MRK) elem = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        --stackTop;
-        Object obj = stack[stackTop];
-        if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.memberRef(obj, elem, cx, indexReg);
+        stackTop = doRefMember(cx, stack, sDbl, stackTop, indexReg);
         continue Loop;
     }
     case Token.REF_NS_MEMBER: {
         //indexReg: flags
-        Object elem = stack[stackTop];
-        if (elem == DBL_MRK) elem = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        --stackTop;
-        Object ns = stack[stackTop];
-        if (ns == DBL_MRK) ns = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        --stackTop;
-        Object obj = stack[stackTop];
-        if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.memberRef(obj, ns, elem, cx, indexReg);
+        stackTop = doRefNsMember(cx, stack, sDbl, stackTop, indexReg);
         continue Loop;
     }
     case Token.REF_NAME: {
@@ -1991,13 +1692,7 @@ switch (op) {
     }
     case Token.REF_NS_NAME: {
         //indexReg: flags
-        Object name = stack[stackTop];
-        if (name == DBL_MRK) name = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        --stackTop;
-        Object ns = stack[stackTop];
-        if (ns == DBL_MRK) ns = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.nameRef(ns, name, cx, frame.scope,
-                                                indexReg);
+        stackTop = doRefNsName(cx, frame, stack, sDbl, stackTop, indexReg);
         continue Loop;
     }
     case Icode_SCOPE_LOAD :
@@ -2017,7 +1712,8 @@ switch (op) {
         initFunction(cx, frame.scope, frame.fnOrScript, indexReg);
         continue Loop;
     case Token.REGEXP :
-        stack[++stackTop] = frame.scriptRegExps[indexReg];
+        Object re = frame.idata.itsRegExpLiterals[indexReg];
+        stack[++stackTop] = ScriptRuntime.wrapRegExp(cx, frame.scope, re);
         continue Loop;
     case Icode_LITERAL_NEW :
         // indexReg: number of values in the literal
@@ -2185,8 +1881,8 @@ switch (op) {
         continue Loop;
     default :
         dumpICode(frame.idata);
-        throw new RuntimeException(
-            "Unknown icode : "+op+" @ pc : "+(frame.pc-1));
+        throw new RuntimeException("Unknown icode : " + op
+                                 + " @ pc : " + (frame.pc-1));
 }  // end of interpreter switch
 
                     } // end of jumplessRun label block
@@ -2261,6 +1957,8 @@ switch (op) {
                 exState = EX_CATCH_STATE;
             } else if (throwable instanceof EvaluatorException) {
                 exState = EX_CATCH_STATE;
+            } else if (throwable instanceof ContinuationPending) {
+                exState = EX_NO_JS_STATE;
             } else if (throwable instanceof RuntimeException) {
                 exState = cx.hasFeature(Context.FEATURE_ENHANCED_JAVA_ACCESS)
                           ? EX_CATCH_STATE
@@ -2383,6 +2081,341 @@ switch (op) {
                : ScriptRuntime.wrapNumber(interpreterResultDbl);
     }
 
+    private static int doInOrInstanceof(Context cx, int op, Object[] stack,
+                                        double[] sDbl, int stackTop) {
+        Object rhs = stack[stackTop];
+        if (rhs == DOUBLE_MARK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        --stackTop;
+        Object lhs = stack[stackTop];
+        if (lhs == DOUBLE_MARK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        boolean valBln;
+        if (op == Token.IN) {
+            valBln = ScriptRuntime.in(lhs, rhs, cx);
+        } else {
+            valBln = ScriptRuntime.instanceOf(lhs, rhs, cx);
+        }
+        stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
+        return stackTop;
+    }
+
+    private static int doCompare(CallFrame frame, int op, Object[] stack,
+                                 double[] sDbl, int stackTop) {
+        --stackTop;
+        Object rhs = stack[stackTop + 1];
+        Object lhs = stack[stackTop];
+        boolean valBln;
+        object_compare:
+        {
+            number_compare:
+            {
+                double rDbl, lDbl;
+                if (rhs == DOUBLE_MARK) {
+                    rDbl = sDbl[stackTop + 1];
+                    lDbl = stack_double(frame, stackTop);
+                } else if (lhs == DOUBLE_MARK) {
+                    rDbl = ScriptRuntime.toNumber(rhs);
+                    lDbl = sDbl[stackTop];
+                } else {
+                    break number_compare;
+                }
+                switch (op) {
+                    case Token.GE:
+                        valBln = (lDbl >= rDbl);
+                        break object_compare;
+                    case Token.LE:
+                        valBln = (lDbl <= rDbl);
+                        break object_compare;
+                    case Token.GT:
+                        valBln = (lDbl > rDbl);
+                        break object_compare;
+                    case Token.LT:
+                        valBln = (lDbl < rDbl);
+                        break object_compare;
+                    default:
+                        throw Kit.codeBug();
+                }
+            }
+            switch (op) {
+                case Token.GE:
+                    valBln = ScriptRuntime.cmp_LE(rhs, lhs);
+                    break;
+                case Token.LE:
+                    valBln = ScriptRuntime.cmp_LE(lhs, rhs);
+                    break;
+                case Token.GT:
+                    valBln = ScriptRuntime.cmp_LT(rhs, lhs);
+                    break;
+                case Token.LT:
+                    valBln = ScriptRuntime.cmp_LT(lhs, rhs);
+                    break;
+                default:
+                    throw Kit.codeBug();
+            }
+        }
+        stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
+        return stackTop;
+    }
+
+    private static int doBitOp(CallFrame frame, int op, Object[] stack,
+                               double[] sDbl, int stackTop) {
+        int lIntValue = stack_int32(frame, stackTop - 1);
+        int rIntValue = stack_int32(frame, stackTop);
+        stack[--stackTop] = DOUBLE_MARK;
+        switch (op) {
+          case Token.BITAND:
+            lIntValue &= rIntValue;
+            break;
+          case Token.BITOR:
+            lIntValue |= rIntValue;
+            break;
+          case Token.BITXOR:
+            lIntValue ^= rIntValue;
+            break;
+          case Token.LSH:
+            lIntValue <<= rIntValue;
+            break;
+          case Token.RSH:
+            lIntValue >>= rIntValue;
+            break;
+        }
+        sDbl[stackTop] = lIntValue;
+        return stackTop;
+    }
+
+    private static int doDelName(Context cx, int op, Object[] stack,
+                                 double[] sDbl, int stackTop) {
+        Object rhs = stack[stackTop];
+        if (rhs == DOUBLE_MARK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        --stackTop;
+        Object lhs = stack[stackTop];
+        if (lhs == DOUBLE_MARK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.delete(lhs, rhs, cx, op == Icode_DELNAME);
+        return stackTop;
+    }
+
+    private static int doGetElem(Context cx, CallFrame frame, Object[] stack,
+                                 double[] sDbl, int stackTop) {
+        --stackTop;
+        Object lhs = stack[stackTop];
+        if (lhs == DOUBLE_MARK) {
+            lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        }
+        Object value;
+        Object id = stack[stackTop + 1];
+        if (id != DOUBLE_MARK) {
+            value = ScriptRuntime.getObjectElem(lhs, id, cx, frame.scope);
+        } else {
+            double d = sDbl[stackTop + 1];
+            value = ScriptRuntime.getObjectIndex(lhs, d, cx);
+        }
+        stack[stackTop] = value;
+        return stackTop;
+    }
+
+    private static int doSetElem(Context cx, Object[] stack, double[] sDbl,
+                                 int stackTop) {
+        stackTop -= 2;
+        Object rhs = stack[stackTop + 2];
+        if (rhs == DOUBLE_MARK) {
+            rhs = ScriptRuntime.wrapNumber(sDbl[stackTop + 2]);
+        }
+        Object lhs = stack[stackTop];
+        if (lhs == DOUBLE_MARK) {
+            lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        }
+        Object value;
+        Object id = stack[stackTop + 1];
+        if (id != DOUBLE_MARK) {
+            value = ScriptRuntime.setObjectElem(lhs, id, rhs, cx);
+        } else {
+            double d = sDbl[stackTop + 1];
+            value = ScriptRuntime.setObjectIndex(lhs, d, rhs, cx);
+        }
+        stack[stackTop] = value;
+        return stackTop;
+    }
+
+    private static int doElemIncDec(Context cx, CallFrame frame, byte[] iCode,
+                                    Object[] stack, double[] sDbl, int stackTop) {
+        Object rhs = stack[stackTop];
+        if (rhs == DOUBLE_MARK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        --stackTop;
+        Object lhs = stack[stackTop];
+        if (lhs == DOUBLE_MARK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.elemIncrDecr(lhs, rhs, cx,
+                                                     iCode[frame.pc]);
+        ++frame.pc;
+        return stackTop;
+    }
+
+    private static int doCallSpecial(Context cx, CallFrame frame,
+                                     Object[] stack, double[] sDbl,
+                                     int stackTop, byte[] iCode,
+                                     int indexReg) {
+        int callType = iCode[frame.pc] & 0xFF;
+        boolean isNew =  (iCode[frame.pc + 1] != 0);
+        int sourceLine = getIndex(iCode, frame.pc + 2);
+
+        // indexReg: number of arguments
+        if (isNew) {
+            // stack change: function arg0 .. argN -> newResult
+            stackTop -= indexReg;
+
+            Object function = stack[stackTop];
+            if (function == DOUBLE_MARK)
+                function = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+            Object[] outArgs = getArgsArray(
+                                   stack, sDbl, stackTop + 1, indexReg);
+            stack[stackTop] = ScriptRuntime.newSpecial(
+                                  cx, function, outArgs, frame.scope, callType);
+        } else {
+            // stack change: function thisObj arg0 .. argN -> result
+            stackTop -= 1 + indexReg;
+
+            // Call code generation ensure that stack here
+            // is ... Callable Scriptable
+            Scriptable functionThis = (Scriptable)stack[stackTop + 1];
+            Callable function = (Callable)stack[stackTop];
+            Object[] outArgs = getArgsArray(
+                                   stack, sDbl, stackTop + 2, indexReg);
+            stack[stackTop] = ScriptRuntime.callSpecial(
+                                  cx, function, functionThis, outArgs,
+                                  frame.scope, frame.thisObj, callType,
+                                  frame.idata.itsSourceFile, sourceLine);
+        }
+        frame.pc += 4;
+        return stackTop;
+    }
+
+    private static int doSetConstVar(CallFrame frame, Object[] stack,
+                                     double[] sDbl, int stackTop,
+                                     Object[] vars, double[] varDbls,
+                                     int[] varAttributes, int indexReg) {
+        if (!frame.useActivation) {
+            if ((varAttributes[indexReg] & ScriptableObject.READONLY) == 0) {
+                throw Context.reportRuntimeError1("msg.var.redecl",
+                                                  frame.idata.argNames[indexReg]);
+            }
+            if ((varAttributes[indexReg] & ScriptableObject.UNINITIALIZED_CONST)
+                != 0)
+            {
+                vars[indexReg] = stack[stackTop];
+                varAttributes[indexReg] &= ~ScriptableObject.UNINITIALIZED_CONST;
+                varDbls[indexReg] = sDbl[stackTop];
+            }
+        } else {
+            Object val = stack[stackTop];
+            if (val == DOUBLE_MARK) val = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+            String stringReg = frame.idata.argNames[indexReg];
+            if (frame.scope instanceof ConstProperties) {
+                ConstProperties cp = (ConstProperties)frame.scope;
+                cp.putConst(stringReg, frame.scope, val);
+            } else
+                throw Kit.codeBug();
+        }
+        return stackTop;
+    }
+
+    private static int doSetVar(CallFrame frame, Object[] stack,
+                                double[] sDbl, int stackTop,
+                                Object[] vars, double[] varDbls,
+                                int[] varAttributes, int indexReg) {
+        if (!frame.useActivation) {
+            if ((varAttributes[indexReg] & ScriptableObject.READONLY) == 0) {
+                vars[indexReg] = stack[stackTop];
+                varDbls[indexReg] = sDbl[stackTop];
+            }
+        } else {
+            Object val = stack[stackTop];
+            if (val == DOUBLE_MARK) val = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+            String stringReg = frame.idata.argNames[indexReg];
+            frame.scope.put(stringReg, frame.scope, val);
+        }
+        return stackTop;
+    }
+
+    private static int doGetVar(CallFrame frame, Object[] stack,
+                                double[] sDbl, int stackTop,
+                                Object[] vars, double[] varDbls,
+                                int indexReg) {
+        ++stackTop;
+        if (!frame.useActivation) {
+            stack[stackTop] = vars[indexReg];
+            sDbl[stackTop] = varDbls[indexReg];
+        } else {
+            String stringReg = frame.idata.argNames[indexReg];
+            stack[stackTop] = frame.scope.get(stringReg, frame.scope);
+        }
+        return stackTop;
+    }
+
+    private static int doVarIncDec(Context cx, CallFrame frame,
+                                   Object[] stack, double[] sDbl,
+                                   int stackTop, Object[] vars,
+                                   double[] varDbls, int indexReg) {
+        // indexReg : varindex
+        ++stackTop;
+        int incrDecrMask = frame.idata.itsICode[frame.pc];
+        if (!frame.useActivation) {
+            stack[stackTop] = DOUBLE_MARK;
+            Object varValue = vars[indexReg];
+            double d;
+            if (varValue == DOUBLE_MARK) {
+                d = varDbls[indexReg];
+            } else {
+                d = ScriptRuntime.toNumber(varValue);
+                vars[indexReg] = DOUBLE_MARK;
+            }
+            double d2 = ((incrDecrMask & Node.DECR_FLAG) == 0)
+                        ? d + 1.0 : d - 1.0;
+            varDbls[indexReg] = d2;
+            sDbl[stackTop] = ((incrDecrMask & Node.POST_FLAG) == 0) ? d2 : d;
+        } else {
+            String varName = frame.idata.argNames[indexReg];
+            stack[stackTop] = ScriptRuntime.nameIncrDecr(frame.scope, varName,
+                                                         cx, incrDecrMask);
+        }
+        ++frame.pc;
+        return stackTop;
+    }
+
+    private static int doRefMember(Context cx, Object[] stack, double[] sDbl,
+                                   int stackTop, int flags) {
+        Object elem = stack[stackTop];
+        if (elem == DOUBLE_MARK) elem = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        --stackTop;
+        Object obj = stack[stackTop];
+        if (obj == DOUBLE_MARK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.memberRef(obj, elem, cx, flags);
+        return stackTop;
+    }
+
+    private static int doRefNsMember(Context cx, Object[] stack, double[] sDbl,
+                                     int stackTop, int flags) {
+        Object elem = stack[stackTop];
+        if (elem == DOUBLE_MARK) elem = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        --stackTop;
+        Object ns = stack[stackTop];
+        if (ns == DOUBLE_MARK) ns = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        --stackTop;
+        Object obj = stack[stackTop];
+        if (obj == DOUBLE_MARK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.memberRef(obj, ns, elem, cx, flags);
+        return stackTop;
+    }
+
+    private static int doRefNsName(Context cx, CallFrame frame,
+                                   Object[] stack, double[] sDbl,
+                                   int stackTop, int flags) {
+        Object name = stack[stackTop];
+        if (name == DOUBLE_MARK) name = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        --stackTop;
+        Object ns = stack[stackTop];
+        if (ns == DOUBLE_MARK) ns = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.nameRef(ns, name, cx, frame.scope, flags);
+        return stackTop;
+    }
+
     /**
      * Call __noSuchMethod__.
      */
@@ -2399,7 +2432,7 @@ switch (op) {
         Object[] elements = new Object[indexReg];
         for (int i=0; i < indexReg; ++i, ++shift) {
             Object val = stack[shift];
-            if (val == UniqueTag.DOUBLE_MARK) {
+            if (val == DOUBLE_MARK) {
                 val = ScriptRuntime.wrapNumber(sDbl[shift]);
             }
             elements[i] = val;
@@ -2426,12 +2459,31 @@ switch (op) {
         return calleeFrame;
     }
 
-    private static boolean shallowEquals(Object[] stack, double[] sDbl,
-            int stackTop)
+    private static boolean doEquals(Object[] stack, double[] sDbl,
+                                    int stackTop) {
+        Object rhs = stack[stackTop + 1];
+        Object lhs = stack[stackTop];
+        if (rhs == DOUBLE_MARK) {
+            if (lhs == DOUBLE_MARK) {
+                return (sDbl[stackTop] == sDbl[stackTop + 1]);
+            } else {
+                return ScriptRuntime.eqNumber(sDbl[stackTop + 1], lhs);
+            }
+        } else {
+            if (lhs == DOUBLE_MARK) {
+                return ScriptRuntime.eqNumber(sDbl[stackTop], rhs);
+            } else {
+                return ScriptRuntime.eq(lhs, rhs);
+            }
+        }
+    }
+
+    private static boolean doShallowEquals(Object[] stack, double[] sDbl,
+                                           int stackTop)
     {
         Object rhs = stack[stackTop + 1];
         Object lhs = stack[stackTop];
-        final Object DBL_MRK = UniqueTag.DOUBLE_MARK;
+        final Object DBL_MRK = DOUBLE_MARK;
         double rdbl, ldbl;
         if (rhs == DBL_MRK) {
             rdbl = sDbl[stackTop + 1];
@@ -2444,9 +2496,7 @@ switch (op) {
             }
         } else if (lhs == DBL_MRK) {
             ldbl = sDbl[stackTop];
-            if (rhs == DBL_MRK) {
-                rdbl = sDbl[stackTop + 1];
-            } else if (rhs instanceof Number) {
+            if (rhs instanceof Number) {
                 rdbl = ((Number)rhs).doubleValue();
             } else {
                 return false;
@@ -2568,7 +2618,7 @@ switch (op) {
           frame.savedStackTop = stackTop;
           frame.pc--; // we want to come back here when we resume
           ScriptRuntime.exitActivationFunction(cx);
-          return (frame.result != UniqueTag.DOUBLE_MARK)
+          return (frame.result != DOUBLE_MARK)
               ? frame.result
               : ScriptRuntime.wrapNumber(frame.resultDbl);
     }
@@ -2605,7 +2655,7 @@ switch (op) {
         Scriptable applyThis;
         if (indexReg != 0) {
             Object obj = stack[stackTop + 2];
-            if (obj == UniqueTag.DOUBLE_MARK)
+            if (obj == DOUBLE_MARK)
                 obj = ScriptRuntime.wrapNumber(sDbl[stackTop + 2]);
             applyThis = ScriptRuntime.toObjectOrNull(cx, obj);
         }
@@ -2699,19 +2749,6 @@ switch (op) {
             }
         }
 
-        Scriptable[] scriptRegExps = null;
-        if (idata.itsRegExpLiterals != null) {
-            // Wrapped regexps for functions are stored in
-            // InterpretedFunction
-            // but for script which should not contain references to scope
-            // the regexps re-wrapped during each script execution
-            if (idata.itsFunctionType != 0) {
-                scriptRegExps = fnOrScript.functionRegExps;
-            } else {
-                scriptRegExps = fnOrScript.createRegExpWraps(cx, scope);
-            }
-        }
-
         // Initialize args, vars, locals and stack
 
         int emptyStackTop = idata.itsMaxVars + idata.itsMaxLocals - 1;
@@ -2769,7 +2806,6 @@ switch (op) {
         frame.useActivation = useActivation;
 
         frame.thisObj = thisObj;
-        frame.scriptRegExps = scriptRegExps;
 
         // Initialize initial values of variables that change during
         // interpretation.
@@ -2833,7 +2869,8 @@ switch (op) {
                             // the call chain before reaching parent frame's
                             // scope. This should not be possible.
                             Kit.codeBug();
-                            break; // Never reached, but keeps the static analyzer happy about "scope" not being null 5 lines above.
+                            break; // Never reached, but keeps the static analyzer
+                            // happy about "scope" not being null 5 lines above.
                         }
                     }
                     else {
@@ -2872,7 +2909,7 @@ switch (op) {
                     } else {
                         result = cjump.result;
                     }
-                    if (result == UniqueTag.DOUBLE_MARK) {
+                    if (result == DOUBLE_MARK) {
                         double resultDbl;
                         if (cjump == null) {
                             resultDbl = frame.resultDbl;
@@ -2970,13 +3007,11 @@ switch (op) {
     private static int stack_int32(CallFrame frame, int i)
     {
         Object x = frame.stack[i];
-        double value;
         if (x == UniqueTag.DOUBLE_MARK) {
-            value = frame.sDbl[i];
+            return ScriptRuntime.toInt32(frame.sDbl[i]);
         } else {
-            value = ScriptRuntime.toNumber(x);
+            return ScriptRuntime.toInt32(x);
         }
-        return ScriptRuntime.toInt32(value);
     }
 
     private static double stack_double(CallFrame frame, int i)
@@ -3011,22 +3046,22 @@ switch (op) {
         }
     }
 
-    private static void do_add(Object[] stack, double[] sDbl, int stackTop,
+    private static void doAdd(Object[] stack, double[] sDbl, int stackTop,
                               Context cx)
     {
         Object rhs = stack[stackTop + 1];
         Object lhs = stack[stackTop];
         double d;
         boolean leftRightOrder;
-        if (rhs == UniqueTag.DOUBLE_MARK) {
+        if (rhs == DOUBLE_MARK) {
             d = sDbl[stackTop + 1];
-            if (lhs == UniqueTag.DOUBLE_MARK) {
+            if (lhs == DOUBLE_MARK) {
                 sDbl[stackTop] += d;
                 return;
             }
             leftRightOrder = true;
             // fallthrough to object + number code
-        } else if (lhs == UniqueTag.DOUBLE_MARK) {
+        } else if (lhs == DOUBLE_MARK) {
             d = sDbl[stackTop];
             lhs = rhs;
             leftRightOrder = false;
@@ -3043,7 +3078,7 @@ switch (op) {
                     ? ((Number)lhs).doubleValue() : ScriptRuntime.toNumber(lhs);
                 double rDbl = (rhs instanceof Number)
                     ? ((Number)rhs).doubleValue() : ScriptRuntime.toNumber(rhs);
-                stack[stackTop] = UniqueTag.DOUBLE_MARK;
+                stack[stackTop] = DOUBLE_MARK;
                 sDbl[stackTop] = lDbl + rDbl;
             }
             return;
@@ -3069,9 +3104,33 @@ switch (op) {
         } else {
             double lDbl = (lhs instanceof Number)
                 ? ((Number)lhs).doubleValue() : ScriptRuntime.toNumber(lhs);
-            stack[stackTop] = UniqueTag.DOUBLE_MARK;
+            stack[stackTop] = DOUBLE_MARK;
             sDbl[stackTop] = lDbl + d;
         }
+    }
+
+    private static int doArithmetic(CallFrame frame, int op, Object[] stack,
+                                    double[] sDbl, int stackTop) {
+        double rDbl = stack_double(frame, stackTop);
+        --stackTop;
+        double lDbl = stack_double(frame, stackTop);
+        stack[stackTop] = DOUBLE_MARK;
+        switch (op) {
+          case Token.SUB:
+            lDbl -= rDbl;
+            break;
+          case Token.MUL:
+            lDbl *= rDbl;
+            break;
+          case Token.DIV:
+            lDbl /= rDbl;
+            break;
+          case Token.MOD:
+            lDbl %= rDbl;
+            break;
+        }
+        sDbl[stackTop] = lDbl;
+        return stackTop;
     }
 
     private static Object[] getArgsArray(Object[] stack, double[] sDbl,

@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 js> var x = new JavaAdapter(java.util.HashMap, {})
 js> x
 {}
@@ -45,5 +49,39 @@ true
 js> x.append("foo") === x
 true
 js> x.run()
-js>
-
+js> // test access to protected methods
+js> x = JavaAdapter(java.util.Hashtable, {test: function() {this.rehash();}});
+{}
+js> x.test()
+js> // test access to protected fields
+js> x = JavaAdapter(java.util.Vector, {test: function() {return this.elementCount;}});
+[]
+js> x.test()
+0
+js> x.add(1)
+true
+js> x.test()
+1
+js> // test non-empty constructor with protected field
+js> x = JavaAdapter(java.util.Vector, {test: function() {return this.elementData.length;}}, 20);
+[]
+js> x.test()
+20
+js> // test extending abstract base class
+js> x = new java.util.AbstractList({get: function(i) { return i + 1; }})
+[]
+js> x.get(0)
+1.0
+js> x.get(1)
+2.0
+js> x.get(2)
+3.0
+js> // test implementing an interface
+js> x = new java.util.List({get: function(i) { return i + 1; }, toString: function() { return "[]"; }})
+[]
+js> x.get(0)
+1.0
+js> x.get(1)
+2.0
+js> x.get(2)
+3.0

@@ -1,42 +1,8 @@
 /* -*- Mode: java; tab-width: 4; indent-tabs-mode: 1; c-basic-offset: 4 -*-
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Rhino code, released
- * May 6, 1999.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1997-1999
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Norris Boyd
- *   Raphael Speyer
- *   Hannes Wallnoefer
- *
- * Alternatively, the contents of this file may be used under the terms of
- * the GNU General Public License Version 2 or later (the "GPL"), in which
- * case the provisions of the GPL are applicable instead of those above. If
- * you wish to allow use of your version of this file only under the terms of
- * the GPL and not to allow others to use your version of this file under the
- * MPL, indicate your decision by deleting the provisions above and replacing
- * them with the notice and other provisions required by the GPL. If you do
- * not delete the provisions above, a recipient may use your version of this
- * file under either the MPL or the GPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.javascript.json;
 
@@ -118,15 +84,23 @@ public class JsonParser {
     }
 
     private Object readObject() throws ParseException {
+        consumeWhitespace();
         Scriptable object = cx.newObject(scope);
+        // handle empty object literal case early
+        if (pos < length && src.charAt(pos) == '}') {
+            pos += 1;
+            return object;
+        }
         String id;
         Object value;
         boolean needsComma = false;
-        consumeWhitespace();
         while (pos < length) {
             char c = src.charAt(pos++);
             switch(c) {
                 case '}':
+                    if (!needsComma) {
+                        throw new ParseException("Unexpected comma in object literal");
+                    }
                     return object;
                 case ',':
                     if (!needsComma) {
@@ -160,13 +134,21 @@ public class JsonParser {
     }
 
     private Object readArray() throws ParseException {
+        consumeWhitespace();
+        // handle empty array literal case early
+        if (pos < length && src.charAt(pos) == ']') {
+            pos += 1;
+            return cx.newArray(scope, 0);
+        }
         List<Object> list = new ArrayList<Object>();
         boolean needsComma = false;
-        consumeWhitespace();
         while (pos < length) {
             char c = src.charAt(pos);
             switch(c) {
                 case ']':
+                    if (!needsComma) {
+                        throw new ParseException("Unexpected comma in array literal");
+                    }
                     pos += 1;
                     return cx.newArray(scope, list.toArray());
                 case ',':
@@ -189,108 +171,166 @@ public class JsonParser {
     }
 
     private String readString() throws ParseException {
-        StringBuilder b = new StringBuilder();
+        /*
+         * Optimization: if the source contains no escaped characters, create the
+         * string directly from the source text.
+         */
+        int stringStart = pos;
         while (pos < length) {
             char c = src.charAt(pos++);
             if (c <= '\u001F') {
                 throw new ParseException("String contains control character");
+            } else if (c == '\\') {
+                break;
+            } else if (c == '"') {
+                return src.substring(stringStart, pos - 1);
             }
-            switch(c) {
-                case '\\':
-                    if (pos >= length) {
-                        throw new ParseException("Unterminated string");
-                    }
-                    c = src.charAt(pos++);
-                    switch (c) {
-                        case '"':
-                            b.append('"');
-                            break;
-                        case '\\':
-                            b.append('\\');
-                            break;
-                        case '/':
-                            b.append('/');
-                            break;
-                        case 'b':
-                            b.append('\b');
-                            break;
-                        case 'f':
-                            b.append('\f');
-                            break;
-                        case 'n':
-                            b.append('\n');
-                            break;
-                        case 'r':
-                            b.append('\r');
-                            break;
-                        case 't':
-                            b.append('\t');
-                            break;
-                        case 'u':
-                            if (length - pos < 5) {
-                                throw new ParseException("Invalid character code: \\u" + src.substring(pos));
-                            }
-                            try {
-                                b.append((char) Integer.parseInt(src.substring(pos, pos + 4), 16));
-                                pos += 4;
-                            } catch (NumberFormatException nfx) {
-                                throw new ParseException("Invalid character code: " + src.substring(pos, pos + 4));
-                            }
-                            break;
-                        default:
-                            throw new ParseException("Unexcpected character in string: '\\" + c + "'");
-                    }
-                    break;
+        }
+
+        /*
+         * Slow case: string contains escaped characters.  Copy a maximal sequence
+         * of unescaped characters into a temporary buffer, then an escaped
+         * character, and repeat until the entire string is consumed.
+         */
+        StringBuilder b = new StringBuilder();
+        while (pos < length) {
+            assert src.charAt(pos - 1) == '\\';
+            b.append(src, stringStart, pos - 1);
+            if (pos >= length) {
+                throw new ParseException("Unterminated string");
+            }
+            char c = src.charAt(pos++);
+            switch (c) {
                 case '"':
-                    return b.toString();
-                default:
-                    b.append(c);
+                    b.append('"');
                     break;
+                case '\\':
+                    b.append('\\');
+                    break;
+                case '/':
+                    b.append('/');
+                    break;
+                case 'b':
+                    b.append('\b');
+                    break;
+                case 'f':
+                    b.append('\f');
+                    break;
+                case 'n':
+                    b.append('\n');
+                    break;
+                case 'r':
+                    b.append('\r');
+                    break;
+                case 't':
+                    b.append('\t');
+                    break;
+                case 'u':
+                    if (length - pos < 5) {
+                        throw new ParseException("Invalid character code: \\u" + src.substring(pos));
+                    }
+                    int code = fromHex(src.charAt(pos + 0)) << 12
+                             | fromHex(src.charAt(pos + 1)) << 8
+                             | fromHex(src.charAt(pos + 2)) << 4
+                             | fromHex(src.charAt(pos + 3));
+                    if (code < 0) {
+                        throw new ParseException("Invalid character code: " + src.substring(pos, pos + 4));
+                    }
+                    pos += 4;
+                    b.append((char) code);
+                    break;
+                default:
+                    throw new ParseException("Unexpected character in string: '\\" + c + "'");
+            }
+            stringStart = pos;
+            while (pos < length) {
+                c = src.charAt(pos++);
+                if (c <= '\u001F') {
+                    throw new ParseException("String contains control character");
+                } else if (c == '\\') {
+                    break;
+                } else if (c == '"') {
+                    b.append(src, stringStart, pos - 1);
+                    return b.toString();
+                }
             }
         }
         throw new ParseException("Unterminated string literal");
     }
 
-    private Number readNumber(char first) throws ParseException {
-        StringBuilder b = new StringBuilder();
-        b.append(first);
-        while (pos < length) {
+    private int fromHex(char c) {
+        return c >= '0' && c <= '9' ? c - '0'
+                : c >= 'A' && c <= 'F' ? c - 'A' + 10
+                : c >= 'a' && c <= 'f' ? c - 'a' + 10
+                : -1;
+    }
+
+    private Number readNumber(char c) throws ParseException {
+        assert c == '-' || (c >= '0' && c <= '9');
+        final int numberStart = pos - 1;
+        if (c == '-') {
+            c = nextOrNumberError(numberStart);
+            if (!(c >= '0' && c <= '9')) {
+                throw numberError(numberStart, pos);
+            }
+        }
+        if (c != '0') {
+            readDigits();
+        }
+        // read optional fraction part
+        if (pos < length) {
+            c = src.charAt(pos);
+            if (c == '.') {
+                pos += 1;
+                c = nextOrNumberError(numberStart);
+                if (!(c >= '0' && c <= '9')) {
+                    throw numberError(numberStart, pos);
+                }
+                readDigits();
+            }
+        }
+        // read optional exponent part
+        if (pos < length) {
+            c = src.charAt(pos);
+            if (c == 'e' || c == 'E') {
+                pos += 1;
+                c = nextOrNumberError(numberStart);
+                if (c == '-' || c == '+') {
+                    c = nextOrNumberError(numberStart);
+                }
+                if (!(c >= '0' && c <= '9')) {
+                    throw numberError(numberStart, pos);
+                }
+                readDigits();
+            }
+        }
+        String num = src.substring(numberStart, pos);
+        final double dval = Double.parseDouble(num);
+        final int ival = (int)dval;
+        if (ival == dval) {
+            return Integer.valueOf(ival);
+        } else {
+            return Double.valueOf(dval);
+        }
+    }
+
+    private ParseException numberError(int start, int end) {
+        return new ParseException("Unsupported number format: " + src.substring(start, end));
+    }
+
+    private char nextOrNumberError(int numberStart) throws ParseException {
+        if (pos >= length) {
+            throw numberError(numberStart, length);
+        }
+        return src.charAt(pos++);
+    }
+
+    private void readDigits() {
+        for (; pos < length; ++pos) {
             char c = src.charAt(pos);
-            if (!Character.isDigit(c)
-                    && c != '-'
-                    && c != '+'
-                    && c != '.'
-                    && c != 'e'
-                    && c != 'E') {
+            if (!(c >= '0' && c <= '9')) {
                 break;
             }
-            pos += 1;
-            b.append(c);
-        }
-        String num = b.toString();
-        int numLength = num.length();
-        try {
-            // check for leading zeroes
-            for (int i = 0; i < numLength; i++) {
-                char c = num.charAt(i);
-                if (Character.isDigit(c)) {
-                    if (c == '0'
-                            && numLength > i + 1
-                            && Character.isDigit(num.charAt(i + 1))) {
-                        throw new ParseException("Unsupported number format: " + num);
-                    }
-                    break;
-                }
-            }
-            final double dval = Double.parseDouble(num);
-            final int ival = (int)dval;
-            if (ival == dval) {
-                return Integer.valueOf(ival);
-            } else {
-                return Double.valueOf(dval);
-            }
-        } catch (NumberFormatException nfe) {
-            throw new ParseException("Unsupported number format: " + num);
         }
     }
 

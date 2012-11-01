@@ -1,51 +1,8 @@
 /* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Rhino code, released
- * May 6, 1999.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1997-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Patrick Beard
- *   Norris Boyd
- *   Igor Bukanov
- *   Mike Harm
- *   Ethan Hugg
- *   Bob Jervis
- *   Roger Lawrence
- *   Terry Lucas
- *   Frank Mitchell
- *   Milen Nankov
- *   Hannes Wallnoefer
- *   Andrew Wason
- *
- * Alternatively, the contents of this file may be used under the terms of
- * the GNU General Public License Version 2 or later (the "GPL"), in which
- * case the provisions of the GPL are applicable instead of those above. If
- * you wish to allow use of your version of this file only under the terms of
- * the GPL and not to allow others to use your version of this file under the
- * MPL, indicate your decision by deleting the provisions above and replacing
- * them with the notice and other provisions required by the GPL. If you do
- * not delete the provisions above, a recipient may use your version of this
- * file under either the MPL or the GPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.javascript;
 
@@ -1751,8 +1708,7 @@ public class ScriptRuntime {
             if (isName) {
                 return Boolean.TRUE;
             }
-            String idStr = (id == null) ? "null" : id.toString();
-            throw typeError2("msg.undef.prop.delete", toString(obj), idStr);
+            throw undefDeleteError(obj, id);
         }
         boolean result = deleteObjectElem(sobj, id, cx);
         return wrapBoolean(result);
@@ -3203,14 +3159,13 @@ public class ScriptRuntime {
                 // Don't overwrite existing def if already defined in object
                 // or prototypes of object.
                 if (!ScriptableObject.hasProperty(scope, name)) {
-                    if (!evalScript) {
+                    if (isConst) {
+                        ScriptableObject.defineConstProperty(varScope, name);
+                    } else if (!evalScript) {
                         // Global var definitions are supposed to be DONTDELETE
-                        if (isConst)
-                            ScriptableObject.defineConstProperty(varScope, name);
-                        else
-                            ScriptableObject.defineProperty(
-                                varScope, name, Undefined.instance,
-                                ScriptableObject.PERMANENT);
+                        ScriptableObject.defineProperty(
+                            varScope, name, Undefined.instance,
+                            ScriptableObject.PERMANENT);
                     } else {
                         varScope.put(name, varScope, Undefined.instance);
                     }
@@ -3265,7 +3220,6 @@ public class ScriptRuntime {
         Object obj;
         boolean cacheObj;
 
-      getObj:
         if (t instanceof JavaScriptException) {
             cacheObj = false;
             obj = ((JavaScriptException)t).getValue();
@@ -3279,77 +3233,9 @@ public class ScriptRuntime {
                 NativeObject last = (NativeObject)lastCatchScope;
                 obj = last.getAssociatedValue(t);
                 if (obj == null) Kit.codeBug();
-                break getObj;
-            }
-
-            RhinoException re;
-            String errorName;
-            String errorMsg;
-            Throwable javaException = null;
-
-            if (t instanceof EcmaError) {
-                EcmaError ee = (EcmaError)t;
-                re = ee;
-                errorName = ee.getName();
-                errorMsg = ee.getErrorMessage();
-            } else if (t instanceof WrappedException) {
-                WrappedException we = (WrappedException)t;
-                re = we;
-                javaException = we.getWrappedException();
-                errorName = "JavaException";
-                errorMsg = javaException.getClass().getName()
-                           +": "+javaException.getMessage();
-            } else if (t instanceof EvaluatorException) {
-                // Pure evaluator exception, nor WrappedException instance
-                EvaluatorException ee = (EvaluatorException)t;
-                re = ee;
-                errorName = "InternalError";
-                errorMsg = ee.getMessage();
-            } else if (cx.hasFeature(Context.FEATURE_ENHANCED_JAVA_ACCESS)) {
-                // With FEATURE_ENHANCED_JAVA_ACCESS, scripts can catch
-                // all exception types
-                re = new WrappedException(t);
-                errorName = "JavaException";
-                errorMsg = t.toString();
             } else {
-                // Script can catch only instances of JavaScriptException,
-                // EcmaError and EvaluatorException
-                throw Kit.codeBug();
+                obj = wrapException(t, scope, cx);
             }
-
-            String sourceUri = re.sourceName();
-            if (sourceUri == null) {
-                sourceUri = "";
-            }
-            int line = re.lineNumber();
-            Object args[];
-            if (line > 0) {
-                args = new Object[] { errorMsg, sourceUri, Integer.valueOf(line) };
-            } else {
-                args = new Object[] { errorMsg, sourceUri };
-            }
-
-            Scriptable errorObject = cx.newObject(scope, errorName, args);
-            ScriptableObject.putProperty(errorObject, "name", errorName);
-            // set exception in Error objects to enable non-ECMA "stack" property
-            if (errorObject instanceof NativeError) {
-                ((NativeError) errorObject).setStackProvider(re);
-            }
-
-            if (javaException != null && isVisible(cx, javaException)) {
-                Object wrap = cx.getWrapFactory().wrap(cx, scope, javaException,
-                                                       null);
-                ScriptableObject.defineProperty(
-                    errorObject, "javaException", wrap,
-                    ScriptableObject.PERMANENT | ScriptableObject.READONLY);
-            }
-            if (isVisible(cx, re)) {
-                Object wrap = cx.getWrapFactory().wrap(cx, scope, re, null);
-                ScriptableObject.defineProperty(
-                        errorObject, "rhinoException", wrap,
-                        ScriptableObject.PERMANENT | ScriptableObject.READONLY);
-            }
-            obj = errorObject;
         }
 
         NativeObject catchScopeObject = new NativeObject();
@@ -3370,6 +3256,79 @@ public class ScriptRuntime {
             catchScopeObject.associateValue(t, obj);
         }
         return catchScopeObject;
+    }
+
+    public static Scriptable wrapException(Throwable t,
+                                           Scriptable scope,
+                                           Context cx) {
+        RhinoException re;
+        String errorName;
+        String errorMsg;
+        Throwable javaException = null;
+
+        if (t instanceof EcmaError) {
+            EcmaError ee = (EcmaError)t;
+            re = ee;
+            errorName = ee.getName();
+            errorMsg = ee.getErrorMessage();
+        } else if (t instanceof WrappedException) {
+            WrappedException we = (WrappedException)t;
+            re = we;
+            javaException = we.getWrappedException();
+            errorName = "JavaException";
+            errorMsg = javaException.getClass().getName()
+                       +": "+javaException.getMessage();
+        } else if (t instanceof EvaluatorException) {
+            // Pure evaluator exception, nor WrappedException instance
+            EvaluatorException ee = (EvaluatorException)t;
+            re = ee;
+            errorName = "InternalError";
+            errorMsg = ee.getMessage();
+        } else if (cx.hasFeature(Context.FEATURE_ENHANCED_JAVA_ACCESS)) {
+            // With FEATURE_ENHANCED_JAVA_ACCESS, scripts can catch
+            // all exception types
+            re = new WrappedException(t);
+            errorName = "JavaException";
+            errorMsg = t.toString();
+        } else {
+            // Script can catch only instances of JavaScriptException,
+            // EcmaError and EvaluatorException
+            throw Kit.codeBug();
+        }
+
+        String sourceUri = re.sourceName();
+        if (sourceUri == null) {
+            sourceUri = "";
+        }
+        int line = re.lineNumber();
+        Object args[];
+        if (line > 0) {
+            args = new Object[] { errorMsg, sourceUri, Integer.valueOf(line) };
+        } else {
+            args = new Object[] { errorMsg, sourceUri };
+        }
+
+        Scriptable errorObject = cx.newObject(scope, errorName, args);
+        ScriptableObject.putProperty(errorObject, "name", errorName);
+        // set exception in Error objects to enable non-ECMA "stack" property
+        if (errorObject instanceof NativeError) {
+            ((NativeError) errorObject).setStackProvider(re);
+        }
+
+        if (javaException != null && isVisible(cx, javaException)) {
+            Object wrap = cx.getWrapFactory().wrap(cx, scope, javaException,
+                                                   null);
+            ScriptableObject.defineProperty(
+                errorObject, "javaException", wrap,
+                ScriptableObject.PERMANENT | ScriptableObject.READONLY);
+        }
+        if (isVisible(cx, re)) {
+            Object wrap = cx.getWrapFactory().wrap(cx, scope, re, null);
+            ScriptableObject.defineProperty(
+                    errorObject, "rhinoException", wrap,
+                    ScriptableObject.PERMANENT | ScriptableObject.READONLY);
+        }
+        return errorObject;
     }
 
     private static boolean isVisible(Context cx, Object obj) {
@@ -3762,25 +3721,25 @@ public class ScriptRuntime {
 
     public static RuntimeException undefReadError(Object object, Object id)
     {
-        String idStr = (id == null) ? "null" : id.toString();
-        return typeError2("msg.undef.prop.read", toString(object), idStr);
+        return typeError2("msg.undef.prop.read", toString(object), toString(id));
     }
 
     public static RuntimeException undefCallError(Object object, Object id)
     {
-        String idStr = (id == null) ? "null" : id.toString();
-        return typeError2("msg.undef.method.call", toString(object), idStr);
+        return typeError2("msg.undef.method.call", toString(object), toString(id));
     }
 
     public static RuntimeException undefWriteError(Object object,
                                                    Object id,
                                                    Object value)
     {
-        String idStr = (id == null) ? "null" : id.toString();
-        String valueStr = (value instanceof Scriptable)
-                          ? value.toString() : toString(value);
-        return typeError3("msg.undef.prop.write", toString(object), idStr,
-                          valueStr);
+        return typeError3("msg.undef.prop.write", toString(object), toString(id),
+                          toString(value));
+    }
+
+    private static RuntimeException undefDeleteError(Object object, Object id)
+    {
+        throw typeError2("msg.undef.prop.delete", toString(object), toString(id));
     }
 
     public static RuntimeException notFoundError(Scriptable object,
@@ -3815,7 +3774,8 @@ public class ScriptRuntime {
         String objString = toString(obj);
         if (obj instanceof NativeFunction) {
             // Omit function body in string representations of functions
-            int curly = objString.indexOf('{');
+            int paren = objString.indexOf(')');
+            int curly = objString.indexOf('{', paren);
             if (curly > -1) {
                 objString = objString.substring(0, curly + 1) + "...}";
             }
@@ -3861,6 +3821,11 @@ public class ScriptRuntime {
             throw Context.reportRuntimeError0("msg.no.regexp");
         }
         return result;
+    }
+
+    public static Scriptable wrapRegExp(Context cx, Scriptable scope,
+                                        Object compiled) {
+        return cx.getRegExpProxy().wrapRegExp(cx, scope, compiled);
     }
 
     private static XMLLib currentXMLLib(Context cx)

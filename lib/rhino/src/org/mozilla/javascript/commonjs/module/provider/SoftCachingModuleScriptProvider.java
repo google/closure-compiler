@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.javascript.commonjs.module.provider;
 
 import java.io.IOException;
@@ -47,7 +51,7 @@ public class SoftCachingModuleScriptProvider extends CachingModuleScriptProvider
 
     @Override
     public ModuleScript getModuleScript(Context cx, String moduleId,
-            URI uri, Scriptable paths)
+            URI uri, URI base, Scriptable paths)
             throws Exception
     {
         // Overridden to clear the reference queue before retrieving the
@@ -59,7 +63,7 @@ public class SoftCachingModuleScriptProvider extends CachingModuleScriptProvider
             }
             scripts.remove(ref.getModuleId(), ref);
         }
-        return super.getModuleScript(cx, moduleId, uri, paths);
+        return super.getModuleScript(cx, moduleId, uri, base, paths);
     }
 
     @Override

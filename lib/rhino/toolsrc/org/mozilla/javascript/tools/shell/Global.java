@@ -1,50 +1,14 @@
 /* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Rhino code, released
- * May 6, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1997-1999
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Patrick Beard
- *   Igor Bukanov
- *   Norris Boyd
- *   Rob Ginda
- *   Kurt Westerfeld
- *   Matthias Radestock
- *
- * Alternatively, the contents of this file may be used under the terms of
- * the GNU General Public License Version 2 or later (the "GPL"), in which
- * case the provisions of the GPL are applicable instead of those above. If
- * you wish to allow use of your version of this file only under the terms of
- * the GPL and not to allow others to use your version of this file under the
- * MPL, indicate your decision by deleting the provisions above and replacing
- * them with the notice and other provisions required by the GPL. If you do
- * not delete the provisions above, a recipient may use your version of this
- * file under either the MPL or the GPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.javascript.tools.shell;
 
 import java.io.*;
 import java.net.*;
+import java.nio.charset.Charset;
 import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,6 +35,7 @@ public class Global extends ImporterTopLevel
 
     NativeArray history;
     boolean attemptedJLineLoad;
+    private ShellConsole console;
     private InputStream inStream;
     private PrintStream outStream;
     private PrintStream errStream;
@@ -277,8 +242,21 @@ public class Global extends ImporterTopLevel
     public static void load(Context cx, Scriptable thisObj,
                             Object[] args, Function funObj)
     {
-        for (int i = 0; i < args.length; i++) {
-            Main.processFile(cx, thisObj, Context.toString(args[i]));
+        for (Object arg : args) {
+            String file = Context.toString(arg);
+            try {
+                Main.processFile(cx, thisObj, file);
+            } catch (IOException ioex) {
+                String msg = ToolErrorReporter.getMessage(
+                        "msg.couldnt.read.source", file, ioex.getMessage());
+                throw Context.reportRuntimeError(msg);
+            } catch (VirtualMachineError ex) {
+                // Treat StackOverflow and OutOfMemory as runtime errors
+                ex.printStackTrace();
+                String msg = ToolErrorReporter.getMessage(
+                        "msg.uncaughtJSException", ex.toString());
+                throw Context.reportRuntimeError(msg);
+            }
         }
     }
 
@@ -866,13 +844,27 @@ public class Global extends ImporterTopLevel
         return ScriptRuntime.wrapInt(ScriptRuntime.toInt32(arg));
     }
 
+    private boolean loadJLine(Charset cs) {
+        if (!attemptedJLineLoad) {
+            // Check if we can use JLine for better command line handling
+            attemptedJLineLoad = true;
+            console = ShellConsole.getConsole(this, cs);
+        }
+        return console != null;
+    }
+
+    public ShellConsole getConsole(Charset cs) {
+        if (!loadJLine(cs)) {
+            console = ShellConsole.getConsole(getIn(), getErr(), cs);
+        }
+        return console;
+    }
+
     public InputStream getIn() {
         if (inStream == null && !attemptedJLineLoad) {
-            // Check if we can use JLine for better command line handling
-            InputStream jlineStream = ShellLine.getStream(this);
-            if (jlineStream != null)
-                inStream = jlineStream;
-            attemptedJLineLoad = true;
+            if (loadJLine(Charset.defaultCharset())) {
+                inStream = console.getIn();
+            }
         }
         return inStream == null ? System.in : inStream;
     }

@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.javascript.commonjs.module.provider;
 
 import java.io.IOException;
@@ -15,7 +19,7 @@ public interface ModuleSourceProvider
 {
     /**
      * A special return value for {@link #loadSource(String, Scriptable,
-     * Object)} and {@link #loadSource(URI, Object)} that signifies that the
+     * Object)} and {@link #loadSource(URI, URI, Object)} that signifies that the
      * cached representation is still valid according to the passed validator.
      */
     public static final ModuleSource NOT_MODIFIED = new ModuleSource(null,
@@ -71,6 +75,8 @@ public interface ModuleSourceProvider
      * validator for it, and a security domain, where applicable.
      * @param uri the absolute URI from which to load the module source, but
      * without an extension such as ".js".
+     * @param baseUri the module path base URI from which <code>uri</code>
+     * was derived.
      * @param validator a validator for an existing loaded and cached module.
      * This will either be null, or an object that this source provider
      * returned earlier as part of a {@link ModuleSource}. It can be used to
@@ -82,6 +88,6 @@ public interface ModuleSourceProvider
      * @throws IOException if there was an I/O problem reading the script
      * @throws URISyntaxException if the final URI could not be constructed
      */
-    public ModuleSource loadSource(URI uri, Object validator)
+    public ModuleSource loadSource(URI uri, URI baseUri, Object validator)
             throws IOException, URISyntaxException;
 }

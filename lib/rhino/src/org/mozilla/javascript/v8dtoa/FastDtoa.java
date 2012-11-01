@@ -276,6 +276,10 @@ public class FastDtoa {
         return ((long)power << 32) | (0xffffffffL & exponent);
     }
 
+    private static boolean uint64_lte(long a, long b) {
+        // less-or-equal for unsigned int64 in java-style...
+        return (a == b) || ((a < b) ^ (a < 0) ^ (b < 0));
+    }
 
     // Generates the digits of input number w.
     // w is a floating-point number (DiyFp), consisting of a significand and an
@@ -325,7 +329,7 @@ public class FastDtoa {
                      FastDtoaBuilder buffer,
                      int mk) {
         assert(low.e() == w.e() && w.e() == high.e());
-        assert(low.f() + 1 <= high.f() - 1);
+        assert uint64_lte(low.f() + 1, high.f() - 1);
         assert(minimal_target_exponent <= w.e() && w.e() <= maximal_target_exponent);
         // low, w and high are imprecise, but by less than one ulp (unit in the last
         // place).

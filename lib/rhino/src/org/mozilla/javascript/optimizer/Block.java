@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Rhino code, released
- * May 6, 1999.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1997-1999
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Norris Boyd
- *   Igor Bukanov
- *   Roger Lawrence
- *   Cameron McCormack
- *
- * Alternatively, the contents of this file may be used under the terms of
- * the GNU General Public License Version 2 or later (the "GPL"), in which
- * case the provisions of the GPL are applicable instead of those above. If
- * you wish to allow use of your version of this file only under the terms of
- * the GPL and not to allow others to use your version of this file under the
- * MPL, indicate your decision by deleting the provisions above and replacing
- * them with the notice and other provisions required by the GPL. If you do
- * not delete the provisions above, a recipient may use your version of this
- * file under either the MPL or the GPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.javascript.optimizer;
 
@@ -110,6 +75,7 @@ class Block
         if (DEBUG) {
             ++debug_blockCount;
             System.out.println("-------------------"+fn.fnode.getFunctionName()+"  "+debug_blockCount+"--------");
+            System.out.println(fn.fnode.toStringTree(fn.fnode));
             System.out.println(toString(theBlocks, statementNodes));
         }
 
@@ -269,7 +235,8 @@ class Block
         return sw.toString();
     }
 
-    private static void reachingDefDataFlow(OptFunctionNode fn, Node[] statementNodes, Block theBlocks[], int[] varTypes)
+    private static void reachingDefDataFlow(OptFunctionNode fn, Node[] statementNodes,
+                                            Block theBlocks[], int[] varTypes)
     {
 /*
     initialize the liveOnEntry and liveOnExit sets, then discover the variables
@@ -324,7 +291,8 @@ class Block
         theBlocks[0].markAnyTypeVariables(varTypes);
     }
 
-    private static void typeFlow(OptFunctionNode fn, Node[] statementNodes, Block theBlocks[], int[] varTypes)
+    private static void typeFlow(OptFunctionNode fn, Node[] statementNodes,
+                                 Block theBlocks[], int[] varTypes)
     {
         boolean visit[] = new boolean[theBlocks.length];
         boolean doneOnce[] = new boolean[theBlocks.length];
@@ -387,6 +355,15 @@ class Block
     private void lookForVariableAccess(OptFunctionNode fn, Node n)
     {
         switch (n.getType()) {
+            case Token.TYPEOFNAME:
+            {
+                // TYPEOFNAME may be used with undefined names, which is why
+                // this is handled separately from GETVAR above.
+                int varIndex = fn.fnode.getIndexForNameNode(n);
+                if (varIndex > -1 && !itsNotDefSet.get(varIndex))
+                    itsUseBeforeDefSet.set(varIndex);
+            }
+            break;
             case Token.DEC :
             case Token.INC :
             {
@@ -396,6 +373,8 @@ class Block
                     if (!itsNotDefSet.get(varIndex))
                         itsUseBeforeDefSet.set(varIndex);
                     itsNotDefSet.set(varIndex);
+                } else {
+                    lookForVariableAccess(fn, child);
                 }
             }
             break;
@@ -489,6 +468,9 @@ class Block
                 return Optimizer.AnyType;
 
             case Token.GETELEM:
+            case Token.GETPROP:
+            case Token.NAME:
+            case Token.THIS:
                 return Optimizer.AnyType;
 
             case Token.GETVAR:
@@ -502,6 +484,7 @@ class Block
             case Token.BITOR:
             case Token.BITXOR:
             case Token.BITAND:
+            case Token.BITNOT:
             case Token.LSH:
             case Token.RSH:
             case Token.URSH:
@@ -510,6 +493,12 @@ class Block
             case Token.NEG:
                 return Optimizer.NumberType;
 
+            case Token.VOID:
+                // NYI: undefined type
+                return Optimizer.AnyType;
+
+            case Token.FALSE:
+            case Token.TRUE:
             case Token.EQ:
             case Token.NE:
             case Token.LT:
@@ -518,6 +507,23 @@ class Block
             case Token.GE:
             case Token.SHEQ:
             case Token.SHNE:
+            case Token.NOT:
+            case Token.INSTANCEOF:
+            case Token.IN:
+            case Token.DEL_REF:
+            case Token.DELPROP:
+                // NYI: boolean type
+                return Optimizer.AnyType;
+
+            case Token.STRING:
+            case Token.TYPEOF:
+            case Token.TYPEOFNAME:
+                // NYI: string type
+                return Optimizer.AnyType;
+
+            case Token.NULL:
+            case Token.REGEXP:
+            case Token.ARRAYCOMP:
             case Token.ARRAYLIT:
             case Token.OBJECTLIT:
                 return Optimizer.AnyType; // XXX: actually, we know it's not
@@ -531,57 +537,56 @@ class Block
                 int rType = findExpressionType(fn, child.getNext(), varTypes);
                 return lType | rType;    // we're not distinguishing strings yet
             }
+
+            case Token.HOOK: {
+                Node ifTrue = n.getFirstChild().getNext();
+                Node ifFalse = ifTrue.getNext();
+                int ifTrueType = findExpressionType(fn, ifTrue, varTypes);
+                int ifFalseType = findExpressionType(fn, ifFalse, varTypes);
+                return ifTrueType | ifFalseType;
+            }
+
+            case Token.COMMA:
+            case Token.SETVAR:
+            case Token.SETNAME:
+            case Token.SETPROP:
+            case Token.SETELEM:
+                return findExpressionType(fn, n.getLastChild(), varTypes);
+
+            case Token.AND:
+            case Token.OR: {
+                Node child = n.getFirstChild();
+                int lType = findExpressionType(fn, child, varTypes);
+                int rType = findExpressionType(fn, child.getNext(), varTypes);
+                return lType | rType;
+            }
         }
 
-        Node child = n.getFirstChild();
-        if (child == null) {
-            return Optimizer.AnyType;
-        } else {
-            int result = Optimizer.NoType;
-            while (child != null) {
-                result |= findExpressionType(fn, child, varTypes);
-                child = child.getNext();
-            }
-            return result;
-        }
+        return Optimizer.AnyType;
     }
 
     private static boolean findDefPoints(OptFunctionNode fn, Node n,
                                          int[] varTypes)
     {
         boolean result = false;
-        Node child = n.getFirstChild();
+        Node first = n.getFirstChild();
+        for (Node next = first; next != null; next = next.getNext()) {
+            result |= findDefPoints(fn, next, varTypes);
+        }
         switch (n.getType()) {
-            default :
-                while (child != null) {
-                    result |= findDefPoints(fn, child, varTypes);
-                    child = child.getNext();
-                }
-                break;
             case Token.DEC :
             case Token.INC :
-                if (child.getType() == Token.GETVAR) {
+                if (first.getType() == Token.GETVAR) {
                     // theVar is a Number now
-                    int i = fn.getVarIndex(child);
-                    result = assignType(varTypes, i, Optimizer.NumberType);
-                }
-                break;
-            case Token.SETPROP :
-            case Token.SETPROP_OP :
-                if (child.getType() == Token.GETVAR) {
-                    int i = fn.getVarIndex(child);
-                    assignType(varTypes, i, Optimizer.AnyType);
-                }
-                while (child != null) {
-                    result |= findDefPoints(fn, child, varTypes);
-                    child = child.getNext();
+                    int i = fn.getVarIndex(first);
+                    result |= assignType(varTypes, i, Optimizer.NumberType);
                 }
                 break;
             case Token.SETVAR : {
-                Node rValue = child.getNext();
+                Node rValue = first.getNext();
                 int theType = findExpressionType(fn, rValue, varTypes);
                 int i = fn.getVarIndex(n);
-                result = assignType(varTypes, i, theType);
+                result |= assignType(varTypes, i, theType);
                 break;
             }
         }

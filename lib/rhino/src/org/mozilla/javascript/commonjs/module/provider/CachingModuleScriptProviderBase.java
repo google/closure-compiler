@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.javascript.commonjs.module.provider;
 
 import java.io.Reader;
@@ -57,13 +61,13 @@ implements ModuleScriptProvider, Serializable
     }
 
     public ModuleScript getModuleScript(Context cx, String moduleId,
-            URI moduleUri, Scriptable paths) throws Exception
+            URI moduleUri, URI baseUri, Scriptable paths) throws Exception
     {
         final CachedModuleScript cachedModule1 = getLoadedModule(moduleId);
         final Object validator1 = getValidator(cachedModule1);
         final ModuleSource moduleSource = (moduleUri == null)
                 ? moduleSourceProvider.loadSource(moduleId, paths, validator1)
-                : moduleSourceProvider.loadSource(moduleUri, validator1);
+                : moduleSourceProvider.loadSource(moduleUri, baseUri, validator1);
         if(moduleSource == ModuleSourceProvider.NOT_MODIFIED) {
             return cachedModule1.getModule();
         }

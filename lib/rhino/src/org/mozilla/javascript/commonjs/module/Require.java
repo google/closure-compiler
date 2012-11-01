@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.javascript.commonjs.module;
 
 import java.io.File;
@@ -121,7 +125,7 @@ public class Require extends BaseFunction
         try {
             // try to get the module script to see if it is on the module path
             moduleScript = moduleScriptProvider.getModuleScript(
-                    cx, mainModuleId, null, paths);
+                    cx, mainModuleId, null, null, paths);
         } catch (RuntimeException x) {
             throw x;
         } catch (Exception x) {
@@ -130,7 +134,7 @@ public class Require extends BaseFunction
 
         if (moduleScript != null) {
             mainExports = getExportedModuleInterface(cx, mainModuleId,
-                    null, true);
+                    null, null, true);
         } else if (!sandboxed) {
 
             URI mainUri = null;
@@ -152,7 +156,7 @@ public class Require extends BaseFunction
                 mainUri = file.toURI();
             }
             mainExports = getExportedModuleInterface(cx, mainUri.toString(),
-                    mainUri, true);
+                    mainUri, null, true);
         }
 
         this.mainModuleId = mainModuleId;
@@ -178,6 +182,7 @@ public class Require extends BaseFunction
 
         String id = (String)Context.jsToJava(args[0], String.class);
         URI uri = null;
+        URI base = null;
         if (id.startsWith("./") || id.startsWith("../")) {
             if (!(thisObj instanceof ModuleScope)) {
                 throw ScriptRuntime.throwError(cx, scope,
@@ -186,7 +191,7 @@ public class Require extends BaseFunction
             }
 
             ModuleScope moduleScope = (ModuleScope) thisObj;
-            URI base = moduleScope.getBase();
+            base = moduleScope.getBase();
             URI current = moduleScope.getUri();
             uri = current.resolve(id);
 
@@ -209,7 +214,7 @@ public class Require extends BaseFunction
                 }
             }
         }
-        return getExportedModuleInterface(cx, id, uri, false);
+        return getExportedModuleInterface(cx, id, uri, base, false);
     }
 
     public Scriptable construct(Context cx, Scriptable scope, Object[] args) {
@@ -218,7 +223,7 @@ public class Require extends BaseFunction
     }
 
     private Scriptable getExportedModuleInterface(Context cx, String id,
-            URI uri, boolean isMain)
+            URI uri, URI base, boolean isMain)
     {
         // Check if the requested module is already completely loaded
         Scriptable exports = exportedModuleInterfaces.get(id);
@@ -255,7 +260,7 @@ public class Require extends BaseFunction
                 return exports;
             }
             // Nope, still not loaded; we're loading it then.
-            final ModuleScript moduleScript = getModule(cx, id, uri);
+            final ModuleScript moduleScript = getModule(cx, id, uri, base);
             if (sandboxed && !moduleScript.isSandboxed()) {
                 throw ScriptRuntime.throwError(cx, nativeScope, "Module \""
                         + id + "\" is not contained in sandbox.");
@@ -352,10 +357,10 @@ public class Require extends BaseFunction
                 ScriptableObject.PERMANENT);
     }
 
-    private ModuleScript getModule(Context cx, String id, URI uri) {
+    private ModuleScript getModule(Context cx, String id, URI uri, URI base) {
         try {
             final ModuleScript moduleScript =
-                    moduleScriptProvider.getModuleScript(cx, id, uri, paths);
+                    moduleScriptProvider.getModuleScript(cx, id, uri, base, paths);
             if (moduleScript == null) {
                 throw ScriptRuntime.throwError(cx, nativeScope, "Module \""
                         + id + "\" not found.");

@@ -35,7 +35,7 @@ package org.mozilla.javascript.v8dtoa;
 // have the most significant bit of the significand set.
 // Multiplication and Subtraction do not normalize their results.
 // DiyFp are not designed to contain special doubles (NaN and Infinity).
-class DiyFp implements Cloneable {
+class DiyFp {
 
     private long f;
     private int e;
@@ -54,13 +54,18 @@ class DiyFp implements Cloneable {
         this.e = e;
     }
 
+    private static boolean uint64_gte(long a, long b) {
+        // greater-or-equal for unsigned int64 in java-style...
+        return (a == b) || ((a > b) ^ (a < 0) ^ (b < 0));
+    }
+
     // this = this - other.
     // The exponents of both numbers must be the same and the significand of this
     // must be bigger than the significand of other.
     // The result will not be normalized.
     void subtract(DiyFp other) {
         assert (e == other.e);
-        assert (f >= other.f);
+        assert uint64_gte(f, other.f);
         f -= other.f;
     }
 
@@ -68,7 +73,7 @@ class DiyFp implements Cloneable {
     // The exponents of both numbers must be the same and this must be bigger
     // than other. The result will not be normalized.
     static DiyFp minus(DiyFp a, DiyFp b) {
-        DiyFp result = a.clone();
+        DiyFp result = new DiyFp(a.f, a.e);
         result.subtract(b);
         return result;
     }
@@ -100,7 +105,7 @@ class DiyFp implements Cloneable {
 
     // returns a * b;
     static DiyFp times(DiyFp a, DiyFp b) {
-        DiyFp result = a.clone();
+        DiyFp result = new DiyFp(a.f, a.e);
         result.multiply(b);
         return result;
     }
@@ -126,7 +131,7 @@ class DiyFp implements Cloneable {
     }
 
     static DiyFp normalize(DiyFp a) {
-        DiyFp result = a.clone();
+        DiyFp result = new DiyFp(a.f, a.e);
         result.normalize();
         return result;
     }
@@ -136,14 +141,6 @@ class DiyFp implements Cloneable {
 
     void setF(long new_value) { f = new_value; }
     void setE(int new_value) { e = new_value; }
-
-    public DiyFp clone() {
-        try {
-            return (DiyFp) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(); // won't happen
-        }
-    }
 
     @Override
     public String toString() {

@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 js> var controlChars = [
   >   0x200C, 0x200D, 0x200E, 0x200F, 
   >   0x202A, 0x202B, 0x202C, 0x202D, 0x202E, 

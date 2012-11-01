@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.javascript.tests.json;
 
 import static org.junit.Assert.assertEquals;
@@ -190,6 +194,66 @@ public class JsonParserTest {
     @Test(expected = ParseException.class)
     public void shouldThrowParseExceptionWhenIncompleteArray() throws Exception {
         parser.parseValue("[1 ");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldFailToParseIllegalUnicodeEscapeSeq() throws Exception {
+        parser.parseValue("\"\\u-123\"");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldFailToParseIllegalUnicodeEscapeSeq2() throws Exception {
+        parser.parseValue("\"\\u006\u0661\"");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldFailToParseIllegalUnicodeEscapeSeq3() throws Exception {
+        parser.parseValue("\"\\u006١\"");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldFailToParseTrailingCommaInObject1() throws Exception {
+        parser.parseValue("{\"a\": 1,}");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldFailToParseTrailingCommaInObject2() throws Exception {
+        parser.parseValue("{,\"a\": 1}");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldFailToParseTrailingCommaInObject3() throws Exception {
+        parser.parseValue("{,}");
+    }
+
+    @Test
+    public void shouldParseEmptyObject() throws Exception {
+        parser.parseValue("{}");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldFailToParseTrailingCommaInArray1() throws Exception {
+        parser.parseValue("[1,]");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldFailToParseTrailingCommaInArray2() throws Exception {
+        parser.parseValue("[,1]");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldFailToParseTrailingCommaInArray3() throws Exception {
+        parser.parseValue("[,]");
+    }
+
+    @Test
+    public void shouldParseEmptyArray() throws Exception {
+        parser.parseValue("[]");
+    }
+
+    @Test(expected = ParseException.class)
+    public void shouldFailToParseIllegalNumber() throws Exception {
+        parser.parseValue("1.");
     }
 
     private String str(char... chars) {
