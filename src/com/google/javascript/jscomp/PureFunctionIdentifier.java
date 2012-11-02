@@ -643,6 +643,11 @@ class PureFunctionIdentifier implements CompilerPass {
           }
         }
 
+        if (inExterns && !info.getThrownTypes().isEmpty()) {
+          hasSpecificSideEffects = true;
+          sideEffectInfo.setFunctionThrows();
+        }
+
         if (!hasSpecificSideEffects) {
           if (hasNoSideEffectsAnnotation(info)) {
             if (inExterns) {

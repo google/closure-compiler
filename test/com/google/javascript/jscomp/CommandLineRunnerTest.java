@@ -74,6 +74,8 @@ public class CommandLineRunnerTest extends TestCase {
         + "/**\n"
         + " * @constructor\n"
         + " * @param {...*} var_args\n"
+        + " * @nosideeffects\n"
+        + " * @throws {Error}\n"
         + " */\n"
         + "function Function(var_args) {}\n"
         + "/**\n"
@@ -450,6 +452,12 @@ public class CommandLineRunnerTest extends TestCase {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
     test("function f() { return '\\u000B' == 'v'; } window['f'] = f;",
          "window.f=function(){return'\\u000B'=='v'}");
+  }
+
+  public void testIssue846() {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    testSame(
+        "try { new Function('this is an error'); } catch(a) { alert('x'); }");
   }
 
   public void testDebugFlag1() {
