@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
@@ -25,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.ConcreteType.ConcreteFunctionType;
 import com.google.javascript.jscomp.ConcreteType.ConcreteInstanceType;
 import com.google.javascript.jscomp.ConcreteType.ConcreteUnionType;
@@ -306,6 +308,8 @@ class DisambiguateProperties<T> implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    Preconditions.checkState(
+        compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
     for (TypeMismatch mis : compiler.getTypeValidator().getMismatches()) {
       addInvalidatingType(mis.typeA, mis.src);
       addInvalidatingType(mis.typeB, mis.src);

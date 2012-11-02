@@ -442,7 +442,14 @@ public abstract class CompilerTestCase extends TestCase  {
 
     BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
 
-    test(compiler, new String[] { expected }, error, warning, description);
+    test(compiler, maybeCreateArray(expected), error, warning, description);
+  }
+
+  private String[] maybeCreateArray(String expected) {
+    if (expected != null) {
+      return new String[] { expected };
+    }
+    return null;
   }
 
   /**
@@ -820,8 +827,11 @@ public abstract class CompilerTestCase extends TestCase  {
       // Verify the symbol table.
       ErrorManager symbolTableErrorManager =
           new BlackHoleErrorManager(compiler);
-      Node expectedRoot = parseExpectedJs(expected);
-      expectedRoot.detachFromParent();
+      Node expectedRoot = null;
+      if (expected != null) {
+        expectedRoot = parseExpectedJs(expected);
+        expectedRoot.detachFromParent();
+      }
 
       JSError[] stErrors = symbolTableErrorManager.getErrors();
       if (expectedSymbolTableError != null) {
@@ -887,14 +897,16 @@ public abstract class CompilerTestCase extends TestCase  {
             hasCodeChanged);
       }
 
-      if (compareAsTree) {
-        String explanation = expectedRoot.checkTreeEquals(mainRoot);
-        assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
-            "\nResult: " + compiler.toSource(mainRoot) +
-            "\n" + explanation, explanation);
-      } else if (expected != null) {
-        assertEquals(
-            Joiner.on("").join(expected), compiler.toSource(mainRoot));
+      if (expected != null) {
+        if (compareAsTree) {
+          String explanation = expectedRoot.checkTreeEquals(mainRoot);
+          assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
+              "\nResult: " + compiler.toSource(mainRoot) +
+              "\n" + explanation, explanation);
+        } else if (expected != null) {
+          assertEquals(
+              Joiner.on("").join(expected), compiler.toSource(mainRoot));
+        }
       }
 
       // Verify normalization is not invalidated.

@@ -15,12 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -46,17 +43,18 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    super.enableNormalize(true);
+    super.enableTypeCheck(CheckLevel.WARNING);
+  }
+
+  @Override
   public CompilerPass getProcessor(final Compiler compiler) {
-    final TypeCheck checker = new TypeCheck(compiler,
-        new SemanticReverseAbstractInterpreter(
-            compiler.getCodingConvention(), compiler.getTypeRegistry()),
-        compiler.getTypeRegistry());
 
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        checker.processForTesting(externs, root);
-
         Map<String, CheckLevel> propertiesToErrorFor =
             Maps.<String, CheckLevel>newHashMap();
         propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
@@ -839,8 +837,8 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "function Foo() {}\n"
         + "function Bar() {}\n"
         + "Bar.prototype.Bar_prototype$a;\n"
-        + "function foo(foo) {\n"
-        + "  var x = foo.Bar_prototype$a;\n"
+        + "function foo(foo$$1) {\n"
+        + "  var x = foo$$1.Bar_prototype$a;\n"
         + "}\n";
     testSets(false, externs, js, result, "{a=[[Bar.prototype]]}");
   }
@@ -912,11 +910,13 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "Top.prototype.f = function() {};"
         + "/** @constructor \n@extends Top*/ function Foo() {}\n"
         + "goog.inherits(Foo, Top);\n"
+        + "/** @override */\n"
         + "Foo.prototype.f = function() {"
         + "  Foo.superClass_.f();"
         + "};\n"
         + "/** @constructor \n* @extends Foo */ function Bar() {}\n"
         + "goog.inherits(Bar, Foo);\n"
+        + "/** @override */\n"
         + "Bar.prototype.f = function() {"
         + "  Bar.superClass_.f();"
         + "};\n"
@@ -1062,12 +1062,13 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "var i = new Bar;\n" // Make I invalidating
         + "/** @constructor \n @implements I \n @implements I2 */"
         + "function Foo() {};\n"
+        + "/** @override */\n"
         + "Foo.prototype.a = 0;\n"
         + "(new Foo).a = 0;"
         + "/** @interface */ function I() {};\n"
         + "I.prototype.a;\n";
-    testSets(false, js, "{}");
-    testSets(true, js, "{}");
+    testSets(false, js, "{}", TypeValidator.TYPE_MISMATCH_WARNING);
+    testSets(true, js, "{}", TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
   public void testMultipleInterfaces() {
@@ -1077,6 +1078,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "I2.prototype.a;\n"
         + "/** @constructor \n @implements I \n @implements I2 */"
         + "function Foo() {};\n"
+        + "/** @override */"
         + "Foo.prototype.a = 0;\n"
         + "(new Foo).a = 0";
     testSets(false, js, "{a=[[Foo.prototype, I2.prototype]]}");
@@ -1104,6 +1106,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "/** @interface \n @extends I */ function I2() {};\n"
         + "/** @constructor \n @implements I2 */"
         + "function Foo() {};\n"
+        + "/** @override */\n"
         + "Foo.prototype.a = 0;\n"
         + "(new Foo).a = 0";
     testSets(false, js, "{a=[[Foo.prototype, I.prototype]]}");
@@ -1340,24 +1343,23 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
    * <p>The format for the set of types for fields is:
    * {field=[[Type1, Type2]]}
    */
-  @SuppressWarnings("unchecked")
   private void testSets(boolean runTightenTypes, String js, String fieldTypes) {
     this.runTightenTypes = runTightenTypes;
-    Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    compiler.init(
-        ImmutableList.of(SourceFile.fromCode("externs", "")),
-        ImmutableList.of(SourceFile.fromCode("testcode", js)),
-        options);
+    test(js, null, null, null);
+    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+  }
 
-    Node root = compiler.parseInputs();
-    assertTrue("Unexpected parse error(s): " +
-        Joiner.on("\n").join(compiler.getErrors()), root != null);
-
-    Node externsRoot = root.getFirstChild();
-    Node mainRoot = externsRoot.getNext();
-    getProcessor(compiler).process(externsRoot, mainRoot);
-
+  /**
+   * Compiles the code and checks that the set of types for each field matches
+   * the expected value.
+   *
+   * <p>The format for the set of types for fields is:
+   * {field=[[Type1, Type2]]}
+   */
+  private void testSets(boolean runTightenTypes, String js, String fieldTypes,
+      DiagnosticType warning) {
+    this.runTightenTypes = runTightenTypes;
+    test(js, null, null, warning);
     assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
