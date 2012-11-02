@@ -33,9 +33,6 @@
  */
 var jQuerySelector;
 
-/** @typedef {function()|Array.<function()>} */
-var jQueryCallback;
-
 /**
  * @constructor
  * @param {(jQuerySelector|Element|Object|Array.<Element>|jQuery|string|
@@ -49,8 +46,8 @@ function jQuery(arg1, arg2) {}
 /**
  * @constructor
  * @extends {jQuery}
- * @param {(jQuerySelector|Element|Object|Array.<Element>|jQuery|string|
- *     function())=} arg1
+ * @param {(jQuerySelector|Element|Array.<Element>|Object|jQuery|string|
+ *     function())} arg1
  * @param {(Element|jQuery|Document|
  *     Object.<string, (string|function(!jQuery.event=))>)=} arg2
  * @return {!jQuery}
@@ -532,7 +529,6 @@ jQuery.prototype.dblclick = function(arg1, handler) {};
 
 /**
  * @constructor
- * @implements {jQuery.Promise}
  * @param {function()=} opt_fn
  * @see http://api.jquery.com/category/deferred-object/
  */
@@ -563,33 +559,29 @@ $.deferred = function(opt_fn) {};
 $.Deferred = function(opt_fn) {};
 
 /**
- * @override
- * @param {jQueryCallback} alwaysCallbacks
- * @param {jQueryCallback=} alwaysCallbacks2
+ * @param {function()} alwaysCallbacks
+ * @param {function()=} alwaysCallbacks2
  * @return {jQuery.deferred}
  */
 jQuery.deferred.prototype.always
     = function(alwaysCallbacks, alwaysCallbacks2) {};
 
 /**
- * @override
- * @param {jQueryCallback} doneCallbacks
- * @param {jQueryCallback=} doneCallbacks2
+ * @param {function()} doneCallbacks
+ * @param {function()=} doneCallbacks2
  * @return {jQuery.deferred}
  */
 jQuery.deferred.prototype.done = function(doneCallbacks, doneCallbacks2) {};
 
 /**
- * @override
- * @param {jQueryCallback} failCallbacks
- * @param {jQueryCallback=} failCallbacks2
+ * @param {function()} failCallbacks
+ * @param {function()=} failCallbacks2
  * @return {jQuery.deferred}
  */
 jQuery.deferred.prototype.fail = function(failCallbacks, failCallbacks2) {};
 
 /**
  * @deprecated
- * @override
  * @return {boolean}
  * @nosideeffects
  */
@@ -597,7 +589,6 @@ jQuery.deferred.prototype.isRejected = function() {};
 
 /**
  * @deprecated
- * @override
  * @return {boolean}
  * @nosideeffects
  */
@@ -617,7 +608,6 @@ jQuery.deferred.prototype.notify = function(var_args) {};
 jQuery.deferred.prototype.notifyWith = function(context, var_args) {};
 
 /**
- * @override
  * @param {function()=} doneFilter
  * @param {function()=} failFilter
  * @param {function()=} progressFilter
@@ -668,10 +658,9 @@ jQuery.deferred.prototype.resolveWith = function(context, args) {};
 jQuery.deferred.prototype.state = function() {};
 
 /**
- * @override
- * @param {jQueryCallback} doneCallbacks
- * @param {jQueryCallback=} failCallbacks
- * @param {jQueryCallback=} progressCallbacks
+ * @param {function()} doneCallbacks
+ * @param {function()} failCallbacks
+ * @param {function()=} progressCallbacks
  * @return {jQuery.deferred}
  */
 jQuery.deferred.prototype.then
@@ -1293,15 +1282,6 @@ jQuery.prototype.jquery;
 jQuery.jqXHR = function () {};
 
 /**
- * @override
- * @param {jQueryCallback} alwaysCallbacks
- * @param {jQueryCallback=} alwaysCallbacks2
- * @return {jQuery.jqXHR}
- */
-jQuery.jqXHR.prototype.always =
-    function(alwaysCallbacks, alwaysCallbacks2) {};
-
-/**
  * @deprecated
  * @param {function()} callback
  * @return {jQuery.jqXHR}
@@ -1310,8 +1290,8 @@ jQuery.jqXHR.prototype.complete = function (callback) {};
 
 /**
  * @override
- * @param {jQueryCallback} doneCallbacks
- * @return {jQuery.jqXHR}
+ * @param {function()} doneCallbacks
+ * @return {jQuery.Promise}
  */
 jQuery.jqXHR.prototype.done = function(doneCallbacks) {};
 
@@ -1324,8 +1304,8 @@ jQuery.jqXHR.prototype.error = function (callback) {};
 
 /**
  * @override
- * @param {jQueryCallback} failCallbacks
- * @return {jQuery.jqXHR}
+ * @param {function()} failCallbacks
+ * @return {jQuery.Promise}
  */
 jQuery.jqXHR.prototype.fail = function(failCallbacks) {};
 
@@ -1352,15 +1332,6 @@ jQuery.jqXHR.prototype.isResolved = function() {};
 jQuery.jqXHR.prototype.onreadystatechange = function (callback) {};
 
 /**
- * @param {function()=} doneFilter
- * @param {function()=} failFilter
- * @param {function()=} progressFilter
- * @return {jQuery.jqXHR}
- */
-jQuery.jqXHR.prototype.pipe =
-    function(doneFilter, failFilter, progressFilter) {};
-
-/**
  * @deprecated
  * @param {function()} callback
  * @return {jQuery.jqXHR}
@@ -1369,13 +1340,11 @@ jQuery.jqXHR.prototype.success = function (callback) {};
 
 /**
  * @override
- * @param {jQueryCallback} doneCallbacks
- * @param {jQueryCallback=} failCallbacks
- * @param {jQueryCallback=} progressCallbacks
- * @return {jQuery.jqXHR}
+ * @param {function()} doneCallbacks
+ * @param {function()} failCallbacks
+ * @return {jQuery.Promise}
  */
-jQuery.jqXHR.prototype.then =
-    function(doneCallbacks, failCallbacks, progressCallbacks) {};
+jQuery.jqXHR.prototype.then = function(doneCallbacks, failCallbacks) {};
 
 /**
  * @param {(function(!jQuery.event=)|Object.<string, *>)=} arg1
@@ -1769,21 +1738,13 @@ jQuery.prototype.promise = function(type, target) {};
 jQuery.Promise = function () {};
 
 /**
- * @param {jQueryCallback} alwaysCallbacks
- * @param {jQueryCallback=} alwaysCallbacks2
- * @return {jQuery.Promise}
- */
-jQuery.Promise.prototype.always =
-    function(alwaysCallbacks, alwaysCallbacks2) {};
-
-/**
- * @param {jQueryCallback} doneCallbacks
+ * @param {function()} doneCallbacks
  * @return {jQuery.Promise}
  */
 jQuery.Promise.prototype.done = function(doneCallbacks) {};
 
 /**
- * @param {jQueryCallback} failCallbacks
+ * @param {function()} failCallbacks
  * @return {jQuery.Promise}
  */
 jQuery.Promise.prototype.fail = function(failCallbacks) {};
@@ -1803,22 +1764,11 @@ jQuery.Promise.prototype.isRejected = function() {};
 jQuery.Promise.prototype.isResolved = function() {};
 
 /**
- * @param {function()=} doneFilter
- * @param {function()=} failFilter
- * @param {function()=} progressFilter
+ * @param {function()} doneCallbacks
+ * @param {function()} failCallbacks
  * @return {jQuery.Promise}
  */
-jQuery.Promise.prototype.pipe =
-    function(doneFilter, failFilter, progressFilter) {};
-
-/**
- * @param {jQueryCallback} doneCallbacks
- * @param {jQueryCallback=} failCallbacks
- * @param {jQueryCallback=} progressCallbacks
- * @return {jQuery.Promise}
- */
-jQuery.Promise.prototype.then =
-    function(doneCallbacks, failCallbacks, progressCallbacks) {};
+jQuery.Promise.prototype.then = function(doneCallbacks, failCallbacks) {};
 
 /**
  * @param {(string|Object.<string,*>)} arg1
