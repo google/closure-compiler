@@ -454,7 +454,7 @@ public class Scope
    * Gets the type of {@code this} in the current scope.
    */
   @Override
-  public ObjectType getTypeOfThis() {
+  public JSType getTypeOfThis() {
     if (isGlobal()) {
       return ObjectType.cast(rootNode.getJSType());
     }

@@ -74,8 +74,15 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
       "String.prototype.slice = function(sliceArg) {};" +
       "/** @type {number} */ String.prototype.length;" +
       "/** @constructor \n * @param {*} var_args \n @return {!Array} */" +
-      "function Array(var_args) {}" +
-      "/** @type {number} */ Array.prototype.length;" + ACTIVE_X_OBJECT_DEF;
+      "function Array(var_args) {}\n" +
+      "/** @type {number} */ Array.prototype.length;\n" +
+      "/** @constructor */\n" +
+      "function Arguments() {}\n" +
+      "/** @type {number} */\n" +
+      "Arguments.prototype.length;\n" +
+      "/** @type {!Arguments} */\n" +
+      "var arguments;" +
+      "" + ACTIVE_X_OBJECT_DEF;
 
   protected Compiler compiler;
 

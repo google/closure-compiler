@@ -407,7 +407,7 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public ObjectType getTypeOfThis() {
+  public JSType getTypeOfThis() {
     if (referencedObjType != null) {
       return referencedObjType.getTypeOfThis();
     }

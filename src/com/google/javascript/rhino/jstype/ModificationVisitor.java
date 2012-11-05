@@ -97,8 +97,8 @@ public class ModificationVisitor implements Visitor<JSType> {
 
     boolean changed = false;
 
-    ObjectType beforeThis = type.getTypeOfThis();
-    ObjectType afterThis = coerseToThisType(beforeThis.visit(this));
+    JSType beforeThis = type.getTypeOfThis();
+    JSType afterThis = coerseToThisType(beforeThis.visit(this));
     if (beforeThis != afterThis) {
       changed = true;
     }
@@ -136,11 +136,8 @@ public class ModificationVisitor implements Visitor<JSType> {
     return type;
   }
 
-  private ObjectType coerseToThisType(JSType type) {
-    // This isn't quite right, handle autoboxing and "strict" mode functions.
-    ObjectType restricted = type.restrictByNotNullOrUndefined()
-        .collapseUnion().toObjectType();
-    return restricted != null ? restricted : registry.getNativeObjectType(
+  private JSType coerseToThisType(JSType type) {
+    return type != null ? type : registry.getNativeObjectType(
         JSTypeNative.UNKNOWN_TYPE);
   }
 

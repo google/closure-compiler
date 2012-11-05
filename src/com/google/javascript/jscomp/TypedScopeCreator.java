@@ -237,7 +237,7 @@ final class TypedScopeCreator implements ScopeCreator {
       JSType type = functionNode.getJSType();
       if (type != null && type.isFunctionType()) {
         FunctionType fnType = type.toMaybeFunctionType();
-        ObjectType fnThisType = fnType.getTypeOfThis();
+        JSType fnThisType = fnType.getTypeOfThis();
         if (!fnThisType.isUnknownType()) {
           NodeTraversal.traverse(compiler, functionNode.getLastChild(),
               scopeBuilder.new CollectProperties(fnThisType));
@@ -293,7 +293,7 @@ final class TypedScopeCreator implements ScopeCreator {
     }
     for (Var var : varsToRemove) {
       globalScope.undeclare(var);
-      globalScope.getTypeOfThis().removeProperty(var.getName());
+      globalScope.getTypeOfThis().toObjectType().removeProperty(var.getName());
     }
 
     // Now re-traverse the given script.
@@ -1717,9 +1717,9 @@ final class TypedScopeCreator implements ScopeCreator {
      */
     private final class CollectProperties
         extends AbstractShallowStatementCallback {
-      private final ObjectType thisType;
+      private final JSType thisType;
 
-      CollectProperties(ObjectType thisType) {
+      CollectProperties(JSType thisType) {
         this.thisType = thisType;
       }
 
@@ -1756,8 +1756,9 @@ final class TypedScopeCreator implements ScopeCreator {
         JSType jsType = getDeclaredType(t.getSourceName(), info, member, value);
         Node name = member.getLastChild();
         if (jsType != null &&
-            (name.isName() || name.isString())) {
-          thisType.defineDeclaredProperty(
+            (name.isName() || name.isString()) &&
+            thisType.toObjectType() != null) {
+          thisType.toObjectType().defineDeclaredProperty(
               name.getString(),
               jsType,
               member);

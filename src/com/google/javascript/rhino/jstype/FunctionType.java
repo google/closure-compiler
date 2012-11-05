@@ -105,7 +105,7 @@ public class FunctionType extends PrototypeObjectType {
   /**
    * The type of {@code this} in the scope of this function.
    */
-  private ObjectType typeOfThis;
+  private JSType typeOfThis;
 
   /**
    * The function node which this type represents. It may be {@code null}.
@@ -132,7 +132,7 @@ public class FunctionType extends PrototypeObjectType {
 
   /** Creates an instance for a function that might be a constructor. */
   FunctionType(JSTypeRegistry registry, String name, Node source,
-               ArrowType arrowType, ObjectType typeOfThis,
+               ArrowType arrowType, JSType typeOfThis,
                ImmutableList<String> templateKeys,
                boolean isConstructor, boolean nativeType) {
     super(registry, name,
@@ -792,20 +792,14 @@ public class FunctionType extends PrototypeObjectType {
         call.returnType.getLeastSupertype(other.call.returnType) :
         call.returnType.getGreatestSubtype(other.call.returnType);
 
-    ObjectType newTypeOfThis = null;
+    JSType newTypeOfThis = null;
     if (isEquivalent(typeOfThis, other.typeOfThis)) {
       newTypeOfThis = typeOfThis;
     } else {
       JSType maybeNewTypeOfThis = leastSuper ?
           typeOfThis.getLeastSupertype(other.typeOfThis) :
           typeOfThis.getGreatestSubtype(other.typeOfThis);
-      if (maybeNewTypeOfThis instanceof ObjectType) {
-        newTypeOfThis = (ObjectType) maybeNewTypeOfThis;
-      } else {
-        newTypeOfThis = leastSuper ?
-            registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE) :
-            registry.getNativeObjectType(JSTypeNative.NO_OBJECT_TYPE);
-      }
+      newTypeOfThis = maybeNewTypeOfThis;
     }
 
     boolean newReturnTypeInferred =
@@ -1027,8 +1021,9 @@ public class FunctionType extends PrototypeObjectType {
         // In practical terms, if C implements I, and I has a method m,
         // then any m doesn't necessarily have to C#m's 'this'
         // type doesn't need to match I.
-        (other.typeOfThis.getConstructor() != null &&
-             other.typeOfThis.getConstructor().isInterface()) ||
+        (other.typeOfThis.toObjectType() != null &&
+             other.typeOfThis.toObjectType().getConstructor() != null &&
+             other.typeOfThis.toObjectType().getConstructor().isInterface()) ||
 
         // If one of the 'this' types is covariant of the other,
         // then we'll treat them as covariant (see comment above).
@@ -1052,7 +1047,7 @@ public class FunctionType extends PrototypeObjectType {
    */
   public ObjectType getInstanceType() {
     Preconditions.checkState(hasInstanceType());
-    return typeOfThis;
+    return typeOfThis.toObjectType();
   }
 
   /**
@@ -1074,8 +1069,8 @@ public class FunctionType extends PrototypeObjectType {
    * Gets the type of {@code this} in this function.
    */
   @Override
-  public ObjectType getTypeOfThis() {
-    return typeOfThis.isNoObjectType() ?
+  public JSType getTypeOfThis() {
+    return typeOfThis.isEmptyType() ?
         registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE) : typeOfThis;
   }
 

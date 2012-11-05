@@ -3174,26 +3174,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "element BAR does not exist on this enum");
   }
 
-  public void testBackwardsTypedefUse1() throws Exception {
-    testTypes(
-        "/** @this {MyTypedef} */ function f() {}" +
-        "/** @typedef {string} */ var MyTypedef;",
-        "@this type of a function must be an object\n" +
-        "Actual type: string");
-  }
-
   public void testBackwardsTypedefUse2() throws Exception {
     testTypes(
         "/** @this {MyTypedef} */ function f() {}" +
         "/** @typedef {!(Date|Array)} */ var MyTypedef;");
-  }
-
-  public void testBackwardsTypedefUse3() throws Exception {
-    testTypes(
-        "/** @this {MyTypedef} */ function f() {}" +
-        "/** @typedef {(Date|string)} */ var MyTypedef;",
-        "@this type of a function must be an object\n" +
-        "Actual type: (Date|null|string)");
   }
 
   public void testBackwardsTypedefUse4() throws Exception {
@@ -10150,6 +10134,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testTemplatedThisType2() throws Exception {
+    testTypes(
+        "/**\n" +
+        " * @this {Array.<T>|{length:number}}\n" +
+        " * @return {T}\n" +
+        " * @template T\n" +
+        " */\n" +
+        "Array.prototype.method = function() {};\n" +
+        "(function(){\n" +
+        "  Array.prototype.method.call(arguments);" +
+        "})();");
+  }
+
   public void testTemplateType1() throws Exception {
     testTypes(
         "/**\n" +
@@ -10286,7 +10283,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function f(x, y) {}\n" +
         "f(g(), function() { h(this); });",
         "actual parameter 1 of h does not match formal parameter\n" +
-        "found   : Object\n" +
+        "found   : (Array|F|null)\n" +
         "required: (F|null)");
   }
 

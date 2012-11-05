@@ -56,7 +56,7 @@ public final class FunctionBuilder {
   private Node sourceNode = null;
   private Node parametersNode = null;
   private JSType returnType = null;
-  private ObjectType typeOfThis = null;
+  private JSType typeOfThis = null;
   private ImmutableList<String> templateKeys = ImmutableList.of();
   private boolean inferredReturnType = false;
   private boolean isConstructor = false;
@@ -113,7 +113,7 @@ public final class FunctionBuilder {
   }
 
   /** Set the "this" type. */
-  public FunctionBuilder withTypeOfThis(ObjectType typeOfThis) {
+  public FunctionBuilder withTypeOfThis(JSType typeOfThis) {
     this.typeOfThis = typeOfThis;
     return this;
   }

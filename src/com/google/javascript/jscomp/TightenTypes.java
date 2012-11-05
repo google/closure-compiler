@@ -891,7 +891,8 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
           if (arg.getJSType() != null && arg.getJSType().isFunctionType()) {
             actions.addAll(getImplicitActionsFromArgument(
                 arg,
-                arg.getJSType().toMaybeFunctionType().getTypeOfThis(),
+                arg.getJSType().toMaybeFunctionType().getTypeOfThis()
+                    .toObjectType(),
                 param.getJSType()));
           }
         }

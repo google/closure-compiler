@@ -134,7 +134,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         .withReturnType(NUMBER_TYPE).build();
 
     assertLeastSupertype(
-        "function (this:Object): (number|string)", retString, retNumber);
+        "function (this:(Array|Date)): (number|string)", retString, retNumber);
     assertGreatestSubtype(
         "function (this:NoObject): None", retString, retNumber);
   }

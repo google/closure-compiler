@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.TypeCheck.BAD_IMPLEMENTED_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
@@ -83,7 +82,7 @@ final class FunctionTypeBuilder {
   private List<ObjectType> implementedInterfaces = null;
   private List<ObjectType> extendedInterfaces = null;
   private ObjectType baseType = null;
-  private ObjectType thisType = null;
+  private JSType thisType = null;
   private boolean isConstructor = false;
   private boolean makesStructs = false;
   private boolean makesDicts = false;
@@ -187,24 +186,6 @@ final class FunctionTypeBuilder {
       } else {
         return true;
       }
-    }
-  }
-
-  private class ThisTypeValidator implements Predicate<JSType> {
-    @Override
-    public boolean apply(JSType type) {
-      // TODO(user): Doing an instanceof check here is too
-      // restrictive as (Date,Error) is, for instance, an object type
-      // even though its implementation is a UnionType. Would need to
-      // create interfaces JSType, ObjectType, FunctionType etc and have
-      // separate implementation instead of the class hierarchy, so that
-      // union types can also be object types, etc.
-      if (!type.restrictByNotNullOrUndefined().isSubtype(
-              typeRegistry.getNativeType(OBJECT_TYPE))) {
-        reportWarning(THIS_TYPE_NON_OBJECT, type.toString());
-        return false;
-      }
-      return true;
     }
   }
 
@@ -411,14 +392,16 @@ final class FunctionTypeBuilder {
    * @param info The JSDocInfo for this function.
    */
   FunctionTypeBuilder inferThisType(JSDocInfo info) {
-    ObjectType maybeThisType = null;
+    JSType maybeThisType = null;
     if (info != null && info.hasThisType()) {
-      maybeThisType = ObjectType.cast(
-          info.getThisType().evaluate(scope, typeRegistry));
+      // TODO(johnlenz): In ES5 strict mode a function can have a null or
+      // undefined "this" value, but all the existing "@this" annotations
+      // don't declare restricted types.
+      maybeThisType = info.getThisType().evaluate(scope, typeRegistry)
+          .restrictByNotNullOrUndefined();
     }
     if (maybeThisType != null) {
       thisType = maybeThisType;
-      thisType.setValidator(new ThisTypeValidator());
     }
 
     return this;

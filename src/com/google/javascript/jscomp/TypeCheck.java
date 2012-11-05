@@ -1680,7 +1680,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // or GETELEM.
       if (functionType.isOrdinaryFunction() &&
           !functionType.getTypeOfThis().isUnknownType() &&
-          !functionType.getTypeOfThis().isNativeObjectType() &&
+          !(functionType.getTypeOfThis().toObjectType() != null &&
+          functionType.getTypeOfThis().toObjectType().isNativeObjectType()) &&
           !(child.isGetElem() ||
             child.isGetProp())) {
         report(t, n, EXPECTED_THIS_TYPE, functionType.toString());

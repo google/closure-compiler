@@ -1188,6 +1188,21 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("?", findNameType("g", globalScope).toString());
   }
 
+  public void testTemplateType12() {
+    testSame(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "\n" +
+        "/**\n" +
+        " * @this {Array.<T>|{length:number}}\n" +
+        " * @return {T} fn\n" +
+        " * @template T\n" +
+        " */\n" +
+        "Foo.prototype.method = function() {var g = this;};\n");
+    assertEquals("(Array.<T>|{length: number})",
+        findNameType("g", lastLocalScope).toString());
+  }
+
   public void testClosureParameterTypesWithoutJSDoc() {
     testSame(
         "/**\n" +
