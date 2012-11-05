@@ -1017,11 +1017,6 @@ public class ParserTest extends BaseJSTypeTestCase {
         MISPLACED_TYPE_ANNOTATION);
   }
 
-  public void testMisplacedTypeAnnotation7() {
-    // TODO(johnlenz): handle this case
-    parse("function f(/** @type {string} */ a) {}");
-  }
-
   public void testValidTypeAnnotation1() {
     parse("/** @type {string} */ var o = 'str';");
     parse("var /** @type {string} */ o = 'str', /** @type {number} */ p = 0;");
@@ -1037,6 +1032,13 @@ public class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     parse("var o = { /** @type {string} */ get prop() { return 'str' }};");
     parse("var o = { /** @type {string} */ set prop(s) {}};");
+  }
+
+  public void testValidTypeAnnotation3() {
+    // These two we don't currently support in the type checker but
+    // we would like to.
+    parse("try {} catch (/** @type {Error} */ e) {}");
+    parse("function f(/** @type {string} */ a) {}");
   }
 
   /**

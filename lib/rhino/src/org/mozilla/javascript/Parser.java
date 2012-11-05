@@ -696,7 +696,12 @@ public class Parser
                 destructuring.put(pname, expr);
             } else {
                 if (mustMatchToken(Token.NAME, "msg.no.parm")) {
-                    fnNode.addParam(createNameNode());
+                    Name paramNameNode = createNameNode();
+                    Comment jsdocNodeForName = getAndResetJsDoc();
+                    if (jsdocNodeForName != null) {
+                      paramNameNode.setJsDocNode(jsdocNodeForName);
+                    }
+                    fnNode.addParam(paramNameNode);
                     String paramName = ts.getString();
                     defineSymbol(Token.LP, paramName);
                     if (this.inUseStrictDirective) {
@@ -1377,7 +1382,12 @@ public class Parser
                     lp = ts.tokenBeg;
 
                 mustMatchToken(Token.NAME, "msg.bad.catchcond");
+
                 Name varName = createNameNode();
+                Comment jsdocNodeForName = getAndResetJsDoc();
+                if (jsdocNodeForName != null) {
+                  varName.setJsDocNode(jsdocNodeForName);
+                }
                 String varNameString = varName.getIdentifier();
                 if (inUseStrictDirective) {
                     if ("eval".equals(varNameString) ||

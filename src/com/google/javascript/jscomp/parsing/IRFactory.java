@@ -304,10 +304,15 @@ class IRFactory {
           FunctionNode fnNode = (FunctionNode)node;
           valid = fnNode.getFunctionType() == FunctionNode.FUNCTION_STATEMENT;
           break;
+        // Object literal properties and catch declarations are valid.
+        case com.google.javascript.rhino.head.Token.NAME:
+          valid = node.getParent() instanceof ObjectProperty
+              || node.getParent() instanceof CatchClause
+              || node.getParent() instanceof FunctionNode;
+          break;
         // Object literal properties are valid
         case com.google.javascript.rhino.head.Token.GET:
         case com.google.javascript.rhino.head.Token.SET:
-        case com.google.javascript.rhino.head.Token.NAME:
         case com.google.javascript.rhino.head.Token.NUMBER:
         case com.google.javascript.rhino.head.Token.STRING:
           valid = node.getParent() instanceof ObjectProperty;
