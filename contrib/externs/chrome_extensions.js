@@ -1074,7 +1074,7 @@ chrome.input.ime.setCandidates = function(parameters, opt_callback) {};
 /**
  * @param {!Object.<string,(string|number|Object.<string,(string|number)>)>}
  *     parameters An object with 'contextID' (number), 'text' (string),
- *     'selectionStart (number), 'selectEnd' (number), 'cursor' (number),
+ *     'selectionStart (number), 'selectionEnd' (number), 'cursor' (number),
  *     and 'segments' (array of object) keys.
  * @param {function(boolean): void=} opt_callback Callback function.
  */
