@@ -264,9 +264,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Inlines functions defined in local scopes */
   public boolean inlineLocalFunctions;
 
-  /** More aggressive function inlining */
-  boolean assumeClosuresOnlyCaptureReferences;
-
   /** Inlines properties */
   boolean inlineProperties;
 
@@ -865,7 +862,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     inlineFunctions = false;
     inlineLocalFunctions = false;
     assumeStrictThis = false;
-    assumeClosuresOnlyCaptureReferences = false;
     inlineProperties = false;
     crossModuleCodeMotion = false;
     crossModuleMethodMotion = false;
@@ -1524,21 +1520,6 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setAssumeStrictThis(boolean enable) {
     this.assumeStrictThis = enable;
-  }
-
-  /**
-   * @return Whether assumeClosuresOnlyCaptureReferences is set.
-   */
-  public boolean assumeClosuresOnlyCaptureReferences() {
-    return assumeClosuresOnlyCaptureReferences;
-  }
-
-  /**
-   * Whether to assume closures capture only what they reference. This allows
-   * more aggressive function inlining.
-   */
-  public void setAssumeClosuresOnlyCaptureReferences(boolean enable) {
-    this.assumeClosuresOnlyCaptureReferences = enable;
   }
 
   /**
