@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for jQuery 1.7.2
+ * @fileoverview Externs for jQuery 1.8.2
  *
  * Note that some functions use different return types depending on the number
  * of parameters passed in. In these cases, you may need to annotate the type
@@ -268,7 +268,7 @@ jQuery.prototype.appendTo = function(target) {};
 
 /**
  * @param {(string|Object.<string,*>)} arg1
- * @param {(string|number|boolean|function(number,string))=} arg2
+ * @param {(string|number|function(number,string))=} arg2
  * @return {(string|!jQuery)}
  */
 jQuery.prototype.attr = function(arg1, arg2) {};
@@ -459,7 +459,7 @@ jQuery.prototype.clone = function(withDataAndEvents, deepWithDataAndEvents) {};
 /**
  * @param {(jQuerySelector|jQuery|Element|string|Array.<string>)} arg1
  * @param {Element=} context
- * @return {(!jQuery|Array.<Element>)}
+ * @return {!jQuery}
  * @nosideeffects
  */
 jQuery.prototype.closest = function(arg1, context) {};
@@ -586,22 +586,6 @@ jQuery.deferred.prototype.done = function(doneCallbacks, doneCallbacks2) {};
  * @return {jQuery.deferred}
  */
 jQuery.deferred.prototype.fail = function(failCallbacks, failCallbacks2) {};
-
-/**
- * @deprecated
- * @override
- * @return {boolean}
- * @nosideeffects
- */
-jQuery.deferred.prototype.isRejected = function() {};
-
-/**
- * @deprecated
- * @override
- * @return {boolean}
- * @nosideeffects
- */
-jQuery.deferred.prototype.isResolved = function() {};
 
 /**
  * @param {...*} var_args
@@ -764,6 +748,7 @@ jQuery.prototype.eq = function(arg1) {};
 jQuery.error = function(message) {};
 
 /**
+ * @deprecated
  * @param {(function(!jQuery.event=)|Object.<string, *>)} arg1
  * @param {function(!jQuery.event=)=} handler
  * @return {!jQuery}
@@ -1332,22 +1317,6 @@ jQuery.jqXHR.prototype.fail = function(failCallbacks) {};
 /**
  * @deprecated
  * @override
- * @return {boolean}
- * @nosideeffects
- */
-jQuery.jqXHR.prototype.isRejected = function() {};
-
-/**
- * @deprecated
- * @override
- * @return {boolean}
- * @nosideeffects
- */
-jQuery.jqXHR.prototype.isResolved = function() {};
-
-/**
- * @deprecated
- * @override
  */
 jQuery.jqXHR.prototype.onreadystatechange = function (callback) {};
 
@@ -1414,6 +1383,7 @@ jQuery.prototype.length;
 jQuery.prototype.live = function(arg1, arg2, handler) {};
 
 /**
+ * @deprecated
  * @param {(function(!jQuery.event=)|Object.<string, *>|string)} arg1
  * @param {(function(!jQuery.event=)|Object.<string,*>|string)=} arg2
  * @param {function(string,string,XMLHttpRequest)=} complete
@@ -1789,20 +1759,6 @@ jQuery.Promise.prototype.done = function(doneCallbacks) {};
 jQuery.Promise.prototype.fail = function(failCallbacks) {};
 
 /**
- * @deprecated
- * @return {boolean}
- * @nosideeffects
- */
-jQuery.Promise.prototype.isRejected = function() {};
-
-/**
- * @deprecated
- * @return {boolean}
- * @nosideeffects
- */
-jQuery.Promise.prototype.isResolved = function() {};
-
-/**
  * @param {function()=} doneFilter
  * @param {function()=} failFilter
  * @param {function()=} progressFilter
@@ -1993,6 +1949,7 @@ jQuery.prototype.show = function(duration, arg2, callback) {};
 jQuery.prototype.siblings = function(selector) {};
 
 /**
+ * @deprecated
  * @return {number}
  * @nosideeffects
  */
@@ -2155,6 +2112,7 @@ jQuery.prototype.text = function(arg1) {};
 jQuery.prototype.toArray = function() {};
 
 /**
+ * @deprecated
  * @param {(function(!jQuery.event=)|string|number|function()|boolean)=} arg1
  * @param {(function(!jQuery.event=)|function()|string)=} arg2
  * @param {(function(!jQuery.event=)|function())=} arg3
@@ -2239,6 +2197,7 @@ jQuery.unique = function(arr) {};
 $.unique = function(arr) {};
 
 /**
+ * @deprecated
  * @param {(function(!jQuery.event=)|Object.<string, *>)} arg1
  * @param {function(!jQuery.event=)=} handler
  * @return {!jQuery}
