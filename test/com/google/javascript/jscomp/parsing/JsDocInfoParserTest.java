@@ -741,7 +741,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo info = parse("@type {function(number=)}*/");
     assertTypeEquals(
         registry.createFunctionType(
-            UNKNOWN_TYPE, createUnionType(VOID_TYPE, NUMBER_TYPE)),
+            UNKNOWN_TYPE, registry.createOptionalParameters(NUMBER_TYPE)),
         info.getType());
   }
 

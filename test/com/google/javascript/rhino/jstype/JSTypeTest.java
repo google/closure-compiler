@@ -2973,13 +2973,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("function (new:Array, ...[*]): Array",
         ARRAY_FUNCTION_TYPE.toString());
 
-    assertEquals("function (new:Boolean, *): boolean",
+    assertEquals("function (new:Boolean, *=): boolean",
         BOOLEAN_OBJECT_FUNCTION_TYPE.toString());
 
-    assertEquals("function (new:Number, *): number",
+    assertEquals("function (new:Number, *=): number",
         NUMBER_OBJECT_FUNCTION_TYPE.toString());
 
-    assertEquals("function (new:String, *): string",
+    assertEquals("function (new:String, *=): string",
         STRING_OBJECT_FUNCTION_TYPE.toString());
 
     assertEquals("function (...[number]): boolean",

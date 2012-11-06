@@ -329,7 +329,7 @@ public class JSTypeRegistry implements Serializable {
     // Boolean
     FunctionType BOOLEAN_OBJECT_FUNCTION_TYPE =
         new FunctionType(this, "Boolean", null,
-            createArrowType(createParameters(false, ALL_TYPE), BOOLEAN_TYPE),
+            createArrowType(createOptionalParameters(ALL_TYPE), BOOLEAN_TYPE),
             null, null, true, true);
     ObjectType booleanPrototype = BOOLEAN_OBJECT_FUNCTION_TYPE.getPrototype();
     registerNativeType(
@@ -426,7 +426,7 @@ public class JSTypeRegistry implements Serializable {
     // Number
     FunctionType NUMBER_OBJECT_FUNCTION_TYPE =
         new FunctionType(this, "Number", null,
-            createArrowType(createParameters(false, ALL_TYPE), NUMBER_TYPE),
+            createArrowType(createOptionalParameters(ALL_TYPE), NUMBER_TYPE),
             null, null, true, true);
     ObjectType numberPrototype = NUMBER_OBJECT_FUNCTION_TYPE.getPrototype();
     registerNativeType(
@@ -453,7 +453,7 @@ public class JSTypeRegistry implements Serializable {
     // String
     FunctionType STRING_OBJECT_FUNCTION_TYPE =
         new FunctionType(this, "String", null,
-            createArrowType(createParameters(false, ALL_TYPE), STRING_TYPE),
+            createArrowType(createOptionalParameters(ALL_TYPE), STRING_TYPE),
             null, null, true, true);
     ObjectType stringPrototype = STRING_OBJECT_FUNCTION_TYPE.getPrototype();
     registerNativeType(

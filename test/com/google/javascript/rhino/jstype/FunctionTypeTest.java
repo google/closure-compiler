@@ -243,6 +243,42 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     assertTrue(type.isEquivalentTo(type));
   }
 
+  public void testIsEquivalentToParams() {
+    FunctionType oneNum = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters(NUMBER_TYPE))
+        .build();
+    FunctionType optNum = new FunctionBuilder(registry)
+        .withParamsNode(registry.createOptionalParameters(NUMBER_TYPE))
+        .build();
+    FunctionType varNum = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParametersWithVarArgs(NUMBER_TYPE))
+        .build();
+    Asserts.assertEquivalenceOperations(oneNum, oneNum);
+    Asserts.assertEquivalenceOperations(optNum, optNum);
+    Asserts.assertEquivalenceOperations(varNum, varNum);
+    assertFalse(oneNum.isEquivalentTo(optNum));
+    assertFalse(oneNum.isEquivalentTo(varNum));
+    assertFalse(optNum.isEquivalentTo(varNum));
+  }
+
+  public void testIsEquivalentOptAndVarArgs() {
+    FunctionType varNum = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParametersWithVarArgs(NUMBER_TYPE))
+        .build();
+
+    FunctionParamBuilder builder = new FunctionParamBuilder(registry);
+    builder.addOptionalParams(NUMBER_TYPE);
+    builder.addVarArgs(NUMBER_TYPE);
+    FunctionType optAndVarNum = new FunctionBuilder(registry)
+        .withParamsNode(builder.build())
+        .build();
+
+    // We currently do not consider function(T=, ...T) and function(...T)
+    // equivalent. This may change.
+    assertFalse(varNum.isEquivalentTo(optAndVarNum));
+    assertFalse(optAndVarNum.isEquivalentTo(varNum));
+  }
+
   public void testRecursiveFunction() {
     ProxyObjectType loop = new ProxyObjectType(registry, NUMBER_TYPE);
     FunctionType fn = new FunctionBuilder(registry)

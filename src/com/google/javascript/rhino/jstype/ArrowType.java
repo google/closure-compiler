@@ -192,6 +192,16 @@ final class ArrowType extends JSType {
           return false;
         }
       }
+
+      // Check var_args/optionality
+      if (thisParam.isOptionalArg() != otherParam.isOptionalArg()) {
+        return false;
+      }
+
+      if (thisParam.isVarArgs() != otherParam.isVarArgs()) {
+        return false;
+      }
+
       thisParam = thisParam.getNext();
       otherParam = otherParam.getNext();
     }

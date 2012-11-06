@@ -82,7 +82,7 @@ public class InferJSDocInfoTest extends CompilerTestCase {
 
   public void testNativeCtor() {
     testSame(
-        "/** Object. \n * @param {*} x \n * @constructor */ " +
+        "/** Object. \n * @param {*=} x \n * @constructor */ " +
         "function Object(x) {};",
         "var x = new Object();" +
         "/** Another object. */ var y = new Object();", null);
@@ -99,7 +99,7 @@ public class InferJSDocInfoTest extends CompilerTestCase {
 
   public void testStructuralFunctions() {
     testSame(
-        "/** Object. \n * @param {*} x \n * @constructor */ " +
+        "/** Object. \n * @param {*=} x \n * @constructor */ " +
         "function Object(x) {};",
         "/** Function. \n * @param {*} x */ " +
         "function fn(x) {};" +

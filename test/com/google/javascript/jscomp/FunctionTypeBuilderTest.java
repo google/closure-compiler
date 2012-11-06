@@ -65,7 +65,7 @@ public class FunctionTypeBuilderTest extends CompilerTestCase {
         "", FunctionTypeBuilder.TYPE_REDEFINITION,
         "attempted re-definition of type String\n"
         + "found   : function (new:String, *=): number\n"
-        + "expected: function (new:String, *): string");
+        + "expected: function (new:String, *=): string");
   }
 
   public void testBuiltInTypeDifferentNumParams() throws Exception {
@@ -78,7 +78,7 @@ public class FunctionTypeBuilderTest extends CompilerTestCase {
         "", FunctionTypeBuilder.TYPE_REDEFINITION,
         "attempted re-definition of type String\n"
         + "found   : function (new:String): string\n"
-        + "expected: function (new:String, *): string");
+        + "expected: function (new:String, *=): string");
   }
 
   public void testBuiltInTypeDifferentNumParams2() throws Exception {
@@ -91,7 +91,7 @@ public class FunctionTypeBuilderTest extends CompilerTestCase {
         "", FunctionTypeBuilder.TYPE_REDEFINITION,
         "attempted re-definition of type String\n"
         + "found   : function (new:String, ?=, ?=): string\n"
-        + "expected: function (new:String, *): string");
+        + "expected: function (new:String, *=): string");
   }
 
   public void testBuiltInTypeDifferentParamType() throws Exception {
@@ -104,7 +104,7 @@ public class FunctionTypeBuilderTest extends CompilerTestCase {
         "", FunctionTypeBuilder.TYPE_REDEFINITION,
         "attempted re-definition of type String\n"
         + "found   : function (new:String, ?=): string\n"
-        + "expected: function (new:String, *): string");
+        + "expected: function (new:String, *=): string");
   }
 
   public void testBadFunctionTypeDefinition() throws Exception {

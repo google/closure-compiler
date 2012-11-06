@@ -264,15 +264,21 @@ public class TightenTypesTest extends CompilerTestCase {
   }
 
   public void testGetElem() {
-    testSame("/** @constructor \n @param {*} var_args \n @return {!Array} */"
-             + "function Array(var_args) {}\n",
-             "/** @constructor */ function Foo() {}\n"
-             + "/** @constructor */ function Bar() {}\n"
-             + "var a = [];\n"
-             + "a[0] = new Foo;\n"
-             + "a[1] = new Bar;\n"
-             + "var b = a[0];\n"
-             + "var c = [new Foo, new Bar];\n", null);
+    testSame(
+        "/**\n"
+        + " * @constructor\n"
+        + " * @extends {Object}\n"
+        + " * @param {...*} var_args\n"
+        + " * @return {!Array}\n"
+        + " */\n"
+        + "function Array(var_args) {}\n",
+        "/** @constructor */ function Foo() {}\n"
+        + "/** @constructor */ function Bar() {}\n"
+        + "var a = [];\n"
+        + "a[0] = new Foo;\n"
+        + "a[1] = new Bar;\n"
+        + "var b = a[0];\n"
+        + "var c = [new Foo, new Bar];\n", null);
 
     assertType("Array", getType("a"));
     assertType("(Array,Bar,Foo)", getType("b"));
