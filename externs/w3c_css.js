@@ -895,7 +895,7 @@ function ViewCSS() {}
 
 /**
  * @param {Element} elt
- * @param {string?} pseudoElt
+ * @param {?string} pseudoElt
  * @return {CSSStyleDeclaration}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSview-getComputedStyle
  */
