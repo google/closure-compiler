@@ -659,7 +659,7 @@ public class TypeInferenceTest extends TestCase {
         createNullableType(
             registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE)));
     inFunction("var y = new x();");
-    verify("y", JSTypeNative.NO_OBJECT_TYPE);
+    verify("y", UNKNOWN_TYPE);
   }
 
   public void testInnerFunction1() {

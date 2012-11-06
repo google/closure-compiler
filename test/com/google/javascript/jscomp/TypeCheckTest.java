@@ -9366,6 +9366,32 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: (MyType|null|number)");
   }
 
+  public void testForwardTypeDeclaration12() throws Exception {
+    // We assume that {Function} types can produce anything, and don't
+    // want to type-check them.
+    testClosureTypes(
+        "goog.addDependency('zzz.js', ['MyType'], []);" +
+        "/**\n" +
+        " * @param {!Function} ctor\n" +
+        " * @return {MyType}\n" +
+        " */\n" +
+        "function f(ctor) { return new ctor(); }", null);
+  }
+
+  public void testForwardTypeDeclaration13() throws Exception {
+    // Some projects use {Function} registries to register constructors
+    // that aren't in their binaries. We want to make sure we can pass these
+    // around, but still do other checks on them.
+    testClosureTypes(
+        "goog.addDependency('zzz.js', ['MyType'], []);" +
+        "/**\n" +
+        " * @param {!Function} ctor\n" +
+        " * @return {MyType}\n" +
+        " */\n" +
+        "function f(ctor) { return (new ctor()).impossibleProp; }",
+        "Property impossibleProp never defined on ?");
+  }
+
   public void testDuplicateTypeDef() throws Exception {
     testTypes(
         "var goog = {};" +

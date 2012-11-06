@@ -181,8 +181,9 @@ public class FunctionType extends PrototypeObjectType {
 
   @Override
   public boolean isInstanceType() {
-    // The universal constructor is its own instance, bizarrely.
-    return isEquivalentTo(registry.getNativeType(U2U_CONSTRUCTOR_TYPE));
+    // The universal constructor is its own instance, bizarrely. It overrides
+    // getConstructor() appropriately when it's declared.
+    return this == registry.getNativeType(U2U_CONSTRUCTOR_TYPE);
   }
 
   @Override

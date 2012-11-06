@@ -257,8 +257,9 @@ public class JSTypeRegistry implements Serializable {
 
     UnknownType UNKNOWN_TYPE = new UnknownType(this, false);
     registerNativeType(JSTypeNative.UNKNOWN_TYPE, UNKNOWN_TYPE);
+    UnknownType checkedUnknownType = new UnknownType(this, true);
     registerNativeType(
-        JSTypeNative.CHECKED_UNKNOWN_TYPE, new UnknownType(this, true));
+        JSTypeNative.CHECKED_UNKNOWN_TYPE, checkedUnknownType);
 
     VoidType VOID_TYPE = new VoidType(this);
     registerNativeType(JSTypeNative.VOID_TYPE, VOID_TYPE);
@@ -508,7 +509,7 @@ public class JSTypeRegistry implements Serializable {
         createFunctionType(UNKNOWN_TYPE, true, UNKNOWN_TYPE);
     registerNativeType(JSTypeNative.U2U_FUNCTION_TYPE, U2U_FUNCTION_TYPE);
 
-    // unknown constructor type, i.e. (?...) -> ? with the NoObject type
+    // unknown constructor type, i.e. (?...) -> ? with the Unknown type
     // as instance type
     FunctionType U2U_CONSTRUCTOR_TYPE =
         // This is equivalent to
@@ -519,7 +520,7 @@ public class JSTypeRegistry implements Serializable {
             createArrowType(
                 createParametersWithVarArgs(UNKNOWN_TYPE),
                 UNKNOWN_TYPE),
-            NO_OBJECT_TYPE, null, true, true) {
+            UNKNOWN_TYPE, null, true, true) {
           private static final long serialVersionUID = 1L;
 
           @Override public FunctionType getConstructor() {

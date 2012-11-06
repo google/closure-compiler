@@ -39,6 +39,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.jstype.UnknownType;
 
 import java.text.MessageFormat;
 import java.util.Iterator;
@@ -476,9 +477,12 @@ class TypeValidator {
   void expectSuperType(NodeTraversal t, Node n, ObjectType superObject,
       ObjectType subObject) {
     FunctionType subCtor = subObject.getConstructor();
+    ObjectType implicitProto = subObject.getImplicitPrototype();
     ObjectType declaredSuper =
-        subObject.getImplicitPrototype().getImplicitPrototype();
-    if (!declaredSuper.isEquivalentTo(superObject)) {
+        implicitProto == null ? null : implicitProto.getImplicitPrototype();
+    if (declaredSuper != null &&
+        !(superObject instanceof UnknownType) &&
+        !declaredSuper.isEquivalentTo(superObject)) {
       if (declaredSuper.isEquivalentTo(getNativeType(OBJECT_TYPE))) {
         registerMismatch(superObject, declaredSuper, report(
             t.makeError(n, MISSING_EXTENDS_TAG_WARNING, subObject.toString())));
