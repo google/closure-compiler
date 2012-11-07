@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -32,6 +33,7 @@ import com.google.javascript.rhino.testing.Asserts;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Tests {@link TypeCheck}.
@@ -2511,10 +2513,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTypeRedefinition() throws Exception {
-    testTypes("a={};/**@enum {string}*/ a.A = {ZOR:'b'};"
+    testClosureTypesMultipleWarnings("a={};/**@enum {string}*/ a.A = {ZOR:'b'};"
         + "/** @constructor */ a.A = function() {}",
-        "variable a.A redefined with type function (new:a.A): undefined, " +
-        "original definition at [testcode]:1 with type enum{a.A}");
+        Lists.newArrayList(
+            "variable a.A redefined with type function (new:a.A): undefined, " +
+            "original definition at [testcode]:1 with type enum{a.A}",
+            "assignment to property A of a\n" +
+            "found   : function (new:a.A): undefined\n" +
+            "required: enum{a.A}"));
   }
 
   public void testIn1() throws Exception {
@@ -6330,6 +6336,18 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */" +
         "function G() {}" +
         "G.prototype.bar = F.prototype.bar;");
+  }
+
+  public void testIssue635b() throws Exception {
+    testTypes(
+        "/** @constructor */" +
+        "function F() {}" +
+        "/** @constructor */" +
+        "function G() {}" +
+        "/** @type {function(new:G)} */ var x = F;",
+        "initializing variable\n" +
+        "found   : function (new:F): undefined\n" +
+        "required: function (new:G): ?");
   }
 
   public void testIssue669() throws Exception {
@@ -10859,10 +10877,12 @@ public class TypeCheckTest extends CompilerTypeTestCase {
           "unexpected warning(s) : " +
           Joiner.on(", ").join(compiler.getWarnings()),
           descriptions.size(), compiler.getWarningCount());
+      Set<String> actualWarningDescriptions = Sets.newHashSet();
       for (int i = 0; i < descriptions.size(); i++) {
-        assertEquals(descriptions.get(i),
-            compiler.getWarnings()[i].description);
+        actualWarningDescriptions.add(compiler.getWarnings()[i].description);
       }
+      assertEquals(
+          Sets.newHashSet(descriptions), actualWarningDescriptions);
     }
   }
 

@@ -1007,17 +1007,14 @@ public class FunctionType extends PrototypeObjectType {
         // An interface function cannot be assigned to anything.
         return false;
       }
+
       // If functionA is a subtype of functionB, then their "this" types
       // should be contravariant. However, this causes problems because
       // of the way we enforce overrides. Because function(this:SubFoo)
       // is not a subtype of function(this:Foo), our override check treats
-      // this as an error. It also screws up out standard method
-      // for aliasing constructors. Let's punt on all this for now.
+      // this as an error. Let's punt on all this for now.
       // TODO(nicksantos): fix this.
       boolean treatThisTypesAsCovariant =
-        // If either one of these is a ctor, skip 'this' checking.
-        isConstructor() || other.isConstructor() ||
-
         // An interface 'this'-type is non-restrictive.
         // In practical terms, if C implements I, and I has a method m,
         // then any m doesn't necessarily have to C#m's 'this'
