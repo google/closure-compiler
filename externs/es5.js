@@ -29,6 +29,7 @@
  *     applied to fn.
  * @return {!Function} A partially-applied form of the Function on which
  *     bind() was invoked as a method.
+ * @nosideeffects
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
  */
 Function.prototype.bind = function(selfObj, var_args) {};

@@ -31,6 +31,7 @@
  * @param {Array.<ArrayBufferView|Blob|string>=} opt_blobParts
  * @param {Object=} opt_options
  * @constructor
+ * @nosideeffects
  */
 function Blob(opt_blobParts, opt_options) {}
 
@@ -51,6 +52,7 @@ Blob.prototype.type;
  * @param {number} start
  * @param {number} length
  * @return {!Blob}
+ * @nosideeffects
  */
 Blob.prototype.slice = function(start, length) {};
 
@@ -60,6 +62,7 @@ Blob.prototype.slice = function(start, length) {};
  * @param {number} start
  * @param {number} end
  * @return {!Blob}
+ * @nosideeffects
  */
 Blob.prototype.webkitSlice = function(start, end) {};
 
@@ -69,6 +72,7 @@ Blob.prototype.webkitSlice = function(start, end) {};
  * @param {number} start
  * @param {number} end
  * @return {!Blob}
+ * @nosideeffects
  */
 Blob.prototype.mozSlice = function(start, end) {};
 

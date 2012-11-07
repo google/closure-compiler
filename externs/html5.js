@@ -42,6 +42,8 @@ Window.prototype.JSON = {};
  * @param {string} text
  * @param {(function(string, *) : *)=} opt_reviver
  * @return {*}
+ * @throws {Error}
+ * @nosideeffects
  * @see http://ejohn.org/blog/ecmascript-5-strict-mode-json-and-more/
  */
 Window.prototype.JSON.parse = function(text, opt_reviver) {};
@@ -51,6 +53,8 @@ Window.prototype.JSON.parse = function(text, opt_reviver) {};
  * @param {(Array.<string>|(function(string, *) : *)|null)=} opt_replacer
  * @param {(number|string)=} opt_space
  * @return {string}
+ * @throws {Error}
+ * @nosideeffects
  * @see http://ejohn.org/blog/ecmascript-5-strict-mode-json-and-more/
  */
 Window.prototype.JSON.stringify =
@@ -71,6 +75,8 @@ HTMLCanvasElement.prototype.height;
 /**
  * @param {string=} opt_type
  * @return {string}
+ * @throws {Error}
+ * @nosideeffects
  */
 HTMLCanvasElement.prototype.toDataURL = function(opt_type) {};
 
@@ -149,6 +155,8 @@ CanvasRenderingContext2D.prototype.setTransform = function(
  * @param {number} x1
  * @param {number} y1
  * @return {CanvasGradient}
+ * @throws {Error}
+ * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.createLinearGradient = function(
     x0, y0, x1, y1) {};
@@ -161,6 +169,8 @@ CanvasRenderingContext2D.prototype.createLinearGradient = function(
  * @param {number} y1
  * @param {number} r1
  * @return {CanvasGradient}
+ * @throws {Error}
+ * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.createRadialGradient = function(
     x0, y0, r0, x1, y1, r1) {};
@@ -169,6 +179,8 @@ CanvasRenderingContext2D.prototype.createRadialGradient = function(
  * @param {HTMLImageElement|HTMLCanvasElement} image
  * @param {string} repetition
  * @return {CanvasPattern}
+ * @throws {Error}
+ * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.createPattern = function(
     image, repetition) {};
@@ -296,6 +308,7 @@ CanvasRenderingContext2D.prototype.clip = function() {};
  * @param {number} x
  * @param {number} y
  * @return {boolean}
+ * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.isPointInPath = function(x, y) {};
 
@@ -322,6 +335,7 @@ CanvasRenderingContext2D.prototype.strokeText = function(
 /**
  * @param {string} text
  * @return {TextMetrics}
+ * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.measureText = function(text) {};
 
@@ -348,6 +362,7 @@ CanvasRenderingContext2D.prototype.drawImage = function(
  * @param {number} sw
  * @param {number} sh
  * @return {ImageData}
+ * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {};
 
@@ -357,6 +372,8 @@ CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {};
  * @param {number} sw
  * @param {number} sh
  * @return {ImageData}
+ * @throws {Error}
+ * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {};
 
@@ -1858,6 +1875,8 @@ HTMLElement.prototype.classList;
  * @param {number} length The length in bytes
  * @constructor
  * @noalias
+ * @throws {Error}
+ * @nosideeffects
  * @implements {Transferable}
  */
 function ArrayBuffer(length) {}
@@ -1869,6 +1888,7 @@ ArrayBuffer.prototype.byteLength;
  * @param {number} begin
  * @param {number=} opt_end
  * @return {!ArrayBuffer}
+ * @nosideeffects
  */
 ArrayBuffer.prototype.slice = function(begin, opt_end) {};
 
@@ -1897,6 +1917,8 @@ ArrayBufferView.prototype.byteLength;
  * @extends {ArrayBufferView}
  * @constructor
  * @noalias
+ * @throws {Error}
+ * @nosideeffects
  */
 function Int8Array(length, opt_byteOffset, opt_length) {}
 
@@ -1919,6 +1941,7 @@ Int8Array.prototype.set = function(array, opt_offset) {};
  * @param {number} begin
  * @param {number=} opt_end
  * @return {!Int8Array}
+ * @nosideeffects
  */
 Int8Array.prototype.subarray = function(begin, opt_end) {};
 
@@ -1931,6 +1954,8 @@ Int8Array.prototype.subarray = function(begin, opt_end) {};
  * @extends {ArrayBufferView}
  * @constructor
  * @noalias
+ * @throws {Error}
+ * @nosideeffects
  */
 function Uint8Array(length, opt_byteOffset, opt_length) {}
 
@@ -1953,6 +1978,7 @@ Uint8Array.prototype.set = function(array, opt_offset) {};
  * @param {number} begin
  * @param {number=} opt_end
  * @return {!Uint8Array}
+ * @nosideeffects
  */
 Uint8Array.prototype.subarray = function(begin, opt_end) {};
 
@@ -1965,6 +1991,8 @@ Uint8Array.prototype.subarray = function(begin, opt_end) {};
  * @extends {ArrayBufferView}
  * @constructor
  * @noalias
+ * @throws {Error}
+ * @nosideeffects
  */
 function Uint8ClampedArray(length, opt_byteOffset, opt_length) {}
 
@@ -1987,6 +2015,7 @@ Uint8ClampedArray.prototype.set = function(array, opt_offset) {};
  * @param {number} begin
  * @param {number=} opt_end
  * @return {!Uint8ClampedArray}
+ * @nosideeffects
  */
 Uint8ClampedArray.prototype.subarray = function(begin, opt_end) {};
 
@@ -2008,6 +2037,8 @@ var CanvasPixelArray;
  * @extends {ArrayBufferView}
  * @constructor
  * @noalias
+ * @throws {Error}
+ * @nosideeffects
  */
 function Int16Array(length, opt_byteOffset, opt_length) {}
 
@@ -2030,6 +2061,7 @@ Int16Array.prototype.set = function(array, opt_offset) {};
  * @param {number} begin
  * @param {number=} opt_end
  * @return {!Int16Array}
+ * @nosideeffects
  */
 Int16Array.prototype.subarray = function(begin, opt_end) {};
 
@@ -2042,6 +2074,8 @@ Int16Array.prototype.subarray = function(begin, opt_end) {};
  * @extends {ArrayBufferView}
  * @constructor
  * @noalias
+ * @throws {Error}
+ * @nosideeffects
  */
 function Uint16Array(length, opt_byteOffset, opt_length) {}
 
@@ -2064,6 +2098,7 @@ Uint16Array.prototype.set = function(array, opt_offset) {};
  * @param {number} begin
  * @param {number=} opt_end
  * @return {!Uint16Array}
+ * @nosideeffects
  */
 Uint16Array.prototype.subarray = function(begin, opt_end) {};
 
@@ -2076,6 +2111,8 @@ Uint16Array.prototype.subarray = function(begin, opt_end) {};
  * @extends {ArrayBufferView}
  * @constructor
  * @noalias
+ * @throws {Error}
+ * @nosideeffects
  */
 function Int32Array(length, opt_byteOffset, opt_length) {}
 
@@ -2098,6 +2135,7 @@ Int32Array.prototype.set = function(array, opt_offset) {};
  * @param {number} begin
  * @param {number=} opt_end
  * @return {!Int32Array}
+ * @nosideeffects
  */
 Int32Array.prototype.subarray = function(begin, opt_end) {};
 
@@ -2110,6 +2148,8 @@ Int32Array.prototype.subarray = function(begin, opt_end) {};
  * @extends {ArrayBufferView}
  * @constructor
  * @noalias
+ * @throws {Error}
+ * @nosideeffects
  */
 function Uint32Array(length, opt_byteOffset, opt_length) {}
 
@@ -2132,6 +2172,7 @@ Uint32Array.prototype.set = function(array, opt_offset) {};
  * @param {number} begin
  * @param {number=} opt_end
  * @return {!Uint32Array}
+ * @nosideeffects
  */
 Uint32Array.prototype.subarray = function(begin, opt_end) {};
 
@@ -2144,6 +2185,8 @@ Uint32Array.prototype.subarray = function(begin, opt_end) {};
  * @extends {ArrayBufferView}
  * @constructor
  * @noalias
+ * @throws {Error}
+ * @nosideeffects
  */
 function Float32Array(length, opt_byteOffset, opt_length) {}
 
@@ -2166,6 +2209,7 @@ Float32Array.prototype.set = function(array, opt_offset) {};
  * @param {number} begin
  * @param {number=} opt_end
  * @return {!Float32Array}
+ * @nosideeffects
  */
 Float32Array.prototype.subarray = function(begin, opt_end) {};
 
@@ -2178,6 +2222,8 @@ Float32Array.prototype.subarray = function(begin, opt_end) {};
  * @extends {ArrayBufferView}
  * @constructor
  * @noalias
+ * @throws {Error}
+ * @nosideeffects
  */
 function Float64Array(length, opt_byteOffset, opt_length) {}
 
@@ -2200,6 +2246,7 @@ Float64Array.prototype.set = function(array, opt_offset) {};
  * @param {number} begin
  * @param {number=} opt_end
  * @return {!Float64Array}
+ * @nosideeffects
  */
 Float64Array.prototype.subarray = function(begin, opt_end) {};
 
@@ -2211,18 +2258,24 @@ Float64Array.prototype.subarray = function(begin, opt_end) {};
  * @extends {ArrayBufferView}
  * @constructor
  * @noalias
+ * @throws {Error}
+ * @nosideeffects
  */
 function DataView(buffer, opt_byteOffset, opt_byteLength) {}
 
 /**
  * @param {number} byteOffset
  * @return {number}
+ * @throws {Error}
+ * @nosideeffects
  */
 DataView.prototype.getInt8 = function(byteOffset) {};
 
 /**
  * @param {number} byteOffset
  * @return {number}
+ * @throws {Error}
+ * @nosideeffects
  */
 DataView.prototype.getUint8 = function(byteOffset) {};
 
@@ -2230,6 +2283,8 @@ DataView.prototype.getUint8 = function(byteOffset) {};
  * @param {number} byteOffset
  * @param {boolean=} opt_littleEndian
  * @return {number}
+ * @throws {Error}
+ * @nosideeffects
  */
 DataView.prototype.getInt16 = function(byteOffset, opt_littleEndian) {};
 
@@ -2237,6 +2292,8 @@ DataView.prototype.getInt16 = function(byteOffset, opt_littleEndian) {};
  * @param {number} byteOffset
  * @param {boolean=} opt_littleEndian
  * @return {number}
+ * @throws {Error}
+ * @nosideeffects
  */
 DataView.prototype.getUint16 = function(byteOffset, opt_littleEndian) {};
 
@@ -2244,6 +2301,8 @@ DataView.prototype.getUint16 = function(byteOffset, opt_littleEndian) {};
  * @param {number} byteOffset
  * @param {boolean=} opt_littleEndian
  * @return {number}
+ * @throws {Error}
+ * @nosideeffects
  */
 DataView.prototype.getInt32 = function(byteOffset, opt_littleEndian) {};
 
@@ -2251,6 +2310,8 @@ DataView.prototype.getInt32 = function(byteOffset, opt_littleEndian) {};
  * @param {number} byteOffset
  * @param {boolean=} opt_littleEndian
  * @return {number}
+ * @throws {Error}
+ * @nosideeffects
  */
 DataView.prototype.getUint32 = function(byteOffset, opt_littleEndian) {};
 
@@ -2258,6 +2319,8 @@ DataView.prototype.getUint32 = function(byteOffset, opt_littleEndian) {};
  * @param {number} byteOffset
  * @param {boolean=} opt_littleEndian
  * @return {number}
+ * @throws {Error}
+ * @nosideeffects
  */
 DataView.prototype.getFloat32 = function(byteOffset, opt_littleEndian) {};
 
@@ -2265,18 +2328,22 @@ DataView.prototype.getFloat32 = function(byteOffset, opt_littleEndian) {};
  * @param {number} byteOffset
  * @param {boolean=} opt_littleEndian
  * @return {number}
+ * @throws {Error}
+ * @nosideeffects
  */
 DataView.prototype.getFloat64 = function(byteOffset, opt_littleEndian) {};
 
 /**
  * @param {number} byteOffset
  * @param {number} value
+ * @throws {Error}
  */
 DataView.prototype.setInt8 = function(byteOffset, value) {};
 
 /**
  * @param {number} byteOffset
  * @param {number} value
+ * @throws {Error}
  */
 DataView.prototype.setUint8 = function(byteOffset, value) {};
 
@@ -2284,6 +2351,7 @@ DataView.prototype.setUint8 = function(byteOffset, value) {};
  * @param {number} byteOffset
  * @param {number} value
  * @param {boolean=} opt_littleEndian
+ * @throws {Error}
  */
 DataView.prototype.setInt16 = function(byteOffset, value, opt_littleEndian) {};
 
@@ -2291,6 +2359,7 @@ DataView.prototype.setInt16 = function(byteOffset, value, opt_littleEndian) {};
  * @param {number} byteOffset
  * @param {number} value
  * @param {boolean=} opt_littleEndian
+ * @throws {Error}
  */
 DataView.prototype.setUint16 = function(byteOffset, value, opt_littleEndian) {};
 
@@ -2298,6 +2367,7 @@ DataView.prototype.setUint16 = function(byteOffset, value, opt_littleEndian) {};
  * @param {number} byteOffset
  * @param {number} value
  * @param {boolean=} opt_littleEndian
+ * @throws {Error}
  */
 DataView.prototype.setInt32 = function(byteOffset, value, opt_littleEndian) {};
 
@@ -2305,6 +2375,7 @@ DataView.prototype.setInt32 = function(byteOffset, value, opt_littleEndian) {};
  * @param {number} byteOffset
  * @param {number} value
  * @param {boolean=} opt_littleEndian
+ * @throws {Error}
  */
 DataView.prototype.setUint32 = function(byteOffset, value, opt_littleEndian) {};
 
@@ -2312,6 +2383,7 @@ DataView.prototype.setUint32 = function(byteOffset, value, opt_littleEndian) {};
  * @param {number} byteOffset
  * @param {number} value
  * @param {boolean=} opt_littleEndian
+ * @throws {Error}
  */
 DataView.prototype.setFloat32 = function(
     byteOffset, value, opt_littleEndian) {};
@@ -2320,6 +2392,7 @@ DataView.prototype.setFloat32 = function(
  * @param {number} byteOffset
  * @param {number} value
  * @param {boolean=} opt_littleEndian
+ * @throws {Error}
  */
 DataView.prototype.setFloat64 = function(
     byteOffset, value, opt_littleEndian) {};
@@ -2510,19 +2583,19 @@ HTMLEmbedElement.prototype.type;
 
 // Fullscreen APIs.
 
-/** 
- * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-element-requestfullscreen 
+/**
+ * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-element-requestfullscreen
  */
 Element.prototype.requestFullscreen = function() {};
 
-/** 
- * @type {boolean} 
+/**
+ * @type {boolean}
  * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-document-fullscreenenabled
  */
 Document.prototype.fullscreenEnabled;
 
-/** 
- * @type {Element} 
+/**
+ * @type {Element}
  * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-document-fullscreenelement
  */
 Document.prototype.fullscreenElement;
