@@ -15,9 +15,10 @@
  */
 
 /**
- * @fileoverview Definitions for W3C's IndexedDB API. In Chrome all the IndexedDB
- * classes are prefixed with 'webkit'. In order to access constants and static
- * methods of these classes they must be duplicated with the prefix here.
+ * @fileoverview Definitions for W3C's IndexedDB API. In Chrome all the
+ * IndexedDB classes are prefixed with 'webkit'. In order to access constants
+ * and static methods of these classes they must be duplicated with the
+ * prefix here.
  * @see http://www.w3.org/TR/IndexedDB/
  *
  * @externs
@@ -426,21 +427,24 @@ function IDBObjectStore() {}
 
 /**
  * @type {string}
- * @const
  */
 IDBObjectStore.prototype.name;
 
 /**
  * @type {string}
- * @const
  */
 IDBObjectStore.prototype.keyPath;
 
 /**
- * @type {Array.<string>}
- * @const
+ * @type {DOMStringList}
  */
 IDBObjectStore.prototype.indexNames;
+
+/** @type {IDBTransaction} */
+IDBObjectStore.prototype.transaction;
+
+/** @type {boolean} */
+IDBObjectStore.prototype.autoIncrement;
 
 /**
  * @param {*} value The value to put into the object store.
@@ -457,16 +461,21 @@ IDBObjectStore.prototype.put = function(value, key) {};
 IDBObjectStore.prototype.add = function(value, key) {};
 
 /**
- * @param {*} key The key of the document to remove.
+ * @param {*} key The key of this value.
  * @return {!IDBRequest} The IDBRequest object.
  */
-IDBObjectStore.prototype.remove = function(key) {};
+IDBObjectStore.prototype['delete'] = function(key) {};
 
 /**
  * @param {*} key The key of the document to retrieve.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBObjectStore.prototype.get = function(key) {};
+
+/**
+ * @return {!IDBRequest} The IDBRequest object.
+ */
+IDBObjectStore.prototype.clear = function() {};
 
 /**
  * @param {IDBKeyRange=} range The range of the cursor.
@@ -496,15 +505,10 @@ IDBObjectStore.prototype.index = function(name) {};
 IDBObjectStore.prototype.deleteIndex = function(indexName) {};
 
 /**
+ * @param {*=} key The key of this value.
  * @return {!IDBRequest} The IDBRequest object.
  */
-IDBObjectStore.prototype.clear = function() {};
-
-/**
- * Note: This is currently only supported by Mozilla's implementation
- * @return {!IDBRequest} The IDBRequest object.
- */
-IDBObjectStore.prototype.getAll = function() {};
+IDBObjectStore.prototype.count = function(key) {};
 
 /**
  * @constructor
