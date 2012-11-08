@@ -1308,7 +1308,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         CompilerTypeTestCase.ACTIVE_X_OBJECT_DEF,
         "var x = new ActiveXObject();", null);
     assertEquals(
-        "NoObject",
+        "?",
         findNameType("x", globalScope).toString());
   }
 
