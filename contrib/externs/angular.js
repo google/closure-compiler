@@ -18,7 +18,29 @@
  * @fileoverview Externs for Angular 1.
  *
  * TODO: Mocks.
- * TODO: Remaining Services.
+ * TODO: Remaining Services:
+ *     $anchorScroll
+ *     $compileProvider
+ *     $controller
+ *     $controllerProvider
+ *     $cookies
+ *     $cookieStore
+ *     $document
+ *     $exceptionHandler
+ *     $filter
+ *     $filterProvider
+ *     $httpBackend
+ *     $interpolate
+ *     $locale
+ *     $parse
+ *     $resource
+ *     $rootElement
+ *     $rootScope
+ *     $rootScopeProvider
+ *     $routeParams
+ *     $sanitize
+ *     $templateCache
+ *     $window
  * TODO: Resolve two issues with angular.$http
  *         1) angular.$http cannot be declared as a callable type.
  *            Its helper methods should be used instead.
@@ -30,6 +52,12 @@
  * @see http://angularjs.org/
  * @externs
  */
+
+/**
+ * @typedef {(Window|Document|Element|Array.<Element>|string|angular.JQLite|
+ *     NodeList|{length: number})}
+ */
+var JQLiteSelector;
 
 /**
  * @type {Object}
@@ -60,10 +88,11 @@ angular.bootstrap = function(element, opt_modules) {};
 angular.copy = function(source, opt_dest) {};
 
 /**
- * @param {string|Element|NodeList|{length: number}} element
+ * @param {(JQLiteSelector|Object)} element
+ * @param {(JQLiteSelector|Object)=} opt_context
  * @return {Object}
  */
-angular.element = function(element) {};
+angular.element = function(element, opt_context) {};
 
 /**
  * @param {*} o1
@@ -173,6 +202,276 @@ angular.mock = {};
  * @return {angular.Module}
  */
 angular.module = function(name, opt_requires, opt_configFn) {};
+
+/**
+ * @typedef {{
+ *   $normalize: function(string): string,
+ *   $observe: function(string, function(*)): function(*),
+ *   $set: function(string, ?(string|boolean), boolean=, string=)
+ *   }}
+ */
+angular.Attributes;
+
+/**
+ * @param {string} name
+ * @return {string}
+ */
+angular.Attributes.$normalize = function(name) {};
+
+/**
+ * @param {string} key
+ * @param {function(*)} fn
+ * @return {function(*)}
+ */
+angular.Attributes.$observe = function(key, fn) {};
+
+/**
+ * @param {string} key
+ * @param {?(string|boolean)} value
+ * @param {boolean=} opt_writeAttr
+ * @param {string=} opt_attrName
+ */
+angular.Attributes.$set = function(key, value, opt_writeAttr, opt_attrName) {};
+
+/**
+ * @typedef {{
+ *   addClass: function(string): angular.JQLite,
+ *   after: function(JQLiteSelector): angular.JQLite,
+ *   append: function(JQLiteSelector): angular.JQLite,
+ *   attr: function(string, (string|boolean)=): (angular.JQLite|string|boolean),
+ *   bind: function(string, Function): angular.JQLite,
+ *   children: function(): angular.JQLite,
+ *   clone: function(): angular.JQLite,
+ *   contents: function(): angular.JQLite,
+ *   controller: function(string=): Object,
+ *   css: function(string, string=): (angular.JQLite|string),
+ *   data: function(string=, *=): *,
+ *   eq: function(number): angular.JQLite,
+ *   find: function(string): angular.JQLite,
+ *   hasClass: function(string): boolean,
+ *   html: function(string=): (angular.JQLite|string),
+ *   inheritedData: function(string=, *=): *,
+ *   injector: function(): angular.$injector,
+ *   length: number,
+ *   next: function(): angular.JQLite,
+ *   parent: function(): angular.JQLite,
+ *   prepend: function(JQLiteSelector): angular.JQLite,
+ *   prop: function(string, *=): *,
+ *   ready: function(Function): angular.JQLite,
+ *   remove: function(): angular.JQLite,
+ *   removeAttr: function(string): angular.JQLite,
+ *   removeClass: function(string): angular.JQLite,
+ *   removeData: function(): angular.JQLite,
+ *   replaceWith: function(JQLiteSelector): angular.JQLite,
+ *   scope: function(): angular.Scope,
+ *   text: function(string=): (angular.JQLite|string),
+ *   toggleClass: function(string, boolean=): angular.JQLite,
+ *   unbind: function(string=, Function=): angular.JQLite,
+ *   val: function(string=): (angular.JQLite|string),
+ *   wrap: function(JQLiteSelector): angular.JQLite
+ *   }}
+ */
+angular.JQLite;
+
+/**
+ * @param {string} name
+ * @return {angular.JQLite}
+ */
+angular.JQLite.addClass = function(name) {};
+
+/**
+ * @param {JQLiteSelector} element
+ * @return {angular.JQLite}
+ */
+angular.JQLite.after = function(element) {};
+
+/**
+ * @param {JQLiteSelector} element
+ * @return {angular.JQLite}
+ */
+angular.JQLite.append = function(element) {};
+
+/**
+ * @param {string} name
+ * @param {(string|boolean)=} opt_value
+ * @return {angular.JQLite|string|boolean}
+ */
+angular.JQLite.attr = function(name, opt_value) {};
+
+/**
+ * @param {string} type
+ * @param {Function} fn
+ * @return {angular.JQLite}
+ */
+angular.JQLite.bind = function(type, fn) {};
+
+/**
+ * @return {angular.JQLite}
+ */
+angular.JQLite.children = function() {};
+
+/**
+ * @return {angular.JQLite}
+ */
+angular.JQLite.clone = function() {};
+
+/**
+ * @return {angular.JQLite}
+ */
+angular.JQLite.contents = function() {};
+
+/**
+ * @param {string=} opt_name
+ * @return {Object}
+ */
+angular.JQLite.controller = function(opt_name) {};
+
+/**
+ * @param {string} name
+ * @param {string=} opt_value
+ * @return {angular.JQLite|string}
+ */
+angular.JQLite.css = function(name, opt_value) {};
+
+/**
+ * @param {string=} opt_key
+ * @param {*=} opt_value
+ * @return {*}
+ */
+angular.JQLite.data = function(opt_key, opt_value) {};
+
+/**
+ * @param {number} index
+ * @return {angular.JQLite}
+ */
+angular.JQLite.eq = function(index) {};
+
+/**
+ * @param {string} selector
+ * @return {angular.JQLite}
+ */
+angular.JQLite.find = function(selector) {};
+
+/**
+ * @param {string} name
+ * @return {boolean}
+ */
+angular.JQLite.hasClass = function(name) {};
+
+/**
+ * @param {string=} opt_value
+ * @return {angular.JQLite|string}
+ */
+angular.JQLite.html = function(opt_value) {};
+
+/**
+ * @param {string=} opt_key
+ * @param {*=} opt_value
+ * @return {*}
+ */
+angular.JQLite.inheritedData = function(opt_key, opt_value) {};
+
+/**
+ * @return {angular.$injector}
+ */
+angular.JQLite.injector = function() {};
+
+/** @type {number} */
+angular.JQLite.length;
+
+/**
+ * @return {angular.JQLite}
+ */
+angular.JQLite.next = function() {};
+
+/**
+ * @return {angular.JQLite}
+ */
+angular.JQLite.parent = function() {};
+
+/**
+ * @param {JQLiteSelector} element
+ * @return {angular.JQLite}
+ */
+angular.JQLite.prepend = function(element) {};
+
+/**
+ * @param {string} name
+ * @param {*=} opt_value
+ * @return {*}
+ */
+angular.JQLite.prop = function(name, opt_value) {};
+
+/**
+ * @param {Function} fn
+ * @return {angular.JQLite}
+ */
+angular.JQLite.ready = function(fn) {};
+
+/**
+ * @return {angular.JQLite}
+ */
+angular.JQLite.remove = function() {};
+
+/**
+ * @param {string} name
+ * @return {angular.JQLite}
+ */
+angular.JQLite.removeAttr = function(name) {};
+
+/**
+ * @param {string} name
+ * @return {angular.JQLite}
+ */
+angular.JQLite.removeClass = function(name) {};
+
+/**
+ * @return {angular.JQLite}
+ */
+angular.JQLite.removeData = function() {};
+
+/**
+ * @param {JQLiteSelector} element
+ * @return {angular.JQLite}
+ */
+angular.JQLite.replaceWith = function(element) {};
+
+/**
+ * @return {angular.Scope}
+ */
+angular.JQLite.scope = function() {};
+
+/**
+ * @param {string=} opt_value
+ * @return {angular.JQLite|string}
+ */
+angular.JQLite.text = function(opt_value) {};
+
+/**
+ * @param {string} name
+ * @param {boolean=} opt_condition
+ * @return {angular.JQLite}
+ */
+angular.JQLite.toggleClass = function(name, opt_condition) {};
+
+/**
+ * @param {string=} opt_type
+ * @param {Function=} opt_fn
+ * @return {angular.JQLite}
+ */
+angular.JQLite.unbind = function(opt_type, opt_fn) {};
+
+/**
+ * @param {string=} opt_value
+ * @return {angular.JQLite|string}
+ */
+angular.JQLite.val = function(opt_value) {};
+
+/**
+ * @param {JQLiteSelector} element
+ * @return {angular.JQLite}
+ */
+angular.JQLite.wrap = function(element) {};
 
 /**
  * @typedef {{
@@ -429,8 +728,9 @@ angular.version.codeName = '';
 
 /**
  * @typedef {
- *   function((string|Element), function(angular.Scope, Function=)=, number=):
- *       function(angular.Scope, function(Object, angular.Scope=)=):Object}
+ *   function(
+ *       (JQLiteSelector|Object), function(angular.Scope, Function=)=, number=):
+ *           function(angular.Scope, function(Object, angular.Scope=)=): Object}
  */
 angular.$compile;
 
@@ -783,6 +1083,63 @@ angular.$log.log = function(var_args) {};
 angular.$log.warn = function(var_args) {};
 
 /******************************************************************************
+ * $provide Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   constant: function(string, *): Object,
+ *   decorator: function(string, (Function|Array.<string|Function>)),
+ *   factory: function(string, (Function|Array.<string|Function>)): Object,
+ *   provider: function(string, (Function|Array.<string|Function>)): Object,
+ *   service: function(string, (Function|Array.<string|Function>)): Object,
+ *   value: function(string, *): Object
+ *   }}
+ */
+angular.$provide;
+
+/**
+ * @param {string} name
+ * @param {*} object
+ * @return {Object}
+ */
+angular.$provide.constant = function(name, object) {};
+
+/**
+ * @param {string} name
+ * @param {Function|Array.<string|Function>} decorator
+ */
+angular.$provide.decorator = function(name, decorator) {};
+
+/**
+ * @param {string} name
+ * @param {Function|Array.<string|Function>} providerFunction
+ * @return {Object}
+ */
+angular.$provide.factory = function(name, providerFunction) {};
+
+/**
+ * @param {string} name
+ * @param {Function|Array.<string|Function>} providerType
+ * @return {Object}
+ */
+angular.$provide.provider = function(name, providerType) {};
+
+/**
+ * @param {string} name
+ * @param {Function|Array.<string|Function>} constructor
+ * @return {Object}
+ */
+angular.$provide.service = function(name, constructor) {};
+
+/**
+ * @param {string} name
+ * @param {*} object
+ * @return {Object}
+ */
+angular.$provide.value = function(name, object) {};
+
+/******************************************************************************
  * $q Service
  *****************************************************************************/
 
@@ -926,7 +1283,7 @@ angular.$routeProvider.when = function(path, route) {};
 
 /**
  * @typedef {{
- *   controller: (Function|Array.<string|Function>|undefined),
+ *   controller: (Function|Array.<string|Function>|string|undefined),
  *   template: (string|undefined),
  *   templateUrl: (string|undefined),
  *   resolve: (Object.<string, (
@@ -938,7 +1295,7 @@ angular.$routeProvider.when = function(path, route) {};
  */
 angular.$routeProvider.Params;
 
-/** @type {Function|Array.<string|Function>} */
+/** @type {Function|Array.<string|Function>|string} */
 angular.$routeProvider.Params.controller;
 
 /** @type {string} */
