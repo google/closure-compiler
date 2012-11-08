@@ -665,6 +665,8 @@ public class Compiler extends AbstractCompiler {
           compilerThread = null;
           if (dumpTraceReport) {
             Tracer.logAndClearCurrentThreadTrace();
+            tracker.outputTracerReport(outStream == null ?
+                System.out : outStream);
           }
         }
         return null;

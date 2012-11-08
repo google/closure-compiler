@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -26,10 +25,16 @@ import com.google.javascript.rhino.Node;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -51,6 +56,9 @@ public class PerformanceTracker {
 
   /** Summary stats by pass name. */
   private final Map<String, Stats> summary = Maps.newHashMap();
+
+  // To share with the rest of the program
+  private ImmutableMap<String, Stats> summaryCopy = null;
 
   /** Stats for each run of a compiler pass. */
   private final List<Stats> log = Lists.newArrayList();
@@ -188,43 +196,108 @@ public class PerformanceTracker {
     }
   }
 
-  public ImmutableMap<String, Long> getRuntimeRecord() {
-    ImmutableMap.Builder<String, Long> builder = ImmutableMap.builder();
-    for (Map.Entry<String, Stats> entry : summary.entrySet()) {
-      builder.put(entry.getKey(), entry.getValue().runtime);
-    }
-    return builder.build();
-  }
-
-  public ImmutableMap<String, Stats> getStats() {
-    return ImmutableMap.copyOf(summary);
-  }
-
-  public ImmutableList<Stats> getLog() {
-    return ImmutableList.copyOf(log);
-  }
-
-  public ImmutableMap<String, Integer> getCodeSizeRecord() {
-    ImmutableMap.Builder<String, Integer> builder = ImmutableMap.builder();
-    for (Map.Entry<String, Stats> entry : summary.entrySet()) {
-      builder.put(entry.getKey(), entry.getValue().diff);
-    }
-    return builder.build();
-  }
-
-  public ImmutableMap<String, Integer> getZippedCodeSizeRecord() {
-    ImmutableMap.Builder<String, Integer> builder = ImmutableMap.builder();
-    for (Map.Entry<String, Stats> entry : summary.entrySet()) {
-      builder.put(entry.getKey(), entry.getValue().gzDiff);
-    }
-    return builder.build();
-  }
-
   private final CodeSizeEstimatePrinter estimateCodeSize(Node root) {
     CodeSizeEstimatePrinter cp = new CodeSizeEstimatePrinter(trackGzippedSize);
     CodeGenerator cg = new CodeGenerator(cp, null, false);
     cg.add(root);
     return cp;
+  }
+
+  public ImmutableMap<String, Stats> getStats() {
+    if (summaryCopy == null) {
+      summaryCopy = ImmutableMap.copyOf(summary);
+    }
+    return summaryCopy;
+  }
+
+  class CmpEntries implements Comparator<Entry<String, Stats>> {
+    public int compare(Entry<String, Stats> e1, Entry<String, Stats> e2) {
+      return (int) (e1.getValue().runtime - e2.getValue().runtime);
+    }
+  }
+
+  public void outputTracerReport(PrintStream pstr) {
+    JvmMetrics.maybeWriteJvmMetrics(pstr, "verbose:pretty:all");
+    OutputStreamWriter output = new OutputStreamWriter(pstr);
+    try {
+      int runtime = 0;
+      int runs = 0;
+      int changes = 0;
+      int diff = 0;
+      int gzDiff = 0;
+
+      // header
+      output.write("Summary:\n");
+      output.write("pass,runtime,runs,changingRuns,reduction,gzReduction\n");
+
+      ArrayList<Entry<String, Stats>> a = new ArrayList<Entry<String, Stats>>();
+      for (Entry<String, Stats> entry : summary.entrySet()) {
+        a.add(entry);
+      }
+      Collections.sort(a, new CmpEntries());
+
+      for (Entry<String, Stats> entry : a) {
+        String key = entry.getKey();
+        Stats stats = entry.getValue();
+
+        output.write(key);
+        output.write(",");
+        output.write(String.valueOf(stats.runtime));
+        runtime += stats.runtime;
+        output.write(",");
+        output.write(String.valueOf(stats.runs));
+        runs += stats.runs;
+        output.write(",");
+        output.write(String.valueOf(stats.changes));
+        changes += stats.changes;
+        output.write(",");
+        output.write(String.valueOf(stats.diff));
+        diff += stats.diff;
+        output.write(",");
+        output.write(String.valueOf(stats.gzDiff));
+        gzDiff += stats.gzDiff;
+        output.write("\n");
+      }
+      output.write("TOTAL");
+      output.write(",");
+      output.write(String.valueOf(runtime));
+      output.write(",");
+      output.write(String.valueOf(runs));
+      output.write(",");
+      output.write(String.valueOf(changes));
+      output.write(",");
+      output.write(String.valueOf(diff));
+      output.write(",");
+      output.write(String.valueOf(gzDiff));
+      output.write("\n");
+      output.write("\n");
+
+      output.write("Log:\n");
+      output.write(
+          "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize\n");
+      for (Stats stats : log) {
+        output.write(stats.pass);
+        output.write(",");
+        output.write(String.valueOf(stats.runtime));
+        output.write(",");
+        output.write(String.valueOf(stats.runs));
+        output.write(",");
+        output.write(String.valueOf(stats.changes));
+        output.write(",");
+        output.write(String.valueOf(stats.diff));
+        output.write(",");
+        output.write(String.valueOf(stats.gzDiff));
+        output.write(",");
+        output.write(String.valueOf(stats.size));
+        output.write(",");
+        output.write(String.valueOf(stats.gzSize));
+        output.write("\n");
+      }
+      output.write("\n");
+      output.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
