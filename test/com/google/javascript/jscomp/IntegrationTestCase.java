@@ -44,7 +44,7 @@ abstract class IntegrationTestCase extends TestCase {
         + "/** @constructor\n * @nosideeffects */ function Widget() {}\n"
         + "/** @modifies {this} */ Widget.prototype.go = function() {};\n"
         + "/** @return {string} */ var widgetToken = function() {};\n"
-        + "function alert(x) {}"
+        + "function alert(message) {}"
         + "function Object() {}"
         + "Object.seal;"));
 
@@ -53,10 +53,13 @@ abstract class IntegrationTestCase extends TestCase {
   // The most recently used compiler.
   protected Compiler lastCompiler;
 
+  protected boolean normalizeResults = false;
+
   @Override
   public void setUp() {
     externs = DEFAULT_EXTERNS;
     lastCompiler = null;
+    normalizeResults = false;
   }
 
   protected void testSame(CompilerOptions options, String original) {
@@ -89,7 +92,7 @@ abstract class IntegrationTestCase extends TestCase {
         0, compiler.getErrors().length + compiler.getWarnings().length);
 
     Node root = compiler.getRoot().getLastChild();
-    Node expectedRoot = parse(compiled, options);
+    Node expectedRoot = parse(compiled, options, normalizeResults);
     String explanation = expectedRoot.checkTreeEquals(root);
     assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
         "\nResult: " + compiler.toSource(root) +
@@ -134,7 +137,7 @@ abstract class IntegrationTestCase extends TestCase {
 
     if (compiled != null) {
       Node root = compiler.getRoot().getLastChild();
-      Node expectedRoot = parse(compiled, options);
+      Node expectedRoot = parse(compiled, options, normalizeResults);
       String explanation = expectedRoot.checkTreeEquals(root);
       assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
           "\nResult: " + compiler.toSource(root) +
@@ -153,7 +156,7 @@ abstract class IntegrationTestCase extends TestCase {
 
     if (compiled != null) {
       Node root = compiler.getRoot().getLastChild();
-      Node expectedRoot = parse(compiled, options);
+      Node expectedRoot = parse(compiled, options, normalizeResults);
       String explanation = expectedRoot.checkTreeEquals(root);
       assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
           "\nResult: " + compiler.toSource(root) +
@@ -193,7 +196,8 @@ abstract class IntegrationTestCase extends TestCase {
     return compiler;
   }
 
-  protected Node parse(String[] original, CompilerOptions options) {
+  protected Node parse(
+      String[] original, CompilerOptions options, boolean normalize) {
     Compiler compiler = new Compiler();
     List<SourceFile> inputs = Lists.newArrayList();
     for (int i = 0; i < original.length; i++) {
@@ -208,6 +212,11 @@ abstract class IntegrationTestCase extends TestCase {
 
     (new CreateSyntheticBlocks(
         compiler, "synStart", "synEnd")).process(externs, n);
+
+    if (normalize) {
+      compiler.normalize();
+    }
+
     return n;
   }
 

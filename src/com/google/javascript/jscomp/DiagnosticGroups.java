@@ -32,7 +32,7 @@ public class DiagnosticGroups {
 
   public DiagnosticGroups() {}
 
-  private final static Map<String, DiagnosticGroup> groupsByName =
+  private static final Map<String, DiagnosticGroup> groupsByName =
       Maps.newHashMap();
 
   static DiagnosticGroup registerDeprecatedGroup(String name) {
@@ -76,7 +76,7 @@ public class DiagnosticGroups {
   // If a group is suppressible on a per-file basis, it should be added
   // to parser/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
-      "accessControls, ambiguousFunctionDecl, checkRegExp, " +
+      "accessControls, ambiguousFunctionDecl, cast, checkRegExp, " +
       "checkTypes, checkVars, const, constantProperty, deprecated, " +
       "duplicateMessage, " +
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
@@ -86,11 +86,11 @@ public class DiagnosticGroups {
       "undefinedNames, undefinedVars, unknownDefines, uselessCode, " +
       "visibility";
 
-  public static DiagnosticGroup GLOBAL_THIS =
+  public static final DiagnosticGroup GLOBAL_THIS =
       DiagnosticGroups.registerGroup("globalThis",
           CheckGlobalThis.GLOBAL_THIS);
 
-  public static DiagnosticGroup DEPRECATED =
+  public static final DiagnosticGroup DEPRECATED =
       DiagnosticGroups.registerGroup("deprecated",
           CheckAccessControls.DEPRECATED_NAME,
           CheckAccessControls.DEPRECATED_NAME_REASON,
@@ -99,7 +99,7 @@ public class DiagnosticGroups {
           CheckAccessControls.DEPRECATED_CLASS,
           CheckAccessControls.DEPRECATED_CLASS_REASON);
 
-  public static DiagnosticGroup VISIBILITY =
+  public static final DiagnosticGroup VISIBILITY =
       DiagnosticGroups.registerGroup("visibility",
           CheckAccessControls.BAD_PRIVATE_GLOBAL_ACCESS,
           CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS,
@@ -107,12 +107,12 @@ public class DiagnosticGroups {
           CheckAccessControls.PRIVATE_OVERRIDE,
           CheckAccessControls.VISIBILITY_MISMATCH);
 
-  public static DiagnosticGroup CONSTANT_PROPERTY =
+  public static final DiagnosticGroup CONSTANT_PROPERTY =
       DiagnosticGroups.registerGroup("constantProperty",
           CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
 
-  public static DiagnosticGroup NON_STANDARD_JSDOC =
+  public static final DiagnosticGroup NON_STANDARD_JSDOC =
       DiagnosticGroups.registerGroup("nonStandardJsDocs",
           RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
 
@@ -120,19 +120,19 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("accessControls",
           DEPRECATED, VISIBILITY);
 
-  public static DiagnosticGroup INVALID_CASTS =
+  public static final DiagnosticGroup INVALID_CASTS =
       DiagnosticGroups.registerGroup("invalidCasts",
           TypeValidator.INVALID_CAST);
 
-  public static DiagnosticGroup FILEOVERVIEW_JSDOC =
+  public static final DiagnosticGroup FILEOVERVIEW_JSDOC =
       DiagnosticGroups.registerDeprecatedGroup("fileoverviewTags");
 
-  public static DiagnosticGroup STRICT_MODULE_DEP_CHECK =
+  public static final DiagnosticGroup STRICT_MODULE_DEP_CHECK =
       DiagnosticGroups.registerGroup("strictModuleDepCheck",
           VarCheck.STRICT_MODULE_DEP_ERROR,
           CheckGlobalNames.STRICT_MODULE_DEP_QNAME);
 
-  public static DiagnosticGroup VIOLATED_MODULE_DEP =
+  public static final DiagnosticGroup VIOLATED_MODULE_DEP =
       DiagnosticGroups.registerGroup("violatedModuleDep",
           VarCheck.VIOLATED_MODULE_DEP_ERROR);
 
@@ -141,77 +141,77 @@ public class DiagnosticGroups {
           VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR,
           VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
 
-  public static DiagnosticGroup AMBIGUOUS_FUNCTION_DECL =
+  public static final DiagnosticGroup AMBIGUOUS_FUNCTION_DECL =
       DiagnosticGroups.registerGroup("ambiguousFunctionDecl",
           VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL);
 
-  public static DiagnosticGroup UNKNOWN_DEFINES =
+  public static final DiagnosticGroup UNKNOWN_DEFINES =
       DiagnosticGroups.registerGroup("unknownDefines",
           ProcessDefines.UNKNOWN_DEFINE_WARNING);
 
-  public static DiagnosticGroup TWEAKS =
+  public static final DiagnosticGroup TWEAKS =
       DiagnosticGroups.registerGroup("tweakValidation",
           ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_WARNING,
           ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING,
           ProcessTweaks.UNKNOWN_TWEAK_WARNING);
 
-  public static DiagnosticGroup MISSING_PROPERTIES =
+  public static final DiagnosticGroup MISSING_PROPERTIES =
       DiagnosticGroups.registerGroup("missingProperties",
           TypeCheck.INEXISTENT_PROPERTY);
 
   // TODO: add more IE specific checks here.
-  public static DiagnosticGroup INTERNET_EXPLORER_CHECKS =
+  public static final DiagnosticGroup INTERNET_EXPLORER_CHECKS =
       DiagnosticGroups.registerGroup("internetExplorerChecks",
           RhinoErrorReporter.TRAILING_COMMA);
 
-  public static DiagnosticGroup UNDEFINED_VARIABLES =
+  public static final DiagnosticGroup UNDEFINED_VARIABLES =
       DiagnosticGroups.registerGroup("undefinedVars",
           VarCheck.UNDEFINED_VAR_ERROR);
 
-  public static DiagnosticGroup UNDEFINED_NAMES =
+  public static final DiagnosticGroup UNDEFINED_NAMES =
       DiagnosticGroups.registerGroup("undefinedNames",
           CheckGlobalNames.UNDEFINED_NAME_WARNING);
 
-  public static DiagnosticGroup DEBUGGER_STATEMENT_PRESENT =
+  public static final DiagnosticGroup DEBUGGER_STATEMENT_PRESENT =
       DiagnosticGroups.registerGroup("checkDebuggerStatement",
           CheckDebuggerStatement.DEBUGGER_STATEMENT_PRESENT);
 
-  public static DiagnosticGroup CHECK_REGEXP =
+  public static final DiagnosticGroup CHECK_REGEXP =
       DiagnosticGroups.registerGroup("checkRegExp",
           CheckRegExp.REGEXP_REFERENCE,
           CheckRegExp.MALFORMED_REGEXP);
 
-  public static DiagnosticGroup CHECK_TYPES =
+  public static final DiagnosticGroup CHECK_TYPES =
       DiagnosticGroups.registerGroup("checkTypes",
           TypeValidator.ALL_DIAGNOSTICS,
           TypeCheck.ALL_DIAGNOSTICS);
 
-  public static DiagnosticGroup CHECK_VARIABLES =
+  public static final DiagnosticGroup CHECK_VARIABLES =
       DiagnosticGroups.registerGroup("checkVars",
           VarCheck.UNDEFINED_VAR_ERROR,
           SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
 
-  public static DiagnosticGroup CHECK_USELESS_CODE =
+  public static final DiagnosticGroup CHECK_USELESS_CODE =
       DiagnosticGroups.registerGroup("uselessCode",
           CheckSideEffects.USELESS_CODE_ERROR,
           CheckUnreachableCode.UNREACHABLE_CODE);
 
-  public static DiagnosticGroup CONST =
+  public static final DiagnosticGroup CONST =
       DiagnosticGroups.registerGroup("const",
           CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
           ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
 
-  public static DiagnosticGroup TYPE_INVALIDATION =
+  public static final DiagnosticGroup TYPE_INVALIDATION =
       DiagnosticGroups.registerGroup("typeInvalidation",
           DisambiguateProperties.Warnings.INVALIDATION);
 
-  public static DiagnosticGroup DUPLICATE_VARS =
+  public static final DiagnosticGroup DUPLICATE_VARS =
       DiagnosticGroups.registerGroup("duplicate",
           SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR,
           TypeValidator.DUP_VAR_DECLARATION);
 
-  public static DiagnosticGroup ES5_STRICT =
+  public static final DiagnosticGroup ES5_STRICT =
       DiagnosticGroups.registerGroup("es5Strict",
           ControlStructureCheck.USE_OF_WITH,
           StrictModeCheck.UNKNOWN_VARIABLE,
@@ -222,17 +222,21 @@ public class DiagnosticGroups {
           StrictModeCheck.DELETE_VARIABLE,
           StrictModeCheck.DUPLICATE_OBJECT_KEY);
 
-  public static DiagnosticGroup CHECK_PROVIDES =
+  public static final DiagnosticGroup CHECK_PROVIDES =
       DiagnosticGroups.registerGroup("checkProvides",
           CheckProvides.MISSING_PROVIDE_WARNING);
 
-  public static DiagnosticGroup DUPLICATE_MESSAGE =
+  public static final DiagnosticGroup DUPLICATE_MESSAGE =
       DiagnosticGroups.registerGroup("duplicateMessage",
           JsMessageVisitor.MESSAGE_DUPLICATE_KEY);
 
-  public static DiagnosticGroup MISPLACED_TYPE_ANNOTATION =
+  public static final DiagnosticGroup MISPLACED_TYPE_ANNOTATION =
       DiagnosticGroups.registerGroup("misplacedTypeAnnotation",
           RhinoErrorReporter.MISPLACED_TYPE_ANNOTATION);
+
+  public static final DiagnosticGroup CAST =
+      DiagnosticGroups.registerGroup("cast",
+          TypeValidator.INVALID_CAST);
 
   /**
    * Adds warning levels by name.

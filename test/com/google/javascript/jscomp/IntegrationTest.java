@@ -1965,6 +1965,22 @@ public class IntegrationTest extends IntegrationTestCase {
         "function f() {}");
   }
 
+  public void testSuppressCastWarning() {
+    CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.WARNING);
+
+    normalizeResults = true;
+
+    test(options,
+        "function f() { var xyz = /** @type {string} */ (0); }",
+        DiagnosticType.warning(
+            "JSC_INVALID_CAST", "invalid cast"));
+
+    testSame(options,
+        "/** @suppress{cast} */\n" +
+        "function f() { var xyz = /** @type {string} */ (0); }");
+  }
+
   public void testRenamePrefix() {
     String code = "var x = {}; function f(y) {}";
     CompilerOptions options = createCompilerOptions();
@@ -2351,7 +2367,7 @@ public class IntegrationTest extends IntegrationTestCase {
     WarningLevel warnings = WarningLevel.VERBOSE;
     warnings.setOptionsForWarningLevel(options);
 
-    int numAdds = 5000;
+    int numAdds = 4750;
     StringBuilder original = new StringBuilder("var x = 0");
     for (int i = 0; i < numAdds; i++) {
       original.append(" + 1");
