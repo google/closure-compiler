@@ -641,6 +641,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Map used in the renaming of CSS class names. */
   public CssRenamingMap cssRenamingMap;
 
+  /** Whitelist used in the renaming of CSS class names. */
+  Set<String> cssRenamingWhitelist;
+
   /** Process instances of goog.testing.ObjectPropertyString. */
   boolean processObjectPropertyString;
 
@@ -935,6 +938,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     recordFunctionInformation = false;
     generateExports = false;
     cssRenamingMap = null;
+    cssRenamingWhitelist = null;
     processObjectPropertyString = false;
     idGenerators = Collections.emptySet();
     replaceStringsFunctionDescriptions = Collections.emptyList();
@@ -1884,6 +1888,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setCssRenamingMap(CssRenamingMap cssRenamingMap) {
     this.cssRenamingMap = cssRenamingMap;
+  }
+
+  public void setCssRenamingWhitelist(Set<String> whitelist) {
+    this.cssRenamingWhitelist = whitelist;
   }
 
   public void setReplaceStringsFunctionDescriptions(List<String> replaceStringsFunctionDescriptions) {

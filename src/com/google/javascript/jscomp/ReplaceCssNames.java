@@ -27,6 +27,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -110,12 +111,16 @@ class ReplaceCssNames implements CompilerPass {
 
   private CssRenamingMap symbolMap;
 
+  private final Set<String> whitelist;
+
   private final JSType nativeStringType;
 
   ReplaceCssNames(AbstractCompiler compiler,
-      @Nullable Map<String, Integer> cssNames) {
+      @Nullable Map<String, Integer> cssNames,
+      @Nullable Set<String> whitelist) {
     this.compiler = compiler;
     this.cssNames = cssNames;
+    this.whitelist = whitelist;
     this.nativeStringType =  compiler.getTypeRegistry()
         .getNativeType(STRING_TYPE);
   }
@@ -203,6 +208,11 @@ class ReplaceCssNames implements CompilerPass {
      */
     private void processStringNode(NodeTraversal t, Node n) {
       String name = n.getString();
+      if (whitelist != null && whitelist.contains(name)) {
+        // We apply the whitelist before splitting on dashes, and not after.
+        // External substitution maps should do the same.
+        return;
+      }
       String[] parts = name.split("-");
       if (symbolMap != null) {
         String replacement = null;

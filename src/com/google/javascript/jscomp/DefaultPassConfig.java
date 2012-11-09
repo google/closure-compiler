@@ -1030,8 +1030,11 @@ public class DefaultPassConfig extends PassConfig {
           if (options.gatherCssNames) {
             newCssNames = Maps.newHashMap();
           }
-          (new ReplaceCssNames(compiler, newCssNames)).process(
-              externs, jsRoot);
+          ReplaceCssNames pass = new ReplaceCssNames(
+              compiler,
+              newCssNames,
+              options.cssRenamingWhitelist);
+          pass.process(externs, jsRoot);
           cssNames = newCssNames;
         }
       };
