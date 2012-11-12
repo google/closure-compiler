@@ -174,9 +174,4 @@ function setInterval(callback, delay) {}
  */
 function setTimeout(callback, delay) {}
 
-/**
- * Workaround for browser on kindle HD. It has a bug where it overwrites
- * window.i after the page load.
- * @suppress {duplicate}
- */
 var i;

@@ -19,7 +19,6 @@
  *
  * TODO: Mocks.
  * TODO: Remaining Services:
- *     $anchorScroll
  *     $compileProvider
  *     $controller
  *     $controllerProvider
@@ -587,12 +586,12 @@ angular.noop = function() {};
  *   $emit: function(string, ...[*]),
  *   $eval: function((string|function())=, Object=):*,
  *   $evalAsync: function((string|function())=),
- *   $id: number,
+ *   $id: string,
  *   $new: function():angular.Scope,
  *   $on: function(string, function(angular.Scope.Event, ...[?])):function(),
+ *   $parent: angular.Scope,
  *   $watch: function(
- *       (string|function()),
- *       (function(*, *, angular.Scope)|string)=, boolean=):function()
+ *       (string|Function), (string|Function)=, boolean=):function()
  *   }}
  */
 angular.Scope;
@@ -644,8 +643,8 @@ angular.Scope.$new = function() {};
 angular.Scope.$on = function(name, listener) {};
 
 /**
- * @param {string|function()} exp
- * @param {(string|function())=} opt_listener
+ * @param {string|Function} exp
+ * @param {(string|Function)=} opt_listener
  * @param {boolean=} opt_objectEquality
  * @return {function()}
  */
@@ -721,6 +720,31 @@ angular.version.dot = 0;
  * @type {string}
  */
 angular.version.codeName = '';
+
+/******************************************************************************
+ * $anchorScroll Service
+ *****************************************************************************/
+
+/**
+ * @typedef {function()}
+ */
+angular.$anchorScroll;
+
+/******************************************************************************
+ * $anchorScrollProvider Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   disableAutoScrolling: function()
+ *   }}
+ */
+angular.$anchorScrollProvider;
+
+/**
+ * @type {function()}
+ */
+angular.$anchorScrollProvider.disableAutoScrolling = function() {};
 
 /******************************************************************************
  * $compile Service
