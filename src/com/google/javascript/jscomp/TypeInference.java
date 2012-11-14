@@ -491,11 +491,20 @@ class TypeInference
    * Any value can be thrown, so it's really impossible to determine the type
    * of a CATCH param. Treat it as the UNKNOWN type.
    */
-  private FlowScope traverseCatch(Node n, FlowScope scope) {
-    Node name = n.getFirstChild();
-    JSType type = getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    name.setJSType(type);
+  private FlowScope traverseCatch(Node catchNode, FlowScope scope) {
+    Node name = catchNode.getFirstChild();
+    String varName = name.getString();
+    JSType type;
+    // If the catch expression name was declared in the catch use that type,
+    // otherwise use "unknown".
+    JSDocInfo info = name.getJSDocInfo();
+    if (info != null && info.hasType()) {
+      type = info.getType().evaluate(syntacticScope, registry);
+    } else {
+      type = getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    }
     redeclareSimpleVar(scope, name, type);
+    name.setJSType(type);
     return scope;
   }
 

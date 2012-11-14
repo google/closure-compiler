@@ -499,7 +499,7 @@ final class TypedScopeCreator implements ScopeCreator {
                child != null;
                child = child.getNext()) {
             if (NodeUtil.isHoistedFunctionDeclaration(child)) {
-              defineFunctionLiteral(child, n);
+              defineFunctionLiteral(child);
             }
           }
         }
@@ -526,7 +526,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
           // Hoisted functions are handled during pre-traversal.
           if (!NodeUtil.isHoistedFunctionDeclaration(n)) {
-            defineFunctionLiteral(n, parent);
+            defineFunctionLiteral(n);
           }
           break;
 
@@ -541,11 +541,11 @@ final class TypedScopeCreator implements ScopeCreator {
           break;
 
         case Token.CATCH:
-          defineCatch(n, parent);
+          defineCatch(n);
           break;
 
         case Token.VAR:
-          defineVar(n, parent);
+          defineVar(n);
           break;
 
         case Token.GETPROP:
@@ -735,16 +735,18 @@ final class TypedScopeCreator implements ScopeCreator {
     /**
      * Defines a catch parameter.
      */
-    void defineCatch(Node n, Node parent) {
+    void defineCatch(Node n) {
       assertDefinitionNode(n, Token.CATCH);
       Node catchName = n.getFirstChild();
-      defineSlot(catchName, n, null);
+      defineSlot(catchName, n,
+          getDeclaredType(
+              sourceName, catchName.getJSDocInfo(), catchName, null));
     }
 
     /**
      * Defines a VAR initialization.
      */
-    void defineVar(Node n, Node parent) {
+    void defineVar(Node n) {
       assertDefinitionNode(n, Token.VAR);
       JSDocInfo info = n.getJSDocInfo();
       if (n.hasMoreThanOneChild()) {
@@ -753,19 +755,18 @@ final class TypedScopeCreator implements ScopeCreator {
           compiler.report(JSError.make(sourceName, n, MULTIPLE_VAR_DEF));
         }
         for (Node name : n.children()) {
-          defineName(name, n, parent, name.getJSDocInfo());
+          defineName(name, n, name.getJSDocInfo());
         }
       } else {
         Node name = n.getFirstChild();
-        defineName(name, n, parent,
-            (info != null) ? info : name.getJSDocInfo());
+        defineName(name, n, (info != null) ? info : name.getJSDocInfo());
       }
     }
 
     /**
      * Defines a function literal.
      */
-    void defineFunctionLiteral(Node n, Node parent) {
+    void defineFunctionLiteral(Node n) {
       assertDefinitionNode(n, Token.FUNCTION);
 
       // Determine the name and JSDocInfo and l-value for the function.
@@ -792,11 +793,10 @@ final class TypedScopeCreator implements ScopeCreator {
      * @param name The {@link Token#NAME} node.
      * @param var The parent of the {@code name} node, which must be a
      *     {@link Token#VAR} node.
-     * @param parent {@code var}'s parent.
      * @param info the {@link JSDocInfo} information relating to this
      *     {@code name} node.
      */
-    private void defineName(Node name, Node var, Node parent, JSDocInfo info) {
+    private void defineName(Node name, Node var, JSDocInfo info) {
       Node value = name.getFirstChild();
 
       // variable's type

@@ -1552,6 +1552,22 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("number", lastLocalScope.getVar("x").getType().toString());
   }
 
+  public void testDeclaredCatchExpression1() {
+    testSame(
+        "try {} catch (e) {}");
+    // Note: "e" actually belongs to a inner scope but we don't
+    // model catches as separate scopes currently.
+    assertEquals(null, globalScope.getVar("e").getType());
+  }
+
+  public void testDeclaredCatchExpression2() {
+    testSame(
+        "try {} catch (/** @type {string} */ e) {}");
+    // Note: "e" actually belongs to a inner scope but we don't
+    // model catches as separate scopes currently.
+    assertEquals("string", globalScope.getVar("e").getType().toString());
+  }
+
   private JSType findNameType(final String name, Scope scope) {
     return findTypeOnMatchedNode(new Predicate<Node>() {
       @Override public boolean apply(Node n) {

@@ -10819,6 +10819,37 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testCatchExpression1() throws Exception {
+    testTypes(
+        "function fn() {" +
+        "  /** @type {number} */" +
+        "  var out = 0;" +
+        "  try {\n" +
+        "    foo();\n" +
+        "  } catch (/** @type {string} */ e) {\n" +
+        "    out = e;" +
+        "  }" +
+        "}\n",
+        "assignment\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
+  public void testCatchExpression2() throws Exception {
+    testTypes(
+        "function fn() {" +
+        "  /** @type {number} */" +
+        "  var out = 0;" +
+        "  /** @type {string} */" +
+        "  var e;" +
+        "  try {\n" +
+        "    foo();\n" +
+        "  } catch (e) {\n" +
+        "    out = e;" +
+        "  }" +
+        "}\n");
+  }
+
   private void testTypes(String js) throws Exception {
     testTypes(js, (String) null);
   }
