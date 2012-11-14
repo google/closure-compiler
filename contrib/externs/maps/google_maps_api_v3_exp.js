@@ -1234,6 +1234,36 @@ google.maps.GroundOverlayOptions.prototype.opacity;
 /**
  * @constructor
  */
+google.maps.Icon = function() {};
+
+/**
+ * @type {google.maps.Point}
+ */
+google.maps.Icon.prototype.anchor;
+
+/**
+ * @type {google.maps.Point}
+ */
+google.maps.Icon.prototype.origin;
+
+/**
+ * @type {google.maps.Size}
+ */
+google.maps.Icon.prototype.scaledSize;
+
+/**
+ * @type {google.maps.Size}
+ */
+google.maps.Icon.prototype.size;
+
+/**
+ * @type {string}
+ */
+google.maps.Icon.prototype.url;
+
+/**
+ * @constructor
+ */
 google.maps.IconSequence = function() {};
 
 /**
@@ -1797,6 +1827,13 @@ google.maps.MVCArray.prototype.setAt = function(i, elem) {};
  * @constructor
  */
 google.maps.MVCObject = function() {};
+
+/**
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @return {google.maps.MapsEventListener}
+ */
+google.maps.MVCObject.prototype.addListener = function(eventName, handler) {};
 
 /**
  * @param {string} key
@@ -2457,7 +2494,7 @@ google.maps.Marker.prototype.getFlat = function() {};
 
 /**
  * @nosideeffects
- * @return {string|google.maps.MarkerImage}
+ * @return {string|google.maps.Icon|google.maps.Symbol}
  */
 google.maps.Marker.prototype.getIcon = function() {};
 
@@ -2475,7 +2512,7 @@ google.maps.Marker.prototype.getPosition = function() {};
 
 /**
  * @nosideeffects
- * @return {string|google.maps.MarkerImage}
+ * @return {string|google.maps.Icon|google.maps.Symbol}
  */
 google.maps.Marker.prototype.getShadow = function() {};
 
@@ -2534,7 +2571,7 @@ google.maps.Marker.prototype.setDraggable = function(flag) {};
 google.maps.Marker.prototype.setFlat = function(flag) {};
 
 /**
- * @param {string|google.maps.MarkerImage} icon
+ * @param {string|google.maps.Icon|google.maps.Symbol} icon
  * @return {undefined}
  */
 google.maps.Marker.prototype.setIcon = function(icon) {};
@@ -2558,7 +2595,7 @@ google.maps.Marker.prototype.setOptions = function(options) {};
 google.maps.Marker.prototype.setPosition = function(latlng) {};
 
 /**
- * @param {string|google.maps.MarkerImage} shadow
+ * @param {string|google.maps.Icon|google.maps.Symbol} shadow
  * @return {undefined}
  */
 google.maps.Marker.prototype.setShadow = function(shadow) {};
@@ -2592,41 +2629,6 @@ google.maps.Marker.prototype.setZIndex = function(zIndex) {};
  * @type {number|string}
  */
 google.maps.Marker.MAX_ZINDEX;
-
-/**
- * @param {string} url
- * @param {google.maps.Size=} opt_size
- * @param {google.maps.Point=} opt_origin
- * @param {google.maps.Point=} opt_anchor
- * @param {google.maps.Size=} opt_scaledSize
- * @constructor
- */
-google.maps.MarkerImage = function(url, opt_size, opt_origin, opt_anchor, opt_scaledSize) {};
-
-/**
- * @type {google.maps.Point}
- */
-google.maps.MarkerImage.prototype.anchor;
-
-/**
- * @type {google.maps.Point}
- */
-google.maps.MarkerImage.prototype.origin;
-
-/**
- * @type {google.maps.Size}
- */
-google.maps.MarkerImage.prototype.scaledSize;
-
-/**
- * @type {google.maps.Size}
- */
-google.maps.MarkerImage.prototype.size;
-
-/**
- * @type {string}
- */
-google.maps.MarkerImage.prototype.url;
 
 /**
  * @constructor
@@ -2664,7 +2666,7 @@ google.maps.MarkerOptions.prototype.draggable;
 google.maps.MarkerOptions.prototype.flat;
 
 /**
- * @type {string|google.maps.MarkerImage|google.maps.Symbol}
+ * @type {string|google.maps.Icon|google.maps.Symbol}
  */
 google.maps.MarkerOptions.prototype.icon;
 
@@ -2689,7 +2691,7 @@ google.maps.MarkerOptions.prototype.position;
 google.maps.MarkerOptions.prototype.raiseOnDrag;
 
 /**
- * @type {string|google.maps.MarkerImage|google.maps.Symbol}
+ * @type {string|google.maps.Icon|google.maps.Symbol}
  */
 google.maps.MarkerOptions.prototype.shadow;
 
@@ -3721,6 +3723,7 @@ google.maps.StrokePosition = {
 /**
  * @param {Array.<google.maps.MapTypeStyle>} styles
  * @param {(google.maps.StyledMapTypeOptions|Object.<string>)=} opt_options
+ * @extends {google.maps.MVCObject}
  * @constructor
  */
 google.maps.StyledMapType = function(styles, opt_options) {};
