@@ -1918,7 +1918,17 @@ ArrayBufferView.prototype.byteLength;
  * @constructor
  * @noalias
  * @throws {Error}
- * @nosideeffects
+ * @modifies {arguments} If the user passes a backing array, then indexed
+ *     accesses will modify the backing array. JSCompiler does not model
+ *     this well. In other words, if you have:
+ *     <code>
+ *     var x = new ArrayBuffer(1);
+ *     var y = new Int8Array(x);
+ *     y[0] = 2;
+ *     </code>
+ *     JSCompiler will not recognize that the last assignment modifies x.
+ *     We workaround this by marking all these arrays as @modifies {arguments},
+ *     to introduce the possibility that x aliases y.
  */
 function Int8Array(length, opt_byteOffset, opt_length) {}
 
@@ -1955,7 +1965,7 @@ Int8Array.prototype.subarray = function(begin, opt_end) {};
  * @constructor
  * @noalias
  * @throws {Error}
- * @nosideeffects
+ * @modifies {arguments}
  */
 function Uint8Array(length, opt_byteOffset, opt_length) {}
 
@@ -1992,7 +2002,7 @@ Uint8Array.prototype.subarray = function(begin, opt_end) {};
  * @constructor
  * @noalias
  * @throws {Error}
- * @nosideeffects
+ * @modifies {arguments}
  */
 function Uint8ClampedArray(length, opt_byteOffset, opt_length) {}
 
@@ -2038,7 +2048,7 @@ var CanvasPixelArray;
  * @constructor
  * @noalias
  * @throws {Error}
- * @nosideeffects
+ * @modifies {arguments}
  */
 function Int16Array(length, opt_byteOffset, opt_length) {}
 
@@ -2075,7 +2085,7 @@ Int16Array.prototype.subarray = function(begin, opt_end) {};
  * @constructor
  * @noalias
  * @throws {Error}
- * @nosideeffects
+ * @modifies {arguments}
  */
 function Uint16Array(length, opt_byteOffset, opt_length) {}
 
@@ -2112,7 +2122,7 @@ Uint16Array.prototype.subarray = function(begin, opt_end) {};
  * @constructor
  * @noalias
  * @throws {Error}
- * @nosideeffects
+ * @modifies {arguments}
  */
 function Int32Array(length, opt_byteOffset, opt_length) {}
 
@@ -2149,7 +2159,7 @@ Int32Array.prototype.subarray = function(begin, opt_end) {};
  * @constructor
  * @noalias
  * @throws {Error}
- * @nosideeffects
+ * @modifies {arguments}
  */
 function Uint32Array(length, opt_byteOffset, opt_length) {}
 
@@ -2186,7 +2196,7 @@ Uint32Array.prototype.subarray = function(begin, opt_end) {};
  * @constructor
  * @noalias
  * @throws {Error}
- * @nosideeffects
+ * @modifies {arguments}
  */
 function Float32Array(length, opt_byteOffset, opt_length) {}
 
@@ -2223,7 +2233,7 @@ Float32Array.prototype.subarray = function(begin, opt_end) {};
  * @constructor
  * @noalias
  * @throws {Error}
- * @nosideeffects
+ * @modifies {arguments}
  */
 function Float64Array(length, opt_byteOffset, opt_length) {}
 
