@@ -23,6 +23,13 @@ package com.google.javascript.jscomp;
 public class OptimizeArgumentsArrayTest extends CompilerTestCase {
 
   public OptimizeArgumentsArrayTest() {
+    /*
+     * arguments is a builtin variable of the javascript language and
+     * OptimizeArgumentsArray does not make any attempt to resolve it. However,
+     * I am leaving "var arguments" in the externs to emulate the current
+     * behavior we have for JS compilation where var arguments in defined in
+     * externs/es3.js as extern.
+     */
     super("var arguments, alert" /* Externs */);
   }
 

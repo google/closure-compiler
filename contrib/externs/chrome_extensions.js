@@ -173,6 +173,13 @@ chrome.tabs.executeScript = function(tabId, details, opt_callback) {};
 chrome.tabs.get = function(tabId, callback) {};
 
 
+/**
+ * Note: as of 2012-04-12, this function is no longer documented on
+ * the public web pages, but there are still existing usages
+ *
+ * @param {number?} windowId Window id.
+ * @param {function(Array.<Tab>): void} callback Callback.
+ */
 chrome.tabs.getAllInWindow = function(windowId, callback) {};
 
 
@@ -182,6 +189,13 @@ chrome.tabs.getAllInWindow = function(windowId, callback) {};
 chrome.tabs.getCurrent = function(callback) {};
 
 
+/**
+ * Note: as of 2012-04-12, this function is no longer documented on
+ * the public web pages, but there are still existing usages.
+ *
+ * @param {number?} windowId Window id.
+ * @param {function(Tab): void} callback Callback.
+ */
 chrome.tabs.getSelected = function(windowId, callback) {};
 
 
@@ -1677,6 +1691,10 @@ Port.prototype.sender;
 Port.prototype.postMessage = function(obj) {};
 
 
+/**
+ * Note: as of 2012-04-12, this function is no longer documented on
+ * the public web pages, but there are still existing usages.
+ */
 Port.prototype.disconnect = function() {};
 
 

@@ -243,6 +243,16 @@ final class NameReferenceGraphReport {
     generateType(builder, defType);
   }
 
+  /**
+   * Generate a link and text for a reference to a particular location
+   * in a source file.  Selecting the link should take the programmer
+   * to a browsable version of the file.
+   *
+   * @param builder  contents of the report to be generated
+   * @param sourceFile  Path to the file
+   * @param lineNumber  line where the object to view is located
+   * @param columnNumber  column where the object to highlight is located.
+   */
   private void generateSourceReferenceLink(StringBuilder builder,
     String sourceFile, int lineNumber, int columnNumber) {
     assert(sourceFile != null);

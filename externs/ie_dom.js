@@ -1208,6 +1208,10 @@ Location.prototype.hostname;
  */
 Location.prototype.href;
 
+/**
+ * @see https://docs.google.com/document/view?id=1r_VTFKApVOaNIkocrg0z-t7lZgzisTuGTXkdzAk4gLU&hl=en
+ * @type {string}
+ */
 Location.prototype.origin;
 
 /**

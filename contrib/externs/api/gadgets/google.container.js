@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * @fileoverview External declarations for common container JS.
+ *
+ * TODO(uix-eng): May want a way to conveniently generate this externs to avoid
+ * manual changes when we merge Shindig.
+ *
+ * @externs
+ */
+
 
 google.container = {};
 
