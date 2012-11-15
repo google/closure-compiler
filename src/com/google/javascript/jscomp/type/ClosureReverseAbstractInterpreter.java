@@ -19,7 +19,10 @@ package com.google.javascript.jscomp.type;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOLEAN;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
@@ -98,6 +101,13 @@ public class ClosureReverseAbstractInterpreter
    */
   private final Visitor<JSType> restrictToNotObjectVisitor =
       new RestrictByFalseTypeOfResultVisitor() {
+
+        @Override
+        public JSType caseAllType() {
+          return typeRegistry.createUnionType(
+              getNativeType(NUMBER_STRING_BOOLEAN), getNativeType(NULL_VOID));
+        }
+
         @Override
         public JSType caseObjectType(ObjectType type) {
           return null;
@@ -126,7 +136,8 @@ public class ClosureReverseAbstractInterpreter
           if (p.outcome) {
             return getRestrictedWithoutUndefined(p.type);
           } else {
-            return null;
+            return  p.type != null ?
+                getNativeType(VOID_TYPE).getGreatestSubtype(p.type) : null;
           }
          }
       })
@@ -134,7 +145,8 @@ public class ClosureReverseAbstractInterpreter
         @Override
         public JSType apply(TypeRestriction p) {
           if (p.outcome) {
-            return getNativeType(NULL_TYPE);
+            return p.type != null ?
+                getNativeType(NULL_TYPE).getGreatestSubtype(p.type) : null;
           } else {
             return getRestrictedWithoutNull(p.type);
           }
@@ -147,7 +159,8 @@ public class ClosureReverseAbstractInterpreter
             return getRestrictedWithoutUndefined(
                 getRestrictedWithoutNull(p.type));
           } else {
-            return null;
+            return p.type != null ?
+                getNativeType(NULL_VOID).getGreatestSubtype(p.type) : null;
           }
         }
       })
