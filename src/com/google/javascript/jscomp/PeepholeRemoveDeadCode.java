@@ -288,15 +288,68 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
     // Removing cases when there exists a default case is not safe.
     if (defaultCase == null) {
-      Node next = null;
-      Node prev = null;
-      // The first child is the switch conditions skip it.
-      for (Node c = n.getFirstChild().getNext(); c != null; c = next) {
-        next = c.getNext();
-        if (!mayHaveSideEffects(c.getFirstChild()) && isUselessCase(c, prev)) {
-          removeCase(n, c);
+      Node cond = n.getFirstChild(), prev = null, next = null, cur;
+
+      for (cur = cond.getNext(); cur != null; cur = next) {
+        next = cur.getNext();
+        if (!mayHaveSideEffects(cur.getFirstChild()) &&
+            isUselessCase(cur, prev)) {
+          removeCase(n, cur);
         } else {
-          prev = c;
+          prev = cur;
+        }
+      }
+
+      // Optimize switches with constant condition
+      if (NodeUtil.isLiteralValue(cond, false)) {
+        Node caseLabel;
+        TernaryValue caseMatches = TernaryValue.TRUE;
+        // Remove cases until you find one that may match
+        for (cur = cond.getNext(); cur != null; cur = next) {
+          next = cur.getNext();
+          caseLabel = cur.getFirstChild();
+          caseMatches = PeepholeFoldConstants.evaluateComparison(
+              Token.SHEQ, cond, caseLabel);
+          if (caseMatches == TernaryValue.TRUE) {
+            break;
+          } else if (caseMatches == TernaryValue.UNKNOWN) {
+            break;
+          } else {
+            n.removeChild(cur);
+            reportCodeChange();
+          }
+        }
+        if (caseMatches != TernaryValue.UNKNOWN) {
+          Node block, lastStm;
+          // Skip cases until you find one whose last stm is a break
+          while (cur != null) {
+            block = cur.getLastChild();
+            lastStm = block.getLastChild();
+            cur = cur.getNext();
+            if (lastStm.isBreak()) {
+              block.removeChild(lastStm);
+              reportCodeChange();
+              break;
+            }
+          }
+          // Remove any remaining cases
+          for (; cur != null; cur = next) {
+            next = cur.getNext();
+            n.removeChild(cur);
+            reportCodeChange();
+          }
+          // If there is one case left, we may be able to fold it
+          cur = cond.getNext();
+          if (cur != null && cur.getNext() == null) {
+            block = cur.getLastChild();
+            if (!(NodeUtil.containsType(block, Token.BREAK,
+                NodeUtil.MATCH_NOT_FUNCTION))) {
+              cur.removeChild(block);
+              n.getParent().replaceChild(n, block);
+              reportCodeChange();
+              return block;
+            }
+          }
         }
       }
     }
@@ -304,9 +357,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     // Remove the switch if there are no remaining cases.
     if (n.hasOneChild()) {
       Node condition = n.removeFirstChild();
-      Node parent = n.getParent();
       Node replacement = IR.exprResult(condition).srcref(n);
-      parent.replaceChild(n, replacement);
+      n.getParent().replaceChild(n, replacement);
       reportCodeChange();
       return replacement;
     }
