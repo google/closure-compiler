@@ -174,4 +174,10 @@ function setInterval(callback, delay) {}
  */
 function setTimeout(callback, delay) {}
 
+/**
+ * window.i is overwritten by the Silk Browser on
+ * Kindle HD 7.1.5 firmware.
+ * Remove this once they have pushed out the fix for this.
+ * @suppress {duplicate}
+ */
 var i;
