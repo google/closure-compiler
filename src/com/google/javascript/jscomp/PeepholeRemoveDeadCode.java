@@ -326,7 +326,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
             block = cur.getLastChild();
             lastStm = block.getLastChild();
             cur = cur.getNext();
-            if (lastStm.isBreak()) {
+            if (lastStm != null && lastStm.isBreak()) {
               block.removeChild(lastStm);
               reportCodeChange();
               break;

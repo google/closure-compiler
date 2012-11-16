@@ -434,6 +434,11 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "case '\\u000B':\n" +
         "  foo();\n" +
         "}");
+    foldSame("switch ('empty') {\n" +
+        "case 'empty':\n" +
+        "case 'foo':\n" +
+        "  foo();\n" +
+        "}");
   }
 
   public void testRemoveNumber() {
