@@ -53,7 +53,7 @@ class RhinoErrorReporter {
       DiagnosticType.warning("JSC_BAD_JSDOC_ANNOTATION", "Parse error. {0}");
 
   static final DiagnosticType MISPLACED_TYPE_ANNOTATION =
-      DiagnosticType.disabled("JSC_MISPLACED_TYPE_ANNOTATION",
+      DiagnosticType.warning("JSC_MISPLACED_TYPE_ANNOTATION",
           "Type annotations are not allowed here. " +
           "Are you missing parentheses?");
 
