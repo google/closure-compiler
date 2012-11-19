@@ -221,12 +221,12 @@ google.maps.ControlPosition = {
 google.maps.DirectionsLeg = function() {};
 
 /**
- * @type {google.maps.Distance}
+ * @type {google.maps.Time}
  */
 google.maps.DirectionsLeg.prototype.arrival_time;
 
 /**
- * @type {google.maps.Duration}
+ * @type {google.maps.Time}
  */
 google.maps.DirectionsLeg.prototype.departure_time;
 
@@ -4883,6 +4883,21 @@ google.maps.places.ComponentRestrictions.prototype.country;
 /**
  * @constructor
  */
+google.maps.places.PlaceAspectRating = function() {};
+
+/**
+ * @type {number}
+ */
+google.maps.places.PlaceAspectRating.prototype.rating;
+
+/**
+ * @type {string}
+ */
+google.maps.places.PlaceAspectRating.prototype.type;
+
+/**
+ * @constructor
+ */
 google.maps.places.PlaceDetailsRequest = function() {};
 
 /**
@@ -4914,6 +4929,11 @@ google.maps.places.PlaceResult = function() {};
  * @type {Array.<google.maps.GeocoderAddressComponent>}
  */
 google.maps.places.PlaceResult.prototype.address_components;
+
+/**
+ * @type {Array.<google.maps.places.PlaceAspectRating>}
+ */
+google.maps.places.PlaceResult.prototype.aspects;
 
 /**
  * @type {string}
@@ -4966,6 +4986,11 @@ google.maps.places.PlaceResult.prototype.rating;
 google.maps.places.PlaceResult.prototype.reference;
 
 /**
+ * @type {Array.<google.maps.places.PlaceReview>}
+ */
+google.maps.places.PlaceResult.prototype.reviews;
+
+/**
  * @type {Array.<string>}
  */
 google.maps.places.PlaceResult.prototype.types;
@@ -4984,6 +5009,31 @@ google.maps.places.PlaceResult.prototype.vicinity;
  * @type {string}
  */
 google.maps.places.PlaceResult.prototype.website;
+
+/**
+ * @constructor
+ */
+google.maps.places.PlaceReview = function() {};
+
+/**
+ * @type {Array.<google.maps.places.PlaceAspectRating>}
+ */
+google.maps.places.PlaceReview.prototype.aspects;
+
+/**
+ * @type {string}
+ */
+google.maps.places.PlaceReview.prototype.author_name;
+
+/**
+ * @type {string}
+ */
+google.maps.places.PlaceReview.prototype.author_url;
+
+/**
+ * @type {string}
+ */
+google.maps.places.PlaceReview.prototype.text;
 
 /**
  * @constructor
