@@ -32,6 +32,7 @@ public class TightenTypesTest extends CompilerTestCase {
   public TightenTypesTest() {
     parseTypeInfo = true;
     enableTypeCheck(CheckLevel.WARNING);
+    enableNormalize(true);
   }
 
   @Override

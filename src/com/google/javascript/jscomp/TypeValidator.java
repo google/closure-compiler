@@ -484,7 +484,7 @@ class TypeValidator {
 
   /**
    * Expect that the first type can be cast to the second type. The first type
-   * should be either a subtype or supertype of the second.
+   * must have some relationship with the second.
    *
    * @param t The node traversal.
    * @param n The node where warnings should point.
@@ -492,10 +492,12 @@ class TypeValidator {
    * @param castType The type being cast to.
    */
   void expectCanCast(NodeTraversal t, Node n, JSType type, JSType castType) {
-    castType = castType.restrictByNotNullOrUndefined();
-    type = type.restrictByNotNullOrUndefined();
 
-    if (!type.canAssignTo(castType) && !castType.canAssignTo(type)) {
+    // TODO(johnlenz): consider tightening this to:
+    //   "a.canAssignTo(b) || b.canAssignTo(a)"
+    if (!type.isEmptyType() &&
+        !castType.isEmptyType() &&
+        type.getGreatestSubtype(castType).isEmptyType()) {
       registerMismatch(type, castType, report(t.makeError(n, INVALID_CAST,
           castType.toString(), type.toString())));
     }

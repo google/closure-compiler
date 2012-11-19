@@ -171,6 +171,7 @@ public class AstValidator implements CompilerPass {
       case Token.TYPEOF:
       case Token.VOID:
       case Token.BITNOT:
+      case Token.CAST:
         validateUnaryOp(n);
         return;
 

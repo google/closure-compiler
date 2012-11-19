@@ -2182,6 +2182,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.CASE;
   }
 
+  public boolean isCast() {
+    return this.getType() == Token.CAST;
+  }
+
   public boolean isCatch() {
     return this.getType() == Token.CATCH;
   }

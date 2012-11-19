@@ -724,6 +724,12 @@ class CodeGenerator {
             last, getContextForNonEmptyExpression(context), true);
         break;
 
+      case Token.CAST:
+        add("(");
+        add(first);
+        add(")");
+        break;
+
       default:
         throw new Error("Unknown type " + type + "\n" + n.toStringTree());
     }
