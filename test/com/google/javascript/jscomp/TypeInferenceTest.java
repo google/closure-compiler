@@ -205,12 +205,6 @@ public class TypeInferenceTest extends TestCase {
     verify("x", NUMBER_TYPE);
   }
 
-  public void testExprWithinCast() {
-    assuming("x", OBJECT_TYPE);
-    inFunction("/** @type {string} */ (x = 1);");
-    verify("x", NUMBER_TYPE);
-  }
-
   public void testGetProp() {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction("x.y();");

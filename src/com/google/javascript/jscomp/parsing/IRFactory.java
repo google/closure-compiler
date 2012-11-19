@@ -288,7 +288,7 @@ class IRFactory {
 
   private void validateTypeAnnotations(
       JSDocInfo info, AstNode node, Node irNode) {
-    if (info.hasType()) {
+    if (info.getType() != null) {
       boolean valid = false;
       switch (node.getType()) {
         // Casts are valid
@@ -354,21 +354,9 @@ class IRFactory {
     Node irNode = justTransform(node);
     JSDocInfo jsDocInfo = handleJsDoc(node, irNode);
     if (jsDocInfo != null) {
-      irNode = maybeInjectCastNode(node, jsDocInfo, irNode);
       irNode.setJSDocInfo(jsDocInfo);
     }
     setSourceInfo(irNode, node);
-    return irNode;
-  }
-
-  private Node maybeInjectCastNode(AstNode node, JSDocInfo info, Node irNode) {
-    if (node.getType() == com.google.javascript.rhino.head.Token.LP
-        && node instanceof ParenthesizedExpression
-        && info.hasType()
-        // TODO(johnlenz): for now, attach object literal type directly.
-        && !irNode.isObjectLit()) {
-      irNode = newNode(Token.CAST, irNode);
-    }
     return irNode;
   }
 

@@ -444,19 +444,15 @@ class TypeInference
       case Token.CATCH:
         scope = traverseCatch(n, scope);
         break;
-
-      case Token.CAST:
-        scope = traverseChildren(n, scope);
-        break;
     }
-
-    // TODO(johnlenz): remove this after the CAST node change has shaken out.
     if (!n.isFunction()) {
       JSDocInfo info = n.getJSDocInfo();
       if (info != null && info.hasType()) {
         JSType castType = info.getType().evaluate(syntacticScope, registry);
 
-        // A stubbed type declaration on a qualified name should take
+        // validate cast here
+
+        // A stubbed type cast on a qualified name should take
         // effect for all subsequent accesses of that name,
         // so treat it the same as an assign to that name.
         if (n.isQualifiedName() &&

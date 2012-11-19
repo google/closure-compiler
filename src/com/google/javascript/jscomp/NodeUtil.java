@@ -499,7 +499,6 @@ public final class NodeUtil {
       case Token.TRUE:
       case Token.FALSE:
         return true;
-      case Token.CAST:
       case Token.NOT:
         return isImmutableValue(n.getFirstChild());
       case Token.VOID:
@@ -590,9 +589,6 @@ public final class NodeUtil {
    */
   static boolean isLiteralValue(Node n, boolean includeFunctions) {
     switch (n.getType()) {
-      case Token.CAST:
-        return isLiteralValue(n.getFirstChild(), includeFunctions);
-
       case Token.ARRAYLIT:
         for (Node child = n.getFirstChild(); child != null;
              child = child.getNext()) {
@@ -796,7 +792,6 @@ public final class NodeUtil {
     // that we know to be safe
     switch (n.getType()) {
       // other side-effect free statements and expressions
-      case Token.CAST:
       case Token.AND:
       case Token.BLOCK:
       case Token.EXPR_RESULT:
@@ -1238,8 +1233,6 @@ public final class NodeUtil {
       case Token.THIS:
       case Token.TRUE:
         return 15;
-      case Token.CAST:
-        return 16;
 
       default: throw new Error("Unknown precedence for " +
                                Token.name(type) +
@@ -1267,8 +1260,6 @@ public final class NodeUtil {
    */
   static boolean allResultsMatch(Node n, Predicate<Node> p) {
     switch (n.getType()) {
-      case Token.CAST:
-        return allResultsMatch(n.getFirstChild(), p);
       case Token.ASSIGN:
       case Token.COMMA:
         return allResultsMatch(n.getLastChild(), p);
@@ -1290,8 +1281,6 @@ public final class NodeUtil {
    */
   static boolean anyResultsMatch(Node n, Predicate<Node> p) {
     switch (n.getType()) {
-      case Token.CAST:
-        return anyResultsMatch(n.getFirstChild(), p);
       case Token.ASSIGN:
       case Token.COMMA:
         return anyResultsMatch(n.getLastChild(), p);
@@ -2912,8 +2901,6 @@ public final class NodeUtil {
    */
   static boolean evaluatesToLocalValue(Node value, Predicate<Node> locals) {
     switch (value.getType()) {
-      case Token.CAST:
-        return evaluatesToLocalValue(value.getFirstChild(), locals);
       case Token.ASSIGN:
         // A result that is aliased by a non-local name, is the effectively the
         // same as returning a non-local name, but this doesn't matter if the
@@ -3055,8 +3042,6 @@ public final class NodeUtil {
                  parent.isAnd() ||
                  (parent.isComma() && parent.getFirstChild() != n)) {
         return getBestJSDocInfo(parent);
-      } else if (parent.isCast()) {
-        return parent.getJSDocInfo();
       }
     }
     return info;
@@ -3079,8 +3064,6 @@ public final class NodeUtil {
         parent.isOr() ||
         parent.isAnd() ||
         (parent.isComma() && parent.getFirstChild() != n)) {
-      return getBestLValue(parent);
-    } else if (parent.isCast()) {
       return getBestLValue(parent);
     }
     return null;
@@ -3142,8 +3125,6 @@ public final class NodeUtil {
       case Token.BLOCK:
       case Token.EXPR_RESULT:
         return false;
-      case Token.CAST:
-        return isExpressionResultUsed(parent);
       case Token.HOOK:
       case Token.AND:
       case Token.OR:
