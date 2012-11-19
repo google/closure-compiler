@@ -2744,11 +2744,11 @@ MutationObserver.prototype.disconnect = function() {};
 Window.prototype.MutationObserver;
 
 /**
- * @type {function(new:MutationObserver)}
+ * @type {function(new:MutationObserver, function(Array.<MutationRecord>))}
  */
 Window.prototype.WebKitMutationObserver;
 
 /**
- * @type {function(new:MutationObserver)}
+ * @type {function(new:MutationObserver, function(Array.<MutationRecord>))}
  */
 Window.prototype.MozMutationObserver;
