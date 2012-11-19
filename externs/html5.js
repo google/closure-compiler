@@ -2665,3 +2665,90 @@ Element.ALLOW_KEYBOARD_INPUT = 1;
 
 /** @type {number} */
 Element.prototype.ALLOW_KEYBOARD_INPUT = 1;
+
+
+/** @constructor */
+function MutationObserverInit() {}
+
+/** @type {boolean} */
+MutationObserverInit.prototype.childList;
+
+/** @type {boolean} */
+MutationObserverInit.prototype.attributes;
+
+/** @type {boolean} */
+MutationObserverInit.prototype.characterData;
+
+/** @type {boolean} */
+MutationObserverInit.prototype.subtree;
+
+/** @type {boolean} */
+MutationObserverInit.prototype.attributeOldValue;
+
+/** @type {boolean} */
+MutationObserverInit.prototype.characterDataOldValue;
+
+/** @type {Array.<string>} */
+MutationObserverInit.prototype.attributeFilter;
+
+
+/** @constructor */
+function MutationRecord() {}
+
+/** @type {string} */
+MutationRecord.prototype.type;
+
+/** @type {Node} */
+MutationRecord.prototype.target;
+
+/** @type {NodeList} */
+MutationRecord.prototype.addedNodes;
+
+/** @type {NodeList} */
+MutationRecord.prototype.removedNodes;
+
+/** @type {Node} */
+MutationRecord.prototype.previouSibling;
+
+/** @type {Node} */
+MutationRecord.prototype.nextSibling;
+
+/** @type {?string} */
+MutationRecord.prototype.attributeName;
+
+/** @type {?string} */
+MutationRecord.prototype.attributeNamespace;
+
+/** @type {?string} */
+MutationRecord.prototype.oldvalue;
+
+
+/**
+ * @see http://www.w3.org/TR/domcore/#mutation-observers
+ * @param {function(Array.<MutationRecord>)} callback
+ * @constructor
+ */
+function MutationObserver(callback) {}
+
+/**
+ * @param {Node} target
+ * @param {MutationObserverInit=} options
+ */
+MutationObserver.prototype.observe = function(target, options) {};
+
+MutationObserver.prototype.disconnect = function() {};
+
+/**
+ * @type {function(new:MutationObserver, function(Array.<MutationRecord>))}
+ */
+Window.prototype.MutationObserver;
+
+/**
+ * @type {function(new:MutationObserver)}
+ */
+Window.prototype.WebKitMutationObserver;
+
+/**
+ * @type {function(new:MutationObserver)}
+ */
+Window.prototype.MozMutationObserver;
