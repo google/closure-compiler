@@ -118,7 +118,7 @@ public final class NodeUtil {
    * Gets the boolean value of a node that represents a literal. This method
    * effectively emulates the <code>Boolean()</code> JavaScript cast function
    * except it return UNKNOWN for known values with side-effects, use
-   * getExpressionBooleanValue if you don't care about side-effects.
+   * getImpureBooleanValue if you don't care about side-effects.
    */
   static TernaryValue getPureBooleanValue(Node n) {
     switch (n.getType()) {
@@ -3235,5 +3235,15 @@ public final class NodeUtil {
       result.srcrefTree(srcref);
     }
     return result;
+  }
+
+  static boolean isNaN(Node n) {
+    if ((n.isName() && n.getString().equals("NaN")) ||
+        (n.getType() == Token.DIV &&
+         n.getFirstChild().isNumber() && n.getFirstChild().getDouble() == 0 &&
+         n.getLastChild().isNumber() && n.getLastChild().getDouble() == 0)) {
+      return true;
+    }
+    return false;
   }
 }

@@ -82,7 +82,8 @@ public class DiagnosticGroups {
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
       "internetExplorerChecks, invalidCasts, misplacedTypeAnnotation, " +
       "missingProperties, " +
-      "nonStandardJsDocs, strictModuleDepCheck, typeInvalidation, " +
+      "nonStandardJsDocs, suspiciousCode, strictModuleDepCheck, " +
+      "typeInvalidation, " +
       "undefinedNames, undefinedVars, unknownDefines, uselessCode, " +
       "visibility";
 
@@ -116,7 +117,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("nonStandardJsDocs",
           RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
 
-  public static DiagnosticGroup ACCESS_CONTROLS =
+  public static final DiagnosticGroup ACCESS_CONTROLS =
       DiagnosticGroups.registerGroup("accessControls",
           DEPRECATED, VISIBILITY);
 
@@ -136,7 +137,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("violatedModuleDep",
           VarCheck.VIOLATED_MODULE_DEP_ERROR);
 
-  public static DiagnosticGroup EXTERNS_VALIDATION =
+  public static final DiagnosticGroup EXTERNS_VALIDATION =
       DiagnosticGroups.registerGroup("externsValidation",
           VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR,
           VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
@@ -159,7 +160,6 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("missingProperties",
           TypeCheck.INEXISTENT_PROPERTY);
 
-  // TODO: add more IE specific checks here.
   public static final DiagnosticGroup INTERNET_EXPLORER_CHECKS =
       DiagnosticGroups.registerGroup("internetExplorerChecks",
           RhinoErrorReporter.TRAILING_COMMA);
@@ -237,6 +237,11 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup CAST =
       DiagnosticGroups.registerGroup("cast",
           TypeValidator.INVALID_CAST);
+
+  public static final DiagnosticGroup SUSPICIOUS_CODE =
+      DiagnosticGroups.registerGroup("suspiciousCode",
+          CheckSuspiciousCode.SUSPICIOUS_SEMICOLON,
+          CheckSuspiciousCode.SUSPICIOUS_COMPARISON_WITH_NAN);
 
   /**
    * Adds warning levels by name.
