@@ -68,7 +68,7 @@ var angular = {};
  * @param {Object} self
  * @param {Function} fn
  * @param {...*} args
- * @return {function()}
+ * @return {Function}
  */
 angular.bind = function(self, fn, args) {};
 
