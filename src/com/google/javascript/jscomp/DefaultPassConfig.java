@@ -794,7 +794,7 @@ public class DefaultPassConfig extends PassConfig {
         compiler) {
       List<Callback> sharedCallbacks = Lists.newArrayList();
       if (options.checkSuspiciousCode) {
-        sharedCallbacks.add(new CheckSuspiciousCode());
+        sharedCallbacks.add(new CheckAccidentalSemicolon(CheckLevel.WARNING));
       }
 
       if (options.enables(DiagnosticGroups.GLOBAL_THIS)) {

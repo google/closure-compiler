@@ -21,7 +21,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
@@ -31,9 +30,6 @@ import junit.framework.TestCase;
 import java.util.Collection;
 import java.util.Set;
 
-/**
- * Tests for NodeUtil
- */
 public class NodeUtilTest extends TestCase {
 
   private static Node parse(String js) {
@@ -331,10 +327,10 @@ public class NodeUtilTest extends TestCase {
     assertEquals(se, NodeUtil.mayHaveSideEffects(n.getFirstChild()));
   }
 
-  private void assertSideEffect(boolean se, String js, boolean globalRegExp) {
+  private void assertSideEffect(boolean se, String js, boolean GlobalRegExp) {
     Node n = parse(js);
     Compiler compiler = new Compiler();
-    compiler.setHasRegExpGlobalReferences(globalRegExp);
+    compiler.setHasRegExpGlobalReferences(GlobalRegExp);
     assertEquals(se, NodeUtil.mayHaveSideEffects(n.getFirstChild(), compiler));
   }
 
@@ -680,7 +676,7 @@ public class NodeUtilTest extends TestCase {
     assertNodeNames(Sets.newHashSet("foo"),
         NodeUtil.getVarsDeclaredInBranch(
             parse("var foo;")));
-    assertNodeNames(Sets.newHashSet("foo", "goo"),
+    assertNodeNames(Sets.newHashSet("foo","goo"),
         NodeUtil.getVarsDeclaredInBranch(
             parse("var foo,goo;")));
     assertNodeNames(Sets.<String>newHashSet(),
@@ -1269,7 +1265,7 @@ public class NodeUtilTest extends TestCase {
   }
 
   private boolean testValidDefineValue(String js) {
-    Node script = parse("var test = " + js + ";");
+    Node script = parse("var test = " + js +";");
     Node var = script.getFirstChild();
     Node name = var.getFirstChild();
     Node value = name.getFirstChild();
@@ -1597,16 +1593,6 @@ public class NodeUtilTest extends TestCase {
     assertEquals("x", getFunctionLValue("var x = y && function() {};"));
     assertEquals("x", getFunctionLValue("var x = y || function() {};"));
     assertEquals("x", getFunctionLValue("var x = (y, function() {});"));
-  }
-
-  public void testIsNaN() {
-    assertEquals(true, NodeUtil.isNaN(getNode("NaN")));
-    assertEquals(false, NodeUtil.isNaN(getNode("Infinity")));
-    assertEquals(false, NodeUtil.isNaN(getNode("x")));
-    assertEquals(true, NodeUtil.isNaN(getNode("0/0")));
-    assertEquals(false, NodeUtil.isNaN(getNode("1/0")));
-    assertEquals(false, NodeUtil.isNaN(getNode("0/1")));
-    assertEquals(false, NodeUtil.isNaN(IR.number(0.0)));
   }
 
   public void testIsExecutedExactlyOnce() {
