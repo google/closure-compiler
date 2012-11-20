@@ -154,24 +154,27 @@ Object.getPrototypeOf = function(obj) {};
 
 
 /**
- * @param {!Object} obj
- * @return {void}
+ * @param {!T} obj
+ * @return {!T}
+ * @template T
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/preventExtensions
  */
 Object.preventExtensions = function(obj) {};
 
 
 /**
- * @param {!Object} obj
- * @return {void}
+ * @param {!T} obj
+ * @return {!T}
+ * @template T
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/seal
  */
 Object.seal = function(obj) {};
 
 
 /**
- * @param {!Object} obj
- * @return {void}
+ * @param {!T} obj
+ * @return {!T}
+ * @template T
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/freeze
  */
 Object.freeze = function(obj) {};
