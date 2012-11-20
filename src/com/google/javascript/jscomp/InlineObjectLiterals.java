@@ -160,14 +160,20 @@ class InlineObjectLiterals implements CompilerPass {
         Node parent = ref.getParent();
         Node gramps = ref.getGrandparent();
 
-        // Ignore indirect references, like x.y (except x.y(), since
-        // the function referenced by y might reference 'this').
+        // Ignore most indirect references, like x.y (but not x.y(),
+        // since the function referenced by y might reference 'this').
         //
         if (parent.isGetProp()) {
           Preconditions.checkState(parent.getFirstChild() == name);
-          // A call target maybe using the object as a 'this' value.
+          // A call target may be using the object as a 'this' value.
           if (gramps.isCall()
               && gramps.getFirstChild() == parent) {
+            return false;
+          }
+
+          // Deleting a property has different semantics from deleting
+          // a variable, so deleted properties should not be inlined.
+          if (gramps.isDelProp()) {
             return false;
           }
 

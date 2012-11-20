@@ -348,6 +348,13 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
         "   '[object Function]';");
   }
 
+  public void testNoInlineDeletedProperties() {
+    testSameLocal(
+        "var foo = {bar:1};" +
+        "delete foo.bar;" +
+        "return foo.bar;");
+  }
+
   private final String LOCAL_PREFIX = "function local(){";
   private final String LOCAL_POSTFIX = "}";
 
