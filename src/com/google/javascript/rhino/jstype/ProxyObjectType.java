@@ -246,11 +246,6 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public boolean canAssignTo(JSType that) {
-    return referencedType.canAssignTo(that);
-  }
-
-  @Override
   public int hashCode() {
     return referencedType.hashCode();
   }

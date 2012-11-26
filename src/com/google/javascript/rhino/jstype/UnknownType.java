@@ -76,11 +76,6 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
-  public boolean canAssignTo(JSType that) {
-    return true;
-  }
-
-  @Override
   public boolean canBeCalled() {
     return true;
   }

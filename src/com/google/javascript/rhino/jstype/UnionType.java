@@ -185,18 +185,6 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public boolean canAssignTo(JSType that) {
-    boolean canAssign = true;
-    for (JSType t : alternates) {
-      if (t.isUnknownType()) {
-        return true;
-      }
-      canAssign &= t.canAssignTo(that);
-    }
-    return canAssign;
-  }
-
-  @Override
   public boolean canBeCalled() {
     for (JSType t : alternates) {
       if (!t.canBeCalled()) {

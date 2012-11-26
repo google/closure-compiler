@@ -1633,6 +1633,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: (number|undefined)");
   }
 
+  public void testFunctionArguments17() throws Exception {
+    testClosureTypesMultipleWarnings(
+        "/** @param {booool|string} x */" +
+        "function f(x) { g(x) }" +
+        "/** @param {number} x */" +
+        "function g(x) {}",
+        Lists.newArrayList(
+            "Bad type annotation. Unknown type booool",
+            "actual parameter 1 of g does not match formal parameter\n" +
+            "found   : (booool|null|string)\n" +
+            "required: number"));
+  }
+
   public void testPrintFunctionName1() throws Exception {
     // Ensures that the function name is pretty.
     testTypes(
