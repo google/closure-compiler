@@ -836,17 +836,6 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * Tests whether values of {@code this} type can be safely assigned
-   * to values of {@code that} type.<p>
-   *
-   * The default implementation verifies that {@code this} is a subtype
-   * of {@code that}.<p>
-   */
-  public boolean canAssignTo(JSType that) {
-    return isSubtype(that);
-  }
-
-  /**
    * Turn a scalar type to the corresponding object type.
    *
    * @return the auto-boxed type or {@code null} if this type is not a scalar.

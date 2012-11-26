@@ -55,7 +55,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
    * Assert that a type can assign to itself.
    */
   private void assertTypeCanAssignToItself(JSType type) {
-    assertTrue(type.canAssignTo(type));
+    assertTrue(type.isSubtype(type));
   }
 
   /**
@@ -218,32 +218,32 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     // autoboxing quirks
     UnionType numbers =
         (UnionType) createUnionType(NUMBER_TYPE, NUMBER_OBJECT_TYPE);
-    assertFalse(numbers.canAssignTo(NUMBER_TYPE));
-    assertFalse(numbers.canAssignTo(NUMBER_OBJECT_TYPE));
-    assertFalse(numbers.canAssignTo(EVAL_ERROR_TYPE));
+    assertFalse(numbers.isSubtype(NUMBER_TYPE));
+    assertFalse(numbers.isSubtype(NUMBER_OBJECT_TYPE));
+    assertFalse(numbers.isSubtype(EVAL_ERROR_TYPE));
 
     UnionType strings =
         (UnionType) createUnionType(STRING_OBJECT_TYPE, STRING_TYPE);
-    assertFalse(strings.canAssignTo(STRING_TYPE));
-    assertFalse(strings.canAssignTo(STRING_OBJECT_TYPE));
-    assertFalse(strings.canAssignTo(DATE_TYPE));
+    assertFalse(strings.isSubtype(STRING_TYPE));
+    assertFalse(strings.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(strings.isSubtype(DATE_TYPE));
 
     UnionType booleans =
         (UnionType) createUnionType(BOOLEAN_OBJECT_TYPE, BOOLEAN_TYPE);
-    assertFalse(booleans.canAssignTo(BOOLEAN_TYPE));
-    assertFalse(booleans.canAssignTo(BOOLEAN_OBJECT_TYPE));
-    assertFalse(booleans.canAssignTo(REGEXP_TYPE));
+    assertFalse(booleans.isSubtype(BOOLEAN_TYPE));
+    assertFalse(booleans.isSubtype(BOOLEAN_OBJECT_TYPE));
+    assertFalse(booleans.isSubtype(REGEXP_TYPE));
 
     // unknown quirks
     JSType unknown = createUnionType(UNKNOWN_TYPE, DATE_TYPE);
-    assertTrue(unknown.canAssignTo(STRING_TYPE));
+    assertTrue(unknown.isSubtype(STRING_TYPE));
 
     // all members need to be assignable to
     UnionType stringDate =
         (UnionType) createUnionType(STRING_OBJECT_TYPE, DATE_TYPE);
-    assertTrue(stringDate.canAssignTo(OBJECT_TYPE));
-    assertFalse(stringDate.canAssignTo(STRING_OBJECT_TYPE));
-    assertFalse(stringDate.canAssignTo(DATE_TYPE));
+    assertTrue(stringDate.isSubtype(OBJECT_TYPE));
+    assertFalse(stringDate.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(stringDate.isSubtype(DATE_TYPE));
   }
 
   /**

@@ -163,7 +163,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         .withParamsNode(registry.createParameters())
         .withTypeOfThis(OBJECT_TYPE)
         .withReturnType(BOOLEAN_TYPE).build();
-    assertTrue(objReturnBoolean.canAssignTo(ifaceReturnBoolean));
+    assertTrue(objReturnBoolean.isSubtype(ifaceReturnBoolean));
   }
 
   public void testOrdinaryFunctionPrototype() {

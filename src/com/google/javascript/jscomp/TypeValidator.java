@@ -362,7 +362,7 @@ class TypeValidator {
   boolean expectCanAssignToPropertyOf(NodeTraversal t, Node n, JSType rightType,
       JSType leftType, Node owner, String propName) {
     // The NoType check is a hack to make typedefs work OK.
-    if (!leftType.isNoType() && !rightType.canAssignTo(leftType)) {
+    if (!leftType.isNoType() && !rightType.isSubtype(leftType)) {
       // Do not type-check interface methods, because we expect that
       // they will have dummy implementations that do not match the type
       // annotations.
@@ -397,7 +397,7 @@ class TypeValidator {
    */
   boolean expectCanAssignTo(NodeTraversal t, Node n, JSType rightType,
       JSType leftType, String msg) {
-    if (!rightType.canAssignTo(leftType)) {
+    if (!rightType.isSubtype(leftType)) {
       mismatch(t, n, msg, rightType, leftType);
       return false;
     }
@@ -417,7 +417,7 @@ class TypeValidator {
    */
   void expectArgumentMatchesParameter(NodeTraversal t, Node n, JSType argType,
       JSType paramType, Node callNode, int ordinal) {
-    if (!argType.canAssignTo(paramType)) {
+    if (!argType.isSubtype(paramType)) {
       mismatch(t, n,
           String.format("actual parameter %d of %s does not match " +
               "formal parameter", ordinal,
@@ -441,7 +441,7 @@ class TypeValidator {
    */
   void expectCanOverride(NodeTraversal t, Node n, JSType overridingType,
       JSType hiddenType, String propertyName, JSType ownerType) {
-    if (!overridingType.canAssignTo(hiddenType)) {
+    if (!overridingType.isSubtype(hiddenType)) {
       registerMismatch(overridingType, hiddenType,
           report(t.makeError(n, HIDDEN_PROPERTY_MISMATCH, propertyName,
             ownerType.toString(), hiddenType.toString(),
@@ -495,7 +495,7 @@ class TypeValidator {
     castType = castType.restrictByNotNullOrUndefined();
     type = type.restrictByNotNullOrUndefined();
 
-    if (!type.canAssignTo(castType) && !castType.canAssignTo(type)) {
+    if (!type.isSubtype(castType) && !castType.isSubtype(type)) {
       registerMismatch(type, castType, report(t.makeError(n, INVALID_CAST,
           castType.toString(), type.toString())));
     }
@@ -622,7 +622,7 @@ class TypeValidator {
           = implementedInterface.getImplicitPrototype().getPropertyType(prop);
       found = found.restrictByNotNullOrUndefined();
       required = required.restrictByNotNullOrUndefined();
-      if (!found.canAssignTo(required)) {
+      if (!found.isSubtype(required)) {
         // Implemented, but not correctly typed
         FunctionType constructor =
             implementedInterface.toObjectType().getConstructor();
@@ -659,7 +659,7 @@ class TypeValidator {
     // code didn't downcast.
     found = found.restrictByNotNullOrUndefined();
     required = required.restrictByNotNullOrUndefined();
-    if (found.canAssignTo(required) || required.canAssignTo(found)) {
+    if (found.isSubtype(required) || required.isSubtype(found)) {
       return;
     }
 
@@ -683,7 +683,7 @@ class TypeValidator {
   private void registerIfMismatch(
       JSType found, JSType required, JSError error) {
     if (found != null && required != null &&
-        !found.canAssignTo(required)) {
+        !found.isSubtype(required)) {
       registerMismatch(found, required, error);
     }
   }

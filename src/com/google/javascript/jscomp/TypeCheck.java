@@ -1205,7 +1205,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // there is a superclass implementation
       JSType superClassPropType =
           superClass.getInstanceType().getPropertyType(propertyName);
-      if (!propertyType.canAssignTo(superClassPropType)) {
+      if (!propertyType.isSubtype(superClassPropType)) {
         compiler.report(
             t.makeError(n, HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
                 propertyName, topInstanceType.toString(),
@@ -1217,7 +1217,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         if (interfaceType.hasProperty(propertyName)) {
           JSType superPropertyType =
               interfaceType.getPropertyType(propertyName);
-          if (!propertyType.canAssignTo(superPropertyType)) {
+          if (!propertyType.isSubtype(superPropertyType)) {
             topInstanceType = interfaceType.getConstructor().
                 getTopMostDefiningType(propertyName);
             compiler.report(
