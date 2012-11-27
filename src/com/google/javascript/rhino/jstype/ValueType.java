@@ -59,4 +59,7 @@ abstract class ValueType extends JSType {
     return true;
   }
 
+  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+    return visitor.caseValueType(this, that);
+  }
 }

@@ -261,6 +261,10 @@ final class ArrowType extends JSType {
     throw new UnsupportedOperationException();
   }
 
+  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+    throw new UnsupportedOperationException();
+  }
+
   @Override
   public BooleanLiteralSet getPossibleToBooleanOutcomes() {
     return BooleanLiteralSet.TRUE;

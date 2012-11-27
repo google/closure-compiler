@@ -22,7 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bob Jervis
+ *   John Lenz
  *   Google Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,50 +37,73 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * For functions with function(this: T, ...) and T as arguments, type inference
- * will set the type of this on a function literal argument to the actual type
- * of T.
- *
- */
 package com.google.javascript.rhino.jstype;
 
-public class TemplateType extends ProxyObjectType {
-  private static final long serialVersionUID = 1L;
 
-  private final String name;
 
-  TemplateType(JSTypeRegistry registry, String name) {
-    super(registry, registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
-    this.name = name;
-  }
+/**
+ * A type relationship visitor.<p>
+ *
+ * This code will calculate a specific value of type {@code T} from
+ * two types based on its structure.
+ *
+ * @author johnlenz@google.com (John Lenz)
+ */
+interface RelationshipVisitor<T> {
 
-  @Override
-  public String getReferenceName() {
-    return name;
-  }
+  /**
+   * Unknown type's case.
+   */
+  T caseUnknownType(JSType thisType, JSType thatType);
 
-  @Override
-  String toStringHelper(boolean forAnnotations) {
-    return name;
-  }
+  /**
+   * Bottom type's case.
+   */
+  T caseNoType(JSType thatType);
 
-  @Override
-  public TemplateType toMaybeTemplateType() {
-    return this;
-  }
+  /**
+   * Bottom Object type's case.
+   */
+  T caseNoObjectType(JSType thatType);
 
-  @Override
-  public boolean hasAnyTemplateTypesInternal() {
-    return true;
-  }
+  /**
+   * All type's case.
+   */
+  T caseAllType(JSType thatType);
 
-  @Override
-  public <T> T visit(Visitor<T> visitor) {
-    return visitor.caseTemplateType(this);
-  }
+  /**
+   * Value type's case.
+   */
+  T caseValueType(ValueType thisType, JSType thatType);
 
-  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
-    return visitor.caseTemplateType(this, that);
-  }
+  /**
+   * Object type's case.
+   */
+  T caseObjectType(ObjectType thisType, JSType thatType);
+
+  /**
+   * Function type's case.
+   */
+  T caseFunctionType(FunctionType thisType, JSType thatType);
+
+  /**
+   * Union type's case.
+   */
+  T caseUnionType(UnionType thisType, JSType thatType);
+
+  /**
+   * Parameterized type's case.
+   */
+  T caseParameterizedType(ParameterizedType thisType, JSType thatType);
+
+  /**
+   * Template type's case.
+   */
+  T caseTemplateType(TemplateType thisType, JSType thatType);
+
+  /**
+   * Enum element type's case.
+   */
+  T caseEnumElementType(EnumElementType typeType, JSType thatType);
+
 }

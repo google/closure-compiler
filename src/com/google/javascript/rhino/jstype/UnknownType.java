@@ -115,6 +115,10 @@ public class UnknownType extends ObjectType {
     return visitor.caseUnknownType();
   }
 
+  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+    return visitor.caseUnknownType(this, that);
+  }
+
   @Override
   String toStringHelper(boolean forAnnotations) {
     return getReferenceName();

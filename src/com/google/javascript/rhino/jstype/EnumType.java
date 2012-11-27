@@ -155,6 +155,10 @@ public class EnumType extends PrototypeObjectType {
     return visitor.caseObjectType(this);
   }
 
+  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+    return visitor.caseObjectType(this, that);
+  }
+
   @Override
   public FunctionType getConstructor() {
     return null;

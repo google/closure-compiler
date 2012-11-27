@@ -74,6 +74,8 @@ public abstract class JSType implements Serializable {
   private final ImmutableList<JSType> templatizedTypes;
 
   private boolean inTemplatedCheckVisit = false;
+  private static final CanCastToVisitor CAN_CAST_TO_VISITOR =
+      new CanCastToVisitor();
 
   public static final String UNKNOWN_NAME =
       "Unknown class name";
@@ -836,6 +838,17 @@ public abstract class JSType implements Serializable {
   }
 
   /**
+   * Tests whether values of {@code this} type can be safely assigned
+   * to values of {@code that} type.<p>
+   *
+   * The default implementation verifies that {@code this} is a subtype
+   * of {@code that}.<p>
+   */
+  public boolean canCastTo(JSType that) {
+    return this.visit(CAN_CAST_TO_VISITOR, that);
+  }
+
+  /**
    * Turn a scalar type to the corresponding object type.
    *
    * @return the auto-boxed type or {@code null} if this type is not a scalar.
@@ -1353,6 +1366,13 @@ public abstract class JSType implements Serializable {
    * @return the value returned by the visitor
    */
   public abstract <T> T visit(Visitor<T> visitor);
+
+  /**
+   * Visit the types with the given visitor.
+   * @see com.google.javascript.rhino.jstype.RelationshipVisitor
+   * @return the value returned by the visitor
+   */
+  abstract <T> T visit(RelationshipVisitor<T> visitor, JSType that);
 
   /**
    * Force this type to resolve, even if the registry is in a lazy

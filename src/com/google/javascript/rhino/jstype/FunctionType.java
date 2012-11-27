@@ -1038,6 +1038,10 @@ public class FunctionType extends PrototypeObjectType {
     return visitor.caseFunctionType(this);
   }
 
+  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+    return visitor.caseFunctionType(this, that);
+  }
+
   /**
    * Gets the type of instance of this function.
    * @throws IllegalStateException if this function is not a constructor

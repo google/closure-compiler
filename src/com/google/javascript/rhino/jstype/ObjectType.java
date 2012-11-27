@@ -468,6 +468,10 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
     return visitor.caseObjectType(this);
   }
 
+  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+    return visitor.caseObjectType(this, that);
+  }
+
   /**
    * Checks that the prototype is an implicit prototype of this object. Since
    * each object has an implicit prototype, an implicit prototype's

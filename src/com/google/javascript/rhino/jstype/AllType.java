@@ -100,6 +100,10 @@ public final class AllType extends JSType {
     return visitor.caseAllType();
   }
 
+  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+    return visitor.caseAllType(that);
+  }
+
   @Override
   public BooleanLiteralSet getPossibleToBooleanOutcomes() {
     return BooleanLiteralSet.BOTH;

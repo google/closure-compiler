@@ -177,6 +177,10 @@ public class EnumElementType extends ObjectType {
     return visitor.caseEnumElementType(this);
   }
 
+  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+    return visitor.caseEnumElementType(this, that);
+  }
+
   @Override
   boolean defineProperty(String propertyName, JSType type,
       boolean inferred, Node propertyNode) {

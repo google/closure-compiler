@@ -390,6 +390,10 @@ class ProxyObjectType extends ObjectType {
     return referencedType.visit(visitor);
   }
 
+  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+    return referencedType.visit(visitor, that);
+  }
+
   @Override
   JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
     setReferencedType(referencedType.resolve(t, scope));

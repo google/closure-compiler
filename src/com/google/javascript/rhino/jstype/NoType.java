@@ -110,6 +110,10 @@ public class NoType extends NoObjectType {
     return visitor.caseNoType();
   }
 
+  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+    return visitor.caseNoType(that);
+  }
+
   @Override
   String toStringHelper(boolean forAnnotations) {
     return forAnnotations ? "?" : "None";

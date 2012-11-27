@@ -171,6 +171,10 @@ public class NoObjectType extends FunctionType {
     return visitor.caseNoObjectType();
   }
 
+  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+    return visitor.caseNoObjectType(that);
+  }
+
   @Override
   String toStringHelper(boolean forAnnotations) {
     return forAnnotations ? "?" : "NoObject";

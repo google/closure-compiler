@@ -74,6 +74,10 @@ public final class ParameterizedType extends ProxyObjectType {
     return visitor.caseParameterizedType(this);
   }
 
+  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+    return visitor.caseParameterizedType(this, that);
+  }
+
   @Override
   public ParameterizedType toMaybeParameterizedType() {
     return this;

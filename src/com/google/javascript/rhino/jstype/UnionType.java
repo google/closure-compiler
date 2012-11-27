@@ -530,6 +530,10 @@ public class UnionType extends JSType {
     return visitor.caseUnionType(this);
   }
 
+  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+    return visitor.caseUnionType(this, that);
+  }
+
   @Override
   JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
     setResolvedTypeInternal(this); // for circularly defined types.
