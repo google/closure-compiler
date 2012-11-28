@@ -265,7 +265,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
       }
       
       if (headerNote != null) {
-        out.append("# "
+        out.append("#"
             + Joiner.on("\n# ").join(Splitter.on("\n").split(headerNote))
             + "\n");
       }
