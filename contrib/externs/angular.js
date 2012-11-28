@@ -986,7 +986,7 @@ angular.$interpolateProvider.endSymbol;
  *   absUrl: function():string,
  *   hash: function(string=):string,
  *   host: function():string,
- *   path: function(string=):string,
+ *   path: function(string=):(string|angular.$location),
  *   port: function():number,
  *   protocol: function():string,
  *   replace: function(),
@@ -1015,7 +1015,7 @@ angular.$location.host = function() {};
 
 /**
  * @param {string=} opt_path
- * @return {string}
+ * @return {string|angular.$location}
  */
 angular.$location.path = function(opt_path) {};
 
