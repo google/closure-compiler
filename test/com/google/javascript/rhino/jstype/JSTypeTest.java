@@ -5173,6 +5173,33 @@ public class JSTypeTest extends BaseJSTypeTestCase {
               proxyTypeI.isEquivalentTo(proxyTypeJ));
         }
 
+        assertTrue(typeJ + " should be castable to " + typeI,
+            typeJ.canCastTo(typeI));
+        assertTrue(typeJ + " should be castable to Named " + namedTypeI,
+            typeJ.canCastTo(namedTypeI));
+        assertTrue(typeJ + " should be castable to Proxy " + proxyTypeI,
+            typeJ.canCastTo(proxyTypeI));
+
+        assertTrue(
+            "Named " + typeJ + " should be castable to " + typeI,
+            namedTypeJ.canCastTo(typeI));
+        assertTrue(
+            "Named " + typeJ + " should be castable to Named " + typeI,
+            namedTypeJ.canCastTo(namedTypeI));
+        assertTrue(
+            "Named " + typeJ + " should be castable to Proxy " + typeI,
+            namedTypeJ.canCastTo(proxyTypeI));
+
+        assertTrue(
+            "Proxy " + typeJ + " should be castable to " + typeI,
+            proxyTypeJ.canCastTo(typeI));
+        assertTrue(
+            "Proxy " + typeJ + " should be castable to Named " + typeI,
+            proxyTypeJ.canCastTo(namedTypeI));
+        assertTrue(
+            "Proxy " + typeJ + " should be castable to Proxy " + typeI,
+            proxyTypeJ.canCastTo(proxyTypeI));
+
         if (checkSubtyping) {
           if (i <= j) {
             assertTrue(typeJ + " should be a subtype of " + typeI,
@@ -5567,7 +5594,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   /**
    * Tests the factory method
-   * {@link JSTypeRegistry#createAnonymousObjectType()}}.
+   * {@link JSTypeRegistry#createAnonymousObjectType}}.
    */
   public void testCreateAnonymousObjectType() throws Exception {
     // anonymous
@@ -5579,7 +5606,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   /**
    * Tests the factory method
-   * {@link JSTypeRegistry#createAnonymousObjectType()}} and adds
+   * {@link JSTypeRegistry#createAnonymousObjectType}} and adds
    * some properties to it.
    */
   public void testCreateAnonymousObjectType2() throws Exception {
@@ -5889,6 +5916,56 @@ public class JSTypeTest extends BaseJSTypeTestCase {
       exceptionThrown = true;
     }
     assertTrue(exceptionThrown);
+  }
+
+  public void testCanCastTo() {
+    assertTrue(ALL_TYPE.canCastTo(NULL_TYPE));
+    assertTrue(ALL_TYPE.canCastTo(VOID_TYPE));
+    assertTrue(ALL_TYPE.canCastTo(STRING_TYPE));
+    assertTrue(ALL_TYPE.canCastTo(NUMBER_TYPE));
+    assertTrue(ALL_TYPE.canCastTo(BOOLEAN_TYPE));
+    assertTrue(ALL_TYPE.canCastTo(OBJECT_TYPE));
+
+    assertFalse(NUMBER_TYPE.canCastTo(NULL_TYPE));
+    assertFalse(NUMBER_TYPE.canCastTo(VOID_TYPE));
+    assertFalse(NUMBER_TYPE.canCastTo(STRING_TYPE));
+    assertTrue(NUMBER_TYPE.canCastTo(NUMBER_TYPE));
+    assertFalse(NUMBER_TYPE.canCastTo(BOOLEAN_TYPE));
+    assertFalse(NUMBER_TYPE.canCastTo(OBJECT_TYPE));
+
+    assertFalse(STRING_TYPE.canCastTo(NULL_TYPE));
+    assertFalse(STRING_TYPE.canCastTo(VOID_TYPE));
+    assertTrue(STRING_TYPE.canCastTo(STRING_TYPE));
+    assertFalse(STRING_TYPE.canCastTo(NUMBER_TYPE));
+    assertFalse(STRING_TYPE.canCastTo(BOOLEAN_TYPE));
+    assertFalse(STRING_TYPE.canCastTo(OBJECT_TYPE));
+
+    assertFalse(BOOLEAN_TYPE.canCastTo(NULL_TYPE));
+    assertFalse(BOOLEAN_TYPE.canCastTo(VOID_TYPE));
+    assertFalse(BOOLEAN_TYPE.canCastTo(STRING_TYPE));
+    assertFalse(BOOLEAN_TYPE.canCastTo(NUMBER_TYPE));
+    assertTrue(BOOLEAN_TYPE.canCastTo(BOOLEAN_TYPE));
+    assertFalse(BOOLEAN_TYPE.canCastTo(OBJECT_TYPE));
+
+    assertFalse(OBJECT_TYPE.canCastTo(NULL_TYPE));
+    assertFalse(OBJECT_TYPE.canCastTo(VOID_TYPE));
+    assertFalse(OBJECT_TYPE.canCastTo(STRING_TYPE));
+    assertFalse(OBJECT_TYPE.canCastTo(NUMBER_TYPE));
+    assertFalse(OBJECT_TYPE.canCastTo(BOOLEAN_TYPE));
+    assertTrue(OBJECT_TYPE.canCastTo(OBJECT_TYPE));
+
+    assertFalse(BOOLEAN_TYPE.canCastTo(OBJECT_NUMBER_STRING));
+    assertFalse(OBJECT_NUMBER_STRING.canCastTo(BOOLEAN_TYPE));
+
+    assertFalse(ARRAY_TYPE.canCastTo(U2U_FUNCTION_TYPE));
+    assertFalse(U2U_FUNCTION_TYPE.canCastTo(ARRAY_TYPE));
+
+    assertFalse(NULL_VOID.canCastTo(ARRAY_TYPE));
+    assertTrue(NULL_VOID.canCastTo(createUnionType(ARRAY_TYPE, NULL_TYPE)));
+
+    // We currently allow any function to be cast to any other function type
+    assertTrue(ARRAY_FUNCTION_TYPE.canCastTo(BOOLEAN_OBJECT_FUNCTION_TYPE));
+
   }
 
   private static boolean containsType(

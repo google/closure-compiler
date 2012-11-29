@@ -1170,7 +1170,7 @@ public class FunctionType extends PrototypeObjectType {
       maybeTypeOfThis = maybeTypeOfThis.restrictByNotNullOrUndefined();
     }
     if (maybeTypeOfThis instanceof ObjectType) {
-      typeOfThis = (ObjectType) maybeTypeOfThis;
+      typeOfThis = maybeTypeOfThis;
     }
 
     boolean changed = false;

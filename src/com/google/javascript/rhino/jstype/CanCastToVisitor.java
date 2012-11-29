@@ -42,7 +42,7 @@ package com.google.javascript.rhino.jstype;
 /**
  * A "can cast to" relationship visitor.
  */
-class CanCastToVisitor implements RelationshipVisitor<Boolean>{
+class CanCastToVisitor implements RelationshipVisitor<Boolean> {
 
   @Override
   public Boolean caseUnknownType(JSType thisType, JSType thatType) {
@@ -66,13 +66,8 @@ class CanCastToVisitor implements RelationshipVisitor<Boolean>{
 
   boolean canCastToUnion(JSType thisType, UnionType unionType) {
     for (JSType type : unionType.getAlternates()) {
-      if (type.isVoidType() || type.isNullType()) {
-        // allow cast from null or undefined to nullable/voidable types.
-        return thisType.isEquivalentTo(type);
-      } else {
-        if (thisType.visit(this, type)) {
-          return true;
-        }
+      if (thisType.visit(this, type)) {
+        return true;
       }
     }
     return false;
@@ -83,7 +78,8 @@ class CanCastToVisitor implements RelationshipVisitor<Boolean>{
       // TODO(johnlenz): visit function parts
       return true;
     } else {
-      return false;
+      return thisType.isSubtype(functionType)
+          || functionType.isSubtype(thisType);
     }
   }
 
@@ -140,17 +136,28 @@ class CanCastToVisitor implements RelationshipVisitor<Boolean>{
 
   @Override
   public Boolean caseUnionType(UnionType thisType, JSType thatType) {
+    boolean visited = false;
     for (JSType type : thisType.getAlternates()) {
       if (type.isVoidType() || type.isNullType()) {
         // Don't allow if the only match between the types is null or void,
         // otherwise any nullable type would be castable to any other nullable
         // type and we don't want that.
       } else {
+        visited = true;
         if (type.visit(this, thatType)) {
           return true;
         }
       }
     }
+
+    // Special case the "null|undefined" union and allow it to be cast
+    // to any cast to any type containing allowing either null|undefined.
+    if (!visited) {
+      JSType NULL_TYPE = thisType.getNativeType(JSTypeNative.NULL_TYPE);
+      JSType VOID_TYPE = thisType.getNativeType(JSTypeNative.VOID_TYPE);
+      return NULL_TYPE.visit(this, thatType) || VOID_TYPE.visit(this, thatType);
+    }
+
     return false;
   }
 

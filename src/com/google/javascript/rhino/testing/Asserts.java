@@ -151,5 +151,10 @@ public class Asserts {
     assertTypeEquals(a, a.getLeastSupertype(a));
     assertTypeEquals(a, b.getLeastSupertype(b));
     assertTypeEquals(a, b.getLeastSupertype(a));
+
+    Assert.assertTrue(a.canCastTo(b));
+    Assert.assertTrue(a.canCastTo(a));
+    Assert.assertTrue(b.canCastTo(b));
+    Assert.assertTrue(b.canCastTo(a));
   }
 }
