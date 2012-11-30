@@ -763,11 +763,11 @@ angular.$compile;
  *****************************************************************************/
 
 /**
- * @param {string} cacheId
- * @param {angular.$cacheFactory.Options=} opt_options
- * @return {angular.$cacheFactory.Cache}
+ * @typedef {
+ *   function(string, angular.$cacheFactory.Options=):
+ *       !angular.$cacheFactory.Cache}
  */
-angular.$cacheFactory = function(cacheId, opt_options) {};
+angular.$cacheFactory;
 
 /** @typedef {{capacity: (number|undefined)}} */
 angular.$cacheFactory.Options;
