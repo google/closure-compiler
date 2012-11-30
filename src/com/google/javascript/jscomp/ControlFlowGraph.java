@@ -133,12 +133,12 @@ class ControlFlowGraph<N> extends
 
   /**
    * Abstract callback to visit a control flow graph node without going into
-   * subtrees of the node that is also represented by another control flow graph
-   * node.
+   * subtrees of the node that are also represented by other
+   * control flow graph nodes.
    *
-   * <p>For example, traversing an IF node as root will visit the two subtree
+   * <p>For example, traversing an IF node as root will visit the two subtrees
    * pointed by the {@link ControlFlowGraph.Branch#ON_TRUE} and
-   * {@link ControlFlowGraph.Branch#ON_FALSE} edge.
+   * {@link ControlFlowGraph.Branch#ON_FALSE} edges.
    */
   public abstract static class AbstractCfgNodeTraversalCallback implements
       Callback {
@@ -165,25 +165,25 @@ class ControlFlowGraph<N> extends
         return true;
       case Token.FUNCTION:
         // A function node represents the start of a function where the name
-        // is bleed into the local scope and parameters has been assigned
+        // bleeds into the local scope and parameters are assigned
         // to the formal argument names. The node includes the name of the
         // function and the LP list since we assume the whole set up process
         // is atomic without change in control flow. The next change of
-        // control is going into the function's body represent by the second
+        // control is going into the function's body, represented by the second
         // child.
         return n != parent.getFirstChild().getNext();
       case Token.WHILE:
       case Token.DO:
       case Token.IF:
-        // Theses control structure is represented by its node that holds the
+        // These control structures are represented by a node that holds the
         // condition. Each of them is a branch node based on its condition.
         return NodeUtil.getConditionExpression(parent) != n;
 
       case Token.FOR:
-        // The FOR(;;) node differs from other control structure in that
-        // it has a initialization and a increment statement. Those
-        // two statements have its corresponding CFG nodes to represent them.
-        // The FOR node represents the condition check for each iteration.
+        // The FOR(;;) node differs from other control structures in that
+        // it has an initialization and an increment statement. Those
+        // two statements have corresponding CFG nodes to represent them.
+        // The FOR node only represents the condition check for each iteration.
         // That way the following:
         // for(var x = 0; x < 10; x++) { } has a graph that is isomorphic to
         // var x = 0; while(x<10) {  x++; }

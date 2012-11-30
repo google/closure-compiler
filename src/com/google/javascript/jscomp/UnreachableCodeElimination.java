@@ -110,16 +110,16 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
   }
 
   /**
-   * Tries to remove n if an unconditional branch node (break, continue or
-   * return) if the target of n is the same as the the follow of n. That is, if
-   * we remove n, the control flow remains the same. Also if n targets to
+   * Tries to remove n if it is an unconditional branch node (break, continue,
+   * or return) and the target of n is the same as the the follow of n.
+   * That is, if removing n preserves the control flow. Also if n targets
    * another unconditional branch, this function will recursively try to remove
    * the target branch as well. The reason why we want to cascade this removal
    * is because we only run this pass once. If we have code such as
    *
    * break -> break -> break
    *
-   * where all 3 break's are useless. The order of removal matters. When we
+   * where all 3 breaks are useless, then the order of removal matters. When we
    * first look at the first break, we see that it branches to the 2nd break.
    * However, if we remove the last break, the 2nd break becomes useless and
    * finally the first break becomes useless as well.
@@ -130,13 +130,13 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
   @SuppressWarnings("fallthrough")
   private Node tryRemoveUnconditionalBranching(Node n) {
     /*
-     * For each of the unconditional branching control flow node, check to see
+     * For each unconditional branching control flow node, check to see
      * if the ControlFlowAnalysis.computeFollowNode of that node is same as
      * the branching target. If it is, the branch node is safe to be removed.
      *
      * This is not as clever as MinimizeExitPoints because it doesn't do any
      * if-else conversion but it handles more complicated switch statements
-     * much nicer.
+     * much more nicely.
      */
 
     // If n is null the target is the end of the function, nothing to do.
@@ -159,8 +159,8 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
       case Token.CONTINUE:
 
         // We are looking for a control flow changing statement that always
-        // branches to the same node. If removing it the control flow still
-        // branches to that same node. It is safe to remove it.
+        // branches to the same node. If after removing it control still
+        // branches to the same node, it is safe to remove.
         List<DiGraphEdge<Node,Branch>> outEdges = gNode.getOutEdges();
         if (outEdges.size() == 1 &&
             // If there is a next node, there is no chance this jump is useless.
@@ -198,9 +198,8 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
       return;
     }
 
-    // TODO(user): This is a problem with removeNoOpStatements. Everything
-    // every expression in a FOR-IN header looks like side effect free on it's
-    // own.
+    // TODO(user): This is a problem with removeNoOpStatements.
+    // Every expression in a FOR-IN header looks side effect free on its own.
     if (NodeUtil.isForIn(parent)) {
       return;
     }
@@ -208,7 +207,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
     switch (n.getType()) {
       // Removing an unreachable DO node is messy because it means we still have
       // to execute one iteration. If the DO's body has breaks in the middle, it
-      // can get even more trickier and code size might actually increase.
+      // can get even more tricky and code size might actually increase.
       case Token.DO:
         return;
 
@@ -236,7 +235,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
       // The node var x is unreachable in the global scope.
       // Before we remove the node, redeclareVarsInsideBranch
       // would basically move var x to the beginning of File 2,
-      // which resulted in zero change in the AST but triggered
+      // which resulted in zero changes to the AST but triggered
       // reportCodeChange().
       // Instead, we should just ignore dead variable declarations.
       return;
