@@ -95,6 +95,9 @@ import javax.annotation.Nullable;
  */
 abstract class AbstractCommandLineRunner<A extends Compiler,
     B extends CompilerOptions> {
+  static final DiagnosticType OUTPUT_SAME_AS_INPUT_ERROR = DiagnosticType.error(
+      "JSC_OUTPUT_SAME_AS_INPUT_ERROR",
+      "Bad output file (already listed as input file): {0}");
 
   private final CommandLineConfig config;
 
@@ -747,7 +750,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     setRunOptions(options);
 
     boolean writeOutputToFile = !config.jsOutputFile.isEmpty();
+    List<String> outputFileNames = Lists.newArrayList();
     if (writeOutputToFile) {
+      outputFileNames.add(config.jsOutputFile);
       jsOutput = fileNameToLegacyOutputWriter(config.jsOutputFile);
     } else if (jsOutput instanceof OutputStream) {
       jsOutput = streamToLegacyOutputWriter((OutputStream) jsOutput);
@@ -765,6 +770,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
     if (!moduleSpecs.isEmpty()) {
       modules = createJsModules(moduleSpecs, jsFiles);
+      for (JSModule m : modules) {
+        outputFileNames.add(getModuleOutputFileName(m));
+      }
+
       if (config.skipNormalOutputs) {
         compiler.initModules(externs, modules, options);
       } else {
@@ -782,6 +791,17 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       // For CommonJS modules construct modules from actual inputs.
       modules = Lists.newArrayList(compiler.getDegenerateModuleGraph()
           .getAllModules());
+      for (JSModule m : modules) {
+        outputFileNames.add(getModuleOutputFileName(m));
+      }
+    }
+
+    for (String outputFileName : outputFileNames) {
+      if (compiler.getSourceFileByName(outputFileName) != null) {
+        compiler.report(
+            JSError.make(OUTPUT_SAME_AS_INPUT_ERROR, outputFileName));
+        return 1;
+      }
     }
 
     int errCode = processResults(result, modules, options);

@@ -1138,6 +1138,11 @@ public class CommandLineRunnerTest extends TestCase {
         "var module$foo$bar={},module$foo$bar={foo:1};");
   }
 
+  public void testOutputSameAsInput() {
+    args.add("--js_output_file=" + getFilename(0));
+    test("", AbstractCommandLineRunner.OUTPUT_SAME_AS_INPUT_ERROR);
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
