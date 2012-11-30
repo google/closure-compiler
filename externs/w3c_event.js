@@ -52,7 +52,7 @@ EventTarget.prototype.removeEventListener = function(type, listener, useCapture)
 EventTarget.prototype.dispatchEvent = function(evt) {};
 
 /**
- * @constructor
+ * @interface
  */
 function EventListener() {}
 
