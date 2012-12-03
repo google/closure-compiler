@@ -10247,6 +10247,21 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testTemplateType4() throws Exception {
+    testTypes(
+        "/**" +
+        " * @param {...T} p\n" +
+        " * @return {T} \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function fn(p) { return p; }\n" +
+        "/** @type {!Object} */ var x;" +
+        "x = fn(3, null);",
+        "assignment\n" +
+        "found   : (null|number)\n" +
+        "required: Object");
+  }
+
   public void disable_testBadTemplateType4() throws Exception {
     // TODO(johnlenz): Add a check for useless of template types.
     // Unless there are at least two references to a Template type in
