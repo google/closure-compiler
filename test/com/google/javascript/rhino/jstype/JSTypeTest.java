@@ -812,6 +812,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertTrue(forwardDeclaredNamedType.isEmptyType());
     assertTrue(forwardDeclaredNamedType.isNoResolvedType());
+
+    UnionType nullable =
+        (UnionType) registry.createNullableType(NO_RESOLVED_TYPE);
+    assertTypeEquals(
+        nullable, nullable.getGreatestSubtype(NULL_TYPE));
+    assertTypeEquals(NO_RESOLVED_TYPE, nullable.getRestrictedUnion(NULL_TYPE));
   }
 
   /**
@@ -1776,7 +1782,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(
         NULL_TYPE.isSubtype(
             createUnionType(forwardDeclaredNamedType, NULL_TYPE)));
-    assertTypeEquals(NULL_TYPE,
+    assertTypeEquals(
+        createUnionType(forwardDeclaredNamedType, NULL_TYPE),
         NULL_TYPE.getGreatestSubtype(
             createUnionType(forwardDeclaredNamedType, NULL_TYPE)));
     assertFalse(NULL_TYPE.isNominalConstructor());
@@ -4904,7 +4911,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         googSubSubBar.getPrototype(),
         googSubSubBar.getInstanceType(),
         registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
-        registry.getNativeType(JSTypeNative.NO_RESOLVED_TYPE),
         registry.getNativeType(JSTypeNative.NO_TYPE));
     verifySubtypeChain(typeChain);
   }

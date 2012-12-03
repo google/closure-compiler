@@ -307,7 +307,7 @@ public class UnionType extends JSType {
     JSType result = builder.build();
     if (!result.isNoType()) {
       return result;
-    } else if (this.isObject() && that.isObject()) {
+    } else if (this.isObject() && (that.isObject() && !that.isNoType())) {
       return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
     } else {
       return getNativeType(JSTypeNative.NO_TYPE);
@@ -405,7 +405,8 @@ public class UnionType extends JSType {
   public JSType getRestrictedUnion(JSType type) {
     UnionTypeBuilder restricted = new UnionTypeBuilder(registry);
     for (JSType t : alternates) {
-      if (t.isUnknownType() || !t.isSubtype(type)) {
+      // Keep all unknown/unresolved types.
+      if (t.isUnknownType() || t.isNoResolvedType() || !t.isSubtype(type)) {
         restricted.addAlternate(t);
       }
     }

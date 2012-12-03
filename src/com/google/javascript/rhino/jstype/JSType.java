@@ -1067,14 +1067,14 @@ public abstract class JSType implements Serializable {
       // unknown type, unless the two types are equal.
       return thisType.isEquivalentTo(thatType) ? thisType :
           thisType.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    } else if (thisType.isSubtype(thatType)) {
-      return filterNoResolvedType(thisType);
-    } else if (thatType.isSubtype(thisType)) {
-      return filterNoResolvedType(thatType);
     } else if (thisType.isUnionType()) {
       return thisType.toMaybeUnionType().meet(thatType);
     } else if (thatType.isUnionType()) {
       return thatType.toMaybeUnionType().meet(thisType);
+    } else if (thisType.isSubtype(thatType)) {
+      return filterNoResolvedType(thisType);
+    } else if (thatType.isSubtype(thisType)) {
+      return filterNoResolvedType(thatType);
     } else if (thisType.isRecordType()) {
       return thisType.toMaybeRecordType().getGreatestSubtypeHelper(thatType);
     } else if (thatType.isRecordType()) {
@@ -1124,6 +1124,7 @@ public abstract class JSType implements Serializable {
 
       if (needsFiltering) {
         UnionTypeBuilder builder = new UnionTypeBuilder(type.registry);
+        builder.addAlternate(type.getNativeType(JSTypeNative.NO_RESOLVED_TYPE));
         for (JSType alt : unionType.getAlternates()) {
           if (!alt.isNoResolvedType()) {
             builder.addAlternate(alt);

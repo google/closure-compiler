@@ -21,6 +21,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_INSTANCE_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NO_RESOLVED_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -139,7 +140,7 @@ public class TypeInferenceTest extends TestCase {
   }
 
   private void verify(String name, JSType type) {
-    Asserts.assertTypeEquals(type, getType(name));
+    Asserts.assertTypeEquals("Mismatch for " + name, type, getType(name));
   }
 
   private void verify(String name, JSTypeNative type) {
@@ -168,6 +169,10 @@ public class TypeInferenceTest extends TestCase {
   private JSType createUndefinableType(JSTypeNative type) {
     return registry.createUnionType(
         registry.getNativeType(type), registry.getNativeType(VOID_TYPE));
+  }
+
+  private JSType getNoResolvedType() {
+    return registry.getNativeType(NO_RESOLVED_TYPE);
   }
 
   private JSType createNullableType(JSTypeNative type) {
@@ -494,7 +499,7 @@ public class TypeInferenceTest extends TestCase {
     verify("x", STRING_OBJECT_TYPE);
   }
 
-  public void testAssertWithIsDef() {
+  public void testAssertWithIsDefAndNotNull() {
     JSType startType = createNullableType(NUMBER_TYPE);
     assuming("x", startType);
     inFunction(
@@ -503,6 +508,22 @@ public class TypeInferenceTest extends TestCase {
         "out2 = x;");
     verify("out1", startType);
     verify("out2", NUMBER_TYPE);
+  }
+
+  public void testIsDefAndNoResolvedType() {
+    JSType startType = createUndefinableType(NO_RESOLVED_TYPE);
+    assuming("x", startType);
+    inFunction(
+        "out1 = x;" +
+        "if (goog.isDef(x)) { out2a = x; out2b = x.length; out2c = x; }" +
+        "out3 = x;" +
+        "if (goog.isDef(x)) { out4 = x; }");
+    verify("out1", startType);
+    verify("out2a", NO_RESOLVED_TYPE);
+    verify("out2b", CHECKED_UNKNOWN_TYPE);
+    verify("out2c", NO_RESOLVED_TYPE);
+    verify("out3", startType);
+    verify("out4", NO_RESOLVED_TYPE);
   }
 
   public void testAssertWithNotIsNull() {
