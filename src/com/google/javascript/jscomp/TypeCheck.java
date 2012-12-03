@@ -1538,7 +1538,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       String functionName, HashMap<String, ObjectType> properties,
       HashMap<String, ObjectType> currentProperties,
       ObjectType interfaceType) {
-    Set<String> currentPropertyNames = interfaceType.getPropertyNames();
+    Set<String> currentPropertyNames =
+        interfaceType.getImplicitPrototype().getOwnPropertyNames();
     for (String name : currentPropertyNames) {
       ObjectType oType = properties.get(name);
       if (oType != null) {

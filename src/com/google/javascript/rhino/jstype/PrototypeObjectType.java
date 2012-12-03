@@ -40,15 +40,14 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -71,7 +70,7 @@ class PrototypeObjectType extends ObjectType {
   private static final long serialVersionUID = 1L;
 
   private final String className;
-  private final Map<String, Property> properties;
+  private final PropertyMap properties;
   private final boolean nativeType;
 
   // NOTE(nicksantos): The implicit prototype can change over time.
@@ -115,7 +114,9 @@ class PrototypeObjectType extends ObjectType {
       ImmutableList<String> templateKeys,
       ImmutableList<JSType> templatizedTypes) {
     super(registry, templateKeys, templatizedTypes);
-    this.properties = Maps.newTreeMap();
+    this.properties = new PropertyMap();
+    this.properties.setParentSource(this);
+
     this.className = className;
     this.nativeType = nativeType;
     if (nativeType || implicitPrototype != null) {
@@ -127,24 +128,13 @@ class PrototypeObjectType extends ObjectType {
   }
 
   @Override
+  PropertyMap getPropertyMap() {
+    return properties;
+  }
+
+  @Override
   public Property getSlot(String name) {
-    if (properties.containsKey(name)) {
-      return properties.get(name);
-    }
-    ObjectType implicitPrototype = getImplicitPrototype();
-    if (implicitPrototype != null) {
-      Property prop = implicitPrototype.getSlot(name);
-      if (prop != null) {
-        return prop;
-      }
-    }
-    for (ObjectType interfaceType : getCtorExtendedInterfaces()) {
-      Property prop = interfaceType.getSlot(name);
-      if (prop != null) {
-        return prop;
-      }
-    }
-    return null;
+    return properties.getSlot(name);
   }
 
   /**
@@ -152,17 +142,7 @@ class PrototypeObjectType extends ObjectType {
    */
   @Override
   public int getPropertiesCount() {
-    ObjectType implicitPrototype = getImplicitPrototype();
-    if (implicitPrototype == null) {
-      return this.properties.size();
-    }
-    int localCount = 0;
-    for (String property : properties.keySet()) {
-      if (!implicitPrototype.hasProperty(property)) {
-        localCount++;
-      }
-    }
-    return implicitPrototype.getPropertiesCount() + localCount;
+    return properties.getPropertiesCount();
   }
 
   @Override
@@ -173,12 +153,12 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   public boolean hasOwnProperty(String propertyName) {
-    return properties.get(propertyName) != null;
+    return properties.hasOwnProperty(propertyName);
   }
 
   @Override
   public Set<String> getOwnPropertyNames() {
-    return properties.keySet();
+    return properties.getOwnPropertyNames();
   }
 
   @Override
@@ -192,13 +172,7 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   void collectPropertyNames(Set<String> props) {
-    for (String prop : properties.keySet()) {
-      props.add(prop);
-    }
-    ObjectType implicitPrototype = getImplicitPrototype();
-    if (implicitPrototype != null) {
-      implicitPrototype.collectPropertyNames(props);
-    }
+    properties.collectPropertyNames(props);
   }
 
   @Override
@@ -221,13 +195,9 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   public boolean isPropertyInExterns(String propertyName) {
-    Property p = properties.get(propertyName);
+    Property p = getSlot(propertyName);
     if (p != null) {
       return p.isFromExterns();
-    }
-    ObjectType implicitPrototype = getImplicitPrototype();
-    if (implicitPrototype != null) {
-      return implicitPrototype.isPropertyInExterns(propertyName);
     }
     return false;
   }
@@ -240,37 +210,27 @@ class PrototypeObjectType extends ObjectType {
     }
     Property newProp = new Property(
         name, type, inferred, propertyNode);
-    Property oldProp = properties.get(name);
-    if (oldProp != null) {
-      // This is to keep previously inferred JsDoc info, e.g., in a
-      // replaceScript scenario.
-      newProp.setJSDocInfo(oldProp.getJSDocInfo());
-    }
-    properties.put(name, newProp);
+    properties.putProperty(name, newProp);
     return true;
   }
 
   @Override
   public boolean removeProperty(String name) {
-    return properties.remove(name) != null;
+    return properties.removeProperty(name);
   }
 
   @Override
   public Node getPropertyNode(String propertyName) {
-    Property p = properties.get(propertyName);
+    Property p = getSlot(propertyName);
     if (p != null) {
       return p.getNode();
-    }
-    ObjectType implicitPrototype = getImplicitPrototype();
-    if (implicitPrototype != null) {
-      return implicitPrototype.getPropertyNode(propertyName);
     }
     return null;
   }
 
   @Override
   public JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
-    Property p = properties.get(propertyName);
+    Property p = properties.getOwnProperty(propertyName);
     if (p != null) {
       return p.getJSDocInfo();
     }
@@ -280,7 +240,7 @@ class PrototypeObjectType extends ObjectType {
   @Override
   public void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
     if (info != null) {
-      if (!properties.containsKey(propertyName)) {
+      if (properties.getOwnProperty(propertyName) == null) {
         // If docInfo was attached, but the type of the property
         // was not defined anywhere, then we consider this an explicit
         // declaration of the property.
@@ -290,7 +250,7 @@ class PrototypeObjectType extends ObjectType {
 
       // The prototype property is not represented as a normal Property.
       // We probably don't want to attach any JSDoc to it anyway.
-      Property property = properties.get(propertyName);
+      Property property = properties.getOwnProperty(propertyName);
       if (property != null) {
         property.setJSDocInfo(info);
       }

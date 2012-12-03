@@ -66,6 +66,12 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  PropertyMap getPropertyMap() {
+    return referencedObjType == null
+        ? null : referencedObjType.getPropertyMap();
+  }
+
+  @Override
   public Property getSlot(String name) {
     if (referencedObjType != null) {
       return referencedObjType.getSlot(name);

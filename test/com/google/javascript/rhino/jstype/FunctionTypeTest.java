@@ -187,8 +187,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     assertTrue(ctor.isPropertyTypeInferred("prototype"));
     assertTrue(ctor.getPropertyType("prototype").isUnknownType());
 
-    // The node is not recorded.
-    assertNull(ctor.getPropertyNode("prototype"));
+    assertEquals(node, ctor.getPropertyNode("prototype"));
   }
 
   public void testEmptyFunctionTypes() {

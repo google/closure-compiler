@@ -72,6 +72,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.Property;
 
 import java.util.Iterator;
 import java.util.List;
@@ -1207,7 +1208,7 @@ final class TypedScopeCreator implements ScopeCreator {
         Scope scopeToDeclareIn, CompilerInput input, Var newVar) {
       // Declare var.prototype in the scope chain.
       FunctionType superClassCtor = fnType.getSuperClassConstructor();
-      ObjectType.Property prototypeSlot = fnType.getSlot("prototype");
+      Property prototypeSlot = fnType.getSlot("prototype");
 
       // When we declare the function prototype implicitly, we
       // want to make sure that the function and its prototype
