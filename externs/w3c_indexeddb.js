@@ -420,6 +420,15 @@ IDBDatabase.prototype.onerror = function() {};
 IDBDatabase.prototype.onversionchange = function() {};
 
 /**
+ * Typedef for valid key types according to the w3 specification. Note that this
+ * is slightly wider than what is actually allowed, as all Array elements must
+ * have a valid key type.
+ * @see http://www.w3.org/TR/IndexedDB/#key-construct
+ * @typedef {number|string|!Date|!Array}
+ */
+var IDBKeyType;
+
+/**
  * @constructor
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBObjectStore
  */
@@ -646,7 +655,7 @@ IDBCursor.prototype.source;
 IDBCursor.prototype.direction;
 
 /**
- * @type {*}
+ * @type {IDBKeyType}
  * @const
  */
 IDBCursor.prototype.key;
