@@ -1049,6 +1049,40 @@ chrome.history.onVisited;
 chrome.input = {};
 chrome.input.ime = {};
 
+/**
+ * The OnKeyEvent event takes an extra argument.
+ * @constructor
+ */
+function ChromeInputImeOnKeyEventEvent() {}
+
+
+/**
+ * @param {function(string, !ChromeKeyboardEvent): (boolean|undefined)} callback
+ *     callback.
+ * @param {Array.<string>=} opt_extraInfoSpec Array of extra information.
+ */
+ChromeInputImeOnKeyEventEvent.prototype.addListener =
+    function(callback, opt_extraInfoSpec) {};
+
+
+/**
+ * @param {function(string, !ChromeKeyboardEvent): (boolean|undefined)} callback
+ *     callback.
+ */
+ChromeInputImeOnKeyEventEvent.prototype.removeListener = function(callback) {};
+
+/**
+ * @param {function(string, !ChromeKeyboardEvent): (boolean|undefined)} callback
+ *     callback.
+ */
+ChromeInputImeOnKeyEventEvent.prototype.hasListener = function(callback) {};
+
+/**
+ * @param {function(string, !ChromeKeyboardEvent): (boolean|undefined)} callback
+ *     callback.
+ */
+ChromeInputImeOnKeyEventEvent.prototype.hasListeners = function(callback) {};
+
 
 /**
  * @param {!Object.<string,number>} parameters An object with a
@@ -1120,6 +1154,13 @@ chrome.input.ime.setMenuItems = function(parameters, opt_callback) {};
  */
 chrome.input.ime.updateMenuItems = function(parameters, opt_callback) {};
 
+/**
+ * @param {string} requestId Request id of the event that was handled. This
+ *     should come from keyEvent.requestId.
+ * @param {boolean} response True if the keystroke was handled, false if not.
+ */
+chrome.input.ime.keyEventHandled = function(requestId, response) {};
+
 
 /** @type {!ChromeEvent} */
 chrome.input.ime.onActivate;
@@ -1145,7 +1186,7 @@ chrome.input.ime.onFocus;
 chrome.input.ime.onInputContextUpdate;
 
 
-/** @type {!ChromeEvent} */
+/** @type {!ChromeInputImeOnKeyEventEvent} */
 chrome.input.ime.onKeyEvent;
 
 
