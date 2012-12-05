@@ -784,6 +784,14 @@ public final class JsDocInfoParser {
                   }
                   continue retry;
 
+                case STABLEIDGENERATOR:
+                  if (!jsdocBuilder.recordStableIdGenerator()) {
+                    parser.addParserWarning("msg.jsdoc.stableidgen",
+                      stream.getLineno(), stream.getCharno());
+                  }
+                  token = eatTokensUntilEOL();
+                  continue retry;
+
                 case SUPPRESS:
                   token = parseSuppressTag(next());
                   continue retry;

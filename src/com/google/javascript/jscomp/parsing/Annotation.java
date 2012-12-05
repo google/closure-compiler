@@ -65,8 +65,9 @@ enum Annotation {
   PUBLIC,
   RETURN,
   SEE,
-  SUPPRESS,
+  STABLEIDGENERATOR,
   STRUCT,
+  SUPPRESS,
   TEMPLATE,
   THIS,
   THROWS,
@@ -120,6 +121,7 @@ enum Annotation {
       put("return", Annotation.RETURN).
       put("returns", Annotation.RETURN).
       put("see", Annotation.SEE).
+      put("stableIdGenerator", Annotation.STABLEIDGENERATOR).
       put("struct", Annotation.STRUCT).
       put("suppress", Annotation.SUPPRESS).
       put("template", Annotation.TEMPLATE).
