@@ -326,6 +326,18 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     // TODO(johnlenz): merge the useless "case 2"
     foldSame("switch(a){case 1: goo(); case 2:break; case 3: foo()}");
 
+    // Can't remove unused code with a "var" in it.
+    fold("switch(1){case 2: var x=0;}", "var x;");
+    fold("switch ('repeated') {\n" +
+        "case 'repeated':\n" +
+        "  foo();\n" +
+        "  break;\n" +
+        "case 'repeated':\n" +
+        "  var x=0;\n" +
+        "  break;\n" +
+        "}",
+        "var x; {foo();}");
+
     // Can't remove cases if something useful is done.
     foldSame("switch(a){case 1: var c =2; break;}");
     foldSame("function f() {switch(a){case 1: return;}}");

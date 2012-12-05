@@ -315,8 +315,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
           } else if (caseMatches == TernaryValue.UNKNOWN) {
             break;
           } else {
-            n.removeChild(cur);
-            reportCodeChange();
+            removeCase(n, cur);
           }
         }
         if (caseMatches != TernaryValue.UNKNOWN) {
@@ -335,8 +334,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
           // Remove any remaining cases
           for (; cur != null; cur = next) {
             next = cur.getNext();
-            n.removeChild(cur);
-            reportCodeChange();
+            removeCase(n, cur);
           }
           // If there is one case left, we may be able to fold it
           cur = cond.getNext();
