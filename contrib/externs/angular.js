@@ -759,7 +759,7 @@ angular.$anchorScrollProvider.disableAutoScrolling = function() {};
 angular.$compile;
 
 /******************************************************************************
- * $http Service
+ * $cacheFactory Service
  *****************************************************************************/
 
 /**
@@ -792,6 +792,10 @@ angular.$cacheFactory.Cache;
  *   }}
  */
 angular.$cacheFactory.Cache.Info;
+
+/******************************************************************************
+ * $http Service
+ *****************************************************************************/
 
 /**
  * This is a typedef because the closure compiler does not allow
@@ -888,18 +892,22 @@ angular.$http.pendingRequests;
 
 /**
  * @typedef {{
- *   then: function(function(*), function(*)=): angular.$http.HttpPromise,
- *   success: function(
- *       function((string|Object), number, function(string):string, Object)),
- *   error: function(
- *       function((string|Object), number, function(string):string, Object))
+ *   then: function(
+ *       ?function(!angular.$http.Response),
+ *       function(!angular.$http.Response)=): angular.$http.HttpPromise,
+ *   success: function(function(
+ *       (string|Object), number, function(string=): (string|Object),
+ *       !angular.$http.Config)),
+ *   error: function(function(
+ *       (string|Object), number, function(string=): (string|Object),
+ *       !angular.$http.Config))
  *   }}
  */
 angular.$http.HttpPromise;
 
 /**
- * @param {function(*)} successCallback
- * @param {function(*)=} opt_errorCallback
+ * @param {?function(!angular.$http.Response)} successCallback
+ * @param {function(!angular.$http.Response)=} opt_errorCallback
  * @return {angular.$http.HttpPromise}
  */
 angular.$http.HttpPromise.then = function(
@@ -916,6 +924,16 @@ angular.$http.HttpPromise.success = function(callback) {};
  *         function(string):string, Object)} callback
  */
 angular.$http.HttpPromise.error = function(callback) {};
+
+/**
+ * @typedef {{
+ *   data: (string|Object),
+ *   status: number,
+ *   headers: function(string=): (string|Object),
+ *   config: !angular.$http.Config
+ *   }}
+ */
+angular.$http.Response;
 
 /******************************************************************************
  * $injector Service
@@ -1172,7 +1190,7 @@ angular.$provide.value = function(name, object) {};
  * @typedef {{
  *   all: function(Array.<angular.$q.Promise>): angular.$q.Promise,
  *   defer: function():angular.$q.Deferred,
- *   reject: function():angular.$q.Promise,
+ *   reject: function(*):angular.$q.Promise,
  *   when: function(*):angular.$q.Promise
  *   }}
  */
@@ -1190,9 +1208,10 @@ angular.$q.all = function(promises) {};
 angular.$q.defer = function() {};
 
 /**
+ * @param {*} reason
  * @return {angular.$q.Promise}
  */
-angular.$q.reject = function() {};
+angular.$q.reject = function(reason) {};
 
 /**
  * @param {*} value
@@ -1219,12 +1238,12 @@ angular.$q.Deferred.reject = function(opt_reason) {};
 angular.$q.Deferred.promise;
 
 /**
- * @typedef {{then: function(function(*), function(*)=): angular.$q.Promise}}
+ * @typedef {{then: function(?function(*), function(*)=): angular.$q.Promise}}
  */
 angular.$q.Promise;
 
 /**
- * @param {function(*)} successCallback
+ * @param {?function(*)} successCallback
  * @param {function(*)=} opt_errorCallback
  * @return {angular.$q.Promise}
  */
