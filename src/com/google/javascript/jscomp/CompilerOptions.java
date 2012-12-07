@@ -24,7 +24,9 @@ import com.google.common.collect.Sets;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
+
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
@@ -711,6 +713,18 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setPreferSingleQuotes(boolean enabled) {
     this.preferSingleQuotes = enabled;
+  }
+
+  boolean trustedStrings;
+
+  /**
+   * Some people want to put arbitrary user input into strings, which are then
+   * run through the compiler. These scripts are then put into HTML.
+   * By default, we assume strings are untrusted. If the compiler is run
+   * from the command-line, we assume that strings are trusted.
+   */
+  public void setTrustedStrings(boolean yes) {
+    trustedStrings = yes;
   }
 
   String reportPath;
@@ -1424,6 +1438,13 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setOutputCharset(String charsetName) {
     this.outputCharset = charsetName;
+  }
+
+  /**
+   * Gets the output charset as a rich object.
+   */
+  Charset getOutputCharset() {
+    return outputCharset == null ? null : Charset.forName(outputCharset);
   }
 
   /**

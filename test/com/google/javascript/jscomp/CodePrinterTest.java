@@ -28,13 +28,21 @@ import junit.framework.TestCase;
 import java.util.List;
 
 public class CodePrinterTest extends TestCase {
-  static Node parse(String js) {
+  boolean trustedStrings = true;
+
+  @Override public void setUp() {
+    trustedStrings = true;
+  }
+
+  Node parse(String js) {
     return parse(js, false);
   }
 
-  static Node parse(String js, boolean checkTypes) {
+  Node parse(String js, boolean checkTypes) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
+    options.setTrustedStrings(trustedStrings);
+
     // Allow getters and setters.
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     compiler.initOptions(options);
@@ -73,6 +81,7 @@ public class CodePrinterTest extends TestCase {
 
   String parsePrint(String js, boolean prettyprint, int lineThreshold) {
     CompilerOptions options = new CompilerOptions();
+    options.setTrustedStrings(trustedStrings);
     options.setPrettyPrint(prettyprint);
     options.setLineLengthThreshold(lineThreshold);
     return new CodePrinter.Builder(parse(js)).setCompilerOptions(options)
@@ -82,6 +91,7 @@ public class CodePrinterTest extends TestCase {
   String parsePrint(String js, boolean prettyprint, boolean lineBreak,
       int lineThreshold) {
     CompilerOptions options = new CompilerOptions();
+    options.setTrustedStrings(trustedStrings);
     options.setPrettyPrint(prettyprint);
     options.setLineLengthThreshold(lineThreshold);
     options.setLineBreak(lineBreak);
@@ -92,6 +102,7 @@ public class CodePrinterTest extends TestCase {
   String parsePrint(String js, boolean prettyprint, boolean lineBreak,
       boolean preferLineBreakAtEof, int lineThreshold) {
     CompilerOptions options = new CompilerOptions();
+    options.setTrustedStrings(trustedStrings);
     options.setPrettyPrint(prettyprint);
     options.setLineLengthThreshold(lineThreshold);
     options.setPreferLineBreakAtEndOfFile(preferLineBreakAtEof);
@@ -103,6 +114,7 @@ public class CodePrinterTest extends TestCase {
   String parsePrint(String js, boolean prettyprint, boolean lineBreak,
       int lineThreshold, boolean outputTypes) {
     CompilerOptions options = new CompilerOptions();
+    options.setTrustedStrings(trustedStrings);
     options.setPrettyPrint(prettyprint);
     options.setLineLengthThreshold(lineThreshold);
     options.setLineBreak(lineBreak);
@@ -115,6 +127,7 @@ public class CodePrinterTest extends TestCase {
                     int lineThreshold, boolean outputTypes,
                     boolean tagAsStrict) {
     CompilerOptions options = new CompilerOptions();
+    options.setTrustedStrings(trustedStrings);
     options.setPrettyPrint(prettyprint);
     options.setLineLengthThreshold(lineThreshold);
     options.setLineBreak(lineBreak);
@@ -178,21 +191,6 @@ public class CodePrinterTest extends TestCase {
         "var a,b,c;a+=b=c+=3");
     assertPrint("var a,b,c; a *= (b -= c);",
         "var a,b,c;a*=b-=c");
-
-    // Break scripts
-    assertPrint("'<script>'", "\"<script>\"");
-    assertPrint("'</script>'", "\"<\\/script>\"");
-    assertPrint("\"</script> </SCRIPT>\"", "\"<\\/script> <\\/SCRIPT>\"");
-
-    assertPrint("'-->'", "\"--\\>\"");
-    assertPrint("']]>'", "\"]]\\>\"");
-    assertPrint("' --></script>'", "\" --\\><\\/script>\"");
-
-    assertPrint("/--> <\\/script>/g", "/--\\> <\\/script>/g");
-
-    // Break HTML start comments. Certain versions of WebKit
-    // begin an HTML comment when they see this.
-    assertPrint("'<!-- I am a string -->'", "\"<\\!-- I am a string --\\>\"");
 
     // Precedence
     assertPrint("a ? delete b[0] : 3", "a?delete b[0]:3");
@@ -352,6 +350,49 @@ public class CodePrinterTest extends TestCase {
     assertPrint("if(x){if(y);}", "if(x)if(y);");
     assertPrint("if(x){if(y){};;;}", "if(x)if(y);");
     assertPrint("if(x){;;function y(){};;}", "if(x){function y(){}}");
+  }
+
+  public void testBreakTrustedStrings() {
+    // Break scripts
+    assertPrint("'<script>'", "\"<script>\"");
+    assertPrint("'</script>'", "\"\\x3c/script>\"");
+    assertPrint("\"</script> </SCRIPT>\"", "\"\\x3c/script> \\x3c/SCRIPT>\"");
+
+    assertPrint("'-->'", "\"--\\x3e\"");
+    assertPrint("']]>'", "\"]]\\x3e\"");
+    assertPrint("' --></script>'", "\" --\\x3e\\x3c/script>\"");
+
+    assertPrint("/--> <\\/script>/g", "/--\\x3e <\\/script>/g");
+
+    // Break HTML start comments. Certain versions of WebKit
+    // begin an HTML comment when they see this.
+    assertPrint("'<!-- I am a string -->'",
+        "\"\\x3c!-- I am a string --\\x3e\"");
+
+    assertPrint("'<=&>'", "\"<=&>\"");
+  }
+
+  public void testBreakUntrustedStrings() {
+    trustedStrings = false;
+
+    // Break scripts
+    assertPrint("'<script>'", "\"\\x3cscript\\x3e\"");
+    assertPrint("'</script>'", "\"\\x3c/script\\x3e\"");
+    assertPrint("\"</script> </SCRIPT>\"", "\"\\x3c/script\\x3e \\x3c/SCRIPT\\x3e\"");
+
+    assertPrint("'-->'", "\"--\\x3e\"");
+    assertPrint("']]>'", "\"]]\\x3e\"");
+    assertPrint("' --></script>'", "\" --\\x3e\\x3c/script\\x3e\"");
+
+    assertPrint("/--> <\\/script>/g", "/--\\x3e <\\/script>/g");
+
+    // Break HTML start comments. Certain versions of WebKit
+    // begin an HTML comment when they see this.
+    assertPrint("'<!-- I am a string -->'",
+        "\"\\x3c!-- I am a string --\\x3e\"");
+
+    assertPrint("'<=&>'", "\"\\x3c\\x3d\\x26\\x3e\"");
+    assertPrint("/(?=x)/", "/(?=x)/");
   }
 
   public void testPrintArray() {

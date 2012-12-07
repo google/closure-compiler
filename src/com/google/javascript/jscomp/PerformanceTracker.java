@@ -198,7 +198,7 @@ public class PerformanceTracker {
 
   private final CodeSizeEstimatePrinter estimateCodeSize(Node root) {
     CodeSizeEstimatePrinter cp = new CodeSizeEstimatePrinter(trackGzippedSize);
-    CodeGenerator cg = new CodeGenerator(cp, null, false);
+    CodeGenerator cg = CodeGenerator.forCostEstimation(cp);
     cg.add(root);
     return cp;
   }

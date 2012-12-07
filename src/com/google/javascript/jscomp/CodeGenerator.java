@@ -34,6 +34,9 @@ import java.util.Map;
  *
  */
 class CodeGenerator {
+  private static final String LT_ESCAPED = "\\x3c";
+  private static final String GT_ESCAPED = "\\x3e";
+
   // A memoizer for formatting strings as JS strings.
   private final Map<String, String> ESCAPED_JS_STRINGS = Maps.newHashMap();
 
@@ -46,11 +49,25 @@ class CodeGenerator {
   private final CharsetEncoder outputCharsetEncoder;
 
   private final boolean preferSingleQuotes;
+  private final boolean trustedStrings;
+
+  private CodeGenerator(CodeConsumer consumer) {
+    cc = consumer;
+    outputCharsetEncoder = null;
+    preferSingleQuotes = false;
+    trustedStrings = true;
+  }
+
+  static CodeGenerator forCostEstimation(CodeConsumer consumer) {
+    return new CodeGenerator(consumer);
+  }
 
   CodeGenerator(
-      CodeConsumer consumer, Charset outputCharset,
-      boolean preferSingleQuotes) {
+      CodeConsumer consumer,
+      CompilerOptions options) {
     cc = consumer;
+
+    Charset outputCharset = options.getOutputCharset();
     if (outputCharset == null || outputCharset == Charsets.US_ASCII) {
       // If we want our default (pretending to be UTF-8, but escaping anything
       // outside of straight ASCII), then don't use the encoder, but
@@ -60,7 +77,8 @@ class CodeGenerator {
     } else {
       this.outputCharsetEncoder = outputCharset.newEncoder();
     }
-    this.preferSingleQuotes = preferSingleQuotes;
+    this.preferSingleQuotes = options.preferSingleQuotes;
+    this.trustedStrings = options.trustedStrings;
   }
 
   /**
@@ -990,36 +1008,38 @@ class CodeGenerator {
     }
 
     return strEscape(s, quote, doublequote, singlequote, "\\\\",
-        outputCharsetEncoder, useSlashV);
+        outputCharsetEncoder, useSlashV, false);
   }
 
   /** Escapes regular expression */
-  static String regexpEscape(String s, CharsetEncoder outputCharsetEncoder) {
-    return strEscape(s, '/', "\"", "'", "\\", outputCharsetEncoder, false);
+  String regexpEscape(String s, CharsetEncoder outputCharsetEncoder) {
+    return strEscape(s, '/', "\"", "'", "\\", outputCharsetEncoder, false, true);
   }
 
   /**
    * Escapes the given string to a double quoted (") JavaScript/JSON string
    */
-  static String escapeToDoubleQuotedJsString(String s) {
-    return strEscape(s, '"',  "\\\"", "\'", "\\\\", null, false);
+  String escapeToDoubleQuotedJsString(String s) {
+    return strEscape(s, '"',  "\\\"", "\'", "\\\\", null, false, false);
   }
 
   /* If the user doesn't want to specify an output charset encoder, assume
      they want Latin/ASCII characters only.
    */
-  static String regexpEscape(String s) {
+  String regexpEscape(String s) {
     return regexpEscape(s, null);
   }
 
   /** Helper to escape JavaScript string as well as regular expression */
-  private static String strEscape(
-      String s, char quote,
+  private String strEscape(
+      String s,
+      char quote,
       String doublequoteEscape,
       String singlequoteEscape,
       String backslashEscape,
       CharsetEncoder outputCharsetEncoder,
-      boolean useSlashV) {
+      boolean useSlashV,
+      boolean isRegexp) {
     StringBuilder sb = new StringBuilder(s.length() + 2);
     sb.append(quote);
     for (int i = 0; i < s.length(); i++) {
@@ -1047,17 +1067,51 @@ class CodeGenerator {
         case '\u2028': sb.append("\\u2028"); break;
         case '\u2029': sb.append("\\u2029"); break;
 
-        case '>':                       // Break --> into --\> or ]]> into ]]\>
+        case '=':
+          // '=' is a syntactically signficant regexp character.
+          if (trustedStrings || isRegexp) {
+            sb.append(c);
+          } else {
+            sb.append("\\x3d");
+          }
+          break;
+
+        case '&':
+          if (trustedStrings || isRegexp) {
+            sb.append(c);
+          } else {
+            sb.append("\\x26");
+          }
+          break;
+
+        case '>':
+          if (!trustedStrings && !isRegexp) {
+            sb.append(GT_ESCAPED);
+            break;
+          }
+
+          // Break --> into --\> or ]]> into ]]\>
+          //
+          // This is just to prevent developers from shooting themselves in the
+          // foot, and does not provide the level of security that you get
+          // with trustedString == false.
           if (i >= 2 &&
               ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
                (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
-            sb.append("\\>");
+            sb.append(GT_ESCAPED);
           } else {
             sb.append(c);
           }
           break;
         case '<':
+          if (!trustedStrings && !isRegexp) {
+            sb.append(LT_ESCAPED);
+            break;
+          }
+
           // Break </script into <\/script
+          // As above, this is just to prevent developers from doing this
+          // accidentally.
           final String END_SCRIPT = "/script";
 
           // Break <!-- into <\!--
@@ -1065,10 +1119,10 @@ class CodeGenerator {
 
           if (s.regionMatches(true, i + 1, END_SCRIPT, 0,
                               END_SCRIPT.length())) {
-            sb.append("<\\");
+            sb.append(LT_ESCAPED);
           } else if (s.regionMatches(false, i + 1, START_COMMENT, 0,
                                      START_COMMENT.length())) {
-            sb.append("<\\");
+            sb.append(LT_ESCAPED);
           } else {
             sb.append(c);
           }

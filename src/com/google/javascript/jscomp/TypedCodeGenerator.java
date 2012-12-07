@@ -24,7 +24,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 
-import java.nio.charset.Charset;
 import java.util.Set;
 
 /**
@@ -32,8 +31,8 @@ import java.util.Set;
  * constructors.
  */
 class TypedCodeGenerator extends CodeGenerator {
-  TypedCodeGenerator(CodeConsumer consumer, Charset outputCharset) {
-    super(consumer, outputCharset, false);
+  TypedCodeGenerator(CodeConsumer consumer, CompilerOptions options) {
+    super(consumer, options);
   }
 
   @Override

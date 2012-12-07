@@ -287,6 +287,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.devMode = config.jscompDevMode;
     options.setCodingConvention(config.codingConvention);
     options.setSummaryDetailLevel(config.summaryDetailLevel);
+    options.setTrustedStrings(true);
 
     legacyOutputCharset = options.outputCharset = getLegacyOutputCharset();
     outputCharset2 = getOutputCharset2();

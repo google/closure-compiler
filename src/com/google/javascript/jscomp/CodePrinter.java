@@ -22,7 +22,6 @@ import com.google.debugging.sourcemap.FilePosition;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -649,8 +648,6 @@ class CodePrinter {
     Preconditions.checkState(options.sourceMapDetailLevel != null);
 
     boolean createSourceMap = (sourceMap != null);
-    Charset outputCharset = options.outputCharset == null ? null :
-        Charset.forName(options.outputCharset);
     MappedCodePrinter mcp =
         outputFormat == Format.COMPACT
         ? new CompactCodePrinter(
@@ -665,8 +662,8 @@ class CodePrinter {
             options.sourceMapDetailLevel);
     CodeGenerator cg =
         outputFormat == Format.TYPED
-        ? new TypedCodeGenerator(mcp, outputCharset)
-        : new CodeGenerator(mcp, outputCharset, options.preferSingleQuotes);
+        ? new TypedCodeGenerator(mcp, options)
+        : new CodeGenerator(mcp, options);
 
     if (tagAsStrict) {
       cg.tagAsStrict();

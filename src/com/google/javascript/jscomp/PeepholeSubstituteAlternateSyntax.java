@@ -40,6 +40,9 @@ class PeepholeSubstituteAlternateSyntax
   private static final int AND_PRECEDENCE = NodeUtil.precedence(Token.AND);
   private static final int OR_PRECEDENCE = NodeUtil.precedence(Token.OR);
   private static final int NOT_PRECEDENCE = NodeUtil.precedence(Token.NOT);
+  private static final CodeGenerator REGEXP_ESCAPER =
+      CodeGenerator.forCostEstimation(
+          null /* blow up if we try to produce code */);
 
   private final boolean late;
 
@@ -1707,7 +1710,7 @@ class PeepholeSubstituteAlternateSyntax
    * out as the body of a regular expression literal.
    */
   static boolean containsUnicodeEscape(String s) {
-    String esc = CodeGenerator.regexpEscape(s);
+    String esc = REGEXP_ESCAPER.regexpEscape(s);
     for (int i = -1; (i = esc.indexOf("\\u", i + 1)) >= 0;) {
       int nSlashes = 0;
       while (i - nSlashes > 0 && '\\' == esc.charAt(i - nSlashes - 1)) {
