@@ -33,7 +33,7 @@
  */
 var jQuerySelector;
 
-/** @typedef {function()|Array.<function()>} */
+/** @typedef {function(...)|Array.<function(...)>} */
 var jQueryCallback;
 
 /**
