@@ -658,7 +658,6 @@ public class FunctionType extends PrototypeObjectType {
       thisTypeNode.setJSType(
           registry.createOptionalNullableType(getTypeOfThis()));
       params.addChildToFront(thisTypeNode);
-      thisTypeNode.setOptionalArg(isCall);
 
       if (isBind) {
         // The arguments of bind() are unique in that they are all
@@ -666,6 +665,15 @@ public class FunctionType extends PrototypeObjectType {
         for (Node current = thisTypeNode.getNext();
              current != null; current = current.getNext()) {
           current.setOptionalArg(true);
+        }
+      } else if (isCall) {
+        // The first argument of call() is optional iff all the arguments
+        // are optional. It's sufficient to check the first argument.
+        Node firstArg = thisTypeNode.getNext();
+        if (firstArg == null
+            || firstArg.isOptionalArg()
+            || firstArg.isVarArgs()) {
+          thisTypeNode.setOptionalArg(true);
         }
       }
 

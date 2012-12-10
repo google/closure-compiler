@@ -302,6 +302,28 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         fn.getPropertyType("bind").toString());
   }
 
+  public void testCallSignature1() {
+    FunctionType fn = new FunctionBuilder(registry)
+        .withTypeOfThis(DATE_TYPE)
+        .withParamsNode(registry.createParameters(STRING_TYPE, NUMBER_TYPE))
+        .withReturnType(BOOLEAN_TYPE).build();
+
+    assertEquals(
+        "function ((Date|null|undefined), string, number): boolean",
+        fn.getPropertyType("call").toString());
+  }
+
+  public void testCallSignature2() {
+    FunctionType fn = new FunctionBuilder(registry)
+        .withTypeOfThis(DATE_TYPE)
+        .withParamsNode(registry.createParameters())
+        .withReturnType(BOOLEAN_TYPE).build();
+
+    assertEquals(
+        "function ((Date|null)=): boolean",
+        fn.getPropertyType("call").toString());
+  }
+
   public void testPrint() {
     FunctionType fn = new FunctionBuilder(registry)
       .withTypeOfThis(new TemplateType(registry, "T"))
