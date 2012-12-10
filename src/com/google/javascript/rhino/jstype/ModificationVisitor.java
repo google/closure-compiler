@@ -126,7 +126,6 @@ public class ModificationVisitor implements Visitor<JSType> {
     }
 
     if (changed) {
-      // TODO(johnlenz): should we support preserving template keys?
       FunctionBuilder builder = new FunctionBuilder(registry);
       builder.withParams(paramBuilder);
       builder.withReturnType(afterReturn);

@@ -302,22 +302,6 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         fn.getPropertyType("bind").toString());
   }
 
-  public void testTemplatedFunctionDerivedFunctions() {
-    FunctionType fn = new FunctionBuilder(registry)
-      .withTypeOfThis(new TemplateType(registry, "T"))
-      .withTemplateKeys(ImmutableList.of("T"))
-      .withReturnType(BOOLEAN_TYPE).build();
-
-    assertEquals("[T]",
-        fn.getPropertyType("call").getTemplateKeys().toString());
-    assertEquals("[T]",
-        fn.getPropertyType("apply").getTemplateKeys().toString());
-    assertEquals("[T]",
-        fn.getPropertyType("bind").getTemplateKeys().toString());
-    assertEquals("[T]",
-        fn.getBindReturnType(0).getTemplateKeys().toString());
-  }
-
   public void testPrint() {
     FunctionType fn = new FunctionBuilder(registry)
       .withTypeOfThis(new TemplateType(registry, "T"))
