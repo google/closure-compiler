@@ -133,76 +133,6 @@ class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public Property getSlot(String name) {
-    return properties.getSlot(name);
-  }
-
-  /**
-   * Gets the number of properties of this object.
-   */
-  @Override
-  public int getPropertiesCount() {
-    return properties.getPropertiesCount();
-  }
-
-  @Override
-  public boolean hasProperty(String propertyName) {
-    // Unknown types have all properties.
-    return isUnknownType() || getSlot(propertyName) != null;
-  }
-
-  @Override
-  public boolean hasOwnProperty(String propertyName) {
-    return properties.hasOwnProperty(propertyName);
-  }
-
-  @Override
-  public Set<String> getOwnPropertyNames() {
-    return properties.getOwnPropertyNames();
-  }
-
-  @Override
-  public boolean isPropertyTypeDeclared(String property) {
-    StaticSlot<JSType> slot = getSlot(property);
-    if (slot == null) {
-      return false;
-    }
-    return !slot.isTypeInferred();
-  }
-
-  @Override
-  void collectPropertyNames(Set<String> props) {
-    properties.collectPropertyNames(props);
-  }
-
-  @Override
-  public boolean isPropertyTypeInferred(String property) {
-    StaticSlot<JSType> slot = getSlot(property);
-    if (slot == null) {
-      return false;
-    }
-    return slot.isTypeInferred();
-  }
-
-  @Override
-  public JSType getPropertyType(String property) {
-    StaticSlot<JSType> slot = getSlot(property);
-    if (slot == null) {
-      return getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    }
-    return slot.getType();
-  }
-
-  @Override
-  public boolean isPropertyInExterns(String propertyName) {
-    Property p = getSlot(propertyName);
-    if (p != null) {
-      return p.isFromExterns();
-    }
-    return false;
-  }
-
-  @Override
   boolean defineProperty(String name, JSType type, boolean inferred,
       Node propertyNode) {
     if (hasOwnDeclaredProperty(name)) {
@@ -217,24 +147,6 @@ class PrototypeObjectType extends ObjectType {
   @Override
   public boolean removeProperty(String name) {
     return properties.removeProperty(name);
-  }
-
-  @Override
-  public Node getPropertyNode(String propertyName) {
-    Property p = getSlot(propertyName);
-    if (p != null) {
-      return p.getNode();
-    }
-    return null;
-  }
-
-  @Override
-  public JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
-    Property p = properties.getOwnProperty(propertyName);
-    if (p != null) {
-      return p.getJSDocInfo();
-    }
-    return null;
   }
 
   @Override

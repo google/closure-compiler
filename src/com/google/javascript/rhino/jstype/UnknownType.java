@@ -44,8 +44,6 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 
-import java.util.Set;
-
 /**
  * The {@code Unknown} type.
  */
@@ -58,11 +56,6 @@ public class UnknownType extends ObjectType {
   UnknownType(JSTypeRegistry registry, boolean isChecked) {
     super(registry);
     this.isChecked = isChecked;
-  }
-
-  @Override
-  public Property getSlot(String name) {
-    return null;
   }
 
   @Override
@@ -137,25 +130,6 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
-  public int getPropertiesCount() {
-    return Integer.MAX_VALUE;
-  }
-
-  @Override
-  void collectPropertyNames(Set<String> props) {
-  }
-
-  @Override
-  public JSType getPropertyType(String propertyName) {
-    return this;
-  }
-
-  @Override
-  public boolean hasProperty(String propertyName) {
-    return true;
-  }
-
-  @Override
   public FunctionType getConstructor() {
     return null;
   }
@@ -173,16 +147,6 @@ public class UnknownType extends ObjectType {
   @Override
   public boolean hasDisplayName() {
     return true;
-  }
-
-  @Override
-  public boolean isPropertyTypeDeclared(String propertyName) {
-    return false;
-  }
-
-  @Override
-  public boolean isPropertyTypeInferred(String propertyName) {
-    return false;
   }
 
   @Override

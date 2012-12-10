@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -54,6 +55,11 @@ import java.util.Set;
  * @author nicksantos@google.com (Nick Santos)
  */
 class PropertyMap implements Serializable {
+  private static final long serialVersionUID = 1L;
+
+  private static final PropertyMap EMPTY_MAP = new PropertyMap(
+      ImmutableMap.<String, Property>of());
+
   private static final Function<ObjectType, PropertyMap> PROP_MAP_FROM_TYPE =
       new Function<ObjectType, PropertyMap>() {
     @Override public PropertyMap apply(ObjectType t) {
@@ -71,15 +77,28 @@ class PropertyMap implements Serializable {
   private final Map<String, Property> properties;
 
   PropertyMap() {
-    this.properties = Maps.newTreeMap();
+    this(Maps.<String, Property>newTreeMap());
+  }
+
+  private PropertyMap(Map<String, Property> underlyingMap) {
+    this.properties = underlyingMap;
+  }
+
+  static PropertyMap immutableEmptyMap() {
+    return EMPTY_MAP;
   }
 
   void setParentSource(ObjectType ownerType) {
-    this.parentSource = ownerType;
+    if (this != EMPTY_MAP) {
+      this.parentSource = ownerType;
+    }
   }
 
   /** Returns the direct parent of this property map. */
   PropertyMap getPrimaryParent() {
+    if (parentSource == null) {
+      return null;
+    }
     ObjectType iProto = parentSource.getImplicitPrototype();
     return iProto == null ? null : iProto.getPropertyMap();
   }
@@ -89,6 +108,9 @@ class PropertyMap implements Serializable {
    * need multiple inheritance.
    */
   Iterable<PropertyMap> getSecondaryParents() {
+    if (parentSource == null) {
+      return ImmutableList.of();
+    }
     Iterable<ObjectType> extendedInterfaces =
         parentSource.getCtorExtendedInterfaces();
 

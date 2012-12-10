@@ -70,11 +70,6 @@ class NoResolvedType extends NoType {
   }
 
   @Override
-  public JSType getPropertyType(String propertyName) {
-    return getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
-  }
-
-  @Override
   public boolean isSubtype(JSType that) {
     if (JSType.isSubtypeHelper(this, that)) {
       return true;

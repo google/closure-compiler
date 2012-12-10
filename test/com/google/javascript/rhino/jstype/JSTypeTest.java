@@ -1081,6 +1081,27 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     Asserts.assertResolvesToSame(UNKNOWN_TYPE);
     assertFalse(UNKNOWN_TYPE.isNominalConstructor());
+
+    assertEquals(UNKNOWN_TYPE, UNKNOWN_TYPE.getPropertyType("abc"));
+  }
+
+  /**
+   * Tests the behavior of the checked unknown type.
+   */
+  public void testCheckedUnknownType() throws Exception {
+    // isPropertyType*
+    assertPropertyTypeUnknown(CHECKED_UNKNOWN_TYPE, "XXX");
+
+    // toString
+    assertEquals("??", CHECKED_UNKNOWN_TYPE.toString());
+    assertTrue(CHECKED_UNKNOWN_TYPE.hasDisplayName());
+    assertEquals("Unknown", CHECKED_UNKNOWN_TYPE.getDisplayName());
+
+    Asserts.assertResolvesToSame(CHECKED_UNKNOWN_TYPE);
+    assertFalse(CHECKED_UNKNOWN_TYPE.isNominalConstructor());
+
+    assertEquals(CHECKED_UNKNOWN_TYPE,
+        CHECKED_UNKNOWN_TYPE.getPropertyType("abc"));
   }
 
   /**

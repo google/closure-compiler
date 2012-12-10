@@ -66,7 +66,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
   protected JSType BOOLEAN_OBJECT_FUNCTION_TYPE;
   protected ObjectType BOOLEAN_OBJECT_TYPE;
   protected JSType BOOLEAN_TYPE;
-  protected JSType CHECKED_UNKNOWN_TYPE;
+  protected ObjectType CHECKED_UNKNOWN_TYPE;
   protected JSType DATE_FUNCTION_TYPE;
   protected ObjectType DATE_TYPE;
   protected JSType ERROR_FUNCTION_TYPE;
@@ -140,7 +140,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
     BOOLEAN_TYPE =
         registry.getNativeType(JSTypeNative.BOOLEAN_TYPE);
     CHECKED_UNKNOWN_TYPE =
-        registry.getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
+        registry.getNativeObjectType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
     DATE_FUNCTION_TYPE =
         registry.getNativeType(JSTypeNative.DATE_FUNCTION_TYPE);
     DATE_TYPE =

@@ -121,25 +121,6 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public int getPropertiesCount() {
-    // Should never be called, returning the biggest number to highlight the
-    // 'unifying' role of this type.
-    return Integer.MAX_VALUE;
-  }
-
-  @Override
-  public JSType getPropertyType(String propertyName) {
-    // Return the least type to be a proper subtype of all other objects.
-    return getNativeType(JSTypeNative.NO_TYPE);
-  }
-
-  @Override
-  public boolean hasProperty(String propertyName) {
-    // has all properties, since it is any object
-    return true;
-  }
-
-  @Override
   boolean defineProperty(String propertyName, JSType type,
       boolean inferred, Node propertyNode) {
     // nothing, all properties are defined
@@ -152,18 +133,8 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
-    return null;
-  }
-
-  @Override
   public void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
     // Do nothing, specific properties do not have JSDocInfo.
-  }
-
-  @Override
-  public boolean isPropertyTypeInferred(String propertyName) {
-    return false;
   }
 
   @Override

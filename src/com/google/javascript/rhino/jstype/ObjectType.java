@@ -105,18 +105,21 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
    * Returns the property map that manages the set of properties for an object.
    */
   PropertyMap getPropertyMap() {
-    return null;
+    return PropertyMap.immutableEmptyMap();
+  }
+
+  /**
+   * Default getSlot implementation. This gets overridden by FunctionType
+   * for lazily-resolved prototypes.
+   */
+  @Override
+  public Property getSlot(String name) {
+    return getPropertyMap().getSlot(name);
   }
 
   @Override
-  public abstract Property getSlot(String name);
-
-  @Override
   public Property getOwnSlot(String name) {
-    if (hasOwnProperty(name)) {
-      return getSlot(name);
-    }
-    return null;
+    return getPropertyMap().getOwnProperty(name);
   }
 
   @Override
@@ -375,16 +378,18 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
    * @return the {@code Node} corresponding to the property or null.
    */
   public Node getPropertyNode(String propertyName) {
-    return null;
+    Property p = getSlot(propertyName);
+    return p == null ? null : p.getNode();
   }
 
   /**
    * Gets the docInfo on the specified property on this type.  This should not
-   * be done implemented recursively, as you generally need to know exactly on
+   * be implemented recursively, as you generally need to know exactly on
    * which type in the prototype chain the JSDocInfo exists.
    */
   public JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
-    return null;
+    Property p = getOwnSlot(propertyName);
+    return p == null ? null : p.getJSDocInfo();
   }
 
   /**
@@ -408,50 +413,83 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
    * underlying object does not have this property, the Unknown type is
    * returned to indicate that no information is available on this property.
    *
+   * This gets overridden by FunctionType for lazily-resolved call() and
+   * bind() functions.
+   *
    * @return the property's type or {@link UnknownType}. This method never
    *         returns {@code null}.
    */
-  public abstract JSType getPropertyType(String propertyName);
+  public JSType getPropertyType(String propertyName) {
+    StaticSlot<JSType> slot = getSlot(propertyName);
+    if (slot == null) {
+      if (isNoResolvedType() || isCheckedUnknownType()) {
+        return getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
+      } else if (isEmptyType()) {
+        return getNativeType(JSTypeNative.NO_TYPE);
+      }
+      return getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    }
+    return slot.getType();
+  }
+
+  @Override
+  public boolean hasProperty(String propertyName) {
+    // Unknown types have all properties.
+    return isEmptyType() || isUnknownType() || getSlot(propertyName) != null;
+  }
 
   /**
    * Checks whether the property whose name is given is present directly on
    * the object.  Returns false even if it is declared on a supertype.
    */
   public boolean hasOwnProperty(String propertyName) {
-    return hasProperty(propertyName);
+    return getOwnSlot(propertyName) != null;
   }
 
-  /** Returns the names of all the properties directly on this type. */
+  /**
+   * Returns the names of all the properties directly on this type.
+   *
+   * Overridden by FunctionType to add "prototype".
+   */
   public Set<String> getOwnPropertyNames() {
-    return ImmutableSet.of();
+    return getPropertyMap().getOwnPropertyNames();
   }
 
   /**
    * Checks whether the property's type is inferred.
    */
-  public abstract boolean isPropertyTypeInferred(String propertyName);
+  public boolean isPropertyTypeInferred(String propertyName) {
+    StaticSlot<JSType> slot = getSlot(propertyName);
+    return slot == null ? false : slot.isTypeInferred();
+  }
 
   /**
    * Checks whether the property's type is declared.
    */
-  public abstract boolean isPropertyTypeDeclared(String propertyName);
+  public boolean isPropertyTypeDeclared(String propertyName) {
+    StaticSlot<JSType> slot = getSlot(propertyName);
+    return slot == null ? false : !slot.isTypeInferred();
+  }
 
   /**
    * Whether the given property is declared on this object.
    */
-  boolean hasOwnDeclaredProperty(String name) {
+  final boolean hasOwnDeclaredProperty(String name) {
     return hasOwnProperty(name) && isPropertyTypeDeclared(name);
   }
 
   /** Checks whether the property was defined in the externs. */
   public boolean isPropertyInExterns(String propertyName) {
-    return false;
+    Property p = getSlot(propertyName);
+    return p == null ? false : p.isFromExterns();
   }
 
   /**
    * Gets the number of properties of this object.
    */
-  public abstract int getPropertiesCount();
+  public int getPropertiesCount() {
+    return getPropertyMap().getPropertiesCount();
+  }
 
   /**
    * Returns a list of properties defined or inferred on this type and any of
@@ -466,7 +504,9 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
   /**
    * Adds any properties defined on this type or its supertypes to the set.
    */
-  abstract void collectPropertyNames(Set<String> props);
+  final void collectPropertyNames(Set<String> props) {
+    getPropertyMap().collectPropertyNames(props);
+  }
 
   @Override
   public <T> T visit(Visitor<T> visitor) {
