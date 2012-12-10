@@ -6723,26 +6723,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function foo(x) { return x.index; }");
   }
 
-  public void testBug7701884() throws Exception {
-    testTypes(
-        "/**\n" +
-        " * @param {Array.<T>} x\n" +
-        " * @param {function(T)} y\n" +
-        " * @template T\n" +
-        " */\n" +
-        "var forEach = function(x, y) {\n" +
-        "  for (var i = 0; i < x.length; i++) y(x[i]);\n" +
-        "};" +
-        "/** @param {number} x */" +
-        "function f(x) {}" +
-        "/** @param {?} x */" +
-        "function h(x) {" +
-        "  var top = null;" +
-        "  forEach(x, function(z) { top = z; });" +
-        "  if (top) f(top);" +
-        "}");
-  }
-
   public void testScopedConstructors1() throws Exception {
     testTypes(
         "function foo1() { " +

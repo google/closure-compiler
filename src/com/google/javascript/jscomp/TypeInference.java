@@ -1148,7 +1148,6 @@ class TypeInference
   private static class TemplateTypeReplacer extends ModificationVisitor {
     private final Map<TemplateType, JSType> replacements;
     private final JSTypeRegistry registry;
-    boolean madeChanges = false;
 
     TemplateTypeReplacer(
         JSTypeRegistry registry, Map<TemplateType, JSType> replacements) {
@@ -1159,7 +1158,6 @@ class TypeInference
 
     @Override
     public JSType caseTemplateType(TemplateType type) {
-      madeChanges = true;
       JSType replacement = replacements.get(type);
       return replacement != null ?
           replacement : registry.getNativeType(UNKNOWN_TYPE);
@@ -1180,21 +1178,22 @@ class TypeInference
     // Try to infer the template types
     Map<TemplateType, JSType> inferred = inferTemplateTypesFromParameters(
         fnType, n);
+    if (inferred.size() > 0) {
+      // Something useful was found, try to replace it.
+      TemplateTypeReplacer replacer = new TemplateTypeReplacer(
+          registry, inferred);
+      Node callTarget = n.getFirstChild();
 
-    // Replace all template types. If we couldn't find a replacement, we
-    // replace it with UNKNOWN.
-    TemplateTypeReplacer replacer = new TemplateTypeReplacer(
-        registry, inferred);
-    Node callTarget = n.getFirstChild();
+      FunctionType replacementFnType = fnType.visit(replacer)
+          .toMaybeFunctionType();
+      Preconditions.checkNotNull(replacementFnType);
 
-    FunctionType replacementFnType = fnType.visit(replacer)
-        .toMaybeFunctionType();
-    Preconditions.checkNotNull(replacementFnType);
+      callTarget.setJSType(replacementFnType);
+      n.setJSType(replacementFnType.getReturnType());
 
-    callTarget.setJSType(replacementFnType);
-    n.setJSType(replacementFnType.getReturnType());
-
-    return replacer.madeChanges;
+      return true;
+    }
+    return false;
   }
 
   private FlowScope traverseNew(Node n, FlowScope scope) {
