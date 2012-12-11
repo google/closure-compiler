@@ -10262,6 +10262,23 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: Object");
   }
 
+  public void testTemplateType5() throws Exception {
+    testTypes(
+        "/**" +
+        " * @param {Array.<T>} arr \n" +
+        " * @param {?function(T)} f \n" +
+        " * @return {T} \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function fn(arr, f) { return arr[0]; }\n" +
+        "/** @param {Array.<number>} arr */ function g(arr) {" +
+        "  /** @type {!Object} */ var x = fn.call(null, arr, null);" +
+        "}",
+        "initializing variable\n" +
+        "found   : number\n" +
+        "required: Object");
+  }
+
   public void disable_testBadTemplateType4() throws Exception {
     // TODO(johnlenz): Add a check for useless of template types.
     // Unless there are at least two references to a Template type in

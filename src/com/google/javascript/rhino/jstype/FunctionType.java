@@ -606,6 +606,7 @@ public class FunctionType extends PrototypeObjectType {
             new FunctionBuilder(registry)
             .withParams(builder)
             .withReturnType(getReturnType())
+            .withTemplateKeys(getTemplateKeys())
             .build(),
             source);
       }
@@ -623,7 +624,8 @@ public class FunctionType extends PrototypeObjectType {
    */
   public FunctionType getBindReturnType(int argsToBind) {
     FunctionBuilder builder = new FunctionBuilder(registry)
-        .withReturnType(getReturnType());
+        .withReturnType(getReturnType())
+        .withTemplateKeys(getTemplateKeys());
     if (argsToBind >= 0) {
       Node origParams = getParametersNode();
       if (origParams != null) {
@@ -648,7 +650,8 @@ public class FunctionType extends PrototypeObjectType {
   private FunctionType getCallOrBindSignature(boolean isCall) {
     boolean isBind = !isCall;
     FunctionBuilder builder = new FunctionBuilder(registry)
-        .withReturnType(isCall ? getReturnType() : getBindReturnType(-1));
+        .withReturnType(isCall ? getReturnType() : getBindReturnType(-1))
+        .withTemplateKeys(getTemplateKeys());
 
     Node origParams = getParametersNode();
     if (origParams != null) {
