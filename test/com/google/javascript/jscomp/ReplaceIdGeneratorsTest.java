@@ -219,6 +219,24 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "f1 = 'f1$0'");
   }
 
+  public void testSimpleStable() {
+    testNonPseudoSupportingGenerator(
+        "/** @stableIdGenerator */ id = function() {};" +
+        "foo.bar = id('foo_bar')",
+
+        "id = function() {};" +
+        "foo.bar = '125lGg'");
+
+    testNonPseudoSupportingGenerator(
+        "/** @stableIdGenerator */ id = function() {};" +
+        "f1 = id('f1');" +
+        "f1 = id('f1')",
+
+        "id = function() {};" +
+        "f1 = 'AAAMiw';" +
+        "f1 = 'AAAMiw'");
+  }
+
   public void testVar() {
     test("/** @consistentIdGenerator */ var id = function() {};" +
          "foo.bar = id('foo_bar')",
@@ -228,6 +246,13 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
          "var id = function() {};" +
          "foo.bar = 'foo_bar$0'");
+
+    testNonPseudoSupportingGenerator(
+        "/** @stableIdGenerator */ var id = function() {};" +
+        "foo.bar = id('foo_bar')",
+
+        "var id = function() {};" +
+        "foo.bar = '125lGg'");
   }
 
   public void testObjLit() {
@@ -239,6 +264,13 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
          "get.id = function() {};" +
          "foo.bar = {a: 'foo_bar$0'}");
+
+    testNonPseudoSupportingGenerator(
+        "/** @stableIdGenerator */ get.id = function() {};" +
+        "foo.bar = {a: get.id('foo_bar')}",
+
+        "get.id = function() {};" +
+        "foo.bar = {a: '125lGg'}");
   }
 
   public void testTwoGenerators() {
@@ -264,27 +296,36 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
          "f4 = '1$1';");
   }
 
-  public void testTwoMixedGenerators() {
+  public void testMixedGenerators() {
     test("/** @idGenerator */ var id1 = function() {};" +
          "/** @consistentIdGenerator */ var id2 = function() {};" +
+         "/** @stableIdGenerator */ var id3 = function() {};" +
          "f1 = id1('1');" +
          "f2 = id1('1');" +
          "f3 = id2('1');" +
-         "f4 = id2('1');",
+         "f4 = id2('1');" +
+         "f5 = id3('1');" +
+         "f6 = id3('1');",
 
          "var id1 = function() {};" +
          "var id2 = function() {};" +
+         "var id3 = function() {};" +
          "f1 = 'a';" +
          "f2 = 'b';" +
          "f3 = 'a';" +
-         "f4 = 'a';",
+         "f4 = 'a';" +
+         "f5 = 'AAAAMQ';" +
+         "f6 = 'AAAAMQ';",
 
          "var id1 = function() {};" +
          "var id2 = function() {};" +
+         "var id3 = function() {};" +
          "f1 = '1$0';" +
          "f2 = '1$1';" +
          "f3 = '1$0';" +
-         "f4 = '1$0';");
+         "f4 = '1$0';" +
+         "f5 = 'AAAAMQ';" +
+         "f6 = 'AAAAMQ';");
   }
 
   public void testLocalCall() {
@@ -306,10 +347,25 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
         "var id = function() {};" +
         "function fb() {foo.bar = 'foo_bar$0'}");
+
+    testNonPseudoSupportingGenerator(
+        "/** @stableIdGenerator */ var id = function() {};" +
+        "function fb() {foo.bar = id('foo_bar')}",
+
+        "var id = function() {};" +
+        "function fb() {foo.bar = '125lGg'}");
   }
 
   public void testConflictingIdGenerator() {
     testSame(new String[] {"/** @idGenerator \n @consistentIdGenerator \n*/" +
+                           "var id = function() {}; "},
+        ReplaceIdGenerators.CONFLICTING_GENERATOR_TYPE);
+
+    testSame(new String[] {"/** @stableIdGenerator \n @idGenerator \n*/" +
+                           "var id = function() {}; "},
+        ReplaceIdGenerators.CONFLICTING_GENERATOR_TYPE);
+
+    testSame(new String[] {"/** @stableIdGenerator \n @consistentIdGenerator \n*/" +
                            "var id = function() {}; "},
         ReplaceIdGenerators.CONFLICTING_GENERATOR_TYPE);
 
@@ -333,5 +389,12 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
     test(code, expected);
     generatePseudoNames = true;
     test(code, expectedPseudo);
+  }
+
+  private void testNonPseudoSupportingGenerator(String code, String expected) {
+    generatePseudoNames = false;
+    test(code, expected);
+    generatePseudoNames = true;
+    test(code, expected);
   }
 }

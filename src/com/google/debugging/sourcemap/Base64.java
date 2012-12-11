@@ -22,7 +22,7 @@ import java.util.Arrays;
  * A utility class for working with Base64 values.
  * @author johnlenz@google.com (John Lenz)
  */
-final class Base64 {
+public final class Base64 {
 
   // This is a utility class
   private Base64() {}
@@ -42,8 +42,9 @@ final class Base64 {
   private static final int[] BASE64_DECODE_MAP = new int[256];
   static {
       Arrays.fill(BASE64_DECODE_MAP, -1);
-      for (int i = 0; i < BASE64_MAP.length(); i++)
+      for (int i = 0; i < BASE64_MAP.length(); i++) {
         BASE64_DECODE_MAP[BASE64_MAP.charAt(i)] = i;
+      }
   }
 
   /**
@@ -63,5 +64,18 @@ final class Base64 {
     int result = BASE64_DECODE_MAP[c];
     assert (result != -1) : "invalid char";
     return BASE64_DECODE_MAP[c];
+  }
+
+  /**
+   * @param value an integer to base64 encode.
+   * @return the six digit long base64 encoded value of the integer.
+   */
+  public static String base64EncodeInt(int value) {
+    char[] c = new char[6];
+    for (int i = 0; i < 5; i++) {
+      c[i] = Base64.toBase64((value >> (26 - i * 6)) & 0x3f);
+    }
+    c[5] = Base64.toBase64((value << 4) & 0x3f);
+    return new String(c);
   }
 }

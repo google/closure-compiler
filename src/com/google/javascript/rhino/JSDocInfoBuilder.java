@@ -367,8 +367,7 @@ final public class JSDocInfoBuilder {
    *     {@code false} if it was already recorded
    */
   public boolean recordConsistentIdGenerator() {
-    if (!currentInfo.isConsistentIdGenerator() &&
-        !currentInfo.isStableIdGenerator()) {
+    if (!currentInfo.isConsistentIdGenerator()) {
       currentInfo.setConsistentIdGenerator(true);
       populated = true;
       return true;
@@ -382,17 +381,15 @@ final public class JSDocInfoBuilder {
    * JSDocInfo#isStableIdGenerator()} flag set to {@code true}.
    *
    * @return {@code true} if the stableIdGenerator flag was recorded and {@code false} if it was
-   *     already recorded or there is a confliciting ID generation annotation.
+   *     already recorded.
    */
   public boolean recordStableIdGenerator() {
-    if (currentInfo.isStableIdGenerator() ||
-        currentInfo.isIdGenerator() ||
-        currentInfo.isConsistentIdGenerator()) {
-      return false;
-    } else {
+    if (!currentInfo.isStableIdGenerator()) {
       currentInfo.setStableIdGenerator(true);
       populated = true;
       return true;
+    } else {
+      return false;
     }
   }
 
@@ -483,8 +480,7 @@ final public class JSDocInfoBuilder {
    *     if it was already recorded
    */
   public boolean recordIdGenerator() {
-    if (!currentInfo.isIdGenerator() &&
-        !currentInfo.isStableIdGenerator()) {
+    if (!currentInfo.isIdGenerator()) {
       currentInfo.setIdGenerator(true);
       populated = true;
       return true;

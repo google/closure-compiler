@@ -2526,25 +2526,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
           "type annotation incompatible with other annotations");
   }
 
-  public void testStableIdGeneratorConflict1() throws Exception {
-    parse("/**\n" +
-          " * @stableIdGenerator\n" +
-          " * @consistentIdGenerator\n" +
-          " */\n" +
-          "function getId() {}",
-          "extra @consistentIdGenerator tag");
-  }
-
-  public void testStableIdGeneratorConflict2() throws Exception {
-    parse("/**\n" +
-          " * @stableIdGenerator\n" +
-          " * @idGenerator\n" +
-          " */\n" +
-          "function getId() {}",
-          "extra @idGenerator tag");
-  }
-
-  public void testStableIdGeneratorConflict3() throws Exception {
+  public void testStableIdGeneratorConflict() throws Exception {
     parse("/**\n" +
           " * @stableIdGenerator\n" +
           " * @stableIdGenerator\n" +

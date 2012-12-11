@@ -28,6 +28,14 @@ public class Base64Test extends TestCase {
     }
   }
 
+  public void testBase64EncodeInt() {
+    assertEquals("AAAAAA", Base64.base64EncodeInt(0));
+    assertEquals("AAAAAQ", Base64.base64EncodeInt(1));
+    assertEquals("AAAAKg", Base64.base64EncodeInt(42));
+    assertEquals("////nA", Base64.base64EncodeInt(-100));
+    assertEquals("/////w", Base64.base64EncodeInt(0xffffffff));
+  }
+
   private void testValue(int value) {
     assertEquals(value, Base64.fromBase64(Base64.toBase64(value)));
   }

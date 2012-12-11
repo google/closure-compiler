@@ -21,6 +21,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Maps;
+import com.google.debugging.sourcemap.Base64;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -53,7 +54,7 @@ class ReplaceIdGenerators implements CompilerPass {
   static final DiagnosticType CONFLICTING_GENERATOR_TYPE =
       DiagnosticType.error(
           "JSC_CONFLICTING_ID_GENERATOR_TYPE",
-          "Id generator can only be consistent or inconsistent");
+          "Id generator can only be one of consistent, inconsistent, or stable.");
 
   static final DiagnosticType INVALID_GENERATOR_ID_MAPPING =
       DiagnosticType.error(
@@ -62,7 +63,6 @@ class ReplaceIdGenerators implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final Map<String, NameSupplier> nameGenerators;
-  private final Map<String, NameSupplier> consistNameGenerators;
   private final Map<String, Map<String, String>> consistNameMap;
 
   private final Map<String, Map<String, String>> idGeneratorMaps;
@@ -77,7 +77,6 @@ class ReplaceIdGenerators implements CompilerPass {
     this.compiler = compiler;
     this.generatePseudoNames = generatePseudoNames;
     nameGenerators = Maps.newLinkedHashMap();
-    consistNameGenerators = Maps.newLinkedHashMap();
     idGeneratorMaps = Maps.newLinkedHashMap();
     consistNameMap = Maps.newLinkedHashMap();
 
@@ -87,23 +86,35 @@ class ReplaceIdGenerators implements CompilerPass {
 
     if (idGens != null) {
       for (String gen : idGens) {
-        nameGenerators.put(gen, createNameSupplier(previousMap.get(gen)));
+        nameGenerators.put(
+            gen, createNameSupplier(RenameStrategy.INCONSISTENT, previousMap.get(gen)));
         idGeneratorMaps.put(gen, Maps.<String, String>newLinkedHashMap());
       }
     }
   }
 
+  private enum RenameStrategy {
+    CONSISTENT,
+    INCONSISTENT,
+    STABLE
+  }
+
   private static interface NameSupplier {
     String getName(String id, String name);
+    RenameStrategy getRenameStrategy();
   }
 
   private static class ObfuscatedNameSuppier implements NameSupplier {
     private final NameGenerator generator;
     private final Map<String, String> previousMappings;
-    public ObfuscatedNameSuppier(BiMap<String, String> previousMappings) {
+    private RenameStrategy renameStrategy;
+
+    public ObfuscatedNameSuppier(
+        RenameStrategy renameStrategy, BiMap<String, String> previousMappings) {
       this.previousMappings = previousMappings.inverse();
       this.generator =
           new NameGenerator(previousMappings.keySet(), "", null);
+      this.renameStrategy = renameStrategy;
     }
 
     @Override
@@ -114,25 +125,57 @@ class ReplaceIdGenerators implements CompilerPass {
       }
       return newName;
     }
+
+    @Override
+    public RenameStrategy getRenameStrategy() {
+      return renameStrategy;
+    }
   }
 
   private static class PseudoNameSuppier implements NameSupplier {
     private int counter = 0;
+    private RenameStrategy renameStrategy;
+
+    public PseudoNameSuppier(RenameStrategy renameStrategy) {
+      this.renameStrategy = renameStrategy;
+    }
+
     @Override
     public String getName(String id, String name) {
-      return name + "$" + counter++;
+      if (renameStrategy == RenameStrategy.INCONSISTENT) {
+        return name + "$" + counter++;
+      }
+      return name + "$0";
+    }
+
+    @Override
+    public RenameStrategy getRenameStrategy() {
+      return renameStrategy;
+    }
+  }
+
+  private static class StableNameSupplier implements NameSupplier {
+    @Override
+    public String getName(String id, String name) {
+      return Base64.base64EncodeInt(name.hashCode());
+    }
+    @Override
+    public RenameStrategy getRenameStrategy() {
+      return RenameStrategy.STABLE;
     }
   }
 
   private NameSupplier createNameSupplier(
-      BiMap<String, String> previousMappings) {
+      RenameStrategy renameStrategy, BiMap<String, String> previousMappings) {
     previousMappings = previousMappings != null ?
         previousMappings :
         ImmutableBiMap.<String, String>of();
-    if (generatePseudoNames) {
-      return new PseudoNameSuppier();
+    if (renameStrategy == RenameStrategy.STABLE) {
+      return new StableNameSupplier();
+    } else if (generatePseudoNames) {
+      return new PseudoNameSuppier(renameStrategy);
     } else {
-      return new ObfuscatedNameSuppier(previousMappings);
+      return new ObfuscatedNameSuppier(renameStrategy, previousMappings);
     }
   }
 
@@ -145,12 +188,13 @@ class ReplaceIdGenerators implements CompilerPass {
         return;
       }
 
-      if (!doc.isConsistentIdGenerator() &&
-          !doc.isIdGenerator()) {
+      int numGeneratorAnnotations =
+          (doc.isConsistentIdGenerator() ? 1 : 0) +
+          (doc.isIdGenerator() ? 1 : 0) +
+          (doc.isStableIdGenerator() ? 1 : 0);
+      if (numGeneratorAnnotations == 0) {
         return;
-      }
-
-      if (doc.isConsistentIdGenerator() && doc.isIdGenerator()) {
+      } else if (numGeneratorAnnotations > 1) {
         compiler.report(t.makeError(n, CONFLICTING_GENERATOR_TYPE));
       }
 
@@ -166,15 +210,16 @@ class ReplaceIdGenerators implements CompilerPass {
         }
       }
 
-      // TODO(user): Error on function that has both. Or redeclartion
-      // on the same function.
-
       if (doc.isConsistentIdGenerator()) {
-        consistNameGenerators.put(
-            name, createNameSupplier(previousMap.get(name)));
         consistNameMap.put(name, Maps.<String, String>newLinkedHashMap());
+        nameGenerators.put(
+            name, createNameSupplier(RenameStrategy.CONSISTENT, previousMap.get(name)));
+      } else if (doc.isStableIdGenerator()) {
+        nameGenerators.put(
+            name, createNameSupplier(RenameStrategy.STABLE, previousMap.get(name)));
       } else {
-        nameGenerators.put(name, createNameSupplier(previousMap.get(name)));
+        nameGenerators.put(
+            name, createNameSupplier(RenameStrategy.INCONSISTENT, previousMap.get(name)));
       }
       idGeneratorMaps.put(name, Maps.<String, String>newLinkedHashMap());
     }
@@ -183,7 +228,7 @@ class ReplaceIdGenerators implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new GatherGenerators());
-    if (!nameGenerators.isEmpty() || !this.consistNameGenerators.isEmpty()) {
+    if (!nameGenerators.isEmpty()) {
       NodeTraversal.traverse(compiler, root, new ReplaceGenerators());
     }
   }
@@ -196,23 +241,19 @@ class ReplaceIdGenerators implements CompilerPass {
       }
 
       String callName = n.getFirstChild().getQualifiedName();
-      boolean consistent = false;
       NameSupplier nameGenerator = nameGenerators.get(callName);
-      if (nameGenerator == null) {
-        nameGenerator = consistNameGenerators.get(callName);
-        consistent = true;
-      }
       if (nameGenerator == null) {
         return;
       }
 
-      if (!t.inGlobalScope() && !consistent) {
+      if (!t.inGlobalScope() &&
+          nameGenerator.getRenameStrategy() == RenameStrategy.INCONSISTENT) {
         // Warn about calls not in the global scope.
         compiler.report(t.makeError(n, NON_GLOBAL_ID_GENERATOR_CALL));
         return;
       }
 
-      if (!consistent) {
+      if (nameGenerator.getRenameStrategy() == RenameStrategy.INCONSISTENT) {
         for (Node ancestor : n.getAncestors()) {
           if (NodeUtil.isControlStructure(ancestor)) {
             // Warn about conditional calls.
@@ -233,8 +274,9 @@ class ReplaceIdGenerators implements CompilerPass {
       String rename = null;
 
       String name = id.getString();
-      String instanceId = getIdForGeneratorNode(consistent, id);
-      if (consistent) {
+      String instanceId = getIdForGeneratorNode(
+          nameGenerator.getRenameStrategy() == RenameStrategy.CONSISTENT, id);
+      if (nameGenerator.getRenameStrategy() == RenameStrategy.CONSISTENT) {
         Map<String, String> entry = consistNameMap.get(callName);
         rename = entry.get(instanceId);
         if (rename == null) {
