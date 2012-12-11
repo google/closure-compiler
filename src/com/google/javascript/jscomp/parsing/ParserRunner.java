@@ -101,11 +101,11 @@ public class ParserRunner {
    * @return The AST of the given text.
    * @throws IOException
    */
-  public static ParseResult parse(StaticSourceFile sourceFile,
-                                  String sourceString,
-                                  Config config,
-                                  ErrorReporter errorReporter,
-                                  Logger logger) throws IOException {
+  public static Node parse(StaticSourceFile sourceFile,
+                           String sourceString,
+                           Config config,
+                           ErrorReporter errorReporter,
+                           Logger logger) throws IOException {
     Context cx = Context.enter();
     cx.setErrorReporter(errorReporter);
     cx.setLanguageVersion(Context.VERSION_1_5);
@@ -143,19 +143,6 @@ public class ParserRunner {
           astRoot, sourceFile, sourceString, config, errorReporter);
       root.setIsSyntheticBlock(true);
     }
-    return new ParseResult(root, astRoot);
-  }
-
-  /**
-   * Holds results of parsing. Includes both ast formats.
-   */
-  public static class ParseResult {
-    public final Node ast;
-    public final AstRoot oldAst;
-
-    public ParseResult(Node ast, AstRoot oldAst) {
-      this.ast = ast;
-      this.oldAst = oldAst;
-    }
+    return root;
   }
 }

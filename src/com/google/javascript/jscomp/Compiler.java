@@ -43,7 +43,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.head.ErrorReporter;
-import com.google.javascript.rhino.head.ast.AstRoot;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.io.IOException;
@@ -2534,22 +2533,5 @@ public class Compiler extends AbstractCompiler {
   public static String getReleaseDate() {
     ResourceBundle config = ResourceBundle.getBundle(CONFIG_RESOURCE);
     return config.getString("compiler.date");
-  }
-
-  /**
-   * Stores the old parse tree for a given source file.
-   * @param sourceName
-   * @param oldAst
-   */
-  public void setOldParseTree(String sourceName, AstRoot oldAst) {
-  }
-
-  /**
-   * Gets an old format parse tree for a given source file.
-   * @param sourceName
-   * @return
-   */
-  public AstRoot getOldParseTreeByName(String sourceName) {
-    return null;
   }
 }
