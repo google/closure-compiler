@@ -242,7 +242,6 @@ public class Token {
           case ASSIGN_DIV:      return "ASSIGN_DIV";
           case ASSIGN_MOD:      return "ASSIGN_MOD";
           case HOOK:            return "HOOK";
-          case COLON:           return "COLON";
           case OR:              return "OR";
           case AND:             return "AND";
           case INC:             return "INC";
@@ -279,6 +278,9 @@ public class Token {
           case BANG:            return "BANG";
           case VOID:            return "VOID";
           case EQUALS:          return "EQUALS";
+          case LB:              return "LB";
+          case LC:              return "LC";
+          case COLON:           return "COLON";
         }
 
         // Token without name

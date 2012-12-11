@@ -714,30 +714,6 @@ public final class JsDocInfoParser {
                   token = eatTokensUntilEOL();
                   continue retry;
 
-                case PRIVATE:
-                  if (!jsdocBuilder.recordVisibility(Visibility.PRIVATE)) {
-                    parser.addParserWarning("msg.jsdoc.visibility.private",
-                        stream.getLineno(), stream.getCharno());
-                  }
-                  token = eatTokensUntilEOL();
-                  continue retry;
-
-                case PROTECTED:
-                  if (!jsdocBuilder.recordVisibility(Visibility.PROTECTED)) {
-                    parser.addParserWarning("msg.jsdoc.visibility.protected",
-                        stream.getLineno(), stream.getCharno());
-                  }
-                  token = eatTokensUntilEOL();
-                  continue retry;
-
-                case PUBLIC:
-                  if (!jsdocBuilder.recordVisibility(Visibility.PUBLIC)) {
-                    parser.addParserWarning("msg.jsdoc.visibility.public",
-                        stream.getLineno(), stream.getCharno());
-                  }
-                  token = eatTokensUntilEOL();
-                  continue retry;
-
                 case NO_SHADOW:
                   if (!jsdocBuilder.recordNoShadow()) {
                     parser.addParserWarning("msg.jsdoc.noshadow",
@@ -841,6 +817,9 @@ public final class JsDocInfoParser {
 
                 case DEFINE:
                 case RETURN:
+                case PRIVATE:
+                case PROTECTED:
+                case PUBLIC:
                 case THIS:
                 case TYPE:
                 case TYPEDEF:
@@ -848,26 +827,45 @@ public final class JsDocInfoParser {
                   charno = stream.getCharno();
 
                   Node typeNode = null;
-                  if (!lookAheadForTypeAnnotation() &&
-                      annotation == Annotation.RETURN) {
-                    // If RETURN doesn't have a type annotation, record
-                    // it as the unknown type.
-                    typeNode = newNode(Token.QMARK);
-                  } else {
+                  boolean hasType = lookAheadForTypeAnnotation();
+                  boolean isVisibilityAnnotation =
+                      (annotation == Annotation.PRIVATE ||
+                       annotation == Annotation.PROTECTED ||
+                       annotation == Annotation.PUBLIC);
+                  boolean canSkipTypeAnnotation =
+                      (isVisibilityAnnotation ||
+                       annotation == Annotation.RETURN);
+                  type = null;
+                  if (hasType || !canSkipTypeAnnotation) {
                     skipEOLs();
                     token = next();
                     typeNode = parseAndRecordTypeNode(token);
+
+                    if (annotation == Annotation.THIS) {
+                      typeNode = wrapNode(Token.BANG, typeNode);
+                    }
+                    type = createJSTypeExpression(typeNode);
                   }
 
-                  if (annotation == Annotation.THIS) {
-                    typeNode = wrapNode(Token.BANG, typeNode);
-                  }
-                  type = createJSTypeExpression(typeNode);
+                  // The error was reported during recursive descent
+                  // recovering parsing
+                  boolean hasError = type == null && !canSkipTypeAnnotation;
+                  if (!hasError) {
+                    // Record types for @type.
+                    // If the @private, @protected, or @public annotations
+                    // have a type attached, pretend that they actually wrote:
+                    // @type {type}\n@private
+                    // This will have some weird behavior in some cases
+                    // (for example, @private can now be used as a type-cast),
+                    // but should be mostly OK.
+                    if ((type != null && isVisibilityAnnotation)
+                        || annotation == Annotation.TYPE) {
+                      if (!jsdocBuilder.recordType(type)) {
+                        parser.addTypeWarning(
+                            "msg.jsdoc.incompat.type", lineno, charno);
+                      }
+                    }
 
-                  if (type == null) {
-                    // error reported during recursive descent
-                    // recovering parsing
-                  } else {
                     switch (annotation) {
                       case DEFINE:
                         if (!jsdocBuilder.recordDefineType(type)) {
@@ -876,7 +874,35 @@ public final class JsDocInfoParser {
                         }
                         break;
 
+                      case PRIVATE:
+                        if (!jsdocBuilder.recordVisibility(Visibility.PRIVATE)) {
+                          parser.addParserWarning(
+                              "msg.jsdoc.visibility.private",
+                              lineno, charno);
+                        }
+                        break;
+
+                      case PROTECTED:
+                        if (!jsdocBuilder.recordVisibility(Visibility.PROTECTED)) {
+                          parser.addParserWarning(
+                              "msg.jsdoc.visibility.protected",
+                              lineno, charno);
+                        }
+                        break;
+
+                      case PUBLIC:
+                        if (!jsdocBuilder.recordVisibility(Visibility.PUBLIC)) {
+                          parser.addParserWarning(
+                              "msg.jsdoc.visibility.public",
+                              lineno, charno);
+                        }
+                        break;
+
                       case RETURN:
+                        if (type == null) {
+                          type = createJSTypeExpression(newNode(Token.QMARK));
+                        }
+
                         if (!jsdocBuilder.recordReturnType(type)) {
                           parser.addTypeWarning(
                               "msg.jsdoc.incompat.type", lineno, charno);
@@ -904,13 +930,6 @@ public final class JsDocInfoParser {
 
                       case THIS:
                         if (!jsdocBuilder.recordThisType(type)) {
-                          parser.addTypeWarning(
-                              "msg.jsdoc.incompat.type", lineno, charno);
-                        }
-                        break;
-
-                      case TYPE:
-                        if (!jsdocBuilder.recordType(type)) {
                           parser.addTypeWarning(
                               "msg.jsdoc.incompat.type", lineno, charno);
                         }

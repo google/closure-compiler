@@ -79,6 +79,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         s.getVar("URIError").getType());
   }
 
+  public void testPrivateType() throws Exception {
+    testTypes(
+        "/** @private {number} */ var x = false;",
+        "initializing variable\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
   public void testTypeCheck1() throws Exception {
     testTypes("/**@return {void}*/function foo(){ if (foo()) return; }");
   }

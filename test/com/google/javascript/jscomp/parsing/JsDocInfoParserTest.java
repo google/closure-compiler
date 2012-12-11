@@ -2526,6 +2526,51 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
           "type annotation incompatible with other annotations");
   }
 
+  public void testTypeTagConflict21() throws Exception {
+    parse("/**\n" +
+          " * @private {string}\n" +
+          " * @type {number}\n" +
+          " */\n" +
+          "function DictDict() {}",
+          "Bad type annotation. " +
+          "type annotation incompatible with other annotations");
+  }
+
+  public void testTypeTagConflict22() throws Exception {
+    parse("/**\n" +
+          " * @protected {string}\n" +
+          " * @param {string} x\n" +
+          " */\n" +
+          "function DictDict(x) {}",
+          "Bad type annotation. " +
+          "type annotation incompatible with other annotations");
+  }
+
+  public void testTypeTagConflict23() throws Exception {
+    parse("/**\n" +
+          " * @public {string}\n" +
+          " * @return {string} x\n" +
+          " */\n" +
+          "function DictDict() {}",
+          "Bad type annotation. " +
+          "type annotation incompatible with other annotations");
+  }
+
+  public void testPrivateType() throws Exception {
+    JSDocInfo jsdoc = parse("@private {string} */");
+    assertTypeEquals(STRING_TYPE, jsdoc.getType());
+  }
+
+  public void testProtectedType() throws Exception {
+    JSDocInfo jsdoc = parse("@protected {string} */");
+    assertTypeEquals(STRING_TYPE, jsdoc.getType());
+  }
+
+  public void testPublicType() throws Exception {
+    JSDocInfo jsdoc = parse("@public {string} */");
+    assertTypeEquals(STRING_TYPE, jsdoc.getType());
+  }
+
   public void testStableIdGeneratorConflict() throws Exception {
     parse("/**\n" +
           " * @stableIdGenerator\n" +
