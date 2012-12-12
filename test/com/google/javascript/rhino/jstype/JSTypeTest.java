@@ -4605,7 +4605,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         subclassCtor,
         recordType,
         forwardDeclaredNamedType,
-        createUnionType(forwardDeclaredNamedType, NULL_TYPE));
+        createUnionType(forwardDeclaredNamedType, NULL_TYPE),
+        createParameterizedType(OBJECT_TYPE, STRING_TYPE),
+        createParameterizedType(OBJECT_TYPE, NUMBER_TYPE),
+        createParameterizedType(ARRAY_TYPE, STRING_TYPE),
+        createParameterizedType(ARRAY_TYPE, NUMBER_TYPE),
+        createUnionType(
+            createParameterizedType(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE),
+        createUnionType(
+            createParameterizedType(OBJECT_TYPE, BOOLEAN_TYPE), NULL_TYPE)
+        );
   }
 
   public void testSymmetryOfTestForEquality() {
@@ -5155,6 +5164,187 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
         registry.getNativeType(JSTypeNative.NO_TYPE));
     verifySubtypeChain(typeChain);
+  }
+
+  public void testParameterizedArrayChain() throws Exception {
+    JSType arrayOfNoType = createParameterizedType(
+        ARRAY_TYPE, NO_TYPE);
+    JSType arrayOfString = createParameterizedType(
+        ARRAY_TYPE, STRING_TYPE);
+    JSType arrayOfStringOrNumber = createParameterizedType(
+        ARRAY_TYPE, createUnionType(STRING_TYPE, NUMBER_TYPE));
+    JSType arrayOfAllType = createParameterizedType(
+        ARRAY_TYPE, ALL_TYPE);
+
+    List<JSType> typeChain = Lists.newArrayList(
+        registry.getNativeType(JSTypeNative.ALL_TYPE),
+        registry.getNativeType(JSTypeNative.OBJECT_TYPE),
+        arrayOfAllType,
+        arrayOfStringOrNumber,
+        arrayOfString,
+        arrayOfNoType,
+        registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
+        registry.getNativeType(JSTypeNative.NO_TYPE));
+    verifySubtypeChain(typeChain, false);
+  }
+
+  public void testParameterizedArrayChain2() throws Exception {
+    JSType arrayOfNoType = createParameterizedType(
+        ARRAY_TYPE, NO_TYPE);
+    JSType arrayOfNoObjectType = createParameterizedType(
+        ARRAY_TYPE, NO_OBJECT_TYPE);
+    JSType arrayOfArray = createParameterizedType(
+        ARRAY_TYPE, ARRAY_TYPE);
+    JSType arrayOfObject = createParameterizedType(
+        ARRAY_TYPE, OBJECT_TYPE);
+    JSType arrayOfAllType = createParameterizedType(
+        ARRAY_TYPE, ALL_TYPE);
+
+    List<JSType> typeChain = Lists.newArrayList(
+        registry.getNativeType(JSTypeNative.ALL_TYPE),
+        registry.getNativeType(JSTypeNative.OBJECT_TYPE),
+        arrayOfAllType,
+        arrayOfObject,
+        arrayOfArray,
+        arrayOfNoObjectType,
+        arrayOfNoType,
+        registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
+        registry.getNativeType(JSTypeNative.NO_TYPE));
+    verifySubtypeChain(typeChain, false);
+  }
+
+  public void testParameterizedObjectChain() throws Exception {
+    JSType objectOfNoType = createParameterizedType(
+        OBJECT_TYPE, NO_TYPE);
+    JSType objectOfString = createParameterizedType(
+        OBJECT_TYPE, STRING_TYPE);
+    JSType objectOfStringOrNumber = createParameterizedType(
+        OBJECT_TYPE, createUnionType(STRING_TYPE, NUMBER_TYPE));
+    JSType objectOfAllType = createParameterizedType(
+        OBJECT_TYPE, ALL_TYPE);
+
+    List<JSType> typeChain = Lists.newArrayList(
+        registry.getNativeType(JSTypeNative.ALL_TYPE),
+        registry.getNativeType(JSTypeNative.OBJECT_TYPE),
+        objectOfAllType,
+        objectOfStringOrNumber,
+        objectOfString,
+        objectOfNoType,
+        registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
+        registry.getNativeType(JSTypeNative.NO_TYPE));
+    verifySubtypeChain(typeChain, false);
+  }
+
+  public void testMixedParameterizedTypeChain() throws Exception {
+    JSType arrayOfNoType = createParameterizedType(
+        ARRAY_TYPE, NO_TYPE);
+    JSType arrayOfString = createParameterizedType(
+        ARRAY_TYPE, STRING_TYPE);
+    JSType objectOfString = createParameterizedType(
+        OBJECT_TYPE, STRING_TYPE);
+    JSType objectOfStringOrNumber = createParameterizedType(
+        OBJECT_TYPE, createUnionType(STRING_TYPE, NUMBER_TYPE));
+    JSType objectOfAllType = createParameterizedType(
+        OBJECT_TYPE, ALL_TYPE);
+
+    List<JSType> typeChain = Lists.newArrayList(
+        registry.getNativeType(JSTypeNative.ALL_TYPE),
+        registry.getNativeType(JSTypeNative.OBJECT_TYPE),
+        objectOfAllType,
+        objectOfStringOrNumber,
+        objectOfString,
+        arrayOfString,
+        arrayOfNoType,
+        registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
+        registry.getNativeType(JSTypeNative.NO_TYPE));
+    verifySubtypeChain(typeChain, false);
+  }
+
+  public void testParameterizedTypeRelations() throws Exception {
+    JSType objectOfString = createParameterizedType(
+        OBJECT_TYPE, STRING_TYPE);
+    JSType arrayOfString = createParameterizedType(
+        ARRAY_TYPE, STRING_TYPE);
+    JSType arrayOfNumber = createParameterizedType(
+        ARRAY_TYPE, NUMBER_TYPE);
+    JSType arrayOfUnknown = createParameterizedType(
+        ARRAY_TYPE, UNKNOWN_TYPE);
+
+    assertFalse(objectOfString.isSubtype(ARRAY_TYPE));
+    assertTrue(ARRAY_TYPE.isSubtype(objectOfString));
+    assertFalse(objectOfString.isSubtype(ARRAY_TYPE));
+    assertTrue(ARRAY_TYPE.isSubtype(objectOfString));
+
+    // Union and least super type cases:
+    //
+    // 1) alternate:Array.<string> and current:Object ==> Object
+    // 2) alternate:Array.<string> and current:Array ==> Array
+    // 3) alternate:Object.<string> and current:Array ==> Array|Object.<string>
+    // 4) alternate:Object and current:Array.<string> ==> Object
+    // 5) alternate:Array and current:Array.<string> ==> Array
+    // 6) alternate:Array and current:Object.<string> ==> Array|Object.<string>
+    // 7) alternate:Array.<string> and current:Array.<number> ==> Array.<?>
+    // 8) alternate:Array.<string> and current:Array.<string> ==> Array.<string>
+    // 9) alternate:Array.<string> and
+    //    current:Object.<string> ==> Object.<string>|Array.<string>
+
+    assertTypeEquals(
+        OBJECT_TYPE,
+        JSType.getLeastSupertype(arrayOfString, OBJECT_TYPE));
+    assertTypeEquals(
+        OBJECT_TYPE,
+        JSType.getLeastSupertype(OBJECT_TYPE, arrayOfString));
+
+    assertTypeEquals(
+        ARRAY_TYPE,
+        JSType.getLeastSupertype(arrayOfString, ARRAY_TYPE));
+    assertTypeEquals(
+        ARRAY_TYPE,
+        JSType.getLeastSupertype(ARRAY_TYPE, arrayOfString));
+
+    assertEquals(
+        "(Array|Object.<string>)",
+        JSType.getLeastSupertype(objectOfString, ARRAY_TYPE).toString());
+    assertEquals(
+        "(Array|Object.<string>)",
+        JSType.getLeastSupertype(ARRAY_TYPE, objectOfString).toString());
+
+    assertEquals(
+        "Array",
+        JSType.getLeastSupertype(arrayOfString, arrayOfNumber).toString());
+    assertEquals(
+        "Array",
+        JSType.getLeastSupertype(arrayOfNumber, arrayOfString).toString());
+    assertTypeEquals(
+        arrayOfString,
+        JSType.getLeastSupertype(arrayOfString, arrayOfString));
+
+    assertEquals(
+        "(Array.<string>|Object.<string>)",
+        JSType.getLeastSupertype(objectOfString, arrayOfString).toString());
+    assertEquals(
+        "(Array.<string>|Object.<string>)",
+        JSType.getLeastSupertype(arrayOfString, objectOfString).toString());
+
+    assertTypeEquals(
+        objectOfString,
+        JSType.getGreatestSubtype(OBJECT_TYPE, objectOfString));
+
+    assertTypeEquals(
+        objectOfString,
+        JSType.getGreatestSubtype(objectOfString, OBJECT_TYPE));
+
+    assertTypeEquals(
+        ARRAY_TYPE,
+        JSType.getGreatestSubtype(objectOfString, ARRAY_TYPE));
+
+    assertTypeEquals(
+        JSType.getGreatestSubtype(objectOfString, arrayOfString),
+        NO_OBJECT_TYPE);
+
+    assertTypeEquals(
+        JSType.getGreatestSubtype(OBJECT_TYPE, arrayOfString),
+        arrayOfString);
   }
 
   /**

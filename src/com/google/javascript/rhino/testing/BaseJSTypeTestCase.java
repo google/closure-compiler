@@ -414,6 +414,11 @@ public abstract class BaseJSTypeTestCase extends TestCase {
     return registry.createTemplatizedType(baseType, templatizedTypes);
   }
 
+  protected JSType createParameterizedType(
+      ObjectType type, JSType typeParameter) {
+    return registry.createParameterizedType(type, typeParameter);
+  }
+
   /**
    * Asserts that a Node representing a type expression resolves to the
    * correct {@code JSType}.

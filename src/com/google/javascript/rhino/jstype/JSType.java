@@ -1071,6 +1071,12 @@ public abstract class JSType implements Serializable {
       return thisType.toMaybeUnionType().meet(thatType);
     } else if (thatType.isUnionType()) {
       return thatType.toMaybeUnionType().meet(thisType);
+    } else if (thisType.isParameterizedType()) {
+      return thisType.toMaybeParameterizedType().getGreatestSubtypeHelper(
+          thatType);
+    }  else if (thatType.isParameterizedType()) {
+      return thatType.toMaybeParameterizedType().getGreatestSubtypeHelper(
+          thisType);
     } else if (thisType.isSubtype(thatType)) {
       return filterNoResolvedType(thisType);
     } else if (thatType.isSubtype(thisType)) {

@@ -10832,21 +10832,84 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void disable_testBackwardsInferenceGoogArrayFilter1()
+  public void testFilter0()
       throws Exception {
-    // TODO(johnlenz): this doesn't fail because any Array is regarded as
-    // a subtype of any other array regardless of the type parameter.
+    testTypes(
+        "/**\n" +
+        " * @param {T} arr\n" +
+        " * @return {T}\n" +
+        " * @template T\n" +
+        " */\n" +
+        "var filter = function(arr){};\n" +
+
+        "/** @type {!Array.<string>} */" +
+        "var arr;\n" +
+        "/** @type {!Array.<string>} */" +
+        "var result = filter(arr);");
+  }
+
+  public void testFilter1()
+      throws Exception {
+    testTypes(
+        "/**\n" +
+        " * @param {!Array.<T>} arr\n" +
+        " * @return {!Array.<T>}\n" +
+        " * @template T\n" +
+        " */\n" +
+        "var filter = function(arr){};\n" +
+
+        "/** @type {!Array.<string>} */" +
+        "var arr;\n" +
+        "/** @type {!Array.<string>} */" +
+        "var result = filter(arr);");
+  }
+
+  public void testFilter2()
+      throws Exception {
+    // TODO(johnlenz): This should produce a warning.
+    testTypes(
+        "/**\n" +
+        " * @param {!Array.<T>} arr\n" +
+        " * @return {!Array.<T>}\n" +
+        " * @template T\n" +
+        " */\n" +
+        "var filter = function(arr){};\n" +
+
+        "/** @type {!Array.<string>} */" +
+        "var arr;\n" +
+        "/** @type {!Array.<number>} */" +
+        "var result = filter(arr);");
+  }
+
+  public void testFilter3()
+      throws Exception {
+    // TODO(johnlenz): This should produce a warning.
+    testTypes(
+        "/**\n" +
+        " * @param {Array.<T>} arr\n" +
+        " * @return {Array.<T>}\n" +
+        " * @template T\n" +
+        " */\n" +
+        "var filter = function(arr){};\n" +
+
+        "/** @type {Array.<string>} */" +
+        "var arr;\n" +
+        "/** @type {Array.<number>} */" +
+        "var result = filter(arr);");
+  }
+
+  public void testBackwardsInferenceGoogArrayFilter1()
+      throws Exception {
+    // TODO(johnlenz): This should produce a warning.
     testClosureTypes(
         CLOSURE_DEFS +
         "/** @type {Array.<string>} */" +
         "var arr;\n" +
-        "/** @type {Array.<number>} */" +
+        "/** @type {!Array.<number>} */" +
         "var result = goog.array.filter(" +
         "   arr," +
         "   function(item,index,src) {return false;});",
-        "assignment\n" +
-        "found   : string\n" +
-        "required: number");
+        null);
   }
 
   public void testBackwardsInferenceGoogArrayFilter2() throws Exception {
@@ -10921,6 +10984,39 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "    out = e;" +
         "  }" +
         "}\n");
+  }
+
+  public void testParameterized1() throws Exception {
+    // TODO(johnlenz): This should produce a warning.
+    testTypes(
+        "/** @type {!Array.<string>} */" +
+        "var arr1 = [];\n" +
+        "/** @type {!Array.<number>} */" +
+        "var arr2 = [];\n" +
+        "arr1 = arr2;");
+  }
+
+  public void testParameterized2() throws Exception {
+    // TODO(johnlenz): This should produce a warning.
+    testTypes(
+        "/** @type {!Array.<string>} */" +
+        "var arr1 = /** @type {!Array.<number>} */([]);\n");
+  }
+
+  public void testParameterized3() throws Exception {
+    // TODO(johnlenz): This should produce a warning.
+    testTypes(
+        "/** @type {Array.<string>} */" +
+        "var arr1 = /** @type {!Array.<number>} */([]);\n");
+  }
+
+  public void testParameterized4() throws Exception {
+    // TODO(johnlenz): This should produce a warning.
+    testTypes(
+        "/** @type {Array.<string>} */" +
+        "var arr1 = [];\n" +
+        "/** @type {Array.<number>} */" +
+        "var arr2 = arr1;\n");
   }
 
   private void testTypes(String js) throws Exception {

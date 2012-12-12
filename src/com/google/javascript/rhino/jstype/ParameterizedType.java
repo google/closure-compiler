@@ -39,6 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.base.Preconditions;
+
 /**
  * An object type with a declared default element type, such as
  * <code>Array.<string></code>.
@@ -86,5 +88,49 @@ public final class ParameterizedType extends ProxyObjectType {
   @Override
   public boolean hasAnyTemplateTypesInternal() {
     return super.hasAnyTemplateTypes() || parameterType.hasAnyTemplateTypes();
+  }
+
+  boolean wrapsSameRawType(JSType that) {
+    return that.isParameterizedType() && this.getReferencedTypeInternal()
+        .isEquivalentTo(
+            that.toMaybeParameterizedType().getReferencedTypeInternal());
+  }
+
+  boolean wrapsRawType(JSType that) {
+    return this.getReferencedTypeInternal().isEquivalentTo(that);
+  }
+
+  /**
+   * Computes the greatest subtype of two related parameterized types.
+   * @return The greatest subtype.
+   */
+  JSType getGreatestSubtypeHelper(JSType rawThat) {
+    Preconditions.checkNotNull(rawThat);
+
+    if (!wrapsSameRawType(rawThat)) {
+      if (!rawThat.isParameterizedType()) {
+        if (this.isSubtype(rawThat)) {
+          return this;
+        } else if (rawThat.isSubtype(this)) {
+          return filterNoResolvedType(rawThat);
+        }
+      }
+      if (this.isObject() && rawThat.isObject()) {
+        return this.getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+      }
+      return this.getNativeType(JSTypeNative.NO_TYPE);
+    }
+
+    ParameterizedType that = rawThat.toMaybeParameterizedType();
+    Preconditions.checkNotNull(that);
+
+    if (this.parameterType.isEquivalentTo(that.parameterType)) {
+      return this;
+    }
+
+    // For types that have the same raw type but different type parameters,
+    // we simply create a type has a "unknown" type parameter.  This is
+    // equivalent to the raw type.
+    return getReferencedObjTypeInternal();
   }
 }
