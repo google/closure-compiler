@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.head.ErrorReporter;
+import com.google.javascript.rhino.head.ast.AstRoot;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.util.List;
@@ -374,4 +375,18 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    *     returns null.
    */
   abstract Node ensureLibraryInjected(String resourceName);
+
+   /**
+    * Stores the old parse tree for a given source file.
+    * @param sourceName
+    * @param astRoot
+    */
+   abstract void setOldParseTree(String sourceName, AstRoot astRoot);
+
+   /**
+    * Gets an old format parse tree for a given source file.
+    * @param sourceName The source file name to get the tree for.
+    * @return The old format parse tree for the given source file.
+    */
+   abstract AstRoot getOldParseTreeByName(String sourceName);
 }
