@@ -344,6 +344,7 @@ IDBOpenDBRequest.prototype.onupgradeneeded = function(e) {};
 
 /**
  * @constructor
+ * @implements {EventTarget}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBDatabase
  */
 function IDBDatabase() {}
@@ -418,6 +419,17 @@ IDBDatabase.prototype.onerror = function() {};
  * @type {Function}
  */
 IDBDatabase.prototype.onversionchange = function() {};
+
+/** @override */
+IDBDatabase.prototype.addEventListener =
+    function(type, listener, useCapture) {};
+
+/** @override */
+IDBDatabase.prototype.removeEventListener =
+    function(type, listener, useCapture) {};
+
+/** @override */
+IDBDatabase.prototype.dispatchEvent = function(evt) {};
 
 /**
  * Typedef for valid key types according to the w3 specification. Note that this
