@@ -5260,7 +5260,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     verifySubtypeChain(typeChain, false);
   }
 
-  public void testParameterizedTypeRelations() throws Exception {
+  public void testParameterizedTypeSubtypes() {
     JSType objectOfString = createParameterizedType(
         OBJECT_TYPE, STRING_TYPE);
     JSType arrayOfString = createParameterizedType(
@@ -5271,9 +5271,34 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ARRAY_TYPE, UNKNOWN_TYPE);
 
     assertFalse(objectOfString.isSubtype(ARRAY_TYPE));
+    // TODO(johnlenz): should this be false?
     assertTrue(ARRAY_TYPE.isSubtype(objectOfString));
     assertFalse(objectOfString.isSubtype(ARRAY_TYPE));
+    // TODO(johnlenz): should this be false?
     assertTrue(ARRAY_TYPE.isSubtype(objectOfString));
+
+    assertTrue(arrayOfString.isSubtype(ARRAY_TYPE));
+    assertTrue(ARRAY_TYPE.isSubtype(arrayOfString));
+    assertTrue(arrayOfString.isSubtype(arrayOfUnknown));
+    assertTrue(arrayOfUnknown.isSubtype(arrayOfString));
+
+    assertFalse(arrayOfString.isSubtype(arrayOfNumber));
+    assertFalse(arrayOfNumber.isSubtype(arrayOfString));
+
+    assertTrue(arrayOfNumber.isSubtype(createUnionType(arrayOfNumber, NULL_VOID)));
+    assertFalse(createUnionType(arrayOfNumber, NULL_VOID).isSubtype(arrayOfNumber));
+    assertFalse(arrayOfString.isSubtype(createUnionType(arrayOfNumber, NULL_VOID)));
+  }
+
+  public void testParameterizedTypeRelations() throws Exception {
+    JSType objectOfString = createParameterizedType(
+        OBJECT_TYPE, STRING_TYPE);
+    JSType arrayOfString = createParameterizedType(
+        ARRAY_TYPE, STRING_TYPE);
+    JSType arrayOfNumber = createParameterizedType(
+        ARRAY_TYPE, NUMBER_TYPE);
+    JSType arrayOfUnknown = createParameterizedType(
+        ARRAY_TYPE, UNKNOWN_TYPE);
 
     // Union and least super type cases:
     //

@@ -1358,7 +1358,15 @@ public abstract class JSType implements Serializable {
           return true;
         }
       }
+      return false;
     }
+
+    // parameterized types.
+    if (thisType.isParameterizedType()) {
+      return thisType.toMaybeParameterizedType().isParameterizeSubtypeOf(
+          thatType);
+    }
+
     // proxy types
     if (thatType instanceof ProxyObjectType) {
       return thisType.isSubtype(

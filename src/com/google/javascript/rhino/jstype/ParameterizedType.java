@@ -90,6 +90,28 @@ public final class ParameterizedType extends ProxyObjectType {
     return super.hasAnyTemplateTypes() || parameterType.hasAnyTemplateTypes();
   }
 
+  @Override
+  public boolean isSubtype(JSType that) {
+    return isSubtypeHelper(this, that);
+  }
+
+  boolean isParameterizeSubtypeOf(JSType thatType) {
+    if (thatType.isParameterizedType()) {
+      JSType thisParameter = this.parameterType;
+      JSType thatParameter = thatType.toMaybeParameterizedType().parameterType;
+      // Currently, there is no way to declare a parameterized type so we have
+      // no way to determine if the type parameters are in anyway related so
+      // we disallow any subtype relationship between parameterized types.
+      // This seems appropriate for "Array.<X>" and "Object.<X>" which are the
+      // two parameterized types we recognize without a formal declaration.
+      return this.wrapsSameRawType(thatType)
+          && (thisParameter.isSubtype(thatParameter)
+              || thatParameter.isSubtype(thisParameter));
+    } else {
+      return this.getReferencedTypeInternal().isSubtype(thatType);
+    }
+  }
+
   boolean wrapsSameRawType(JSType that) {
     return that.isParameterizedType() && this.getReferencedTypeInternal()
         .isEquivalentTo(

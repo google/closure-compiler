@@ -11105,7 +11105,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testFilter2()
       throws Exception {
-    // TODO(johnlenz): This should produce a warning.
     testTypes(
         "/**\n" +
         " * @param {!Array.<T>} arr\n" +
@@ -11117,12 +11116,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {!Array.<string>} */" +
         "var arr;\n" +
         "/** @type {!Array.<number>} */" +
-        "var result = filter(arr);");
+        "var result = filter(arr);",
+        "initializing variable\n" +
+        "found   : Array.<string>\n" +
+        "required: Array.<number>");
   }
 
   public void testFilter3()
       throws Exception {
-    // TODO(johnlenz): This should produce a warning.
     testTypes(
         "/**\n" +
         " * @param {Array.<T>} arr\n" +
@@ -11134,12 +11135,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {Array.<string>} */" +
         "var arr;\n" +
         "/** @type {Array.<number>} */" +
-        "var result = filter(arr);");
+        "var result = filter(arr);",
+        "initializing variable\n" +
+        "found   : (Array.<string>|null)\n" +
+        "required: (Array.<number>|null)");
   }
 
   public void testBackwardsInferenceGoogArrayFilter1()
       throws Exception {
-    // TODO(johnlenz): This should produce a warning.
     testClosureTypes(
         CLOSURE_DEFS +
         "/** @type {Array.<string>} */" +
@@ -11148,7 +11151,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "var result = goog.array.filter(" +
         "   arr," +
         "   function(item,index,src) {return false;});",
-        null);
+        "initializing variable\n" +
+        "found   : Array.<string>\n" +
+        "required: Array.<number>");
   }
 
   public void testBackwardsInferenceGoogArrayFilter2() throws Exception {
@@ -11226,36 +11231,53 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testParameterized1() throws Exception {
-    // TODO(johnlenz): This should produce a warning.
     testTypes(
         "/** @type {!Array.<string>} */" +
         "var arr1 = [];\n" +
         "/** @type {!Array.<number>} */" +
         "var arr2 = [];\n" +
-        "arr1 = arr2;");
+        "arr1 = arr2;",
+        "assignment\n" +
+        "found   : Array.<number>\n" +
+        "required: Array.<string>");
   }
 
   public void testParameterized2() throws Exception {
-    // TODO(johnlenz): This should produce a warning.
     testTypes(
         "/** @type {!Array.<string>} */" +
-        "var arr1 = /** @type {!Array.<number>} */([]);\n");
+        "var arr1 = /** @type {!Array.<number>} */([]);\n",
+        "initializing variable\n" +
+        "found   : Array.<number>\n" +
+        "required: Array.<string>");
   }
 
   public void testParameterized3() throws Exception {
-    // TODO(johnlenz): This should produce a warning.
     testTypes(
         "/** @type {Array.<string>} */" +
-        "var arr1 = /** @type {!Array.<number>} */([]);\n");
+        "var arr1 = /** @type {!Array.<number>} */([]);\n",
+        "initializing variable\n" +
+        "found   : Array.<number>\n" +
+        "required: (Array.<string>|null)");
   }
 
   public void testParameterized4() throws Exception {
-    // TODO(johnlenz): This should produce a warning.
     testTypes(
         "/** @type {Array.<string>} */" +
         "var arr1 = [];\n" +
         "/** @type {Array.<number>} */" +
-        "var arr2 = arr1;\n");
+        "var arr2 = arr1;\n",
+        "initializing variable\n" +
+        "found   : (Array.<string>|null)\n" +
+        "required: (Array.<number>|null)");
+  }
+
+  public void testParameterizedTypeSubtypes2() throws Exception {
+    JSType arrayOfNumber = createParameterizedType(
+        ARRAY_TYPE, NUMBER_TYPE);
+    JSType arrayOfString = createParameterizedType(
+        ARRAY_TYPE, STRING_TYPE);
+    assertFalse(arrayOfString.isSubtype(createUnionType(arrayOfNumber, NULL_VOID)));
+
   }
 
   private void testTypes(String js) throws Exception {
