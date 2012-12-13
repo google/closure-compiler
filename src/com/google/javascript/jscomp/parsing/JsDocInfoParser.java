@@ -253,14 +253,6 @@ public final class JsDocInfoParser {
                   token = eatTokensUntilEOL();
                   continue retry;
 
-                case CONSTANT:
-                  if (!jsdocBuilder.recordConstancy()) {
-                    parser.addParserWarning("msg.jsdoc.const",
-                        stream.getLineno(), stream.getCharno());
-                  }
-                  token = eatTokensUntilEOL();
-                  continue retry;
-
                 case STRUCT:
                   if (!jsdocBuilder.recordStruct()) {
                     parser.addTypeWarning("msg.jsdoc.incompat.type",
@@ -815,6 +807,7 @@ public final class JsDocInfoParser {
                   token = versionInfo.token;
                   continue retry;
 
+                case CONSTANT:
                 case DEFINE:
                 case RETURN:
                 case PRIVATE:
@@ -828,12 +821,13 @@ public final class JsDocInfoParser {
 
                   Node typeNode = null;
                   boolean hasType = lookAheadForTypeAnnotation();
-                  boolean isVisibilityAnnotation =
+                  boolean isAlternateTypeAnnotation =
                       (annotation == Annotation.PRIVATE ||
                        annotation == Annotation.PROTECTED ||
-                       annotation == Annotation.PUBLIC);
+                       annotation == Annotation.PUBLIC ||
+                       annotation == Annotation.CONSTANT);
                   boolean canSkipTypeAnnotation =
-                      (isVisibilityAnnotation ||
+                      (isAlternateTypeAnnotation ||
                        annotation == Annotation.RETURN);
                   type = null;
                   if (hasType || !canSkipTypeAnnotation) {
@@ -858,7 +852,7 @@ public final class JsDocInfoParser {
                     // This will have some weird behavior in some cases
                     // (for example, @private can now be used as a type-cast),
                     // but should be mostly OK.
-                    if ((type != null && isVisibilityAnnotation)
+                    if ((type != null && isAlternateTypeAnnotation)
                         || annotation == Annotation.TYPE) {
                       if (!jsdocBuilder.recordType(type)) {
                         parser.addTypeWarning(
@@ -867,6 +861,13 @@ public final class JsDocInfoParser {
                     }
 
                     switch (annotation) {
+                      case CONSTANT:
+                        if (!jsdocBuilder.recordConstancy()) {
+                          parser.addParserWarning("msg.jsdoc.const",
+                              stream.getLineno(), stream.getCharno());
+                        }
+                        break;
+
                       case DEFINE:
                         if (!jsdocBuilder.recordDefineType(type)) {
                           parser.addParserWarning("msg.jsdoc.define",

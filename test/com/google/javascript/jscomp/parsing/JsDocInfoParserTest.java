@@ -2556,6 +2556,16 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
           "type annotation incompatible with other annotations");
   }
 
+  public void testTypeTagConflict24() throws Exception {
+    parse("/**\n" +
+          " * @const {string}\n" +
+          " * @return {string} x\n" +
+          " */\n" +
+          "function DictDict() {}",
+          "Bad type annotation. " +
+          "type annotation incompatible with other annotations");
+  }
+
   public void testPrivateType() throws Exception {
     JSDocInfo jsdoc = parse("@private {string} */");
     assertTypeEquals(STRING_TYPE, jsdoc.getType());
@@ -2568,6 +2578,11 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testPublicType() throws Exception {
     JSDocInfo jsdoc = parse("@public {string} */");
+    assertTypeEquals(STRING_TYPE, jsdoc.getType());
+  }
+
+  public void testConstType() throws Exception {
+    JSDocInfo jsdoc = parse("@const {string} */");
     assertTypeEquals(STRING_TYPE, jsdoc.getType());
   }
 
