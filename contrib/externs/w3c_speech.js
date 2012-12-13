@@ -109,8 +109,7 @@ SpeechRecognitionAlternative.prototype.confidence;
 function SpeechRecognitionResult() {}
 
 /** @type {boolean} */
-//TODO(user) Replace ['final'] hack with .isFinal once api is updated.
-SpeechRecognitionResult.prototype['final'];
+SpeechRecognitionResult.prototype.isFinal;
 
 /** @type {number} */
 SpeechRecognitionResult.prototype.length;
@@ -141,7 +140,7 @@ SpeechRecognitionResultList.prototype.item = function(index) {};
 function webkitSpeechRecognitionEvent() {}
 
 /** @type {SpeechRecognitionResult} */
-webkitSpeechRecognitionEvent.prototype.result;
+webkitSpeechRecognitionEvent.prototype.results;
 
 /** @type {number} */
 webkitSpeechRecognitionEvent.prototype.resultIndex;
