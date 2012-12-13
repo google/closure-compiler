@@ -656,6 +656,22 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "}", null);
   }
 
+  public void testTypeOfReduction16() throws Exception {
+    testClosureTypes(
+        CLOSURE_DEFS +
+        "/** @interface */ function I() {}\n" +
+        "/**\n" +
+        " * @param {*} x\n" +
+        " * @return {I}\n" +
+        " */\n" +
+        "function f(x) { " +
+        "  if(goog.isObject(x)) {" +
+        "    return /** @type {I} */(x);" +
+        "  }" +
+        "  return null;" +
+        "}", null);
+  }
+
   public void testQualifiedNameReduction1() throws Exception {
     testTypes("var x = {}; /** @type {string?} */ x.a = 'a';\n" +
         "/** @return {string} */ var f = function() {\n" +
@@ -5159,6 +5175,16 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testInferredParam7() throws Exception {
+    testTypes(
+        "/** @param {string} x */ function f(x) {}" +
+        "var bar = /** @type {function(number=,number=)} */ (" +
+        "    function(x, y) { f(y); });",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : (number|undefined)\n" +
+        "required: string");
+  }
+
   public void testOverriddenParams1() throws Exception {
     testTypes(
         "/** @constructor */ function Foo() {}" +
@@ -7444,6 +7470,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: derived");
   }
 
+  public void testCast3a() throws Exception {
+    // cannot downcast
+    testTypes("/** @constructor */function Base() {}\n" +
+        "/** @constructor @extends {Base} */function Derived() {}\n" +
+        "var baseInstance = new Base();" +
+        "/** @type {!Derived} */ var baz = baseInstance;\n",
+        "initializing variable\n" +
+        "found   : Base\n" +
+        "required: Derived");
+  }
+
   public void testCast4() throws Exception {
     // downcast must be explicit
     testTypes("/** @constructor */function base() {}\n" +
@@ -7457,6 +7494,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/** @constructor */function foo() {}\n" +
         "/** @constructor */function bar() {}\n" +
         "var baz = /** @type {!foo} */(new bar);\n",
+        "invalid cast - must be a subtype or supertype\n" +
+        "from: bar\n" +
+        "to  : foo");
+  }
+
+  public void testCast5a() throws Exception {
+    // cannot explicitly cast to an unrelated type
+    testTypes("/** @constructor */function foo() {}\n" +
+        "/** @constructor */function bar() {}\n" +
+        "var barInstance = new bar;\n" +
+        "var baz = /** @type {!foo} */(barInstance);\n",
         "invalid cast - must be a subtype or supertype\n" +
         "from: bar\n" +
         "to  : foo");
@@ -7559,14 +7607,16 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testCast17() throws Exception {
+  public void testCast17a() throws Exception {
     // Mostly verifying that rhino actually understands these JsDocs.
     testTypes("/** @constructor */ function Foo() {} \n" +
         "/** @type {Foo} */ var x = /** @type {Foo} */ (y)");
 
     testTypes("/** @constructor */ function Foo() {} \n" +
         "/** @type {Foo} */ var x = (/** @type {Foo} */ y)");
+  }
 
+  public void testCast17b() throws Exception {
     // Mostly verifying that rhino actually understands these JsDocs.
     testTypes("/** @constructor */ function Foo() {} \n" +
         "/** @type {Foo} */ var x = /** @type {Foo} */ ({})");
@@ -7585,6 +7635,195 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {Foo} */ var x = /** @type {Foo} */ {}",
         "Type annotations are not allowed here. " +
         "Are you missing parentheses?");
+  }
+
+  public void testCast19() throws Exception {
+    testTypes(
+        "var x = 'string';\n" +
+        "/** @type {number} */\n" +
+        "var y = /** @type {number} */(x);",
+        "invalid cast - must be a subtype or supertype\n" +
+        "from: string\n" +
+        "to  : number");
+  }
+
+  public void testCast20() throws Exception {
+    testTypes(
+        "/** @enum {boolean|null} */\n" +
+        "var X = {" +
+        "  AA: true," +
+        "  BB: false," +
+        "  CC: null" +
+        "};\n" +
+        "var y = /** @type {X} */(true);");
+  }
+
+  public void testCast21() throws Exception {
+    testTypes(
+        "/** @enum {boolean|null} */\n" +
+        "var X = {" +
+        "  AA: true," +
+        "  BB: false," +
+        "  CC: null" +
+        "};\n" +
+        "var value = true;\n" +
+        "var y = /** @type {X} */(value);");
+  }
+
+  public void testCast22() throws Exception {
+    testTypes(
+        "var x = null;\n" +
+        "var y = /** @type {number} */(x);",
+        "invalid cast - must be a subtype or supertype\n" +
+        "from: null\n" +
+        "to  : number");
+  }
+
+  public void testCast23() throws Exception {
+    testTypes(
+        "var x = null;\n" +
+        "var y = /** @type {Number} */(x);");
+  }
+
+  public void testCast24() throws Exception {
+    testTypes(
+        "var x = undefined;\n" +
+        "var y = /** @type {number} */(x);",
+        "invalid cast - must be a subtype or supertype\n" +
+        "from: undefined\n" +
+        "to  : number");
+  }
+
+  public void testCast25() throws Exception {
+    testTypes(
+        "var x = undefined;\n" +
+        "var y = /** @type {number|undefined} */(x);");
+  }
+
+  public void testCast26() throws Exception {
+    testTypes(
+        "function fn(dir) {\n" +
+        "  var node = dir ? 1 : 2;\n" +
+        "  fn(/** @type {number} */ (node));\n" +
+        "}");
+  }
+
+  public void testCast27() throws Exception {
+    // C doesn't implement I but a subtype might.
+    testTypes(
+        "/** @interface */ function I() {}\n" +
+        "/** @constructor */ function C() {}\n" +
+        "var x = new C();\n" +
+        "var y = /** @type {I} */(x);");
+  }
+
+  public void testCast27a() throws Exception {
+    // C doesn't implement I but a subtype might.
+    testTypes(
+        "/** @interface */ function I() {}\n" +
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {C} */ var x ;\n" +
+        "var y = /** @type {I} */(x);");
+  }
+
+  public void testCast28() throws Exception {
+    // C doesn't implement I but a subtype might.
+    testTypes(
+        "/** @interface */ function I() {}\n" +
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {!I} */ var x;\n" +
+        "var y = /** @type {C} */(x);");
+  }
+
+  public void testCast28a() throws Exception {
+    // C doesn't implement I but a subtype might.
+    testTypes(
+        "/** @interface */ function I() {}\n" +
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {I} */ var x;\n" +
+        "var y = /** @type {C} */(x);");
+  }
+
+  public void testCast29a() throws Exception {
+    // C doesn't implement the record type but a subtype might.
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "var x = new C();\n" +
+        "var y = /** @type {{remoteJids: Array, sessionId: string}} */(x);");
+  }
+
+  public void testCast29b() throws Exception {
+    // C doesn't implement the record type but a subtype might.
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {C} */ var x;\n" +
+        "var y = /** @type {{prop1: Array, prop2: string}} */(x);");
+  }
+
+  public void testCast29c() throws Exception {
+    // C doesn't implement the record type but a subtype might.
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {{remoteJids: Array, sessionId: string}} */ var x ;\n" +
+        "var y = /** @type {C} */(x);");
+  }
+
+  public void testCast30() throws Exception {
+    // Should be able to cast to a looser return type
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {function():string} */ var x ;\n" +
+        "var y = /** @type {function():?} */(x);");
+  }
+
+  public void testCast31() throws Exception {
+    // Should be able to cast to a tighter parameter type
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {function(*)} */ var x ;\n" +
+        "var y = /** @type {function(string)} */(x);");
+  }
+
+  public void testCast32() throws Exception {
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {Object} */ var x ;\n" +
+        "var y = /** @type {null|{length:number}} */(x);");
+  }
+
+  public void testCast33() throws Exception {
+    // null and void should be assignable to any type that accepts one or the
+    // other or both.
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {null|undefined} */ var x ;\n" +
+        "var y = /** @type {string?|undefined} */(x);");
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {null|undefined} */ var x ;\n" +
+        "var y = /** @type {string|undefined} */(x);");
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {null|undefined} */ var x ;\n" +
+        "var y = /** @type {string?} */(x);");
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {null|undefined} */ var x ;\n" +
+        "var y = /** @type {null} */(x);");
+  }
+
+  public void testCast34a() throws Exception {
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {Object} */ var x ;\n" +
+        "var y = /** @type {Function} */(x);");
+  }
+
+  public void testCast34b() throws Exception {
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "/** @type {Function} */ var x ;\n" +
+        "var y = /** @type {Object} */(x);");
   }
 
   public void testNestedCasts() throws Exception {

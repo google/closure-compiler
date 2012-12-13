@@ -476,6 +476,19 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     boolean typeable = true;
 
     switch (n.getType()) {
+      case Token.CAST:
+        Node expr = n.getFirstChild();
+        ensureTyped(t, n, getJSType(expr));
+
+        // If the cast, tightens the type apply it, so it is available post
+        // normalization.
+        JSType castType = getJSType(n);
+        JSType exprType = getJSType(expr);
+        if (castType.isSubtype(exprType)) {
+          expr.setJSType(castType);
+        }
+        break;
+
       case Token.NAME:
         typeable = visitName(t, n, parent);
         break;
@@ -1936,8 +1949,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     JSDocInfo info = n.getJSDocInfo();
     if (info != null) {
       if (info.hasType()) {
+        // TODO(johnlenz): Change this so that we only look for casts on CAST
+        // nodes one the misplaced type annotation warning is on by default and
+        // people have been given a chance to fix them.  As is, this is here
+        // simply for legacy casts.
         JSType infoType = info.getType().evaluate(t.getScope(), typeRegistry);
-        // remove cast check here.
         validator.expectCanCast(t, n, infoType, type);
         type = infoType;
       }

@@ -405,6 +405,10 @@ class Normalize implements CompilerPass {
             annotateConstantsByConvention(n, parent);
           }
           break;
+
+        case Token.CAST:
+          parent.replaceChild(n, n.removeFirstChild());
+          break;
       }
     }
 

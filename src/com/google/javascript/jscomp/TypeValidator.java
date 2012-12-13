@@ -74,8 +74,9 @@ class TypeValidator {
       "found   : {1}\n" +
       "required: {2}";
 
+  // TODO(johnlenz): reenable this after after the next release.
   static final DiagnosticType INVALID_CAST =
-      DiagnosticType.warning("JSC_INVALID_CAST",
+      DiagnosticType.disabled("JSC_INVALID_CAST",
           "invalid cast - must be a subtype or supertype\n" +
           "from: {0}\n" +
           "to  : {1}");
@@ -484,20 +485,17 @@ class TypeValidator {
 
   /**
    * Expect that the first type can be cast to the second type. The first type
-   * should be either a subtype or supertype of the second.
+   * must have some relationship with the second.
    *
    * @param t The node traversal.
    * @param n The node where warnings should point.
    * @param type The type being cast from.
    * @param castType The type being cast to.
    */
-  void expectCanCast(NodeTraversal t, Node n, JSType type, JSType castType) {
-    castType = castType.restrictByNotNullOrUndefined();
-    type = type.restrictByNotNullOrUndefined();
-
-    if (!type.isSubtype(castType) && !castType.isSubtype(type)) {
+  void expectCanCast(NodeTraversal t, Node n, JSType castType, JSType type) {
+    if (!type.canCastTo(castType)) {
       registerMismatch(type, castType, report(t.makeError(n, INVALID_CAST,
-          castType.toString(), type.toString())));
+          type.toString(), castType.toString())));
     }
   }
 
