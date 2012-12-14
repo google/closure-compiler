@@ -59,7 +59,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Override
   protected int getNumRepetitions() {
-    // Reduce this to 2 if we get better expression evaluators.
+    // Reduce this to 1 if we get better expression evaluators.
     return 2;
   }
 
@@ -72,7 +72,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   private void fold(String js, String expected, DiagnosticType warning) {
-    test(js, expected, warning);
+    test(js, expected, null, warning);
   }
 
   // TODO(user): This is same as fold() except it uses string comparison. Any
@@ -337,7 +337,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
          PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
     fold("a=~-0x100000000", "a=~-0x100000000",
          PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
-    fold("a=~.5", "~.5", PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+    testSame("a=~.5", PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
   }
 
   public void testUnaryOpsStringCompare() {
@@ -528,27 +528,27 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = -1 >>> 0", "x = 4294967295"); // 0xffffffff
     fold("x = -2 >>> 0", "x = 4294967294"); // 0xfffffffe
 
-    fold("3000000000 << 1", "3000000000<<1",
+    testSame("3000000000 << 1",
          PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
-    fold("1 << 32", "1<<32",
+    testSame("1 << 32",
         PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
-    fold("1 << -1", "1<<32",
+    testSame("1 << -1",
         PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
-    fold("3000000000 >> 1", "3000000000>>1",
+    testSame("3000000000 >> 1",
         PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
-    fold("1 >> 32", "1>>32",
+    testSame("1 >> 32",
         PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
-    fold("1.5 << 0",  "1.5<<0",
+    testSame("1.5 << 0",
         PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    fold("1 << .5",   "1.5<<0",
+    testSame("1 << .5",
         PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    fold("1.5 >>> 0", "1.5>>>0",
+    testSame("1.5 >>> 0",
         PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    fold("1 >>> .5",  "1.5>>>0",
+    testSame("1 >>> .5",
         PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    fold("1.5 >> 0",  "1.5>>0",
+    testSame("1.5 >> 0",
         PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    fold("1 >> .5",   "1.5>>0",
+    testSame("1 >> .5",
         PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
   }
 
@@ -771,11 +771,12 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = [,10][0]", "x = void 0");
     fold("x = [10, 20][0]", "x = 10");
     fold("x = [10, 20][1]", "x = 20");
-    fold("x = [10, 20][0.5]", "",
+
+    testSame("x = [10, 20][0.5]",
         PeepholeFoldConstants.INVALID_GETELEM_INDEX_ERROR);
-    fold("x = [10, 20][-1]",    "",
+    testSame("x = [10, 20][-1]",
         PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
-    fold("x = [10, 20][2]",     "",
+    testSame("x = [10, 20][2]",
         PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
 
     foldSame("x = [foo(), 0][1]");

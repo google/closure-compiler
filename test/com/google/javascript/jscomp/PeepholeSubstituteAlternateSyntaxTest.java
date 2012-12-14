@@ -317,8 +317,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("x = new RegExp(\"\")",              "x = RegExp(\"\")");
     fold("x = new RegExp(\"\", \"i\")",       "x = RegExp(\"\",\"i\")");
     // Bogus flags should not fold
-    fold("x = new RegExp(\"foobar\", \"bogus\")",
-         "x = RegExp(\"foobar\",\"bogus\")",
+    testSame("x = RegExp(\"foobar\", \"bogus\")",
          PeepholeSubstituteAlternateSyntax.INVALID_REGULAR_EXPRESSION_FLAGS);
     // Can Fold
     fold("x = new RegExp(\"foobar\")",        "x = /foobar/");

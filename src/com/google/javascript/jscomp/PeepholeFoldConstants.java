@@ -29,33 +29,37 @@ import com.google.javascript.rhino.jstype.TernaryValue;
  */
 class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
+  // TODO(johnlenz): optimizations should not be emiting errors. Move these to
+  // a check pass.
   static final DiagnosticType INVALID_GETELEM_INDEX_ERROR =
-      DiagnosticType.error(
+      DiagnosticType.warning(
           "JSC_INVALID_GETELEM_INDEX_ERROR",
           "Array index not integer: {0}");
 
   static final DiagnosticType INDEX_OUT_OF_BOUNDS_ERROR =
-      DiagnosticType.error(
+      DiagnosticType.warning(
           "JSC_INDEX_OUT_OF_BOUNDS_ERROR",
           "Array index out of bounds: {0}");
 
   static final DiagnosticType NEGATING_A_NON_NUMBER_ERROR =
-      DiagnosticType.error(
+      DiagnosticType.warning(
           "JSC_NEGATING_A_NON_NUMBER_ERROR",
           "Can't negate non-numeric value: {0}");
 
   static final DiagnosticType BITWISE_OPERAND_OUT_OF_RANGE =
-      DiagnosticType.error(
+      DiagnosticType.warning(
           "JSC_BITWISE_OPERAND_OUT_OF_RANGE",
           "Operand out of range, bitwise operation will lose information: {0}");
 
-  static final DiagnosticType SHIFT_AMOUNT_OUT_OF_BOUNDS = DiagnosticType.error(
-      "JSC_SHIFT_AMOUNT_OUT_OF_BOUNDS",
-      "Shift amount out of bounds: {0}");
+  static final DiagnosticType SHIFT_AMOUNT_OUT_OF_BOUNDS =
+      DiagnosticType.warning(
+          "JSC_SHIFT_AMOUNT_OUT_OF_BOUNDS",
+          "Shift amount out of bounds: {0}");
 
-  static final DiagnosticType FRACTIONAL_BITWISE_OPERAND = DiagnosticType.error(
-      "JSC_FRACTIONAL_BITWISE_OPERAND",
-      "Fractional bitwise operand: {0}");
+  static final DiagnosticType FRACTIONAL_BITWISE_OPERAND =
+      DiagnosticType.warning(
+          "JSC_FRACTIONAL_BITWISE_OPERAND",
+          "Fractional bitwise operand: {0}");
 
   private static final double MAX_FOLD_NUMBER = Math.pow(2, 53);
 
@@ -368,30 +372,30 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         }
         return n;
       case Token.NEG:
-        try {
-          if (left.isName()) {
-            if (left.getString().equals("Infinity")) {
-              // "-Infinity" is valid and a literal, don't modify it.
-              return n;
-            } else if (left.getString().equals("NaN")) {
-              // "-NaN" is "NaN".
-              n.removeChild(left);
-              parent.replaceChild(n, left);
-              reportCodeChange();
-              return left;
-            }
+        if (left.isName()) {
+          if (left.getString().equals("Infinity")) {
+            // "-Infinity" is valid and a literal, don't modify it.
+            return n;
+          } else if (left.getString().equals("NaN")) {
+            // "-NaN" is "NaN".
+            n.removeChild(left);
+            parent.replaceChild(n, left);
+            reportCodeChange();
+            return left;
           }
+        }
 
+        if (left.isNumber()) {
           double negNum = -left.getDouble();
 
           Node negNumNode = IR.number(negNum);
           parent.replaceChild(n, negNumNode);
           reportCodeChange();
           return negNumNode;
-        } catch (UnsupportedOperationException ex) {
+        } else {
           // left is not a number node, so do not replace, but warn the
           // user because they can't be doing anything good
-          error(NEGATING_A_NON_NUMBER_ERROR, left);
+          report(NEGATING_A_NON_NUMBER_ERROR, left);
           return n;
         }
       case Token.BITNOT:
@@ -405,17 +409,17 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
               reportCodeChange();
               return notIntValNode;
             } else {
-              error(FRACTIONAL_BITWISE_OPERAND, left);
+              report(FRACTIONAL_BITWISE_OPERAND, left);
               return n;
             }
           } else {
-            error(BITWISE_OPERAND_OUT_OF_RANGE, left);
+            report(BITWISE_OPERAND_OUT_OF_RANGE, left);
             return n;
           }
         } catch (UnsupportedOperationException ex) {
           // left is not a number node, so do not replace, but warn the
           // user because they can't be doing anything good
-          error(NEGATING_A_NON_NUMBER_ERROR, left);
+          report(NEGATING_A_NON_NUMBER_ERROR, left);
           return n;
         }
         default:
@@ -860,27 +864,27 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // check ranges.  We do not do anything that would clip the double to
       // a 32-bit range, since the user likely does not intend that.
       if (!(lval >= Integer.MIN_VALUE && lval <= Integer.MAX_VALUE)) {
-        error(BITWISE_OPERAND_OUT_OF_RANGE, left);
+        report(BITWISE_OPERAND_OUT_OF_RANGE, left);
         return n;
       }
 
       // only the lower 5 bits are used when shifting, so don't do anything
       // if the shift amount is outside [0,32)
       if (!(rval >= 0 && rval < 32)) {
-        error(SHIFT_AMOUNT_OUT_OF_BOUNDS, right);
+        report(SHIFT_AMOUNT_OUT_OF_BOUNDS, right);
         return n;
       }
 
       // Convert the numbers to ints
       int lvalInt = (int) lval;
       if (lvalInt != lval) {
-        error(FRACTIONAL_BITWISE_OPERAND, left);
+        report(FRACTIONAL_BITWISE_OPERAND, left);
         return n;
       }
 
       int rvalInt = (int) rval;
       if (rvalInt != rval) {
-        error(FRACTIONAL_BITWISE_OPERAND, right);
+        report(FRACTIONAL_BITWISE_OPERAND, right);
         return n;
       }
 
@@ -1397,12 +1401,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     double index = right.getDouble();
     int intIndex = (int) index;
     if (intIndex != index) {
-      error(INVALID_GETELEM_INDEX_ERROR, right);
+      report(INVALID_GETELEM_INDEX_ERROR, right);
       return n;
     }
 
     if (intIndex < 0) {
-      error(INDEX_OUT_OF_BOUNDS_ERROR, right);
+      report(INDEX_OUT_OF_BOUNDS_ERROR, right);
       return n;
     }
 
@@ -1421,7 +1425,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     if (elem == null) {
-      error(INDEX_OUT_OF_BOUNDS_ERROR, right);
+      report(INDEX_OUT_OF_BOUNDS_ERROR, right);
       return n;
     }
 

@@ -49,7 +49,7 @@ class PeepholeSubstituteAlternateSyntax
   private final int STRING_SPLIT_OVERHEAD = ".split('.')".length();
 
   static final DiagnosticType INVALID_REGULAR_EXPRESSION_FLAGS =
-    DiagnosticType.error(
+    DiagnosticType.warning(
         "JSC_INVALID_REGULAR_EXPRESSION_FLAGS",
         "Invalid flags to RegExp constructor: {0}");
 
@@ -1491,7 +1491,7 @@ class PeepholeSubstituteAlternateSyntax
       } else {
         // fold to /foobar/gi
         if (!areValidRegexpFlags(flags.getString())) {
-          error(INVALID_REGULAR_EXPRESSION_FLAGS, flags);
+          report(INVALID_REGULAR_EXPRESSION_FLAGS, flags);
           return n;
         }
         if (!areSafeFlagsToFold(flags.getString())) {
