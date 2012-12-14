@@ -9219,6 +9219,52 @@ public class TypeCheckTest extends CompilerTypeTestCase {
             "Could not resolve type in @extends tag of T"));
   }
 
+  public void testImplementsLoop() throws Exception {
+    testClosureTypesMultipleWarnings(
+        suppressMissingProperty("foo") +
+        "/** @constructor \n * @implements {T} */var T = function() {};" +
+        "alert((new T).foo);",
+        Lists.newArrayList(
+            "Parse error. Cycle detected in inheritance chain of type T"));
+  }
+
+  public void testImplementsExtendsLoop() throws Exception {
+    testClosureTypesMultipleWarnings(
+        suppressMissingProperty("foo") +
+            "/** @constructor \n * @implements {F} */var G = function() {};" +
+            "/** @constructor \n * @extends {G} */var F = function() {};" +
+        "alert((new F).foo);",
+        Lists.newArrayList(
+            "Parse error. Cycle detected in inheritance chain of type F"));
+  }
+
+  public void testInterfaceExtendsLoop() throws Exception {
+    // TODO(user): This should give a cycle in inheritance graph error,
+    // not a cannot resolve error.
+    testClosureTypesMultipleWarnings(
+        suppressMissingProperty("foo") +
+            "/** @interface \n * @extends {F} */var G = function() {};" +
+            "/** @interface \n * @extends {G} */var F = function() {};",
+        Lists.newArrayList(
+            "Could not resolve type in @extends tag of G"));
+  }
+
+  public void testConversionFromInterfaceToRecursiveConstructor()
+      throws Exception {
+    testClosureTypesMultipleWarnings(
+        suppressMissingProperty("foo") +
+            "/** @interface */ var OtherType = function() {}\n" +
+            "/** @implements {MyType} \n * @constructor */\n" +
+            "var MyType = function() {}\n" +
+            "/** @type {MyType} */\n" +
+            "var x = /** @type {!OtherType} */ (new Object());",
+        Lists.newArrayList(
+            "Parse error. Cycle detected in inheritance chain of type MyType",
+            "initializing variable\n" +
+            "found   : OtherType\n" +
+            "required: (MyType|null)"));
+  }
+
   public void testDirectPrototypeAssign() throws Exception {
     // For now, we just ignore @type annotations on the prototype.
     testTypes(

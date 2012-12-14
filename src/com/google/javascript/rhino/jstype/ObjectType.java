@@ -44,6 +44,7 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -171,8 +172,6 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
    * invoked only after the object is sufficiently initialized to respond to
    * calls to this method.<p>
    *
-   * The method is not thread safe.<p>
-   *
    * @return True iff an implicit prototype cycle was detected.
    */
   final boolean detectImplicitPrototypeCycle() {
@@ -195,6 +194,22 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
       p = p.getImplicitPrototype();
     } while (p != null);
     return false;
+  }
+
+  /**
+   * Detects cycles in either the implicit prototype chain, or the implemented/extended
+   * interfaces.<p>
+   *
+   * @return True iff a cycle was detected.
+   */
+  final boolean detectInheritanceCycle() {
+    // TODO(user): This should get moved to preventing cycles in FunctionTypeBuilder
+    // rather than removing them here after they have been created.
+    // Also, this doesn't do the right thing for extended interfaces, though that is
+    // masked by another bug.
+    return detectImplicitPrototypeCycle()
+        || Iterables.contains(this.getCtorImplementedInterfaces(), this)
+        || Iterables.contains(this.getCtorExtendedInterfaces(), this);
   }
 
   /**

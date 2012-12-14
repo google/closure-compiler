@@ -187,7 +187,7 @@ class NamedType extends ProxyObjectType {
     // makes more sense. Now, resolution via registry is first in order to
     // avoid triggering the warnings built into the resolution via properties.
     boolean resolved = resolveViaRegistry(t, enclosing);
-    if (detectImplicitPrototypeCycle()) {
+    if (detectInheritanceCycle()) {
       handleTypeCycle(t);
     }
 
@@ -199,7 +199,7 @@ class NamedType extends ProxyObjectType {
     }
 
     resolveViaProperties(t, enclosing);
-    if (detectImplicitPrototypeCycle()) {
+    if (detectInheritanceCycle()) {
       handleTypeCycle(t);
     }
 
