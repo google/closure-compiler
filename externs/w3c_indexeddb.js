@@ -758,7 +758,7 @@ IDBTransaction.VERSION_CHANGE;
 webkitIDBTransaction.VERSION_CHANGE;
 
 /**
- * @type {number}
+ * @type {number|string}
  * @const
  */
 IDBTransaction.prototype.mode;
