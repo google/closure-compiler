@@ -195,9 +195,9 @@ public class CommandLineRunner extends
     @Option(name = "--summary_detail_level",
         usage = "Controls how detailed the compilation summary is. Values:"
         + " 0 (never print summary), 1 (print summary only if there are "
-        + "errors or warnings), 2 (print summary if type checking is on, "
-        + "see --check_types), 3 (always print summary). The default level "
-        + "is 1")
+        + "errors or warnings), 2 (print summary if the 'checkTypes' "
+        + "diagnostic  group is enabled, see --jscomp_warning), "
+        + "3 (always print summary). The default level is 1")
     private int summary_detail_level = 1;
 
     @Option(name = "--output_wrapper",
