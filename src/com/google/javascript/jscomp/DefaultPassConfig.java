@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
@@ -2125,6 +2126,11 @@ public class DefaultPassConfig extends PassConfig {
         options.anonymousFunctionNaming.getReservedCharacters();
     boolean preserveAnonymousFunctionNames =
         options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
+    Set<String> reservedNames = Sets.newHashSet();
+    if (exportedNames != null) {
+      reservedNames.addAll(exportedNames);
+    }
+    reservedNames.addAll(ParserRunner.getReservedVars());
     RenameVars rn = new RenameVars(
         compiler,
         options.renamePrefix,
@@ -2134,7 +2140,7 @@ public class DefaultPassConfig extends PassConfig {
         options.shadowVariables,
         prevVariableMap,
         reservedChars,
-        exportedNames);
+        reservedNames);
     rn.process(externs, root);
     return rn.getVariableMap();
   }

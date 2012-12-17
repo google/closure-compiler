@@ -42,6 +42,7 @@ public class ParserRunner {
   private static Set<String> annotationNames = null;
 
   private static Set<String> suppressionNames = null;
+  private static Set<String> reservedVars = null;
 
   // Should never need to instantiate class of static methods.
   private ParserRunner() {}
@@ -73,6 +74,11 @@ public class ParserRunner {
         isIdeMode, languageMode, acceptConstKeyword);
   }
 
+  public static Set<String> getReservedVars() {
+    initResourceConfig();
+    return reservedVars;
+  }
+
   private static synchronized void initResourceConfig() {
     if (annotationNames != null) {
       return;
@@ -81,6 +87,7 @@ public class ParserRunner {
     ResourceBundle config = ResourceBundle.getBundle(configResource);
     annotationNames = extractList(config.getString("jsdoc.annotations"));
     suppressionNames = extractList(config.getString("jsdoc.suppressions"));
+    reservedVars = extractList(config.getString("compiler.reserved.vars"));
   }
 
   private static Set<String> extractList(String configProp) {
