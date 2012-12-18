@@ -1126,6 +1126,73 @@ angular.$log.log = function(var_args) {};
 angular.$log.warn = function(var_args) {};
 
 /******************************************************************************
+ * NgModelController
+ *****************************************************************************/
+
+/**
+ * @constructor
+ */
+angular.NgModelController = function() {};
+
+angular.NgModelController.prototype.$render = function() {};
+
+/**
+ * @param {string} key
+ * @param {boolean} isValid
+ */
+angular.NgModelController.prototype.$setValidity = function(key, isValid) {};
+
+/**
+ * @param {?} value
+ */
+angular.NgModelController.prototype.$setViewValue = function(value) {};
+
+/**
+ * @type {?}
+ */
+angular.NgModelController.prototype.$viewValue;
+
+/**
+ * @type {?}
+ */
+angular.NgModelController.prototype.$modelValue;
+
+/**
+ * @type {!Array.<function(?):*>}
+ */
+angular.NgModelController.prototype.$parsers;
+
+/**
+ * @type {!Array.<function(?):*>}
+ */
+angular.NgModelController.prototype.$formatters;
+
+/**
+ * @type {!Object.<boolean>}
+ */
+angular.NgModelController.prototype.$error;
+
+/**
+ * @type {boolean}
+ */
+angular.NgModelController.prototype.$pristine;
+
+/**
+ * @type {boolean}
+ */
+angular.NgModelController.prototype.$dirty;
+
+/**
+ * @type {boolean}
+ */
+angular.NgModelController.prototype.$valid;
+
+/**
+ * @type {boolean}
+ */
+angular.NgModelController.prototype.$invalid;
+
+/******************************************************************************
  * $provide Service
  *****************************************************************************/
 
