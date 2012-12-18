@@ -2506,6 +2506,9 @@ HTMLInputElement.prototype.checkValidity = function() {};
 /** @param {string} message */
 HTMLInputElement.prototype.setCustomValidity = function(message) {};
 
+/** @type {Element} */
+HTMLLabelElement.prototype.control;
+
 /** @type {boolean} */
 HTMLSelectElement.prototype.autofocus;
 
