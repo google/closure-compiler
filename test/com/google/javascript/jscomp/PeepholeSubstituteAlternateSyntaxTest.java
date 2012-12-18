@@ -54,15 +54,15 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   public CompilerPass getProcessor(final Compiler compiler) {
     CompilerPass peepholePass =
       new PeepholeOptimizationsPass(compiler,
-          new PeepholeSubstituteAlternateSyntax(late));
+          new PeepholeSubstituteAlternateSyntax(late))
+      .setRetraverseOnChange(false);
 
     return peepholePass;
   }
 
   @Override
   protected int getNumRepetitions() {
-    // Reduce this to 2 if we get better expression evaluators.
-    return 2;
+    return 1;
   }
 
   private void foldSame(String js) {
@@ -273,7 +273,8 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   public void testNotCond() {
     fold("function f(){if(!x)foo()}", "function f(){x||foo()}");
     fold("function f(){if(!x)b=1}", "function f(){x||(b=1)}");
-    fold("if(!x)z=1;else if(y)z=2", "x ? y&&(z=2) : z=1");
+    fold("if(!x)z=1;else if(y)z=2", "if(x){y&&(z=2);}else{z=1;}");
+    fold("if(x)y&&(z=2);else z=1;", "x ? y&&(z=2) : z=1");
     foldSame("function f(){if(!(x=1))a.b=1}");
   }
 
@@ -535,7 +536,9 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("for(;;) if (a) { f(); break }");
     fold("for(;;) if (a) break; else f()", "for(;!a;) { { f(); } }");
     fold("for(;a;) if (b) break", "for(;a && !b;);");
-    fold("for(;a;) { if (b) break; if (c) break; }", "for(;(a && !b) && !c;);");
+    fold("for(;a;) { if (b) break; if (c) break; }",
+         "for(;(a && !b);) if (c) break;");
+    fold("for(;(a && !b);) if (c) break;", "for(;(a && !b) && !c;);");
 
     // 'while' is normalized to 'for'
     enableNormalize(true);
@@ -570,12 +573,14 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("function f(){return false;}", "function f(){return !1}");
     foldSame("function f(){return null;}");
     fold("function f(){return void 0;}",
+         "function f(){return}");
+    fold("function f(){return;}",
          "function f(){}");
     foldSame("function f(){return void foo();}");
     fold("function f(){return undefined;}",
-         "function f(){}");
+         "function f(){return}");
     fold("function f(){if(a()){return undefined;}}",
-         "function f(){if(a()){}}");
+         "function f(){if(a()){return}}");
   }
 
   public void testFoldStandardConstructors() {
@@ -846,14 +851,18 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
     fold("(x=2), foo()", "x=2; foo()");
     fold("foo(), boo();", "foo(); boo()");
-    fold("(a(), b()), (c(), d());", "a(); b(); c(); d();");
-    fold("foo(), true", "foo();1");
-    fold("function x(){foo(), !0}", "function x(){foo(); 1}");
+    fold("(a(), b()), (c(), d());", "a(); b(); (c(), d());");
+    fold("a(); b(); (c(), d());", "a(); b(); c(); d();");
+    fold("foo(), true", "foo();true");
+    fold("foo();true", "foo();1");
+    fold("function x(){foo(), !0}", "function x(){foo(); !0}");
+    fold("function x(){foo(); !0}", "function x(){foo(); 1}");
   }
 
   public void testComma1() {
     late = false;
-    fold("1, 2", "1; 1");
+    fold("1, 2", "1; 2");
+    fold("1; 2", "1; 1");
     late = true;
     foldSame("1, 2");
   }

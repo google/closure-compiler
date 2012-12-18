@@ -32,13 +32,15 @@ import java.util.ArrayList;
 class PeepholeOptimizationsPass
     implements CompilerPass {
   private AbstractCompiler compiler;
-
+  
   // Use an array here for faster iteration compared to ImmutableSet
   private final AbstractPeepholeOptimization[] peepholeOptimizations;
 
   // Track whether the a scope has been modified so that it can be revisited
   // immediately.
   private StateStack traversalState = new StateStack();
+
+  private boolean retraverseOnChange = true;
 
   static private class ScopeState {
     boolean changed;
@@ -95,6 +97,11 @@ class PeepholeOptimizationsPass
     this.compiler = compiler;
     this.peepholeOptimizations = optimizations;
   }
+  
+  PeepholeOptimizationsPass setRetraverseOnChange(boolean retraverse) {
+    this.retraverseOnChange = retraverse;
+    return this;
+  }
 
   public AbstractCompiler getCompiler() {
     return compiler;
@@ -138,7 +145,9 @@ class PeepholeOptimizationsPass
   }
 
   private boolean shouldRetraverse(Node node) {
-    if (node.getParent() != null && node.isFunction() || node.isScript()) {
+    if (retraverseOnChange
+        && node.getParent() != null 
+        && (node.isFunction() || node.isScript())) {
       ScopeState state = traversalState.peek();
       if (state.changed) {
         // prepare to re-visit the scope:
