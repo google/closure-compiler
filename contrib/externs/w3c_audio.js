@@ -123,6 +123,12 @@ AudioContext.prototype.createChannelMerger = function() {};
 AudioContext.prototype.createDynamicsCompressor = function() {};
 
 /**
+ * @param {HTMLMediaElement} mediaElement
+ * @return {MediaElementAudioSourceNode}
+ */
+AudioContext.prototype.createMediaElementSource = function(mediaElement) {};
+
+/**
  * @constructor
  */
 var AudioNode = function() {};
