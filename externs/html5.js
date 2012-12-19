@@ -1116,6 +1116,27 @@ HTMLElement.prototype.hidden;
 HTMLElement.prototype.spellcheck;
 
 /** @type {string} */
+HTMLAnchorElement.prototype.hash;
+
+/** @type {string} */
+HTMLAnchorElement.prototype.host;
+
+/** @type {string} */
+HTMLAnchorElement.prototype.hostname;
+
+/** @type {string} */
+HTMLAnchorElement.prototype.pathname;
+
+/** @type {string} */
+HTMLAnchorElement.prototype.port;
+
+/** @type {string} */
+HTMLAnchorElement.prototype.protocol;
+
+/** @type {string} */
+HTMLAnchorElement.prototype.search;
+
+/** @type {string} */
 HTMLInputElement.prototype.autocomplete;
 
 /** @type {string} */
