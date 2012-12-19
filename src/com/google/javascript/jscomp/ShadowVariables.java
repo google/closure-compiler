@@ -28,7 +28,6 @@ import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.SortedMap;
 import java.util.SortedSet;
 
 /**
@@ -83,7 +82,7 @@ class ShadowVariables implements CompilerPass {
 
   // All the information used for renaming.
   private final SortedSet<Assignment> varsByFrequency;
-  private final SortedMap<String, Assignment> assignments;
+  private final Map<String, Assignment> assignments;
   private final Map<Node, String> oldPseudoNameMap;
   private final Map<Node, String> deltaPseudoNameMap;
 
@@ -96,7 +95,7 @@ class ShadowVariables implements CompilerPass {
    */
   ShadowVariables(
       AbstractCompiler compiler,
-      SortedMap<String, Assignment> assignments,
+      Map<String, Assignment> assignments,
       SortedSet<Assignment> varsByFrequency,
       Map<Node, String> pseudoNameMap) {
     this.compiler = compiler;
