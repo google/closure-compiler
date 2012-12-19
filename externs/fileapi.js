@@ -725,6 +725,12 @@ function Metadata() {}
 Metadata.prototype.modificationTime;
 
 /**
+ * @see http://www.w3.org/TR/file-system-api/#widl-Metadata-size
+ * @type {number}
+ */
+Metadata.prototype.size;
+
+/**
  * @see http://www.w3.org/TR/file-system-api/#widl-LocalFileSystem-TEMPORARY
  * @type {number}
 */
