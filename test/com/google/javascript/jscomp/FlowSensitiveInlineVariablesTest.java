@@ -142,6 +142,51 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var y = noSFX(); do { var z = y.foo(); } while (true);");
   }
 
+  public void testDoNotInlineCatchExpression1() {
+    noInline(
+        "var a;\n" +
+        "try {\n" +
+        "  throw Error(\"\");\n" +
+        "}catch(err) {" +
+        "   a = err;\n" +
+        "}\n" +
+        "return a.stack\n");
+  }
+
+  public void testDoNotInlineCatchExpression1a() {
+    noInline(
+        "var a;\n" +
+        "try {\n" +
+        "  throw Error(\"\");\n" +
+        "}catch(err) {" +
+        "   a = err + 1;\n" +
+        "}\n" +
+        "return a.stack\n");
+  }
+
+  public void testDoNotInlineCatchExpression2() {
+    noInline(
+        "var a;\n" +
+        "try {\n" +
+        "  if (x) {throw Error(\"\");}\n" +
+        "}catch(err) {" +
+        "   a = err;\n" +
+        "}\n" +
+        "return a.stack\n");
+  }
+
+  public void testDoNotInlineCatchExpression3() {
+    noInline(
+        "var a;\n" +
+        "try {\n" +
+        "  throw Error(\"\");\n" +
+        "} catch(err) {" +
+        "  err = x;\n" +
+        "  a = err;\n" +
+        "}\n" +
+        "return a.stack\n");
+  }
+
   public void testDefinitionAfterUse() {
     inline("var x = 0; print(x); x = 1", "var x; print(0); x = 1");
   }
