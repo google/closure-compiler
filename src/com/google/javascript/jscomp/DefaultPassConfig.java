@@ -915,7 +915,7 @@ public class DefaultPassConfig extends PassConfig {
   /** Closure pre-processing pass. */
   @SuppressWarnings("deprecation")
   final HotSwapPassFactory closurePrimitives =
-      new HotSwapPassFactory("processProvidesAndRequires", false) {
+      new HotSwapPassFactory("closurePrimitives", false) {
     @Override
     protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
       maybeInitializePreprocessorSymbolTable(compiler);
@@ -982,7 +982,7 @@ public class DefaultPassConfig extends PassConfig {
 
   /** Applies aliases and inlines goog.scope. */
   final HotSwapPassFactory closureGoogScopeAliases =
-      new HotSwapPassFactory("processGoogScopeAliases", true) {
+      new HotSwapPassFactory("closureGoogScopeAliases", true) {
     @Override
     protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
       maybeInitializePreprocessorSymbolTable(compiler);
@@ -1004,7 +1004,7 @@ public class DefaultPassConfig extends PassConfig {
 
   /** Checks that CSS class names are wrapped in goog.getCssName */
   final PassFactory closureCheckGetCssName =
-      new PassFactory("checkMissingGetCssName", true) {
+      new PassFactory("closureCheckGetCssName", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       String blacklist = options.checkMissingGetCssNameBlacklist;
@@ -1021,7 +1021,7 @@ public class DefaultPassConfig extends PassConfig {
    * inlined.
    */
   final PassFactory closureReplaceGetCssName =
-      new PassFactory("renameCssNames", true) {
+      new PassFactory("closureReplaceGetCssName", true) {
     @Override
     protected CompilerPass createInternal(final AbstractCompiler compiler) {
       return new CompilerPass() {
@@ -2049,7 +2049,7 @@ public class DefaultPassConfig extends PassConfig {
 
   /** Inverting name normalization. */
   final PassFactory invertContextualRenaming =
-      new PassFactory("invertNames", true) {
+      new PassFactory("invertContextualRenaming", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return MakeDeclaredNamesUnique.getContextualRenameInverter(compiler);
