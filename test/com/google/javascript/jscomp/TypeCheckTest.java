@@ -863,6 +863,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: function (): number");
   }
 
+  public void testObjLitDef6() throws Exception {
+    testTypes("var lit = /** @struct */ { 'x': 1 };",
+        "Illegal key, the object literal is a struct");
+  }
+
+  public void testObjLitDef7() throws Exception {
+    testTypes("var lit = /** @dict */ { x: 1 };",
+        "Illegal key, the object literal is a dict");
+  }
 
   public void testInstanceOfReduction1() throws Exception {
     testTypes("/** @constructor */ var T = function() {};\n" +
@@ -4178,7 +4187,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testGetpropDict7() throws Exception {
-    testTypes("(/** @dict */ {x: 123}).x = 321;",
+    testTypes("(/** @dict */ {'x': 123}).x = 321;",
               "Cannot do '.' access on a dict");
   }
 

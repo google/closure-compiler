@@ -238,6 +238,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                              "Cannot add a property to a struct instance " +
                              "after it is constructed.");
 
+  static final DiagnosticType ILLEGAL_OBJLIT_KEY =
+      DiagnosticType.warning(
+          "ILLEGAL_OBJLIT_KEY",
+          "Illegal key, the object literal is a {0}");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       DETERMINISTIC_TEST,
       DETERMINISTIC_TEST_NO_RESULT,
@@ -269,6 +274,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       EXPECTED_THIS_TYPE,
       IN_USED_WITH_STRUCT,
       ILLEGAL_PROPERTY_CREATION,
+      ILLEGAL_OBJLIT_KEY,
       RhinoErrorReporter.TYPE_PARSE_ERROR,
       TypedScopeCreator.UNKNOWN_LENDS,
       TypedScopeCreator.LENDS_ON_NON_OBJECT,
@@ -823,8 +829,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           }
         }
         if (n.isObjectLit()) {
+          JSType typ = getJSType(n);
           for (Node key : n.children()) {
-            visitObjLitKey(t, key, n);
+            visitObjLitKey(t, key, n, typ);
           }
         }
         break;
@@ -1048,12 +1055,20 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param t the traversal
    * @param key the assign node
    */
-  private void visitObjLitKey(NodeTraversal t, Node key, Node objlit) {
+  private void visitObjLitKey(
+      NodeTraversal t, Node key, Node objlit, JSType litType) {
     // Do not validate object lit value types in externs. We don't really care,
     // and it makes it easier to generate externs.
     if (objlit.isFromExterns()) {
       ensureTyped(t, key);
       return;
+    }
+
+    // Structs must have unquoted keys and dicts must have quoted keys
+    if (litType.isStruct() && key.isQuotedString()) {
+      report(t, key, ILLEGAL_OBJLIT_KEY, "struct");
+    } else if (litType.isDict() && !key.isQuotedString()) {
+      report(t, key, ILLEGAL_OBJLIT_KEY, "dict");
     }
 
     // TODO(johnlenz): Validate get and set function declarations are valid
