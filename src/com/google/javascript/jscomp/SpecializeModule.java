@@ -173,7 +173,7 @@ class SpecializeModule implements CompilerPass {
     Collection<SpecializationAwareCompilerPass> passes = Lists.newLinkedList();
 
     for (PassFactory passFactory : specializationPassFactories) {
-      CompilerPass pass = passFactory.createInternal(compiler);
+      CompilerPass pass = passFactory.create(compiler);
 
       Preconditions.checkState(pass instanceof
           SpecializationAwareCompilerPass);

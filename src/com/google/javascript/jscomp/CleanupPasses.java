@@ -68,7 +68,7 @@ class CleanupPasses extends PassConfig {
   final PassFactory fieldCleanupPassFactory =
       new HotSwapPassFactory("FieldCleaupPassFactory", false) {
         @Override
-        protected HotSwapCompilerPass createInternal(
+        protected HotSwapCompilerPass create(
             AbstractCompiler compiler) {
           return new FieldCleanupPass(compiler);
         }
@@ -77,7 +77,7 @@ class CleanupPasses extends PassConfig {
   final PassFactory scopeCleanupPassFactory =
       new HotSwapPassFactory("ScopeCleanupPassFactory", false) {
         @Override
-        protected HotSwapCompilerPass createInternal(
+        protected HotSwapCompilerPass create(
             AbstractCompiler compiler) {
           return new MemoizedScopeCleanupPass(compiler);
         }
@@ -86,7 +86,7 @@ class CleanupPasses extends PassConfig {
   final PassFactory globalVarRefCleanupPassFactory =
       new HotSwapPassFactory("GlobalVarRefCleanupPassFactory", false) {
         @Override
-        protected HotSwapCompilerPass createInternal(
+        protected HotSwapCompilerPass create(
             AbstractCompiler compiler) {
           return new GlobalVarRefCleanupPass(compiler);
         }

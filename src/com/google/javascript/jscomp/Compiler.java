@@ -855,7 +855,7 @@ public class Compiler extends AbstractCompiler {
   private final PassFactory sanityCheck =
       new PassFactory("sanityCheck", false) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected CompilerPass create(AbstractCompiler compiler) {
       return new SanityCheck(compiler);
     }
   };
@@ -1890,9 +1890,6 @@ public class Compiler extends AbstractCompiler {
     }
     phaseOptimizer.consume(getPassConfig().getOptimizations());
     phaseOptimizer.process(externsRoot, jsRoot);
-    if (hasErrors()) {
-      return;
-    }
   }
 
   @Override

@@ -16,10 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
-
-
-
 /**
  * A factory for creating JSCompiler passes based on the Options
  * injected.  Contains all meta-data about compiler passes (like
@@ -32,7 +28,6 @@ public abstract class PassFactory {
 
   private final String name;
   private final boolean isOneTimePass;
-  private boolean isCreated = false;
 
   /**
    * @param name The name of the pass that this factory creates.
@@ -59,40 +54,9 @@ public abstract class PassFactory {
   }
 
   /**
-   * Make a new pass factory that only creates one-time passes.
-   */
-  PassFactory makeOneTimePass() {
-    if (isOneTimePass()) {
-      return this;
-    }
-
-    final PassFactory self = this;
-    return new PassFactory(name, true /* one time pass */) {
-      @Override
-      protected CompilerPass createInternal(AbstractCompiler compiler) {
-        return self.createInternal(compiler);
-      }
-      @Override
-      HotSwapCompilerPass getHotSwapPass(AbstractCompiler compiler) {
-        return self.getHotSwapPass(compiler);
-      }
-    };
-  }
-
-  /**
    * Creates a new compiler pass to be run.
    */
-  final CompilerPass create(AbstractCompiler compiler) {
-    Preconditions.checkState(!isCreated || !isOneTimePass,
-        "One-time passes cannot be run multiple times: %s", name);
-    isCreated = true;
-    return createInternal(compiler);
-  }
-
-  /**
-   * Creates a new compiler pass to be run.
-   */
-  abstract protected CompilerPass createInternal(AbstractCompiler compiler);
+  abstract CompilerPass create(AbstractCompiler compiler);
 
   /**
    * Any factory whose CompilerPass has a corresponding hot-swap version should

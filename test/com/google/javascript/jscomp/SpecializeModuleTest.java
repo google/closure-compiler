@@ -37,7 +37,7 @@ public class SpecializeModuleTest extends CompilerTestCase {
   private PassFactory inlineFunctions =
       new PassFactory("inlineFunctions", true) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected CompilerPass create(AbstractCompiler compiler) {
       return new InlineFunctions(compiler,
           compiler.getUniqueNameIdSupplier(), true, false, true, true, true);
     }
@@ -46,7 +46,7 @@ public class SpecializeModuleTest extends CompilerTestCase {
   private PassFactory removeUnusedPrototypeProperties =
     new PassFactory("removeUnusedPrototypeProperties", true) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected CompilerPass create(AbstractCompiler compiler) {
       return new RemoveUnusedPrototypeProperties(compiler, false, false);
     }
   };
@@ -54,7 +54,7 @@ public class SpecializeModuleTest extends CompilerTestCase {
   private PassFactory devirtualizePrototypeMethods =
     new PassFactory("devirtualizePrototypeMethods", true) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected CompilerPass create(AbstractCompiler compiler) {
       return new DevirtualizePrototypeMethods(compiler);
     }
   };
