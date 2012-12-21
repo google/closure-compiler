@@ -1730,6 +1730,7 @@ public final class JsDocInfoParser {
       // {function(number, ?)} - right paren
       // {function(number, ...[?])} - right bracket
       // {function(): ?|number} - pipe
+      // {Array.<?>} - greater than
       // I'm not a big fan of using look-ahead for this, but it makes
       // the type language a lot nicer.
       token = next();
@@ -1738,7 +1739,8 @@ public final class JsDocInfoParser {
           token == JsDocToken.RB ||
           token == JsDocToken.RC ||
           token == JsDocToken.RP ||
-          token == JsDocToken.PIPE) {
+          token == JsDocToken.PIPE ||
+          token == JsDocToken.GT) {
         restoreLookAhead(token);
         return newNode(Token.QMARK);
       }
@@ -1797,7 +1799,6 @@ public final class JsDocInfoParser {
   /**
    * TypeName := NameExpression | NameExpression TypeApplication
    * TypeApplication := '.<' TypeExpressionList '>'
-   * TypeExpressionList := TypeExpression // a white lie
    */
   private Node parseTypeName(JsDocToken token) {
     if (token != JsDocToken.STRING) {

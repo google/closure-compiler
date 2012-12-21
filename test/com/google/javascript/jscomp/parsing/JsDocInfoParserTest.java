@@ -335,6 +335,11 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertIndexTypeEquals(STRING_TYPE, info.getType());
   }
 
+  public void testParseParametrizedType13() throws Exception {
+    JSDocInfo info = parse("@type !Array.<?> */");
+    assertTypeEquals(parameterize(ARRAY_TYPE, UNKNOWN_TYPE), info.getType());
+  }
+
   public void testParseUnionType1() throws Exception {
     JSDocInfo info = parse("@type {(boolean,null)}*/");
     assertTypeEquals(createUnionType(BOOLEAN_TYPE, NULL_TYPE), info.getType());
