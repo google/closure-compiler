@@ -11326,6 +11326,22 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: (Array.<number>|null)");
   }
 
+  public void testParameterized5() throws Exception {
+    testTypes(
+        "/**\n" +
+        " * @param {Object.<T>} obj\n" +
+        " * @return {boolean|undefined}\n" +
+        " * @template T\n" +
+        " */\n" +
+        "var some = function(obj) {" +
+        "  for (var key in obj) if (obj[key]) return true;" +
+        "};" +
+        "/** @return {!Array} */ function f() { return []; }" +
+        "/** @return {!Array.<string>} */ function g() { return []; }" +
+        "some(f());\n" +
+        "some(g());\n");
+  }
+
   public void testParameterizedTypeSubtypes2() throws Exception {
     JSType arrayOfNumber = createParameterizedType(
         ARRAY_TYPE, NUMBER_TYPE);

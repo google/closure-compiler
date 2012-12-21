@@ -102,4 +102,13 @@ public class ParameterizedTypeTest extends BaseJSTypeTestCase {
         ARRAY_TYPE, UNKNOWN_TYPE);
     assertEquals("Array.<?>", arrOfUnknown.toString());
   }
+
+  public void testDifferentRawTypes() throws Exception {
+    ParameterizedType arrOfNumber = createParameterizedType(
+        ARRAY_TYPE, NUMBER_TYPE);
+    ParameterizedType objType = createParameterizedType(
+        OBJECT_TYPE, UNKNOWN_TYPE);
+    assertTrue(arrOfNumber.isSubtype(objType));
+    assertFalse(objType.isSubtype(arrOfNumber));
+  }
 }
