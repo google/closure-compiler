@@ -23,8 +23,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -381,13 +381,7 @@ class PhaseOptimizer implements CompilerPass {
 
     /** Re-arrange the passes in a random order. */
     private void randomizePasses() {
-      List<NamedPass> mixedupPasses = Lists.newArrayList();
-      Random random = new Random();
-      while (myPasses.size() > 0) {
-        mixedupPasses.add(
-            myPasses.remove(random.nextInt(myPasses.size())));
-      }
-      myPasses.addAll(mixedupPasses);
+      Collections.shuffle(myPasses);
     }
 
     /** Re-arrange the passes in an optimal order. */
