@@ -48,7 +48,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.StaticSlot;
 
 import java.util.Set;
 

@@ -38,6 +38,17 @@ public class IntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_COMPILED =
       "var COMPILED = true; var goog$exportSymbol = function() {};";
 
+  public void testConstructorCycle() {
+    CompilerOptions options = createCompilerOptions();
+    options.checkTypes = true;
+    test(options,
+        "/** @return {function()} */ var AsyncTestCase = function() {};\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " */ Foo = /** @type {function(new:Foo)} */ (AyncTestCase());",
+        RhinoErrorReporter.PARSE_ERROR);
+  }
+
   public void testBug1949424() {
     CompilerOptions options = createCompilerOptions();
     options.collapseProperties = true;

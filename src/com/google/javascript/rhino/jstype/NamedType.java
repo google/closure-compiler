@@ -306,6 +306,7 @@ class NamedType extends ProxyObjectType {
     }
     setReferencedType(type);
     checkEnumElementCycle(t);
+    checkProtoCycle(t);
     setResolvedTypeInternal(getReferencedType());
   }
 
@@ -321,6 +322,13 @@ class NamedType extends ProxyObjectType {
     JSType referencedType = getReferencedType();
     if (referencedType instanceof EnumElementType &&
         ((EnumElementType) referencedType).getPrimitiveType() == this) {
+      handleTypeCycle(t);
+    }
+  }
+
+  private void checkProtoCycle(ErrorReporter t) {
+    JSType referencedType = getReferencedType();
+    if (referencedType == this) {
       handleTypeCycle(t);
     }
   }
