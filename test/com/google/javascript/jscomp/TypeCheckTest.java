@@ -3768,6 +3768,18 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Bad type annotation. Unknown type nonExistent");
   }
 
+  public void testBadInterfaceExtendsNonExistentInterfaces() throws Exception {
+    String js = "/** @interface \n" +
+        " * @extends {nonExistent1} \n" +
+        " * @extends {nonExistent2} \n" +
+        " */function A() {}";
+    String[] expectedWarnings = {
+      "Bad type annotation. Unknown type nonExistent1",
+      "Bad type annotation. Unknown type nonExistent2"
+    };
+    testTypes(js, expectedWarnings);
+  }
+
   public void testBadInterfaceExtends2() throws Exception {
     testTypes("/** @constructor */function A() {}\n" +
         "/** @interface \n * @extends {A} */function B() {}",

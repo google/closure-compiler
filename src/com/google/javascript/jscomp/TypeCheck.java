@@ -28,6 +28,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -1566,8 +1567,15 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       String functionName, HashMap<String, ObjectType> properties,
       HashMap<String, ObjectType> currentProperties,
       ObjectType interfaceType) {
-    Set<String> currentPropertyNames =
-        interfaceType.getImplicitPrototype().getOwnPropertyNames();
+    ObjectType implicitProto = interfaceType.getImplicitPrototype();
+    Set<String> currentPropertyNames;
+    if (implicitProto == null) {
+      // This can be the case if interfaceType is proxy to a non-existent
+      // object (which is a bad type annotation, but shouldn't crash).
+      currentPropertyNames = ImmutableSet.of();
+    } else {
+      currentPropertyNames = implicitProto.getOwnPropertyNames();
+    }
     for (String name : currentPropertyNames) {
       ObjectType oType = properties.get(name);
       if (oType != null) {
