@@ -444,18 +444,6 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(closureOptimizePrimitives);
     }
 
-    // TODO(user): This forces a first crack at crossModuleCodeMotion
-    // before devirtualization. Once certain functions are devirtualized,
-    // it confuses crossModuleCodeMotion ability to recognized that
-    // it is recursive.
-
-    // TODO(user): This is meant for a temporary quick win.
-    // In the future, we might want to improve our analysis in
-    // CrossModuleCodeMotion so we don't need to do this.
-    if (options.crossModuleCodeMotion) {
-      passes.add(crossModuleCodeMotion);
-    }
-
     // Method devirtualization benefits from property disambiguation so
     // it should run after that pass but before passes that do
     // optimizations based on global names (like cross module code motion
@@ -472,13 +460,13 @@ public class DefaultPassConfig extends PassConfig {
 
     passes.add(createEmptyPass("beforeMainOptimizations"));
 
+    passes.addAll(getMainOptimizationLoop());
+
     if (options.specializeInitialModule) {
       // When specializing the initial module, we want our fixups to be
       // as lean as possible, so we run the entire optimization loop to a
       // fixed point before specializing, then specialize, and then run the
       // main optimization loop again.
-
-      passes.addAll(getMainOptimizationLoop());
 
       if (options.crossModuleCodeMotion) {
         passes.add(crossModuleCodeMotion);
@@ -489,9 +477,8 @@ public class DefaultPassConfig extends PassConfig {
       }
 
       passes.add(specializeInitialModule);
+      passes.addAll(getMainOptimizationLoop());
     }
-
-    passes.addAll(getMainOptimizationLoop());
 
     passes.add(createEmptyPass("beforeModuleMotion"));
 
@@ -1684,8 +1671,7 @@ public class DefaultPassConfig extends PassConfig {
    * Process smart name processing - removes unused classes and does referencing
    * starting with minimum set of names.
    */
-  final PassFactory smartNamePass =
-      new PassFactory("smartNamePass", true) {
+  final PassFactory smartNamePass = new PassFactory("smartNamePass", true) {
     @Override
     protected CompilerPass create(final AbstractCompiler compiler) {
       return new CompilerPass() {
