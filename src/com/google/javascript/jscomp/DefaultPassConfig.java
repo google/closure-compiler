@@ -444,6 +444,18 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(closureOptimizePrimitives);
     }
 
+    // TODO(user): This forces a first crack at crossModuleCodeMotion
+    // before devirtualization. Once certain functions are devirtualized,
+    // it confuses crossModuleCodeMotion ability to recognized that
+    // it is recursive.
+
+    // TODO(user): This is meant for a temporary quick win.
+    // In the future, we might want to improve our analysis in
+    // CrossModuleCodeMotion so we don't need to do this.
+    if (options.crossModuleCodeMotion) {
+      passes.add(crossModuleCodeMotion);
+    }
+
     // Method devirtualization benefits from property disambiguation so
     // it should run after that pass but before passes that do
     // optimizations based on global names (like cross module code motion
