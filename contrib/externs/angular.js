@@ -630,6 +630,9 @@ angular.Scope.$eval = function(opt_exp, opt_locals) {};
  */
 angular.Scope.$evalAsync = function(opt_exp) {};
 
+/** @type {string} */
+angular.Scope.$id;
+
 /**
  * @return {angular.Scope}
  */
@@ -641,6 +644,9 @@ angular.Scope.$new = function() {};
  * @return {function()}
  */
 angular.Scope.$on = function(name, listener) {};
+
+/** @type {angular.Scope} */
+angular.Scope.$parent;
 
 /**
  * @param {string|Function} exp
@@ -1134,6 +1140,41 @@ angular.$log.warn = function(var_args) {};
  */
 angular.NgModelController = function() {};
 
+/**
+ * @type {?}
+ */
+angular.NgModelController.prototype.$modelValue;
+
+/**
+ * @type {boolean}
+ */
+angular.NgModelController.prototype.$dirty;
+
+/**
+ * @type {!Object.<boolean>}
+ */
+angular.NgModelController.prototype.$error;
+
+/**
+ * @type {!Array.<function(?):*>}
+ */
+angular.NgModelController.prototype.$formatters;
+
+/**
+ * @type {boolean}
+ */
+angular.NgModelController.prototype.$invalid;
+
+/**
+ * @type {!Array.<function(?):*>}
+ */
+angular.NgModelController.prototype.$parsers;
+
+/**
+ * @type {boolean}
+ */
+angular.NgModelController.prototype.$pristine;
+
 angular.NgModelController.prototype.$render = function() {};
 
 /**
@@ -1148,49 +1189,19 @@ angular.NgModelController.prototype.$setValidity = function(key, isValid) {};
 angular.NgModelController.prototype.$setViewValue = function(value) {};
 
 /**
- * @type {?}
- */
-angular.NgModelController.prototype.$viewValue;
-
-/**
- * @type {?}
- */
-angular.NgModelController.prototype.$modelValue;
-
-/**
- * @type {!Array.<function(?):*>}
- */
-angular.NgModelController.prototype.$parsers;
-
-/**
- * @type {!Array.<function(?):*>}
- */
-angular.NgModelController.prototype.$formatters;
-
-/**
- * @type {!Object.<boolean>}
- */
-angular.NgModelController.prototype.$error;
-
-/**
- * @type {boolean}
- */
-angular.NgModelController.prototype.$pristine;
-
-/**
- * @type {boolean}
- */
-angular.NgModelController.prototype.$dirty;
-
-/**
  * @type {boolean}
  */
 angular.NgModelController.prototype.$valid;
 
 /**
- * @type {boolean}
+ * @type {!Array.<function()>}
  */
-angular.NgModelController.prototype.$invalid;
+angular.NgModelController.prototype.$viewChangeListener;
+
+/**
+ * @type {?}
+ */
+angular.NgModelController.prototype.$viewValue;
 
 /******************************************************************************
  * $provide Service
