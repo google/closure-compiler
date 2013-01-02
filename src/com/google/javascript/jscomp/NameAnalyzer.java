@@ -19,6 +19,8 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -29,10 +31,10 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.DiGraph;
-import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
-import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
+import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
+import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -92,7 +94,8 @@ final class NameAnalyzer implements CompilerPass {
    * If scopes.get(node).equals(name) && node2 is a child of node, then node2
    * will not get executed unless name is referenced via a get operation
    */
-  private final Map<Node, NameInformation> scopes = Maps.newHashMap();
+  private final ListMultimap<Node, NameInformation> scopes =
+      LinkedListMultimap.create();
 
   /** Used to parse prototype names */
   private static final String PROTOTYPE_SUBSTRING = ".prototype.";
@@ -463,9 +466,9 @@ final class NameAnalyzer implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       NameInformation ns = null;
       if (NodeUtil.isVarDeclaration(n)) {
-        ns = createNameInformation(t, n, parent);
+        ns = createNameInformation(t, n);
       } else if (NodeUtil.isFunctionDeclaration(n)) {
-        ns = createNameInformation(t, n.getFirstChild(), n);
+        ns = createNameInformation(t, n.getFirstChild());
       }
       if (ns != null) {
         JsName jsName = getName(ns.name, true);
@@ -504,40 +507,76 @@ final class NameAnalyzer implements CompilerPass {
       }
 
       if (n.isAssign()) {
-        Node nameNode = n.getFirstChild();
-        NameInformation ns = createNameInformation(t, nameNode, n);
-        if (ns != null) {
-          if (parent.isFor() && !NodeUtil.isForIn(parent)) {
-            // Patch for assignments that appear in the init,
-            // condition or iteration part of a FOR loop.  Without
-            // this change, all 3 of those parts try to claim the for
-            // loop as their dependency scope.  The last assignment in
-            // those three fields wins, which can result in incorrect
-            // reference edges between referenced and assigned variables.
-            //
-            // TODO(user) revisit the dependency scope calculation
-            // logic.
-            if (parent.getFirstChild().getNext() != n) {
-              recordDepScope(n, ns);
-            } else {
-              recordDepScope(nameNode, ns);
-            }
-          } else {
-            recordDepScope(n, ns);
-          }
+        recordAssignment(t, n, n);
+        if (!NodeUtil.isImmutableResult(n.getLastChild())) {
+          recordConsumers(t, n, n);
         }
       } else if (NodeUtil.isVarDeclaration(n)) {
-        NameInformation ns = createNameInformation(t, n, parent);
+        NameInformation ns = createNameInformation(t, n);
         recordDepScope(n, ns);
       } else if (NodeUtil.isFunctionDeclaration(n)) {
-        NameInformation ns = createNameInformation(t, n.getFirstChild(), n);
+        NameInformation ns = createNameInformation(t, n.getFirstChild());
         recordDepScope(n, ns);
       } else if (NodeUtil.isExprCall(n)) {
         Node callNode = n.getFirstChild();
         Node nameNode = callNode.getFirstChild();
-        NameInformation ns = createNameInformation(t, nameNode, callNode);
+        NameInformation ns = createNameInformation(t, nameNode);
         if (ns != null && ns.onlyAffectsClassDef) {
           recordDepScope(n, ns);
+        }
+      }
+    }
+
+    private void recordConsumers(NodeTraversal t, Node n, Node recordNode) {
+      Node parent = n.getParent();
+      switch (parent.getType()) {
+        case Token.ASSIGN:
+          if (n == parent.getLastChild()) {
+            recordAssignment(t, parent, recordNode);
+          }
+          recordConsumers(t, parent, recordNode);
+          break;
+        case Token.NAME:
+          NameInformation ns = createNameInformation(t, parent);
+          recordDepScope(recordNode, ns);
+          break;
+        case Token.OR:
+          recordConsumers(t, parent, recordNode);
+          break;
+        case Token.AND:
+          // In "a && b" only "b" can be meaningfully aliased.
+          // "a" must be falsy, which it must be an immutable, non-Object
+        case Token.COMMA:
+        case Token.HOOK:
+          if (n != parent.getFirstChild()) {
+            recordConsumers(t, parent, recordNode);
+          }
+          break;
+      }
+    }
+
+    private void recordAssignment(NodeTraversal t, Node n, Node recordNode) {
+      Node nameNode = n.getFirstChild();
+      Node parent = n.getParent();
+      NameInformation ns = createNameInformation(t, nameNode);
+      if (ns != null) {
+        if (parent.isFor() && !NodeUtil.isForIn(parent)) {
+          // Patch for assignments that appear in the init,
+          // condition or iteration part of a FOR loop.  Without
+          // this change, all 3 of those parts try to claim the for
+          // loop as their dependency scope.  The last assignment in
+          // those three fields wins, which can result in incorrect
+          // reference edges between referenced and assigned variables.
+          //
+          // TODO(user) revisit the dependency scope calculation
+          // logic.
+          if (parent.getFirstChild().getNext() != n) {
+            recordDepScope(recordNode, ns);
+          } else {
+            recordDepScope(nameNode, ns);
+          }
+        } else {
+          recordDepScope(recordNode, ns);
         }
       }
     }
@@ -546,6 +585,7 @@ final class NameAnalyzer implements CompilerPass {
      * Defines a dependency scope.
      */
     private void recordDepScope(Node node, NameInformation name) {
+      Preconditions.checkNotNull(name);
       scopes.put(node, name);
     }
   }
@@ -562,12 +602,12 @@ final class NameAnalyzer implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (NodeUtil.isVarDeclaration(n)) {
-        NameInformation ns = createNameInformation(t, n, parent);
+        NameInformation ns = createNameInformation(t, n);
         Preconditions.checkNotNull(ns, "NameInformation is null");
         createName(ns.name);
       } else if (NodeUtil.isFunctionDeclaration(n)) {
         Node nameNode = n.getFirstChild();
-        NameInformation ns = createNameInformation(t, nameNode, n);
+        NameInformation ns = createNameInformation(t, nameNode);
         Preconditions.checkNotNull(ns, "NameInformation is null");
         createName(nameNode.getString());
       }
@@ -590,18 +630,18 @@ final class NameAnalyzer implements CompilerPass {
       // Record global variable and function declarations
       if (t.inGlobalScope()) {
         if (NodeUtil.isVarDeclaration(n)) {
-          NameInformation ns = createNameInformation(t, n, parent);
+          NameInformation ns = createNameInformation(t, n);
           Preconditions.checkNotNull(ns);
           recordSet(ns.name, n);
         } else if (NodeUtil.isFunctionDeclaration(n)) {
           Node nameNode = n.getFirstChild();
-          NameInformation ns = createNameInformation(t, nameNode, n);
+          NameInformation ns = createNameInformation(t, nameNode);
           if (ns != null) {
             JsName nameInfo = getName(nameNode.getString(), true);
             recordSet(nameInfo.name, nameNode);
           }
         } else if (NodeUtil.isObjectLitKey(n, parent)) {
-          NameInformation ns = createNameInformation(t, n, parent);
+          NameInformation ns = createNameInformation(t, n);
           if (ns != null) {
             recordSet(ns.name, n);
           }
@@ -612,7 +652,7 @@ final class NameAnalyzer implements CompilerPass {
       if (n.isAssign()) {
         Node nameNode = n.getFirstChild();
 
-        NameInformation ns = createNameInformation(t, nameNode, n);
+        NameInformation ns = createNameInformation(t, nameNode);
         if (ns != null) {
           if (ns.isPrototype) {
             recordPrototypeSet(ns.prototypeClass, ns.prototypeProperty, n);
@@ -622,7 +662,7 @@ final class NameAnalyzer implements CompilerPass {
         }
       } else if (n.isCall()) {
         Node nameNode = n.getFirstChild();
-        NameInformation ns = createNameInformation(t, nameNode, n);
+        NameInformation ns = createNameInformation(t, nameNode);
         if (ns != null && ns.onlyAffectsClassDef) {
           JsName name = getName(ns.name, true);
           refNodes.add(new ClassDefiningFunctionNode(name, n));
@@ -811,7 +851,7 @@ final class NameAnalyzer implements CompilerPass {
         return;
       }
 
-      NameInformation nameInfo = createNameInformation(t, n, parent);
+      NameInformation nameInfo = createNameInformation(t, n);
       if (nameInfo == null) {
         // The name is not a global name
         return;
@@ -849,7 +889,20 @@ final class NameAnalyzer implements CompilerPass {
       // looking up the nearest enclosing dependency scope. It's unnecessary to
       // determine all enclosing dependency scopes because this callback should
       // create a chain of references between them.
-      NameInformation referring = getDependencyScope(n);
+      List<NameInformation> referers = getDependencyScope(n);
+      if (referers.isEmpty()) {
+        maybeRecordReferenceOrAlias(t, n, parent, nameInfo, null);
+      } else {
+        for (NameInformation referring : referers) {
+          maybeRecordReferenceOrAlias(t, n, parent, nameInfo, referring);
+        }
+        recordAliases(referers);
+      }
+    }
+
+    private void maybeRecordReferenceOrAlias(
+        NodeTraversal t, Node n, Node parent,
+        NameInformation nameInfo, NameInformation referring) {
       String referringName = "";
       if (referring != null) {
         referringName = referring.isPrototype
@@ -885,11 +938,17 @@ final class NameAnalyzer implements CompilerPass {
       }
 
       if (nodesToKeep.contains(n)) {
-        NameInformation functionScope = getEnclosingFunctionDependencyScope(t);
-        if (functionScope != null) {
-          recordReference(functionScope.name, name, RefType.REGULAR);
+        List<NameInformation> functionScopes =
+            getEnclosingFunctionDependencyScope(t);
+        if (!functionScopes.isEmpty()) {
+          for (NameInformation functionScope : functionScopes) {
+            recordReference(functionScope.name, name, RefType.REGULAR);
+          }
         } else {
           recordReference(WINDOW, name, RefType.REGULAR);
+          if (referring != null) {
+            maybeRecordAlias(name, parent, referring, referringName);
+          }
         }
       } else if (referring != null) {
         if (!maybeRecordAlias(name, parent, referring, referringName)) {
@@ -908,6 +967,16 @@ final class NameAnalyzer implements CompilerPass {
             recordReference(WINDOW, name, RefType.REGULAR);
             break;
           }
+        }
+      }
+    }
+
+    private void recordAliases(List<NameInformation> referers) {
+      int size = referers.size();
+      for (int i = 0; i < size; i++) {
+        for (int j = i + 1; j < size; j++) {
+          recordAlias(referers.get(i).name, referers.get(j).name);
+          recordAlias(referers.get(j).name, referers.get(i).name);
         }
       }
     }
@@ -959,7 +1028,7 @@ final class NameAnalyzer implements CompilerPass {
           parent.isAssign()) &&
           !isPrototypePropAssignment &&
           referring != null &&
-          scopes.get(parent) == referring) {
+          scopes.get(parent).contains(referring)) {
         recordAlias(referringName, name);
         return true;
       }
@@ -1321,12 +1390,11 @@ final class NameAnalyzer implements CompilerPass {
    *
    * @param t The node traversal
    * @param n The current node
-   * @param parent The parent of n
    * @return The name information, or null if the name is irrelevant to this
    *     pass
    */
-  private NameInformation createNameInformation(NodeTraversal t, Node n,
-      Node parent) {
+  private NameInformation createNameInformation(NodeTraversal t, Node n) {
+    Node parent = n.getParent();
     // Build the full name and find its root node by iterating down through all
     // GETPROP/GETELEM nodes.
     String name = "";
@@ -1398,7 +1466,7 @@ final class NameAnalyzer implements CompilerPass {
             n.isGetProp() &&
             parent.isAssign() &&
             "prototype".equals(n.getLastChild().getString())) {
-          if (createNameInformation(t, n.getFirstChild(), n) != null) {
+          if (createNameInformation(t, n.getFirstChild()) != null) {
             name = rootNameNode.getString() + name;
             name = name.substring(0, name.length() - PROTOTYPE_SUFFIX_LEN);
             NameInformation nameInfo = new NameInformation();
@@ -1492,15 +1560,15 @@ final class NameAnalyzer implements CompilerPass {
   /**
    * Gets the nearest enclosing dependency scope, or null if there isn't one.
    */
-  private NameInformation getDependencyScope(Node n) {
+  private List<NameInformation> getDependencyScope(Node n) {
     for (Node node : n.getAncestors()) {
-      NameInformation ref = scopes.get(node);
-      if (ref != null) {
-        return ref;
+      List<NameInformation> refs = scopes.get(node);
+      if (!refs.isEmpty()) {
+        return refs;
       }
     }
 
-    return null;
+    return Collections.emptyList();
   }
 
   /**
@@ -1509,15 +1577,16 @@ final class NameAnalyzer implements CompilerPass {
    * its parent if the parent node is a variable declaration or
    * assignment.
    */
-  private NameInformation getEnclosingFunctionDependencyScope(NodeTraversal t) {
+  private List<NameInformation> getEnclosingFunctionDependencyScope(
+      NodeTraversal t) {
     Node function = t.getEnclosingFunction();
     if (function == null) {
-      return null;
+      return Collections.emptyList();
     }
 
-    NameInformation ref = scopes.get(function);
-    if (ref != null) {
-      return ref;
+    List<NameInformation> refs = scopes.get(function);
+    if (!refs.isEmpty()) {
+      return refs;
     }
 
     // Function expression.  try to get a name from the parent var
@@ -1539,7 +1608,7 @@ final class NameAnalyzer implements CompilerPass {
       }
     }
 
-    return null;
+    return Collections.emptyList();
   }
 
   /**
@@ -1679,7 +1748,8 @@ final class NameAnalyzer implements CompilerPass {
         break;
       case Token.ASSIGN:
         Preconditions.checkArgument(parent.isFor(),
-            "Unsupported assignment in replaceWithRhs. parent: %s", Token.name(parent.getType()));
+            "Unsupported assignment in replaceWithRhs. parent: %s",
+            Token.name(parent.getType()));
         break;
       default:
         throw new IllegalArgumentException(

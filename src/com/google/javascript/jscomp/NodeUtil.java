@@ -1261,6 +1261,17 @@ public final class NodeUtil {
     return n.isNull() || isUndefined(n);
   }
 
+  static final Predicate<Node> IMMUTABLE_PREDICATE = new Predicate<Node>() {
+    @Override
+    public boolean apply(Node n) {
+      return isImmutableValue(n);
+    }
+  };
+
+  static boolean isImmutableResult(Node n) {
+    return allResultsMatch(n, IMMUTABLE_PREDICATE);
+  }
+
   /**
    * Apply the supplied predicate against
    * all possible result Nodes of the expression.

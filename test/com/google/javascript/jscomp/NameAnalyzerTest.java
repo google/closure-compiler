@@ -47,41 +47,82 @@ public class NameAnalyzerTest extends CompilerTestCase {
     return 1;
   }
 
-  public void testRemoveVarDeclartion1() {
+  public void testRemoveVarDeclaration1() {
     test("var foo = 3;", "");
   }
 
-  public void testRemoveVarDeclartion2() {
+  public void testRemoveVarDeclaration2() {
     test("var foo = 3, bar = 4; externfoo = foo;",
          "var foo = 3; externfoo = foo;");
   }
 
-  public void testRemoveVarDeclartion3() {
+  public void testRemoveVarDeclaration3() {
     test("var a = f(), b = 1, c = 2; b; c", "f();var b = 1, c = 2; b; c");
   }
 
-  public void testRemoveVarDeclartion4() {
+  public void testRemoveVarDeclaration4() {
     test("var a = 0, b = f(), c = 2; a; c", "var a = 0;f();var c = 2; a; c");
   }
 
-  public void testRemoveVarDeclartion5() {
+  public void testRemoveVarDeclaration5() {
     test("var a = 0, b = 1, c = f(); a; b", "var a = 0, b = 1; f(); a; b");
   }
 
-  public void testRemoveVarDeclartion6() {
+  public void testRemoveVarDeclaration6() {
     test("var a = 0, b = a = 1; a", "var a = 0; a = 1; a");
   }
 
-  public void testRemoveVarDeclartion7() {
+  public void testRemoveVarDeclaration7() {
     test("var a = 0, b = a = 1", "");
   }
 
-  public void testRemoveVarDeclartion8() {
+  public void testRemoveVarDeclaration8() {
     test("var a;var b = 0, c = a = b = 1", "");
   }
 
-  public void testRemoveFunction() {
+
+  public void testRemoveDeclaration1() {
+    test("var a;var b = 0, c = a = b = 1", "");
+  }
+
+  public void testRemoveDeclaration2() {
+    test("var a,b,c; c = a = b = 1", "");
+  }
+
+  public void testRemoveDeclaration3() {
+    test("var a,b,c; c = a = b = {}; a.x = 1;", "");
+  }
+
+  public void testRemoveDeclaration4() {
+    testSame("var a,b,c; c = a = b = {}; a.x = 1;alert(c.x);");
+  }
+
+  public void testRemoveDeclaration5() {
+    test("var a,b,c; c = a = b = null; use(b)", "var b;b=null;use(b)");
+  }
+
+  public void testRemoveDeclaration6() {
+    test("var a,b,c; c = a = b = 'str';use(b)", "var b;b='str';use(b)");
+  }
+
+  public void testRemoveDeclaration7() {
+    test("var a,b,c; c = a = b = true;use(b)", "var b;b=true;use(b)");
+  }
+
+  public void testRemoveFunction1() {
+    test("var foo = function(){};", "");
+  }
+
+  public void testRemoveFunction2() {
+    test("var foo; foo = function(){};", "");
+  }
+
+  public void testRemoveFunction3() {
     test("var foo = {}; foo.bar = function() {};", "");
+  }
+
+  public void testRemoveFunction4() {
+    test("var a = {}; a.b = {}; a.b.c = function() {};", "");
   }
 
   public void testReferredToByWindow() {
@@ -104,12 +145,16 @@ public class NameAnalyzerTest extends CompilerTestCase {
     test("var f = function (){f()}", "");
   }
 
+  public void testRemoveRecursiveFunction2a() {
+    test("var f = function g(){g()}", "");
+  }
+
   public void testRemoveRecursiveFunction3() {
     test("var f;f = function (){f()}", "");
   }
 
   public void testRemoveRecursiveFunction4() {
-    // TODO(user) bug?  not removed if name definition doesn't exist.
+    // don't removed if name definition doesn't exist.
     testSame("f = function (){f()}");
   }
 
@@ -570,6 +615,22 @@ public class NameAnalyzerTest extends CompilerTestCase {
          "var e = false;if(e);");
   }
 
+  public void testIf4a() {
+    // TODO(johnlenz): fix this.
+    testSame("var e = [], f;if(f=e);f[0] = 1;");
+  }
+
+  public void testIf4b() {
+    // TODO(johnlenz): fix this.
+    test("var e = [], f;if(e=f);f[0] = 1;",
+         "var f;if(f);f[0] = 1;");
+  }
+
+  public void testIf4c() {
+    test("var e = [], f;if(f=e);e[0] = 1;",
+         "var e = [];if(e);e[0] = 1;");
+  }
+
   public void testIf5() {
     test("var e = false, f;var foo = {};if(f = e + 1)foo.bar=function(){};",
          "var e = false;if(e + 1);");
@@ -692,17 +753,11 @@ public class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testSetterInForIn3() {
-    // TODO(user) Fix issue similar to b/2316773: bar should be preserved
-    // but isn't due to missing references between e and foo.a
-    test("var foo = {}; var bar; for(e in bar = foo.a); bar.b = 3",
-         "var foo = {}; for(e in foo.a);");
+    testSame("var foo = {}; var bar; for(e in bar = foo.a); bar.b = 3");
   }
 
   public void testSetterInForIn4() {
-    // TODO(user) Fix issue similar to b/2316773: bar should be preserved
-    // but isn't due to missing references between e and foo.a
-    test("var foo = {}; var bar; for (e in bar = foo.a); bar.b = 3; foo.a",
-         "var foo = {}; for (e in foo.a); foo.a");
+    testSame("var foo = {}; var bar; for (e in bar = foo.a); bar.b = 3; foo.a");
   }
 
   public void testSetterInForIn5() {
@@ -751,9 +806,13 @@ public class NameAnalyzerTest extends CompilerTestCase {
     testSame("var x = 0; x += 3; x *= 5;");
   }
 
-  public void testNestedAssigns() {
+  public void testNestedAssigns1() {
     test("var x = 0; var y = x = 3; window.alert(y);",
          "var y = 3; window.alert(y);");
+  }
+
+  public void testNestedAssigns2() {
+    testSame("var x = 0; var y = x = {}; x.b = 3; window.alert(y);");
   }
 
   public void testComplexNestedAssigns1() {
@@ -871,6 +930,11 @@ public class NameAnalyzerTest extends CompilerTestCase {
 
   public void testConditionallyDefinedFunction2() {
     testSame("var g; 1 || (externfoo.x = function() { g; })");
+  }
+
+  public void testConditionallyDefinedFunction3() {
+      testSame("var a = {};" +
+           "rand() % 2 || (a.f = function() { externfoo = 1; } || alert());");
   }
 
   public void testGetElemOnThis() {
@@ -1084,6 +1148,13 @@ public class NameAnalyzerTest extends CompilerTestCase {
         "");
   }
 
+  public void testAssignWithHook2a() {
+    test("function Foo(){} var foo = null;" +
+        "var f; f = window.a ? " +
+        "    function () {return new Foo()} : function () {return foo};",
+        "");
+  }
+
   public void testAssignWithHook3() {
     testSame("function Foo(){} var foo = null; var f = {};" +
         "f.b = window.a ? " +
@@ -1109,6 +1180,55 @@ public class NameAnalyzerTest extends CompilerTestCase {
         "f.b = window.a ? function () {return new Foo()} :" +
         "    window.b ? function () {return foo} :" +
         "    function() { return Foo };",
+        "");
+  }
+
+  public void testAssignWithHook7() {
+    testSame("function Foo(){} var foo = null;" +
+        "var f = window.a ? new Foo() : foo;" +
+        "f()");
+  }
+
+  public void testAssignWithHook8() {
+    test("function Foo(){} var foo = null;" +
+        "var f = window.a ? new Foo() : foo;",
+        "function Foo(){}" +
+        "window.a && new Foo()");
+  }
+
+  public void testAssignWithHook9() {
+    test("function Foo(){} var foo = null; var f = {};" +
+        "f.b = window.a ? new Foo() : foo;",
+        "function Foo(){} window.a && new Foo()");
+  }
+
+  public void testAssign1() {
+    test("function Foo(){} var foo = null; var f = {};" +
+        "f.b = window.a;",
+        "");
+  }
+
+  public void testAssign2() {
+    test("function Foo(){} var foo = null; var f = {};" +
+        "f.b = window;",
+        "");
+  }
+
+  public void testAssign3() {
+    test("var f = {};" +
+        "f.b = window;",
+        "");
+  }
+
+  public void testAssign4() {
+    test("function Foo(){} var foo = null; var f = {};" +
+        "f.b = new Foo();",
+        "function Foo(){} new Foo()");
+  }
+
+  public void testAssign5() {
+    test("function Foo(){} var foo = null; var f = {};" +
+        "f.b = foo;",
         "");
   }
 
@@ -1451,13 +1571,7 @@ public class NameAnalyzerTest extends CompilerTestCase {
         "this.x = Foo.getInstance();");
   }
 
-  // TODO(user): Make NameAnalyzer handle this. The OR subexpressions may
-  // modify global state.
-  // public void testConditionallyDefinedFunction3() {
-  //    test("var a = {};" +
-  //         "rand() % 2 || (a.f = function() { externfoo = 1; } || alert());",
-  //         "rand() % 2 || function() { externfoo = 1; } || alert();");
-  // }
+
 
   public void testNoRemoveWindowPropertyAlias1() {
      testSame(
@@ -1474,6 +1588,62 @@ public class NameAnalyzerTest extends CompilerTestCase {
   public void testNoRemoveWindowPropertyAlias3() {
     testSame(
         "var self_ = window;\n" +
+        "self_['qs'] = function() {};");
+  }
+
+  public void testNoRemoveWindowPropertyAlias4() {
+    // TODO(johnlenz): fix this. "self_" should remain.
+    test(
+        "var self_ = window['gbar'] || {};\n" +
+        "self_.qs = function() {};",
+        "");
+ }
+
+  public void testNoRemoveWindowPropertyAlias4a() {
+    // TODO(johnlenz): fix this. "self_" should remain.
+    test(
+        "var self_; self_ = window.gbar || {};\n" +
+        "self_.qs = function() {};",
+        "");
+ }
+
+  public void testNoRemoveWindowPropertyAlias5() {
+    // TODO(johnlenz): fix this. "self_" should remain.
+    test(
+        "var self_ = window || {};\n" +
+        "self_['qs'] = function() {};",
+        "");
+  }
+
+  public void testNoRemoveWindowPropertyAlias5a() {
+    // TODO(johnlenz): fix this.
+    test(
+        "var self_; self_ = window || {};\n" +
+        "self_['qs'] = function() {};",
+        "");
+  }
+
+  public void testNoRemoveWindowPropertyAlias6() {
+    testSame(
+        "var self_ = (window.gbar = window.gbar || {});\n" +
+        "self_.qs = function() {};");
+  }
+
+  public void testNoRemoveWindowPropertyAlias6a() {
+    testSame(
+        "var self_; self_ = (window.gbar = window.gbar || {});\n" +
+        "self_.qs = function() {};");
+  }
+
+  public void testNoRemoveWindowPropertyAlias7() {
+    testSame(
+        "var self_ = (window = window || {});\n" +
+        "self_['qs'] = function() {};");
+  }
+
+  public void testNoRemoveWindowPropertyAlias7a() {
+    testSame(
+        "var self_; self_ = (window = window || {});\n" +
         "self_['qs'] = function() {};");
   }
 
@@ -1678,6 +1848,80 @@ public class NameAnalyzerTest extends CompilerTestCase {
         "");
   }
 
+  public void testIssue838a() {
+    testSame("var z = window['z'] || (window['z'] = {});\n" +
+         "z['hello'] = 'Hello';\n" +
+         "z['world'] = 'World';");
+  }
+
+  public void testIssue838b() {
+    testSame(
+         "var z;" +
+         "window['z'] = z || (z = {});\n" +
+         "z['hello'] = 'Hello';\n" +
+         "z['world'] = 'World';");
+  }
+
+
+  public void testIssue874a() {
+    testSame(
+        "var a = a || {};\n" +
+        "var b = a;\n" +
+        "b.View = b.View || {}\n" +
+        "var c = b.View;\n" +
+        "c.Editor = function f(d, e) {\n" +
+        "  return d + e\n" +
+        "};\n" +
+        "window.ImageEditor.View.Editor = a.View.Editor;");
+  }
+
+  public void testIssue874b() {
+    testSame(
+        "var b;\n" +
+        "var c = b = {};\n" +
+        "c.Editor = function f(d, e) {\n" +
+        "  return d + e\n" +
+        "};\n" +
+        "window['Editor'] = b.Editor;");
+  }
+
+  public void testIssue874c() {
+    testSame(
+        "var b, c;\n" +
+        "c = b = {};\n" +
+        "c.Editor = function f(d, e) {\n" +
+        "  return d + e\n" +
+        "};\n" +
+        "window['Editor'] = b.Editor;");
+  }
+
+  public void testIssue874d() {
+    testSame(
+        "var b = {}, c;\n" +
+        "c = b;\n" +
+        "c.Editor = function f(d, e) {\n" +
+        "  return d + e\n" +
+        "};\n" +
+        "window['Editor'] = b.Editor;");
+  }
+
+  public void testIssue874e() {
+    testSame(
+        "var a;\n" +
+        "var b = a || (a = {});\n" +
+        "var c = b.View || (b.View = {});\n" +
+        "c.Editor = function f(d, e) {\n" +
+        "  return d + e\n" +
+        "};\n" +
+        "window.ImageEditor.View.Editor = a.View.Editor;");
+  }
+
+  public void testBug6575051() {
+    testSame(
+        "var hackhack = window['__o_o_o__'] = window['__o_o_o__'] || {};\n" +
+        "window['__o_o_o__']['va'] = 1;\n" +
+        "hackhack['Vb'] = 1;");
+  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
