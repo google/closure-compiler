@@ -187,6 +187,17 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "return a.stack\n");
   }
 
+  public void testDoNotInlineCatchExpression4() {
+    // Note: it is valid to inline "x" here but we currently don't.
+    noInline(
+        "try {\n" +
+        " stuff();\n" +
+        "} catch (e) {\n" +
+        " x = e;\n" +
+        " print(x);\n" +
+        "}");
+  }
+
   public void testDefinitionAfterUse() {
     inline("var x = 0; print(x); x = 1", "var x; print(0); x = 1");
   }
