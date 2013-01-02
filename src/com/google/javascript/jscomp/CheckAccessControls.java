@@ -89,6 +89,11 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
           "JSC_PRIVATE_OVERRIDE",
           "Overriding private property of {0}.");
 
+  static final DiagnosticType EXTEND_FINAL_CLASS =
+      DiagnosticType.error(
+          "JSC_EXTEND_FINAL_CLASS",
+          "{0} is not allowed to extend final class {1}.");
+
   static final DiagnosticType VISIBILITY_MISMATCH =
       DiagnosticType.disabled(
           "JSC_VISIBILITY_MISMATCH",
@@ -232,6 +237,9 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       case Token.NEW:
         checkConstructorDeprecation(t, n, parent);
         break;
+      case Token.FUNCTION:
+        checkFinalClassOverrides(t, n, parent);
+        break;
     }
   }
 
@@ -350,6 +358,23 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
                     name.getString(), varSrc.getName()));
           }
         }
+      }
+    }
+  }
+
+  /**
+   * Checks if a constructor is trying to override a final class.
+   * @param t The current traversal.
+   * @param name The name node.
+   */
+  private void checkFinalClassOverrides(NodeTraversal t, Node fn, Node parent) {
+    JSType type = fn.getJSType().toMaybeFunctionType();
+    if (type != null && type.isConstructor()) {
+      JSType finalParentClass = getFinalParentClass(getClassOfMethod(fn, parent));
+      if (finalParentClass != null) {
+        compiler.report(
+            t.makeError(fn, EXTEND_FINAL_CLASS,
+                type.getDisplayName(), finalParentClass.getDisplayName()));
       }
     }
   }
@@ -675,5 +700,25 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    */
   private static JSType dereference(JSType type) {
     return type == null ? null : type.dereference();
+  }
+
+  /**
+   * Returns the super class of the given type that has a constructor.
+   */
+  private JSType getFinalParentClass(JSType type) {
+    if (type != null) {
+      ObjectType iproto = ObjectType.cast(type).getImplicitPrototype();
+      while (iproto != null && iproto.getConstructor() == null) {
+        iproto = iproto.getImplicitPrototype();
+      }
+      if (iproto != null) {
+        Node source = iproto.getConstructor().getSource();
+        JSDocInfo jsDoc = source != null ? NodeUtil.getBestJSDocInfo(source) : null;
+        if (jsDoc != null && jsDoc.isConstant()) {
+          return iproto;
+        }
+      }
+    }
+    return null;
   }
 }

@@ -27,6 +27,7 @@ import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_NAME;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_NAME_REASON;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_PROP;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_PROP_REASON;
+import static com.google.javascript.jscomp.CheckAccessControls.EXTEND_FINAL_CLASS;
 import static com.google.javascript.jscomp.CheckAccessControls.PRIVATE_OVERRIDE;
 import static com.google.javascript.jscomp.CheckAccessControls.VISIBILITY_MISMATCH;
 
@@ -810,5 +811,28 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         " * @constructor\n" +
         " */ function B() {" +
         "/** @const */ this.bar = 3;this.bar += 4;}");
+  }
+
+  public void testFinalClassCannotBeSubclassed() {
+    test(
+        "/**\n"
+        + " * @constructor\n"
+        + " * @const\n"
+        + " */ Foo = function() {};\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {Foo}\n*"
+        + " */ Bar = function() {};",
+        null, EXTEND_FINAL_CLASS);
+    test(
+        "/**\n"
+        + " * @constructor\n"
+        + " * @const\n"
+        + " */ function Foo() {};\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {Foo}\n*"
+        + " */ function Bar() {};",
+        null, EXTEND_FINAL_CLASS);
   }
 }
