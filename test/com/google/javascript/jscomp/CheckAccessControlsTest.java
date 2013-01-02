@@ -19,6 +19,8 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PRIVATE_GLOBAL_ACCESS;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS;
+import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_DELETED;
+import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_CLASS;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_CLASS_REASON;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_NAME;
@@ -27,11 +29,6 @@ import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_PROP;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_PROP_REASON;
 import static com.google.javascript.jscomp.CheckAccessControls.PRIVATE_OVERRIDE;
 import static com.google.javascript.jscomp.CheckAccessControls.VISIBILITY_MISMATCH;
-import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_DELETED;
-import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE;
-
-import com.google.javascript.jscomp.CheckLevel;
-import com.google.javascript.jscomp.CompilerOptions;
 
 /**
  * Tests for {@link CheckAccessControls}.
@@ -41,6 +38,7 @@ import com.google.javascript.jscomp.CompilerOptions;
 public class CheckAccessControlsTest extends CompilerTestCase {
 
   public CheckAccessControlsTest() {
+    super(CompilerTypeTestCase.DEFAULT_EXTERNS);
     parseTypeInfo = true;
     enableTypeCheck(CheckLevel.WARNING);
   }
@@ -646,21 +644,24 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testAutoboxedDeprecatedProperty() {
-    testDep(
+    test(
+        "", // no externs
         "/** @constructor */ function String() {}" +
         "/** @deprecated %s */ String.prototype.length;" +
         "function f() { return 'x'.length; }",
         "GRR",
-        DEPRECATED_PROP,
-        DEPRECATED_PROP_REASON);
+        DEPRECATED_PROP_REASON,
+        null);
   }
 
   public void testAutoboxedPrivateProperty() {
-    test(new String[] {
+    test(
         "/** @constructor */ function String() {}" +
-        "/** @private */ String.prototype.length;",
-        "function f() { return 'x'.length; }"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @private */ String.prototype.length;", // externs
+        "function f() { return 'x'.length; }",
+        "", // output
+        BAD_PRIVATE_PROPERTY_ACCESS,
+        null);
   }
 
   public void testNullableDeprecatedProperty() {
