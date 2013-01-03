@@ -476,7 +476,7 @@ public class Compiler extends AbstractCompiler {
   /**
    * Rebuilds the internal list of inputs by iterating over all modules.
    * This is necessary if inputs have been added to or removed from a module
-   * after the {@link #init(JSSourceFile[], JSModule[], CompilerOptions)} call.
+   * after the {@link #init(List, List, CompilerOptions)} call.
    */
   public void rebuildInputsFromModules() {
     inputs = getAllInputsFromModules(modules);
@@ -2004,8 +2004,10 @@ public class Compiler extends AbstractCompiler {
       case ECMASCRIPT5:
       case ECMASCRIPT5_STRICT:
         return true;
+      case ECMASCRIPT3:
+        return false;
     }
-    return false;
+    throw new IllegalStateException("unexpected language mode");
   }
 
   public LanguageMode languageMode() {
@@ -2534,18 +2536,16 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
-   * Stores the old parse tree for a given source file.
-   * @param sourceName
-   * @param oldAst
+   * {@inheritDoc}
    */
+  @Override
   public void setOldParseTree(String sourceName, AstRoot oldAst) {
   }
 
   /**
-   * Gets an old format parse tree for a given source file.
-   * @param sourceName
-   * @return
+   * {@inheritDoc}
    */
+  @Override
   public AstRoot getOldParseTreeByName(String sourceName) {
     return null;
   }

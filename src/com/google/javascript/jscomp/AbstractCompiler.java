@@ -377,16 +377,16 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract Node ensureLibraryInjected(String resourceName);
 
    /**
-    * Stores the old parse tree for a given source file.
-    * @param sourceName
-    * @param astRoot
+    * Stores the "new" Rhino parse tree for a given source file.
+    * @param sourceName The source file name.
+    * @param astRoot The "new" Rhino parse tree.
     */
    abstract void setOldParseTree(String sourceName, AstRoot astRoot);
 
    /**
     * Gets an old format parse tree for a given source file.
     * @param sourceName The source file name to get the tree for.
-    * @return The old format parse tree for the given source file.
+    * @return The "new" Rhino parse tree for the given source file.
     */
    abstract AstRoot getOldParseTreeByName(String sourceName);
 }

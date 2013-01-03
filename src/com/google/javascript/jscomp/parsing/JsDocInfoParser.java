@@ -179,6 +179,7 @@ public final class JsDocInfoParser {
    * @return {@code true} if JSDoc information was correctly parsed,
    *     {@code false} otherwise
    */
+  @SuppressWarnings("incomplete-switch")
   boolean parse() {
     int lineno;
     int charno;

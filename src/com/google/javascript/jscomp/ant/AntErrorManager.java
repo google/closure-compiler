@@ -47,6 +47,8 @@ public final class AntErrorManager
       case WARNING:
         this.task.log(error.format(level, this.formatter), Project.MSG_WARN);
         break;
+      case OFF:
+        break;
     }
   }
 

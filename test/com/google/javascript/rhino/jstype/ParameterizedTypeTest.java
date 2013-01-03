@@ -47,6 +47,7 @@ public class ParameterizedTypeTest extends BaseJSTypeTestCase {
     super.setUp();
   }
 
+  @Override
   protected ParameterizedType createParameterizedType(
       ObjectType objectType, JSType parameterType) {
     return registry.createParameterizedType(objectType, parameterType);

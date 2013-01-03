@@ -171,10 +171,6 @@ public class TypeInferenceTest extends TestCase {
         registry.getNativeType(type), registry.getNativeType(VOID_TYPE));
   }
 
-  private JSType getNoResolvedType() {
-    return registry.getNativeType(NO_RESOLVED_TYPE);
-  }
-
   private JSType createNullableType(JSTypeNative type) {
     return createNullableType(registry.getNativeType(type));
   }

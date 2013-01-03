@@ -177,8 +177,9 @@ class ProcessTweaks implements CompilerPass {
           return IR.number(0);
         case REGISTER_STRING:
           return IR.string("");
+        default:
+          throw new IllegalStateException();
       }
-      throw new IllegalStateException();
     }
   }
 
@@ -337,6 +338,7 @@ class ProcessTweaks implements CompilerPass {
     final Map<String, TweakInfo> allTweaks = Maps.newHashMap();
     final List<TweakFunctionCall> getOverridesCalls = Lists.newArrayList();
 
+    @SuppressWarnings("incomplete-switch")
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (!n.isCall()) {

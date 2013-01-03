@@ -73,10 +73,6 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     test(js, expected);
   }
 
-  private void fold(String js, String expected, DiagnosticType warning) {
-    test(js, expected, warning);
-  }
-
   void assertResultString(String js, String expected) {
     assertResultString(js, expected, false);
   }

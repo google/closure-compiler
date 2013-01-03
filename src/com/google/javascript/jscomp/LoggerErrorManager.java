@@ -55,6 +55,8 @@ public class LoggerErrorManager extends BasicErrorManager {
       case WARNING:
         logger.warning(error.format(level, formatter));
         break;
+      case OFF:
+        break;
     }
   }
 

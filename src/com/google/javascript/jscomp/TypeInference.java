@@ -187,7 +187,7 @@ class TypeInference
   }
 
   @Override
-  @SuppressWarnings("fallthrough")
+  @SuppressWarnings({"fallthrough", "incomplete-switch"})
   List<FlowScope> branchedFlowThrough(Node source, FlowScope input) {
     // NOTE(nicksantos): Right now, we just treat ON_EX edges like UNCOND
     // edges. If we wanted to be perfect, we'd actually JOIN all the out

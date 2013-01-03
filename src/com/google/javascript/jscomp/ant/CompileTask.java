@@ -364,6 +364,7 @@ public final class CompileTask
    * @param options
    */
   private void convertPropertiesMap(CompilerOptions options) {
+    @SuppressWarnings("unchecked")
     Map<String, Object> props = getProject().getProperties();
     for (Map.Entry<String, Object> entry : props.entrySet()) {
       String key = entry.getKey();

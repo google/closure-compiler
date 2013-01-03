@@ -211,6 +211,7 @@ public class PerformanceTracker {
   }
 
   class CmpEntries implements Comparator<Entry<String, Stats>> {
+    @Override
     public int compare(Entry<String, Stats> e1, Entry<String, Stats> e2) {
       return (int) (e1.getValue().runtime - e2.getValue().runtime);
     }

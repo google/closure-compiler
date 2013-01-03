@@ -1137,6 +1137,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           return Token.TRUE;
         case FALSE:
           return Token.FALSE;
+        case UNKNOWN:
+          return type;
       }
     }
     return type;

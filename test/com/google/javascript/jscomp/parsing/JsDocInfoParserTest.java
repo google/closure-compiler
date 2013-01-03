@@ -2368,6 +2368,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Some.Long.Type.Name", 0, 7, 1, 8, true);
   }
 
+  @SuppressWarnings("deprecation")
   public void testParseWithoutMarkerName() throws Exception {
     JSDocInfo jsdoc = parse("@author helloworld*/", true);
     assertNull(assertAnnotationMarker(jsdoc, "author", 0, 0).getName());
@@ -2767,6 +2768,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
    * @param startCharno The starting character of the text.
    * @return The marker, for chaining purposes.
    */
+  @SuppressWarnings("deprecation")
   private JSDocInfo.Marker assertNameInMarker(JSDocInfo.Marker marker,
       String name, int startLine, int startCharno) {
     assertTrue(marker.getName() != null);

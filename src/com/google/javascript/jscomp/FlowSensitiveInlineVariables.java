@@ -67,8 +67,8 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
    * could be inlined using {@link GatherCandiates}.
    *
    * The second step involves verifying that each candidate is actually safe
-   * to inline with {@link Candidate#canInline()} and finally perform inlining
-   * using {@link Candidate#inlineVariable()}.
+   * to inline with {@link Candidate#canInline(Scope)} and finally perform
+   * inlining using {@link Candidate#inlineVariable()}.
    *
    * The reason for the delayed evaluation of the candidates is because we
    * need two separate dataflow result.
@@ -190,7 +190,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
    * Gathers a list of possible candidates for inlining based only on
    * information from {@link MustBeReachingVariableDef}. The list will be stored
    * in {@code candidates} and the validity of each inlining Candidate should
-   * be later verified with {@link Candidate#canInline()} when
+   * be later verified with {@link Candidate#canInline(Scope)} when
    * {@link MaybeReachingVariableUse} has been performed.
    */
   private class GatherCandiates extends AbstractShallowCallback {
