@@ -587,7 +587,7 @@ angular.noop = function() {};
  *   $eval: function((string|function())=, Object=):*,
  *   $evalAsync: function((string|function())=),
  *   $id: string,
- *   $new: function():angular.Scope,
+ *   $new: function(boolean=):angular.Scope,
  *   $on: function(string, function(angular.Scope.Event, ...[?])):function(),
  *   $parent: angular.Scope,
  *   $watch: function(
@@ -634,9 +634,10 @@ angular.Scope.$evalAsync = function(opt_exp) {};
 angular.Scope.$id;
 
 /**
+ * @param {boolean=} opt_isolate
  * @return {angular.Scope}
  */
-angular.Scope.$new = function() {};
+angular.Scope.$new = function(opt_isolate) {};
 
 /**
  * @param {string} name
@@ -1086,16 +1087,16 @@ angular.$location.url = function(opt_url) {};
 angular.$locationProvider;
 
 /**
- * @param {string=} prefix
+ * @param {string=} opt_prefix
  * @return {string|angular.$locationProvider}
  */
-angular.$locationProvider.hashPrefix = function(prefix) {};
+angular.$locationProvider.hashPrefix = function(opt_prefix) {};
 
 /**
- * @param {boolean=} enabled
+ * @param {boolean=} opt_enabled
  * @return {boolean|angular.$locationProvider}
  */
-angular.$locationProvider.html5mode = function(enabled) {};
+angular.$locationProvider.html5Mode = function(opt_enabled) {};
 
 /******************************************************************************
  * $log Service
