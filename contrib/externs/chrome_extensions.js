@@ -350,17 +350,15 @@ chrome.windows.getAll = function(getInfo, callback) {};
 
 
 /**
- * @param {Object.<string, boolean>} getInfo May have 'populate' key.
  * @param {function(ChromeWindow): void} callback Callback.
  */
-chrome.windows.getCurrent = function(getInfo, callback) { };
+chrome.windows.getCurrent = function(callback) {};
 
 
 /**
- * @param {Object.<string, boolean>} getInfo May have 'populate' key.
  * @param {function(ChromeWindow): void} callback Callback.
  */
-chrome.windows.getLastFocused = function(getInfo, callback) { };
+chrome.windows.getLastFocused = function(callback) {};
 
 
 /**
@@ -2265,21 +2263,22 @@ StorageArea.prototype.clear = function(opt_callback) {};
 
 
 /**
- * @param {(string|!Array.<string>|!Object.<string>|null)} keys
+ * @param {(string|Array.<string>|Object.<string>)} keys
  *    A single key to get, list of keys to get, or a dictionary
  *    specifying default values (see description of the
  *    object). An empty list or object will return an empty
  *    result object. Pass in null to get the entire contents of storage.
- * @param {function(Object)} callback Callback with storage items, or null
- *    on failure.
+ * @param {!function(Object.<string>)} callback
+ *    Callback with storage items, or on failure.
  */
 StorageArea.prototype.get = function(keys, callback) {};
 
 
 /**
- * @param {(string|!Array.<string>)} keys
+ * @param {(string|Array.<string>)} keys
  *    A single key or a list of keys for items to remove.
- * @param {function()=} opt_callback Callback.
+ * @param {function(Object.<string>)=} opt_callback
+ *    Callback on success, or on failure.
  */
 StorageArea.prototype.remove = function(keys, opt_callback) {};
 
@@ -2288,19 +2287,10 @@ StorageArea.prototype.remove = function(keys, opt_callback) {};
  * @param {!Object.<string>} keys
  *    Object specifying items to augment storage
  *    with. Values that cannot be serialized (functions, etc) will be ignored.
- * @param {function()=} opt_callback Callback.
+ * @param {function(Object.<string>)=} opt_callback
+ *    Callback with storage items, or on failure.
  */
-StorageArea.prototype.set = function(keys, opt_callback) { };
-
-
-/**
- * @param {(string|!Array.<string>|null)} keys
- *    A single key or list of keys to get the total usage for. An empty list
- *    will return 0. Pass in null to get the total usage of all of storage.
- * @param {function(number)} callback
- *    Callback with the amount of space being used by storage, or on failure.
- */
-StorageArea.prototype.getBytesInUse = function(keys, callback) { };
+StorageArea.prototype.set = function(keys, opt_callback) {};
 
 
 
