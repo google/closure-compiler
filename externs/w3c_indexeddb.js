@@ -469,26 +469,26 @@ IDBObjectStore.prototype.autoIncrement;
 
 /**
  * @param {*} value The value to put into the object store.
- * @param {*=} key The key of this value.
+ * @param {IDBKeyType=} key The key of this value.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBObjectStore.prototype.put = function(value, key) {};
 
 /**
  * @param {*} value The value to add into the object store.
- * @param {*=} key The key of this value.
+ * @param {IDBKeyType=} key The key of this value.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBObjectStore.prototype.add = function(value, key) {};
 
 /**
- * @param {*} key The key of this value.
+ * @param {IDBKeyType} key The key of this value.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBObjectStore.prototype['delete'] = function(key) {};
 
 /**
- * @param {*} key The key of the document to retrieve.
+ * @param {IDBKeyType} key The key of the document to retrieve.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBObjectStore.prototype.get = function(key) {};
@@ -526,7 +526,7 @@ IDBObjectStore.prototype.index = function(name) {};
 IDBObjectStore.prototype.deleteIndex = function(indexName) {};
 
 /**
- * @param {*=} key The key of this value.
+ * @param {IDBKeyType=} key The key of this value.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBObjectStore.prototype.count = function(key) {};
