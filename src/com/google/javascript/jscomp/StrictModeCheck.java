@@ -72,11 +72,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
       "JSC_DUPLICATE_OBJECT_KEY",
       "object literals cannot contain duplicate keys in ES5 strict mode");
 
-  static final DiagnosticType BAD_FUNCTION_DECLARATION = DiagnosticType.error(
-      "JSC_BAD_FUNCTION_DECLARATION",
-      "functions can only be declared at top level or immediately within " +
-      "another function in ES5 strict mode");
-
   private final AbstractCompiler compiler;
   private final boolean noVarCheck;
   private final boolean noCajaChecks;
@@ -99,9 +94,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   @Override public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isFunction()) {
-      checkFunctionUse(t, n);
-    } else if (n.isName()) {
+    if (n.isName()) {
       if (!isDeclaration(n)) {
         checkNameUse(t, n);
       }
@@ -113,13 +106,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
       checkObjectLiteral(t, n);
     } else if (n.isLabel()) {
       checkLabel(t, n);
-    }
-  }
-
-  /** Checks that the function is used legally. */
-  private void checkFunctionUse(NodeTraversal t, Node n) {
-    if (NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isHoistedFunctionDeclaration(n)) {
-      t.report(n, BAD_FUNCTION_DECLARATION);
     }
   }
 
