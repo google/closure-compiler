@@ -220,7 +220,8 @@ public class DiagnosticGroups {
           StrictModeCheck.ARGUMENTS_DECLARATION,
           StrictModeCheck.ARGUMENTS_ASSIGNMENT,
           StrictModeCheck.DELETE_VARIABLE,
-          StrictModeCheck.DUPLICATE_OBJECT_KEY);
+          StrictModeCheck.DUPLICATE_OBJECT_KEY,
+          StrictModeCheck.BAD_FUNCTION_DECLARATION);
 
   public static final DiagnosticGroup CHECK_PROVIDES =
       DiagnosticGroups.registerGroup("checkProvides",
