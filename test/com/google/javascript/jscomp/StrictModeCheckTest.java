@@ -215,4 +215,32 @@ public class StrictModeCheckTest extends CompilerTestCase {
         "  set appData(data) { this.appData_ = data; }\n" +
         "};");
   }
+
+  public void testFunctionDecl() {
+    testSame("function g() {}");
+    testSame("var g = function() {};");
+    testSame("(function() {})();");
+    testSame("(function() {});");
+    testSame(inFn("function g() {}"));
+    testSame(inFn("var g = function() {};"));
+    testSame(inFn("(function() {})();"));
+    testSame(inFn("(function() {});"));
+
+    test("{function g() {}}", null, StrictModeCheck.BAD_FUNCTION_DECLARATION);
+    testSame("{var g = function () {}}");
+    testSame("{(function g() {})()}");
+
+    test("var x;if (x) { function g(){} }", null,
+        StrictModeCheck.BAD_FUNCTION_DECLARATION);
+    testSame("var x;if (x) {var g = function () {}}");
+    testSame("var x;if (x) {(function g() {})()}");
+  }
+
+  public void testFunctionDecl2() {
+    test("{function g() {}}", null, StrictModeCheck.BAD_FUNCTION_DECLARATION);
+  }
+
+  private String inFn(String body) {
+    return "function func() {" + body + "}";
+  }
 }
