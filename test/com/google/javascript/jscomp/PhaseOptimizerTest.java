@@ -68,12 +68,12 @@ public class PhaseOptimizerTest extends TestCase {
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", 3);
     addLoopedPass(loop, "y", 1);
-    assertPasses("x", "y", "x", "y", "x", "y", "x", "y");
+    assertPasses("x", "y", "x", "y", "x", "x", "y");
   }
 
   public void testNotInfiniteLoop() {
     Loop loop = optimizer.addFixedPointLoop();
-    addLoopedPass(loop, "x", PhaseOptimizer.MAX_LOOPS);
+    addLoopedPass(loop, "x", PhaseOptimizer.MAX_LOOPS - 1);
     optimizer.process(null, null);
     assertEquals("There should be no errors.", 0, compiler.getErrorCount());
   }
@@ -95,7 +95,7 @@ public class PhaseOptimizerTest extends TestCase {
     addLoopedPass(loop, "x", 3);
     addLoopedPass(loop, "y", 1);
     addOneTimePass("z");
-    assertPasses("a", "x", "y", "x", "y", "x", "y", "x", "y", "z");
+    assertPasses("a", "x", "y", "x", "y", "x", "x", "y", "z");
   }
 
   public void testSanityCheck() {
@@ -116,7 +116,7 @@ public class PhaseOptimizerTest extends TestCase {
             createPassFactory("d", 1, false),
             createPassFactory("e", 1, true),
             createPassFactory("f", 0, true)));
-    assertPasses("a", "b", "c", "d", "b", "c", "d", "b", "c", "d", "e", "f");
+    assertPasses("a", "b", "c", "d", "b", "c", "d", "c", "b", "d", "e", "f");
   }
 
   public void testConsumption2() {
