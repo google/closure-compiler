@@ -151,6 +151,16 @@ public class CommandLineRunnerTest extends TestCase {
     test("function f() { this.a = 3; }", CheckGlobalThis.GLOBAL_THIS);
   }
 
+  public void testSimpleModeLeavesUnusedParams() {
+    args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
+    testSame("window.f = function(a) {};");
+  }
+
+  public void testAdvancedModeRemovesUnusedParams() {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    test("window.f = function(a) {};", "window.a = function() {};");
+  }
+
   public void testCheckGlobalThisOffByDefault() {
     testSame("function f() { this.a = 3; }");
   }
@@ -464,7 +474,7 @@ public class CommandLineRunnerTest extends TestCase {
     args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
     args.add("--debug=false");
     test("function foo(a) {}",
-         "function foo() {}");
+         "function foo(a) {}");
   }
 
   public void testDebugFlag2() {
@@ -747,7 +757,7 @@ public class CommandLineRunnerTest extends TestCase {
           "goog.provide('Scotch'); var x = 3;"
          },
          new String[] {
-           "var beer = {}; function f() {}",
+           "var beer = {}; function f(a) {}",
            ""
          });
 
@@ -756,7 +766,7 @@ public class CommandLineRunnerTest extends TestCase {
           "goog.provide('beer'); /** @param {Scotch} x */ function f(x) {}"
          },
          new String[] {
-           "var beer = {}; function f() {}",
+           "var beer = {}; function f(a) {}",
            ""
          },
          RhinoErrorReporter.TYPE_PARSE_ERROR);

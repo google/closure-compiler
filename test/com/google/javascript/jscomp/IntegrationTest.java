@@ -2356,7 +2356,7 @@ public class IntegrationTest extends IntegrationTestCase {
     String result = "" +
         "function some_function() {\n" +
         "  var a, b;\n" +
-        "  any_expression && (b = external_ref, a = function() {\n" +
+        "  any_expression && (b = external_ref, a = function(a) {\n" +
         "    return b()\n" +
         "  });\n" +
         "  return{method1:function() {\n" +

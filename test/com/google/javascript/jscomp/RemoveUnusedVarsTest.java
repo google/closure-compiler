@@ -244,20 +244,20 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   public void testRemoveGlobal1() {
     removeGlobal = false;
     testSame("var x=1");
-    test("var y=function(x){var z;}", "var y=function(){}");
+    test("var y=function(x){var z;}", "var y=function(x){}");
   }
 
   public void testRemoveGlobal2() {
     removeGlobal = false;
     testSame("var x=1");
-    test("function y(x){var z;}", "function y(){}");
+    test("function y(x){var z;}", "function y(x){}");
   }
 
   public void testRemoveGlobal3() {
     removeGlobal = false;
     testSame("var x=1");
     test("function x(){function y(x){var z;}y()}",
-         "function x(){function y(){}y()}");
+         "function x(){function y(x){}y()}");
   }
 
   public void testRemoveGlobal4() {
@@ -286,7 +286,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
          "function b(){" +
          "  a();" +
          "}",
-         "function a(){(function(){b()})(1)}" +
+         "function a(){(function(x){b()})(1)}" +
          "function b(){a()}");
   }
 
