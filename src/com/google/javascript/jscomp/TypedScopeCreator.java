@@ -1299,35 +1299,35 @@ final class TypedScopeCreator implements ScopeCreator {
         } else if (info.isConstructor() || info.isInterface()) {
           return createFunctionTypeFromNodes(
               rValue, lValue.getQualifiedName(), info, lValue);
-        } else {
-          // Check if this is constant, and if it has a known type.
-          if (info.isConstant()) {
-            JSType knownType = null;
-            if (rValue != null) {
-              JSDocInfo rValueInfo = rValue.getJSDocInfo();
-              if (rValueInfo != null && rValueInfo.hasType()) {
-                // If rValue has a type-cast, we use the type in the type-cast.
-                return rValueInfo.getType().evaluate(scope, typeRegistry);
-              } else if (rValue.getJSType() != null
-                  && !rValue.getJSType().isUnknownType()) {
-                // If rValue's type was already computed during scope creation,
-                // then we can safely use that.
-                return rValue.getJSType();
-              } else if (rValue.isOr()) {
-                // Check for a very specific JS idiom:
-                // var x = x || TYPE;
-                // This is used by Closure's base namespace for esoteric
-                // reasons.
-                Node firstClause = rValue.getFirstChild();
-                Node secondClause = firstClause.getNext();
-                boolean namesMatch = firstClause.isName()
-                    && lValue.isName()
-                    && firstClause.getString().equals(lValue.getString());
-                if (namesMatch && secondClause.getJSType() != null
-                    && !secondClause.getJSType().isUnknownType()) {
-                  return secondClause.getJSType();
-                }
-              }
+        }
+      }
+
+      // Check if this is constant, and if it has a known type.
+      if (isConstantSymbol(info, lValue)) {
+        JSType knownType = null;
+        if (rValue != null) {
+          JSDocInfo rValueInfo = rValue.getJSDocInfo();
+          if (rValueInfo != null && rValueInfo.hasType()) {
+            // If rValue has a type-cast, we use the type in the type-cast.
+            return rValueInfo.getType().evaluate(scope, typeRegistry);
+          } else if (rValue.getJSType() != null
+              && !rValue.getJSType().isUnknownType()) {
+            // If rValue's type was already computed during scope creation,
+            // then we can safely use that.
+            return rValue.getJSType();
+          } else if (rValue.isOr()) {
+            // Check for a very specific JS idiom:
+            // var x = x || TYPE;
+            // This is used by Closure's base namespace for esoteric
+            // reasons.
+            Node firstClause = rValue.getFirstChild();
+            Node secondClause = firstClause.getNext();
+            boolean namesMatch = firstClause.isName()
+                && lValue.isName()
+                && firstClause.getString().equals(lValue.getString());
+            if (namesMatch && secondClause.getJSType() != null
+                && !secondClause.getJSType().isUnknownType()) {
+              return secondClause.getJSType();
             }
           }
         }
@@ -1628,7 +1628,7 @@ final class TypedScopeCreator implements ScopeCreator {
       if (info != null) {
         inferred = !(info.hasType()
             || info.hasEnumParameterType()
-            || (info.isConstant() && valueType != null
+            || (isConstantSymbol(info, n) && valueType != null
                 && !valueType.isUnknownType())
             || FunctionTypeBuilder.isFunctionTypeDeclaration(info));
       }
@@ -1660,6 +1660,22 @@ final class TypedScopeCreator implements ScopeCreator {
         }
       }
       return inferred;
+    }
+
+    private boolean isConstantSymbol(JSDocInfo info, Node node) {
+      if (info != null && info.isConstant()) {
+        return true;
+      }
+
+      switch (node.getType()) {
+        case Token.NAME:
+          return NodeUtil.isConstantByConvention(
+              compiler.getCodingConvention(), node, node.getParent());
+        case Token.GETPROP:
+          return node.isQualifiedName() && NodeUtil.isConstantByConvention(
+              compiler.getCodingConvention(), node.getLastChild(), node);
+      }
+      return false;
     }
 
     /**

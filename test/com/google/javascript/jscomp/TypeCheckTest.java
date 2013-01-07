@@ -10597,6 +10597,28 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTemplateType5() throws Exception {
+    compiler.getOptions().setCodingConvention(new GoogleCodingConvention());
+    testTypes(
+        "var CGI_PARAM_RETRY_COUNT = 'rc';" +
+        "" +
+        "/**" +
+        " * @param {...T} p\n" +
+        " * @return {T} \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function fn(p) { return p; }\n" +
+        "/** @type {!Object} */ var x;" +
+        "" +
+        "/** @return {void} */\n" +
+        "function aScope() {\n" +
+        "  x = fn(CGI_PARAM_RETRY_COUNT, 1);\n" +
+        "}",
+        "assignment\n" +
+        "found   : (number|string)\n" +
+        "required: Object");
+  }
+
+  public void testTemplateType6() throws Exception {
     testTypes(
         "/**" +
         " * @param {Array.<T>} arr \n" +
@@ -10611,6 +10633,16 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "initializing variable\n" +
         "found   : number\n" +
         "required: Object");
+  }
+
+  public void testTemplateType7() throws Exception {
+    // TODO(johnlenz): As the @this type for Array.prototype.push includes
+    // "{length:number}" (and this includes "Array.<number>") we don't
+    // get a type warning here. Consider special-casing array methods.
+    testTypes(
+        "/** @type {!Array.<string>} */\n" +
+        "var query = [];\n" +
+        "query.push(1);\n");
   }
 
   public void disable_testBadTemplateType4() throws Exception {

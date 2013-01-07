@@ -2803,21 +2803,15 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true if a name node represents a constant variable.
-   *
-   * <p>Determining whether a variable is constant has three steps:
+   * <p>Determines whether a variable is constant:
    * <ol>
-   * <li>In CodingConventionAnnotator, any name that matches the
+   * <li>In Normalize, any name that matches the
    *     {@link CodingConvention#isConstant(String)} is annotated with an
    *     IS_CONSTANT_NAME property.
-   * <li>The normalize pass renames any variable with the IS_CONSTANT_NAME
-   *     annotation and that is initialized to a constant value with
-   *     a variable name including $$constant.
-   * <li>Return true here if the variable includes $$constant in its name.
    * </ol>
    *
    * @param node A NAME or STRING node
-   * @return True if the variable is constant
+   * @return True if a name node represents a constant variable
    */
   static boolean isConstantName(Node node) {
     return node.getBooleanProp(Node.IS_CONSTANT_NAME);
@@ -2826,15 +2820,14 @@ public final class NodeUtil {
   /** Whether the given name is constant by coding convention. */
   static boolean isConstantByConvention(
       CodingConvention convention, Node node, Node parent) {
-    String name = node.getString();
-    if (parent.isGetProp() &&
-        node == parent.getLastChild()) {
-      return convention.isConstantKey(name);
+    if (parent.isGetProp() && node == parent.getLastChild()) {
+      return convention.isConstantKey(node.getString());
     } else if (isObjectLitKey(node, parent)) {
-      return convention.isConstantKey(name);
-    } else {
-      return convention.isConstant(name);
+      return convention.isConstantKey(node.getString());
+    } else if (node.isName()) {
+      return convention.isConstant(node.getString());
     }
+    return false;
   }
 
   /**
