@@ -1197,7 +1197,7 @@ angular.NgModelController.prototype.$valid;
 /**
  * @type {!Array.<function()>}
  */
-angular.NgModelController.prototype.$viewChangeListener;
+angular.NgModelController.prototype.$viewChangeListeners;
 
 /**
  * @type {?}
