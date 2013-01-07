@@ -36,13 +36,13 @@ public class DefaultCodingConventionTest extends TestCase {
         Node.newString(Token.NAME, "opt_b"));
 
     assertFalse(conv.isVarArgsParameter(args.getFirstChild()));
-    assertTrue(conv.isVarArgsParameter(args.getLastChild()));
+    assertFalse(conv.isVarArgsParameter(args.getLastChild()));
     assertFalse(conv.isVarArgsParameter(optArgs.getFirstChild()));
-    assertTrue(conv.isVarArgsParameter(optArgs.getLastChild()));
+    assertFalse(conv.isVarArgsParameter(optArgs.getLastChild()));
 
-    assertTrue(conv.isOptionalParameter(args.getFirstChild()));
+    assertFalse(conv.isOptionalParameter(args.getFirstChild()));
     assertFalse(conv.isOptionalParameter(args.getLastChild()));
-    assertTrue(conv.isOptionalParameter(optArgs.getFirstChild()));
+    assertFalse(conv.isOptionalParameter(optArgs.getFirstChild()));
     assertFalse(conv.isOptionalParameter(optArgs.getLastChild()));
   }
 

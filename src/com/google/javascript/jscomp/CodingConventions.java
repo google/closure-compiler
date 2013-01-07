@@ -269,13 +269,13 @@ public class CodingConventions {
     public boolean isOptionalParameter(Node parameter) {
       // be as lax as possible, but this must be mutually exclusive from
       // var_args parameters.
-      return !isVarArgsParameter(parameter);
+      return false;
     }
 
     @Override
     public boolean isVarArgsParameter(Node parameter) {
       // be as lax as possible
-      return parameter.getParent().getLastChild() == parameter;
+      return false;
     }
 
     @Override
