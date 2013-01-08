@@ -62,7 +62,6 @@ class IgnoreCajaProperties implements CompilerPass {
         Node tmp = IR.name(
             "JSCompiler_IgnoreCajaProperties_" + counter++);
         n.addChildToFront(IR.var(tmp));
-        Node assignment;
         Node ifBody;
 
         // Construct the body of the if statement.

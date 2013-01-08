@@ -230,8 +230,7 @@ class ExpressionDecomposer {
     } else {
       Node parent = nonconditionalExpr.getParent();
       boolean needResult = !parent.isExprResult();
-      Node extractedConditional = extractConditional(
-          nonconditionalExpr, exprInjectionPoint, needResult);
+      extractConditional(nonconditionalExpr, exprInjectionPoint, needResult);
     }
   }
 
@@ -305,7 +304,7 @@ class ExpressionDecomposer {
     }
 
     // Never try to decompose an object literal key.
-    Preconditions.checkState(!NodeUtil.isObjectLitKey(n, n.getParent()));
+    Preconditions.checkState(!NodeUtil.isObjectLitKey(n));
 
     // Decompose the children in reverse evaluation order.  This simplifies
     // determining if the any of the children following have side-effects.
@@ -759,8 +758,6 @@ class ExpressionDecomposer {
             ? DecompositionType.DECOMPOSABLE
             : DecompositionType.MOVABLE;
       }
-
-      int parentType = parent.getType();
 
       if (isConditionalOp(parent)) {
         // Only the first child is always executed, otherwise it must be

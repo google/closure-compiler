@@ -791,7 +791,7 @@ class GlobalNamespace
         }
       }
 
-      if (parent != null && NodeUtil.isObjectLitKey(n, parent)) {
+      if (parent != null && NodeUtil.isObjectLitKey(n)) {
         // Object literal keys have no prefix that's referenced directly per
         // key, so we're done.
         return true;
@@ -1032,7 +1032,6 @@ class GlobalNamespace
     boolean isSimpleStubDeclaration() {
       if (getRefs().size() == 1) {
         Ref ref = refs.get(0);
-        JSDocInfo info = ref.node.getJSDocInfo();
         if (ref.node.getParent() != null &&
             ref.node.getParent().isExprResult()) {
           return true;

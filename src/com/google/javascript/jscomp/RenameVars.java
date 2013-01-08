@@ -363,14 +363,12 @@ final class RenameVars implements CompilerPass {
     }
 
     // Rename the locals!
-    int count = 0;
     for (Node n : localNameNodes) {
       String newName = getNewLocalName(n);
       if (newName != null) {
         n.setString(newName);
         changed = true;
       }
-      count++;
     }
 
     if (changed) {

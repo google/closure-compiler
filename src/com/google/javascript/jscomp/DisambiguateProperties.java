@@ -315,7 +315,6 @@ class DisambiguateProperties<T> implements CompilerPass {
       addInvalidatingType(mis.typeB, mis.src);
     }
 
-    StaticScope<T> scope = typeSystem.getRootScope();
     NodeTraversal.traverse(compiler, externs, new FindExternProperties());
     NodeTraversal.traverse(compiler, root, new FindRenameableProperties());
     renameProperties();
@@ -781,6 +780,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       if (type.isUnionType()) {
         Set<JSType> types = Sets.newHashSet(type);
         for (JSType alt : type.toMaybeUnionType().getAlternates()) {
+          // TODO(johnlenz): shouldn't we use "alt" here?
           types.addAll(getTypesToSkipForTypeNonUnion(type));
         }
         return ImmutableSet.copyOf(types);

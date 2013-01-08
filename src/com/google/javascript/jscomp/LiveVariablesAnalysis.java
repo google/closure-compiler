@@ -204,7 +204,6 @@ class LiveVariablesAnalysis extends
         } else {
           // for(x in y) {...}
           Node lhs = n.getFirstChild();
-          Node rhs = lhs.getNext();
           if (lhs.isVar()) {
             // for(var x in y) {...}
             lhs = lhs.getLastChild();

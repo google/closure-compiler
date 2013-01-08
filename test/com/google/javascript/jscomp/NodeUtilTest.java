@@ -267,7 +267,7 @@ public class NodeUtilTest extends TestCase {
   }
 
   private void testIsObjectLiteralKey(Node node, boolean expected) {
-    assertEquals(expected, NodeUtil.isObjectLitKey(node, node.getParent()));
+    assertEquals(expected, NodeUtil.isObjectLitKey(node));
   }
 
   public void testGetFunctionName1() throws Exception {

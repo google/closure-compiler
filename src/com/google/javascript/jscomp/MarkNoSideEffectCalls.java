@@ -135,8 +135,6 @@ class MarkNoSideEffectCalls implements CompilerPass {
         List<Node> nameNodes = Lists.newArrayList();
         nameNodes.add(node.getFirstChild());
 
-        Node nameNode = null;
-
         if (parent.isName()) {
           Node gramp = parent.getParent();
           if (gramp.isVar() &&

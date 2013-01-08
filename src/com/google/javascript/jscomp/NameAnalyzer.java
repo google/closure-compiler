@@ -640,7 +640,7 @@ final class NameAnalyzer implements CompilerPass {
             JsName nameInfo = getName(nameNode.getString(), true);
             recordSet(nameInfo.name, nameNode);
           }
-        } else if (NodeUtil.isObjectLitKey(n, parent)) {
+        } else if (NodeUtil.isObjectLitKey(n)) {
           NameInformation ns = createNameInformation(t, n);
           if (ns != null) {
             recordSet(ns.name, n);
@@ -916,7 +916,7 @@ final class NameAnalyzer implements CompilerPass {
       // can be an alias to global object.
       // Here we add a alias to the general "global" object
       // to act as a placeholder for the actual (unnamed) value.
-      if (maybeHiddenAlias(name, n)) {
+      if (maybeHiddenAlias(n)) {
         recordAlias(name, WINDOW);
       }
 
@@ -987,7 +987,7 @@ final class NameAnalyzer implements CompilerPass {
      * prevent the removal of the function and its dependent values, but won't
      * prevent the alias' removal.
      */
-    private boolean maybeHiddenAlias(String name, Node n) {
+    private boolean maybeHiddenAlias(Node n) {
       Node parent = n.getParent();
       if (NodeUtil.isVarOrSimpleAssignLhs(n, parent)) {
         Node rhs = (parent.isVar())
@@ -1411,8 +1411,7 @@ final class NameAnalyzer implements CompilerPass {
           name = "";
         }
         rootNameNode = rootNameNode.getFirstChild();
-      } else if (NodeUtil.isObjectLitKey(
-          rootNameNode, rootNameNode.getParent())) {
+      } else if (NodeUtil.isObjectLitKey(rootNameNode)) {
         name = "." + rootNameNode.getString() + name;
 
         // Check if this is an object literal assigned to something.

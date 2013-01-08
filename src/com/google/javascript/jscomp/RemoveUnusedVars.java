@@ -546,7 +546,6 @@ class RemoveUnusedVars
         if (isModifiableCallSite(site)) {
           Node arg = getArgumentForCallOrNewOrDotCall(site, argIndex);
           if (arg != null) {
-            Node argParent = arg.getParent();
             // Even if we can't change the signature in general we can always
             // remove an unused value off the end of the parameter list.
             if (canModifyAllSites
@@ -802,8 +801,6 @@ class RemoveUnusedVars
    * assignments to those variables as well.
    */
   private void removeUnreferencedVars() {
-    CodingConvention convention = codingConvention;
-
     for (Iterator<Var> it = maybeUnreferenced.iterator(); it.hasNext(); ) {
       Var var = it.next();
 

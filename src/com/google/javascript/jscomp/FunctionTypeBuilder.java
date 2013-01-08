@@ -445,7 +445,6 @@ final class FunctionTypeBuilder {
     Set<String> allJsDocParams = (info == null) ?
         Sets.<String>newHashSet() :
         Sets.newHashSet(info.getParameterNames());
-    boolean foundTemplateType = false;
     boolean isVarArgs = false;
     for (Node arg : argsParent.children()) {
       String argumentName = arg.getString();

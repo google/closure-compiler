@@ -368,7 +368,7 @@ class CollapseProperties implements CompilerPass {
       // 2) References inside a complex assign. (a = x.y = 0). These are
       //    called TWIN references, because they show up twice in the
       //    reference list. Only collapse the set, not the alias.
-      if (!NodeUtil.isObjectLitKey(r.node, rParent) &&
+      if (!NodeUtil.isObjectLitKey(r.node) &&
           (r.getTwin() == null || r.isSet())) {
         flattenNameRef(alias, r.node, rParent, originalName);
       }
@@ -439,7 +439,7 @@ class CollapseProperties implements CompilerPass {
     // proceeding. In the OBJLIT case, we don't need to do anything.
     int nType = n.getType();
     boolean isQName = nType == Token.NAME || nType == Token.GETPROP;
-    boolean isObjKey = NodeUtil.isObjectLitKey(n, n.getParent());
+    boolean isObjKey = NodeUtil.isObjectLitKey(n);
     Preconditions.checkState(isObjKey || isQName);
     if (isQName) {
       for (int i = 1; i < depth && n.hasChildren(); i++) {
@@ -537,7 +537,6 @@ class CollapseProperties implements CompilerPass {
     Node parent = ref.node.getParent();
     Node gramps = parent.getParent();
     Node greatGramps = gramps.getParent();
-    Node greatGreatGramps = greatGramps.getParent();
 
     if (rvalue != null && rvalue.isFunction()) {
       checkForHosedThisReferences(rvalue, refName.docInfo, refName);

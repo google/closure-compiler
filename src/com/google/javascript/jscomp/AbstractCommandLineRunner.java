@@ -205,10 +205,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     return compiler.getDiagnosticGroups();
   }
 
-  /** No longer does anything. */
-  @Deprecated
-  protected void initOptionsFromFlags(CompilerOptions options) {}
-
   /**
    * A helper function for creating the dependency options object.
    */
@@ -885,7 +881,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       }
 
       // Output the variable and property name maps if requested.
-      outputNameMaps(options);
+      outputNameMaps();
 
       // Output the manifest and bundle files if requested.
       outputManifest();
@@ -1221,7 +1217,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * Outputs the variable and property name maps for the specified compiler if
    * the proper FLAGS are set.
    */
-  private void outputNameMaps(B options) throws FlagUsageException,
+  private void outputNameMaps() throws FlagUsageException,
       IOException {
 
     String propertyMapOutputPath = null;
@@ -1423,7 +1419,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     if (config.outputModuleDependencies != null &&
         config.outputModuleDependencies != "") {
       Writer out = fileNameToOutputWriter2(config.outputModuleDependencies);
-      printModuleGraphJsonTo(compiler.getDegenerateModuleGraph(), out);
+      printModuleGraphJsonTo(out);
       out.close();
     }
   }
@@ -1432,8 +1428,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * Prints the current module graph as JSON.
    */
   @VisibleForTesting
-  void printModuleGraphJsonTo(JSModuleGraph graph,
-      Appendable out) throws IOException {
+  void printModuleGraphJsonTo(Appendable out) throws IOException {
     out.append(compiler.getDegenerateModuleGraph().toJson().toString());
   }
 

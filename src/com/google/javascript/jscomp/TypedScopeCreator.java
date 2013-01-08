@@ -364,7 +364,6 @@ final class TypedScopeCreator implements ScopeCreator {
 
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
-      Node nameNode = null;
       switch (node.getType()) {
         case Token.VAR:
           for (Node child = node.getFirstChild();
@@ -516,7 +515,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
       switch (n.getType()) {
         case Token.CALL:
-          checkForClassDefiningCalls(t, n, parent);
+          checkForClassDefiningCalls(t, n);
           checkForCallingConventionDefiningCalls(n, delegateCallingConventions);
           break;
 
@@ -693,7 +692,6 @@ final class TypedScopeCreator implements ScopeCreator {
 
         if (keyType != null && objLitType != null && declareOnOwner) {
           // Declare this property on its object literal.
-          boolean isExtern = keyNode.isFromExterns();
           objLitType.defineDeclaredProperty(memberName, keyType, keyNode);
         }
       }
@@ -705,13 +703,8 @@ final class TypedScopeCreator implements ScopeCreator {
      * Extracts type information from either the {@code @type} tag or from
      * the {@code @return} and {@code @param} tags.
      */
-    private JSType getDeclaredTypeInAnnotation(String sourceName,
-        Node node, JSDocInfo info) {
+    private JSType getDeclaredTypeInAnnotation(Node node, JSDocInfo info) {
       JSType jsType = null;
-      Node objNode =
-          node.isGetProp() ? node.getFirstChild() :
-          NodeUtil.isObjectLitKey(node, node.getParent()) ? node.getParent() :
-          null;
       if (info != null) {
         if (info.hasType()) {
           jsType = info.getType().evaluate(scope, typeRegistry);
@@ -822,7 +815,7 @@ final class TypedScopeCreator implements ScopeCreator {
         return true;
       }
       if (lValue != null &&
-          NodeUtil.isObjectLitKey(lValue, lValue.getParent())) {
+          NodeUtil.isObjectLitKey(lValue)) {
         return false;
       }
       return scope.isGlobal() || !type.isReturnTypeInferred();
@@ -882,7 +875,6 @@ final class TypedScopeCreator implements ScopeCreator {
         Node fnRoot = isFnLiteral ? rValue : null;
         Node parametersNode = isFnLiteral ?
             rValue.getFirstChild().getNext() : null;
-        Node fnBlock = isFnLiteral ? parametersNode.getNext() : null;
 
         if (info != null && info.hasType()) {
           JSType type = info.getType().evaluate(scope, typeRegistry);
@@ -1130,7 +1122,6 @@ final class TypedScopeCreator implements ScopeCreator {
 
       // The input may be null if we are working with a AST snippet. So read
       // the extern info from the node.
-      boolean isExtern = n.isFromExterns();
       Var newVar = null;
 
       // declared in closest scope?
@@ -1283,7 +1274,7 @@ final class TypedScopeCreator implements ScopeCreator {
     private JSType getDeclaredType(String sourceName, JSDocInfo info,
         Node lValue, @Nullable Node rValue) {
       if (info != null && info.hasType()) {
-        return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+        return getDeclaredTypeInAnnotation(lValue, info);
       } else if (rValue != null && rValue.isFunction() &&
           shouldUseFunctionLiteralType(
               JSType.toMaybeFunctionType(rValue.getJSType()), info, lValue)) {
@@ -1304,7 +1295,6 @@ final class TypedScopeCreator implements ScopeCreator {
 
       // Check if this is constant, and if it has a known type.
       if (isConstantSymbol(info, lValue)) {
-        JSType knownType = null;
         if (rValue != null) {
           JSDocInfo rValueInfo = rValue.getJSDocInfo();
           if (rValueInfo != null && rValueInfo.hasType()) {
@@ -1333,7 +1323,7 @@ final class TypedScopeCreator implements ScopeCreator {
         }
       }
 
-      return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+      return getDeclaredTypeInAnnotation(lValue, info);
     }
 
     private FunctionType getFunctionType(@Nullable Var v) {
@@ -1356,8 +1346,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * Because JS has no 'native' syntax for defining classes,
      * this is often very coding-convention dependent and business-logic heavy.
      */
-    private void checkForClassDefiningCalls(
-        NodeTraversal t, Node n, Node parent) {
+    private void checkForClassDefiningCalls(NodeTraversal t, Node n) {
       SubclassRelationship relationship =
           codingConvention.getClassesDefinedByCall(n);
       if (relationship != null) {
@@ -1966,7 +1955,6 @@ final class TypedScopeCreator implements ScopeCreator {
         iifeArgumentNode = functionNode.getNext();
       }
 
-      Node body = astParameters.getNext();
       FunctionType functionType =
           JSType.toMaybeFunctionType(functionNode.getJSType());
       if (functionType != null) {

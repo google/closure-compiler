@@ -928,8 +928,7 @@ public class CommandLineRunnerTest extends TestCase {
         "var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
-    lastCommandLineRunner.printModuleGraphJsonTo(
-        lastCompiler.getModuleGraph(), builder);
+    lastCommandLineRunner.printModuleGraphJsonTo(builder);
     assertTrue(builder.toString().indexOf("transitive-dependencies") != -1);
   }
 

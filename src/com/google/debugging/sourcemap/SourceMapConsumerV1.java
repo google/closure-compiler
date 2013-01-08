@@ -156,7 +156,6 @@ public class SourceMapConsumerV1 implements SourceMapConsumer {
       LineFragment myLineFragment = null;
 
       JSONArray charArray = new JSONArray(currentLine);
-      int numOffsets = charArray.length();
       int lastID = -1;
       int startID = Integer.MIN_VALUE;
       List<Byte> currentOffsets = Lists.newArrayList();

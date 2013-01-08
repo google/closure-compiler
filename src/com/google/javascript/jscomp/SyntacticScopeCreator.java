@@ -73,7 +73,7 @@ class SyntacticScopeCreator implements ScopeCreator {
       scope = new Scope(parent, n);
     }
 
-    scanRoot(n, parent);
+    scanRoot(n);
 
     inputId = null;
     Scope returnedScope = scope;
@@ -81,7 +81,7 @@ class SyntacticScopeCreator implements ScopeCreator {
     return returnedScope;
   }
 
-  private void scanRoot(Node n, Scope parent) {
+  private void scanRoot(Node n) {
     if (n.isFunction()) {
       if (inputId == null) {
         inputId = NodeUtil.getInputId(n);
@@ -110,18 +110,18 @@ class SyntacticScopeCreator implements ScopeCreator {
       }
 
       // Body
-      scanVars(body, n);
+      scanVars(body);
     } else {
       // It's the global block
       Preconditions.checkState(scope.getParent() == null);
-      scanVars(n, null);
+      scanVars(n);
     }
   }
 
   /**
    * Scans and gather variables declarations under a Node
    */
-  private void scanVars(Node n, Node parent) {
+  private void scanVars(Node n) {
     switch (n.getType()) {
       case Token.VAR:
         // Declare all variables. e.g. var x = 1, y, z;
@@ -156,7 +156,7 @@ class SyntacticScopeCreator implements ScopeCreator {
         final Node block = var.getNext();
 
         declareVar(var);
-        scanVars(block, n);
+        scanVars(block);
         return;  // only one child to scan
 
       case Token.SCRIPT:
@@ -171,7 +171,7 @@ class SyntacticScopeCreator implements ScopeCreator {
       for (Node child = n.getFirstChild();
            child != null;) {
         Node next = child.getNext();
-        scanVars(child, n);
+        scanVars(child);
         child = next;
       }
     }

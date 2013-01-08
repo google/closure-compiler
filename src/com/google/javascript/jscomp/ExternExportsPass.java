@@ -267,11 +267,6 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
         return;
       }
 
-      /* We must get the JSDocInfo from the function's type since the function
-       * itself does not have an associated JSDocInfo node.
-       */
-      JSDocInfo functionJSDocInfo = functionType.getJSDocInfo();
-
       JSType returnType = functionType.getReturnType();
 
       /* It is OK if a constructor doesn't have a return type */

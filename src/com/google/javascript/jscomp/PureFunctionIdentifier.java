@@ -613,7 +613,7 @@ class PureFunctionIdentifier implements CompilerPass {
         FunctionType functionType = JSType.toMaybeFunctionType(jstype);
         if (functionType != null) {
           JSType jstypeReturn = functionType.getReturnType();
-          if (isLocalValueType(jstypeReturn, true)) {
+          if (isLocalValueType(jstypeReturn)) {
             knownLocalResult = true;
           }
         }
@@ -669,7 +669,7 @@ class PureFunctionIdentifier implements CompilerPass {
     /**
      * @return Whether the jstype is something known to be a local value.
      */
-    private boolean isLocalValueType(JSType jstype, boolean recurse) {
+    private boolean isLocalValueType(JSType jstype) {
       Preconditions.checkNotNull(jstype);
       JSType subtype =  jstype.getGreatestSubtype(
           compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE));
@@ -809,7 +809,6 @@ class PureFunctionIdentifier implements CompilerPass {
             // null or undefined. We don't need to worry about this with a
             // direct method call because null and undefined don't have any
             // properties.
-            String name = objectNode.getString();
 
             // TODO(nicksantos): Turn this back on when locals-tracking
             // is fixed. See testLocalizedSideEffects11.

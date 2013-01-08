@@ -1386,7 +1386,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   private Node tryFoldArrayAccess(Node n, Node left, Node right) {
-    Node parent = n.getParent();
     // If GETPROP/GETELEM is used as assignment target the array literal is
     // acting as a temporary we can't fold it here:
     //    "[][0] += 1"

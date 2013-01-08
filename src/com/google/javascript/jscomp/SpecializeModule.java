@@ -268,8 +268,6 @@ class SpecializeModule implements CompilerPass {
 
       original.removeChildren();
 
-      List<Node> specializedChildren = Lists.newLinkedList();
-
       while (specialized.getFirstChild() != null) {
         original.addChildToBack(specialized.removeFirstChild());
       }
@@ -302,7 +300,6 @@ class SpecializeModule implements CompilerPass {
          // anything with prototype property requires no dummy declaration
          // fix-ups afterward.
          if (block != null) {
-           Node originalRoot = specializedInputRootsByOriginal.get(block);
            block.addChildrenToBack(originalInfo.generateDummyDeclaration());
          }
        }

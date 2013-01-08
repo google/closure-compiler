@@ -372,7 +372,7 @@ class Normalize implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      doStatementNormalizations(t, n, parent);
+      doStatementNormalizations(t, n);
 
       return true;
     }
@@ -426,7 +426,7 @@ class Normalize implements CompilerPass {
       // There are only two cases where a string token
       // may be a variable reference: The right side of a GETPROP
       // or an OBJECTLIT key.
-      boolean isObjLitKey = NodeUtil.isObjectLitKey(n, parent);
+      boolean isObjLitKey = NodeUtil.isObjectLitKey(n);
       boolean isProperty = isObjLitKey ||
           (parent.isGetProp() &&
            parent.getLastChild() == n);
@@ -500,7 +500,7 @@ class Normalize implements CompilerPass {
      * Do normalizations that introduce new siblings or parents.
      */
     private void doStatementNormalizations(
-        NodeTraversal t, Node n, Node parent) {
+        NodeTraversal t, Node n) {
       if (n.isLabel()) {
         normalizeLabels(n);
       }

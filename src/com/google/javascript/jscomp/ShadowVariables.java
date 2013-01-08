@@ -198,7 +198,7 @@ class ShadowVariables implements CompilerPass {
         }
 
         // Try to look for the best shadow for the current candidate.
-        Assignment bestShadow = findBestShadow(s, var);
+        Assignment bestShadow = findBestShadow(s);
         if (bestShadow == null) {
           continue;
         }
@@ -234,7 +234,7 @@ class ShadowVariables implements CompilerPass {
      * @returns An assignment that can be used as a shadow for a local variable
      *     in the scope defined by curScopeRoot.
      */
-    private Assignment findBestShadow(Scope curScope, Var candidate) {
+    private Assignment findBestShadow(Scope curScope) {
       // Search for the candidate starting from the most used local.
       for (Assignment assignment : varsByFrequency) {
         if (assignment.oldName.startsWith(RenameVars.LOCAL_VAR_PREFIX)) {

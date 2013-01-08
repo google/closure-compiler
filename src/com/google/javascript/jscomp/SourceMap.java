@@ -90,7 +90,7 @@ public class SourceMap {
             || node.isFunction()
             || node.isName()
             || NodeUtil.isGet(node)
-            || NodeUtil.isObjectLitKey(node, node.getParent())
+            || NodeUtil.isObjectLitKey(node)
             || (node.isString() && NodeUtil.isGet(node.getParent()));
       }
     };

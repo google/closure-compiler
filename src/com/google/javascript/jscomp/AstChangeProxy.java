@@ -112,20 +112,15 @@ class AstChangeProxy {
       Node block = IR.block();
       for (Node newChild : replacements) {
         newChild.copyInformationFrom(node);
-        Node oldParent = newChild.getParent();
         block.addChildToBack(newChild);
       }
-
       parent.replaceChild(node, block);
-
     } else {
       for (Node newChild : replacements) {
         newChild.copyInformationFrom(node);
-        Node oldParent = newChild.getParent();
         parent.addChildBefore(newChild, node);
       }
       parent.removeChild(node);
-
     }
     notifyOfRemoval(node);
   }

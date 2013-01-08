@@ -98,7 +98,6 @@ class RemoveTryCatch implements CompilerPass {
           break;
 
         case Token.RETURN:
-          boolean isInTryBlock = false;
           for (Node anc = parent;
                anc != null && !anc.isFunction();
                anc = anc.getParent()) {

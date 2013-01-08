@@ -970,7 +970,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     JSType leftType = getJSType(lvalue);
     if (lvalue.isQualifiedName()) {
       // variable with inferred type case
-      JSType rvalueType = getJSType(assign.getLastChild());
       Var var = t.getScope().getVar(lvalue.getQualifiedName());
       if (var != null) {
         if (var.isTypeInferred()) {

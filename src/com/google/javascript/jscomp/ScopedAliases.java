@@ -302,7 +302,6 @@ class ScopedAliases implements HotSwapCompilerPass {
       Scope scope = t.getScope();
       for (Var v : scope.getVarIterable()) {
         Node n = v.getNode();
-        int type = n.getType();
         Node parent = n.getParent();
         if (parent.isVar() &&
             n.hasChildren() && n.getFirstChild().isQualifiedName()) {

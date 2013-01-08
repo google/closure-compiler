@@ -138,7 +138,6 @@ class FunctionArgumentInjector {
 
     // Add temp names for arguments that don't have named parameters in the
     // called function.
-    int anonArg = 0;
     while (cArg != null) {
       String uniquePlaceholder =
         getUniqueAnonymousParameterName(safeNameIdSupplier);

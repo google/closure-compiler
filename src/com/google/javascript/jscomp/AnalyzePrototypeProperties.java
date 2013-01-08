@@ -392,7 +392,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       if (lValue == null ||
           lValue.getParent() == null ||
           lValue.getParent().getParent() == null ||
-          !(NodeUtil.isObjectLitKey(lValue, lValue.getParent()) ||
+          !(NodeUtil.isObjectLitKey(lValue) ||
             NodeUtil.isExprAssign(lValue.getParent().getParent()))) {
         return null;
       }

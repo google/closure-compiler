@@ -518,7 +518,7 @@ class TypeValidator {
     Var newVar = var;
     boolean allowDupe = false;
     if (n.isGetProp() ||
-        NodeUtil.isObjectLitKey(n, parent)) {
+        NodeUtil.isObjectLitKey(n)) {
       JSDocInfo info = n.getJSDocInfo();
       if (info == null) {
         info = parent.getJSDocInfo();

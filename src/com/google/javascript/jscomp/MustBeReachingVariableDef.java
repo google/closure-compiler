@@ -163,8 +163,6 @@ final class MustBeReachingVariableDef extends
           continue;
         }
 
-        Node aNode = aDef.node;
-
         if (b.reachingDef.containsKey(var)) {
           Definition bDef = b.reachingDef.get(var);
 

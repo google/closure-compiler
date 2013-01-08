@@ -933,7 +933,6 @@ public class Compiler extends AbstractCompiler {
     Preconditions.checkState(currentTracer != null,
         "Tracer should not be null at the end of a pass.");
     stopTracer(currentTracer, currentPassName);
-    String passToCheck = currentPassName;
     currentPassName = null;
     currentTracer = null;
 

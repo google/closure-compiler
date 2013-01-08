@@ -188,7 +188,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
     final JSModule module;
     final Node node;
 
-    Declaration(JSModule module, Node node, Node parent, Node gramps) {
+    Declaration(JSModule module, Node node) {
       this.module = module;
       this.node = node;
     }
@@ -335,14 +335,14 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
       case Token.VAR:
         if (canMoveValue(name.getFirstChild())) {
           return info.addDeclaration(
-              new Declaration(t.getModule(), name, parent, gramps));
+              new Declaration(t.getModule(), name));
         }
         return false;
 
       case Token.FUNCTION:
         if (NodeUtil.isFunctionDeclaration(parent)) {
           return info.addDeclaration(
-              new Declaration(t.getModule(), name, parent, gramps));
+              new Declaration(t.getModule(), name));
         }
         return false;
 
@@ -361,8 +361,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
             if (currentParent.isExprResult() &&
                 canMoveValue(current.getLastChild())) {
               return info.addDeclaration(
-                  new Declaration(t.getModule(), current, currentParent,
-                      currentParent.getParent()));
+                  new Declaration(t.getModule(), current));
             }
           } else {
             return false;
@@ -379,8 +378,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
           if (relationship != null &&
               name.getString().equals(relationship.subclassName)) {
             return info.addDeclaration(
-                new Declaration(t.getModule(), parent, gramps,
-                    gramps.getParent()));
+                new Declaration(t.getModule(), parent));
           }
         }
         return false;

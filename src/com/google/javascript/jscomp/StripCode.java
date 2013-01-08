@@ -366,7 +366,6 @@ class StripCode implements CompilerPass {
       Node key = n.getFirstChild();
       while (key != null) {
         if (isStripName(key.getString())) {
-          Node value = key.getFirstChild();
           Node next = key.getNext();
           n.removeChild(key);
           key = next;

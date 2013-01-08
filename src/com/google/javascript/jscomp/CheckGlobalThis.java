@@ -110,7 +110,7 @@ final class CheckGlobalThis implements Callback {
 
       // Don't traverse functions that are getting lent to a prototype.
       Node gramps = parent.getParent();
-      if (NodeUtil.isObjectLitKey(parent, gramps)) {
+      if (NodeUtil.isObjectLitKey(parent)) {
         JSDocInfo maybeLends = gramps.getJSDocInfo();
         if (maybeLends != null &&
             maybeLends.getLendsName() != null &&
@@ -122,7 +122,6 @@ final class CheckGlobalThis implements Callback {
 
     if (parent != null && parent.isAssign()) {
       Node lhs = parent.getFirstChild();
-      Node rhs = lhs.getNext();
 
       if (n == lhs) {
         // Always traverse the left side of the assignment. To handle
@@ -153,7 +152,7 @@ final class CheckGlobalThis implements Callback {
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isThis() && shouldReportThis(n, parent)) {
+    if (n.isThis() && shouldReportThis(n)) {
       compiler.report(t.makeError(n, GLOBAL_THIS));
     }
     if (n == assignLhsChild) {
@@ -161,7 +160,8 @@ final class CheckGlobalThis implements Callback {
     }
   }
 
-  private boolean shouldReportThis(Node n, Node parent) {
+  private boolean shouldReportThis(Node n) {
+    Node parent = n.getParent();
     if (assignLhsChild != null) {
       // Always report a THIS on the left side of an assign.
       return true;

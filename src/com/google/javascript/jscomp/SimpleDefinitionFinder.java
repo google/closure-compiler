@@ -422,7 +422,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
         return parent;
       } else if (parent.isAssign()) {
         return parent.getFirstChild();
-      } else if (NodeUtil.isObjectLitKey(parent, parent.getParent())) {
+      } else if (NodeUtil.isObjectLitKey(parent)) {
         return parent;
       }
     }

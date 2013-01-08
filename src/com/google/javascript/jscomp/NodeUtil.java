@@ -247,8 +247,6 @@ public final class NodeUtil {
   static String arrayToString(Node literal) {
     Node first = literal.getFirstChild();
     StringBuilder result = new StringBuilder();
-    int nextSlot = 0;
-    int nextSkipSlot = 0;
     for (Node n = first; n != null; n = n.getNext()) {
       String childValue = getArrayElementStringValue(n);
       if (childValue == null) {
@@ -258,8 +256,6 @@ public final class NodeUtil {
         result.append(',');
       }
       result.append(childValue);
-
-      nextSlot++;
     }
     return result.toString();
   }
@@ -2068,9 +2064,8 @@ public final class NodeUtil {
    * (e.g. key1 in {key1: value1, key2: value2}).
    *
    * @param node A node
-   * @param parent The node's parent
    */
-  static boolean isObjectLitKey(Node node, Node parent) {
+  static boolean isObjectLitKey(Node node) {
     switch (node.getType()) {
       case Token.STRING_KEY:
       case Token.GETTER_DEF:
@@ -2822,7 +2817,7 @@ public final class NodeUtil {
       CodingConvention convention, Node node, Node parent) {
     if (parent.isGetProp() && node == parent.getLastChild()) {
       return convention.isConstantKey(node.getString());
-    } else if (isObjectLitKey(node, parent)) {
+    } else if (isObjectLitKey(node)) {
       return convention.isConstantKey(node.getString());
     } else if (node.isName()) {
       return convention.isConstant(node.getString());
@@ -3048,7 +3043,7 @@ public final class NodeUtil {
         return getBestJSDocInfo(parent);
       } else if (parent.isAssign()) {
         return parent.getJSDocInfo();
-      } else if (isObjectLitKey(parent, parent.getParent())) {
+      } else if (isObjectLitKey(parent)) {
         return parent.getJSDocInfo();
       } else if (parent.isFunction()) {
         return parent.getJSDocInfo();
@@ -3076,7 +3071,7 @@ public final class NodeUtil {
       return parent;
     } else if (parent.isAssign()) {
       return parent.getFirstChild();
-    } else if (isObjectLitKey(parent, parent.getParent())) {
+    } else if (isObjectLitKey(parent)) {
       return parent;
     } else if (
         (parent.isHook() && parent.getFirstChild() != n) ||
@@ -3109,7 +3104,7 @@ public final class NodeUtil {
     if (lValue == null || lValue.getParent() == null) {
       return null;
     }
-    if (isObjectLitKey(lValue, lValue.getParent())) {
+    if (isObjectLitKey(lValue)) {
       return getBestLValue(lValue.getParent());
     } else if (isGet(lValue)) {
       return lValue.getFirstChild();
@@ -3123,7 +3118,7 @@ public final class NodeUtil {
     if (lValue == null || lValue.getParent() == null) {
       return null;
     }
-    if (isObjectLitKey(lValue, lValue.getParent())) {
+    if (isObjectLitKey(lValue)) {
       Node owner = getBestLValue(lValue.getParent());
       if (owner != null) {
         String ownerName = getBestLValueName(owner);

@@ -23,9 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
-import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
 import com.google.javascript.jscomp.MustBeReachingVariableDef.Definition;
-import com.google.javascript.jscomp.MustBeReachingVariableDef.MustDef;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -201,8 +199,6 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         // Not a CFG node.
         return;
       }
-      FlowState<MustDef> state = graphNode.getAnnotation();
-      final MustDef defs = state.getIn();
       final Node cfgNode = n;
       AbstractCfgNodeTraversalCallback gatherCb =
           new AbstractCfgNodeTraversalCallback() {
@@ -292,8 +288,8 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         }
       }
 
-      getDefinition(getDefCfgNode(), null);
-      getNumUseInUseCfgNode(useCfgNode, null);
+      getDefinition(getDefCfgNode());
+      getNumUseInUseCfgNode(useCfgNode);
 
       // Definition was not found.
       if (def == null) {
@@ -447,7 +443,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
      *
      * @param n A node that has a corresponding CFG node in the CFG.
      */
-    private void getDefinition(Node n, Node parent) {
+    private void getDefinition(Node n) {
       AbstractCfgNodeTraversalCallback gatherCb =
         new AbstractCfgNodeTraversalCallback() {
 
@@ -476,7 +472,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
      * Computes the number of uses of the variable varName and store it in
      * numUseWithinUseCfgNode.
      */
-    private void getNumUseInUseCfgNode(Node n, Node parant) {
+    private void getNumUseInUseCfgNode(Node n) {
 
       AbstractCfgNodeTraversalCallback gatherCb =
           new AbstractCfgNodeTraversalCallback() {

@@ -497,7 +497,6 @@ class TypeInference
    */
   private FlowScope traverseCatch(Node catchNode, FlowScope scope) {
     Node name = catchNode.getFirstChild();
-    String varName = name.getString();
     JSType type;
     // If the catch expression name was declared in the catch use that type,
     // otherwise use "unknown".
@@ -758,7 +757,6 @@ class TypeInference
         NodeUtil.getBestLValue(n));
     for (Node name = n.getFirstChild(); name != null;
          name = name.getNext()) {
-      Node value = name.getFirstChild();
       String memberName = NodeUtil.getObjectLitKeyName(name);
       if (memberName != null) {
         JSType rawValueType =  name.getFirstChild().getJSType();
@@ -966,14 +964,14 @@ class TypeInference
       fnType = n.getFirstChild().getJSType().toMaybeFunctionType();
     }
     updateTypeOfParameters(n, fnType);
-    updateBind(n, fnType);
+    updateBind(n);
   }
 
   /**
    * When "bind" is called on a function, we infer the type of the returned
    * "bound" function by looking at the number of parameters in the call site.
    */
-  private void updateBind(Node n, FunctionType fnType) {
+  private void updateBind(Node n) {
     CodingConvention.Bind bind =
         compiler.getCodingConvention().describeFunctionBind(n, true);
     if (bind == null) {

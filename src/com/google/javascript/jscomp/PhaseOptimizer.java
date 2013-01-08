@@ -308,17 +308,6 @@ class PhaseOptimizer implements CompilerPass {
       myPasses.add(new NamedPass(factory));
     }
 
-    /**
-     * Gets the pass names, in order.
-     */
-    private List<String> getPassOrder() {
-      List<String> order = Lists.newArrayList();
-      for (NamedPass pass : myPasses) {
-        order.add(pass.name);
-      }
-      return order;
-    }
-
     @Override
     public void process(Node externs, Node root) {
       Preconditions.checkState(!loopMutex, "Nested loops are forbidden");

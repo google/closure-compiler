@@ -231,7 +231,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         break;
 
       case Token.EXPR_RESULT:
-        handleTypedefDefinition(t, n, parent);
+        handleTypedefDefinition(t, n);
         break;
 
       case Token.FUNCTION:
@@ -336,7 +336,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    * @param n EXPR_RESULT node.
    */
   private void handleTypedefDefinition(
-      NodeTraversal t, Node n, Node parent) {
+      NodeTraversal t, Node n) {
     JSDocInfo info = n.getFirstChild().getJSDocInfo();
     if (t.inGlobalScope() && info != null && info.hasTypedefType()) {
       String name = n.getFirstChild().getQualifiedName();

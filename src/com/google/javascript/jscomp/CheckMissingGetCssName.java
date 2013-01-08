@@ -61,13 +61,13 @@ class CheckMissingGetCssName
       String s = n.getString();
 
       for (blacklist.reset(s); blacklist.find();) {
-        if (insideGetCssNameCall(n, parent)) {
+        if (insideGetCssNameCall(n)) {
           continue;
         }
-        if (insideGetUniqueIdCall(n, parent)) {
+        if (insideGetUniqueIdCall(n)) {
           continue;
         }
-        if (insideAssignmentToIdConstant(n, parent)) {
+        if (insideAssignmentToIdConstant(n)) {
           continue;
         }
         compiler.report(t.makeError(n, level, MISSING_GETCSSNAME,
@@ -77,7 +77,8 @@ class CheckMissingGetCssName
   }
 
   /** Returns whether the node is an argument of a goog.getCssName call. */
-  private boolean insideGetCssNameCall(Node n, Node parent) {
+  private boolean insideGetCssNameCall(Node n) {
+    Node parent = n.getParent();
     return parent.isCall() &&
         GET_CSS_NAME_FUNCTION.equals(
             parent.getFirstChild().getQualifiedName());
@@ -88,7 +89,8 @@ class CheckMissingGetCssName
    * a unique id (the last part of the qualified name matches
    * GET_UNIQUE_ID_FUNCTION).
    */
-  private boolean insideGetUniqueIdCall(Node n, Node parent) {
+  private boolean insideGetUniqueIdCall(Node n) {
+    Node parent = n.getParent();
     String name = parent.isCall() ?
         parent.getFirstChild().getQualifiedName() : null;
 
@@ -99,7 +101,8 @@ class CheckMissingGetCssName
    * Returns whether the node is the right hand side of an assignment or
    * initialization of a variable named *_ID of *_ID_.
    */
-  private boolean insideAssignmentToIdConstant(Node n, Node parent) {
+  private boolean insideAssignmentToIdConstant(Node n) {
+    Node parent = n.getParent();
     if (parent.isAssign()) {
       String qname = parent.getFirstChild().getQualifiedName();
       return qname != null && isIdName(qname);

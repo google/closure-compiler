@@ -140,7 +140,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     if (!t.inGlobalScope()) {
       Node n = t.getScopeRoot();
       Node parent = n.getParent();
-      if (isDeprecatedFunction(n, parent)) {
+      if (isDeprecatedFunction(n)) {
         deprecatedDepth++;
       }
 
@@ -155,8 +155,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   public void exitScope(NodeTraversal t) {
     if (!t.inGlobalScope()) {
       Node n = t.getScopeRoot();
-      Node parent = n.getParent();
-      if (isDeprecatedFunction(n, parent)) {
+      if (isDeprecatedFunction(n)) {
         deprecatedDepth--;
       }
 
@@ -364,8 +363,6 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
   /**
    * Checks if a constructor is trying to override a final class.
-   * @param t The current traversal.
-   * @param name The name node.
    */
   private void checkFinalClassOverrides(NodeTraversal t, Node fn, Node parent) {
     JSType type = fn.getJSType().toMaybeFunctionType();
@@ -617,7 +614,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   /**
    * Returns whether this is a function node annotated as deprecated.
    */
-  private static boolean isDeprecatedFunction(Node n, Node parent) {
+  private static boolean isDeprecatedFunction(Node n) {
     if (n.isFunction()) {
       JSType type = n.getJSType();
       if (type != null) {

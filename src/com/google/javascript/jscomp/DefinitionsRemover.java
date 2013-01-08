@@ -54,7 +54,7 @@ class DefinitionsRemover {
       }
     } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return new AssignmentDefinition(parent, isExtern);
-    } else if (NodeUtil.isObjectLitKey(n, parent)) {
+    } else if (NodeUtil.isObjectLitKey(n)) {
       return new ObjectLiteralPropertyDefinition(parent, n, n.getFirstChild(),
           isExtern);
     } else if (parent.isParamList()) {
@@ -84,7 +84,7 @@ class DefinitionsRemover {
       }
     } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return true;
-    } else if (NodeUtil.isObjectLitKey(n, parent)) {
+    } else if (NodeUtil.isObjectLitKey(n)) {
       return true;
     } else if (parent.isParamList()) {
       return true;

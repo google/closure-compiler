@@ -382,8 +382,6 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
     // Renumber used mappings and keep track of the last line.
     int id = 0;
     int maxLine = 0;
-    int sourceId = 0;
-    int nameId = 0;
     for (Mapping m : mappings) {
       if (m.used) {
         m.id = id++;
@@ -620,7 +618,6 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
     appendFieldStart(out, "sections");
     out.append("[\n");
     boolean first = true;
-    int line = 0, column = 0;
     for (SourceMapSection section : sections) {
       if (first) {
         first = false;
@@ -704,8 +701,6 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
     @Override
     public void visit(Mapping m, int line, int col, int nextLine, int nextCol)
       throws IOException {
-
-      int id = (m != null) ? m.id : UNMAPPED;
 
       if (previousLine != line) {
         previousColumn = 0;
