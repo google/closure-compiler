@@ -39,6 +39,7 @@ public class RenameVarsTest extends CompilerTestCase {
   private boolean useGoogleCodingConvention = true;
   private boolean generatePseudoNames = false;
   private boolean shouldShadow = false;
+  private boolean withNormalize = false;
 
   @Override
   protected CodingConvention getCodingConvention() {
@@ -51,14 +52,24 @@ public class RenameVarsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
+    CompilerPass pass;
     if (withClosurePass) {
-      return new ClosurePassAndRenameVars(compiler);
+      pass = new ClosurePassAndRenameVars(compiler);
     } else {
-      return renameVars = new RenameVars(compiler, prefix,
+      pass =  renameVars = new RenameVars(compiler, prefix,
           localRenamingOnly, preserveFunctionExpressionNames,
           generatePseudoNames, shouldShadow,
           previouslyUsedMap, null, null);
     }
+
+    if (withNormalize) {
+      // Don't use the standard CompilerTestCase normalization options
+      // as renaming is a post denormalization operation, but we do still
+      // want to run the normal normalizations on the input in some cases.
+      pass = new NormalizePassWrapper(compiler, pass);
+    }
+
+    return pass;
   }
 
   @Override
@@ -72,6 +83,7 @@ public class RenameVarsTest extends CompilerTestCase {
     previouslyUsedMap = new VariableMap(ImmutableMap.<String, String>of());
     prefix = DEFAULT_PREFIX;
     withClosurePass = false;
+    withNormalize = false;
     localRenamingOnly = false;
     preserveFunctionExpressionNames = false;
     generatePseudoNames = false;
@@ -497,8 +509,7 @@ public class RenameVarsTest extends CompilerTestCase {
   }
 
   public void testDollarSignSuperExport2() {
-    boolean normalizedExpectedJs = false;
-    super.enableNormalize(false);
+    withNormalize = true;
 
     useGoogleCodingConvention = false;
     // See http://code.google.com/p/closure-compiler/issues/detail?id=32
@@ -515,8 +526,6 @@ public class RenameVarsTest extends CompilerTestCase {
             "var y = function($super,duper){};",
          "var c = function($super,   a,    b         ){};" +
             "var d = function($super,a){};");
-
-    super.disableNormalize();
   }
 
   public void testPseudoNames() {
@@ -592,6 +601,25 @@ public class RenameVarsTest extends CompilerTestCase {
           false, false, false, false, previouslyUsedMap, null,
           closurePass.getExportedVariableNames());
       renameVars.process(externs, root);
+    }
+  }
+
+  private class NormalizePassWrapper implements CompilerPass {
+    private final Compiler compiler;
+    private CompilerPass wrappedPass;
+
+    private NormalizePassWrapper(Compiler compiler,
+        CompilerPass wrappedPass) {
+      this.compiler = compiler;
+      this.wrappedPass = wrappedPass;
+    }
+
+    @Override
+    public void process(Node externs, Node root) {
+      Normalize normalize = new Normalize(compiler, false);
+      normalize.process(externs, root);
+
+      wrappedPass.process(externs, root);
     }
   }
 }

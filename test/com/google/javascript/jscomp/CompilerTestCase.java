@@ -873,6 +873,8 @@ public abstract class CompilerTestCase extends TestCase  {
         }
       }
 
+      // If we ran normalize on the AST, we must also run normalize on the
+      // clone before checking for changes.
       if (normalizeEnabled) {
         normalizeActualCode(compiler, externsRootClone, mainRootClone);
       }
@@ -913,8 +915,8 @@ public abstract class CompilerTestCase extends TestCase  {
 
       // Verify normalization is not invalidated.
       Node normalizeCheckRootClone = root.cloneTree();
-      Node normalizeCheckExternsRootClone = root.getFirstChild();
-      Node normalizeCheckMainRootClone = root.getLastChild();
+      Node normalizeCheckExternsRootClone = normalizeCheckRootClone.getFirstChild();
+      Node normalizeCheckMainRootClone = normalizeCheckRootClone.getLastChild();
       new PrepareAst(compiler).process(
           normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
       String explanation =
@@ -927,8 +929,8 @@ public abstract class CompilerTestCase extends TestCase  {
       // TODO(johnlenz): enable this for most test cases.
       // Currently, this invalidates test for while-loops, for-loop
       // initializers, and other naming.  However, a set of code
-      // (FoldConstants, etc) runs before the Normalize pass, so this can't be
-      // force on everywhere.
+      // (Closure primitive rewrites, etc) runs before the Normalize pass,
+      // so this can't be force on everywhere.
       if (normalizeEnabled) {
         new Normalize(compiler, true).process(
             normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
