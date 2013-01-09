@@ -92,6 +92,9 @@ public class Compiler extends AbstractCompiler {
       "JSC_MISSING_ENTRY_ERROR",
       "required entry point \"{0}\" never provided");
 
+  // Used in PerformanceTracker
+  static final String PARSING_PASS_NAME = "parseInputs";
+
   private static final String CONFIG_RESOURCE =
       "com.google.javascript.jscomp.parsing.ParserConfig";
 
@@ -1305,7 +1308,7 @@ public class Compiler extends AbstractCompiler {
       addChangeHandler(tracker.getCodeChangeHandler());
     }
 
-    Tracer tracer = newTracer("parseInputs");
+    Tracer tracer = newTracer(PARSING_PASS_NAME);
 
     try {
       // Parse externs sources.
@@ -1398,7 +1401,7 @@ public class Compiler extends AbstractCompiler {
       }
       return externAndJsRoot;
     } finally {
-      stopTracer(tracer, "parseInputs");
+      stopTracer(tracer, PARSING_PASS_NAME);
     }
   }
 

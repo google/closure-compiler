@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -43,14 +44,16 @@ public class PerformanceTracker {
 
   private final Node jsRoot;
   private final boolean trackSize;
-  private final boolean trackGzippedSize;
+  private final boolean trackGzSize;
 
   // Keeps track of AST changes and computes code size estimation
   // if there is any.
   private final RecentChange codeChange = new RecentChange();
 
-  private int curCodeSizeEstimate = -1;
-  private int curZippedCodeSizeEstimate = -1;
+  private int codeSize = 0;
+  private int gzCodeSize = 0;
+  private int initCodeSize = 0;
+  private int initGzCodeSize = 0;
 
   private Deque<String> currentRunningPass = new ArrayDeque<String>();
 
@@ -83,17 +86,17 @@ public class PerformanceTracker {
     switch (mode) {
       case TIMING_ONLY:
         this.trackSize = false;
-        this.trackGzippedSize = false;
+        this.trackGzSize = false;
         break;
 
       case RAW_SIZE:
         this.trackSize = true;
-        this.trackGzippedSize = false;
+        this.trackGzSize = false;
         break;
 
       case ALL:
         this.trackSize = true;
-        this.trackGzippedSize = true;
+        this.trackGzSize = true;
         break;
 
       case OFF:
@@ -118,89 +121,57 @@ public class PerformanceTracker {
    * @param result Execution time.
    */
   void recordPassStop(String passName, long result) {
-    String currentPassName = currentRunningPass.pop();
-    if (!passName.equals(currentPassName)) {
+    if (!passName.equals(currentRunningPass.pop())) {
       throw new RuntimeException(passName + " is not running.");
     }
 
-    CodeSizeEstimatePrinter printer = null;
-    if (codeChange.hasCodeChanged() && (trackSize || trackGzippedSize)) {
-      printer = estimateCodeSize(jsRoot);
+    // After parsing, initialize codeSize and gzCodeSize
+    if (passName.equals(Compiler.PARSING_PASS_NAME) && trackSize) {
+      CodeSizeEstimatePrinter printer = new CodeSizeEstimatePrinter();
+      CodeGenerator.forCostEstimation(printer).add(jsRoot);
+      initCodeSize = codeSize = printer.calcSize();
+      if (this.trackGzSize) {
+        initGzCodeSize = gzCodeSize = printer.calcZippedSize();
+      }
     }
 
-    Stats logStats = new Stats(currentPassName);
+    // Initialize logStats and summaryStats
+    Stats logStats = new Stats(passName);
     log.add(logStats);
-    updateStats(logStats, result, printer);
-
     Stats summaryStats = summary.get(passName);
     if (summaryStats == null) {
       summaryStats = new Stats(passName);
       summary.put(passName, summaryStats);
     }
-    updateStats(summaryStats, result, printer);
 
-    if (printer != null) {
-      if (trackSize) {
-        curCodeSizeEstimate = printer.calcSize();
-      }
-      if (trackGzippedSize) {
-        curZippedCodeSizeEstimate = printer.calcZippedSize();
-      }
-    }
-  }
-
-  private void updateStats(Stats stats,
-      long result, CodeSizeEstimatePrinter printer) {
-    stats.runtime += result;
-    stats.runs += 1;
+    // Update fields that aren't related to code size
+    logStats.runtime = result;
+    logStats.runs = 1;
+    summaryStats.runtime += result;
+    summaryStats.runs += 1;
     if (codeChange.hasCodeChanged()) {
-      stats.changes += 1;
+      logStats.changes = 1;
+      summaryStats.changes += 1;
     }
 
-    if (printer != null) {
-      recordSizeChange(
-          curCodeSizeEstimate, printer.calcSize(), stats);
-      recordGzSizeChange(
-          curZippedCodeSizeEstimate, printer.calcZippedSize(), stats);
-    }
-  }
-
-  /**
-   * Record the size change in the given record for that given pass.
-   */
-  private static void recordSizeChange(int oldSize, int newSize, Stats record) {
-    if (oldSize != -1) {
-      int delta = oldSize - newSize;
-      if (delta > 0) {
-        record.diff += delta;
+    // Update fields related to code size
+    if (codeChange.hasCodeChanged() && trackSize) {
+      int newSize = 0;
+      CodeSizeEstimatePrinter printer = new CodeSizeEstimatePrinter();
+      CodeGenerator.forCostEstimation(printer).add(jsRoot);
+      if (trackSize) {
+        newSize = printer.calcSize();
+        logStats.diff = codeSize - newSize;
+        summaryStats.diff += logStats.diff;
+        codeSize = summaryStats.size = logStats.size = newSize;
+      }
+      if (trackGzSize) {
+        newSize = printer.calcZippedSize();
+        logStats.gzDiff = gzCodeSize - newSize;
+        summaryStats.gzDiff += logStats.gzDiff;
+        gzCodeSize = summaryStats.gzSize = logStats.gzSize = newSize;
       }
     }
-    if (newSize != -1) {
-      record.size = newSize;
-    }
-  }
-
-  /**
-   * Record the gzip size change in the given record for that given pass.
-   */
-  private static void recordGzSizeChange(
-      int oldSize, int newSize, Stats record) {
-    if (oldSize != -1) {
-      int delta = oldSize - newSize;
-      if (delta > 0) {
-        record.gzDiff += delta;
-      }
-    }
-    if (newSize != -1) {
-      record.gzSize = newSize;
-    }
-  }
-
-  private final CodeSizeEstimatePrinter estimateCodeSize(Node root) {
-    CodeSizeEstimatePrinter cp = new CodeSizeEstimatePrinter(trackGzippedSize);
-    CodeGenerator cg = CodeGenerator.forCostEstimation(cp);
-    cg.add(root);
-    return cp;
   }
 
   public ImmutableMap<String, Stats> getStats() {
@@ -259,6 +230,10 @@ public class PerformanceTracker {
         gzDiff += stats.gzDiff;
         output.write("\n");
       }
+      Preconditions.checkState(!trackSize || initCodeSize == diff + codeSize);
+      Preconditions.checkState(!trackGzSize ||
+          initGzCodeSize == gzDiff + gzCodeSize);
+
       output.write("TOTAL");
       output.write(",");
       output.write(String.valueOf(runtime));
@@ -304,16 +279,13 @@ public class PerformanceTracker {
   /**
    * Purely use to get a code size estimate and not generate any code at all.
    */
-  private static final class CodeSizeEstimatePrinter extends CodeConsumer {
-    private final boolean trackGzippedSize;
+  private final class CodeSizeEstimatePrinter extends CodeConsumer {
     private int size = 0;
     private char lastChar = '\0';
     private final ByteArrayOutputStream output = new ByteArrayOutputStream();
     private final GZIPOutputStream stream;
 
-    private CodeSizeEstimatePrinter(boolean trackGzippedSize) {
-      this.trackGzippedSize = trackGzippedSize;
-
+    private CodeSizeEstimatePrinter() {
       try {
         stream = new GZIPOutputStream(output);
       } catch (IOException e) {
@@ -327,7 +299,7 @@ public class PerformanceTracker {
       if (len > 0) {
         size += len;
         lastChar = str.charAt(len - 1);
-        if (trackGzippedSize) {
+        if (trackGzSize) {
           try {
             stream.write(str.getBytes());
           } catch (IOException e) {
@@ -346,18 +318,15 @@ public class PerformanceTracker {
       return size;
     }
 
+    // Called iff trackGzSize is true
     private int calcZippedSize() {
-      if (trackGzippedSize) {
-        try {
-          stream.finish();
-          stream.flush();
-          stream.close();
-          return output.size();
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-      } else {
-        return -1;
+      try {
+        stream.finish();
+        stream.flush();
+        stream.close();
+        return output.size();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
     }
   }
