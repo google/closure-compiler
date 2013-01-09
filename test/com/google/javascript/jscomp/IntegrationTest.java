@@ -2410,9 +2410,18 @@ public class IntegrationTest extends IntegrationTestCase {
     outstream.flush();
     outstream.close();
     Pattern p = Pattern.compile(
-        ".*Summary:.pass,runtime,runs,changingRuns,reduction,gzReduction" +
-        ".*TOTAL,[0-9]+,[0-9]+,[0-9]+,[0-9]+,[0-9]+[^,]" +
-        ".*Log:." +
+        ".*Summary:\npass,runtime,runs,changingRuns,reduction,gzReduction" +
+        ".*TOTAL:" +
+        "\nRuntime\\(ms\\): [0-9]+" +
+        "\n#Runs: [0-9]+" +
+        "\n#Changing runs: [0-9]+" +
+        "\n#Loopable runs: [0-9]+" +
+        "\n#Changing loopable runs: [0-9]+" +
+        "\nReduction\\(bytes\\): [0-9]+" +
+        "\nGzReduction\\(bytes\\): [0-9]+" +
+        "\nSize\\(bytes\\): [0-9]+" +
+        "\nGzSize\\(bytes\\): [0-9]+" +
+        "\n\nLog:\n" +
         "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize.*",
         Pattern.DOTALL);
     assertTrue(p.matcher(output.toString()).matches());

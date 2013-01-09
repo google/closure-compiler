@@ -55,7 +55,7 @@ public class PerformanceTracker {
   private int initCodeSize = 0;
   private int initGzCodeSize = 0;
 
-  private Deque<String> currentRunningPass = new ArrayDeque<String>();
+  private Deque<Stats> currentPass = new ArrayDeque<Stats>();
 
   /** Summary stats by pass name. */
   private final Map<String, Stats> summary = Maps.newHashMap();
@@ -66,12 +66,13 @@ public class PerformanceTracker {
   /** Stats for each run of a compiler pass. */
   private final List<Stats> log = Lists.newArrayList();
 
-
   public static class Stats {
-    public Stats(String pass) {
+    Stats(String pass, boolean iot) {
       this.pass = pass;
+      this.isOneTime = iot;
     }
     public final String pass;
+    public final boolean isOneTime;
     public long runtime = 0;
     public int runs = 0;
     public int changes = 0;
@@ -109,8 +110,8 @@ public class PerformanceTracker {
     return codeChange;
   }
 
-  void recordPassStart(String passName) {
-    currentRunningPass.push(passName);
+  void recordPassStart(String passName, boolean isOneTime) {
+    currentPass.push(new Stats(passName, isOneTime));
     codeChange.reset();
   }
 
@@ -121,7 +122,8 @@ public class PerformanceTracker {
    * @param result Execution time.
    */
   void recordPassStop(String passName, long result) {
-    if (!passName.equals(currentRunningPass.pop())) {
+    Stats logStats = currentPass.pop();
+    if (!passName.equals(logStats.pass)) {
       throw new RuntimeException(passName + " is not running.");
     }
 
@@ -135,12 +137,11 @@ public class PerformanceTracker {
       }
     }
 
-    // Initialize logStats and summaryStats
-    Stats logStats = new Stats(passName);
+    // Populate log and summary
     log.add(logStats);
     Stats summaryStats = summary.get(passName);
     if (summaryStats == null) {
-      summaryStats = new Stats(passName);
+      summaryStats = new Stats(passName, logStats.isOneTime);
       summary.put(passName, summaryStats);
     }
 
@@ -195,12 +196,10 @@ public class PerformanceTracker {
       int runtime = 0;
       int runs = 0;
       int changes = 0;
+      int loopRuns = 0;
+      int loopChanges = 0;
       int diff = 0;
       int gzDiff = 0;
-
-      // header
-      output.write("Summary:\n");
-      output.write("pass,runtime,runs,changingRuns,reduction,gzReduction\n");
 
       ArrayList<Entry<String, Stats>> a = new ArrayList<Entry<String, Stats>>();
       for (Entry<String, Stats> entry : summary.entrySet()) {
@@ -208,66 +207,53 @@ public class PerformanceTracker {
       }
       Collections.sort(a, new CmpEntries());
 
+      output.write("Summary:\n" +
+          "pass,runtime,runs,changingRuns,reduction,gzReduction\n");
       for (Entry<String, Stats> entry : a) {
         String key = entry.getKey();
         Stats stats = entry.getValue();
-
-        output.write(key);
-        output.write(",");
-        output.write(String.valueOf(stats.runtime));
         runtime += stats.runtime;
-        output.write(",");
-        output.write(String.valueOf(stats.runs));
         runs += stats.runs;
-        output.write(",");
-        output.write(String.valueOf(stats.changes));
         changes += stats.changes;
-        output.write(",");
-        output.write(String.valueOf(stats.diff));
+        if (!stats.isOneTime) {
+          loopRuns += stats.runs;
+          loopChanges += stats.changes;
+        }
         diff += stats.diff;
-        output.write(",");
-        output.write(String.valueOf(stats.gzDiff));
         gzDiff += stats.gzDiff;
-        output.write("\n");
+        output.write(key + "," +
+            String.valueOf(stats.runtime) + "," +
+            String.valueOf(stats.runs) + "," +
+            String.valueOf(stats.changes) + "," +
+            String.valueOf(stats.diff) + "," +
+            String.valueOf(stats.gzDiff) + "\n");
       }
+      output.write("\nTOTAL:" +
+          "\nRuntime(ms): " + String.valueOf(runtime) +
+          "\n#Runs: " + String.valueOf(runs) +
+          "\n#Changing runs: " + String.valueOf(changes) +
+          "\n#Loopable runs: " + String.valueOf(loopRuns) +
+          "\n#Changing loopable runs: " + String.valueOf(loopChanges) +
+          "\nReduction(bytes): " + String.valueOf(diff) +
+          "\nGzReduction(bytes): " + String.valueOf(gzDiff) +
+          "\nSize(bytes): " + String.valueOf(codeSize) +
+          "\nGzSize(bytes): " + String.valueOf(gzCodeSize) + "\n\n");
+
       Preconditions.checkState(!trackSize || initCodeSize == diff + codeSize);
       Preconditions.checkState(!trackGzSize ||
           initGzCodeSize == gzDiff + gzCodeSize);
 
-      output.write("TOTAL");
-      output.write(",");
-      output.write(String.valueOf(runtime));
-      output.write(",");
-      output.write(String.valueOf(runs));
-      output.write(",");
-      output.write(String.valueOf(changes));
-      output.write(",");
-      output.write(String.valueOf(diff));
-      output.write(",");
-      output.write(String.valueOf(gzDiff));
-      output.write("\n");
-      output.write("\n");
-
-      output.write("Log:\n");
-      output.write(
+      output.write("Log:\n" +
           "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize\n");
       for (Stats stats : log) {
-        output.write(stats.pass);
-        output.write(",");
-        output.write(String.valueOf(stats.runtime));
-        output.write(",");
-        output.write(String.valueOf(stats.runs));
-        output.write(",");
-        output.write(String.valueOf(stats.changes));
-        output.write(",");
-        output.write(String.valueOf(stats.diff));
-        output.write(",");
-        output.write(String.valueOf(stats.gzDiff));
-        output.write(",");
-        output.write(String.valueOf(stats.size));
-        output.write(",");
-        output.write(String.valueOf(stats.gzSize));
-        output.write("\n");
+        output.write(stats.pass + "," +
+            String.valueOf(stats.runtime) + "," +
+            String.valueOf(stats.runs) + "," +
+            String.valueOf(stats.changes) + "," +
+            String.valueOf(stats.diff) + "," +
+            String.valueOf(stats.gzDiff) + "," +
+            String.valueOf(stats.size) + "," +
+            String.valueOf(stats.gzSize) + "\n");
       }
       output.write("\n");
       output.close();

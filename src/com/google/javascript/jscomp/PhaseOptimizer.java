@@ -202,10 +202,10 @@ class PhaseOptimizer implements CompilerPass {
   /**
    * Marks the beginning of a pass.
    */
-  private void startPass(String passName) {
+  private void startPass(String passName, boolean isOneTime) {
     Preconditions.checkState(currentTracer == null && currentPassName == null);
     currentPassName = passName;
-    currentTracer = newTracer(passName);
+    currentTracer = newTracer(passName, isOneTime);
   }
 
   /**
@@ -250,11 +250,11 @@ class PhaseOptimizer implements CompilerPass {
   /**
    * Returns a new tracer for the given pass name.
    */
-  private Tracer newTracer(String passName) {
+  private Tracer newTracer(String passName, boolean isOneTime) {
     String comment = passName +
         (recentChange.hasCodeChanged() ? " on recently changed AST" : "");
     if (tracker != null) {
-      tracker.recordPassStart(passName);
+      tracker.recordPassStart(passName, isOneTime);
     }
     return new Tracer("JSCompiler", comment);
   }
@@ -281,7 +281,7 @@ class PhaseOptimizer implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
       logger.fine(name);
-      startPass(name);
+      startPass(name, factory.isOneTimePass());
       // Delay the creation of the actual pass until *after* all previous passes
       // have been processed.
       // Some precondition checks rely on this, eg, in CoalesceVariableNames.

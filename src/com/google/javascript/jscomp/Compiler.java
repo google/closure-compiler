@@ -949,7 +949,7 @@ public class Compiler extends AbstractCompiler {
     String comment = passName
         + (recentChange.hasCodeChanged() ? " on recently changed AST" : "");
     if (options.tracer.isOn()) {
-      tracker.recordPassStart(passName);
+      tracker.recordPassStart(passName, true);
     }
     return new Tracer("Compiler", comment);
   }
