@@ -768,6 +768,12 @@ DOMApplicationCache.prototype.DOWNLOADING = 3;
 DOMApplicationCache.prototype.UPDATEREADY = 4;
 
 /**
+ * The cache is obsolete.
+ * @type {number}
+ */
+DOMApplicationCache.prototype.OBSOLETE = 5;
+
+/**
  * The current status of the application cache.
  * @type {number}
  */
