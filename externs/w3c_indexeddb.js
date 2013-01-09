@@ -576,13 +576,13 @@ IDBIndex.prototype.openCursor = function(range, direction) {};
 IDBIndex.prototype.openKeyCursor = function(range, direction) {};
 
 /**
- * @param {*} key The id of the object to retrieve.
+ * @param {IDBKeyType} key The id of the object to retrieve.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBIndex.prototype.get = function(key) {};
 
 /**
- * @param {*} key The id of the object to retrieve.
+ * @param {IDBKeyType} key The id of the object to retrieve.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBIndex.prototype.getKey = function(key) {};
@@ -686,8 +686,8 @@ IDBCursor.prototype.update = function(value) {};
 
 /**
  * Note: Must be quoted to avoid parse error.
- * @param {*=} key Continue enumerating the cursor from the specified key
- *    (or next).
+ * @param {IDBKeyType=} key Continue enumerating the cursor from the specified
+ *     key (or next).
  */
 IDBCursor.prototype['continue'] = function(key) {};
 
