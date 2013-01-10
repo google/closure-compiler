@@ -144,7 +144,8 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup AMBIGUOUS_FUNCTION_DECL =
       DiagnosticGroups.registerGroup("ambiguousFunctionDecl",
-          VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL);
+          VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL,
+          StrictModeCheck.BAD_FUNCTION_DECLARATION);
 
   public static final DiagnosticGroup UNKNOWN_DEFINES =
       DiagnosticGroups.registerGroup("unknownDefines",
