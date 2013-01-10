@@ -121,6 +121,10 @@ var sun;
 // Identity Protection has been fixed and pushed to most people.
 var o;
 
+// Used by extensions as $j = jQuery.noConflict();. This overwrites whatever's
+// stored in the variable '$j' with a function.
+var $j;
+
 /**
  * @see https://developer.mozilla.org/en/DOM/window.alert
  */
