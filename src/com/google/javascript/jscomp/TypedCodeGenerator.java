@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
@@ -124,7 +125,9 @@ class TypedCodeGenerator extends CodeGenerator {
 
     // Return type
     JSType retType = funType.getReturnType();
-    if (retType != null && !retType.isUnknownType() && !retType.isEmptyType()) {
+    if (retType != null &&
+        (retType.isTemplateType() || !retType.isUnknownType()) &&
+        !retType.isEmptyType()) {
       sb.append(" * ");
       appendAnnotation(sb, "return", retType.toAnnotationString());
       sb.append("\n");
@@ -171,6 +174,12 @@ class TypedCodeGenerator extends CodeGenerator {
       }
     }
 
+    if (!funType.getTemplateKeys().isEmpty()) {
+      sb.append(" * @template ");
+      sb.append(Joiner.on(",").join(funType.getTemplateKeys()));
+      sb.append("\n");
+    }
+
     if (fnNode != null && fnNode.getBooleanProp(Node.IS_DISPATCHER)) {
       sb.append(" * @javadispatch\n");
     }
@@ -194,7 +203,8 @@ class TypedCodeGenerator extends CodeGenerator {
 
     // Emit unknown types as '*' (AllType) since '?' (UnknownType) is not
     // a valid JSDoc type.
-    if (parameterType.isUnknownType()) {
+    // TODO(johnlenz): Removing '?' is incorrect, update code
+    if (!parameterType.isTemplateType() && parameterType.isUnknownType()) {
       typeString = "*";
     } else {
       // Fix-up optional and vararg parameters to match JSDoc type language

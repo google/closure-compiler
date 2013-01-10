@@ -205,6 +205,46 @@ public class ExternExportsPassTest extends TestCase {
                     "var externalName = function(param1, param2) {\n};\n");
   }
 
+  public void testExportSymbolWithTemplateAnnotation() {
+
+    compileAndCheck("var internalName;\n" +
+                    "/**\n" +
+                    " * @param {T} param1\n" +
+                    " * @return {T}\n" +
+                    " * @template T\n" +
+                    " */\n" +
+                    "internalName = function(param1) {" +
+                      "return param1;" +
+                    "};" +
+                    "goog.exportSymbol('externalName', internalName)",
+                    "/**\n" +
+                    " * @param {T} param1\n" +
+                    " * @return {T}\n" +
+                    " * @template T\n" +
+                    " */\n" +
+                    "var externalName = function(param1) {\n};\n");
+  }
+
+  public void testExportSymbolWithMultipleTemplateAnnotation() {
+
+    compileAndCheck("var internalName;\n" +
+                    "/**\n" +
+                    " * @param {K} param1\n" +
+                    " * @return {V}\n" +
+                    " * @template K,V\n" +
+                    " */\n" +
+                    "internalName = function(param1) {" +
+                      "return /** @type {V} */ (param1);" +
+                    "};" +
+                    "goog.exportSymbol('externalName', internalName)",
+                    "/**\n" +
+                    " * @param {K} param1\n" +
+                    " * @return {V}\n" +
+                    " * @template K,V\n" +
+                    " */\n" +
+                    "var externalName = function(param1) {\n};\n");
+  }
+
   public void testExportSymbolWithoutTypeCheck() {
     // ExternExportsPass should not emit annotations
     // if there is no type information available.
