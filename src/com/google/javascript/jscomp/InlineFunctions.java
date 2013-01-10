@@ -963,7 +963,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
 
     public void addReference(Reference ref) {
       if (references == null) {
-        references = Maps.newHashMap();
+        references = Maps.newLinkedHashMap();
       }
       references.put(ref.callNode, ref);
     }
