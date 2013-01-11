@@ -154,7 +154,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
         v = t.getScope().getVar(n.getString());
       }
       if (v != null && varFilter.apply(v)) {
-        addReference(t, v, new Reference(n, t, blockStack.peek()));
+        addReference(v, new Reference(n, t, blockStack.peek()));
       }
     }
 
@@ -236,7 +236,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
     return n.isCase();
   }
 
-  private void addReference(NodeTraversal t, Var v, Reference reference) {
+  private void addReference(Var v, Reference reference) {
     // Create collection if none already
     ReferenceCollection referenceInfo = referenceMap.get(v);
     if (referenceInfo == null) {
@@ -245,7 +245,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
     }
 
     // Add this particular reference
-    referenceInfo.add(reference, t, v);
+    referenceInfo.add(reference);
   }
 
   interface ReferenceMap {
@@ -294,7 +294,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       return references.iterator();
     }
 
-    void add(Reference reference, NodeTraversal t, Var v) {
+    void add(Reference reference) {
       references.add(reference);
     }
 

@@ -419,7 +419,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     // line number gets reported correctly (on the next line) but the
     // character position is -1, so the overall line/char pair in our tree
     // is -1.
-    //assertNodePosition(4, 0, incrClause);
+    assertNodePosition(-1, -1, incrClause); // should be 4
   }
 
   public void testBinaryExprLocation() {
@@ -941,7 +941,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   }
 
   private void testParseError(String string, String[] errors) {
-    Node root = newParse(string, new TestErrorReporter(errors, null));
+    newParse(string, new TestErrorReporter(errors, null));
     assertTrue("unexpected warnings reported",
         errorReporter.hasEncounteredAllWarnings());
     assertTrue("expected error were not reported",

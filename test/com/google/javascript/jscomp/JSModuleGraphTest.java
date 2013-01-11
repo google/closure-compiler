@@ -285,8 +285,6 @@ public class JSModuleGraphTest extends TestCase {
   }
 
   private void assertInputs(JSModule module, String ... sourceNames) {
-    List<CompilerInput> actualInputs = module.getInputs();
-
     assertEquals(
         Lists.newArrayList(sourceNames),
         sourceNames(module.getInputs()));

@@ -882,8 +882,11 @@ public class Node implements Cloneable, Serializable {
     }
   }
 
-  /** Can only be called when <tt>getType() == TokenStream.NUMBER</tt> */
-  public void setDouble(double s) throws UnsupportedOperationException {
+  /**
+   * Can only be called when <tt>getType() == Token.NUMBER</tt>
+   * @param value value to set.
+   */
+  public void setDouble(double value) throws UnsupportedOperationException {
     if (this.getType() == Token.NUMBER) {
       throw new IllegalStateException(
           "Number node not created with Node.newNumber");
@@ -902,9 +905,12 @@ public class Node implements Cloneable, Serializable {
     }
   }
 
-  /** Can only be called when node has String context. */
-  public void setString(String s) throws UnsupportedOperationException {
-    if (this.getType() == Token.STRING) {
+  /**
+   * Can only be called for a Token.STRING or Token.NAME.
+   * @param value the value to set.
+   */
+  public void setString(String value) throws UnsupportedOperationException {
+    if (this.getType() == Token.STRING || this.getType() == Token.NAME) {
       throw new IllegalStateException(
           "String node not created with Node.newString");
     } else {

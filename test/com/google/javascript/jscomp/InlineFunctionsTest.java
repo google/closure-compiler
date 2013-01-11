@@ -1443,28 +1443,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testComplexSampleNoInline() {
-    // This is the result we would expect if we could handle "foo = function"
-    String result =
-    "foo=function(stylesString,opt_element){" +
-        "var styleSheet=null;" +
-        "if(goog$userAgent$IE){" +
-          "styleSheet=0" +
-        "}else{" +
-          "var head=0" +
-         "}" +
-         "{var JSCompiler_inline_element_0=styleSheet;" +
-         "var JSCompiler_inline_stylesString_1=stylesString;" +
-         "if(goog$userAgent$IE){" +
-           "JSCompiler_inline_element_0.cssText=" +
-           "JSCompiler_inline_stylesString_1" +
-         "}else{" +
-           "var propToSet=goog$userAgent$WEBKIT?\"innerText\":\"innerHTML\";" +
-           "JSCompiler_inline_element_0[propToSet]=" +
-           "JSCompiler_inline_stylesString_1" +
-         "}}" +
-        "return styleSheet" +
-     "}";
-
     testSame(
       "foo=function(stylesString,opt_element){" +
         "var styleSheet=null;" +
@@ -2348,7 +2326,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
             }
          );
   }
-  
+
   public void test6671158() {
     test(
         "function f() {return g()}" +

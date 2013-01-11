@@ -99,7 +99,7 @@ class Normalize implements CompilerPass {
   }
 
   static Node parseAndNormalizeTestCode(
-      AbstractCompiler compiler, String code, String prefix) {
+      AbstractCompiler compiler, String code) {
     Node js = compiler.parseTestCode(code);
     NodeTraversal.traverse(compiler, js,
         new Normalize.NormalizeStatements(compiler, false));
@@ -372,7 +372,7 @@ class Normalize implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      doStatementNormalizations(t, n);
+      doStatementNormalizations(n);
 
       return true;
     }
@@ -499,8 +499,7 @@ class Normalize implements CompilerPass {
     /**
      * Do normalizations that introduce new siblings or parents.
      */
-    private void doStatementNormalizations(
-        NodeTraversal t, Node n) {
+    private void doStatementNormalizations(Node n) {
       if (n.isLabel()) {
         normalizeLabels(n);
       }

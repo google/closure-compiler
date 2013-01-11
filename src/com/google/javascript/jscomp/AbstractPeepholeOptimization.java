@@ -94,6 +94,7 @@ abstract class AbstractPeepholeOptimization {
 
   /**
    * Informs the optimization that a traversal has completed.
+   * @param compiler The current compiler.
    */
   void endTraversal(AbstractCompiler compiler) {
     this.compiler = null;

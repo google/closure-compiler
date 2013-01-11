@@ -186,7 +186,7 @@ class NamedType extends ProxyObjectType {
     // different mechanisms for resolving named types, and if so, which order
     // makes more sense. Now, resolution via registry is first in order to
     // avoid triggering the warnings built into the resolution via properties.
-    boolean resolved = resolveViaRegistry(t, enclosing);
+    boolean resolved = resolveViaRegistry(t);
     if (detectInheritanceCycle()) {
       handleTypeCycle(t);
     }
@@ -215,11 +215,10 @@ class NamedType extends ProxyObjectType {
    * Resolves a named type by looking it up in the registry.
    * @return True if we resolved successfully.
    */
-  private boolean resolveViaRegistry(
-      ErrorReporter t, StaticScope<JSType> enclosing) {
+  private boolean resolveViaRegistry(ErrorReporter reporter) {
     JSType type = registry.getType(reference);
     if (type != null) {
-      setReferencedAndResolvedType(type, t, enclosing);
+      setReferencedAndResolvedType(type, reporter);
       return true;
     }
     return false;
@@ -230,22 +229,21 @@ class NamedType extends ProxyObjectType {
    * subsequent components as properties. The scope must have been fully
    * parsed and a symbol table constructed.
    */
-  private void resolveViaProperties(ErrorReporter t,
+  private void resolveViaProperties(ErrorReporter reporter,
                                     StaticScope<JSType> enclosing) {
-    JSType value = lookupViaProperties(t, enclosing);
+    JSType value = lookupViaProperties(reporter, enclosing);
     // last component of the chain
     if (value != null && value.isFunctionType() &&
         (value.isConstructor() || value.isInterface())) {
       FunctionType functionType = value.toMaybeFunctionType();
-      setReferencedAndResolvedType(
-          functionType.getInstanceType(), t, enclosing);
+      setReferencedAndResolvedType(functionType.getInstanceType(), reporter);
     } else if (value != null && value.isNoObjectType()) {
       setReferencedAndResolvedType(
           registry.getNativeFunctionType(
-              JSTypeNative.NO_OBJECT_TYPE).getInstanceType(), t, enclosing);
+              JSTypeNative.NO_OBJECT_TYPE).getInstanceType(), reporter);
     } else if (value instanceof EnumType) {
       setReferencedAndResolvedType(
-          ((EnumType) value).getElementsType(), t, enclosing);
+          ((EnumType) value).getElementsType(), reporter);
     } else {
       // We've been running into issues where people forward-declare
       // non-named types. (This is legitimate...our dependency management
@@ -253,7 +251,7 @@ class NamedType extends ProxyObjectType {
       //
       // So if the type does resolve to an actual value, but it's not named,
       // then don't respect the forward declaration.
-      handleUnresolvedType(t, value == null || value.isUnknownType());
+      handleUnresolvedType(reporter, value == null || value.isUnknownType());
     }
   }
 
@@ -263,7 +261,7 @@ class NamedType extends ProxyObjectType {
    * parsed and a symbol table constructed.
    * @return The type of the symbol, or null if the type could not be found.
    */
-  private JSType lookupViaProperties( ErrorReporter t,
+  private JSType lookupViaProperties(ErrorReporter reporter,
       StaticScope<JSType> enclosing) {
     String[] componentNames = reference.split("\\.", -1);
     if (componentNames[0].length() == 0) {
@@ -280,7 +278,7 @@ class NamedType extends ProxyObjectType {
     if (slotType == null || slotType.isAllType() || slotType.isNoType()) {
       return null;
     }
-    JSType value = getTypedefType(t, slot, componentNames[0]);
+    JSType value = getTypedefType(reporter, slot);
     if (value == null) {
       return null;
     }
@@ -299,14 +297,14 @@ class NamedType extends ProxyObjectType {
     return value;
   }
 
-  private void setReferencedAndResolvedType(JSType type, ErrorReporter t,
-      StaticScope<JSType> enclosing) {
+  private void setReferencedAndResolvedType(
+      JSType type, ErrorReporter reporter) {
     if (validator != null) {
       validator.apply(type);
     }
     setReferencedType(type);
-    checkEnumElementCycle(t);
-    checkProtoCycle(t);
+    checkEnumElementCycle(reporter);
+    checkProtoCycle(reporter);
     setResolvedTypeInternal(getReferencedType());
   }
 
@@ -360,7 +358,7 @@ class NamedType extends ProxyObjectType {
     }
   }
 
-  JSType getTypedefType(ErrorReporter t, StaticSlot<JSType> slot, String name) {
+  private JSType getTypedefType(ErrorReporter t, StaticSlot<JSType> slot) {
     JSType type = slot.getType();
     if (type != null) {
       return type;

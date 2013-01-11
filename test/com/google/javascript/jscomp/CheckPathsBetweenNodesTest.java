@@ -21,8 +21,6 @@ import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
-import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
-
 import junit.framework.TestCase;
 
 /**
@@ -68,8 +66,6 @@ public class CheckPathsBetweenNodesTest extends TestCase {
     g.connect("c", "-", "d");
     g.connect("a", "x", "d");
 
-    CheckPathsBetweenNodes<String, String> test = null;
-
     // Simple case: the sole path from a to d has a matching node.
     assertGood(createTest(g, "a", "d", Predicates.equalTo("b"), edgeIs("-")));
     //Test two edge cases where satisfying node is the first and last node on
@@ -114,7 +110,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
     g.createDirectedGraphNode("c1");
     g.createDirectedGraphNode("c2");
     g.createDirectedGraphNode("c3");
-    DiGraphNode<String, String> d = g.createDirectedGraphNode("d");
+    g.createDirectedGraphNode("d");
 
     g.connect("a",  "-", "b");
     g.connect("b",  "-", "c1");

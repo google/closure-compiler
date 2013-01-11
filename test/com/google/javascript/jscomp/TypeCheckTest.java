@@ -9375,7 +9375,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     TypeCheckResult ns =
         parseAndTypeCheckWithScope("/** @type {!Object} */var t; t.x; t;");
     Node n = ns.root;
-    Scope s = ns.scope;
     JSType type = n.getLastChild().getLastChild().getJSType();
     assertFalse(type.isUnknownType());
     assertTypeEquals(type, OBJECT_TYPE);
@@ -11469,7 +11468,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   void testTypes(String externs, String js, String description, boolean isError)
       throws Exception {
-    Node n = parseAndTypeCheck(externs, js);
+    parseAndTypeCheck(externs, js);
 
     JSError[] errors = compiler.getErrors();
     if (description != null && isError) {
@@ -11557,7 +11556,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     Node n = compiler.parseTestCode(js);
     assertEquals(0, compiler.getErrorCount());
     Node externsNode = new Node(Token.BLOCK);
-    Node externAndJsRoot = new Node(Token.BLOCK, externsNode, n);
+    // create a parent node for the extern and source blocks
+    new Node(Token.BLOCK, externsNode, n);
 
     makeTypeCheck().processForTesting(null, n);
     assertEquals(0, compiler.getErrorCount());

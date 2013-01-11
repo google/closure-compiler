@@ -1241,7 +1241,8 @@ public class ControlFlowAnalysisTest extends TestCase {
 
     Node script1 = compiler.parseSyntheticCode("cfgtest", "var foo;");
     Node script2 = compiler.parseSyntheticCode("cfgtest2", "var bar;");
-    Node root = new Node(Token.BLOCK, script1, script2);
+    // Create a parent node for the scripts
+    new Node(Token.BLOCK, script1, script2);
 
     cfa.process(null, script1);
     ControlFlowGraph<Node> cfg = cfa.getCfg();

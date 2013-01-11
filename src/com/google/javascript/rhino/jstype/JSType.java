@@ -180,7 +180,10 @@ public abstract class JSType implements Serializable {
     return displayName != null && !displayName.isEmpty();
   }
 
-  /** Checks whether the property pname is present on the object. */
+  /**
+   * Checks whether the property is present on the object.
+   * @param pname The property name.
+   */
   public boolean hasProperty(String pname) {
     return false;
   }
@@ -1518,6 +1521,7 @@ public abstract class JSType implements Serializable {
    * This is useful for reverse type-inference, where we want to
    * infer that an object literal matches its constraint (much like
    * how the java compiler does reverse-inference to figure out generics).
+   * @param constraint
    */
   public void matchConstraint(JSType constraint) {}
 }

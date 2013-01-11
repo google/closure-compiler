@@ -268,7 +268,7 @@ class InlineObjectLiterals implements CompilerPass {
      * variable name.
      */
     private Map<String, String> computeVarList(
-        Var v, ReferenceCollection referenceInfo) {
+        ReferenceCollection referenceInfo) {
       Map<String, String> varmap = Maps.newLinkedHashMap();
 
       for (Reference ref : referenceInfo.references) {
@@ -399,7 +399,7 @@ class InlineObjectLiterals implements CompilerPass {
                              ReferenceCollection referenceInfo) {
       // First figure out the FULL set of possible keys, so that they
       // can all be properly set as necessary.
-      Map<String, String> varmap = computeVarList(v, referenceInfo);
+      Map<String, String> varmap = computeVarList(referenceInfo);
 
       Map<String, Node> initvals = Maps.newHashMap();
       // Figure out the top-level of the var assign node. If it's a plain

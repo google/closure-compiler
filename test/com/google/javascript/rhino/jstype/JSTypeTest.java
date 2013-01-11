@@ -5297,8 +5297,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ARRAY_TYPE, STRING_TYPE);
     JSType arrayOfNumber = createParameterizedType(
         ARRAY_TYPE, NUMBER_TYPE);
-    JSType arrayOfUnknown = createParameterizedType(
-        ARRAY_TYPE, UNKNOWN_TYPE);
 
     // Union and least super type cases:
     //
@@ -6151,7 +6149,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     boolean exceptionThrown = false;
     try {
-      JSType templatizedInstance = registry.createTemplatizedType(
+      registry.createTemplatizedType(
           templatizedCtor.getInstanceType(),
           ImmutableList.of(NUMBER_TYPE, STRING_TYPE, BOOLEAN_TYPE));
     } catch (IllegalArgumentException e) {

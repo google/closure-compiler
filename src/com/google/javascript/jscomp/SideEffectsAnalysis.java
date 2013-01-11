@@ -218,6 +218,7 @@ import java.util.Set;
   /**
    * Returns true if the node is pure, that is it side effect free and does it
    * not depend on its environment?
+   * @param node node to check.
    */
   private boolean isPure(Node node) {
     // For now, we conservatively assume all code is not pure.

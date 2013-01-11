@@ -225,7 +225,6 @@ class UnionTypeBuilder implements Serializable {
                 ParameterizedType parameterizedCurrent = current.toMaybeParameterizedType();
 
                 if (parameterizedCurrent.wrapsSameRawType(parameterizedAlternate)) {
-                  JSType alternateTypeParameter = parameterizedAlternate.getParameterType();
                   JSType currentTypeParameter = parameterizedCurrent.getParameterType();
                   if (currentTypeParameter.isEquivalentTo(parameterizedCurrent)) {
                     // case 8

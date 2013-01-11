@@ -544,7 +544,6 @@ public class JsMessageVisitorTest extends TestCase {
 
   private void extractMessagesSafely(String input) {
     extractMessages(input);
-    JSError[] errors = compiler.getErrors();
     assertEquals(
         "Unexpected error(s): " + Joiner.on("\n").join(compiler.getErrors()),
         0, compiler.getErrorCount());

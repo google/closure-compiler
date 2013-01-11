@@ -364,19 +364,6 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "/** @constructor */ function Baz() {}\n"
         + "Baz.prototype.a = 0;\n"
         + "Baz.prototype.b = 0;\n";
-    String output = ""
-        + "function Foo(){}"
-        + "Foo.prototype.Bar_prototype$a=0;"
-        + "Foo.prototype.Bar_prototype$b=0;"
-        + "function Bar(){}"
-        + "Bar.prototype.Bar_prototype$a=0;"
-        + "Bar.prototype.Bar_prototype$b=0;"
-        + "var B=new Bar;"
-        + "B.Bar_prototype$a=0;"
-        + "B.Bar_prototype$b=0;"
-        + "function Baz(){}"
-        + "Baz.prototype.a$Baz_prototype=0;"
-        + "Baz.prototype.b$Baz_prototype=0;";
     testSets(false, js, "{a=[[Bar.prototype, Foo.prototype], [Baz.prototype]],"
                  + " b=[[Bar.prototype, Foo.prototype], [Baz.prototype]]}");
     testSets(true, js, "{a=[[Bar.prototype, Foo.prototype], [Baz.prototype]],"

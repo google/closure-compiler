@@ -29,12 +29,6 @@ import java.util.List;
  */
 public class CompilerTest extends TestCase {
 
-  public void testCodeBuilderColumnAfterResetDummy() {
-    Compiler compiler = new Compiler();
-    Node n = compiler.parseTestCode("");
-    Compiler.CodeBuilder cb = new Compiler.CodeBuilder();
-  }
-
   // Verify the line and column information is maintained after a reset
   public void testCodeBuilderColumnAfterReset() {
     Compiler.CodeBuilder cb = new Compiler.CodeBuilder();

@@ -406,6 +406,7 @@ public interface CodingConvention extends Serializable {
     /**
      * Returns the type for a type assertion, or null if the function asserts
      * that the node must not be null or undefined.
+     * @param call The asserting call
      */
     public JSType getAssertedType(Node call, JSTypeRegistry registry) {
       return assertedType != null ? registry.getNativeType(assertedType) : null;

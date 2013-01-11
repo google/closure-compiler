@@ -341,7 +341,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
 
     Preconditions.checkNotNull(key);
     Preconditions.checkNotNull(replacementString);
-    recordReplacement(expr, key, replacementString);
+    recordReplacement(expr, key);
 
     parent.replaceChild(expr, replacement);
     compiler.reportCodeChange();
@@ -366,7 +366,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
   /**
    * Record the location the replacement was made.
    */
-  private void recordReplacement(Node n, String key, String replacement) {
+  private void recordReplacement(Node n, String key) {
     Result result = results.get(key);
     Preconditions.checkState(result != null);
 

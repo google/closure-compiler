@@ -41,8 +41,6 @@ public class SortedDependenciesTest extends TestCase {
         "d", "d", provides("d"), requires());
     SimpleDependencyInfo e = new SimpleDependencyInfo(
         "e", "e", provides("e"), requires());
-    SimpleDependencyInfo f = new SimpleDependencyInfo(
-        "f", "f", provides("f"), requires());
 
     assertSortedInputs(
         ImmutableList.of(d, b, c, a),

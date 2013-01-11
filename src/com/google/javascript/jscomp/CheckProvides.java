@@ -79,7 +79,7 @@ class CheckProvides implements HotSwapCompilerPass {
           visitFunctionNode(n, parent);
           break;
         case Token.SCRIPT:
-          visitScriptNode(t, n);
+          visitScriptNode();
       }
     }
 
@@ -106,7 +106,7 @@ class CheckProvides implements HotSwapCompilerPass {
       }
     }
 
-    private void visitScriptNode(NodeTraversal t, Node n) {
+    private void visitScriptNode() {
       for (Map.Entry<String, Node> ctorEntry : ctors.entrySet()) {
         String ctor = ctorEntry.getKey();
         int index = -1;
@@ -121,9 +121,10 @@ class CheckProvides implements HotSwapCompilerPass {
         } while (index != -1);
 
         if (!found) {
+          Node n = ctorEntry.getValue();
           compiler.report(
-              t.makeError(ctorEntry.getValue(), checkLevel,
-                  MISSING_PROVIDE_WARNING, ctorEntry.getKey()));
+              JSError.make(n.getSourceFileName(), n,
+                  checkLevel, MISSING_PROVIDE_WARNING, ctorEntry.getKey()));
         }
       }
       provides.clear();

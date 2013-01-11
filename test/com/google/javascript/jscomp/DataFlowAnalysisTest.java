@@ -660,7 +660,7 @@ public class DataFlowAnalysisTest extends TestCase {
         assertTrue(outEdges.size() < 2);
         ConstPropLatticeElement aResult = flowThroughArithmeticInstruction(
             (ArithmeticInstruction) node, input);
-        for (DiGraphEdge<Instruction, Branch> _ : outEdges) {
+        for (int i = 0; i < outEdges.size(); i++) {
           result.add(aResult);
         }
       } else {

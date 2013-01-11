@@ -477,7 +477,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       super.visit(t, n, parent);
       if (n.isName()) {
-        checkNameUsage(t, n, parent);
+        checkNameUsage(n, parent);
       }
     }
 
@@ -546,7 +546,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     /**
      * Find functions that can be inlined.
      */
-    private void checkNameUsage(NodeTraversal t, Node n, Node parent) {
+    private void checkNameUsage(Node n, Node parent) {
       Preconditions.checkState(n.isName());
 
       if (isCandidateUsage(n)) {
@@ -639,7 +639,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       String fnName = fn.getName();
       Node fnNode = fs.getSafeFnNode();
 
-      injector.inline(t, callNode, fnName, fnNode, mode);
+      injector.inline(callNode, fnName, fnNode, mode);
       t.getCompiler().reportCodeChange();
       t.getCompiler().addToDebugLog("Inlined function: " + fn.getName());
     }

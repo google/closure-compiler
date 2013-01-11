@@ -380,7 +380,6 @@ public class VarCheckTest extends CompilerTestCase {
     Node externsAndJs = compiler.getRoot();
     Node root = externsAndJs.getLastChild();
 
-    Node rootOriginal = root.cloneTree();
     Node externs = externsAndJs.getFirstChild();
 
     Node expected = compiler.parseTestCode(expectedExtern);

@@ -108,11 +108,11 @@ class RuntimeTypeCheck implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isFunction()) {
-        visitFunction(t, n);
+        visitFunction(n);
       }
     }
 
-    private void visitFunction(NodeTraversal t, Node n) {
+    private void visitFunction(Node n) {
       FunctionType funType = n.getJSType().toMaybeFunctionType();
       if (funType != null && !funType.isConstructor()) {
         return;
@@ -218,7 +218,7 @@ class RuntimeTypeCheck implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isFunction()) {
-        visitFunction(t, n);
+        visitFunction(n);
       } else if (n.isReturn()) {
         visitReturn(t, n);
       }
@@ -227,7 +227,7 @@ class RuntimeTypeCheck implements CompilerPass {
     /**
      * Insert checks for the parameters of the function.
      */
-    private void visitFunction(NodeTraversal t, Node n) {
+    private void visitFunction(Node n) {
       FunctionType funType = JSType.toMaybeFunctionType(n.getJSType());
       Node block = n.getLastChild();
       Node paramName = NodeUtil.getFunctionParameters(n).getFirstChild();

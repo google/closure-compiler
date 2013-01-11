@@ -23,8 +23,6 @@ import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import junit.framework.TestCase;
 
 import java.util.List;
@@ -1377,9 +1375,6 @@ public class FunctionInjectorTest extends TestCase {
         assumeMinimumCapture);
     final Node tree = parse(compiler, code);
 
-    Node externsRoot = new Node(Token.EMPTY);
-    Node mainRoot = tree;
-
     final Node fnNode = findFunction(tree, fnName);
     final Set<String> unsafe =
         FunctionArgumentInjector.findModifiedParameters(fnNode);
@@ -1477,8 +1472,6 @@ public class FunctionInjectorTest extends TestCase {
               CanInlineResult.AFTER_PREPARATION == canInline);
 
           Set<String> knownConstants = Sets.newHashSet();
-          ExpressionDecomposer decomposer = new ExpressionDecomposer(
-              compiler, compiler.getUniqueNameIdSupplier(), knownConstants);
           injector.setKnownConstants(knownConstants);
           injector.maybePrepareCall(n);
 
@@ -1487,8 +1480,7 @@ public class FunctionInjectorTest extends TestCase {
               CanInlineResult.YES != canInline);
         }
 
-        Node result = injector.inline(
-            t, n, fnName, fnNode, mode);
+        Node result = injector.inline(n, fnName, fnNode, mode);
         validateSourceInfo(compiler, result);
         String explanation = expectedRoot.checkTreeEquals(tree.getFirstChild());
         assertNull("\nExpected: " + toSource(expectedRoot) +

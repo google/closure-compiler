@@ -1666,7 +1666,6 @@ public class IntegrationTest extends IntegrationTestCase {
         "  set appData(data) { this.appData_ = data; }\n" +
         "};";
 
-    Compiler compiler = compile(options, code);
     testSame(options, code);
   }
 

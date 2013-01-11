@@ -1085,12 +1085,9 @@ public class CallGraphTest extends CompilerTestCase {
     CallGraph callgraph = compileAndRunBackward(source);
 
     Function mainFunction = callgraph.getMainFunction();
-    Function functionA = callgraph.getUniqueFunctionWithName("A");
 
     Callsite callInMain = mainFunction.getCallsitesInFunction().iterator()
         .next();
-
-    UnsupportedOperationException caughtException = null;
 
     try {
       callInMain.getPossibleTargets();

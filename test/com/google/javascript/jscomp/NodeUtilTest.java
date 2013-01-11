@@ -675,8 +675,6 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testGetVarsDeclaredInBranch() {
-    Compiler compiler = new Compiler();
-
     assertNodeNames(Sets.newHashSet("foo"),
         NodeUtil.getVarsDeclaredInBranch(
             parse("var foo;")));
@@ -752,8 +750,6 @@ public class NodeUtilTest extends TestCase {
     Node actual = parse("try {foo()} catch(e) {} finally {}");
 
     Node tryNode = actual.getFirstChild();
-    Node tryBlock = tryNode.getFirstChild();
-    Node catchBlocks = tryNode.getFirstChild().getNext();
     Node finallyBlock = tryNode.getLastChild();
 
     NodeUtil.removeChild(tryNode, finallyBlock);
@@ -770,7 +766,6 @@ public class NodeUtilTest extends TestCase {
 
     Node tryNode = actual.getFirstChild();
     Node tryBlock = tryNode.getFirstChild();
-    Node catchBlocks = tryNode.getFirstChild().getNext();
 
     NodeUtil.removeChild(tryNode, tryBlock);
     String expected = "try {} catch(e) {} finally {}";
@@ -785,10 +780,8 @@ public class NodeUtilTest extends TestCase {
     Node actual = parse("try {foo()} catch(e) {} finally {}");
 
     Node tryNode = actual.getFirstChild();
-    Node tryBlock = tryNode.getFirstChild();
     Node catchBlocks = tryNode.getFirstChild().getNext();
     Node catchBlock = catchBlocks.getFirstChild();
-    Node finallyBlock = tryNode.getLastChild();
 
     NodeUtil.removeChild(catchBlocks, catchBlock);
     String expected = "try {foo()} finally {}";
@@ -803,10 +796,7 @@ public class NodeUtilTest extends TestCase {
     Node actual = parse("try {foo()} catch(e) {} finally {}");
 
     Node tryNode = actual.getFirstChild();
-    Node tryBlock = tryNode.getFirstChild();
     Node catchBlocks = tryNode.getFirstChild().getNext();
-    Node catchBlock = catchBlocks.getFirstChild();
-    Node finallyBlock = tryNode.getLastChild();
 
     NodeUtil.removeChild(tryNode, catchBlocks);
     String expected = "try {foo()} finally {}";
@@ -820,10 +810,8 @@ public class NodeUtilTest extends TestCase {
     Node actual = parse("try {foo()} catch(e) {} finally {}");
 
     Node tryNode = actual.getFirstChild();
-    Node tryBlock = tryNode.getFirstChild();
     Node catchBlocks = tryNode.getFirstChild().getNext();
     Node catchBlock = catchBlocks.getFirstChild();
-    Node finallyBlock = tryNode.getLastChild();
 
     NodeUtil.removeChild(catchBlocks, catchBlock);
     String expected = "try {foo()} finally {}";
@@ -834,8 +822,6 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testRemoveVarChild() {
-    Compiler compiler = new Compiler();
-
     // Test removing the first child.
     Node actual = parse("var foo, goo, hoo");
 
@@ -891,8 +877,6 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testRemoveLabelChild1() {
-    Compiler compiler = new Compiler();
-
     // Test removing the first child.
     Node actual = parse("foo: goo()");
 
@@ -923,8 +907,6 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testRemoveForChild() {
-    Compiler compiler = new Compiler();
-
     // Test removing the initializer.
     Node actual = parse("for(var a=0;a<0;a++)foo()");
 
@@ -986,8 +968,6 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testMergeBlock1() {
-    Compiler compiler = new Compiler();
-
     // Test removing the initializer.
     Node actual = parse("{{a();b();}}");
 
@@ -1001,8 +981,6 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testMergeBlock2() {
-    Compiler compiler = new Compiler();
-
     // Test removing the initializer.
     Node actual = parse("foo:{a();}");
 
@@ -1013,8 +991,6 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testMergeBlock3() {
-    Compiler compiler = new Compiler();
-
     // Test removing the initializer.
     String code = "foo:{a();boo()}";
     Node actual = parse("foo:{a();boo()}");

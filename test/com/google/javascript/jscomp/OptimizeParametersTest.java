@@ -134,34 +134,22 @@ public class OptimizeParametersTest extends CompilerTestCase {
   }
 
   public void testRemoveOneOptionalMultiplePossibleDefinition() {
+    // TODO(johnlenz): Support multiple valid definitions.
     String src = "var goog = {};" +
         "goog.foo = function (p1, p2) { };" +
         "goog.foo = function (q1, q2) { };" +
         "goog.foo = function (r1, r2) { };" +
         "goog.foo(1); goog.foo(2); goog.foo()";
-
-    String expected = "var goog = {};" +
-        "goog.foo = function (p1) { var p2 };" +
-        "goog.foo = function (q1) { var q2 };" +
-        "goog.foo = function (r1) { var r2 };" +
-        "goog.foo(1); goog.foo(2); goog.foo()";
-    // TODO(johnlenz): Support multiple valid definitions.
     testSame(src);
   }
 
   public void testRemoveTwoOptionalMultiplePossibleDefinition() {
+    // TODO(johnlenz): Support multiple valid definitions.
     String src = "var goog = {};" +
         "goog.foo = function (p1, p2, p3, p4) { };" +
         "goog.foo = function (q1, q2, q3, q4) { };" +
         "goog.foo = function (r1, r2, r3, r4) { };" +
         "goog.foo(1,0); goog.foo(2,1); goog.foo()";
-
-    String expected = "var goog = {};" +
-        "goog.foo = function(p1, p2) { var p4; var p3};" +
-        "goog.foo = function(q1, q2) { var q4; var q3};" +
-        "goog.foo = function(r1, r2) { var r4; var r3};" +
-        "goog.foo(1,0); goog.foo(2,1); goog.foo()";
-    // TODO(johnlenz): Support multiple valid definitions.
     testSame(src);
   }
 
@@ -178,20 +166,13 @@ public class OptimizeParametersTest extends CompilerTestCase {
   }
 
   public void testMultipleUnknown() {
+    // TODO(johnlenz): Support multiple definitions.
     String src = "var goog1 = {};" +
         "goog1.foo = function () { };" +
         "var goog2 = {};" +
         "goog2.foo = function (p1) { };" +
         "var x = getGoog();" +
         "x.foo()";
-
-    String expected = "var goog1 = {};" +
-        "goog1.foo = function () { };" +
-        "var goog2 = {};" +
-        "goog2.foo = function () { var p1 };" +
-        "var x = getGoog();" +
-        "x.foo()";
-    // TODO(johnlenz): Support multiple definitions.
     testSame(src);
   }
 

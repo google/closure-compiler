@@ -369,26 +369,24 @@ final class TypedScopeCreator implements ScopeCreator {
           for (Node child = node.getFirstChild();
                child != null; child = child.getNext()) {
             identifyNameNode(
-                child, child.getFirstChild(),
-                NodeUtil.getBestJSDocInfo(child));
+                child, NodeUtil.getBestJSDocInfo(child));
           }
           break;
         case Token.EXPR_RESULT:
           Node firstChild = node.getFirstChild();
           if (firstChild.isAssign()) {
             identifyNameNode(
-                firstChild.getFirstChild(), firstChild.getLastChild(),
-                firstChild.getJSDocInfo());
+                firstChild.getFirstChild(), firstChild.getJSDocInfo());
           } else {
             identifyNameNode(
-                firstChild, null, firstChild.getJSDocInfo());
+                firstChild, firstChild.getJSDocInfo());
           }
           break;
       }
     }
 
     private void identifyNameNode(
-        Node nameNode, Node valueNode, JSDocInfo info) {
+        Node nameNode, JSDocInfo info) {
       if (nameNode.isQualifiedName()) {
         if (info != null) {
           if (info.hasEnumParameterType()) {
@@ -511,7 +509,7 @@ final class TypedScopeCreator implements ScopeCreator {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       inputId = t.getInputId();
-      attachLiteralTypes(t, n);
+      attachLiteralTypes(n);
 
       switch (n.getType()) {
         case Token.CALL:
@@ -567,7 +565,7 @@ final class TypedScopeCreator implements ScopeCreator {
       }
     }
 
-    private void attachLiteralTypes(NodeTraversal t, Node n) {
+    private void attachLiteralTypes(Node n) {
       switch (n.getType()) {
         case Token.NULL:
           n.setJSType(getNativeType(NULL_TYPE));
@@ -674,8 +672,7 @@ final class TypedScopeCreator implements ScopeCreator {
         Node value = keyNode.getFirstChild();
         String memberName = NodeUtil.getObjectLitKeyName(keyNode);
         JSDocInfo info = keyNode.getJSDocInfo();
-        JSType valueType =
-            getDeclaredType(keyNode.getSourceFileName(), info, keyNode, value);
+        JSType valueType = getDeclaredType(info, keyNode, value);
         JSType keyType =  objLitType.isEnumType() ?
             objLitType.toMaybeEnumType().getElementsType() :
             NodeUtil.getObjectLitKeyTypeFromValueType(keyNode, valueType);
@@ -734,7 +731,7 @@ final class TypedScopeCreator implements ScopeCreator {
       Node catchName = n.getFirstChild();
       defineSlot(catchName, n,
           getDeclaredType(
-              sourceName, catchName.getJSDocInfo(), catchName, null));
+              catchName.getJSDocInfo(), catchName, null));
     }
 
     /**
@@ -794,7 +791,7 @@ final class TypedScopeCreator implements ScopeCreator {
       Node value = name.getFirstChild();
 
       // variable's type
-      JSType type = getDeclaredType(sourceName, info, name, value);
+      JSType type = getDeclaredType(info, name, value);
       if (type == null) {
         // The variable's type will be inferred.
         type = name.isFromExterns() ? unknownType : null;
@@ -1265,14 +1262,13 @@ final class TypedScopeCreator implements ScopeCreator {
     /**
      * Look for a type declaration on a property assignment
      * (in an ASSIGN or an object literal key).
-     *
      * @param info The doc info for this property.
      * @param lValue The l-value node.
      * @param rValue The node that {@code n} is being initialized to,
      *     or {@code null} if this is a stub declaration.
      */
-    private JSType getDeclaredType(String sourceName, JSDocInfo info,
-        Node lValue, @Nullable Node rValue) {
+    private JSType getDeclaredType(JSDocInfo info, Node lValue,
+        @Nullable Node rValue) {
       if (info != null && info.hasType()) {
         return getDeclaredTypeInAnnotation(lValue, info);
       } else if (rValue != null && rValue.isFunction() &&
@@ -1492,7 +1488,7 @@ final class TypedScopeCreator implements ScopeCreator {
       // about getting as much type information as possible for them.
 
       // Determining type for #1 + #2 + #3 + #4
-      JSType valueType = getDeclaredType(t.getSourceName(), info, n, rhsValue);
+      JSType valueType = getDeclaredType(info, n, rhsValue);
       if (valueType == null && rhsValue != null) {
         // Determining type for #5
         valueType = rhsValue.getJSType();
@@ -1735,18 +1731,18 @@ final class TypedScopeCreator implements ScopeCreator {
           Node child = n.getFirstChild();
           switch (child.getType()) {
             case Token.ASSIGN:
-              maybeCollectMember(t, child.getFirstChild(), child,
+              maybeCollectMember(child.getFirstChild(), child,
                   child.getLastChild());
               break;
             case Token.GETPROP:
-              maybeCollectMember(t, child, child, null);
+              maybeCollectMember(child, child, null);
               break;
           }
         }
       }
 
-      private void maybeCollectMember(NodeTraversal t,
-          Node member, Node nodeWithJsDocInfo, @Nullable Node value) {
+      private void maybeCollectMember(Node member,
+          Node nodeWithJsDocInfo, @Nullable Node value) {
         JSDocInfo info = nodeWithJsDocInfo.getJSDocInfo();
 
         // Do nothing if there is no JSDoc type info, or
@@ -1759,7 +1755,7 @@ final class TypedScopeCreator implements ScopeCreator {
         }
 
         member.getFirstChild().setJSType(thisType);
-        JSType jsType = getDeclaredType(t.getSourceName(), info, member, value);
+        JSType jsType = getDeclaredType(info, member, value);
         Node name = member.getLastChild();
         if (jsType != null &&
             (name.isName() || name.isString()) &&

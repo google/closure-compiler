@@ -328,7 +328,6 @@ public class SymbolTableTest extends TestCase {
     Symbol bar = getGlobalVar(table, "Bar");
     Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
     Symbol fn = getGlobalVar(table, "Function");
-    Symbol obj = getGlobalVar(table, "Object");
     assertEquals(
         Lists.newArrayList(foo, bar), table.getAllSymbolsForTypeOf(x));
     assertEquals(

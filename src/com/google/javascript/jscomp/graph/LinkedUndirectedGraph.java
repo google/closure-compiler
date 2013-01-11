@@ -109,7 +109,6 @@ public class LinkedUndirectedGraph<N, E>
 
   @Override
   public List<GraphNode<N, E>> getNeighborNodes(N value) {
-    UndiGraphNode<N, E> uNode = getUndirectedGraphNode(value);
     List<GraphNode<N, E>> nodeList = Lists.newArrayList();
     for (Iterator<GraphNode<N, E>> i = getNeighborNodesIterator(value);
         i.hasNext();) {

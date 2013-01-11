@@ -828,8 +828,6 @@ public class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testReservedKeywords() {
-    boolean isIdeMode = false;
-
     mode = LanguageMode.ECMASCRIPT3;
 
     parseError("var boolean;", "missing variable name");
@@ -857,8 +855,6 @@ public class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testKeywordsAsProperties() {
-    boolean isIdeMode = false;
-
     mode = LanguageMode.ECMASCRIPT3;
 
     parseError("var x = {function: 1};", "invalid property id");

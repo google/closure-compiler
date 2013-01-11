@@ -2160,7 +2160,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testFileOverviewDuplicate() throws Exception {
-    JSDocInfo jsdoc = parseFileOverview(
+    parseFileOverview(
         "@fileoverview Pie \n * @fileoverview Cake */",
         "extra @fileoverview tag");
   }
@@ -2870,7 +2870,6 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Config config =
         new Config(extraAnnotations, extraSuppressions,
             true, LanguageMode.ECMASCRIPT3, false);
-    StaticSourceFile file = new SimpleSourceFile(script.getSourceName(), false);
     for (Comment comment : script.getComments()) {
       JsDocInfoParser jsdocParser =
         new JsDocInfoParser(

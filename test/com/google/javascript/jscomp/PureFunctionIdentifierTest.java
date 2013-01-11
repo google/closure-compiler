@@ -181,7 +181,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     super.tearDown();
     noSideEffectCalls.clear();
     localResultCalls.clear();
-    boolean regExpHaveSideEffects = true;
+    regExpHaveSideEffects = true;
   }
 
   public void testIssue303() throws Exception {
@@ -1229,8 +1229,8 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
           new PureFunctionIdentifier(compiler, defFinder);
       passUnderTest.process(externs, root);
 
-      // Ensure that debug report computation works.
-      String debugReport = passUnderTest.getDebugReport();
+      // Ensure that debug report computation doesn't crash.
+      passUnderTest.getDebugReport();
 
       NodeTraversal.traverse(compiler, externs, this);
       NodeTraversal.traverse(compiler, root, this);

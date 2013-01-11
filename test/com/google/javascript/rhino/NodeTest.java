@@ -141,8 +141,6 @@ public class NodeTest extends TestCase {
   }
 
   public void testCheckTreeTypeAwareEqualsSameNull() {
-    TestErrorReporter testErrorReporter = new TestErrorReporter(null, null);
-    JSTypeRegistry registry = new JSTypeRegistry(testErrorReporter);
     Node node1 = Node.newString(Token.NAME, "f");
     Node node2 = Node.newString(Token.NAME, "f");
     assertTrue(node1.isEquivalentToTyped(node2));
@@ -197,27 +195,40 @@ public class NodeTest extends TestCase {
     assertEquals("foobar", n.getJSDocInfo().getLicense());
   }
 
-  // TODO(johnlenz): reenable this test.
-  public void disable_testIsQualifiedName() {
-    assertTrue(getNode("a").isQualifiedName());
-    assertTrue(getNode("$").isQualifiedName());
-    assertTrue(getNode("_").isQualifiedName());
-    assertTrue(getNode("a.b").isQualifiedName());
-    assertTrue(getNode("a_b.cccccc$d4.x.y.zA$").isQualifiedName());
-    assertTrue(getNode("this.foo").isQualifiedName());
-    assertFalse(getNode("0").isQualifiedName());
-    assertFalse(getNode("[]").isQualifiedName());
-    assertFalse(getNode("{}").isQualifiedName());
-    assertFalse(getNode("''").isQualifiedName());
-    assertFalse(getNode("a[b]").isQualifiedName());
-    assertFalse(getNode("a[b].c").isQualifiedName());
-    assertFalse(getNode("c.a[b]").isQualifiedName());
-    assertFalse(getNode("a()").isQualifiedName());
-    assertFalse(getNode("a().b").isQualifiedName());
-    assertFalse(getNode("b.a()").isQualifiedName());
-    assertFalse(getNode("'a'").isQualifiedName());
-    assertFalse(getNode("/x/").isQualifiedName());
-    assertFalse(getNode("++x").isQualifiedName());
+  public void testIsQualifiedName() {
+    assertTrue(IR.name("a").isQualifiedName());
+    assertTrue(IR.name("$").isQualifiedName());
+    assertTrue(IR.name("_").isQualifiedName());
+    assertTrue(IR.getprop(IR.name("a"),IR.string("b")).isQualifiedName());
+    assertTrue(IR.getprop(IR.thisNode(),IR.string("b")).isQualifiedName());
+    assertFalse(IR.number(0).isQualifiedName());
+    assertFalse(IR.arraylit().isQualifiedName());
+    assertFalse(IR.objectlit().isQualifiedName());
+    assertFalse(IR.string("").isQualifiedName());
+    assertFalse(IR.getelem(IR.name("a"),IR.string("b")).isQualifiedName());
+    assertFalse( // a[b].c
+        IR.getprop(
+            IR.getelem(IR.name("a"),IR.string("b")),
+            IR.string("c"))
+            .isQualifiedName());
+    assertFalse( // a.b[c]
+        IR.getelem(
+            IR.getprop(IR.name("a"),IR.string("b")),
+            IR.string("c"))
+            .isQualifiedName());
+    assertFalse(IR.call(IR.name("a")).isQualifiedName());
+    assertFalse( // a().b
+        IR.getprop(
+            IR.call(IR.name("a")),
+            IR.string("b"))
+        .isQualifiedName());
+    assertFalse( // (a.b)()
+        IR.call(
+            IR.getprop(IR.name("a"),IR.string("b")))
+        .isQualifiedName());
+    assertFalse(IR.string("a").isQualifiedName());
+    assertFalse(IR.regexp(IR.string("x")).isQualifiedName());
+    assertFalse(new Node(Token.INC, IR.name("x")).isQualifiedName());
   }
 
   public void testCloneAnnontations() {
@@ -399,27 +410,5 @@ public class NodeTest extends TestCase {
 
   private static Node getAssignExpr(String name1, String name2) {
     return new Node(Token.ASSIGN, getVarRef(name1), getVarRef(name2));
-  }
-
-  private static Node getNode(String js) {
-    /*
-    Node root = parse("var a=(" + js + ");");
-    Node expr = root.getFirstChild();
-    Node var = expr.getFirstChild();
-    return var.getFirstChild();
-    */
-    return null;
-  }
-
-  private static Node parse(String string) {
-    /*
-    CompilerEnvirons environment = new CompilerEnvirons();
-    TestErrorReporter testErrorReporter = new TestErrorReporter(null, null);
-    environment.setErrorReporter(testErrorReporter);
-    environment.setParseJSDoc(true);
-    Parser p = new Parser(environment, testErrorReporter);
-    return p.parse(string, null, 0);
-    */
-    return null;
   }
 }

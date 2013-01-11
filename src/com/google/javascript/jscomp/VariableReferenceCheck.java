@@ -91,7 +91,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       // Check all vars after finishing a scope
       for (Iterator<Var> it = t.getScope().getVars(); it.hasNext();) {
         Var v = it.next();
-        checkVar(t, v, referenceMap.getReferences(v).references);
+        checkVar(v, referenceMap.getReferences(v).references);
       }
     }
 
@@ -101,7 +101,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
      * declared, which suggest a likely error. Relies on the fact that
      * references is in parse-tree order.
      */
-    private void checkVar(NodeTraversal t, Var v, List<Reference> references) {
+    private void checkVar(Var v, List<Reference> references) {
       blocksWithDeclarations.clear();
       boolean isDeclaredInScope = false;
       boolean isUnhoistedNamedFunction = false;

@@ -100,7 +100,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
               !NodeUtil.mayHaveSideEffects(
                   callNode.getFirstChild(), compiler)) {
             logger.fine("Inlining empty method: " + callName);
-            inlineEmptyMethod(t, parent, callNode);
+            inlineEmptyMethod(parent, callNode);
           }
         }
       } else {
@@ -249,7 +249,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
   /**
    * Remove the provided object and its method call.
    */
-  private void inlineEmptyMethod(NodeTraversal t, Node parent, Node call) {
+  private void inlineEmptyMethod(Node parent, Node call) {
     // If the return value of the method call is read,
     // replace it with "void 0". Otherwise, remove the call entirely.
     if (NodeUtil.isExprCall(parent)) {

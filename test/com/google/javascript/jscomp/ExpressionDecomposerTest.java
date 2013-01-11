@@ -20,8 +20,6 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import junit.framework.TestCase;
 
 import java.util.Set;
@@ -477,7 +475,6 @@ public class ExpressionDecomposerTest extends TestCase {
         "function goo() {}" +
         "function foo() {}");
     assertNotNull(externsRoot);
-    Node mainRoot = tree;
 
     Node callSite = findCall(tree, null, 2);
     assertNotNull("Call " + call + " was not found.", callSite);
@@ -507,7 +504,6 @@ public class ExpressionDecomposerTest extends TestCase {
         "function goo() {}" +
         "function foo() {}");
     assertNotNull(externsRoot);
-    Node mainRoot = tree;
 
     Node callSite = findCall(tree, fnName);
     assertNotNull("Call to " + fnName + " was not found.", callSite);
@@ -557,9 +553,6 @@ public class ExpressionDecomposerTest extends TestCase {
     Node tree = parse(compiler, code);
     assertNotNull(tree);
 
-    Node externsRoot = new Node(Token.EMPTY);
-    Node mainRoot = tree;
-
     Node callSite = findCall(tree, fnName);
     assertNotNull("Call to " + fnName + " was not found.", callSite);
 
@@ -602,9 +595,6 @@ public class ExpressionDecomposerTest extends TestCase {
     Node expectedRoot = parse(compiler, expectedResult);
     Node tree = parse(compiler, code);
     assertNotNull(tree);
-
-    Node externsRoot = new Node(Token.EMPTY);
-    Node mainRoot = tree;
 
     Node callSite = findCall(tree, fnName);
     assertNotNull("Call to " + fnName + " was not found.", callSite);
@@ -668,7 +658,7 @@ public class ExpressionDecomposerTest extends TestCase {
   }
 
   private static Node parse(Compiler compiler, String js) {
-    Node n = Normalize.parseAndNormalizeTestCode(compiler, js, "");
+    Node n = Normalize.parseAndNormalizeTestCode(compiler, js);
     assertEquals(0, compiler.getErrorCount());
     return n;
   }

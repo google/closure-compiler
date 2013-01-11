@@ -51,7 +51,8 @@ public class XtbMessageBundle implements MessageBundle {
   private final JsMessage.IdGenerator idGenerator;
 
   public XtbMessageBundle(
-      InputStream xtb, @Nullable String projectId, boolean unused) {
+      InputStream xtb, @Nullable String projectId,
+      @SuppressWarnings("unused") boolean unused) {
     this(xtb, projectId);
   }
 

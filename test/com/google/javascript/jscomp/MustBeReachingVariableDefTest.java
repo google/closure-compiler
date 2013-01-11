@@ -169,7 +169,6 @@ public class MustBeReachingVariableDefTest extends TestCase {
   private void computeDefUse(String src) {
     Compiler compiler = new Compiler();
     src = "function _FUNCTION(param1, param2){" + src + "}";
-    Node externs = compiler.parseTestCode(EXTERNS);
     Node root = compiler.parseTestCode(src).getFirstChild();
     assertEquals(0, compiler.getErrorCount());
     Scope scope = new SyntacticScopeCreator(compiler).createScope(root, null);

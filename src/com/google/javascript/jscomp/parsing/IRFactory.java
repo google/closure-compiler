@@ -278,7 +278,7 @@ class IRFactory {
       if (!handlePossibleFileOverviewJsDoc(jsDocParser)) {
         JSDocInfo info = jsDocParser.retrieveAndResetParsedJSDocInfo();
         if (info != null) {
-          validateTypeAnnotations(info, node, irNode);
+          validateTypeAnnotations(info, node);
         }
         return info;
       }
@@ -286,8 +286,7 @@ class IRFactory {
     return null;
   }
 
-  private void validateTypeAnnotations(
-      JSDocInfo info, AstNode node, Node irNode) {
+  private void validateTypeAnnotations(JSDocInfo info, AstNode node) {
     if (info.hasType()) {
       boolean valid = false;
       switch (node.getType()) {

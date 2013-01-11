@@ -238,8 +238,7 @@ class FunctionInjector {
    * Inline a function into the call site.
    */
   Node inline(
-      NodeTraversal t, Node callNode, String fnName, Node fnNode,
-      InliningMode mode) {
+      Node callNode, String fnName, Node fnNode, InliningMode mode) {
     Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
 
     if (mode == InliningMode.DIRECT) {

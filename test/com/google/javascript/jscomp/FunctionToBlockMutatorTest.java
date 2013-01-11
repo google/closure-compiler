@@ -25,8 +25,6 @@ import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
 
-import java.util.Set;
-
 /**
  * @author johnlenz@google.com (John Lenz)
  */
@@ -221,8 +219,6 @@ public class FunctionToBlockMutatorTest extends TestCase {
     mark.process(externsRoot, mainRoot);
 
     final Node fnNode = findFunction(tree, fnName);
-    final Set<String> unsafe =
-        FunctionArgumentInjector.findModifiedParameters(fnNode);
 
     // Fake precondition.
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
