@@ -178,7 +178,7 @@ public abstract class CompilerTestCase extends TestCase  {
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setWarningLevel(
-        DiagnosticGroups.CAST, CheckLevel.WARNING);
+        DiagnosticGroups.INVALID_CASTS, CheckLevel.WARNING);
     options.setCodingConvention(getCodingConvention());
     return options;
   }

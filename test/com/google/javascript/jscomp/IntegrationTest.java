@@ -1994,7 +1994,7 @@ public class IntegrationTest extends IntegrationTestCase {
             "JSC_INVALID_CAST", "invalid cast"));
 
     testSame(options,
-        "/** @suppress{cast} */\n" +
+        "/** @suppress {invalidCasts} */\n" +
         "function f() { var xyz = /** @type {string} */ (0); }");
   }
 

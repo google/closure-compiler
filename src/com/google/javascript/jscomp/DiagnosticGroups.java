@@ -236,10 +236,6 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("misplacedTypeAnnotation",
           RhinoErrorReporter.MISPLACED_TYPE_ANNOTATION);
 
-  public static final DiagnosticGroup CAST =
-      DiagnosticGroups.registerGroup("cast",
-          TypeValidator.INVALID_CAST);
-
   public static final DiagnosticGroup SUSPICIOUS_CODE =
       DiagnosticGroups.registerGroup("suspiciousCode",
           CheckSuspiciousCode.SUSPICIOUS_SEMICOLON,
