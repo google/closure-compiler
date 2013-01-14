@@ -575,7 +575,6 @@ class DisambiguateProperties<T> implements CompilerPass {
 
         ++propsRenamed;
         prop.expandTypesToSkip();
-        UnionFind<T> types = prop.getTypes();
         for (Node node : prop.renameNodes) {
           T rootType = prop.rootTypes.get(node);
           if (prop.shouldRename(rootType)) {
@@ -780,8 +779,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       if (type.isUnionType()) {
         Set<JSType> types = Sets.newHashSet(type);
         for (JSType alt : type.toMaybeUnionType().getAlternates()) {
-          // TODO(johnlenz): shouldn't we use "alt" here?
-          types.addAll(getTypesToSkipForTypeNonUnion(type));
+          types.addAll(getTypesToSkipForTypeNonUnion(alt));
         }
         return ImmutableSet.copyOf(types);
       } else if (type.isEnumElementType()) {
