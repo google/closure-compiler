@@ -148,10 +148,10 @@ final class FunctionTypeBuilder {
     public boolean apply(JSType type) {
       ObjectType objectType = ObjectType.cast(type);
       if (objectType == null) {
-        reportWarning(EXTENDS_NON_OBJECT, fnName, type.toString());
+        reportWarning(EXTENDS_NON_OBJECT, formatFnName(), type.toString());
         return false;
       } else if (objectType.isEmptyType()) {
-        reportWarning(RESOLVED_TAG_EMPTY, "@extends", fnName);
+        reportWarning(RESOLVED_TAG_EMPTY, "@extends", formatFnName());
         return false;
       } else if (objectType.isUnknownType()) {
         if (hasMoreTagsToResolve(objectType)) {
@@ -209,6 +209,11 @@ final class FunctionTypeBuilder {
     this.sourceName = sourceName;
     this.compiler = compiler;
     this.scope = scope;
+  }
+
+  /** Format the function name for use in warnings. */
+  String formatFnName() {
+    return fnName.isEmpty() ? "<anonymous>" : fnName;
   }
 
   /**
@@ -314,9 +319,9 @@ final class FunctionTypeBuilder {
       isInterface = info.isInterface();
 
       if (makesStructs && !isConstructor) {
-        reportWarning(CONSTRUCTOR_REQUIRED, "@struct", fnName);
+        reportWarning(CONSTRUCTOR_REQUIRED, "@struct", formatFnName());
       } else if (makesDicts && !isConstructor) {
-        reportWarning(CONSTRUCTOR_REQUIRED, "@dict", fnName);
+        reportWarning(CONSTRUCTOR_REQUIRED, "@dict", formatFnName());
       }
 
       // base type
@@ -329,7 +334,7 @@ final class FunctionTypeBuilder {
             baseType = (ObjectType) maybeBaseType;
           }
         } else {
-          reportWarning(EXTENDS_WITHOUT_TYPEDEF, fnName);
+          reportWarning(EXTENDS_WITHOUT_TYPEDEF, formatFnName());
         }
       }
 
@@ -346,9 +351,9 @@ final class FunctionTypeBuilder {
           }
         } else if (isInterface) {
           reportWarning(
-              TypeCheck.CONFLICTING_IMPLEMENTED_TYPE, fnName);
+              TypeCheck.CONFLICTING_IMPLEMENTED_TYPE, formatFnName());
         } else {
-          reportWarning(CONSTRUCTOR_REQUIRED, "@implements", fnName);
+          reportWarning(CONSTRUCTOR_REQUIRED, "@implements", formatFnName());
         }
       }
 
@@ -486,7 +491,7 @@ final class FunctionTypeBuilder {
     }
 
     for (String inexistentName : allJsDocParams) {
-      reportWarning(INEXISTANT_PARAM, inexistentName, fnName);
+      reportWarning(INEXISTANT_PARAM, inexistentName, formatFnName());
     }
 
     parametersNode = builder.build();
@@ -684,7 +689,7 @@ final class FunctionTypeBuilder {
         }
 
         if (!existingFn.hasEqualCallType(fnType)) {
-          reportWarning(TYPE_REDEFINITION, fnName,
+          reportWarning(TYPE_REDEFINITION, formatFnName(),
               fnType.toString(), existingFn.toString());
         }
 

@@ -1679,6 +1679,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
             "required: number"));
   }
 
+  public void testFunctionArguments18() throws Exception {
+    testTypes(
+        "function f(x) {}" +
+        "f(/** @param {number} y */ (function() {}));",
+        "parameter y does not appear in <anonymous>'s parameter list");
+  }
+
   public void testPrintFunctionName1() throws Exception {
     // Ensures that the function name is pretty.
     testTypes(
