@@ -2750,7 +2750,7 @@ MutationRecord.prototype.attributeName;
 MutationRecord.prototype.attributeNamespace;
 
 /** @type {?string} */
-MutationRecord.prototype.oldvalue;
+MutationRecord.prototype.oldValue;
 
 
 /**

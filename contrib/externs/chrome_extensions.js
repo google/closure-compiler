@@ -869,15 +869,15 @@ function TtsEvent() {}
 
 
 /** @type {string} */
-TtsEvent.type;
+TtsEvent.prototype.type;
 
 
 /** @type {number} */
-TtsEvent.charIndex;
+TtsEvent.prototype.charIndex;
 
 
 /** @type {string} */
-TtsEvent.errorMessage;
+TtsEvent.prototype.errorMessage;
 
 
 
@@ -889,23 +889,23 @@ function TtsVoice() {}
 
 
 /** @type {string} */
-TtsVoice.voiceName;
+TtsVoice.prototype.voiceName;
 
 
 /** @type {string} */
-TtsVoice.lang;
+TtsVoice.prototype.lang;
 
 
 /** @type {string} */
-TtsVoice.gender;
+TtsVoice.prototype.gender;
 
 
 /** @type {string} */
-TtsVoice.extensionId;
+TtsVoice.prototype.extensionId;
 
 
 /** @type {Array.<string>} */
-TtsVoice.eventTypes;
+TtsVoice.prototype.eventTypes;
 
 
 /**
