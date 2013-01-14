@@ -152,7 +152,7 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("try {var x = 1} catch (e) {e()} finally {x()}",
         " try {var x = 1}                 finally {x()}");
     test("try {var x = 1} catch (e) {e()} finally {}",
-        "try {var x = 1} finally {}");
+        " try {var x = 1} finally {}");
     testSame("try {var x = 1} finally {x()}");
     testSame("try {var x = 1} finally {}");
     test("function f() {return; try{var x = 1}catch(e){} }",
@@ -195,7 +195,7 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
              " case 'a': return; default: alert(1)}}");
   }
 
-  public void testUnlessUnconditionalContinue() {
+  public void testUselessUnconditionalContinue() {
     test("for(;1;) {continue}", " for(;1;) {}");
     test("for(;0;) {continue}", " for(;0;) {}");
 
@@ -206,7 +206,7 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("do { continue } while(1);", "do {  } while(1);");
   }
 
-  public void testUnlessUnconditonalBreak() {
+  public void testUselessUnconditonalBreak() {
     test("switch (a) { case 'a': break }", "switch (a) { case 'a': }");
     test("switch (a) { case 'a': break; case foo(): }",
          "switch (a) { case 'a':        case foo(): }");
@@ -232,22 +232,33 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
     testSame("for(;1;) { break }");
   }
 
-  public void testCascadedRemovalOfUnlessUnconditonalJumps() {
+  // These tests all require the analysis to go to a fixpoint in order to pass
+  public void testIteratedRemoval() {
     test("switch (a) { case 'a': break; case 'b': break; case 'c': break }",
-         "switch (a) { case 'a': break; case 'b': case 'c': }");
-    // Only one break removed per pass.
-    test("switch (a) { case 'a': break; case 'b': case 'c': }",
-         "switch (a) { case 'a': case 'b': case 'c': }");
+        " switch (a) { case 'a': case 'b': case 'c': }");
 
     test("function foo() {" +
-      "  switch (a) { case 'a':return; case 'b':return; case 'c':return }}",
-      "function foo() { switch (a) { case 'a':return; case 'b': case 'c': }}");
-    test("function foo() {" +
-      "  switch (a) { case 'a':return; case 'b': case 'c': }}",
-      "function foo() { switch (a) { case 'a': case 'b': case 'c': }}");
+        "  switch (a) { case 'a':return; case 'b':return; case 'c':return }}",
+        " function foo() { switch (a) { case 'a': case 'b': case 'c': }}");
 
-    testSame("function foo() {" +
-             "switch (a) { case 'a':return 2; case 'b':return 1}}");
+    test("for (;;) {\n" +
+        "   switch (a) {\n" +
+        "   case 'a': continue;\n" +
+        "   case 'b': continue;\n" +
+        "   case 'c': continue;\n" +
+        "   }\n" +
+        " }",
+        " for (;;) { switch (a) { case 'a': case 'b': case 'c': } }");
+
+    test("function foo() { if (x) { return; } if (x) { return; } x; }",
+        " function foo() {}");
+
+    test("var x; \n" +
+        " out: { \n" +
+        "   try { break out; } catch (e) { break out; } \n" +
+        "   x = undefined; \n" +
+        " }",
+        " var x; out: {}");
   }
 
   public void testIssue311() {
