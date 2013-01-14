@@ -54,7 +54,7 @@ final class RenameVars implements CompilerPass {
 
   /**
    * Maps a name node to its pseudo name, null if we are not generating so
-   * there will not no overhead unless we are debugging.
+   * there will be no overhead unless we are debugging.
    */
   private final Map<Node, String> pseudoNameMap;
 
@@ -417,6 +417,11 @@ final class RenameVars implements CompilerPass {
    * that were reused.
    */
   private void reusePreviouslyUsedVariableMap() {
+    // If prevUsedRenameMap had duplicate values then this pass would be
+    // non-deterministic.
+    // In such a case, the following will throw an IllegalArgumentException.
+    Preconditions.checkState(
+        prevUsedRenameMap.getNewNameToOriginalNameMap() instanceof Map);
     for (Assignment a : assignments.values()) {
       String prevNewName = prevUsedRenameMap.lookupNewName(a.oldName);
       if (prevNewName == null || reservedNames.contains(prevNewName)) {
@@ -435,7 +440,7 @@ final class RenameVars implements CompilerPass {
   /**
    * Determines which new names to substitute for the original names.
    */
-  private void assignNames(Set<Assignment> varsToRename) {
+  private void assignNames(SortedSet<Assignment> varsToRename) {
     NameGenerator globalNameGenerator =
         new NameGenerator(reservedNames, prefix, reservedCharacters);
 

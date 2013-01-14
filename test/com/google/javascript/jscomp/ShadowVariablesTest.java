@@ -24,11 +24,14 @@ package com.google.javascript.jscomp;
 public class ShadowVariablesTest extends CompilerTestCase{
   // Use pseudo names to make test easier to read.
   private boolean generatePseudoNames = false;
+  private RenameVars pass = null;
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-      return new RenameVars(
+      pass = new RenameVars(
           compiler, "", false, false,
           generatePseudoNames, true, null, null, null);
+      return  pass;
   }
 
   @Override
@@ -40,6 +43,12 @@ public class ShadowVariablesTest extends CompilerTestCase{
   protected void setUp() throws Exception {
     super.setUp();
     generatePseudoNames = false;
+  }
+
+  @Override
+  protected void tearDown() throws Exception {
+    super.tearDown();
+    pass = null;
   }
 
   public void testShadowSimple1() {
@@ -237,6 +246,19 @@ public class ShadowVariablesTest extends CompilerTestCase{
   public void testExportedLocal2() {
     test("function f($super) { $super();$super(); return function(a){} }",
          "function a($super) { $super();$super(); return function(b){} }");
+  }
+
+  public void testRenameMapHasNoDuplicates() {
+    test("function foo(x) { return function (y) {} }",
+         "function   b(a) { return function (a) {} }");
+
+    VariableMap vm = pass.getVariableMap();
+    try {
+      vm.getNewNameToOriginalNameMap();
+    } catch (java.lang.IllegalArgumentException unexpected) {
+      fail("Invalid VariableMap generated: " +
+           vm.getOriginalNameToNewNameMap().toString());
+    }
   }
 
   public void testBug4172539() {

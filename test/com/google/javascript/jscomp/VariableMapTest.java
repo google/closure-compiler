@@ -136,4 +136,18 @@ public class VariableMapTest extends TestCase {
       }
     }
   }
+
+  public void testReverseThrowsErrorOnDuplicate() throws ParseException {
+    VariableMap vm = new VariableMap(ImmutableMap.of("AA", "b", "BB", "b"));
+    try {
+      vm.getNewNameToOriginalNameMap();
+      fail();
+    } catch (java.lang.IllegalArgumentException expected) {
+    }
+  }
+
+  public void testReverseLookupOfNullFindsNoName() throws ParseException {
+    VariableMap vm = new VariableMap(ImmutableMap.of("AA", "a", "BB", "b"));
+    assertNull(vm.lookupSourceName(null));
+  }
 }

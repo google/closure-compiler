@@ -472,6 +472,15 @@ public class RenameVarsTest extends CompilerTestCase {
     assertVariableMapsEqual(expectedVariableMap, previouslyUsedMap);
   }
 
+  public void testPrevUsedMapWithDuplicates() {
+    previouslyUsedMap = makeVariableMap("Foo", "z", "Bar", "z");
+    try {
+      testSame("");
+      fail();
+    } catch (java.lang.IllegalArgumentException expected) {
+    }
+  }
+
   public void testExportSimpleSymbolReservesName() {
     test("var goog, x; goog.exportSymbol('a', x);",
          "var a, b; a.exportSymbol('a', b);");
