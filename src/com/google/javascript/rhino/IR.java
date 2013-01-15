@@ -386,6 +386,10 @@ public class IR {
     return unaryOp(Token.POS, expr1);
   }
 
+  public static Node cast(Node expr1) {
+    return unaryOp(Token.CAST, expr1);
+  }
+
   public static Node add(Node expr1, Node expr2) {
     return binaryOp(Token.ADD, expr1, expr2);
   }
@@ -569,6 +573,7 @@ public class IR {
       case Token.BITNOT:
       case Token.BITXOR:
       case Token.CALL:
+      case Token.CAST:
       case Token.COMMA:
       case Token.DEC:
       case Token.DELPROP:

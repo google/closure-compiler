@@ -200,6 +200,18 @@ public class IRTest extends TestCase {
         "    BLOCK\n");
   }
 
+  public void testAdd() {
+    testIR(
+        IR.add(
+            IR.cast(IR.number(1)),
+            IR.number(2)),
+        "ADD\n" +
+        "    CAST\n" +
+        "        NUMBER 1.0\n" +
+        "    NUMBER 2.0\n");
+
+  }
+
   private void testIR(Node node, String expectedStructure) {
     assertEquals(expectedStructure, node.toStringTree());
   }
