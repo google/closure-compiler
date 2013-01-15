@@ -1006,6 +1006,27 @@ final public class JSDocInfoBuilder {
   }
 
   /**
+   * Returns whether current JSDoc is annotated with {@code @angularInject}.
+   */
+  public boolean isAngularInjectRecorded() {
+    return currentInfo.isAngularInject();
+  }
+
+  /**
+   * Records that we'd like to add {@code $inject} property inferred from
+   * parameters.
+   */
+  public boolean recordAngularInject(boolean angularInject) {
+    if (!isAngularInjectRecorded()) {
+      currentInfo.setAngularInject(angularInject);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Whether the current doc info has other type tags, like
    * {@code @param} or {@code @return} or {@code @type} or etc.
    */

@@ -25,6 +25,7 @@ import java.util.Map;
  * @author nicksantos@google.com (Nick Santos)
  */
 enum Annotation {
+  ANGULAR_INJECT,
   AUTHOR,
   CONSISTENTIDGENERATOR,
   CONSTANT,
@@ -77,6 +78,7 @@ enum Annotation {
 
   static final Map<String, Annotation> recognizedAnnotations =
       new ImmutableMap.Builder<String, Annotation>().
+      put("angularInject", Annotation.ANGULAR_INJECT).
       put("argument", Annotation.PARAM).
       put("author", Annotation.AUTHOR).
       put("consistentIdGenerator", Annotation.CONSISTENTIDGENERATOR).

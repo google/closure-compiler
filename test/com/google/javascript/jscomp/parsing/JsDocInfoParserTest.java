@@ -2659,6 +2659,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testWhitelistedAnnotations() {
     parse(
       "* @addon \n" +
+      "* @angularInject \n" +
       "* @augments \n" +
       "* @base \n" +
       "* @borrows \n" +
@@ -2700,6 +2701,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertNull(info.getOriginalCommentString());
     info = parse(comment, true /* parseDocumentation */);
     assertEquals(comment, info.getOriginalCommentString());
+  }
+
+  public void testParseAngularInject1() throws Exception {
+    assertTrue(parse("@angularInject*/").isAngularInject());
+  }
+
+  public void testParseAngularInject2() throws Exception {
+    parse("@angularInject \n@angularInject*/", "extra @angularInject tag");
   }
 
   /**
