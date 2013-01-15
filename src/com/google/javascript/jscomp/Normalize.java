@@ -173,6 +173,9 @@ class Normalize implements CompilerPass {
         }
       } else if (n.isStringKey() && isMarkedExpose(n)) {
         exposedProperties.add(n.getString());
+      } else if (n.isGetProp() && n.getParent().isExprResult()
+                  && isMarkedExpose(n)) {
+        exposedProperties.add(n.getLastChild().getString());
       }
     }
 

@@ -289,7 +289,8 @@ public class IntegrationTest extends IntegrationTestCase {
          "/** @constructor */ var Foo = function() {};" +
          "/** @expose */  Foo.prototype.miny = 3;" +
          "Foo.prototype.moe = 4;" +
-         "function moe(a, b) { return a.meeny + b.miny; }" +
+         "/** @expose */  Foo.prototype.tiger;" +
+         "function moe(a, b) { return a.meeny + b.miny + a.tiger; }" +
          "window['x'] = x;" +
          "window['Foo'] = Foo;" +
          "window['moe'] = moe;",
@@ -298,7 +299,7 @@ public class IntegrationTest extends IntegrationTestCase {
          "window.x={a:1,meeny:2};" +
          "window.Foo=a;" +
          "window.moe=function(b,c){" +
-         "  return b.meeny+c.miny" +
+         "  return b.meeny+c.miny+b.tiger" +
          "}");
   }
 
