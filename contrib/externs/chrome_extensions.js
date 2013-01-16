@@ -311,54 +311,46 @@ chrome.tabs.onUpdated;
 chrome.tabs.onSelectionChanged;
 
 
-/** @see http://code.google.com/chrome/extensions/windows.html */
+/** @see http://code.google.com/chrome/extensions/windows.html  */
 chrome.windows = {};
 
 
 /**
- * @param {Object?} createData May have 'url', 'left', 'top',
- *     'width', or 'height' properties.
+ * @param {Object=} opt_createData May have many keys to specify parameters.
+ *     Or the callback.
  * @param {function(ChromeWindow): void=} opt_callback Callback.
  */
-chrome.windows.create = function(createData, opt_callback) {};
+chrome.windows.create = function(opt_createData, opt_callback) {};
 
 
 /**
- * Note: This is a screwy function signature as the middle param is
- * optional, but the JS compiler only supports optional params at the
- * end. Sigh. This is dealt with by declaring the 2nd param to be of
- * either the type of the 2nd or 3rd params and declaring the 3rd
- * param to be optional.  This is not completely accurate as the last
- * param, whether there are 2 or 3, must be the callback and this signature
- * accepts a object for the 2nd and last param.
- *
  * @param {number} id Window id.
- * @param {!Object.<string,boolean>|function(!ChromeWindow)} param2
- *     An optional object with a "populate" (boolean) key or the
- *     callback function.
+ * @param {Object=} opt_getInfo May have 'populate' key. Or the callback.
  * @param {function(!ChromeWindow): void=} opt_callback Callback when
- *     param2 is an object.
+ *     opt_getInfo is an object.
  */
-chrome.windows.get = function(id, param2, opt_callback) {};
+chrome.windows.get = function(id, opt_getInfo, opt_callback) {};
 
 
 /**
- * @param {Object.<string, boolean>?} getInfo May have 'populate' key.
- * @param {function(!Array.<!ChromeWindow>): void} callback Callback.
+ * @param {Object=} opt_getInfo May have 'populate' key. Or the callback.
+ * @param {function(!Array.<!ChromeWindow>): void=} opt_callback Callback.
  */
-chrome.windows.getAll = function(getInfo, callback) {};
+chrome.windows.getAll = function(opt_getInfo, opt_callback) {};
 
 
 /**
- * @param {function(ChromeWindow): void} callback Callback.
+ * @param {Object=} opt_getInfo May have 'populate' key. Or the callback.
+ * @param {function(ChromeWindow): void=} opt_callback Callback.
  */
-chrome.windows.getCurrent = function(callback) {};
+chrome.windows.getCurrent = function(opt_getInfo, opt_callback) { };
 
 
 /**
- * @param {function(ChromeWindow): void} callback Callback.
+ * @param {Object=} opt_getInfo May have 'populate' key. Or the callback.
+ * @param {function(ChromeWindow): void=} opt_callback Callback.
  */
-chrome.windows.getLastFocused = function(callback) {};
+chrome.windows.getLastFocused = function(opt_getInfo, opt_callback) { };
 
 
 /**
@@ -370,8 +362,8 @@ chrome.windows.remove = function(tabId, opt_callback) {};
 
 /**
  * @param {number} tabId Tab Id.
- * @param {Object.<string, number>} updateProperties An object which may
- *     have 'left', 'top', 'width', or 'height' keys.
+ * @param {Object} updateProperties An object which may have many keys for
+ *     various options.
  * @param {function(): void=} opt_callback Callback.
  */
 chrome.windows.update = function(tabId, updateProperties, opt_callback) {};
@@ -2257,28 +2249,28 @@ function StorageArea() {}
 
 
 /**
- * @param {function()=} opt_callback callback on success, or on failure.
+ * Removes all items from storage.
+ * @param {function(): void=} opt_callback Callback function.
  */
 StorageArea.prototype.clear = function(opt_callback) {};
 
 
 /**
- * @param {(string|Array.<string>|Object.<string>)} keys
+ * @param {(string|!Array.<string>|!Object|null)=} opt_keys
  *    A single key to get, list of keys to get, or a dictionary
  *    specifying default values (see description of the
  *    object). An empty list or object will return an empty
  *    result object. Pass in null to get the entire contents of storage.
- * @param {!function(Object.<string>)} callback
- *    Callback with storage items, or on failure.
+ * @param {function(Object)=} opt_callback Callback with storage items, or null
+ *    on failure.
  */
-StorageArea.prototype.get = function(keys, callback) {};
+StorageArea.prototype.get = function(opt_keys, opt_callback) {};
 
 
 /**
- * @param {(string|Array.<string>)} keys
+ * @param {(string|!Array.<string>)} keys
  *    A single key or a list of keys for items to remove.
- * @param {function(Object.<string>)=} opt_callback
- *    Callback on success, or on failure.
+ * @param {function()=} opt_callback Callback.
  */
 StorageArea.prototype.remove = function(keys, opt_callback) {};
 
@@ -2287,10 +2279,19 @@ StorageArea.prototype.remove = function(keys, opt_callback) {};
  * @param {!Object.<string>} keys
  *    Object specifying items to augment storage
  *    with. Values that cannot be serialized (functions, etc) will be ignored.
- * @param {function(Object.<string>)=} opt_callback
- *    Callback with storage items, or on failure.
+ * @param {function()=} opt_callback Callback.
  */
-StorageArea.prototype.set = function(keys, opt_callback) {};
+StorageArea.prototype.set = function(keys, opt_callback) { };
+
+
+/**
+ * @param {(string|!Array.<string>|null)=} opt_keys
+ *    A single key or list of keys to get the total usage for. An empty list
+ *    will return 0. Pass in null to get the total usage of all of storage.
+ * @param {function(number)=} opt_callback
+ *    Callback with the amount of space being used by storage.
+ */
+StorageArea.prototype.getBytesInUse = function(opt_keys, opt_callback) { };
 
 
 
