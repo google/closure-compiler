@@ -21,6 +21,7 @@ import com.google.common.base.Throwables;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -548,6 +549,7 @@ class CodePrinter {
     private boolean outputTypes = false;
     private SourceMap sourceMap = null;
     private boolean tagAsStrict;
+    private JSTypeRegistry registry;
 
     /**
      * Sets the root node from which to generate the source code.
@@ -566,6 +568,11 @@ class CodePrinter {
       } catch (CloneNotSupportedException e) {
         throw Throwables.propagate(e);
       }
+      return this;
+    }
+
+    Builder setTypeRegistry(JSTypeRegistry registry) {
+      this.registry = registry;
       return this;
     }
 
@@ -630,7 +637,8 @@ class CodePrinter {
               ? Format.PRETTY
               : Format.COMPACT;
 
-      return toSource(root, outputFormat, options, sourceMap, tagAsStrict);
+      return toSource(root, outputFormat, options, registry,
+          sourceMap, tagAsStrict);
     }
   }
 
@@ -644,7 +652,8 @@ class CodePrinter {
    * Converts a tree to JS code
    */
   private static String toSource(Node root, Format outputFormat,
-      CompilerOptions options, SourceMap sourceMap,  boolean tagAsStrict) {
+      CompilerOptions options, JSTypeRegistry registry,
+      SourceMap sourceMap,  boolean tagAsStrict) {
     Preconditions.checkState(options.sourceMapDetailLevel != null);
 
     boolean createSourceMap = (sourceMap != null);
@@ -662,7 +671,7 @@ class CodePrinter {
             options.sourceMapDetailLevel);
     CodeGenerator cg =
         outputFormat == Format.TYPED
-        ? new TypedCodeGenerator(mcp, options)
+        ? new TypedCodeGenerator(mcp, options, registry)
         : new CodeGenerator(mcp, options);
 
     if (tagAsStrict) {

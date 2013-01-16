@@ -23,6 +23,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.Set;
@@ -32,8 +34,12 @@ import java.util.Set;
  * constructors.
  */
 class TypedCodeGenerator extends CodeGenerator {
-  TypedCodeGenerator(CodeConsumer consumer, CompilerOptions options) {
+  private final JSTypeRegistry registry;
+  TypedCodeGenerator(
+      CodeConsumer consumer, CompilerOptions options, JSTypeRegistry registry) {
     super(consumer, options);
+    Preconditions.checkNotNull(registry);
+    this.registry = registry;
   }
 
   @Override
@@ -88,8 +94,6 @@ class TypedCodeGenerator extends CodeGenerator {
    */
   private String getFunctionAnnotation(Node fnNode) {
     Preconditions.checkState(fnNode.isFunction());
-    StringBuilder sb = new StringBuilder("/**\n");
-
     JSType type = fnNode.getJSType();
 
     if (type == null || type.isUnknownType()) {
@@ -97,6 +101,14 @@ class TypedCodeGenerator extends CodeGenerator {
     }
 
     FunctionType funType = type.toMaybeFunctionType();
+
+    if (JSType.isEquivalent(
+        type, registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE))) {
+      return "/** @type {!Function} */\n";
+    }
+
+    StringBuilder sb = new StringBuilder("/**\n");
+
 
     // We need to use the child nodes of the function as the nodes for the
     // parameters of the function type do not have the real parameter names.
@@ -126,8 +138,8 @@ class TypedCodeGenerator extends CodeGenerator {
     // Return type
     JSType retType = funType.getReturnType();
     if (retType != null &&
-        (retType.isTemplateType() || !retType.isUnknownType()) &&
-        !retType.isEmptyType()) {
+        !retType.isEmptyType() && // There is no annotation for the empty type.
+        !funType.isInterface()) { // Interfaces never return a value.
       sb.append(" * ");
       appendAnnotation(sb, "return", retType.toAnnotationString());
       sb.append("\n");
@@ -201,25 +213,24 @@ class TypedCodeGenerator extends CodeGenerator {
     JSType parameterType = parameterNode.getJSType();
     String typeString;
 
-    // Emit unknown types as '*' (AllType) since '?' (UnknownType) is not
-    // a valid JSDoc type.
-    // TODO(johnlenz): Removing '?' is incorrect, update code
-    if (!parameterType.isTemplateType() && parameterType.isUnknownType()) {
-      typeString = "*";
+    if (parameterNode.isOptionalArg()) {
+      typeString = restrictByUndefined(parameterType).toAnnotationString() +
+          "=";
+    } else if (parameterNode.isVarArgs()) {
+      typeString = "..." +
+          restrictByUndefined(parameterType).toAnnotationString();
     } else {
-      // Fix-up optional and vararg parameters to match JSDoc type language
-      if (parameterNode.isOptionalArg()) {
-        typeString =
-            parameterType.restrictByNotNullOrUndefined().toAnnotationString() +
-            "=";
-      } else if (parameterNode.isVarArgs()) {
-        typeString = "..." +
-            parameterType.restrictByNotNullOrUndefined().toAnnotationString();
-      } else {
-        typeString = parameterType.toAnnotationString();
-      }
+      typeString = parameterType.toAnnotationString();
     }
 
     return typeString;
+  }
+
+  private JSType restrictByUndefined(JSType type) {
+    if (type.isUnionType()) {
+      return type.toMaybeUnionType().getRestrictedUnion(
+          registry.getNativeType(JSTypeNative.VOID_TYPE));
+    }
+    return type;
   }
 }

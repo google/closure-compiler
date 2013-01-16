@@ -53,9 +53,9 @@ public class ExternExportsPassTest extends TestCase {
     compileAndCheck("var a = {}; a.b = {}; a.b.c = function(d, e, f) {};" +
                     "goog.exportSymbol('foobar', a.b.c)",
                     "/**\n" +
-                    " * @param {*} d\n" +
-                    " * @param {*} e\n" +
-                    " * @param {*} f\n" +
+                    " * @param {?} d\n" +
+                    " * @param {?} e\n" +
+                    " * @param {?} f\n" +
                     " * @return {undefined}\n" +
                     " */\n" +
                     "var foobar = function(d, e, f) {\n};\n");
@@ -65,9 +65,9 @@ public class ExternExportsPassTest extends TestCase {
     compileAndCheck("var a = function(d, e, f) {};" +
                     "goog.exportSymbol('foobar', a)",
                     "/**\n" +
-                    " * @param {*} d\n" +
-                    " * @param {*} e\n" +
-                    " * @param {*} f\n" +
+                    " * @param {?} d\n" +
+                    " * @param {?} e\n" +
+                    " * @param {?} f\n" +
                     " * @return {undefined}\n" +
                     " */\n" +
                     "var foobar = function(d, e, f) {\n};\n");
@@ -79,9 +79,9 @@ public class ExternExportsPassTest extends TestCase {
                     "var a;\n" +
                     "a.b;\n" +
                     "/**\n" +
-                    " * @param {*} d\n" +
-                    " * @param {*} e\n" +
-                    " * @param {*} f\n" +
+                    " * @param {?} d\n" +
+                    " * @param {?} e\n" +
+                    " * @param {?} f\n" +
                     " * @return {undefined}\n" +
                     " */\n" +
                     "a.b.cprop = function(d, e, f) {\n};\n");
@@ -97,21 +97,21 @@ public class ExternExportsPassTest extends TestCase {
 
                     "var a;\n" +
                     "/**\n" +
-                    " * @param {*} p1\n" +
+                    " * @param {?} p1\n" +
                     " * @return {undefined}\n" +
                     " */\n" +
                     "a.b = function(p1) {\n};\n" +
                     "/**\n" +
-                    " * @param {*} d\n" +
-                    " * @param {*} e\n" +
-                    " * @param {*} f\n" +
+                    " * @param {?} d\n" +
+                    " * @param {?} e\n" +
+                    " * @param {?} f\n" +
                     " * @return {undefined}\n" +
                     " */\n" +
                     "a.b.c = function(d, e, f) {\n};\n" +
                     "/**\n" +
-                    " * @param {*} g\n" +
-                    " * @param {*} h\n" +
-                    " * @param {*} i\n" +
+                    " * @param {?} g\n" +
+                    " * @param {?} h\n" +
+                    " * @param {?} i\n" +
                     " * @return {undefined}\n" +
                     " */\n" +
                     "a.b.prototype.c = function(g, h, i) {\n};\n");
@@ -129,16 +129,16 @@ public class ExternExportsPassTest extends TestCase {
                     "var hello = {};\n" +
                     "hello.b;\n" +
                     "/**\n" +
-                    " * @param {*} d\n" +
-                    " * @param {*} e\n" +
-                    " * @param {*} f\n" +
+                    " * @param {?} d\n" +
+                    " * @param {?} e\n" +
+                    " * @param {?} f\n" +
                     " * @return {undefined}\n" +
                     " */\n" +
                     "hello.b.c = function(d, e, f) {\n};\n" +
                     "/**\n" +
-                    " * @param {*} g\n" +
-                    " * @param {*} h\n" +
-                    " * @param {*} i\n" +
+                    " * @param {?} g\n" +
+                    " * @param {?} h\n" +
+                    " * @param {?} i\n" +
                     " * @return {undefined}\n" +
                     " */\n" +
                     "hello.b.prototype.c = function(g, h, i) {\n};\n");
@@ -152,14 +152,14 @@ public class ExternExportsPassTest extends TestCase {
                     "goog.exportProperty(a.b, 'c', a.b.c);",
 
                     "/**\n" +
-                    " * @param {*} p1\n" +
+                    " * @param {?} p1\n" +
                     " * @return {undefined}\n" +
                     " */\n" +
                     "var prefix = function(p1) {\n};\n" +
                     "/**\n" +
-                    " * @param {*} d\n" +
-                    " * @param {*} e\n" +
-                    " * @param {*} f\n" +
+                    " * @param {?} d\n" +
+                    " * @param {?} e\n" +
+                    " * @param {?} f\n" +
                     " * @return {undefined}\n" +
                     " */\n" +
                     "prefix.c = function(d, e, f) {\n};\n");
@@ -297,7 +297,22 @@ public class ExternExportsPassTest extends TestCase {
                     "var externalName = function() {\n};\n");
   }
 
-  public void testExportFunctionWithOptionalArguments() {
+  public void testExportFunctionWithOptionalArguments1() {
+    compileAndCheck("var internalName;\n" +
+        "/**\n" +
+        " * @param {number=} a\n" +
+        " */\n" +
+        "internalName = function(a) {" +
+        "};" +
+        "goog.exportSymbol('externalName', internalName)",
+        "/**\n" +
+        " * @param {number=} a\n" +
+        " * @return {undefined}\n" +
+        " */\n" +
+        "var externalName = function(a) {\n};\n");
+  }
+
+  public void testExportFunctionWithOptionalArguments2() {
     compileAndCheck("var internalName;\n" +
         "/**\n" +
         " * @param {number=} a\n" +
@@ -308,6 +323,23 @@ public class ExternExportsPassTest extends TestCase {
         "goog.exportSymbol('externalName', internalName)",
         "/**\n" +
         " * @param {number=} a\n" +
+        " * @return {?}\n" +
+        " */\n" +
+        "var externalName = function(a) {\n};\n");
+  }
+
+  public void testExportFunctionWithOptionalArguments3() {
+    compileAndCheck("var internalName;\n" +
+        "/**\n" +
+        " * @param {number=} a\n" +
+        " */\n" +
+        "internalName = function(a) {" +
+        "  return a;\n" +
+        "};" +
+        "goog.exportSymbol('externalName', internalName)",
+        "/**\n" +
+        " * @param {number=} a\n" +
+        " * @return {?}\n" +
         " */\n" +
         "var externalName = function(a) {\n};\n");
   }
@@ -453,6 +485,29 @@ public class ExternExportsPassTest extends TestCase {
         " * @return {undefined}\n" +
         " */\n" +
         "var fn = function(a) {\n};\n");
+  }
+
+  public void testExportParamWithNull() throws Exception {
+    compileAndCheck(
+        "/** @param {string|null=} d */\n" +
+        "var f = function(d) {};\n" +
+        "goog.exportSymbol('foobar', f)\n",
+        "/**\n" +
+        " * @param {(null|string)=} d\n" +
+        " * @return {undefined}\n" +
+        " */\n" +
+        "var foobar = function(d) {\n" +
+        "};\n");
+  }
+
+  public void testExportConstructor() throws Exception {
+    compileAndCheck("/** @constructor */ var a = function() {};" +
+                    "goog.exportSymbol('foobar', a)",
+                    "/**\n" +
+                    " * @return {undefined}\n" +
+                    " * @constructor\n" +
+                    " */\n" +
+                    "var foobar = function() {\n};\n");
   }
 
   private void compileAndCheck(String js, String expected) {

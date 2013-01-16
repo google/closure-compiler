@@ -28,10 +28,12 @@ import junit.framework.TestCase;
 import java.util.List;
 
 public class CodePrinterTest extends TestCase {
-  boolean trustedStrings = true;
+  private boolean trustedStrings = true;
+  private Compiler lastCompiler = null;
 
   @Override public void setUp() {
     trustedStrings = true;
+    lastCompiler = null;
   }
 
   Node parse(String js) {
@@ -40,6 +42,7 @@ public class CodePrinterTest extends TestCase {
 
   Node parse(String js, boolean checkTypes) {
     Compiler compiler = new Compiler();
+    lastCompiler = compiler;
     CompilerOptions options = new CompilerOptions();
     options.setTrustedStrings(trustedStrings);
 
@@ -113,26 +116,30 @@ public class CodePrinterTest extends TestCase {
 
   String parsePrint(String js, boolean prettyprint, boolean lineBreak,
       int lineThreshold, boolean outputTypes) {
+    Node node = parse(js, true);
     CompilerOptions options = new CompilerOptions();
     options.setTrustedStrings(trustedStrings);
     options.setPrettyPrint(prettyprint);
     options.setLineLengthThreshold(lineThreshold);
     options.setLineBreak(lineBreak);
-    return new CodePrinter.Builder(parse(js, true)).setCompilerOptions(options)
+    return new CodePrinter.Builder(node).setCompilerOptions(options)
         .setOutputTypes(outputTypes)
+        .setTypeRegistry(lastCompiler.getTypeRegistry())
         .build();
   }
 
   String parsePrint(String js, boolean prettyprint, boolean lineBreak,
                     int lineThreshold, boolean outputTypes,
                     boolean tagAsStrict) {
+    Node node = parse(js, true);
     CompilerOptions options = new CompilerOptions();
     options.setTrustedStrings(trustedStrings);
     options.setPrettyPrint(prettyprint);
     options.setLineLengthThreshold(lineThreshold);
     options.setLineBreak(lineBreak);
-    return new CodePrinter.Builder(parse(js, true)).setCompilerOptions(options)
+    return new CodePrinter.Builder(node).setCompilerOptions(options)
         .setOutputTypes(outputTypes)
+        .setTypeRegistry(lastCompiler.getTypeRegistry())
         .setTagAsStrict(tagAsStrict)
         .build();
   }
@@ -926,17 +933,27 @@ public class CodePrinterTest extends TestCase {
         "};\n");
   }
 
-  public void testU2UFunctionTypeAnnotation() {
+  public void testU2UFunctionTypeAnnotation1() {
     assertTypeAnnotations(
         "/** @type {!Function} */ var x = function() {}",
-        "/**\n * @constructor\n */\nvar x = function() {\n};\n");
+        "/** @type {!Function} */\n" +
+        "var x = function() {\n};\n");
+  }
+
+  public void testU2UFunctionTypeAnnotation2() {
+    // TODO(johnlenz): we currently report the type of the RHS which is not
+    // correct, we should export the type of the LHS.
+    assertTypeAnnotations(
+        "/** @type {Function} */ var x = function() {}",
+        "/** @type {!Function} */\n" +
+        "var x = function() {\n};\n");
   }
 
   public void testEmitUnknownParamTypesAsAllType() {
     assertTypeAnnotations(
         "var a = function(x) {}",
         "/**\n" +
-        " * @param {*} x\n" +
+        " * @param {?} x\n" +
         " * @return {undefined}\n" +
         " */\n" +
         "var a = function(x) {\n};\n");
