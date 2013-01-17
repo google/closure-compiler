@@ -120,7 +120,7 @@ public class CompilerOptions implements Serializable, Cloneable {
    * Configures the compiler to log a hash code of the AST after
    * every pass. Only intended for internal development.
    */
-  public boolean checkDeterminism;
+  private boolean checkDeterminism;
 
   //--------------------------------
   // Input Options
@@ -1586,6 +1586,14 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setDevMode(DevMode devMode) {
     this.devMode = devMode;
+  }
+
+  public void setCheckDeterminism(boolean checkDeterminism) {
+    this.checkDeterminism = checkDeterminism;
+  }
+
+  public boolean getCheckDeterminism() {
+    return checkDeterminism;
   }
 
   public void setMessageBundle(MessageBundle messageBundle) {

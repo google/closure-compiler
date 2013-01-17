@@ -811,7 +811,7 @@ public class Compiler extends AbstractCompiler {
     if (options.devMode == DevMode.EVERY_PASS) {
       phaseOptimizer.setSanityCheck(sanityCheck);
     }
-    if (options.checkDeterminism) {
+    if (options.getCheckDeterminism()) {
       phaseOptimizer.setPrintAstHashcodes(true);
     }
     phaseOptimizer.consume(getPassConfig().getChecks());
@@ -1893,7 +1893,7 @@ public class Compiler extends AbstractCompiler {
     if (options.devMode == DevMode.EVERY_PASS) {
       phaseOptimizer.setSanityCheck(sanityCheck);
     }
-    if (options.checkDeterminism) {
+    if (options.getCheckDeterminism()) {
       phaseOptimizer.setPrintAstHashcodes(true);
     }
     phaseOptimizer.consume(getPassConfig().getOptimizations());
