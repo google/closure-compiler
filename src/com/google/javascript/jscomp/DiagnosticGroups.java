@@ -76,7 +76,7 @@ public class DiagnosticGroups {
   // If a group is suppressible on a per-file basis, it should be added
   // to parser/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
-      "accessControls, ambiguousFunctionDecl, cast, checkRegExp, " +
+      "accessControls, ambiguousFunctionDecl, checkRegExp, " +
       "checkTypes, checkVars, const, constantProperty, deprecated, " +
       "duplicateMessage, " +
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
