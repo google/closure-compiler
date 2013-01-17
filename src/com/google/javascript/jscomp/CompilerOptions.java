@@ -116,6 +116,12 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   DevMode devMode;
 
+  /**
+   * Configures the compiler to log a hash code of the AST after
+   * every pass. Only intended for internal development.
+   */
+  public boolean checkDeterminism;
+
   //--------------------------------
   // Input Options
   //--------------------------------
@@ -849,6 +855,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     skipAllPasses = false;
     nameAnonymousFunctionsOnly = false;
     devMode = DevMode.OFF;
+    checkDeterminism = false;
     checkSymbols = false;
     aggressiveVarCheck = CheckLevel.OFF;
     checkSuspiciousCode = false;

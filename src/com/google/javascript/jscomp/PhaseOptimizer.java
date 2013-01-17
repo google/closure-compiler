@@ -71,6 +71,7 @@ class PhaseOptimizer implements CompilerPass {
   private Tracer currentTracer = null;
   private String currentPassName = null;
   private PassFactory sanityCheck = null;
+  private boolean printAstHashcodes = false;
 
   private double progress = 0.0;
   private double progressStep = 0.0;
@@ -179,6 +180,13 @@ class PhaseOptimizer implements CompilerPass {
   }
 
   /**
+   * Sets the hashcode of the AST to be logged every pass. Intended for development.
+   */
+  void setPrintAstHashcodes(boolean printAstHashcodes) {
+    this.printAstHashcodes = printAstHashcodes;
+  }
+
+  /**
    * Run all the passes in the optimizer.
    */
   @Override
@@ -226,11 +234,21 @@ class PhaseOptimizer implements CompilerPass {
       currentPassName = null;
       currentTracer = null;
 
+      maybePrintAstHashcodes(passToCheck, root);
       maybeSanityCheck(externs, root);
     } catch (Exception e) {
       // TODO(johnlenz): Remove this once the normalization checks report
       // errors instead of exceptions.
       throw new RuntimeException("Sanity check failed for " + passToCheck, e);
+    }
+  }
+
+  private void maybePrintAstHashcodes(String passName, Node root) {
+    if (printAstHashcodes) {
+      String hashCodeMsg = "AST hashCode after " + passName + ": " +
+          compiler.toSource(root).hashCode();
+      System.err.println(hashCodeMsg);
+      compiler.addToDebugLog(hashCodeMsg);
     }
   }
 
