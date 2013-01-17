@@ -17,11 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.AbstractCompiler;
-import com.google.javascript.jscomp.CompilerPass;
-import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -58,27 +54,23 @@ class MinimizeExitPoints
 
       case Token.FOR:
       case Token.WHILE:
-        tryMinimizeExits(
-            NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
+        tryMinimizeExits(NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
         break;
 
       case Token.DO:
-        tryMinimizeExits(
-            NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
+        tryMinimizeExits(NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
 
         Node cond = NodeUtil.getConditionExpression(n);
         if (NodeUtil.getImpureBooleanValue(cond) == TernaryValue.FALSE) {
           // Normally, we wouldn't be able to optimize BREAKs inside a loop
           // but as we know the condition will always false, we can treat them
           // as we would a CONTINUE.
-          tryMinimizeExits(
-              n.getFirstChild(), Token.BREAK, null);
+          tryMinimizeExits(n.getFirstChild(), Token.BREAK, null);
         }
         break;
 
       case Token.FUNCTION:
-        tryMinimizeExits(
-            n.getLastChild(), Token.RETURN, null);
+        tryMinimizeExits(n.getLastChild(), Token.RETURN, null);
         break;
     }
   }
@@ -262,12 +254,8 @@ class MinimizeExitPoints
 
       // Move all the if node's following siblings.
       moveAllFollowing(ifNode, ifNode.getParent(), newDestBlock);
+      compiler.reportCodeChange();
     }
-
-    // Get rid of the "exit", replace with an empty item if needed.
-    NodeUtil.removeChild(exitNodeParent, exitNode);
-
-    compiler.reportCodeChange();
   }
 
   /**
@@ -281,7 +269,7 @@ class MinimizeExitPoints
    * @nullable labelName non-null only for breaks associated with labels.
    * @return Whether the node matches the specified block-exit type.
    */
-  static private boolean matchingExitNode(Node n, int type, String labelName) {
+  private static boolean matchingExitNode(Node n, int type, String labelName) {
     if (n.getType() == type) {
       if (type == Token.RETURN) {
         // only returns without expressions.
@@ -305,14 +293,11 @@ class MinimizeExitPoints
    * @param srcParent The parent node of start.
    * @param destParent The destination node.
    */
-  static private void moveAllFollowing(
+  private static void moveAllFollowing(
       Node start, Node srcParent, Node destParent) {
     for (Node n = start.getNext(); n != null; n = start.getNext()) {
-      boolean isFunctionDeclaration =
-          NodeUtil.isFunctionDeclaration(n);
-
+      boolean isFunctionDeclaration = NodeUtil.isFunctionDeclaration(n);
       srcParent.removeChild(n);
-
       if (isFunctionDeclaration) {
         destParent.addChildToFront(n);
       } else {
