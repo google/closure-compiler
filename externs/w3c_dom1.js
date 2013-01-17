@@ -405,7 +405,7 @@ Document.prototype.createEntityReference = function(name) {};
 Document.prototype.createProcessingInstruction = function(target, data) {};
 
 /**
- * @param {string} data
+ * @param {number|string} data
  * @return {!Text}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-createTextNode
  * @nosideeffects
@@ -850,4 +850,3 @@ Window.prototype.onerror;
 /** @type {?function (Event=)} */ Window.prototype.onsubmit;
 /** @type {?function (Event)} */ Window.prototype.onunload;
 /** @type {?function (Event)} */ Window.prototype.onwheel;
-
