@@ -27,11 +27,17 @@
  */
 
 
-/** namespace */
+/**
+ * namespace
+ * @const
+ */
 var chrome = {};
 
 
-/** @see http://code.google.com/chrome/extensions/extension.html */
+/**
+ * @see http://code.google.com/chrome/extensions/extension.html
+ * @const
+ */
 chrome.extension = {};
 
 
@@ -89,6 +95,18 @@ chrome.extension.isAllowedIncognitoAccess = function(callback) {};
 
 
 /**
+ * @param {string|*} extensionIdOrRequest Either the extensionId to send the
+ *     request to, in which case the request is passed as the next arg, or the
+ *     request.
+ * @param {*=} opt_request The request value, if arg1 was the extensionId.
+ * @param {function(*): void=} opt_callback The callback function which
+ *     takes a JSON response object sent by the handler of the request.
+ */
+chrome.extension.sendMessage = function(
+    extensionIdOrRequest, opt_request, opt_callback) {};
+
+
+/**
  * @param {number|*=} opt_arg1 Either the extensionId to send the request to,
  *     in which case the request is passed as the next arg, or the request.
  * @param {*=} opt_request The request value, if arg1 was the extensionId.
@@ -113,6 +131,10 @@ chrome.extension.onConnectExternal;
 
 
 /** @type {ChromeEvent} */
+chrome.extension.onMessage;
+
+
+/** @type {ChromeEvent} */
 chrome.extension.onRequest;
 
 
@@ -120,7 +142,10 @@ chrome.extension.onRequest;
 chrome.extension.onRequestExternal;
 
 
-/** @see http://code.google.com/chrome/extensions/tabs.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/tabs.html
+ */
 chrome.tabs = {};
 
 
@@ -253,6 +278,13 @@ chrome.tabs.reload = function(opt_tabId, opt_reloadProperties, opt_callback) {};
  */
 chrome.tabs.remove = function(tabIds, opt_callback) {};
 
+/**
+ * @param {number} tabId Tab id.
+ * @param {*} request The request value of any type.
+ * @param {function(*): void=} opt_callback The callback function which
+ *     takes a JSON response object sent by the handler of the request.
+ */
+chrome.tabs.sendMessage = function(tabId, request, opt_callback) {};
 
 /**
  * @param {number} tabId Tab id.
@@ -311,7 +343,10 @@ chrome.tabs.onUpdated;
 chrome.tabs.onSelectionChanged;
 
 
-/** @see http://code.google.com/chrome/extensions/windows.html  */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/windows.html
+ */
 chrome.windows = {};
 
 
@@ -395,7 +430,10 @@ chrome.windows.WINDOW_ID_NONE;
 chrome.windows.WINDOW_ID_CURRENT;
 
 
-/** @see http://code.google.com/chrome/extensions/i18n.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/i18n.html
+ */
 chrome.i18n = {};
 
 
@@ -415,7 +453,10 @@ chrome.i18n.getAcceptLanguages = function(callback) {};
 chrome.i18n.getMessage = function(messageName, opt_args) {};
 
 
-/** @see http://code.google.com/chrome/extensions/pageAction.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/pageAction.html
+ */
 chrome.pageAction = {};
 
 
@@ -454,7 +495,10 @@ chrome.pageAction.show = function(tabId) {};
 chrome.pageAction.onClicked;
 
 
-/** @see http://code.google.com/chrome/extensions/browserAction.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/browserAction.html
+ */
 chrome.browserAction = {};
 
 
@@ -496,7 +540,10 @@ chrome.browserAction.setTitle = function(details) {};
 chrome.browserAction.onClicked;
 
 
-/** @see http://code.google.com/chrome/extensions/bookmarks.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/bookmarks.html
+ */
 chrome.bookmarks = {};
 
 
@@ -626,7 +673,10 @@ chrome.bookmarks.onMoved;
 chrome.bookmarks.onRemoved;
 
 
-/** @see http://code.google.com/chrome/extensions/omnibox.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/omnibox.html
+ */
 chrome.omnibox = {};
 
 
@@ -667,7 +717,10 @@ SuggestResult.prototype.content;
 SuggestResult.prototype.description;
 
 
-/** @see http://code.google.com/chrome/extensions/dev/contextMenus.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/dev/contextMenus.html
+ */
 chrome.contextMenus = {};
 
 
@@ -700,7 +753,10 @@ chrome.contextMenus.removeAll = function(opt_callback) {};
 chrome.contextMenus.update = function(id, updateProperties, opt_callback) {};
 
 
-/** @see http://code.google.com/chrome/extensions/dev/cookies.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/dev/cookies.html
+ */
 chrome.cookies = {};
 
 
@@ -759,6 +815,7 @@ CookieChangeInfo.prototype.cookie;
 /** @type {string} */
 CookieChangeInfo.prototype.cause;
 
+/** @const */
 chrome.management = {};
 
 
@@ -829,7 +886,10 @@ chrome.management.onInstalled;
 chrome.management.onUninstalled;
 
 
-/** @see http://code.google.com/chrome/extensions/idle.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/idle.html
+ */
 chrome.idle = {};
 
 
@@ -847,6 +907,7 @@ chrome.idle.onStateChanged;
 
 /**
  * Chrome Text-to-Speech API.
+ * @const
  * @see http://code.google.com/chrome/extensions/tts.html
  */
 chrome.tts = {};
@@ -933,7 +994,10 @@ chrome.tts.speak = function(utterance, opt_options, opt_callback) {};
 chrome.tts.stop = function() {};
 
 
-/** @see http://code.google.com/chrome/extensions/ttsEngine.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/ttsEngine.html
+ */
 chrome.ttsEngine = {};
 
 
@@ -945,7 +1009,10 @@ chrome.ttsEngine.onSpeak;
 chrome.ttsEngine.onStop;
 
 
-/** @see http://code.google.com/chrome/extensions/contentSettings.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/contentSettings.html
+ */
 chrome.contentSettings = {};
 
 
@@ -973,7 +1040,10 @@ chrome.contentSettings.popups;
 chrome.contentSettings.notifications;
 
 
-/** @see http://code.google.com/chrome/extensions/fileBrowserHandle.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/fileBrowserHandle.html
+ */
 chrome.fileBrowserHandle = {};
 
 
@@ -981,7 +1051,10 @@ chrome.fileBrowserHandle = {};
 chrome.fileBrowserHandle.onExecute;
 
 
-/** @see http://code.google.com/chrome/extensions/history.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/history.html
+ */
 chrome.history = {};
 
 
@@ -1037,8 +1110,13 @@ chrome.history.onVisitRemoved;
 chrome.history.onVisited;
 
 
-/** @see http://code.google.com/chrome/extensions/input.ime.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/input.ime.html
+ */
 chrome.input = {};
+
+/** @const */
 chrome.input.ime = {};
 
 /**
@@ -1186,7 +1264,7 @@ chrome.input.ime.onKeyEvent;
 chrome.input.ime.onMenuItemActivated;
 
 
-/** namespace */
+/** @const namespace */
 chrome.mediaGalleries = {};
 
 
@@ -1198,7 +1276,10 @@ chrome.mediaGalleries = {};
 chrome.mediaGalleries.getMediaFileSystems = function(details, callback) {};
 
 
-/** @see http://code.google.com/chrome/extensions/pageCapture.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/pageCapture.html
+ */
 chrome.pageCapture = {};
 
 
@@ -1208,8 +1289,10 @@ chrome.pageCapture = {};
  */
 chrome.pageCapture.saveAsMHTML = function(details, callback) {};
 
-
-/** @see http://code.google.com/chrome/extensions/permissions.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/permissions.html
+ */
 chrome.permissions = {};
 
 
@@ -1248,7 +1331,10 @@ chrome.permissions.onAdded;
 chrome.permissions.onRemoved;
 
 
-/** @see http://code.google.com/chrome/extensions/privacy.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/privacy.html
+ */
 chrome.privacy = {};
 
 
@@ -1264,7 +1350,10 @@ chrome.privacy.services;
 chrome.privacy.websites;
 
 
-/** @see http://code.google.com/chrome/extensions/proxy.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/proxy.html
+ */
 chrome.proxy = {};
 
 
@@ -1276,7 +1365,10 @@ chrome.proxy.settings;
 chrome.proxy.onProxyError;
 
 
-/** @see http://code.google.com/chrome/extensions/storage.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/storage.html
+ */
 chrome.storage = {};
 
 
@@ -1292,7 +1384,10 @@ chrome.storage.local;
 chrome.storage.onChanged;
 
 
-/** @see http://code.google.com/chrome/extensions/types.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/types.html
+ */
 chrome.chromeSetting = {};
 
 
@@ -1300,7 +1395,10 @@ chrome.chromeSetting = {};
 chrome.chromeSetting.onChange;
 
 
-/** @see http://code.google.com/chrome/extensions/webNavigation.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/webNavigation.html
+ */
 chrome.webNavigation = {};
 
 
@@ -1427,7 +1525,10 @@ WebRequestOnErrorOccurredEvent.prototype.hasListener = function(listener) {};
 WebRequestOnErrorOccurredEvent.prototype.hasListeners = function(listener) {};
 
 
-/** @see http://code.google.com/chrome/extensions/webRequest.html */
+/**
+ * @const
+ * @see http://code.google.com/chrome/extensions/webRequest.html
+ */
 chrome.webRequest = {};
 
 
