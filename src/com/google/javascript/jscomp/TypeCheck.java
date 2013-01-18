@@ -29,7 +29,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -999,19 +998,41 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
-  /** Check that we don't create new properties on structs. */
+  /**
+   * After a struct object is created, we can't add new properties to it, with
+   * one exception. We allow creation of "static" properties like
+   * Foo.prototype.bar = baz;
+   * where Foo.prototype is a struct, if the assignment happens at the top level
+   * and the constructor Foo is defined in the same file.
+   */
   private void checkPropCreation(NodeTraversal t, Node lvalue) {
     if (lvalue.isGetProp()) {
       Node obj = lvalue.getFirstChild();
       Node prop = lvalue.getLastChild();
       JSType objType = getJSType(obj);
       String pname = prop.getString();
-      if (objType.isStruct() && !objType.hasProperty(pname)) {
-        if (!(obj.isThis() &&
-              getJSType(t.getScope().getRootNode()).isConstructor())) {
-          report(t, prop, ILLEGAL_PROPERTY_CREATION);
+
+      if (!objType.isStruct() || objType.hasProperty(pname)) {
+        return;
+      }
+      Scope s = t.getScope();
+      if (obj.isThis() && getJSType(s.getRootNode()).isConstructor()) {
+        return;
+      }
+      // Prop created outside ctor, check that it's a static prop
+      Node assgnStm = lvalue.getParent().getParent();
+      if (objType instanceof ObjectType &&
+          s.isGlobal() &&
+          NodeUtil.isPrototypePropertyDeclaration(assgnStm)) {
+        ObjectType instance =
+            objType.toObjectType().getOwnerFunction().getInstanceType();
+        String file = lvalue.getSourceFileName();
+        Node ctor = instance.getConstructor().getSource();
+        if (ctor != null && ctor.getSourceFileName().equals(file)) {
+          return;
         }
       }
+      report(t, prop, ILLEGAL_PROPERTY_CREATION);
     }
   }
 
@@ -1696,7 +1717,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       boolean isExtern = false;
       JSDocInfo functionJSDocInfo = functionType.getJSDocInfo();
-      if( functionJSDocInfo != null  &&
+      if (functionJSDocInfo != null  &&
           functionJSDocInfo.getAssociatedNode() != null) {
         isExtern = functionJSDocInfo.getAssociatedNode().isFromExterns();
       }

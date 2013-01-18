@@ -4110,9 +4110,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               "Square.prototype = /** @struct */ {\n" +
               "  area: function() { return this.side * this.side; }\n" +
               "};\n" +
-              "Square.prototype.id = function(x) { return x; };\n",
-              "Cannot add a property to a struct instance " +
-              "after it is constructed.");
+              "Square.prototype.id = function(x) { return x; };");
   }
 
   public void testSetprop11() throws Exception {
@@ -4121,11 +4119,20 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               " * @struct\n" +
               " */\n" +
               "function Foo() {}\n" +
+              "/** @constructor */\n" +
               "function Bar() {}\n" +
               "Bar.prototype = new Foo();\n" +
-              "Bar.prototype.someprop = 123;\n",
-              "Cannot add a property to a struct instance " +
-              "after it is constructed.");
+              "Bar.prototype.someprop = 123;");
+  }
+
+  public void testSetprop12() throws Exception {
+    // Create property on a constructor of structs (which isn't itself a struct)
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Foo() {}\n" +
+              "Foo.someprop = 123;");
   }
 
   public void testGetpropDict1() throws Exception {
@@ -4302,6 +4309,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               " * @struct\n" +
               " */\n" +
               "function Foo() {}\n" +
+              "/** @constructor */\n" +
               "function Bar() {}\n" +
               "Bar.prototype = new Foo();\n" +
               "Bar.prototype['someprop'] = 123;\n",
@@ -11143,7 +11151,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testGenerics1() throws Exception {
-    String FN_DECL = "/** \n" +
+    String fnDecl = "/** \n" +
         " * @param {T} x \n" +
         " * @param {function(T):T} y \n" +
         " * @template T\n" +
@@ -11151,14 +11159,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function f(x,y) { return y(x); }\n";
 
     testTypes(
-        FN_DECL +
+        fnDecl +
         "/** @type {string} */" +
         "var out;" +
         "/** @type {string} */" +
         "var result = f('hi', function(x){ out = x; return x; });");
 
     testTypes(
-        FN_DECL +
+        fnDecl +
         "/** @type {string} */" +
         "var out;" +
         "var result = f(0, function(x){ out = x; return x; });",
@@ -11167,7 +11175,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
 
     testTypes(
-        FN_DECL +
+        fnDecl +
         "var out;" +
         "/** @type {string} */" +
         "var result = f(0, function(x){ out = x; return x; });",

@@ -2506,10 +2506,8 @@ public final class NodeUtil {
    *     some constructor.
    */
   static boolean isPrototypePropertyDeclaration(Node n) {
-    if (!isExprAssign(n)) {
-      return false;
-    }
-    return isPrototypeProperty(n.getFirstChild().getFirstChild());
+    return isExprAssign(n) &&
+        isPrototypeProperty(n.getFirstChild().getFirstChild());
   }
 
   /**
@@ -2517,11 +2515,7 @@ public final class NodeUtil {
    */
   static boolean isPrototypeProperty(Node n) {
     String lhsString = n.getQualifiedName();
-    if (lhsString == null) {
-      return false;
-    }
-    int prototypeIdx = lhsString.indexOf(".prototype.");
-    return prototypeIdx != -1;
+    return lhsString != null && lhsString.contains(".prototype.");
   }
 
   /**
