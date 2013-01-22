@@ -1706,10 +1706,80 @@ CSSProperties.prototype.zIndex;
 CSSProperties.prototype.boxSizing;
 
 /**
- * Mozilla-only.
  * @type {string|number}
+ * @see http://www.w3.org/TR/css3-color/#transparency
  */
 CSSProperties.prototype.opacity;
+
+// CSS 3 transforms
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-2d-transforms/#backface-visibility-property
+ */
+CSSProperties.prototype.backfaceVisibility;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-2d-transforms/#perspective
+ */
+CSSProperties.prototype.perspective;
+
+/**
+ * @type {string|number}
+ * @see http://www.w3.org/TR/css3-2d-transforms/#perspective-origin
+ */
+CSSProperties.prototype.perspectiveOrigin;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-2d-transforms/#effects
+ */
+CSSProperties.prototype.transform;
+
+/**
+ * @type {string|number}
+ * @see http://www.w3.org/TR/css3-2d-transforms/#transform-origin
+ */
+CSSProperties.prototype.transformOrigin;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-2d-transforms/#transform-style
+ */
+CSSProperties.prototype.transformStyle;
+
+// CSS 3 transitions
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-transitions/#transition
+ */
+CSSProperties.prototype.transition;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-transitions/#transition-delay
+ */
+CSSProperties.prototype.transitionDelay;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-transitions/#transition-duration
+ */
+CSSProperties.prototype.transitionDuration;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-transitions/#transition-property-property
+ */
+CSSProperties.prototype.transitionProperty;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-transitions/#transition-timing-function
+ */
+CSSProperties.prototype.transitionTimingFunction;
 
 
 /**
