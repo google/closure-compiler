@@ -2268,6 +2268,20 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function (?): undefined");
   }
 
+  public void testDuplicateStaticMethodDecl6() throws Exception {
+    // Make sure the CAST node doesn't interfere with the @suppress
+    // annotation.
+    testTypes(
+        "var goog = goog || {};" +
+        "goog.foo = function(x) {};" +
+        "/**\n" +
+        " * @suppress {duplicate}\n" +
+        " * @return {undefined}\n" +
+        " */\n" +
+        "goog.foo = " +
+        "   /** @type {!Function} */ (function(x) {});");
+  }
+
   public void testDuplicateStaticPropertyDecl1() throws Exception {
     testTypes(
         "var goog = goog || {};" +

@@ -52,24 +52,32 @@ class SuppressDocWarningsGuard extends WarningsGuard {
   public CheckLevel level(JSError error) {
     Node node = error.node;
     if (node != null) {
+      boolean visitedFunction = false;
       for (Node current = node;
            current != null;
            current = current.getParent()) {
         int type = current.getType();
         JSDocInfo info = null;
 
-        // We only care about function annotations at the FUNCTION and SCRIPT
-        // level. Otherwise, the @suppress annotation has an implicit
-        // dependency on the exact structure of our AST, and that seems like
-        // a bad idea.
         if (type == Token.FUNCTION) {
-          info = NodeUtil.getFunctionJSDocInfo(current);
+          info = NodeUtil.getBestJSDocInfo(current);
+          visitedFunction = true;
         } else if (type == Token.SCRIPT) {
           info = current.getJSDocInfo();
-        } else if (type == Token.ASSIGN) {
-          Node rhs = current.getLastChild();
-          if (rhs.isFunction()) {
-            info = NodeUtil.getFunctionJSDocInfo(rhs);
+        } else if (current.isVar() || current.isAssign()) {
+          // There's one edge case we're worried about:
+          // if the warning points to an assigment to a function, we
+          // want the suppressions on that function to apply.
+          // It's OK if we double-count some cases.
+          Node rhs = NodeUtil.getRValueOfLValue(current.getFirstChild());
+          if (rhs != null) {
+            if (rhs.isCast()) {
+              rhs = rhs.getFirstChild();
+            }
+
+            if (rhs.isFunction() && !visitedFunction) {
+              info = NodeUtil.getBestJSDocInfo(current);
+            }
           }
         }
 
