@@ -1450,11 +1450,12 @@ angular.$routeProvider.Params.reloadOnSearch;
  */
 angular.$timeout;
 
-// /**
-//  * This extern is incomplete. $timeout cannot be a function with properties.
-//  * To use cancel, index $timeout.
-//  * Example: $timeout['cancel'](promise);
-//  * @param {angular.$q.Promise=} opt_promise
-//  * @return {boolean}
-//  */
-// angular.$timeout.cancel = function(opt_promise) {};
+/**
+ * TODO(user): This should be defined on angular.$timeout, but a
+ * function defined on a function is not currently expressible in Closure type
+ * annotations. See
+ * https://code.google.com/p/closure-compiler/issues/detail?id=899
+ * @param {angular.$q.Promise=} opt_promise
+ * @return {boolean}
+ */
+Function.prototype.cancel = function(opt_promise) {};
