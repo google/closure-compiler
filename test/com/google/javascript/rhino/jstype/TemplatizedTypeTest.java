@@ -40,7 +40,7 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
-public class ParameterizedTypeTest extends BaseJSTypeTestCase {
+public class TemplatizedTypeTest extends BaseJSTypeTestCase {
 
   @Override
   public void setUp() throws Exception {
@@ -48,9 +48,9 @@ public class ParameterizedTypeTest extends BaseJSTypeTestCase {
   }
 
   @Override
-  protected ParameterizedType createParameterizedType(
-      ObjectType objectType, JSType parameterType) {
-    return registry.createParameterizedType(objectType, parameterType);
+  protected TemplatizedType createTemplatizedType(
+      ObjectType objectType, JSType templateType) {
+    return registry.createTemplatizedType(objectType, templateType);
   }
 
   /**
@@ -64,20 +64,20 @@ public class ParameterizedTypeTest extends BaseJSTypeTestCase {
    * Tests the behavior of variants type.
    */
   @SuppressWarnings("checked")
-  public void testParameterizedType() throws Exception {
-    ParameterizedType arrOfString = createParameterizedType(
+  public void testTemplatizedType() throws Exception {
+    TemplatizedType arrOfString = createTemplatizedType(
         ARRAY_TYPE, STRING_TYPE);
     assertTypeCanAssignToItself(arrOfString);
     assertTrue(arrOfString.isSubtype(ARRAY_TYPE));
     assertTrue(ARRAY_TYPE.isSubtype(arrOfString));
 
-    ParameterizedType arrOfNumber = createParameterizedType(
+    TemplatizedType arrOfNumber = createTemplatizedType(
         ARRAY_TYPE, NUMBER_TYPE);
     assertTypeCanAssignToItself(arrOfNumber);
     assertTrue(arrOfNumber.isSubtype(ARRAY_TYPE));
     assertTrue(ARRAY_TYPE.isSubtype(arrOfNumber));
 
-    assertTrue(arrOfString.isEquivalentTo(createParameterizedType(
+    assertTrue(arrOfString.isEquivalentTo(createTemplatizedType(
         ARRAY_TYPE, STRING_TYPE)));
 
     assertFalse(arrOfString.isEquivalentTo(ARRAY_TYPE));
@@ -87,27 +87,27 @@ public class ParameterizedTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testPrint1() throws Exception {
-    ParameterizedType arrOfString = createParameterizedType(
+    TemplatizedType arrOfString = createTemplatizedType(
         ARRAY_TYPE, STRING_TYPE);
     assertEquals("Array.<string>", arrOfString.toString());
   }
 
   public void testPrint2() throws Exception {
-    ParameterizedType arrOfTemplateType = createParameterizedType(
+    TemplatizedType arrOfTemplateType = createTemplatizedType(
         ARRAY_TYPE, new TemplateType(registry, "T"));
     assertEquals("Array.<T>", arrOfTemplateType.toString());
   }
 
   public void testPrint3() throws Exception {
-    ParameterizedType arrOfUnknown = createParameterizedType(
+    TemplatizedType arrOfUnknown = createTemplatizedType(
         ARRAY_TYPE, UNKNOWN_TYPE);
     assertEquals("Array.<?>", arrOfUnknown.toString());
   }
 
   public void testDifferentRawTypes() throws Exception {
-    ParameterizedType arrOfNumber = createParameterizedType(
+    TemplatizedType arrOfNumber = createTemplatizedType(
         ARRAY_TYPE, NUMBER_TYPE);
-    ParameterizedType objType = createParameterizedType(
+    TemplatizedType objType = createTemplatizedType(
         OBJECT_TYPE, UNKNOWN_TYPE);
     assertTrue(arrOfNumber.isSubtype(objType));
     assertFalse(objType.isSubtype(arrOfNumber));

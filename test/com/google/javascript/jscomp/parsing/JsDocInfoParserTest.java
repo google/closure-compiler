@@ -243,101 +243,101 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(VOID_TYPE, parse("@type {void}*/").getType());
   }
 
-  public void testParseParametrizedType1() throws Exception {
+  public void testParseTemplatizedType1() throws Exception {
     JSDocInfo info = parse("@type !Array.<number> */");
-    assertTypeEquals(parameterize(ARRAY_TYPE, NUMBER_TYPE), info.getType());
+    assertTypeEquals(templatize(ARRAY_TYPE, NUMBER_TYPE), info.getType());
   }
 
-  public void testParseParametrizedType2() throws Exception {
+  public void testParseTemplatizedType2() throws Exception {
     JSDocInfo info = parse("@type {!Array.<number>}*/");
-    assertTypeEquals(parameterize(ARRAY_TYPE, NUMBER_TYPE), info.getType());
+    assertTypeEquals(templatize(ARRAY_TYPE, NUMBER_TYPE), info.getType());
   }
 
-  public void testParseParametrizedType3() throws Exception {
+  public void testParseTemplatizedType3() throws Exception {
     JSDocInfo info = parse("@type !Array.<(number,null)>*/");
     assertTypeEquals(
-        parameterize(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)),
+        templatize(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)),
         info.getType());
   }
 
-  public void testParseParametrizedType4() throws Exception {
+  public void testParseTemplatizedType4() throws Exception {
     JSDocInfo info = parse("@type {!Array.<(number|null)>}*/");
     assertTypeEquals(
-        parameterize(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)),
+        templatize(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)),
         info.getType());
   }
 
-  public void testParseParametrizedType5() throws Exception {
+  public void testParseTemplatizedType5() throws Exception {
     JSDocInfo info = parse("@type {!Array.<Array.<(number|null)>>}*/");
     assertTypeEquals(
-        parameterize(ARRAY_TYPE,
+        templatize(ARRAY_TYPE,
             createUnionType(NULL_TYPE,
-                parameterize(ARRAY_TYPE,
+                templatize(ARRAY_TYPE,
                     createUnionType(NUMBER_TYPE, NULL_TYPE)))),
         info.getType());
   }
 
-  public void testParseParametrizedType6() throws Exception {
+  public void testParseTemplatizedType6() throws Exception {
     JSDocInfo info = parse("@type {!Array.<!Array.<(number|null)>>}*/");
     assertTypeEquals(
-        parameterize(ARRAY_TYPE,
-            parameterize(ARRAY_TYPE,
+        templatize(ARRAY_TYPE,
+            templatize(ARRAY_TYPE,
                 createUnionType(NUMBER_TYPE, NULL_TYPE))),
         info.getType());
   }
 
-  public void testParseParametrizedType7() throws Exception {
+  public void testParseTemplatizedType7() throws Exception {
     JSDocInfo info = parse("@type {!Array.<function():Date>}*/");
     assertTypeEquals(
-        parameterize(ARRAY_TYPE,
+        templatize(ARRAY_TYPE,
             registry.createFunctionType(
                 createUnionType(DATE_TYPE, NULL_TYPE))),
         info.getType());
   }
 
-  public void testParseParametrizedType8() throws Exception {
+  public void testParseTemplatizedType8() throws Exception {
     JSDocInfo info = parse("@type {!Array.<function():!Date>}*/");
     assertTypeEquals(
-        parameterize(ARRAY_TYPE,
+        templatize(ARRAY_TYPE,
             registry.createFunctionType(DATE_TYPE)),
         info.getType());
   }
 
-  public void testParseParametrizedType9() throws Exception {
+  public void testParseTemplatizedType9() throws Exception {
     JSDocInfo info = parse("@type {!Array.<Date|number>}*/");
     assertTypeEquals(
-        parameterize(ARRAY_TYPE,
+        templatize(ARRAY_TYPE,
             createUnionType(DATE_TYPE, NUMBER_TYPE, NULL_TYPE)),
         info.getType());
   }
 
-  public void testParseParametrizedType10() throws Exception {
+  public void testParseTemplatizedType10() throws Exception {
     JSDocInfo info = parse("@type {!Array.<Date|number|boolean>}*/");
     assertTypeEquals(
-        parameterize(ARRAY_TYPE,
+        templatize(ARRAY_TYPE,
             createUnionType(DATE_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, NULL_TYPE)),
         info.getType());
   }
 
-  public void testParseParameterizedType11() throws Exception {
+  public void testParseTemplatizedType11() throws Exception {
     JSDocInfo info = parse("@type {!Object.<number>}*/");
     assertTypeEquals(
-        parameterize(OBJECT_TYPE, NUMBER_TYPE),
+        templatize(OBJECT_TYPE, NUMBER_TYPE),
         info.getType());
     assertParameterTypeEquals(NUMBER_TYPE, info.getType());
   }
 
-  public void testParseParameterizedType12() throws Exception {
+  public void testParseTemplatizedType12() throws Exception {
     JSDocInfo info = parse("@type {!Object.<string,number>}*/");
     assertTypeEquals(
-        parameterize(OBJECT_TYPE, NUMBER_TYPE), info.getType());
+        templatize(OBJECT_TYPE, NUMBER_TYPE), info.getType());
     assertParameterTypeEquals(NUMBER_TYPE, info.getType());
     assertIndexTypeEquals(STRING_TYPE, info.getType());
   }
 
-  public void testParseParametrizedType13() throws Exception {
+  public void testParseTemplatizedType13() throws Exception {
     JSDocInfo info = parse("@type !Array.<?> */");
-    assertTypeEquals(parameterize(ARRAY_TYPE, UNKNOWN_TYPE), info.getType());
+    assertTypeEquals(templatize(ARRAY_TYPE, UNKNOWN_TYPE), info.getType());
   }
 
   public void testParseUnionType1() throws Exception {
@@ -358,37 +358,37 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseUnionType4() throws Exception {
     JSDocInfo info = parse("@type {(Array.<boolean>,null)}*/");
     assertTypeEquals(createUnionType(
-        parameterize(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
+        templatize(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
   }
 
   public void testParseUnionType5() throws Exception {
     JSDocInfo info = parse("@type {(null, Array.<boolean>)}*/");
     assertTypeEquals(createUnionType(
-        parameterize(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
+        templatize(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
   }
 
   public void testParseUnionType6() throws Exception {
     JSDocInfo info = parse("@type {Array.<boolean>|null}*/");
     assertTypeEquals(createUnionType(
-        parameterize(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
+        templatize(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
   }
 
   public void testParseUnionType7() throws Exception {
     JSDocInfo info = parse("@type {null|Array.<boolean>}*/");
     assertTypeEquals(createUnionType(
-        parameterize(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
+        templatize(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
   }
 
   public void testParseUnionType8() throws Exception {
     JSDocInfo info = parse("@type {null||Array.<boolean>}*/");
     assertTypeEquals(createUnionType(
-        parameterize(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
+        templatize(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
   }
 
   public void testParseUnionType9() throws Exception {
     JSDocInfo info = parse("@type {Array.<boolean>||null}*/");
     assertTypeEquals(createUnionType(
-        parameterize(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
+        templatize(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
   }
 
   public void testParseUnionType10() throws Exception {
@@ -687,14 +687,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseNullableModifiers2() throws Exception {
     JSDocInfo info = parse("@type {!Array.<string?>}*/");
     assertTypeEquals(
-        parameterize(ARRAY_TYPE, createUnionType(STRING_TYPE, NULL_TYPE)),
+        templatize(ARRAY_TYPE, createUnionType(STRING_TYPE, NULL_TYPE)),
         info.getType());
   }
 
   public void testParseNullableModifiers3() throws Exception {
     JSDocInfo info = parse("@type {Array.<boolean>?}*/");
     assertTypeEquals(
-        createNullableType(parameterize(ARRAY_TYPE, BOOLEAN_TYPE)),
+        createNullableType(templatize(ARRAY_TYPE, BOOLEAN_TYPE)),
         info.getType());
   }
 
@@ -757,27 +757,27 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseNewline2() throws Exception {
     JSDocInfo info = parse("@type !Array.<\n* number\n* > */");
-    assertTypeEquals(parameterize(ARRAY_TYPE, NUMBER_TYPE), info.getType());
+    assertTypeEquals(templatize(ARRAY_TYPE, NUMBER_TYPE), info.getType());
   }
 
   public void testParseNewline3() throws Exception {
     JSDocInfo info = parse("@type !Array.<(number,\n* null)>*/");
     assertTypeEquals(
-        parameterize(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)),
+        templatize(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)),
         info.getType());
   }
 
   public void testParseNewline4() throws Exception {
     JSDocInfo info = parse("@type !Array.<(number|\n* null)>*/");
     assertTypeEquals(
-        parameterize(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)),
+        templatize(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)),
         info.getType());
   }
 
   public void testParseNewline5() throws Exception {
     JSDocInfo info = parse("@type !Array.<function(\n* )\n* :\n* Date>*/");
     assertTypeEquals(
-        parameterize(ARRAY_TYPE,
+        templatize(ARRAY_TYPE,
             registry.createFunctionType(
                 createUnionType(DATE_TYPE, NULL_TYPE))),
         info.getType());
@@ -787,7 +787,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo info =
         parse("@return {null|string|Array.<boolean>}*/");
     assertTypeEquals(
-        createUnionType(parameterize(ARRAY_TYPE, BOOLEAN_TYPE),
+        createUnionType(templatize(ARRAY_TYPE, BOOLEAN_TYPE),
             NULL_TYPE, STRING_TYPE),
         info.getReturnType());
   }
@@ -796,7 +796,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo info =
         parse("@returns {null|(string,Array.<boolean>)}*/");
     assertTypeEquals(
-        createUnionType(parameterize(ARRAY_TYPE, BOOLEAN_TYPE),
+        createUnionType(templatize(ARRAY_TYPE, BOOLEAN_TYPE),
             NULL_TYPE, STRING_TYPE),
         info.getReturnType());
   }
@@ -805,7 +805,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo info =
         parse("@return {((null||Array.<boolean>,string),boolean)}*/");
     assertTypeEquals(
-        createUnionType(parameterize(ARRAY_TYPE, BOOLEAN_TYPE),
+        createUnionType(templatize(ARRAY_TYPE, BOOLEAN_TYPE),
             NULL_TYPE, STRING_TYPE, BOOLEAN_TYPE),
         info.getReturnType());
   }
@@ -2956,7 +2956,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   private void assertParameterTypeEquals(JSType expected, JSTypeExpression te) {
-    assertEquals(expected, ((ObjectType) resolve(te)).getParameterType());
+    assertEquals(expected, ((ObjectType) resolve(te)).getTemplateType());
   }
 
   private void assertIndexTypeEquals(JSType expected, JSTypeExpression te) {

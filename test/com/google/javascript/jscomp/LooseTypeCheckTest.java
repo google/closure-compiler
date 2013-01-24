@@ -241,7 +241,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "required: string", false);
   }
 
-  public void testParameterizedArray1() throws Exception {
+  public void testTemplatizedArray1() throws Exception {
     testTypes("/** @param {!Array.<number>} a\n" +
         "* @return {string}\n" +
         "*/ var f = function(a) { return a[0]; };",
@@ -250,7 +250,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testParameterizedArray2() throws Exception {
+  public void testTemplatizedArray2() throws Exception {
     testTypes("/** @param {!Array.<!Array.<number>>} a\n" +
         "* @return {number}\n" +
         "*/ var f = function(a) { return a[0]; };",
@@ -259,13 +259,13 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
-  public void testParameterizedArray3() throws Exception {
+  public void testTemplatizedArray3() throws Exception {
     testTypes("/** @param {!Array.<number>} a\n" +
         "* @return {number}\n" +
         "*/ var f = function(a) { a[1] = 0; return a[0]; };");
   }
 
-  public void testParameterizedArray4() throws Exception {
+  public void testTemplatizedArray4() throws Exception {
     testTypes("/** @param {!Array.<number>} a\n" +
         "*/ var f = function(a) { a[0] = 'a'; };",
         "assignment\n" +
@@ -273,12 +273,12 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
-  public void testParameterizedArray5() throws Exception {
+  public void testTemplatizedArray5() throws Exception {
     testTypes("/** @param {!Array.<*>} a\n" +
         "*/ var f = function(a) { a[0] = 'a'; };");
   }
 
-  public void testParameterizedArray6() throws Exception {
+  public void testTemplatizedArray6() throws Exception {
     testTypes("/** @param {!Array.<*>} a\n" +
         "* @return {string}\n" +
         "*/ var f = function(a) { return a[0]; };",
@@ -287,7 +287,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testParameterizedArray7() throws Exception {
+  public void testTemplatizedArray7() throws Exception {
     testTypes("/** @param {?Array.<number>} a\n" +
         "* @return {string}\n" +
         "*/ var f = function(a) { return a[0]; };",
@@ -296,7 +296,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testParameterizedObject1() throws Exception {
+  public void testTemplatizedObject1() throws Exception {
     testTypes("/** @param {!Object.<number>} a\n" +
         "* @return {string}\n" +
         "*/ var f = function(a) { return a[0]; };",
@@ -305,7 +305,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testParameterizedObject2() throws Exception {
+  public void testTemplatizedObject2() throws Exception {
     testTypes("/** @param {!Object.<string,number>} a\n" +
         "* @return {string}\n" +
         "*/ var f = function(a) { return a['x']; };",
@@ -314,7 +314,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testParameterizedObject3() throws Exception {
+  public void testTemplatizedObject3() throws Exception {
     testTypes("/** @param {!Object.<number,string>} a\n" +
         "* @return {string}\n" +
         "*/ var f = function(a) { return a['x']; };",
@@ -323,7 +323,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
-  public void testParameterizedObject4() throws Exception {
+  public void testTemplatizedObject4() throws Exception {
     testTypes("/** @enum {string} */ var E = {A: 'a', B: 'b'};\n" +
         "/** @param {!Object.<E,string>} a\n" +
         "* @return {string}\n" +

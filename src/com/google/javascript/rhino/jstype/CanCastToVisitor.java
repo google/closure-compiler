@@ -109,11 +109,11 @@ class CanCastToVisitor implements RelationshipVisitor<Boolean> {
       return canCastToUnion(thisType, thatType.toMaybeUnionType());
     } else if (thatType.isFunctionType()) {
       return canCastToFunction(thisType, thatType.toMaybeFunctionType());
-    } else if (thatType.isParameterizedType()) {
+    } else if (thatType.isTemplatizedType()) {
       // TODO(johnlenz): once the templated type work is finished,
       // restrict the type parameters.
       return thisType.visit(this,
-          thatType.toMaybeParameterizedType().getReferencedTypeInternal());
+          thatType.toMaybeTemplatizedType().getReferencedTypeInternal());
     }
 
     return thisType.isSubtype(thatType) || thatType.isSubtype(thisType);
@@ -162,8 +162,8 @@ class CanCastToVisitor implements RelationshipVisitor<Boolean> {
   }
 
   @Override
-  public Boolean caseParameterizedType(
-      ParameterizedType thisType, JSType thatType) {
+  public Boolean caseTemplatizedType(
+      TemplatizedType thisType, JSType thatType) {
     // TODO(johnlenz): once the templated type work is finished,
     // restrict the type parameters.
     return thisType.getReferencedTypeInternal().visit(this, thatType);

@@ -423,23 +423,23 @@ public abstract class JSType implements Serializable {
     return null;
   }
 
-  public final boolean isParameterizedType() {
-    return toMaybeParameterizedType() != null;
+  public final boolean isTemplatizedType() {
+    return toMaybeTemplatizedType() != null;
   }
 
   /**
-   * Downcasts this to a ParameterizedType, or returns null if this is not
+   * Downcasts this to a TemplatizedType, or returns null if this is not
    * a function.
    */
-  public ParameterizedType toMaybeParameterizedType() {
+  public TemplatizedType toMaybeTemplatizedType() {
     return null;
   }
 
   /**
-   * Null-safe version of toMaybeParameterizedType().
+   * Null-safe version of toMaybeTemplatizedType().
    */
-  public static ParameterizedType toMaybeParameterizedType(JSType type) {
-    return type == null ? null : type.toMaybeParameterizedType();
+  public static TemplatizedType toMaybeTemplatizedType(JSType type) {
+    return type == null ? null : type.toMaybeTemplatizedType();
   }
 
   public final boolean isTemplateType() {
@@ -694,14 +694,14 @@ public abstract class JSType implements Serializable {
           that.toMaybeRecordType(), eqMethod);
     }
 
-    ParameterizedType thisParamType = toMaybeParameterizedType();
-    ParameterizedType thatParamType = that.toMaybeParameterizedType();
+    TemplatizedType thisParamType = toMaybeTemplatizedType();
+    TemplatizedType thatParamType = that.toMaybeTemplatizedType();
     if (thisParamType != null || thatParamType != null) {
-      // Check if one type is parameterized, but the other is not.
+      // Check if one type is templatized, but the other is not.
       boolean paramsMatch = false;
       if (thisParamType != null && thatParamType != null) {
-        paramsMatch = thisParamType.getParameterType().checkEquivalenceHelper(
-            thatParamType.getParameterType(), eqMethod);
+        paramsMatch = thisParamType.getTemplateType().checkEquivalenceHelper(
+            thatParamType.getTemplateType(), eqMethod);
       } else if (eqMethod == EquivalenceMethod.IDENTITY) {
         paramsMatch = false;
       } else {
@@ -1074,11 +1074,11 @@ public abstract class JSType implements Serializable {
       return thisType.toMaybeUnionType().meet(thatType);
     } else if (thatType.isUnionType()) {
       return thatType.toMaybeUnionType().meet(thisType);
-    } else if (thisType.isParameterizedType()) {
-      return thisType.toMaybeParameterizedType().getGreatestSubtypeHelper(
+    } else if (thisType.isTemplatizedType()) {
+      return thisType.toMaybeTemplatizedType().getGreatestSubtypeHelper(
           thatType);
-    }  else if (thatType.isParameterizedType()) {
-      return thatType.toMaybeParameterizedType().getGreatestSubtypeHelper(
+    }  else if (thatType.isTemplatizedType()) {
+      return thatType.toMaybeTemplatizedType().getGreatestSubtypeHelper(
           thisType);
     } else if (thisType.isSubtype(thatType)) {
       return filterNoResolvedType(thisType);
@@ -1364,9 +1364,9 @@ public abstract class JSType implements Serializable {
       return false;
     }
 
-    // parameterized types.
-    if (thisType.isParameterizedType()) {
-      return thisType.toMaybeParameterizedType().isParameterizeSubtypeOf(
+    // templatized types.
+    if (thisType.isTemplatizedType()) {
+      return thisType.toMaybeTemplatizedType().isTemplatizedSubtypeOf(
           thatType);
     }
 

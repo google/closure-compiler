@@ -122,9 +122,9 @@ public interface Visitor<T> {
   T caseUnionType(UnionType type);
 
   /**
-   * Parameterized type's case.
+   * Templatized type's case.
    */
-  T caseParameterizedType(ParameterizedType type);
+  T caseTemplatizedType(TemplatizedType type);
 
   /**
    * Template type's case.

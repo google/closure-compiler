@@ -48,7 +48,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.ParameterizedType;
+import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 
 import junit.framework.TestCase;
@@ -414,9 +414,9 @@ public abstract class BaseJSTypeTestCase extends TestCase {
     return registry.createTemplatizedType(baseType, templatizedTypes);
   }
 
-  protected JSType createParameterizedType(
+  protected JSType createTemplatizedType(
       ObjectType type, JSType typeParameter) {
-    return registry.createParameterizedType(type, typeParameter);
+    return registry.createTemplatizedType(type, typeParameter);
   }
 
   /**
@@ -607,7 +607,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
     Asserts.assertTypeNotEquals(msg, a, b);
   }
 
-  protected final ParameterizedType parameterize(ObjectType objType, JSType t) {
-    return registry.createParameterizedType(objType, t);
+  protected final TemplatizedType templatize(ObjectType objType, JSType t) {
+    return registry.createTemplatizedType(objType, t);
   }
 }

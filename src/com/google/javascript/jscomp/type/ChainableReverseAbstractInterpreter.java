@@ -39,7 +39,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.ParameterizedType;
+import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.UnionType;
@@ -257,7 +257,7 @@ public abstract class ChainableReverseAbstractInterpreter
       }
 
       @Override
-      public JSType caseParameterizedType(ParameterizedType type) {
+      public JSType caseTemplatizedType(TemplatizedType type) {
         return caseObjectType(type);
       }
 
@@ -346,7 +346,7 @@ public abstract class ChainableReverseAbstractInterpreter
       }
 
       @Override
-      public JSType caseParameterizedType(ParameterizedType type) {
+      public JSType caseTemplatizedType(TemplatizedType type) {
         return caseObjectType(type);
       }
 
@@ -425,7 +425,7 @@ public abstract class ChainableReverseAbstractInterpreter
     }
 
     @Override
-    public JSType caseParameterizedType(ParameterizedType type) {
+    public JSType caseTemplatizedType(TemplatizedType type) {
       return caseObjectType(type);
     }
 

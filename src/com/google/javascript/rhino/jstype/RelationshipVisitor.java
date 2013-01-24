@@ -92,9 +92,9 @@ interface RelationshipVisitor<T> {
   T caseUnionType(UnionType thisType, JSType thatType);
 
   /**
-   * Parameterized type's case.
+   * Templatized type's case.
    */
-  T caseParameterizedType(ParameterizedType thisType, JSType thatType);
+  T caseTemplatizedType(TemplatizedType thisType, JSType thatType);
 
   /**
    * Template type's case.

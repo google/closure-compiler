@@ -182,14 +182,14 @@ class UnionTypeBuilder implements Serializable {
           } else {
 
             // Because "Foo" and "Foo.<?>" are roughly equivalent
-            // parameterized types, special care is needed when building the
+            // templatized types, special care is needed when building the
             // union. For example:
             //   Object is consider a subtype of Object.<string>
             // but we want to leave "Object" not "Object.<string>" when
             // building the subtype.
             //
 
-            if (alternate.isParameterizedType() || current.isParameterizedType()) {
+            if (alternate.isTemplatizedType() || current.isTemplatizedType()) {
               // Cases:
               // 1) alternate:Array.<string> and current:Object ==> Object
               // 2) alternate:Array.<string> and current:Array ==> Array
@@ -206,42 +206,42 @@ class UnionTypeBuilder implements Serializable {
               // 9) alternate:Array.<string> and
               //    current:Object.<string> ==> Object.<string>|Array.<string>
 
-              if (!current.isParameterizedType()) {
+              if (!current.isTemplatizedType()) {
                 if (alternate.isSubtype(current)) {
                   // case 1, 2
                   return this;
                 }
                 // case 3: leave current, add alternate
-              } else if (!alternate.isParameterizedType()) {
+              } else if (!alternate.isTemplatizedType()) {
                 if (current.isSubtype(alternate)) {
                   // case 4, 5
                   removeCurrent = true;
                 }
                 // case 6: leave current, add alternate
               } else {
-                Preconditions.checkState(current.isParameterizedType()
-                    && alternate.isParameterizedType());
-                ParameterizedType parameterizedAlternate = alternate.toMaybeParameterizedType();
-                ParameterizedType parameterizedCurrent = current.toMaybeParameterizedType();
+                Preconditions.checkState(current.isTemplatizedType()
+                    && alternate.isTemplatizedType());
+                TemplatizedType templatizedAlternate = alternate.toMaybeTemplatizedType();
+                TemplatizedType templatizedCurrent = current.toMaybeTemplatizedType();
 
-                if (parameterizedCurrent.wrapsSameRawType(parameterizedAlternate)) {
-                  JSType currentTypeParameter = parameterizedCurrent.getParameterType();
-                  if (currentTypeParameter.isEquivalentTo(parameterizedCurrent)) {
+                if (templatizedCurrent.wrapsSameRawType(templatizedAlternate)) {
+                  JSType currentTypeParameter = templatizedCurrent.getTemplateType();
+                  if (currentTypeParameter.isEquivalentTo(templatizedCurrent)) {
                     // case 8
                     return this;
                   } else {
                     // TODO(johnlenz): should we leave both types?
                     // case 7: add a merged alternate
-                    // We currently merge to the parameterized types to "unknown"
+                    // We currently merge to the templatized types to "unknown"
                     // which is equivalent to the raw type.
-                    JSType merged = parameterizedCurrent
+                    JSType merged = templatizedCurrent
                         .getReferencedObjTypeInternal();
                     return addAlternate(merged);
                   }
                 }
                 // case 9: leave current, add alternate
               }
-              // Otherwise leave both parameterized types.
+              // Otherwise leave both templatized types.
             } else if (alternate.isSubtype(current)) {
               // Alternate is unnecessary.
               return this;

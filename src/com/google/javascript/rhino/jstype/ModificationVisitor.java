@@ -156,13 +156,13 @@ public class ModificationVisitor implements Visitor<JSType> {
   }
 
   @Override
-  public JSType caseParameterizedType(ParameterizedType type) {
+  public JSType caseTemplatizedType(TemplatizedType type) {
     ObjectType genericType = ObjectType.cast(
         type.getReferencedTypeInternal().visit(this));
-    JSType paramType = type.getParameterType().visit(this);
+    JSType paramType = type.getTemplateType().visit(this);
     if (type.getReferencedTypeInternal() != genericType
-        || type.getParameterType() != paramType) {
-      type = registry.createParameterizedType(genericType, paramType);
+        || type.getTemplateType() != paramType) {
+      type = registry.createTemplatizedType(genericType, paramType);
     }
     return type;
   }

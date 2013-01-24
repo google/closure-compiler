@@ -598,7 +598,7 @@ public class TypeInferenceTest extends TestCase {
   }
 
   public void testFor5() {
-    assuming("y", parameterize(
+    assuming("y", templatize(
         getNativeObjectType(ARRAY_TYPE), getNativeType(NUMBER_TYPE)));
     inFunction(
         "var x = null; for (var i = 0; i < y.length; i++) { x = y[i]; }");
@@ -1081,7 +1081,7 @@ public class TypeInferenceTest extends TestCase {
     return registry.getNativeType(t);
   }
 
-  private JSType parameterize(ObjectType objType, JSType t) {
-    return registry.createParameterizedType(objType, t);
+  private JSType templatize(ObjectType objType, JSType t) {
+    return registry.createTemplatizedType(objType, t);
   }
 }

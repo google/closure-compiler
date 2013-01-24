@@ -250,7 +250,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         false);
   }
 
-  public void testParameterizedArray1() throws Exception {
+  public void testTemplatizedArray1() throws Exception {
     testTypes("/** @param {!Array.<number>} a\n" +
         "* @return {string}\n" +
         "*/ var f = function(a) { return a[0]; };",
@@ -259,7 +259,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testParameterizedArray2() throws Exception {
+  public void testTemplatizedArray2() throws Exception {
     testTypes("/** @param {!Array.<!Array.<number>>} a\n" +
         "* @return {number}\n" +
         "*/ var f = function(a) { return a[0]; };",
@@ -268,13 +268,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
-  public void testParameterizedArray3() throws Exception {
+  public void testTemplatizedArray3() throws Exception {
     testTypes("/** @param {!Array.<number>} a\n" +
         "* @return {number}\n" +
         "*/ var f = function(a) { a[1] = 0; return a[0]; };");
   }
 
-  public void testParameterizedArray4() throws Exception {
+  public void testTemplatizedArray4() throws Exception {
     testTypes("/** @param {!Array.<number>} a\n" +
         "*/ var f = function(a) { a[0] = 'a'; };",
         "assignment\n" +
@@ -282,12 +282,12 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
-  public void testParameterizedArray5() throws Exception {
+  public void testTemplatizedArray5() throws Exception {
     testTypes("/** @param {!Array.<*>} a\n" +
         "*/ var f = function(a) { a[0] = 'a'; };");
   }
 
-  public void testParameterizedArray6() throws Exception {
+  public void testTemplatizedArray6() throws Exception {
     testTypes("/** @param {!Array.<*>} a\n" +
         "* @return {string}\n" +
         "*/ var f = function(a) { return a[0]; };",
@@ -296,7 +296,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testParameterizedArray7() throws Exception {
+  public void testTemplatizedArray7() throws Exception {
     testTypes("/** @param {?Array.<number>} a\n" +
         "* @return {string}\n" +
         "*/ var f = function(a) { return a[0]; };",
@@ -305,7 +305,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testParameterizedObject1() throws Exception {
+  public void testTemplatizedObject1() throws Exception {
     testTypes("/** @param {!Object.<number>} a\n" +
         "* @return {string}\n" +
         "*/ var f = function(a) { return a[0]; };",
@@ -314,7 +314,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testParameterizedObject2() throws Exception {
+  public void testTemplatizedObject2() throws Exception {
     testTypes("/** @param {!Object.<string,number>} a\n" +
         "* @return {string}\n" +
         "*/ var f = function(a) { return a['x']; };",
@@ -323,7 +323,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testParameterizedObject3() throws Exception {
+  public void testTemplatizedObject3() throws Exception {
     testTypes("/** @param {!Object.<number,string>} a\n" +
         "* @return {string}\n" +
         "*/ var f = function(a) { return a['x']; };",
@@ -332,7 +332,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
-  public void testParameterizedObject4() throws Exception {
+  public void testTemplatizedObject4() throws Exception {
     testTypes("/** @enum {string} */ var E = {A: 'a', B: 'b'};\n" +
         "/** @param {!Object.<E,string>} a\n" +
         "* @return {string}\n" +
@@ -342,7 +342,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: E.<string>");
   }
 
-  public void testParameterizedObject5() throws Exception {
+  public void testTemplatizedObject5() throws Exception {
     testTypes("/** @constructor */ function F() {" +
         "  /** @type {Object.<number, string>} */ this.numbers = {};" +
         "}" +
@@ -11357,7 +11357,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "}\n");
   }
 
-  public void testParameterized1() throws Exception {
+  public void testTemplatized1() throws Exception {
     testTypes(
         "/** @type {!Array.<string>} */" +
         "var arr1 = [];\n" +
@@ -11369,7 +11369,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: Array.<string>");
   }
 
-  public void testParameterized2() throws Exception {
+  public void testTemplatized2() throws Exception {
     testTypes(
         "/** @type {!Array.<string>} */" +
         "var arr1 = /** @type {!Array.<number>} */([]);\n",
@@ -11378,7 +11378,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: Array.<string>");
   }
 
-  public void testParameterized3() throws Exception {
+  public void testTemplatized3() throws Exception {
     testTypes(
         "/** @type {Array.<string>} */" +
         "var arr1 = /** @type {!Array.<number>} */([]);\n",
@@ -11387,7 +11387,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: (Array.<string>|null)");
   }
 
-  public void testParameterized4() throws Exception {
+  public void testTemplatized4() throws Exception {
     testTypes(
         "/** @type {Array.<string>} */" +
         "var arr1 = [];\n" +
@@ -11398,7 +11398,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: (Array.<number>|null)");
   }
 
-  public void testParameterized5() throws Exception {
+  public void testTemplatized5() throws Exception {
     testTypes(
         "/**\n" +
         " * @param {Object.<T>} obj\n" +
@@ -11414,10 +11414,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "some(g());\n");
   }
 
-  public void testParameterizedTypeSubtypes2() throws Exception {
-    JSType arrayOfNumber = createParameterizedType(
+  public void testTemplatizedTypeSubtypes2() throws Exception {
+    JSType arrayOfNumber = createTemplatizedType(
         ARRAY_TYPE, NUMBER_TYPE);
-    JSType arrayOfString = createParameterizedType(
+    JSType arrayOfString = createTemplatizedType(
         ARRAY_TYPE, STRING_TYPE);
     assertFalse(arrayOfString.isSubtype(createUnionType(arrayOfNumber, NULL_VOID)));
 

@@ -46,7 +46,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ModificationVisitor;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.ParameterizedType;
+import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.UnionType;
@@ -1085,18 +1085,18 @@ class TypeInference
             paramFunctionType.getParameters(),
             argFunctionType.getParameters(), resolvedTypes);
       }
-    } else if (paramType.isParameterizedType()) {
-      ParameterizedType paramObjectType = paramType.toMaybeParameterizedType();
-      JSType typeParameter = paramObjectType.getParameterType();
+    } else if (paramType.isTemplatizedType()) {
+      TemplatizedType paramObjectType = paramType.toMaybeTemplatizedType();
+      JSType typeParameter = paramObjectType.getTemplateType();
       Preconditions.checkNotNull(typeParameter);
       if (typeParameter != null) {
         // @param {Array.<T>}
         ObjectType argObjectType = argType
             .restrictByNotNullOrUndefined()
             .collapseUnion()
-            .toMaybeParameterizedType();
+            .toMaybeTemplatizedType();
         if (argObjectType != null && argObjectType.isSubtype(paramType)) {
-          JSType argTypeParameter = argObjectType.getParameterType();
+          JSType argTypeParameter = argObjectType.getTemplateType();
           Preconditions.checkNotNull(argTypeParameter);
           maybeResolveTemplatedType(
               typeParameter, argTypeParameter, resolvedTypes);
@@ -1243,7 +1243,7 @@ class TypeInference
     ObjectType objType = ObjectType.cast(
         getJSType(n.getFirstChild()).restrictByNotNullOrUndefined());
     if (objType != null) {
-      JSType type = objType.getParameterType();
+      JSType type = objType.getTemplateType();
       if (type != null) {
         n.setJSType(type);
       }

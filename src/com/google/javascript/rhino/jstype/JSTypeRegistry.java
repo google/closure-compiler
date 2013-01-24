@@ -1437,11 +1437,11 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * Creates a parameterized type.
+   * Creates a templatized type.
    */
-  public ParameterizedType createParameterizedType(
+  public TemplatizedType createTemplatizedType(
       ObjectType objectType, JSType parameterType) {
-    return new ParameterizedType(this, objectType, parameterType);
+    return new TemplatizedType(this, objectType, parameterType);
   }
 
   /**
@@ -1582,11 +1582,11 @@ public class JSTypeRegistry implements Serializable {
           if (typeList != null &&
               ("Array".equals(n.getString()) ||
                "Object".equals(n.getString()))) {
-            JSType parameterType =
+            JSType templateType =
                 createFromTypeNodesInternal(
                     typeList.getLastChild(), sourceName, scope);
-            namedType = new ParameterizedType(
-                this, (ObjectType) namedType, parameterType);
+            namedType = new TemplatizedType(
+                this, (ObjectType) namedType, templateType);
             if (typeList.hasMoreThanOneChild()) {
               JSType indexType =
                   createFromTypeNodesInternal(

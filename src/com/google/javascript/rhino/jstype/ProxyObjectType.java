@@ -49,7 +49,7 @@ import java.util.Collections;
  * An object type which uses composition to delegate all calls.
  *
  * @see NamedType
- * @see ParameterizedType
+ * @see TemplatizedType
  *
  */
 class ProxyObjectType extends ObjectType {
@@ -302,9 +302,9 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public JSType getParameterType() {
+  public JSType getTemplateType() {
     return referencedObjType == null ? null :
-        referencedObjType.getParameterType();
+        referencedObjType.getTemplateType();
   }
 
   @Override
@@ -355,8 +355,8 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public ParameterizedType toMaybeParameterizedType() {
-    return referencedType.toMaybeParameterizedType();
+  public TemplatizedType toMaybeTemplatizedType() {
+    return referencedType.toMaybeTemplatizedType();
   }
 
   @Override

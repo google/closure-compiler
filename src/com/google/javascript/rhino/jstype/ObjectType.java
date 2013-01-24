@@ -129,9 +129,9 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
 
   /**
    * Gets the declared default element type.
-   * @see ParameterizedType
+   * @see TemplatizedType
    */
-  public JSType getParameterType() {
+  public JSType getTemplateType() {
     return null;
   }
 
