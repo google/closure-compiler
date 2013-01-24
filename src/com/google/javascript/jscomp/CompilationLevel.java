@@ -80,10 +80,6 @@ public enum CompilationLevel {
    */
   private static void applyBasicCompilationOptions(CompilerOptions options) {
     options.skipAllCompilerPasses();
-
-    // Allows annotations that are not standard.
-    options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
-        CheckLevel.OFF);
   }
 
   /**
@@ -118,10 +114,6 @@ public enum CompilationLevel {
     options.setRemoveUnusedVariables(Reach.LOCAL_ONLY);
     options.collapseObjectLiterals = true;
     options.protectHiddenSideEffects = true;
-
-    // Allows annotations that are not standard.
-    options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
-        CheckLevel.OFF);
   }
 
   /**
@@ -182,10 +174,6 @@ public enum CompilationLevel {
     options.optimizeParameters = true;
     options.optimizeReturns = true;
     options.optimizeCalls = true;
-
-    // Kindly tell the user that they have JsDocs that we don't understand.
-    options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
-        CheckLevel.WARNING);
   }
 
   /**

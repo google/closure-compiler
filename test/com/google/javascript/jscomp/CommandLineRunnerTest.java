@@ -127,6 +127,15 @@ public class CommandLineRunnerTest extends TestCase {
     super.tearDown();
   }
 
+  public void testUnknownAnnotation() {
+    args.add("--warning_level=VERBOSE");
+    test("/** @unknownTag */ function f() {}",
+         RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    args.add("--extra_annotation_name=unknownTag");
+    testSame("/** @unknownTag */ function f() {}");
+  }
+
   public void testWarningGuardOrdering1() {
     args.add("--jscomp_error=globalThis");
     args.add("--jscomp_off=globalThis");

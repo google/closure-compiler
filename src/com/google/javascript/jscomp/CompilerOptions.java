@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -1432,8 +1433,8 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.externExports = enabled;
   }
 
-  public void setExtraAnnotationNames(Set<String> extraAnnotationNames) {
-    this.extraAnnotationNames = Sets.newHashSet(extraAnnotationNames);
+  public void setExtraAnnotationNames(Iterable<String> extraAnnotationNames) {
+    this.extraAnnotationNames = ImmutableSet.copyOf(extraAnnotationNames);
   }
 
   public boolean isExternExportsEnabled() {

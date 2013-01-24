@@ -413,6 +413,10 @@ public class CommandLineRunner extends
             "<file-name>:<line-number>?  <warning-description>")
     private String warnings_whitelist_file = "";
 
+    @Option(name = "--extra_annotation_name",
+        usage = "A whitelist of tag names in JSDoc. You may specify multiple")
+    private List<String> extra_annotation_name = Lists.newArrayList();
+
     @Argument
     private List<String> arguments = Lists.newArrayList();
 
@@ -761,6 +765,8 @@ public class CommandLineRunner extends
     } else {
       options.setCodingConvention(new ClosureCodingConvention());
     }
+
+    options.setExtraAnnotationNames(flags.extra_annotation_name);
 
     CompilationLevel level = flags.compilation_level;
     level.setOptionsForCompilationLevel(options);

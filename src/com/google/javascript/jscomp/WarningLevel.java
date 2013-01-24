@@ -75,6 +75,10 @@ public enum WarningLevel {
     options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
     options.checkCaja = false;
+
+    // Allows annotations that are not standard.
+    options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
+        CheckLevel.OFF);
   }
 
   /**
@@ -85,6 +89,10 @@ public enum WarningLevel {
     options.checkSuspiciousCode = true;
     options.checkUnreachableCode = CheckLevel.WARNING;
     options.checkControlStructures = true;
+
+    // Allows annotations that are not standard.
+    options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
+        CheckLevel.OFF);
   }
 
   /**
@@ -114,5 +122,9 @@ public enum WarningLevel {
         DiagnosticGroups.DEPRECATED, CheckLevel.WARNING);
     options.setWarningLevel(
         DiagnosticGroups.ES5_STRICT, CheckLevel.WARNING);
+
+    // Kindly tell the user that they have JsDocs that we don't understand.
+    options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
+        CheckLevel.WARNING);
   }
 }

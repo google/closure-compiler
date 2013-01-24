@@ -85,6 +85,7 @@ enum Annotation {
       put("const", Annotation.CONSTANT).
       put("constant", Annotation.CONSTANT).
       put("constructor", Annotation.CONSTRUCTOR).
+      put("copyright", Annotation.LICENSE).
       put("define", Annotation.DEFINE).
       put("deprecated", Annotation.DEPRECATED).
       put("desc", Annotation.DESC).
