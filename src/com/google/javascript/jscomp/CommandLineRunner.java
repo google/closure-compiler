@@ -366,6 +366,12 @@ public class CommandLineRunner extends
         + "jQuery.fn and jQuery.extend()")
     private boolean process_jquery_primitives = false;
 
+    @Option(name = "--angular_pass",
+        handler = BooleanOptionHandler.class,
+        usage = "Generate $inject properties for AngularJS for functions "
+        + "annotated with @angularInject")
+    private boolean angular_pass = false;
+
     @Option(name = "--output_manifest",
         usage = "Prints out a list of all the files in the compilation. "
         + "If --manage_closure_dependencies is on, this will not include "
@@ -793,6 +799,8 @@ public class CommandLineRunner extends
 
     options.jqueryPass = flags.process_jquery_primitives &&
         CompilationLevel.ADVANCED_OPTIMIZATIONS == level;
+
+    options.angularPass = flags.angular_pass;
 
     if (!flags.translationsFile.isEmpty()) {
       try {

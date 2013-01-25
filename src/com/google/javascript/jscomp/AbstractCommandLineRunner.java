@@ -356,6 +356,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.transformAMDToCJSModules = config.transformAMDToCJSModules;
     options.processCommonJSModules = config.processCommonJSModules;
     options.commonJSModulePathPrefix = config.commonJSModulePathPrefix;
+    options.angularPass = config.angularPass;
   }
 
   final protected A getCompiler() {
@@ -2063,6 +2064,16 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setWarningsWhitelistFile(String fileName) {
       this.warningsWhitelistFile = fileName;
+      return this;
+    }
+
+    private boolean angularPass = false;
+
+    /**
+     * Sets whether to process AngularJS-specific annotations.
+     */
+    CommandLineConfig setAngularPass(boolean angularPass) {
+      this.angularPass = angularPass;
       return this;
     }
   }

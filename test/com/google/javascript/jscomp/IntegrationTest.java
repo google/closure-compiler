@@ -268,6 +268,26 @@ public class IntegrationTest extends IntegrationTestCase {
          "/** @export */ function f() {} goog.exportSymbol('f', f);");
   }
 
+  public void testAngularPassOff() {
+    testSame(createCompilerOptions(),
+        "/** @angularInject */ function f() {} " +
+        "/** @angularInject */ function g(a){} " +
+        "/** @angularInject */ var b = function f(a) {} ");
+  }
+
+  public void testAngularPassOn() {
+    CompilerOptions options = createCompilerOptions();
+    options.angularPass = true;
+    test(options,
+        "/** @angularInject */ function f() {} " +
+        "/** @angularInject */ function g(a){} " +
+        "/** @angularInject */ var b = function f(a, b, c) {} ",
+
+        "function f() {} " +
+        "function g(a) {} g.$inject=['a'];" +
+        "var b = function f(a, b, c) {}; b.$inject=['a', 'b', 'c']");
+  }
+
   public void testExportTestFunctionsOff() {
     testSame(createCompilerOptions(), "function testFoo() {}");
   }

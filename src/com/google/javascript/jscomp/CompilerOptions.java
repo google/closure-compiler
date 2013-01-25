@@ -589,6 +589,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Processes jQuery aliases */
   public boolean jqueryPass;
 
+  /** Processes AngularJS-specific annotations */
+  boolean angularPass;
+
   /** Remove goog.abstractMethod assignments. */
   boolean removeAbstractMethods;
 
@@ -943,6 +946,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     removeTryCatchFinally = false;
     closurePass = false;
     jqueryPass = false;
+    angularPass = false;
     removeAbstractMethods = true;
     removeClosureAsserts = false;
     stripTypes = Collections.emptySet();
@@ -1367,6 +1371,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setGenerateExports(boolean generateExports) {
     this.generateExports = generateExports;
+  }
+
+  public void setAngularPass(boolean angularPass) {
+    this.angularPass = angularPass;
   }
 
   public void setCodingConvention(CodingConvention codingConvention) {
