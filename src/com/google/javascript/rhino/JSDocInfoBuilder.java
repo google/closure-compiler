@@ -1006,19 +1006,19 @@ final public class JSDocInfoBuilder {
   }
 
   /**
-   * Returns whether current JSDoc is annotated with {@code @angularInject}.
+   * Returns whether current JSDoc is annotated with {@code @ngInject}.
    */
-  public boolean isAngularInjectRecorded() {
-    return currentInfo.isAngularInject();
+  public boolean isNgInjectRecorded() {
+    return currentInfo.isNgInject();
   }
 
   /**
    * Records that we'd like to add {@code $inject} property inferred from
    * parameters.
    */
-  public boolean recordAngularInject(boolean angularInject) {
-    if (!isAngularInjectRecorded()) {
-      currentInfo.setAngularInject(angularInject);
+  public boolean recordNgInject(boolean ngInject) {
+    if (!isNgInjectRecorded()) {
+      currentInfo.setNgInject(ngInject);
       populated = true;
       return true;
     } else {

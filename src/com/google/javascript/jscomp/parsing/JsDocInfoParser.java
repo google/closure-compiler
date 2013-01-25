@@ -229,12 +229,12 @@ public final class JsDocInfoParser {
               jsdocBuilder.markAnnotation(annotationName, lineno, charno);
 
               switch (annotation) {
-                case ANGULAR_INJECT:
-                  if (jsdocBuilder.isAngularInjectRecorded()) {
-                    parser.addParserWarning("msg.jsdoc.angularinject.extra",
+                case NG_INJECT:
+                  if (jsdocBuilder.isNgInjectRecorded()) {
+                    parser.addParserWarning("msg.jsdoc.nginject.extra",
                       stream.getLineno(), stream.getCharno());
                   } else {
-                    jsdocBuilder.recordAngularInject(true);
+                    jsdocBuilder.recordNgInject(true);
                   }
                   token = eatTokensUntilEOL();
                   continue retry;

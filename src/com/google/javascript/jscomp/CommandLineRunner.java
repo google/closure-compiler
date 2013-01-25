@@ -369,7 +369,7 @@ public class CommandLineRunner extends
     @Option(name = "--angular_pass",
         handler = BooleanOptionHandler.class,
         usage = "Generate $inject properties for AngularJS for functions "
-        + "annotated with @angularInject")
+        + "annotated with @ngInject")
     private boolean angular_pass = false;
 
     @Option(name = "--output_manifest",

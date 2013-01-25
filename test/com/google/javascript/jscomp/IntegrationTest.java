@@ -270,18 +270,18 @@ public class IntegrationTest extends IntegrationTestCase {
 
   public void testAngularPassOff() {
     testSame(createCompilerOptions(),
-        "/** @angularInject */ function f() {} " +
-        "/** @angularInject */ function g(a){} " +
-        "/** @angularInject */ var b = function f(a) {} ");
+        "/** @ngInject */ function f() {} " +
+        "/** @ngInject */ function g(a){} " +
+        "/** @ngInject */ var b = function f(a) {} ");
   }
 
   public void testAngularPassOn() {
     CompilerOptions options = createCompilerOptions();
     options.angularPass = true;
     test(options,
-        "/** @angularInject */ function f() {} " +
-        "/** @angularInject */ function g(a){} " +
-        "/** @angularInject */ var b = function f(a, b, c) {} ",
+        "/** @ngInject */ function f() {} " +
+        "/** @ngInject */ function g(a){} " +
+        "/** @ngInject */ var b = function f(a, b, c) {} ",
 
         "function f() {} " +
         "function g(a) {} g.$inject=['a'];" +

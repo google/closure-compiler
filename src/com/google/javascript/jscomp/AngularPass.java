@@ -31,12 +31,12 @@ import java.util.List;
 /**
  * Compiler pass for AngularJS-specific needs. Generates {@code $inject} \
  * properties for functions (class constructors, wrappers, etc) annotated with
- * @angularInject.
+ * @ngInject.
  *
  * <p>For example, the following code:</p>
  * <pre>{@code
  *
- * /** @angularInject * /
+ * /** @ngInject * /
  * function Controller(dependency1, dependency2) {
  *   // do something
  * }
@@ -57,14 +57,14 @@ import java.util.List;
  * like:
  * <pre>{@code
  *
- * /** @angularInject * /
+ * /** @ngInject * /
  * var filter = function(a, b) {};
  *
  * var ns = {};
- * /** @angularInject * /
+ * /** @ngInject * /
  * ns.method = function(a,b,c) {};
  *
- * /** @angularInject * /
+ * /** @ngInject * /
  * var shorthand = ns.method2 = function(a,b,c,) {}
  *
  * }</pre>
@@ -72,7 +72,7 @@ import java.util.List;
 class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
   final AbstractCompiler compiler;
 
-  /** Nodes annotated with @angularInject */
+  /** Nodes annotated with @ngInject */
   private List<NodeContext> injectables = new ArrayList<NodeContext>();
 
   public AngularPass(AbstractCompiler compiler) {
@@ -83,21 +83,21 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
 
   static final DiagnosticType INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR =
       DiagnosticType.error("JSC_INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR",
-          "@angularInject only applies to functions defined in blocks or " +
+          "@ngInject only applies to functions defined in blocks or " +
           "global scope.");
 
   static final DiagnosticType INJECT_NON_FUNCTION_ERROR =
       DiagnosticType.error("JSC_INJECT_NON_FUNCTION_ERROR",
-          "@angularInject can only be used when defining a function or " +
+          "@ngInject can only be used when defining a function or " +
           "assigning a function expression.");
 
   static final DiagnosticType FUNCTION_NAME_ERROR =
       DiagnosticType.error("JSC_FUNCTION_NAME_ERROR",
-          "Unable to determine target function name for @angularInject.");
+          "Unable to determine target function name for @ngInject.");
 
   @Override
   public void process(Node externs, Node root) {
-    // Traverses AST looking for nodes annotated with @angularInject.
+    // Traverses AST looking for nodes annotated with @ngInject.
     NodeTraversal.traverse(compiler, root, this);
     CodingConvention convention = compiler.getCodingConvention();
     boolean codeChanged = false;
@@ -163,7 +163,7 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     JSDocInfo docInfo = n.getJSDocInfo();
-    if (docInfo != null && docInfo.isAngularInject()) {
+    if (docInfo != null && docInfo.isNgInject()) {
       addNode(n, t);
     }
   }

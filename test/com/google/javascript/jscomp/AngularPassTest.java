@@ -45,9 +45,9 @@ public class AngularPassTest extends CompilerTestCase {
     return getOptions(options);
   }
 
-  public void testAngularInjectAddsInjectToFunctions() throws Exception {
+  public void testNgInjectAddsInjectToFunctions() throws Exception {
     test(
-        "/** @angularInject */" +
+        "/** @ngInject */" +
         "function fn(a, b) {}",
 
         "function fn(a, b) {}\n" +
@@ -59,10 +59,10 @@ public class AngularPassTest extends CompilerTestCase {
     );
   }
 
-  public void testAngularInjectAddsInjectToProps() throws Exception {
+  public void testNgInjectAddsInjectToProps() throws Exception {
     test(
         "var ns = {};\n" +
-        "/** @angularInject */" +
+        "/** @ngInject */" +
         "ns.fn = function (a, b) {}",
 
         "var ns = {};\n" +
@@ -76,10 +76,10 @@ public class AngularPassTest extends CompilerTestCase {
     );
   }
 
-  public void testAngularInjectAddsInjectToNestedProps() throws Exception {
+  public void testNgInjectAddsInjectToNestedProps() throws Exception {
     test(
         "var ns = {}; ns.subns = {};\n" +
-        "/** @angularInject */" +
+        "/** @ngInject */" +
         "ns.subns.fn = function (a, b) {}",
 
         "var ns = {};ns.subns = {};\n" +
@@ -93,9 +93,9 @@ public class AngularPassTest extends CompilerTestCase {
     );
   }
 
-  public void testAngularInjectAddsInjectToVars() throws Exception {
+  public void testNgInjectAddsInjectToVars() throws Exception {
     test(
-        "/** @angularInject */" +
+        "/** @ngInject */" +
         "var fn = function (a, b) {}",
 
         "var fn = function (a, b) {};\n" +
@@ -107,11 +107,11 @@ public class AngularPassTest extends CompilerTestCase {
     );
   }
 
-  public void testAngularInjectAddsInjectToVarsWithChainedAssignment()
+  public void testNgInjectAddsInjectToVarsWithChainedAssignment()
       throws Exception {
     test(
         "var ns = {};\n" +
-        "/** @angularInject */" +
+        "/** @ngInject */" +
         "var fn = ns.func = function (a, b) {}",
 
         "var ns = {}; var fn = ns.func = function (a, b) {};\n" +
@@ -124,11 +124,11 @@ public class AngularPassTest extends CompilerTestCase {
     );
   }
 
-  public void testAngularInjectInBlock() throws Exception {
+  public void testNgInjectInBlock() throws Exception {
     test(
         "(function() {" +
         "var ns = {};\n" +
-        "/** @angularInject */" +
+        "/** @ngInject */" +
         "var fn = ns.func = function (a, b) {}" +
         "})()",
 
@@ -146,12 +146,12 @@ public class AngularPassTest extends CompilerTestCase {
     );
   }
 
-  public void testAngularInjectAddsToTheRightBlock() throws Exception {
+  public void testNgInjectAddsToTheRightBlock() throws Exception {
     test(
         "var fn = 10;\n" +
         "(function() {" +
         "var ns = {};\n" +
-        "/** @angularInject */" +
+        "/** @ngInject */" +
         "var fn = ns.func = function (a, b) {}" +
         "})()",
 
@@ -163,11 +163,11 @@ public class AngularPassTest extends CompilerTestCase {
     );
   }
 
-  public void testAngularInjectInNonBlock() throws Exception {
+  public void testNgInjectInNonBlock() throws Exception {
     test(
         "function fake(){}; var ns = {};" +
         "fake(" +
-        "/** @angularInject */" +
+        "/** @ngInject */" +
         "ns.func = function (a, b) {}" +
         ")",
         null,
@@ -175,7 +175,7 @@ public class AngularPassTest extends CompilerTestCase {
     );
 
     test(
-        "/** @angularInject */(" +
+        "/** @ngInject */(" +
         "function (a, b) {}" +
         ")",
         null,
@@ -183,16 +183,16 @@ public class AngularPassTest extends CompilerTestCase {
     );
   }
 
-  public void testAngularInjectNonFunction() throws Exception {
+  public void testNgInjectNonFunction() throws Exception {
     test(
-        "/** @angularInject */" +
+        "/** @ngInject */" +
         "var a = 10",
         null,
         AngularPass.INJECT_NON_FUNCTION_ERROR
     );
 
     test(
-        "/** @angularInject */" +
+        "/** @ngInject */" +
         "var x",
         null,
         AngularPass.INJECT_NON_FUNCTION_ERROR

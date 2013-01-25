@@ -103,7 +103,7 @@ public class JSDocInfo implements Serializable {
     Set<String> suppressions = null;
     Set<String> modifies = null;
     String lendsName = null;
-    boolean angularInject = false;
+    boolean ngInject = false;
   }
 
   private static final class LazilyInitializedDocumentation {
@@ -1227,15 +1227,15 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Returns whether JSDoc is annotated with {@code @angularInject} annotation.
+   * Returns whether JSDoc is annotated with {@code @ngInject} annotation.
    */
-  public boolean isAngularInject() {
-    return (info == null) ? false : info.angularInject;
+  public boolean isNgInject() {
+    return (info == null) ? false : info.ngInject;
   }
 
-  void setAngularInject(boolean angularInject) {
+  void setNgInject(boolean ngInject) {
     lazyInitInfo();
-    info.angularInject = angularInject;
+    info.ngInject = ngInject;
   }
 
   /**
