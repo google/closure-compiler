@@ -1496,6 +1496,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case Token.NOT:
         return parent.getParent().isOr() &&
             parent.getParent().getFirstChild() == parent;
+
+      case Token.CAST:
+        return isPropertyTest(parent);
     }
     return false;
   }

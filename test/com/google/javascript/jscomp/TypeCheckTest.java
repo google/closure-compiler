@@ -10288,6 +10288,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "}");
   }
 
+  public void testMissingProperty43() throws Exception {
+    testTypes(
+        "function f(x) { " +
+        " return /** @type {number} */ (x.impossible) && 1;" +
+        "}");
+  }
+
   public void testReflectObject1() throws Exception {
     testClosureTypes(
         "var goog = {}; goog.reflect = {}; " +
