@@ -180,6 +180,7 @@ class FunctionToBlockMutator {
     NodeTraversal.traverse(
         compiler, fnNode, new MakeDeclaredNamesUnique(
             new InlineRenamer(
+                compiler.getCodingConvention(),
                 idSupplier,
                 "inline_",
                 isCallInLoop)));

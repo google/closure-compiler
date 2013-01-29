@@ -93,6 +93,7 @@ class Normalize implements CompilerPass {
         compiler, js,
         new MakeDeclaredNamesUnique(
             new BoilerplateRenamer(
+                compiler.getCodingConvention(),
                 compiler.getUniqueNameIdSupplier(),
                 prefix)));
     return js;

@@ -517,11 +517,14 @@ class MakeDeclaredNamesUnique
     private final Supplier<String> uniqueIdSupplier;
     private final String idPrefix;
     private final boolean removeConstness;
+    private final CodingConvention convention;
 
     InlineRenamer(
+        CodingConvention convention,
         Supplier<String> uniqueIdSupplier,
         String idPrefix,
         boolean removeConstness) {
+      this.convention = convention;
       this.uniqueIdSupplier = uniqueIdSupplier;
       // To ensure that the id does not conflict with the id from the
       // ContextualRenamer some prefix is needed.
@@ -548,6 +551,13 @@ class MakeDeclaredNamesUnique
               0, name.lastIndexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR));
       }
 
+      if (convention.isExported(name)) {
+        // The google internal coding convention includes a naming convention
+        // to export names starting with "_".  Simply strip "_" those to avoid
+        // exporting names.
+        name = "JSCompiler_" + name;
+      }
+
       // By using the same separator the id will be stripped if it isn't
       // needed when variable renaming is turned off.
       return name + ContextualRenamer.UNIQUE_ID_SEPARATOR
@@ -561,7 +571,8 @@ class MakeDeclaredNamesUnique
 
     @Override
     public Renamer forChildScope() {
-      return new InlineRenamer(uniqueIdSupplier, idPrefix, removeConstness);
+      return new InlineRenamer(
+          convention, uniqueIdSupplier, idPrefix, removeConstness);
     }
 
     @Override
@@ -577,17 +588,20 @@ class MakeDeclaredNamesUnique
   static class BoilerplateRenamer extends ContextualRenamer {
     private final Supplier<String> uniqueIdSupplier;
     private final String idPrefix;
+    private final CodingConvention convention;
 
     BoilerplateRenamer(
+        CodingConvention convention,
         Supplier<String> uniqueIdSupplier,
         String idPrefix) {
+      this.convention = convention;
       this.uniqueIdSupplier = uniqueIdSupplier;
       this.idPrefix = idPrefix;
     }
 
     @Override
     public Renamer forChildScope() {
-      return new InlineRenamer(uniqueIdSupplier, idPrefix, false);
+      return new InlineRenamer(convention, uniqueIdSupplier, idPrefix, false);
     }
   }
 

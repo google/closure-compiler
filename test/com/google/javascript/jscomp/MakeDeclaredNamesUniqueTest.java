@@ -43,6 +43,7 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
           } else {
             renamer = new MakeDeclaredNamesUnique(
                 new InlineRenamer(
+                    compiler.getCodingConvention(),
                     compiler.getUniqueNameIdSupplier(),
                     localNamePrefix,
                     removeConst));
@@ -279,6 +280,17 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
          "try { } catch(e) {e;}};",
          "try { } catch(e$$unique_0) {e$$unique_0; " +
             "try { } catch(e$$unique_1) {e$$unique_1;} }; ");
+  }
+
+  public void testMakeLocalNamesUniqueWithoutContext2() {
+    // Set the test type
+    this.useDefaultRenamer = false;
+
+    test("var _a;",
+         "var JSCompiler__a$$unique_0");
+    test("var _a = function _b(_c) { var _d; };",
+         "var JSCompiler__a$$unique_0 = function JSCompiler__b$$unique_1(" +
+             "JSCompiler__c$$unique_2) { var JSCompiler__d$$unique_3; };");
   }
 
   public void testOnlyInversion() {
