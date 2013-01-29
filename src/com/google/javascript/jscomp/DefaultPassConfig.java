@@ -1773,7 +1773,7 @@ public class DefaultPassConfig extends PassConfig {
           enableBlockInlining,
           options.assumeStrictThis()
               || options.getLanguageIn() == LanguageMode.ECMASCRIPT5_STRICT,
-          true /* assumeMinimumCapture */);
+          options.assumeClosuresOnlyCaptureReferences);
     }
   };
 
