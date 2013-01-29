@@ -330,14 +330,14 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
       .withTemplateKeys(ImmutableList.of("T"))
       .withReturnType(BOOLEAN_TYPE).build();
 
-    assertEquals("[T]",
-        fn.getPropertyType("call").getTemplateKeys().toString());
-    assertEquals("[T]",
-        fn.getPropertyType("apply").getTemplateKeys().toString());
-    assertEquals("[T]",
-        fn.getPropertyType("bind").getTemplateKeys().toString());
-    assertEquals("[T]",
-        fn.getBindReturnType(0).getTemplateKeys().toString());
+    assertEquals("[T]", fn.getPropertyType("call").getTemplateTypeMap()
+        .getTemplateKeys().toString());
+    assertEquals("[T]", fn.getPropertyType("apply").getTemplateTypeMap()
+        .getTemplateKeys().toString());
+    assertEquals("[T]", fn.getPropertyType("bind").getTemplateTypeMap()
+        .getTemplateKeys().toString());
+    assertEquals("[T]", fn.getBindReturnType(0).getTemplateTypeMap()
+        .getTemplateKeys().toString());
   }
 
   public void testPrint() {

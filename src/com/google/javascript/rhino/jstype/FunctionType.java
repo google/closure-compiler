@@ -133,11 +133,11 @@ public class FunctionType extends PrototypeObjectType {
   /** Creates an instance for a function that might be a constructor. */
   FunctionType(JSTypeRegistry registry, String name, Node source,
                ArrowType arrowType, JSType typeOfThis,
-               ImmutableList<String> templateKeys,
+               TemplateTypeMap templateTypeMap,
                boolean isConstructor, boolean nativeType) {
     super(registry, name,
         registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
-        nativeType, templateKeys, null);
+        nativeType, templateTypeMap);
     setPrettyPrint(true);
 
     Preconditions.checkArgument(source == null ||
@@ -148,7 +148,7 @@ public class FunctionType extends PrototypeObjectType {
       this.kind = Kind.CONSTRUCTOR;
       this.propAccess = PropAccess.ANY;
       this.typeOfThis = typeOfThis != null ?
-          typeOfThis : new InstanceObjectType(registry, this, nativeType, null);
+          typeOfThis : new InstanceObjectType(registry, this, nativeType);
     } else {
       this.kind = Kind.ORDINARY;
       this.typeOfThis = typeOfThis != null ?
@@ -377,7 +377,7 @@ public class FunctionType extends PrototypeObjectType {
                 registry,
                 getReferenceName() + ".prototype",
                 registry.getNativeObjectType(OBJECT_TYPE),
-                isNativeObjectType(), null, null),
+                isNativeObjectType(), null),
             null);
       }
     }
@@ -606,7 +606,7 @@ public class FunctionType extends PrototypeObjectType {
             new FunctionBuilder(registry)
             .withParams(builder)
             .withReturnType(getReturnType())
-            .withTemplateKeys(getTemplateKeys())
+            .withTemplateKeys(getTemplateTypeMap().getTemplateKeys())
             .build(),
             source);
       }
@@ -625,7 +625,7 @@ public class FunctionType extends PrototypeObjectType {
   public FunctionType getBindReturnType(int argsToBind) {
     FunctionBuilder builder = new FunctionBuilder(registry)
         .withReturnType(getReturnType())
-        .withTemplateKeys(getTemplateKeys());
+        .withTemplateKeys(getTemplateTypeMap().getTemplateKeys());
     if (argsToBind >= 0) {
       Node origParams = getParametersNode();
       if (origParams != null) {
@@ -651,7 +651,7 @@ public class FunctionType extends PrototypeObjectType {
     boolean isBind = !isCall;
     FunctionBuilder builder = new FunctionBuilder(registry)
         .withReturnType(isCall ? getReturnType() : getBindReturnType(-1))
-        .withTemplateKeys(getTemplateKeys());
+        .withTemplateKeys(getTemplateTypeMap().getTemplateKeys());
 
     Node origParams = getParametersNode();
     if (origParams != null) {
@@ -1259,7 +1259,7 @@ public class FunctionType extends PrototypeObjectType {
 
   @Override
   public boolean hasAnyTemplateTypesInternal() {
-    return !getTemplateKeys().isEmpty()
+    return getTemplateTypeMap().numUnfilledTemplateKeys() > 0
         || typeOfThis.hasAnyTemplateTypes()
         || call.hasAnyTemplateTypes();
   }

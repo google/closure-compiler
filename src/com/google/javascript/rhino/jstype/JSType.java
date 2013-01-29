@@ -42,7 +42,6 @@ package com.google.javascript.rhino.jstype;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.jstype.JSTypeRegistry.ResolveMode;
@@ -70,8 +69,7 @@ public abstract class JSType implements Serializable {
 
   private boolean resolved = false;
   private JSType resolveResult = null;
-  private final ImmutableList<String> templateKeys;
-  private final ImmutableList<JSType> templatizedTypes;
+  protected final TemplateTypeMap templateTypeMap;
 
   private boolean inTemplatedCheckVisit = false;
   private static final CanCastToVisitor CAN_CAST_TO_VISITOR =
@@ -108,39 +106,14 @@ public abstract class JSType implements Serializable {
   final JSTypeRegistry registry;
 
   JSType(JSTypeRegistry registry) {
-    this(registry, null, null);
+    this(registry, null);
   }
 
-  JSType(JSTypeRegistry registry, ImmutableList<String> templateKeys,
-      ImmutableList<JSType> templatizedTypes) {
+  JSType(JSTypeRegistry registry, TemplateTypeMap templateTypeMap) {
     this.registry = registry;
 
-    // Do sanity checking on the specified keys and templatized types.
-    int keysLength = templateKeys == null ? 0 : templateKeys.size();
-    int typesLength = templatizedTypes == null ? 0 : templatizedTypes.size();
-    if (typesLength > keysLength) {
-      throw new IllegalArgumentException(
-          "Cannot have more templatized types than template keys");
-    } else if (typesLength < keysLength) {
-      // If there are fewer templatized types than keys, extend the templatized
-      // types list to match the number of keys, using UNKNOWN_TYPE for the
-      // unspecified types.
-      ImmutableList.Builder<JSType> builder = ImmutableList.builder();
-      if (typesLength > 0) {
-        builder.addAll(templatizedTypes);
-      }
-      for (int i = 0; i < keysLength - typesLength; i++) {
-        builder.add(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
-      }
-      templatizedTypes = builder.build();
-    } else if (keysLength == 0 && typesLength == 0) {
-      // Ensure that both lists are non-null.
-      templateKeys = ImmutableList.of();
-      templatizedTypes = ImmutableList.of();
-    }
-
-    this.templateKeys = templateKeys;
-    this.templatizedTypes = templatizedTypes;
+    this.templateTypeMap = templateTypeMap == null ?
+        registry.createTemplateTypeMap(null, null) : templateTypeMap;
   }
 
   /**
@@ -474,81 +447,15 @@ public abstract class JSType implements Serializable {
   }
 
   boolean hasAnyTemplateTypesInternal() {
-    if (isTemplatized()) {
-      for (JSType templatizedType : templatizedTypes) {
-        if (templatizedType.hasAnyTemplateTypes()) {
-          return true;
-        }
-      }
-    }
-    return false;
+    return templateTypeMap.hasAnyTemplateTypesInternal();
   }
 
   /**
-   * Returns true if this type is templatized; false otherwise.
+   * Returns the template type map associated with this type.
    */
-  public boolean isTemplatized() {
-    return !templateKeys.isEmpty();
+  public TemplateTypeMap getTemplateTypeMap() {
+    return templateTypeMap;
   }
-
-  /**
-   * Returns the template keys associated with this type.
-   */
-  public ImmutableList<String> getTemplateKeys() {
-    return templateKeys;
-  }
-
-  public ImmutableList<JSType> getTemplatizedTypes() {
-    return templatizedTypes;
-  }
-
-  /**
-   * Returns true if this type is templatized for the specified key; false
-   * otherwise.
-   */
-  public boolean hasTemplatizedType(String key) {
-    return templateKeys.contains(key);
-  }
-
-  /**
-   * Returns the type associated with a given template key. Will return
-   * the UNKNOWN_TYPE if there is no template type associated with that
-   * template key.
-   */
-  public JSType getTemplatizedType(String key) {
-     int index = templateKeys.indexOf(key);
-     if (index < 0) {
-       return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-     }
-     return templatizedTypes.get(index);
-  }
-
-  /**
-   * Determines if the two specified JSTypes have equivalent, invariant
-   * templatized types.
-   */
-  static boolean hasEquivalentTemplateTypes(
-      JSType type1, JSType type2, EquivalenceMethod eqMethod) {
-    ImmutableList<JSType> templatizedTypes1 = type1.getTemplatizedTypes();
-    ImmutableList<JSType> templatizedTypes2 = type2.getTemplatizedTypes();
-    int nTemplatizedTypes1 = templatizedTypes1.size();
-    int nTemplatizedTypes2 = templatizedTypes2.size();
-
-    if (nTemplatizedTypes1 != nTemplatizedTypes2) {
-      return false;
-    }
-
-    for (int i = 0; i < nTemplatizedTypes1; i++) {
-      JSType templatizedType1 = templatizedTypes1.get(i);
-      JSType templatizedType2 = templatizedTypes2.get(i);
-      if (templatizedType1.checkEquivalenceHelper(templatizedType2, eqMethod)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
 
   /**
    * Tests whether this type is an {@code Object}, or any subtype thereof.

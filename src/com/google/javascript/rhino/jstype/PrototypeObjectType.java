@@ -102,7 +102,7 @@ class PrototypeObjectType extends ObjectType {
    */
   PrototypeObjectType(JSTypeRegistry registry, String className,
       ObjectType implicitPrototype) {
-    this(registry, className, implicitPrototype, false, null, null);
+    this(registry, className, implicitPrototype, false, null);
   }
 
   /**
@@ -111,9 +111,8 @@ class PrototypeObjectType extends ObjectType {
    */
   PrototypeObjectType(JSTypeRegistry registry, String className,
       ObjectType implicitPrototype, boolean nativeType,
-      ImmutableList<String> templateKeys,
-      ImmutableList<JSType> templatizedTypes) {
-    super(registry, templateKeys, templatizedTypes);
+      TemplateTypeMap templateTypeMap) {
+    super(registry, templateTypeMap);
     this.properties = new PropertyMap();
     this.properties.setParentSource(this);
 

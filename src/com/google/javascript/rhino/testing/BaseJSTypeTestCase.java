@@ -39,7 +39,6 @@
 
 package com.google.javascript.rhino.testing;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionBuilder;
@@ -407,11 +406,6 @@ public abstract class BaseJSTypeTestCase extends TestCase {
 
   protected JSType createOptionalType(JSType type) {
     return registry.createOptionalType(type);
-  }
-
-  protected JSType createTemplatizedType(
-      JSType baseType, ImmutableList<JSType> templatizedTypes) {
-    return registry.createTemplatizedType(baseType, templatizedTypes);
   }
 
   protected JSType createTemplatizedType(

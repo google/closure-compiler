@@ -158,6 +158,10 @@ public class JSTypeRegistry implements Serializable {
   // The template type name.
   private Map<String, TemplateType> templateTypes = Maps.newHashMap();
 
+  // A single empty TemplateTypeMap, which can be safely reused in cases where
+  // there are no template types.
+  private final TemplateTypeMap emptyTemplateTypeMap;
+
   private final boolean tolerateUndefinedValues;
 
   /**
@@ -203,6 +207,8 @@ public class JSTypeRegistry implements Serializable {
   public JSTypeRegistry(
       ErrorReporter reporter, boolean tolerateUndefinedValues) {
     this.reporter = reporter;
+    this.emptyTemplateTypeMap = new TemplateTypeMap(
+        this, ImmutableList.<String>of(), ImmutableList.<JSType>of());
     nativeTypes = new JSType[JSTypeNative.values().length];
     namesToTypes = new HashMap<String, JSType>();
     resetForTypeCheck();
@@ -272,7 +278,7 @@ public class JSTypeRegistry implements Serializable {
     // use each other's results, so at least one of them will get null
     // instead of an actual type; however, this seems to be benign.
     PrototypeObjectType TOP_LEVEL_PROTOTYPE =
-        new PrototypeObjectType(this, null, null, true, null, null);
+        new PrototypeObjectType(this, null, null, true, null);
     registerNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE, TOP_LEVEL_PROTOTYPE);
 
     // Object
@@ -1402,7 +1408,7 @@ public class JSTypeRegistry implements Serializable {
    */
   ObjectType createNativeAnonymousObjectType() {
     PrototypeObjectType type =
-        new PrototypeObjectType(this, null, null, true, null, null);
+        new PrototypeObjectType(this, null, null, true, null);
     type.setPrettyPrint(true);
     return type;
   }
@@ -1423,7 +1429,7 @@ public class JSTypeRegistry implements Serializable {
       Node parameters, JSType returnType, ImmutableList<String> templateKeys) {
     return new FunctionType(this, name, source,
         createArrowType(parameters, returnType), null,
-        templateKeys, true, false);
+        createTemplateTypeMap(templateKeys, null), true, false);
   }
 
   /**
@@ -1437,32 +1443,28 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
+   * Creates a template type map from the specified list of template keys and
+   * template value types.
+   */
+  public TemplateTypeMap createTemplateTypeMap(
+      ImmutableList<String> templateKeys,
+      ImmutableList<JSType> templateValues) {
+    templateKeys = templateKeys == null ?
+        ImmutableList.<String>of() : templateKeys;
+    templateValues = templateValues == null ?
+        ImmutableList.<JSType>of() : templateValues;
+
+    return (templateKeys.isEmpty() && templateValues.isEmpty()) ?
+        emptyTemplateTypeMap :
+        new TemplateTypeMap(this, templateKeys, templateValues);
+  }
+
+  /*
    * Creates a templatized type.
    */
   public TemplatizedType createTemplatizedType(
       ObjectType objectType, JSType parameterType) {
     return new TemplatizedType(this, objectType, parameterType);
-  }
-
-  /**
-   * Creates a templatized instance of the specified type.
-   * @param baseType the type to be templatized.
-   * @param templatizedTypes a list of the template JSTypes. Will be matched by
-   *     list order to the template keys specified in the constructor function.
-   */
-  public JSType createTemplatizedType(
-      JSType baseType, ImmutableList<JSType> templatizedTypes) {
-    // Only instance object types can currently be templatized; extend this
-    // logic when more types can be templatized.
-    if (baseType instanceof InstanceObjectType) {
-      ObjectType baseObjType = baseType.toObjectType();
-      return new InstanceObjectType(
-          this, baseObjType.getConstructor(), baseObjType.isNativeObjectType(),
-          templatizedTypes);
-    } else {
-      throw new IllegalArgumentException(
-          "Only instance object types can be templatized");
-    }
   }
 
   /**

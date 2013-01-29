@@ -1027,7 +1027,7 @@ class TypeInference
 
   private Map<TemplateType, JSType> inferTemplateTypesFromParameters(
       FunctionType fnType, Node call) {
-    if (fnType.getTemplateKeys().isEmpty()) {
+    if (fnType.getTemplateTypeMap().getTemplateKeys().isEmpty()) {
       return Collections.emptyMap();
     }
 
@@ -1175,7 +1175,7 @@ class TypeInference
    */
   private boolean inferTemplatedTypesForCall(
       Node n, FunctionType fnType) {
-    if (fnType.getTemplateKeys().isEmpty()) {
+    if (fnType.getTemplateTypeMap().getTemplateKeys().isEmpty()) {
       return false;
     }
 

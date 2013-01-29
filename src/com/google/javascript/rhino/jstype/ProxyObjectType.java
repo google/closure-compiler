@@ -59,7 +59,12 @@ class ProxyObjectType extends ObjectType {
   private ObjectType referencedObjType;
 
   ProxyObjectType(JSTypeRegistry registry, JSType referencedType) {
-    super(registry);
+    this(registry, referencedType, null);
+  }
+
+  ProxyObjectType(JSTypeRegistry registry, JSType referencedType,
+                  TemplateTypeMap templateTypeMap) {
+    super(registry, templateTypeMap);
     setReferencedType(referencedType);
   }
 
@@ -367,5 +372,10 @@ class ProxyObjectType extends ObjectType {
   @Override
   public boolean hasAnyTemplateTypesInternal() {
     return referencedType.hasAnyTemplateTypes();
+  }
+
+  @Override
+  public TemplateTypeMap getTemplateTypeMap() {
+    return referencedType.getTemplateTypeMap();
   }
 }

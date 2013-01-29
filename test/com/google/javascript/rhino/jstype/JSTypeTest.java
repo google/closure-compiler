@@ -6104,59 +6104,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             .hasAnyTemplateTypes());
   }
 
-  public void testTemplatizedType() throws Exception {
-    FunctionType templatizedCtor = registry.createConstructorType(
-        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of("A", "B"));
-    JSType templatizedInstance = registry.createTemplatizedType(
-        templatizedCtor.getInstanceType(),
-        ImmutableList.of(NUMBER_TYPE, STRING_TYPE));
-
-    assertTrue(templatizedInstance.isTemplatized());
-    assertTrue(templatizedInstance.hasTemplatizedType("A"));
-    assertTrue(templatizedInstance.hasTemplatizedType("B"));
-    assertFalse(templatizedInstance.hasTemplatizedType("C"));
-
-    assertEquals(NUMBER_TYPE, templatizedInstance.getTemplatizedType("A"));
-    assertEquals(STRING_TYPE, templatizedInstance.getTemplatizedType("B"));
-    assertEquals(UNKNOWN_TYPE, templatizedInstance.getTemplatizedType("C"));
-
-    assertEquals("TestingType.<number,string>", templatizedInstance.toString());
-  }
-
-  public void testPartiallyTemplatizedType() throws Exception {
-    FunctionType templatizedCtor = registry.createConstructorType(
-        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of("A", "B"));
-    JSType templatizedInstance = registry.createTemplatizedType(
-        templatizedCtor.getInstanceType(),
-        ImmutableList.of(NUMBER_TYPE));
-
-    assertTrue(templatizedInstance.isTemplatized());
-    assertTrue(templatizedInstance.hasTemplatizedType("A"));
-    assertTrue(templatizedInstance.hasTemplatizedType("B"));
-    assertFalse(templatizedInstance.hasTemplatizedType("C"));
-
-    assertEquals(NUMBER_TYPE, templatizedInstance.getTemplatizedType("A"));
-    assertEquals(UNKNOWN_TYPE, templatizedInstance.getTemplatizedType("B"));
-    assertEquals(UNKNOWN_TYPE, templatizedInstance.getTemplatizedType("C"));
-
-    assertEquals("TestingType.<number,?>", templatizedInstance.toString());
-  }
-
-  public void testInvalidTemplatizedType() throws Exception {
-    FunctionType templatizedCtor = registry.createConstructorType(
-        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of("A", "B"));
-
-    boolean exceptionThrown = false;
-    try {
-      registry.createTemplatizedType(
-          templatizedCtor.getInstanceType(),
-          ImmutableList.of(NUMBER_TYPE, STRING_TYPE, BOOLEAN_TYPE));
-    } catch (IllegalArgumentException e) {
-      exceptionThrown = true;
-    }
-    assertTrue(exceptionThrown);
-  }
-
   public void testCanCastTo() {
     assertTrue(ALL_TYPE.canCastTo(NULL_TYPE));
     assertTrue(ALL_TYPE.canCastTo(VOID_TYPE));

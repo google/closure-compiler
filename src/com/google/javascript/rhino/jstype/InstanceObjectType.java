@@ -40,9 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -54,14 +52,12 @@ class InstanceObjectType extends PrototypeObjectType {
   private final FunctionType constructor;
 
   InstanceObjectType(JSTypeRegistry registry, FunctionType constructor) {
-    this(registry, constructor, false, null);
+    this(registry, constructor, false);
   }
 
   InstanceObjectType(JSTypeRegistry registry, FunctionType constructor,
-                     boolean isNativeType,
-                     ImmutableList<JSType> templatizedTypes) {
-    super(registry, null, null, isNativeType, constructor.getTemplateKeys(),
-        templatizedTypes);
+                     boolean isNativeType) {
+    super(registry, null, null, isNativeType, constructor.getTemplateTypeMap());
     Preconditions.checkNotNull(constructor);
     this.constructor = constructor;
   }
@@ -99,14 +95,7 @@ class InstanceObjectType extends PrototypeObjectType {
   @Override
   String toStringHelper(boolean forAnnotations) {
     if (constructor.hasReferenceName()) {
-      String typeString = constructor.getReferenceName();
-
-      ImmutableList<JSType> templatizedTypes = getTemplatizedTypes();
-      if (!templatizedTypes.isEmpty()) {
-        typeString += ".<" + Joiner.on(",").join(templatizedTypes) + ">";
-      }
-
-      return typeString;
+      return constructor.getReferenceName();
     } else {
       return super.toStringHelper(forAnnotations);
     }
