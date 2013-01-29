@@ -89,6 +89,11 @@ class DisambiguateProperties<T> implements CompilerPass {
         "JSC_INVALIDATION",
         "Property disambiguator skipping all instances of property {0} "
         + "because of type {1} node {2}. {3}");
+
+    static final DiagnosticType INVALIDATION_ON_TYPE = DiagnosticType.disabled(
+        "JSC_INVALIDATION_TYPE",
+        "Property disambiguator skipping instances of property {0} "
+        + "on type {1}. {2}");
   }
 
   private final AbstractCompiler compiler;
@@ -569,6 +574,7 @@ class DisambiguateProperties<T> implements CompilerPass {
     int propsRenamed = 0, propsSkipped = 0, instancesRenamed = 0,
         instancesSkipped = 0, singleTypeProps = 0;
 
+    Set<String> reported = Sets.newHashSet();
     for (Property prop : properties.values()) {
       if (prop.shouldRename()) {
         Map<T, String> propNames = buildPropNames(prop.getTypes(), prop.name);
@@ -584,6 +590,18 @@ class DisambiguateProperties<T> implements CompilerPass {
             ++instancesRenamed;
           } else {
             ++instancesSkipped;
+
+            CheckLevel checkLevelForProp = propertiesToErrorFor.get(prop.name);
+            if (checkLevelForProp != null &&
+                checkLevelForProp != CheckLevel.OFF &&
+                !reported.contains(prop.name)) {
+              reported.add(prop.name);
+              compiler.report(JSError.make(
+                  NodeUtil.getSourceName(node), node,
+                  checkLevelForProp,
+                  Warnings.INVALIDATION_ON_TYPE, prop.name,
+                  rootType.toString(), ""));
+            }
           }
         }
       } else {

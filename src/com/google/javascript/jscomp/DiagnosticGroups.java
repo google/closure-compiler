@@ -205,7 +205,8 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup TYPE_INVALIDATION =
       DiagnosticGroups.registerGroup("typeInvalidation",
-          DisambiguateProperties.Warnings.INVALIDATION);
+          DisambiguateProperties.Warnings.INVALIDATION,
+          DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE);
 
   public static final DiagnosticGroup DUPLICATE_VARS =
       DiagnosticGroups.registerGroup("duplicate",

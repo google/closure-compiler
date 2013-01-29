@@ -1289,6 +1289,31 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         .contains("Consider fixing errors"));
   }
 
+  public void testUnionTypeInvalidationError() {
+    String externs = ""
+        + "/** @constructor */ function Baz() {}"
+        + "Baz.prototype.foobar";
+    String js = ""
+        + "/** @constructor */ function Ind() {this.foobar=0}\n"
+        + "/** @constructor */ function Foo() {}\n"
+        + "Foo.prototype.foobar = 0;\n"
+        + "/** @constructor */ function Bar() {}\n"
+        + "Bar.prototype.foobar = 0;\n"
+        + "/** @type {Foo|Bar} */\n"
+        + "var F = new Foo;\n"
+        + "F.foobar = 1\n;"
+        + "F = new Bar;\n"
+        + "/** @type {Baz} */\n"
+        + "var Z = new Baz;\n"
+        + "Z.foobar = 1\n;";
+
+    test(
+        externs, js, "",
+        DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE, null);
+    assertTrue(getLastCompiler().getErrors()[0].toString()
+        .contains("foobar"));
+   }
+
   public void runFindHighestTypeInChain() {
     // Check that this doesn't go into an infinite loop.
     DisambiguateProperties.forJSTypeSystem(new Compiler(),
