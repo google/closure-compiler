@@ -192,7 +192,7 @@ class TypeInference
     // NOTE(nicksantos): Right now, we just treat ON_EX edges like UNCOND
     // edges. If we wanted to be perfect, we'd actually JOIN all the out
     // lattices of this flow with the in lattice, and then make that the out
-    // lattice for the ON_EX edge. But it's probably to expensive to be
+    // lattice for the ON_EX edge. But it's probably too expensive to be
     // worthwhile.
     FlowScope output = flowThrough(source, input);
     Node condition = null;

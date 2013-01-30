@@ -105,7 +105,7 @@ class UnionTypeBuilder implements Serializable {
     this.maxUnionSize = maxUnionSize;
   }
 
-  Iterable<JSType> getAlternates() {
+  Collection<JSType> getAlternates() {
     JSType specialCaseType = reduceAlternatesWithoutUnion();
     if (specialCaseType != null) {
       return ImmutableList.of(specialCaseType);

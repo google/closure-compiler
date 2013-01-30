@@ -71,7 +71,7 @@ public class UnionType extends JSType {
   private static final long serialVersionUID = 1L;
 
   Collection<JSType> alternates;
-  private final int hashcode;
+  private int hashcode;
 
   /**
    * Creates a union type.
@@ -89,8 +89,27 @@ public class UnionType extends JSType {
    * @return The alternate types of this union type. The returned set is
    *     immutable.
    */
-  public Iterable<JSType> getAlternates() {
+  public Collection<JSType> getAlternates() {
+    for (JSType t : alternates) {
+      if (t.isUnionType()) {
+        rebuildAlternates();
+        break;
+      }
+    }
     return alternates;
+  }
+
+  /**
+   * Use UnionTypeBuilder to rebuild the list of alternates and hashcode
+   * of the current UnionType.
+   */
+  private void rebuildAlternates() {
+    UnionTypeBuilder builder = new UnionTypeBuilder(registry);
+    for (JSType alternate : alternates) {
+      builder.addAlternate(alternate);
+    }
+    alternates = builder.getAlternates();
+    hashcode = alternates.hashCode();
   }
 
   /**
@@ -315,16 +334,17 @@ public class UnionType extends JSType {
   }
 
   /**
-   * Two union types are equal if they have the same number of alternates
-   * and all alternates are equal.
+   * Two union types are equal if, after flattening nested union types,
+   * they have the same number of alternates and all alternates are equal.
    */
   boolean checkUnionEquivalenceHelper(
       UnionType that, EquivalenceMethod eqMethod) {
+    Collection<JSType> thatAlternates = that.getAlternates();
     if (eqMethod == EquivalenceMethod.IDENTITY
-        && alternates.size() != that.alternates.size()) {
+        && getAlternates().size() != thatAlternates.size()) {
       return false;
     }
-    for (JSType alternate : that.alternates) {
+    for (JSType alternate : thatAlternates) {
       if (!hasAlternate(alternate, eqMethod)) {
         return false;
       }
@@ -333,7 +353,7 @@ public class UnionType extends JSType {
   }
 
   private boolean hasAlternate(JSType type, EquivalenceMethod eqMethod) {
-    for (JSType alternate : alternates) {
+    for (JSType alternate : getAlternates()) {
       if (alternate.checkEquivalenceHelper(type, eqMethod)) {
         return true;
       }

@@ -6827,6 +6827,28 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "}");
   }
 
+  public void testBug8017789() throws Exception {
+    testTypes(
+        "/** @param {(map|function())} isResult */" +
+        "var f = function(isResult) {" +
+        "    while (true)" +
+        "        isResult['t'];" +
+        "};" +
+        "/** @typedef {Object.<string, number>} */" +
+        "var map;");
+  }
+
+  public void testTypedefBeforeUse() throws Exception {
+    testTypes(
+        "/** @typedef {Object.<string, number>} */" +
+        "var map;" +
+        "/** @param {(map|function())} isResult */" +
+        "var f = function(isResult) {" +
+        "    while (true)" +
+        "        isResult['t'];" +
+        "};");
+  }
+
   public void testScopedConstructors1() throws Exception {
     testTypes(
         "function foo1() { " +
