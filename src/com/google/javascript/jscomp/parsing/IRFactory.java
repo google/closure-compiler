@@ -1140,6 +1140,7 @@ class IRFactory {
 
     private boolean validAssignmentTarget(Node target) {
       switch (target.getType()) {
+        case Token.CAST: // CAST is a bit weird, but syntactically valid.
         case Token.NAME:
         case Token.GETPROP:
         case Token.GETELEM:

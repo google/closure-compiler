@@ -2024,6 +2024,16 @@ public class IntegrationTest extends IntegrationTestCase {
         "g.a = g.b = function() { var xyz = /** @type {string} */ (0); }");
   }
 
+  public void testLhsCast() {
+    CompilerOptions options = createCompilerOptions();
+    test(
+        options,
+        "/** @const */ var g = {};" +
+        "/** @type {number} */ (g.foo) = 3;",
+        "/** @const */ var g = {};" +
+        "g.foo = 3;");
+  }
+
   public void testRenamePrefix() {
     String code = "var x = {}; function f(y) {}";
     CompilerOptions options = createCompilerOptions();
