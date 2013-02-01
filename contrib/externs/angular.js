@@ -1451,11 +1451,17 @@ angular.$routeProvider.Params.reloadOnSearch;
 angular.$timeout;
 
 /**
- * TODO(user): This should be defined on angular.$timeout, but a
- * function defined on a function is not currently expressible in Closure type
- * annotations. See
- * https://code.google.com/p/closure-compiler/issues/detail?id=899
- * @param {angular.$q.Promise=} opt_promise
- * @return {boolean}
+ * Augment the angular.$timeout type definition by reopening the type via an
+ * artificial angular.$timeout instance.
+ *
+ * This allows us to define methods on function objects which is something
+ * that can't be expressed via typical type annotations.
+ *
+ * @type {angular.$timeout}
  */
-Function.prototype.cancel = function(opt_promise) {};
+angular.$timeout_;
+
+/**
+ * @type {function(angular.$q.Promise):boolean}
+ */
+angular.$timeout_.cancel = function(promise) {};
