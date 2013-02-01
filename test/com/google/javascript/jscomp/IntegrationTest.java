@@ -2017,6 +2017,11 @@ public class IntegrationTest extends IntegrationTestCase {
     testSame(options,
         "/** @suppress {invalidCasts} */\n" +
         "function f() { var xyz = /** @type {string} */ (0); }");
+
+    testSame(options,
+        "/** @const */ var g = {};" +
+        "/** @suppress {invalidCasts} */" +
+        "g.a = g.b = function() { var xyz = /** @type {string} */ (0); }");
   }
 
   public void testRenamePrefix() {

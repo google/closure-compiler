@@ -3036,7 +3036,7 @@ public final class NodeUtil {
       if (parent.isName()) {
         return getBestJSDocInfo(parent);
       } else if (parent.isAssign()) {
-        return parent.getJSDocInfo();
+        return getBestJSDocInfo(parent);
       } else if (isObjectLitKey(parent)) {
         return parent.getJSDocInfo();
       } else if (parent.isFunction()) {
