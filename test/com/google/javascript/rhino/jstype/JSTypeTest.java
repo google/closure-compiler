@@ -5325,10 +5325,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         JSType.getLeastSupertype(ARRAY_TYPE, arrayOfString));
 
     assertEquals(
-        "(Array|Object.<string>)",
+        "(Array|Object.<string,?>)",
         JSType.getLeastSupertype(objectOfString, ARRAY_TYPE).toString());
     assertEquals(
-        "(Array|Object.<string>)",
+        "(Array|Object.<string,?>)",
         JSType.getLeastSupertype(ARRAY_TYPE, objectOfString).toString());
 
     assertEquals(
@@ -5342,10 +5342,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         JSType.getLeastSupertype(arrayOfString, arrayOfString));
 
     assertEquals(
-        "(Array.<string>|Object.<string>)",
+        "(Array.<string>|Object.<string,?>)",
         JSType.getLeastSupertype(objectOfString, arrayOfString).toString());
     assertEquals(
-        "(Array.<string>|Object.<string>)",
+        "(Array.<string>|Object.<string,?>)",
         JSType.getLeastSupertype(arrayOfString, objectOfString).toString());
 
     assertTypeEquals(
@@ -6065,18 +6065,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(
         new TemplateType(registry, "T")
             .hasAnyTemplateTypes());
-    assertFalse(
-        ARRAY_TYPE
-            .hasAnyTemplateTypes());
+    assertFalse(ARRAY_TYPE.hasAnyTemplateTypes());
 
     assertTrue(
-        registry.createTemplatizedType(
-            ARRAY_TYPE, new TemplateType(registry, "T"))
+        createTemplatizedType(ARRAY_TYPE, new TemplateType(registry, "T"))
             .hasAnyTemplateTypes());
     assertFalse(
-        registry.createTemplatizedType(
-            ARRAY_TYPE, STRING_TYPE)
-            .hasAnyTemplateTypes());
+        createTemplatizedType(ARRAY_TYPE, STRING_TYPE).hasAnyTemplateTypes());
 
     assertTrue(
         new FunctionBuilder(registry)
@@ -6102,6 +6097,44 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.createUnionType(
             NULL_TYPE, ARRAY_TYPE, STRING_TYPE)
             .hasAnyTemplateTypes());
+  }
+
+  public void testTemplatizedType() throws Exception {
+    FunctionType templatizedCtor = registry.createConstructorType(
+        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of("A", "B"));
+    JSType templatizedInstance = registry.createTemplatizedType(
+        templatizedCtor.getInstanceType(),
+        ImmutableList.of(NUMBER_TYPE, STRING_TYPE));
+
+    TemplateTypeMap templateTypeMap = templatizedInstance.getTemplateTypeMap();
+    assertTrue(templateTypeMap.hasTemplateKey("A"));
+    assertTrue(templateTypeMap.hasTemplateKey("B"));
+    assertFalse(templateTypeMap.hasTemplateKey("C"));
+
+    assertEquals(NUMBER_TYPE, templateTypeMap.getTemplateType("A"));
+    assertEquals(STRING_TYPE, templateTypeMap.getTemplateType("B"));
+    assertEquals(UNKNOWN_TYPE, templateTypeMap.getTemplateType("C"));
+
+    assertEquals("TestingType.<number,string>", templatizedInstance.toString());
+  }
+
+  public void testPartiallyTemplatizedType() throws Exception {
+    FunctionType templatizedCtor = registry.createConstructorType(
+        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of("A", "B"));
+    JSType templatizedInstance = registry.createTemplatizedType(
+        templatizedCtor.getInstanceType(),
+        ImmutableList.of(NUMBER_TYPE));
+
+    TemplateTypeMap templateTypeMap = templatizedInstance.getTemplateTypeMap();
+    assertTrue(templateTypeMap.hasTemplateKey("A"));
+    assertTrue(templateTypeMap.hasTemplateKey("B"));
+    assertFalse(templateTypeMap.hasTemplateKey("C"));
+
+    assertEquals(NUMBER_TYPE, templateTypeMap.getTemplateType("A"));
+    assertEquals(UNKNOWN_TYPE, templateTypeMap.getTemplateType("B"));
+    assertEquals(UNKNOWN_TYPE, templateTypeMap.getTemplateType("C"));
+
+    assertEquals("TestingType.<number,?>", templatizedInstance.toString());
   }
 
   public void testCanCastTo() {

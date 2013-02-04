@@ -599,7 +599,8 @@ public class TypeInferenceTest extends TestCase {
 
   public void testFor5() {
     assuming("y", templatize(
-        getNativeObjectType(ARRAY_TYPE), getNativeType(NUMBER_TYPE)));
+        getNativeObjectType(ARRAY_TYPE),
+        ImmutableList.of(getNativeType(NUMBER_TYPE))));
     inFunction(
         "var x = null; for (var i = 0; i < y.length; i++) { x = y[i]; }");
     verify("x", createNullableType(NUMBER_TYPE));
@@ -1081,7 +1082,7 @@ public class TypeInferenceTest extends TestCase {
     return registry.getNativeType(t);
   }
 
-  private JSType templatize(ObjectType objType, JSType t) {
+  private JSType templatize(ObjectType objType, ImmutableList<JSType> t) {
     return registry.createTemplatizedType(objType, t);
   }
 }

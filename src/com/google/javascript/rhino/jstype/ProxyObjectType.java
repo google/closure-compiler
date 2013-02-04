@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -307,15 +308,9 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public JSType getTemplateType() {
+  public ImmutableList<JSType> getTemplateTypes() {
     return referencedObjType == null ? null :
-        referencedObjType.getTemplateType();
-  }
-
-  @Override
-  public JSType getIndexType() {
-    return referencedObjType == null ? null :
-        referencedObjType.getIndexType();
+        referencedObjType.getTemplateTypes();
   }
 
   @Override

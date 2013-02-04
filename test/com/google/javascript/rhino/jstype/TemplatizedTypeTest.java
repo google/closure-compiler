@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 public class TemplatizedTypeTest extends BaseJSTypeTestCase {
@@ -45,12 +46,6 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-  }
-
-  @Override
-  protected TemplatizedType createTemplatizedType(
-      ObjectType objectType, JSType templateType) {
-    return registry.createTemplatizedType(objectType, templateType);
   }
 
   /**
@@ -111,5 +106,41 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
         OBJECT_TYPE, UNKNOWN_TYPE);
     assertTrue(arrOfNumber.isSubtype(objType));
     assertFalse(objType.isSubtype(arrOfNumber));
+  }
+
+  public void testCustomTemplatizedType() throws Exception {
+    FunctionType ctor = registry.createConstructorType(
+        "Foo", null, null, null, ImmutableList.of("T", "U"));
+    ObjectType baseType = ctor.getInstanceType();
+
+    JSType templatizedType1 = registry.createTemplatizedType(
+        baseType, ImmutableList.of(STRING_TYPE, NUMBER_TYPE));
+    JSType templatizedType2 = registry.createTemplatizedType(
+        baseType, ImmutableList.of(STRING_TYPE, ALL_TYPE));
+    JSType templatizedType3 = registry.createTemplatizedType(
+        baseType, ImmutableList.of(STRING_TYPE, UNKNOWN_TYPE));
+    JSType templatizedType4 = registry.createTemplatizedType(
+        baseType, ImmutableList.<JSType>of(UNKNOWN_TYPE, UNKNOWN_TYPE));
+
+    assertTrue(templatizedType1.isSubtype(baseType));
+    assertTrue(templatizedType2.isSubtype(baseType));
+    assertTrue(templatizedType3.isSubtype(baseType));
+    assertTrue(templatizedType4.isSubtype(baseType));
+
+    assertFalse(templatizedType1.isEquivalentTo(baseType));
+    assertFalse(templatizedType2.isEquivalentTo(baseType));
+    assertFalse(templatizedType3.isEquivalentTo(baseType));
+    assertTrue(templatizedType4.isEquivalentTo(baseType));
+
+    assertFalse(baseType.isSubtype(templatizedType1));
+    assertFalse(baseType.isSubtype(templatizedType2));
+    assertFalse(baseType.isSubtype(templatizedType3));
+    assertTrue(baseType.isSubtype(templatizedType4));
+
+    assertFalse(templatizedType1.isSubtype(templatizedType2));
+    assertFalse(templatizedType2.isSubtype(templatizedType1));
+
+    assertFalse(templatizedType2.isSubtype(templatizedType3));
+    assertFalse(templatizedType3.isSubtype(templatizedType2));
   }
 }

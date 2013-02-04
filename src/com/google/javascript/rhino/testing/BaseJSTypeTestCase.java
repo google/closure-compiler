@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.testing;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionBuilder;
@@ -47,8 +48,8 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
+import com.google.javascript.rhino.jstype.TemplatizedType;
 
 import junit.framework.TestCase;
 
@@ -408,9 +409,15 @@ public abstract class BaseJSTypeTestCase extends TestCase {
     return registry.createOptionalType(type);
   }
 
-  protected JSType createTemplatizedType(
-      ObjectType type, JSType typeParameter) {
-    return registry.createTemplatizedType(type, typeParameter);
+  protected TemplatizedType createTemplatizedType(
+      ObjectType baseType, ImmutableList<JSType> templatizedTypes) {
+    return registry.createTemplatizedType(baseType, templatizedTypes);
+  }
+
+  protected TemplatizedType createTemplatizedType(
+      ObjectType baseType, JSType... templatizedType) {
+    return createTemplatizedType(
+        baseType, ImmutableList.copyOf(templatizedType));
   }
 
   /**
@@ -599,9 +606,5 @@ public abstract class BaseJSTypeTestCase extends TestCase {
 
   protected final void assertTypeNotEquals(String msg, JSType a, JSType b) {
     Asserts.assertTypeNotEquals(msg, a, b);
-  }
-
-  protected final TemplatizedType templatize(ObjectType objType, JSType t) {
-    return registry.createTemplatizedType(objType, t);
   }
 }

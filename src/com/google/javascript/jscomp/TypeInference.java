@@ -26,6 +26,8 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_VALUE_OR_OB
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeRegistry.OBJECT_ELEMENT_TEMPLATE;
+import static com.google.javascript.rhino.jstype.JSTypeRegistry.OBJECT_INDEX_TEMPLATE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -46,7 +48,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ModificationVisitor;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.TemplatizedType;
+import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.UnionType;
@@ -221,7 +223,7 @@ class TypeInference
               JSType iterKeyType = getNativeType(STRING_TYPE);
               ObjectType objType = getJSType(obj).dereference();
               JSType objIndexType = objType == null ?
-                  null : objType.getIndexType();
+                  null : objType.getTemplateTypeMap().getTemplateType(OBJECT_INDEX_TEMPLATE);
               if (objIndexType != null && !objIndexType.isUnknownType()) {
                 JSType narrowedKeyType =
                     iterKeyType.getGreatestSubtype(objIndexType);
@@ -1086,20 +1088,24 @@ class TypeInference
             argFunctionType.getParameters(), resolvedTypes);
       }
     } else if (paramType.isTemplatizedType()) {
-      TemplatizedType paramObjectType = paramType.toMaybeTemplatizedType();
-      JSType typeParameter = paramObjectType.getTemplateType();
-      Preconditions.checkNotNull(typeParameter);
-      if (typeParameter != null) {
-        // @param {Array.<T>}
-        ObjectType argObjectType = argType
-            .restrictByNotNullOrUndefined()
-            .collapseUnion()
-            .toMaybeTemplatizedType();
-        if (argObjectType != null && argObjectType.isSubtype(paramType)) {
-          JSType argTypeParameter = argObjectType.getTemplateType();
-          Preconditions.checkNotNull(argTypeParameter);
+      // @param {Array.<T>}
+      ObjectType referencedParamType = paramType
+          .toMaybeTemplatizedType()
+          .getReferencedType();
+      JSType argObjectType = argType
+          .restrictByNotNullOrUndefined()
+          .collapseUnion();
+
+      if (argObjectType.isSubtype(referencedParamType)) {
+        // If the argument type is a subtype of the parameter type, resolve any
+        // template types amongst their templatized types.
+        TemplateTypeMap paramTypeMap = paramType.getTemplateTypeMap();
+        TemplateTypeMap argTypeMap = argObjectType.getTemplateTypeMap();
+        for (String key : paramTypeMap.getTemplateKeys()) {
           maybeResolveTemplatedType(
-              typeParameter, argTypeParameter, resolvedTypes);
+              paramTypeMap.getTemplateType(key),
+              argTypeMap.getTemplateType(key),
+              resolvedTypes);
         }
       }
     }
@@ -1240,13 +1246,10 @@ class TypeInference
 
   private FlowScope traverseGetElem(Node n, FlowScope scope) {
     scope = traverseChildren(n, scope);
-    ObjectType objType = ObjectType.cast(
-        getJSType(n.getFirstChild()).restrictByNotNullOrUndefined());
-    if (objType != null) {
-      JSType type = objType.getTemplateType();
-      if (type != null) {
-        n.setJSType(type);
-      }
+    JSType type = getJSType(n.getFirstChild()).restrictByNotNullOrUndefined();
+    TemplateTypeMap typeMap = type.getTemplateTypeMap();
+    if (typeMap.hasTemplateType(OBJECT_ELEMENT_TEMPLATE)) {
+      n.setJSType(typeMap.getTemplateType(OBJECT_ELEMENT_TEMPLATE));
     }
     return dereferencePointer(n.getFirstChild(), scope);
   }

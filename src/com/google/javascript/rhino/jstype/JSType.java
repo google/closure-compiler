@@ -551,8 +551,7 @@ public abstract class JSType implements Serializable {
    * This is a trickier check than pure equality, because it has to properly
    * handle unknown types. See {@code EquivalenceMethod} for more info.
    *
-   * @see <a href="http://www.youtube.com/watch?v=_RpSv3HjpEw">Unknown
-   *     unknowns</a>
+   * @see <a href="http://www.youtube.com/watch?v=_RpSv3HjpEw">Unknown unknowns</a>
    */
   public final boolean differsFrom(JSType that) {
     return !checkEquivalenceHelper(that, EquivalenceMethod.DATA_FLOW);
@@ -601,29 +600,9 @@ public abstract class JSType implements Serializable {
           that.toMaybeRecordType(), eqMethod);
     }
 
-    TemplatizedType thisParamType = toMaybeTemplatizedType();
-    TemplatizedType thatParamType = that.toMaybeTemplatizedType();
-    if (thisParamType != null || thatParamType != null) {
-      // Check if one type is templatized, but the other is not.
-      boolean paramsMatch = false;
-      if (thisParamType != null && thatParamType != null) {
-        paramsMatch = thisParamType.getTemplateType().checkEquivalenceHelper(
-            thatParamType.getTemplateType(), eqMethod);
-      } else if (eqMethod == EquivalenceMethod.IDENTITY) {
-        paramsMatch = false;
-      } else {
-        // If one of the type parameters is unknown, but the other is not,
-        // then we consider these the same for the purposes of data flow
-        // and invariance.
-        paramsMatch = true;
-      }
-
-      JSType thisRootType = thisParamType == null ?
-          this : thisParamType.getReferencedTypeInternal();
-      JSType thatRootType = thatParamType == null ?
-          that : thatParamType.getReferencedTypeInternal();
-      return paramsMatch &&
-          thisRootType.checkEquivalenceHelper(thatRootType, eqMethod);
+    if (!getTemplateTypeMap().checkEquivalenceHelper(
+        that.getTemplateTypeMap(), eqMethod)) {
+      return false;
     }
 
     if (isNominalType() && that.isNominalType()) {
@@ -1273,8 +1252,16 @@ public abstract class JSType implements Serializable {
 
     // templatized types.
     if (thisType.isTemplatizedType()) {
-      return thisType.toMaybeTemplatizedType().isTemplatizedSubtypeOf(
-          thatType);
+      return !areIncompatibleArrays(thisType, thatType) &&
+          thisType.toMaybeTemplatizedType().getReferencedType().isSubtype(
+              thatType);
+    }
+    if (thatType.isTemplatizedType()) {
+      if (!isExemptFromTemplateTypeInvariance(thatType) &&
+          !thisType.getTemplateTypeMap().checkEquivalenceHelper(
+              thatType.getTemplateTypeMap(), EquivalenceMethod.IDENTITY)) {
+        return false;
+      }
     }
 
     // proxy types
@@ -1283,6 +1270,39 @@ public abstract class JSType implements Serializable {
           ((ProxyObjectType) thatType).getReferencedTypeInternal());
     }
     return false;
+  }
+
+  /**
+   * Determines if two types are incompatible Arrays, meaning that their element
+   * template types are not subtypes of one another.
+   */
+  private static boolean areIncompatibleArrays(JSType type1, JSType type2) {
+    ObjectType type1Obj = type1.toObjectType();
+    ObjectType type2Obj = type2.toObjectType();
+    if (type1Obj == null || type2Obj == null) {
+      return false;
+    }
+
+    if (!"Array".equals(type1Obj.getReferenceName()) ||
+        !"Array".equals(type2Obj.getReferenceName())) {
+      return false;
+    }
+
+    String templateKey = JSTypeRegistry.OBJECT_ELEMENT_TEMPLATE;
+    JSType elemType1 = type1.getTemplateTypeMap().getTemplateType(templateKey);
+    JSType elemType2 = type2.getTemplateTypeMap().getTemplateType(templateKey);
+    return !elemType1.isSubtype(elemType2) && !elemType2.isSubtype(elemType1);
+  }
+
+  /**
+   * Determines if the specified type is exempt from standard invariant
+   * templatized typing rules.
+   */
+  static boolean isExemptFromTemplateTypeInvariance(JSType type) {
+    ObjectType objType = type.toObjectType();
+    return objType == null ||
+        "Array".equals(objType.getReferenceName()) ||
+        "Object".equals(objType.getReferenceName());
   }
 
   /**

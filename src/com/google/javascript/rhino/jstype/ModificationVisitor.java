@@ -40,6 +40,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
@@ -148,12 +149,24 @@ public class ModificationVisitor implements Visitor<JSType> {
 
   @Override
   public JSType caseTemplatizedType(TemplatizedType type) {
-    ObjectType genericType = ObjectType.cast(
-        type.getReferencedTypeInternal().visit(this));
-    JSType paramType = type.getTemplateType().visit(this);
-    if (type.getReferencedTypeInternal() != genericType
-        || type.getTemplateType() != paramType) {
-      type = registry.createTemplatizedType(genericType, paramType);
+    boolean changed = false;
+    ObjectType beforeBaseType = type.getReferencedType();
+    ObjectType afterBaseType = ObjectType.cast(beforeBaseType.visit(this));
+    if (beforeBaseType != afterBaseType) {
+      changed = true;
+    }
+
+    ImmutableList.Builder<JSType> builder = ImmutableList.builder();
+    for (JSType beforeTemplateType : type.getTemplateTypes()) {
+      JSType afterTemplateType = beforeTemplateType.visit(this);
+      if (beforeTemplateType != afterTemplateType) {
+        changed = true;
+      }
+      builder.add(afterTemplateType);
+    }
+
+    if (changed) {
+      type = registry.createTemplatizedType(afterBaseType, builder.build());
     }
     return type;
   }

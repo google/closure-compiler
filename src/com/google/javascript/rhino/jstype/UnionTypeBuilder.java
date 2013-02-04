@@ -225,8 +225,9 @@ class UnionTypeBuilder implements Serializable {
                 TemplatizedType templatizedCurrent = current.toMaybeTemplatizedType();
 
                 if (templatizedCurrent.wrapsSameRawType(templatizedAlternate)) {
-                  JSType currentTypeParameter = templatizedCurrent.getTemplateType();
-                  if (currentTypeParameter.isEquivalentTo(templatizedCurrent)) {
+                  if (alternate.getTemplateTypeMap().checkEquivalenceHelper(
+                      current.getTemplateTypeMap(),
+                      EquivalenceMethod.IDENTITY)) {
                     // case 8
                     return this;
                   } else {

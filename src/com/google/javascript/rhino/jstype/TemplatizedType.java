@@ -39,36 +39,46 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
- * An object type with a declared default element type, such as
+ * An object type with declared template types, such as
  * <code>Array.<string></code>.
- *
- * // TODO(user): Define the subtyping relation for templatized types. Also,
- * take templatized type into account for equality.
  *
  */
 public final class TemplatizedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
-  final JSType templateType;
+  final ImmutableList<JSType> templateTypes;
 
   TemplatizedType(
-      JSTypeRegistry registry, ObjectType objectType, JSType templateType) {
-    super(registry, objectType);
-    this.templateType = templateType;
-  }
+      JSTypeRegistry registry, ObjectType objectType,
+      ImmutableList<JSType> templateTypes) {
+    super(registry, objectType, objectType.getTemplateTypeMap().extendValues(
+        templateTypes));
 
-  @Override
-  public JSType getTemplateType() {
-    return templateType;
+    // Cache which template keys were filled, and what JSTypes they were filled
+    // with.
+    ImmutableList<String> filledTemplateKeys =
+        objectType.getTemplateTypeMap().getUnfilledTemplateKeys();
+    ImmutableList.Builder<JSType> builder = ImmutableList.builder();
+    for (String filledTemplateKey : filledTemplateKeys) {
+      builder.add(getTemplateTypeMap().getTemplateType(filledTemplateKey));
+    }
+    this.templateTypes = builder.build();
   }
 
   @Override
   String toStringHelper(boolean forAnnotations) {
-    String result = super.toStringHelper(forAnnotations);
-    return result + ".<" + templateType.toStringHelper(forAnnotations) + ">";
+    String typeString = super.toStringHelper(forAnnotations);
+
+    if (!templateTypes.isEmpty()) {
+      typeString += ".<" + Joiner.on(",").join(templateTypes) + ">";
+    }
+
+    return typeString;
   }
 
   @Override
@@ -86,32 +96,13 @@ public final class TemplatizedType extends ProxyObjectType {
   }
 
   @Override
-  public boolean hasAnyTemplateTypesInternal() {
-    return super.hasAnyTemplateTypes() || templateType.hasAnyTemplateTypes();
+  public ImmutableList<JSType> getTemplateTypes() {
+    return templateTypes;
   }
 
-  @Override
+  //@Override
   public boolean isSubtype(JSType that) {
     return isSubtypeHelper(this, that);
-  }
-
-  boolean isTemplatizedSubtypeOf(JSType thatType) {
-    if (thatType.isTemplatizedType()) {
-      JSType thisParameter = this.templateType;
-      JSType thatParameter = thatType.toMaybeTemplatizedType().templateType;
-      // Currently, there is no way to declare a templatized type so we have
-      // no way to determine if the type parameters are in anyway related.
-      //
-      // Right now we fallback to the raw type relationship if the raw types
-      // are different. This is not great, and we'll figure out a better
-      // solution later.
-      if (this.wrapsSameRawType(thatType)) {
-        return (thisParameter.isSubtype(thatParameter)
-            || thatParameter.isSubtype(thisParameter));
-      }
-    }
-
-    return this.getReferencedTypeInternal().isSubtype(thatType);
   }
 
   boolean wrapsSameRawType(JSType that) {
@@ -148,13 +139,31 @@ public final class TemplatizedType extends ProxyObjectType {
     TemplatizedType that = rawThat.toMaybeTemplatizedType();
     Preconditions.checkNotNull(that);
 
-    if (this.templateType.isEquivalentTo(that.templateType)) {
+    if (getTemplateTypeMap().checkEquivalenceHelper(
+        that.getTemplateTypeMap(), EquivalenceMethod.INVARIANT)) {
       return this;
     }
 
     // For types that have the same raw type but different type parameters,
     // we simply create a type has a "unknown" type parameter.  This is
     // equivalent to the raw type.
+    return getReferencedObjTypeInternal();
+  }
+
+  @Override
+  public TemplateTypeMap getTemplateTypeMap() {
+    return templateTypeMap;
+  }
+
+  @Override
+  public boolean hasAnyTemplateTypesInternal() {
+    return templateTypeMap.hasAnyTemplateTypesInternal();
+  }
+
+  /**
+   * @return The referenced ObjectType wrapped by this TemplatizedType.
+   */
+  public ObjectType getReferencedType() {
     return getReferencedObjTypeInternal();
   }
 }

@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -129,15 +130,7 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
    * Gets the declared default element type.
    * @see TemplatizedType
    */
-  public JSType getTemplateType() {
-    return null;
-  }
-
-  /**
-   * Gets the declared default index type.
-   * @see IndexedType
-   */
-  public JSType getIndexType() {
+  public ImmutableList<JSType> getTemplateTypes() {
     return null;
   }
 

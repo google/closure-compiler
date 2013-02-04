@@ -78,6 +78,18 @@ public class JSTypeRegistry implements Serializable {
   private static final long serialVersionUID = 1L;
 
   /**
+   * The template variable corresponding to the property key type of the built-
+   * in Javascript object.
+   */
+  public static final String OBJECT_INDEX_TEMPLATE = "Object#Key";
+
+  /**
+   * The template variable corresponding to the property value type for
+   * Javascript Objects and Arrays.
+   */
+  public static final String OBJECT_ELEMENT_TEMPLATE = "Object#Element";
+
+  /**
    * The UnionTypeBuilder caps the maximum number of alternate types it
    * remembers and then defaults to "?" (unknown type). By default this max
    * is 20, but it's very easy for the same property to appear on more than 20
@@ -285,7 +297,10 @@ public class JSTypeRegistry implements Serializable {
     FunctionType OBJECT_FUNCTION_TYPE =
         new FunctionType(this, "Object", null,
             createArrowType(createOptionalParameters(ALL_TYPE), UNKNOWN_TYPE),
-            null, null, true, true);
+            null,
+            createTemplateTypeMap(ImmutableList.of(
+                OBJECT_INDEX_TEMPLATE, OBJECT_ELEMENT_TEMPLATE), null),
+            true, true);
 
     OBJECT_FUNCTION_TYPE.setPrototype(TOP_LEVEL_PROTOTYPE, null);
     registerNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE, OBJECT_FUNCTION_TYPE);
@@ -322,7 +337,10 @@ public class JSTypeRegistry implements Serializable {
     FunctionType ARRAY_FUNCTION_TYPE =
       new FunctionType(this, "Array", null,
           createArrowType(createParametersWithVarArgs(ALL_TYPE), null),
-          null, null, true, true);
+          null,
+          createTemplateTypeMap(ImmutableList.of(
+              OBJECT_ELEMENT_TEMPLATE), null),
+          true, true);
     ARRAY_FUNCTION_TYPE.getInternalArrowType().returnType =
         ARRAY_FUNCTION_TYPE.getInstanceType();
 
@@ -1459,12 +1477,33 @@ public class JSTypeRegistry implements Serializable {
         new TemplateTypeMap(this, templateKeys, templateValues);
   }
 
-  /*
-   * Creates a templatized type.
+  /**
+   * Creates a templatized instance of the specified type.  Only ObjectTypes
+   * can currently be templatized; extend the logic in this function when
+   * more types can be templatized.
+   * @param baseType the type to be templatized.
+   * @param templatizedTypes a list of the template JSTypes. Will be matched by
+   *     list order to the template keys on the base type.
    */
   public TemplatizedType createTemplatizedType(
-      ObjectType objectType, JSType parameterType) {
-    return new TemplatizedType(this, objectType, parameterType);
+      ObjectType baseType, ImmutableList<JSType> templatizedTypes) {
+    // Only ObjectTypes can currently be templatized; extend this logic when
+    // more types can be templatized.
+    return new TemplatizedType(this, baseType, templatizedTypes);
+  }
+
+  /**
+   * Creates a templatized instance of the specified type.  Only ObjectTypes
+   * can currently be templatized; extend the logic in this function when
+   * more types can be templatized.
+   * @param baseType the type to be templatized.
+   * @param templatizedTypes a list of the template JSTypes. Will be matched by
+   *     list order to the template keys on the base type.
+   */
+  public TemplatizedType createTemplatizedType(
+      ObjectType baseType, JSType... templatizedTypes) {
+    return createTemplatizedType(
+        baseType, ImmutableList.copyOf(templatizedTypes));
   }
 
   /**
@@ -1581,21 +1620,40 @@ public class JSTypeRegistry implements Serializable {
         if ((namedType instanceof ObjectType) &&
             !(nonNullableTypeNames.contains(n.getString()))) {
           Node typeList = n.getFirstChild();
-          if (typeList != null &&
-              ("Array".equals(n.getString()) ||
-               "Object".equals(n.getString()))) {
-            JSType templateType =
-                createFromTypeNodesInternal(
-                    typeList.getLastChild(), sourceName, scope);
-            namedType = new TemplatizedType(
-                this, (ObjectType) namedType, templateType);
-            if (typeList.hasMoreThanOneChild()) {
-              JSType indexType =
-                  createFromTypeNodesInternal(
-                      typeList.getFirstChild(), sourceName, scope);
-              namedType = new IndexedType(
-                  this, (ObjectType) namedType, indexType);
+          int nAllowedTypes =
+              namedType.getTemplateTypeMap().numUnfilledTemplateKeys();
+          if (typeList != null && nAllowedTypes > 0) {
+            // Templatized types.
+            ImmutableList.Builder<JSType> templateTypes =
+                ImmutableList.builder();
+
+            // Special case for Object, where Object.<X> implies Object.<?,X>.
+            if (n.getString().equals("Object") &&
+                typeList.getFirstChild() == typeList.getLastChild()) {
+              templateTypes.add(getNativeType(UNKNOWN_TYPE));
             }
+
+            int templateNodeIndex = 0;
+            for (Node templateNode : typeList.getFirstChild().siblings()) {
+              // Don't parse more templatized type nodes than the type can
+              // accommodate. This is because some existing clients have
+              // template annotations on non-templatized classes, for instance:
+              //   goog.structs.Set.<SomeType>
+              // The problem in these cases is that the previously-unparsed
+              // SomeType is not actually a valid type. To prevent these clients
+              // from seeing unknown type errors, we explicitly don't parse
+              // these types.
+              // TODO(user): Address this issue by removing bad template
+              // annotations on non-templatized classes.
+              if (++templateNodeIndex > nAllowedTypes) {
+                break;
+              }
+              templateTypes.add(createFromTypeNodesInternal(
+                  templateNode, sourceName, scope));
+            }
+            namedType = createTemplatizedType(
+                (ObjectType) namedType, templateTypes.build());
+            Preconditions.checkNotNull(namedType);
           }
           return createDefaultObjectUnion(namedType);
         } else {
