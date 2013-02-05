@@ -5146,6 +5146,11 @@ google.maps.places.PlaceResult.prototype.rating;
 google.maps.places.PlaceResult.prototype.reference;
 
 /**
+ * @type {string}
+ */
+google.maps.places.PlaceResult.prototype.review_summary;
+
+/**
  * @type {Array.<google.maps.places.PlaceReview>}
  */
 google.maps.places.PlaceResult.prototype.reviews;
