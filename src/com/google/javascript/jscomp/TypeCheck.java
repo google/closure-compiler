@@ -153,6 +153,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "JSC_INTERFACE_FUNCTION_NOT_EMPTY",
           "interface member functions must have an empty body");
 
+  static final DiagnosticType CONFLICTING_SHAPE_TYPE =
+      DiagnosticType.warning(
+          "JSC_CONFLICTING_SHAPE_TYPE",
+          "{1} cannot extend this type; {0}s can only extend {0}s");
+
   static final DiagnosticType CONFLICTING_EXTENDED_TYPE =
       DiagnosticType.warning(
           "JSC_CONFLICTING_EXTENDED_TYPE",
@@ -258,6 +263,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ENUM_NOT_CONSTANT,
       INVALID_INTERFACE_MEMBER_DECLARATION,
       INTERFACE_FUNCTION_NOT_EMPTY,
+      CONFLICTING_SHAPE_TYPE,
       CONFLICTING_EXTENDED_TYPE,
       CONFLICTING_IMPLEMENTED_TYPE,
       BAD_IMPLEMENTED_TYPE,
@@ -926,7 +932,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             // Only assign structs to the prototype of a @struct constructor
             if (functionType.makesStructs() && !rvalueType.isStruct()) {
               String funName = functionType.getTypeOfThis().toString();
-              compiler.report(t.makeError(assign, CONFLICTING_EXTENDED_TYPE,
+              compiler.report(t.makeError(assign, CONFLICTING_SHAPE_TYPE,
                                           "struct", funName));
             }
             return;
@@ -1640,10 +1646,10 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         if (baseConstructor != getNativeType(OBJECT_FUNCTION_TYPE)) {
           ObjectType proto = functionType.getPrototype();
           if (functionType.makesStructs() && !proto.isStruct()) {
-            compiler.report(t.makeError(n, CONFLICTING_EXTENDED_TYPE,
+            compiler.report(t.makeError(n, CONFLICTING_SHAPE_TYPE,
                                         "struct", functionPrivateName));
           } else if (functionType.makesDicts() && !proto.isDict()) {
-            compiler.report(t.makeError(n, CONFLICTING_EXTENDED_TYPE,
+            compiler.report(t.makeError(n, CONFLICTING_SHAPE_TYPE,
                                         "dict", functionPrivateName));
           }
         }

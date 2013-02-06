@@ -187,6 +187,10 @@ public class DiagnosticGroups {
           TypeValidator.ALL_DIAGNOSTICS,
           TypeCheck.ALL_DIAGNOSTICS);
 
+  public static final DiagnosticGroup CHECK_STRUCT_DICT_INHERITENCE =
+      DiagnosticGroups.registerGroup("checkStructDictInheritence",
+          TypeCheck.CONFLICTING_SHAPE_TYPE);
+
   public static final DiagnosticGroup CHECK_VARIABLES =
       DiagnosticGroups.registerGroup("checkVars",
           VarCheck.UNDEFINED_VAR_ERROR,
