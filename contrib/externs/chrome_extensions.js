@@ -41,23 +41,26 @@ var chrome = {};
 chrome.extension = {};
 
 
-/** * @type {!Object.<string,string>|undefined} */
+/** @type {!Object.<string,string>|undefined} */
 chrome.extension.lastError;
 
 
-/** * @type {boolean|undefined} */
+/** @type {boolean|undefined} */
 chrome.extension.inIncognitoContext;
 
 
+// TODO: change Object to !Object when it's clear nobody is passing in null
+// TODO: change Port to !Port since it should never be null
 /**
- * @param {string|Object.<string>=} opt_arg1 Either the extensionId to
- *     to connect to, in which case connectInfo params can be passed in the
- *     next optional argument, or the connectInfo params.
+ * @param {string|Object.<string>=} opt_extensionIdOrConnectInfo Either the
+ *     extensionId to connect to, in which case connectInfo params can be
+ *     passed in the next optional argument, or the connectInfo params.
  * @param {Object.<string>=} opt_connectInfo The connectInfo object,
  *     if arg1 was the extensionId to connect to.
  * @return {Port} New port.
  */
-chrome.extension.connect = function(opt_arg1, opt_connectInfo) {};
+chrome.extension.connect = function(
+    opt_extensionIdOrConnectInfo, opt_connectInfo) {};
 
 
 /**
@@ -140,6 +143,219 @@ chrome.extension.onRequest;
 
 /** @type {ChromeEvent} */
 chrome.extension.onRequestExternal;
+
+
+/**
+ * @see http://code.google.com/chrome/extensions/runtime.html
+ * @const
+ */
+chrome.runtime = {};
+
+
+/** @type {!Object.<string,string>|undefined} */
+chrome.runtime.lastError;
+
+
+/** @type {string} */
+chrome.runtime.id;
+
+
+/**
+ * @param {function(!Window=): void} callback Callback function.
+ */
+chrome.runtime.getBackgroundPage = function(callback) {};
+
+
+/**
+ * @return {!Object} The full manifest file of the app or extension.
+ */
+chrome.runtime.getManifest = function() {};
+
+
+/**
+ * @param {string} path A path to a resource within an extension expressed
+ *     relative to it's install directory.
+ * @return {string} The fully-qualified URL to the resource.
+ */
+chrome.runtime.getURL = function(path) {};
+
+
+/**
+ * Reloads the app or extension.
+ */
+chrome.runtime.reload = function() {};
+
+
+/**
+ * @param {function(string, !Object=): void} callback
+ */
+chrome.runtime.requestUpdateCheck = function(callback) {};
+
+
+/**
+ * @param {string|!Object.<string>=} opt_extensionIdOrConnectInfo Either the
+ *     extensionId to connect to, in which case connectInfo params can be
+ *     passed in the next optional argument, or the connectInfo params.
+ * @param {!Object.<string>=} opt_connectInfo The connectInfo object,
+ *     if arg1 was the extensionId to connect to.
+ * @return {!Port} New port.
+ */
+chrome.runtime.connect = function(
+    opt_extensionIdOrConnectInfo, opt_connectInfo) {};
+
+
+/**
+ * @param {string|*} extensionIdOrMessage Either the extensionId to send the
+ *     message to, in which case the message is passed as the next arg, or the
+ *     message itself.
+ * @param {(*|function(*): void)=} opt_messageOrCallback The message, if arg1
+ *     was the extensionId, or the callback, if arg1 was the message, or
+ *     optional.
+ * @param {function(*): void=} opt_callback The callback function which
+ *     takes a JSON response object sent by the handler of the request.
+ */
+chrome.runtime.sendMessage = function(
+    extensionIdOrMessage, opt_messageOrCallback, opt_callback) {};
+
+
+/** @type {!chrome.runtime.PortEvent} */
+chrome.runtime.onConnect;
+
+
+/** @type {!chrome.runtime.PortEvent} */
+chrome.runtime.onConnectExternal;
+
+
+/** @type {!chrome.runtime.ObjectEvent} */
+chrome.runtime.onInstalled;
+
+
+/** @type {!chrome.runtime.MessageSenderEvent} */
+chrome.runtime.onMessage;
+
+
+/** @type {!chrome.runtime.MessageSenderEvent} */
+chrome.runtime.onMessageExternal;
+
+
+/** @type {!ChromeEvent} */
+chrome.runtime.onStartup;
+
+
+/** @type {!ChromeEvent} */
+chrome.runtime.onSuspend;
+
+
+/** @type {!ChromeEvent} */
+chrome.runtime.onSuspendCanceled;
+
+
+/** @type {!chrome.runtime.ObjectEvent} */
+chrome.runtime.onUpdateAvailable;
+
+
+
+/**
+ * Event whose listeners take an Object parameter.
+ * @constructor
+ */
+chrome.runtime.ObjectEvent = function() {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+chrome.runtime.ObjectEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+chrome.runtime.ObjectEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ * @return {boolean}
+ */
+chrome.runtime.ObjectEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.runtime.ObjectEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * Event whose listeners take a Port parameter.
+ * @constructor
+ */
+chrome.runtime.PortEvent = function() {};
+
+
+/**
+ * @param {function(!Port): void} callback Callback.
+ */
+chrome.runtime.PortEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(!Port): void} callback Callback.
+ */
+chrome.runtime.PortEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!Port): void} callback Callback.
+ * @return {boolean}
+ */
+chrome.runtime.PortEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.runtime.PortEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * Event whose listeners take a MessageSender and additional parameters.
+ * @see https://developer.chrome.com/dev/apps/runtime.html#event-onMessage
+ * @constructor
+ */
+chrome.runtime.MessageSenderEvent = function() {};
+
+
+/**
+ * @param {function(*, !MessageSender, function(*): void): (boolean|undefined)}
+ *     callback Callback.
+ */
+chrome.runtime.MessageSenderEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(*, !MessageSender, function(*): void): (boolean|undefined)}
+ *     callback Callback.
+ */
+chrome.runtime.MessageSenderEvent.prototype.removeListener = function(callback)
+    {};
+
+
+/**
+ * @param {function(*, !MessageSender, function(*): void): (boolean|undefined)}
+ *     callback Callback.
+ * @return {boolean}
+ */
+chrome.runtime.MessageSenderEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.runtime.MessageSenderEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -1787,10 +2003,12 @@ ChromeEvent.prototype.addListener = function(callback) {};
 ChromeEvent.prototype.removeListener = function(callback) {};
 
 
+// TODO: this returns boolean
 /** @param {Function} callback */
 ChromeEvent.prototype.hasListener = function(callback) {};
 
 
+// TODO: this returns boolean, and doesn't take any parameters
 /** @param {Function} callback */
 ChromeEvent.prototype.hasListeners = function(callback) {};
 
