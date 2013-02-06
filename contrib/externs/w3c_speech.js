@@ -187,6 +187,8 @@ webkitSpeechRecognitionError.prototype.LANGUAGE_NOT_SUPPORTED;
 /** @type {string} */
 webkitSpeechRecognitionError.prototype.message;
 
+/** @type {string} */
+webkitSpeechRecognitionError.prototype.error;
 
 /**
  * @constructor
