@@ -19,11 +19,23 @@
  */
 
 /**
+ * @param {string} title
+ * @param {Object=} opt_options
  * @constructor
  * @implements {EventTarget}
- * @see http://dev.w3.org/2006/webapi/WebNotifications/publish/#idl-if-Notification
+ * @see http://notifications.spec.whatwg.org/#notification
  */
-function Notification() {}
+function Notification(title, opt_options) {}
+
+/**
+ * @type {string}
+ */
+Notification.permission;
+
+/**
+ * @param {NotificationPermissionCallback=} opt_callback
+ */
+Notification.requestPermission = function(opt_callback) {};
 
 /** @override */
 Notification.prototype.addEventListener =
@@ -40,6 +52,7 @@ Notification.prototype.dispatchEvent = function(evt) {};
  * The ID used by clients to uniquely identify notifications to eliminate
  * duplicate notifications.
  * @type {string}
+ * @deprecated Use NotificationOptions.tag instead.
  */
 Notification.prototype.replaceId;
 
@@ -47,7 +60,7 @@ Notification.prototype.replaceId;
  * The string used by clients to specify the directionality (rtl/ltr) of the
  * notification.
  * @type {string}
- * @see http://dev.w3.org/2006/webapi/WebNotifications/publish/Notifications.html#dfn-dir
+ * @deprecated Use NotificationOptions.titleDir and bodyDir instead.
  */
 Notification.prototype.dir;
 
@@ -61,6 +74,12 @@ Notification.prototype.show = function() {};
  * displayed.
  */
 Notification.prototype.cancel = function() {};
+
+/**
+ * Prevents the notification from being displayed, or closes it if it is already
+ * displayed.
+ */
+Notification.prototype.close = function() {};
 
 /**
  * An event handler called when notification is closed.
@@ -78,8 +97,15 @@ Notification.prototype.onerror;
 /**
  * An event handler called when the notification has become visible.
  * @type {?function(Event)}
+ * @deprecated Use onshow instead.
  */
 Notification.prototype.ondisplay;
+
+/**
+ * An event handler called when the notification has become visible.
+ * @type {?function(Event)}
+ */
+Notification.prototype.onshow;
 
 /**
  * An event handler called when the notification has been clicked on.
@@ -88,8 +114,15 @@ Notification.prototype.ondisplay;
 Notification.prototype.onclick;
 
 /**
+ * @typedef {function(string)}
+ * @see http://notifications.spec.whatwg.org/#notificationpermissioncallback
+ */
+var NotificationPermissionCallback;
+
+/**
  * @constructor
  * @see http://dev.w3.org/2006/webapi/WebNotifications/publish/#dialog-if
+ * @deprecated Use Notification instead.
  */
 function NotificationCenter() {}
 
@@ -129,3 +162,4 @@ NotificationCenter.prototype.requestPermission = function(opt_callback) {};
  * @type {NotificationCenter}
  */
 Window.prototype.webkitNotifications;
+
