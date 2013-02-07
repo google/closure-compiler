@@ -1207,30 +1207,18 @@ public class IntegrationTest extends IntegrationTestCase {
       code += "f.prototype.devir" + i + " = function() {};";
 
       char letter = (char) ('d' + i);
-
-      // skip i,j,o (reserved)
-      if (letter >= 'i') letter++;
-      if (letter >= 'j') letter++;
-      if (letter >= 'o') letter++;
-
       expected += "a.argz = function() {arguments};";
       expected += "function " + letter + "(c){}";
     }
 
     code += "var F = new f(); F.argz();";
-    expected += "var q = new b(); q.argz();";
+    expected += "var n = new b(); n.argz();";
 
     for (int i = 0; i < 10; i++) {
       code += "F.devir" + i + "();";
 
       char letter = (char) ('d' + i);
-
-      // skip i,j,o (reserved)
-      if (letter >= 'i') letter++;
-      if (letter >= 'j') letter++;
-      if (letter >= 'o') letter++;
-
-      expected += letter + "(q);";
+      expected += letter + "(n);";
     }
     test(options, code, expected);
   }
