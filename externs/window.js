@@ -114,17 +114,6 @@ var netscape;
  */
 var sun;
 
-// Magic variable for Norton Identity Protection's Chrome extension.  This
-// program will overwrite whatever's stored in the variable 'o' with random
-// values, so we want to avoid it.
-// NOTE(user): Added 8-30-2012.  We may want to remove this once Norton
-// Identity Protection has been fixed and pushed to most people.
-var o;
-
-// Used by extensions as $j = jQuery.noConflict();. This overwrites whatever's
-// stored in the variable '$j' with a function.
-var $j;
-
 /**
  * @see https://developer.mozilla.org/en/DOM/window.alert
  */
