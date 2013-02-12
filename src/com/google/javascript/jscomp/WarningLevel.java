@@ -122,6 +122,12 @@ public enum WarningLevel {
         DiagnosticGroups.DEPRECATED, CheckLevel.WARNING);
     options.setWarningLevel(
         DiagnosticGroups.ES5_STRICT, CheckLevel.WARNING);
+    options.setWarningLevel(
+        DiagnosticGroups.VISIBILITY, CheckLevel.WARNING);
+    options.setWarningLevel(
+        DiagnosticGroups.CONST, CheckLevel.WARNING);
+    options.setWarningLevel(
+        DiagnosticGroups.CHECK_REGEXP, CheckLevel.WARNING);
 
     // Kindly tell the user that they have JsDocs that we don't understand.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
