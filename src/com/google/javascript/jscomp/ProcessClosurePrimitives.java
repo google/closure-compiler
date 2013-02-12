@@ -112,7 +112,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   // The goog.provides must be processed in a deterministic order.
   private final Map<String, ProvidedName> providedNames =
-      Maps.newTreeMap();
+      Maps.newLinkedHashMap();
 
   private final List<UnrecognizedRequire> unrecognizedRequires =
       Lists.newArrayList();
