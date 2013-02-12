@@ -47,7 +47,6 @@
   <property name="classes.dir" value="${build.dir}/classes" />
   <property name="testClasses.dir" value="${build.dir}/test" />
   <property name="javadoc.dir" value="${build.dir}/javadoc" />
-  <property name="stylesheetfile" value="${javadoc.dir}/dev_javadoc.css" />
   <property name="lib.dir" value="${basedir}/lib" />
   <property name="tools.dir" value="${basedir}/tools" />
   <property name="compiler-jarfile"
@@ -396,32 +395,14 @@
          destdir="${javadoc.dir}"
          author="false"
          protected="true"
-         windowtitle="Compiler"
-         additionalparam=" -notimestamp "
-         stylesheetfile="${stylesheetfile}">
+         windowtitle="Closure Compiler"
+         additionalparam=" -notimestamp ">
       <sourcepath>
         <pathelement location="${src.dir}" />
         <pathelement location="${gen.dir}" />
       </sourcepath>
       <classpath refid="allclasspath.path" />
       <link href="http://java.sun.com/javase/6/docs/api/" />
-      <bottom><![CDATA[
-        <div id="footer">
-          <div id="footerlogo">
-            <img src="http://www.google.com/images/art.gif"
-                 alt="Google colored balls">
-          </div>
-
-          <div id="copyright">
-          <p>&copy; 2009 Google -
-            <a href="http://www.google.com/privacy.html">Privacy Policy</a> -
-            <a href="http://www.google.com/terms_of_service.html">Terms and Conditions</a> -
-            <a href="http://www.google.com/about.html">About Google</a>
-          </p>
-          </div>
-        </div>
-      ]]>
-      </bottom>
     </javadoc>
   </target>
 
