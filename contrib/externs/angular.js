@@ -584,7 +584,7 @@ angular.noop = function() {};
  *   $destroy: function(),
  *   $digest: function(),
  *   $emit: function(string, ...[*]),
- *   $eval: function((string|function())=, Object=):*,
+ *   $eval: function((string|function(angular.Scope))=, Object=):*,
  *   $evalAsync: function((string|function())=),
  *   $id: string,
  *   $new: function(boolean=):angular.Scope,
