@@ -80,9 +80,10 @@ angular.bind = function(self, fn, args) {};
 angular.bootstrap = function(element, opt_modules) {};
 
 /**
- * @param {*} source
+ * @param {T} source
  * @param {(Object|Array)=} opt_dest
- * @return {*}
+ * @return {T}
+ * @template T
  */
 angular.copy = function(source, opt_dest) {};
 
@@ -115,8 +116,9 @@ angular.extend = function(dest, srcs) {};
 angular.forEach = function(obj, iterator, opt_context) {};
 
 /**
- * @param {string} json
- * @return {Object|Array|Date|string|number}
+ * @param {string|T} json
+ * @return {Object|Array|Date|T}
+ * @template T
  */
 angular.fromJson = function(json) {};
 
@@ -197,7 +199,7 @@ angular.mock = {};
 /**
  * @param {string} name
  * @param {Array.<string>=} opt_requires
- * @param {Function=} opt_configFn
+ * @param {(Function|Array.<string|Function>)=} opt_configFn
  * @return {angular.Module}
  */
 angular.module = function(name, opt_requires, opt_configFn) {};
