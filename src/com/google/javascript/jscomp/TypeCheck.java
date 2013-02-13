@@ -62,16 +62,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
 
   //
-  // User errors
-  //
-  // TODO(nicksantos): delete this
-  static final DiagnosticType BAD_DELETE =
-      DiagnosticType.warning(
-          "JSC_BAD_DELETE_OPERAND",
-          "delete operator needs a reference operand");
-
-
-  //
   // User warnings
   //
 
