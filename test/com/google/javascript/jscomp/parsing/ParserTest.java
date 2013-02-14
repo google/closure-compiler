@@ -479,6 +479,26 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertNotNull(exprCall.getFirstChild().getJSDocInfo());
   }
 
+  public void testJSDocAttachment17() {
+    Node fn = parse("function f(/** string */ x) {}").getFirstChild();
+    assertTrue(fn.isFunction());
+
+    JSDocInfo info =
+        fn.getFirstChild().getNext().getFirstChild().getJSDocInfo();
+    assertNotNull(info);
+    assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
+  public void testJSDocAttachment18() {
+    Node fn = parse("function f(/** {string} */ x) {}").getFirstChild();
+    assertTrue(fn.isFunction());
+
+    JSDocInfo info =
+        fn.getFirstChild().getNext().getFirstChild().getJSDocInfo();
+    assertNotNull(info);
+    assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
   public void testIncorrectJSDocDoesNotAlterJSParsing1() throws Exception {
     assertNodeEquality(
         parse("var a = [1,2]"),
@@ -1031,10 +1051,9 @@ public class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testValidTypeAnnotation3() {
-    // These two we don't currently support in the type checker but
+    // This one we don't currently support in the type checker but
     // we would like to.
     parse("try {} catch (/** @type {Error} */ e) {}");
-    parse("function f(/** @type {string} */ a) {}");
   }
 
   /**

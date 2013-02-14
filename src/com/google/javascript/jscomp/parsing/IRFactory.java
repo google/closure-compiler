@@ -371,6 +371,28 @@ class IRFactory {
     return irNode;
   }
 
+  /**
+   * Parameter NAMEs are special, because they can have inline type docs
+   * attached.
+   *
+   * function f(/** string &#42;/ x) {}
+   * annotates 'x' as a string.
+   *
+   * @see http://code.google.com/p/jsdoc-toolkit/wiki/InlineDocs
+   */
+  private Node transformParameter(AstNode node) {
+    Node irNode = justTransform(node);
+    Comment comment = node.getJsDocNode();
+    if (comment != null) {
+      JSDocInfo info = parseInlineTypeDoc(comment, irNode);
+      if (info != null) {
+        irNode.setJSDocInfo(info);
+      }
+    }
+    setSourceInfo(irNode, node);
+    return irNode;
+  }
+
   private Node transformNameAsString(Name node) {
     Node irNode = transformDispatcher.processName(node, true);
     JSDocInfo jsDocInfo = handleJsDoc(node, irNode);
@@ -446,6 +468,28 @@ class IRFactory {
     jsdocParser.setFileOverviewJSDocInfo(fileOverviewInfo);
     jsdocParser.parse();
     return jsdocParser;
+  }
+
+  /**
+   * Parses inline type info.
+   */
+  private JSDocInfo parseInlineTypeDoc(Comment node, Node irNode) {
+    String comment = node.getValue();
+    int lineno = node.getLineno();
+    int position = node.getAbsolutePosition();
+
+    // The JsDocInfoParser expects the comment without the initial '/**'.
+    int numOpeningChars = 3;
+    JsDocInfoParser parser =
+      new JsDocInfoParser(
+          new JsDocTokenStream(comment.substring(numOpeningChars),
+                               lineno,
+                               position2charno(position) + numOpeningChars),
+          node,
+          irNode,
+          config,
+          errorReporter);
+    return parser.parseInlineTypeDoc();
   }
 
   // Set the length on the node if we're in IDE mode.
@@ -758,7 +802,7 @@ class IRFactory {
 
       lp.setCharno(position2charno(lparenCharno));
       for (AstNode param : functionNode.getParams()) {
-        Node paramNode = transform(param);
+        Node paramNode = transformParameter(param);
         // When in ideMode Rhino can generate a param list with only a single
         // ErrorNode. This is transformed into an EMPTY node. Drop this node in
         // ideMode to keep the AST in a valid state.

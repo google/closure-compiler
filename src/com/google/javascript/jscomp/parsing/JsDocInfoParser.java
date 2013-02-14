@@ -150,6 +150,16 @@ public final class JsDocInfoParser {
     return sourceFile == null ? null : sourceFile.getName();
   }
 
+  public JSDocInfo parseInlineTypeDoc() {
+    Node typeAst = parseAndRecordTypeNode(next());
+    JSTypeExpression expr = createJSTypeExpression(typeAst);
+    if (expr != null) {
+      jsdocBuilder.recordType(expr);
+      return retrieveAndResetParsedJSDocInfo();
+    }
+    return null;
+  }
+
   /**
    * Parses a string containing a JsDoc type declaration, returning the
    * type if the parsing succeeded or {@code null} if it failed.
@@ -1118,7 +1128,7 @@ public final class JsDocInfoParser {
    * @param token The current token.
    * @return The type expression found or null if none.
    */
-  private Node parseAndRecordTypeNode(JsDocToken token) {
+  Node parseAndRecordTypeNode(JsDocToken token) {
     return parseAndRecordTypeNode(token, token == JsDocToken.LC);
   }
 
@@ -1283,7 +1293,7 @@ public final class JsDocInfoParser {
    * Constructs a new {@code JSTypeExpression}.
    * @param n A node. May be null.
    */
-  private JSTypeExpression createJSTypeExpression(Node n) {
+  JSTypeExpression createJSTypeExpression(Node n) {
     return n == null ? null :
         new JSTypeExpression(n, getSourceName());
   }
