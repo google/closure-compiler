@@ -2035,7 +2035,7 @@ chrome.pushMessaging.onMessage;
  *     Callback.
  */
 chrome.pushMessaging.getChannelId =
-    function(interactive, opt_callback) {};
+    function(interactiveOrCallback, opt_callback) {};
 
 
 /**
