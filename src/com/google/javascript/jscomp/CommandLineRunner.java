@@ -89,11 +89,19 @@ import java.util.zip.ZipInputStream;
  */
 public class CommandLineRunner extends
     AbstractCommandLineRunner<Compiler, CompilerOptions> {
+  private static class GuardLevel {
+    final String name;
+    final CheckLevel level;
+    GuardLevel(String name, CheckLevel level) {
+      this.name = name;
+      this.level = level;
+    }
+  }
+
   // I don't really care about unchecked warnings in this class.
   @SuppressWarnings("unchecked")
   private static class Flags {
-    private static final WarningGuardSpec warningGuardSpec =
-        new WarningGuardSpec();
+    private static List<GuardLevel> guardLevels = Lists.newArrayList();
 
     @Option(name = "--help",
         handler = BooleanOptionHandler.class,
@@ -190,7 +198,6 @@ public class CommandLineRunner extends
         usage = "Check source validity but do not enforce Closure style "
         + "rules and conventions")
     private boolean third_party = false;
-
 
     @Option(name = "--summary_detail_level",
         usage = "Controls how detailed the compilation summary is. Values:"
@@ -547,8 +554,16 @@ public class CommandLineRunner extends
 
       @Override public void addValue(String value) throws CmdLineException {
         proxy.addValue(value);
-        warningGuardSpec.add(level, value);
+        guardLevels.add(new GuardLevel(value, level));
       }
+    }
+
+    public static WarningGuardSpec getWarningGuardSpec() {
+      WarningGuardSpec spec = new WarningGuardSpec();
+      for (GuardLevel guardLevel : guardLevels) {
+        spec.add(guardLevel.level, guardLevel.name);
+      }
+      return spec;
     }
   }
 
@@ -659,8 +674,12 @@ public class CommandLineRunner extends
     List<String> processedFileArgs
         = processArgs(argsInFile.toArray(new String[] {}));
     CmdLineParser parserFileArgs = new CmdLineParser(flags);
-    Flags.warningGuardSpec.clear();
+    // Command-line warning levels should override flag file settings,
+    // which means they should go last.
+    List<GuardLevel> previous = Lists.newArrayList(Flags.guardLevels);
+    Flags.guardLevels.clear();
     parserFileArgs.parseArgument(processedFileArgs.toArray(new String[] {}));
+    Flags.guardLevels.addAll(previous);
 
     // Currently we are not supporting this (prevent direct/indirect loops)
     if (!flags.flag_file.equals("")) {
@@ -675,7 +694,7 @@ public class CommandLineRunner extends
     List<String> processedArgs = processArgs(args);
 
     CmdLineParser parser = new CmdLineParser(flags);
-    Flags.warningGuardSpec.clear();
+    Flags.guardLevels.clear();
     isConfigValid = true;
     try {
       parser.parseArgument(processedArgs.toArray(new String[] {}));
@@ -746,7 +765,7 @@ public class CommandLineRunner extends
           .setModuleOutputPathPrefix(flags.module_output_path_prefix)
           .setCreateSourceMap(flags.create_source_map)
           .setSourceMapFormat(flags.source_map_format)
-          .setWarningGuardSpec(Flags.warningGuardSpec)
+          .setWarningGuardSpec(Flags.getWarningGuardSpec())
           .setDefine(flags.define)
           .setCharset(flags.charset)
           .setManageClosureDependencies(flags.manage_closure_dependencies)
