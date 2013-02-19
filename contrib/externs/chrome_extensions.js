@@ -2013,6 +2013,66 @@ ChromeEvent.prototype.hasListener = function(callback) {};
 ChromeEvent.prototype.hasListeners = function(callback) {};
 
 
+/**
+ * @see http://developer.chrome.com/extensions/pushMessaging.html
+ * @const
+ */
+chrome.pushMessaging = {};
+
+
+/**
+ * @type {!chrome.pushMessaging.PushMessageEvent}
+ */
+chrome.pushMessaging.onMessage;
+
+
+/**
+ * @param {boolean|function(!chrome.pushMessaging.ChannelIdResult)}
+ *     interactiveOrCallback Either a flag(optional), if set to true, user will
+ *     be asked to log in if they are not already logged in, or, when he flag is
+ *     not given, the callback.
+ * @param {function(!chrome.pushMessaging.ChannelIdResult)=} opt_callback
+ *     Callback.
+ */
+chrome.pushMessaging.getChannelId =
+    function(interactive, opt_callback) {};
+
+
+/**
+ * Event whose listeners take a chrome.pushMessaging.Message parameter.
+ * @constructor
+ */
+chrome.pushMessaging.PushMessageEvent = function() {};
+
+
+/**
+ * @param {function(!chrome.pushMessaging.Message): void} callback
+ */
+chrome.pushMessaging.PushMessageEvent.prototype.addListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!chrome.pushMessaging.Message): void} callback
+ */
+chrome.pushMessaging.PushMessageEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!chrome.pushMessaging.Message): void} callback
+ * @return {boolean}
+ */
+chrome.pushMessaging.PushMessageEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.pushMessaging.PushMessageEvent.prototype.hasListeners = function() {};
+
+
 
 /**
  * @see http://code.google.com/chrome/extensions/extension.html#type-Port
@@ -2721,3 +2781,36 @@ BlockingResponse.prototype.responseHeaders;
 
 /** @type {Object.<string,string>} */
 BlockingResponse.prototype.authCredentials;
+
+
+
+/**
+ * @see http://developer.chrome.com/extensions/pushMessaging.html#type-Message
+ * @constructor
+ */
+chrome.pushMessaging.Message = function() {};
+
+
+/**
+ * @type {number}
+ */
+chrome.pushMessaging.Message.prototype.subchannelId;
+
+
+/**
+ * @type {string}
+ */
+chrome.pushMessaging.Message.prototype.payload;
+
+
+
+/**
+ * @see http://developer.chrome.com/extensions/pushMessaging.html#type-ChannelIdResult
+ * @constructor
+ */
+chrome.pushMessaging.ChannelIdResult = function() {};
+
+/**
+ * @type {string}
+ */
+chrome.pushMessaging.ChannelIdResult.prototype.channelId;
