@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.javascript.jscomp.CodeChangeHandler.RecentChange;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.rhino.Node;
 
@@ -48,7 +47,7 @@ public class PerformanceTracker {
 
   // Keeps track of AST changes and computes code size estimation
   // if there is any.
-  private final RecentChange codeChange = new RecentChange();
+  private final CodeChangeHandler codeChange = new CodeChangeHandler();
 
   private int codeSize = 0;
   private int gzCodeSize = 0;
@@ -66,6 +65,7 @@ public class PerformanceTracker {
   /** Stats for each run of a compiler pass. */
   private final List<Stats> log = Lists.newArrayList();
 
+  /** For each pass, keep track of the runtime, the size changes, etc */
   public static class Stats {
     Stats(String pass, boolean iot) {
       this.pass = pass;

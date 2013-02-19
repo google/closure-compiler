@@ -234,8 +234,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
-   * Creates n Compiler that reports errors and warnings to an output
-   * stream.
+   * Creates a Compiler that reports errors and warnings to an output stream.
    */
   public Compiler(PrintStream stream) {
     addChangeHandler(recentChange);
@@ -1962,8 +1961,7 @@ public class Compiler extends AbstractCompiler {
     endPass();
   }
 
-  protected final CodeChangeHandler.RecentChange recentChange =
-      new CodeChangeHandler.RecentChange();
+  protected final CodeChangeHandler recentChange = new CodeChangeHandler();
   private final List<CodeChangeHandler> codeChangeHandlers =
       Lists.<CodeChangeHandler>newArrayList();
 

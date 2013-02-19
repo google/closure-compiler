@@ -32,7 +32,7 @@ import java.util.ArrayList;
 class PeepholeOptimizationsPass
     implements CompilerPass {
   private AbstractCompiler compiler;
-  
+
   // Use an array here for faster iteration compared to ImmutableSet
   private final AbstractPeepholeOptimization[] peepholeOptimizations;
 
@@ -42,7 +42,7 @@ class PeepholeOptimizationsPass
 
   private boolean retraverseOnChange = true;
 
-  static private class ScopeState {
+  private static class ScopeState {
     boolean changed;
     boolean traverseChildScopes;
     ScopeState() {
@@ -55,7 +55,7 @@ class PeepholeOptimizationsPass
     }
   }
 
-  static private class StateStack {
+  private static class StateStack {
     private ArrayList<ScopeState> states = Lists.newArrayList();
     private int currentDepth = 0;
 
@@ -81,7 +81,7 @@ class PeepholeOptimizationsPass
     }
   }
 
-  private class PeepholeChangeHandler implements CodeChangeHandler {
+  private class PeepholeChangeHandler extends CodeChangeHandler {
     @Override
     public void reportChange() {
       traversalState.peek().changed = true;
@@ -97,7 +97,7 @@ class PeepholeOptimizationsPass
     this.compiler = compiler;
     this.peepholeOptimizations = optimizations;
   }
-  
+
   PeepholeOptimizationsPass setRetraverseOnChange(boolean retraverse) {
     this.retraverseOnChange = retraverse;
     return this;
@@ -129,7 +129,7 @@ class PeepholeOptimizationsPass
     int visits = 0;
     do {
       Node c = node.getFirstChild();
-      while(c != null) {
+      while (c != null) {
         Node next = c.getNext();
         traverse(c);
         c = next;
@@ -146,7 +146,7 @@ class PeepholeOptimizationsPass
 
   private boolean shouldRetraverse(Node node) {
     if (retraverseOnChange
-        && node.getParent() != null 
+        && node.getParent() != null
         && (node.isFunction() || node.isScript())) {
       ScopeState state = traversalState.peek();
       if (state.changed) {

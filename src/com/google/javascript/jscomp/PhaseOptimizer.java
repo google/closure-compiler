@@ -65,8 +65,7 @@ class PhaseOptimizer implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final PerformanceTracker tracker;
-  private final CodeChangeHandler.RecentChange recentChange =
-      new CodeChangeHandler.RecentChange();
+  private final CodeChangeHandler recentChange = new CodeChangeHandler();
   private boolean loopMutex = false;
   private Tracer currentTracer = null;
   private String currentPassName = null;

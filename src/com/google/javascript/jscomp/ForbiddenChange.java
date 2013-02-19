@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 The Closure Compiler Authors.
+ * Copyright 2013 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,34 +19,24 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 
 /**
- * A simple listener for code change events.
- * Records whether the code has changed since the last reset.
+ * A change handler that throws an exception if any changes are made.
  * @author nicksantos@google.com (Nick Santos)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-class CodeChangeHandler {
-  private boolean hasChanged = false;
+final class ForbiddenChange extends CodeChangeHandler {
 
-  /** Report a change to some unspecified node of the AST. */
+  @Override
   public void reportChange() {
-    hasChanged = true;
+    throw new IllegalStateException("Code changes forbidden");
   }
 
-  /** Report a change to a specific function in the AST. */
+  @Override
   public void reportChangedFun(Node n) {
-    hasChanged = true;
+    throw new IllegalStateException("Code changes forbidden");
   }
 
-  /** Report that a function node has been removed from the AST */
+  @Override
   public void reportDeletedFun(Node n) {
-    hasChanged = true;
-  }
-
-  void reset() {
-    hasChanged = false;
-  }
-
-  boolean hasCodeChanged() {
-    return hasChanged;
+    throw new IllegalStateException("Code changes forbidden");
   }
 }

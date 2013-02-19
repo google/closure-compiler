@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.javascript.jscomp.CodeChangeHandler.RecentChange;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -741,7 +740,7 @@ public abstract class CompilerTestCase extends TestCase  {
   private void test(Compiler compiler, String[] expected,
                     DiagnosticType error, DiagnosticType warning,
                     String description) {
-    RecentChange recentChange = new RecentChange();
+    CodeChangeHandler recentChange = new  CodeChangeHandler();
     compiler.addChangeHandler(recentChange);
 
     Node root = compiler.parseInputs();
