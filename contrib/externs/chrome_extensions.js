@@ -17,10 +17,105 @@
 /**
  * @fileoverview Definitions for the Chromium extensions API.
  *
- * Please do not add any chrome.experimental.* externs to this file. The
+ * There are several problematic issues regarding Chrome extension APIs and
+ * this externs files, including:
+ * A. When to add packages to this file
+ * B. Optional parameters
+ * C. Pseduo-types
+ * D. Events
+ * E. Nullability
+ *
+ * The best practices for each are described in more detail below.  It
+ * should be noted that, due to historical reasons, and the evolutionary
+ * nature of this file, much this file currently violates the best practices
+ * described below. As changed are made, the changes should adhere to the
+ * best practices.
+ *
+ * A. When to Add Packages to this File?
+ * Packages in chrome.experimental.* should *not* be added to this file. The
  * experimental APIs change very quickly, so rather than add them here, make a
  * separate externs file for your project, then move the API here when it moves
  * out of experimental.
+ *
+ * B. Optional Parameters
+ * The Chrome extension APIs make extensive use of optional parameters that
+ * are not at the end of the parameter list, "interior optional parameters",
+ * while the JS Compiler's type system requires optional parameters to be
+ * at the end. This creates a bit of tension:
+ *
+ * 1. If a method has N required params, then the parameter declarations
+ *    should have N required params.
+ * 2. If, due to interior optional params, a parameter can be of more than
+ *    one type, its at-param should:
+ *    a. be named to indicate both possibilities, eg, extensionIdOrRequest,
+ *       or getInfoOrCallback.
+ *    b. the type should include both types, in the same order as the parts
+ *       of the name, even when one type subsumes the other, eg, {string|*}
+ *       or {Object|function(string)}.
+ * See chrome.runtime.sendMessage for a complex example as sendMessage
+ * takes three params with the first and third being optional.
+ *
+ * C. Pseudo-types
+ * The Chrome APIs define many types are that actually pseudo-types, that
+ * is, they can't be instantiated by name, such as Port defined at
+ * http://developer.chrome.com/extensions/extension.html#type-Port.
+ *
+ * There are two fundamentally different kinds of pseudo-types: those
+ * instantiated in extension code and those instantiated in extension
+ * library functions. The latter are returned by library functions or passed
+ * to callbacks. Currently, there are no instances of the former in Chrome
+ * Extension APIs, however, the app APIs include CreateWindowOptions, defined at
+ * http://developer.chrome.com/apps/app.window.html#type-CreateWindowOptions.
+ *
+ * Those types instantiated in extension code should be declared as typedefs
+ * so that object literals and objects created via goog.object are acceptable,
+ * for example, a subset of CreateWindowOptions would be:
+ *
+ *   * at-typedef {{id: (string|undefined), singleton: (boolean|undefined)}}
+ *   chrome.app.window.CreateWindowOptions;
+ *
+ * Those types instantiated in library code should be declared as classes.
+ * Always qualify the type name to reduce top-level pollution in this file:
+ *
+ *   Do:
+ *        function chrome.extension.Port() {}
+ *   Don't:
+ *        function Port() {}
+ *
+ * In both cases, when the type is used by more than one package use "shared",
+ * for example, chrome.shared.Port.
+ *
+ * D. Events
+ * Most packages define a set of events with the standard set of methods:
+ * addListener, removeListener, hasListener and hasListeners.  ChromeEvent
+ * is the appropriate type when an event's listeners do not take any
+ * parameters, however, many events take parameters specific to that event:
+ *
+ * 1. Create a pseduo-type for the event, for example,
+ *    chrome.runtime.PortEvent and define the four methods on it.
+ * 2. Fully describe the listener/callback's signature, for example,
+ *
+ *       * at-param {function(!chrome.runtime.Port): void} callback Callback.
+ *      chrome.runtime.PortEvent.prototype.addListener =
+ *          function(callback) {};
+ *    or
+ *
+ *       * at-param {function(*, !chrome.runtime.MessageSender,
+ *       *     function(*): void): (boolean|undefined)} callback Callback.
+ *      chrome.runtime.MessageSenderEvent.prototype.addListener =
+ *          function(callback) {};
+ *
+ * E. Nullability
+ * We treat the Chrome Extension API pages as "the truth".  Not-null types
+ * should be used in the following situations:
+ *
+ * 1. Parameters and return values that are not explicitly declared to handle
+ *    null.
+ * 2. Static event instances, for example, chrome.runtime.onConnect's type
+ *    should be: !chrome.runtime.PortEvent.
+ * 3. Optional params as there is little value to passing null when the
+ *    parameter can be omitted, of course, if null is explicitly declared
+ *    to be meaningful, then a nullable type should be used.
  *
  * @externs
  *
@@ -1899,7 +1994,9 @@ Tab.prototype.index;
 
 /** @type {number} */
 Tab.prototype.windowId;
-//** @type {number} */
+
+
+/** @type {number} */
 Tab.prototype.openerTabId;
 
 
