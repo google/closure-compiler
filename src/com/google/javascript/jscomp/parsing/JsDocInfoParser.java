@@ -785,7 +785,7 @@ public final class JsDocInfoParser {
                   token = parseSuppressTag(next());
                   continue retry;
 
-                case TEMPLATE:
+                case TEMPLATE: {
                   ExtractionInfo templateInfo = extractSingleLineBlock();
                   List<String> names = Lists.newArrayList(
                       Splitter.on(',')
@@ -802,6 +802,28 @@ public final class JsDocInfoParser {
 
                   token = templateInfo.token;
                   continue retry;
+                }
+
+                case CLASS_TEMPLATE: {
+                  ExtractionInfo classTemplateInfo = extractSingleLineBlock();
+                  List<String> names = Lists.newArrayList(
+                      Splitter.on(',')
+                          .trimResults()
+                          .split(classTemplateInfo.string));
+
+                  if (names.size() == 0 || names.get(0).length() == 0) {
+                    parser.addTypeWarning(
+                        "msg.jsdoc.classtemplate.missing.type.name",
+                        stream.getLineno(), stream.getCharno());
+                  } else if (!jsdocBuilder.recordClassTemplateTypeNames(names)) {
+                    parser.addTypeWarning(
+                        "msg.jsdoc.classtemplate.at.most.once",
+                        stream.getLineno(), stream.getCharno());
+                  }
+
+                  token = classTemplateInfo.token;
+                  continue retry;
+                }
 
                 case IDGENERATOR:
                   if (!jsdocBuilder.recordIdGenerator()) {
