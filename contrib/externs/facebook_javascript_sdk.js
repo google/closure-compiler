@@ -140,3 +140,9 @@ FB.Canvas.setAutoResize = function(onOrOff, interval) {};
  * @param {Object.<*, number>} params
  */
 FB.Canvas.setSize = function(params) {};
+
+/**
+ * @see https://developers.facebook.com/docs/reference/javascript/FB.Canvas.getPageInfo/
+ * @param {function(Object.<*,*>)} callback
+ */
+FB.Canvas.getPageInfo = function(callback) {};
