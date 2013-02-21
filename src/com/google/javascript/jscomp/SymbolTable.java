@@ -950,11 +950,14 @@ public final class SymbolTable
     ObjectType instanceType = type;
     Iterable<String> propNames = type.getOwnPropertyNames();
     if (instanceType.isFunctionPrototypeType()) {
-      // Merge the properties of "Foo.prototype" and "new Foo()" together.
-      instanceType = instanceType.getOwnerFunction().getInstanceType();
-      Set<String> set = Sets.newHashSet(propNames);
-      Iterables.addAll(set, instanceType.getOwnPropertyNames());
-      propNames = set;
+      // Guard against modifying foo.prototype when foo is a regular (non-constructor) function.
+      if (instanceType.getOwnerFunction().hasInstanceType()) {
+        // Merge the properties of "Foo.prototype" and "new Foo()" together.
+        instanceType = instanceType.getOwnerFunction().getInstanceType();
+        Set<String> set = Sets.newHashSet(propNames);
+        Iterables.addAll(set, instanceType.getOwnPropertyNames());
+        propNames = set;
+      }
     }
 
     s.setPropertyScope(new SymbolScope(null, parentPropertyScope, type, s));
