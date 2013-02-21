@@ -3776,6 +3776,16 @@ public class TypeCheckTest extends CompilerTypeTestCase {
             "empty functions, or goog.abstractMethod"));
   }
 
+  public void testConstructorClassTemplate() throws Exception {
+    testTypes("/** @constructor \n @classTemplate S,T */ function A() {}\n");
+  }
+
+  // TODO(johnlenz): Check for bad usage
+  public void disable_testBadClassTemplate() throws Exception {
+    testTypes("/** @classTemplate T */function A() {}",
+        "Bad type annotation. Unknown type nonExistent");
+  }
+
   public void testInterfaceExtends() throws Exception {
     testTypes("/** @interface */function A() {}\n" +
         "/** @interface \n * @extends {A} */function B() {}\n" +
@@ -10700,6 +10710,26 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {!Array.<string>} */\n" +
         "var query = [];\n" +
         "query.push(1);\n");
+  }
+
+  public void testTemplateType8() throws Exception {
+    testTypes(
+        "/** @constructor \n" +
+        " * @classTemplate S,T\n" +
+        " */\n" +
+        "function Bar() {}\n" +
+        "/**" +
+        " * @param {Bar.<T>} bar \n" +
+        " * @return {T} \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function fn(bar) {}\n" +
+        "/** @param {Bar.<number>} bar */ function g(bar) {" +
+        "  /** @type {!Object} */ var x = fn(bar);" +
+        "}",
+        "initializing variable\n" +
+        "found   : number\n" +
+        "required: Object");
   }
 
   public void disable_testBadTemplateType4() throws Exception {

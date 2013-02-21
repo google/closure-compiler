@@ -89,6 +89,7 @@ final class FunctionTypeBuilder {
   private boolean isInterface = false;
   private Node parametersNode = null;
   private ImmutableList<String> templateTypeNames = ImmutableList.of();
+  private ImmutableList<String> classTypeParameterNames = ImmutableList.of();;
 
   static final DiagnosticType EXTENDS_WITHOUT_TYPEDEF = DiagnosticType.warning(
       "JSC_EXTENDS_WITHOUT_TYPEDEF",
@@ -110,6 +111,11 @@ final class FunctionTypeBuilder {
   static final DiagnosticType CONSTRUCTOR_REQUIRED =
       DiagnosticType.warning("JSC_CONSTRUCTOR_REQUIRED",
                              "{0} used without @constructor for {1}");
+
+  static final DiagnosticType CLASS_TEMPLATE_WITHOUT_CONSTRUCTOR =
+      DiagnosticType.warning(
+          "JSC_CLASS_TEMPLATE_WITHOUT_CONSTRUCTOR",
+          "@classTemplate used without @constructor or @interface for {0}");
 
   static final DiagnosticType VAR_ARGS_MUST_BE_LAST = DiagnosticType.warning(
       "JSC_VAR_ARGS_MUST_BE_LAST",
@@ -367,6 +373,16 @@ final class FunctionTypeBuilder {
               maybeInterfaceType.setValidator(new ExtendedTypeValidator())) {
             extendedInterfaces.add((ObjectType) maybeInterfaceType);
           }
+        }
+      }
+
+      ImmutableList<String> typeParameters = info.getClassTemplateTypeNames();
+      if (!typeParameters.isEmpty()) {
+        if (isConstructor || isInterface) {
+          this.classTypeParameterNames = typeParameters;
+        } else {
+          reportWarning(CLASS_TEMPLATE_WITHOUT_CONSTRUCTOR,
+              formatFnName());
         }
       }
     }
@@ -671,7 +687,8 @@ final class FunctionTypeBuilder {
    */
   private FunctionType getOrCreateConstructor() {
     FunctionType fnType = typeRegistry.createConstructorType(
-        fnName, contents.getSourceNode(), parametersNode, returnType, null);
+        fnName, contents.getSourceNode(), parametersNode, returnType,
+        classTypeParameterNames);
     JSType existingType = typeRegistry.getType(fnName);
 
     if (makesStructs) {
