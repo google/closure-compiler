@@ -74,6 +74,9 @@ public abstract class CompilerTestCase extends TestCase  {
   /** Whether to check that all line number information is preserved. */
   private boolean checkLineNumbers = true;
 
+  /** Whether we expect parse warnings in the current test. */
+  private boolean expectParseWarningsThisTest = false;
+
   /**
    * An expected symbol table error. Only useful for testing the
    * symbol table error-handling.
@@ -142,6 +145,11 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   protected CompilerTestCase() {
     this("", true);
+  }
+
+  @Override protected void tearDown() throws Exception {
+    super.tearDown();
+    expectParseWarningsThisTest = false;
   }
 
   /**
@@ -306,6 +314,11 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   protected void enableAstValidation(boolean validate) {
     astValidationEnabled = validate;
+  }
+
+  /** Whether we should ignore parse warnings for the current test method. */
+  protected void setExpectParseWarningsThisTest() {
+    expectParseWarningsThisTest = true;
   }
 
   /** Returns a newly created TypeCheck. */
@@ -746,6 +759,11 @@ public abstract class CompilerTestCase extends TestCase  {
     Node root = compiler.parseInputs();
     assertTrue("Unexpected parse error(s): " +
         Joiner.on("\n").join(compiler.getErrors()), root != null);
+    if (!expectParseWarningsThisTest) {
+      assertTrue("Unexpected parse warnings(s): " +
+          Joiner.on("\n").join(compiler.getWarnings()),
+          compiler.getWarnings().length == 0);
+    }
 
     if (astValidationEnabled) {
       (new AstValidator()).validateRoot(root);

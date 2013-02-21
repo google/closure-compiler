@@ -489,6 +489,8 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "Foo.prototype.Foo_prototype$a=0;"
         + "var Bar=function(){};"
         + "Bar.prototype.Bar_prototype$a=0;";
+
+    setExpectParseWarningsThisTest();
     testSets(false, BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES,
         js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
     testSets(true, BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES,
@@ -883,7 +885,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
   public void testClosureInherits() {
     String js = ""
         + "var goog = {};"
-        + "/* @param {Function} childCtor Child class.\n"
+        + "/** @param {Function} childCtor Child class.\n"
         + " * @param {Function} parentCtor Parent class. */\n"
         + "goog.inherits = function(childCtor, parentCtor) {\n"
         + "  /** @constructor */\n"

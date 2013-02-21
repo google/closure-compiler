@@ -559,7 +559,7 @@ public class TightenTypesTest extends CompilerTestCase {
 
   public void testImplicitPropCall() {
     testSame("/** @constructor */ function Window() {};\n"
-             + "/** @param {function()} f \n@param {number} */\n"
+             + "/** @param {function()} f \n@param {number} d */\n"
              + "Window.prototype.setTimeout = function(f, d) {};",
              "function foo() {};\n"
              + "(new Window).setTimeout(foo, 20);", null);

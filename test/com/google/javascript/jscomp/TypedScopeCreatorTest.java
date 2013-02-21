@@ -1219,8 +1219,8 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         " * @param {function(!Object)} bar\n" +
         " */\n" +
         "function foo(bar) {}\n" +
-        "foo((/** @type {function(string)} */" +
-        "function(baz) { var f = baz; }))\n");
+        "foo(/** @type {function(string)} */" +
+        "  (function(baz) { var f = baz; }))\n");
     assertEquals("string", findNameType("f", lastLocalScope).toString());
   }
 
