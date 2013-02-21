@@ -107,6 +107,8 @@ public class DependencyOptions implements Serializable {
    * primitives we're using. For example, goog.provide('foo.bar')
    * provides the symbol 'foo.bar'.
    *
+   * Entry points can be scoped to a module by specifying 'mod2:foo.bar'.
+   *
    * @return this for easy chaining.
    */
   public DependencyOptions setEntryPoints(Collection<String> symbols) {

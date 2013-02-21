@@ -728,6 +728,23 @@ public class CommandLineRunnerTest extends TestCase {
          });
   }
 
+  public void testModuleEntryPoint() throws Exception {
+    useModules = ModulePattern.STAR;
+    args.add("--only_closure_dependencies");
+    args.add("--closure_entry_point=m1:a");
+    test(
+        new String[] {
+          "goog.provide('a');",
+          "goog.provide('b');"
+        },
+        // Check that 'b' was stripped out, and 'a' was moved to the second
+        // module (m1).
+        new String[] {
+          "",
+          "var a = {};"
+        });
+  }
+
   public void testNoCompile() {
     args.add("--warning_level=VERBOSE");
     test(new String[] {

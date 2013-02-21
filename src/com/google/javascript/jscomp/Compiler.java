@@ -92,6 +92,10 @@ public class Compiler extends AbstractCompiler {
       "JSC_MISSING_ENTRY_ERROR",
       "required entry point \"{0}\" never provided");
 
+  static final DiagnosticType MISSING_MODULE_ERROR = DiagnosticType.error(
+      "JSC_MISSING_ENTRY_ERROR",
+      "unknown module \"{0}\" specified in entry point spec");
+
   // Used in PerformanceTracker
   static final String PARSING_PASS_NAME = "parseInputs";
 
@@ -1354,19 +1358,17 @@ public class Compiler extends AbstractCompiler {
         } catch (CircularDependencyException e) {
           report(JSError.make(
               JSModule.CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));
-
-          // If in IDE mode, we ignore the error and keep going.
-          if (hasErrors()) {
-            return null;
-          }
         } catch (MissingProvideException e) {
           report(JSError.make(
               MISSING_ENTRY_ERROR, e.getMessage()));
+        } catch (JSModuleGraph.MissingModuleException e) {
+          report(JSError.make(
+              MISSING_MODULE_ERROR, e.getMessage()));
+        }
 
-          // If in IDE mode, we ignore the error and keep going.
-          if (hasErrors()) {
-            return null;
-          }
+        // If in IDE mode, we ignore the error and keep going.
+        if (hasErrors()) {
+          return null;
         }
       }
 

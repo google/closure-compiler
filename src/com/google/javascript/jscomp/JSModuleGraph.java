@@ -122,6 +122,17 @@ public class JSModuleGraph {
   }
 
   /**
+   * Gets all modules indexed by name.
+   */
+  Map<String, JSModule> getModulesByName() {
+    Map<String, JSModule> result = Maps.newHashMap();
+    for (JSModule m : modules) {
+      result.put(m.getName(), m);
+    }
+    return result;
+  }
+
+  /**
    * Gets the total number of modules.
    */
   int getModuleCount() {
@@ -330,7 +341,9 @@ public class JSModuleGraph {
   public List<CompilerInput> manageDependencies(
       List<String> entryPoints,
       List<CompilerInput> inputs)
-      throws CircularDependencyException, MissingProvideException {
+      throws CircularDependencyException,
+          MissingModuleException,
+          MissingProvideException {
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
     depOptions.setDependencyPruning(true);
@@ -354,27 +367,13 @@ public class JSModuleGraph {
   public List<CompilerInput> manageDependencies(
       DependencyOptions depOptions,
       List<CompilerInput> inputs)
-      throws CircularDependencyException, MissingProvideException {
+      throws CircularDependencyException, MissingProvideException,
+          MissingModuleException {
 
     SortedDependencies<CompilerInput> sorter =
         new SortedDependencies<CompilerInput>(inputs);
-    Set<CompilerInput> entryPointInputs = Sets.newLinkedHashSet();
-    if (depOptions.shouldPruneDependencies()) {
-      if (!depOptions.shouldDropMoochers()) {
-        entryPointInputs.addAll(sorter.getInputsWithoutProvides());
-      }
-
-      for (String entryPoint : depOptions.getEntryPoints()) {
-        entryPointInputs.add(sorter.getInputProviding(entryPoint));
-      }
-
-      CompilerInput baseJs = sorter.maybeGetInputProviding("goog");
-      if (baseJs != null) {
-        entryPointInputs.add(baseJs);
-      }
-    } else {
-      entryPointInputs.addAll(inputs);
-    }
+    Iterable<CompilerInput> entryPointInputs = createEntryPointInputs(
+        depOptions, inputs, sorter);
 
     // The order of inputs, sorted independently of modules.
     List<CompilerInput> absoluteOrder =
@@ -430,6 +429,54 @@ public class JSModuleGraph {
     }
 
     return result;
+  }
+
+  private Collection<CompilerInput> createEntryPointInputs(
+      DependencyOptions depOptions,
+      List<CompilerInput> inputs,
+      SortedDependencies<CompilerInput> sorter)
+      throws MissingModuleException, MissingProvideException {
+    Set<CompilerInput> entryPointInputs = Sets.newLinkedHashSet();
+    Map<String, JSModule> modulesByName = getModulesByName();
+
+    if (depOptions.shouldPruneDependencies()) {
+      if (!depOptions.shouldDropMoochers()) {
+        entryPointInputs.addAll(sorter.getInputsWithoutProvides());
+      }
+
+      for (String entryPoint : depOptions.getEntryPoints()) {
+        // An entry point is either formatted as:
+        // 'foo.bar' - peg foo.bar to its current module
+        // 'modC:foo.bar' - peg foo.bar to modC
+        String inputName = entryPoint;
+        int splitPoint = entryPoint.indexOf(':');
+        CompilerInput entryPointInput = null;
+        if (splitPoint != -1) {
+          String moduleName = entryPoint.substring(0, splitPoint);
+          inputName = entryPoint.substring(
+              Math.min(splitPoint + 1, entryPoint.length() - 1));
+          JSModule module = modulesByName.get(moduleName);
+          if (module == null) {
+            throw new MissingModuleException(moduleName);
+          } else {
+            entryPointInput = sorter.getInputProviding(inputName);
+            entryPointInput.overrideModule(module);
+          }
+        } else {
+          entryPointInput = sorter.getInputProviding(inputName);
+        }
+
+        entryPointInputs.add(entryPointInput);
+      }
+
+      CompilerInput baseJs = sorter.maybeGetInputProviding("goog");
+      if (baseJs != null) {
+        entryPointInputs.add(baseJs);
+      }
+    } else {
+      entryPointInputs.addAll(inputs);
+    }
+    return entryPointInputs;
   }
 
   LinkedDirectedGraph<JSModule, String> toGraphvizGraph() {
@@ -491,6 +538,12 @@ public class JSModuleGraph {
 
     public JSModule getDependentModule() {
       return dependentModule;
+    }
+  }
+
+  public static class MissingModuleException extends Exception {
+    MissingModuleException(String moduleName) {
+      super(moduleName);
     }
   }
 
