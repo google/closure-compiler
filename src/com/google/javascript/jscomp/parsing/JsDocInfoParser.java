@@ -150,7 +150,12 @@ public final class JsDocInfoParser {
     return sourceFile == null ? null : sourceFile.getName();
   }
 
+  /**
+   * Parse a description as a {@code @type}.
+   */
   public JSDocInfo parseInlineTypeDoc() {
+    skipEOLs();
+
     Node typeAst = parseAndRecordTypeNode(next());
     JSTypeExpression expr = createJSTypeExpression(typeAst);
     if (expr != null) {
@@ -195,8 +200,6 @@ public final class JsDocInfoParser {
 
     JsDocToken token = next();
 
-    List<ExtendedTypeInfo> extendedTypes = Lists.newArrayList();
-
     // Always record that we have a comment.
     if (jsdocBuilder.shouldParseDocumentation()) {
       ExtractionInfo blockInfo = extractBlockComment(token);
@@ -213,7 +216,11 @@ public final class JsDocInfoParser {
       }
     }
 
-    // Parse the actual JsDoc.
+    return parseHelperLoop(token, Lists.<ExtendedTypeInfo>newArrayList());
+  }
+
+  private boolean parseHelperLoop(JsDocToken token,
+                                  List<ExtendedTypeInfo> extendedTypes) {
     while (true) {
       switch (token) {
         case ANNOTATION:
@@ -1002,8 +1009,9 @@ public final class JsDocInfoParser {
           return eatTokensUntilEOL();
       }
     }
+
     return next();
-  };
+  }
 
   private void checkExtendedTypes(List<ExtendedTypeInfo> extendedTypes) {
     for (ExtendedTypeInfo typeInfo : extendedTypes) {

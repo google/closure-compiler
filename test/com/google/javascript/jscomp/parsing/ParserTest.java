@@ -479,7 +479,7 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertNotNull(exprCall.getFirstChild().getJSDocInfo());
   }
 
-  public void testJSDocAttachment17() {
+  public void testInlineJSDocAttachment1() {
     Node fn = parse("function f(/** string */ x) {}").getFirstChild();
     assertTrue(fn.isFunction());
 
@@ -489,14 +489,31 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
-  public void testJSDocAttachment18() {
-    Node fn = parse("function f(/** {string} */ x) {}").getFirstChild();
+  public void testInlineJSDocAttachment2() {
+    Node fn = parse(
+        "function f(/**\n" +
+        " * {string}\n" +
+        " */ x) {}").getFirstChild();
     assertTrue(fn.isFunction());
 
     JSDocInfo info =
         fn.getFirstChild().getNext().getFirstChild().getJSDocInfo();
     assertNotNull(info);
     assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
+  public void testInlineJSDocAttachment3() {
+    parse(
+        "function f(/** @type {string} */ x) {}",
+        "Bad type annotation. type not recognized due to syntax error");
+  }
+
+  public void testInlineJSDocAttachment4() {
+    parse(
+        "function f(/**\n" +
+        " * @type {string}\n" +
+        " */ x) {}",
+        "Bad type annotation. type not recognized due to syntax error");
   }
 
   public void testIncorrectJSDocDoesNotAlterJSParsing1() throws Exception {
