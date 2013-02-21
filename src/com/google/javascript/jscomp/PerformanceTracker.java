@@ -49,10 +49,18 @@ public class PerformanceTracker {
   // if there is any.
   private final CodeChangeHandler codeChange = new CodeChangeHandler();
 
-  private int codeSize = 0;
-  private int gzCodeSize = 0;
   private int initCodeSize = 0;
   private int initGzCodeSize = 0;
+
+  private int runtime = 0;
+  private int runs = 0;
+  private int changes = 0;
+  private int loopRuns = 0;
+  private int loopChanges = 0;
+  private int codeSize = 0;
+  private int gzCodeSize = 0;
+  private int diff = 0;
+  private int gzDiff = 0;
 
   private Deque<Stats> currentPass = new ArrayDeque<Stats>();
 
@@ -175,10 +183,23 @@ public class PerformanceTracker {
     }
   }
 
+  public int getRuntime() {
+    calcTotalStats();
+    return runtime;
+  }
+
+  public int getSize() {
+    calcTotalStats();
+    return codeSize;
+  }
+
+  public int getGzSize() {
+    calcTotalStats();
+    return gzCodeSize;
+  }
+
   public ImmutableMap<String, Stats> getStats() {
-    if (summaryCopy == null) {
-      summaryCopy = ImmutableMap.copyOf(summary);
-    }
+    calcTotalStats();
     return summaryCopy;
   }
 
@@ -189,17 +210,34 @@ public class PerformanceTracker {
     }
   }
 
+  private void calcTotalStats() {
+    // This method only does work the first time it's called
+    if (summaryCopy != null) {
+      return;
+    }
+    summaryCopy = ImmutableMap.copyOf(summary);
+    for (Entry<String, Stats> entry : summary.entrySet()) {
+      Stats stats = entry.getValue();
+      runtime += stats.runtime;
+      runs += stats.runs;
+      changes += stats.changes;
+      if (!stats.isOneTime) {
+        loopRuns += stats.runs;
+        loopChanges += stats.changes;
+      }
+      diff += stats.diff;
+      gzDiff += stats.gzDiff;
+    }
+    Preconditions.checkState(!trackSize || initCodeSize == diff + codeSize);
+    Preconditions.checkState(!trackGzSize ||
+        initGzCodeSize == gzDiff + gzCodeSize);
+  }
+
   public void outputTracerReport(PrintStream pstr) {
     JvmMetrics.maybeWriteJvmMetrics(pstr, "verbose:pretty:all");
     OutputStreamWriter output = new OutputStreamWriter(pstr);
     try {
-      int runtime = 0;
-      int runs = 0;
-      int changes = 0;
-      int loopRuns = 0;
-      int loopChanges = 0;
-      int diff = 0;
-      int gzDiff = 0;
+      calcTotalStats();
 
       ArrayList<Entry<String, Stats>> a = new ArrayList<Entry<String, Stats>>();
       for (Entry<String, Stats> entry : summary.entrySet()) {
@@ -212,15 +250,6 @@ public class PerformanceTracker {
       for (Entry<String, Stats> entry : a) {
         String key = entry.getKey();
         Stats stats = entry.getValue();
-        runtime += stats.runtime;
-        runs += stats.runs;
-        changes += stats.changes;
-        if (!stats.isOneTime) {
-          loopRuns += stats.runs;
-          loopChanges += stats.changes;
-        }
-        diff += stats.diff;
-        gzDiff += stats.gzDiff;
         output.write(key + "," +
             String.valueOf(stats.runtime) + "," +
             String.valueOf(stats.runs) + "," +
@@ -238,10 +267,6 @@ public class PerformanceTracker {
           "\nGzReduction(bytes): " + String.valueOf(gzDiff) +
           "\nSize(bytes): " + String.valueOf(codeSize) +
           "\nGzSize(bytes): " + String.valueOf(gzCodeSize) + "\n\n");
-
-      Preconditions.checkState(!trackSize || initCodeSize == diff + codeSize);
-      Preconditions.checkState(!trackGzSize ||
-          initGzCodeSize == gzDiff + gzCodeSize);
 
       output.write("Log:\n" +
           "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize\n");
