@@ -1364,7 +1364,7 @@ public final class JsDocInfoParser {
     int lineno = stream.getLineno();
     int charno = stream.getCharno() + 1;
 
-    String line = stream.getRemainingJSDocLine().trim();
+    String line = getRemainingJSDocLine().trim();
 
     // Record the textual description.
     if (line.length() > 0) {
@@ -1420,7 +1420,7 @@ public final class JsDocInfoParser {
     int startCharno = stream.getCharno() + 1;
 
     // Read the content from the first line.
-    String line = stream.getRemainingJSDocLine();
+    String line = getRemainingJSDocLine();
     if (option != WhitespaceOption.PRESERVE) {
       line = line.trim();
     }
@@ -1509,7 +1509,7 @@ public final class JsDocInfoParser {
 
           builder.append(toString(token));
 
-          line = stream.getRemainingJSDocLine();
+          line = getRemainingJSDocLine();
 
           if (option != WhitespaceOption.PRESERVE) {
             line = trimEnd(line);
@@ -1572,7 +1572,7 @@ public final class JsDocInfoParser {
 
           builder.append(toString(token));
 
-          String line = stream.getRemainingJSDocLine();
+          String line = getRemainingJSDocLine();
           line = trimEnd(line);
           builder.append(line);
           token = next();
@@ -2391,6 +2391,15 @@ public final class JsDocInfoParser {
         next();
       }
     }
+  }
+
+  /**
+   * Returns the remainder of the line.
+   */
+  private String getRemainingJSDocLine() {
+    String result = stream.getRemainingJSDocLine();
+    unreadToken = NO_UNREAD_TOKEN;
+    return result;
   }
 
   /**
