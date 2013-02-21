@@ -287,6 +287,23 @@ public class Compiler extends AbstractCompiler {
       }
     }
 
+    reconcileOptionsWithGuards();
+
+    // Initialize the warnings guard.
+    List<WarningsGuard> guards = Lists.newArrayList();
+    guards.add(
+        new SuppressDocWarningsGuard(
+            getDiagnosticGroups().getRegisteredGroups()));
+    guards.add(options.getWarningsGuard());
+
+    this.warningsGuard = new ComposeWarningsGuard(guards);
+  }
+
+  /**
+   * When the CompilerOptions and its WarningsGuard overlap, reconcile
+   * any discrepencies.
+   */
+  protected void reconcileOptionsWithGuards() {
     // DiagnosticGroups override the plain checkTypes option.
     if (options.enables(DiagnosticGroups.CHECK_TYPES)) {
       options.checkTypes = true;
@@ -315,27 +332,16 @@ public class Compiler extends AbstractCompiler {
           CheckLevel.ERROR);
     }
 
-    // Initialize the warnings guard.
-    List<WarningsGuard> guards = Lists.newArrayList();
-    guards.add(
-        new SuppressDocWarningsGuard(
-            getDiagnosticGroups().getRegisteredGroups()));
-    guards.add(options.getWarningsGuard());
-
-    ComposeWarningsGuard composedGuards = new ComposeWarningsGuard(guards);
-
     // All passes must run the variable check. This synthesizes
     // variables later so that the compiler doesn't crash. It also
     // checks the externs file for validity. If you don't want to warn
     // about missing variable declarations, we shut that specific
     // error off.
     if (!options.checkSymbols &&
-        !composedGuards.enables(DiagnosticGroups.CHECK_VARIABLES)) {
-      composedGuards.addGuard(new DiagnosticGroupWarningsGuard(
-          DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
+        !options.enables(DiagnosticGroups.CHECK_VARIABLES)) {
+      options.setWarningLevel(
+          DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
     }
-
-    this.warningsGuard = composedGuards;
   }
 
   /**
