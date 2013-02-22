@@ -67,8 +67,6 @@ class PhaseOptimizer implements CompilerPass {
   private final PerformanceTracker tracker;
   private final CodeChangeHandler recentChange = new CodeChangeHandler();
   private boolean loopMutex = false;
-  private Tracer currentTracer = null;
-  private String currentPassName = null;
   private PassFactory sanityCheck = null;
   private boolean printAstHashcodes = false;
 
@@ -206,42 +204,6 @@ class PhaseOptimizer implements CompilerPass {
     }
   }
 
-  /**
-   * Marks the beginning of a pass.
-   */
-  private void startPass(String passName, boolean isOneTime) {
-    Preconditions.checkState(currentTracer == null && currentPassName == null);
-    currentPassName = passName;
-    currentTracer = newTracer(passName, isOneTime);
-  }
-
-  /**
-   * Marks the end of a pass.
-   */
-  private void endPass(Node externs, Node root) {
-    Preconditions.checkState(currentTracer != null && currentPassName != null);
-
-    String passToCheck = currentPassName;
-    try {
-      if (progressRange == null) {
-        compiler.setProgress(-1, currentPassName);
-      } else {
-        progress += progressStep;
-        compiler.setProgress(progress, currentPassName);
-      }
-      stopTracer(currentTracer, currentPassName);
-      currentPassName = null;
-      currentTracer = null;
-
-      maybePrintAstHashcodes(passToCheck, root);
-      maybeSanityCheck(externs, root);
-    } catch (Exception e) {
-      // TODO(johnlenz): Remove this once the normalization checks report
-      // errors instead of exceptions.
-      throw new RuntimeException("Sanity check failed for " + passToCheck, e);
-    }
-  }
-
   private void maybePrintAstHashcodes(String passName, Node root) {
     if (printAstHashcodes) {
       String hashCodeMsg = "AST hashCode after " + passName + ": " +
@@ -265,30 +227,12 @@ class PhaseOptimizer implements CompilerPass {
   }
 
   /**
-   * Returns a new tracer for the given pass name.
-   */
-  private Tracer newTracer(String passName, boolean isOneTime) {
-    String comment = passName +
-        (recentChange.hasCodeChanged() ? " on recently changed AST" : "");
-    if (tracker != null) {
-      tracker.recordPassStart(passName, isOneTime);
-    }
-    return new Tracer("JSCompiler", comment);
-  }
-
-  private void stopTracer(Tracer t, String passName) {
-    long result = t.stop();
-    if (tracker != null) {
-      tracker.recordPassStop(passName, result);
-    }
-  }
-
-  /**
    * A single compiler pass.
    */
   class NamedPass implements CompilerPass {
     final String name;
     private final PassFactory factory;
+    private Tracer tracer;
 
     NamedPass(PassFactory factory) {
       this.name = factory.getName();
@@ -298,12 +242,47 @@ class PhaseOptimizer implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
       logger.fine(name);
-      startPass(name, factory.isOneTimePass());
+      tracer = newTracer();
       // Delay the creation of the actual pass until *after* all previous passes
       // have been processed.
       // Some precondition checks rely on this, eg, in CoalesceVariableNames.
       factory.create(compiler).process(externs, root);
       endPass(externs, root);
+    }
+
+    /**
+     * Marks the end of a pass.
+     */
+    private void endPass(Node externs, Node root) {
+      try {
+        if (progressRange == null) {
+          compiler.setProgress(-1, name);
+        } else {
+          progress += progressStep;
+          compiler.setProgress(progress, name);
+        }
+        if (tracker != null) {
+          tracker.recordPassStop(name, tracer.stop());
+        }
+        maybePrintAstHashcodes(name, root);
+        maybeSanityCheck(externs, root);
+      } catch (Exception e) {
+        // TODO(johnlenz): Remove this once the normalization checks report
+        // errors instead of exceptions.
+        throw new RuntimeException("Sanity check failed for " + name, e);
+      }
+    }
+
+    /**
+     * Returns a new tracer for the given pass name.
+     */
+    private Tracer newTracer() {
+      String comment = name +
+          (recentChange.hasCodeChanged() ? " on recently changed AST" : "");
+      if (tracker != null) {
+        tracker.recordPassStart(name, factory.isOneTimePass());
+      }
+      return new Tracer("JSCompiler", comment);
     }
   }
 
