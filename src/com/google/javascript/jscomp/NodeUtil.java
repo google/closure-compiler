@@ -2297,7 +2297,13 @@ public final class NodeUtil {
     if (endPos == -1) {
       return newName(convention, name);
     }
-    Node node = newName(convention, name.substring(0, endPos));
+    Node node;
+    String nodeName = name.substring(0, endPos);
+    if ("this".equals(nodeName)) {
+      node = IR.thisNode();
+    } else {
+      node = newName(convention, nodeName);
+    }
     int startPos;
     do {
       startPos = endPos + 1;
