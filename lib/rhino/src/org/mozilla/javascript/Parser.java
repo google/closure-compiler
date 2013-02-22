@@ -2276,6 +2276,7 @@ public class Parser
           case Token.TYPEOF:
               consumeToken();
               node = new UnaryExpression(tt, ts.tokenBeg, unaryExpr());
+              node.setLineno(line);
               return node;
 
           case Token.ADD:
@@ -3254,7 +3255,6 @@ public class Parser
 
             // Eat any dangling jsdoc in the property.
             getAndResetJsDoc();
-            jsdocNode = null;
 
             if (matchToken(Token.COMMA)) {
                 afterComma = ts.tokenEnd;
