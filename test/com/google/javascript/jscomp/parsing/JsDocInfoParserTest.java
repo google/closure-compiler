@@ -2060,6 +2060,11 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertEquals(Sets.newHashSet("x", "y", "z"), info.getSuppressions());
   }
 
+  public void testSuppress3() throws Exception {
+    JSDocInfo info = parse("@suppress {x,y} */");
+    assertEquals(Sets.newHashSet("x", "y"), info.getSuppressions());
+  }
+
   public void testBadSuppress1() throws Exception {
     parse("@suppress {} */", "malformed @suppress tag");
   }
@@ -2074,10 +2079,6 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testBadSuppress4() throws Exception {
     parse("@suppress {x|y */", "malformed @suppress tag");
-  }
-
-  public void testBadSuppress5() throws Exception {
-    parse("@suppress {x,y} */", "malformed @suppress tag");
   }
 
   public void testBadSuppress6() throws Exception {

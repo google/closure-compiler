@@ -1055,7 +1055,7 @@ public final class JsDocInfoParser {
           return token;
         }
 
-        if (match(JsDocToken.PIPE)) {
+        if (match(JsDocToken.PIPE, JsDocToken.COMMA)) {
           token = next();
         } else {
           break;
