@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.ant;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CommandLineRunner;
@@ -24,9 +25,11 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.MessageFormatter;
 import com.google.javascript.jscomp.Result;
+import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.SourceMap;
+import com.google.javascript.jscomp.SourceMap.Format;
 import com.google.javascript.jscomp.WarningLevel;
 
 import org.apache.tools.ant.BuildException;
@@ -38,6 +41,7 @@ import org.apache.tools.ant.types.Path;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
@@ -76,6 +80,8 @@ public final class CompileTask
   private final List<FileList> sourceFileLists;
   private final List<Path> sourcePaths;
   private final List<Warning> warnings;
+  private String sourceMapFormat;
+  private File sourceMapOutputFile;
 
   public CompileTask() {
     this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT3;
@@ -285,12 +291,28 @@ public final class CompileTask
 
       Result result = compiler.compile(externs, sources, options);
       if (result.success) {
-        writeResult(compiler.toSource());
+        StringBuilder source = new StringBuilder(compiler.toSource());
+        if (result.sourceMap != null) {
+          flushSourceMap(result.sourceMap);
+          source.append(System.getProperty("line.separator"));
+          source.append("//@ sourceMappingURL=" + sourceMapOutputFile.getName());
+        }
+        writeResult(source.toString());
       } else {
         throw new BuildException("Compilation failed.");
       }
     } else {
       log("None of the files changed. Compilation skipped.");
+    }
+  }
+
+  private void flushSourceMap(SourceMap sourceMap) {
+    try {
+      FileWriter out = new FileWriter(sourceMapOutputFile);
+      sourceMap.appendTo(out, sourceMapOutputFile.getName());
+      out.close();
+    } catch (IOException e) {
+      throw new BuildException("Cannot write sourcemap to file.", e);
     }
   }
 
@@ -328,6 +350,17 @@ public final class CompileTask
       options.setWarningLevel(group, level);
     }
 
+    if (!Strings.isNullOrEmpty(sourceMapFormat)) {
+      options.sourceMapFormat = Format.valueOf(sourceMapFormat);
+    }
+
+    if (sourceMapOutputFile != null) {
+      File parentFile = sourceMapOutputFile.getParentFile();
+      if (parentFile.mkdirs()) {
+        log("Created missing parent directory " + parentFile, Project.MSG_DEBUG);
+      }
+      options.sourceMapOutputPath = parentFile.getAbsolutePath();
+    }
     return options;
   }
 
@@ -582,5 +615,13 @@ public final class CompileTask
       fileLastModified = new Date().getTime();
     }
     return fileLastModified;
+  }
+
+  public void setSourceMapFormat(String format) {
+    this.sourceMapFormat = format;
+  }
+
+  public void setSourceMapOutputFile(File sourceMapOutputFile) {
+    this.sourceMapOutputFile = sourceMapOutputFile;
   }
 }
