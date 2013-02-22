@@ -2911,3 +2911,5 @@ chrome.pushMessaging.ChannelIdResult = function() {};
  * @type {string}
  */
 chrome.pushMessaging.ChannelIdResult.prototype.channelId;
+
+
