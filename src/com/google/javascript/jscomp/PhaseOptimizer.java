@@ -65,7 +65,6 @@ class PhaseOptimizer implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final PerformanceTracker tracker;
-  private final CodeChangeHandler recentChange = new CodeChangeHandler();
   private boolean loopMutex = false;
   private PassFactory sanityCheck = null;
   private boolean printAstHashcodes = false;
@@ -91,7 +90,6 @@ class PhaseOptimizer implements CompilerPass {
     this.compiler = compiler;
     this.tracker = tracker;
     this.progressRange = progressRange;
-    compiler.addChangeHandler(recentChange);
   }
 
   /**
@@ -242,18 +240,14 @@ class PhaseOptimizer implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
       logger.fine(name);
-      tracer = newTracer();
+      if (tracker != null) {
+        tracker.recordPassStart(name, factory.isOneTimePass());
+      }
+      tracer = new Tracer("JSCompiler");
       // Delay the creation of the actual pass until *after* all previous passes
       // have been processed.
       // Some precondition checks rely on this, eg, in CoalesceVariableNames.
       factory.create(compiler).process(externs, root);
-      endPass(externs, root);
-    }
-
-    /**
-     * Marks the end of a pass.
-     */
-    private void endPass(Node externs, Node root) {
       try {
         if (progressRange == null) {
           compiler.setProgress(-1, name);
@@ -272,18 +266,6 @@ class PhaseOptimizer implements CompilerPass {
         throw new RuntimeException("Sanity check failed for " + name, e);
       }
     }
-
-    /**
-     * Returns a new tracer for the given pass name.
-     */
-    private Tracer newTracer() {
-      String comment = name +
-          (recentChange.hasCodeChanged() ? " on recently changed AST" : "");
-      if (tracker != null) {
-        tracker.recordPassStart(name, factory.isOneTimePass());
-      }
-      return new Tracer("JSCompiler", comment);
-    }
   }
 
   /**
@@ -295,6 +277,7 @@ class PhaseOptimizer implements CompilerPass {
   class Loop implements CompilerPass {
     private final List<NamedPass> myPasses = Lists.newArrayList();
     private final Set<String> myNames = Sets.newHashSet();
+    private CodeChangeHandler recentChange = new CodeChangeHandler();
 
     void addLoopedPass(PassFactory factory) {
       String name = factory.getName();
@@ -314,6 +297,7 @@ class PhaseOptimizer implements CompilerPass {
         optimizePasses();
       }
 
+      compiler.addChangeHandler(recentChange);
       // Contains a pass iff it made changes the last time it was run.
       Set<NamedPass> madeChanges = new HashSet<NamedPass>();
       // Contains a pass iff it was run during the last inner loop.
@@ -360,6 +344,7 @@ class PhaseOptimizer implements CompilerPass {
         }
       } finally {
         loopMutex = false;
+        compiler.removeChangeHandler(recentChange);
       }
     }
 
