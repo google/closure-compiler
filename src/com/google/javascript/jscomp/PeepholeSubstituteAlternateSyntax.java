@@ -779,7 +779,9 @@ class PeepholeSubstituteAlternateSyntax
               // evaluates LHS before cond]
               // NOTE - there are some circumstances where we can
               // proceed even if there are side effects...
-              !mayEffectMutableState(lhs)) {
+              !mayEffectMutableState(lhs) &&
+              (!mayHaveSideEffects(cond) ||
+                  (thenOp.isAssign() && thenOp.getFirstChild().isName()))) {
 
             n.removeChild(cond);
             Node assignName = thenOp.removeFirstChild();
