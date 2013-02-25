@@ -488,8 +488,8 @@ angular.JQLite.wrap = function(element) {};
  *   filter:
  *       function(string, (Function|Array.<string|Function>)):angular.Module,
  *   name: string,
- *   provider:
- *       function(string, (Function|Array.<string|Function>)):angular.Module,
+ *   provider: function(string,
+ *       (Object|Function|Array.<string|Function>)):angular.Module,
  *   requires: Array.<string>,
  *   run: function((Function|Array.<string|Function>)):angular.Module,
  *   service:
@@ -833,6 +833,9 @@ angular.$http;
  *   params: (Object.<(string|Object)>|undefined),
  *   timeout: (number|undefined),
  *   transformRequest:
+ *       (function((string|Object), Object):(string|Object)|
+ *       Array.<function((string|Object), Object):(string|Object)>|undefined),
+ *   transformResponse:
  *       (function((string|Object), Object):(string|Object)|
  *       Array.<function((string|Object), Object):(string|Object)>|undefined),
  *   url: (string|undefined),
