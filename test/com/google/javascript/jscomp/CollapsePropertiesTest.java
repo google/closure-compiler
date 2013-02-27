@@ -27,8 +27,11 @@ import com.google.javascript.rhino.Node;
 public class CollapsePropertiesTest extends CompilerTestCase {
 
   private static String EXTERNS =
-      "var window; function alert(s) {} function parseInt(s) {}" +
-      "/** @constructor */ function String() {}";
+      "var window;\n" +
+      "function alert(s) {}\n" +
+      "function parseInt(s) {}\n" +
+      "/** @constructor */ function String() {};\n" +
+      "var arguments";
 
   private boolean collapsePropertiesOnExternTypes = false;
 
@@ -1091,6 +1094,17 @@ public class CollapsePropertiesTest extends CompilerTestCase {
          "if (!Array.forEach) {\n" +
          "  Array.forEach = function() {};\n" +
          "}", null, null);
+  }
+
+  public void testIssue931() {
+    collapsePropertiesOnExternTypes = true;
+    testSame(
+      "function f() {\n" +
+      "  return function () {\n" +
+      "    var args = arguments;\n" +
+      "    setTimeout(function() { alert(args); }, 0);\n" +
+      "  }\n" +
+      "};\n");
   }
 
   public void testDoNotCollapsePropertyOnExternType() {

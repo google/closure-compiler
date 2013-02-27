@@ -169,7 +169,7 @@ class CollapseProperties implements CompilerPass {
         continue;
       }
 
-      if (name.globalSets == 1 && name.localSets == 0 &&
+      if (!name.inExterns && name.globalSets == 1 && name.localSets == 0 &&
           name.aliasingGets > 0) {
         // {@code name} meets condition (b). Find all of its local aliases
         // and try to inline them.
