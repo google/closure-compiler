@@ -284,8 +284,8 @@ public class IntegrationTest extends IntegrationTestCase {
         "/** @ngInject */ var b = function f(a, b, c) {} ",
 
         "function f() {} " +
-        "function g(a) {} g.$inject=['a'];" +
-        "var b = function f(a, b, c) {}; b.$inject=['a', 'b', 'c']");
+        "function g(a) {} g['$inject']=['a'];" +
+        "var b = function f(a, b, c) {}; b['$inject']=['a', 'b', 'c']");
   }
 
   public void testExportTestFunctionsOff() {

@@ -115,8 +115,9 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
       // creates `something.$inject = ['param1', 'param2']` node.
       Node statement = IR.exprResult(
           IR.assign(
-              NodeUtil.newQualifiedNameNode(convention,
-                  name + "." + INJECT_PROPERTY_NAME),
+              IR.getelem(
+                  NodeUtil.newQualifiedNameNode(convention, name),
+                  IR.string(INJECT_PROPERTY_NAME)),
               dependenciesArray
           )
       );

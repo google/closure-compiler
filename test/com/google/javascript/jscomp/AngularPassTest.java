@@ -51,7 +51,7 @@ public class AngularPassTest extends CompilerTestCase {
         "function fn(a, b) {}",
 
         "function fn(a, b) {}\n" +
-        "fn.$inject=['a', 'b']"
+        "fn['$inject']=['a', 'b']"
     );
 
     testSame(
@@ -67,7 +67,7 @@ public class AngularPassTest extends CompilerTestCase {
 
         "var ns = {};\n" +
         "ns.fn = function (a, b) {}\n" +
-        "ns.fn.$inject=['a', 'b']"
+        "ns.fn['$inject']=['a', 'b']"
     );
 
     testSame(
@@ -84,7 +84,7 @@ public class AngularPassTest extends CompilerTestCase {
 
         "var ns = {};ns.subns = {};\n" +
         "ns.subns.fn = function (a, b) {}\n" +
-        "ns.subns.fn.$inject=['a', 'b']"
+        "ns.subns.fn['$inject']=['a', 'b']"
     );
 
     testSame(
@@ -99,7 +99,7 @@ public class AngularPassTest extends CompilerTestCase {
         "var fn = function (a, b) {}",
 
         "var fn = function (a, b) {};\n" +
-        "fn.$inject=['a', 'b']"
+        "fn['$inject']=['a', 'b']"
     );
 
     testSame(
@@ -115,7 +115,7 @@ public class AngularPassTest extends CompilerTestCase {
         "var fn = ns.func = function (a, b) {}",
 
         "var ns = {}; var fn = ns.func = function (a, b) {};\n" +
-        "fn.$inject=['a', 'b']"
+        "fn['$inject']=['a', 'b']"
     );
 
     testSame(
@@ -134,7 +134,7 @@ public class AngularPassTest extends CompilerTestCase {
 
         "(function() {" +
         "var ns = {}; var fn = ns.func = function (a, b) {};\n" +
-        "fn.$inject=['a', 'b']" +
+        "fn['$inject']=['a', 'b']" +
         "})()"
     );
 
@@ -158,7 +158,7 @@ public class AngularPassTest extends CompilerTestCase {
         "var fn = 10;" +
         "(function() {" +
         "var ns = {}; var fn = ns.func = function (a, b) {};\n" +
-        "fn.$inject=['a', 'b']" +
+        "fn['$inject']=['a', 'b']" +
         "})()"
     );
   }
