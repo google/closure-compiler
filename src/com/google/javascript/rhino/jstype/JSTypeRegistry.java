@@ -78,16 +78,20 @@ public class JSTypeRegistry implements Serializable {
   private static final long serialVersionUID = 1L;
 
   /**
-   * The template variable corresponding to the property key type of the built-
-   * in Javascript object.
+   * The name associated with the template variable corresponding to the
+   * property key type of the built-in Javascript object.
    */
   public static final String OBJECT_INDEX_TEMPLATE = "Object#Key";
 
+  private TemplateType objectIndexTemplateKey;
+
   /**
-   * The template variable corresponding to the property value type for
-   * Javascript Objects and Arrays.
+   * The name associated with the template variable corresponding to the
+   * property value type for Javascript Objects and Arrays.
    */
   public static final String OBJECT_ELEMENT_TEMPLATE = "Object#Element";
+
+  private TemplateType objectElementTemplateKey;
 
   /**
    * The UnionTypeBuilder caps the maximum number of alternate types it
@@ -220,11 +224,28 @@ public class JSTypeRegistry implements Serializable {
       ErrorReporter reporter, boolean tolerateUndefinedValues) {
     this.reporter = reporter;
     this.emptyTemplateTypeMap = new TemplateTypeMap(
-        this, ImmutableList.<String>of(), ImmutableList.<JSType>of());
+        this, ImmutableList.<TemplateType>of(), ImmutableList.<JSType>of());
     nativeTypes = new JSType[JSTypeNative.values().length];
     namesToTypes = new HashMap<String, JSType>();
     resetForTypeCheck();
     this.tolerateUndefinedValues = tolerateUndefinedValues;
+  }
+
+  /**
+   * @return The template variable corresponding to the property value type for
+   * Javascript Objects and Arrays.
+   */
+  public TemplateType getObjectElementKey() {
+    return this.objectElementTemplateKey;
+  }
+
+  /**
+   * @return The template variable corresponding to the
+   * property key type of the built-in Javascript object.
+   */
+  public TemplateType getObjectIndexKey() {
+    Preconditions.checkNotNull(objectIndexTemplateKey);
+    return objectIndexTemplateKey;
   }
 
   /**
@@ -260,6 +281,9 @@ public class JSTypeRegistry implements Serializable {
   }
 
   private void initializeBuiltInTypes() {
+    objectIndexTemplateKey = new TemplateType(this, OBJECT_INDEX_TEMPLATE);
+    objectElementTemplateKey = new TemplateType(this, OBJECT_ELEMENT_TEMPLATE);
+
     // These locals shouldn't be all caps.
     BooleanType BOOLEAN_TYPE = new BooleanType(this);
     registerNativeType(JSTypeNative.BOOLEAN_TYPE, BOOLEAN_TYPE);
@@ -299,7 +323,7 @@ public class JSTypeRegistry implements Serializable {
             createArrowType(createOptionalParameters(ALL_TYPE), UNKNOWN_TYPE),
             null,
             createTemplateTypeMap(ImmutableList.of(
-                OBJECT_INDEX_TEMPLATE, OBJECT_ELEMENT_TEMPLATE), null),
+                objectIndexTemplateKey, objectElementTemplateKey), null),
             true, true);
 
     OBJECT_FUNCTION_TYPE.setPrototype(TOP_LEVEL_PROTOTYPE, null);
@@ -339,7 +363,7 @@ public class JSTypeRegistry implements Serializable {
           createArrowType(createParametersWithVarArgs(ALL_TYPE), null),
           null,
           createTemplateTypeMap(ImmutableList.of(
-              OBJECT_ELEMENT_TEMPLATE), null),
+              objectElementTemplateKey), null),
           true, true);
     ARRAY_FUNCTION_TYPE.getInternalArrowType().returnType =
         ARRAY_FUNCTION_TYPE.getInstanceType();
@@ -1441,13 +1465,29 @@ public class JSTypeRegistry implements Serializable {
    *     to indicate that the parameter types are unknown.
    * @param returnType the function's return type or {@code null} to indicate
    *     that the return type is unknown.
-   * @param templateKeys the templatized type keys for the class.
+   * @param templateKeyNames the templatized type keys for the class.
    */
   public FunctionType createConstructorType(String name, Node source,
-      Node parameters, JSType returnType, ImmutableList<String> templateKeys) {
+      Node parameters, JSType returnType, ImmutableList<String> templateKeyNames) {
+    return createConstructorTypeInternal(name, source, parameters, returnType,
+        createTemplateMapKeys(templateKeyNames));
+  }
+
+  private FunctionType createConstructorTypeInternal(String name, Node source,
+      Node parameters, JSType returnType, ImmutableList<TemplateType> templateKeys) {
     return new FunctionType(this, name, source,
         createArrowType(parameters, returnType), null,
         createTemplateTypeMap(templateKeys, null), true, false);
+  }
+
+  ImmutableList<TemplateType> createTemplateMapKeys(ImmutableList<String> keys) {
+    ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
+    if (keys != null) {
+      for (String key : keys) {
+        builder.add(new TemplateType(this, key));
+      }
+    }
+    return builder.build();
   }
 
   /**
@@ -1460,15 +1500,19 @@ public class JSTypeRegistry implements Serializable {
     return FunctionType.forInterface(this, name, source);
   }
 
+  public TemplateType createTemplateType(String name) {
+    return new TemplateType(this, name);
+  }
+
   /**
    * Creates a template type map from the specified list of template keys and
    * template value types.
    */
   public TemplateTypeMap createTemplateTypeMap(
-      ImmutableList<String> templateKeys,
+      ImmutableList<TemplateType> templateKeys,
       ImmutableList<JSType> templateValues) {
     templateKeys = templateKeys == null ?
-        ImmutableList.<String>of() : templateKeys;
+        ImmutableList.<TemplateType>of() : templateKeys;
     templateValues = templateValues == null ?
         ImmutableList.<JSType>of() : templateValues;
 
@@ -1794,10 +1838,10 @@ public class JSTypeRegistry implements Serializable {
   /**
    * Sets the template type name.
    */
-  public void setTemplateTypeNames(List<String> names) {
-    Preconditions.checkNotNull(names);
-    for (String name : names) {
-      templateTypes.put(name, new TemplateType(this, name));
+  public void setTemplateTypeNames(List<TemplateType> keys) {
+    Preconditions.checkNotNull(keys);
+    for (TemplateType key : keys) {
+      templateTypes.put(key.getReferenceName(), key);
     }
   }
 

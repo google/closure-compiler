@@ -325,9 +325,10 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testTemplatedFunctionDerivedFunctions() {
+    TemplateType template = registry.createTemplateType("T");
     FunctionType fn = new FunctionBuilder(registry)
-      .withTypeOfThis(new TemplateType(registry, "T"))
-      .withTemplateKeys(ImmutableList.of("T"))
+      .withTypeOfThis(template)
+      .withTemplateKeys(ImmutableList.of(template))
       .withReturnType(BOOLEAN_TYPE).build();
 
     assertEquals("[T]", fn.getPropertyType("call").getTemplateTypeMap()

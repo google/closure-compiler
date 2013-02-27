@@ -1203,6 +1203,21 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         findNameType("g", lastLocalScope).toString());
   }
 
+  public void disable_testTemplateType13() {
+    // TODO(johnlenz): allow template types in @type function expressions
+    testSame(
+        "/**\n" +
+        " * @type {function(T):T}\n" +
+        " * @template T\n" +
+        " */\n" +
+        "var f;" +
+        "/** @type {string} */\n" +
+        "var val = 'hi';\n" +
+        "var result = f(val);");
+    assertEquals("(string|undefined)",
+        findNameType("result", globalScope).toString());
+  }
+
   public void testClosureParameterTypesWithoutJSDoc() {
     testSame(
         "/**\n" +

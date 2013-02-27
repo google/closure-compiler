@@ -26,8 +26,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeRegistry.OBJECT_INDEX_TEMPLATE;
-
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -336,9 +334,9 @@ class TypeValidator {
       ObjectType dereferenced = objType.dereference();
       if (dereferenced != null && dereferenced
           .getTemplateTypeMap()
-          .hasTemplateKey(OBJECT_INDEX_TEMPLATE)) {
+          .hasTemplateKey(typeRegistry.getObjectIndexKey())) {
         expectCanAssignTo(t, indexNode, indexType, dereferenced
-            .getTemplateTypeMap().getTemplateType(OBJECT_INDEX_TEMPLATE),
+            .getTemplateTypeMap().getTemplateType(typeRegistry.getObjectIndexKey()),
             "restricted index type");
       } else if (dereferenced != null && dereferenced.isArrayType()) {
         expectNumber(t, indexNode, indexType, "array access");

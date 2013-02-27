@@ -1288,7 +1288,7 @@ public abstract class JSType implements Serializable {
       return false;
     }
 
-    String templateKey = JSTypeRegistry.OBJECT_ELEMENT_TEMPLATE;
+    TemplateType templateKey = type1.registry.getObjectElementKey();
     JSType elemType1 = type1.getTemplateTypeMap().getTemplateType(templateKey);
     JSType elemType2 = type2.getTemplateTypeMap().getTemplateType(templateKey);
     return !elemType1.isSubtype(elemType2) && !elemType2.isSubtype(elemType1);

@@ -119,7 +119,8 @@ public final class FunctionBuilder {
   }
 
   /** Set the template name. */
-  public FunctionBuilder withTemplateKeys(ImmutableList<String> templateKeys) {
+  public FunctionBuilder withTemplateKeys(
+      ImmutableList<TemplateType> templateKeys) {
     this.templateTypeMap = registry.createTemplateTypeMap(templateKeys, null);
     return this;
   }

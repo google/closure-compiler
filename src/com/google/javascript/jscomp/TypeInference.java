@@ -26,9 +26,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_VALUE_OR_OB
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeRegistry.OBJECT_ELEMENT_TEMPLATE;
-import static com.google.javascript.rhino.jstype.JSTypeRegistry.OBJECT_INDEX_TEMPLATE;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -223,7 +220,8 @@ class TypeInference
               JSType iterKeyType = getNativeType(STRING_TYPE);
               ObjectType objType = getJSType(obj).dereference();
               JSType objIndexType = objType == null ?
-                  null : objType.getTemplateTypeMap().getTemplateType(OBJECT_INDEX_TEMPLATE);
+                  null : objType.getTemplateTypeMap().getTemplateType(
+                      registry.getObjectIndexKey());
               if (objIndexType != null && !objIndexType.isUnknownType()) {
                 JSType narrowedKeyType =
                     iterKeyType.getGreatestSubtype(objIndexType);
@@ -1101,7 +1099,7 @@ class TypeInference
         // template types amongst their templatized types.
         TemplateTypeMap paramTypeMap = paramType.getTemplateTypeMap();
         TemplateTypeMap argTypeMap = argObjectType.getTemplateTypeMap();
-        for (String key : paramTypeMap.getTemplateKeys()) {
+        for (TemplateType key : paramTypeMap.getTemplateKeys()) {
           maybeResolveTemplatedType(
               paramTypeMap.getTemplateType(key),
               argTypeMap.getTemplateType(key),
@@ -1248,8 +1246,8 @@ class TypeInference
     scope = traverseChildren(n, scope);
     JSType type = getJSType(n.getFirstChild()).restrictByNotNullOrUndefined();
     TemplateTypeMap typeMap = type.getTemplateTypeMap();
-    if (typeMap.hasTemplateType(OBJECT_ELEMENT_TEMPLATE)) {
-      n.setJSType(typeMap.getTemplateType(OBJECT_ELEMENT_TEMPLATE));
+    if (typeMap.hasTemplateType(registry.getObjectElementKey())) {
+      n.setJSType(typeMap.getTemplateType(registry.getObjectElementKey()));
     }
     return dereferencePointer(n.getFirstChild(), scope);
   }

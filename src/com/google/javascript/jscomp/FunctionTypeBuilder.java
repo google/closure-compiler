@@ -41,6 +41,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.TemplateType;
 
 import java.util.Iterator;
 import java.util.List;
@@ -88,7 +89,7 @@ final class FunctionTypeBuilder {
   private boolean makesDicts = false;
   private boolean isInterface = false;
   private Node parametersNode = null;
-  private ImmutableList<String> templateTypeNames = ImmutableList.of();
+  private ImmutableList<TemplateType> templateTypeNames = ImmutableList.of();
   private ImmutableList<String> classTypeParameterNames = ImmutableList.of();;
 
   static final DiagnosticType EXTENDS_WITHOUT_TYPEDEF = DiagnosticType.warning(
@@ -549,11 +550,18 @@ final class FunctionTypeBuilder {
   /**
    * Infer the template type from the doc info.
    */
-  FunctionTypeBuilder inferTemplateTypeName(@Nullable JSDocInfo info) {
-    if (info != null) {
-      templateTypeNames = info.getTemplateTypeNames();
-      typeRegistry.setTemplateTypeNames(templateTypeNames);
+  FunctionTypeBuilder inferTemplateTypeName(
+      @Nullable JSDocInfo info) {
+    if (info != null &&  !info.getTemplateTypeNames().isEmpty()) {
+      ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
+      for (String key : info.getTemplateTypeNames()) {
+        builder.add(typeRegistry.createTemplateType(key));
+      }
+      templateTypeNames = builder.build();
+    } else {
+      templateTypeNames = ImmutableList.of();
     }
+    typeRegistry.setTemplateTypeNames(templateTypeNames);
     return this;
   }
 

@@ -6106,14 +6106,23 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         templatizedCtor.getInstanceType(),
         ImmutableList.of(NUMBER_TYPE, STRING_TYPE));
 
-    TemplateTypeMap templateTypeMap = templatizedInstance.getTemplateTypeMap();
-    assertTrue(templateTypeMap.hasTemplateKey("A"));
-    assertTrue(templateTypeMap.hasTemplateKey("B"));
-    assertFalse(templateTypeMap.hasTemplateKey("C"));
+    TemplateTypeMap ctrTypeMap = templatizedCtor.getTemplateTypeMap();
+    TemplateType keyA = ctrTypeMap.getTemplateTypeKeyByName("A");
+    assertNotNull(keyA);
+    TemplateType keyB = ctrTypeMap.getTemplateTypeKeyByName("B");
+    assertNotNull(keyB);
+    TemplateType keyC = ctrTypeMap.getTemplateTypeKeyByName("C");
+    assertNull(keyC);
+    TemplateType unknownKey = registry.createTemplateType("C");
 
-    assertEquals(NUMBER_TYPE, templateTypeMap.getTemplateType("A"));
-    assertEquals(STRING_TYPE, templateTypeMap.getTemplateType("B"));
-    assertEquals(UNKNOWN_TYPE, templateTypeMap.getTemplateType("C"));
+    TemplateTypeMap templateTypeMap = templatizedInstance.getTemplateTypeMap();
+    assertTrue(templateTypeMap.hasTemplateKey(keyA));
+    assertTrue(templateTypeMap.hasTemplateKey(keyB));
+    assertFalse(templateTypeMap.hasTemplateKey(unknownKey));
+
+    assertEquals(NUMBER_TYPE, templateTypeMap.getTemplateType(keyA));
+    assertEquals(STRING_TYPE, templateTypeMap.getTemplateType(keyB));
+    assertEquals(UNKNOWN_TYPE, templateTypeMap.getTemplateType(unknownKey));
 
     assertEquals("TestingType.<number,string>", templatizedInstance.toString());
   }
@@ -6125,14 +6134,23 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         templatizedCtor.getInstanceType(),
         ImmutableList.of(NUMBER_TYPE));
 
-    TemplateTypeMap templateTypeMap = templatizedInstance.getTemplateTypeMap();
-    assertTrue(templateTypeMap.hasTemplateKey("A"));
-    assertTrue(templateTypeMap.hasTemplateKey("B"));
-    assertFalse(templateTypeMap.hasTemplateKey("C"));
+    TemplateTypeMap ctrTypeMap = templatizedCtor.getTemplateTypeMap();
+    TemplateType keyA = ctrTypeMap.getTemplateTypeKeyByName("A");
+    assertNotNull(keyA);
+    TemplateType keyB = ctrTypeMap.getTemplateTypeKeyByName("B");
+    assertNotNull(keyB);
+    TemplateType keyC = ctrTypeMap.getTemplateTypeKeyByName("C");
+    assertNull(keyC);
+    TemplateType unknownKey = registry.createTemplateType("C");
 
-    assertEquals(NUMBER_TYPE, templateTypeMap.getTemplateType("A"));
-    assertEquals(UNKNOWN_TYPE, templateTypeMap.getTemplateType("B"));
-    assertEquals(UNKNOWN_TYPE, templateTypeMap.getTemplateType("C"));
+    TemplateTypeMap templateTypeMap = templatizedInstance.getTemplateTypeMap();
+    assertTrue(templateTypeMap.hasTemplateKey(keyA));
+    assertTrue(templateTypeMap.hasTemplateKey(keyB));
+    assertFalse(templateTypeMap.hasTemplateKey(unknownKey));
+
+    assertEquals(NUMBER_TYPE, templateTypeMap.getTemplateType(keyA));
+    assertEquals(UNKNOWN_TYPE, templateTypeMap.getTemplateType(keyB));
+    assertEquals(UNKNOWN_TYPE, templateTypeMap.getTemplateType(unknownKey));
 
     assertEquals("TestingType.<number,?>", templatizedInstance.toString());
   }

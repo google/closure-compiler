@@ -61,10 +61,10 @@ public final class TemplatizedType extends ProxyObjectType {
 
     // Cache which template keys were filled, and what JSTypes they were filled
     // with.
-    ImmutableList<String> filledTemplateKeys =
+    ImmutableList<TemplateType> filledTemplateKeys =
         objectType.getTemplateTypeMap().getUnfilledTemplateKeys();
     ImmutableList.Builder<JSType> builder = ImmutableList.builder();
-    for (String filledTemplateKey : filledTemplateKeys) {
+    for (TemplateType filledTemplateKey : filledTemplateKeys) {
       builder.add(getTemplateTypeMap().getTemplateType(filledTemplateKey));
     }
     this.templateTypes = builder.build();
@@ -100,7 +100,7 @@ public final class TemplatizedType extends ProxyObjectType {
     return templateTypes;
   }
 
-  //@Override
+  @Override
   public boolean isSubtype(JSType that) {
     return isSubtypeHelper(this, that);
   }

@@ -51,12 +51,12 @@ import java.io.Serializable;
  * @author izaakr@google.com (Izaak Rubin)
  */
 public class TemplateTypeMap implements Serializable {
-  private final ImmutableList<String> templateKeys;
+  private final ImmutableList<TemplateType> templateKeys;
   private final ImmutableList<JSType> templateValues;
   final JSTypeRegistry registry;
 
   TemplateTypeMap(JSTypeRegistry registry,
-                  ImmutableList<String> templateKeys,
+                  ImmutableList<TemplateType> templateKeys,
                   ImmutableList<JSType> templateValues) {
     Preconditions.checkNotNull(templateKeys);
     Preconditions.checkNotNull(templateValues);
@@ -72,7 +72,7 @@ public class TemplateTypeMap implements Serializable {
   /**
    * Returns a list of all template keys.
    */
-  public ImmutableList<String> getTemplateKeys() {
+  public ImmutableList<TemplateType> getTemplateKeys() {
     return templateKeys;
   }
 
@@ -80,8 +80,14 @@ public class TemplateTypeMap implements Serializable {
    * Returns true if this map contains the specified template key, false
    * otherwise.
    */
-  public boolean hasTemplateKey(String templateKey) {
-    return templateKeys.contains(templateKey);
+  public boolean hasTemplateKey(TemplateType templateKey) {
+    // Note: match by identity, not equality
+    for (TemplateType entry : templateKeys) {
+      if (entry == templateKey) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -96,7 +102,7 @@ public class TemplateTypeMap implements Serializable {
    * Returns a list of template keys in this map that do not have corresponding
    * JSType values.
    */
-  ImmutableList<String> getUnfilledTemplateKeys() {
+  ImmutableList<TemplateType> getUnfilledTemplateKeys() {
     return templateKeys.subList(templateValues.size(), templateKeys.size());
   }
 
@@ -104,7 +110,7 @@ public class TemplateTypeMap implements Serializable {
    * Returns true if there is a JSType value associated with the specified
    * template key; false otherwise.
    */
-  public boolean hasTemplateType(String key) {
+  public boolean hasTemplateType(TemplateType key) {
     return getTemplateTypeInternal(key) != null;
   }
 
@@ -112,18 +118,34 @@ public class TemplateTypeMap implements Serializable {
    * Returns the JSType value associated with the specified template key. If no
    * JSType value is associated, returns UNKNOWN_TYPE.
    */
-  public JSType getTemplateType(String key) {
+  public JSType getTemplateType(TemplateType key) {
     JSType templateType = getTemplateTypeInternal(key);
     return (templateType == null) ?
         registry.getNativeType(JSTypeNative.UNKNOWN_TYPE) : templateType;
+  }
+
+  public TemplateType getTemplateTypeKeyByName(String keyName) {
+    for (TemplateType key : templateKeys) {
+      if (key.getReferenceName().equals(keyName)) {
+        return key;
+      }
+    }
+    return null;
   }
 
   /**
    * Returns the JSType value associated with the specified template key. If no
    * JSType value is associated, returns null.
    */
-  private JSType getTemplateTypeInternal(String key) {
-    int index = templateKeys.indexOf(key);
+  private JSType getTemplateTypeInternal(TemplateType key) {
+    int index = 0;
+    for (TemplateType item : templateKeys) {
+      // Note: match by identity.
+      if (item == key) {
+        break;
+      }
+      index++;
+    }
     if (index < 0 || index >= templateValues.size()) {
       return null;
     }
@@ -157,7 +179,7 @@ public class TemplateTypeMap implements Serializable {
    * Returns a new TemplateTypeMap whose keys have been extended with the
    * specified list.
    */
-  TemplateTypeMap extendKeys(ImmutableList<String> newKeys) {
+  TemplateTypeMap extendKeys(ImmutableList<TemplateType> newKeys) {
     return registry.createTemplateTypeMap(
         concatImmutableLists(templateKeys, newKeys), templateValues);
   }

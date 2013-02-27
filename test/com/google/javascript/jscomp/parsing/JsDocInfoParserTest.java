@@ -32,10 +32,10 @@ import com.google.javascript.rhino.head.Token.CommentType;
 import com.google.javascript.rhino.head.ast.AstRoot;
 import com.google.javascript.rhino.head.ast.Comment;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.SimpleSourceFile;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
+import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 import java.util.Collection;
@@ -332,7 +332,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
             OBJECT_TYPE, ImmutableList.of(UNKNOWN_TYPE, NUMBER_TYPE)),
         info.getType());
     assertTemplatizedTypeEquals(
-        JSTypeRegistry.OBJECT_ELEMENT_TEMPLATE, NUMBER_TYPE, info.getType());
+        registry.getObjectElementKey(), NUMBER_TYPE, info.getType());
   }
 
   public void testParseTemplatizedType12() throws Exception {
@@ -342,9 +342,9 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
             OBJECT_TYPE, ImmutableList.of(STRING_TYPE, NUMBER_TYPE)),
         info.getType());
     assertTemplatizedTypeEquals(
-        JSTypeRegistry.OBJECT_ELEMENT_TEMPLATE, NUMBER_TYPE, info.getType());
+        registry.getObjectElementKey(), NUMBER_TYPE, info.getType());
     assertTemplatizedTypeEquals(
-        JSTypeRegistry.OBJECT_INDEX_TEMPLATE, STRING_TYPE, info.getType());
+        registry.getObjectIndexKey(), STRING_TYPE, info.getType());
   }
 
   public void testParseTemplatizedType13() throws Exception {
@@ -3002,7 +3002,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     return new JsDocTokenStream(source, 0);
   }
 
-  private void assertTemplatizedTypeEquals(String key, JSType expected,
+  private void assertTemplatizedTypeEquals(TemplateType key, JSType expected,
                                            JSTypeExpression te) {
     assertEquals(
         expected, resolve(te).getTemplateTypeMap().getTemplateType(key));
