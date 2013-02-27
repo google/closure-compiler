@@ -21,7 +21,7 @@
  * @see http://www.w3.org/TR/webaudio/
  *
  * @externs
-*/
+ */
 
 /**
  * @constructor
@@ -75,6 +75,11 @@ AudioContext.prototype.createBufferSource = function() {};
  */
 AudioContext.prototype.createJavaScriptNode = function(bufferSize,
     numberOfInputs, numberOfOuputs) {};
+
+/**
+ * @return {OscillatorNode}
+ */
+AudioContext.prototype.createOscillator = function() {};
 
 /**
  * @return {RealtimeAnalyserNode}
@@ -649,6 +654,33 @@ BiquadFilterNode.prototype.getFrequencyResponse = function(frequencyHz,
  * @constructor
  * @extends {AudioNode}
  */
+var OscillatorNode = function() {};
+
+/** @type {string} */
+OscillatorNode.prototype.type;
+
+/** @type {number} */
+OscillatorNode.prototype.playbackState;
+
+/** @type {AudioParam} */
+OscillatorNode.prototype.frequency;
+
+/** @type {AudioParam} */
+OscillatorNode.prototype.detune;
+
+/** @type {function(number)} */
+OscillatorNode.prototype.start;
+
+/** @type {function(number)} */
+OscillatorNode.prototype.stop;
+
+/** @type {function(WaveTable)} */
+OscillatorNode.prototype.setWaveTable;
+
+/**
+ * @constructor
+ * @extends {AudioNode}
+ */
 var WaveShaperNode = function() {};
 
 /** @type {Float32Array} */
@@ -698,3 +730,4 @@ Audio.prototype.mozWriteAudio = function(buffer) {};
  * @return {number}
  */
 Audio.prototype.mozCurrentSampleOffset = function() {};
+
