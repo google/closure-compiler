@@ -652,6 +652,11 @@ BiquadFilterNode.prototype.getFrequencyResponse = function(frequencyHz,
 
 /**
  * @constructor
+ */
+var WaveTable = function() {};
+
+/**
+ * @constructor
  * @extends {AudioNode}
  */
 var OscillatorNode = function() {};
