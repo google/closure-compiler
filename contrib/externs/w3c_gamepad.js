@@ -21,7 +21,11 @@
  */
 
 /**
- * @typedef {{id: string, index: number, timestamp: number, axes: Array.<number>, buttons: Array.<number>}}
+ * @typedef {{id: string,
+ *            index: number,
+ *            timestamp: number,
+ *            axes: Array.<number>,
+ *            buttons: Array.<number>}}
  */
 var Gamepad;
 
