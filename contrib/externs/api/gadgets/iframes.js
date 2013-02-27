@@ -340,3 +340,30 @@ iframes.Iframes.prototype.iframer = {};
  * @type {!Object}
  */
 var iframer = {};
+
+/**
+ * Send a message to the parent.
+ * @param {string} message The message name.
+ * @param {*=} opt_data Optional data to pass.
+ * @param {Function=} opt_callback Optional callback to handle response.
+ * @param {Function=} opt_filter Optional iframes filter (not used).
+ */
+iframer.send = function(message, opt_data, opt_callback, opt_filter) {};
+
+/**
+ * Send a message to the iframe.
+ * @param {string} message The message name.
+ * @param {*=} opt_data Optional data to pass.
+ * @param {Function=} opt_callback Optional callback to handle response.
+ * @param {Function=} opt_filter Optional iframes filter (not used).
+ */
+iframes.Iframe.prototype.send = function(
+    message, opt_data, opt_callback, opt_filter) {};
+
+/**
+ * Register an handler for messages from the iframe.
+ * @param {string} message The message name.
+ * @param {Function} callback Message handler.
+ * @param {Function=} opt_filter Optional iframes filter (not used).
+ */
+iframes.Iframe.prototype.register = function(message, callback, opt_filter) {};
