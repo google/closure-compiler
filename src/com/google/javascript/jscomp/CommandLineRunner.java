@@ -21,8 +21,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import com.google.common.io.LimitInputStream;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -931,7 +931,7 @@ public class CommandLineRunner extends
     Map<String, SourceFile> externsMap = Maps.newHashMap();
     for (ZipEntry entry = null; (entry = zip.getNextEntry()) != null; ) {
       BufferedInputStream entryStream = new BufferedInputStream(
-          new LimitInputStream(zip, entry.getSize()));
+          ByteStreams.limit(zip, entry.getSize()));
       externsMap.put(entry.getName(),
           SourceFile.fromInputStream(
               // Give the files an odd prefix, so that they do not conflict
