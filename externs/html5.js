@@ -2772,3 +2772,16 @@ Window.prototype.WebKitMutationObserver;
  * @type {function(new:MutationObserver, function(Array.<MutationRecord>))}
  */
 Window.prototype.MozMutationObserver;
+
+
+/**
+ * @see http://www.w3.org/TR/page-visibility/
+ * @type {string}
+ */
+Document.prototype.visibilityState;
+
+/**
+ * @see http://www.w3.org/TR/page-visibility/
+ * @type {boolean}
+ */
+Document.prototype.hidden;
