@@ -187,7 +187,7 @@ lib/guava.jar
 
 Guava Libraries
 URL: http://code.google.com/p/guava-libraries/
-Version:  13.0.1
+Version:  14.0
 License: Apache License 2.0
 
 Description: Google's core Java libraries.
