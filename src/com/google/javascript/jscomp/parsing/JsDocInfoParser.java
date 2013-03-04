@@ -138,6 +138,7 @@ public final class JsDocInfoParser {
     this.jsdocBuilder = new JSDocInfoBuilder(config.parseJsDocDocumentation);
     if (commentNode != null) {
       this.jsdocBuilder.recordOriginalCommentString(commentNode.getValue());
+      this.jsdocBuilder.recordOriginalCommentPosition(commentNode.getPosition());
     }
     this.annotationNames = config.annotationNames;
     this.suppressionNames = config.suppressionNames;

@@ -17,7 +17,9 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.InputId;
@@ -38,6 +40,7 @@ import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -2737,6 +2740,20 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       "* @supported */");
   }
 
+  public void testJsDocInfoPosition() throws IOException {
+    SourceFile sourceFile = SourceFile.fromCode("comment-position-test.js",
+        "   \n" +
+        "  /**\n" +
+        "   * A comment\n" +
+        "   */\n" +
+        "  function double(x) {}");
+    List<JSDocInfo> jsdocs = parseFull(sourceFile.getCode());
+    assertEquals(1, jsdocs.size());
+    assertEquals(6, jsdocs.get(0).getOriginalCommentPosition());
+    assertEquals(2, sourceFile.getLineOfOffset(jsdocs.get(0).getOriginalCommentPosition()));
+    assertEquals(2, sourceFile.getColumnOfOffset(jsdocs.get(0).getOriginalCommentPosition()));
+  }
+
   public void testGetOriginalCommentString() throws Exception {
     String comment = "* @desc This is a comment */";
     JSDocInfo info = parse(comment);
@@ -2911,7 +2928,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTrue(collection.contains(item));
   }
 
-  private void parseFull(String code, String... warnings) {
+  private List<JSDocInfo> parseFull(String code, String... warnings) {
     CompilerEnvirons environment = new CompilerEnvirons();
 
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
@@ -2926,6 +2943,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Config config =
         new Config(extraAnnotations, extraSuppressions,
             true, LanguageMode.ECMASCRIPT3, false);
+
+    List<JSDocInfo> jsdocs = Lists.newArrayList();
     for (Comment comment : script.getComments()) {
       JsDocInfoParser jsdocParser =
         new JsDocInfoParser(
@@ -2936,11 +2955,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
             config,
             testErrorReporter);
       jsdocParser.parse();
-      jsdocParser.retrieveAndResetParsedJSDocInfo();
+      jsdocs.add(jsdocParser.retrieveAndResetParsedJSDocInfo());
     }
 
     assertTrue("some expected warnings were not reported",
         testErrorReporter.hasEncounteredAllWarnings());
+    return jsdocs;
   }
 
   @SuppressWarnings("unused")

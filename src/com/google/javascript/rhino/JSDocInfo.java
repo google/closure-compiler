@@ -289,6 +289,11 @@ public class JSDocInfo implements Serializable {
    */
   private boolean includeDocumentation = false;
 
+  /**
+   * Position of the original comment.
+   */
+  private int originalCommentPosition;
+
   // We use a bit map to represent whether or not the JSDoc contains
   // one of the "boolean" annotation types (annotations like @constructor,
   // for which the presence of the annotation alone is significant).
@@ -1578,5 +1583,13 @@ public class JSDocInfo implements Serializable {
       return;
     }
     documentation.sourceComment = sourceComment;
+  }
+
+  public int getOriginalCommentPosition() {
+    return originalCommentPosition;
+  }
+
+  void setOriginalCommentPosition(int position) {
+    originalCommentPosition = position;
   }
 }

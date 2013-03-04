@@ -81,6 +81,15 @@ final public class JSDocInfoBuilder {
     }
   }
 
+  /**
+   * Sets the position of original JSDoc comment.
+   */
+  public void recordOriginalCommentPosition(int position) {
+    if (parseDocumentation) {
+      currentInfo.setOriginalCommentPosition(position);
+    }
+  }
+
   public boolean shouldParseDocumentation() {
     return parseDocumentation;
   }
@@ -1078,5 +1087,4 @@ final public class JSDocInfoBuilder {
     return currentInfo.isNoSideEffects() ||
         currentInfo.hasModifies();
   }
-
 }
