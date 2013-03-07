@@ -652,7 +652,7 @@ angular.Scope.$on = function(name, listener) {};
 /** @type {angular.Scope} */
 angular.Scope.$parent;
 
-/** @type {angular.Scope} */
+/** @type {!angular.Scope} */
 angular.Scope.$root;
 
 /**
