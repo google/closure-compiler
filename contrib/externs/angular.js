@@ -652,6 +652,9 @@ angular.Scope.$on = function(name, listener) {};
 /** @type {angular.Scope} */
 angular.Scope.$parent;
 
+/** @type {angular.Scope} */
+angular.Scope.$root;
+
 /**
  * @param {string|Function} exp
  * @param {(string|Function)=} opt_listener
