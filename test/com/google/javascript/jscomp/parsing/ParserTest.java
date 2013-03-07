@@ -43,7 +43,7 @@ public class ParserTest extends BaseJSTypeTestCase {
 
   private static final String MISSING_GT_MESSAGE =
       "Bad type annotation. " +
-      com.google.javascript.rhino.ScriptRuntime.getMessage0(
+      com.google.javascript.rhino.SimpleErrorReporter.getMessage0(
           "msg.jsdoc.missing.gt");
 
   private static final String MISPLACED_TYPE_ANNOTATION =

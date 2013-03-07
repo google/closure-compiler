@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.ScriptRuntime;
+import com.google.javascript.rhino.SimpleErrorReporter;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -92,7 +92,8 @@ class RhinoErrorReporter {
             DUPLICATE_PARAM)
 
         // Unknown @annotations.
-        .put(replacePlaceHolders(ScriptRuntime.getMessage0("msg.bad.jsdoc.tag")),
+        .put(replacePlaceHolders(
+            SimpleErrorReporter.getMessage0("msg.bad.jsdoc.tag")),
             BAD_JSDOC_ANNOTATION)
 
         .put(Pattern.compile("^Type annotations are not allowed here.*"),
