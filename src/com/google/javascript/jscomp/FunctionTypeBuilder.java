@@ -551,7 +551,7 @@ final class FunctionTypeBuilder {
    * Infer the template type from the doc info.
    */
   FunctionTypeBuilder inferTemplateTypeName(
-      @Nullable JSDocInfo info) {
+      @Nullable JSDocInfo info, JSType ownerType) {
     if (info != null &&  !info.getTemplateTypeNames().isEmpty()) {
       ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
       for (String key : info.getTemplateTypeNames()) {
@@ -561,7 +561,22 @@ final class FunctionTypeBuilder {
     } else {
       templateTypeNames = ImmutableList.of();
     }
-    typeRegistry.setTemplateTypeNames(templateTypeNames);
+
+    ImmutableList<TemplateType> keys = templateTypeNames;
+    if (ownerType != null) {
+      ImmutableList<TemplateType> ownerTypeKeys =
+          ownerType.getTemplateTypeMap().getTemplateKeys();
+      if (!ownerTypeKeys.isEmpty()) {
+        ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
+        builder.addAll(templateTypeNames);
+        builder.addAll(ownerTypeKeys);
+        keys = builder.build();
+      }
+    }
+
+    if (!keys.isEmpty()) {
+      typeRegistry.setTemplateTypeNames(keys);
+    }
     return this;
   }
 

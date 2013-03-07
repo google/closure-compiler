@@ -1158,6 +1158,28 @@ class TypeInference
     }
   }
 
+  private static class TemplateTypeMapReplacer extends ModificationVisitor {
+    private final TemplateTypeMap replacements;
+    boolean madeChanges = false;
+
+    TemplateTypeMapReplacer(
+        JSTypeRegistry registry, TemplateTypeMap replacements) {
+      super(registry);
+      this.replacements = replacements;
+    }
+
+    @Override
+    public JSType caseTemplateType(TemplateType type) {
+      if (replacements.hasTemplateKey(type)) {
+        madeChanges = true;
+        JSType replacement = replacements.getTemplateType(type);
+        return replacements.getTemplateType(type);
+      } else {
+        return type;
+      }
+    }
+  }
+
   /**
    * For functions with function(this: T, ...) and T as parameters, type
    * inference will set the type of this on a function literal argument to the
@@ -1316,6 +1338,17 @@ class TypeInference
       JSType foundType = objType.findPropertyType(propName);
       if (foundType != null) {
         propertyType = foundType;
+      }
+    }
+
+    if (propertyType != null && objType != null) {
+      JSType restrictedObjType = objType.restrictByNotNullOrUndefined();
+      if (restrictedObjType.isTemplatizedType()
+          && propertyType.hasAnyTemplateTypes()) {
+        TemplateTypeMap typeMap = restrictedObjType.getTemplateTypeMap();
+        TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(
+            registry, typeMap);
+        propertyType = propertyType.visit(replacer);
       }
     }
 

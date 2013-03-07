@@ -961,7 +961,21 @@ public class JSTypeRegistry implements Serializable {
    */
   public JSType getType(StaticScope<JSType> scope, String jsTypeName,
       String sourceName, int lineno, int charno) {
-    JSType type = getType(jsTypeName);
+    // Resolve template type names
+    JSType type = null;
+    JSType thisType = null;
+    if (scope != null && scope.getTypeOfThis() != null) {
+      thisType = scope.getTypeOfThis().toObjectType();
+    }
+    if (thisType != null) {
+      type = thisType.getTemplateTypeMap().getTemplateTypeKeyByName(jsTypeName);
+      if (type != null) {
+        Preconditions.checkState(type.isTemplateType(), "expected:" + type);
+        return type;
+      }
+    }
+
+    type = getType(jsTypeName);
     if (type == null) {
       // TODO(user): Each instance should support named type creation using
       // interning.
