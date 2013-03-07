@@ -119,7 +119,7 @@ public class StatementFusion extends AbstractPeepholeOptimization {
   }
 
   // exp1, exp1
-  private static Node fuseExpressionIntoExpression(Node exp1, Node exp2) {
+  protected static Node fuseExpressionIntoExpression(Node exp1, Node exp2) {
     Node comma = new Node(Token.COMMA, exp1);
     comma.copyInformationFrom(exp2);
 
@@ -141,13 +141,13 @@ public class StatementFusion extends AbstractPeepholeOptimization {
     }
   }
 
-  private static void fuseExpresssonIntoFirstChild(Node exp, Node stmt) {
+  protected static void fuseExpresssonIntoFirstChild(Node exp, Node stmt) {
     Node val = stmt.removeFirstChild();
     Node comma = fuseExpressionIntoExpression(exp, val);
     stmt.addChildToFront(comma);
   }
 
-  private static void fuseExpresssonIntoSecondChild(Node exp, Node stmt) {
+  protected static void fuseExpresssonIntoSecondChild(Node exp, Node stmt) {
     Node val = stmt.removeChildAfter(stmt.getFirstChild());
     Node comma = fuseExpressionIntoExpression(exp, val);
     stmt.addChildAfter(comma, stmt.getFirstChild());
