@@ -363,9 +363,7 @@ class IRFactory {
   private Node maybeInjectCastNode(AstNode node, JSDocInfo info, Node irNode) {
     if (node.getType() == com.google.javascript.rhino.head.Token.LP
         && node instanceof ParenthesizedExpression
-        && info.hasType()
-        // TODO(johnlenz): for now, attach object literal type directly.
-        && !irNode.isObjectLit()) {
+        && info.hasType()) {
       irNode = newNode(Token.CAST, irNode);
     }
     return irNode;

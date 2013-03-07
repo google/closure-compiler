@@ -7684,7 +7684,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
           "var x = /** @type {Object|number} */ (" +
           "  {/** @type {string} */ foo: 3});" +
         "}",
-        "assignment to property foo of Object\n" +
+        "assignment to property foo of {foo: string}\n" +
         "found   : number\n" +
         "required: string");
   }
@@ -7702,21 +7702,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     // Mostly verifying that rhino actually understands these JsDocs.
     testTypes("/** @constructor */ function Foo() {} \n" +
         "/** @type {Foo} */ var x = /** @type {Foo} */ ({})");
-  }
-
-  public void testCast18() throws Exception {
-    // Mostly verifying that legacy annotations are applied
-    // despite the parser warning.
-    testTypes("/** @constructor */ function Foo() {} \n" +
-        "/** @type {Foo} */ var x = (/** @type {Foo} */ {})",
-        "Type annotations are not allowed here. " +
-        "Are you missing parentheses?");
-
-    // Not really encourage because of possible ambiguity but it works.
-    testTypes("/** @constructor */ function Foo() {} \n" +
-        "/** @type {Foo} */ var x = /** @type {Foo} */ {}",
-        "Type annotations are not allowed here. " +
-        "Are you missing parentheses?");
   }
 
   public void testCast19() throws Exception {

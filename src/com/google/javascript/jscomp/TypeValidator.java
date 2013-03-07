@@ -73,9 +73,8 @@ class TypeValidator {
       "found   : {1}\n" +
       "required: {2}";
 
-  // TODO(johnlenz): reenable this after after the next release.
   static final DiagnosticType INVALID_CAST =
-      DiagnosticType.disabled("JSC_INVALID_CAST",
+      DiagnosticType.warning("JSC_INVALID_CAST",
           "invalid cast - must be a subtype or supertype\n" +
           "from: {0}\n" +
           "to  : {1}");
