@@ -507,7 +507,7 @@ IDBObjectStore.prototype.openCursor = function(range, direction) {};
 
 /**
  * @param {string} name The name of the index.
- * @param {string} keyPath The path to the index key.
+ * @param {string|!Array.<string>} keyPath The path to the index key.
  * @param {Object=} opt_paramters Optional parameters
  *     for the created index.
  * @return {!IDBIndex} The IDBIndex object.
