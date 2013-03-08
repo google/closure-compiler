@@ -10717,6 +10717,27 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: Object");
   }
 
+  public void testTemplateType9() throws Exception {
+    // verify interface type parameters are recognised.
+    testTypes(
+        "/** @interface \n" +
+        " * @classTemplate S,T\n" +
+        " */\n" +
+        "function Bar() {}\n" +
+        "/**" +
+        " * @param {Bar.<T>} bar \n" +
+        " * @return {T} \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function fn(bar) {}\n" +
+        "/** @param {Bar.<number>} bar */ function g(bar) {" +
+        "  /** @type {!Object} */ var x = fn(bar);" +
+        "}",
+        "initializing variable\n" +
+        "found   : number\n" +
+        "required: Object");
+  }
+
   public void disable_testBadTemplateType4() throws Exception {
     // TODO(johnlenz): Add a check for useless of template types.
     // Unless there are at least two references to a Template type in

@@ -154,7 +154,8 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testSubtypeWithInterfaceThisType() {
-    FunctionType iface = registry.createInterfaceType("I", null);
+    FunctionType iface = registry.createInterfaceType("I", null,
+        ImmutableList.<String>of());
     FunctionType ifaceReturnBoolean = new FunctionBuilder(registry)
         .withParamsNode(registry.createParameters())
         .withTypeOfThis(iface.getInstanceType())
@@ -196,7 +197,8 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testInterfacePrototypeChain1() {
-    FunctionType iface = registry.createInterfaceType("I", null);
+    FunctionType iface = registry.createInterfaceType("I", null,
+        ImmutableList.<String>of());
     assertTypeEquals(
         iface.getPrototype(),
         iface.getInstanceType().getImplicitPrototype());
@@ -206,11 +208,13 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testInterfacePrototypeChain2() {
-    FunctionType iface = registry.createInterfaceType("I", null);
+    FunctionType iface = registry.createInterfaceType("I", null,
+        ImmutableList.<String>of());
     iface.getPrototype().defineDeclaredProperty(
         "numberProp", NUMBER_TYPE, null);
 
-    FunctionType subIface = registry.createInterfaceType("SubI", null);
+    FunctionType subIface = registry.createInterfaceType("SubI", null,
+        ImmutableList.<String>of());
     subIface.setExtendedInterfaces(
         Lists.<ObjectType>newArrayList(iface.getInstanceType()));
     assertTypeEquals(
@@ -349,8 +353,10 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testSetImplementsOnInterface() {
-    FunctionType iface = registry.createInterfaceType("I", null);
-    FunctionType subIface = registry.createInterfaceType("SubI", null);
+    FunctionType iface = registry.createInterfaceType("I", null,
+        ImmutableList.<String>of());
+    FunctionType subIface = registry.createInterfaceType("SubI", null,
+        ImmutableList.<String>of());
     try {
       subIface.setImplementedInterfaces(
           ImmutableList.of(iface.getInstanceType()));
