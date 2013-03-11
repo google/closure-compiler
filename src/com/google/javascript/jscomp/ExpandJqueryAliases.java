@@ -168,7 +168,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
     Node fn = n.getLastChild();
     if (fn != null) {
-      n.replaceChild(fn, IR.string("prototype"));
+      n.replaceChild(fn, IR.string("prototype").srcref(fn));
       compiler.reportCodeChange();
     }
   }
@@ -250,14 +250,20 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
       Node fnc = IR.function(IR.name("").srcref(n),
           IR.paramList().srcref(n),
-          fncBlock);
-      n.replaceChild(callTarget, fnc);
-      n.putBooleanProp(Node.FREE_CALL, true);
+          fncBlock).srcref(n);
+
+      // add an explicit "call" statement so that we can maintain
+      // the same reference for "this"
+      Node newCallTarget = IR.getprop(
+          fnc, IR.string("call").srcref(n)).srcref(n);
+      n.replaceChild(callTarget, newCallTarget);
+      n.putBooleanProp(Node.FREE_CALL, false);
 
       // remove any other pre-existing call arguments
-      while(fnc.getNext() != null) {
-        n.removeChildAfter(fnc);
+      while(newCallTarget.getNext() != null) {
+        n.removeChildAfter(newCallTarget);
       }
+      n.addChildToBack(IR.thisNode().srcref(n));
     }
     compiler.reportCodeChange();
   }
