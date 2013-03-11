@@ -19,8 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_WARNING;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CheckLevel;
-import com.google.javascript.jscomp.Result;
 
 /**
  * Tests for {@link CheckRequiresForConstructors}.
@@ -254,5 +252,37 @@ public class CheckRequiresForConstructorsTest extends CompilerTestCase {
       "};"};
     String warning = "'goog.Forgot' used but not goog.require'd";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
+  }
+
+  public void testVarConstructorName() {
+    String js = "/** @type {function(new:Date)} */var bar = Date;" +
+        "new bar();";
+    testSame(js);
+  }
+
+  public void testVarConstructorFunction() {
+    String js = "/** @type {function(new:Date)} */var bar = function() {};" +
+        "new bar();";
+    testSame(js);
+  }
+
+  public void testAssignConstructorName() {
+    String js = "var foo = {};" +
+        "/** @type {function(new:Date)} */foo.bar = Date;" +
+        "new foo.bar();";
+    testSame(js);
+  }
+
+  public void testAssignConstructorFunction() {
+    String js = "var foo = {};" +
+        "/** @type {function(new:Date)} */foo.bar = function() {};" +
+        "new foo.bar();";
+    testSame(js);
+  }
+
+  public void testConstructorFunctionReference() {
+    String js = "/** @type {function(new:Date)} */function bar() {}" +
+        "new bar();";
+    testSame(js);
   }
 }
