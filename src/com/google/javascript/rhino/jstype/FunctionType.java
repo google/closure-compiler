@@ -159,9 +159,11 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   /** Creates an instance for a function that is an interface. */
-  private FunctionType(JSTypeRegistry registry, String name, Node source) {
+  private FunctionType(JSTypeRegistry registry, String name, Node source,
+      TemplateTypeMap typeParameters) {
     super(registry, name,
-        registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE));
+        registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
+        false, typeParameters);
     setPrettyPrint(true);
 
     Preconditions.checkArgument(source == null ||
@@ -175,8 +177,9 @@ public class FunctionType extends PrototypeObjectType {
 
   /** Creates an instance for a function that is an interface. */
   static FunctionType forInterface(
-      JSTypeRegistry registry, String name, Node source) {
-    return new FunctionType(registry, name, source);
+      JSTypeRegistry registry, String name, Node source,
+      TemplateTypeMap typeParameters) {
+    return new FunctionType(registry, name, source, typeParameters);
   }
 
   @Override

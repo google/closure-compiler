@@ -480,13 +480,17 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     switch (n.getType()) {
       case Token.CAST:
         Node expr = n.getFirstChild();
-        ensureTyped(t, n, getJSType(expr));
-
-        // If the cast, tightens the type apply it, so it is available post
-        // normalization.
-        JSType castType = getJSType(n);
         JSType exprType = getJSType(expr);
-        if (castType.isSubtype(exprType)) {
+        JSType castType = getJSType(n);
+
+        // TODO(johnlenz): determine if we can limit object literals in some
+        // way.
+        if (!expr.isObjectLit()) {
+          validator.expectCanCast(t, n, castType, exprType);
+        }
+        ensureTyped(t, n, castType);
+
+        if (castType.isSubtype(exprType) || expr.isObjectLit()) {
           expr.setJSType(castType);
         }
         break;
@@ -1988,18 +1992,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     Preconditions.checkState(!n.isFunction() ||
             type.isFunctionType() ||
             type.isUnknownType());
+    // TODO(johnlenz): this seems like a strange place to check "@implicitCast"
     JSDocInfo info = n.getJSDocInfo();
     if (info != null) {
-      if (info.hasType()) {
-        // TODO(johnlenz): Change this so that we only look for casts on CAST
-        // nodes one the misplaced type annotation warning is on by default and
-        // people have been given a chance to fix them.  As is, this is here
-        // simply for legacy casts.
-        JSType infoType = info.getType().evaluate(t.getScope(), typeRegistry);
-        validator.expectCanCast(t, n, infoType, type);
-        type = infoType;
-      }
-
       if (info.isImplicitCast() && !inExterns) {
         String propName = n.isGetProp() ?
             n.getLastChild().getString() : "(missing)";

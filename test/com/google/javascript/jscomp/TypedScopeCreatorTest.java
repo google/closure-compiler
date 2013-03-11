@@ -1218,6 +1218,145 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         findNameType("result", globalScope).toString());
   }
 
+  public void testClassTemplateType1() {
+    // Verify that template types used in method signature are resolved.
+    testSame(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @classTemplate T\n" +
+        " */\n" +
+        "function C() {};\n" +
+        "" +
+        "/** @return {T} */\n" +
+        "C.prototype.method = function() {}\n" +
+        "" +
+        "/** @type {C.<string>} */ var x = new C();\n" +
+        "var result = x.method();\n");
+    assertEquals("string", findNameType("result", globalScope).toString());
+  }
+
+  public void testClassTemplateType2() {
+    // Verify that template types used in method signature on namespaced
+    // objects are resolved.
+    testSame(
+        "/** @const */ var ns = {};" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @classTemplate T\n" +
+        " */\n" +
+        "ns.C = function() {};\n" +
+        "" +
+        "/** @return {T} */\n" +
+        "ns.C.prototype.method = function() {}\n" +
+        "" +
+        "/** @type {ns.C.<string>} */ var x = new ns.C();\n" +
+        "var result = x.method();\n");
+    assertEquals("string", findNameType("result", globalScope).toString());
+  }
+
+  public void testClassTemplateType3() {
+    // Verify that template types used for instance properties are recognized.
+    testSame(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @classTemplate T\n" +
+        " */\n" +
+        "function C() {\n" +
+        "  /** @type {T} */\n" +
+        "  this.foo;" +
+        "};\n" +
+        "" +
+        "/** @type {C.<string>} */ var x = new C();\n" +
+        "var result = x.foo;\n");
+    assertEquals("string", findNameType("result", globalScope).toString());
+  }
+
+  public void testClassTemplateType4() {
+    // Verify that template types used for instance properties are recognized.
+    testSame(
+        "/** @const */ var ns = {};" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @classTemplate T\n" +
+        " */\n" +
+        "ns.C = function() {\n" +
+        "  /** @type {T} */\n" +
+        "  this.foo;" +
+        "};\n" +
+        "" +
+        "/** @type {ns.C.<string>} */ var x = new ns.C();\n" +
+        "var result = x.foo;\n");
+    assertEquals("string", findNameType("result", globalScope).toString());
+  }
+
+  public void testClassTemplateType5() {
+    // Verify that template types used for prototype properties in stub
+    // declarations are recognized.
+    testSame(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @classTemplate T\n" +
+        " */\n" +
+        "function C() {\n" +
+        "};\n" +
+        "" +
+        "/** @type {T} */" +
+        "C.prototype.foo;\n" +
+        "" +
+        "/** @type {C.<string>} */ var x = new C();\n" +
+        "var result = x.foo;\n");
+    assertEquals("string", findNameType("result", globalScope).toString());
+  }
+
+  public void testClassTemplateType6() {
+    // Verify that template types used for prototype properties in assignment
+    // expressions are recognized.
+    testSame(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @classTemplate T\n" +
+        " */\n" +
+        "function C() {\n" +
+        "};\n" +
+        "" +
+        "/** @type {T} */" +
+        "C.prototype.foo = 1;\n" +
+        "" +
+        "/** @type {C.<string>} */ var x = new C();\n" +
+        "var result = x.foo;\n");
+    assertEquals("string", findNameType("result", globalScope).toString());
+  }
+
+  public void testClassTemplateType7() {
+    // Verify that template types used in prototype methods are recognized.
+    testSame(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @classTemplate T\n" +
+        " */\n" +
+        "function C() {};\n" +
+        "" +
+        "C.prototype.method = function() {\n" +
+        "  /** @type {T} */ var local;" +
+        "}\n");
+    assertEquals("T", findNameType("local", lastLocalScope).toString());
+  }
+
+  public void testClassTemplateType8() {
+    // Verify that template types used in casts are recognized.
+    testSame(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @classTemplate T\n" +
+        " */\n" +
+        "function C() {};\n" +
+        "" +
+        "C.prototype.method = function() {\n" +
+        "  var local = /** @type {T} */ (x);" +
+        "}\n");
+    assertEquals("T", findNameType("local", lastLocalScope).toString());
+  }
+
   public void testClosureParameterTypesWithoutJSDoc() {
     testSame(
         "/**\n" +

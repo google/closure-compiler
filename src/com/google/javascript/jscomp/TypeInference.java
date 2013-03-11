@@ -447,25 +447,11 @@ class TypeInference
 
       case Token.CAST:
         scope = traverseChildren(n, scope);
-        break;
-    }
-
-    // TODO(johnlenz): remove this after the CAST node change has shaken out.
-    if (!n.isFunction()) {
-      JSDocInfo info = n.getJSDocInfo();
-      if (info != null && info.hasType()) {
-        JSType castType = info.getType().evaluate(syntacticScope, registry);
-
-        // A stubbed type declaration on a qualified name should take
-        // effect for all subsequent accesses of that name,
-        // so treat it the same as an assign to that name.
-        if (n.isQualifiedName() &&
-            n.getParent().isExprResult()) {
-          updateScopeForTypeChange(scope, n, n.getJSType(), castType);
+        JSDocInfo info = n.getJSDocInfo();
+        if (info != null && info.hasType()) {
+          n.setJSType(info.getType().evaluate(syntacticScope, registry));
         }
-
-        n.setJSType(castType);
-      }
+        break;
     }
 
     return scope;
@@ -1172,6 +1158,28 @@ class TypeInference
     }
   }
 
+  private static class TemplateTypeMapReplacer extends ModificationVisitor {
+    private final TemplateTypeMap replacements;
+    boolean madeChanges = false;
+
+    TemplateTypeMapReplacer(
+        JSTypeRegistry registry, TemplateTypeMap replacements) {
+      super(registry);
+      this.replacements = replacements;
+    }
+
+    @Override
+    public JSType caseTemplateType(TemplateType type) {
+      if (replacements.hasTemplateKey(type)) {
+        madeChanges = true;
+        JSType replacement = replacements.getTemplateType(type);
+        return replacements.getTemplateType(type);
+      } else {
+        return type;
+      }
+    }
+  }
+
   /**
    * For functions with function(this: T, ...) and T as parameters, type
    * inference will set the type of this on a function literal argument to the
@@ -1330,6 +1338,17 @@ class TypeInference
       JSType foundType = objType.findPropertyType(propName);
       if (foundType != null) {
         propertyType = foundType;
+      }
+    }
+
+    if (propertyType != null && objType != null) {
+      JSType restrictedObjType = objType.restrictByNotNullOrUndefined();
+      if (restrictedObjType.isTemplatizedType()
+          && propertyType.hasAnyTemplateTypes()) {
+        TemplateTypeMap typeMap = restrictedObjType.getTemplateTypeMap();
+        TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(
+            registry, typeMap);
+        propertyType = propertyType.visit(replacer);
       }
     }
 

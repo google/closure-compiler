@@ -28,7 +28,7 @@ import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ScriptRuntime;
+import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.head.ErrorReporter;
 import com.google.javascript.rhino.head.ast.Comment;
@@ -61,12 +61,13 @@ public final class JsDocInfoParser {
   private class ErrorReporterParser {
     void addParserWarning(String messageId, String messageArg, int lineno,
         int charno) {
-      errorReporter.warning(ScriptRuntime.getMessage1(messageId, messageArg),
+      errorReporter.warning(
+          SimpleErrorReporter.getMessage1(messageId, messageArg),
           getSourceName(), lineno, null, charno);
     }
 
     void addParserWarning(String messageId, int lineno, int charno) {
-      errorReporter.warning(ScriptRuntime.getMessage0(messageId),
+      errorReporter.warning(SimpleErrorReporter.getMessage0(messageId),
           getSourceName(), lineno, null, charno);
     }
 
@@ -74,14 +75,14 @@ public final class JsDocInfoParser {
                     int charno) {
       errorReporter.warning(
           "Bad type annotation. " +
-          ScriptRuntime.getMessage1(messageId, messageArg),
+          SimpleErrorReporter.getMessage1(messageId, messageArg),
           getSourceName(), lineno, null, charno);
     }
 
     void addTypeWarning(String messageId, int lineno, int charno) {
       errorReporter.warning(
           "Bad type annotation. " +
-          ScriptRuntime.getMessage0(messageId),
+          SimpleErrorReporter.getMessage0(messageId),
           getSourceName(), lineno, null, charno);
     }
   }

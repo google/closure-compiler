@@ -5457,6 +5457,11 @@ google.maps.places.SearchBox.prototype.setBounds = function(bounds) {};
 google.maps.places.SearchBoxOptions = function() {};
 
 /**
+ * @type {google.maps.LatLngBounds}
+ */
+google.maps.places.SearchBoxOptions.prototype.bounds;
+
+/**
  * @interface
  */
 google.maps.places.TextSearchRequest = function() {};

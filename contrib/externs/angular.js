@@ -592,6 +592,7 @@ angular.noop = function() {};
  *   $new: function(boolean=):angular.Scope,
  *   $on: function(string, function(angular.Scope.Event, ...[?])):function(),
  *   $parent: angular.Scope,
+ *   $root: angular.Scope,
  *   $watch: function(
  *       (string|Function), (string|Function)=, boolean=):function()
  *   }}
@@ -650,6 +651,9 @@ angular.Scope.$on = function(name, listener) {};
 
 /** @type {angular.Scope} */
 angular.Scope.$parent;
+
+/** @type {!angular.Scope} */
+angular.Scope.$root;
 
 /**
  * @param {string|Function} exp

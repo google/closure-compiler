@@ -73,6 +73,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
+import com.google.javascript.rhino.jstype.TemplateType;
 
 import java.util.Iterator;
 import java.util.List;
@@ -704,7 +705,32 @@ final class TypedScopeCreator implements ScopeCreator {
       JSType jsType = null;
       if (info != null) {
         if (info.hasType()) {
+
+          ImmutableList<TemplateType> ownerTypeKeys = ImmutableList.of();
+          Node ownerNode = NodeUtil.getBestLValueOwner(node);
+          String ownerName = NodeUtil.getBestLValueName(ownerNode);
+          ObjectType ownerType = null;
+          if (ownerName != null) {
+            Var ownerVar = scope.getVar(ownerName);
+            if (ownerVar != null) {
+              ownerType = getPrototypeOwnerType(
+                  ObjectType.cast(ownerVar.getType()));
+              if (ownerType != null) {
+                ownerTypeKeys =
+                    ownerType.getTemplateTypeMap().getTemplateKeys();
+              }
+            }
+          }
+
+          if (!ownerTypeKeys.isEmpty()) {
+            typeRegistry.setTemplateTypeNames(ownerTypeKeys);
+          }
+
           jsType = info.getType().evaluate(scope, typeRegistry);
+
+          if (!ownerTypeKeys.isEmpty()) {
+            typeRegistry.clearTemplateTypeNames();
+          }
         } else if (FunctionTypeBuilder.isFunctionTypeDeclaration(info)) {
           String fnName = node.getQualifiedName();
           jsType = createFunctionTypeFromNodes(
@@ -906,12 +932,14 @@ final class TypedScopeCreator implements ScopeCreator {
             overriddenType = findOverriddenFunction(ownerType, propName);
           }
 
+          ObjectType prototypeOwner = getPrototypeOwnerType(ownerType);
+
           FunctionTypeBuilder builder =
               new FunctionTypeBuilder(name, compiler, errorRoot, sourceName,
                   scope)
               .setContents(getFunctionAnalysisResults(fnRoot))
               .inferFromOverriddenFunction(overriddenType, parametersNode)
-              .inferTemplateTypeName(info)
+              .inferTemplateTypeName(info, prototypeOwner)
               .inferReturnType(info)
               .inferInheritance(info);
 
@@ -947,6 +975,13 @@ final class TypedScopeCreator implements ScopeCreator {
 
       // all done
       return functionType;
+    }
+
+    private ObjectType getPrototypeOwnerType(ObjectType ownerType) {
+      if (ownerType != null && ownerType.isFunctionPrototypeType()) {
+        return ownerType.getOwnerFunction();
+      }
+      return null;
     }
 
     /**
@@ -1755,7 +1790,22 @@ final class TypedScopeCreator implements ScopeCreator {
         }
 
         member.getFirstChild().setJSType(thisType);
+
+        // TODO: We are evaluating these values in the wrong scope:
+        // https://code.google.com/p/closure-compiler/issues/detail?id=926
+        JSType thisObjectType = thisType.toObjectType();
+        if (thisObjectType != null) {
+          ImmutableList<TemplateType> keys =
+              thisObjectType.getTemplateTypeMap().getTemplateKeys();
+          typeRegistry.setTemplateTypeNames(keys);
+        }
+
         JSType jsType = getDeclaredType(info, member, value);
+
+        if (thisObjectType != null) {
+          typeRegistry.clearTemplateTypeNames();
+        }
+
         Node name = member.getLastChild();
         if (jsType != null &&
             (name.isName() || name.isString()) &&

@@ -56,7 +56,7 @@ import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ScriptRuntime;
+import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
 
@@ -961,7 +961,21 @@ public class JSTypeRegistry implements Serializable {
    */
   public JSType getType(StaticScope<JSType> scope, String jsTypeName,
       String sourceName, int lineno, int charno) {
-    JSType type = getType(jsTypeName);
+    // Resolve template type names
+    JSType type = null;
+    JSType thisType = null;
+    if (scope != null && scope.getTypeOfThis() != null) {
+      thisType = scope.getTypeOfThis().toObjectType();
+    }
+    if (thisType != null) {
+      type = thisType.getTemplateTypeMap().getTemplateTypeKeyByName(jsTypeName);
+      if (type != null) {
+        Preconditions.checkState(type.isTemplateType(), "expected:" + type);
+        return type;
+      }
+    }
+
+    type = getType(jsTypeName);
     if (type == null) {
       // TODO(user): Each instance should support named type creation using
       // interning.
@@ -1496,8 +1510,16 @@ public class JSTypeRegistry implements Serializable {
    * @param source the node defining this function. Its type
    *     ({@link Node#getType()}) must be {@link Token#FUNCTION}.
    */
-  public FunctionType createInterfaceType(String name, Node source) {
-    return FunctionType.forInterface(this, name, source);
+  public FunctionType createInterfaceType(String name, Node source,
+      ImmutableList<String> typeParameters) {
+    return createInterfaceTypeInternal(name, source,
+        createTemplateMapKeys(typeParameters));
+  }
+
+  private FunctionType createInterfaceTypeInternal(String name, Node source,
+      ImmutableList<TemplateType> typeParameters) {
+    return FunctionType.forInterface(this, name, source,
+        createTemplateTypeMap(typeParameters, null));
   }
 
   public TemplateType createTemplateType(String name) {
@@ -1718,7 +1740,7 @@ public class JSTypeRegistry implements Serializable {
                   .restrictByNotNullOrUndefined());
           if (thisType == null) {
             reporter.warning(
-                ScriptRuntime.getMessage0(
+                SimpleErrorReporter.getMessage0(
                     current.getType() == Token.THIS ?
                     "msg.jsdoc.function.thisnotobject" :
                     "msg.jsdoc.function.newnotobject"),
@@ -1750,7 +1772,8 @@ public class JSTypeRegistry implements Serializable {
                 boolean addSuccess = paramBuilder.addOptionalParams(type);
                 if (!addSuccess) {
                   reporter.warning(
-                      ScriptRuntime.getMessage0("msg.jsdoc.function.varargs"),
+                      SimpleErrorReporter.getMessage0(
+                          "msg.jsdoc.function.varargs"),
                       sourceName, arg.getLineno(), arg.getCharno());
                 }
               } else {

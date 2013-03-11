@@ -39,8 +39,11 @@
 
 package com.google.javascript.rhino;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 /**
  * A simple {@link ErrorReporter} that collects warnings and errors and makes
@@ -101,4 +104,40 @@ public class SimpleErrorReporter implements ErrorReporter {
       buf.append(')');
       return buf.toString();
     }
+
+    public static String getMessage0(String messageId) {
+      return getMessage(messageId, null);
+    }
+
+    public static String getMessage1(String messageId, Object arg1) {
+      Object[] arguments = {arg1};
+      return getMessage(messageId, arguments);
+    }
+
+    static String getMessage(String messageId, Object[] arguments) {
+      final String defaultResource
+          = "rhino_ast.java.com.google.javascript.rhino.Messages";
+
+      Locale locale = Locale.getDefault();
+
+      // ResourceBundle does caching.
+      ResourceBundle rb = ResourceBundle.getBundle(defaultResource, locale);
+
+      String formatString;
+      try {
+          formatString = rb.getString(messageId);
+      } catch (java.util.MissingResourceException mre) {
+          throw new RuntimeException
+              ("no message resource found for message property " + messageId);
+      }
+
+      /*
+       * It's OK to format the string, even if 'arguments' is null;
+       * we need to format it anyway, to make double ''s collapse to
+       * single 's.
+       */
+      MessageFormat formatter = new MessageFormat(formatString);
+      return formatter.format(arguments);
+    }
+
 }
