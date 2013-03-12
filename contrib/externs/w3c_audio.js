@@ -291,6 +291,33 @@ AudioBuffer.prototype.getChannelData = function(channel) {};
  */
 var AudioBufferSourceNode = function() {};
 
+/**
+ * @const
+ * @type {number}
+ */
+AudioBufferSourceNode.prototype.UNSCHEDULED_STATE; /* = 0 */
+
+/**
+ * @const
+ * @type {number}
+ */
+AudioBufferSourceNode.prototype.SCHEDULED_STATE; /* = 1 */
+
+/**
+ * @const
+ * @type {number}
+ */
+AudioBufferSourceNode.prototype.PLAYING_STATE; /* = 2 */
+
+/**
+ * @const
+ * @type {number}
+ */
+AudioBufferSourceNode.prototype.FINISHED_STATE; /* = 3 */
+
+/** @type {number} */
+AudioBufferSourceNode.prototype.playbackState;
+
 /** @type {AudioBuffer} */
 AudioBufferSourceNode.prototype.buffer;
 
@@ -302,6 +329,25 @@ AudioBufferSourceNode.prototype.playbackRate;
 
 /** @type {boolean} */
 AudioBufferSourceNode.prototype.loop;
+
+/** @type {number} */
+AudioBufferSourceNode.prototype.loopStart;
+
+/** @type {number} */
+AudioBufferSourceNode.prototype.loopEnd;
+
+/**
+ * @param {number} when
+ * @param {number=} opt_offset
+ * @param {number=} opt_duration
+ */
+AudioBufferSourceNode.prototype.start = function(when, opt_offset,
+    opt_duration) {};
+
+/**
+ * @param {number} when
+ */
+AudioBufferSourceNode.prototype.stop = function(when) {};
 
 /**
  * @param {number} when
