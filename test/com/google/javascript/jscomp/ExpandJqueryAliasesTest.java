@@ -84,6 +84,12 @@ public class ExpandJqueryAliasesTest extends CompilerTestCase {
     // Test extend call where first argument includes a method call
     testSame(setupCode+"obj2.meth=function() { return { a:{} }; };" +
         "jQuery.extend(obj2.meth().a, {a: 'test'});");
+
+    // Test extend call where returned object is used
+    test(setupCode + "obj2 = jQuery.extend(obj2, {a:'test', " +
+        "b:'test2'});",
+        setupCode + "obj2 = function() {obj2 = obj2 || {}; " + 
+        "obj2.a = 'test';obj2.b = 'test2';return obj2;}.call(this);");
   }
 
   public void testJqueryExpandedEachExpansion() {
