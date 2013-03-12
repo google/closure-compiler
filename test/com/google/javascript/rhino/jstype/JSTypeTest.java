@@ -123,11 +123,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     subclassCtor.setPrototypeBasedOn(unresolvedNamedType);
     subclassOfUnresolvedNamedType = subclassCtor.getInstanceType();
 
-    interfaceType = FunctionType.forInterface(registry, "Interface", null);
+    interfaceType = FunctionType.forInterface(registry, "Interface", null,
+        registry.createTemplateTypeMap(null, null));
     interfaceInstType = interfaceType.getInstanceType();
 
     subInterfaceType = FunctionType.forInterface(
-        registry, "SubInterface", null);
+        registry, "SubInterface", null,
+        registry.createTemplateTypeMap(null, null));
     subInterfaceType.setExtendedInterfaces(
         Lists.<ObjectType>newArrayList(interfaceInstType));
     subInterfaceInstType = subInterfaceType.getInstanceType();

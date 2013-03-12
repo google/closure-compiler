@@ -659,7 +659,7 @@ final class FunctionTypeBuilder {
       fnType = getOrCreateConstructor();
     } else if (isInterface) {
       fnType = typeRegistry.createInterfaceType(
-          fnName, contents.getSourceNode());
+          fnName, contents.getSourceNode(), classTypeParameterNames);
       if (getScopeDeclaredIn().isGlobal() && !fnName.isEmpty()) {
         typeRegistry.declareType(fnName, fnType.getInstanceType());
       }

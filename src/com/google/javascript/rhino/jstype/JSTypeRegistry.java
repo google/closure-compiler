@@ -1510,8 +1510,16 @@ public class JSTypeRegistry implements Serializable {
    * @param source the node defining this function. Its type
    *     ({@link Node#getType()}) must be {@link Token#FUNCTION}.
    */
-  public FunctionType createInterfaceType(String name, Node source) {
-    return FunctionType.forInterface(this, name, source);
+  public FunctionType createInterfaceType(String name, Node source,
+      ImmutableList<String> typeParameters) {
+    return createInterfaceTypeInternal(name, source,
+        createTemplateMapKeys(typeParameters));
+  }
+
+  private FunctionType createInterfaceTypeInternal(String name, Node source,
+      ImmutableList<TemplateType> typeParameters) {
+    return FunctionType.forInterface(this, name, source,
+        createTemplateTypeMap(typeParameters, null));
   }
 
   public TemplateType createTemplateType(String name) {
