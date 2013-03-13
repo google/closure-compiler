@@ -1536,17 +1536,11 @@ public final class SymbolTable
 
     public void visitTypeNode(SymbolScope scope, Node n) {
       if (n.isString()) {
-        Symbol symbol = scope.getSlot(n.getString());
-        if (symbol == null) {
-          // If we can't find this type, it might be a reference to a
-          // primitive type (like {string}). Autobox it to check.
-          JSType type = typeRegistry.getType(n.getString());
-          JSType autobox = type == null ? null : type.autoboxesTo();
-          symbol = autobox == null
-              ? null : getSymbolForTypeHelper(autobox, true);
-        }
+        Symbol symbol = lookupPossiblyDottedName(scope, n.getString());
         if (symbol != null) {
           symbol.defineReferenceAt(n);
+        } else {
+          logger.warning("Could not find symbol for type: " + n.getString());
         }
       }
 
@@ -1554,6 +1548,38 @@ public final class SymbolTable
            child != null; child = child.getNext()) {
         visitTypeNode(scope, child);
       }
+    }
+
+    // TODO(peterhal): @template types.
+    private Symbol lookupPossiblyDottedName(SymbolScope scope, String dottedName) {
+      // Try the dotted name to start.
+      String[] names = dottedName.split("\\.");
+      Symbol result = null;
+      SymbolScope currentScope = scope;
+      for (int i = 0; i < names.length; i++) {
+        String name = names[i];
+        result = currentScope.getSlot(name);
+        if (result == null) {
+          break;
+        }
+        if (i < (names.length - 1)) {
+          currentScope = result.getPropertyScope();
+          if (currentScope == null) {
+            result = null;
+            break;
+          }
+        }
+      }
+
+      if (result == null) {
+        // If we can't find this type, it might be a reference to a
+        // primitive type (like {string}). Autobox it to check.
+        JSType type = typeRegistry.getType(dottedName);
+        JSType autobox = type == null ? null : type.autoboxesTo();
+        result = autobox == null
+            ? null : getSymbolForTypeHelper(autobox, true);
+      }
+      return result;
     }
   }
 
