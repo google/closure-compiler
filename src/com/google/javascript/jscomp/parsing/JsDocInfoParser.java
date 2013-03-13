@@ -936,7 +936,7 @@ public final class JsDocInfoParser {
                   parser.addParserWarning("msg.jsdoc.define",
                       lineno, charno);
                 }
-                break;
+                return recordDescription(token);
 
               case PRIVATE:
                 if (!jsdocBuilder.recordVisibility(Visibility.PRIVATE)) {
@@ -944,7 +944,7 @@ public final class JsDocInfoParser {
                       "msg.jsdoc.visibility.private",
                       lineno, charno);
                 }
-                break;
+                return recordDescription(token);
 
               case PROTECTED:
                 if (!jsdocBuilder.recordVisibility(Visibility.PROTECTED)) {
@@ -952,7 +952,7 @@ public final class JsDocInfoParser {
                       "msg.jsdoc.visibility.protected",
                       lineno, charno);
                 }
-                break;
+                return recordDescription(token);
 
               case PUBLIC:
                 if (!jsdocBuilder.recordVisibility(Visibility.PUBLIC)) {
@@ -960,7 +960,7 @@ public final class JsDocInfoParser {
                       "msg.jsdoc.visibility.public",
                       lineno, charno);
                 }
-                break;
+                return recordDescription(token);
 
               case RETURN:
                 if (type == null) {
@@ -1013,6 +1013,21 @@ public final class JsDocInfoParser {
     }
 
     return next();
+  }
+
+  /**
+   * Records a marker's description if there is one available and record it in
+   * the current marker.
+   */
+  private JsDocToken recordDescription(JsDocToken token) {
+    // Find marker's description (if applicable).
+    if (jsdocBuilder.shouldParseDocumentation()) {
+      ExtractionInfo descriptionInfo = extractMultilineTextualBlock(token);
+      token = descriptionInfo.token;
+    } else {
+      token = eatTokensUntilEOL(token);
+    }
+    return token;
   }
 
   private void checkExtendedTypes(List<ExtendedTypeInfo> extendedTypes) {
