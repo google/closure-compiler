@@ -15,19 +15,24 @@
  */
 
 /**
- * @fileoverview Externs for YouTube Player API for <iframe> Embeds
+ * @fileoverview Externs for YouTube Player API for <iframe> Embeds.
  * @see http://code.google.com/apis/youtube/iframe_api_reference.html
  * @externs
  */
 
+
 /** @return {undefined} */
 var onYouTubePlayerAPIReady = function() {};
+
 
 /** @return {undefined} */
 window.onYouTubePlayerAPIReady = function() {};
 
+
 /** @const */
 var YT = {};
+
+
 
 /**
  * @constructor
@@ -35,6 +40,7 @@ var YT = {};
  * @param {Object.<string, *>} opts
  */
 YT.Player = function(container, opts) {};
+
 
 /**
  * @param {string} videoId
@@ -44,6 +50,7 @@ YT.Player = function(container, opts) {};
 YT.Player.prototype.cueVideoById =
     function(videoId, startSeconds, suggestedQuality) {};
 
+
 /**
  * @param {string} videoId
  * @param {number=} startSeconds
@@ -51,6 +58,7 @@ YT.Player.prototype.cueVideoById =
  */
 YT.Player.prototype.loadVideoById =
     function(videoId, startSeconds, suggestedQuality) {};
+
 
 /**
  * @param {string} mediaContentUrl
@@ -60,6 +68,7 @@ YT.Player.prototype.loadVideoById =
 YT.Player.prototype.cueVideoByUrl =
     function(mediaContentUrl, startSeconds, suggestedQuality) {};
 
+
 /**
  * @param {string} mediaContentUrl
  * @param {number} startSeconds
@@ -67,6 +76,7 @@ YT.Player.prototype.cueVideoByUrl =
  */
 YT.Player.prototype.loadVideoByUrl =
     function(mediaContentUrl, startSeconds, suggestedQuality) {};
+
 
 /**
  * @param {(String|Array.<String>)} playlist
@@ -77,6 +87,7 @@ YT.Player.prototype.loadVideoByUrl =
 YT.Player.prototype.cuePlaylist =
     function(playlist, index, startSeconds, suggestedQuality) {};
 
+
 /**
  * @param {(String|Array.<String>)} playlist
  * @param {number=} index
@@ -86,14 +97,18 @@ YT.Player.prototype.cuePlaylist =
 YT.Player.prototype.loadPlaylist =
     function(playlist, index, startSeconds, suggestedQuality) {};
 
+
 /** @return {undefined} */
 YT.Player.prototype.playVideo = function() {};
+
 
 /** @return {undefined} */
 YT.Player.prototype.pauseVideo = function() {};
 
+
 /** @return {undefined} */
 YT.Player.prototype.stopVideo = function() {};
+
 
 /**
  * @param {number} seconds
@@ -101,29 +116,38 @@ YT.Player.prototype.stopVideo = function() {};
  */
 YT.Player.prototype.seekTo = function(seconds, allowSeekAhead) {};
 
+
 /** @return {undefined} */
 YT.Player.prototype.clearVideo = function() {};
+
 
 /** @return {undefined} */
 YT.Player.prototype.nextVideo = function() {};
 
+
 /** @return {undefined} */
 YT.Player.prototype.previousVideo = function() {};
+
 
 /** @param {number} index */
 YT.Player.prototype.playVideoAt = function(index) {};
 
+
 /** @return {undefined} */
 YT.Player.prototype.mute = function() {};
+
 
 /** @return {undefined} */
 YT.Player.prototype.unMute = function() {};
 
+
 /** @return {boolean} */
 YT.Player.prototype.isMuted = function() {};
 
+
 /** @param {number} volume */
 YT.Player.prototype.setVolume = function(volume) {};
+
 
 /**
  * @return {number}
@@ -131,11 +155,14 @@ YT.Player.prototype.setVolume = function(volume) {};
  */
 YT.Player.prototype.getVolume = function() {};
 
+
 /** @param {boolean} loopPlaylists */
 YT.Player.prototype.setLoop = function(loopPlaylists) {};
 
+
 /** @param {boolean} shufflePlaylist */
 YT.Player.prototype.setShuffle = function(shufflePlaylist) {};
+
 
 /**
  * @return {number}
@@ -143,11 +170,13 @@ YT.Player.prototype.setShuffle = function(shufflePlaylist) {};
  */
 YT.Player.prototype.getVideoBytesLoaded = function() {};
 
+
 /**
  * @return {number}
  * @nosideeffects
  */
 YT.Player.prototype.getVideoBytesTotal = function() {};
+
 
 /**
  * @return {number}
@@ -155,11 +184,13 @@ YT.Player.prototype.getVideoBytesTotal = function() {};
  */
 YT.Player.prototype.getVideoStartBytes = function() {};
 
+
 /**
  * @return {YT.PlayerState|number}
  * @nosideeffects
  */
 YT.Player.prototype.getPlayerState = function() {};
+
 
 /**
  * @return {number}
@@ -167,14 +198,17 @@ YT.Player.prototype.getPlayerState = function() {};
  */
 YT.Player.prototype.getCurrentTime = function() {};
 
+
 /**
  * @return {(undefined|string)}
  * @nosideeffects
  */
 YT.Player.prototype.getPlaybackQuality = function() {};
 
+
 /** @param {string} suggestedQuality */
 YT.Player.prototype.setPlaybackQuality = function(suggestedQuality) {};
+
 
 /**
  * @return {Array.<string>}
@@ -182,11 +216,13 @@ YT.Player.prototype.setPlaybackQuality = function(suggestedQuality) {};
  */
 YT.Player.prototype.getAvailableQualityLevels = function() {};
 
+
 /**
  * @return {number}
  * @nosideeffects
  */
 YT.Player.prototype.getDuration = function() {};
+
 
 /**
  * @return {string}
@@ -194,11 +230,13 @@ YT.Player.prototype.getDuration = function() {};
  */
 YT.Player.prototype.getVideoUrl = function() {};
 
+
 /**
  * @return {string}
  * @nosideeffects
  */
 YT.Player.prototype.getVideoEmbedCode = function() {};
+
 
 /**
  * @return {Array.<string>}
@@ -206,11 +244,13 @@ YT.Player.prototype.getVideoEmbedCode = function() {};
  */
 YT.Player.prototype.getPlaylist = function() {};
 
+
 /**
  * @return {number}
  * @nosideeffects
  */
 YT.Player.prototype.getPlaylistIndex = function() {};
+
 
 /**
  * @param {string} eventName
@@ -218,14 +258,21 @@ YT.Player.prototype.getPlaylistIndex = function() {};
  */
 YT.Player.prototype.addEventListener = function(eventName, listenerName) {};
 
+
+/** Destroys the player reference. */
+YT.Player.prototype.destroy = function() {};
+
+
 /** @enum */
 YT.PlayerState = {
-    ENDED: 0,
-    PLAYING: 1,
-    PAUSED: 2,
-    BUFFERING: 3,
-    CUED: 4
+  ENDED: 0,
+  PLAYING: 1,
+  PAUSED: 2,
+  BUFFERING: 3,
+  CUED: 4
 };
+
+
 
 /**
  * @constructor
@@ -233,8 +280,10 @@ YT.PlayerState = {
  */
 YT.Event = function() {};
 
+
 /** @type {string|number|undefined} */
 YT.Event.prototype.data;
+
 
 /** @type {YT.Player} */
 YT.Event.prototype.target = null;
