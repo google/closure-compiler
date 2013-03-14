@@ -2322,6 +2322,26 @@ public final class NodeUtil {
   }
 
   /**
+   * Creates a node representing a qualified name.
+   *
+   * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
+   * @return A NAME or GETPROP node
+   */
+  public static Node newQualifiedNameNodeDeclaration(
+      CodingConvention convention, String name, Node value, JSDocInfo info) {
+    Node result;
+    Node nameNode = newQualifiedNameNode(convention, name);
+    if (nameNode.isName()) {
+      result = IR.var(nameNode, value);
+      result.setJSDocInfo(info);
+    } else {
+      result = IR.exprResult(IR.assign(nameNode, value));
+      result.getFirstChild().setJSDocInfo(info);
+    }
+    return result;
+  }
+
+  /**
    * Creates a node representing a qualified name, copying over the source
    * location information from the basis node and assigning the given original
    * name to the node.

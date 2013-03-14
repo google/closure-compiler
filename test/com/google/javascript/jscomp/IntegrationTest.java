@@ -555,6 +555,32 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, code, CLOSURE_COMPILED + " var x$bar = 3;");
   }
 
+  public void testGoogDefine1() {
+    String code = CLOSURE_BOILERPLATE +
+        "/** @define {boolean} */ goog.define('FLAG', true);";
+
+    CompilerOptions options = createCompilerOptions();
+
+    options.closurePass = true;
+    options.collapseProperties = true;
+    options.setDefineToBooleanLiteral("FLAG", false);
+
+    test(options, code, CLOSURE_COMPILED + " var FLAG = false;");
+  }
+
+  public void testGoogDefine2() {
+    String code = CLOSURE_BOILERPLATE +
+        "goog.provide('ns');" +
+        "/** @define {boolean} */ goog.define('ns.FLAG', true);";
+
+    CompilerOptions options = createCompilerOptions();
+
+    options.closurePass = true;
+    options.collapseProperties = true;
+    options.setDefineToBooleanLiteral("ns.FLAG", false);
+    test(options, code, CLOSURE_COMPILED + "var ns$FLAG = false;");
+  }
+
   public void testCollapseProperties1() {
     String code =
         "var x = {}; x.FOO = 5; x.bar = 3;";
