@@ -59,6 +59,30 @@ public class AngularPassTest extends CompilerTestCase {
     );
   }
 
+  public void testNgInjectAddsInjectAfterGoogInherits() throws Exception {
+    test(
+        "/** @ngInject \n @constructor */" +
+        "function fn(a, b) {}" +
+        "goog.inherits(fn, parent);",
+
+        "function fn(a, b) {}\n" +
+        "goog.inherits(fn, parent);" +
+        "fn['$inject']=['a', 'b']"
+    );
+
+    test(
+        "/** @ngInject \n @constructor */" +
+        "function fn(a, b) {}" +
+        "goog.inherits(fn, parent);" +
+        "var foo = 42;",
+
+        "function fn(a, b) {}\n" +
+        "goog.inherits(fn, parent);" +
+        "fn['$inject']=['a', 'b'] + " +
+        "var foo = 42;";
+    );
+  }
+
   public void testNgInjectAddsInjectToProps() throws Exception {
     test(
         "var ns = {};\n" +
