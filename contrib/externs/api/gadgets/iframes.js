@@ -367,3 +367,9 @@ iframes.Iframe.prototype.send = function(
  * @param {Function=} opt_filter Optional iframes filter (not used).
  */
 iframes.Iframe.prototype.register = function(message, callback, opt_filter) {};
+
+/**
+ * Filter function to allow cross origin messages.
+ * @param {Object} iframe Iframe to filter.
+ */
+iframes.Iframes.prototype.CROSS_ORIGIN_IFRAMES_FILTER = function(iframe) {};
