@@ -121,9 +121,19 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
               dependenciesArray
           )
       );
-      // adds `something.$inject = [...]` node after the annotated node.
-      Node target = entry.getTarget();
-      target.getParent().addChildAfter(statement, target);
+      // adds `something.$inject = [...]` node after the annotated node or the following
+      // goog.inherits call.
+      Node insertionPoint = entry.getTarget();
+      Node next = insertionPoint.getNext();
+      while (next != null &&
+             NodeUtil.isExprCall(next) &&
+             convention.getClassesDefinedByCall(
+                 next.getFirstChild()) != null) {
+        insertionPoint = next;
+        next = insertionPoint.getNext();
+      }
+
+      insertionPoint.getParent().addChildAfter(statement, insertionPoint);
       codeChanged = true;
     }
     if (codeChanged) {
