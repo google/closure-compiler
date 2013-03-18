@@ -16,14 +16,14 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.List;
 import java.util.Set;
@@ -108,38 +108,15 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      JSDocInfo info;
       switch (n.getType()) {
         case Token.ASSIGN:
-          info = (JSDocInfo) n.getProp(Node.JSDOC_INFO_PROP);
-          if (info != null && info.isConstructor()) {
-            String qualifiedName = n.getFirstChild().getQualifiedName();
-            constructors.add(qualifiedName);
-          }
+        case Token.VAR:
+          maybeAddConstructor(t, n);
           break;
         case Token.FUNCTION:
-          if (NodeUtil.isFunctionExpression(n)) {
-            if (parent.isName()) {
-              String functionName = parent.getString();
-              info = (JSDocInfo) parent.getProp(Node.JSDOC_INFO_PROP);
-              if (info != null && info.isConstructor()) {
-                constructors.add(functionName);
-              } else {
-                Node gramps = parent.getParent();
-                Preconditions.checkState(
-                    gramps != null && gramps.isVar());
-                info = (JSDocInfo) gramps.getProp(Node.JSDOC_INFO_PROP);
-                if (info != null && info.isConstructor()) {
-                  constructors.add(functionName);
-                }
-              }
-            }
-          } else {
-            info = (JSDocInfo) n.getProp(Node.JSDOC_INFO_PROP);
-            if (info != null && info.isConstructor()) {
-              String functionName = n.getFirstChild().getString();
-              constructors.add(functionName);
-            }
+          // Exclude function expressions.
+          if (NodeUtil.isStatement(n)) {
+            maybeAddConstructor(t, n);
           }
           break;
         case Token.CALL:
@@ -208,6 +185,24 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
         return;
       }
       newNodes.add(n);
+    }
+
+    private void maybeAddConstructor(NodeTraversal t, Node n) {
+      JSDocInfo info = (JSDocInfo) n.getProp(Node.JSDOC_INFO_PROP);
+      if (info != null) {
+        String ctorName = n.getFirstChild().getQualifiedName();
+        if (info.isConstructor()) {
+          constructors.add(ctorName);
+        } else {
+          JSTypeExpression typeExpr = info.getType();
+          if (typeExpr != null) {
+            JSType type = typeExpr.evaluate(t.getScope(), compiler.getTypeRegistry());
+            if (type.isConstructor()) {
+              constructors.add(ctorName);
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -731,7 +731,7 @@ MediaConstraintsInterface_.prototype.optional;
 var MediaConstraints;
 
 /**
- * @param {!RTCConfiguration} configuration
+ * @param {RTCConfiguration} configuration
  * @param {!MediaConstraints=} constraints
  * @constructor
  * @implements {EventTarget}
@@ -918,7 +918,7 @@ RTCPeerConnection.prototype.ongatheringchange;
 RTCPeerConnection.prototype.onicechange;
 
 /**
- * @type {function(new: RTCPeerConnection, !RTCConfiguration,
+ * @type {function(new: RTCPeerConnection, RTCConfiguration,
  *     !MediaConstraints=)}
  */
 var webkitRTCPeerConnection;

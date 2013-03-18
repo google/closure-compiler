@@ -330,6 +330,10 @@ class IRFactory {
         case com.google.javascript.rhino.head.Token.GETELEM:
           valid = isExprStmt(node.getParent());
           break;
+
+        case com.google.javascript.rhino.head.Token.CALL:
+          valid = info.isDefine();
+          break;
       }
       if (!valid) {
         errorReporter.warning(MISPLACED_TYPE_ANNOTATION,

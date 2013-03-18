@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Marker;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -1409,6 +1410,33 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseDefine5() throws Exception {
     assertTypeEquals(createUnionType(NUMBER_TYPE, BOOLEAN_TYPE),
         parse("@define {number|boolean}*/").getType());
+  }
+
+  public void testParseDefineDescription() throws Exception {
+    JSDocInfo doc = parse(
+        "@define {string} description of element \n next line*/", true);
+    Marker defineMarker = doc.getMarkers().iterator().next();
+    assertEquals("define", defineMarker.getAnnotation().getItem());
+    assertTrue(defineMarker.getDescription().getItem().contains("description of element"));
+    assertTrue(defineMarker.getDescription().getItem().contains("next line"));
+  }
+
+  public void testParsePrivateDescription() throws Exception {
+    JSDocInfo doc =
+        parse("@private {string} description \n next line*/", true);
+    Marker defineMarker = doc.getMarkers().iterator().next();
+    assertEquals("private", defineMarker.getAnnotation().getItem());
+    assertTrue(defineMarker.getDescription().getItem().contains("description "));
+    assertTrue(defineMarker.getDescription().getItem().contains("next line"));
+  }
+
+  public void testParseProtectedDescription() throws Exception {
+    JSDocInfo doc =
+        parse("@protected {string} description \n next line*/", true);
+    Marker defineMarker = doc.getMarkers().iterator().next();
+    assertEquals("protected", defineMarker.getAnnotation().getItem());
+    assertTrue(defineMarker.getDescription().getItem().contains("description "));
+    assertTrue(defineMarker.getDescription().getItem().contains("next line"));
   }
 
   public void testParseDefineErrors1() throws Exception {
