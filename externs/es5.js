@@ -36,6 +36,7 @@ Function.prototype.bind = function(selfObj, var_args) {};
 
 
 /**
+ * @this {String|string}
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String/Trim
@@ -44,6 +45,7 @@ String.prototype.trim = function() {};
 
 
 /**
+ * @this {String|string}
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String/TrimLeft
@@ -52,6 +54,7 @@ String.prototype.trimLeft = function() {};
 
 
 /**
+ * @this {String|string}
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String/TrimRight
