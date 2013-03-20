@@ -1250,18 +1250,36 @@ public abstract class JSType implements Serializable {
       return false;
     }
 
-    // templatized types.
-    if (thisType.isTemplatizedType()) {
-      return !areIncompatibleArrays(thisType, thatType) &&
-          thisType.toMaybeTemplatizedType().getReferencedType().isSubtype(
-              thatType);
-    }
-    if (thatType.isTemplatizedType()) {
-      if (!isExemptFromTemplateTypeInvariance(thatType) &&
-          !thisType.getTemplateTypeMap().checkEquivalenceHelper(
-              thatType.getTemplateTypeMap(), EquivalenceMethod.IDENTITY)) {
+    if (thisType.isTemplatizedType() && thatType.isTemplatizedType()) {
+      JSType rawThisType = thisType.toMaybeTemplatizedType().getReferencedType();
+      JSType rawThatType = thatType.toMaybeTemplatizedType().getReferencedType();
+      if (!rawThisType.isSubtype(rawThatType)) {
         return false;
       }
+
+      TemplateTypeMap thisTypeParams = thisType.getTemplateTypeMap();
+      TemplateTypeMap thatTypeParams = thatType.getTemplateTypeMap();
+
+      if (thisTypeParams.checkEquivalenceHelper(
+          thatTypeParams, EquivalenceMethod.INVARIANT)) {
+        return true;
+      } else if (isExemptFromTemplateTypeInvariance(thatType)) {
+        // Only array and object qualify and they are compatible if their
+        // elmenet types are related.
+        TemplateType key = thisType.registry.getObjectElementKey();
+        JSType thisElement = thisTypeParams.getTemplateType(key);
+        JSType thatElement = thatTypeParams.getTemplateType(key);
+
+        return thisElement.isSubtype(thatElement)
+            || thatElement.isSubtype(thisElement);
+      } else {
+        return false;
+      }
+    }
+
+    if (thisType.isTemplatizedType()) {
+      return thisType.toMaybeTemplatizedType().getReferencedType().isSubtype(
+              thatType);
     }
 
     // proxy types
@@ -1270,28 +1288,6 @@ public abstract class JSType implements Serializable {
           ((ProxyObjectType) thatType).getReferencedTypeInternal());
     }
     return false;
-  }
-
-  /**
-   * Determines if two types are incompatible Arrays, meaning that their element
-   * template types are not subtypes of one another.
-   */
-  private static boolean areIncompatibleArrays(JSType type1, JSType type2) {
-    ObjectType type1Obj = type1.toObjectType();
-    ObjectType type2Obj = type2.toObjectType();
-    if (type1Obj == null || type2Obj == null) {
-      return false;
-    }
-
-    if (!"Array".equals(type1Obj.getReferenceName()) ||
-        !"Array".equals(type2Obj.getReferenceName())) {
-      return false;
-    }
-
-    TemplateType templateKey = type1.registry.getObjectElementKey();
-    JSType elemType1 = type1.getTemplateTypeMap().getTemplateType(templateKey);
-    JSType elemType2 = type2.getTemplateTypeMap().getTemplateType(templateKey);
-    return !elemType1.isSubtype(elemType2) && !elemType2.isSubtype(elemType1);
   }
 
   /**

@@ -132,15 +132,15 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
     assertFalse(templatizedType3.isEquivalentTo(baseType));
     assertTrue(templatizedType4.isEquivalentTo(baseType));
 
-    assertFalse(baseType.isSubtype(templatizedType1));
-    assertFalse(baseType.isSubtype(templatizedType2));
-    assertFalse(baseType.isSubtype(templatizedType3));
+    assertTrue(baseType.isSubtype(templatizedType1));
+    assertTrue(baseType.isSubtype(templatizedType2));
+    assertTrue(baseType.isSubtype(templatizedType3));
     assertTrue(baseType.isSubtype(templatizedType4));
 
     assertFalse(templatizedType1.isSubtype(templatizedType2));
     assertFalse(templatizedType2.isSubtype(templatizedType1));
 
-    assertFalse(templatizedType2.isSubtype(templatizedType3));
-    assertFalse(templatizedType3.isSubtype(templatizedType2));
+    assertTrue(templatizedType2.isSubtype(templatizedType3));
+    assertTrue(templatizedType3.isSubtype(templatizedType2));
   }
 }

@@ -10718,7 +10718,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTemplateType9() throws Exception {
-    // verify interface type parameters are recognised.
+    // verify interface type parameters are recognized.
     testTypes(
         "/** @interface \n" +
         " * @classTemplate S,T\n" +
@@ -10736,6 +10736,21 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "initializing variable\n" +
         "found   : number\n" +
         "required: Object");
+  }
+
+  public void testTemplateType10() throws Exception {
+    // verify a type parameterized with unknown can be assigned to
+    // the same type with any other type parameter.
+    testTypes(
+        "/** @constructor \n" +
+        " * @classTemplate T\n" +
+        " */\n" +
+        "function Bar() {}\n" +
+        "\n" +
+        "" +
+        "/** @type {!Bar.<?>} */ var x;" +
+        "/** @type {!Bar.<number>} */ var y;" +
+        "y = x;");
   }
 
   public void disable_testBadTemplateType4() throws Exception {
