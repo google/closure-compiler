@@ -47,7 +47,7 @@ public class PerformanceTracker {
 
   // Keeps track of AST changes and computes code size estimation
   // if there is any.
-  private final CodeChangeHandler codeChange = new CodeChangeHandler();
+  private final RecentChange codeChange = new RecentChange();
 
   private int initCodeSize = 0;
   private int initGzCodeSize = 0;

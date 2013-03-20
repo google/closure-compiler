@@ -829,7 +829,6 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
         }
 
         fn.remove();
-        compiler.reportCodeChange();
       }
     }
   }
@@ -1014,7 +1013,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
   }
 
   /** NamedFunction implementation of the Function interface */
-  private static class NamedFunction implements Function {
+  private class NamedFunction implements Function {
     private final Node fn;
 
     public NamedFunction(Node fn) {
@@ -1033,6 +1032,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
 
     @Override
     public void remove() {
+      compiler.reportChangeToScope(fn);
       NodeUtil.removeChild(fn.getParent(), fn);
     }
 
@@ -1043,7 +1043,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
   }
 
   /** FunctionVar implementation of the Function interface */
-  private static class FunctionVar implements Function {
+  private class FunctionVar implements Function {
     private final Node var;
 
     public FunctionVar(Node var) {
@@ -1062,6 +1062,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
 
     @Override
     public void remove() {
+      compiler.reportChangeToScope(var);
       NodeUtil.removeChild(var.getParent(), var);
     }
 
@@ -1072,7 +1073,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
   }
 
   /** FunctionExpression implementation of the Function interface */
-  private static class FunctionExpression implements Function {
+  private class FunctionExpression implements Function {
     private final Node fn;
     private final String fakeName;
 

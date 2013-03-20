@@ -16,11 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
+import com.google.javascript.jscomp.NodeTraversal.FunctionCallback;
 import com.google.javascript.rhino.Node;
-
-import java.util.ArrayList;
 
 /**
  * A compiler pass to run various peephole optimizations (e.g. constant folding,
@@ -29,64 +27,14 @@ import java.util.ArrayList;
  * @author dcc@google.com (Devin Coughlin)
  * @author acleung@google.com (Alan Leung)(
  */
-class PeepholeOptimizationsPass
-    implements CompilerPass {
+class PeepholeOptimizationsPass implements CompilerPass {
   private AbstractCompiler compiler;
 
   // Use an array here for faster iteration compared to ImmutableSet
   private final AbstractPeepholeOptimization[] peepholeOptimizations;
 
-  // Track whether the a scope has been modified so that it can be revisited
-  // immediately.
-  private StateStack traversalState = new StateStack();
-
-  private boolean retraverseOnChange = true;
-
-  private static class ScopeState {
-    boolean changed;
-    boolean traverseChildScopes;
-    ScopeState() {
-      reset();
-    }
-
-    void reset() {
-      changed = false;
-      traverseChildScopes = true;
-    }
-  }
-
-  private static class StateStack {
-    private ArrayList<ScopeState> states = Lists.newArrayList();
-    private int currentDepth = 0;
-
-    StateStack() {
-      states.add(new ScopeState());
-    }
-
-    ScopeState peek() {
-      return states.get(currentDepth);
-    }
-
-    void push() {
-      currentDepth++;
-      if (states.size() <= currentDepth) {
-        states.add(new ScopeState());
-      } else {
-        states.get(currentDepth).reset();
-      }
-    }
-
-    void pop() {
-      currentDepth--;
-    }
-  }
-
-  private class PeepholeChangeHandler extends CodeChangeHandler {
-    @Override
-    public void reportChange() {
-      traversalState.peek().changed = true;
-    }
-  }
+  private boolean retraverseOnChange;
+  private RecentChange handler;
 
   /**
    * Creates a peephole optimization pass that runs the given
@@ -96,11 +44,12 @@ class PeepholeOptimizationsPass
       AbstractPeepholeOptimization... optimizations) {
     this.compiler = compiler;
     this.peepholeOptimizations = optimizations;
+    this.retraverseOnChange = true;
+    this.handler = new RecentChange();
   }
 
-  PeepholeOptimizationsPass setRetraverseOnChange(boolean retraverse) {
+  void setRetraverseOnChange(boolean retraverse) {
     this.retraverseOnChange = retraverse;
-    return this;
   }
 
   public AbstractCompiler getCompiler() {
@@ -109,97 +58,43 @@ class PeepholeOptimizationsPass
 
   @Override
   public void process(Node externs, Node root) {
-    PeepholeChangeHandler handler = new PeepholeChangeHandler();
     compiler.addChangeHandler(handler);
     beginTraversal();
-    traverse(root);
+    NodeTraversal.traverseChangedFunctions(compiler, new FunctionCallback() {
+        @Override
+        public void visit(AbstractCompiler compiler, Node root) {
+          if (root.isFunction()) {
+            root = root.getLastChild();
+          }
+          do {
+            handler.reset();
+            NodeTraversal.traverse(compiler, root, new PeepCallback());
+          } while (retraverseOnChange && handler.hasCodeChanged());
+        }
+      });
     endTraversal();
     compiler.removeChangeHandler(handler);
   }
 
-  private void traverse(Node node) {
-    // The goal here is to avoid retraversing
-    // the entire AST to catch newly created opportunities.
-    // So we track whether a "unit of code" has changed,
-    // and revisit immediately.
-    if (!shouldVisit(node)) {
-      return;
-    }
-
-    int visits = 0;
-    do {
-      Node c = node.getFirstChild();
-      while (c != null) {
-        Node next = c.getNext();
-        traverse(c);
-        c = next;
-      }
-
-      visit(node);
-      visits++;
-
-      Preconditions.checkState(visits < 10000, "too many interations");
-    } while (shouldRetraverse(node));
-
-    exitNode(node);
-  }
-
-  private boolean shouldRetraverse(Node node) {
-    if (retraverseOnChange
-        && node.getParent() != null
-        && (node.isFunction() || node.isScript())) {
-      ScopeState state = traversalState.peek();
-      if (state.changed) {
-        // prepare to re-visit the scope:
-        // when revisiting, only visit the immediate scope
-        // this reduces the cost of getting to a fixed
-        // point in global scope.
-        state.changed = false;
-        state.traverseChildScopes = false;
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private boolean shouldVisit(Node node) {
-    if (node.isFunction() || node.isScript()) {
-      ScopeState previous = traversalState.peek();
-      if (!previous.traverseChildScopes) {
-        return false;
-      }
-      traversalState.push();
-    }
-    return true;
-  }
-
-  private void exitNode(Node node) {
-    if (node.isFunction() || node.isScript()) {
-      traversalState.pop();
-    }
-  }
-
-  public void visit(Node n) {
-    Node currentVersionOfNode = n;
-    boolean somethingChanged = false;
-
-    do {
-      somethingChanged = false;
-      for (AbstractPeepholeOptimization optimization : peepholeOptimizations) {
-        Node newVersionOfNode =
-            optimization.optimizeSubtree(currentVersionOfNode);
-
-        if (newVersionOfNode != currentVersionOfNode) {
-          somethingChanged = true;
-
-          currentVersionOfNode = newVersionOfNode;
+  private class PeepCallback extends AbstractShallowCallback {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      Node currentNode = n, newNode;
+      boolean codeChanged = false;
+      do {
+        codeChanged = false;
+        for (AbstractPeepholeOptimization optim : peepholeOptimizations) {
+          newNode = optim.optimizeSubtree(currentNode);
+          if (newNode != currentNode) {
+            codeChanged = true;
+            currentNode = newNode;
+          }
+          if (currentNode == null) {
+            return;
+          }
         }
-
-        if (currentVersionOfNode == null) {
-          return;
-        }
-      }
-    } while(somethingChanged);
+      } while(codeChanged);
+    }
   }
 
   /**

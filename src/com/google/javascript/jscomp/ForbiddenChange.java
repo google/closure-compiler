@@ -16,27 +16,14 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.rhino.Node;
-
 /**
  * A change handler that throws an exception if any changes are made.
  * @author nicksantos@google.com (Nick Santos)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-final class ForbiddenChange extends CodeChangeHandler {
-
+final class ForbiddenChange implements CodeChangeHandler {
   @Override
   public void reportChange() {
-    throw new IllegalStateException("Code changes forbidden");
-  }
-
-  @Override
-  public void reportChangedFun(Node n) {
-    throw new IllegalStateException("Code changes forbidden");
-  }
-
-  @Override
-  public void reportDeletedFun(Node n) {
     throw new IllegalStateException("Code changes forbidden");
   }
 }

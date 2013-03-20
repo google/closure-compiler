@@ -52,11 +52,9 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
-    CompilerPass peepholePass =
-      new PeepholeOptimizationsPass(compiler,
-          new PeepholeSubstituteAlternateSyntax(late))
-      .setRetraverseOnChange(false);
-
+    PeepholeOptimizationsPass peepholePass = new PeepholeOptimizationsPass(
+        compiler, new PeepholeSubstituteAlternateSyntax(late));
+    peepholePass.setRetraverseOnChange(false);
     return peepholePass;
   }
 
@@ -332,7 +330,9 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     // Don't fold really long regexp literals, because Opera 9.2's
     // regexp parser will explode.
     String longRegexp = "";
-    for (int i = 0; i < 200; i++) longRegexp += "x";
+    for (int i = 0; i < 200; i++) {
+      longRegexp += "x";
+    }
     foldSame("x = RegExp(\"" + longRegexp + "\")");
 
     // Shouldn't fold RegExp unnormalized because

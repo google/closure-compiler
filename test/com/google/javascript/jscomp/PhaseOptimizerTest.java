@@ -33,6 +33,7 @@ import java.util.Random;
  */
 public class PhaseOptimizerTest extends TestCase {
   private final List<String> passesRun = Lists.newArrayList();
+  private final Node dummyRoot = new Node(Token.BLOCK);
   private PhaseOptimizer optimizer;
   private Compiler compiler;
   private PerformanceTracker tracker;
@@ -42,8 +43,7 @@ public class PhaseOptimizerTest extends TestCase {
     passesRun.clear();
     compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
-    tracker = new PerformanceTracker(
-        new Node(Token.BLOCK), TracerMode.TIMING_ONLY);
+    tracker = new PerformanceTracker(dummyRoot, TracerMode.TIMING_ONLY);
     optimizer = new PhaseOptimizer(compiler, tracker, null);
   }
 
@@ -74,7 +74,7 @@ public class PhaseOptimizerTest extends TestCase {
   public void testNotInfiniteLoop() {
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", PhaseOptimizer.MAX_LOOPS - 1);
-    optimizer.process(null, null);
+    optimizer.process(null, dummyRoot);
     assertEquals("There should be no errors.", 0, compiler.getErrorCount());
   }
 
@@ -82,7 +82,7 @@ public class PhaseOptimizerTest extends TestCase {
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", PhaseOptimizer.MAX_LOOPS + 1);
     try {
-      optimizer.process(null, null);
+      optimizer.process(null, dummyRoot);
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
       assertTrue(e.getMessage().contains(PhaseOptimizer.OPTIMIZE_LOOP_ERROR));
@@ -143,7 +143,9 @@ public class PhaseOptimizerTest extends TestCase {
     try {
       addLoopedPass(loop, "x", 1);
       fail("Expected exception");
-    } catch (IllegalArgumentException e) {}
+    } catch (IllegalArgumentException e) {
+      return;
+    }
   }
 
   public void testPassOrdering() {
@@ -155,7 +157,7 @@ public class PhaseOptimizerTest extends TestCase {
       addLoopedPass(
           loop, optimalOrder.remove(random.nextInt(optimalOrder.size())), 0);
     }
-    optimizer.process(null, null);
+    optimizer.process(null, dummyRoot);
     assertEquals(PhaseOptimizer.OPTIMAL_ORDER, passesRun);
   }
 
@@ -173,7 +175,7 @@ public class PhaseOptimizerTest extends TestCase {
     addOneTimePass("x2");
     addOneTimePass("x3");
     addOneTimePass("x4");
-    optimizer.process(null, null);
+    optimizer.process(null, dummyRoot);
     assertEquals(4, progressList.size());
     assertEquals(25, Math.round(progressList.get(0)));
     assertEquals(50, Math.round(progressList.get(1)));
@@ -182,7 +184,7 @@ public class PhaseOptimizerTest extends TestCase {
   }
 
   public void assertPasses(String ... names) {
-    optimizer.process(null, null);
+    optimizer.process(null, dummyRoot);
     assertEquals(Lists.newArrayList(names), passesRun);
   }
 

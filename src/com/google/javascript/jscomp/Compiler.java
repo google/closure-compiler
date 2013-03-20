@@ -168,6 +168,9 @@ public class Compiler extends AbstractCompiler {
 
   private ReverseAbstractInterpreter abstractInterpreter;
   private TypeValidator typeValidator;
+  // The compiler can ask phaseOptimizer for things like which pass is currently
+  // running, or which functions have been changed by optimizations
+  private PhaseOptimizer phaseOptimizer = null;
 
   public PerformanceTracker tracker;
 
@@ -815,7 +818,7 @@ public class Compiler extends AbstractCompiler {
 
     // We are currently only interested in check-passes for progress reporting
     // as it is used for IDEs, that's why the maximum progress is set to 1.0.
-    PhaseOptimizer phaseOptimizer = new PhaseOptimizer(this, tracker,
+    phaseOptimizer = new PhaseOptimizer(this, tracker,
         new PhaseOptimizer.ProgressRange(getProgress(), 1.0));
     if (options.devMode == DevMode.EVERY_PASS) {
       phaseOptimizer.setSanityCheck(sanityCheck);
@@ -848,6 +851,7 @@ public class Compiler extends AbstractCompiler {
     }
 
     runCustomPasses(CustomPassExecutionTime.BEFORE_OPTIMIZATIONS);
+    phaseOptimizer = null;
   }
 
   private void externExports() {
@@ -1896,7 +1900,7 @@ public class Compiler extends AbstractCompiler {
     // unmodified local names.
     normalize();
 
-    PhaseOptimizer phaseOptimizer = new PhaseOptimizer(this, tracker, null);
+    phaseOptimizer = new PhaseOptimizer(this, tracker, null);
     if (options.devMode == DevMode.EVERY_PASS) {
       phaseOptimizer.setSanityCheck(sanityCheck);
     }
@@ -1905,6 +1909,7 @@ public class Compiler extends AbstractCompiler {
     }
     phaseOptimizer.consume(getPassConfig().getOptimizations());
     phaseOptimizer.process(externsRoot, jsRoot);
+    phaseOptimizer = null;
   }
 
   @Override
@@ -1969,7 +1974,7 @@ public class Compiler extends AbstractCompiler {
     endPass();
   }
 
-  protected final CodeChangeHandler recentChange = new CodeChangeHandler();
+  protected final RecentChange recentChange = new RecentChange();
   private final List<CodeChangeHandler> codeChangeHandlers =
       Lists.<CodeChangeHandler>newArrayList();
 
@@ -1986,6 +1991,57 @@ public class Compiler extends AbstractCompiler {
   @Override
   void removeChangeHandler(CodeChangeHandler handler) {
     codeChangeHandlers.remove(handler);
+  }
+
+  @Override
+  void setScope(Node n) {
+    if (phaseOptimizer != null) {
+      phaseOptimizer.setScope(n);
+    }
+  }
+
+  @Override
+  Node getJsRoot() {
+    return jsRoot;
+  }
+
+  @Override
+  boolean hasScopeChanged(Node n) {
+    if (phaseOptimizer != null) {
+      return phaseOptimizer.hasScopeChanged(n);
+    }
+    return true;
+  }
+
+  @Override
+  void reportChangeToScope(Node n) {
+    if (phaseOptimizer != null) {
+      phaseOptimizer.reportChangeToScope(n);
+      phaseOptimizer.startCrossScopeReporting();
+      reportCodeChange();
+      phaseOptimizer.endCrossScopeReporting();
+    } else {
+      reportCodeChange();
+    }
+  }
+
+  /**
+   * Some tests don't want to call the compiler "wholesale," they may not want
+   * to call check and/or optimize. With this method, tests can execute custom
+   * optimization loops.
+   */
+  @VisibleForTesting
+  void setPhaseOptimizer(PhaseOptimizer po) {
+    this.phaseOptimizer = po;
+  }
+
+  @Override
+  Node getEnclosingScope(Node n) {
+    while (n != jsRoot) {
+      n = n.getParent();
+      if (n.isFunction()) { return n; }
+    }
+    return n;
   }
 
   /**

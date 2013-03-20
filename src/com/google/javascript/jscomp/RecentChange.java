@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 The Closure Compiler Authors.
+ * Copyright 2013 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,22 @@
 package com.google.javascript.jscomp;
 
 /**
- * A simple listener for code change events.
+ * Records whether the code has changed since the last reset.
  * @author nicksantos@google.com (Nick Santos)
- * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-interface CodeChangeHandler {
-  /** Report a change to some unspecified node of the AST. */
-  public void reportChange();
+final class RecentChange implements CodeChangeHandler {
+  private boolean hasChanged = false;
+
+  @Override
+  public void reportChange() {
+    hasChanged = true;
+  }
+
+  public boolean hasCodeChanged() {
+    return hasChanged;
+  }
+
+  public void reset() {
+    hasChanged = false;
+  }
 }

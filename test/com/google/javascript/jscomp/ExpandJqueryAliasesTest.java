@@ -22,13 +22,13 @@ package com.google.javascript.jscomp;
 public class ExpandJqueryAliasesTest extends CompilerTestCase {
   private JqueryCodingConvention conv = new JqueryCodingConvention();
 
-  final DiagnosticType NAME_ERROR =
+  static final DiagnosticType NAME_ERROR =
       ExpandJqueryAliases.JQUERY_UNABLE_TO_EXPAND_INVALID_NAME_ERROR;
 
-  final DiagnosticType INVALID_LIT_ERROR =
+  static final DiagnosticType INVALID_LIT_ERROR =
       ExpandJqueryAliases.JQUERY_UNABLE_TO_EXPAND_INVALID_LIT_ERROR;
 
-  final DiagnosticType USELESS_EACH_ERROR =
+  static final DiagnosticType USELESS_EACH_ERROR =
       ExpandJqueryAliases.JQUERY_USELESS_EACH_EXPANSION;
 
   public ExpandJqueryAliasesTest() {}
@@ -82,7 +82,7 @@ public class ExpandJqueryAliasesTest extends CompilerTestCase {
         "jQuery.b = 'test2';}");
 
     // Test extend call where first argument includes a method call
-    testSame(setupCode+"obj2.meth=function() { return { a:{} }; };" +
+    testSame(setupCode + "obj2.meth=function() { return { a:{} }; };" +
         "jQuery.extend(obj2.meth().a, {a: 'test'});");
 
     // Test extend call where returned object is used
@@ -95,13 +95,15 @@ public class ExpandJqueryAliasesTest extends CompilerTestCase {
   public void testJqueryExpandedEachExpansion() {
     String setupCode = "var jQuery={};" +
         "jQuery.expandedEach=function(vals, callback){};";
+    String resultCode =
+        "var jQuery={ expandedEach: function(vals, callback){} };";
 
     testSame(setupCode);
 
     // Test expansion with object literal
     test(setupCode + "jQuery.expandedEach({'a': 1, 'b': 2, 'c': 8}," +
         "function(key, val) { var a = key; jQuery[key] = val; });",
-        setupCode + "(function(){ var a = 'a'; jQuery.a = 1 })();" +
+        resultCode + "(function(){ var a = 'a'; jQuery.a = 1 })();" +
         "(function(){ var a = 'b'; jQuery.b = 2 })();" +
         "(function(){ var a = 'c'; jQuery.c = 8 })();");
 
@@ -111,35 +113,35 @@ public class ExpandJqueryAliasesTest extends CompilerTestCase {
     // string literal value should become a property name.
     test(setupCode + "jQuery.expandedEach(['a', 'b', 'c']," +
         "function(key, val){ jQuery[val] = key; });",
-        setupCode + "(function(){ jQuery.a = 0; })();" +
+        resultCode + "(function(){ jQuery.a = 0; })();" +
         "(function(){ jQuery.b = 1; })();" +
         "(function(){ jQuery.c = 2 })();");
 
     // Test expansion with object literal using 'this' keyword
     test(setupCode + "jQuery.expandedEach({'a': 1, 'b': 2, 'c': 8}," +
         "function(key, val) { var a = key; jQuery[key] = this; });",
-        setupCode + "(function(){ var a = 'a'; jQuery.a = 1 })();" +
+        resultCode + "(function(){ var a = 'a'; jQuery.a = 1 })();" +
         "(function(){ var a = 'b'; jQuery.b = 2 })();" +
         "(function(){ var a = 'c'; jQuery.c = 8 })();");
 
     // Test expansion with array literal using 'this' keyword
     test(setupCode + "jQuery.expandedEach(['a', 'b', 'c']," +
         "function(key, val){ jQuery[this] = key; });",
-        setupCode + "(function(){ jQuery.a = 0; })();" +
+        resultCode + "(function(){ jQuery.a = 0; })();" +
         "(function(){ jQuery.b = 1; })();" +
         "(function(){ jQuery.c = 2 })();");
 
     // test nested function using argument name to shadow callback name
     test(setupCode + "jQuery.expandedEach(['a'], function(key,val) {" +
         "jQuery[val] = key; (function(key) { jQuery[key] = 1;})('test'); })",
-        setupCode + "(function(){ jQuery.a = 0;" +
+        resultCode + "(function(){ jQuery.a = 0;" +
          "(function(key){ jQuery[key] = 1})('test') })()");
 
     // test nested function using var name to shadow callback name
     test(setupCode + "jQuery.expandedEach(['a'], function(key,val) {" +
         "jQuery[val] = key; (function(key) { var val = 2;" +
         "jQuery[key] = val;})('test');})",
-        setupCode + "(function(){" +
+        resultCode + "(function(){" +
         "jQuery.a=0;" +
         "(function(key){var val = 2; jQuery[key] = val;})('test')})()");
 
@@ -148,29 +150,34 @@ public class ExpandJqueryAliasesTest extends CompilerTestCase {
         "jQuery[val] = key; (function(key1) {" +
         "function key() {}; key();" +
         "})('test');})",
-        setupCode + "(function(){" +
+        resultCode + "(function(){" +
         "jQuery.a=0;(function(key1) {" +
-        "function key() {}; key(); })('test')})()");
+        "function key() {} key(); })('test')})()");
 
     // test using return val
     test(setupCode + "alert(jQuery.expandedEach(['a']," +
         "function(key,val) { jQuery[val] = key;})[0])",
-        setupCode + "alert((function(){" +
+        resultCode + "alert((function(){" +
         "(function(){ jQuery.a = 0;})(); return ['a']})()[0]);");
 
     // Loop object is a variable. Test that warning is raised.
-    testSame(setupCode + "var a = ['a'];" +
-        "jQuery.expandedEach(a, function(key,val){ jQuery[key]=val; })",
-        INVALID_LIT_ERROR);
+    String testCode = "var a = ['a'];" +
+        "jQuery.expandedEach(a, function(key,val){ jQuery[key]=val; })";
+    test(setupCode + testCode, resultCode + testCode, null, INVALID_LIT_ERROR);
 
     // Invalid property name. Test that warning is raised.
-    testSame(setupCode + "var obj2={};" +
+    test(setupCode + "var obj2={};" +
         "jQuery.expandedEach(['foo','bar'], function(i, name) {" +
-        "obj2[ '[object ' + name + ']' ] = 'a';});", NAME_ERROR, true);
+        "obj2[ '[object ' + name + ']' ] = 'a';});",
+        resultCode + "var obj2={};" +
+        "jQuery.expandedEach(['foo','bar'], function(i, name) {" +
+        "obj2[ '[object foo]' ] = 'a';});",
+        null, USELESS_EACH_ERROR);
 
     // Useless expansion (key not used). Test that warning is raised.
-    testSame(setupCode + "var obj2={};" +
-        "jQuery.expandedEach(['foo','bar'], function(i, name) {" +
-        "obj2[i] = 1;});", USELESS_EACH_ERROR, false);
+    testCode =
+        "var obj2={}; jQuery.expandedEach(['foo','bar'], function(i, name) {" +
+        "obj2[i] = 1;});";
+    test(setupCode + testCode, resultCode + testCode, null, USELESS_EACH_ERROR);
   }
 }

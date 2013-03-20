@@ -22,6 +22,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
@@ -30,7 +31,9 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>Base class for testing JS compiler classes that change
@@ -735,6 +738,24 @@ public abstract class CompilerTestCase extends TestCase  {
     test(compiler, expected, error, warning, null);
   }
 
+  private Map<Node, Node> findCorrespondingNodes(Node n1, Node n2) {
+    Preconditions.checkState(n1.isEquivalentTo(n2));
+    Map<Node, Node> correspondingNodes = new HashMap<Node, Node>();
+    correspondingNodes.put(n1, n2);
+    correspondingNodesHelper(correspondingNodes, n1, n2);
+    return correspondingNodes;
+  }
+
+  private void correspondingNodesHelper(Map<Node, Node> map, Node n1, Node n2) {
+    if (n1.isFunction()) {
+      map.put(n1, n2);
+    }
+    for (Node child1 = n1.getFirstChild(), child2 = n2.getFirstChild();
+         child1 != null;
+         child1 = child1.getNext(), child2 = child2.getNext()) {
+      correspondingNodesHelper(map, child1, child2);
+    }
+  }
 
   /**
    * Verifies that the compiler pass's JS output matches the expected output
@@ -753,7 +774,7 @@ public abstract class CompilerTestCase extends TestCase  {
   private void test(Compiler compiler, String[] expected,
                     DiagnosticType error, DiagnosticType warning,
                     String description) {
-    CodeChangeHandler recentChange = new  CodeChangeHandler();
+    RecentChange recentChange = new RecentChange();
     compiler.addChangeHandler(recentChange);
 
     Node root = compiler.parseInputs();
@@ -775,6 +796,8 @@ public abstract class CompilerTestCase extends TestCase  {
     Node rootClone = root.cloneTree();
     Node externsRootClone = rootClone.getFirstChild();
     Node mainRootClone = rootClone.getLastChild();
+    final Map<Node, Node> nodeMap =
+        findCorrespondingNodes(mainRoot, mainRootClone);
 
     int numRepetitions = getNumRepetitions();
     ErrorManager[] errorManagers = new ErrorManager[numRepetitions];
@@ -899,7 +922,7 @@ public abstract class CompilerTestCase extends TestCase  {
       boolean codeChange = !mainRootClone.isEquivalentTo(mainRoot);
       boolean externsChange = !externsRootClone.isEquivalentTo(externsRoot);
 
-      // Generally, externs should not be change by the compiler passes.
+      // Generally, externs should not be changed by the compiler passes.
       if (externsChange && !allowExternsChanges) {
         String explanation = externsRootClone.checkTreeEquals(externsRoot);
         fail("Unexpected changes to externs" +
@@ -918,6 +941,25 @@ public abstract class CompilerTestCase extends TestCase  {
             hasCodeChanged);
       }
 
+      // If a scope is marked as changed, it should not be shallow-equivalent
+      // to its corresponding cloned scope. The converse is false b/c we don't
+      // track changes to scopes by non-loopable passes.
+      if (mainRoot.getChangeTime() != 0) {
+        assertFalse(mainRoot.isEquivalentToShallow(nodeMap.get(mainRoot)));
+      }
+      NodeTraversal.traverse(compiler, mainRoot,
+          new AbstractPreOrderCallback() {
+            @Override
+            public final boolean shouldTraverse(
+                NodeTraversal t, Node n, Node p) {
+              if (n.isFunction() &&
+                  n.getChangeTime() != 0 && nodeMap.containsKey(n)) {
+                assertFalse(n.isEquivalentToShallow(nodeMap.get(n)));
+              }
+              return true;
+            }
+          });
+
       if (expected != null) {
         if (compareAsTree) {
           String explanation = expectedRoot.checkTreeEquals(mainRoot);
@@ -932,7 +974,8 @@ public abstract class CompilerTestCase extends TestCase  {
 
       // Verify normalization is not invalidated.
       Node normalizeCheckRootClone = root.cloneTree();
-      Node normalizeCheckExternsRootClone = normalizeCheckRootClone.getFirstChild();
+      Node normalizeCheckExternsRootClone =
+          normalizeCheckRootClone.getFirstChild();
       Node normalizeCheckMainRootClone = normalizeCheckRootClone.getLastChild();
       new PrepareAst(compiler).process(
           normalizeCheckExternsRootClone, normalizeCheckMainRootClone);

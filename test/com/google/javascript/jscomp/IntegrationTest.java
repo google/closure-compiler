@@ -1235,9 +1235,15 @@ public class IntegrationTest extends IntegrationTestCase {
       char letter = (char) ('d' + i);
 
       // skip i,j,o (reserved)
-      if (letter >= 'i') letter++;
-      if (letter >= 'j') letter++;
-      if (letter >= 'o') letter++;
+      if (letter >= 'i') {
+        letter++;
+      }
+      if (letter >= 'j') {
+        letter++;
+      }
+      if (letter >= 'o') {
+        letter++;
+      }
 
       expected += "a.argz = function() {arguments};";
       expected += "function " + letter + "(c){}";
@@ -1252,9 +1258,15 @@ public class IntegrationTest extends IntegrationTestCase {
       char letter = (char) ('d' + i);
 
       // skip i,j,o (reserved)
-      if (letter >= 'i') letter++;
-      if (letter >= 'j') letter++;
-      if (letter >= 'o') letter++;
+      if (letter >= 'i') {
+        letter++;
+      }
+      if (letter >= 'j') {
+        letter++;
+      }
+      if (letter >= 'o') {
+        letter++;
+      }
 
       expected += letter + "(q);";
     }
@@ -2498,6 +2510,16 @@ public class IntegrationTest extends IntegrationTestCase {
         "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize.*",
         Pattern.DOTALL);
     assertTrue(p.matcher(output.toString()).matches());
+  }
+
+  // isEquivalentTo returns false for alpha-equivalent nodes
+  public void testIsEquivalentTo() {
+    String[] input1 = {"function f(z) { return z; }"};
+    String[] input2 = {"function f(y) { return y; }"};
+    CompilerOptions options = new CompilerOptions();
+    Node out1 = parse(input1, options, false);
+    Node out2 = parse(input2, options, false);
+    assertFalse(out1.isEquivalentTo(out2));
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */

@@ -356,25 +356,25 @@ class InlineVariables implements CompilerPass {
      * Do the actual work of inlining a single declaration into a single
      * reference.
      */
-    private void inline(Var v, Reference declaration,
-                        Reference init, Reference reference) {
+    private void inline(Var v, Reference decl, Reference init, Reference ref) {
       Node value = init.getAssignedValue();
       Preconditions.checkState(value != null);
       // Check for function declarations before the value is moved in the AST.
       boolean isFunctionDeclaration = NodeUtil.isFunctionDeclaration(value);
 
-      inlineValue(v, reference, value.detachFromParent());
-      if (declaration != init) {
+      // decl and ref may be in different scopes, report change for both
+      compiler.reportChangeToScope(compiler.getEnclosingScope(decl.getNode()));
+      compiler.reportChangeToScope(compiler.getEnclosingScope(ref.getNode()));
+
+      inlineValue(v, ref, value.detachFromParent());
+      if (decl != init) {
         Node expressRoot = init.getGrandparent();
         Preconditions.checkState(expressRoot.isExprResult());
         NodeUtil.removeChild(expressRoot.getParent(), expressRoot);
       }
-
       // Function declarations have already been removed.
       if (!isFunctionDeclaration) {
-        removeDeclaration(declaration);
-      } else {
-        compiler.reportCodeChange();
+        removeDeclaration(decl);
       }
     }
 
@@ -412,19 +412,17 @@ class InlineVariables implements CompilerPass {
     /**
      * Remove the given VAR declaration.
      */
-    private void removeDeclaration(Reference declaration) {
-      Node varNode = declaration.getParent();
-      Node grandparent = declaration.getGrandparent();
+    private void removeDeclaration(Reference decl) {
+      Node varNode = decl.getParent();
+      Node grandparent = decl.getGrandparent();
 
-      varNode.removeChild(declaration.getNode());
-
+      compiler.reportChangeToScope(compiler.getEnclosingScope(decl.getNode()));
+      varNode.removeChild(decl.getNode());
       // Remove var node if empty
       if (!varNode.hasChildren()) {
         Preconditions.checkState(varNode.isVar());
         NodeUtil.removeChild(grandparent, varNode);
       }
-
-      compiler.reportCodeChange();
     }
 
     /**
@@ -436,15 +434,14 @@ class InlineVariables implements CompilerPass {
      *     to re-parent.
      */
     private void inlineValue(Var v, Reference ref, Node value) {
+      compiler.reportChangeToScope(compiler.getEnclosingScope(ref.getNode()));
       if (ref.isSimpleAssignmentToName()) {
         // This is the initial assignment.
         ref.getGrandparent().replaceChild(ref.getParent(), value);
       } else {
         ref.getParent().replaceChild(ref.getNode(), value);
       }
-
       blacklistVarReferencesInTree(value, v.scope);
-      compiler.reportCodeChange();
     }
 
     /**

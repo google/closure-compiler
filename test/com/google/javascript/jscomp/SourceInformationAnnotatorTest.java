@@ -40,7 +40,7 @@ public class SourceInformationAnnotatorTest extends CompilerTestCase {
     name.putProp(Node.ORIGINALNAME_PROP, "bar");
     root.addChildToBack(name);
 
-    NodeTraversal.traverse(null, root,
+    NodeTraversal.traverse(new Compiler(), root,
         new SourceInformationAnnotator("", false));
     assertEquals(name.getProp(Node.ORIGINALNAME_PROP), "bar");
   }
