@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.graph;
 import java.util.Collection;
 import java.util.Set;
 
-
 /**
  * Union-Find is a classical algorithm used to find connected components in
  * graph theory.

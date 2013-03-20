@@ -29,6 +29,7 @@ import java.util.Set;
  */
 public class Config {
 
+  /** JavaScript mode */
   public enum LanguageMode {
     ECMASCRIPT3,
     ECMASCRIPT5,

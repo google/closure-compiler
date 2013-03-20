@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.graph;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 
@@ -127,6 +126,7 @@ public final class FixedPointGraphTraversal<N, E> {
         NON_HALTING_ERROR_MSG);
   }
 
+  /** Edge callback */
   public static interface EdgeCallback<Node, Edge> {
     /**
      * Update the state of the destination node when the given edge

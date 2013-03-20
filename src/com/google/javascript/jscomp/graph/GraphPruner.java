@@ -31,6 +31,9 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
  *
  * We do not make any guarantees about what edges are in the pruned graph.
  *
+ * @param <N> The type of data that the graph node holds.
+ * @param <E> The type of data that the graph edge holds.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
 public class GraphPruner<N, E> {

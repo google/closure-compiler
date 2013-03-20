@@ -31,8 +31,7 @@ class JsDocTokenStream {
    * to check.  (And checking EOF by exception is annoying.)
    * Note distinction from EOF token type!
    */
-  private final static int
-      EOF_CHAR = -1;
+  private static final int EOF_CHAR = -1;
 
   JsDocTokenStream(String sourceString) {
     this(sourceString, 0);
@@ -226,7 +225,7 @@ class JsDocTokenStream {
   final int getLineno() { return lineno; }
 
   final int getCharno() {
-    return lineno == initLineno? initCharno + charno : charno;
+    return lineno == initLineno ? initCharno + charno : charno;
   }
 
   final String getString() { return string; }
@@ -239,14 +238,14 @@ class JsDocTokenStream {
   }
 
   private void addToString(int c) {
-    int N = stringBufferTop;
-    if (N == stringBuffer.length) {
+    int n = stringBufferTop;
+    if (n == stringBuffer.length) {
         char[] tmp = new char[stringBuffer.length * 2];
-        System.arraycopy(stringBuffer, 0, tmp, 0, N);
+        System.arraycopy(stringBuffer, 0, tmp, 0, n);
         stringBuffer = tmp;
     }
-    stringBuffer[N] = (char)c;
-    stringBufferTop = N + 1;
+    stringBuffer[n] = (char) c;
+    stringBufferTop = n + 1;
   }
 
   void ungetChar(int c) {
@@ -311,12 +310,12 @@ class JsDocTokenStream {
       return c == 0x20 || c == 0x9 || c == 0xC || c == 0xB;
     } else {
       return c == 0xA0
-          || Character.getType((char)c) == Character.SPACE_SEPARATOR;
+          || Character.getType((char) c) == Character.SPACE_SEPARATOR;
     }
   }
 
   private static boolean isJSFormatChar(int c) {
-    return c > 127 && Character.getType((char)c) == Character.FORMAT;
+    return c > 127 && Character.getType((char) c) == Character.FORMAT;
   }
 
   /**
@@ -343,7 +342,7 @@ class JsDocTokenStream {
       return ungetBuffer[ungetCursor];
     }
 
-    for(;;) {
+    for (;;) {
       int c;
       if (sourceCursor == sourceEnd) {
         hitEOF = true;
@@ -399,7 +398,7 @@ class JsDocTokenStream {
       return ungetBuffer[ungetCursor];
     }
 
-    for(;;) {
+    for (;;) {
       int c;
       if (sourceCursor == sourceEnd) {
         hitEOF = true;

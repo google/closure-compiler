@@ -300,7 +300,7 @@ class IRFactory {
           break;
         // Function declarations are valid
         case com.google.javascript.rhino.head.Token.FUNCTION:
-          FunctionNode fnNode = (FunctionNode)node;
+          FunctionNode fnNode = (FunctionNode) node;
           valid = fnNode.getFunctionType() == FunctionNode.FUNCTION_STATEMENT;
           break;
         // Object literal properties and catch declarations are valid.
@@ -321,7 +321,7 @@ class IRFactory {
         case com.google.javascript.rhino.head.Token.ASSIGN:
           if (node instanceof Assignment) {
             valid = isExprStmt(node.getParent())
-                && isPropAccess(((Assignment)node).getLeft());
+                && isPropAccess(((Assignment) node).getLeft());
           }
           break;
 
@@ -520,7 +520,7 @@ class IRFactory {
         com.google.javascript.rhino.head.Node n) {
       Node node = newNode(transformTokenType(n.getType()));
       for (com.google.javascript.rhino.head.Node child : n) {
-        node.addChildToBack(transform((AstNode)child));
+        node.addChildToBack(transform((AstNode) child));
       }
       return node;
     }
@@ -537,9 +537,9 @@ class IRFactory {
     private Node transformAsString(AstNode n) {
       Node ret;
       if (n instanceof Name) {
-        ret = transformNameAsString((Name)n);
+        ret = transformNameAsString((Name) n);
       } else if (n instanceof NumberLiteral) {
-        ret = transformNumberAsString((NumberLiteral)n);
+        ret = transformNumberAsString((NumberLiteral) n);
         ret.putBooleanProp(Node.QUOTED_PROP, true);
       } else {
         ret = transform(n);
@@ -580,7 +580,7 @@ class IRFactory {
     Node processAstRoot(AstRoot rootNode) {
       Node node = newNode(Token.SCRIPT);
       for (com.google.javascript.rhino.head.Node child : rootNode) {
-        node.addChildToBack(transform((AstNode)child));
+        node.addChildToBack(transform((AstNode) child));
       }
       parseDirectives(node);
       return node;
@@ -613,8 +613,9 @@ class IRFactory {
     }
 
     private boolean isDirective(Node n) {
-      if (n == null) return false;
-
+      if (n == null) {
+        return false;
+      }
       int nType = n.getType();
       return nType == Token.EXPR_RESULT &&
           n.getFirstChild().isString() &&

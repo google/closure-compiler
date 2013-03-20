@@ -25,6 +25,9 @@ import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
  * the graph nodes will be annotated with {@link #REACHABLE} if it is reachable
  * from the specified entry node.
  *
+ * @param <N> The type of data that the graph node holds.
+ * @param <E> The type of data that the graph edge holds.
+ *
  * @see GraphNode#getAnnotation()
  */
 public class GraphReachability<N, E> implements EdgeCallback<N, E> {

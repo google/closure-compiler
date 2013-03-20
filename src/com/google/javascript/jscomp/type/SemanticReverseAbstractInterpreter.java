@@ -102,8 +102,7 @@ public class SemanticReverseAbstractInterpreter
   /**
    * Merging function for inequality comparisons between types.
    */
-  private final
-      Function<TypePair, TypePair> INEQ =
+  private final Function<TypePair, TypePair> ineq =
     new Function<TypePair, TypePair>() {
       @Override
       public TypePair apply(TypePair p) {
@@ -233,7 +232,7 @@ public class SemanticReverseAbstractInterpreter
       case Token.GE:
       case Token.GT:
         if (outcome) {
-          return caseEquality(condition, blindScope, INEQ);
+          return caseEquality(condition, blindScope, ineq);
         }
         break;
 
