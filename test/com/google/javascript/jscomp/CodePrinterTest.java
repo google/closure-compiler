@@ -1419,6 +1419,10 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x = -0.0;", "var x=-0");
   }
 
+  public void testIssue942() {
+    assertPrint("var x = {0: 1};", "var x={0:1}");
+  }
+
   public void testIssue601() {
     assertPrint("'\\v' == 'v'", "\"\\v\"==\"v\"");
     assertPrint("'\\u000B' == '\\v'", "\"\\x0B\"==\"\\v\"");
