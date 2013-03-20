@@ -72,11 +72,11 @@ jQuery.prototype.add = function(arg1, context) {};
 jQuery.prototype.addClass = function(arg1) {};
 
 /**
- * @param {(string|Element|jQuery|function(number))} arg1
- * @param {(string|Element|Array.<Element>|jQuery)=} content
+ * @param {(string|Element|jQuery|function(this:Element,number))} arg1
+ * @param {...(string|Element|jQuery)} var_args
  * @return {!jQuery}
  */
-jQuery.prototype.after = function(arg1, content) {};
+jQuery.prototype.after = function(arg1, var_args) {};
 
 /**
  * @param {(string|Object.<string,*>)} arg1
@@ -254,11 +254,11 @@ jQuery.prototype.andSelf = function() {};
 jQuery.prototype.animate = function(properties, arg2, easing, complete) {};
 
 /**
- * @param {(string|Element|jQuery|function(number,string))} arg1
- * @param {(string|Element|Array.<Element>|jQuery)=} content
+ * @param {(string|Element|jQuery|function(this:Element,number,string))} arg1
+ * @param {...(string|Element|jQuery)} var_args
  * @return {!jQuery}
  */
-jQuery.prototype.append = function(arg1, content) {};
+jQuery.prototype.append = function(arg1, var_args) {};
 
 /**
  * @param {(jQuerySelector|Element|jQuery)} target
@@ -274,11 +274,11 @@ jQuery.prototype.appendTo = function(target) {};
 jQuery.prototype.attr = function(arg1, arg2) {};
 
 /**
- * @param {(string|Element|jQuery|function())} arg1
- * @param {(string|Element|Array.<Element>|jQuery)=} content
+ * @param {(string|Element|jQuery|function(this:Element,number))} arg1
+ * @param {...(string|Element|jQuery)} var_args
  * @return {!jQuery}
  */
-jQuery.prototype.before = function(arg1, content) {};
+jQuery.prototype.before = function(arg1, var_args) {};
 
 /**
  * @param {(string|Object.<string, function(!jQuery.event=)>)} arg1
@@ -1690,11 +1690,11 @@ jQuery.post = function(url, data, success, dataType) {};
 $.post = function(url, data, success, dataType) {};
 
 /**
- * @param {(string|Element|jQuery|function(number,string))} arg1
- * @param {(string|Element|jQuery)=} content
+ * @param {(string|Element|jQuery|function(this:Element,number,string))} arg1
+ * @param {...(string|Element|jQuery)} var_args
  * @return {!jQuery}
  */
-jQuery.prototype.prepend = function(arg1, content) {};
+jQuery.prototype.prepend = function(arg1, var_args) {};
 
 /**
  * @param {(jQuerySelector|Element|jQuery)} target
