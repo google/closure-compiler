@@ -69,7 +69,7 @@ public abstract class JSType implements Serializable {
 
   private boolean resolved = false;
   private JSType resolveResult = null;
-  protected final TemplateTypeMap templateTypeMap;
+  protected TemplateTypeMap templateTypeMap;
 
   private boolean inTemplatedCheckVisit = false;
   private static final CanCastToVisitor CAN_CAST_TO_VISITOR =
@@ -455,6 +455,14 @@ public abstract class JSType implements Serializable {
    */
   public TemplateTypeMap getTemplateTypeMap() {
     return templateTypeMap;
+  }
+
+  /**
+   * Extends the template type map associated with this type, merging in the
+   * keys and values of the specified map.
+   */
+  public void extendTemplateTypeMap(TemplateTypeMap otherMap) {
+    templateTypeMap = templateTypeMap.extend(otherMap);
   }
 
   /**

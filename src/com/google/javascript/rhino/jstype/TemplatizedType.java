@@ -56,7 +56,7 @@ public final class TemplatizedType extends ProxyObjectType {
   TemplatizedType(
       JSTypeRegistry registry, ObjectType objectType,
       ImmutableList<JSType> templateTypes) {
-    super(registry, objectType, objectType.getTemplateTypeMap().extendValues(
+    super(registry, objectType, objectType.getTemplateTypeMap().addValues(
         templateTypes));
 
     // Cache which template keys were filled, and what JSTypes they were filled

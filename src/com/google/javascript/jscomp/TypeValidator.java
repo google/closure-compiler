@@ -39,6 +39,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.UnknownType;
 
 import java.text.MessageFormat;
@@ -618,10 +619,18 @@ class TypeValidator {
       propNode = propNode == null ? n : propNode;
 
       JSType found = propSlot.getType();
+      found = found.restrictByNotNullOrUndefined();
+
       JSType required
           = implementedInterface.getImplicitPrototype().getPropertyType(prop);
-      found = found.restrictByNotNullOrUndefined();
+      TemplateTypeMap typeMap = implementedInterface.getTemplateTypeMap();
+      if (!typeMap.isEmpty()) {
+        TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(
+            typeRegistry, typeMap);
+        required = required.visit(replacer);
+      }
       required = required.restrictByNotNullOrUndefined();
+
       if (!found.isSubtype(required)) {
         // Implemented, but not correctly typed
         FunctionType constructor =

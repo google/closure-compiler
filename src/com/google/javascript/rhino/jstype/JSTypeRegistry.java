@@ -1479,15 +1479,9 @@ public class JSTypeRegistry implements Serializable {
    *     to indicate that the parameter types are unknown.
    * @param returnType the function's return type or {@code null} to indicate
    *     that the return type is unknown.
-   * @param templateKeyNames the templatized type keys for the class.
+   * @param templateKeys the templatized types for the class.
    */
   public FunctionType createConstructorType(String name, Node source,
-      Node parameters, JSType returnType, ImmutableList<String> templateKeyNames) {
-    return createConstructorTypeInternal(name, source, parameters, returnType,
-        createTemplateMapKeys(templateKeyNames));
-  }
-
-  private FunctionType createConstructorTypeInternal(String name, Node source,
       Node parameters, JSType returnType, ImmutableList<TemplateType> templateKeys) {
     return new FunctionType(this, name, source,
         createArrowType(parameters, returnType), null,
@@ -1509,17 +1503,12 @@ public class JSTypeRegistry implements Serializable {
    * @param name the function's name
    * @param source the node defining this function. Its type
    *     ({@link Node#getType()}) must be {@link Token#FUNCTION}.
+   * @param templateKeys the templatized types for the interface.
    */
   public FunctionType createInterfaceType(String name, Node source,
-      ImmutableList<String> typeParameters) {
-    return createInterfaceTypeInternal(name, source,
-        createTemplateMapKeys(typeParameters));
-  }
-
-  private FunctionType createInterfaceTypeInternal(String name, Node source,
-      ImmutableList<TemplateType> typeParameters) {
+      ImmutableList<TemplateType> templateKeys) {
     return FunctionType.forInterface(this, name, source,
-        createTemplateTypeMap(typeParameters, null));
+        createTemplateTypeMap(templateKeys, null));
   }
 
   public TemplateType createTemplateType(String name) {

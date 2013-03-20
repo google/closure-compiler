@@ -70,6 +70,13 @@ public class TemplateTypeMap implements Serializable {
   }
 
   /**
+   * Returns true if the map is empty; false otherwise.
+   */
+  public boolean isEmpty() {
+    return templateKeys.isEmpty();
+  }
+
+  /**
    * Returns a list of all template keys.
    */
   public ImmutableList<TemplateType> getTemplateKeys() {
@@ -176,19 +183,22 @@ public class TemplateTypeMap implements Serializable {
   }
 
   /**
-   * Returns a new TemplateTypeMap whose keys have been extended with the
-   * specified list.
+   * Extends this TemplateTypeMap with the contents of the specified map.
+   * UNKNOWN_TYPE will be used as the value for any missing values in the
+   * specified map.
    */
-  TemplateTypeMap extendKeys(ImmutableList<TemplateType> newKeys) {
+  TemplateTypeMap extend(TemplateTypeMap thatMap) {
+    thatMap = thatMap.addUnknownValues();
     return registry.createTemplateTypeMap(
-        concatImmutableLists(templateKeys, newKeys), templateValues);
+        concatImmutableLists(thatMap.templateKeys, templateKeys),
+        concatImmutableLists(thatMap.templateValues, templateValues));
   }
 
   /**
    * Returns a new TemplateTypeMap whose values have been extended with the
    * specified list.
    */
-  TemplateTypeMap extendValues(ImmutableList<JSType> newValues) {
+  TemplateTypeMap addValues(ImmutableList<JSType> newValues) {
     // Ignore any new template values that will not align with an existing
     // template key.
     int numUnfilledKeys = numUnfilledTemplateKeys();
@@ -198,6 +208,23 @@ public class TemplateTypeMap implements Serializable {
 
     return registry.createTemplateTypeMap(
         templateKeys, concatImmutableLists(templateValues, newValues));
+  }
+
+  /**
+   * Returns a new TemplateTypeMap, where all unfilled values have been filled
+   * with UNKNOWN_TYPE.
+   */
+  private TemplateTypeMap addUnknownValues() {
+    int numUnfilledTemplateKeys = numUnfilledTemplateKeys();
+    if (numUnfilledTemplateKeys == 0) {
+      return this;
+    }
+
+    ImmutableList.Builder<JSType> builder = ImmutableList.builder();
+    for (int i = 0; i < numUnfilledTemplateKeys; i++) {
+      builder.add(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+    }
+    return addValues(builder.build());
   }
 
   /**

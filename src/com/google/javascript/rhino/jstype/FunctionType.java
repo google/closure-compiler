@@ -417,6 +417,7 @@ public class FunctionType extends PrototypeObjectType {
     if (baseType.hasReferenceName() ||
         isNativeObjectType() ||
         baseType.isFunctionPrototypeType()) {
+      typeOfThis.extendTemplateTypeMap(baseType.getTemplateTypeMap());
       baseType = new PrototypeObjectType(
           registry, getReferenceName() + ".prototype", baseType);
     }
@@ -579,6 +580,10 @@ public class FunctionType extends PrototypeObjectType {
     throws UnsupportedOperationException {
     if (isInterface()) {
       this.extendedInterfaces = ImmutableList.copyOf(extendedInterfaces);
+      for (ObjectType extendedInterface : this.extendedInterfaces) {
+        typeOfThis.extendTemplateTypeMap(
+            extendedInterface.getTemplateTypeMap());
+      }
     } else {
       throw new UnsupportedOperationException();
     }

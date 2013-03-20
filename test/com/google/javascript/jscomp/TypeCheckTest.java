@@ -8881,6 +8881,36 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "foo.bar();");
   }
 
+  /**
+   * Verify that templatized interfaces can extend one another and share
+   * template values.
+   */
+  public void testInterfaceInheritanceCheck14() throws Exception {
+    testTypes(
+        "/** @interface\n @classTemplate T */function A() {};" +
+        "/** @desc description\n @return {T} */A.prototype.foo = function() {};" +
+        "/** @interface\n @classTemplate U\n @extends {A.<U>} */function B() {};" +
+        "/** @desc description\n @return {U} */B.prototype.bar = function() {};" +
+        "/** @constructor\n @implements {B.<string>} */function C() {};" +
+        "/** @return {string}\n @override */C.prototype.foo = function() {};" +
+        "/** @return {string}\n @override */C.prototype.bar = function() {};");
+  }
+
+  /**
+   * Verify that templatized instances can correctly implement templatized
+   * interfaces.
+   */
+  public void testInterfaceInheritanceCheck15() throws Exception {
+    testTypes(
+        "/** @interface\n @classTemplate T */function A() {};" +
+        "/** @desc description\n @return {T} */A.prototype.foo = function() {};" +
+        "/** @interface\n @classTemplate U\n @extends {A.<U>} */function B() {};" +
+        "/** @desc description\n @return {U} */B.prototype.bar = function() {};" +
+        "/** @constructor\n @classTemplate V\n @implements {B.<V>}\n */function C() {};" +
+        "/** @return {V}\n @override */C.prototype.foo = function() {};" +
+        "/** @return {V}\n @override */C.prototype.bar = function() {};");
+  }
+
   public void testInterfacePropertyNotImplemented() throws Exception {
     testTypes(
         "/** @interface */function Int() {};" +
@@ -8896,6 +8926,21 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @interface \n @extends {Int} */function Int2() {};" +
         "/** @constructor\n @implements {Int2} */function Foo() {};",
         "property foo on interface Int is not implemented by type Foo");
+  }
+
+  /**
+   * Verify that templatized interfaces enforce their template type values.
+   */
+  public void testInterfacePropertyNotImplemented3() throws Exception {
+    testTypes(
+        "/** @interface\n @classTemplate T */function Int() {};" +
+        "/** @desc description\n @return {T} */Int.prototype.foo = function() {};" +
+        "/** @constructor\n @implements {Int.<string>} */function Foo() {};" +
+        "/** @return {number}\n @override */Foo.prototype.foo = function() {};",
+        "mismatch of the foo property type and the type of the property it " +
+        "overrides from interface Int\n" +
+        "original: function (this:Int): string\n" +
+        "override: function (this:Foo): number");
   }
 
   public void testStubConstructorImplementingInterface() throws Exception {

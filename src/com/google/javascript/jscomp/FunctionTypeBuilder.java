@@ -90,7 +90,7 @@ final class FunctionTypeBuilder {
   private boolean isInterface = false;
   private Node parametersNode = null;
   private ImmutableList<TemplateType> templateTypeNames = ImmutableList.of();
-  private ImmutableList<String> classTypeParameterNames = ImmutableList.of();;
+  private ImmutableList<TemplateType> classTemplateTypeNames = ImmutableList.of();
 
   static final DiagnosticType EXTENDS_WITHOUT_TYPEDEF = DiagnosticType.warning(
       "JSC_EXTENDS_WITHOUT_TYPEDEF",
@@ -331,6 +331,23 @@ final class FunctionTypeBuilder {
         reportWarning(CONSTRUCTOR_REQUIRED, "@dict", formatFnName());
       }
 
+      // Class template types, which can be used in the scope of a constructor
+      // definition.
+      ImmutableList<String> typeParameters = info.getClassTemplateTypeNames();
+      if (!typeParameters.isEmpty()) {
+        if (isConstructor || isInterface) {
+          ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
+          for (String typeParameter : typeParameters) {
+            builder.add(typeRegistry.createTemplateType(typeParameter));
+          }
+          classTemplateTypeNames = builder.build();
+          typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
+        } else {
+          reportWarning(CLASS_TEMPLATE_WITHOUT_CONSTRUCTOR,
+              formatFnName());
+        }
+      }
+
       // base type
       if (info.hasBaseType()) {
         if (isConstructor) {
@@ -374,16 +391,6 @@ final class FunctionTypeBuilder {
               maybeInterfaceType.setValidator(new ExtendedTypeValidator())) {
             extendedInterfaces.add((ObjectType) maybeInterfaceType);
           }
-        }
-      }
-
-      ImmutableList<String> typeParameters = info.getClassTemplateTypeNames();
-      if (!typeParameters.isEmpty()) {
-        if (isConstructor || isInterface) {
-          this.classTypeParameterNames = typeParameters;
-        } else {
-          reportWarning(CLASS_TEMPLATE_WITHOUT_CONSTRUCTOR,
-              formatFnName());
         }
       }
     }
@@ -659,7 +666,7 @@ final class FunctionTypeBuilder {
       fnType = getOrCreateConstructor();
     } else if (isInterface) {
       fnType = typeRegistry.createInterfaceType(
-          fnName, contents.getSourceNode(), classTypeParameterNames);
+          fnName, contents.getSourceNode(), classTemplateTypeNames);
       if (getScopeDeclaredIn().isGlobal() && !fnName.isEmpty()) {
         typeRegistry.declareType(fnName, fnType.getInstanceType());
       }
@@ -711,7 +718,7 @@ final class FunctionTypeBuilder {
   private FunctionType getOrCreateConstructor() {
     FunctionType fnType = typeRegistry.createConstructorType(
         fnName, contents.getSourceNode(), parametersNode, returnType,
-        classTypeParameterNames);
+        classTemplateTypeNames);
     JSType existingType = typeRegistry.getType(fnName);
 
     if (makesStructs) {

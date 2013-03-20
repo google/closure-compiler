@@ -6103,7 +6103,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testTemplatizedType() throws Exception {
     FunctionType templatizedCtor = registry.createConstructorType(
-        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of("A", "B"));
+        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of(
+            registry.createTemplateType("A"),
+            registry.createTemplateType("B")));
     JSType templatizedInstance = registry.createTemplatizedType(
         templatizedCtor.getInstanceType(),
         ImmutableList.of(NUMBER_TYPE, STRING_TYPE));
@@ -6131,7 +6133,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testPartiallyTemplatizedType() throws Exception {
     FunctionType templatizedCtor = registry.createConstructorType(
-        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of("A", "B"));
+        "TestingType", null, null, UNKNOWN_TYPE, ImmutableList.of(
+            registry.createTemplateType("A"),
+            registry.createTemplateType("B")));
     JSType templatizedInstance = registry.createTemplatizedType(
         templatizedCtor.getInstanceType(),
         ImmutableList.of(NUMBER_TYPE));
