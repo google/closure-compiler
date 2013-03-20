@@ -987,6 +987,12 @@ Element.prototype.attachEvent;
 Element.prototype.canHaveChildren;
 
 /**
+ * @type {string}
+ * @see http://msdn.microsoft.com/en-us/library/ms533559(v=vs.85).aspx
+ */
+Element.prototype.classid;
+
+/**
  * @param {number} iCoordX Integer that specifies the client window coordinate
  *     of x.
  * @param {number} iCoordY Integer that specifies the client window coordinate
