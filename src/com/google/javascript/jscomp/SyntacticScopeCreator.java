@@ -22,7 +22,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-
 /**
  * <p>The syntactic scope creator scans the parse tree to create a Scope object
  * containing all the variable declarations in that scope.</p>

@@ -316,7 +316,7 @@ class RenameProperties implements CompilerPass {
       int affinityScore = 0;
       for (Iterator<UndiGraphEdge<Property, PropertyAffinity>> edgeIterator =
           node.getNeighborEdgesIterator(); edgeIterator.hasNext();) {
-        UndiGraphEdge<Property,PropertyAffinity> edge = edgeIterator.next();
+        UndiGraphEdge<Property, PropertyAffinity> edge = edgeIterator.next();
         affinityScore += edge.getValue().affinity +
             (node == edge.getNodeA() ?
                 edge.getNodeB().getValue().numOccurrences :
@@ -546,7 +546,7 @@ class RenameProperties implements CompilerPass {
         for (Property p1 : currentHighAffinityProperties) {
           for (Property p2 : currentHighAffinityProperties) {
             if (p1.oldName.compareTo(p2.oldName) < 0) {
-              GraphEdge<Property,PropertyAffinity> edge =
+              GraphEdge<Property, PropertyAffinity> edge =
                   affinityGraph.getFirstEdge(p1, p2);
               if (edge == null) {
                 affinityGraph.connect(p1, new PropertyAffinity(1), p2);

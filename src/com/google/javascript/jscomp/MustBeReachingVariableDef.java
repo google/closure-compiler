@@ -119,7 +119,7 @@ final class MustBeReachingVariableDef extends
 
     public MustDef(Iterator<Var> vars) {
       this();
-      while(vars.hasNext()) {
+      while (vars.hasNext()) {
         Var var = vars.next();
         // Every variable in the scope is defined once in the beginning of the
         // function: all the declared variables are undefined, all functions
@@ -322,7 +322,7 @@ final class MustBeReachingVariableDef extends
    * @param node The CFG node where the definition should be record to.
    *     {@code null} if this is a conditional define.
    */
-  private void addToDefIfLocal( String name, @Nullable Node node,
+  private void addToDefIfLocal(String name, @Nullable Node node,
       @Nullable Node rValue, MustDef def) {
     Var var = jsScope.getVar(name);
 
@@ -366,7 +366,7 @@ final class MustBeReachingVariableDef extends
     }
 
     // Also, assume we no longer know anything that depends on a parameter.
-    for (Entry<Var, Definition> pair: output.reachingDef.entrySet()) {
+    for (Entry<Var, Definition> pair : output.reachingDef.entrySet()) {
       Definition value = pair.getValue();
       if (value == null) {
         continue;

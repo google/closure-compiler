@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CheckLevel;
-
 import java.io.Serializable;
 import java.text.MessageFormat;
 

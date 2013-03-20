@@ -24,8 +24,8 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
-import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
+import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -52,8 +52,8 @@ import java.util.Stack;
 class AnalyzePrototypeProperties implements CompilerPass {
 
   // Constants for symbol types, for easier readability.
-  private final SymbolType PROPERTY = SymbolType.PROPERTY;
-  private final SymbolType VAR = SymbolType.VAR;
+  private static final SymbolType PROPERTY = SymbolType.PROPERTY;
+  private static final SymbolType VAR = SymbolType.VAR;
 
   private final AbstractCompiler compiler;
   private final boolean canModifyExterns;

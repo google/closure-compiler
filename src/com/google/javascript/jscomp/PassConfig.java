@@ -110,7 +110,7 @@ public abstract class PassConfig {
    * Clients that only want to analyze code (like IDEs) and not emit
    * code will only run checks and not optimizations.
    */
-  abstract protected List<PassFactory> getChecks();
+  protected abstract List<PassFactory> getChecks();
 
   /**
    * Gets the optimization passes to run.
@@ -118,7 +118,7 @@ public abstract class PassConfig {
    * Optimization passes revolve around producing smaller and faster code.
    * They should always run after checking passes.
    */
-  abstract protected List<PassFactory> getOptimizations();
+  protected abstract List<PassFactory> getOptimizations();
 
   /**
    * Gets a graph of the passes run. For debugging.
@@ -185,7 +185,7 @@ public abstract class PassConfig {
   /**
    * Insert the given pass factory before the factory of the given name.
    */
-  final static void addPassFactoryBefore(
+  static final void addPassFactoryBefore(
       List<PassFactory> factoryList, PassFactory factory, String passName) {
     factoryList.add(
         findPassIndexByName(factoryList, passName), factory);
@@ -194,7 +194,7 @@ public abstract class PassConfig {
   /**
    * Find a pass factory with the same name as the given one, and replace it.
    */
-  final static void replacePassFactory(
+  static final void replacePassFactory(
       List<PassFactory> factoryList, PassFactory factory) {
     factoryList.set(
         findPassIndexByName(factoryList, factory.getName()), factory);

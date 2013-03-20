@@ -1753,9 +1753,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ensureTyped(t, n);
     }
 
-    // TODO: Add something to check for calls of RegExp objects, which is not
-    // supported by IE.  Either say something about the return type or warn
-    // about the non-portability of the call or both.
+    // TODO(nicksantos): Add something to check for calls of RegExp objects,
+    // which is not supported by IE. Either say something about the return type
+    // or warn about the non-portability of the call or both.
   }
 
   /**

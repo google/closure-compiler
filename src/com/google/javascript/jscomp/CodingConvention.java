@@ -254,6 +254,7 @@ public interface CodingConvention extends Serializable {
    */
   public Bind describeFunctionBind(Node n, boolean useTypeInfo);
 
+  /** Bind class */
   public static class Bind {
     // The target of the bind action
     final Node target;
@@ -312,11 +313,13 @@ public interface CodingConvention extends Serializable {
    */
   public Collection<AssertionFunctionSpec> getAssertionFunctions();
 
+  /** Specify the kind of inheritance */
   static enum SubclassType {
     INHERITS,
     MIXIN
   }
 
+  /** Record subclass relations */
   static class SubclassRelationship {
     final SubclassType type;
     final String subclassName;

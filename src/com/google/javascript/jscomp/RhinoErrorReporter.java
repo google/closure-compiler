@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.SimpleErrorReporter;
 
@@ -78,7 +77,7 @@ class RhinoErrorReporter {
 
   private RhinoErrorReporter(AbstractCompiler compiler) {
     this.compiler = compiler;
-    typeMap = ImmutableMap.<Pattern,DiagnosticType>builder()
+    typeMap = ImmutableMap.<Pattern, DiagnosticType>builder()
         // Trailing comma
         .put(replacePlaceHolders(
             com.google.javascript.rhino.head.ScriptRuntime.getMessage0(

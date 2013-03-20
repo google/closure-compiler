@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.CheckLevel;
 
 import java.util.Set;
 
@@ -79,8 +78,9 @@ public abstract class AbstractMessageFormatter implements MessageFormatter {
   }
 
   private String maybeColorize(String text, Color color) {
-    if (!colorize) return text;
-
+    if (!colorize) {
+      return text;
+    }
     return color.getControlCharacter() +
         text + Color.RESET.getControlCharacter();
   }

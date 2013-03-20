@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import javax.annotation.Nullable;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -25,6 +24,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * A pass for stripping a list of provided JavaScript object types.

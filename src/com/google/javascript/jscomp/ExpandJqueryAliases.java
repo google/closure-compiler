@@ -151,7 +151,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
   private void maybeReplaceJqueryPrototypeAlias(Node n) {
     // Check to see if this is the assignment of the original alias.
     // If so, leave it intact.
-    if(NodeUtil.isLValue(n)) {
+    if (NodeUtil.isLValue(n)) {
       Node maybeAssign = n.getParent();
       while (!NodeUtil.isStatement(maybeAssign) && !maybeAssign.isAssign()) {
         maybeAssign = maybeAssign.getParent();
@@ -219,7 +219,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
       Node propValue = currentProp.removeFirstChild();
 
       Node newProp;
-      if(currentProp.isQuotedString()) {
+      if (currentProp.isQuotedString()) {
         newProp = IR.getelem(objectToExtend.cloneTree(),
             currentProp).srcref(currentProp);
       } else {
@@ -260,7 +260,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
       n.putBooleanProp(Node.FREE_CALL, false);
 
       // remove any other pre-existing call arguments
-      while(newCallTarget.getNext() != null) {
+      while (newCallTarget.getNext() != null) {
         n.removeChildAfter(newCallTarget);
       }
       n.addChildToBack(IR.thisNode().srcref(n));
@@ -300,7 +300,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
     if (!objectToLoopOver.isObjectLit() &&
         !(objectToLoopOver.isArrayLit() &&
         isArrayLitValidForExpansion(objectToLoopOver))) {
-      t.report(n, JQUERY_UNABLE_TO_EXPAND_INVALID_LIT_ERROR, (String)null);
+      t.report(n, JQUERY_UNABLE_TO_EXPAND_INVALID_LIT_ERROR, (String) null);
       return;
     }
 
@@ -314,9 +314,9 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
             keyNodeReferences, valueNodeReferences,
             objectToLoopOver.isArrayLit()));
 
-    if(keyNodeReferences.size() == 0) {
+    if (keyNodeReferences.size() == 0) {
      // We didn't do anything useful ...
-      t.report(n, JQUERY_USELESS_EACH_EXPANSION, (String)null);
+      t.report(n, JQUERY_USELESS_EACH_EXPANSION, (String) null);
       return;
     }
 
@@ -327,7 +327,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
         replaceOriginalJqueryEachCall(n, fncBlock);
     } else {
       // We didn't do anything useful ...
-      t.report(n, JQUERY_USELESS_EACH_EXPANSION, (String)null);
+      t.report(n, JQUERY_USELESS_EACH_EXPANSION, (String) null);
     }
   }
 
@@ -344,7 +344,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
     // Expand the jQuery.expandedEach call
     Node key = objectToLoopOver.getFirstChild(), val = null;
-    for(int i = 0; key != null; key = key.getNext(), i++) {
+    for (int i = 0; key != null; key = key.getNext(), i++) {
       if (key != null) {
         if (objectToLoopOver.isArrayLit()) {
           // Arrays have a value of their index number
@@ -481,7 +481,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
       n.putBooleanProp(Node.FREE_CALL, true);
 
       // remove any other pre-existing call arguments
-      while(fnc.getNext() != null) {
+      while (fnc.getNext() != null) {
         n.removeChildAfter(fnc);
       }
     }

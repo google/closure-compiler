@@ -29,7 +29,6 @@ import com.google.common.collect.TreeMultimap;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
-import com.google.javascript.jscomp.CheckLevel;
 
 import java.io.File;
 import java.io.IOException;
@@ -201,6 +200,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
     return warning;
   }
 
+  /** Whitelist builder */
   public static class WhitelistBuilder implements ErrorHandler {
     private final Set<JSError> warnings = Sets.newLinkedHashSet();
     private String productName = null;
@@ -263,7 +263,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
         out.append("# When you fix any of these warnings, run "
             + generatorTarget + " task.\n");
       }
-      
+
       if (headerNote != null) {
         out.append("#"
             + Joiner.on("\n# ").join(Splitter.on("\n").split(headerNote))

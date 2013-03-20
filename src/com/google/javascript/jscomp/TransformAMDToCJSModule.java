@@ -15,12 +15,13 @@
  */
 package com.google.javascript.jscomp;
 
-import java.util.Iterator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Iterators;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+
+import java.util.Iterator;
 
 /**
  * Rewrites an AMD module https://github.com/amdjs/amdjs-api/wiki/AMD to a
@@ -30,22 +31,22 @@ import com.google.javascript.rhino.Node;
 class TransformAMDToCJSModule implements CompilerPass {
 
   @VisibleForTesting
-  final static DiagnosticType UNSUPPORTED_DEFINE_SIGNATURE_ERROR =
+  static final DiagnosticType UNSUPPORTED_DEFINE_SIGNATURE_ERROR =
       DiagnosticType.error(
           "UNSUPPORTED_DEFINE_SIGNATURE",
           "Only define(function() ...), define(OBJECT_LITERAL) and define("
               + "['dep', 'dep1'], function(d0, d2, [exports, module]) ...) forms "
               + "are currently supported.");
-  final static DiagnosticType NON_TOP_LEVEL_STATEMENT_DEFINE_ERROR =
+  static final DiagnosticType NON_TOP_LEVEL_STATEMENT_DEFINE_ERROR =
       DiagnosticType.error(
             "NON_TOP_LEVEL_STATEMENT_DEFINE",
             "The define function must be called as a top-level statement.");
-  final static DiagnosticType REQUIREJS_PLUGINS_NOT_SUPPORTED_WARNING =
+  static final DiagnosticType REQUIREJS_PLUGINS_NOT_SUPPORTED_WARNING =
     DiagnosticType.warning(
           "REQUIREJS_PLUGINS_NOT_SUPPORTED",
           "Plugins in define requirements are not supported: {0}");
 
-  final static String VAR_RENAME_SUFFIX = "__alias";
+  static final String VAR_RENAME_SUFFIX = "__alias";
 
 
   private final AbstractCompiler compiler;

@@ -20,7 +20,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 
-
 /**
  * An AST generated totally by the compiler.
  *

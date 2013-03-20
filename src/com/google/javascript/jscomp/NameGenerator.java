@@ -16,12 +16,13 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.rhino.TokenStream;
-import javax.annotation.Nullable;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Chars;
+import com.google.javascript.rhino.TokenStream;
 
 import java.util.*;
+
+import javax.annotation.Nullable;
 
 /**
  * A simple class for generating unique JavaScript variable/property names.

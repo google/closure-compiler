@@ -314,13 +314,13 @@ class ProcessTweaks implements CompilerPass {
     NodeTraversal.traverse(compiler, root, pass);
 
     Map<String, TweakInfo> tweakInfos = pass.allTweaks;
-    for (TweakInfo tweakInfo: tweakInfos.values()) {
+    for (TweakInfo tweakInfo : tweakInfos.values()) {
       tweakInfo.emitAllWarnings();
     }
     return new CollectTweaksResult(tweakInfos, pass.getOverridesCalls);
   }
 
-  private final static class CollectTweaksResult {
+  private static final class CollectTweaksResult {
     final Map<String, TweakInfo> tweakInfos;
     final List<TweakFunctionCall> getOverridesCalls;
 

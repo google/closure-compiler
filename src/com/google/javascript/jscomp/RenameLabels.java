@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-
 /**
  * RenameLabels renames all the labels so that they have short names, to reduce
  * code size and also to obfuscate the code.

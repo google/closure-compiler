@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.JsFileParser;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,7 +44,7 @@ public class CompilerInput
 
   // Info about where the file lives.
   private JSModule module;
-  final private InputId id;
+  private final InputId id;
 
   // The AST.
   private final SourceAst ast;

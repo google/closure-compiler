@@ -19,7 +19,6 @@ import static com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt.L
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.SourceExcerptProvider.ExcerptFormatter;
 import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
 

@@ -16,9 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CheckLevel;
-import com.google.javascript.jscomp.CompilerOptions;
-
 /**
  * Convert the warnings level to an Options object.
  *

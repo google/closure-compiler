@@ -208,7 +208,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       return null;
     }
 
-    int paramCount = callNode.getChildCount() -1;
+    int paramCount = callNode.getChildCount() - 1;
     if (paramCount > 2) {
       compiler.report(JSError.make(callNode, GOOG_CLASS_UNEXPECTED_PARAMS));
       return null;

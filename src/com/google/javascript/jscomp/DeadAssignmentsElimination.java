@@ -248,7 +248,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         if (parent.isExprResult()) {
           parent.replaceChild(n,
               IR.voidNode(IR.number(0).srcref(n)));
-        } else if(n.isComma() && n != parent.getLastChild()) {
+        } else if (n.isComma() && n != parent.getLastChild()) {
           parent.removeChild(n);
         } else if (parent.isFor() && !NodeUtil.isForIn(parent) &&
             NodeUtil.getConditionExpression(parent) != n) {
@@ -323,8 +323,8 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
           break;
 
         default:
-          for(Node sibling = n.getNext(); sibling != null;
-              sibling = sibling.getNext()) {
+          for (Node sibling = n.getNext(); sibling != null;
+               sibling = sibling.getNext()) {
             state = isVariableReadBeforeKill(sibling, variable);
             if (state != VariableLiveness.MAYBE_LIVE) {
               break;

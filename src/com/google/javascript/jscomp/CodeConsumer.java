@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 
-
 /**
  * Abstracted consumer of the CodeGenerator output.
  *

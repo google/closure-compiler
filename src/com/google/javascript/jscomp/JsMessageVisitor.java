@@ -52,7 +52,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
   static final DiagnosticType MESSAGE_HAS_NO_TEXT =
       DiagnosticType.warning("JSC_MSG_HAS_NO_TEXT",
           "Message value of {0} is just an empty string. "
-              + "Empty messages are forbidden." );
+              + "Empty messages are forbidden.");
 
   static final DiagnosticType MESSAGE_TREE_MALFORMED =
       DiagnosticType.error("JSC_MSG_TREE_MALFORMED",
@@ -584,7 +584,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
           // Check that all placeholders from the message text have appropriate
           // object literal keys
           for (String phName : builder.getPlaceholders()) {
-            if(!phNames.contains(phName)) {
+            if (!phNames.contains(phName)) {
               throw new MalformedException(
                   "Unrecognized message placeholder referenced: " + phName,
                   returnNode);
@@ -710,7 +710,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
     // values
     Set<String> usedPlaceholders = builder.getPlaceholders();
     for (String phName : usedPlaceholders) {
-      if(!phNames.contains(phName)) {
+      if (!phNames.contains(phName)) {
         throw new MalformedException(
             "Unrecognized message placeholder referenced: " + phName,
             objLitNode);
@@ -720,7 +720,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
     // Check that objLiteral have only names that are present in the
     // message text
     for (String phName : phNames) {
-      if(!usedPlaceholders.contains(phName)) {
+      if (!usedPlaceholders.contains(phName)) {
         throw new MalformedException(
             "Unused message placeholder: " + phName,
             objLitNode);
@@ -741,7 +741,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
       throws MalformedException {
     String value = extractStringFromStringExprNode(node);
 
-    while(true) {
+    while (true) {
       int phBegin = value.indexOf(PH_JS_PREFIX);
       if (phBegin < 0) {
         // Just a string literal

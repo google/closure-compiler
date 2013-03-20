@@ -206,9 +206,12 @@ public class JsMessage {
 
   @Override
   public boolean equals(Object o) {
-    if (o == this) return true;
-    if (!(o instanceof JsMessage)) return false;
-
+    if (o == this) {
+      return true;
+    }
+    if (!(o instanceof JsMessage)) {
+      return false;
+    }
     JsMessage m = (JsMessage) o;
     return id.equals(m.id) &&
            key.equals(m.key) &&
@@ -471,9 +474,9 @@ public class JsMessage {
    * <p>The original code for the hash function is courtesy
    * <a href="http://burtleburtle.net/bob/hash/evahash.html">Bob Jenkins</a>.
    *
-   * <p>TODO: Add stream hashing functionality.
+   * <p>TODO(anatol): Add stream hashing functionality.
    */
-  final static class Hash {
+  static final class Hash {
     private Hash() {}
 
     /** Default hash seed (64 bit) */
@@ -565,58 +568,81 @@ public class JsMessage {
       }
 
       c += length;
-      switch (keylen) { // deal with rest. Cases fall through
-        case 23:
+      if (keylen >= 16) {
+        if (keylen == 23) {
           c += ((long) value[offset + 22]) << 56;
-        case 22:
+        }
+        if (keylen >= 22) {
           c += (value[offset + 21] & 0xffL) << 48;
-        case 21:
+        }
+        if (keylen >= 21) {
           c += (value[offset + 20] & 0xffL) << 40;
-        case 20:
+        }
+        if (keylen >= 20) {
           c += (value[offset + 19] & 0xffL) << 32;
-        case 19:
+        }
+        if (keylen >= 19) {
           c += (value[offset + 18] & 0xffL) << 24;
-        case 18:
+        }
+        if (keylen >= 18) {
           c += (value[offset + 17] & 0xffL) << 16;
-        case 17:
+        }
+        if (keylen >= 17) {
           c += (value[offset + 16] & 0xffL) << 8;
           // the first byte of c is reserved for the length
-        case 16:
+        }
+        if (keylen >= 16) {
           b += word64At(value, offset + 8);
           a += word64At(value, offset);
-          break;
-        case 15:
+        }
+      } else if (keylen >= 8) {
+        if (keylen == 15) {
           b += (value[offset + 14] & 0xffL) << 48;
-        case 14:
+        }
+        if (keylen >= 14) {
           b += (value[offset + 13] & 0xffL) << 40;
-        case 13:
+        }
+        if (keylen >= 13) {
           b += (value[offset + 12] & 0xffL) << 32;
-        case 12:
+        }
+        if (keylen >= 12) {
           b += (value[offset + 11] & 0xffL) << 24;
-        case 11:
+        }
+        if (keylen >= 11) {
           b += (value[offset + 10] & 0xffL) << 16;
-        case 10:
+        }
+        if (keylen >= 10) {
           b += (value[offset + 9] & 0xffL) << 8;
-        case 9:
+        }
+        if (keylen >= 9) {
           b += (value[offset + 8] & 0xffL);
-        case 8:
+        }
+        if (keylen >= 8) {
           a += word64At(value, offset);
-          break;
-        case 7:
+        }
+      } else {
+        if (keylen == 7) {
           a += (value[offset + 6] & 0xffL) << 48;
-        case 6:
+        }
+        if (keylen >= 6) {
           a += (value[offset + 5] & 0xffL) << 40;
-        case 5:
+        }
+        if (keylen >= 5) {
           a += (value[offset + 4] & 0xffL) << 32;
-        case 4:
+        }
+        if (keylen >= 4) {
           a += (value[offset + 3] & 0xffL) << 24;
-        case 3:
+        }
+        if (keylen >= 3) {
           a += (value[offset + 2] & 0xffL) << 16;
-        case 2:
+        }
+        if (keylen >= 2) {
           a += (value[offset + 1] & 0xffL) << 8;
-        case 1:
+        }
+        if (keylen >= 1) {
           a += (value[offset + 0] & 0xffL);
           // case 0: nothing left to add
+        }
       }
       return mix64(a, b, c);
     }
@@ -652,6 +678,7 @@ public class JsMessage {
     }
   }
 
+  /** ID generator */
   public interface IdGenerator {
     /**
      * Generate the ID for the message. Messages with the same messageParts

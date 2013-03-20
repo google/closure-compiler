@@ -46,7 +46,7 @@ class PeepholeSubstituteAlternateSyntax
 
   private final boolean late;
 
-  private final int STRING_SPLIT_OVERHEAD = ".split('.')".length();
+  private static final int STRING_SPLIT_OVERHEAD = ".split('.')".length();
 
   static final DiagnosticType INVALID_REGULAR_EXPRESSION_FLAGS =
     DiagnosticType.warning(
@@ -457,7 +457,7 @@ class PeepholeSubstituteAlternateSyntax
     // Find the enclosing control structure, if any, that a "break" would exit
     // from.
     Node breakTarget = n;
-    for (;!ControlFlowAnalysis.isBreakTarget(breakTarget, null /* no label */);
+    for (; !ControlFlowAnalysis.isBreakTarget(breakTarget, null /* no label */);
         breakTarget = breakTarget.getParent()) {
       if (breakTarget.isFunction() || breakTarget.isScript()) {
         // No break target.
@@ -1165,11 +1165,11 @@ class PeepholeSubstituteAlternateSyntax
                 // If an expression has higher precedence than && or ||,
                 // but lower precedence than NOT, an additional () is needed
                 // Thus we do not preceed
-                int op_precedence = NodeUtil.precedence(first.getType());
+                int opPrecedence = NodeUtil.precedence(first.getType());
                 if ((isLowerPrecedence(leftParent, NOT_PRECEDENCE)
-                    && isHigherPrecedence(leftParent, op_precedence))
+                    && isHigherPrecedence(leftParent, opPrecedence))
                     || (isLowerPrecedence(rightParent, NOT_PRECEDENCE)
-                    && isHigherPrecedence(rightParent, op_precedence))) {
+                    && isHigherPrecedence(rightParent, opPrecedence))) {
                   return n;
                 }
               }
@@ -1538,7 +1538,7 @@ class PeepholeSubstituteAlternateSyntax
   }
 
   private Node tryMinimizeStringArrayLiteral(Node n) {
-    if(!late) {
+    if (!late) {
       return n;
     }
 
@@ -1593,7 +1593,7 @@ class PeepholeSubstituteAlternateSyntax
 
     String[] delimiters = new String[]{" ", ";", ",", "{", "}", null};
     int i = 0;
-    NEXT_DELIMITER: for (;delimiters[i] != null; i++) {
+    NEXT_DELIMITER: for (; delimiters[i] != null; i++) {
       for (String cur : strings) {
         if (cur.contains(delimiters[i])) {
           continue NEXT_DELIMITER;

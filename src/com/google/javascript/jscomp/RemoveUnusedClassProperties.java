@@ -68,7 +68,7 @@ class RemoveUnusedClassProperties
         } else if (parent.isInc() || parent.isDec()) {
           parent.getParent().replaceChild(parent, IR.number(0));
         } else {
-          throw new IllegalStateException("unexpected: "+ parent);
+          throw new IllegalStateException("unexpected: " + parent);
         }
         compiler.reportCodeChange();
       }

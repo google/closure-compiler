@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import javax.annotation.Nullable;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -34,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
 
 /**
  * <p>AliasExternals provides wrappers and aliases for external globals and
@@ -335,7 +335,7 @@ class AliasExternals implements CompilerPass {
       // one parameter to GETPROP_prop() call.
       Node callName = IR.name(
           getMutatorFor(propNameNode.getString()));
-      Node call = IR.call( callName, propSrc, propDest);
+      Node call = IR.call(callName, propSrc, propDest);
       call.putBooleanProp(Node.FREE_CALL, true);
 
       // And replace the assign statement with the new call

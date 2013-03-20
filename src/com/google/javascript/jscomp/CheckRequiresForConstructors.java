@@ -28,7 +28,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import java.util.List;
 import java.util.Set;
 
-
 /**
  * This pass walks the AST to create a Collection of 'new' nodes and
  * 'goog.require' nodes. It reconciles these Collections, creating a

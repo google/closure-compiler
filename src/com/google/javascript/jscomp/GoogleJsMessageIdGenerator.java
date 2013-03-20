@@ -72,7 +72,7 @@ public class GoogleJsMessageIdGenerator implements IdGenerator {
     String projectScopedMeaning =
         (projectId != null ? (projectId + ": ") : "") + meaning;
     return String.valueOf(
-        MessageId.GenerateId(tcValue, projectScopedMeaning));
+        MessageId.generateId(tcValue, projectScopedMeaning));
   }
 
 
@@ -93,7 +93,7 @@ public class GoogleJsMessageIdGenerator implements IdGenerator {
         hi ^= 0x130f9bef;
         lo ^= 0x94a0a928;
       }
-      return (((long) hi) << 32) | (lo & 0xffffffffl);
+      return (((long) hi) << 32) | (lo & 0xffffffffL);
     }
 
     /**
@@ -154,31 +154,41 @@ public class GoogleJsMessageIdGenerator implements IdGenerator {
       }
 
       c += limit - start;
-      switch (limit - i) { // deal with rest. Cases fall through
-        case 11:
-          c += (str[i + 10] & 0xff) << 24;
-        case 10:
-          c += (str[i + 9] & 0xff) << 16;
-        case 9:
-          c += (str[i + 8] & 0xff) << 8;
-          // the first byte of c is reserved for the length
-        case 8:
-          b += (str[i + 7] & 0xff) << 24;
-        case 7:
-          b += (str[i + 6] & 0xff) << 16;
-        case 6:
-          b += (str[i + 5] & 0xff) << 8;
-        case 5:
-          b += (str[i + 4] & 0xff);
-        case 4:
-          a += (str[i + 3] & 0xff) << 24;
-        case 3:
-          a += (str[i + 2] & 0xff) << 16;
-        case 2:
-          a += (str[i + 1] & 0xff) << 8;
-        case 1:
-          a += (str[i + 0] & 0xff);
-          // case 0 : nothing left to add
+      int tmp = limit - i;
+      if (tmp == 11) {
+        c += (str[i + 10] & 0xff) << 24;
+      }
+      if (tmp >= 10) {
+        c += (str[i + 9] & 0xff) << 16;
+      }
+      if (tmp >= 9) {
+        c += (str[i + 8] & 0xff) << 8;
+        // the first byte of c is reserved for the length
+      }
+      if (tmp >= 8) {
+        b += (str[i + 7] & 0xff) << 24;
+      }
+      if (tmp >= 7) {
+        b += (str[i + 6] & 0xff) << 16;
+      }
+      if (tmp >= 6) {
+        b += (str[i + 5] & 0xff) << 8;
+      }
+      if (tmp >= 5) {
+        b += (str[i + 4] & 0xff);
+      }
+      if (tmp >= 4) {
+        a += (str[i + 3] & 0xff) << 24;
+      }
+      if (tmp >= 3) {
+        a += (str[i + 2] & 0xff) << 16;
+      }
+      if (tmp >= 2) {
+        a += (str[i + 1] & 0xff) << 8;
+      }
+      if (tmp >= 1) {
+        a += (str[i + 0] & 0xff);
+        // case 0 : nothing left to add
       }
 
       // Mix
@@ -223,7 +233,7 @@ public class GoogleJsMessageIdGenerator implements IdGenerator {
    * Forked from the i18n library.
    */
   private static class MessageId {
-    private final static long GenerateId(String message, String meaning) {
+    private static final long generateId(String message, String meaning) {
       long fp = FP.fingerprint(message);
       if (null != meaning && meaning.length() > 0) {
         // combine the fingerprints of message and meaning

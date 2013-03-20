@@ -38,7 +38,7 @@ class CodeGenerator {
   private static final String GT_ESCAPED = "\\x3e";
 
   // A memoizer for formatting strings as JS strings.
-  private final Map<String, String> ESCAPED_JS_STRINGS = Maps.newHashMap();
+  private final Map<String, String> escapedJsStrings = Maps.newHashMap();
 
   private static final char[] HEX_CHARS
       = { '0', '1', '2', '3', '4', '5', '6', '7',
@@ -981,10 +981,10 @@ class CodeGenerator {
     if (useSlashV) {
       add(jsString(n.getString(), useSlashV));
     } else {
-      String cached = ESCAPED_JS_STRINGS.get(s);
+      String cached = escapedJsStrings.get(s);
       if (cached == null) {
         cached = jsString(n.getString(), useSlashV);
-        ESCAPED_JS_STRINGS.put(s, cached);
+        escapedJsStrings.put(s, cached);
       }
       add(cached);
     }
@@ -1121,16 +1121,16 @@ class CodeGenerator {
           // Break </script into <\/script
           // As above, this is just to prevent developers from doing this
           // accidentally.
-          final String END_SCRIPT = "/script";
+          final String endScript = "/script";
 
           // Break <!-- into <\!--
-          final String START_COMMENT = "!--";
+          final String startComment = "!--";
 
-          if (s.regionMatches(true, i + 1, END_SCRIPT, 0,
-                              END_SCRIPT.length())) {
+          if (s.regionMatches(true, i + 1, endScript, 0,
+                              endScript.length())) {
             sb.append(LT_ESCAPED);
-          } else if (s.regionMatches(false, i + 1, START_COMMENT, 0,
-                                     START_COMMENT.length())) {
+          } else if (s.regionMatches(false, i + 1, startComment, 0,
+                                     startComment.length())) {
             sb.append(LT_ESCAPED);
           } else {
             sb.append(c);
@@ -1196,7 +1196,7 @@ class CodeGenerator {
     Node c = n.getFirstChild();
     for (; c != null && i < maxCount; c = c.getNext()) {
       if (c.isBlock()) {
-        i += getNonEmptyChildCount(c, maxCount-i);
+        i += getNonEmptyChildCount(c, maxCount - i);
       } else if (!c.isEmpty()) {
         i++;
       }

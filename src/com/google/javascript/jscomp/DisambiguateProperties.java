@@ -459,7 +459,7 @@ class DisambiguateProperties<T> implements CompilerPass {
             JSType jsType = (JSType) type;
             if (jsType.isAllType() || jsType.isUnknownType()) {
               if (n.getFirstChild().isThis()) {
-                suggestion = "The \"this\" object is unknown in the function,"+
+                suggestion = "The \"this\" object is unknown in the function," +
                     "consider using @this";
               } else {
                 String qName = n.getFirstChild().getQualifiedName();
@@ -653,7 +653,7 @@ class DisambiguateProperties<T> implements CompilerPass {
   /** Returns a map from field name to types for which it will be renamed. */
   Multimap<String, Collection<T>> getRenamedTypesForTesting() {
     Multimap<String, Collection<T>> ret = HashMultimap.create();
-    for (Map.Entry<String, Property> entry: properties.entrySet()) {
+    for (Map.Entry<String, Property> entry : properties.entrySet()) {
       Property prop = entry.getValue();
       if (!prop.skipRenaming) {
         for (Collection<T> c : prop.getTypes().allEquivalenceClasses()) {
@@ -944,7 +944,9 @@ class DisambiguateProperties<T> implements CompilerPass {
             }
 
             // If this interface invalidated this property, return now.
-            if (p.skipRenaming) return;
+            if (p.skipRenaming) {
+              return;
+            }
           }
           if (constructor.isInterface() || constructor.isConstructor()) {
             constructor = constructor.getSuperClassConstructor();

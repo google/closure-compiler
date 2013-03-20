@@ -332,7 +332,9 @@ class GlobalNamespace
           if (parent != null && parent.isObjectLit()) {
             name = getNameForObjLitKey(n);
           }
-          if (name == null) return;
+          if (name == null) {
+            return;
+          }
           isSet = true;
           switch (n.getType()) {
             case Token.STRING_KEY:
@@ -367,8 +369,9 @@ class GlobalNamespace
                 return;
               case Token.FUNCTION:
                 Node gramps = parent.getParent();
-                if (gramps == null ||
-                    NodeUtil.isFunctionExpression(parent)) return;
+                if (gramps == null || NodeUtil.isFunctionExpression(parent)) {
+                  return;
+                }
                 isSet = true;
                 type = Name.Type.FUNCTION;
                 break;
@@ -414,7 +417,9 @@ class GlobalNamespace
             }
           }
           name = n.getQualifiedName();
-          if (name == null) return;
+          if (name == null) {
+            return;
+          }
           break;
         default:
           return;
@@ -530,7 +535,9 @@ class GlobalNamespace
           // The same line of reasoning used for the OR case applies here.
           Node second = n.getFirstChild().getNext();
           Name.Type t = getValueType(second);
-          if (t != Name.Type.OTHER) return t;
+          if (t != Name.Type.OTHER) {
+            return t;
+          }
           Node third = second.getNext();
           return getValueType(third);
       }
@@ -551,7 +558,9 @@ class GlobalNamespace
      */
     void handleSetFromGlobal(NodeTraversal t, Node n, Node parent, String name,
                              boolean isPropAssign, Name.Type type) {
-      if (maybeHandlePrototypePrefix(t, n, parent, name)) return;
+      if (maybeHandlePrototypePrefix(t, n, parent, name)) {
+        return;
+      }
 
       Name nameObj = getOrCreateName(name);
       nameObj.type = type;
@@ -603,7 +612,9 @@ class GlobalNamespace
      */
     void handleSetFromLocal(NodeTraversal t, Node n, Node parent,
                             String name) {
-      if (maybeHandlePrototypePrefix(t, n, parent, name)) return;
+      if (maybeHandlePrototypePrefix(t, n, parent, name)) {
+        return;
+      }
 
       Name nameObj = getOrCreateName(name);
       Ref set = new Ref(t, n, nameObj,
@@ -629,7 +640,9 @@ class GlobalNamespace
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
     void handleGet(NodeTraversal t, Node n, Node parent, String name) {
-      if (maybeHandlePrototypePrefix(t, n, parent, name)) return;
+      if (maybeHandlePrototypePrefix(t, n, parent, name)) {
+        return;
+      }
 
       Ref.Type type = Ref.Type.DIRECT_GET;
       if (parent != null) {

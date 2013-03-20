@@ -276,7 +276,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
     void afterExitScope(NodeTraversal t, ReferenceMap referenceMap);
   }
 
-  static Behavior DO_NOTHING_BEHAVIOR = new Behavior() {
+  static final Behavior DO_NOTHING_BEHAVIOR = new Behavior() {
     @Override
     public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {}
   };
@@ -373,7 +373,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
      */
     private boolean isInitializingAssignmentAt(int index) {
       if (index < references.size() && index > 0) {
-        Reference maybeDecl = references.get(index-1);
+        Reference maybeDecl = references.get(index - 1);
         if (maybeDecl.isVarDeclaration()) {
           Preconditions.checkState(!maybeDecl.isInitializingDeclaration());
           Reference maybeInit = references.get(index);

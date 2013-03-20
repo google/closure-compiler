@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 /**
  * Using the infrastructure provided by {@link ReferenceCollectingCallback},
  * identify variables that are only ever assigned to object literals
@@ -214,7 +213,7 @@ class InlineObjectLiterals implements CompilerPass {
         // Make sure that the value is not self-referential. IOW,
         // disallow things like x = {b: x.a}.
         //
-        // TODO: Only exclude unorderable self-referential
+        // TODO(user): Only exclude unorderable self-referential
         // assignments. i.e. x = {a: x.b, b: x.a} is not orderable,
         // but x = {a: 1, b: x.a} is.
         //
@@ -435,7 +434,9 @@ class InlineObjectLiterals implements CompilerPass {
 
       for (Reference ref : referenceInfo.references) {
         // The init/decl have already been converted.
-        if (defined && ref == init) continue;
+        if (defined && ref == init) {
+          continue;
+        }
 
         if (ref.isLvalue()) {
           // Assignments have to be handled specially, since they

@@ -659,13 +659,15 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         // To speed things up, only consider cases where len(b) <= 10
         List<String> errors = Lists.newArrayList();
         for (Map.Entry<String, String> b : cssNames.entrySet()) {
-          if (b.getKey().length() > 10) continue;
+          if (b.getKey().length() > 10) {
+            continue;
+          }
           for (Map.Entry<String, String> a : cssNames.entrySet()) {
             String combined = cssNames.get(a.getKey() + "-" + b.getKey());
             if (combined != null &&
                 !combined.equals(a.getValue() + "-" + b.getValue())) {
-              errors.add("map(" + a.getKey() + "-" + b.getKey() +") != map(" +
-                         a.getKey() + ")-map(" + b.getKey() +")");
+              errors.add("map(" + a.getKey() + "-" + b.getKey() + ") != map(" +
+                         a.getKey() + ")-map(" + b.getKey() + ")");
             }
           }
         }
@@ -1179,8 +1181,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         name);
 
     // Offsets to add to source. Named for documentation purposes.
-    final int FOR_QUOTE = 1;
-    final int FOR_DOT = 1;
+    final int forQuote = 1;
+    final int forDot = 1;
 
     Node current = null;
     for (current = syntheticRef;
@@ -1189,16 +1191,16 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       int fullLen = current.getQualifiedName().length();
       int namespaceLen = current.getFirstChild().getQualifiedName().length();
 
-      current.setSourceEncodedPosition(n.getSourcePosition() + FOR_QUOTE);
+      current.setSourceEncodedPosition(n.getSourcePosition() + forQuote);
       current.setLength(fullLen);
 
       current.getLastChild().setSourceEncodedPosition(
-          n.getSourcePosition() + namespaceLen + FOR_QUOTE + FOR_DOT);
+          n.getSourcePosition() + namespaceLen + forQuote + forDot);
       current.getLastChild().setLength(
           current.getLastChild().getString().length());
     }
 
-    current.setSourceEncodedPosition(n.getSourcePosition() + FOR_QUOTE);
+    current.setSourceEncodedPosition(n.getSourcePosition() + forQuote);
     current.setLength(current.getString().length());
 
     maybeAddToSymbolTable(syntheticRef);

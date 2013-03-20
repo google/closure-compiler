@@ -44,7 +44,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   @SuppressWarnings("unused")
   private boolean manageClosureDependencies = false;
 
-  // A common enum for compiler passes that can run either globally or locally.
+  /**
+   * A common enum for compiler passes that can run either globally or locally.
+   */
   public enum Reach {
     ALL,
     LOCAL_ONLY,
@@ -1958,16 +1960,22 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.cssRenamingWhitelist = whitelist;
   }
 
-  public void setReplaceStringsFunctionDescriptions(List<String> replaceStringsFunctionDescriptions) {
-    this.replaceStringsFunctionDescriptions = replaceStringsFunctionDescriptions;
+  public void setReplaceStringsFunctionDescriptions(
+      List<String> replaceStringsFunctionDescriptions) {
+    this.replaceStringsFunctionDescriptions =
+        replaceStringsFunctionDescriptions;
   }
 
-  public void setReplaceStringsPlaceholderToken(String replaceStringsPlaceholderToken) {
-    this.replaceStringsPlaceholderToken = replaceStringsPlaceholderToken;
+  public void setReplaceStringsPlaceholderToken(
+      String replaceStringsPlaceholderToken) {
+    this.replaceStringsPlaceholderToken =
+        replaceStringsPlaceholderToken;
   }
 
-  public void setReplaceStringsReservedStrings(Set<String> replaceStringsReservedStrings) {
-    this.replaceStringsReservedStrings = replaceStringsReservedStrings;
+  public void setReplaceStringsReservedStrings(
+      Set<String> replaceStringsReservedStrings) {
+    this.replaceStringsReservedStrings =
+        replaceStringsReservedStrings;
   }
 
   public void setReplaceStringsInputMap(VariableMap serializedMap) {
@@ -2030,7 +2038,8 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.sourceMapFormat = sourceMapFormat;
   }
 
-  public void setSourceMapLocationMappings(List<SourceMap.LocationMapping> sourceMapLocationMappings) {
+  public void setSourceMapLocationMappings(
+      List<SourceMap.LocationMapping> sourceMapLocationMappings) {
     this.sourceMapLocationMappings = sourceMapLocationMappings;
   }
 
@@ -2115,6 +2124,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     EVERY_PASS
   }
 
+  /** How much tracing we want to do */
   public static enum TracerMode {
     ALL,  // Collect all timing and size metrics.
     RAW_SIZE, // Collect all timing and size metrics, except gzipped size.
@@ -2126,6 +2136,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     }
   }
 
+  /** Option for the ProcessTweaks pass */
   public static enum TweakProcessing {
     OFF,  // Do not run the ProcessTweaks pass.
     CHECK, // Run the pass, but do not strip out the calls.

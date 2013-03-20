@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CheckLevel;
-
 import java.io.Serializable;
 
 /**
@@ -44,6 +42,7 @@ import java.io.Serializable;
  */
 public abstract class WarningsGuard implements Serializable {
 
+  /** Priority */
   public static enum Priority {
     MAX(1),
     MIN(100),

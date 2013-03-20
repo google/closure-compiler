@@ -1791,7 +1791,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
         member.getFirstChild().setJSType(thisType);
 
-        // TODO: We are evaluating these values in the wrong scope:
+        // TODO(johnlenz): We are evaluating these values in the wrong scope:
         // https://code.google.com/p/closure-compiler/issues/detail?id=926
         JSType thisObjectType = thisType.toObjectType();
         if (thisObjectType != null) {
@@ -1958,8 +1958,9 @@ final class TypedScopeCreator implements ScopeCreator {
      * @param parent The parent of n
      */
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n == scope.getRootNode()) return;
-
+      if (n == scope.getRootNode()) {
+        return;
+      }
       if (n.isParamList() && parent == scope.getRootNode()) {
         handleFunctionInputs(parent);
         return;

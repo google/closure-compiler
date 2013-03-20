@@ -21,8 +21,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-
-
 /**
  * Rewrites <code>new goog.testing.ObjectPropertyString(foo, 'bar')</code> to
  * <code>new JSCompiler_ObjectPropertyString(window, foo.bar)</code>.

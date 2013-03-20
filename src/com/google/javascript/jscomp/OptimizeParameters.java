@@ -202,7 +202,7 @@ class OptimizeParameters
         continueLooking = buildParameterList(parameters, cur, site.scope);
         firstCall = false;
       } else {
-        continueLooking= findFixedParameters(parameters, cur);
+        continueLooking = findFixedParameters(parameters, cur);
       }
       if (!continueLooking) {
         return;
@@ -302,7 +302,7 @@ class OptimizeParameters
       index++;
     }
 
-    for (;index < parameters.size(); index++) {
+    for (; index < parameters.size(); index++) {
       parameters.get(index).setShouldRemove(false);
     }
 

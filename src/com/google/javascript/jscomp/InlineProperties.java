@@ -32,7 +32,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Map;
 import java.util.Set;
 
-
 /**
  * InlineProperties attempts to find references to properties that are known to
  * be constants and inline the known value.

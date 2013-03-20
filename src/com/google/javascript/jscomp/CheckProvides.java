@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Maps;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -112,7 +111,7 @@ class CheckProvides implements HotSwapCompilerPass {
         int index = -1;
         boolean found = false;
         do {
-          index = ctor.indexOf('.', index +1);
+          index = ctor.indexOf('.', index + 1);
           String provideKey = index == -1 ? ctor : ctor.substring(0, index);
           if (provides.containsKey(provideKey)) {
             found = true;

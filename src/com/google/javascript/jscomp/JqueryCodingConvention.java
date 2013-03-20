@@ -16,11 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import java.util.Set;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
+
+import java.util.Set;
 
 /**
  * This describes the jQuery specific JavaScript coding conventions.
@@ -41,7 +41,7 @@ public class JqueryCodingConvention extends CodingConventions.Proxy {
     return "window";
   }
 
-  private final static Set<String> propertyTestFunctions = ImmutableSet.of(
+  private static final Set<String> propertyTestFunctions = ImmutableSet.of(
       "jQuery.isPlainObject", "jQuery.isFunction", "jQuery.isNumeric",
       "jQuery.isEmptyObject");
 
@@ -52,7 +52,7 @@ public class JqueryCodingConvention extends CodingConventions.Proxy {
         call.getFirstChild().getQualifiedName());
   }
 
-  private final static Set<String> prototypeAliases = ImmutableSet.of(
+  private static final Set<String> prototypeAliases = ImmutableSet.of(
       "jQuery.fn", "jQuerySub.fn");
 
   @Override

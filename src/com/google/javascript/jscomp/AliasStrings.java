@@ -402,9 +402,9 @@ class AliasStrings extends AbstractPostOrderCallback
      */
     String encodeStringAsIdentifier(String prefix, String s) {
       // Limit to avoid generating very long identifiers
-      final int MAX_LIMIT = 20;
+      final int maxLimit = 20;
       final int length = s.length();
-      final int limit = Math.min(length, MAX_LIMIT);
+      final int limit = Math.min(length, maxLimit);
 
       StringBuilder sb = new StringBuilder();
       sb.append(prefix);

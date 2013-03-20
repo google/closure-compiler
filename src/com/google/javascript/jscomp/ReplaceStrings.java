@@ -54,7 +54,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
           "JSC_BAD_REPLACEMENT_CONFIGURATION",
           "Bad replacement configuration.");
 
-  private final String DEFAULT_PLACEHOLDER_TOKEN = "`";
+  private static final String DEFAULT_PLACEHOLDER_TOKEN = "`";
   private final String placeholderToken;
   private static final String REPLACE_ONE_MARKER = "?";
   private static final String REPLACE_ALL_MARKER = "*";
@@ -156,8 +156,8 @@ class ReplaceStrings extends AbstractPostOrderCallback
 
   private void initMapping(
       VariableMap previousVarMap, Set<String> reservedNames) {
-    Map<String,String> previous = previousVarMap.getOriginalNameToNewNameMap();
-    for (Map.Entry<String,String> entry : previous.entrySet()) {
+    Map<String, String> previous = previousVarMap.getOriginalNameToNewNameMap();
+    for (Map.Entry<String, String> entry : previous.entrySet()) {
       String key = entry.getKey();
       if (!reservedNames.contains(key)) {
         String value = entry.getValue();
@@ -462,7 +462,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
     Preconditions.checkState(first != -1 && last != -1);
 
     String name = function.substring(0, first);
-    String params = function.substring(first+1, last);
+    String params = function.substring(first + 1, last);
 
     int paramCount = 0;
     int replacementParameter = -1;

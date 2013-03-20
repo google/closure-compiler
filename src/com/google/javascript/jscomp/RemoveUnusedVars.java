@@ -476,7 +476,7 @@ class RemoveUnusedVars
       if (param != null) {
         // Take care of the following siblings first.
         boolean hasFollowing = markUnreferencedFunctionArgs(
-            scope, function, referenced, param.getNext(), paramIndex+1,
+            scope, function, referenced, param.getNext(), paramIndex + 1,
             canChangeSignature);
 
         Var var = scope.getVar(param.getString());
@@ -504,7 +504,7 @@ class RemoveUnusedVars
       } else {
         // Anything past the last formal parameter can be removed from the call
         // sites.
-        tryRemoveAllFollowingArgs(function, paramIndex-1);
+        tryRemoveAllFollowingArgs(function, paramIndex - 1);
         return false;
       }
     }

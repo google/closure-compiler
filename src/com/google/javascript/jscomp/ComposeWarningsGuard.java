@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.javascript.jscomp.CheckLevel;
 
 import java.io.Serializable;
 import java.util.*;

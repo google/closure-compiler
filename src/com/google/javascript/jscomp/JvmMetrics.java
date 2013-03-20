@@ -33,10 +33,10 @@ import java.util.StringTokenizer;
  */
 class JvmMetrics {
 
-  private static int TABULAR_COLON_POS = 40;
-  private static long ONE_KILO_BYTE = 1L << 10L;
-  private static long ONE_MEGA_BYTE = 1L << 20L;
-  private static long ONE_GIGA_BYTE = 1L << 30L;
+  private static final int TABULAR_COLON_POS = 40;
+  private static final long ONE_KILO_BYTE = 1L << 10L;
+  private static final long ONE_MEGA_BYTE = 1L << 20L;
+  private static final long ONE_GIGA_BYTE = 1L << 30L;
 
   public static void maybeWriteJvmMetrics(PrintStream out, String options) {
     if (options == null) {

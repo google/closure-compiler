@@ -794,8 +794,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         (NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType))
         || n.isAdd());
 
-    Preconditions.checkState(
-        !n.isAdd()|| !NodeUtil.mayBeString(n));
+    Preconditions.checkState(!n.isAdd() || !NodeUtil.mayBeString(n));
 
     // Use getNumberValue to handle constants like "NaN" and "Infinity"
     // other values are converted to numbers elsewhere.

@@ -16,9 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CheckLevel;
-
-
 /**
  * Sets the level for a particular DiagnosticGroup.
  * @author nicksantos@google.com (Nick Santos)

@@ -34,6 +34,7 @@ public class AstValidator implements CompilerPass {
   // * optionally verify every node has an assigned JSType
   //
 
+  /** Violation handler */
   public interface ViolationHandler {
     void handleViolation(String message, Node n);
   }

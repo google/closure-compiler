@@ -112,7 +112,7 @@ public class StatementFusion extends AbstractPeepholeOptimization {
         if (NodeUtil.isForIn(last)) {
           fuseExpresssonIntoSecondChild(commaTree, last);
         }
-        return ;
+        return;
       default:
         throw new IllegalStateException("Statement fusion missing.");
     }
@@ -128,7 +128,7 @@ public class StatementFusion extends AbstractPeepholeOptimization {
     // tree comparison.
     if (exp2.isComma()) {
       Node leftMostChild = exp2;
-      while(leftMostChild.isComma()) {
+      while (leftMostChild.isComma()) {
         leftMostChild = leftMostChild.getFirstChild();
       }
       Node parent = leftMostChild.getParent();

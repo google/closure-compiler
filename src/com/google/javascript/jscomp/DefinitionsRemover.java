@@ -93,7 +93,7 @@ class DefinitionsRemover {
   }
 
 
-  static abstract class Definition {
+  abstract static class Definition {
 
     private final boolean isExtern;
 

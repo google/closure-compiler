@@ -180,7 +180,7 @@ final class Tracer {
   private long[] extraTracingValues;
 
   /** The type for grouping traces, may be null */
-  private final @Nullable String type;
+  @Nullable private final String type;
 
   /** A comment string for the report */
   private final String comment;
@@ -305,10 +305,10 @@ final class Tracer {
    * @param v The value to convert.
    * @param digits_column_width The desired with of the string.
    */
-  private static String longToPaddedString(long v, int digits_column_width) {
-    int digit_width = numDigits(v);
+  private static String longToPaddedString(long v, int digitsColumnWidth) {
+    int digitWidth = numDigits(v);
     StringBuilder sb = new StringBuilder();
-    appendSpaces(sb, digits_column_width - digit_width);
+    appendSpaces(sb, digitsColumnWidth - digitWidth);
     sb.append(v);
     return sb.toString();
   }
@@ -404,7 +404,7 @@ final class Tracer {
    * that the current ThreadTrace silence_threshold should be used.
    * @return The time that this trace actually ran
    */
-  long stop(int silence_threshold) {
+  long stop(int silenceThreshold) {
     Preconditions.checkState(Thread.currentThread() == startThread);
 
     ThreadTrace trace = getThreadTrace();
@@ -429,11 +429,11 @@ final class Tracer {
       return 0;
     }
 
-    trace.endEvent(this, silence_threshold);
+    trace.endEvent(this, silenceThreshold);
     return stopTimeMs - startTimeMs;
   }
 
-  /** Stop the trace using the default silence_threshold
+  /** Stop the trace using the default silenceThreshold
    *
    * @return  The time that this trace actually ran.
    */
@@ -474,9 +474,9 @@ final class Tracer {
     events.init();
   }
 
-  static void initCurrentThreadTrace(int default_silence_threshold) {
+  static void initCurrentThreadTrace(int defaultSilenceThreshold) {
     initCurrentThreadTrace();
-    setDefaultSilenceThreshold(default_silence_threshold);
+    setDefaultSilenceThreshold(defaultSilenceThreshold);
   }
 
   /**
@@ -572,17 +572,17 @@ final class Tracer {
   /**
    * This map tracks counts of tracers for each type over all time.
    */
-  private static @Nullable AtomicTracerStatMap typeToCountMap;
+  @Nullable private static AtomicTracerStatMap typeToCountMap;
 
   /**
    * This map tracks counts of silent tracers for each type over all time.
    */
-  private static @Nullable AtomicTracerStatMap typeToSilentMap;
+  @Nullable private static AtomicTracerStatMap typeToSilentMap;
 
   /**
    * This map tracks time (ms) for each type over all time.
    */
-  private static @Nullable AtomicTracerStatMap typeToTimeMap;
+  @Nullable private static AtomicTracerStatMap typeToTimeMap;
 
   /**
    * This method MUST be called before getTypeToCountMap (and friends)
@@ -602,7 +602,7 @@ final class Tracer {
    * map must be synchronized on the map.  If enableTypeMaps has not
    * been called, this will return null.
    */
-  static @Nullable Map<String, Long> getTypeToCountMap() {
+  @Nullable static Map<String, Long> getTypeToCountMap() {
     return typeToCountMap != null ? typeToCountMap.getMap() : null;
   }
 
@@ -611,7 +611,7 @@ final class Tracer {
    * map must be synchronized on the map.  If enableTypeMaps has not
    * been called, this will return null.
    */
-  static @Nullable Map<String, Long> getTypeToSilentMap() {
+  @Nullable static Map<String, Long> getTypeToSilentMap() {
     return typeToSilentMap != null ? typeToSilentMap.getMap() : null;
   }
 
@@ -620,7 +620,7 @@ final class Tracer {
    * map must be synchronized on the map.  If enableTypeMaps has not
    * been called, this will return null.
    */
-  static @Nullable Map<String, Long> getTypeToTimeMap() {
+  @Nullable static Map<String, Long> getTypeToTimeMap() {
     return typeToTimeMap != null ? typeToTimeMap.getMap() : null;
   }
 
@@ -931,20 +931,20 @@ final class Tracer {
      */
     private int getMaxDigits() {
       long etime = -1;
-      long max_time = 0;
+      long maxTime = 0;
       for (Event e : events) {
         if (etime != -1) {
           long time = e.eventTime() - etime;
-          max_time = Math.max(max_time, time);
+          maxTime = Math.max(maxTime, time);
         }
         if (!e.isStart) {
           long time = e.tracer.stopTimeMs - e.tracer.startTimeMs;
-          max_time = Math.max(max_time, time);
+          maxTime = Math.max(maxTime, time);
         }
         etime = e.eventTime();
       }
       // Minimum is 3 to preserve an indent even when max is small.
-      return Math.max(3, numDigits(max_time));
+      return Math.max(3, numDigits(maxTime));
     }
   }
 

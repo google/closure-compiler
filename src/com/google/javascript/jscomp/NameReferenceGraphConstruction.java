@@ -105,7 +105,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
 
     private Traversal(boolean isExtern) {
       this.isExtern = isExtern;
-      pushContainingFunction(graph.MAIN);
+      pushContainingFunction(graph.main);
     }
 
     @Override
@@ -126,7 +126,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
           // When the name is null, we have a function that is presumably not
           // reference-able again and should not be modeled in the name graph.
           // A common example would be (function() { ... })();
-          pushContainingFunction(graph.UNKNOWN);
+          pushContainingFunction(graph.unknown);
           return;
         }
 
@@ -371,7 +371,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
 
     private Name recordStaticNameDefinition(String name, JSType type,
         Node n, Node rValue) {
-      if (getNamedContainingFunction() != graph.MAIN) {
+      if (getNamedContainingFunction() != graph.main) {
         // TODO(user): if A.B() defines A.C(), there is a dependence from
         // A.C() -> A.B(). However, this is not important in module code motion
         // and will be ignored (for now).
@@ -607,7 +607,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
     int pos;
     for (pos = currentFunctionStack.size() - 1; pos >= 0; pos = pos - 1) {
       Name cf = currentFunctionStack.get(pos);
-      if (cf != graph.UNKNOWN) {
+      if (cf != graph.unknown) {
         containingFn = cf;
         break;
       }

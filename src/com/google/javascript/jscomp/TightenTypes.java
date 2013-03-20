@@ -669,7 +669,9 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
               scope = getTopScope();
             }
 
-            if (scope == null) break;
+            if (scope == null) {
+              break;
+            }
 
             ConcreteType type = inferConcreteType(getTopScope(), n);
             if (type.isNone() || type.isAll()) {

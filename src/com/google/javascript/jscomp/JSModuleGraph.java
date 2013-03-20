@@ -32,6 +32,10 @@ import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyEx
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -40,10 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * A {@link JSModule} dependency graph that assigns a depth to each module and
@@ -512,12 +512,11 @@ public class JSModuleGraph {
     return d1 < d2 ? -1 : d2 == d1 ? m1.getName().compareTo(m2.getName()) : 1;
   }
 
-  /*
+  /**
    * Exception class for declaring when the modules being fed into a
    * JSModuleGraph as input aren't in dependence order, and so can't be
    * processed for caching of various dependency-related queries.
    */
-
   protected static class ModuleDependenceException
       extends IllegalArgumentException {
     private static final long serialVersionUID = 1;
@@ -541,6 +540,7 @@ public class JSModuleGraph {
     }
   }
 
+  /** Another exception class */
   public static class MissingModuleException extends Exception {
     MissingModuleException(String moduleName) {
       super(moduleName);

@@ -231,8 +231,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         .setDependencySorting(true)
         .setMoocherDropping(false)
         .setEntryPoints(closureEntryPoints);
-    }
-    else if (manageClosureDependencies ||
+    } else if (manageClosureDependencies ||
         closureEntryPoints.size() > 0) {
       return new DependencyOptions()
           .setDependencyPruning(true)
@@ -359,7 +358,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.angularPass = config.angularPass;
   }
 
-  final protected A getCompiler() {
+  protected final A getCompiler() {
     return compiler;
   }
 
@@ -367,7 +366,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * Runs the Compiler and calls System.exit() with the exit status of the
    * compiler.
    */
-  final public void run() {
+  public final void run() {
     int result = 0;
     int runs = 1;
     if (config.computePhaseOrdering) {
@@ -1570,7 +1569,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         int i = 1;
         for (List<String> loop : loopedPassesInBestRun) {
           jsOutput.append(
-              "\nLoop " + i + ":\n" + Joiner.on("\n").join(loop)+ "\n");
+              "\nLoop " + i + ":\n" + Joiner.on("\n").join(loop) + "\n");
           i++;
         }
       } catch (IOException e) {

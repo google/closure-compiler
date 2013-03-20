@@ -432,7 +432,7 @@ class MakeDeclaredNamesUnique
     private final Map<String, String> declarations = Maps.newHashMap();
     private final boolean global;
 
-    final static String UNIQUE_ID_SEPARATOR = "$$";
+    static final String UNIQUE_ID_SEPARATOR = "$$";
 
     ContextualRenamer() {
       this.global = true;

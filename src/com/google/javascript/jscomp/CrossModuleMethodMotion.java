@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.AnalyzePrototypeProperties.Property;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.Symbol;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;

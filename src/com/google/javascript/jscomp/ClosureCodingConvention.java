@@ -95,7 +95,9 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   public SubclassRelationship getClassesDefinedByCall(Node callNode) {
     SubclassRelationship relationship =
         super.getClassesDefinedByCall(callNode);
-    if (relationship != null) return relationship;
+    if (relationship != null) {
+      return relationship;
+    }
 
     Node callName = callNode.getFirstChild();
     SubclassType type = typeofClassDefiningName(callName);

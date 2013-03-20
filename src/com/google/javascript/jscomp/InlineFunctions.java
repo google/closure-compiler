@@ -33,8 +33,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-
-
 /**
  * Inlines functions that are divided into two types: "direct call node
  * replacement" (aka "direct") and as a block of statements (aka block).

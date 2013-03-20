@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.CheckLevel;
 
 import java.util.ArrayList;
 import java.util.Comparator;

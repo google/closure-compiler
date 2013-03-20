@@ -27,7 +27,6 @@ import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.List;
 
-
 /**
  * Provides passes that should be run before hot-swap/incremental builds.
  *

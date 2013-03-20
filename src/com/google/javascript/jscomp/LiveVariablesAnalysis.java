@@ -291,13 +291,13 @@ class LiveVariablesAnalysis extends
    */
   void markAllParametersEscaped() {
     Node lp = jsScope.getRootNode().getFirstChild().getNext();
-    for(Node arg = lp.getFirstChild(); arg != null; arg = arg.getNext()) {
+    for (Node arg = lp.getFirstChild(); arg != null; arg = arg.getNext()) {
       escaped.add(jsScope.getVar(arg.getString()));
     }
   }
 
   private boolean isArgumentsName(Node n) {
-    if (!n.isName()||
+    if (!n.isName() ||
         !n.getString().equals(ARGUMENT_ARRAY_ALIAS) ||
         jsScope.isDeclared(ARGUMENT_ARRAY_ALIAS, false)) {
       return false;
