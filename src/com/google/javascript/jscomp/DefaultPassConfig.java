@@ -630,6 +630,11 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(instrumentFunctions);
     }
 
+    // Instrument calls to memory allocations
+    if (options.getInstrumentMemoryAllocations()) {
+      passes.add(instrumentMemoryAllocations);
+    }
+
     if (options.variableRenaming != VariableRenamingPolicy.ALL) {
       // If we're leaving some (or all) variables with their old names,
       // then we need to undo any of the markers we added for distinguishing
@@ -2189,6 +2194,15 @@ public class DefaultPassConfig extends PassConfig {
       };
     }
   };
+
+  /** Adds instrumentation for memory allocations. */
+  final PassFactory instrumentMemoryAllocations =
+      new PassFactory("instrumentMemoryAllocations", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new InstrumentMemoryAllocPass(compiler);
+        }
+      };
 
   /**
    * Create a no-op pass that can only run once. Used to break up loops.
