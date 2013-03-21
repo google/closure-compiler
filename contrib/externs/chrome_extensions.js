@@ -852,6 +852,18 @@ chrome.browserAction.onClicked;
 
 
 /**
+ * @param {number} tabId the ID of the tab on which to disable this action.
+ */
+chrome.browserAction.disable = function(tabId) {};
+
+
+/**
+ * @param {number} tabId the ID of the tab on which to enable this action.
+ */
+chrome.browserAction.enable = function(tabId) {};
+
+
+/**
  * @const
  * @see http://code.google.com/chrome/extensions/bookmarks.html
  */
