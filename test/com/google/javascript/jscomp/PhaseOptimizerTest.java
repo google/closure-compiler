@@ -98,15 +98,6 @@ public class PhaseOptimizerTest extends TestCase {
     assertPasses("a", "x", "y", "x", "y", "x", "x", "y", "z");
   }
 
-  public void testSanityCheck() {
-    Loop loop = optimizer.addFixedPointLoop();
-    addLoopedPass(loop, "x", 1);
-    addOneTimePass("z");
-    optimizer.setSanityCheck(
-        createPassFactory("sanity", createPass("sanity", 0), false));
-    assertPasses("x", "sanity", "x", "sanity", "z", "sanity");
-  }
-
   public void testConsumption1() {
     optimizer.consume(
         Lists.newArrayList(

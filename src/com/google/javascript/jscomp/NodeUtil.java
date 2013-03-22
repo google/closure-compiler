@@ -35,6 +35,7 @@ import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -3283,5 +3284,62 @@ public final class NodeUtil {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Given an AST and its copy, map the root node of each scope of main to the
+   * corresponding root node of clone
+   */
+  public static Map<Node, Node> mapMainToClone(Node main, Node clone) {
+    Preconditions.checkState(main.isEquivalentTo(clone));
+    Map<Node, Node> mtoc = new HashMap<Node, Node>();
+    mtoc.put(main, clone);
+    mtocHelper(mtoc, main, clone);
+    return mtoc;
+  }
+
+  private static void mtocHelper(Map<Node, Node> map, Node main, Node clone) {
+    if (main.isFunction()) {
+      map.put(main, clone);
+    }
+    Node mchild = main.getFirstChild(), cchild = clone.getFirstChild();
+    while (mchild != null) {
+      mtocHelper(map, mchild, cchild);
+      mchild = mchild.getNext();
+      cchild = cchild.getNext();
+    }
+  }
+
+  /** Checks that the scope roots marked as changed have indeed changed */
+  public static void verifyScopeChanges(Map<Node, Node> map,
+      Node main, boolean verifyUnchangedNodes) {
+    // If verifyUnchangedNodes is false, we are comparing the initial AST to the
+    // final AST. Don't check unmarked nodes b/c they may have been changed by
+    // non-loopable passes.
+    // If verifyUnchangedNodes is true, we are comparing the ASTs before & after
+    // a pass. Check all scope roots.
+    final Map<Node, Node> mtoc = map;
+    final boolean checkUnchanged = verifyUnchangedNodes;
+    Node clone = mtoc.get(main);
+    if (main.getChangeTime() > clone.getChangeTime()) {
+      Preconditions.checkState(!main.isEquivalentToShallow(clone));
+    } else if (checkUnchanged) {
+      Preconditions.checkState(main.isEquivalentToShallow(clone));
+    }
+    visitPreOrder(main,
+        new Visitor() {
+          @Override
+          public void visit(Node n) {
+            if (n.isFunction() && mtoc.containsKey(n)) {
+              Node clone = mtoc.get(n);
+              if (n.getChangeTime() > clone.getChangeTime()) {
+                Preconditions.checkState(!n.isEquivalentToShallow(clone));
+              } else if (checkUnchanged) {
+                Preconditions.checkState(n.isEquivalentToShallow(clone));
+              }
+            }
+          }
+        },
+        Predicates.<Node>alwaysTrue());
   }
 }

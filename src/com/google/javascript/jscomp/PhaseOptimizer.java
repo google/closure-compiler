@@ -103,6 +103,10 @@ class PhaseOptimizer implements CompilerPass {
   // change handlers. This flag prevents double update in ScopedChangeHandler.
   private boolean crossScopeReporting;
 
+  // Used for sanity checks between loopable passes
+  private Node lastAst;
+  private Map<Node, Node> mtoc; // Stands for "main to clone"
+
   /**
    * @param compiler the compiler that owns/creates this.
    * @param tracker an optional performance tracker
@@ -112,6 +116,7 @@ class PhaseOptimizer implements CompilerPass {
   PhaseOptimizer(AbstractCompiler compiler, PerformanceTracker tracker,
       ProgressRange progressRange) {
     this.compiler = compiler;
+    this.jsRoot = compiler.getJsRoot();
     this.tracker = tracker;
     this.progressRange = progressRange;
     this.inLoop = false;
@@ -199,6 +204,12 @@ class PhaseOptimizer implements CompilerPass {
    */
   void setSanityCheck(PassFactory sanityCheck) {
     this.sanityCheck = sanityCheck;
+    setSanityCheckState();
+  }
+
+  private void setSanityCheckState() {
+    lastAst = jsRoot.cloneTree();
+    mtoc = NodeUtil.mapMainToClone(jsRoot, lastAst);
   }
 
   /**
@@ -221,8 +232,6 @@ class PhaseOptimizer implements CompilerPass {
           / passes.size();
       progress = progressRange.initialValue;
     }
-
-    jsRoot = root;
     for (CompilerPass pass : passes) {
       pass.process(externs, root);
       if (hasHaltingErrors()) {
@@ -243,9 +252,11 @@ class PhaseOptimizer implements CompilerPass {
   /**
    * Runs the sanity check if it is available.
    */
-  void maybeSanityCheck(Node externs, Node root) {
+  private void maybeSanityCheck(Node externs, Node root) {
     if (sanityCheck != null) {
       sanityCheck.create(compiler).process(externs, root);
+      NodeUtil.verifyScopeChanges(mtoc, jsRoot, true);
+      setSanityCheckState();
     }
   }
 
@@ -299,7 +310,10 @@ class PhaseOptimizer implements CompilerPass {
 
   /** {@code n} is either a function or the top-level node of the AST */
   void setScope(Node n) {
-    currentScope = n;
+    // NodeTraversal causes setScope calls outside loops; ignore them.
+    if (inLoop) {
+      currentScope = n.isFunction() ? n : compiler.getEnclosingScope(n);
+    }
   }
 
   boolean hasScopeChanged(Node n) {
@@ -390,7 +404,7 @@ class PhaseOptimizer implements CompilerPass {
       // Set up function-change tracking
       scopeHandler = new ScopedChangeHandler();
       compiler.addChangeHandler(scopeHandler);
-      currentScope = root;
+      setScope(root);
       // lastRuns is initialized before each loop. This way, when a pass is run
       // in the 2nd loop for the 1st time, it looks at all scopes.
       lastRuns = new HashMap<NamedPass, Integer>();

@@ -36,6 +36,12 @@ public class MultiPassTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     PhaseOptimizer po = new PhaseOptimizer(compiler, null, null);
     po.consume(passes);
+    po.setSanityCheck(new PassFactory("sanityCheck", false) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new SanityCheck(compiler);
+        }
+      });
     compiler.setPhaseOptimizer(po);
     return po;
   }

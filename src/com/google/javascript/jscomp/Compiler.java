@@ -2037,9 +2037,11 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   Node getEnclosingScope(Node n) {
-    while (n != jsRoot) {
+    while (n != jsRoot && n.getParent() != null) {
       n = n.getParent();
-      if (n.isFunction()) { return n; }
+      if (n.isFunction()) {
+        return n;
+      }
     }
     return n;
   }
