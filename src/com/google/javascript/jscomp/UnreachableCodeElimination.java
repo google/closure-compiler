@@ -167,10 +167,20 @@ class UnreachableCodeElimination implements CompilerPass {
                 outEdges.get(0).getValue() == Branch.UNCOND);
             Node fallThrough = computeFollowing(n);
             Node nextCfgNode = outEdges.get(0).getDestination().getValue();
-            if (nextCfgNode == fallThrough) {
+            if (nextCfgNode == fallThrough && !inFinally(n.getParent(), n)) {
               removeNode(n);
             }
           }
+      }
+    }
+
+    private boolean inFinally(Node parent, Node child) {
+      if (parent == null || parent.isFunction()) {
+        return false;
+      } else if (NodeUtil.isTryFinallyNode(parent, child)) {
+        return true;
+      } else {
+        return inFinally(parent.getParent(), parent);
       }
     }
 
