@@ -134,10 +134,10 @@ class MinimizeExitPoints
         Node catchCodeBlock = catchNode.getLastChild();
         tryMinimizeExits(catchCodeBlock, exitType, labelName);
       }
-      if (NodeUtil.hasFinally(n)) {
-        Node finallyBlock = n.getLastChild();
-        tryMinimizeExits(finallyBlock, exitType, labelName);
-      }
+      /* Don't try to minimize the exits of finally blocks, as this
+       * can cause problems if it changes the completion type of the finally
+       * block. See ECMA 262 Sections 8.9 & 12.14
+       */
     }
 
     // Just a 'label'.

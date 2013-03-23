@@ -120,12 +120,12 @@ public class MinimizeExitPointsTest extends CompilerTestCase {
          "function f(){while(a())break}");
     foldSame("function f(){for(x in a())break}");
 
-    fold("function f(){try{return;}catch(e){return;}finally{return}}",
-         "function f(){try{}catch(e){}finally{}}");
+    fold("function f(){try{return;}catch(e){throw 9;}finally{return}}",
+         "function f(){try{}catch(e){throw 9;}finally{return}}");
+    foldSame("function f(){try{throw 9;}finally{return;}}");
+
     fold("function f(){try{return;}catch(e){return;}}",
          "function f(){try{}catch(e){}}");
-    fold("function f(){try{return;}finally{return;}}",
-         "function f(){try{}finally{}}");
     fold("function f(){try{if(a()){return;}else{return;} return;}catch(e){}}",
          "function f(){try{if(a()){}else{}}catch(e){}}");
 
@@ -133,8 +133,8 @@ public class MinimizeExitPointsTest extends CompilerTestCase {
          "function f(){}");
     fold("function f(){g:if(a()){return;}else{return;} return;}",
          "function f(){g:if(a()){}else{}}");
-    fold("function f(){try{g:if(a()){} return;}finally{return}}",
-         "function f(){try{g:if(a()){}}finally{}}");
+    fold("function f(){try{g:if(a()){throw 9;} return;}finally{return}}",
+         "function f(){try{g:if(a()){throw 9;}}finally{return}}");
   }
 
   public void testWhileContinueOptimization() throws Exception {
@@ -270,5 +270,9 @@ public class MinimizeExitPointsTest extends CompilerTestCase {
   public void testCodeMotionDoesntBreakFunctionHoisting() throws Exception {
     fold("function f() { if (x) return; foo(); function foo() {} }",
          "function f() { if (x); else { function foo() {} foo(); } }");
+  }
+
+  public void testDontRemoveBreakInTryFinally() throws Exception {
+    foldSame("function f() {b:try{throw 9} finally {break b} return 1;}");
   }
 }

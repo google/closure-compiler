@@ -73,4 +73,9 @@ public class RemoveTryCatchTest extends CompilerTestCase {
   public void testIfTryCatch() {
     test("if(x)try{y;z}catch(e){}", "if(x){y;z}");
   }
+
+  public void testRemoveTryCatchIsNotAnOptimization() {
+    test("try { throw fire } finally { putOutFire() }",
+         "throw fire;putOutFire()");
+  }
 }

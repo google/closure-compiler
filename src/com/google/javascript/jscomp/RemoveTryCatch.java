@@ -29,6 +29,8 @@ import java.util.Set;
  * Removes try catch finally blocks from a parse tree for easier debugging
  * (these statements impact both debugging in IE and sometimes even in FF).
  *
+ * This changes the semantics of the code and should not be used in production!
+ *
  */
 class RemoveTryCatch implements CompilerPass {
   private final AbstractCompiler compiler;
