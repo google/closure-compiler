@@ -289,7 +289,7 @@ class StripCode implements CompilerPass {
       //   l-value
       //   r-value
       Node lvalue = n.getFirstChild();
-      if (nameEndsWithFieldNameToStrip(lvalue) ||
+      if (nameIncludesFieldNameToStrip(lvalue) ||
           qualifiedNameBeginsWithStripType(lvalue)) {
 
         // Limit to EXPR_RESULT because it is not
@@ -515,6 +515,19 @@ class StripCode implements CompilerPass {
         Node propNode = n.getLastChild();
         return propNode != null && propNode.isString() &&
                isStripName(propNode.getString());
+      }
+      return false;
+    }
+
+    /**
+     * @return Whether a name includes a field name that should be stripped.
+     * E.g., "foo.stripMe.bar", "(foo.bar).stripMe", etc.
+     */
+    boolean nameIncludesFieldNameToStrip(@Nullable Node n) {
+      if (n != null && n.isGetProp()) {
+        Node propNode = n.getLastChild();
+        return isStripName(propNode.getString())
+            || nameIncludesFieldNameToStrip(n.getFirstChild());
       }
       return false;
     }

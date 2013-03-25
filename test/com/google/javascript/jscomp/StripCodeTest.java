@@ -255,12 +255,12 @@ public class StripCodeTest extends CompilerTestCase {
   }
 
   public void testPublicPropertyAssignment() {
-    // We don't eliminate property assignments on vars/properties that we
-    // remove, since the debugging classes should have setter methods instead
-    // of public properties.
-    testSame("rootLogger.someProperty=3");
-    testSame("this.blcLogger_.level=x");
-    testSame("goog.ui.Component.logger.prop=y");
+    // Eliminate property assignments on vars/properties that we
+    // remove as otherwise we create invalid code.
+    test("goog.debug.Logger = 1; goog.debug.Logger.prop=2; ", "");
+    test("this.blcLogger_.level=x", "");
+    test("goog.ui.Component.logger.prop=y", "");
+    test("goog.ui.Component.logger.prop.foo.bar=baz", "");
   }
 
   public void testGlobalCallWithStrippedType() {
@@ -353,7 +353,7 @@ public class StripCodeTest extends CompilerTestCase {
          "e.f.TraceXXX.prototype.yyy = 2;", "");
   }
 
-  public void testStripCallsToStrippedNames() {
+  public void testStripCallsToStrippedNames1() {
     test("a = function() { this.logger_ = function(msg){}; };" +
          "a.prototype.b = function() { this.logger_('hi'); }",
          "a=function(){};a.prototype.b=function(){}");
@@ -361,6 +361,13 @@ public class StripCodeTest extends CompilerTestCase {
          "a.prototype.logger_ = function(msg) {};" +
          "a.prototype.b = function() { this.logger_('hi'); }",
          "a=function(){};a.prototype.b=function(){}");
+  }
+
+  public void testStripCallsToStrippedNames2() {
+    test("a = function() {};" +
+        "a.prototype.logger_ = function(msg) {};" +
+        "a.prototype.b = function() { this.logger_('hi'); }",
+        "a=function(){};a.prototype.b=function(){}");
   }
 
   public void testStripVarsInitializedFromStrippedNames() {
@@ -422,4 +429,11 @@ public class StripCodeTest extends CompilerTestCase {
          "var z = goog.debug.Logger.getLogger(); x(y[z['foo']]);",
          "var x = function() {}; var y = {}; x(y[null]);");
   }
+
+  public void testNamespace1() {
+    test(
+        "var x = {};x.traceutil = {};x.traceutil.FOO = 1;",
+        "var x = {};");
+  }
+
 }
