@@ -500,6 +500,12 @@ public class CompilerOptions implements Serializable, Cloneable {
   String debugFunctionSideEffectsPath;
 
   /**
+   * Rename private properties to disambiguate between unrelated fields based on
+   * the coding convention.
+   */
+  boolean disambiguatePrivateProperties;
+
+  /**
    * Rename properties to disambiguate between unrelated fields based on
    * type information.
    */
@@ -1835,6 +1841,21 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setDebugFunctionSideEffectsPath(String debugFunctionSideEffectsPath) {
     this.debugFunctionSideEffectsPath = debugFunctionSideEffectsPath;
+  }
+
+  /**
+   * @return Whether disambiguate private properties is enabled.
+   */
+  public boolean isDisambiguatePrivateProperties() {
+    return disambiguatePrivateProperties;
+  }
+
+  /**
+   * @param value Whether to enable private property disambiguation based on
+   * the coding convention.
+   */
+  public void setDisambiguatePrivateProperties(boolean value) {
+    this.disambiguatePrivateProperties = value;
   }
 
   public void setDisambiguateProperties(boolean disambiguateProperties) {

@@ -378,6 +378,14 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(closureCodeRemoval);
     }
 
+    // Property disambiguation should only run once and needs to be done
+    // soon after type checking, both so that it can make use of type
+    // information and so that other passes can take advantage of the renamed
+    // properties.
+    if (options.disambiguatePrivateProperties) {
+      passes.add(disambiguatePrivateProperties);
+    }
+
     // Collapsing properties can undo constant inlining, so we do this before
     // the main optimization loop.
     if (options.collapseProperties) {
@@ -1521,7 +1529,16 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /** Devirtualize property names based on type information. */
+  /** Disambiguate property names based on the coding convention. */
+  final PassFactory disambiguatePrivateProperties =
+      new PassFactory("disambiguatePrivateProperties", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new DisambiguatePrivateProperties(compiler);
+    }
+  };
+
+  /** Disambiguate property names based on type information. */
   final PassFactory disambiguateProperties =
       new PassFactory("disambiguateProperties", true) {
     @Override
