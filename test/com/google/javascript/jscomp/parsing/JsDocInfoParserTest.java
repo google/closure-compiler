@@ -2752,6 +2752,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       "* @id \n" +
       "* @ignore \n" +
       "* @inner \n" +
+      "* @wizaction \n" +
       "* @lends {string} \n" +
       "* @link \n" +
       "* @member \n" +
@@ -2796,6 +2797,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseNgInject2() throws Exception {
     parse("@ngInject \n@ngInject*/", "extra @ngInject tag");
+  }
+
+  public void testParseWizaction1() throws Exception {
+    assertTrue(parse("@wizaction*/").isWizaction());
+  }
+
+  public void testParseWizaction2() throws Exception {
+    parse("@wizaction \n@wizaction*/", "extra @wizaction tag");
   }
 
   public void testTextExtents() {

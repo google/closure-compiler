@@ -853,6 +853,13 @@ public final class JsDocInfoParser {
           }
           return eatTokensUntilEOL();
 
+        case WIZACTION:
+          if (!jsdocBuilder.recordWizaction()) {
+            parser.addParserWarning("msg.jsdoc.wizaction",
+              stream.getLineno(), stream.getCharno());
+          }
+          return eatTokensUntilEOL();
+
         case VERSION:
           ExtractionInfo versionInfo = extractSingleLineBlock();
           String version = versionInfo.string;

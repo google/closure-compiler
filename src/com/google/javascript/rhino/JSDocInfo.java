@@ -105,6 +105,7 @@ public class JSDocInfo implements Serializable {
     Set<String> modifies = null;
     String lendsName = null;
     boolean ngInject = false;
+    boolean wizaction = false;
   }
 
   private static final class LazilyInitializedDocumentation {
@@ -1259,6 +1260,18 @@ public class JSDocInfo implements Serializable {
   void setNgInject(boolean ngInject) {
     lazyInitInfo();
     info.ngInject = ngInject;
+  }
+
+  /**
+   * Returns whether JSDoc is annotated with {@code @wizaction} annotation.
+   */
+  public boolean isWizaction() {
+    return (info == null) ? false : info.wizaction;
+  }
+
+  void setWizaction(boolean wizaction) {
+    lazyInitInfo();
+    info.wizaction = wizaction;
   }
 
   /**

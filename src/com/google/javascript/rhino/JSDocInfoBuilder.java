@@ -1052,6 +1052,26 @@ final public class JSDocInfoBuilder {
   }
 
   /**
+   * Returns whether current JSDoc is annotated with {@code @wizaction}.
+   */
+  public boolean isWizactionRecorded() {
+    return currentInfo.isWizaction();
+  }
+
+  /**
+   * Records that this method is to be exposed as a wizaction.
+   */
+  public boolean recordWizaction() {
+    if (!isWizactionRecorded()) {
+      currentInfo.setWizaction(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Whether the current doc info has other type tags, like
    * {@code @param} or {@code @return} or {@code @type} or etc.
    */
