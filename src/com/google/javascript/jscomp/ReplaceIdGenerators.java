@@ -263,17 +263,30 @@ class ReplaceIdGenerators implements CompilerPass {
         }
       }
 
-      Node id = n.getFirstChild().getNext();
+      Node arg = n.getFirstChild().getNext();
 
-      // TODO(user): Error on id not a string literal.
-      if (!id.isString()) {
-        return;
+      if (arg.isString()) {
+        String rename = getObfuscatedName(arg, callName, nameGenerator, arg.getString());
+        parent.replaceChild(n, IR.string(rename));
+        compiler.reportCodeChange();
+      } else if (arg.isObjectLit()) {
+        for (Node key : arg.children()) {
+          String rename = getObfuscatedName(key, callName, nameGenerator, key.getString());
+          key.setString(rename);
+          // Prevent standard renaming by marking the key as quoted.
+          key.putBooleanProp(Node.QUOTED_PROP, true);
+        }
+        arg.detachFromParent();
+        parent.replaceChild(n, arg);
+        compiler.reportCodeChange();
       }
+      // TODO(user): Error on id not a string or object literal.
+    }
 
-      Map<String, String> idGeneratorMap = idGeneratorMaps.get(callName);
+    private String getObfuscatedName(Node id, String callName, NameSupplier nameGenerator,
+        String name) {
       String rename = null;
-
-      String name = id.getString();
+      Map<String, String> idGeneratorMap = idGeneratorMaps.get(callName);
       String instanceId = getIdForGeneratorNode(
           nameGenerator.getRenameStrategy() == RenameStrategy.CONSISTENT, id);
       if (nameGenerator.getRenameStrategy() == RenameStrategy.CONSISTENT) {
@@ -286,13 +299,11 @@ class ReplaceIdGenerators implements CompilerPass {
       } else {
         rename = nameGenerator.getName(instanceId, name);
       }
-
-      parent.replaceChild(n, IR.string(rename));
       idGeneratorMap.put(rename, instanceId);
-
-      compiler.reportCodeChange();
+      return rename;
     }
   }
+
 
   /**
    * @return The serialize map of generators and their ids and their
@@ -380,7 +391,7 @@ class ReplaceIdGenerators implements CompilerPass {
   }
 
   String getIdForGeneratorNode(boolean consistent, Node n) {
-    Preconditions.checkState(n.isString());
+    Preconditions.checkState(n.isString() || n.isStringKey());
     if (consistent) {
       return n.getString();
     } else {

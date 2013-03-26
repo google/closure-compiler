@@ -181,6 +181,28 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "foo1 = 'foo1$1';");
   }
 
+  public void testObjectLit() {
+    test("/** @idGenerator */ goog.xid = function() {};" +
+        "things = goog.xid({foo1: 'test', 'foo bar': 'test'})",
+
+        "goog.xid = function() {};" +
+        "things = {'a': 'test', 'b': 'test'}",
+
+        "goog.xid = function() {};" +
+        "things = {'foo1$0': 'test', 'foo bar$1': 'test'}");
+  }
+
+  public void testObjectLit_empty() {
+    test("/** @idGenerator */ goog.xid = function() {};" +
+        "things = goog.xid({})",
+
+        "goog.xid = function() {};" +
+        "things = {}",
+
+        "goog.xid = function() {};" +
+        "things = {}");
+  }
+
   public void testSimpleConsistent() {
     test("/** @consistentIdGenerator */ id = function() {};" +
          "foo.bar = id('foo_bar')",
@@ -255,7 +277,7 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "foo.bar = '125lGg'");
   }
 
-  public void testObjLit() {
+  public void testInObjLit() {
     test("/** @consistentIdGenerator */ get.id = function() {};" +
          "foo.bar = {a: get.id('foo_bar')}",
 
