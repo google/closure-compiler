@@ -419,6 +419,23 @@ final public class JSDocInfoBuilder {
   }
 
   /**
+   * Records that the {@link JSDocInfo} being built should have its {@link
+   * JSDocInfo#isStableIdGenerator()} flag set to {@code true}.
+   *
+   * @return {@code true} if the stableIdGenerator flag was recorded and {@code false} if it was
+   *     already recorded.
+   */
+  public boolean recordMappedIdGenerator() {
+    if (!currentInfo.isMappedIdGenerator()) {
+      currentInfo.setMappedIdGenerator(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Records the version.
    */
   public boolean recordVersion(String version) {

@@ -2656,6 +2656,56 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
           "extra @stableIdGenerator tag");
   }
 
+  public void testIdGenerator() throws Exception {
+    JSDocInfo info = parse("/**\n" +
+          " * @idGenerator\n" +
+          " */\n" +
+          "function getId() {}");
+    assertTrue(info.isIdGenerator());
+  }
+
+  public void testIdGeneratorConflict() throws Exception {
+    parse("/**\n" +
+          " * @idGenerator\n" +
+          " * @idGenerator\n" +
+          " */\n" +
+          "function getId() {}",
+          "extra @idGenerator tag");
+  }
+
+  public void testIdGenerator1() throws Exception {
+    JSDocInfo info = parse("@idGenerator {unique} */");
+    assertTrue(info.isIdGenerator());
+  }
+
+  public void testIdGenerator2() throws Exception {
+    JSDocInfo info = parse("@idGenerator {consistent} */");
+    assertTrue(info.isConsistentIdGenerator());
+  }
+
+  public void testIdGenerator3() throws Exception {
+    JSDocInfo info = parse("@idGenerator {stable} */");
+    assertTrue(info.isStableIdGenerator());
+  }
+
+  public void testIdGenerator4() throws Exception {
+    JSDocInfo info = parse("@idGenerator {mapped} */");
+    assertTrue(info.isMappedIdGenerator());
+  }
+
+  public void testBadIdGenerator1() throws Exception {
+    parse("@idGenerator {} */", "malformed @idGenerator tag");
+  }
+
+  public void testBadIdGenerator2() throws Exception {
+    parse("@idGenerator {impossible} */",
+        "unknown @idGenerator parameter: impossible");
+  }
+
+  public void testBadIdGenerator3() throws Exception {
+    parse("@idGenerator {unique */", "malformed @idGenerator tag");
+  }
+
   public void testParserWithTemplateTypeNameMissing() {
     parse("@template */",
         "Bad type annotation. @template tag missing type name");

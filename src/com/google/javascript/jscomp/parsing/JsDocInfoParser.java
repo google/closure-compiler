@@ -95,6 +95,8 @@ public final class JsDocInfoParser {
   private final Set<String> suppressionNames;
   private static final Set<String> modifiesAnnotationKeywords =
       ImmutableSet.<String>of("this", "arguments");
+  private static final Set<String> idGeneratorAnnotationKeywords =
+      ImmutableSet.<String>of("unique", "consistent", "stable", "mapped");
 
   private Node.FileLevelJsDocBuilder fileLevelJsDocBuilder;
 
@@ -847,11 +849,8 @@ public final class JsDocInfoParser {
         }
 
         case IDGENERATOR:
-          if (!jsdocBuilder.recordIdGenerator()) {
-            parser.addParserWarning("msg.jsdoc.idgen",
-              stream.getLineno(), stream.getCharno());
-          }
-          return eatTokensUntilEOL();
+          token = parseIdGeneratorTag(next());
+          return token;
 
         case WIZACTION:
           if (!jsdocBuilder.recordWizaction()) {
@@ -1144,6 +1143,65 @@ public final class JsDocInfoParser {
         }
       }
     }
+    return token;
+  }
+
+  /**
+   * Parse a {@code @idgenerator} tag of the form
+   * {@code @idgenerator} or
+   * {@code @idgenerator&#123;consistent&#125;}.
+   *
+   * @param token The current token.
+   */
+  private JsDocToken parseIdGeneratorTag(JsDocToken token) {
+    String idgenKind = "unique";
+    if (token == JsDocToken.LC) {
+      if (match(JsDocToken.STRING)) {
+        String name = stream.getString();
+        if (!idGeneratorAnnotationKeywords.contains(name)
+            && !jsdocBuilder.hasParameter(name)) {
+            parser.addParserWarning("msg.jsdoc.idgen.unknown", name,
+                stream.getLineno(), stream.getCharno());
+        }
+
+        idgenKind = name;
+        token = next();
+      } else {
+        parser.addParserWarning("msg.jsdoc.idgen.bad",
+            stream.getLineno(), stream.getCharno());
+        return token;
+      }
+
+      if (!match(JsDocToken.RC)) {
+        parser.addParserWarning("msg.jsdoc.idgen.bad",
+            stream.getLineno(), stream.getCharno());
+      } else {
+        token = next();
+      }
+    }
+
+    if (idgenKind.equals("unique")) {
+      if (!jsdocBuilder.recordIdGenerator()) {
+        parser.addParserWarning("msg.jsdoc.idgen.duplicate",
+            stream.getLineno(), stream.getCharno());
+      }
+    } else if (idgenKind.equals("consistent")) {
+      if (!jsdocBuilder.recordConsistentIdGenerator()) {
+        parser.addParserWarning("msg.jsdoc.idgen.duplicate",
+            stream.getLineno(), stream.getCharno());
+      }
+    } else if (idgenKind.equals("stable")) {
+      if (!jsdocBuilder.recordStableIdGenerator()) {
+        parser.addParserWarning("msg.jsdoc.idgen.duplicate",
+            stream.getLineno(), stream.getCharno());
+      }
+    } else if (idgenKind.equals("mapped")) {
+      if (!jsdocBuilder.recordMappedIdGenerator()) {
+        parser.addParserWarning("msg.jsdoc.idgen.duplicate",
+            stream.getLineno(), stream.getCharno());
+      }
+    }
+
     return token;
   }
 
