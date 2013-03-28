@@ -3777,13 +3777,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testConstructorClassTemplate() throws Exception {
-    testTypes("/** @constructor \n @classTemplate S,T */ function A() {}\n");
-  }
-
-  // TODO(johnlenz): Check for bad usage
-  public void disable_testBadClassTemplate() throws Exception {
-    testTypes("/** @classTemplate T */function A() {}",
-        "Bad type annotation. Unknown type nonExistent");
+    testTypes("/** @constructor \n @template S,T */ function A() {}\n");
   }
 
   public void testInterfaceExtends() throws Exception {
@@ -8887,9 +8881,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
    */
   public void testInterfaceInheritanceCheck14() throws Exception {
     testTypes(
-        "/** @interface\n @classTemplate T */function A() {};" +
+        "/** @interface\n @template T */function A() {};" +
         "/** @desc description\n @return {T} */A.prototype.foo = function() {};" +
-        "/** @interface\n @classTemplate U\n @extends {A.<U>} */function B() {};" +
+        "/** @interface\n @template U\n @extends {A.<U>} */function B() {};" +
         "/** @desc description\n @return {U} */B.prototype.bar = function() {};" +
         "/** @constructor\n @implements {B.<string>} */function C() {};" +
         "/** @return {string}\n @override */C.prototype.foo = function() {};" +
@@ -8902,11 +8896,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
    */
   public void testInterfaceInheritanceCheck15() throws Exception {
     testTypes(
-        "/** @interface\n @classTemplate T */function A() {};" +
+        "/** @interface\n @template T */function A() {};" +
         "/** @desc description\n @return {T} */A.prototype.foo = function() {};" +
-        "/** @interface\n @classTemplate U\n @extends {A.<U>} */function B() {};" +
+        "/** @interface\n @template U\n @extends {A.<U>} */function B() {};" +
         "/** @desc description\n @return {U} */B.prototype.bar = function() {};" +
-        "/** @constructor\n @classTemplate V\n @implements {B.<V>}\n */function C() {};" +
+        "/** @constructor\n @template V\n @implements {B.<V>}\n */function C() {};" +
         "/** @return {V}\n @override */C.prototype.foo = function() {};" +
         "/** @return {V}\n @override */C.prototype.bar = function() {};");
   }
@@ -8933,7 +8927,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
    */
   public void testInterfacePropertyNotImplemented3() throws Exception {
     testTypes(
-        "/** @interface\n @classTemplate T */function Int() {};" +
+        "/** @interface\n @template T */function Int() {};" +
         "/** @desc description\n @return {T} */Int.prototype.foo = function() {};" +
         "/** @constructor\n @implements {Int.<string>} */function Foo() {};" +
         "/** @return {number}\n @override */Foo.prototype.foo = function() {};",
@@ -10745,7 +10739,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testTemplateType8() throws Exception {
     testTypes(
         "/** @constructor \n" +
-        " * @classTemplate S,T\n" +
+        " * @template S,T\n" +
         " */\n" +
         "function Bar() {}\n" +
         "/**" +
@@ -10766,7 +10760,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     // verify interface type parameters are recognized.
     testTypes(
         "/** @interface \n" +
-        " * @classTemplate S,T\n" +
+        " * @template S,T\n" +
         " */\n" +
         "function Bar() {}\n" +
         "/**" +
@@ -10788,7 +10782,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     // the same type with any other type parameter.
     testTypes(
         "/** @constructor \n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "function Bar() {}\n" +
         "\n" +

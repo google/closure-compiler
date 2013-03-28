@@ -70,7 +70,6 @@ enum Annotation {
   STRUCT,
   SUPPRESS,
   TEMPLATE,
-  CLASS_TEMPLATE,
   THIS,
   THROWS,
   TYPE,
@@ -130,7 +129,6 @@ enum Annotation {
       put("struct", Annotation.STRUCT).
       put("suppress", Annotation.SUPPRESS).
       put("template", Annotation.TEMPLATE).
-      put("classTemplate", Annotation.CLASS_TEMPLATE).
       put("this", Annotation.THIS).
       put("throws", Annotation.THROWS).
       put("type", Annotation.TYPE).

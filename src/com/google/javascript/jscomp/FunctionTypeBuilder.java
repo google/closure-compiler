@@ -90,6 +90,8 @@ final class FunctionTypeBuilder {
   private boolean isInterface = false;
   private Node parametersNode = null;
   private ImmutableList<TemplateType> templateTypeNames = ImmutableList.of();
+  // TODO(johnlenz): verify we want both template and class template lists instead of a unified
+  // list.
   private ImmutableList<TemplateType> classTemplateTypeNames = ImmutableList.of();
 
   static final DiagnosticType EXTENDS_WITHOUT_TYPEDEF = DiagnosticType.warning(
@@ -112,11 +114,6 @@ final class FunctionTypeBuilder {
   static final DiagnosticType CONSTRUCTOR_REQUIRED =
       DiagnosticType.warning("JSC_CONSTRUCTOR_REQUIRED",
                              "{0} used without @constructor for {1}");
-
-  static final DiagnosticType CLASS_TEMPLATE_WITHOUT_CONSTRUCTOR =
-      DiagnosticType.warning(
-          "JSC_CLASS_TEMPLATE_WITHOUT_CONSTRUCTOR",
-          "@classTemplate used without @constructor or @interface for {0}");
 
   static final DiagnosticType VAR_ARGS_MUST_BE_LAST = DiagnosticType.warning(
       "JSC_VAR_ARGS_MUST_BE_LAST",
@@ -333,7 +330,7 @@ final class FunctionTypeBuilder {
 
       // Class template types, which can be used in the scope of a constructor
       // definition.
-      ImmutableList<String> typeParameters = info.getClassTemplateTypeNames();
+      ImmutableList<String> typeParameters = info.getTemplateTypeNames();
       if (!typeParameters.isEmpty()) {
         if (isConstructor || isInterface) {
           ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
@@ -342,9 +339,6 @@ final class FunctionTypeBuilder {
           }
           classTemplateTypeNames = builder.build();
           typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
-        } else {
-          reportWarning(CLASS_TEMPLATE_WITHOUT_CONSTRUCTOR,
-              formatFnName());
         }
       }
 

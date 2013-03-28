@@ -1223,7 +1223,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "function C() {};\n" +
         "" +
@@ -1242,7 +1242,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @const */ var ns = {};" +
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "ns.C = function() {};\n" +
         "" +
@@ -1259,7 +1259,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "function C() {\n" +
         "  /** @type {T} */\n" +
@@ -1277,7 +1277,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @const */ var ns = {};" +
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "ns.C = function() {\n" +
         "  /** @type {T} */\n" +
@@ -1295,7 +1295,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "function C() {\n" +
         "};\n" +
@@ -1314,7 +1314,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "function C() {\n" +
         "};\n" +
@@ -1332,7 +1332,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "function C() {};\n" +
         "" +
@@ -1347,7 +1347,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "function C() {};\n" +
         "" +
@@ -1362,7 +1362,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "function C() {};\n" +
         "" +
@@ -1371,7 +1371,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "" +
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T, U\n" +
+        " * @template T, U\n" +
         " * @extends {C.<U>}" +
         " */\n" +
         "function D() {};\n" +
@@ -1391,7 +1391,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "function C() {};\n" +
         "" +
@@ -1400,7 +1400,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "" +
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T, U\n" +
+        " * @template T, U\n" +
         " * @extends {C.<U>}" +
         " */\n" +
         "function D() {};\n" +
@@ -1421,7 +1421,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "function C() {\n" +
         "  /** @type {T} */\n" +
@@ -1430,7 +1430,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "" +
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " * @extends {C}" +
         " */\n" +
         "function D() {\n" +
@@ -1450,7 +1450,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "function C() {};\n" +
         "" +
@@ -1459,7 +1459,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "" +
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T, U\n" +
+        " * @template T, U\n" +
         " * @extends {C.<U>}" +
         " */\n" +
         "function D() {};\n" +
@@ -1477,7 +1477,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T\n" +
+        " * @template T\n" +
         " */\n" +
         "function C() {};\n" +
         "" +
@@ -1486,7 +1486,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "" +
         "/**\n" +
         " * @constructor\n" +
-        " * @classTemplate T, U\n" +
+        " * @template T, U\n" +
         " * @extends {C.<U>}" +
         " */\n" +
         "function D() {};\n" +

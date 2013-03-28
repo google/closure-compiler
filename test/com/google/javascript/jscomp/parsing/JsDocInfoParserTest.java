@@ -2720,24 +2720,6 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@template T,V */");
   }
 
-  public void testParserWithClassTemplateTypeNameMissing() {
-    parse("@classTemplate */",
-        "Bad type annotation. @classTemplate tag missing type name");
-  }
-
-  public void testParserWithClassTemplateDuplicated() {
-    parse("@classTemplate T\n@classTemplate V */",
-        "Bad type annotation. @classTemplate tag at most once");
-  }
-
-  public void testParserWithTwoClassTemplates() {
-    parse("@classTemplate T,V */");
-  }
-
-  public void testParserWithClassTemplatesAndTemplate() {
-    parse("@template T\n@classTemplate T,V */");
-  }
-
   public void testWhitelistedNewAnnotations() {
     parse("@foobar */",
         "illegal use of unknown JSDoc tag \"foobar\"; ignoring it");

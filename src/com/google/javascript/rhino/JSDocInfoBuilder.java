@@ -314,22 +314,6 @@ final public class JSDocInfoBuilder {
   }
 
   /**
-   * Records a template type name.
-   *
-   * @return {@code true} if the template type name was recorded and
-   *     {@code false} if a template type name was already defined.
-   */
-  public boolean recordClassTemplateTypeNames(List<String> names) {
-    if (currentInfo.declareClassTemplateTypeNames(names)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-
-  /**
    * Records a thrown type.
    */
   public boolean recordThrowType(JSTypeExpression type) {
