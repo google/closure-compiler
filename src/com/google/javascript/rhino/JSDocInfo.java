@@ -326,7 +326,7 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_STRUCT        = 0x00200000; // @struct
   private static final int MASK_DICT          = 0x00400000; // @dict
   private static final int MASK_STALBEIDGEN   = 0x00800000; // @stableIdGenerator
-  private static final int MASK_MAPPEDIDGEN   = 0x00800000; // @idGenerator {mapped}
+  private static final int MASK_MAPPEDIDGEN   = 0x01000000; // @idGenerator {mapped}
 
   // 3 bit type field stored in the top 3 bits of the most significant
   // nibble.

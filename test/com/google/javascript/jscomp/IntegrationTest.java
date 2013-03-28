@@ -287,7 +287,7 @@ public class IntegrationTest extends IntegrationTestCase {
         "var f = function() {};" +
         "var s = 'a' + 'b'",
 
-        InstrumentMemoryAllocPass.JS_INSTRUMENT_ALLOCATION_CODE + 
+        InstrumentMemoryAllocPass.JS_INSTRUMENT_ALLOCATION_CODE +
         "var obj=__alloc(new Object(),\"i0:1\",4,\"new Unknown\");" +
         "var o=__alloc({},\"i0:1\",5,\"Object\");" +
         "var a=__alloc([],\"i0:1\",6,\"Array\");" +
@@ -534,7 +534,7 @@ public class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     testSame(options, code);
 
-    options.idGenerators = Sets.newHashSet("f");
+    options.setIdGenerators(Sets.newHashSet("f"));
     test(options, code, "function f() {} 'a';");
   }
 

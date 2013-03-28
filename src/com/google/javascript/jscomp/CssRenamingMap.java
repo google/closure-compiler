@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Interface used by {@link ReplaceCssNames} to substitute CSS class names.
  */
-public interface CssRenamingMap {
+public interface CssRenamingMap extends RenamingMap {
 
   /** Kind of renaming map */
   public static enum Style {
@@ -27,6 +27,7 @@ public interface CssRenamingMap {
     BY_PART,
   }
 
+  @Override
   String get(String value);
 
   Style getStyle();

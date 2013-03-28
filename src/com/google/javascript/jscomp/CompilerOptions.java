@@ -17,11 +17,11 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
@@ -677,7 +677,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   boolean replaceIdGenerators = true;  // true by default for legacy reasons.
 
   /** Id generators to replace. */
-  Set<String> idGenerators;
+  ImmutableMap<String, RenamingMap> idGenerators;
 
   /**
    * A previous map of ids (serialized to a string by a previous compile).
@@ -980,7 +980,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     cssRenamingMap = null;
     cssRenamingWhitelist = null;
     processObjectPropertyString = false;
-    idGenerators = Collections.emptySet();
+    idGenerators = ImmutableMap.of();
     replaceStringsFunctionDescriptions = Collections.emptyList();
     replaceStringsPlaceholderToken = "";
     replaceStringsReservedStrings = Collections.emptySet();
@@ -1228,7 +1228,25 @@ public class CompilerOptions implements Serializable, Cloneable {
    * Sets the id generators to replace.
    */
   public void setIdGenerators(Set<String> idGenerators) {
-    this.idGenerators = Sets.newHashSet(idGenerators);
+    ImmutableMap.Builder<String, RenamingMap> builder = ImmutableMap.builder();
+    for (String name : idGenerators) {
+       builder.put(name, UNIQUE_ID_GENERATOR);
+    }
+    this.idGenerators = builder.build();
+  }
+
+  /**
+   * A renaming map instance to use to signal the use of the "inconsistent"
+   * id generator type.
+   */
+  public static final RenamingMap UNIQUE_ID_GENERATOR =
+      ReplaceIdGenerators.UNIQUE;
+
+  /**
+   * Sets the id generators to replace.
+   */
+  public void setIdGenerators(Map<String, RenamingMap> idGenerators) {
+    this.idGenerators = ImmutableMap.copyOf(idGenerators);
   }
 
   /**

@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 /**
  * Replaces calls to id generators with ids.
@@ -54,12 +54,18 @@ class ReplaceIdGenerators implements CompilerPass {
   static final DiagnosticType CONFLICTING_GENERATOR_TYPE =
       DiagnosticType.error(
           "JSC_CONFLICTING_ID_GENERATOR_TYPE",
-          "Id generator can only be one of consistent, inconsistent, or stable.");
+          "Id generator can only be one of " +
+          "consistent, inconsistent, mapped or stable.");
 
   static final DiagnosticType INVALID_GENERATOR_ID_MAPPING =
       DiagnosticType.error(
           "JSC_INVALID_GENERATOR_ID_MAPPING",
           "Invalid generator id mapping. {0}");
+
+  static final DiagnosticType MISSING_NAME_MAP_FOR_GENERATOR =
+      DiagnosticType.warning(
+          "JSC_MISSING_NAME_MAP_FOR_GENERATOR",
+          "The mapped id generator, does not have a renaming map supplied.");
 
   private final AbstractCompiler compiler;
   private final Map<String, NameSupplier> nameGenerators;
@@ -70,8 +76,11 @@ class ReplaceIdGenerators implements CompilerPass {
 
   private final boolean generatePseudoNames;
 
+  public static final RenamingMap UNIQUE = new RenamingMap() {
+    @Override public String get(String value) { return null; }};
+
   public ReplaceIdGenerators(
-      AbstractCompiler compiler, Set<String> idGens,
+      AbstractCompiler compiler, Map<String, RenamingMap> idGens,
       boolean generatePseudoNames,
       String previousMapSerialized) {
     this.compiler = compiler;
@@ -85,17 +94,27 @@ class ReplaceIdGenerators implements CompilerPass {
     this.previousMap = previousMap;
 
     if (idGens != null) {
-      for (String gen : idGens) {
-        nameGenerators.put(
-            gen, createNameSupplier(RenameStrategy.INCONSISTENT, previousMap.get(gen)));
-        idGeneratorMaps.put(gen, Maps.<String, String>newLinkedHashMap());
+      for (Entry<String, RenamingMap> gen : idGens.entrySet()) {
+        String name = gen.getKey();
+        RenamingMap map = gen.getValue();
+        if (map == ReplaceIdGenerators.UNIQUE) {
+          nameGenerators.put(name,
+              createNameSupplier(
+                  RenameStrategy.INCONSISTENT, previousMap.get(name)));
+        } else {
+          nameGenerators.put(name,
+              createNameSupplier(
+                  RenameStrategy.MAPPED, map));
+        }
+        idGeneratorMaps.put(name, Maps.<String, String>newLinkedHashMap());
       }
     }
   }
 
-  private enum RenameStrategy {
+  enum RenameStrategy {
     CONSISTENT,
     INCONSISTENT,
+    MAPPED,
     STABLE
   }
 
@@ -165,6 +184,24 @@ class ReplaceIdGenerators implements CompilerPass {
     }
   }
 
+  private static class MappedNameSupplier implements NameSupplier {
+    private final RenamingMap map;
+
+    MappedNameSupplier(RenamingMap map) {
+      this.map = map;
+    }
+
+    @Override
+    public String getName(String id, String name) {
+      return map.get(name);
+    }
+
+    @Override
+    public RenameStrategy getRenameStrategy() {
+      return RenameStrategy.MAPPED;
+    }
+  }
+
   private NameSupplier createNameSupplier(
       RenameStrategy renameStrategy, BiMap<String, String> previousMappings) {
     previousMappings = previousMappings != null ?
@@ -179,6 +216,12 @@ class ReplaceIdGenerators implements CompilerPass {
     }
   }
 
+  private NameSupplier createNameSupplier(
+      RenameStrategy renameStrategy, RenamingMap mappings) {
+    Preconditions.checkState(renameStrategy == RenameStrategy.MAPPED);
+    return new MappedNameSupplier(mappings);
+  }
+
   private class GatherGenerators extends AbstractPostOrderCallback {
 
     @Override
@@ -191,7 +234,8 @@ class ReplaceIdGenerators implements CompilerPass {
       int numGeneratorAnnotations =
           (doc.isConsistentIdGenerator() ? 1 : 0) +
           (doc.isIdGenerator() ? 1 : 0) +
-          (doc.isStableIdGenerator() ? 1 : 0);
+          (doc.isStableIdGenerator() ? 1 : 0) +
+          (doc.isMappedIdGenerator() ? 1 : 0);
       if (numGeneratorAnnotations == 0) {
         return;
       } else if (numGeneratorAnnotations > 1) {
@@ -213,13 +257,27 @@ class ReplaceIdGenerators implements CompilerPass {
       if (doc.isConsistentIdGenerator()) {
         consistNameMap.put(name, Maps.<String, String>newLinkedHashMap());
         nameGenerators.put(
-            name, createNameSupplier(RenameStrategy.CONSISTENT, previousMap.get(name)));
+            name, createNameSupplier(
+                RenameStrategy.CONSISTENT, previousMap.get(name)));
       } else if (doc.isStableIdGenerator()) {
         nameGenerators.put(
-            name, createNameSupplier(RenameStrategy.STABLE, previousMap.get(name)));
-      } else {
+            name, createNameSupplier(
+                RenameStrategy.STABLE, previousMap.get(name)));
+      } else if (doc.isIdGenerator()) {
         nameGenerators.put(
-            name, createNameSupplier(RenameStrategy.INCONSISTENT, previousMap.get(name)));
+            name, createNameSupplier(
+                RenameStrategy.INCONSISTENT, previousMap.get(name)));
+      } else if (doc.isMappedIdGenerator()) {
+        NameSupplier supplier = nameGenerators.get(name);
+        if (supplier == null
+            || supplier.getRenameStrategy() != RenameStrategy.MAPPED) {
+          compiler.report(t.makeError(n, MISSING_NAME_MAP_FOR_GENERATOR));
+          // skip registering the name in the list of Generators if there no
+          // mapping.
+          return;
+        }
+      } else {
+        throw new IllegalStateException("unexpected");
       }
       idGeneratorMaps.put(name, Maps.<String, String>newLinkedHashMap());
     }
@@ -266,12 +324,14 @@ class ReplaceIdGenerators implements CompilerPass {
       Node arg = n.getFirstChild().getNext();
 
       if (arg.isString()) {
-        String rename = getObfuscatedName(arg, callName, nameGenerator, arg.getString());
+        String rename = getObfuscatedName(
+            arg, callName, nameGenerator, arg.getString());
         parent.replaceChild(n, IR.string(rename));
         compiler.reportCodeChange();
       } else if (arg.isObjectLit()) {
         for (Node key : arg.children()) {
-          String rename = getObfuscatedName(key, callName, nameGenerator, key.getString());
+          String rename = getObfuscatedName(
+              key, callName, nameGenerator, key.getString());
           key.setString(rename);
           // Prevent standard renaming by marking the key as quoted.
           key.putBooleanProp(Node.QUOTED_PROP, true);
@@ -283,8 +343,8 @@ class ReplaceIdGenerators implements CompilerPass {
       // TODO(user): Error on id not a string or object literal.
     }
 
-    private String getObfuscatedName(Node id, String callName, NameSupplier nameGenerator,
-        String name) {
+    private String getObfuscatedName(
+        Node id, String callName, NameSupplier nameGenerator, String name) {
       String rename = null;
       Map<String, String> idGeneratorMap = idGeneratorMaps.get(callName);
       String instanceId = getIdForGeneratorNode(
