@@ -462,6 +462,29 @@ public class IntegrationTest extends IntegrationTestCase {
         lastCompiler.getPassConfig().getIntermediateState().cssNames);
   }
 
+  public void testReplaceIdGeneratorsTest() {
+    CompilerOptions options = createCompilerOptions();
+    options.replaceIdGenerators = true;
+
+    options.setIdGenerators(ImmutableMap.<String, RenamingMap>of(
+        "xid", new RenamingMap() {
+      @Override
+      public String get(String value) {
+        return ":" + value + ":";
+      }
+    }));
+
+    test(options, "/** @idGenerator {mapped} */"
+         + "var xid = function() {};\n"
+         + "function f() {\n"
+         + "  return xid('foo');\n"
+         + "}",
+         "var xid = function() {};\n"
+         + "function f() {\n"
+         + "  return ':foo:';\n"
+         + "}");
+  }
+
   public void testRemoveClosureAsserts() {
     CompilerOptions options = createCompilerOptions();
     options.closurePass = true;
