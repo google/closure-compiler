@@ -26,8 +26,6 @@
  *     $cookieStore
  *     $document
  *     $exceptionHandler
- *     $filter
- *     $filterProvider
  *     $httpBackend
  *     $interpolate
  *     $locale
@@ -805,6 +803,32 @@ angular.$cacheFactory.Cache;
  *   }}
  */
 angular.$cacheFactory.Cache.Info;
+
+/******************************************************************************
+ * $filter Service
+ *****************************************************************************/
+
+/**
+ * @typedef {function(string): !Function}
+ */
+angular.$filter;
+
+/******************************************************************************
+ * $filterProvider Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   register: function(string, (Function|Array.<string|Function>))
+ *   }}
+ */
+angular.$filterProvider;
+
+/**
+ * @param {string} name
+ * @param {(Function|Array.<string|Function>)} fn
+ */
+angular.$filterProvider.register = function(name, fn) {};
 
 /******************************************************************************
  * $http Service
