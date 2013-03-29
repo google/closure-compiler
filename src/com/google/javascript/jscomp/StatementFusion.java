@@ -35,9 +35,15 @@ public class StatementFusion extends AbstractPeepholeOptimization {
 
   @Override
   Node optimizeSubtree(Node n) {
+    // TODO(user): canFuseIntoOnestatement needs to be rewritten to
+    // allow more aggressve use of comma's.
+
     // The block of a function body always need { }.
     if (!n.getParent().isFunction() && canFuseIntoOneStatement(n)) {
-      fuseIntoOneStatement(n);
+      Node start = n.getFirstChild();
+      Node end = n.getChildBefore(n.getLastChild());
+      Node result = fuseIntoOneStatement(n, start, end);
+      fuseExpressionIntoControlFlowStatement(result, n.getLastChild());
       reportCodeChange();
     }
     return n;
@@ -82,35 +88,59 @@ public class StatementFusion extends AbstractPeepholeOptimization {
     return false;
   }
 
-  private void fuseIntoOneStatement(Node block) {
-    Node cur = block.removeFirstChild();
-
-    // Starts building a tree.
-    Node commaTree = cur.removeFirstChild();
-
-
-    while (block.hasMoreThanOneChild()) {
-      Node next = block.removeFirstChild().removeFirstChild();
-      commaTree = fuseExpressionIntoExpression(commaTree, next);
+  /**
+   * Given a block, fuse a list of statements with comma's.
+   *
+   * @param parent The parent that contains the statements.
+   * @param first The first statement to fuse (inclusive)
+   * @param last The last statement to fuse (inclusive)
+   * @return A single statement that contains all the fused statement as one.
+   */
+  private Node fuseIntoOneStatement(Node parent, Node first, Node last) {
+    // Nothing to fuse if there is only one statement.
+    if (first == last) {
+      return first;
     }
 
-    Preconditions.checkState(block.hasOneChild());
-    Node last = block.getLastChild();
+    // Step one: Create a comma tree that contains all the statements.
+    Node commaTree = first.removeFirstChild();
+    Node onePastLast = last.getNext();
+
+    Node next = null;
+    for (Node cur = first.getNext(); cur != onePastLast; cur = next) {
+      commaTree = fuseExpressionIntoExpression(
+          commaTree, cur.removeFirstChild());
+      next = cur.getNext();
+      parent.removeChild(cur);
+    }
+
+    // Step two: The last EXPR_RESULT will now hold the comma tree with all
+    // the fused statements.
+    first.addChildToBack(commaTree);
+    return first;
+  }
+
+  private void fuseExpressionIntoControlFlowStatement(
+      Node before, Node control) {
+    Preconditions.checkArgument(before.isExprResult(),
+        "before must be expression result");
 
     // Now we are just left with two statements. The comma tree of the first
     // n - 1 statements (which can be used in an expression) and the last
     // statement. We perform specific fusion based on the last statement's type.
-    switch(last.getType()) {
+    switch(control.getType()) {
       case Token.IF:
       case Token.RETURN:
       case Token.THROW:
       case Token.SWITCH:
       case Token.EXPR_RESULT:
-        fuseExpresssonIntoFirstChild(commaTree, last);
+        before.getParent().removeChild(before);
+        fuseExpresssonIntoFirstChild(before.removeFirstChild(), control);
         return;
       case Token.FOR:
-        if (NodeUtil.isForIn(last)) {
-          fuseExpresssonIntoSecondChild(commaTree, last);
+        before.getParent().removeChild(before);
+        if (NodeUtil.isForIn(control)) {
+          fuseExpresssonIntoSecondChild(before.removeFirstChild(), control);
         }
         return;
       default:
