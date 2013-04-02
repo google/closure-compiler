@@ -22,16 +22,20 @@ package com.google.javascript.jscomp;
  */
 public class StatementFusionTest extends CompilerTestCase  {
 
+  private boolean favorsCommas = false;
+
   @Override
   public void setUp() throws Exception {
     super.setUp();
     enableLineNumberCheck(true);
+    favorsCommas = false;
   }
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass =
-      new PeepholeOptimizationsPass(compiler, new StatementFusion());
+      new PeepholeOptimizationsPass(
+          compiler, new StatementFusion(favorsCommas));
 
     return peepholePass;
   }
@@ -90,6 +94,16 @@ public class StatementFusionTest extends CompilerTestCase  {
 
   public void testNoFuseIntoDo() {
     fuseSame("a;b;c;do{}while(x)");
+  }
+
+  public void testFavorComma1() {
+    favorsCommas = true;
+    test("a;b;c", "a,b,c");
+  }
+
+  public void testFavorComma2() {
+    favorsCommas = true;
+    test("a;b;c;if(d){}", "if(a,b,c,d){}");
   }
 
   public void testNoGlobalSchopeChanges() {

@@ -31,15 +31,30 @@ import com.google.javascript.rhino.Token;
  * goodies in {@link PeepholeSubstituteAlternateSyntax}.
  *
  */
-public class StatementFusion extends AbstractPeepholeOptimization {
+class StatementFusion extends AbstractPeepholeOptimization {
+  // TODO(user): We probably need to test this more. The current compiler
+  // assumes that there are more ;'s than ,'s in a real program. However,
+  // this assumption may be incorrect. We can probably do a quick traverse
+  // to check this assumption if that's neccessary.
+  public static final boolean SHOULD_FAVOR_COMMA_OVER_SEMI_COLON = false;
+
+  private final boolean favorsCommaOverSemiColon;
+
+  public StatementFusion() {
+    this(SHOULD_FAVOR_COMMA_OVER_SEMI_COLON);
+  }
+
+  public StatementFusion(boolean favorsCommaOverSemiColon) {
+    this.favorsCommaOverSemiColon = favorsCommaOverSemiColon;
+  }
 
   @Override
   Node optimizeSubtree(Node n) {
     // TODO(user): canFuseIntoOnestatement needs to be rewritten to
-    // allow more aggressve use of comma's.
+    // allow more aggressive use of comma's.
 
-    // The block of a function body always need { }.
-    if (!n.getParent().isFunction() && canFuseIntoOneStatement(n)) {
+    if ((favorsCommaOverSemiColon || !n.getParent().isFunction())
+        && canFuseIntoOneStatement(n)) {
       Node start = n.getFirstChild();
       Node end = n.getChildBefore(n.getLastChild());
       Node result = fuseIntoOneStatement(n, start, end);
@@ -50,8 +65,8 @@ public class StatementFusion extends AbstractPeepholeOptimization {
   }
 
   private boolean canFuseIntoOneStatement(Node block) {
-    // Fold only statement block. NOT scripts block.
-    if (!block.isBlock()) {
+    // If we are favoring semi-colon, we shouldn't fuse script blocks.
+    if (!favorsCommaOverSemiColon && !block.isBlock()) {
       return false;
     }
 
