@@ -25,7 +25,6 @@
  *     $cookies
  *     $cookieStore
  *     $document
- *     $exceptionHandler
  *     $httpBackend
  *     $interpolate
  *     $locale
@@ -803,6 +802,15 @@ angular.$cacheFactory.Cache;
  *   }}
  */
 angular.$cacheFactory.Cache.Info;
+
+/******************************************************************************
+ * $exceptionHandler Service
+ *****************************************************************************/
+
+/**
+ * @typedef {function(Error, string=)}
+ */
+angular.$exceptionHandler;
 
 /******************************************************************************
  * $filter Service
