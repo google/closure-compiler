@@ -1458,7 +1458,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkPropertyAccessHelper(JSType objectType, String propName,
       NodeTraversal t, Node n) {
     if (!objectType.isEmptyType() &&
-        reportMissingProperties && !isPropertyTest(n)) {
+        reportMissingProperties && (!isPropertyTest(n) || objectType.isStruct())) {
       if (!typeRegistry.canPropertyBeDefined(objectType, propName)) {
         report(t, n, INEXISTENT_PROPERTY, propName,
             validator.getReadableJSTypeName(n.getFirstChild(), true));
