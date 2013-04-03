@@ -5236,9 +5236,24 @@ google.maps.places.PlaceSearchRequest.prototype.keyword;
 google.maps.places.PlaceSearchRequest.prototype.location;
 
 /**
+ * @type {number}
+ */
+google.maps.places.PlaceSearchRequest.prototype.maxPriceLevel;
+
+/**
+ * @type {number}
+ */
+google.maps.places.PlaceSearchRequest.prototype.minPriceLevel;
+
+/**
  * @type {string}
  */
 google.maps.places.PlaceSearchRequest.prototype.name;
+
+/**
+ * @type {boolean}
+ */
+google.maps.places.PlaceSearchRequest.prototype.openNow;
 
 /**
  * @type {number}
@@ -5825,6 +5840,11 @@ google.maps.visualization.MapsEngineLayer.prototype.setOptions = function(option
  * @interface
  */
 google.maps.visualization.MapsEngineLayerOptions = function() {};
+
+/**
+ * @type {string}
+ */
+google.maps.visualization.MapsEngineLayerOptions.prototype.accessToken;
 
 /**
  * @type {boolean}
