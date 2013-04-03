@@ -418,6 +418,7 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
   }
 
   public void testDontRemoveBreakInTryFinallySwitch() throws Exception {
-    testSame("function f() {b:try{throw 9} finally {switch(x) {case 1: break b} } return 1;}");
+    testSame("function f() {b:try{throw 9} finally {" +
+             "switch(x) {case 1: break b} } return 1;}");
   }
 }
