@@ -76,8 +76,11 @@ class ReplaceIdGenerators implements CompilerPass {
 
   private final boolean generatePseudoNames;
 
-  public static final RenamingMap UNIQUE = new RenamingMap() {
-    @Override public String get(String value) { return null; }};
+  public static final RenamingMap UNIQUE = new UniqueRenamingToken();
+
+  private static class UniqueRenamingToken implements RenamingMap {
+    @Override public String get(String value) { return null; }
+  }
 
   public ReplaceIdGenerators(
       AbstractCompiler compiler, Map<String, RenamingMap> idGens,
@@ -97,7 +100,7 @@ class ReplaceIdGenerators implements CompilerPass {
       for (Entry<String, RenamingMap> gen : idGens.entrySet()) {
         String name = gen.getKey();
         RenamingMap map = gen.getValue();
-        if (map == ReplaceIdGenerators.UNIQUE) {
+        if (map instanceof UniqueRenamingToken) {
           nameGenerators.put(name,
               createNameSupplier(
                   RenameStrategy.INCONSISTENT, previousMap.get(name)));
