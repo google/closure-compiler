@@ -1459,9 +1459,15 @@ MessageEvent.prototype.initMessageEventNS = function(namespaceURI, typeArg,
     portsArg) {};
 
 /**
- * HTML5 DataTransfer class
+ * HTML5 DataTransfer class.
+ *
+ * We say that this extends ClipboardData, because Event.prototype.clipboardData
+ * is a DataTransfer on WebKit but a ClipboardData on IE. The interfaces are so
+ * similar that it's easier to merge them.
+ *
  * @see http://dev.w3.org/html5/spec/dnd.html#the-dragevent-and-datatransfer-interfaces
  * @constructor
+ * @extends {ClipboardData}
  */
 function DataTransfer() {}
 
@@ -1479,18 +1485,21 @@ DataTransfer.prototype.files;
 
 /**
  * @param {string=} opt_format Format for which to remove data.
+ * @override
  */
 DataTransfer.prototype.clearData = function(opt_format) {};
 
 /**
  * @param {string} format Format for which to set data.
  * @param {string} data Data to add.
+ * @override
  */
 DataTransfer.prototype.setData = function(format, data) {};
 
 /**
  * @param {string} format Format for which to set data.
  * @return {string} Data for the given format.
+ * @override
  */
 DataTransfer.prototype.getData = function(format) { return ''; };
 
