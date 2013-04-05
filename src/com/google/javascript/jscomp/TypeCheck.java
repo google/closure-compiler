@@ -194,7 +194,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "property {0} is already defined by the {1} extended interface");
 
   static final DiagnosticType UNKNOWN_EXPR_TYPE =
-      DiagnosticType.warning("JSC_UNKNOWN_EXPR_TYPE",
+      DiagnosticType.disabled("JSC_UNKNOWN_EXPR_TYPE",
           "could not determine the type of this expression");
 
   static final DiagnosticType UNRESOLVED_TYPE =
@@ -238,6 +238,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "ILLEGAL_OBJLIT_KEY",
           "Illegal key, the object literal is a {0}");
 
+  // If a diagnostic is disabled by default, do not add it in this list
+  // TODO(user): Either INEXISTENT_PROPERTY shouldn't be here, or we should
+  // change DiagnosticGroups.setWarningLevel to not accidentally enable it.
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       DETERMINISTIC_TEST,
       DETERMINISTIC_TEST_NO_RESULT,
@@ -262,7 +265,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
       UNKNOWN_OVERRIDE,
       INTERFACE_METHOD_OVERRIDE,
-      UNKNOWN_EXPR_TYPE,
       UNRESOLVED_TYPE,
       WRONG_ARGUMENT_COUNT,
       ILLEGAL_IMPLICIT_CAST,
@@ -289,7 +291,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private MemoizedScopeCreator scopeCreator;
 
   private final CheckLevel reportMissingOverride;
-  private final CheckLevel reportUnknownTypes;
+  private final boolean reportUnknownTypes;
 
   // This may be expensive, so don't emit these warnings if they're
   // explicitly turned off.
@@ -312,8 +314,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       JSTypeRegistry typeRegistry,
       Scope topScope,
       MemoizedScopeCreator scopeCreator,
-      CheckLevel reportMissingOverride,
-      CheckLevel reportUnknownTypes) {
+      CheckLevel reportMissingOverride) {
     this.compiler = compiler;
     this.validator = compiler.getTypeValidator();
     this.reverseInterpreter = reverseInterpreter;
@@ -321,24 +322,24 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     this.topScope = topScope;
     this.scopeCreator = scopeCreator;
     this.reportMissingOverride = reportMissingOverride;
-    this.reportUnknownTypes = reportUnknownTypes;
+    this.reportUnknownTypes = ((Compiler) compiler).getOptions().enables(
+        DiagnosticGroups.REPORT_UNKNOWN_TYPES);
     this.inferJSDocInfo = new InferJSDocInfo(compiler);
   }
 
   public TypeCheck(AbstractCompiler compiler,
       ReverseAbstractInterpreter reverseInterpreter,
       JSTypeRegistry typeRegistry,
-      CheckLevel reportMissingOverride,
-      CheckLevel reportUnknownTypes) {
+      CheckLevel reportMissingOverride) {
     this(compiler, reverseInterpreter, typeRegistry, null, null,
-        reportMissingOverride, reportUnknownTypes);
+        reportMissingOverride);
   }
 
   TypeCheck(AbstractCompiler compiler,
       ReverseAbstractInterpreter reverseInterpreter,
       JSTypeRegistry typeRegistry) {
     this(compiler, reverseInterpreter, typeRegistry, null, null,
-         CheckLevel.WARNING, CheckLevel.OFF);
+         CheckLevel.WARNING);
   }
 
   /** Turn on the missing property check. Returns this for easy chaining. */
@@ -869,9 +870,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (type == null) {
       nullCount++;
     } else if (type.isUnknownType()) {
-      if (reportUnknownTypes.isOn()) {
-        compiler.report(
-            t.makeError(n, reportUnknownTypes, UNKNOWN_EXPR_TYPE));
+      if (reportUnknownTypes) {
+        compiler.report(t.makeError(n, UNKNOWN_EXPR_TYPE));
       }
       unknownCount++;
     } else {

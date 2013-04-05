@@ -175,13 +175,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     reportMissingOverride = level;
   }
 
-  CheckLevel reportUnknownTypes;
-
-  /** Flags a warning for every node whose type could not be determined. */
-  public void setReportUnknownTypes(CheckLevel level) {
-    reportUnknownTypes = level;
-  }
-
   /** Checks for missing goog.require() calls **/
   public CheckLevel checkRequires;
 
@@ -881,7 +874,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     checkTypes = false;
     tightenTypes = false;
     reportMissingOverride = CheckLevel.OFF;
-    reportUnknownTypes = CheckLevel.OFF;
     checkRequires = CheckLevel.OFF;
     checkProvides = CheckLevel.OFF;
     checkGlobalNamesLevel = CheckLevel.OFF;

@@ -6865,7 +6865,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         compiler,
         new SemanticReverseAbstractInterpreter(
             compiler.getCodingConvention(), registry),
-        registry, topScope, scopeCreator, CheckLevel.WARNING, CheckLevel.OFF)
+        registry, topScope, scopeCreator, CheckLevel.WARNING)
         .process(null, second);
 
     assertEquals(1, compiler.getWarningCount());

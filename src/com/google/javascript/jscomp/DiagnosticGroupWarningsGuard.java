@@ -23,8 +23,8 @@ package com.google.javascript.jscomp;
 public class DiagnosticGroupWarningsGuard extends WarningsGuard {
   private static final long serialVersionUID = 1L;
 
-  final DiagnosticGroup group;
-  final CheckLevel level;
+  private final DiagnosticGroup group;
+  private final CheckLevel level;
 
   public DiagnosticGroupWarningsGuard(
       DiagnosticGroup group, CheckLevel level) {
@@ -51,7 +51,6 @@ public class DiagnosticGroupWarningsGuard extends WarningsGuard {
         }
       }
     }
-
     return false;
   }
 

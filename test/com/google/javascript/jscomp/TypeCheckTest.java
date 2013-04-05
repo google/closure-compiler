@@ -10553,7 +10553,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         compiler,
         new SemanticReverseAbstractInterpreter(
             compiler.getCodingConvention(), registry),
-        registry, topScope, scopeCreator, CheckLevel.WARNING, CheckLevel.OFF)
+        registry, topScope, scopeCreator, CheckLevel.WARNING)
         .process(null, second);
 
     assertEquals(1, compiler.getWarningCount());
@@ -11533,6 +11533,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "some(g());\n");
   }
 
+  public void testUnknownTypeReport() throws Exception {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.REPORT_UNKNOWN_TYPES,
+        CheckLevel.WARNING);
+    testTypes("function id(x) { return x; }",
+        "could not determine the type of this expression");
+  }
+
+  public void testUnknownTypeDisabledByDefault() throws Exception {
+    testTypes("function id(x) { return x; }");
+  }
+
   public void testTemplatizedTypeSubtypes2() throws Exception {
     JSType arrayOfNumber = createTemplatizedType(
         ARRAY_TYPE, NUMBER_TYPE);
@@ -11737,8 +11748,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         new SemanticReverseAbstractInterpreter(
             compiler.getCodingConvention(), registry),
         registry,
-        reportMissingOverrides,
-        CheckLevel.OFF);
+        reportMissingOverrides);
   }
 
   void testTypes(String js, String[] warnings) throws Exception {

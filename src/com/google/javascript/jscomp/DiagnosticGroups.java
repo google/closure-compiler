@@ -77,13 +77,13 @@ public class DiagnosticGroups {
   // to parser/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, ambiguousFunctionDecl, checkRegExp, " +
-      "checkTypes, checkVars, const, constantProperty, deprecated, " +
-      "duplicateMessage, " +
+      "checkStructDictInheritance, checkTypes, checkVars, const, " +
+      "constantProperty, deprecated, duplicateMessage, " +
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
       "internetExplorerChecks, invalidCasts, misplacedTypeAnnotation, " +
       "missingProperties, " +
-      "nonStandardJsDocs, suspiciousCode, strictModuleDepCheck, " +
-      "typeInvalidation, " +
+      "nonStandardJsDocs, reportUnknownTypes, suspiciousCode, " +
+      "strictModuleDepCheck, typeInvalidation, " +
       "undefinedNames, undefinedVars, unknownDefines, uselessCode, " +
       "visibility";
 
@@ -187,8 +187,12 @@ public class DiagnosticGroups {
           TypeValidator.ALL_DIAGNOSTICS,
           TypeCheck.ALL_DIAGNOSTICS);
 
-  public static final DiagnosticGroup CHECK_STRUCT_DICT_INHERITENCE =
-      DiagnosticGroups.registerGroup("checkStructDictInheritence",
+  public static final DiagnosticGroup REPORT_UNKNOWN_TYPES =
+      DiagnosticGroups.registerGroup("reportUnknownTypes",
+          TypeCheck.UNKNOWN_EXPR_TYPE);
+
+  public static final DiagnosticGroup CHECK_STRUCT_DICT_INHERITANCE =
+      DiagnosticGroups.registerGroup("checkStructDictInheritance",
           TypeCheck.CONFLICTING_SHAPE_TYPE);
 
   public static final DiagnosticGroup CHECK_VARIABLES =

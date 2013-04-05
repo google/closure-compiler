@@ -176,8 +176,7 @@ public abstract class PassConfig {
         compiler.getTypeRegistry(),
         topScope,
         typedScopeCreator,
-        options.reportMissingOverride,
-        options.reportUnknownTypes)
+        options.reportMissingOverride)
         .reportMissingProperties(options.enables(
             DiagnosticGroup.forType(TypeCheck.INEXISTENT_PROPERTY)));
   }

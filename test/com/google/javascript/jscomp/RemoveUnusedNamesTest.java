@@ -58,7 +58,6 @@ public class RemoveUnusedNamesTest extends CompilerTestCase {
                 compiler.getCodingConvention(),
                 compiler.getTypeRegistry()),
             compiler.getTypeRegistry(),
-            CheckLevel.ERROR,
             CheckLevel.ERROR).processForTesting(externs, root);
 
         new RemoveUnusedNames(
