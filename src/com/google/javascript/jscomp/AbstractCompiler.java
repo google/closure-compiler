@@ -50,7 +50,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   // If false, the pass will analyze all functions, even those that didn't
   // change since the last time it ran.
   // Intended for use by the compiler only; not accessed by compiler users.
-  protected boolean analyzeChangedFunsOnly = true;
+  protected boolean analyzeChangedScopesOnly = true;
 
   // TODO(nicksantos): Decide if all of these are really necessary.
   // Many of them are just accessors that should be passed to the
@@ -119,6 +119,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   /**
    * Report code changes.
+   *
+   * Passes should call reportCodeChange when they alter the JS tree. This is
+   * verified by CompilerTestCase. This allows us to optimize to a fixed point.
    */
   public abstract void reportCodeChange();
 
@@ -223,10 +226,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract boolean hasScopeChanged(Node n);
 
   /** Passes that do cross-scope modifications use this (eg, InlineVariables) */
-  abstract void reportChangeToScope(Node n);
-
-  /** Returns the containing function (or the top level node) for n */
-  abstract Node getEnclosingScope(Node n);
+  abstract void reportChangeToEnclosingScope(Node n);
 
   /**
    * Returns true if compiling in IDE mode.

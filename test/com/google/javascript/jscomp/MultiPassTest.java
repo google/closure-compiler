@@ -31,7 +31,9 @@ import java.util.List;
 public class MultiPassTest extends CompilerTestCase {
   private List<PassFactory> passes;
 
-  public MultiPassTest() {}
+  public MultiPassTest() {
+    enableNormalize();
+  }
 
   protected CompilerPass getProcessor(Compiler compiler) {
     PhaseOptimizer po = new PhaseOptimizer(compiler, null, null);
@@ -52,6 +54,16 @@ public class MultiPassTest extends CompilerTestCase {
     addPeephole();
     test("function f() { var x = 1; return x + 5; }",
         "function f() { return 6; }");
+  }
+
+  public void testInlineFunctionsAndPeephole() {
+    passes = Lists.newLinkedList();
+    addInlineFunctions();
+    addPeephole();
+    test("function f() { return 1; }" +
+        "function g() { return f(); }" +
+        "function h() { return g(); } var n = h();",
+        "var n = 1");
   }
 
   public void testInlineVarsAndDeadCodeElim() {
@@ -83,6 +95,16 @@ public class MultiPassTest extends CompilerTestCase {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new InlineVariables(compiler, InlineVariables.Mode.ALL, true);
+        }
+      });
+  }
+
+  private void addInlineFunctions() {
+    passes.add(new PassFactory("inlineFunctions", false) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new InlineFunctions(compiler,
+              compiler.getUniqueNameIdSupplier(), true, true, true, true, true);
         }
       });
   }

@@ -2007,16 +2007,16 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   boolean hasScopeChanged(Node n) {
-    if (phaseOptimizer != null) {
-      return phaseOptimizer.hasScopeChanged(n);
+    if (!analyzeChangedScopesOnly || phaseOptimizer == null) {
+      return true;
     }
-    return true;
+    return phaseOptimizer.hasScopeChanged(n);
   }
 
   @Override
-  void reportChangeToScope(Node n) {
+  void reportChangeToEnclosingScope(Node n) {
     if (phaseOptimizer != null) {
-      phaseOptimizer.reportChangeToScope(n);
+      phaseOptimizer.reportChangeToEnclosingScope(n);
       phaseOptimizer.startCrossScopeReporting();
       reportCodeChange();
       phaseOptimizer.endCrossScopeReporting();
@@ -2035,22 +2035,6 @@ public class Compiler extends AbstractCompiler {
     this.phaseOptimizer = po;
   }
 
-  @Override
-  Node getEnclosingScope(Node n) {
-    while (n != jsRoot && n.getParent() != null) {
-      n = n.getParent();
-      if (n.isFunction()) {
-        return n;
-      }
-    }
-    return n;
-  }
-
-  /**
-   * All passes should call reportCodeChange() when they alter
-   * the JS tree structure. This is verified by CompilerTestCase.
-   * This allows us to optimize to a fixed point.
-   */
   @Override
   public void reportCodeChange() {
     for (CodeChangeHandler handler : codeChangeHandlers) {

@@ -363,8 +363,8 @@ class InlineVariables implements CompilerPass {
       boolean isFunctionDeclaration = NodeUtil.isFunctionDeclaration(value);
 
       // decl and ref may be in different scopes, report change for both
-      compiler.reportChangeToScope(compiler.getEnclosingScope(decl.getNode()));
-      compiler.reportChangeToScope(compiler.getEnclosingScope(ref.getNode()));
+      compiler.reportChangeToEnclosingScope(decl.getNode());
+      compiler.reportChangeToEnclosingScope(ref.getNode());
 
       inlineValue(v, ref, value.detachFromParent());
       if (decl != init) {
@@ -416,7 +416,7 @@ class InlineVariables implements CompilerPass {
       Node varNode = decl.getParent();
       Node grandparent = decl.getGrandparent();
 
-      compiler.reportChangeToScope(compiler.getEnclosingScope(decl.getNode()));
+      compiler.reportChangeToEnclosingScope(decl.getNode());
       varNode.removeChild(decl.getNode());
       // Remove var node if empty
       if (!varNode.hasChildren()) {
@@ -434,7 +434,7 @@ class InlineVariables implements CompilerPass {
      *     to re-parent.
      */
     private void inlineValue(Var v, Reference ref, Node value) {
-      compiler.reportChangeToScope(compiler.getEnclosingScope(ref.getNode()));
+      compiler.reportChangeToEnclosingScope(ref.getNode());
       if (ref.isSimpleAssignmentToName()) {
         // This is the initial assignment.
         ref.getGrandparent().replaceChild(ref.getParent(), value);

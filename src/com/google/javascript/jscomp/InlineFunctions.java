@@ -1030,7 +1030,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
 
     @Override
     public void remove() {
-      compiler.reportChangeToScope(fn);
+      compiler.reportChangeToEnclosingScope(fn);
       NodeUtil.removeChild(fn.getParent(), fn);
     }
 
@@ -1060,7 +1060,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
 
     @Override
     public void remove() {
-      compiler.reportChangeToScope(var);
+      compiler.reportChangeToEnclosingScope(var);
       NodeUtil.removeChild(var.getParent(), var);
     }
 
