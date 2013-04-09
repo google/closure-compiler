@@ -16,11 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Chars;
 import com.google.javascript.rhino.TokenStream;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -31,6 +34,49 @@ import javax.annotation.Nullable;
  *
  */
 final class NameGenerator {
+
+  /**
+   * Represents a char that can be used in renaming as well as how often
+   * that char appears in the generated code.
+   */
+  private final class CharPriority implements Comparable<CharPriority>{
+    final char name;
+    int occurance;
+
+    // This is a tie-breaker when two chars occurrence count is the same.
+    // When that happens, the 'natural' order prevails.
+    final int order;
+    CharPriority(char name, int order) {
+      this.name = name;
+      this.order = order;
+      this.occurance = 0;
+    }
+
+    @Override
+    public int compareTo(CharPriority other) {
+      // Start out by putting the element with more occurance first.
+      int result = other.occurance - this.occurance;
+      if (result != 0) {
+        return result;
+      }
+      // If there is a tie, follow the order of FIRST_CHAR and NONFIRST_CHAR.
+      result = this.order - other.order;
+      return result;
+    }
+  }
+
+  // TODO(user): Maybe we don't need a HashMap to look up.
+  // I started writing a skip-list like data-structure that would let us
+  // have O(1) favors() and O(1) restartNaming() but the code gotten very messy.
+  // Lets start with a logical implementation first until performance becomes
+  // a problem.
+  private final Map<Character, CharPriority> priorityLookupMap;
+
+  // It is important that the ordering of FIRST_CHAR is as close to NONFIRT_CHAR
+  // as possible. Using the ASCII ordering is not a good idea. The reason
+  // is that we cannot use numbers as FIRST_CHAR yet the ACSII value of numbers
+  // is very small. If we picked numbers first in NONFIRST_CHAR, we would
+  // end up balancing the huffman tree and result is bad compression.
   /** Generate short name with this first character */
   static final char[] FIRST_CHAR =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$".toCharArray();
@@ -44,8 +90,8 @@ final class NameGenerator {
   private final String prefix;
   private int nameCount;
 
-  private final char[] firstChars;
-  private final char[] nonFirstChars;
+  private final CharPriority[] firstChars;
+  private final CharPriority[] nonFirstChars;
 
   /**
    * Creates a NameGenerator.
@@ -62,11 +108,42 @@ final class NameGenerator {
     this.reservedNames = reservedNames;
     this.prefix = prefix;
 
+    this.priorityLookupMap = Maps.newHashMapWithExpectedSize(
+        NONFIRST_CHAR.length);
+
+    int order = 0;
+    for (char c : NONFIRST_CHAR) {
+      priorityLookupMap.put(c, new CharPriority(c, order));
+      order++;
+    }
+
     // build the character arrays to use
     this.firstChars = reserveCharacters(FIRST_CHAR, reservedCharacters);
     this.nonFirstChars = reserveCharacters(NONFIRST_CHAR, reservedCharacters);
 
     checkPrefix(prefix);
+  }
+
+  /**
+   * Restart the name generation. Re-calculate how characters are prioritized
+   * based on how often the they appear in the final output.
+   */
+  public void restartNaming() {
+    Arrays.sort(firstChars);
+    Arrays.sort(nonFirstChars);
+    nameCount = 0;
+  }
+
+  /**
+   * Increase the prioritization of all the chars in a String. This information
+   * is not used until {@link #restartNaming()} is called. A compiler would be
+   * able to generate names while changing the prioritization of the name
+   * generator for the <b>next</b> pass.
+   */
+  public void favors(CharSequence sequence) {
+    for (int i = 0; i < sequence.length(); i++) {
+      priorityLookupMap.get(sequence.charAt(i)).occurance++;
+    }
   }
 
   /**
@@ -76,15 +153,25 @@ final class NameGenerator {
    * @return An array of characters to use. Will return the chars array if
    *    reservedCharacters is null or empty, otherwise creates a new array.
    */
-  static char[] reserveCharacters(char[] chars, char[] reservedCharacters) {
+  CharPriority[] reserveCharacters(char[] chars, char[] reservedCharacters) {
     if (reservedCharacters == null || reservedCharacters.length == 0) {
-      return chars;
+      CharPriority[] result = new CharPriority[chars.length];
+      for (int i = 0; i < chars.length; i++) {
+        result[i] = priorityLookupMap.get(chars[i]);
+      }
+      return result;
     }
     Set<Character> charSet = Sets.newLinkedHashSet(Chars.asList(chars));
     for (char reservedCharacter : reservedCharacters) {
       charSet.remove(reservedCharacter);
     }
-    return Chars.toArray(charSet);
+
+    CharPriority[] result = new CharPriority[charSet.size()];
+    int index = 0;
+    for (char c : charSet) {
+      result[index++] = priorityLookupMap.get(c);
+    }
+    return result;
   }
 
   /** Validates a name prefix. */
@@ -92,22 +179,30 @@ final class NameGenerator {
     if (prefix.length() > 0) {
       // Make sure that prefix starts with a legal character.
       if (!contains(firstChars, prefix.charAt(0))) {
+        char[] chars = new char[firstChars.length];
+        for (int i = 0; i < chars.length; i++) {
+          chars[i] = firstChars[i].name;
+        }
         throw new IllegalArgumentException("prefix must start with one of: " +
-                                           Arrays.toString(firstChars));
+                                           Arrays.toString(chars));
       }
       for (int pos = 1; pos < prefix.length(); ++pos) {
+        char[] chars = new char[nonFirstChars.length];
+        for (int i = 0; i < chars.length; i++) {
+          chars[i] = nonFirstChars[i].name;
+        }
         if (!contains(nonFirstChars, prefix.charAt(pos))) {
           throw new IllegalArgumentException("prefix has invalid characters, " +
                                              "must be one of: " +
-                                             Arrays.toString(nonFirstChars));
+                                             Arrays.toString(chars));
         }
       }
     }
   }
 
-  private boolean contains(char[] arr, char c) {
+  private static boolean contains(CharPriority[] arr, char c) {
     for (int i = 0; i < arr.length; i++) {
-      if (arr[i] == c) {
+      if (arr[i].name == c) {
         return true;
       }
     }
@@ -125,14 +220,14 @@ final class NameGenerator {
 
       if (name.isEmpty()) {
         int pos = i % firstChars.length;
-        name += firstChars[pos];
+        name += firstChars[pos].name;
         i /= firstChars.length;
       }
 
       while (i > 0) {
         i--;
         int pos = i % nonFirstChars.length;
-        name += nonFirstChars[pos];
+        name += nonFirstChars[pos].name;
         i /= nonFirstChars.length;
       }
 
