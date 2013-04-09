@@ -230,7 +230,6 @@ final class TypedScopeCreator implements ScopeCreator {
     }
 
     scopeBuilder.resolveStubDeclarations();
-    scopeBuilder.resolveTypes();
 
     // Gather the properties in each function that we found in the
     // global scope, if that function has a @this type that we can
@@ -252,6 +251,8 @@ final class TypedScopeCreator implements ScopeCreator {
           typeRegistry, newScope, delegateProxyPrototypes,
           delegateCallingConventions);
     }
+
+    newScope.setTypeResolver(scopeBuilder);
     return newScope;
   }
 
@@ -405,7 +406,7 @@ final class TypedScopeCreator implements ScopeCreator {
   }
 
   private abstract class AbstractScopeBuilder
-      implements NodeTraversal.Callback {
+      implements NodeTraversal.Callback, Scope.TypeResolver {
 
     /**
      * The scope that we're building.
@@ -459,7 +460,8 @@ final class TypedScopeCreator implements ScopeCreator {
       deferredSetTypes.add(new DeferredSetType(node, type));
     }
 
-    void resolveTypes() {
+    @Override
+    public void resolveTypes() {
       // Resolve types and attach them to nodes.
       for (DeferredSetType deferred : deferredSetTypes) {
         deferred.resolve(scope);

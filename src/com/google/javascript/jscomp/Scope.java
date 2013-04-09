@@ -617,4 +617,22 @@ public class Scope
     return Iterators.filter(
         getVars(), DECLARATIVELY_UNBOUND_VARS_WITHOUT_TYPES);
   }
+
+  static interface TypeResolver {
+    void resolveTypes();
+  }
+
+  private TypeResolver typeResolver;
+
+  /** Resolve all type references. Only used on typed scopes. */
+  void resolveTypes() {
+    if (typeResolver != null) {
+      typeResolver.resolveTypes();
+      typeResolver = null;
+    }
+  }
+
+  void setTypeResolver(TypeResolver resolver) {
+    this.typeResolver = resolver;
+  }
 }
