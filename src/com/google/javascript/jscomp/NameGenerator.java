@@ -142,7 +142,10 @@ final class NameGenerator {
    */
   public void favors(CharSequence sequence) {
     for (int i = 0; i < sequence.length(); i++) {
-      priorityLookupMap.get(sequence.charAt(i)).occurance++;
+      CharPriority c = priorityLookupMap.get(sequence.charAt(i));
+      if (c != null) {
+        c.occurance++;
+      }
     }
   }
 
