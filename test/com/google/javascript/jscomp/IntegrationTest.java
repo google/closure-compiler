@@ -2465,6 +2465,15 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, code, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
+  public void testBiasedLabelRenaming() {
+    CompilerOptions options = createCompilerOptions();
+    options.setAggressiveRenaming(true);
+    options.setLabelRenaming(true);
+    String code = "function a() {lbl: while(1) {while(1) {break lbl}}}";
+    String result = "function a() {f: for(;1;) for(;1;)break f}";
+    test(options, code, result);
+  }
+
   public void testIssue937() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;

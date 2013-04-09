@@ -36,6 +36,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -101,6 +102,8 @@ public class DefaultPassConfig extends PassConfig {
   /** Names exported by goog.exportSymbol. */
   private Set<String> exportedNames = null;
 
+  /** Shared name generator that remembers character encoding bias */
+  private NameGenerator nameGenerator = null;
   /**
    * Ids for cross-module method stubbing, so that each method has
    * a unique id.
@@ -167,6 +170,13 @@ public class DefaultPassConfig extends PassConfig {
 
   PreprocessorSymbolTable getPreprocessorSymbolTable() {
     return preprocessorSymbolTable;
+  }
+
+  private NameGenerator getNameGenerator() {
+    if (nameGenerator == null) {
+      nameGenerator = new NameGenerator(new HashSet<String>(0), "", null);
+    }
+    return nameGenerator;
   }
 
   void maybeInitializePreprocessorSymbolTable(AbstractCompiler compiler) {
@@ -641,6 +651,10 @@ public class DefaultPassConfig extends PassConfig {
     // Instrument calls to memory allocations
     if (options.getInstrumentMemoryAllocations()) {
       passes.add(instrumentMemoryAllocations);
+    }
+
+    if (options.aggressiveRenaming) {
+      passes.add(gatherCharBias);
     }
 
     if (options.variableRenaming != VariableRenamingPolicy.ALL) {
@@ -2155,10 +2169,22 @@ public class DefaultPassConfig extends PassConfig {
   }
 
   /** Renames labels */
+  final PassFactory gatherCharBias = new PassFactory("gatherCharBias", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new GatherCharacterEncodingBias(compiler, getNameGenerator());
+    }
+  };
+
+  /** Renames labels */
   final PassFactory renameLabels = new PassFactory("renameLabels", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new RenameLabels(compiler);
+      if (options.aggressiveRenaming) {
+        return new RenameLabels(compiler, getNameGenerator());
+      } else {
+        return new RenameLabels(compiler);
+      }
     }
   };
 

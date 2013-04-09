@@ -72,8 +72,13 @@ final class RenameLabels implements CompilerPass {
   private final Supplier<String> nameSupplier;
   private final boolean removeUnused;
 
-  RenameLabels(AbstractCompiler compiler) {
+  RenameLabels(final AbstractCompiler compiler) {
     this(compiler, new DefaultNameSupplier(), true);
+  }
+
+  RenameLabels(final AbstractCompiler compiler, final NameGenerator nameGen) {
+    this(compiler, new DefaultNameSupplier(nameGen), true);
+    nameGen.restartNaming();
   }
 
   RenameLabels(
@@ -87,8 +92,15 @@ final class RenameLabels implements CompilerPass {
 
   static class DefaultNameSupplier implements Supplier<String> {
     // NameGenerator is used to create safe label names.
-    final NameGenerator nameGenerator =
-        new NameGenerator(new HashSet<String>(), "", null);
+    private final NameGenerator nameGenerator;
+
+    private DefaultNameSupplier(final NameGenerator nameGen) {
+      this.nameGenerator = nameGen;
+    }
+
+    private DefaultNameSupplier() {
+      this.nameGenerator = new NameGenerator(new HashSet<String>(), "", null);
+    }
 
     @Override
     public String get() {

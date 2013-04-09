@@ -253,6 +253,8 @@ public class CompilerOptions implements Serializable, Cloneable {
   // Optimizations
   //--------------------------------
 
+  boolean aggressiveRenaming;
+
   /** Folds constants (e.g. (2 + 3) to 5) */
   public boolean foldConstants;
 
@@ -889,6 +891,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     extraAnnotationNames = null;
 
     // Optimizations
+    aggressiveRenaming = false;
     foldConstants = false;
     coalesceVariableNames = false;
     deadAssignmentElimination = false;
@@ -1670,6 +1673,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setCheckMissingGetCssNameBlacklist(String blackList) {
     this.checkMissingGetCssNameBlacklist = blackList;
+  }
+
+  public void setAggressiveRenaming(boolean aggressive) {
+    this.aggressiveRenaming = true;
   }
 
   public void setFoldConstants(boolean foldConstants) {
