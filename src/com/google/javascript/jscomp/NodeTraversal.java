@@ -35,7 +35,6 @@ import java.util.Set;
  *
  */
 public class NodeTraversal {
-  // Package protected for tests
   private final AbstractCompiler compiler;
   private final Callback callback;
 
