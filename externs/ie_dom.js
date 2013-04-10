@@ -274,10 +274,10 @@ function ClipboardData() {}
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms535220(VS.85).aspx
- * @param {string} type Type of clipboard data to clear. 'Text' or
+ * @param {string=} opt_type Type of clipboard data to clear. 'Text' or
  *     'URL' or 'File' or 'HTML' or 'Image'.
  */
-ClipboardData.prototype.clearData = function(type) {};
+ClipboardData.prototype.clearData = function(opt_type) {};
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms535220(VS.85).aspx
