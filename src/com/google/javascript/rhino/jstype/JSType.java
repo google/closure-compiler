@@ -1258,33 +1258,31 @@ public abstract class JSType implements Serializable {
       return false;
     }
 
-    if (thisType.isTemplatizedType() && thatType.isTemplatizedType()) {
-      JSType rawThisType = thisType.toMaybeTemplatizedType().getReferencedType();
-      JSType rawThatType = thatType.toMaybeTemplatizedType().getReferencedType();
-      if (!rawThisType.isSubtype(rawThatType)) {
-        return false;
-      }
+    // TemplateTypeMaps. This check only returns false if the TemplateTypeMaps
+    // are not equivalent.
+    TemplateTypeMap thisTypeParams = thisType.getTemplateTypeMap();
+    TemplateTypeMap thatTypeParams = thatType.getTemplateTypeMap();
+    boolean templateMatch = true;
+    if (isExemptFromTemplateTypeInvariance(thatType)) {
+      // Array and Object are exempt from template type invariance; their
+      // template types maps are considered a match only if the ObjectElementKey
+      // values are subtypes/supertypes of one another.
+      TemplateType key = thisType.registry.getObjectElementKey();
+      JSType thisElement = thisTypeParams.getTemplateType(key);
+      JSType thatElement = thatTypeParams.getTemplateType(key);
 
-      TemplateTypeMap thisTypeParams = thisType.getTemplateTypeMap();
-      TemplateTypeMap thatTypeParams = thatType.getTemplateTypeMap();
-
-      if (thisTypeParams.checkEquivalenceHelper(
-          thatTypeParams, EquivalenceMethod.INVARIANT)) {
-        return true;
-      } else if (isExemptFromTemplateTypeInvariance(thatType)) {
-        // Only array and object qualify and they are compatible if their
-        // elmenet types are related.
-        TemplateType key = thisType.registry.getObjectElementKey();
-        JSType thisElement = thisTypeParams.getTemplateType(key);
-        JSType thatElement = thatTypeParams.getTemplateType(key);
-
-        return thisElement.isSubtype(thatElement)
-            || thatElement.isSubtype(thisElement);
-      } else {
-        return false;
-      }
+      templateMatch = thisElement.isSubtype(thatElement)
+          || thatElement.isSubtype(thisElement);
+    } else {
+      templateMatch = thisTypeParams.checkEquivalenceHelper(
+          thatTypeParams, EquivalenceMethod.INVARIANT);
+    }
+    if (!templateMatch) {
+      return false;
     }
 
+    // Templatized types. The above check guarantees TemplateTypeMap
+    // equivalence; check if the base type is a subtype.
     if (thisType.isTemplatizedType()) {
       return thisType.toMaybeTemplatizedType().getReferencedType().isSubtype(
               thatType);

@@ -531,6 +531,7 @@ public class FunctionType extends PrototypeObjectType {
       // Records this type for each implemented interface.
       for (ObjectType type : implementedInterfaces) {
         registry.registerTypeImplementingInterface(this, type);
+        typeOfThis.extendTemplateTypeMap(type.getTemplateTypeMap());
       }
       this.implementedInterfaces = ImmutableList.copyOf(implementedInterfaces);
     } else {

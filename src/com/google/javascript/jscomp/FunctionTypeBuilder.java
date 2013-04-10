@@ -43,6 +43,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TemplateType;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -146,6 +147,12 @@ final class FunctionTypeBuilder {
           "JSC_THIS_TYPE_NON_OBJECT",
           "@this type of a function must be an object\n" +
           "Actual type: {0}");
+
+  static final DiagnosticType SAME_INTERFACE_MULTIPLE_IMPLEMENTS =
+      DiagnosticType.warning(
+          "JSC_SAME_INTERFACE_MULTIPLE_IMPLEMENTS",
+          "Cannot @implement the same interface more than once\n" +
+          "Repeated interface: {0}");
 
   private class ExtendedTypeValidator implements Predicate<JSType> {
     @Override
@@ -360,10 +367,26 @@ final class FunctionTypeBuilder {
       if (info.getImplementedInterfaceCount() > 0) {
         if (isConstructor) {
           implementedInterfaces = Lists.newArrayList();
+          Set<JSType> baseInterfaces = new HashSet<JSType>();
           for (JSTypeExpression t : info.getImplementedInterfaces()) {
             JSType maybeInterType = t.evaluate(scope, typeRegistry);
+
             if (maybeInterType != null &&
                 maybeInterType.setValidator(new ImplementedTypeValidator())) {
+              // Disallow implementing the same base (not templatized) interface
+              // type more than once.
+              JSType baseInterface = maybeInterType;
+              if (baseInterface.toMaybeTemplatizedType() != null) {
+                baseInterface =
+                    baseInterface.toMaybeTemplatizedType().getReferencedType();
+              }
+              if (baseInterfaces.contains(baseInterface)) {
+                reportWarning(SAME_INTERFACE_MULTIPLE_IMPLEMENTS,
+                              baseInterface.toString());
+              } else {
+                baseInterfaces.add(baseInterface);
+              }
+
               implementedInterfaces.add((ObjectType) maybeInterType);
             }
           }

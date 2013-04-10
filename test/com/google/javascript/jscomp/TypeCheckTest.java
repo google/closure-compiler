@@ -3851,6 +3851,40 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "can only implement interfaces");
   }
 
+  public void testBadImplementsDuplicateInterface1() throws Exception {
+    // verify that the same base (not templatized) interface cannot be
+    // @implemented more than once.
+    testTypes(
+        "/** @interface \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "/** @constructor \n" +
+        " * @implements {Foo.<?>}\n" +
+        " * @implements {Foo}\n" +
+        " */\n" +
+        "function A() {}\n",
+        "Cannot @implement the same interface more than once\n" +
+        "Repeated interface: Foo");
+  }
+
+  public void testBadImplementsDuplicateInterface2() throws Exception {
+    // verify that the same base (not templatized) interface cannot be
+    // @implemented more than once.
+    testTypes(
+        "/** @interface \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "/** @constructor \n" +
+        " * @implements {Foo.<string>}\n" +
+        " * @implements {Foo.<number>}\n" +
+        " */\n" +
+        "function A() {}\n",
+        "Cannot @implement the same interface more than once\n" +
+        "Repeated interface: Foo");
+  }
+
   public void testInterfaceAssignment1() throws Exception {
     testTypes("/** @interface */var I = function() {};\n" +
         "/** @constructor\n@implements {I} */var T = function() {};\n" +
@@ -10790,6 +10824,110 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {!Bar.<?>} */ var x;" +
         "/** @type {!Bar.<number>} */ var y;" +
         "y = x;");
+  }
+
+  public void testTemplateType11() throws Exception {
+    // verify that assignment/subtype relationships work when extending
+    // templatized types.
+    testTypes(
+        "/** @constructor \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "" +
+        "/** @constructor \n" +
+        " * @extends {Foo.<string>}\n" +
+        " */\n" +
+        "function A() {}\n" +
+        "" +
+        "/** @constructor \n" +
+        " * @extends {Foo.<number>}\n" +
+        " */\n" +
+        "function B() {}\n" +
+        "" +
+        "/** @type {!Foo.<string>} */ var a = new A();\n" +
+        "/** @type {!Foo.<string>} */ var b = new B();",
+        "initializing variable\n" +
+        "found   : B\n" +
+        "required: Foo.<string>");
+  }
+
+  public void testTemplateType12() throws Exception {
+    // verify that assignment/subtype relationships work when implementing
+    // templatized types.
+    testTypes(
+        "/** @interface \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "" +
+        "/** @constructor \n" +
+        " * @implements {Foo.<string>}\n" +
+        " */\n" +
+        "function A() {}\n" +
+        "" +
+        "/** @constructor \n" +
+        " * @implements {Foo.<number>}\n" +
+        " */\n" +
+        "function B() {}\n" +
+        "" +
+        "/** @type {!Foo.<string>} */ var a = new A();\n" +
+        "/** @type {!Foo.<string>} */ var b = new B();",
+        "initializing variable\n" +
+        "found   : B\n" +
+        "required: Foo.<string>");
+  }
+
+  public void testTemplateType13() throws Exception {
+    // verify that assignment/subtype relationships work when extending
+    // templatized types.
+    testTypes(
+        "/** @constructor \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "" +
+        "/** @constructor \n" +
+        " * @template T\n" +
+        " * @extends {Foo.<T>}\n" +
+        " */\n" +
+        "function A() {}\n" +
+        "" +
+        "var a1 = new A();\n" +
+        "var a2 = /** @type {!A.<string>} */ (new A());\n" +
+        "var a3 = /** @type {!A.<number>} */ (new A());\n" +
+        "/** @type {!Foo.<string>} */ var f1 = a1;\n" +
+        "/** @type {!Foo.<string>} */ var f2 = a2;\n" +
+        "/** @type {!Foo.<string>} */ var f3 = a3;",
+        "initializing variable\n" +
+        "found   : A.<number>\n" +
+        "required: Foo.<string>");
+  }
+
+  public void testTemplateType14() throws Exception {
+    // verify that assignment/subtype relationships work when implementing
+    // templatized types.
+    testTypes(
+        "/** @interface \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "" +
+        "/** @constructor \n" +
+        " * @template T\n" +
+        " * @implements {Foo.<T>}\n" +
+        " */\n" +
+        "function A() {}\n" +
+        "" +
+        "var a1 = new A();\n" +
+        "var a2 = /** @type {!A.<string>} */ (new A());\n" +
+        "var a3 = /** @type {!A.<number>} */ (new A());\n" +
+        "/** @type {!Foo.<string>} */ var f1 = a1;\n" +
+        "/** @type {!Foo.<string>} */ var f2 = a2;\n" +
+        "/** @type {!Foo.<string>} */ var f3 = a3;",
+        "initializing variable\n" +
+        "found   : A.<number>\n" +
+        "required: Foo.<string>");
   }
 
   public void disable_testBadTemplateType4() throws Exception {
