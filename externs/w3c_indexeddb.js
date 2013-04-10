@@ -526,8 +526,9 @@ IDBObjectStore.prototype.index = function(name) {};
 IDBObjectStore.prototype.deleteIndex = function(indexName) {};
 
 /**
- * @param {IDBKeyType=} key The key of this value.
+ * @param {(IDBKeyType|IDBKeyRange)=} key The key of this value.
  * @return {!IDBRequest} The IDBRequest object.
+ * @see http://www.w3.org/TR/IndexedDB/#widl-IDBObjectStore-count
  */
 IDBObjectStore.prototype.count = function(key) {};
 
