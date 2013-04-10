@@ -45,16 +45,24 @@ class GatherCharacterEncodingBias extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
+      case Token.TRUE:
+      case Token.FALSE:
       // TRUE and FALSE are purposely skipped as this gets removed in a late
       // peephole optimization pass.
+        return;
 
+      case Token.NAME:
+      case Token.LABEL_NAME:
       // Case dealing with names / properties are *NOT* handled here. The idea
       // is not to duplicate logics of variable renaming and property renaming.
       // Those passes are responsible for calling favors() on anything they
       // could not rename.
+        return;
 
       case Token.FUNCTION:
-        nameGenerator.favors("function");
+        if (!NodeUtil.isGetOrSetKey(n.getParent())) {
+          nameGenerator.favors("function");
+        }
         return;
       case Token.IF:
         nameGenerator.favors("if");
@@ -139,6 +147,15 @@ class GatherCharacterEncodingBias extends AbstractPostOrderCallback
         return;
       case Token.NULL:
         nameGenerator.favors("null");
+        return;
+      case Token.DEBUGGER:
+        nameGenerator.favors("debugger");
+        return;
+      case Token.GETTER_DEF:
+        nameGenerator.favors("get");
+        return;
+      case Token.SETTER_DEF:
+        nameGenerator.favors("set");
         return;
       case Token.NUMBER:
         // TODO(user): This has to share some code with the code generator

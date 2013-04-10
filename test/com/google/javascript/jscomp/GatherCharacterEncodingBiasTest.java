@@ -74,6 +74,7 @@ public class GatherCharacterEncodingBiasTest extends CompilerTestCase {
     generator.restartNaming();
     assertEquals("z", generator.generateNextName());
   }
+
   public void testGathering6() {
     testSame("this");
     generator.restartNaming();
@@ -81,6 +82,28 @@ public class GatherCharacterEncodingBiasTest extends CompilerTestCase {
     assertEquals("i", generator.generateNextName());
     assertEquals("s", generator.generateNextName());
     assertEquals("t", generator.generateNextName());
+    assertEquals("a", generator.generateNextName());
+  }
+
+  public void testGatheringGetterSetter() {
+    testSame("var x = { get y(){}, set y(val){} }");
+    generator.restartNaming();
+    assertEquals("e", generator.generateNextName()); // Twice each
+    assertEquals("t", generator.generateNextName());
+
+    assertEquals("a", generator.generateNextName()); // Once each
+    assertEquals("g", generator.generateNextName());
+  }
+
+  public void testGatheringDebugger() {
+    testSame("debugger;");
+    generator.restartNaming();
+    assertEquals("e", generator.generateNextName());
+    assertEquals("g", generator.generateNextName());
+    assertEquals("b", generator.generateNextName());
+    assertEquals("d", generator.generateNextName());
+    assertEquals("r", generator.generateNextName());
+    assertEquals("u", generator.generateNextName());
     assertEquals("a", generator.generateNextName());
   }
 }
