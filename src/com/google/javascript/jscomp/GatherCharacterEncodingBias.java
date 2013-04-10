@@ -15,7 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -28,11 +30,14 @@ class GatherCharacterEncodingBias extends AbstractPostOrderCallback
     implements CompilerPass {
   private final NameGenerator nameGenerator;
   private final AbstractCompiler compiler;
+  private final boolean renameGlobaVars;
 
   public GatherCharacterEncodingBias(
-      final AbstractCompiler compiler, final NameGenerator ng) {
+      final AbstractCompiler compiler, final NameGenerator ng,
+      boolean renameGlobalVars) {
     this.compiler = compiler;
     this.nameGenerator = ng;
+    this.renameGlobaVars = renameGlobalVars;
   }
 
   @Override
@@ -51,12 +56,15 @@ class GatherCharacterEncodingBias extends AbstractPostOrderCallback
       // peephole optimization pass.
         return;
 
-      case Token.NAME:
       case Token.LABEL_NAME:
-      // Case dealing with names / properties are *NOT* handled here. The idea
-      // is not to duplicate logics of variable renaming and property renaming.
-      // Those passes are responsible for calling favors() on anything they
-      // could not rename.
+        return;
+
+      // Case dealing with renamed names / properties are *NOT* handled here.
+      // The idea is not to duplicate logics of variable renaming and property
+      // renaming.
+      case Token.NAME:
+        visitName(t, n);
+
         return;
 
       case Token.FUNCTION:
@@ -162,6 +170,19 @@ class GatherCharacterEncodingBias extends AbstractPostOrderCallback
         // to figure out how the number will eventually be printed.
         return;
 
+    }
+  }
+
+  private void visitName(NodeTraversal t, Node n) {
+    Preconditions.checkArgument(n.getType() == Token.NAME);
+    if (renameGlobaVars) {
+      // Assumes everything can be renamed. Don't change bias.
+      return;
+    }
+    String name = n.getString();
+    Var var = t.getScope().getVar(name);
+    if (var == null || var.scope.isGlobal()) {
+      nameGenerator.favors(name);
     }
   }
 }

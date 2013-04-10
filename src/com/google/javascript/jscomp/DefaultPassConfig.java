@@ -2172,7 +2172,10 @@ public class DefaultPassConfig extends PassConfig {
   final PassFactory gatherCharBias = new PassFactory("gatherCharBias", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new GatherCharacterEncodingBias(compiler, getNameGenerator());
+      return new GatherCharacterEncodingBias(
+          compiler,
+          getNameGenerator(),
+          options.variableRenaming != VariableRenamingPolicy.LOCAL);
     }
   };
 

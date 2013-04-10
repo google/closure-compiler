@@ -23,11 +23,18 @@ import java.util.HashSet;
 public class GatherCharacterEncodingBiasTest extends CompilerTestCase {
 
   private NameGenerator generator;
+  private boolean renameGlobalVars;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     generator = new NameGenerator(new HashSet<String>(0), "", null);
-    return new GatherCharacterEncodingBias(compiler, generator);
+    return new GatherCharacterEncodingBias(
+        compiler, generator, renameGlobalVars);
+  }
+
+  @Override
+  protected void setUp() {
+    renameGlobalVars = true;
   }
 
   @Override
@@ -105,5 +112,25 @@ public class GatherCharacterEncodingBiasTest extends CompilerTestCase {
     assertEquals("r", generator.generateNextName());
     assertEquals("u", generator.generateNextName());
     assertEquals("a", generator.generateNextName());
+  }
+
+  public void testGatheringNames1() {
+    testSame("var MMMMMM");
+    generator.restartNaming();
+    assertEquals("a", generator.generateNextName());
+  }
+
+  public void testGatheringNames2() {
+    renameGlobalVars = false;
+    testSame("var MMMMMM");
+    generator.restartNaming();
+    assertEquals("M", generator.generateNextName());
+    assertEquals("a", generator.generateNextName());
+  }
+
+  public void testGatheringNames3() {
+    testSame("var x = function() { var MMMMMMMMMMMMMMMMMMM }");
+    generator.restartNaming();
+    assertNotSame("M", generator.generateNextName());
   }
 }
