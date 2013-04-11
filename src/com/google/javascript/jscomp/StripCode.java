@@ -261,10 +261,14 @@ class StripCode implements CompilerPass {
           replaceWithEmpty(ancestor, ancParent);
           break;
         }
-        int type = ancestor.getType();
-        if (type != Token.GETPROP &&
-            type != Token.GETELEM &&
-            type != Token.CALL) {
+        if (ancestor.isAssign()) {
+          Node ancParent = ancestor.getParent();
+          ancParent.replaceChild(
+              ancestor, ancestor.getLastChild().detachFromParent());
+          break;
+        }
+        if (!NodeUtil.isGet(ancestor)
+            && !ancestor.isCall()) {
           replaceWithNull(ancestorChild, ancestor);
           break;
         }
@@ -322,7 +326,7 @@ class StripCode implements CompilerPass {
       // EXPR_RESULT
       //   expression
       Node expression = n.getFirstChild();
-      if (nameEndsWithFieldNameToStrip(expression) ||
+      if (nameIncludesFieldNameToStrip(expression) ||
           qualifiedNameBeginsWithStripType(expression)) {
         if (parent.isExprResult()) {
           Node gramps = parent.getParent();
@@ -396,7 +400,7 @@ class StripCode implements CompilerPass {
            n.isNew()) &&
           n.hasChildren() &&
           (qualifiedNameBeginsWithStripType(n.getFirstChild()) ||
-              nameEndsWithFieldNameToStrip(n.getFirstChild()));
+              nameIncludesFieldNameToStrip(n.getFirstChild()));
     }
 
     /**
@@ -456,7 +460,7 @@ class StripCode implements CompilerPass {
     /**
      * Gets whether a CALL node triggers statement removal, based on the name
      * of the object whose method is being called, or the name of the method.
-     * Checks whether the name begins with a strip type, ends with a field name
+     * Checks whether the name begins with a strip type, includes a field name
      * that's a strip name, or belongs to the set of global class-defining
      * functions (e.g. goog.inherits).
      *
@@ -496,27 +500,10 @@ class StripCode implements CompilerPass {
       }
 
       Node callee = function.getFirstChild();
-      return nameEndsWithFieldNameToStrip(callee) ||
-          nameEndsWithFieldNameToStrip(function) ||
+      return nameIncludesFieldNameToStrip(callee) ||
+          nameIncludesFieldNameToStrip(function) ||
           qualifiedNameBeginsWithStripType(function) ||
           actsOnStripType(t, n);
-    }
-
-    /**
-     * Gets whether a name ends with a field name that should be stripped. For
-     * example, this function would return true when passed "this.logger" or
-     * "a.b.c.myLogger" if "logger" is a strip name.
-     *
-     * @param n A node (typically a GETPROP node)
-     * @return Whether the name ends with a field name that should be stripped
-     */
-    boolean nameEndsWithFieldNameToStrip(@Nullable Node n) {
-      if (n != null && n.isGetProp()) {
-        Node propNode = n.getLastChild();
-        return propNode != null && propNode.isString() &&
-               isStripName(propNode.getString());
-      }
-      return false;
     }
 
     /**

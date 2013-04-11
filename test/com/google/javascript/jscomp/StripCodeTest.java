@@ -365,16 +365,34 @@ public class StripCodeTest extends CompilerTestCase {
 
   public void testStripCallsToStrippedNames2() {
     test("a = function() {};" +
-        "a.prototype.logger_ = function(msg) {};" +
-        "a.prototype.b = function() { this.logger_('hi'); }",
-        "a=function(){};a.prototype.b=function(){}");
+         "a.prototype.logger_ = function(msg) {};" +
+         "a.prototype.b = function() { this.logger_('hi'); }",
+         "a=function(){};a.prototype.b=function(){}");
   }
 
-  public void testStripVarsInitializedFromStrippedNames() {
+  public void testStripCallsToStrippedNames3() {
+    test("a = function() { this.logger_ = function(msg){}; };" +
+         "a.prototype.b = function() { this.logger_('hi').foo = 2; }",
+         "a=function(){};a.prototype.b=function(){2;}");
+  }
+
+  public void testStripCallsToStrippedNames4() {
+    test("a = this.logger_().foo;",
+         "a = null;");
+  }
+
+  public void testStripVarsInitializedFromStrippedNames1() {
     test("a = function() { this.logger_ = function() { return 1; }; };" +
          "a.prototype.b = function() { " +
          "  var one = this.logger_(); if (one) foo() }",
           "a=function(){};a.prototype.b=function(){if(null)foo()}");
+  }
+
+  public void testStripVarsInitializedFromStrippedNames2() {
+    test("a = function() { this.logger_ = function() { return 1; }; };" +
+         "a.prototype.b = function() { " +
+         "  var one = this.logger_.foo.bar(); if (one) foo() }",
+         "a=function(){};a.prototype.b=function(){if(null)foo()}");
   }
 
   public void testReportErrorOnStripInNestedAssignment() {
@@ -402,6 +420,11 @@ public class StripCodeTest extends CompilerTestCase {
   public void testNewOperatior2() {
     test("function foo() {} foo.bar = (new goog.debug.Logger()).foo();",
          "function foo() {} foo.bar = null;");
+  }
+
+  public void testNewOperatior3() {
+    test("(new goog.debug.Logger()).foo().bar = 2;",
+         "2;");
   }
 
   public void testCrazyNesting1() {
@@ -434,6 +457,17 @@ public class StripCodeTest extends CompilerTestCase {
     test(
         "var x = {};x.traceutil = {};x.traceutil.FOO = 1;",
         "var x = {};");
+  }
+
+
+  public void testMethodCallTriggersRemoval() {
+    test("this.logger_.foo.bar();",
+        "");
+  }
+
+  public void testRemoveExpressionByName() {
+    test("this.logger_.foo.bar;",
+        "");
   }
 
 }
