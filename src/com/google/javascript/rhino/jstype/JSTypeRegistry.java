@@ -1552,6 +1552,27 @@ public class JSTypeRegistry implements Serializable {
    * can currently be templatized; extend the logic in this function when
    * more types can be templatized.
    * @param baseType the type to be templatized.
+   * @param templatizedTypes a map from TemplateType to corresponding JSType
+   *     value. Any unfilled TemplateTypes on the baseType that are *not*
+   *     contained in this map will have UNKNOWN_TYPE used as their value.
+   */
+  public TemplatizedType createTemplatizedType(
+      ObjectType baseType, Map<TemplateType, JSType> templatizedTypes) {
+    ImmutableList.Builder<JSType> builder = ImmutableList.builder();
+    TemplateTypeMap baseTemplateTypeMap = baseType.getTemplateTypeMap();
+    for (TemplateType key : baseTemplateTypeMap.getUnfilledTemplateKeys()) {
+      JSType templatizedType = templatizedTypes.containsKey(key) ?
+          templatizedTypes.get(key) : getNativeType(UNKNOWN_TYPE);
+      builder.add(templatizedType);
+    }
+    return createTemplatizedType(baseType, builder.build());
+  }
+
+  /**
+   * Creates a templatized instance of the specified type.  Only ObjectTypes
+   * can currently be templatized; extend the logic in this function when
+   * more types can be templatized.
+   * @param baseType the type to be templatized.
    * @param templatizedTypes a list of the template JSTypes. Will be matched by
    *     list order to the template keys on the base type.
    */

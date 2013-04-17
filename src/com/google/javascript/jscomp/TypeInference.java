@@ -1210,8 +1210,18 @@ class TypeInference
           ct = (FunctionType) constructorType;
         }
         if (ct != null && ct.isConstructor()) {
-          type = ct.getInstanceType();
           backwardsInferenceFromCallSite(n, ct);
+
+          // If necessary, create a TemplatizedType wrapper around the instance
+          // type, based on the types of the constructor parameters.
+          ObjectType instanceType = ct.getInstanceType();
+          Map<TemplateType, JSType> inferredTypes =
+              inferTemplateTypesFromParameters(ct, n);
+          if (inferredTypes.isEmpty()) {
+            type = instanceType;
+          } else {
+            type = registry.createTemplatizedType(instanceType, inferredTypes);
+          }
         }
       }
     }

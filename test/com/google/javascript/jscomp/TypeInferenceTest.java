@@ -695,6 +695,38 @@ public class TypeInferenceTest extends TestCase {
     verify("y", UNKNOWN_TYPE);
   }
 
+  public void testNew2() {
+    inFunction(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @param {T} x\n" +
+        " * @template T\n" +
+        " */" +
+        "function F(x) {}\n" +
+        "var x = /** @type {!Array.<number>} */ ([]);\n" +
+        "var result = new F(x);");
+
+    assertEquals("F.<Array.<number>>", getType("result").toString());
+  }
+
+  public void testNew3() {
+    inFunction(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @param {Array.<T>} x\n" +
+        " * @param {T} y\n" +
+        " * @param {S} z\n" +
+        " * @template T,S\n" +
+        " */" +
+        "function F(x,y,z) {}\n" +
+        "var x = /** @type {!Array.<number>} */ ([]);\n" +
+        "var y = /** @type {string} */ ('foo');\n" +
+        "var z = /** @type {boolean} */ (true);\n" +
+        "var result = new F(x,y,z);");
+
+    assertEquals("F.<(number|string),boolean>", getType("result").toString());
+  }
+
   public void testInnerFunction1() {
     inFunction("var x = 1; function f() { x = null; };");
     verify("x", NUMBER_TYPE);
