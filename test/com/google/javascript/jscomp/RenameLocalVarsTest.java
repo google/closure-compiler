@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import java.util.HashSet;
+
 /**
  * Tests for {@link RenameVars}.
  * @see RenameVarsTest
@@ -25,10 +27,18 @@ public class RenameLocalVarsTest extends CompilerTestCase {
 
   private String prefix = DEFAULT_PREFIX;
 
+  private NameGenerator nameGenerator = null;
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new RenameVars(
-        compiler, prefix, true, false, false, false, null, null, null);
+        compiler, prefix, true, false, false, false,
+        null, null, null, nameGenerator);
+  }
+
+  @Override
+  protected void setUp() {
+    nameGenerator = null;
   }
 
   public void testRenameSimple() {
@@ -113,5 +123,18 @@ public class RenameLocalVarsTest extends CompilerTestCase {
          "  Foo();" +
          "} Bar();");
     prefix = DEFAULT_PREFIX;
+  }
+
+  public void testBias() {
+    nameGenerator = new NameGenerator(new HashSet<String>(0), "", null);
+    nameGenerator.favors("AAAAAAAAHH");
+    test("function foo(x,y){}", "function foo(A,H){}");
+  }
+
+  public void testBias2() {
+    nameGenerator = new NameGenerator(new HashSet<String>(0), "", null);
+    nameGenerator.favors("AAAAAAAAHH");
+    test("function foo(x,y){ var z = z + z + z}",
+         "function foo(H,a){ var A = A + A + A}");
   }
 }

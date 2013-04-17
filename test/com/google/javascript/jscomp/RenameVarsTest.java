@@ -20,7 +20,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
 
 
 /**
@@ -40,6 +41,7 @@ public class RenameVarsTest extends CompilerTestCase {
   private boolean generatePseudoNames = false;
   private boolean shouldShadow = false;
   private boolean withNormalize = false;
+  private NameGenerator nameGenerator = null;
 
   @Override
   protected CodingConvention getCodingConvention() {
@@ -59,7 +61,7 @@ public class RenameVarsTest extends CompilerTestCase {
       pass =  renameVars = new RenameVars(compiler, prefix,
           localRenamingOnly, preserveFunctionExpressionNames,
           generatePseudoNames, shouldShadow,
-          previouslyUsedMap, null, null);
+          previouslyUsedMap, null, null, nameGenerator);
     }
 
     if (withNormalize) {
@@ -88,6 +90,7 @@ public class RenameVarsTest extends CompilerTestCase {
     preserveFunctionExpressionNames = false;
     generatePseudoNames = false;
     shouldShadow = false;
+    nameGenerator = null;
 
     // TODO(johnlenz): Enable Normalize during these tests.
   }
@@ -537,6 +540,12 @@ public class RenameVarsTest extends CompilerTestCase {
             "var d = function($super,a){};");
   }
 
+  public void testBias() {
+    nameGenerator = new NameGenerator(new HashSet<String>(0), "", null);
+    nameGenerator.favors("AAAAAAAAHH");
+    test("var x, y", "var A, H");
+  }
+
   public void testPseudoNames() {
     generatePseudoNames = false;
     // See http://code.google.com/p/closure-compiler/issues/detail?id=32
@@ -608,14 +617,14 @@ public class RenameVarsTest extends CompilerTestCase {
       closurePass.process(externs, root);
       renameVars = new RenameVars(compiler, prefix,
           false, false, false, false, previouslyUsedMap, null,
-          closurePass.getExportedVariableNames());
+          closurePass.getExportedVariableNames(), null);
       renameVars.process(externs, root);
     }
   }
 
   private class NormalizePassWrapper implements CompilerPass {
     private final Compiler compiler;
-    private CompilerPass wrappedPass;
+    private final CompilerPass wrappedPass;
 
     private NormalizePassWrapper(Compiler compiler,
         CompilerPass wrappedPass) {
