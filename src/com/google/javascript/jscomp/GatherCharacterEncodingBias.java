@@ -31,13 +31,21 @@ class GatherCharacterEncodingBias extends AbstractPostOrderCallback
   private final NameGenerator nameGenerator;
   private final AbstractCompiler compiler;
   private final boolean renameGlobaVars;
+  private final boolean renameProperties;
+
+  public GatherCharacterEncodingBias(
+      final AbstractCompiler compiler, final NameGenerator ng,
+      boolean renameGlobalVars, boolean renameProperties) {
+    this.compiler = compiler;
+    this.nameGenerator = ng;
+    this.renameGlobaVars = renameGlobalVars;
+    this.renameProperties = renameProperties;
+  }
 
   public GatherCharacterEncodingBias(
       final AbstractCompiler compiler, final NameGenerator ng,
       boolean renameGlobalVars) {
-    this.compiler = compiler;
-    this.nameGenerator = ng;
-    this.renameGlobaVars = renameGlobalVars;
+    this(compiler, ng, renameGlobalVars, true);
   }
 
   @Override
@@ -64,7 +72,10 @@ class GatherCharacterEncodingBias extends AbstractPostOrderCallback
       // renaming.
       case Token.NAME:
         visitName(t, n);
+        return;
 
+      case Token.GETPROP:
+        visitGetProp(n);
         return;
 
       case Token.FUNCTION:
@@ -88,11 +99,14 @@ class GatherCharacterEncodingBias extends AbstractPostOrderCallback
       case Token.VAR:
         nameGenerator.favors("var");
         return;
-      // TODO(user): Deal with getProp..etc.
       case Token.STRING:
-        nameGenerator.favors(n.getString());
+        if (!parent.isGetProp()) {
+          nameGenerator.favors(n.getString());
+        }
         return;
       case Token.STRING_KEY:
+        // TODO(user): Currently not taking into accout of quoted properties
+        // and 'advanced mode' stuff.
         nameGenerator.favors(n.getString());
         return;
       case Token.TRY:
@@ -160,16 +174,15 @@ class GatherCharacterEncodingBias extends AbstractPostOrderCallback
         nameGenerator.favors("debugger");
         return;
       case Token.GETTER_DEF:
-        nameGenerator.favors("get");
+        visitGetterSetterDef(n, "get");
         return;
       case Token.SETTER_DEF:
-        nameGenerator.favors("set");
+        visitGetterSetterDef(n, "set");
         return;
       case Token.NUMBER:
         // TODO(user): This has to share some code with the code generator
         // to figure out how the number will eventually be printed.
         return;
-
     }
   }
 
@@ -183,6 +196,20 @@ class GatherCharacterEncodingBias extends AbstractPostOrderCallback
     Var var = t.getScope().getVar(name);
     if (var == null || var.scope.isGlobal()) {
       nameGenerator.favors(name);
+    }
+  }
+
+  private void visitGetProp(Node n) {
+    Preconditions.checkArgument(n.getType() == Token.GETPROP);
+    if (!renameProperties) {
+      nameGenerator.favors(n.getLastChild().getString());
+    }
+  }
+
+  private void visitGetterSetterDef(Node n, String method) {
+    nameGenerator.favors(method);
+    if (!renameProperties) {
+      nameGenerator.favors(n.getString());
     }
   }
 }

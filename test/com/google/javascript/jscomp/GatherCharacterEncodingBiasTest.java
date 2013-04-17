@@ -24,17 +24,19 @@ public class GatherCharacterEncodingBiasTest extends CompilerTestCase {
 
   private NameGenerator generator;
   private boolean renameGlobalVars;
+  private boolean renameProperties;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     generator = new NameGenerator(new HashSet<String>(0), "", null);
     return new GatherCharacterEncodingBias(
-        compiler, generator, renameGlobalVars);
+        compiler, generator, renameGlobalVars, renameProperties);
   }
 
   @Override
   protected void setUp() {
     renameGlobalVars = true;
+    renameProperties = true;
   }
 
   @Override
@@ -132,5 +134,44 @@ public class GatherCharacterEncodingBiasTest extends CompilerTestCase {
     testSame("var x = function() { var MMMMMMMMMMMMMMMMMMM }");
     generator.restartNaming();
     assertNotSame("M", generator.generateNextName());
+  }
+
+  public void testGatheringProperties1() {
+    renameProperties = false;
+    testSame("a.mmm.MMMMM");
+    generator.restartNaming();
+    assertEquals("M", generator.generateNextName());
+    assertEquals("m", generator.generateNextName());
+    assertEquals("a", generator.generateNextName());
+  }
+
+  public void testGatheringProperties2() {
+    renameProperties = true;
+    testSame("mmm.MMMMM");
+    generator.restartNaming();
+    assertNotSame("M", generator.generateNextName());
+  }
+
+  public void testGatheringMixed() {
+    renameGlobalVars = false;
+    renameProperties = true;
+    testSame("mmm.MMMMMMMMMMMMMMM");
+    generator.restartNaming();
+    assertEquals("m", generator.generateNextName());
+    assertNotSame("M", generator.generateNextName());
+  }
+
+  public void testGatheringGetter() {
+    renameProperties = false;
+    testSame("({get ZZZZZ(){return 1}})");
+    generator.restartNaming();
+    assertEquals("Z", generator.generateNextName());
+  }
+
+  public void testGatheringSetter() {
+    renameProperties = false;
+    testSame("({set ZZZZZ(z){}})");
+    generator.restartNaming();
+    assertEquals("Z", generator.generateNextName());
   }
 }
