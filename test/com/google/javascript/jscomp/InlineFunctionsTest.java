@@ -2351,4 +2351,15 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "    g())}");
   }
 
+  public void test8609285a() {
+   test(
+       "function f(x){ for(x in y){} } f()",
+       "{var x$$inline_0=void 0;for(x$$inline_0 in y);}");
+  }
+
+  public void test8609285b() {
+    test(
+        "function f(x){ for(var x in y){} } f()",
+        "{var x$$inline_0=void 0;for(x$$inline_0 in y);}");
+   }
 }
