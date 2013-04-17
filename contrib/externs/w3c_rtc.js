@@ -609,47 +609,65 @@ function RTCPeerConnectionIceEvent(type, eventInitDict) {}
  */
 RTCPeerConnectionIceEvent.prototype.candidate;
 
-// These RTCStats types represent Webkit's current implementation, which is
-// different from the latest spec.
-// TODO(bemasc): Update this once spec and code are reconciled.
-/**
- * @interface
- */
-function RTCStatsElement() {}
-
-/**
- * @type {Date}
- * @const
- */
-RTCStatsElement.prototype.timestamp;
-
-/**
- * @return {!Array.<!string>}
- */
-RTCStatsElement.prototype.names = function() {};
-
-/**
- * @param {string} name
- * @return {string}
- */
-RTCStatsElement.prototype.stat = function(name) {};
-
+// Note: The specification of RTCStats types is still under development.
+// Declarations here will be updated and removed to follow the development of
+// modern browsers, breaking compatibility with older versions as they become
+// obsolete.
 /**
  * @interface
  */
 function RTCStatsReport() {}
 
 /**
- * @type {RTCStatsElement}
+ * @type {Date}
+ * @const
+ */
+RTCStatsReport.prototype.timestamp;
+
+/**
+ * @return {!Array.<!string>}
+ */
+RTCStatsReport.prototype.names = function() {};
+
+/**
+ * @param {string} name
+ * @return {string}
+ */
+RTCStatsReport.prototype.stat = function(name) {};
+
+/**
+ * @deprecated
+ * @type {RTCStatsReport}
  * @const
  */
 RTCStatsReport.prototype.local;
 
 /**
- * @type {RTCStatsElement}
+ * @deprecated
+ * @type {RTCStatsReport}
  * @const
  */
 RTCStatsReport.prototype.remote;
+
+/**
+ * @type {string}
+ * @const
+ */
+RTCStatsReport.prototype.type;
+
+/**
+ * @type {string}
+ * @const
+ */
+RTCStatsReport.prototype.id;
+
+/**
+ * TODO(bemasc): Remove this type once it is no longer in use.  It has already
+ * been removed from the specification.
+ * @typedef {RTCStatsReport}
+ * @deprecated
+ */
+var RTCStatsElement;
 
 /**
  * @interface
