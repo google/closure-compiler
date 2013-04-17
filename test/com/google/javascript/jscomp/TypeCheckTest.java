@@ -6242,6 +6242,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testIIFE5() throws Exception {
+    // TODO(nicksantos): This behavior is currently incorrect.
+    // To handle this case properly, we'll need to change how we handle
+    // type resolution.
     testTypes(
         "/** @const */ var namespace = {};" +
         "(function(ns) {" +
@@ -6253,9 +6256,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "})(namespace);" +
         "/** @param {namespace.Ctor} x\n" +
         "  * @return {number} */ function f(x) { return x.bar; }",
-        "inconsistent return type\n" +
-        "found   : boolean\n" +
-        "required: number");
+        "Bad type annotation. Unknown type namespace.Ctor");
   }
 
   public void testNotIIFE1() throws Exception {
@@ -7055,6 +7056,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testQualifiedNameInference8() throws Exception {
+    // We may need to reshuffle name resolution order so that the @param
+    // type resolves correctly.
     testClosureTypesMultipleWarnings(
         "var ns = {}; " +
         "(function() { " +
@@ -7064,6 +7067,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {ns.Foo} x */ function f(x) {}" +
         "f(new ns.Foo(true));",
         Lists.newArrayList(
+            "Bad type annotation. Unknown type ns.Foo",
             "actual parameter 1 of ns.Foo does not match formal parameter\n" +
             "found   : boolean\n" +
             "required: number"));

@@ -101,13 +101,6 @@ class TypeInferencePass implements CompilerPass {
     (new NodeTraversal(
         compiler, new FirstScopeBuildingCallback(), scopeCreator))
         .traverseWithScope(node, topScope);
-
-    Preconditions.checkState(scopeCreator instanceof MemoizedScopeCreator);
-    for (Scope s :
-           ((MemoizedScopeCreator) scopeCreator).getAllMemoizedScopes()) {
-      s.resolveTypes();
-    }
-
     (new NodeTraversal(
         compiler, new SecondScopeBuildingCallback(), scopeCreator))
         .traverseWithScope(node, topScope);
