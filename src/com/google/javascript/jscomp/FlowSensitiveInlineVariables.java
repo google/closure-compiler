@@ -256,9 +256,8 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
     private final Node use;
     private final Node useCfgNode;
 
-    // Number of uses of the variable within the CFG node that represented the
-    // use in the CFG.
-    private int numUseWithinUseCfgNode;
+    // Number of uses of the variable within the current CFG node.
+    private int numUsesWithinCfgNode;
 
     Candidate(String varName, Definition defMetadata,
         Node use, Node useCfgNode) {
@@ -328,7 +327,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
       // Finally we have to make sure that there are no more than one use
       // in the program and in the CFG node. Even when it is semantically
       // correctly inlining twice increases code size.
-      if (numUseWithinUseCfgNode != 1) {
+      if (numUsesWithinCfgNode != 1) {
         return false;
       }
 
@@ -472,23 +471,41 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
      * Computes the number of uses of the variable varName and store it in
      * numUseWithinUseCfgNode.
      */
-    private void getNumUseInUseCfgNode(Node n) {
+    private void getNumUseInUseCfgNode(final Node cfgNode) {
 
+      numUsesWithinCfgNode = 0;
       AbstractCfgNodeTraversalCallback gatherCb =
           new AbstractCfgNodeTraversalCallback() {
 
         @Override
         public void visit(NodeTraversal t, Node n, Node parent) {
-          if (n.isName() && n.getString().equals(varName) &&
-              // do not count in if it is left child of an assignment operator
-              !(parent.isAssign() &&
-               (parent.getFirstChild() == n))) {
-            numUseWithinUseCfgNode++;
+          if (n.isName() && n.getString().equals(varName)) {
+            // We make a special exception when the entire cfgNode is a chain
+            // of assignments, since in that case the assignment statements
+            // will happen after the inlining of the right hand side.
+            // TODO(blickly): Make the SIDE_EFFECT_PREDICATE check more exact
+            //   and remove this special case.
+            if (parent.isAssign() && (parent.getFirstChild() == n)
+                && isAssignChain(parent, cfgNode)) {
+              // Don't count lhs of top-level assignment chain
+              return;
+            } else {
+              numUsesWithinCfgNode++;
+            }
           }
+        }
+
+        private boolean isAssignChain(Node child, Node ancestor) {
+          for (Node n = child; n != ancestor; n = n.getParent()) {
+            if (!n.isAssign()) {
+              return false;
+            }
+          }
+          return true;
         }
       };
 
-      NodeTraversal.traverse(compiler, n, gatherCb);
+      NodeTraversal.traverse(compiler, cfgNode, gatherCb);
     }
   }
 
@@ -522,7 +539,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
    */
   private static boolean checkLeftOf(
       Node n, Node expressionRoot, Predicate<Node> predicate) {
-    for (Node p = n.getParent(); p != expressionRoot; p = p.getParent()) {
+    for (Node p = n; p != expressionRoot; p = p.getParent()) {
       for (Node cur = p.getParent().getFirstChild(); cur != p;
           cur = cur.getNext()) {
         if (predicate.apply(cur)) {

@@ -84,6 +84,11 @@ final class MustBeReachingVariableDef extends
       // same depends set.
       return otherDef.node == node;
     }
+
+    @Override
+    public String toString() {
+      return "Definition@" + node.toString();
+    }
   }
 
   /**
