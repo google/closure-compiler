@@ -132,7 +132,7 @@ MediaStreamTrackEvent.prototype.track;
 /**
  * TODO(bemasc): Remove this type once implementations are updated to the
  * new API.
- * 
+ *
  * @deprecated
  * @interface
  * @see http://www.w3.org/TR/mediacapture-streams/#mediastreamtracklist
@@ -537,7 +537,7 @@ RTCIceServerInterface_.prototype.url;
 RTCIceServerInterface_.prototype.credential;
 
 /**
- * This type, and several below it, are constructed as unions between records 
+ * This type, and several below it, are constructed as unions between records
  *
  * @typedef {RTCIceServerRecord_|RTCIceServerInterface_}
  * @private
@@ -749,6 +749,116 @@ MediaConstraintsInterface_.prototype.optional;
 var MediaConstraints;
 
 /**
+ * @constructor
+ * @extends {Event}
+ * @private
+ */
+function MessageEvent() {}
+
+/**
+ * @type {string|!Blob|!ArrayBuffer|!ArrayBufferView}
+ * @const
+ */
+MessageEvent.prototype.data;
+
+/**
+ * @interface
+ */
+function RTCDataChannel() {}
+
+/**
+ * @type {string}
+ * @const
+ */
+RTCDataChannel.prototype.label;
+
+/**
+ * @type {boolean}
+ * @const
+ */
+RTCDataChannel.prototype.reliable;
+
+/**
+ * An enumerated string type (RTCDataChannelState) with values:
+ * "connecting", "open", "closing", and "closed".
+ * @type {string} 
+ * Read only.
+ */
+RTCDataChannel.prototype.readyState;
+
+/**
+ * @type {number}
+ * Read only.
+ */
+RTCDataChannel.prototype.bufferedAmount;
+
+/**
+ * @type {?function(!Event)}
+ */
+RTCDataChannel.prototype.onopen;
+
+/**
+ * @type {?function(!Event)}
+ */
+RTCDataChannel.prototype.onerror;
+
+/**
+ * @type {?function(!Event)}
+ */
+RTCDataChannel.prototype.onclose;
+
+RTCDataChannel.prototype.close = function() {};
+
+/**
+ * @type {?function(!MessageEvent)}
+ */
+RTCDataChannel.prototype.onmessage;
+
+/**
+ * @type {string}
+ */
+RTCDataChannel.prototype.binaryType;
+
+/**
+ * @param {string|!Blob|!ArrayBuffer|!ArrayBufferView} data
+ */
+RTCDataChannel.prototype.send = function(data) {};
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @private
+ */
+function RTCDataChannelEvent() {}
+
+/**
+ * @type {!RTCDataChannel}
+ * Read only.
+ */
+RTCDataChannelEvent.prototype.channel;
+
+/**
+ * @typedef {{reliable: boolean}}
+ */
+var RTCDataChannelInitRecord_;
+
+/**
+ * @interface
+ * @private
+ */
+function RTCDataChannelInitInterface_() {}
+
+/**
+ * @type {boolean}
+ */
+RTCDataChannelInitInterface_.prototype.reliable;
+
+/**
+ * @typedef {RTCDataChannelInitInterface_|RTCDataChannelInitRecord_}
+ */
+var RTCDataChannelInit;
+
+/**
  * @param {RTCConfiguration} configuration
  * @param {!MediaConstraints=} constraints
  * @constructor
@@ -872,8 +982,13 @@ RTCPeerConnection.prototype.getRemoteStreams = function() {};
  */
 RTCPeerConnection.prototype.getStreamById = function(streamId) {};
 
-// TODO(bemasc): Add createDataChannel (and DataChannel and related types).
-
+/**
+ * @param {?string} label
+ * @param {RTCDataChannelInit=} dataChannelDict
+ * @return {!RTCDataChannel}
+ */
+RTCPeerConnection.prototype.createDataChannel =
+    function(label, dataChannelDict);
 /**
  * @param {!MediaStream} stream
  * @param {!MediaConstraints=} constraints
@@ -934,6 +1049,11 @@ RTCPeerConnection.prototype.ongatheringchange;
  * @type {?function(!Event)}
  */
 RTCPeerConnection.prototype.onicechange;
+
+/**
+ * @type {?function(!RTCDataChannelEvent)}
+ */
+RTCPeerConnection.prototype.ondatachannel;
 
 /**
  * @type {function(new: RTCPeerConnection, RTCConfiguration,
