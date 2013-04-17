@@ -6242,9 +6242,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testIIFE5() throws Exception {
-    // TODO(nicksantos): This behavior is currently incorrect.
-    // To handle this case properly, we'll need to change how we handle
-    // type resolution.
     testTypes(
         "/** @const */ var namespace = {};" +
         "(function(ns) {" +
