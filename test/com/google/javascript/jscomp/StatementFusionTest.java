@@ -106,6 +106,21 @@ public class StatementFusionTest extends CompilerTestCase  {
     test("a;b;c;if(d){}", "if(a,b,c,d){}");
   }
 
+  public void testFavorComma3() {
+    favorsCommas = true;
+    test("a;b;c;if(d){} d;e;f", "if(a,b,c,d){}d,e,f");
+  }
+
+  public void testFavorComma4() {
+    favorsCommas = true;
+    test("if(d){} d;e;f", "if(d){}d,e,f");
+  }
+
+  public void testFavorComma5() {
+    favorsCommas = true;
+    test("a;b;c;if(d){}d;e;f;if(g){}", "if(a,b,c,d){}if(d,e,f,g){}");
+  }
+
   public void testNoGlobalSchopeChanges() {
     testSame("a,b,c");
   }

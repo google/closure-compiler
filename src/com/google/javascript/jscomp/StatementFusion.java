@@ -50,17 +50,55 @@ class StatementFusion extends AbstractPeepholeOptimization {
 
   @Override
   Node optimizeSubtree(Node n) {
-    // TODO(user): canFuseIntoOnestatement needs to be rewritten to
-    // allow more aggressive use of comma's.
+    // TODO(user): It is much cleaner to have two algorithms depending
+    // on favorsCommaOverSemiColon. If we decided the less aggressive one is
+    // no longer useful, delete it.
+    if (favorsCommaOverSemiColon) {
+      return tryFuseStatementsAggressively(n);
+    } else {
+      return tryFuseStatements(n);
+    }
+  }
 
-    if ((favorsCommaOverSemiColon || !n.getParent().isFunction())
-        && canFuseIntoOneStatement(n)) {
+  Node tryFuseStatements(Node n) {
+    if (!n.getParent().isFunction() && canFuseIntoOneStatement(n)) {
       Node start = n.getFirstChild();
-      Node end = n.getChildBefore(n.getLastChild());
+      Node end = n.getLastChild();
       Node result = fuseIntoOneStatement(n, start, end);
       fuseExpressionIntoControlFlowStatement(result, n.getLastChild());
       reportCodeChange();
     }
+    return n;
+  }
+
+  Node tryFuseStatementsAggressively(Node n) {
+    if (!NodeUtil.isStatementBlock(n)) {
+      return n;
+    }
+
+    Node cur = n.getFirstChild();
+    while (cur != null) {
+      if (!cur.isExprResult()) {
+        cur = cur.getNext();
+        continue;
+      }
+      Node next = cur.getNext();
+      while (next != null && next.isExprResult()) {
+        next = next.getNext();
+      }
+      if (cur.getNext() != next) {
+        cur = fuseIntoOneStatement(n, cur, next);
+        reportCodeChange();
+      }
+      if (cur.isExprResult() &&
+          next != null && isFusableControlStatement(next)) {
+        fuseExpressionIntoControlFlowStatement(cur, next);
+        reportCodeChange();
+        next = next.getNext();
+      }
+      cur = next;
+    }
+
     return n;
   }
 
@@ -83,9 +121,13 @@ class StatementFusion extends AbstractPeepholeOptimization {
       }
     }
 
+    return isFusableControlStatement(last);
+  }
+
+  private boolean isFusableControlStatement(Node n) {
     // TODO(user): Support more control statement for fusion.
     // FOR
-    switch(last.getType()) {
+    switch(n.getType()) {
       case Token.IF:
       case Token.THROW:
       case Token.SWITCH:
@@ -93,13 +135,12 @@ class StatementFusion extends AbstractPeepholeOptimization {
         return true;
       case Token.RETURN:
         // We don't want to add a new return value.
-        return last.hasChildren();
+        return n.hasChildren();
       case Token.FOR:
-        return NodeUtil.isForIn(last) &&
+        return NodeUtil.isForIn(n) &&
             // Avoid cases where we have for(var x = foo() in a) { ....
-            !mayHaveSideEffects(last.getFirstChild());
+            !mayHaveSideEffects(n.getFirstChild());
     }
-
     return false;
   }
 
@@ -108,21 +149,20 @@ class StatementFusion extends AbstractPeepholeOptimization {
    *
    * @param parent The parent that contains the statements.
    * @param first The first statement to fuse (inclusive)
-   * @param last The last statement to fuse (inclusive)
+   * @param last The last statement to fuse (exclusive)
    * @return A single statement that contains all the fused statement as one.
    */
   private Node fuseIntoOneStatement(Node parent, Node first, Node last) {
     // Nothing to fuse if there is only one statement.
-    if (first == last) {
+    if (first.getNext() == last) {
       return first;
     }
 
     // Step one: Create a comma tree that contains all the statements.
     Node commaTree = first.removeFirstChild();
-    Node onePastLast = last.getNext();
 
     Node next = null;
-    for (Node cur = first.getNext(); cur != onePastLast; cur = next) {
+    for (Node cur = first.getNext(); cur != last; cur = next) {
       commaTree = fuseExpressionIntoExpression(
           commaTree, cur.removeFirstChild());
       next = cur.getNext();
