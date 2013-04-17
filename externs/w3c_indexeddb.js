@@ -282,45 +282,33 @@ IDBRequest.DONE;
  */
 webkitIDBRequest.DONE;
 
-/**
- * @type {number}
- * @const
- */
-IDBRequest.prototype.readyState;
+/** @type {number} */
+IDBRequest.prototype.readyState; // readonly
 
-/**
- * @type {function(!Event)}
- */
+/** @type {function(!Event)} */
 IDBRequest.prototype.onsuccess = function(e) {};
 
-/**
- * @type {function(!Event)}
- */
+/** @type {function(!Event)} */
 IDBRequest.prototype.onerror = function(e) {};
 
-/**
- * @type {*}
- * @const
- */
-IDBRequest.prototype.result;
+/** @type {*} */
+IDBRequest.prototype.result;  // readonly
 
 /**
  * @type {number}
- * @const
+ * @deprecated Use "error"
  */
-IDBRequest.prototype.errorCode;
+IDBRequest.prototype.errorCode;  // readonly
 
-/**
- * @type {Object}
- * @const
- */
-IDBRequest.prototype.source;
 
-/**
- * @type {IDBTransaction}
- * @const
- */
-IDBRequest.prototype.transaction;
+/** @type {!DOMError} */
+IDBRequest.prototype.error; // readonly
+
+/** @type {Object} */
+IDBRequest.prototype.source; // readonly
+
+/** @type {IDBTransaction} */
+IDBRequest.prototype.transaction; // readonly
 
 /** @type {function(new:IDBOpenDBRequest)} */
 Window.prototype.IDBOpenDBRequest;
