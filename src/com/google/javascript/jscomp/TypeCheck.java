@@ -1020,7 +1020,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         return;
       }
       // Prop created outside ctor, check that it's a static prop
-      Node assgnStm = lvalue.getParent().getParent();
+      Node assgnExp = lvalue.getParent();
+      Node assgnStm = assgnExp.getParent();
       if (objType instanceof ObjectType &&
           s.isGlobal() &&
           NodeUtil.isPrototypePropertyDeclaration(assgnStm)) {
@@ -1029,6 +1030,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         String file = lvalue.getSourceFileName();
         Node ctor = instance.getConstructor().getSource();
         if (ctor != null && ctor.getSourceFileName().equals(file)) {
+          JSType rvalueType = assgnExp.getLastChild().getJSType();
+          instance.defineInferredProperty(pname, rvalueType, lvalue);
           return;
         }
       }

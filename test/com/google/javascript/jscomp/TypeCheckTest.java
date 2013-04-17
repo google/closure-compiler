@@ -4187,6 +4187,46 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               "Foo.someprop = 123;");
   }
 
+  public void testSetprop13() throws Exception {
+    // Create static property on struct
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Parent() {}\n" +
+              "/**\n" +
+              " * @constructor\n" +
+              " * @extends {Parent}\n" +
+              " */\n" +
+              "function Kid() {}\n" +
+              "Kid.prototype.foo = 123;\n" +
+              "var x = (new Kid()).foo;");
+  }
+
+  public void testSetprop14() throws Exception {
+    // Create static property on struct
+    testTypes("/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " */\n" +
+              "function Top() {}\n" +
+              "/**\n" +
+              " * @constructor\n" +
+              " * @extends {Top}\n" +
+              " */\n" +
+              "function Mid() {}\n" +
+              "/** blah blah */\n" +
+              "Mid.prototype.foo = function() { return 1; };\n" +
+              "/**\n" +
+              " * @constructor\n" +
+              " * @struct\n" +
+              " * @extends {Mid}\n" +
+              " */\n" +
+              "function Bottom() {}\n" +
+              "/** @override */\n" +
+              "Bottom.prototype.foo = function() { return 3; };");
+  }
+
   public void testGetpropDict1() throws Exception {
     testTypes("/**\n" +
               " * @constructor\n" +
