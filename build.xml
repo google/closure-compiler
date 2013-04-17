@@ -81,13 +81,17 @@
            uri="antlib:org.apache.maven.artifact.ant"
            classpathref="maven-ant-tasks.classpath" />
 
-  <!-- gather svn version -->
-  <target name="svnversion">
-    <exec outputproperty="build.svnVersion"
-      executable="svnversion"
+  <!-- gather release version -->
+  <target name="relversion">
+    <exec outputproperty="build.relVersion"
+      executable="git"
       failonerror="false"
       failifexecutionfails="false"
-      dir="."/>
+      dir=".">
+      <arg value="describe"/>
+      <arg value="--tag"/>
+      <arg value="--always"/>
+    </exec>
   </target>
 
   <!-- compile rhino -->
@@ -127,18 +131,18 @@
     </exec>
   </target>
 
-  <!-- Generate pom.xml with the proper svn build number -->
-  <target name="pom" depends="svnversion">
+  <!-- Generate pom.xml with the proper rel build number -->
+  <target name="pom" depends="relversion">
     <copy file="closure-compiler.pom" tofile="${build.dir}/pom.xml">
       <filterset>
-        <filter token="build.svnVersion"
-             value="${build.svnVersion}"/>
+        <filter token="build.relVersion"
+             value="${build.relVersion}"/>
       </filterset>
     </copy>
 
-    <property name="compiler-jarfile-nodeps" value="${build.dir}/closure-${ant.project.name}-r${build.svnVersion}.jar" />
-    <property name="compiler-jarfile-javadoc" value="${build.dir}/closure-${ant.project.name}-r${build.svnVersion}-javadoc.jar" />
-    <property name="compiler-jarfile-sources" value="${build.dir}/closure-${ant.project.name}-r${build.svnVersion}-sources.jar" />
+    <property name="compiler-jarfile-nodeps" value="${build.dir}/closure-${ant.project.name}-${build.relVersion}.jar" />
+    <property name="compiler-jarfile-javadoc" value="${build.dir}/closure-${ant.project.name}-${build.relVersion}-javadoc.jar" />
+    <property name="compiler-jarfile-sources" value="${build.dir}/closure-${ant.project.name}-${build.relVersion}-sources.jar" />
 
     <artifact:pom id="project" file="${build.dir}/pom.xml" />
   </target>
@@ -247,17 +251,17 @@
 
   <target name="compile"
           description="compile the source code"
-          depends="rhino-jarjar,svnversion">
+          depends="rhino-jarjar,relversion">
     <mkdir dir="${classes.dir}" />
     <javac srcdir="${gen.dir}"
            destdir="${classes.dir}"
-           excludes=".svn"
+           excludes=".svn,.git"
            debug="${javac.debug}">
       <classpath refid="srcclasspath.path" />
     </javac>
     <javac srcdir="${src.dir}"
            destdir="${classes.dir}"
-           excludes=".svn,**/jsonml/**,**/webservice/**,**/testing/**"
+           excludes=".svn,.git,**/jsonml/**,**/webservice/**,**/testing/**"
            debug="${javac.debug}">
       <classpath refid="srcclasspath.path" />
     </javac>
@@ -275,7 +279,7 @@
         file="${classes.dir}/com/google/javascript/jscomp/parsing/ParserConfig.properties"
         comment="Parser properties">
       <entry key="compiler.date" type="date" value="now"/>
-      <entry key="compiler.version" value="${build.svnVersion}"/>
+      <entry key="compiler.version" value="${build.relVersion}"/>
     </propertyfile>
 
     <!-- Move runtime_type_check.js where RuntimeTypeCheck.java expects it. -->
@@ -325,13 +329,13 @@
     <mkdir dir="${testClasses.dir}" />
     <javac srcdir="${src.dir}"
            destdir="${testClasses.dir}"
-           excludes=".svn"
+           excludes=".svn,.git"
            debug="on">
       <classpath refid="allclasspath.path" />
     </javac>
     <javac srcdir="${test.dir}"
            destdir="${testClasses.dir}"
-           excludes=".svn"
+           excludes=".svn,.git"
            debug="on">
       <classpath refid="allclasspath.path" />
     </javac>
@@ -442,7 +446,7 @@
     <mkdir dir="${jsonml-classes.dir}" />
     <javac srcdir="${jsonml.dir}"
            destdir="${jsonml-classes.dir}"
-           excludes=".svn"
+           excludes=".svn,.git"
            debug="${javac.debug}">
       <classpath refid="jsonml-classpath.path" />
     </javac>
@@ -466,7 +470,7 @@
     <mkdir dir="${webservice-classes.dir}" />
     <javac srcdir="${webservice.dir}"
            destdir="${webservice-classes.dir}"
-           excludes=".svn"
+           excludes=".svn,.git"
            debug="${javac.debug}">
       <classpath refid="jsonml-classpath.path" />
     </javac>
