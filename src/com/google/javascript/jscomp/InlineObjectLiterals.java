@@ -426,6 +426,7 @@ class InlineObjectLiterals implements CompilerPass {
           blacklistVarReferencesInTree(val, v.scope);
         }
         vnode.getParent().addChildBefore(varnode, vnode);
+        compiler.reportChangeToEnclosingScope(vnode);
       }
 
       if (defined) {
@@ -433,6 +434,7 @@ class InlineObjectLiterals implements CompilerPass {
       }
 
       for (Reference ref : referenceInfo.references) {
+        compiler.reportChangeToEnclosingScope(ref.getNode());
         // The init/decl have already been converted.
         if (defined && ref == init) {
           continue;
@@ -464,8 +466,6 @@ class InlineObjectLiterals implements CompilerPass {
           ref.getGrandparent().replaceChild(ref.getParent(), replacement);
         }
       }
-
-      compiler.reportCodeChange();
     }
   }
 }

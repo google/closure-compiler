@@ -79,12 +79,10 @@ class RemoveUnusedPrototypeProperties implements
    * never referenced.
    */
   private void removeUnusedSymbols(Collection<NameInfo> allNameInfo) {
-    boolean changed = false;
     for (NameInfo nameInfo : allNameInfo) {
       if (!nameInfo.isReferenced()) {
         for (Symbol declaration : nameInfo.getDeclarations()) {
           boolean canRemove = false;
-
           if (specializationState == null) {
             canRemove = true;
           } else {
@@ -97,19 +95,13 @@ class RemoveUnusedPrototypeProperties implements
               canRemove = true;
             }
           }
-
           if (canRemove) {
-            declaration.remove();
-            changed = true;
+            // Code-change reporting happens at the remove methods
+            declaration.remove(compiler);
           }
         }
-
         logger.fine("Removed unused prototype property: " + nameInfo.name);
       }
-    }
-
-    if (changed) {
-      compiler.reportCodeChange();
     }
   }
 

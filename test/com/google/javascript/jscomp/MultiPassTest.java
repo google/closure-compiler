@@ -25,8 +25,8 @@ import java.util.List;
 
 /**
  * This file contains the only tests that use the infrastructure in
- * CompilerTestCase to run multiple passes. The other files that use
- * CompilerTestCase test a single pass.
+ * CompilerTestCase to run multiple passes and do sanity checks. The other files
+ * that use CompilerTestCase unit test a single pass.
  */
 public class MultiPassTest extends CompilerTestCase {
   private List<PassFactory> passes;
@@ -74,11 +74,58 @@ public class MultiPassTest extends CompilerTestCase {
         "function f() { return 1; }");
   }
 
+  public void testCollapseObjectLiteralsScopeChange() {
+    passes = Lists.newLinkedList();
+    addCollapseObjectLiterals();
+    test("function f() {" +
+        "  var obj = { x: 1 };" +
+        "  var z = function() { return obj.x; }" +
+        "}",
+        "function f(){" +
+        "  var JSCompiler_object_inline_x_0 = 1;" +
+        "  var z = function(){" +
+        "    return JSCompiler_object_inline_x_0;" +
+        "  }" +
+        "}");
+  }
+
+  public void testRemoveUnusedClassPropertiesScopeChange() {
+    passes = Lists.newLinkedList();
+    addRemoveUnusedClassProperties();
+    test("/** @constructor */" +
+        "function Foo() { this.a = 1; }" +
+        "Foo.baz = function() {};",
+        "/** @constructor */" +
+        "function Foo() { 1; }" +
+        "Foo.baz = function() {};");
+  }
+
+  public void testRemoveUnusedVariablesScopeChange() {
+    passes = Lists.newLinkedList();
+    addRemoveUnusedVars();
+    test("function f() { var x; }",
+        "function f() {}");
+    test("function g() { function f(x, y) { return 1; } }",
+        "function g() {}");
+    test("function f() { var x = 123; }",
+        "function f() {}");
+  }
+
   public void testTopScopeChange() {
     passes = Lists.newLinkedList();
     addInlineVariables();
     addPeephole();
     test("var x = 1, y = x, z = x + y;", "var z = 2;");
+  }
+
+  private void addCollapseObjectLiterals() {
+    passes.add(new PassFactory("collapseObjectLiterals", false) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new InlineObjectLiterals(
+              compiler, compiler.getUniqueNameIdSupplier());
+        }
+      });
   }
 
   private void addDeadCodeElimination() {
@@ -90,21 +137,21 @@ public class MultiPassTest extends CompilerTestCase {
       });
   }
 
-  private void addInlineVariables() {
-    passes.add(new PassFactory("inlineVariables", false) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new InlineVariables(compiler, InlineVariables.Mode.ALL, true);
-        }
-      });
-  }
-
   private void addInlineFunctions() {
     passes.add(new PassFactory("inlineFunctions", false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new InlineFunctions(compiler,
               compiler.getUniqueNameIdSupplier(), true, true, true, true, true);
+        }
+      });
+  }
+
+  private void addInlineVariables() {
+    passes.add(new PassFactory("inlineVariables", false) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new InlineVariables(compiler, InlineVariables.Mode.ALL, true);
         }
       });
   }
@@ -120,6 +167,24 @@ public class MultiPassTest extends CompilerTestCase {
               new PeepholeRemoveDeadCode(),
               new PeepholeFoldConstants(late),
               new PeepholeCollectPropertyAssignments());
+        }
+      });
+  }
+
+  private void addRemoveUnusedClassProperties() {
+    passes.add(new PassFactory("removeUnusedClassProperties", false) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new RemoveUnusedClassProperties(compiler);
+        }
+      });
+  }
+
+  private void addRemoveUnusedVars() {
+    passes.add(new PassFactory("removeUnusedVars", false) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new RemoveUnusedVars(compiler, false, false, false);
         }
       });
   }

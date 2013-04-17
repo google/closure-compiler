@@ -249,7 +249,7 @@ class UnreachableCodeElimination implements CompilerPass {
     private void removeNode(Node n) {
       codeChanged = true;
       NodeUtil.redeclareVarsInsideBranch(n);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(n);
       if (logger.isLoggable(Level.FINE)) {
         logger.fine("Removing " + n.toString());
       }

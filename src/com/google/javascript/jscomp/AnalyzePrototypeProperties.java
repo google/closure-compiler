@@ -545,7 +545,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     /**
      * Remove the declaration from the AST.
      */
-    void remove();
+    void remove(AbstractCompiler compiler);
 
     /**
      * The variable for the root of this symbol.
@@ -587,8 +587,9 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     @Override
-    public void remove() {
+    public void remove(AbstractCompiler compiler) {
       Node parent = nameNode.getParent();
+      compiler.reportChangeToEnclosingScope(parent);
       if (parent.isFunction() || parent.hasOneChild()) {
         NodeUtil.removeChild(parent.getParent(), parent);
       } else {
@@ -653,7 +654,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     @Override
-    public void remove() {
+    public void remove(AbstractCompiler compiler) {
+      compiler.reportChangeToEnclosingScope(exprNode);
       NodeUtil.removeChild(exprNode.getParent(), exprNode);
     }
 
@@ -707,7 +709,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     @Override
-    public void remove() {
+    public void remove(AbstractCompiler compiler) {
+      compiler.reportChangeToEnclosingScope(key);
       map.removeChild(key);
     }
 

@@ -637,8 +637,8 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       String fnName = fn.getName();
       Node fnNode = fs.getSafeFnNode();
 
+      t.getCompiler().reportChangeToEnclosingScope(callNode);
       injector.inline(callNode, fnName, fnNode, mode);
-      t.getCompiler().reportCodeChange();
       t.getCompiler().addToDebugLog("Inlined function: " + fn.getName());
     }
   }

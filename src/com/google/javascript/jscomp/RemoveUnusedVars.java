@@ -397,8 +397,8 @@ class RemoveUnusedVars
       while ((lastArg = argList.getLastChild()) != null) {
         Var var = fnScope.getVar(lastArg.getString());
         if (!referenced.contains(var)) {
+          compiler.reportChangeToEnclosingScope(lastArg);
           argList.removeChild(lastArg);
-          compiler.reportCodeChange();
         } else {
           break;
         }
@@ -447,12 +447,12 @@ class RemoveUnusedVars
      */
     public void applyChanges() {
       for (Node n : toRemove) {
+        compiler.reportChangeToEnclosingScope(n);
         n.getParent().removeChild(n);
-        compiler.reportCodeChange();
       }
       for (Node n : toReplaceWithZero) {
+        compiler.reportChangeToEnclosingScope(n);
         n.getParent().replaceChild(n, IR.number(0).srcref(n));
-        compiler.reportCodeChange();
       }
     }
 
@@ -776,8 +776,8 @@ class RemoveUnusedVars
    */
   private void removeAllAssigns(Var var) {
     for (Assign assign : assignsByVar.get(var)) {
+      compiler.reportChangeToEnclosingScope(assign.assignNode);
       assign.remove();
-      compiler.reportCodeChange();
     }
   }
 
@@ -807,8 +807,8 @@ class RemoveUnusedVars
       // Remove calls to inheritance-defining functions where the unreferenced
       // class is the subclass.
       for (Node exprCallNode : classDefiningCalls.get(var)) {
+        compiler.reportChangeToEnclosingScope(exprCallNode);
         NodeUtil.removeChild(exprCallNode.getParent(), exprCallNode);
-        compiler.reportCodeChange();
       }
 
       // Regardless of what happens to the original declaration,
@@ -834,8 +834,8 @@ class RemoveUnusedVars
         // that's taken care of in removeUnreferencedFunctionArgs.
       } else if (NodeUtil.isFunctionExpression(toRemove)) {
         if (!preserveFunctionExpressionNames) {
+          compiler.reportChangeToEnclosingScope(toRemove);
           toRemove.getFirstChild().setString("");
-          compiler.reportCodeChange();
         }
         // Don't remove bleeding functions.
       } else if (parent != null &&
@@ -849,19 +849,19 @@ class RemoveUnusedVars
         // declaration itself and just leave the value, e.g.,
         // var a = foo(); => foo();
         if (toRemove.getChildCount() == 1) {
+          compiler.reportChangeToEnclosingScope(toRemove);
           parent.replaceChild(toRemove,
               IR.exprResult(nameNode.removeFirstChild()));
-          compiler.reportCodeChange();
         }
       } else if (toRemove.isVar() &&
           toRemove.getChildCount() > 1) {
         // For var declarations with multiple names (i.e. var a, b, c),
         // only remove the unreferenced name
+        compiler.reportChangeToEnclosingScope(toRemove);
         toRemove.removeChild(nameNode);
-        compiler.reportCodeChange();
       } else if (parent != null) {
+        compiler.reportChangeToEnclosingScope(toRemove);
         NodeUtil.removeChild(parent, toRemove);
-        compiler.reportCodeChange();
       }
     }
   }

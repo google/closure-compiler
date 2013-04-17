@@ -257,7 +257,7 @@ class PhaseOptimizer implements CompilerPass {
     if (sanityCheck != null) {
       sanityCheck.create(compiler).process(externs, root);
       if (inLoop) {
-        NodeUtil.verifyScopeChanges(mtoc, jsRoot, true);
+        NodeUtil.verifyScopeChanges(mtoc, jsRoot, true, compiler);
         setSanityCheckState();
       }
     }
@@ -367,7 +367,8 @@ class PhaseOptimizer implements CompilerPass {
     @Override
     public void reportChange() {
       if (crossScopeReporting) {
-        // This call was caused by Compiler/reportChangeToScope, do nothing
+        // This call was caused by Compiler/reportChangeToEnclosingScope,
+        // do nothing.
         return;
       }
       lastChange = timestamp;

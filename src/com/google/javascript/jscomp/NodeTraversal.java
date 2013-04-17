@@ -458,25 +458,31 @@ public class NodeTraversal {
    * Then, if a function doesn't change between two runs of P1, it won't look at
    * the function the second time.
    * (We're assuming that P1 runs to a fixpoint, o/w we may miss optimizations.)
+   *
+   * Most changes are reported with calls to Compiler.reportCodeChange(), which
+   * doesn't know which scope changed. We keep track of the current scope by
+   * calling Compiler.setScope inside pushScope and popScope.
+   * The automatic tracking can be wrong in rare cases when a pass changes scope
+   * w/out causing a call to pushScope or popScope. It's very hard to find the
+   * places where this happens unless a bug is triggered.
+   * Passes that do cross-scope modifications call
+   * Compiler.reportChangeToEnclosingScope(Node n).
    */
   public static void traverseChangedFunctions(
       AbstractCompiler compiler, FunctionCallback callback) {
     final AbstractCompiler comp = compiler;
     final FunctionCallback cb = callback;
     final Node jsRoot = comp.getJsRoot();
-    if (comp.hasScopeChanged(jsRoot)) {
-      cb.visit(comp, jsRoot);
-    }
-    traverse(comp, jsRoot,
-        new AbstractPreOrderCallback() {
-          @Override
-          public final boolean shouldTraverse(NodeTraversal t, Node n, Node p) {
-            if (n.isFunction() && comp.hasScopeChanged(n)) {
-              cb.visit(comp, n);
-            }
-            return true;
+    NodeTraversal t = new NodeTraversal(comp, new AbstractPreOrderCallback() {
+        @Override
+        public final boolean shouldTraverse(NodeTraversal t, Node n, Node p) {
+          if ((n == jsRoot || n.isFunction()) && comp.hasScopeChanged(n)) {
+            cb.visit(comp, n);
           }
-        });
+          return true;
+        }
+      });
+    t.traverse(jsRoot);
   }
 
   /**
@@ -540,7 +546,6 @@ public class NodeTraversal {
     Preconditions.checkState(n.isFunction());
 
     final Node fnName = n.getFirstChild();
-
     boolean isFunctionExpression = (parent != null)
         && NodeUtil.isFunctionExpression(n);
 
@@ -618,8 +623,8 @@ public class NodeTraversal {
       scopeRoots.pop();
     }
     cfgs.pop();
-    if (!scopes.isEmpty()) {
-      compiler.setScope(scopes.peek().getRootNode());
+    if (hasScope()) {
+      compiler.setScope(getScopeRoot());
     }
   }
 
@@ -636,7 +641,7 @@ public class NodeTraversal {
       scopes.push(scope);
     }
     scopeRoots.clear();
-
+    // No need to call compiler.setScope; the top scopeRoot is now the top scope
     return scope;
   }
 

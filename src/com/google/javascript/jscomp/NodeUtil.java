@@ -3312,7 +3312,11 @@ public final class NodeUtil {
 
   /** Checks that the scope roots marked as changed have indeed changed */
   public static void verifyScopeChanges(Map<Node, Node> map,
-      Node main, boolean verifyUnchangedNodes) {
+      Node main, boolean verifyUnchangedNodes,
+      AbstractCompiler compiler) {
+    // compiler is passed only to call compiler.toSource during debugging to see
+    // mismatches in scopes
+
     // If verifyUnchangedNodes is false, we are comparing the initial AST to the
     // final AST. Don't check unmarked nodes b/c they may have been changed by
     // non-loopable passes.
