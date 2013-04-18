@@ -174,7 +174,7 @@ MediaStreamTrackList.prototype.onaddtrack;
 MediaStreamTrackList.prototype.onremovetrack;
 
 /**
- * @param {MediaStream|Array.<!MediaStreamTrack>=} streamOrTracks
+ * @param {!MediaStream|!Array.<!MediaStreamTrack>=} streamOrTracks
  * @constructor
  * @implements {EventTarget}
  * @see http://www.w3.org/TR/mediacapture-streams/#mediastream
@@ -267,6 +267,12 @@ MediaStream.prototype.onaddtrack;
  * @type {?function(!MediaStreamTrackEvent)}
  */
 MediaStream.prototype.onremovetrack;
+
+/**
+ * @type {function(new: MediaStream,
+ *                 (!MediaStream|!Array.<!MediaStreamTrack>)=)}
+ */
+var webkitMediaStream;
 
 /**
  * @constructor
