@@ -329,6 +329,21 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "foo.bar = ':foo:';");
   }
 
+  public void testMappedMap() {
+    testMap("/** @idGenerator {mapped}*/ xid = function() {};" +
+        "foo.bar = xid('foo');" +
+        "foo.bar = xid('foo');",
+
+        "xid = function() {};" +
+        "foo.bar = ':foo:';" +
+        "foo.bar = ':foo:';",
+
+        "[xid]\n" +
+        "\n" +
+        ":foo::foo\n" +
+        "\n");
+  }
+
   public void testMapped2() {
     test("/** @idGenerator {mapped}*/ xid = function() {};" +
         "foo.bar = function() { return xid('foo'); };",

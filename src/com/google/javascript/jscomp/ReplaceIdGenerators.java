@@ -351,7 +351,7 @@ class ReplaceIdGenerators implements CompilerPass {
       String rename = null;
       Map<String, String> idGeneratorMap = idGeneratorMaps.get(callName);
       String instanceId = getIdForGeneratorNode(
-          nameGenerator.getRenameStrategy() == RenameStrategy.CONSISTENT, id);
+          nameGenerator.getRenameStrategy() != RenameStrategy.INCONSISTENT, id);
       if (nameGenerator.getRenameStrategy() == RenameStrategy.CONSISTENT) {
         Map<String, String> entry = consistNameMap.get(callName);
         rename = entry.get(instanceId);
