@@ -780,7 +780,8 @@ public class CommandLineRunner extends
           .setProcessCommonJSModules(flags.processCommonJsModules)
           .setCommonJSModulePathPrefix(flags.commonJsPathPrefix)
           .setTransformAMDToCJSModules(flags.transformAmdModules)
-          .setWarningsWhitelistFile(flags.warningsWhitelistFile);
+          .setWarningsWhitelistFile(flags.warningsWhitelistFile)
+          .setAngularPass(flags.angularPass);
     }
   }
 
