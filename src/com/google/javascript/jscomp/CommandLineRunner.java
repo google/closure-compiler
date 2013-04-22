@@ -876,6 +876,7 @@ public class CommandLineRunner extends
     "gecko_event.js",
     "ie_event.js",
     "webkit_event.js",
+    "w3c_device_sensor_event.js",
 
     // DOM apis
     "w3c_dom1.js",
