@@ -478,6 +478,7 @@ Document.prototype.popupNode;
 Document.prototype.referrer;
 
 /**
+ * @type {StyleSheetList}
  * @see https://developer.mozilla.org/en/DOM/document.styleSheets
  */
 Document.prototype.styleSheets;

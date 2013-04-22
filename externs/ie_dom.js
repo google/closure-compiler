@@ -531,6 +531,7 @@ History.prototype.forward = function() {};
 HTMLFrameElement.prototype.allowTransparency;
 
 /**
+ * @type {Window}
  * @see http://msdn.microsoft.com/en-us/library/ms533692(VS.85).aspx
  */
 HTMLFrameElement.prototype.contentWindow;
@@ -543,6 +544,7 @@ HTMLFrameElement.prototype.contentWindow;
 HTMLIFrameElement.prototype.allowTransparency;
 
 /**
+ * @type {Window}
  * @see http://msdn.microsoft.com/en-us/library/ms533692(VS.85).aspx
  */
 HTMLIFrameElement.prototype.contentWindow;
