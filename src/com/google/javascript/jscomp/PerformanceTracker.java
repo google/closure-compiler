@@ -49,18 +49,20 @@ public class PerformanceTracker {
   // if there is any.
   private final RecentChange codeChange = new RecentChange();
 
-  private int initCodeSize = 0;
-  private int initGzCodeSize = 0;
+  private int initCodeSize = -1;
+  private int initGzCodeSize = -1;
 
   private int runtime = 0;
   private int runs = 0;
   private int changes = 0;
   private int loopRuns = 0;
   private int loopChanges = 0;
-  private int codeSize = 0;
-  private int gzCodeSize = 0;
-  private int diff = 0;
-  private int gzDiff = 0;
+  private int codeSize = -1;  // estimate
+  private int gzCodeSize = -1;  // estimate
+  private int diff = 0;  // estimate
+  private int gzDiff = 0;  // estimate
+  private long finalCodeSize = -1;  // exact
+  private long finalGzSize = -1;  // exact
 
   private Deque<Stats> currentPass = new ArrayDeque<Stats>();
 
@@ -84,10 +86,10 @@ public class PerformanceTracker {
     public long runtime = 0;
     public int runs = 0;
     public int changes = 0;
-    public int diff = 0;
-    public int gzDiff = 0;
-    public int size = 0;
-    public int gzSize = 0;
+    public int diff = 0;  // estimate
+    public int gzDiff = 0;  // estimate
+    public int size;  // estimate
+    public int gzSize;  // estimate
   }
 
   PerformanceTracker(Node jsRoot, TracerMode mode) {
@@ -137,11 +139,11 @@ public class PerformanceTracker {
 
     // After parsing, initialize codeSize and gzCodeSize
     if (passName.equals(Compiler.PARSING_PASS_NAME) && trackSize) {
-      CodeSizeEstimatePrinter printer = new CodeSizeEstimatePrinter();
-      CodeGenerator.forCostEstimation(printer).add(jsRoot);
-      initCodeSize = codeSize = printer.calcSize();
+      CodeSizeEstimatePrinter estimatePrinter = new CodeSizeEstimatePrinter();
+      CodeGenerator.forCostEstimation(estimatePrinter).add(jsRoot);
+      initCodeSize = codeSize = estimatePrinter.calcSize();
       if (this.trackGzSize) {
-        initGzCodeSize = gzCodeSize = printer.calcZippedSize();
+        initGzCodeSize = gzCodeSize = estimatePrinter.calcZippedSize();
       }
     }
 
@@ -166,16 +168,16 @@ public class PerformanceTracker {
     // Update fields related to code size
     if (codeChange.hasCodeChanged() && trackSize) {
       int newSize = 0;
-      CodeSizeEstimatePrinter printer = new CodeSizeEstimatePrinter();
-      CodeGenerator.forCostEstimation(printer).add(jsRoot);
+      CodeSizeEstimatePrinter estimatePrinter = new CodeSizeEstimatePrinter();
+      CodeGenerator.forCostEstimation(estimatePrinter).add(jsRoot);
       if (trackSize) {
-        newSize = printer.calcSize();
+        newSize = estimatePrinter.calcSize();
         logStats.diff = codeSize - newSize;
         summaryStats.diff += logStats.diff;
         codeSize = summaryStats.size = logStats.size = newSize;
       }
       if (trackGzSize) {
-        newSize = printer.calcZippedSize();
+        newSize = estimatePrinter.calcZippedSize();
         logStats.gzDiff = gzCodeSize - newSize;
         summaryStats.gzDiff += logStats.gzDiff;
         gzCodeSize = summaryStats.gzSize = logStats.gzSize = newSize;
@@ -201,6 +203,11 @@ public class PerformanceTracker {
   public ImmutableMap<String, Stats> getStats() {
     calcTotalStats();
     return summaryCopy;
+  }
+
+  public void setFinalSizes(long finalCodeSize, long finalGzSize) {
+    this.finalCodeSize = finalCodeSize;
+    this.finalGzSize = finalGzSize;
   }
 
   class CmpEntries implements Comparator<Entry<String, Stats>> {
@@ -263,10 +270,13 @@ public class PerformanceTracker {
           "\n#Changing runs: " + String.valueOf(changes) +
           "\n#Loopable runs: " + String.valueOf(loopRuns) +
           "\n#Changing loopable runs: " + String.valueOf(loopChanges) +
-          "\nReduction(bytes): " + String.valueOf(diff) +
-          "\nGzReduction(bytes): " + String.valueOf(gzDiff) +
-          "\nSize(bytes): " + String.valueOf(codeSize) +
-          "\nGzSize(bytes): " + String.valueOf(gzCodeSize) + "\n\n");
+          "\nEstimated Reduction(bytes): " + String.valueOf(diff) +
+          "\nEstimated GzReduction(bytes): " + String.valueOf(gzDiff) +
+          "\nEstimated Size(bytes): " + String.valueOf(codeSize) +
+          "\nEstimated GzSize(bytes): " + String.valueOf(gzCodeSize) +
+          "\nTotal Size(bytes): " + String.valueOf(finalCodeSize) +
+          "\nTotal GzSize(bytes): " + String.valueOf(finalGzSize) +
+          "\n\n");
 
       output.write("Log:\n" +
           "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize\n");

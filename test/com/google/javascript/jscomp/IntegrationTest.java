@@ -2578,10 +2578,12 @@ public class IntegrationTest extends IntegrationTestCase {
         "\n#Changing runs: [0-9]+" +
         "\n#Loopable runs: [0-9]+" +
         "\n#Changing loopable runs: [0-9]+" +
-        "\nReduction\\(bytes\\): [0-9]+" +
-        "\nGzReduction\\(bytes\\): [0-9]+" +
-        "\nSize\\(bytes\\): [0-9]+" +
-        "\nGzSize\\(bytes\\): [0-9]+" +
+        "\nEstimated Reduction\\(bytes\\): [0-9]+" +
+        "\nEstimated GzReduction\\(bytes\\): [0-9]+" +
+        "\nEstimated Size\\(bytes\\): [0-9]+" +
+        "\nEstimated GzSize\\(bytes\\): [0-9]+" +
+        "\nTotal Size\\(bytes\\): -?[0-9]+" +
+        "\nTotal GzSize\\(bytes\\): -?[0-9]+" +
         "\n\nLog:\n" +
         "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize.*",
         Pattern.DOTALL);
