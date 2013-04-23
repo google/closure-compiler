@@ -125,8 +125,6 @@ class StatementFusion extends AbstractPeepholeOptimization {
   }
 
   private boolean isFusableControlStatement(Node n) {
-    // TODO(user): Support more control statement for fusion.
-    // FOR
     switch(n.getType()) {
       case Token.IF:
       case Token.THROW:
@@ -137,9 +135,15 @@ class StatementFusion extends AbstractPeepholeOptimization {
         // We don't want to add a new return value.
         return n.hasChildren();
       case Token.FOR:
-        return NodeUtil.isForIn(n) &&
-            // Avoid cases where we have for(var x = foo() in a) { ....
-            !mayHaveSideEffects(n.getFirstChild());
+        if (NodeUtil.isForIn(n)) {
+          // Avoid cases where we have for(var x = foo() in a) { ....
+          return !mayHaveSideEffects(n.getFirstChild());
+        } else {
+          // Avoid cases where we have for(var x;_;_) { ....
+          return !n.getFirstChild().isVar();
+        }
+      case Token.LABEL:
+        return isFusableControlStatement(n.getLastChild());
     }
     return false;
   }
@@ -196,7 +200,12 @@ class StatementFusion extends AbstractPeepholeOptimization {
         before.getParent().removeChild(before);
         if (NodeUtil.isForIn(control)) {
           fuseExpresssonIntoSecondChild(before.removeFirstChild(), control);
+        } else {
+          fuseExpresssonIntoFirstChild(before.removeFirstChild(), control);
         }
+        return;
+      case Token.LABEL:
+        fuseExpressionIntoControlFlowStatement(before, control.getLastChild());
         return;
       default:
         throw new IllegalStateException("Statement fusion missing.");
@@ -205,6 +214,9 @@ class StatementFusion extends AbstractPeepholeOptimization {
 
   // exp1, exp1
   protected static Node fuseExpressionIntoExpression(Node exp1, Node exp2) {
+    if (exp2.isEmpty()) {
+      return exp1;
+    }
     Node comma = new Node(Token.COMMA, exp1);
     comma.copyInformationFrom(exp2);
 

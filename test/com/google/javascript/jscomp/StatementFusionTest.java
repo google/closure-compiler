@@ -88,6 +88,20 @@ public class StatementFusionTest extends CompilerTestCase  {
     fuseSame("a();for(var x = b() in y){}");
   }
 
+  public void testFuseIntoVanillaFor() {
+    fuse("a;b;c;for(;g;){}", "for(a,b,c;g;){}");
+    fuse("a;b;c;for(d;g;){}", "for(a,b,c,d;g;){}");
+    fuse("a;b;c;for(d,e;g;){}", "for(a,b,c,d,e;g;){}");
+    fuseSame("a();for(var x;g;){}");
+  }
+
+  public void testFuseIntoLabel() {
+    fuse("a;b;c;label:for(x in y){}", "label:for(x in a,b,c,y){}");
+    fuse("a;b;c;label:for(;g;){}", "label:for(a,b,c;g;){}");
+    fuse("a;b;c;l1:l2:l3:for(;g;){}", "l1:l2:l3:for(a,b,c;g;){}");
+    fuseSame("a;b;c;label:while(true){}");
+  }
+
   public void testNoFuseIntoWhile() {
     fuseSame("a;b;c;while(x){}");
   }
