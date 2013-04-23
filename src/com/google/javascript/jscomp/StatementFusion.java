@@ -144,6 +144,8 @@ class StatementFusion extends AbstractPeepholeOptimization {
         }
       case Token.LABEL:
         return isFusableControlStatement(n.getLastChild());
+      case Token.BLOCK:
+        return isFusableControlStatement(n.getFirstChild());
     }
     return false;
   }
@@ -206,6 +208,9 @@ class StatementFusion extends AbstractPeepholeOptimization {
         return;
       case Token.LABEL:
         fuseExpressionIntoControlFlowStatement(before, control.getLastChild());
+        return;
+      case Token.BLOCK:
+        fuseExpressionIntoControlFlowStatement(before, control.getFirstChild());
         return;
       default:
         throw new IllegalStateException("Statement fusion missing.");

@@ -102,6 +102,14 @@ public class StatementFusionTest extends CompilerTestCase  {
     fuseSame("a;b;c;label:while(true){}");
   }
 
+  public void testFuseIntoBlock() {
+    fuse("a;b;c;{d;e;f}", "{a,b,c,d,e,f}");
+    fuse("a;b; label: { if(q) break label; bar(); }",
+         "label: { if(a,b,q) break label; bar(); }");
+    fuseSame("a;b;c;{var x;d;e;}");
+    fuseSame("a;b;c;label:{break label;d;e;}");
+  }
+
   public void testNoFuseIntoWhile() {
     fuseSame("a;b;c;while(x){}");
   }
