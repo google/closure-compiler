@@ -1246,6 +1246,40 @@ angular.NgModelController.prototype.$viewChangeListeners;
 angular.NgModelController.prototype.$viewValue;
 
 /******************************************************************************
+ * FormController
+ *****************************************************************************/
+
+/**
+ * @constructor
+ */
+angular.FormController = function() {};
+
+/**
+ * @type {boolean}
+ */
+angular.FormController.prototype.$dirty;
+
+/**
+ * @type {!Object.<boolean>}
+ */
+angular.FormController.prototype.$error;
+
+/**
+ * @type {boolean}
+ */
+angular.FormController.prototype.$invalid;
+
+/**
+ * @type {boolean}
+ */
+angular.FormController.prototype.$pristine;
+
+/**
+ * @type {boolean}
+ */
+angular.FormController.prototype.$valid;
+
+/******************************************************************************
  * $provide Service
  *****************************************************************************/
 
