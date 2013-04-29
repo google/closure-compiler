@@ -112,6 +112,8 @@ MediaStreamTrack.prototype.onunmute;
  */
 MediaStreamTrack.prototype.onended;
 
+MediaStreamTrack.prototype.stop = function() {};
+
 /**
  * @constructor
  * @extends {Event}
@@ -269,6 +271,13 @@ MediaStream.prototype.onaddtrack;
 MediaStream.prototype.onremovetrack;
 
 /**
+ * @deprecated
+ * TODO(bemasc): Remove this method once browsers have updated to
+ * MediaStreamTrack.stop().
+ */
+MediaStream.prototype.stop = function() {};
+
+/**
  * @type {function(new: MediaStream,
  *                 (!MediaStream|!Array.<!MediaStreamTrack>)=)}
  */
@@ -278,11 +287,11 @@ var webkitMediaStream;
  * @constructor
  * @extends {MediaStream}
  * @private
- * @see http://www.w3.org/TR/mediacapture-streams/#localmediastream
+ * @deprecated
+ * TODO(bemasc): Remove LocalMediaStream once users have transitioned to
+ * MediaStream.
  */
 function LocalMediaStream() {}
-
-LocalMediaStream.prototype.stop = function() {};
 
 /**
  * This interface defines the available constraint attributes.  These are the
@@ -422,6 +431,8 @@ NavigatorUserMediaError.prototype.code;
  * @param {MediaStreamConstraints} constraints A MediaStreamConstraints object.
  * @param {function(!LocalMediaStream)} successCallback
  *     A NavigatorUserMediaSuccessCallback function.
+ *     TODO(bemasc):  Change to function(!MediaStream) when LocalMediaStream is
+ *     removed.
  * @param {function(!NavigatorUserMediaError)=} errorCallback A
  *     NavigatorUserMediaErrorCallback function.
  * @see http://dev.w3.org/2011/webrtc/editor/getusermedia.html
@@ -774,7 +785,7 @@ RTCDataChannel.prototype.reliable;
 /**
  * An enumerated string type (RTCDataChannelState) with values:
  * "connecting", "open", "closing", and "closed".
- * @type {string} 
+ * @type {string}
  * Read only.
  */
 RTCDataChannel.prototype.readyState;
