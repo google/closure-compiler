@@ -157,6 +157,29 @@ AudioContext.prototype.createDynamicsCompressor = function() {};
 AudioContext.prototype.createMediaElementSource = function(mediaElement) {};
 
 /**
+ * @param {number} numberOfChannels
+ * @param {number} length
+ * @param {number} sampleRate
+ * @constructor
+ * @extends {AudioContext}
+ */
+var OfflineAudioContext = function(numberOfChannels, length, sampleRate) {};
+
+OfflineAudioContext.prototype.startRendering = function() {};
+
+/** @type {function(OfflineAudioCompletionEvent)} */
+OfflineAudioContext.prototype.oncomplete;
+
+/**
+ * @constructor
+ * @extends {Event}
+ */
+var OfflineAudioCompletionEvent = function() {};
+
+/** @type {AudioBuffer} */
+OfflineAudioCompletionEvent.prototype.renderedBuffer;
+
+/**
  * @constructor
  */
 var AudioNode = function() {};
@@ -784,6 +807,16 @@ WaveShaperNode.prototype.curve;
  * @extends {AudioContext}
  */
 var webkitAudioContext = function() {};
+
+/**
+ * @param {number} numberOfChannels
+ * @param {number} length
+ * @param {number} sampleRate
+ * @constructor
+ * @extends {OfflineAudioContext}
+ */
+var webkitOfflineAudioContext =
+    function(numberOfChannels, length, sampleRate) {};
 
 /**
  * @constructor
