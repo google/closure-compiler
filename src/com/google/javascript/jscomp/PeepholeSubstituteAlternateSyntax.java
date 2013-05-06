@@ -925,7 +925,7 @@ class PeepholeSubstituteAlternateSyntax
    * @return Whether the node is a block with a single statement that is
    *     an expression.
    */
-  private boolean isFoldableExpressBlock(Node n) {
+  private static boolean isFoldableExpressBlock(Node n) {
     if (n.isBlock()) {
       if (n.hasOneChild()) {
         Node maybeExpr = n.getFirstChild();
@@ -961,7 +961,7 @@ class PeepholeSubstituteAlternateSyntax
   /**
    * @return The expression node.
    */
-  private Node getBlockExpression(Node n) {
+  private static Node getBlockExpression(Node n) {
     Preconditions.checkState(isFoldableExpressBlock(n));
     return n.getFirstChild();
   }
@@ -970,7 +970,7 @@ class PeepholeSubstituteAlternateSyntax
    * @return Whether the node is a block with a single statement that is
    *     an return with or without an expression.
    */
-  private boolean isReturnBlock(Node n) {
+  private static boolean isReturnBlock(Node n) {
     if (n.isBlock()) {
       if (n.hasOneChild()) {
         Node first = n.getFirstChild();
@@ -985,7 +985,7 @@ class PeepholeSubstituteAlternateSyntax
    * @return Whether the node is a block with a single statement that is
    *     an return.
    */
-  private boolean isReturnExpressBlock(Node n) {
+  private static boolean isReturnExpressBlock(Node n) {
     if (n.isBlock()) {
       if (n.hasOneChild()) {
         Node first = n.getFirstChild();
@@ -1001,7 +1001,7 @@ class PeepholeSubstituteAlternateSyntax
   /**
    * @return Whether the node is a single return statement.
    */
-  private boolean isReturnExpression(Node n) {
+  private static boolean isReturnExpression(Node n) {
     if (n.isReturn()) {
       return n.hasOneChild();
     }
@@ -1011,7 +1011,7 @@ class PeepholeSubstituteAlternateSyntax
   /**
    * @return The expression that is part of the return.
    */
-  private Node getBlockReturnExpression(Node n) {
+  private static Node getBlockReturnExpression(Node n) {
     Preconditions.checkState(isReturnExpressBlock(n));
     return n.getFirstChild().getFirstChild();
   }
@@ -1020,7 +1020,7 @@ class PeepholeSubstituteAlternateSyntax
    * @return Whether the node is a block with a single statement that is
    *     a VAR declaration of a single variable.
    */
-  private boolean isVarBlock(Node n) {
+  private static boolean isVarBlock(Node n) {
     if (n.isBlock()) {
       if (n.hasOneChild()) {
         Node first = n.getFirstChild();
@@ -1036,7 +1036,7 @@ class PeepholeSubstituteAlternateSyntax
   /**
    * @return The var node.
    */
-  private Node getBlockVar(Node n) {
+  private static Node getBlockVar(Node n) {
     Preconditions.checkState(isVarBlock(n));
     return n.getFirstChild();
   }
@@ -1046,7 +1046,7 @@ class PeepholeSubstituteAlternateSyntax
    * a 'dangling else' if an 'else' token following the statement
    * would be considered by the parser to be part of the statement.
    */
-  private boolean consumesDanglingElse(Node n) {
+  private static boolean consumesDanglingElse(Node n) {
     while (true) {
       switch (n.getType()) {
         case Token.IF:
@@ -1070,20 +1070,20 @@ class PeepholeSubstituteAlternateSyntax
   /**
    * Whether the node type has lower precedence than "precedence"
    */
-  private boolean isLowerPrecedence(Node n, final int precedence) {
+  private static boolean isLowerPrecedence(Node n, final int precedence) {
     return NodeUtil.precedence(n.getType()) < precedence;
   }
 
   /**
    * Whether the node type has higher precedence than "precedence"
    */
-  private boolean isHigherPrecedence(Node n, final int precedence) {
+  private static boolean isHigherPrecedence(Node n, final int precedence) {
     return NodeUtil.precedence(n.getType()) > precedence;
   }
   /**
    * Does the expression contain a property assignment?
    */
-  private boolean isPropertyAssignmentInExpression(Node n) {
+  private static boolean isPropertyAssignmentInExpression(Node n) {
     Predicate<Node> isPropertyAssignmentInExpressionPredicate =
         new Predicate<Node>() {
       @Override
@@ -1408,7 +1408,7 @@ class PeepholeSubstituteAlternateSyntax
    * at least two. The remaining case may be unsafe since Array(number)
    * actually reserves memory for an empty array which contains number elements.
    */
-  private FoldArrayAction isSafeToFoldArrayConstructor(Node arg) {
+  private static FoldArrayAction isSafeToFoldArrayConstructor(Node arg) {
     FoldArrayAction action = FoldArrayAction.NOT_SAFE_TO_FOLD;
 
     if (arg == null) {
@@ -1561,7 +1561,7 @@ class PeepholeSubstituteAlternateSyntax
    * @param strings The strings that must be separated.
    * @return a delimiter string or null
    */
-  private String pickDelimiter(String[] strings) {
+  private static String pickDelimiter(String[] strings) {
     boolean allLength1 = true;
     for (String s : strings) {
       if (s.length() != 1) {
