@@ -77,13 +77,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "left : {0}\n" +
           "right: {1}");
 
-  static final DiagnosticType DETERMINISTIC_TEST_NO_RESULT =
-      DiagnosticType.warning(
-          "JSC_DETERMINISTIC_TEST_NO_RESULT",
-          "condition always evaluates to the same value\n" +
-          "left : {0}\n" +
-          "right: {1}");
-
   static final DiagnosticType INEXISTENT_ENUM_ELEMENT =
       DiagnosticType.warning(
           "JSC_INEXISTENT_ENUM_ELEMENT",
@@ -243,7 +236,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   // change DiagnosticGroups.setWarningLevel to not accidentally enable it.
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       DETERMINISTIC_TEST,
-      DETERMINISTIC_TEST_NO_RESULT,
       INEXISTENT_ENUM_ELEMENT,
       INEXISTENT_PROPERTY,
       NOT_A_CONSTRUCTOR,
