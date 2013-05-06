@@ -157,7 +157,10 @@ Console.prototype.profile = function(opt_title) {};
 /** @type {Array.<ScriptProfile>} */
 Console.prototype.profiles;
 
-Console.prototype.profileEnd = function() {};
+/**
+ * @param {string=} opt_title
+ */
+Console.prototype.profileEnd = function(opt_title) {};
 
 /**
  * @param {string} name
