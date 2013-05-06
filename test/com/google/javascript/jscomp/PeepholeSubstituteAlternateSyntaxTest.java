@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.PeepholeSubstituteAlternateSyntax.MinimizedCondition;
+import com.google.javascript.rhino.Node;
+
 /**
  * Tests for {@link PeepholeSubstituteAlternateSyntax} in isolation.
  * Tests for the interaction of multiple peephole passes are in
@@ -502,6 +505,99 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("while(x&&!0) foo()", "while(x) foo()");
     fold("while(x||!1) foo()", "while(x) foo()");
     fold("while(!((x,y)&&z)) foo()", "while(!(x,y)||!z) foo()");
+  }
+
+  public void testMinimizeDemorganRemoveLeadingNot() {
+    fold("if(!(!a||!b)&&c) foo()", "((a&&b)&&c)&&foo()");
+    fold("if(!(x&&y)) foo()", "x&&y||foo()");
+    fold("if(!(x||y)) foo()", "(x||y)||foo()");
+  }
+
+  public void testMinimizeDemorgan1() {
+    fold("if(!a&&!b)foo()", "(a||b)||foo()");
+  }
+
+  public void testMinimizeDemorgan3() {
+    fold("if((!a||!b)&&(c||d)) foo()", "(a&&b||!c&&!d)||foo()");
+  }
+
+  public void testMinimizeDemorgan5() {
+    fold("if((!a||!b)&&c) foo()", "(a&&b||!c)||foo()");
+  }
+
+  public void testMinimizeDemorgan11() {
+    fold("if (x && (y===2 || !f()) && (y===3 || !h())) foo()",
+         "(!x || y!==2 && f() || y!==3 && h()) || foo()");
+  }
+
+  public void testMinimizeDemorgan20() {
+    fold("if (0===c && (2===a || 1===a)) f(); else g()",
+         "if (0!==c || 2!==a && 1!==a) g(); else f()");
+    fold("if (0!==c || 2!==a && 1!==a) g(); else f()",
+         "(0!==c || 2!==a && 1!==a) ? g() : f()");
+  }
+
+  public void testSwapHook() {
+    fold("!x ? foo() : bar()",
+         "x ? bar() : foo()");
+  }
+
+  public void testMinimizeDemorgan21() {
+    fold("if (0===c && (2===a || 1===a)) f()",
+         "(0!==c || 2!==a && 1!==a) || f()");
+  }
+
+  public void testMinimizeAndOr1() {
+    fold("if ((!a || !b) && (d || e)) f()", "(a&&b || !d&&!e) || f()");
+  }
+
+  public Node parseExpr(String input) {
+    Node block = parseExpectedJs(input);
+    Node script = block.getFirstChild();
+    Node exprResult = script.getFirstChild();
+    return exprResult.getFirstChild();
+  }
+
+  public void minimizeCond(String input, String positive, String negative) {
+    Node inputNode = parseExpr(input);
+    MinimizedCondition result = PeepholeSubstituteAlternateSyntax
+        .MinimizedCondition.fromConditionNode(inputNode);
+    Node positiveNode = parseExpr(positive);
+    Node negativeNode = parseExpr(negative);
+    if (!result.getNode().isEquivalentTo(positiveNode)) {
+      fail("Not equal:\n" + result.getNode().toStringTree()
+          + "and:\n" + positiveNode.toStringTree());
+    }
+    if (!result.getNegatedNode().isEquivalentTo(negativeNode)) {
+      fail("Not equal:\n" + result.getNegatedNode().toStringTree()
+          + "and:\n" + negativeNode.toStringTree());
+    }
+  }
+
+  public void testTryMinimizeCondition1() {
+    minimizeCond("x", "x", "!x");
+  }
+
+  public void testTryMinimizeCondition2() {
+    minimizeCond("!x", "!x", "x");
+  }
+
+  public void testTryMinimizeCondition3() {
+    minimizeCond("x || y", "x || y", "!x && !y");
+  }
+
+  public void testTryMinimizeCondition4() {
+    minimizeCond("x && y", "x && y", "!x || !y");
+  }
+
+  public void testTryMinimizeCondition5() {
+    minimizeCond("w && x && y && z", "w && x && y && z", "!(w && x && y && z)");
+  }
+
+  public void testMinimizeCondDemorgan() {
+    minimizeCond("x && (y===2 || !f()) && (y===3 || !h())",
+        "x && !((y!==2 && f()) || (y!==3 && h()))",
+        "!x || (y!==2 && f()) || (y!==3 && h())");
   }
 
   public void testMinimizeForCondition() {

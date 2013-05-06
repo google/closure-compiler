@@ -26,6 +26,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.regex.Pattern;
 
 /**
@@ -39,7 +41,6 @@ class PeepholeSubstituteAlternateSyntax
 
   private static final int AND_PRECEDENCE = NodeUtil.precedence(Token.AND);
   private static final int OR_PRECEDENCE = NodeUtil.precedence(Token.OR);
-  private static final int NOT_PRECEDENCE = NodeUtil.precedence(Token.NOT);
   private static final CodeGenerator REGEXP_ESCAPER =
       CodeGenerator.forCostEstimation(
           null /* blow up if we try to produce code */);
@@ -103,30 +104,30 @@ class PeepholeSubstituteAlternateSyntax
       // with MinimizeExitPoints.
 
       case Token.NOT:
-        tryMinimizeCondition(node.getFirstChild());
+        tryMinimizeCondition(node.getFirstChild(), true);
         return tryMinimizeNot(node);
 
       case Token.IF:
-        tryMinimizeCondition(node.getFirstChild());
+        tryMinimizeCondition(node.getFirstChild(), false);
         return tryMinimizeIf(node);
 
       case Token.EXPR_RESULT:
-        tryMinimizeCondition(node.getFirstChild());
+        tryMinimizeCondition(node.getFirstChild(), true);
         return node;
 
       case Token.HOOK:
-        tryMinimizeCondition(node.getFirstChild());
-        return node;
+        tryMinimizeCondition(node.getFirstChild(), false);
+        return tryMinimizeHook(node);
 
       case Token.WHILE:
       case Token.DO:
-        tryMinimizeCondition(NodeUtil.getConditionExpression(node));
+        tryMinimizeCondition(NodeUtil.getConditionExpression(node), true);
         return node;
 
       case Token.FOR:
         if (!NodeUtil.isForIn(node)) {
           tryJoinForCondition(node);
-          tryMinimizeCondition(NodeUtil.getConditionExpression(node));
+          tryMinimizeCondition(NodeUtil.getConditionExpression(node), true);
         }
         return node;
 
@@ -628,6 +629,24 @@ class PeepholeSubstituteAlternateSyntax
   }
 
   /**
+   * Try flipping HOOKs that have negated conditions.
+   *
+   * Returns the replacement for n or the original if no replacement was
+   * necessary.
+   */
+  private Node tryMinimizeHook(Node n) {
+    Node cond = n.getFirstChild();
+    if (cond.isNot()) {
+      Node thenBranch = cond.getNext();
+      n.replaceChild(cond, cond.removeFirstChild());
+      n.removeChild(thenBranch);
+      n.addChildToBack(thenBranch);
+      reportCodeChange();
+    }
+    return n;
+  }
+
+  /**
    * Try turning IF nodes into smaller HOOKs
    *
    * Returns the replacement for n or the original if no replacement was
@@ -1075,12 +1094,6 @@ class PeepholeSubstituteAlternateSyntax
   }
 
   /**
-   * Whether the node type has higher precedence than "precedence"
-   */
-  private static boolean isHigherPrecedence(Node n, final int precedence) {
-    return NodeUtil.precedence(n.getType()) > precedence;
-  }
-  /**
    * Does the expression contain a property assignment?
    */
   private static boolean isPropertyAssignmentInExpression(Node n) {
@@ -1097,6 +1110,188 @@ class PeepholeSubstituteAlternateSyntax
         DONT_TRAVERSE_FUNCTIONS_PREDICATE);
   }
 
+  private Node tryMinimizeCondition(Node n, boolean countLeadingNot) {
+    n = tryMinimizeConditionOld(n);
+    return demorganMinimizeCondition(n, countLeadingNot);
+  }
+
+  /**
+   *  Minimize the given conditional node according to De Morgan's Laws.
+   *    !(x && !y)  ==> !x || y
+   *    (!a || !b || !c || !d)  ==>  !(a && b && c && d)
+   *  etc.
+   *
+   * @param countLeadingNot When this is false, do not count a leading
+   *  NOT in doing the minimization. i.e. Allow minimizations such as:
+   *    (!x || !y || z)  ==>  !(x && y && !z)
+   *  This is useful in contexts such as IFs or HOOKs where subsequent
+   *  optimizations can efficiently deal with leading NOTs.
+   *
+   * @param n The conditional node.
+   * @return The minimized version of n, or n if no minimization was possible.
+   */
+  private Node demorganMinimizeCondition(Node n, boolean countLeadingNot) {
+    MinimizedCondition minCond = MinimizedCondition.fromConditionNode(n);
+    if (countLeadingNot ||
+         minCond.getLength() <= minCond.getNegativeLength()) {
+      return maybeReplaceNode(n, minCond.getNode());
+    } else {
+      return maybeReplaceNode(n,
+          new Node(Token.NOT, minCond.getNegatedNode()));
+    }
+  }
+
+  private Node maybeReplaceNode(Node lhs, Node rhs) {
+    if (lhs.isEquivalentTo(rhs)) {
+      return lhs;
+    }
+    Node parent = lhs.getParent();
+    parent.replaceChild(lhs, rhs);
+    reportCodeChange();
+    return rhs;
+  }
+
+  /** A class that represents a minimized conditional expression.
+   *  Depending on the context, either the original conditional, or the
+   *  negation of the original conditional may be needed, so this class
+   *  provides ways to access minimized versions of both of those ASTs.
+   */
+  static class MinimizedCondition {
+    private final Node positive;
+    private final Node negative;
+
+    private MinimizedCondition(Node p, Node n) {
+      Preconditions.checkArgument(p.getParent() == null);
+      Preconditions.checkArgument(n.getParent() == null);
+      positive = p;
+      negative = n;
+    }
+
+    /** Minimize the condition at the given node.
+     *
+     *  @param n The conditional expression tree to minimize.
+     *   This may be still connected to a tree and will be cloned as necessary.
+     *  @return A MinimizedCondition object representing that tree.
+     */
+    static MinimizedCondition fromConditionNode(Node n) {
+      switch (n.getType()) {
+        case Token.NOT: {
+          MinimizedCondition subtree = fromConditionNode(n.getFirstChild());
+          ImmutableSet<Node> positiveAsts = ImmutableSet.of(
+              negate(subtree.positive.cloneTree()),
+              subtree.negative.cloneTree());
+          ImmutableSet<Node> negativeAsts = ImmutableSet.of(
+              negate(subtree.negative),
+              subtree.positive);
+          return new MinimizedCondition(
+              Collections.min(positiveAsts, AST_LENGTH_COMPARATOR),
+              Collections.min(negativeAsts, AST_LENGTH_COMPARATOR));
+        }
+        case Token.AND:
+        case Token.OR: {
+          int opType = n.getType();
+          int complementType = opType == Token.AND ? Token.OR : Token.AND;
+          MinimizedCondition leftSubtree = fromConditionNode(n.getFirstChild());
+          MinimizedCondition rightSubtree = fromConditionNode(n.getLastChild());
+          ImmutableSet<Node> positiveAsts = ImmutableSet.of(
+              new Node(opType,
+                  leftSubtree.positive.cloneTree(),
+                  rightSubtree.positive.cloneTree()).srcref(n),
+              negate(new Node(complementType,
+                  leftSubtree.negative.cloneTree(),
+                  rightSubtree.negative.cloneTree()).srcref(n)));
+          ImmutableSet<Node> negativeAsts = ImmutableSet.of(
+              negate(new Node(opType,
+                  leftSubtree.positive,
+                  rightSubtree.positive).srcref(n)),
+              new Node(complementType,
+                  leftSubtree.negative,
+                  rightSubtree.negative).srcref(n));
+          return new MinimizedCondition(
+              Collections.min(positiveAsts, AST_LENGTH_COMPARATOR),
+              Collections.min(negativeAsts, AST_LENGTH_COMPARATOR));
+        }
+        default:
+          return new MinimizedCondition(n.cloneTree(), negate(n.cloneTree()));
+      }
+    }
+
+    Node getNode() {
+      return positive;
+    }
+
+    Node getNegatedNode() {
+      return negative;
+    }
+
+    int getLength() {
+      return length(positive);
+    }
+
+    int getNegativeLength() {
+      return length(negative);
+    }
+
+    private static Node negate(Node node) {
+      Preconditions.checkArgument(node.getParent() == null);
+      int complementOperator;
+      switch (node.getType()) {
+        default:
+          return new Node(Token.NOT, node).srcref(node);
+        case Token.NOT:
+          return node.removeFirstChild();
+        // Otherwise a binary operator with a complement.
+        case Token.EQ:
+          complementOperator = Token.NE;
+          break;
+        case Token.NE:
+          complementOperator = Token.EQ;
+          break;
+        case Token.SHEQ:
+          complementOperator = Token.SHNE;
+          break;
+        case Token.SHNE:
+          complementOperator = Token.SHEQ;
+          break;
+      }
+      // Clone entire tree and just change operator.
+      node.setType(complementOperator);
+      return node;
+    }
+
+    private static final Comparator<Node> AST_LENGTH_COMPARATOR =
+        new Comparator<Node>() {
+      @Override
+      public int compare(Node o1, Node o2) {
+        return length(o1) - length(o2);
+      }
+    };
+
+    /** Return the number of characters in the textual representation of
+     *  the given tree that will be devoted to negation, or parentheses.
+     *  Since these are the only characters that flipping a condition
+     *  according to De Morgan's rule can affect, these are the only ones
+     *  we count.
+     *  @param node The tree whose length should be checked.
+     *  @return The number of negations and parentheses in the tree.
+     */
+    static int length(Node node) {
+      int result = 0;
+      if (node.isNot()) {
+        result++;  // One negation needed.
+      }
+      for (Node n = node.getFirstChild(); n != null; n = n.getNext()) {
+        if (NodeUtil.precedenceWithDefault(n.getType())
+            < NodeUtil.precedenceWithDefault(node.getType())) {
+          result += 2;  // One pair of parentheses needed.
+        }
+        result += length(n);
+      }
+      return result;
+    }
+
+  }
+
   /**
    * Try to minimize conditions expressions, as there are additional
    * assumptions that can be made when it is known that the final result
@@ -1111,86 +1306,10 @@ class PeepholeSubstituteAlternateSyntax
    *
    *   Returns the replacement for n, or the original if no change was made
    */
-  private Node tryMinimizeCondition(Node n) {
+  private Node tryMinimizeConditionOld(Node n) {
     Node parent = n.getParent();
 
     switch (n.getType()) {
-      case Token.NOT:
-        Node first = n.getFirstChild();
-        switch (first.getType()) {
-          case Token.NOT: {
-              Node newRoot = first.removeFirstChild();
-              parent.replaceChild(n, newRoot);
-              reportCodeChange();
-              // No need to traverse, tryMinimizeCondition is called on the
-              // NOT children are handled below.
-              return newRoot;
-            }
-          case Token.AND:
-          case Token.OR: {
-              // !(!x && !y) --> x || y
-              // !(!x || !y) --> x && y
-              // !(!x && y) --> x || !y
-              // !(!x || y) --> x && !y
-              // !(x && !y) --> !x || y
-              // !(x || !y) --> !x && y
-              // !(x && y) --> !x || !y
-              // !(x || y) --> !x && !y
-              Node leftParent = first.getFirstChild();
-              Node rightParent = first.getLastChild();
-              Node left, right;
-
-              // Check special case when such transformation cannot reduce
-              // due to the added ()
-              // It only occurs when both of expressions are not NOT expressions
-              if (!leftParent.isNot()
-                  && !rightParent.isNot()) {
-                // If an expression has higher precedence than && or ||,
-                // but lower precedence than NOT, an additional () is needed
-                // Thus we do not preceed
-                int opPrecedence = NodeUtil.precedence(first.getType());
-                if ((isLowerPrecedence(leftParent, NOT_PRECEDENCE)
-                    && isHigherPrecedence(leftParent, opPrecedence))
-                    || (isLowerPrecedence(rightParent, NOT_PRECEDENCE)
-                    && isHigherPrecedence(rightParent, opPrecedence))) {
-                  return n;
-                }
-              }
-
-              if (leftParent.isNot()) {
-                left = leftParent.removeFirstChild();
-              } else {
-                leftParent.detachFromParent();
-                left = IR.not(leftParent).srcref(leftParent);
-              }
-              if (rightParent.isNot()) {
-                right = rightParent.removeFirstChild();
-              } else {
-                rightParent.detachFromParent();
-                right = IR.not(rightParent).srcref(rightParent);
-              }
-
-              int newOp = (first.isAnd()) ? Token.OR : Token.AND;
-              Node newRoot = new Node(newOp, left, right);
-              parent.replaceChild(n, newRoot);
-              reportCodeChange();
-              // No need to traverse, tryMinimizeCondition is called on the
-              // AND and OR children below.
-              return newRoot;
-            }
-
-           default:
-             TernaryValue nVal = NodeUtil.getPureBooleanValue(first);
-             if (nVal != TernaryValue.UNKNOWN) {
-               boolean result = nVal.not().toBoolean(true);
-               int equivalentResult = result ? 1 : 0;
-               return maybeReplaceChildWithNumber(n, parent, equivalentResult);
-             }
-        }
-        // No need to traverse, tryMinimizeCondition is called on the NOT
-        // children in the general case in the main post-order traversal.
-        return n;
-
       case Token.OR:
       case Token.AND: {
         Node left = n.getFirstChild();
@@ -1198,8 +1317,8 @@ class PeepholeSubstituteAlternateSyntax
 
         // Because the expression is in a boolean context minimize
         // the children, this can't be done in the general case.
-        left = tryMinimizeCondition(left);
-        right = tryMinimizeCondition(right);
+        left = tryMinimizeConditionOld(left);
+        right = tryMinimizeConditionOld(right);
 
         // Remove useless conditionals
         // Handle four cases:
@@ -1240,8 +1359,8 @@ class PeepholeSubstituteAlternateSyntax
         // Because the expression is in a boolean context minimize
         // the result children, this can't be done in the general case.
         // The condition is handled in the general case in #optimizeSubtree
-        trueNode = tryMinimizeCondition(trueNode);
-        falseNode = tryMinimizeCondition(falseNode);
+        trueNode = tryMinimizeConditionOld(trueNode);
+        falseNode = tryMinimizeConditionOld(falseNode);
 
         // Handle four cases:
         //   x ? true : false --> x
