@@ -661,8 +661,8 @@ class PeepholeSubstituteAlternateSyntax
 
         if (cond.isNot()) {
           // if(!x)bar(); -> x||bar();
-          if (isLowerPrecedenceInExpression(cond, OR_PRECEDENCE) &&
-              isLowerPrecedenceInExpression(expr.getFirstChild(),
+          if (isLowerPrecedence(cond.getFirstChild(), OR_PRECEDENCE) &&
+              isLowerPrecedence(expr.getFirstChild(),
                   OR_PRECEDENCE)) {
             // It's not okay to add two sets of parentheses.
             return n;
@@ -679,8 +679,8 @@ class PeepholeSubstituteAlternateSyntax
         }
 
         // if(x)foo(); -> x&&foo();
-        if (isLowerPrecedenceInExpression(cond, AND_PRECEDENCE) &&
-            isLowerPrecedenceInExpression(expr.getFirstChild(),
+        if (isLowerPrecedence(cond, AND_PRECEDENCE) &&
+            isLowerPrecedence(expr.getFirstChild(),
                 AND_PRECEDENCE)) {
           // One additional set of parentheses is worth the change even if
           // there is no immediate code size win. However, two extra pair of
@@ -709,8 +709,8 @@ class PeepholeSubstituteAlternateSyntax
             Node innerElseBranch = innerThenBranch.getNext();
 
             if (innerElseBranch == null &&
-                 !(isLowerPrecedenceInExpression(cond, AND_PRECEDENCE) &&
-                   isLowerPrecedenceInExpression(innerCond, AND_PRECEDENCE))) {
+                 !(isLowerPrecedence(cond, AND_PRECEDENCE) &&
+                   isLowerPrecedence(innerCond, AND_PRECEDENCE))) {
               n.detachChildren();
               n.addChildToBack(
                   IR.and(
@@ -1065,23 +1065,6 @@ class PeepholeSubstituteAlternateSyntax
           return false;
       }
     }
-  }
-
-  /**
-   * Does the expression contain an operator with lower precedence than
-   * the argument?
-   */
-  private boolean isLowerPrecedenceInExpression(Node n,
-      final int precedence) {
-    Predicate<Node> isLowerPrecedencePredicate = new Predicate<Node>() {
-      @Override
-      public boolean apply(Node input) {
-        return NodeUtil.precedence(input.getType()) < precedence;
-      }
-    };
-
-    return NodeUtil.has(n, isLowerPrecedencePredicate,
-        DONT_TRAVERSE_FUNCTIONS_PREDICATE);
   }
 
   /**

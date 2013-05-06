@@ -565,6 +565,15 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("if(x) var y = 1; else {y = 2; print(y)}");
   }
 
+  public void testFoldIfWithLowerOperatorsInside() {
+    fold("if (x + (y=5)) z && (w,z);",
+         "x + (y=5) && z && (w,z)");
+    fold("if (!(x+(y=5))) z && (w,z);",
+         "x + (y=5) || z && (w,z)");
+    fold("if (x + (y=5)) if (z && (w,z)) for(;;) foo();",
+         "if (x + (y=5) && z && (w,z)) for(;;) foo();");
+  }
+
   public void testFoldReturnResult() {
     fold("function f(){return false;}", "function f(){return !1}");
     foldSame("function f(){return null;}");
