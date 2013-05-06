@@ -50,6 +50,9 @@ KeyboardEvent.prototype.repeat;
 /** @type {string} */
 KeyboardEvent.prototype.locale;
 
+/** @type {number} */
+MouseEvent.prototype.buttons;
+
 /** @type {boolean} */
 Event.prototype.defaultPrevented;
 
