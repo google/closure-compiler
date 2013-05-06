@@ -81,7 +81,7 @@ public class DiagnosticGroups {
       "constantProperty, deprecated, duplicateMessage, " +
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
       "internetExplorerChecks, invalidCasts, misplacedTypeAnnotation, " +
-      "missingProperties, " +
+      "missingProperties, missingReturn," +
       "nonStandardJsDocs, reportUnknownTypes, suspiciousCode, " +
       "strictModuleDepCheck, typeInvalidation, " +
       "undefinedNames, undefinedVars, unknownDefines, uselessCode, " +
@@ -108,18 +108,13 @@ public class DiagnosticGroups {
           CheckAccessControls.PRIVATE_OVERRIDE,
           CheckAccessControls.VISIBILITY_MISMATCH);
 
-  public static final DiagnosticGroup CONSTANT_PROPERTY =
-      DiagnosticGroups.registerGroup("constantProperty",
-          CheckAccessControls.CONST_PROPERTY_DELETED,
-          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
+  public static final DiagnosticGroup ACCESS_CONTROLS =
+      DiagnosticGroups.registerGroup("accessControls",
+          DEPRECATED, VISIBILITY);
 
   public static final DiagnosticGroup NON_STANDARD_JSDOC =
       DiagnosticGroups.registerGroup("nonStandardJsDocs",
           RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
-
-  public static final DiagnosticGroup ACCESS_CONTROLS =
-      DiagnosticGroups.registerGroup("accessControls",
-          DEPRECATED, VISIBILITY);
 
   public static final DiagnosticGroup INVALID_CASTS =
       DiagnosticGroups.registerGroup("invalidCasts",
@@ -160,6 +155,10 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup MISSING_PROPERTIES =
       DiagnosticGroups.registerGroup("missingProperties",
           TypeCheck.INEXISTENT_PROPERTY);
+
+  public static final DiagnosticGroup MISSING_RETURN =
+      DiagnosticGroups.registerGroup("missingReturn",
+          CheckMissingReturn.MISSING_RETURN_STATEMENT);
 
   public static final DiagnosticGroup INTERNET_EXPLORER_CHECKS =
       DiagnosticGroups.registerGroup("internetExplorerChecks",
@@ -210,6 +209,11 @@ public class DiagnosticGroups {
           CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
           ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+
+  public static final DiagnosticGroup CONSTANT_PROPERTY =
+      DiagnosticGroups.registerGroup("constantProperty",
+          CheckAccessControls.CONST_PROPERTY_DELETED,
+          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
 
   public static final DiagnosticGroup TYPE_INVALIDATION =
       DiagnosticGroups.registerGroup("typeInvalidation",
