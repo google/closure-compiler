@@ -35,6 +35,7 @@ public class MultiPassTest extends CompilerTestCase {
     enableNormalize();
   }
 
+  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     PhaseOptimizer po = new PhaseOptimizer(compiler, null, null);
     po.consume(passes);
@@ -162,6 +163,7 @@ public class MultiPassTest extends CompilerTestCase {
         protected CompilerPass create(AbstractCompiler compiler) {
           final boolean late = false;
           return new PeepholeOptimizationsPass(compiler,
+              new PeepholeMinimizeConditions(late),
               new PeepholeSubstituteAlternateSyntax(late),
               new PeepholeReplaceKnownMethods(late),
               new PeepholeRemoveDeadCode(),

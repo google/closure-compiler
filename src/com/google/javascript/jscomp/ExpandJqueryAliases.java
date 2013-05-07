@@ -81,6 +81,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
     // Passes, such as StatementFusion, are omitted for this reason.
     final boolean late = false;
     this.peepholePasses = new PeepholeOptimizationsPass(compiler,
+        new PeepholeMinimizeConditions(late),
         new PeepholeSubstituteAlternateSyntax(late),
         new PeepholeReplaceKnownMethods(late),
         new PeepholeRemoveDeadCode(),

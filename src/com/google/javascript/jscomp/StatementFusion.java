@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Token;
  * extra () around. Once we have only one statement in a block, we can then
  * eliminate a pair of {}'s. Further more, we can also fold a single
  * statement IF into && or create further opportunities for all the other
- * goodies in {@link PeepholeSubstituteAlternateSyntax}.
+ * goodies in {@link PeepholeMinimizeConditions}.
  *
  */
 class StatementFusion extends AbstractPeepholeOptimization {

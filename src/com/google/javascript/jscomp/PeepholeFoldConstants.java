@@ -589,7 +589,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     // Note: Right hand side folding is handled by
-    // PeepholeSubstituteAlternateSyntax#tryMinimizeCondition
+    // PeepholeMinimizeConditions#tryMinimizeCondition
 
     if (result != null) {
       // Fold it!
