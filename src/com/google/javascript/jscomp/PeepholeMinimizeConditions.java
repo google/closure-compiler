@@ -101,7 +101,7 @@ class PeepholeMinimizeConditions
         return tryMinimizeIf(node);
 
       case Token.EXPR_RESULT:
-        tryMinimizeCondition(node.getFirstChild(), true);
+        tryMinimizeCondition(node.getFirstChild(), false);
         return node;
 
       case Token.HOOK:
@@ -450,6 +450,7 @@ class PeepholeMinimizeConditions
    * Returns the replacement for n or the original if no change was made
    */
   private Node tryMinimizeNot(Node n) {
+    Preconditions.checkArgument(n.isNot());
     Node parent = n.getParent();
 
     Node notChild = n.getFirstChild();

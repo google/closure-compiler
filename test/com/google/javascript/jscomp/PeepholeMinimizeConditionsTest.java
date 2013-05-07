@@ -365,6 +365,12 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
          "x ? bar() : foo()");
   }
 
+  public void testMinimizeExprResult() {
+    fold("!x||!y", "!(x&&y)");
+    fold("if(!(x&&!y)) foo()", "!(x&&!y||!foo())");
+    fold("if(!x||y) foo()", "!(x&&!y||!foo())");
+  }
+
   public void testMinimizeDemorgan21() {
     fold("if (0===c && (2===a || 1===a)) f()",
          "(0!==c || 2!==a && 1!==a) || f()");
