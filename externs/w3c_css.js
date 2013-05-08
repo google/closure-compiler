@@ -1711,6 +1711,12 @@ CSSProperties.prototype.boxSizing;
  */
 CSSProperties.prototype.opacity;
 
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-ui/#text-overflow
+ */
+CSSProperties.prototype.textOverflow;
+
 // CSS 3 transforms
 
 /**
