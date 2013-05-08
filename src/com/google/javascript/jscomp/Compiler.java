@@ -1396,8 +1396,12 @@ public class Compiler extends AbstractCompiler {
           }
         }
 
+        // TODO(johnlenz): we shouldn't need to check both isExternExportsEnabled and
+        // externExportsPath.
         if (options.sourceMapOutputPath != null ||
-            options.nameReferenceReportPath != null) {
+            options.nameReferenceReportPath != null ||
+            options.isExternExportsEnabled() ||
+            options.externExportsPath != null) {
 
           // Annotate the nodes in the tree with information from the
           // input file. This information is used to construct the SourceMap.
