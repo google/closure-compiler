@@ -744,11 +744,6 @@ public class Compiler extends AbstractCompiler {
         return;
       }
 
-      if (options.isExternExportsEnabled()
-          || options.externExportsPath != null) {
-        externExports();
-      }
-
       // IDE-mode is defined to stop here, before the heavy rewriting begins.
       if (!options.ideMode) {
         optimize();
@@ -1903,6 +1898,12 @@ public class Compiler extends AbstractCompiler {
     // 2) ReplaceMessages, stripCode, and potentially custom passes rely on
     // unmodified local names.
     normalize();
+
+    // Create extern exports after the normalize because externExports depends on unique names.
+    if (options.isExternExportsEnabled()
+        || options.externExportsPath != null) {
+      externExports();
+    }
 
     phaseOptimizer = new PhaseOptimizer(this, tracker, null);
     if (options.devMode == DevMode.EVERY_PASS) {

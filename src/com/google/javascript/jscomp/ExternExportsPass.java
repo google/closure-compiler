@@ -215,6 +215,16 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     private Node createExternFunction(Node exportedFunction) {
       Node paramList = NodeUtil.getFunctionParameters(exportedFunction)
           .cloneTree();
+      // Use the original parameter names so that the externs look pretty.
+      Node param = paramList.getFirstChild();
+      while (param != null && param.isName()) {
+        System.err.println(param);
+        String originalName = (String) param.getProp(Node.ORIGINALNAME_PROP);
+        if (originalName != null) {
+          param.setString(originalName);
+        }
+        param = param.getNext();
+      }
       Node externFunction = IR.function(IR.name(""), paramList, IR.block());
 
       checkForFunctionsWithUnknownTypes(exportedFunction);
