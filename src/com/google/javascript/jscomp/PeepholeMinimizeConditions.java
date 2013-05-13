@@ -1010,12 +1010,87 @@ class PeepholeMinimizeConditions
    *  provides ways to access minimized versions of both of those ASTs.
    */
   static class MinimizedCondition {
-    private final Node positive;
-    private final Node negative;
+    static class MeasuredNode {
+      Node node;
+      int length;
 
-    private MinimizedCondition(Node p, Node n) {
-      Preconditions.checkArgument(p.getParent() == null);
-      Preconditions.checkArgument(n.getParent() == null);
+      MeasuredNode(Node n, int len) {
+        node = n;
+        length = len;
+      }
+
+      private MeasuredNode negate() {
+        int complementOperator;
+        switch (node.getType()) {
+          default:
+            node = new Node(Token.NOT, node).srcref(node);
+            length += estimateCostOneLevel(node);
+            return this;
+          case Token.NOT:
+            length -= estimateCostOneLevel(node);
+            node = node.removeFirstChild();
+            return this;
+          // Otherwise a binary operator with a complement.
+          case Token.EQ:
+            complementOperator = Token.NE;
+            break;
+          case Token.NE:
+            complementOperator = Token.EQ;
+            break;
+          case Token.SHEQ:
+            complementOperator = Token.SHNE;
+            break;
+          case Token.SHNE:
+            complementOperator = Token.SHEQ;
+            break;
+        }
+        // Clone entire tree and just change operator.
+        node.setType(complementOperator);
+        return this;
+      }
+
+      /** Estimate the number of characters in the textual representation of
+       *  the given node and that will be devoted to negation or parentheses.
+       *  Since these are the only characters that flipping a condition
+       *  according to De Morgan's rule can affect, these are the only ones
+       *  we count.
+       *  Not nodes are counted by the NOT node itself, whereas
+       *  parentheses around an expression are counted by the parent node.
+       *  @param n The node to be checked.
+       *  @return The number of negations and parentheses in the node.
+       */
+      private static int estimateCostOneLevel(Node n) {
+        int cost = 0;
+        if (n.isNot()) {
+          cost++;  // A negation is needed.
+        }
+        int parentPrecedence = NodeUtil.precedence(n.getType());
+        for (Node child = n.getFirstChild();
+            child != null; child = child.getNext()) {
+          if (isLowerPrecedence(child, parentPrecedence)) {
+            cost += 2;  // A pair of parenthesis is needed.
+          }
+        }
+        return cost;
+      }
+
+      MeasuredNode cloneTree() {
+        return new MeasuredNode(node.cloneTree(), length);
+      }
+
+      static MeasuredNode addNode(int opType, Node infoSource,
+          MeasuredNode l, MeasuredNode r) {
+        Node newNode = new Node(opType, l.node, r.node).srcref(infoSource);
+        int newCost = estimateCostOneLevel(newNode) + l.length + r.length;
+        return new MeasuredNode(newNode, newCost);
+      }
+    }
+    private final MeasuredNode positive;
+    private final MeasuredNode negative;
+
+    private MinimizedCondition(MeasuredNode p, MeasuredNode n) {
+      //Preconditions.checkArgument(p.getParent() == null);
+      //Preconditions.checkArgument(n.getParent() == null);
       positive = p;
       negative = n;
     }
@@ -1030,11 +1105,11 @@ class PeepholeMinimizeConditions
       switch (n.getType()) {
         case Token.NOT: {
           MinimizedCondition subtree = fromConditionNode(n.getFirstChild());
-          ImmutableSet<Node> positiveAsts = ImmutableSet.of(
-              negate(subtree.positive.cloneTree()),
+          ImmutableSet<MeasuredNode> positiveAsts = ImmutableSet.of(
+              subtree.positive.cloneTree().negate(),
               subtree.negative.cloneTree());
-          ImmutableSet<Node> negativeAsts = ImmutableSet.of(
-              negate(subtree.negative),
+          ImmutableSet<MeasuredNode> negativeAsts = ImmutableSet.of(
+              subtree.negative.negate(),
               subtree.positive);
           return new MinimizedCondition(
               Collections.min(positiveAsts, AST_LENGTH_COMPARATOR),
@@ -1046,43 +1121,45 @@ class PeepholeMinimizeConditions
           int complementType = opType == Token.AND ? Token.OR : Token.AND;
           MinimizedCondition leftSubtree = fromConditionNode(n.getFirstChild());
           MinimizedCondition rightSubtree = fromConditionNode(n.getLastChild());
-          ImmutableSet<Node> positiveAsts = ImmutableSet.of(
-              new Node(opType,
+          ImmutableSet<MeasuredNode> positiveAsts = ImmutableSet.of(
+              MeasuredNode.addNode(opType, n,
                   leftSubtree.positive.cloneTree(),
-                  rightSubtree.positive.cloneTree()).srcref(n),
-              negate(new Node(complementType,
+                  rightSubtree.positive.cloneTree()),
+              MeasuredNode.addNode(complementType, n,
                   leftSubtree.negative.cloneTree(),
-                  rightSubtree.negative.cloneTree()).srcref(n)));
-          ImmutableSet<Node> negativeAsts = ImmutableSet.of(
-              negate(new Node(opType,
+                  rightSubtree.negative.cloneTree()).negate());
+          ImmutableSet<MeasuredNode> negativeAsts = ImmutableSet.of(
+              MeasuredNode.addNode(opType, n,
                   leftSubtree.positive,
-                  rightSubtree.positive).srcref(n)),
-              new Node(complementType,
+                  rightSubtree.positive).negate(),
+              MeasuredNode.addNode(complementType, n,
                   leftSubtree.negative,
-                  rightSubtree.negative).srcref(n));
+                  rightSubtree.negative));
           return new MinimizedCondition(
               Collections.min(positiveAsts, AST_LENGTH_COMPARATOR),
               Collections.min(negativeAsts, AST_LENGTH_COMPARATOR));
         }
         default:
-          return new MinimizedCondition(n.cloneTree(), negate(n.cloneTree()));
+          MeasuredNode pos = new MeasuredNode(n.cloneTree(), 0);
+          MeasuredNode neg = pos.cloneTree().negate();
+          return new MinimizedCondition(pos, neg);
       }
     }
 
     Node getNode() {
-      return positive;
+      return positive.node;
     }
 
     Node getNegatedNode() {
-      return negative;
+      return negative.node;
     }
 
     int getLength() {
-      return length(positive);
+      return positive.length;
     }
 
     int getNegativeLength() {
-      return length(negative);
+      return negative.length;
     }
 
     /** Return the shorter representation of the original condition node.
@@ -1105,63 +1182,13 @@ class PeepholeMinimizeConditions
      }
     }
 
-    private static Node negate(Node node) {
-      Preconditions.checkArgument(node.getParent() == null);
-      int complementOperator;
-      switch (node.getType()) {
-        default:
-          return new Node(Token.NOT, node).srcref(node);
-        case Token.NOT:
-          return node.removeFirstChild();
-        // Otherwise a binary operator with a complement.
-        case Token.EQ:
-          complementOperator = Token.NE;
-          break;
-        case Token.NE:
-          complementOperator = Token.EQ;
-          break;
-        case Token.SHEQ:
-          complementOperator = Token.SHNE;
-          break;
-        case Token.SHNE:
-          complementOperator = Token.SHEQ;
-          break;
-      }
-      // Clone entire tree and just change operator.
-      node.setType(complementOperator);
-      return node;
-    }
-
-    private static final Comparator<Node> AST_LENGTH_COMPARATOR =
-        new Comparator<Node>() {
+    private static final Comparator<MeasuredNode> AST_LENGTH_COMPARATOR =
+        new Comparator<MeasuredNode>() {
       @Override
-      public int compare(Node o1, Node o2) {
-        return length(o1) - length(o2);
+      public int compare(MeasuredNode o1, MeasuredNode o2) {
+        return o1.length - o2.length;
       }
     };
-
-    /** Return the number of characters in the textual representation of
-     *  the given tree that will be devoted to negation, or parentheses.
-     *  Since these are the only characters that flipping a condition
-     *  according to De Morgan's rule can affect, these are the only ones
-     *  we count.
-     *  @param node The tree whose length should be checked.
-     *  @return The number of negations and parentheses in the tree.
-     */
-    static int length(Node node) {
-      int result = 0;
-      if (node.isNot()) {
-        result++;  // One negation needed.
-      }
-      for (Node n = node.getFirstChild(); n != null; n = n.getNext()) {
-        if (NodeUtil.precedenceWithDefault(n.getType())
-            < NodeUtil.precedenceWithDefault(node.getType())) {
-          result += 2;  // One pair of parentheses needed.
-        }
-        result += length(n);
-      }
-      return result;
-    }
 
   }
 
