@@ -264,7 +264,8 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold("function f(){if(!x)b=1}", "function f(){x||(b=1)}");
     fold("if(!x)z=1;else if(y)z=2", "if(x){y&&(z=2);}else{z=1;}");
     fold("if(x)y&&(z=2);else z=1;", "x ? y&&(z=2) : z=1");
-    foldSame("function f(){if(!(x=1))a.b=1}");
+    fold("function f(){if(!(x=1))a.b=1}",
+         "function f(){(x=1)||(a.b=1)}");
   }
 
   public void testAndParenthesesCount() {
@@ -358,6 +359,10 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
          "if (0!==c || 2!==a && 1!==a) g(); else f()");
     fold("if (0!==c || 2!==a && 1!==a) g(); else f()",
          "(0!==c || 2!==a && 1!==a) ? g() : f()");
+  }
+
+  public void testPreserveIf() {
+    foldSame("if(!a&&!b)for(;f(););");
   }
 
   public void testSwapHook() {

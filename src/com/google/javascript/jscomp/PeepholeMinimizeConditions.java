@@ -39,7 +39,6 @@ class PeepholeMinimizeConditions
   extends AbstractPeepholeOptimization {
 
   private static final int AND_PRECEDENCE = NodeUtil.precedence(Token.AND);
-  private static final int OR_PRECEDENCE = NodeUtil.precedence(Token.OR);
 
   private final boolean late;
 
@@ -97,7 +96,7 @@ class PeepholeMinimizeConditions
         return tryMinimizeNot(node);
 
       case Token.IF:
-        tryMinimizeCondition(node.getFirstChild(), false);
+        performConditionSubstitutions(node.getFirstChild());
         return tryMinimizeIf(node);
 
       case Token.EXPR_RESULT:
@@ -508,17 +507,27 @@ class PeepholeMinimizeConditions
 
     Node parent = n.getParent();
 
-    Node cond = n.getFirstChild();
+    Node originalCond = n.getFirstChild();
 
     /* If the condition is a literal, we'll let other
      * optimizations try to remove useless code.
      */
-    if (NodeUtil.isLiteralValue(cond, true)) {
+    if (NodeUtil.isLiteralValue(originalCond, true)) {
       return n;
     }
 
-    Node thenBranch = cond.getNext();
+    Node thenBranch = originalCond.getNext();
     Node elseBranch = thenBranch.getNext();
+
+    MinimizedCondition minCond = MinimizedCondition
+        .fromConditionNode(originalCond);
+    // Compute two minimized representations. The first representation counts
+    // a leading NOT node, and the second ignores a leading NOT node.
+    // If we can fold the if statement into a HOOK or boolean operation,
+    // then the NOT node does not matter, and we prefer the second condition.
+    // If we cannot fold the if statement, then we prefer the first condition.
+    Node unnegatedCond = minCond.getShorterRepresentation(true);
+    Node shortCond = minCond.getShorterRepresentation(false);
 
     if (elseBranch == null) {
       if (isFoldableExpressBlock(thenBranch)) {
@@ -530,17 +539,10 @@ class PeepholeMinimizeConditions
           return n;
         }
 
-        if (cond.isNot()) {
+        if (shortCond.isNot()) {
           // if(!x)bar(); -> x||bar();
-          if (isLowerPrecedence(cond.getFirstChild(), OR_PRECEDENCE) &&
-              isLowerPrecedence(expr.getFirstChild(),
-                  OR_PRECEDENCE)) {
-            // It's not okay to add two sets of parentheses.
-            return n;
-          }
-
           Node or = IR.or(
-              cond.removeFirstChild(),
+              shortCond.removeFirstChild(),
               expr.removeFirstChild()).srcref(n);
           Node newExpr = NodeUtil.newExpr(or);
           parent.replaceChild(n, newExpr);
@@ -548,20 +550,21 @@ class PeepholeMinimizeConditions
 
           return newExpr;
         }
+        Preconditions.checkState(shortCond.isEquivalentTo(unnegatedCond));
 
         // if(x)foo(); -> x&&foo();
-        if (isLowerPrecedence(cond, AND_PRECEDENCE) &&
+        if (isLowerPrecedence(shortCond, AND_PRECEDENCE) &&
             isLowerPrecedence(expr.getFirstChild(),
                 AND_PRECEDENCE)) {
           // One additional set of parentheses is worth the change even if
           // there is no immediate code size win. However, two extra pair of
           // {}, we would have to think twice. (unless we know for sure the
           // we can further optimize its parent.
+          maybeReplaceNode(originalCond, shortCond);
           return n;
         }
 
-        n.removeChild(cond);
-        Node and = IR.and(cond, expr.removeFirstChild()).srcref(n);
+        Node and = IR.and(shortCond, expr.removeFirstChild()).srcref(n);
         Node newExpr = NodeUtil.newExpr(and);
         parent.replaceChild(n, newExpr);
         reportCodeChange();
@@ -580,14 +583,14 @@ class PeepholeMinimizeConditions
             Node innerElseBranch = innerThenBranch.getNext();
 
             if (innerElseBranch == null &&
-                 !(isLowerPrecedence(cond, AND_PRECEDENCE) &&
+                 !(isLowerPrecedence(unnegatedCond, AND_PRECEDENCE) &&
                    isLowerPrecedence(innerCond, AND_PRECEDENCE))) {
               n.detachChildren();
               n.addChildToBack(
                   IR.and(
-                      cond,
+                      unnegatedCond,
                       innerCond.detachFromParent())
-                      .srcref(cond));
+                      .srcref(originalCond));
               n.addChildrenToBack(innerThenBranch.detachFromParent());
               reportCodeChange();
               // Not worth trying to fold the current IF-ELSE into && because
@@ -597,7 +600,7 @@ class PeepholeMinimizeConditions
           }
         }
       }
-
+      maybeReplaceNode(originalCond, unnegatedCond);
       return n;
     }
 
@@ -608,8 +611,8 @@ class PeepholeMinimizeConditions
 
     // if(!x)foo();else bar(); -> if(x)bar();else foo();
     // An additional set of curly braces isn't worth it.
-    if (cond.isNot() && !consumesDanglingElse(elseBranch)) {
-      n.replaceChild(cond, cond.removeFirstChild());
+    if (shortCond.isNot() && !consumesDanglingElse(elseBranch)) {
+      n.replaceChild(originalCond, shortCond.removeFirstChild());
       n.removeChild(thenBranch);
       n.addChildToBack(thenBranch);
       reportCodeChange();
@@ -620,7 +623,6 @@ class PeepholeMinimizeConditions
     if (isReturnExpressBlock(thenBranch) && isReturnExpressBlock(elseBranch)) {
       Node thenExpr = getBlockReturnExpression(thenBranch);
       Node elseExpr = getBlockReturnExpression(elseBranch);
-      n.removeChild(cond);
       thenExpr.detachFromParent();
       elseExpr.detachFromParent();
 
@@ -628,7 +630,7 @@ class PeepholeMinimizeConditions
       // can be converted to "return undefined;" or some variant, but
       // that does not help code size.
       Node returnNode = IR.returnNode(
-                            IR.hook(cond, thenExpr, elseExpr)
+                            IR.hook(shortCond, thenExpr, elseExpr)
                                 .srcref(n));
       parent.replaceChild(n, returnNode);
       reportCodeChange();
@@ -651,16 +653,15 @@ class PeepholeMinimizeConditions
               // NOTE - there are some circumstances where we can
               // proceed even if there are side effects...
               !mayEffectMutableState(lhs) &&
-              (!mayHaveSideEffects(cond) ||
+              (!mayHaveSideEffects(originalCond) ||
                   (thenOp.isAssign() && thenOp.getFirstChild().isName()))) {
 
-            n.removeChild(cond);
             Node assignName = thenOp.removeFirstChild();
             Node thenExpr = thenOp.removeFirstChild();
             Node elseExpr = elseOp.getLastChild();
             elseOp.removeChild(elseExpr);
 
-            Node hookNode = IR.hook(cond, thenExpr, elseExpr).srcref(n);
+            Node hookNode = IR.hook(shortCond, thenExpr, elseExpr).srcref(n);
             Node assign = new Node(thenOp.getType(), assignName, hookNode)
                               .srcref(thenOp);
             Node expr = NodeUtil.newExpr(assign);
@@ -672,11 +673,10 @@ class PeepholeMinimizeConditions
         }
       }
       // if(x)foo();else bar(); -> x?foo():bar()
-      n.removeChild(cond);
       thenOp.detachFromParent();
       elseOp.detachFromParent();
       Node expr = IR.exprResult(
-          IR.hook(cond, thenOp, elseOp).srcref(n));
+          IR.hook(shortCond, thenOp, elseOp).srcref(n));
       parent.replaceChild(n, expr);
       reportCodeChange();
       return expr;
@@ -700,8 +700,7 @@ class PeepholeMinimizeConditions
           && name1.getString().equals(maybeName2.getString())) {
         Node thenExpr = name1.removeChildren();
         Node elseExpr = elseAssign.getLastChild().detachFromParent();
-        cond.detachFromParent();
-        Node hookNode = IR.hook(cond, thenExpr, elseExpr)
+        Node hookNode = IR.hook(shortCond, thenExpr, elseExpr)
                             .srcref(n);
         var.detachFromParent();
         name1.addChildrenToBack(hookNode);
@@ -725,8 +724,7 @@ class PeepholeMinimizeConditions
           && maybeName1.getString().equals(name2.getString())) {
         Node thenExpr = thenAssign.getLastChild().detachFromParent();
         Node elseExpr = name2.removeChildren();
-        cond.detachFromParent();
-        Node hookNode = IR.hook(cond, thenExpr, elseExpr)
+        Node hookNode = IR.hook(shortCond, thenExpr, elseExpr)
                             .srcref(n);
         var.detachFromParent();
         name2.addChildrenToBack(hookNode);
@@ -737,6 +735,7 @@ class PeepholeMinimizeConditions
       }
     }
 
+    maybeReplaceNode(originalCond, unnegatedCond);
     return n;
   }
 
@@ -962,8 +961,15 @@ class PeepholeMinimizeConditions
         DONT_TRAVERSE_FUNCTIONS_PREDICATE);
   }
 
+  /**
+   * Try to minimize condition expression, as there are additional
+   * assumptions that can be made when it is known that the final result
+   * is a boolean.
+   *
+   * @return The replacement for n, or the original if no change was made.
+   */
   private Node tryMinimizeCondition(Node n, boolean countLeadingNot) {
-    n = tryMinimizeConditionOld(n);
+    n = performConditionSubstitutions(n);
     return demorganMinimizeCondition(n, countLeadingNot);
   }
 
@@ -984,13 +990,8 @@ class PeepholeMinimizeConditions
    */
   private Node demorganMinimizeCondition(Node n, boolean countLeadingNot) {
     MinimizedCondition minCond = MinimizedCondition.fromConditionNode(n);
-    if (countLeadingNot ||
-         minCond.getLength() <= minCond.getNegativeLength()) {
-      return maybeReplaceNode(n, minCond.getNode());
-    } else {
-      return maybeReplaceNode(n,
-          new Node(Token.NOT, minCond.getNegatedNode()));
-    }
+    Node newNode = minCond.getShorterRepresentation(countLeadingNot);
+    return maybeReplaceNode(n, newNode);
   }
 
   private Node maybeReplaceNode(Node lhs, Node rhs) {
@@ -1084,6 +1085,26 @@ class PeepholeMinimizeConditions
       return length(negative);
     }
 
+    /** Return the shorter representation of the original condition node.
+     *
+     * @param countLeadingNot When this is false, do not count a leading
+     *  NOT in doing the minimization.
+     *  i.e. Prefer the right side in cases such as:
+     *    !x || !y || z  ==>  !(x && y && !z)
+     *  This is useful in contexts such as IFs or HOOKs where subsequent
+     *  optimizations can efficiently deal with leading NOTs.
+     *
+     *  @return The minimized condition Node, equivalent to that
+     *    passed to #fromConditionNode().
+     */
+    Node getShorterRepresentation(boolean countLeadingNot) {
+      if (countLeadingNot || getLength() <= getNegativeLength()) {
+       return getNode();
+     } else {
+       return new Node(Token.NOT, getNegatedNode());
+     }
+    }
+
     private static Node negate(Node node) {
       Preconditions.checkArgument(node.getParent() == null);
       int complementOperator;
@@ -1145,20 +1166,17 @@ class PeepholeMinimizeConditions
   }
 
   /**
-   * Try to minimize conditions expressions, as there are additional
-   * assumptions that can be made when it is known that the final result
-   * is a boolean.
+   * Try to minimize the given condition by applying local substitutions.
    *
-   * The following transformations are done recursively:
-   *   !(x||y) --> !x&&!y
-   *   !(x&&y) --> !x||!y
-   *   !!x     --> x
-   * Thus:
-   *   !(x&&!y) --> !x||!!y --> !x||y
+   * The following types of transformations are performed:
+   *   x || true        --> true
+   *   x && true        --> x
+   *   x ? false : true --> !x
+   *   x ? true : y     --> x || y
    *
    *   Returns the replacement for n, or the original if no change was made
    */
-  private Node tryMinimizeConditionOld(Node n) {
+  private Node performConditionSubstitutions(Node n) {
     Node parent = n.getParent();
 
     switch (n.getType()) {
@@ -1169,8 +1187,8 @@ class PeepholeMinimizeConditions
 
         // Because the expression is in a boolean context minimize
         // the children, this can't be done in the general case.
-        left = tryMinimizeConditionOld(left);
-        right = tryMinimizeConditionOld(right);
+        left = performConditionSubstitutions(left);
+        right = performConditionSubstitutions(right);
 
         // Remove useless conditionals
         // Handle four cases:
@@ -1211,8 +1229,8 @@ class PeepholeMinimizeConditions
         // Because the expression is in a boolean context minimize
         // the result children, this can't be done in the general case.
         // The condition is handled in the general case in #optimizeSubtree
-        trueNode = tryMinimizeConditionOld(trueNode);
-        falseNode = tryMinimizeConditionOld(falseNode);
+        trueNode = performConditionSubstitutions(trueNode);
+        falseNode = performConditionSubstitutions(falseNode);
 
         // Handle four cases:
         //   x ? true : false --> x
