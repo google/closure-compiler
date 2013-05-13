@@ -39,8 +39,11 @@ class PeepholeMinimizeConditions
   extends AbstractPeepholeOptimization {
 
   private static final int AND_PRECEDENCE = NodeUtil.precedence(Token.AND);
+  private static final int NOT_PRECEDENCE = NodeUtil.precedence(Token.NOT);
+  private static final boolean DEFAULT_AGGRESSIVE_MINIMIZE_CONDITIONS = false;
 
   private final boolean late;
+  private final boolean aggressiveMinimization;
 
   static final Predicate<Node> DONT_TRAVERSE_FUNCTIONS_PREDICATE
       = new Predicate<Node>() {
@@ -58,7 +61,12 @@ class PeepholeMinimizeConditions
    * do anything to minimize for size.
    */
   PeepholeMinimizeConditions(boolean late) {
+    this(late, DEFAULT_AGGRESSIVE_MINIMIZE_CONDITIONS);
+  }
+
+  PeepholeMinimizeConditions(boolean late, boolean aggressive) {
     this.late = late;
+    this.aggressiveMinimization = aggressive;
   }
 
   /**
@@ -519,15 +527,23 @@ class PeepholeMinimizeConditions
     Node thenBranch = originalCond.getNext();
     Node elseBranch = thenBranch.getNext();
 
-    MinimizedCondition minCond = MinimizedCondition
-        .fromConditionNode(originalCond);
-    // Compute two minimized representations. The first representation counts
-    // a leading NOT node, and the second ignores a leading NOT node.
-    // If we can fold the if statement into a HOOK or boolean operation,
-    // then the NOT node does not matter, and we prefer the second condition.
-    // If we cannot fold the if statement, then we prefer the first condition.
-    Node unnegatedCond = minCond.getShorterRepresentation(true);
-    Node shortCond = minCond.getShorterRepresentation(false);
+
+    Node unnegatedCond;
+    Node shortCond;
+    if (aggressiveMinimization) {
+      MinimizedCondition minCond = MinimizedCondition
+          .fromConditionNode(originalCond);
+      // Compute two minimized representations. The first representation counts
+      // a leading NOT node, and the second ignores a leading NOT node.
+      // If we can fold the if statement into a HOOK or boolean operation,
+      // then the NOT node does not matter, and we prefer the second condition.
+      // If we cannot fold the if statement, then we prefer the first condition.
+      unnegatedCond = minCond.getShorterRepresentation(true);
+      shortCond = minCond.getShorterRepresentation(false);
+    } else {
+      unnegatedCond = originalCond;
+      shortCond = originalCond;
+    }
 
     if (elseBranch == null) {
       if (isFoldableExpressBlock(thenBranch)) {
@@ -564,6 +580,7 @@ class PeepholeMinimizeConditions
           return n;
         }
 
+        n.removeChild(originalCond);
         Node and = IR.and(shortCond, expr.removeFirstChild()).srcref(n);
         Node newExpr = NodeUtil.newExpr(and);
         parent.replaceChild(n, newExpr);
@@ -623,6 +640,7 @@ class PeepholeMinimizeConditions
     if (isReturnExpressBlock(thenBranch) && isReturnExpressBlock(elseBranch)) {
       Node thenExpr = getBlockReturnExpression(thenBranch);
       Node elseExpr = getBlockReturnExpression(elseBranch);
+      n.removeChild(originalCond);
       thenExpr.detachFromParent();
       elseExpr.detachFromParent();
 
@@ -656,6 +674,7 @@ class PeepholeMinimizeConditions
               (!mayHaveSideEffects(originalCond) ||
                   (thenOp.isAssign() && thenOp.getFirstChild().isName()))) {
 
+            n.removeChild(originalCond);
             Node assignName = thenOp.removeFirstChild();
             Node thenExpr = thenOp.removeFirstChild();
             Node elseExpr = elseOp.getLastChild();
@@ -673,6 +692,7 @@ class PeepholeMinimizeConditions
         }
       }
       // if(x)foo();else bar(); -> x?foo():bar()
+      n.removeChild(originalCond);
       thenOp.detachFromParent();
       elseOp.detachFromParent();
       Node expr = IR.exprResult(
@@ -700,6 +720,7 @@ class PeepholeMinimizeConditions
           && name1.getString().equals(maybeName2.getString())) {
         Node thenExpr = name1.removeChildren();
         Node elseExpr = elseAssign.getLastChild().detachFromParent();
+        originalCond.detachFromParent();
         Node hookNode = IR.hook(shortCond, thenExpr, elseExpr)
                             .srcref(n);
         var.detachFromParent();
@@ -724,6 +745,7 @@ class PeepholeMinimizeConditions
           && maybeName1.getString().equals(name2.getString())) {
         Node thenExpr = thenAssign.getLastChild().detachFromParent();
         Node elseExpr = name2.removeChildren();
+        originalCond.detachFromParent();
         Node hookNode = IR.hook(shortCond, thenExpr, elseExpr)
                             .srcref(n);
         var.detachFromParent();
@@ -945,6 +967,13 @@ class PeepholeMinimizeConditions
   }
 
   /**
+   * Whether the node type has higher precedence than "precedence"
+   */
+  private static boolean isHigherPrecedence(Node n, final int precedence) {
+    return NodeUtil.precedence(n.getType()) > precedence;
+  }
+
+  /**
    * Does the expression contain a property assignment?
    */
   private static boolean isPropertyAssignmentInExpression(Node n) {
@@ -970,7 +999,11 @@ class PeepholeMinimizeConditions
    */
   private Node tryMinimizeCondition(Node n, boolean countLeadingNot) {
     n = performConditionSubstitutions(n);
-    return demorganMinimizeCondition(n, countLeadingNot);
+    if (aggressiveMinimization) {
+      return demorganMinimizeCondition(n, countLeadingNot);
+    } else {
+      return n;
+    }
   }
 
   /**
@@ -1207,6 +1240,81 @@ class PeepholeMinimizeConditions
     Node parent = n.getParent();
 
     switch (n.getType()) {
+      case Token.NOT:
+        Node first = n.getFirstChild();
+        switch (first.getType()) {
+          case Token.NOT: {
+              Node newRoot = first.removeFirstChild();
+              parent.replaceChild(n, newRoot);
+              reportCodeChange();
+              // No need to traverse, tryMinimizeCondition is called on the
+              // NOT children are handled below.
+              return newRoot;
+            }
+          case Token.AND:
+          case Token.OR: {
+              // !(!x && !y) --> x || y
+              // !(!x || !y) --> x && y
+              // !(!x && y) --> x || !y
+              // !(!x || y) --> x && !y
+              // !(x && !y) --> !x || y
+              // !(x || !y) --> !x && y
+              // !(x && y) --> !x || !y
+              // !(x || y) --> !x && !y
+              Node leftParent = first.getFirstChild();
+              Node rightParent = first.getLastChild();
+              Node left, right;
+
+              // Check special case when such transformation cannot reduce
+              // due to the added ()
+              // It only occurs when both of expressions are not NOT expressions
+              if (!leftParent.isNot()
+                  && !rightParent.isNot()) {
+                // If an expression has higher precedence than && or ||,
+                // but lower precedence than NOT, an additional () is needed
+                // Thus we do not preceed
+                int opPrecedence = NodeUtil.precedence(first.getType());
+                if ((isLowerPrecedence(leftParent, NOT_PRECEDENCE)
+                    && isHigherPrecedence(leftParent, opPrecedence))
+                    || (isLowerPrecedence(rightParent, NOT_PRECEDENCE)
+                    && isHigherPrecedence(rightParent, opPrecedence))) {
+                  return n;
+                }
+              }
+
+              if (leftParent.isNot()) {
+                left = leftParent.removeFirstChild();
+              } else {
+                leftParent.detachFromParent();
+                left = IR.not(leftParent).srcref(leftParent);
+              }
+              if (rightParent.isNot()) {
+                right = rightParent.removeFirstChild();
+              } else {
+                rightParent.detachFromParent();
+                right = IR.not(rightParent).srcref(rightParent);
+              }
+
+              int newOp = (first.isAnd()) ? Token.OR : Token.AND;
+              Node newRoot = new Node(newOp, left, right);
+              parent.replaceChild(n, newRoot);
+              reportCodeChange();
+              // No need to traverse, tryMinimizeCondition is called on the
+              // AND and OR children below.
+              return newRoot;
+            }
+
+           default:
+             TernaryValue nVal = NodeUtil.getPureBooleanValue(first);
+             if (nVal != TernaryValue.UNKNOWN) {
+               boolean result = nVal.not().toBoolean(true);
+               int equivalentResult = result ? 1 : 0;
+               return maybeReplaceChildWithNumber(n, parent, equivalentResult);
+             }
+        }
+        // No need to traverse, tryMinimizeCondition is called on the NOT
+        // children in the general case in the main post-order traversal.
+        return n;
       case Token.OR:
       case Token.AND: {
         Node left = n.getFirstChild();
