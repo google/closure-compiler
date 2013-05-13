@@ -1187,10 +1187,22 @@ chrome.management.setEnabled = function(id, enabled, callback) {};
 
 
 /**
- * @param {string} id
- * @param {function(): void} callback
+ * @param {string} id The id of an already installed extension.
+ * @param {(Object|function(): void)=} opt_optionsOrCallback An optional
+ *     uninstall options object or an optional callback function.
+ * @param {function(): void=} opt_callback An optional callback function.
  */
-chrome.management.uninstall = function(id, callback) {};
+chrome.management.uninstall =
+    function(id, opt_optionsOrCallback, opt_callback) {};
+
+
+/**
+ * @param {(Object|function(): void)=} opt_optionsOrCallback An optional
+ *     uninstall options object or an optional callback function.
+ * @param {function(): void=} opt_callback An optional callback function.
+ */
+chrome.management.uninstallSelf =
+    function(opt_optionsOrCallback, opt_callback) {};
 
 
 /** @type {ChromeEvent} */
