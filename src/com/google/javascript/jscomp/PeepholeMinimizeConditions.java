@@ -1237,84 +1237,13 @@ class PeepholeMinimizeConditions
    *   Returns the replacement for n, or the original if no change was made
    */
   private Node performConditionSubstitutions(Node n) {
+    if (!aggressiveMinimization && n.isNot()) {
+      return simpleDemorgan(n);
+    }
+
     Node parent = n.getParent();
 
     switch (n.getType()) {
-      case Token.NOT:
-        Node first = n.getFirstChild();
-        switch (first.getType()) {
-          case Token.NOT: {
-              Node newRoot = first.removeFirstChild();
-              parent.replaceChild(n, newRoot);
-              reportCodeChange();
-              // No need to traverse, tryMinimizeCondition is called on the
-              // NOT children are handled below.
-              return newRoot;
-            }
-          case Token.AND:
-          case Token.OR: {
-              // !(!x && !y) --> x || y
-              // !(!x || !y) --> x && y
-              // !(!x && y) --> x || !y
-              // !(!x || y) --> x && !y
-              // !(x && !y) --> !x || y
-              // !(x || !y) --> !x && y
-              // !(x && y) --> !x || !y
-              // !(x || y) --> !x && !y
-              Node leftParent = first.getFirstChild();
-              Node rightParent = first.getLastChild();
-              Node left, right;
-
-              // Check special case when such transformation cannot reduce
-              // due to the added ()
-              // It only occurs when both of expressions are not NOT expressions
-              if (!leftParent.isNot()
-                  && !rightParent.isNot()) {
-                // If an expression has higher precedence than && or ||,
-                // but lower precedence than NOT, an additional () is needed
-                // Thus we do not preceed
-                int opPrecedence = NodeUtil.precedence(first.getType());
-                if ((isLowerPrecedence(leftParent, NOT_PRECEDENCE)
-                    && isHigherPrecedence(leftParent, opPrecedence))
-                    || (isLowerPrecedence(rightParent, NOT_PRECEDENCE)
-                    && isHigherPrecedence(rightParent, opPrecedence))) {
-                  return n;
-                }
-              }
-
-              if (leftParent.isNot()) {
-                left = leftParent.removeFirstChild();
-              } else {
-                leftParent.detachFromParent();
-                left = IR.not(leftParent).srcref(leftParent);
-              }
-              if (rightParent.isNot()) {
-                right = rightParent.removeFirstChild();
-              } else {
-                rightParent.detachFromParent();
-                right = IR.not(rightParent).srcref(rightParent);
-              }
-
-              int newOp = (first.isAnd()) ? Token.OR : Token.AND;
-              Node newRoot = new Node(newOp, left, right);
-              parent.replaceChild(n, newRoot);
-              reportCodeChange();
-              // No need to traverse, tryMinimizeCondition is called on the
-              // AND and OR children below.
-              return newRoot;
-            }
-
-           default:
-             TernaryValue nVal = NodeUtil.getPureBooleanValue(first);
-             if (nVal != TernaryValue.UNKNOWN) {
-               boolean result = nVal.not().toBoolean(true);
-               int equivalentResult = result ? 1 : 0;
-               return maybeReplaceChildWithNumber(n, parent, equivalentResult);
-             }
-        }
-        // No need to traverse, tryMinimizeCondition is called on the NOT
-        // children in the general case in the main post-order traversal.
-        return n;
       case Token.OR:
       case Token.AND: {
         Node left = n.getFirstChild();
@@ -1415,6 +1344,88 @@ class PeepholeMinimizeConditions
         // We can't do anything else currently.
         return n;
     }
+  }
+
+  /**
+   *  Perform a heuristic-based application of De Morgan's Laws, trying to
+   *  push NOT nodes further down the AST toward the leaves.
+   */
+  private Node simpleDemorgan(Node n) {
+    Node parent = n.getParent();
+    Node first = n.getFirstChild();
+    switch (first.getType()) {
+      case Token.NOT: {
+        Node newRoot = first.removeFirstChild();
+        parent.replaceChild(n, newRoot);
+        reportCodeChange();
+        // No need to traverse, tryMinimizeCondition is called on the
+        // NOT children are handled below.
+        return newRoot;
+      }
+      case Token.AND:
+      case Token.OR: {
+        // !(!x && !y) --> x || y
+        // !(!x || !y) --> x && y
+        // !(!x && y) --> x || !y
+        // !(!x || y) --> x && !y
+        // !(x && !y) --> !x || y
+        // !(x || !y) --> !x && y
+        // !(x && y) --> !x || !y
+        // !(x || y) --> !x && !y
+        Node leftParent = first.getFirstChild();
+        Node rightParent = first.getLastChild();
+        Node left, right;
+
+        // Check special case when such transformation cannot reduce
+        // due to the added ()
+        // It only occurs when both of expressions are not NOT expressions
+        if (!leftParent.isNot()
+            && !rightParent.isNot()) {
+          // If an expression has higher precedence than && or ||,
+          // but lower precedence than NOT, an additional () is needed
+          // Thus we do not preceed
+          int opPrecedence = NodeUtil.precedence(first.getType());
+          if ((isLowerPrecedence(leftParent, NOT_PRECEDENCE)
+              && isHigherPrecedence(leftParent, opPrecedence))
+              || (isLowerPrecedence(rightParent, NOT_PRECEDENCE)
+                  && isHigherPrecedence(rightParent, opPrecedence))) {
+            return n;
+          }
+        }
+
+        if (leftParent.isNot()) {
+          left = leftParent.removeFirstChild();
+        } else {
+          leftParent.detachFromParent();
+          left = IR.not(leftParent).srcref(leftParent);
+        }
+        if (rightParent.isNot()) {
+          right = rightParent.removeFirstChild();
+        } else {
+          rightParent.detachFromParent();
+          right = IR.not(rightParent).srcref(rightParent);
+        }
+
+        int newOp = (first.isAnd()) ? Token.OR : Token.AND;
+        Node newRoot = new Node(newOp, left, right);
+        parent.replaceChild(n, newRoot);
+        reportCodeChange();
+        // No need to traverse, tryMinimizeCondition is called on the
+        // AND and OR children below.
+        return newRoot;
+      }
+
+      default:
+        TernaryValue nVal = NodeUtil.getPureBooleanValue(first);
+        if (nVal != TernaryValue.UNKNOWN) {
+          boolean result = nVal.not().toBoolean(true);
+          int equivalentResult = result ? 1 : 0;
+          return maybeReplaceChildWithNumber(n, parent, equivalentResult);
+        }
+    }
+    // No need to traverse, tryMinimizeCondition is called on the NOT
+    // children in the general case in the main post-order traversal.
+    return n;
   }
 
   /**
