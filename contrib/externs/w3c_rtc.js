@@ -601,17 +601,17 @@ var RTCVoidCallback;
 /**
  * @typedef {string}
  */
-var RTCPeerState;
+var RTCSignalingState;
 
 /**
  * @typedef {string}
  */
-var RTCIceState;
+var RTCIceConnectionState;
 
 /**
  * @typedef {string}
  */
-var RTCGatheringState;
+var RTCIceGatheringState;
 
 /**
  * @param {string} type
@@ -926,10 +926,17 @@ RTCPeerConnection.prototype.localDescription;
 RTCPeerConnection.prototype.remoteDescription;
 
 /**
- * @type {RTCPeerState}
+ * @type {RTCSignalingState}
+ * @deprecated
  * Read only.
  */
 RTCPeerConnection.prototype.readyState;
+
+/**
+ * @type {RTCSignalingState}
+ * Read only.
+ */
+RTCPeerConnection.prototype.signalingState;
 
 /**
  * @param {?RTCConfiguration=} configuration
@@ -943,16 +950,16 @@ RTCPeerConnection.prototype.updateIce = function(configuration, constraints) {};
 RTCPeerConnection.prototype.addIceCandidate = function(candidate) {};
 
 /**
- * @type {!RTCGatheringState}
+ * @type {!RTCIceGatheringState}
  * Read only.
  */
 RTCPeerConnection.prototype.iceGatheringState;
 
 /**
- * @type {!RTCIceState}
+ * @type {!RTCIceConnectionState}
  * Read only.
  */
-RTCPeerConnection.prototype.iceState;
+RTCPeerConnection.prototype.iceConnectionState;
 
 /**
  * TODO(bemasc): Remove this attribute once browsers are updated.
