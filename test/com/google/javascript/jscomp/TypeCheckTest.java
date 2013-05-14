@@ -5421,6 +5421,26 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testOverriddenParams7() throws Exception {
+    testTypes(
+        "/** @constructor\n * @template T */ function Foo() {}" +
+        "/** @param {T} x */" +
+        "Foo.prototype.bar = function(x) { };" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo.<string>}\n" +
+        " */ function SubFoo() {}" +
+        "/**\n" +
+        " * @param {number} x\n" +
+        " * @override\n" +
+        " */" +
+        "SubFoo.prototype.bar = function(x) {};",
+        "mismatch of the bar property type and the type of the " +
+        "property it overrides from superclass Foo\n" +
+        "original: function (this:Foo, string): undefined\n" +
+        "override: function (this:SubFoo, number): undefined");
+  }
+
   public void testOverriddenReturn1() throws Exception {
     testTypes(
         "/** @constructor */ function Foo() {}" +
@@ -5446,6 +5466,33 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "property it overrides from superclass Foo\n" +
         "original: function (this:Foo): (SubFoo|null)\n" +
         "override: function (this:SubFoo): (Foo|null)");
+  }
+
+  public void testOverriddenReturn3() throws Exception {
+    testTypes(
+        "/** @constructor \n * @template T */ function Foo() {}" +
+        "/** @return {T} */ Foo.prototype.bar = " +
+        "    function() { return null; };" +
+        "/** @constructor \n * @extends {Foo.<string>} */ function SubFoo() {}" +
+        "/** @override */ SubFoo.prototype.bar = " +
+        "    function() { return 3; }",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void testOverriddenReturn4() throws Exception {
+    testTypes(
+        "/** @constructor \n * @template T */ function Foo() {}" +
+        "/** @return {T} */ Foo.prototype.bar = " +
+        "    function() { return null; };" +
+        "/** @constructor \n * @extends {Foo.<string>} */ function SubFoo() {}" +
+        "/** @return {number}\n * @override */ SubFoo.prototype.bar = " +
+        "    function() { return 3; }",
+        "mismatch of the bar property type and the type of the " +
+        "property it overrides from superclass Foo\n" +
+        "original: function (this:Foo): string\n" +
+        "override: function (this:SubFoo): number");
   }
 
   public void testThis1() throws Exception {
@@ -7530,6 +7577,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testFunctionCall9() throws Exception {
+    testTypes(
+        "/** @constructor\n * @template T\n **/ function Foo() {}\n" +
+        "/** @param {T} x */ Foo.prototype.bar = function(x) {}\n" +
+        "var foo = /** @type {Foo.<string>} */ (new Foo());\n" +
+        "foo.bar(3);",
+        "actual parameter 1 of Foo.prototype.bar does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
   public void testFunctionBind1() throws Exception {
     testTypes(
         "/** @type {function(string, number): boolean} */" +
@@ -8976,6 +9034,23 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor\n @template V\n @implements {B.<V>}\n */function C() {};" +
         "/** @return {V}\n @override */C.prototype.foo = function() {};" +
         "/** @return {V}\n @override */C.prototype.bar = function() {};");
+  }
+
+  /**
+   * Verify that using @override to declare the signature for an implementing
+   * class works correctly when the interface is generic.
+   */
+  public void testInterfaceInheritanceCheck16() throws Exception {
+    testTypes(
+        "/** @interface\n @template T */function A() {};" +
+        "/** @desc description\n @return {T} */A.prototype.foo = function() {};" +
+        "/** @desc description\n @return {T} */A.prototype.bar = function() {};" +
+        "/** @constructor\n @implements {A.<string>} */function B() {};" +
+        "/** @override */B.prototype.foo = function() { return 'string'};" +
+        "/** @override */B.prototype.bar = function() { return 3 };",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: string");
   }
 
   public void testInterfacePropertyNotImplemented() throws Exception {
@@ -11458,6 +11533,20 @@ public class TypeCheckTest extends CompilerTypeTestCase {
             " super interfaces Int1 and Int4",
             "Interface Int5 has a property foo with incompatible types in its" +
             " super interfaces Int0 and Int4"});
+  }
+
+  public void testExtendedInterfacePropertiesCompatibility9() throws Exception {
+    testTypes(
+        "/** @interface\n * @template T */function Int0() {};" +
+        "/** @interface\n * @template T */function Int1() {};" +
+        "/** @type {T} */" +
+        "Int0.prototype.foo;" +
+        "/** @type {T} */" +
+        "Int1.prototype.foo;" +
+        "/** @interface \n @extends {Int0.<number>} \n @extends {Int1.<string>} */" +
+        "function Int2() {};",
+        "Interface Int2 has a property foo with incompatible types in its " +
+        "super interfaces Int0.<number> and Int1.<string>");
   }
 
   public void testGenerics1() throws Exception {

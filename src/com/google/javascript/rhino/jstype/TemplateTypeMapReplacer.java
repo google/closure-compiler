@@ -67,9 +67,10 @@ public class TemplateTypeMapReplacer extends ModificationVisitor {
   @Override
   public JSType caseTemplateType(TemplateType type) {
     if (replacements.hasTemplateKey(type)) {
-      if (hasVisitedType(type)) {
+      if (hasVisitedType(type) || !replacements.hasTemplateType(type)) {
         // If we have already encountered this TemplateType during replacement
-        // (i.e. there is a reference loop), return the type itself.
+        // (i.e. there is a reference loop), or there is no JSType substitution
+        // for the TemplateType, return the TemplateType type itself.
         return type;
       } else {
         JSType replacement = replacements.getTemplateType(type);

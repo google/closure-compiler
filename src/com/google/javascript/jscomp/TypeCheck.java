@@ -40,6 +40,8 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.TemplateTypeMap;
+import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
 import java.util.HashMap;
@@ -1249,6 +1251,13 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // there is a superclass implementation
       JSType superClassPropType =
           superClass.getInstanceType().getPropertyType(propertyName);
+      TemplateTypeMap ctorTypeMap =
+          ctorType.getTypeOfThis().getTemplateTypeMap();
+      if (!ctorTypeMap.isEmpty()) {
+        superClassPropType = superClassPropType.visit(
+            new TemplateTypeMapReplacer(typeRegistry, ctorTypeMap));
+      }
+
       if (!propertyType.isSubtype(superClassPropType)) {
         compiler.report(
             t.makeError(n, HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,

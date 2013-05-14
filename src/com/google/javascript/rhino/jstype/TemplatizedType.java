@@ -52,6 +52,7 @@ public final class TemplatizedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
   final ImmutableList<JSType> templateTypes;
+  final TemplateTypeMapReplacer replacer;
 
   TemplatizedType(
       JSTypeRegistry registry, ObjectType objectType,
@@ -68,6 +69,8 @@ public final class TemplatizedType extends ProxyObjectType {
       builder.add(getTemplateTypeMap().getTemplateType(filledTemplateKey));
     }
     this.templateTypes = builder.build();
+
+    replacer = new TemplateTypeMapReplacer(registry, getTemplateTypeMap());
   }
 
   @Override
@@ -98,6 +101,12 @@ public final class TemplatizedType extends ProxyObjectType {
   @Override
   public ImmutableList<JSType> getTemplateTypes() {
     return templateTypes;
+  }
+
+  @Override
+  public JSType getPropertyType(String propertyName) {
+    JSType result = super.getPropertyType(propertyName);
+    return result == null ? null : result.visit(replacer);
   }
 
   @Override

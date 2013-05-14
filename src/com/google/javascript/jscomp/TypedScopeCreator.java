@@ -74,6 +74,8 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.TemplateType;
+import com.google.javascript.rhino.jstype.TemplateTypeMap;
+import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 
 import java.util.Iterator;
 import java.util.List;
@@ -929,12 +931,19 @@ final class TypedScopeCreator implements ScopeCreator {
             }
           }
 
-          FunctionType overriddenType = null;
-          if (ownerType != null && propName != null) {
-            overriddenType = findOverriddenFunction(ownerType, propName);
+          ObjectType prototypeOwner = getPrototypeOwnerType(ownerType);
+          TemplateTypeMap prototypeOwnerTypeMap = null;
+          if (prototypeOwner != null &&
+              prototypeOwner.getTypeOfThis() != null) {
+              prototypeOwnerTypeMap =
+                  prototypeOwner.getTypeOfThis().getTemplateTypeMap();
           }
 
-          ObjectType prototypeOwner = getPrototypeOwnerType(ownerType);
+          FunctionType overriddenType = null;
+          if (ownerType != null && propName != null) {
+            overriddenType = findOverriddenFunction(
+                ownerType, propName, prototypeOwnerTypeMap);
+          }
 
           FunctionTypeBuilder builder =
               new FunctionTypeBuilder(name, compiler, errorRoot, sourceName,
@@ -990,12 +999,14 @@ final class TypedScopeCreator implements ScopeCreator {
      * Find the function that's being overridden on this type, if any.
      */
     private FunctionType findOverriddenFunction(
-        ObjectType ownerType, String propName) {
+        ObjectType ownerType, String propName, TemplateTypeMap typeMap) {
+      FunctionType result = null;
+
       // First, check to see if the property is implemented
       // on a superclass.
       JSType propType = ownerType.getPropertyType(propName);
       if (propType != null && propType.isFunctionType()) {
-        return propType.toMaybeFunctionType();
+        result =  propType.toMaybeFunctionType();
       } else {
         // If it's not, then check to see if it's implemented
         // on an implemented interface.
@@ -1003,12 +1014,19 @@ final class TypedScopeCreator implements ScopeCreator {
                  ownerType.getCtorImplementedInterfaces()) {
           propType = iface.getPropertyType(propName);
           if (propType != null && propType.isFunctionType()) {
-            return propType.toMaybeFunctionType();
+            result = propType.toMaybeFunctionType();
+            break;
           }
         }
       }
 
-      return null;
+      if (result != null && typeMap != null && !typeMap.isEmpty()) {
+        result = result.visit(
+            new TemplateTypeMapReplacer(typeRegistry, typeMap))
+            .toMaybeFunctionType();
+      }
+
+      return result;
     }
 
     /**
