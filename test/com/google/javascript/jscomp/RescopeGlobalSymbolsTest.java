@@ -150,6 +150,13 @@ public class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("",
         "document",
         "window.document", null, null);
+    // Javascript builtin objects
+    test("Object;Function;Array;String;Boolean;Number;Math;" +
+        "Date;RegExp;JSON;Error;EvalError;ReferenceError;" +
+        "SyntaxError;TypeError;URIError;",
+        "Object;Function;Array;String;Boolean;Number;Math;" +
+        "Date;RegExp;JSON;Error;EvalError;ReferenceError;" +
+        "SyntaxError;TypeError;URIError;");
   }
 
   private class StringCompare extends CompilerTestCase {
