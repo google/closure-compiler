@@ -121,11 +121,26 @@ jasmine.Spy.prototype.andReturn = function(value) {};
 jasmine.Spy.prototype.andThrow = function(exception) {};
 
 
+/** @constructor */
+jasmine.Helper = function() {};
+
+
+/** @param {*} value */
+jasmine.Helper.prototype.addMatchers = function(value) {};
+
+
+/** @type {*} */
+jasmine.Helper.prototype.actual;
+
+/** @type {boolean} */
+jasmine.Helper.prototype.isNot;
+
+
 /** @param {function()} handler */
 function afterEach(handler) {}
 
 
-/** @param {function()} handler */
+/** @param {function(this:jasmine.Helper)} handler */
 function beforeEach(handler) {}
 
 
