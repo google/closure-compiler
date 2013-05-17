@@ -25,7 +25,7 @@ import java.util.Map;
 
 
 /**
- * Tests for {@link Rename2Vars}.
+ * Tests for {@link RenameVars2}.
  */
 public class RenameVars2Test extends CompilerTestCase {
   private static final String DEFAULT_PREFIX = "";

@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Node;
 /**
  * Analyzes names and references usage by determining:
  * <p><ol>
- * <li>If the name is reachable from the {@link NameReferenceGraph#MAIN}.</li>
+ * <li>If the name is reachable from the {@link NameReferenceGraph#main}.</li>
  * <li>as well as the deepest common module that references it.</li>
  * </ol>
  *

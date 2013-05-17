@@ -130,7 +130,7 @@ class IRFactory {
 
   // Use a template node for properties set on all nodes to minimize the
   // memory footprint associated with these.
-  private Node templateNode;
+  private final Node templateNode;
 
   // TODO(johnlenz): Consider creating a template pool for ORIGINALNAME_PROP.
 
@@ -380,7 +380,8 @@ class IRFactory {
    * function f(/** string &#42;/ x) {}
    * annotates 'x' as a string.
    *
-   * @see http://code.google.com/p/jsdoc-toolkit/wiki/InlineDocs
+   * @see <a href="http://code.google.com/p/jsdoc-toolkit/wiki/InlineDocs">
+   *   Using Inline Doc Comments</a>
    */
   private Node transformParameter(AstNode node) {
     Node irNode = justTransform(node);

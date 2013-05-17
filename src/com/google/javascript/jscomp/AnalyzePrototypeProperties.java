@@ -196,7 +196,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     //    name are given a special [anonymous] context.
     // 2) Every assignment of a prototype property of a non-function is
     //    given a name context. These contexts do not have scopes.
-    private Stack<NameContext> symbolStack = new Stack<NameContext>();
+    private final Stack<NameContext> symbolStack = new Stack<NameContext>();
 
     @Override
     public void enterScope(NodeTraversal t) {

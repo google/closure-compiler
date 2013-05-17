@@ -89,6 +89,11 @@ final class MustBeReachingVariableDef extends
     public String toString() {
       return "Definition@" + node.toString();
     }
+
+    @Override
+    public int hashCode() {
+      return node.hashCode();
+    }
   }
 
   /**
@@ -146,6 +151,11 @@ final class MustBeReachingVariableDef extends
     public boolean equals(Object other) {
       return (other instanceof MustDef) &&
           ((MustDef) other).reachingDef.equals(this.reachingDef);
+    }
+
+    @Override
+    public int hashCode() {
+      return reachingDef.hashCode();
     }
   }
 

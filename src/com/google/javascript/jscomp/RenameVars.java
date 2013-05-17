@@ -438,8 +438,7 @@ final class RenameVars implements CompilerPass {
     // If prevUsedRenameMap had duplicate values then this pass would be
     // non-deterministic.
     // In such a case, the following will throw an IllegalArgumentException.
-    Preconditions.checkState(
-        prevUsedRenameMap.getNewNameToOriginalNameMap() instanceof Map);
+    Preconditions.checkNotNull(prevUsedRenameMap.getNewNameToOriginalNameMap());
     for (Assignment a : assignments.values()) {
       String prevNewName = prevUsedRenameMap.lookupNewName(a.oldName);
       if (prevNewName == null || reservedNames.contains(prevNewName)) {

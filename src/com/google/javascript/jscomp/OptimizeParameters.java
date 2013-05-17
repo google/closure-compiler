@@ -45,7 +45,7 @@ class OptimizeParameters
     implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
 
   private final AbstractCompiler compiler;
-  private List<Node> removedNodes = Lists.newArrayList();
+  private final List<Node> removedNodes = Lists.newArrayList();
 
   OptimizeParameters(AbstractCompiler compiler) {
     this.compiler = compiler;

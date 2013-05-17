@@ -37,8 +37,8 @@ class TypeInferencePass implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final ReverseAbstractInterpreter reverseInterpreter;
-  private Scope topScope;
-  private MemoizedScopeCreator scopeCreator;
+  private final Scope topScope;
+  private final MemoizedScopeCreator scopeCreator;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
 
   TypeInferencePass(AbstractCompiler compiler,
@@ -102,9 +102,7 @@ class TypeInferencePass implements CompilerPass {
         compiler, new FirstScopeBuildingCallback(), scopeCreator))
         .traverseWithScope(node, topScope);
 
-    Preconditions.checkState(scopeCreator instanceof MemoizedScopeCreator);
-    for (Scope s :
-           ((MemoizedScopeCreator) scopeCreator).getAllMemoizedScopes()) {
+    for (Scope s : scopeCreator.getAllMemoizedScopes()) {
       s.resolveTypes();
     }
 

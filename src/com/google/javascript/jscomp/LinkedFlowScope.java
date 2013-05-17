@@ -361,6 +361,11 @@ class LinkedFlowScope implements FlowScope {
     return slots;
   }
 
+  @Override
+  public int hashCode() {
+    throw new UnsupportedOperationException();
+  }
+
   /**
    * A static slot that can be used in a linked list.
    */

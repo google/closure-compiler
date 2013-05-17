@@ -303,7 +303,7 @@ final class Tracer {
    * Converts 'v' to a string and pads it with up to 16 spaces for
    * improved alignment.
    * @param v The value to convert.
-   * @param digits_column_width The desired with of the string.
+   * @param digitsColumnWidth The desired with of the string.
    */
   private static String longToPaddedString(long v, int digitsColumnWidth) {
     int digitWidth = numDigits(v);
@@ -399,7 +399,7 @@ final class Tracer {
    * Stop the trace.
    * This may only be done once and must be done from the same thread
    * that started it.
-   * @param silence_threshold Traces for time less than silence_threshold
+   * @param silenceThreshold Traces for time less than silence_threshold
    * ms will be left out of the trace report. A value of -1 indicates
    * that the current ThreadTrace silence_threshold should be used.
    * @return The time that this trace actually ran
@@ -1030,7 +1030,7 @@ final class Tracer {
    *
    */
   static final class AtomicTracerStatMap {
-    private ConcurrentMap<String, Long> map =
+    private final ConcurrentMap<String, Long> map =
         new ConcurrentHashMap<String, Long>();
 
     /**

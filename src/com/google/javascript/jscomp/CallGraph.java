@@ -22,7 +22,6 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
-import com.google.javascript.jscomp.NameReferenceGraph.Name;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
@@ -59,33 +58,27 @@ import java.util.Map;
  * @author dcc@google.com (Devin Coughlin)
  */
 public class CallGraph implements CompilerPass {
-  private AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
 
   /**
    * Maps an AST node (with type Token.CALL or Token.NEW) to a Callsite object.
    */
-  private Map<Node, Callsite> callsitesByNode;
+  private final Map<Node, Callsite> callsitesByNode;
 
   /** Maps an AST node (with type Token.FUNCTION) to a Function object. */
-  private Map<Node, Function> functionsByNode;
+  private final Map<Node, Function> functionsByNode;
 
   /**
    * Will the call graph support looking up the callsites that could call a
    * given function?
    */
-  private boolean computeBackwardGraph;
+  private final boolean computeBackwardGraph;
 
   /**
    * Will the call graph support looking up the functions that a given callsite
    * can call?
    */
-  private boolean computeForwardGraph;
-
-  /**
-   * If true, then the callgraph will use NameReferenceGraph as a
-   * definition provider; otherwise, use the faster SimpleDefinitionProvider.
-   */
-  private boolean useNameReferenceGraph = false;
+  private final boolean computeForwardGraph;
 
   /** Has the CallGraph already been constructed? */
   private boolean alreadyRun = false;
@@ -350,50 +343,18 @@ public class CallGraph implements CompilerPass {
    * functions that are actually called.
    */
   private void fillInFunctionInformation(DefinitionProvider provider) {
-    if (useNameReferenceGraph) {
-      NameReferenceGraph referenceGraph = (NameReferenceGraph) provider;
+    SimpleDefinitionFinder finder = (SimpleDefinitionFinder) provider;
 
-      for (Function function : getAllFunctions()) {
-        if (!function.isMain()) {
-          String functionName = function.getName();
+    for (DefinitionSite definitionSite : finder.getDefinitionSites()) {
+      Definition definition = definitionSite.definition;
 
-          if (functionName != null) {
-            Name symbol = referenceGraph.getSymbol(functionName);
-            updateFunctionForName(function, symbol);
-          }
+      Function function = lookupFunctionForDefinition(definition);
+
+      if (function != null) {
+        for (UseSite useSite : finder.getUseSites(definition)) {
+          updateFunctionForUse(function, useSite.node);
         }
       }
-    } else {
-      SimpleDefinitionFinder finder = (SimpleDefinitionFinder) provider;
-
-      for (DefinitionSite definitionSite : finder.getDefinitionSites()) {
-        Definition definition = definitionSite.definition;
-
-        Function function = lookupFunctionForDefinition(definition);
-
-        if (function != null) {
-          for (UseSite useSite : finder.getUseSites(definition)) {
-            updateFunctionForUse(function, useSite.node);
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Updates {@link Function} information (such as whether is is aliased
-   * or exposed to .apply or .call from a {@link NameReferenceGraph.Name}.
-   *
-   * Note: this method may be called multiple times per Function, each time
-   * with a different name.
-   */
-  private void updateFunctionForName(Function function, Name name) {
-    if (name.isAliased()) {
-      function.isAliased = true;
-    }
-
-    if (name.exposedToCallOrApply()) {
-      function.isExposedToCallOrApply = true;
     }
   }
 
@@ -538,30 +499,15 @@ public class CallGraph implements CompilerPass {
    * Constructs a DefinitionProvider that can be used to determine the
    * targets of callsites.
    *
-   * This construction is the main cost of building the callgraph, so we offer
-   * the client a choice of NameReferenceGraph, which is slow and hopefully more
-   * precise, and SimpleDefinitionFinder, which is fast and perhaps not as
-   * precise.
-   *
-   * We use SimpleNameFinder as the default because in practice it does
+   * We use SimpleNameFinder because in practice it does
    * not appear to be less precise than NameReferenceGraph and is at least an
    * order of magnitude faster on large compiles.
    */
   private DefinitionProvider constructDefinitionProvider(Node externsRoot,
         Node jsRoot) {
-    if (useNameReferenceGraph) {
-      // Name reference graph is very, very slow
-      NameReferenceGraphConstruction graphConstruction
-          = new NameReferenceGraphConstruction(compiler);
-
-      graphConstruction.process(externsRoot, jsRoot);
-
-      return graphConstruction.getNameReferenceGraph();
-    } else {
-      SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
-      defFinder.process(externsRoot, jsRoot);
-      return defFinder;
-    }
+    SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
+    defFinder.process(externsRoot, jsRoot);
+    return defFinder;
   }
 
   /**
@@ -579,18 +525,11 @@ public class CallGraph implements CompilerPass {
 
     Node targetExpression = callsite.getFirstChild();
 
-    // NameReferenceGraph throws an exception unless the node is
-    // a GETPROP or a NAME
-    if (!useNameReferenceGraph
-        || (targetExpression.isGetProp()
-        ||  targetExpression.isName())) {
-
-      Collection<Definition> definitions =
+    Collection<Definition> definitions =
         definitionProvider.getDefinitionsReferencedAt(targetExpression);
 
-      if (definitions != null && !definitions.isEmpty()) {
-        return definitions;
-      }
+    if (definitions != null && !definitions.isEmpty()) {
+      return definitions;
     }
 
     return null;
@@ -603,7 +542,7 @@ public class CallGraph implements CompilerPass {
    */
   public class Function {
 
-    private Node astNode;
+    private final Node astNode;
 
     private boolean isAliased = false;
 
@@ -730,7 +669,7 @@ public class CallGraph implements CompilerPass {
    * Function is, and what its target Functions are.
    */
   public class Callsite {
-    private Node astNode;
+    private final Node astNode;
 
     private boolean hasUnknownTarget = false;
     private boolean hasExternTarget = false;

@@ -819,8 +819,8 @@ public class CommandLineRunner extends
 
     options.closurePass = flags.processClosurePrimitives;
 
-    options.jqueryPass = flags.processJqueryPrimitives &&
-        CompilationLevel.ADVANCED_OPTIMIZATIONS == level;
+    options.jqueryPass = CompilationLevel.ADVANCED_OPTIMIZATIONS == level &&
+        flags.processJqueryPrimitives;
 
     options.angularPass = flags.angularPass;
 

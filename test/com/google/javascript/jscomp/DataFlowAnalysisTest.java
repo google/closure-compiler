@@ -78,7 +78,7 @@ public class DataFlowAnalysisTest extends TestCase {
    * A variable.
    */
   static class Variable extends Value {
-    private String name;
+    private final String name;
 
     /**
      * Constructor.
@@ -117,7 +117,7 @@ public class DataFlowAnalysisTest extends TestCase {
    * A number constant.
    */
   static class Number extends Value {
-    private int value;
+    private final int value;
 
     /**
      * Constructor
@@ -382,6 +382,11 @@ public class DataFlowAnalysisTest extends TestCase {
             this.constMap.equals(otherLattice.constMap);
       }
       return false;
+    }
+
+    @Override
+    public int hashCode() {
+      return constMap.hashCode();
     }
   }
 

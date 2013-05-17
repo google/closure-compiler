@@ -72,7 +72,7 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
   final AbstractCompiler compiler;
 
   /** Nodes annotated with @ngInject */
-  private List<NodeContext> injectables = new ArrayList<NodeContext>();
+  private final List<NodeContext> injectables = new ArrayList<NodeContext>();
 
   public AngularPass(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -265,13 +265,13 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
 
   class NodeContext {
     /** Name of the function/object. */
-    private String name;
+    private final String name;
     /** Node jsDoc is attached to. */
-    private Node node;
+    private final Node node;
     /** Function node */
-    private Node functionNode;
+    private final Node functionNode;
     /** Node after which to inject the new code */
-    private Node target;
+    private final Node target;
 
     public NodeContext(String name, Node node, Node functionNode, Node target) {
       this.name = name;
