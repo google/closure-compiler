@@ -31,6 +31,11 @@ public class RescopeGlobalSymbolsTest extends CompilerTestCase {
     return new RescopeGlobalSymbols(compiler, namespace, false);
   }
 
+  @Override public void setUp() throws Exception {
+    super.setUp();
+    RescopeGlobalSymbols.assumeCrossModuleNames = true;
+  }
+
   @Override
   protected int getNumRepetitions() {
     return 1;
@@ -46,7 +51,47 @@ public class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("var a, b = 1;", "_.b = 1");
   }
 
+  public void testVarDeclarations_allSameModule() {
+    RescopeGlobalSymbols.assumeCrossModuleNames = false;
+    testSame("var a = 1;");
+    testSame("var a = 1, b = 2, c = 3;");
+    testSame("var a = 'str', b = 1, c = { foo: 'bar' }, d = function() {};");
+    testSame("if(1){var x = 1;}");
+    testSame("var x;");
+    testSame("var a, b = 1;");
+  }
+
+  public void testVarDeclarations_acrossModules() {
+    RescopeGlobalSymbols.assumeCrossModuleNames = false;
+    test(createModules(
+        "var a = 1;", "a"),
+        new String[] {"_.a = 1", "_.a"});
+    test(createModules(
+        "var a = 1, b = 2, c = 3;", "a;c;"),
+        new String[] {"var b;_.a = 1; b = 2; _.c = 3;", "_.a;_.c"});
+    test(createModules(
+        "var a = 1, b = 2, c = 3;", "b;c;"),
+        new String[] {"var a;a = 1; _.b = 2; _.c = 3;", "_.b;_.c"});
+    test(createModules(
+        "var a = 1, b = 2, c = 3;b;c;", "a;c;"),
+        new String[] {"var b;_.a = 1; b = 2; _.c = 3;b;_.c", "_.a;_.c"});
+    test(createModules(
+        "var a, b = 1;", "b"),
+        new String[] {"var a;_.b = 1;", "_.b"});
+  }
+
   public void testForLoops() {
+    RescopeGlobalSymbols.assumeCrossModuleNames = false;
+    test(createModules(
+        "for (var i = 0, c = 2; i < 1000; i++);", "c"),
+        new String[] {"var i;for (i = 0, _.c = 2; i < 1000; i++);", "_.c"});
+    test(createModules(
+        "for (var i = 0, c = 2; i < 1000; i++);", "i"),
+        new String[] {"var c;for (_.i = 0, c = 2; _.i < 1000; _.i++);",
+            "_.i"});
+  }
+
+  public void testForLoops_acrossModules() {
     test("for (var i = 0; i < 1000; i++);",
         "for (_.i = 0; _.i < 1000; _.i++);");
     test("for (var i = 0, c = 2; i < 1000; i++);",

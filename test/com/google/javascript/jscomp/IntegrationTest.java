@@ -38,6 +38,11 @@ import java.util.regex.Pattern;
  */
 public class IntegrationTest extends IntegrationTestCase {
 
+  @Override public void setUp() {
+    super.setUp();
+    RescopeGlobalSymbols.assumeCrossModuleNames = true;
+  }
+
   private static final String CLOSURE_BOILERPLATE =
       "/** @define {boolean} */ var COMPILED = false; var goog = {};" +
       "goog.exportSymbol = function() {};";
