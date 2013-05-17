@@ -142,9 +142,8 @@ public enum CompilationLevel {
     options.collapseObjectLiterals = true;
     options.protectHiddenSideEffects = true;
 
-    // All the advance optimizations.
+    // All the advanced optimizations.
     options.removeClosureAsserts = true;
-    options.aliasKeywords = true;
     options.reserveRawExports = true;
     options.setRenamingPolicy(
         VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
