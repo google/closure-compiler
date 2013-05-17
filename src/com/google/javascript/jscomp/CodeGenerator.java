@@ -238,7 +238,8 @@ class CodeGenerator {
 
       case Token.COMMA:
         Preconditions.checkState(childCount == 2);
-        unrollBinaryOperator(n, Token.COMMA, ",", context, Context.OTHER, 0, 0);
+        unrollBinaryOperator(n, Token.COMMA, ",", context,
+            getContextForNoInOperator(context), 0, 0);
         break;
 
       case Token.NUMBER:
@@ -934,7 +935,8 @@ class CodeGenerator {
         addExpr(n, isArrayOrFunctionArgument ? 1 : 0, lhsContext);
       } else {
         cc.listSeparator();
-        addExpr(n, isArrayOrFunctionArgument ? 1 : 0, Context.OTHER);
+        addExpr(n, isArrayOrFunctionArgument ? 1 : 0,
+            getContextForNoInOperator(lhsContext));
       }
     }
   }
