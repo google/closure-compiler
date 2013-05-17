@@ -295,7 +295,7 @@ Window.prototype.getAttention = function() {};
 
 /**
  * @param {Element} element
- * @param {?string} pseudoElt
+ * @param {?string=} pseudoElt
  * @return {CSSStyleDeclaration}
  * @nosideeffects
  */
