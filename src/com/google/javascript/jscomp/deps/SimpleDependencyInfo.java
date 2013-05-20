@@ -103,13 +103,7 @@ public class SimpleDependencyInfo implements DependencyInfo {
 
   @Override
   public int hashCode() {
-    int hash = 1;
-    hash = hash * 3 + (srcPathRelativeToClosure == null ?
-        0 : srcPathRelativeToClosure.hashCode());
-    hash = hash * 5 + (pathOfDefiningFile == null ?
-        0 : pathOfDefiningFile.hashCode());
-    hash = hash * 7 + (requires == null ? 0 : requires.hashCode());
-    hash = hash * 11 + (provides == null ? 0 : provides.hashCode());
-    return hash;
+    return Objects.hashCode(provides, requires,
+        srcPathRelativeToClosure, pathOfDefiningFile);
   }
 }
