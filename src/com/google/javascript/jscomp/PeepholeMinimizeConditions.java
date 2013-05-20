@@ -40,7 +40,7 @@ class PeepholeMinimizeConditions
 
   private static final int AND_PRECEDENCE = NodeUtil.precedence(Token.AND);
   private static final int NOT_PRECEDENCE = NodeUtil.precedence(Token.NOT);
-  private static final boolean DEFAULT_AGGRESSIVE_MINIMIZE_CONDITIONS = false;
+  private static final boolean DEFAULT_AGGRESSIVE_MINIMIZE_CONDITIONS = true;
 
   private final boolean late;
   private final boolean aggressiveMinimization;
