@@ -129,16 +129,21 @@ class CollapseProperties implements CompilerPass {
     globalNames = namespace.getNameForest();
     checkNamespaces();
 
-    for (Name n : globalNames) {
-      flattenReferencesToCollapsibleDescendantNames(n, n.getBaseName());
+    for (Name name : globalNames) {
+      flattenReferencesToCollapsibleDescendantNames(name, name.getBaseName());
     }
 
     // We collapse property definitions after collapsing property references
     // because this step can alter the parse tree above property references,
     // invalidating the node ancestry stored with each reference.
-    for (Name n : globalNames) {
-      collapseDeclarationOfNameAndDescendants(n, n.getBaseName());
+    for (Name name : globalNames) {
+      collapseDeclarationOfNameAndDescendants(name, name.getBaseName());
     }
+  }
+
+  private void inlineAliases(GlobalNamespace namespace) {
+    // inline names until we reach a fixed point.
+    do {} while (inlineAliasesOnce(namespace));
   }
 
   /**
@@ -147,6 +152,7 @@ class CollapseProperties implements CompilerPass {
    *     (If N = "a.b.c", "a" and "a.b" are never aliased).
    * (b) N has exactly one write, and it lives in the global scope.
    * (c) N is aliased in a local scope.
+   * (d) N is aliased in global scope
    *
    * If (a) is true, then GlobalNamespace must know all the writes to N.
    * If (a) and (b) are true, then N cannot change during the execution of
@@ -154,13 +160,22 @@ class CollapseProperties implements CompilerPass {
    * If (a) and (b) and (c) are true, then the alias can be inlined if the
    *    alias obeys the usual rules for how we decide whether a variable is
    *    inlineable.
+   * If (a) and (b) and (d) are true, then inline the alias if possible (if
+   * it is assigned exactly once unconditionally).
    * @see InlineVariables
+   * @return Whether any work still needs to be done.
    */
-  private void inlineAliases(GlobalNamespace namespace) {
+  private boolean inlineAliasesOnce(GlobalNamespace namespace) {
+    int deferredCount = 0;
+
     // Invariant: All the names in the worklist meet condition (a).
     Deque<Name> workList = new ArrayDeque<Name>(namespace.getNameForest());
+
+    Set<Node> newNodes = Sets.newHashSet();
+
     while (!workList.isEmpty()) {
       Name name = workList.pop();
+      boolean inlinedGlobalAliasToCurrentName = false;
 
       // Don't attempt to inline a getter or setter property as a variable.
       if (name.type == Name.Type.GET || name.type == Name.Type.SET) {
@@ -175,23 +190,180 @@ class CollapseProperties implements CompilerPass {
         for (Ref ref : refs) {
           if (ref.type == Type.ALIASING_GET && ref.scope.isLocal()) {
             // {@code name} meets condition (c). Try to inline it.
+            // TODO(johnlenz): consider picking up new aliases at the end
+            // of the pass instead of immediately like we do for global
+            // inlines.
             if (inlineAliasIfPossible(ref, namespace)) {
               name.removeRef(ref);
+            }
+          } else if (ref.type == Type.ALIASING_GET
+              && ref.scope.isGlobal()
+              && ref.getTwin() == null) {  // ignore aliases in chained assignments
+            if (inlineGlobalAliasIfPossible(ref, namespace, newNodes)) {
+              name.removeRef(ref);
+              inlinedGlobalAliasToCurrentName = true;
             }
           }
         }
       }
 
-      // Check if {@code name} has any aliases left after the
+      // * Check if {@code name} has any aliases left after the
       // local-alias-inlining above.
-      if ((name.type == Name.Type.OBJECTLIT ||
+      // * Defer checking for inline-able aliases of properties of the current
+      // name if global aliases were inlined as they may have created new
+      // references to these properties
+      if (!inlinedGlobalAliasToCurrentName &&
+          (name.type == Name.Type.OBJECTLIT ||
            name.type == Name.Type.FUNCTION) &&
           name.aliasingGets == 0 && name.props != null) {
         // All of {@code name}'s children meet condition (a), so they can be
         // added to the worklist.
         workList.addAll(name.props);
       }
+
+      if (inlinedGlobalAliasToCurrentName) {
+        deferredCount++;
+      }
     }
+
+    if (!newNodes.isEmpty()) {
+      // Inlining the variable may have introduced new references
+      // to descendants of {@code name}. So those need to be collected now.
+      namespace.scanNewNodes(newNodes);
+    }
+
+    return deferredCount > 0;
+  }
+
+  /**
+   * Attempt to inline an global alias of a global name. This requires that
+   * the name is well defined: assigned unconditionally, assigned exactly once.
+   * It is assumed that, the name for which it is an alias must already
+   * meet these same requirements.
+   *
+   * @param alias The alias to inline
+   * @param newNodes nodes added when replaces aliases.
+   * @return Whether the alias was inlined.
+   */
+  private boolean inlineGlobalAliasIfPossible(
+      Ref alias, GlobalNamespace namespace, Set<Node> newNodes) {
+    // Ensure that the alias is assigned to global name at that the
+    // declaration.
+
+    Node aliasParent = alias.node.getParent();
+    if (aliasParent.isAssign() && NodeUtil.isExecutedExactlyOnce(aliasParent)) {
+      String target = aliasParent.getFirstChild().getQualifiedName();
+      if (target != null) {
+        Name name = namespace.getSlot(target);
+        if (name != null && isInlinableGlobalAlias(name)) {
+          List<Ref> refs = Lists.newArrayList(name.getRefs());
+          for (Ref ref : refs) {
+            switch (ref.type) {
+              case SET_FROM_GLOBAL:
+                continue;
+              case DIRECT_GET:
+              case ALIASING_GET:
+                Node newNode = alias.node.cloneTree();
+                Node node = ref.node;
+                node.getParent().replaceChild(node, newNode);
+                newNodes.add(newNode);
+                name.removeRef(ref);
+                break;
+              default:
+                throw new IllegalStateException();
+            }
+          }
+
+          rewriteAliasProps(name, alias.node, 0, newNodes);
+
+          // just set the original alias to null.
+          aliasParent.replaceChild(alias.node, IR.nullNode());
+          compiler.reportCodeChange();
+
+          // NOTE: It is too expensive to scan for aliases in global scope
+          // immediately, so we defer it and check for them all at once at
+          // the end of the pass.
+
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * @param name The Name whose properties references should be updated.
+   * @param value The value to use when rewriting.
+   * @param depth The chain depth.
+   * @param newNodes Expression nodes that have been updated.
+   */
+  private void rewriteAliasProps(
+      Name name, Node value, int depth, Set<Node> newNodes) {
+    if (name.props != null) {
+      Preconditions.checkState(!
+          value.getQualifiedName().equals(name.getFullName()));
+
+      for (Name prop : name.props) {
+        rewriteAliasProps(prop, value, depth + 1, newNodes);
+
+        List<Ref> refs = Lists.newArrayList(prop.getRefs());
+        for (Ref ref : refs) {
+          Node target = ref.node;
+          for (int i = 0; i <= depth; i++) {
+            if (target.isGetProp()) {
+              target = target.getFirstChild();
+            } else if (NodeUtil.isObjectLitKey(target)) {
+              // Object literal key definitions are a little trickier, as we
+              // need to find the assignment target
+              Node gparent = target.getParent().getParent();
+              if (gparent.isAssign()) {
+                target = gparent.getFirstChild();
+              } else {
+                Preconditions.checkState(NodeUtil.isObjectLitKey(gparent));
+                target = gparent;
+              }
+            } else {
+              throw new IllegalStateException(
+                  "unexpected: " + target.toString());
+            }
+          }
+          Preconditions.checkState(target.isGetProp() || target.isName());
+          target.getParent().replaceChild(target, value.cloneTree());
+          prop.removeRef(ref);
+          newNodes.add(ref.node);
+        }
+      }
+    }
+  }
+
+  private boolean isInlinableGlobalAlias(Name name) {
+    // Only simple aliases with direct usage are inlinable.
+    if (name.inExterns || name.globalSets != 1 || name.localSets != 0
+        || !name.canCollapse()) {
+      return false;
+    }
+
+    // Only allow inlining of simple references.
+    for (Ref ref : name.getRefs()) {
+      switch (ref.type) {
+        case SET_FROM_GLOBAL:
+          // Expect one global set
+          continue;
+        case SET_FROM_LOCAL:
+          throw new IllegalStateException();
+        case ALIASING_GET:
+        case DIRECT_GET:
+          continue;
+        case PROTOTYPE_GET:
+        case CALL_GET:
+        case DELETE_PROP:
+          return false;
+        default:
+          throw new IllegalStateException();
+      }
+    }
+    return true;
   }
 
   private boolean inlineAliasIfPossible(Ref alias, GlobalNamespace namespace) {

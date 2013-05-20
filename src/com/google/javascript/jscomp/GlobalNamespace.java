@@ -57,6 +57,7 @@ class GlobalNamespace
   private final Node externsRoot;
   private boolean inExterns;
   private Scope externsScope;
+  private Scope globalScope;
   private boolean generated = false;
 
   /**
@@ -182,6 +183,10 @@ class GlobalNamespace
     t.traverseAtScope(scope);
   }
 
+  void scanNewNodes(Set<Node> newNodes) {
+    scanNewNodes(globalScope, newNodes);
+  }
+
   /**
    * A filter that looks for qualified names that contain one of the nodes
    * in the given set.
@@ -195,6 +200,10 @@ class GlobalNamespace
 
     @Override
     public boolean apply(Node n) {
+      if (NodeUtil.isObjectLitKey(n)) {
+        return newNodes.contains(n);
+      }
+
       if (!n.isQualifiedName()) {
         return false;
       }
@@ -317,6 +326,11 @@ class GlobalNamespace
       if (externsRoot != null && n == externsRoot) {
         externsScope = t.getScope();
       }
+
+      if (root != null && n == root) {
+        globalScope = t.getScope();
+      }
+
 
       String name;
       boolean isSet = false;
@@ -1175,6 +1189,9 @@ class GlobalNamespace
    * node and its ancestors that may be affected.
    */
   static class Ref implements StaticReference<JSType> {
+
+    // Note: we are more aggressive about collapsing @enum and @constructor
+    // declarations than implied here, see Name#canCollapse
     enum Type {
       SET_FROM_GLOBAL,
       SET_FROM_LOCAL,
