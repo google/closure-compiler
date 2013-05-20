@@ -43,6 +43,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   private CheckLevel reportMissingOverrides = CheckLevel.WARNING;
 
+  private static final String SUGGESTION_CLASS =
+      "/** @constructor\n */\n" +
+      "function Suggest() {}\n" +
+      "Suggest.prototype.a = 1;\n" +
+      "Suggest.prototype.veryPossible = 1;\n" +
+      "Suggest.prototype.veryPossible2 = 1;\n";
+
   @Override
   public void setUp() throws Exception {
     super.setUp();
@@ -6653,11 +6660,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testIssue725() throws Exception {
     testTypes(
         "/** @typedef {{name: string}} */ var RecordType1;" +
-        "/** @typedef {{name2: string}} */ var RecordType2;" +
+        "/** @typedef {{name2222: string}} */ var RecordType2;" +
         "/** @param {RecordType1} rec */ function f(rec) {" +
-        "  alert(rec.name2);" +
+        "  alert(rec.name2222);" +
         "}",
-        "Property name2 never defined on rec");
+        "Property name2222 never defined on rec");
   }
 
   public void testIssue726() throws Exception {
@@ -11859,6 +11866,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "}",
         "Property bar never defined on A", false);
   }
+
 
   private void testTypes(String js) throws Exception {
     testTypes(js, (String) null);

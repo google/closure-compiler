@@ -43,7 +43,9 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.TernaryValue;
+import com.google.javascript.rhino.jstype.UnionType;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
@@ -90,6 +92,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.disabled(
           "JSC_INEXISTENT_PROPERTY",
           "Property {0} never defined on {1}");
+
+  static final DiagnosticType INEXISTENT_PROPERTY_WITH_SUGGESTION =
+      DiagnosticType.disabled(
+          "JSC_INEXISTENT_PROPERTY",
+          "Property {0} never defined on {1}. Did you mean {2}?");
 
   protected static final DiagnosticType NOT_A_CONSTRUCTOR =
       DiagnosticType.warning(
@@ -303,6 +310,17 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   // code.
   private int noTypeCheckSection = 0;
 
+  private Method editDistance;
+
+  private static final class SuggestionPair {
+    private final String suggestion;
+    final int distance;
+    private SuggestionPair(String suggestion, int distance) {
+      this.suggestion = suggestion;
+      this.distance = distance;
+    }
+  }
+
   public TypeCheck(AbstractCompiler compiler,
       ReverseAbstractInterpreter reverseInterpreter,
       JSTypeRegistry typeRegistry,
@@ -319,6 +337,16 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     this.reportUnknownTypes = ((Compiler) compiler).getOptions().enables(
         DiagnosticGroups.REPORT_UNKNOWN_TYPES);
     this.inferJSDocInfo = new InferJSDocInfo(compiler);
+
+    ClassLoader classLoader = TypeCheck.class.getClassLoader();
+    try {
+      Class<?> c = classLoader.loadClass(
+          "com.google.common.string.EditDistance");
+      editDistance = c.getDeclaredMethod(
+          "getEditDistance", String.class, String.class, boolean.class);
+    } catch (Exception ignored) {
+      editDistance = null;
+    }
   }
 
   public TypeCheck(AbstractCompiler compiler,
@@ -1462,12 +1490,76 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkPropertyAccessHelper(JSType objectType, String propName,
       NodeTraversal t, Node n) {
     if (!objectType.isEmptyType() &&
-        reportMissingProperties && (!isPropertyTest(n) || objectType.isStruct())) {
+        reportMissingProperties &&
+        (!isPropertyTest(n) || objectType.isStruct())) {
       if (!typeRegistry.canPropertyBeDefined(objectType, propName)) {
-        report(t, n, INEXISTENT_PROPERTY, propName,
-            validator.getReadableJSTypeName(n.getFirstChild(), true));
+        SuggestionPair pair =
+            getClosestPropertySuggestion(objectType, propName);
+        if (pair != null && pair.distance * 4 < propName.length()) {
+          report(t, n, INEXISTENT_PROPERTY_WITH_SUGGESTION, propName,
+              validator.getReadableJSTypeName(n.getFirstChild(), true),
+              pair.suggestion);
+        } else {
+          report(t, n, INEXISTENT_PROPERTY, propName,
+              validator.getReadableJSTypeName(n.getFirstChild(), true));
+        }
       }
     }
+  }
+
+  private SuggestionPair getClosestPropertySuggestion(
+      JSType objectType, String propName) {
+    if (editDistance == null) {
+      return null;
+    }
+
+    String bestSoFar = null;
+    int shortest = Integer.MAX_VALUE;
+    if (objectType instanceof ObjectType) {
+      ObjectType type = (ObjectType) objectType;
+      for (String alt : type.getPropertyNames()) {
+        int distance;
+        try {
+          distance = (Integer) editDistance.invoke(null, propName, alt, false);
+        } catch (Exception e) {
+          return null;
+        }
+        if (distance <= shortest) {
+          if (distance == shortest) {
+            // To make warning determistic across runs we 'tie-break' by
+            // alphabetical order ignore-case.
+            if (bestSoFar != null && alt.compareToIgnoreCase(bestSoFar) > 0) {
+              continue;
+            }
+          }
+          shortest = distance;
+          bestSoFar = alt;
+        }
+      }
+    } else if (objectType.isUnionType()) {
+      UnionType type = (UnionType) objectType;
+      for (JSType alt : type.getAlternates()) {
+        SuggestionPair pair = getClosestPropertySuggestion(alt, propName);
+        if (pair != null) {
+          if (pair.distance <= shortest) {
+            if (pair.distance  == shortest) {
+              if (bestSoFar != null &&
+                  pair.suggestion.compareToIgnoreCase(bestSoFar) > 0) {
+                continue;
+              }
+            }
+            shortest = pair.distance;
+            bestSoFar = pair.suggestion;
+          }
+        }
+      }
+    }
+
+    if (bestSoFar != null) {
+      return new SuggestionPair(bestSoFar, shortest);
+    }
+
+    return null;
   }
 
   /**
