@@ -66,6 +66,9 @@ public abstract class CompilerTestCase extends TestCase  {
   /** Error level reported by type checker. */
   private CheckLevel typeCheckLevel;
 
+  /** Whether to the test compiler pass before the type check. */
+  protected boolean runTypeCheckAfterProcessing = false;
+
   /** Whether the Normalize pass runs before pass being tested. */
   private boolean normalizeEnabled = false;
 
@@ -801,7 +804,7 @@ public abstract class CompilerTestCase extends TestCase  {
         // Running it twice can cause unpredictable behavior because duplicate
         // objects for the same type are created, and the type system
         // uses reference equality to compare many types.
-        if (typeCheckEnabled && i == 0) {
+        if (!runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
           TypeCheck check = createTypeCheck(compiler, typeCheckLevel);
           check.processForTesting(externsRoot, mainRoot);
         }
@@ -824,6 +827,11 @@ public abstract class CompilerTestCase extends TestCase  {
         }
         if (checkLineNumbers) {
           (new LineNumberCheck(compiler)).process(externsRoot, mainRoot);
+        }
+
+        if (runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
+          TypeCheck check = createTypeCheck(compiler, typeCheckLevel);
+          check.processForTesting(externsRoot, mainRoot);
         }
 
         hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
