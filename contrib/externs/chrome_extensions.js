@@ -21,7 +21,7 @@
  * this externs files, including:
  * A. When to add packages to this file
  * B. Optional parameters
- * C. Pseduo-types
+ * C. Pseudo-types
  * D. Events
  * E. Nullability
  *
@@ -58,7 +58,7 @@
  * C. Pseudo-types
  * The Chrome APIs define many types are that actually pseudo-types, that
  * is, they can't be instantiated by name, such as Port defined at
- * http://developer.chrome.com/extensions/extension.html#type-Port.
+ * http://developer.chrome.com/extensions/runtime.html#type-Port.
  *
  * There are two fundamentally different kinds of pseudo-types: those
  * instantiated in extension code and those instantiated in extension
@@ -261,8 +261,53 @@ chrome.runtime.id;
 chrome.runtime.getBackgroundPage = function(callback) {};
 
 
+
 /**
- * @return {!Object} The full manifest file of the app or extension.
+ * Manifest information returned from chrome.runtime.getManifest. See
+ * http://developer.chrome.com/extensions/manifest.html. Note that there are
+ * several other fields not included here. They should be added to these externs
+ * as needed.
+ * @constructor
+ */
+chrome.runtime.Manifest = function() {};
+
+
+/** @type {string} */
+chrome.runtime.Manifest.prototype.name;
+
+
+/** @type {string} */
+chrome.runtime.Manifest.prototype.version;
+
+
+/** @type {number|undefined} */
+chrome.runtime.Manifest.prototype.manifest_version;
+
+
+/** @type {string|undefined} */
+chrome.runtime.Manifest.prototype.description;
+
+
+/** @type {!chrome.runtime.Manifest.Oauth2|undefined} */
+chrome.runtime.Manifest.prototype.oauth2;
+
+
+/**
+ * Oauth2 info in the manifest.
+ * See http://developer.chrome.com/apps/app_identity.html#update_manifest.
+ * @constructor
+ */
+chrome.runtime.Manifest.Oauth2 = function() {};
+
+
+/** @type {string} */
+chrome.runtime.Manifest.Oauth2.prototype.client_id;
+
+
+/**
+ * http://developer.chrome.com/extensions/runtime.html#method-getManifest
+ * @return {!chrome.runtime.Manifest} The full manifest file of the app or
+ *     extension.
  */
 chrome.runtime.getManifest = function() {};
 
