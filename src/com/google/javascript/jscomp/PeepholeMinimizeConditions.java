@@ -1085,11 +1085,6 @@ class PeepholeMinimizeConditions
             node = new Node(Token.NOT, node).srcref(node);
             length += estimateCostOneLevel(node);
             return this;
-          case Token.NOT:
-            length -= estimateCostOneLevel(node);
-            node = node.removeFirstChild();
-            this.changed = true;
-            return this;
           // Otherwise a binary operator with a complement.
           case Token.EQ:
             complementOperator = Token.NE;
@@ -1139,12 +1134,18 @@ class PeepholeMinimizeConditions
         return new MeasuredNode(node.cloneTree(), length, changed);
       }
 
-      static MeasuredNode addNode(int opType, Node infoSource,
-          MeasuredNode l, MeasuredNode r) {
-        Node newNode = new Node(opType, l.node, r.node).srcref(infoSource);
-        int newCost = estimateCostOneLevel(newNode) + l.length + r.length;
-        return new MeasuredNode(newNode, newCost, l.changed || r.changed);
+      static MeasuredNode addNode(Node parent, MeasuredNode... children) {
+        int cost = 0;
+        boolean changed = false;
+        for (MeasuredNode child : children) {
+          parent.addChildrenToBack(child.node);
+          cost += child.length;
+          changed = changed || child.changed;
+        }
+        cost += estimateCostOneLevel(parent);
+        return new MeasuredNode(parent, cost, changed);
       }
+
     }
     private final MeasuredNode positive;
     private final MeasuredNode negative;
@@ -1152,9 +1153,8 @@ class PeepholeMinimizeConditions
     private MinimizedCondition(MeasuredNode p, MeasuredNode n) {
       Preconditions.checkArgument(p.node.getParent() == null);
       Preconditions.checkArgument(n.node.getParent() == null);
-      Preconditions.checkState(n.changed);
       positive = p;
-      negative = n;
+      negative = n.change();
     }
 
     /** Minimize the condition at the given node.
@@ -1170,10 +1170,9 @@ class PeepholeMinimizeConditions
           ImmutableSet<MeasuredNode> positiveAsts = ImmutableSet.of(
               subtree.positive.cloneTree().addNot(),
               subtree.negative.cloneTree());
-          subtree.positive.changed = true;
           ImmutableSet<MeasuredNode> negativeAsts = ImmutableSet.of(
               subtree.negative.negate(),
-              subtree.positive.change());
+              subtree.positive);
           return new MinimizedCondition(
               Collections.min(positiveAsts, AST_LENGTH_COMPARATOR),
               Collections.min(negativeAsts, AST_LENGTH_COMPARATOR));
@@ -1185,22 +1184,49 @@ class PeepholeMinimizeConditions
           MinimizedCondition leftSubtree = fromConditionNode(n.getFirstChild());
           MinimizedCondition rightSubtree = fromConditionNode(n.getLastChild());
           ImmutableSet<MeasuredNode> positiveAsts = ImmutableSet.of(
-              MeasuredNode.addNode(opType, n,
+              MeasuredNode.addNode(new Node(opType).srcref(n),
                   leftSubtree.positive.cloneTree(),
                   rightSubtree.positive.cloneTree()),
-              MeasuredNode.addNode(complementType, n,
+              MeasuredNode.addNode(new Node(complementType).srcref(n),
                   leftSubtree.negative.cloneTree(),
                   rightSubtree.negative.cloneTree()).negate());
           ImmutableSet<MeasuredNode> negativeAsts = ImmutableSet.of(
-              MeasuredNode.addNode(opType, n,
+              MeasuredNode.addNode(new Node(opType).srcref(n),
                   leftSubtree.positive,
                   rightSubtree.positive).negate(),
-              MeasuredNode.addNode(complementType, n,
+              MeasuredNode.addNode(new Node(complementType).srcref(n),
                   leftSubtree.negative,
                   rightSubtree.negative));
           return new MinimizedCondition(
               Collections.min(positiveAsts, AST_LENGTH_COMPARATOR),
               Collections.min(negativeAsts, AST_LENGTH_COMPARATOR));
+        }
+        case Token.HOOK: {
+          Node cond = n.getFirstChild();
+          Node thenNode = cond.getNext();
+          Node elseNode = thenNode.getNext();
+          MinimizedCondition thenSubtree = fromConditionNode(thenNode);
+          MinimizedCondition elseSubtree = fromConditionNode(elseNode);
+          MeasuredNode posTree = MeasuredNode.addNode(
+              new Node(Token.HOOK, cond.cloneTree()).srcref(n),
+              thenSubtree.positive,
+              elseSubtree.positive);
+          MeasuredNode negTree = MeasuredNode.addNode(
+              new Node(Token.HOOK, cond.cloneTree()).srcref(n),
+              thenSubtree.negative,
+              elseSubtree.negative);
+          return new MinimizedCondition(posTree, negTree);
+        }
+        case Token.COMMA: {
+          Node lhs = n.getFirstChild();
+          MinimizedCondition rhsSubtree = fromConditionNode(lhs.getNext());
+          MeasuredNode posTree = MeasuredNode.addNode(
+              new Node(Token.COMMA, lhs.cloneTree()).srcref(n),
+              rhsSubtree.positive);
+          MeasuredNode negTree = MeasuredNode.addNode(
+              new Node(Token.COMMA, lhs.cloneTree()).srcref(n),
+              rhsSubtree.negative);
+          return new MinimizedCondition(posTree, negTree);
         }
         default:
           return unoptimized(n);

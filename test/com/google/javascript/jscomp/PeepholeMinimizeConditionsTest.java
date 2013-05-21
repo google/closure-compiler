@@ -330,7 +330,7 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold("while(!(!!x&&y)) foo()", "while(!x||!y) foo()");
     fold("while(x&&!0) foo()", "while(x) foo()");
     fold("while(x||!1) foo()", "while(x) foo()");
-    fold("while(!((x,y)&&z)) foo()", "while(!(x,y)||!z) foo()");
+    fold("while(!((x,y)&&z)) foo()", "while((x,!y)||!z) foo()");
   }
 
   public void testMinimizeDemorganRemoveLeadingNot() {
@@ -367,9 +367,20 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     foldSame("if(!a&&!b)for(;f(););");
   }
 
-  public void testSwapHook() {
+  public void testMinimizeHook() {
     fold("!x ? foo() : bar()",
          "x ? bar() : foo()");
+    fold("while(!(x ? y : z)) foo();",
+         "while(x ? !y : !z) foo();");
+    fold("(x ? !y : !z) ? foo() : bar()",
+         "(x ? y : z) ? bar() : foo()");
+  }
+
+  public void testMinimizeComma() {
+    fold("while(!(inc(), test())) foo();",
+         "while(inc(), !test()) foo();");
+    fold("(inc(), !test()) ? foo() : bar()",
+         "(inc(), test()) ? bar() : foo()");
   }
 
   public void testMinimizeExprResult() {
