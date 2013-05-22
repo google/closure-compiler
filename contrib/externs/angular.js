@@ -28,7 +28,6 @@
  *     $httpBackend
  *     $interpolate
  *     $locale
- *     $parse
  *     $resource
  *     $rootElement
  *     $rootScope
@@ -70,7 +69,7 @@ var angular = {};
 angular.bind = function(self, fn, args) {};
 
 /**
- * @param {Element} element
+ * @param {Element|HTMLDocument} element
  * @param {Array.<string|Function>=} opt_modules
  * @return {function()}
  */
@@ -578,6 +577,7 @@ angular.noop = function() {};
 
 /**
  * @typedef {{
+ *   $$phase: string,
  *   $apply: function((string|function(angular.Scope))=):*,
  *   $broadcast: function(string, ...[*]),
  *   $destroy: function(),
@@ -595,6 +595,9 @@ angular.noop = function() {};
  *   }}
  */
 angular.Scope;
+
+/** @type {string} */
+angular.Scope.$$phase;
 
 /**
  * @param {(string|function(angular.Scope))=} opt_exp
@@ -1278,6 +1281,31 @@ angular.FormController.prototype.$pristine;
  * @type {boolean}
  */
 angular.FormController.prototype.$valid;
+
+/******************************************************************************
+ * $parse Service
+ *****************************************************************************/
+
+/**
+ * @param {string} expression
+ * @return {!angular.$parse.Expression}
+ */
+angular.$parse = function(expression) {};
+
+/**
+ * A made-up class for the type checker.
+ * @typedef {
+ *   function(angular.Scope, Object=)
+ *   |{assign: function(angular.Scope, *)}
+ * }
+ */
+angular.$parse.Expression;
+
+/**
+ * @param {angular.Scope} scope
+ * @param {*} newVal
+ */
+angular.$parse.Expression.prototype.assign = function(scope, newVal) {};
 
 /******************************************************************************
  * $provide Service
