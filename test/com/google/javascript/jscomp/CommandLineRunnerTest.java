@@ -479,6 +479,31 @@ public class CommandLineRunnerTest extends TestCase {
         "try { new Function('this is an error'); } catch(a) { alert('x'); }");
   }
 
+  public void testSideEffectIntegration() {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    test("/** @constructor */" +
+         "var Foo = function() {};" +
+
+         "Foo.prototype.blah = function() {" +
+         "  Foo.bar_(this)" +
+         "};" +
+
+         "Foo.bar_ = function(f) {" +
+         "  f.x = 5;" +
+         "};" +
+
+         "var y = new Foo();" +
+
+         "Foo.bar_({});" +
+
+         // We used to strip this too
+         // due to bad side-effect propagation.
+         "y.blah();" +
+
+         "alert(y);",
+         "var a = new function(){}; a.a = 5; alert(a);");
+  }
+
   public void testDebugFlag1() {
     args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
     args.add("--debug=false");

@@ -30,6 +30,7 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
 
   @Override public void setUp() throws Exception {
     super.setUp();
+    enableComputeSideEffects();
     removeNoOpStatements = true;
   }
 
@@ -420,5 +421,12 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
   public void testDontRemoveBreakInTryFinallySwitch() throws Exception {
     testSame("function f() {b:try{throw 9} finally {" +
              "switch(x) {case 1: break b} } return 1;}");
+  }
+
+  public void testIssue1001() throws Exception {
+    test("function f(x) { x.property = 3; } f({})",
+         "function f(x) { x.property = 3; }");
+    test("function f(x) { x.property = 3; } new f({})",
+         "function f(x) { x.property = 3; }");
   }
 }

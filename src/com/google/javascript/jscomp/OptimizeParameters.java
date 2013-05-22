@@ -392,10 +392,24 @@ class OptimizeParameters
 
   private void optimizeCallSite(
       SimpleDefinitionFinder defFinder, List<Parameter> parameters, Node call) {
+    boolean mayMutateArgs = call.mayMutateArguments();
+    boolean mayMutateGlobalsOrThrow = call.mayMutateGlobalStateOrThrow();
     for (int index = parameters.size() - 1; index >= 0; index--) {
       Parameter p = parameters.get(index);
       if (p.shouldRemove()) {
         eliminateCallParamAt(defFinder, p, call, index);
+
+        if (mayMutateArgs && !mayMutateGlobalsOrThrow &&
+            // We want to cover both global-state arguments, and
+            // expressions that might throw exceptions.
+            // We're deliberately conservative here b/c it's
+            // difficult to test all the edge cases.
+            !NodeUtil.isImmutableValue(p.getArg())) {
+          mayMutateGlobalsOrThrow = true;
+          call.setSideEffectFlags(
+              new Node.SideEffectFlags(call.getSideEffectFlags())
+              .setMutatesGlobalState());
+        }
       }
     }
   }

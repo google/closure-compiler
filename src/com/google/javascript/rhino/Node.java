@@ -2126,6 +2126,17 @@ public class Node implements Cloneable, Serializable {
   }
 
   /**
+   * @return Whether the only side-effect is "modifies arguments"
+   */
+  public boolean isOnlyModifiesArgumentsCall() {
+    return areBitFlagsSet(
+        getSideEffectFlags() & Node.NO_SIDE_EFFECTS,
+        Node.FLAG_GLOBAL_STATE_UNMODIFIED
+            | Node.FLAG_THIS_UNMODIFIED
+            | Node.FLAG_NO_THROWS);
+  }
+
+  /**
    * Returns true if this node is a function or constructor call that
    * has no side effects.
    */
@@ -2140,6 +2151,17 @@ public class Node implements Cloneable, Serializable {
    */
   public boolean isLocalResultCall() {
     return areBitFlagsSet(getSideEffectFlags(), FLAG_LOCAL_RESULTS);
+  }
+
+  /** Returns true if this is a new/call that may mutate its arguments. */
+  public boolean mayMutateArguments() {
+    return !areBitFlagsSet(getSideEffectFlags(), FLAG_ARGUMENTS_UNMODIFIED);
+  }
+
+  /** Returns true if this is a new/call that may mutate global state or throw. */
+  public boolean mayMutateGlobalStateOrThrow() {
+    return !areBitFlagsSet(getSideEffectFlags(),
+        FLAG_GLOBAL_STATE_UNMODIFIED | FLAG_NO_THROWS);
   }
 
   /**

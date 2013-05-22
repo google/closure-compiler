@@ -303,16 +303,13 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   public void testAnnotationInExterns_new10() throws Exception {
-    // While "externObjSEThisMethod2" only modifies it arguments
-    // and the arguments are known local values, we don't
-    // yet connect the dots, and "f" is consider to have
-    // global side-effects.
     checkMarkedCalls(
         "function f() {" +
         "  new externObjSEThis().externObjSEThisMethod2('') " +
         "};" +
         "f();",
-        ImmutableList.<String>of("externObjSEThis"));
+        ImmutableList.<String>of(
+            "externObjSEThis", "NEW STRING externObjSEThisMethod2", "f"));
   }
 
   public void testAnnotationInExterns1() throws Exception {
@@ -840,7 +837,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   public void testUnaryOperators5() throws Exception {
     checkMarkedCalls("function f(x) {x.foo++}" +
                      "f({foo : 0})",
-                     ImmutableList.<String>of());
+                     ImmutableList.<String>of("f"));
   }
 
   public void testDeleteOperator1() throws Exception {
@@ -1066,6 +1063,53 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "f(); g()";
 
     checkMarkedCalls(source, ImmutableList.<String>of("A", "A", "f"));
+  }
+
+  public void testMutatesArguments1() throws Exception {
+    String source = "function f(x) { x.y = 1; }\n" +
+        "f({});";
+    checkMarkedCalls(source, ImmutableList.<String>of("f"));
+  }
+
+  public void testMutatesArguments2() throws Exception {
+    String source = "function f(x) { x.y = 1; }\n" +
+        "f(window);";
+    checkMarkedCalls(source, ImmutableList.<String>of());
+  }
+
+  public void testMutatesArguments3() throws Exception {
+    // We could do better here with better side-effect propagation.
+    String source = "function f(x) { x.y = 1; }\n" +
+        "function g(x) { f(x); }\n" +
+        "g({});";
+    checkMarkedCalls(source, ImmutableList.<String>of());
+  }
+
+  public void testMutatesArguments4() throws Exception {
+    String source = "function f(x) { x.y = 1; }\n" +
+        "function g(x) { f({}); x.y = 1; }\n" +
+        "g({});";
+    checkMarkedCalls(source, ImmutableList.<String>of("f", "g"));
+  }
+
+  public void testMutatesArgumentsArray1() throws Exception {
+    // We could be smarter here.
+    String source = "function f(x) { arguments[0] = 1; }\n" +
+        "f({});";
+    checkMarkedCalls(source, ImmutableList.<String>of());
+  }
+
+  public void testMutatesArgumentsArray2() throws Exception {
+    // We could be smarter here.
+    String source = "function f(x) { arguments[0].y = 1; }\n" +
+        "f({});";
+    checkMarkedCalls(source, ImmutableList.<String>of());
+  }
+
+  public void testMutatesArgumentsArray3() throws Exception {
+    String source = "function f(x) { arguments[0].y = 1; }\n" +
+        "f(x);";
+    checkMarkedCalls(source, ImmutableList.<String>of());
   }
 
   public void testCallFunctionFOrG() throws Exception {

@@ -92,6 +92,11 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   private boolean markNoSideEffects = false;
 
+  /**
+   * Whether the PureFunctionIdentifier pass runs before the pass being tested
+   */
+  private boolean computeSideEffects = false;
+
   /** The most recently used Compiler instance. */
   private Compiler lastCompiler;
 
@@ -309,8 +314,18 @@ public abstract class CompilerTestCase extends TestCase  {
    *
    * @see MarkNoSideEffectCalls
    */
+  // TODO(nicksantos): This pass doesn't get run anymore. It should be removed.
   void enableMarkNoSideEffects() {
     markNoSideEffects  = true;
+  }
+
+  /**
+   * Run the PureFunctionIdentifier pass before running the test pass.
+   *
+   * @see MarkNoSideEffectCalls
+   */
+  void enableComputeSideEffects() {
+    computeSideEffects  = true;
   }
 
   /**
@@ -812,6 +827,12 @@ public abstract class CompilerTestCase extends TestCase  {
         // Only run the normalize pass once, if asked.
         if (normalizeEnabled && i == 0) {
           normalizeActualCode(compiler, externsRoot, mainRoot);
+        }
+
+        if (computeSideEffects && i == 0) {
+          PureFunctionIdentifier.Driver mark =
+              new PureFunctionIdentifier.Driver(compiler, null, false);
+          mark.process(externsRoot, mainRoot);
         }
 
         if (markNoSideEffects && i == 0) {

@@ -182,16 +182,21 @@ class MarkNoSideEffectCalls implements CompilerPass {
         return;
       }
 
+      boolean maybeFunction = false;
       for (Definition def : definitions) {
         Node lValue = def.getLValue();
         Preconditions.checkNotNull(lValue);
-        if (!noSideEffectFunctionNames.contains(lValue) &&
-            definitionTypeContainsFunctionType(def)) {
-          return;
+        if (definitionTypeContainsFunctionType(def)) {
+          maybeFunction = true;
+          if (!noSideEffectFunctionNames.contains(lValue)) {
+            return;
+          }
         }
       }
 
-      node.setSideEffectFlags(Node.NO_SIDE_EFFECTS);
+      if (maybeFunction) {
+        node.setSideEffectFlags(Node.NO_SIDE_EFFECTS);
+      }
     }
   }
 }

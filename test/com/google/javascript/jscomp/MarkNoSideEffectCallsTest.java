@@ -251,6 +251,11 @@ public class MarkNoSideEffectCallsTest extends CompilerTestCase {
          null, INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
+  public void testCallNumber() throws Exception {
+    testMarkCalls("", "var x = 1; x();",
+                  ImmutableList.<String>of());
+  }
+
   void testMarkCalls(String source, List<String> expected) {
     testMarkCalls("", source, expected);
   }

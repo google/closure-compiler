@@ -954,6 +954,11 @@ public final class NodeUtil {
       return false;
     }
 
+    if (callNode.isOnlyModifiesArgumentsCall() &&
+        allArgsUnescapedLocal(callNode)) {
+      return false;
+    }
+
     Node nameNode = callNode.getFirstChild();
     if (nameNode.isName() &&
         CONSTRUCTORS_WITHOUT_SIDE_EFFECTS.contains(nameNode.getString())) {
@@ -1000,6 +1005,11 @@ public final class NodeUtil {
     }
 
     if (callNode.isNoSideEffectsCall()) {
+      return false;
+    }
+
+    if (callNode.isOnlyModifiesArgumentsCall() &&
+        allArgsUnescapedLocal(callNode)) {
       return false;
     }
 
@@ -1099,6 +1109,16 @@ public final class NodeUtil {
       default:
         return false;
     }
+  }
+
+  static boolean allArgsUnescapedLocal(Node callOrNew) {
+    for (Node arg = callOrNew.getFirstChild().getNext();
+         arg != null; arg = arg.getNext()) {
+      if (!evaluatesToLocalValue(arg)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**

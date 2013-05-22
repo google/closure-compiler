@@ -321,10 +321,12 @@ class PureFunctionIdentifier implements CompilerPass {
           FunctionInformation functionInfo =
               functionSideEffectMap.get(def.getRValue());
           Preconditions.checkNotNull(functionInfo);
-          // TODO(johnlenz): set the arguments separately from the
-          // global state flag.
           if (functionInfo.mutatesGlobalState()) {
             flags.setMutatesGlobalState();
+          }
+
+          if (functionInfo.mutatesArguments()) {
+            flags.setMutatesArguments();
           }
 
           if (functionInfo.functionThrows) {
@@ -493,6 +495,15 @@ class PureFunctionIdentifier implements CompilerPass {
 
       for (Iterator<Var> i = t.getScope().getVars(); i.hasNext();) {
         Var v = i.next();
+
+        boolean param = v.getParentNode().isParamList();
+        if (param &&
+            !sideEffectInfo.blacklisted.contains(v) &&
+            sideEffectInfo.taintedLocals.contains(v)) {
+          sideEffectInfo.setTaintsArguments();
+          continue;
+        }
+
         boolean localVar = false;
         // Parameters and catch values come can from other scopes.
         if (v.getParentNode().isVar()) {
@@ -803,6 +814,14 @@ class PureFunctionIdentifier implements CompilerPass {
         changed = true;
       }
 
+      if (!caller.mutatesGlobalState() && callee.mutatesArguments() &&
+          !NodeUtil.allArgsUnescapedLocal(callSite)) {
+        // TODO(nicksantos): We should track locals in the caller
+        // and using that to be more precise. See testMutatesArguments3.
+        caller.setTaintsGlobalState();
+        changed = true;
+      }
+
       if (callee.mutatesThis()) {
         // Side effects only propagate via regular calls.
         // Calling a constructor that modifies "this" has no side effects.
@@ -980,7 +999,14 @@ class PureFunctionIdentifier implements CompilerPass {
      * Returns true if function mutates global state.
      */
     boolean mutatesGlobalState() {
-      // TODO(johnlenz): track arguments separately.
+      return taintsGlobalState || taintsUnknown;
+    }
+
+
+    /**
+     * Returns true if function mutates its arguments.
+     */
+    boolean mutatesArguments() {
       return taintsGlobalState || taintsArguments || taintsUnknown;
     }
 
