@@ -981,6 +981,13 @@ class PeepholeMinimizeConditions
           // This IF node has no else clause.
           n = n.getLastChild();
           continue;
+        case Token.BLOCK:
+          if (n.getChildCount() != 1) {
+            return false;
+          }
+          // This BLOCK has no curly braces.
+          n = n.getLastChild();
+          continue;
         case Token.WITH:
         case Token.WHILE:
         case Token.FOR:

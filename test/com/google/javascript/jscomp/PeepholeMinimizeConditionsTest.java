@@ -367,6 +367,11 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     foldSame("if(!a&&!b)for(;f(););");
   }
 
+  public void testNoSwapWithDanglingElse() {
+    foldSame("if(!x) {for(;;)foo(); for(;;)bar()} else if(y) for(;;) f()");
+    foldSame("if(!a&&!b) {for(;;)foo(); for(;;)bar()} else if(y) for(;;) f()");
+  }
+
   public void testMinimizeHook() {
     fold("!x ? foo() : bar()",
          "x ? bar() : foo()");
