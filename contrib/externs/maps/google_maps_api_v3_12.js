@@ -1173,6 +1173,11 @@ google.maps.GeocoderResult.prototype.geometry;
 /**
  * @type {Array.<string>}
  */
+google.maps.GeocoderResult.prototype.postcode_localities;
+
+/**
+ * @type {Array.<string>}
+ */
 google.maps.GeocoderResult.prototype.types;
 
 /**
@@ -2671,6 +2676,11 @@ google.maps.MarkerOptions.prototype.animation;
  * @type {boolean}
  */
 google.maps.MarkerOptions.prototype.clickable;
+
+/**
+ * @type {boolean}
+ */
+google.maps.MarkerOptions.prototype.crossOnDrag;
 
 /**
  * @type {string}
@@ -4283,14 +4293,16 @@ google.maps.adsense.AdUnit.prototype.getTitleColor = function() {};
 google.maps.adsense.AdUnit.prototype.getUrlColor = function() {};
 
 /**
- * @return {string}
+ * @param {string} backgroundColor
+ * @return {undefined}
  */
-google.maps.adsense.AdUnit.prototype.setBackgroundColor = function() {};
+google.maps.adsense.AdUnit.prototype.setBackgroundColor = function(backgroundColor) {};
 
 /**
- * @return {string}
+ * @param {string} borderColor
+ * @return {undefined}
  */
-google.maps.adsense.AdUnit.prototype.setBorderColor = function() {};
+google.maps.adsense.AdUnit.prototype.setBorderColor = function(borderColor) {};
 
 /**
  * @param {string} channelNumber
@@ -4317,19 +4329,22 @@ google.maps.adsense.AdUnit.prototype.setMap = function(map) {};
 google.maps.adsense.AdUnit.prototype.setPosition = function(position) {};
 
 /**
- * @return {string}
+ * @param {string} textColor
+ * @return {undefined}
  */
-google.maps.adsense.AdUnit.prototype.setTextColor = function() {};
+google.maps.adsense.AdUnit.prototype.setTextColor = function(textColor) {};
 
 /**
- * @return {string}
+ * @param {string} titleColor
+ * @return {undefined}
  */
-google.maps.adsense.AdUnit.prototype.setTitleColor = function() {};
+google.maps.adsense.AdUnit.prototype.setTitleColor = function(titleColor) {};
 
 /**
- * @return {string}
+ * @param {string} urlColor
+ * @return {undefined}
  */
-google.maps.adsense.AdUnit.prototype.setUrlColor = function() {};
+google.maps.adsense.AdUnit.prototype.setUrlColor = function(urlColor) {};
 
 /**
  * @interface
