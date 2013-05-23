@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -4397,7 +4396,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   public void testBug1942972() throws Exception {
     testTypes(
-        "var google = {\n"+
+        "var google = {\n" +
         "  gears: {\n" +
         "    factory: {},\n" +
         "    workerPool: {}\n" +
@@ -5053,7 +5052,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @type {Foo} */ var x = /** @type {Foo} */ ({})");
 
     testTypes("/** @constructor */ function Foo() {} \n" +
-        "/** @type {Foo} */ var x = (/** @type {Foo} */ y)");
+        "/** @type {Foo} */ var x = /** @type {Foo} */ (y)");
   }
 
   public void testNestedCasts() throws Exception {

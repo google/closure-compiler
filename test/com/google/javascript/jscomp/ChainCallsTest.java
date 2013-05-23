@@ -80,8 +80,8 @@ public class ChainCallsTest extends CompilerTestCase {
         + "Foo.prototype.bar = function() { return this; };\n"
         + "/** @constructor\n@extends {Foo} */ function Baz() {}\n"
         + "Baz.prototype.bar = function() {};\n"
-        + "(/** @type {Foo} */ new Baz()).bar();\n"
-        + "(/** @type {Foo} */ new Baz()).bar();\n");
+        + "/** @type {Foo} */ (new Baz()).bar();\n"
+        + "/** @type {Foo} */ (new Baz()).bar();\n");
   }
 
   public void testSimpleDefinitionFinder() {

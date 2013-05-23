@@ -642,7 +642,7 @@ public class TightenTypesTest extends CompilerTestCase {
   public void testRestrictToCast() {
     testSame("/** @constructor */ function Foo() {};\n"
              + "var a = [];\n"
-             + "var foo = (/** @type {Foo} */ a[0]);\n"
+             + "var foo = /** @type {Foo} */ (a[0]);\n"
              + "var u = a[0];\n"
              + "new Foo");
 
@@ -654,7 +654,7 @@ public class TightenTypesTest extends CompilerTestCase {
     testSame("/** @constructor \n @implements Int */ function Foo() {};\n"
              + "/** @interface */ function Int() {};\n"
              + "var a = [];\n"
-             + "var foo = (/** @type {Int} */ a[0]);\n"
+             + "var foo = /** @type {Int} */ (a[0]);\n"
              + "new Foo");
 
     assertType("Foo", getType("foo"));

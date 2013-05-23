@@ -2488,7 +2488,7 @@ public class IntegrationTest extends IntegrationTestCase {
 
     String code = "" +
         "console.log(" +
-            "/** @type {function():!string} */ ((new x())['abc'])() );";
+            "/** @type {function():!string} */ ((new x())['abc'])());";
     String result = "" +
         "console.log((new x()).abc());";
     test(options, code, result);

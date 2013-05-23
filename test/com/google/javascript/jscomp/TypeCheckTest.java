@@ -4399,7 +4399,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               " * @implements {Foo}\n" +
               " */" +
               "function Bar(){ this.x = 123; }\n" +
-              "var z = /** @type {Foo} */(new Bar)['x'];");
+              "var z = /** @type {Foo} */(new Bar())['x'];");
   }
 
   public void testGetelemStruct7() throws Exception {
@@ -7842,7 +7842,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {Foo} */ var x = /** @type {Foo} */ (y)");
 
     testTypes("/** @constructor */ function Foo() {} \n" +
-        "/** @type {Foo} */ var x = (/** @type {Foo} */ y)");
+        "/** @type {Foo} */ var x = /** @type {Foo} */ (y)");
   }
 
   public void testCast17b() throws Exception {

@@ -130,7 +130,7 @@ public class ParserTest extends BaseJSTypeTestCase {
 
     assertEquals(Token.GETELEM, call.getType());
     assertEquals(3, call.getLineno());
-    assertEquals(2, call.getCharno());
+    assertEquals(1, call.getCharno());
   }
 
   public void testLinenoCharnoForComparison() throws Exception {
@@ -305,8 +305,6 @@ public class ParserTest extends BaseJSTypeTestCase {
   public void testJSDocAttachment3() {
     Node assignNode = parse(
         "/** @type number */goog.FOO = 5;").getFirstChild().getFirstChild();
-
-    // ASSIGN
     assertEquals(Token.ASSIGN, assignNode.getType());
     JSDocInfo info = assignNode.getJSDocInfo();
     assertNotNull(info);
@@ -315,7 +313,7 @@ public class ParserTest extends BaseJSTypeTestCase {
 
   public void testJSDocAttachment4() {
     Node varNode = parse(
-        "var a, /** @define {number} */b = 5;").getFirstChild();
+        "var a, /** @define {number} */ b = 5;").getFirstChild();
 
     // ASSIGN
     assertEquals(Token.VAR, varNode.getType());
@@ -477,6 +475,29 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertEquals(Token.EXPR_RESULT, exprCall.getType());
     assertNull(exprCall.getNext().getJSDocInfo());
     assertNotNull(exprCall.getFirstChild().getJSDocInfo());
+  }
+
+  public void testJSDocAttachment17() {
+    Node fn =
+        parse(
+            "function f() { " +
+            "  return /** @type {string} */ (g(1 /** @desc x */));" +
+            "};").getFirstChild();
+    assertEquals(Token.FUNCTION, fn.getType());
+    Node cast = fn.getLastChild().getFirstChild().getFirstChild();
+    assertEquals(Token.CAST, cast.getType());
+  }
+
+  public void testJSDocAttachment18() {
+    Node fn =
+        parse(
+            "function f() { " +
+            "  var x = /** @type {string} */ (y);" +
+            "};").getFirstChild();
+    assertEquals(Token.FUNCTION, fn.getType());
+    Node cast =
+        fn.getLastChild().getFirstChild().getFirstChild().getFirstChild();
+    assertEquals(Token.CAST, cast.getType());
   }
 
   public void testInlineJSDocAttachment1() {
@@ -1018,28 +1039,28 @@ public class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testMisplacedTypeAnnotation2() {
-    // missing parenthese for the cast.
+    // missing parentheses for the cast.
     parse(
         "var o = /** @type {string} */ getValue();",
         MISPLACED_TYPE_ANNOTATION);
   }
 
   public void testMisplacedTypeAnnotation3() {
-    // missing parenthese for the cast.
+    // missing parentheses for the cast.
     parse(
         "var o = 1 + /** @type {string} */ value;",
         MISPLACED_TYPE_ANNOTATION);
   }
 
   public void testMisplacedTypeAnnotation4() {
-    // missing parenthese for the cast.
+    // missing parentheses for the cast.
     parse(
         "var o = /** @type {!Array.<string>} */ ['hello', 'you'];",
         MISPLACED_TYPE_ANNOTATION);
   }
 
   public void testMisplacedTypeAnnotation5() {
-    // missing parenthese for the cast.
+    // missing parentheses for the cast.
     parse(
         "var o = (/** @type {!Foo} */ {});",
         MISPLACED_TYPE_ANNOTATION);
