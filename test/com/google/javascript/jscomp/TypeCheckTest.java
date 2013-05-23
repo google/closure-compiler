@@ -6737,6 +6737,21 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Property unknownProp never defined on obj");
   }
 
+  public void testIssue1002() throws Exception {
+    testTypes(
+        "/** @interface */" +
+        "var I = function() {};" +
+        "/** @constructor @implements {I} */" +
+        "var A = function() {};" +
+        "/** @constructor @implements {I} */" +
+        "var B = function() {};" +
+        "var f = function() {" +
+        "  if (A === B) {" +
+        "    new B();" +
+        "  }" +
+        "};");
+  }
+
   /**
    * Tests that the || operator is type checked correctly, that is of
    * the type of the first argument or of the second argument. See
@@ -10116,7 +10131,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     return t.getTypedPercent();
   }
 
-  private ObjectType getInstanceType(Node js1Node) {
+  private static ObjectType getInstanceType(Node js1Node) {
     JSType type = js1Node.getFirstChild().getJSType();
     assertNotNull(type);
     assertTrue(type instanceof FunctionType);

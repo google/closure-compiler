@@ -1176,7 +1176,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * Returns true if any type in the chain has an implicitCast annotation for
    * the given property.
    */
-  private boolean propertyIsImplicitCast(ObjectType type, String prop) {
+  private static boolean propertyIsImplicitCast(ObjectType type, String prop) {
     for (; type != null; type = type.getImplicitPrototype()) {
       JSDocInfo docInfo = type.getOwnPropertyJSDocInfo(prop);
       if (docInfo != null && docInfo.isImplicitCast()) {
@@ -1658,7 +1658,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     JSType type = getJSType(constructor).restrictByNotNullOrUndefined();
     if (type.isConstructor() || type.isEmptyType() || type.isUnknownType()) {
       FunctionType fnType = type.toMaybeFunctionType();
-      if (fnType != null) {
+      if (fnType != null && fnType.hasInstanceType()) {
         visitParameterList(t, n, fnType);
         ensureTyped(t, n, fnType.getInstanceType());
       } else {
