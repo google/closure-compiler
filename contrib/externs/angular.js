@@ -1287,25 +1287,30 @@ angular.FormController.prototype.$valid;
  *****************************************************************************/
 
 /**
- * @param {string} expression
- * @return {!angular.$parse.Expression}
+ * @typedef {function(string):!angular.$parse.Expression}
  */
-angular.$parse = function(expression) {};
+angular.$parse;
 
 /**
- * A made-up class for the type checker.
- * @typedef {
- *   function(angular.Scope, Object=)
- *   |{assign: function(angular.Scope, *)}
- * }
+ * @typedef {function((!angular.Scope|!Object)):*}
  */
 angular.$parse.Expression;
 
 /**
- * @param {angular.Scope} scope
- * @param {*} newVal
+ * Augment the angular.$parse.Expression type definition by reopening the type
+ * via an artificial angular.$parse instance.
+ *
+ * This allows us to define methods on function objects which is something
+ * that can't be expressed via typical type annotations.
+ *
+ * @type {angular.$parse.Expression}
  */
-angular.$parse.Expression.prototype.assign = function(scope, newVal) {};
+angular.$parse_;
+
+/**
+ * @type {function((!angular.Scope|!Object), *)}
+ */
+angular.$parse_.assign = function(scope, newValue) {};
 
 /******************************************************************************
  * $provide Service
