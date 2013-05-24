@@ -20,7 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.GlobalNamespace.AstChange;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.GlobalNamespace.Ref.Type;
@@ -37,7 +37,6 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Flattens global objects/namespaces by replacing each '.' with '$' in
@@ -141,11 +140,6 @@ class CollapseProperties implements CompilerPass {
     }
   }
 
-  private void inlineAliases(GlobalNamespace namespace) {
-    // inline names until we reach a fixed point.
-    do {} while (inlineAliasesOnce(namespace));
-  }
-
   /**
    * For each qualified name N in the global scope, we check if:
    * (a) No ancestor of N is ever aliased or assigned an unknown value type.
@@ -163,19 +157,13 @@ class CollapseProperties implements CompilerPass {
    * If (a) and (b) and (d) are true, then inline the alias if possible (if
    * it is assigned exactly once unconditionally).
    * @see InlineVariables
-   * @return Whether any work still needs to be done.
    */
-  private boolean inlineAliasesOnce(GlobalNamespace namespace) {
-    int deferredCount = 0;
-
+  private void inlineAliases(GlobalNamespace namespace) {
     // Invariant: All the names in the worklist meet condition (a).
     Deque<Name> workList = new ArrayDeque<Name>(namespace.getNameForest());
 
-    Set<Node> newNodes = Sets.newHashSet();
-
     while (!workList.isEmpty()) {
       Name name = workList.pop();
-      boolean inlinedGlobalAliasToCurrentName = false;
 
       // Don't attempt to inline a getter or setter property as a variable.
       if (name.type == Name.Type.GET || name.type == Name.Type.SET) {
@@ -199,40 +187,23 @@ class CollapseProperties implements CompilerPass {
           } else if (ref.type == Type.ALIASING_GET
               && ref.scope.isGlobal()
               && ref.getTwin() == null) {  // ignore aliases in chained assignments
-            if (inlineGlobalAliasIfPossible(ref, namespace, newNodes)) {
+            if (inlineGlobalAliasIfPossible(ref, namespace)) {
               name.removeRef(ref);
-              inlinedGlobalAliasToCurrentName = true;
             }
           }
         }
       }
 
-      // * Check if {@code name} has any aliases left after the
+      // Check if {@code name} has any aliases left after the
       // local-alias-inlining above.
-      // * Defer checking for inline-able aliases of properties of the current
-      // name if global aliases were inlined as they may have created new
-      // references to these properties
-      if (!inlinedGlobalAliasToCurrentName &&
-          (name.type == Name.Type.OBJECTLIT ||
+      if ((name.type == Name.Type.OBJECTLIT ||
            name.type == Name.Type.FUNCTION) &&
           name.aliasingGets == 0 && name.props != null) {
         // All of {@code name}'s children meet condition (a), so they can be
         // added to the worklist.
         workList.addAll(name.props);
       }
-
-      if (inlinedGlobalAliasToCurrentName) {
-        deferredCount++;
-      }
     }
-
-    if (!newNodes.isEmpty()) {
-      // Inlining the variable may have introduced new references
-      // to descendants of {@code name}. So those need to be collected now.
-      namespace.scanNewNodes(newNodes);
-    }
-
-    return deferredCount > 0;
   }
 
   /**
@@ -242,11 +213,10 @@ class CollapseProperties implements CompilerPass {
    * meet these same requirements.
    *
    * @param alias The alias to inline
-   * @param newNodes nodes added when replaces aliases.
    * @return Whether the alias was inlined.
    */
   private boolean inlineGlobalAliasIfPossible(
-      Ref alias, GlobalNamespace namespace, Set<Node> newNodes) {
+      Ref alias, GlobalNamespace namespace) {
     // Ensure that the alias is assigned to global name at that the
     // declaration.
 
@@ -256,6 +226,8 @@ class CollapseProperties implements CompilerPass {
       if (target != null) {
         Name name = namespace.getSlot(target);
         if (name != null && isInlinableGlobalAlias(name)) {
+          List<AstChange> newNodes = Lists.newArrayList();
+
           List<Ref> refs = Lists.newArrayList(name.getRefs());
           for (Ref ref : refs) {
             switch (ref.type) {
@@ -266,7 +238,7 @@ class CollapseProperties implements CompilerPass {
                 Node newNode = alias.node.cloneTree();
                 Node node = ref.node;
                 node.getParent().replaceChild(node, newNode);
-                newNodes.add(newNode);
+                newNodes.add(new AstChange(ref.module, ref.scope, newNode));
                 name.removeRef(ref);
                 break;
               default:
@@ -280,9 +252,9 @@ class CollapseProperties implements CompilerPass {
           aliasParent.replaceChild(alias.node, IR.nullNode());
           compiler.reportCodeChange();
 
-          // NOTE: It is too expensive to scan for aliases in global scope
-          // immediately, so we defer it and check for them all at once at
-          // the end of the pass.
+          // Inlining the variable may have introduced new references
+          // to descendants of {@code name}. So those need to be collected now.
+          namespace.scanNewNodes(newNodes);
 
           return true;
         }
@@ -299,7 +271,7 @@ class CollapseProperties implements CompilerPass {
    * @param newNodes Expression nodes that have been updated.
    */
   private void rewriteAliasProps(
-      Name name, Node value, int depth, Set<Node> newNodes) {
+      Name name, Node value, int depth, List<AstChange> newNodes) {
     if (name.props != null) {
       Preconditions.checkState(!
           value.getQualifiedName().equals(name.getFullName()));
@@ -331,7 +303,8 @@ class CollapseProperties implements CompilerPass {
           Preconditions.checkState(target.isGetProp() || target.isName());
           target.getParent().replaceChild(target, value.cloneTree());
           prop.removeRef(ref);
-          newNodes.add(ref.node);
+          // Rescan the expression root.
+          newNodes.add(new AstChange(ref.module, ref.scope, ref.node));
         }
       }
     }
@@ -383,19 +356,20 @@ class CollapseProperties implements CompilerPass {
       (new NodeTraversal(compiler, collector)).traverseAtScope(scope);
 
       ReferenceCollection aliasRefs = collector.getReferences(aliasVar);
+      List<AstChange> newNodes = Lists.newArrayList();
       if (aliasRefs.isWellDefined()
           && aliasRefs.firstReferenceIsAssigningDeclaration()
           && aliasRefs.isAssignedOnceInLifetime()) {
         // The alias is well-formed, so do the inlining now.
         int size = aliasRefs.references.size();
-        Set<Node> newNodes = Sets.newHashSetWithExpectedSize(size - 1);
         for (int i = 1; i < size; i++) {
           ReferenceCollectingCallback.Reference aliasRef =
               aliasRefs.references.get(i);
 
           Node newNode = alias.node.cloneTree();
           aliasRef.getParent().replaceChild(aliasRef.getNode(), newNode);
-          newNodes.add(newNode);
+          newNodes.add(new AstChange(
+              getRefModule(aliasRef), aliasRef.getScope(), newNode));
         }
 
         // just set the original alias to null.
@@ -404,12 +378,17 @@ class CollapseProperties implements CompilerPass {
 
         // Inlining the variable may have introduced new references
         // to descendants of {@code name}. So those need to be collected now.
-        namespace.scanNewNodes(alias.scope, newNodes);
+        namespace.scanNewNodes(newNodes);
         return true;
       }
     }
 
     return false;
+  }
+
+  JSModule getRefModule(ReferenceCollectingCallback.Reference ref) {
+    CompilerInput input  = compiler.getInput(ref.getInputId());
+    return input == null ? null : input.getModule();
   }
 
   /**
