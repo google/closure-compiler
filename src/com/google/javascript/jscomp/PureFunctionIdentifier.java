@@ -333,7 +333,12 @@ class PureFunctionIdentifier implements CompilerPass {
 
           if (!callNode.isNew()) {
             if (functionInfo.taintsThis) {
-              flags.setMutatesThis();
+              // A FunctionInfo for "f" maps to both "f()" and "f.call()" nodes.
+              if (isCallOrApply(callNode)) {
+                flags.setMutatesArguments();
+              } else {
+                flags.setMutatesThis();
+              }
             }
           }
 
@@ -802,9 +807,15 @@ class PureFunctionIdentifier implements CompilerPass {
         // Side effects only propagate via regular calls.
         // Calling a constructor that modifies "this" has no side effects.
         if (!callSite.isNew()) {
-          Node objectNode = getCallThisObject(callSite);
+          // Notice that we're using "mutatesThis" from the callee
+          // FunctionInfo. If the call site is actually a .call or .apply, then
+          // the "this" is going to be one of its arguments.
+          boolean isCallOrApply = isCallOrApply(callSite);
+          Node objectNode = isCallOrApply ?
+              callSite.getFirstChild().getNext() :
+              callSite.getFirstChild().getFirstChild();
           if (objectNode != null && objectNode.isName()
-              && !isCallOrApply(callSite)) {
+              && !isCallOrApply) {
             // Exclude ".call" and ".apply" as the value may still be
             // null or undefined. We don't need to worry about this with a
             // direct method call because null and undefined don't have any
@@ -825,7 +836,7 @@ class PureFunctionIdentifier implements CompilerPass {
             }
           } else if (objectNode != null
               && NodeUtil.evaluatesToLocalValue(objectNode)
-              && !isCallOrApply(callSite)) {
+              && !isCallOrApply) {
             // Modifying 'this' on a known local object doesn't change any
             // significant state.
             // TODO(johnlenz): We can improve this by including literal values
@@ -841,40 +852,9 @@ class PureFunctionIdentifier implements CompilerPass {
     }
   }
 
-  /**
-   * Analyze a call site and extract the node that will be act as
-   * "this" inside the call, which is either the object part of the
-   * qualified function name, the first argument to the call in the
-   * case of ".call" and ".apply" or null if object is not specified
-   * in either of those ways.
-   *
-   * @return node that will act as "this" for the call.
-   */
-  private static Node getCallThisObject(Node callSite) {
-    Node callTarget = callSite.getFirstChild();
-    if (!NodeUtil.isGet(callTarget)) {
-
-      // "this" is not specified explicitly; call modifies global "this".
-      return null;
-    }
-
-    String propString = callTarget.getLastChild().getString();
-    if (propString.equals("call") || propString.equals("apply")) {
-      return callTarget.getNext();
-    } else {
-      return callTarget.getFirstChild();
-    }
-  }
-
   private static boolean isCallOrApply(Node callSite) {
-    Node callTarget = callSite.getFirstChild();
-    if (NodeUtil.isGet(callTarget)) {
-      String propString = callTarget.getLastChild().getString();
-      if (propString.equals("call") || propString.equals("apply")) {
-        return true;
-      }
-    }
-    return false;
+    return NodeUtil.isFunctionObjectCall(callSite) ||
+      NodeUtil.isFunctionObjectApply(callSite);
   }
 
   /**

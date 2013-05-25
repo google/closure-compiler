@@ -2029,6 +2029,50 @@ public class IntegrationTest extends IntegrationTestCase {
         "a.b.c.myFunc = function(x) {};");
   }
 
+  public void testAddFunctionProperties1() throws Exception {
+    String source =
+        "/** @constructor */ function F() {}" +
+        "var x = new F();" +
+        "/** @this {F} */" +
+        "function g() { this.bar = function() { alert(3); }; }" +
+        "g.call(x);" +
+        "x.bar();";
+    String expected =
+        "var x = new function() {};" +
+        "/** @this {F} */" +
+        "(function () { this.bar = function() { alert(3); }; }).call(x);" +
+        "x.bar();";
+
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS
+        .setOptionsForCompilationLevel(options);
+    options.setRenamingPolicy(
+        VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
+    test(options, source, expected);
+  }
+
+  public void testAddFunctionProperties2() throws Exception {
+    String source =
+        "/** @constructor */ function F() {}" +
+        "var x = new F();" +
+        "/** @this {F} */" +
+        "function g(y) { y.bar = function() { alert(3); }; }" +
+        "g(x);" +
+        "x.bar();";
+    String expected =
+        "var x = new function() {};" +
+        "/** @this {F} */" +
+        "(function (y) { y.bar = function() { alert(3); }; })(x);" +
+        "x.bar();";
+
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS
+        .setOptionsForCompilationLevel(options);
+    options.setRenamingPolicy(
+        VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
+    test(options, source, expected);
+  }
+
   public void testCodingConvention() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());

@@ -1164,6 +1164,26 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     checkMarkedCalls(source, ImmutableList.<String>of());
   }
 
+  public void testFunctionProperties1() throws Exception {
+    String source =
+        "/** @constructor */" +
+        "function F() {}" +
+        "function g() {" +
+        "  this.bar = function() { alert(3); };" +
+        "}" +
+        "var x = new F();" +
+        "g.call(x);" +
+        "x.bar();";
+    checkMarkedCalls(source, ImmutableList.<String>of("F"));
+
+    Node lastRoot = getLastCompiler().getRoot();
+    Node call = findQualifiedNameNode("g.call", lastRoot).getParent();
+    assertEquals(
+        new Node.SideEffectFlags()
+        .clearAllFlags().setMutatesArguments().valueOf(),
+        call.getSideEffectFlags());
+  }
+
   public void testInvalidAnnotation1() throws Exception {
     test("/** @nosideeffects */ function foo() {}",
          null, INVALID_NO_SIDE_EFFECT_ANNOTATION);

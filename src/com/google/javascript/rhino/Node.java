@@ -2058,13 +2058,15 @@ public class Node implements Cloneable, Serializable {
     }
 
     /** All side-effect occur and the returned results are non-local. */
-    public void setAllFlags() {
+    public SideEffectFlags setAllFlags() {
       value = Node.SIDE_EFFECTS_ALL;
+      return this;
     }
 
     /** No side-effects occur and the returned results are local. */
-    public void clearAllFlags() {
+    public SideEffectFlags clearAllFlags() {
       value = Node.NO_SIDE_EFFECTS | Node.FLAG_LOCAL_RESULTS;
+      return this;
     }
 
     public boolean areAllFlagsSet() {
@@ -2079,27 +2081,32 @@ public class Node implements Cloneable, Serializable {
       value |= Node.NO_SIDE_EFFECTS;
     }
 
-    public void setMutatesGlobalState() {
+    public SideEffectFlags setMutatesGlobalState() {
       // Modify global means everything must be assumed to be modified.
       removeFlag(Node.FLAG_GLOBAL_STATE_UNMODIFIED);
       removeFlag(Node.FLAG_ARGUMENTS_UNMODIFIED);
       removeFlag(Node.FLAG_THIS_UNMODIFIED);
+      return this;
     }
 
-    public void setThrows() {
+    public SideEffectFlags setThrows() {
       removeFlag(Node.FLAG_NO_THROWS);
+      return this;
     }
 
-    public void setMutatesThis() {
+    public SideEffectFlags setMutatesThis() {
       removeFlag(Node.FLAG_THIS_UNMODIFIED);
+      return this;
     }
 
-    public void setMutatesArguments() {
+    public SideEffectFlags setMutatesArguments() {
       removeFlag(Node.FLAG_ARGUMENTS_UNMODIFIED);
+      return this;
     }
 
-    public void setReturnsTainted() {
+    public SideEffectFlags setReturnsTainted() {
       removeFlag(Node.FLAG_LOCAL_RESULTS);
+      return this;
     }
 
     private void removeFlag(int flag) {
