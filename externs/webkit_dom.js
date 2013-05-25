@@ -22,6 +22,13 @@
  * @externs
  */
 
+
+/**
+ * @param {boolean=} opt_center
+ * @see https://bugzilla.mozilla.org/show_bug.cgi?id=403510
+ */
+Element.prototype.scrollIntoViewIfNeeded = function(opt_center) {};
+
 /**
  * @constructor
  * @see http://trac.webkit.org/browser/trunk/Source/WebCore/page/MemoryInfo.idl
