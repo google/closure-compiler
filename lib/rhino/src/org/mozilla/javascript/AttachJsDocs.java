@@ -331,6 +331,16 @@ public class AttachJsDocs {
             return res;
           }
         }
+        int finpos = t.getFinallyPosition();
+        if (finpos != -1) {
+          if (capos < finpos) {
+            return new NodePos(n, napos);
+          }
+          res = attachComment(t.getFinallyBlock(), napos);
+          if (res != null) {
+            return res;
+          }
+        }
         return new NodePos(n, napos);
 
       case Token.VAR:
