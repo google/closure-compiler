@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.JsMessage.Style;
 /**
  * Test which checks that replacer works correctly.
  *
+ * @author tbreisacher@google.com (Tyler Breisacher)
  */
 public class ReplaceMessagesForChromeTest extends CompilerTestCase {
 

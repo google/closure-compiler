@@ -1,0 +1,1161 @@
+/*
+ * Copyright 2012 The Closure Compiler Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.javascript.jscomp;
+
+import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.UnionType;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
+/**
+ * Check to ensure there exists a path to dispose of each eventful object
+ * created.
+ *
+ * This compiler pass uses the inferred types and hence either type checking or
+ * type inference needs to be enabled. The set of eventful objects is initialized
+ * to {goog.events.Eventful} and, if the "aggressive" mode is set, expanded to a
+ * larger class using the eventize relationship (see http://research.google.com/pubs/pub40738.html).
+ *
+ * This pass is heuristic based and should not be used for any check
+ * of pass/fail testing.
+ *
+ * This check is performed interprocedurally but in a flow and path
+ * insensitive manner.
+ *
+ *
+ */
+ // TODO(user) Pass needs to be updated for listenable interfaces.
+public class CheckEventfulObjectDisposal implements CompilerPass {
+
+  // Error messages returned
+  static final DiagnosticType EVENTFUL_OBJECT_NOT_DISPOSED = DiagnosticType.error(
+      "JSC_EVENTFUL_OBJECT_NOT_DISPOSED",
+      "eventful object created should be\n" +
+      "  * registered as disposable, or\n" +
+      "  * explicitly disposed of");
+  static final DiagnosticType EVENTFUL_OBJECT_PURELY_LOCAL = DiagnosticType.error(
+      "JSC_EVENTFUL_OBJECT_PURELY_LOCAL",
+      "a purely local eventful object cannot be disposed of later");
+  static final DiagnosticType OVERWRITE_PRIVATE_EVENTFUL_OBJECT = DiagnosticType.error(
+      "JSC_OVERWRITE_PRIVATE_EVENTFUL_OBJECT",
+      "private eventful object overwritten in subclass cannot be properly disposed of");
+  static final DiagnosticType UNLISTEN_WITH_ANONBOUND = DiagnosticType.error(
+      "JSC_UNLISTEN_WITH_ANONBOUND",
+      "an unlisten call with an anonymous or bound function does not result in " +
+      "the event being unlisted to");
+
+  /**
+   * Policies to determine the disposal checking level.
+   */
+  public enum DisposalCheckingPolicy {
+    /**
+     * Don't check any disposal.
+     */
+    OFF,
+
+    /**
+     * Default/conservative disposal checking.
+     */
+    ON,
+
+    /**
+     * Aggressive disposal checking.
+     */
+    AGGRESSIVE,
+  }
+
+  // Seed types
+  static final String DISPOSABLE_TYPE_NAME = "goog.Disposable";
+  static final String EVENT_HANDLER_TYPE_NAME = "goog.events.EventHandler";
+  JSType googDisposableType;
+  JSType googEventsEventHandlerType;
+
+  // Eventful types
+  Set<JSType> eventfulTypes;
+
+  final AbstractCompiler compiler;
+  final JSTypeRegistry typeRegistry;
+
+  // At the moment only ALLOCATED and POSSIBLY_DISPOSED are used
+  private enum SeenType {
+    ALLOCATED, ALLOCATED_LOCALLY, POSSIBLY_DISPOSED, DISPOSED
+  }
+
+  // Combine the state and allocation site of eventful objects
+  private class EventfulObjectState {
+    public SeenType seen;
+    public Node allocationSite;
+  }
+
+  /*
+   * The disposal checking policy used.
+   */
+  public DisposalCheckingPolicy checkingPolicy;
+
+  /*
+   * Eventize DAG represented using adjacency lists.
+   */
+  public Map<String, Set<String>> eventizes;
+
+  /*
+   * Maps from eventful object name to state.
+   */
+  static Map<String, EventfulObjectState> eventfulObjectMap;
+
+  public CheckEventfulObjectDisposal(AbstractCompiler compiler,
+      DisposalCheckingPolicy checkingPolicy) {
+    this.compiler = compiler;
+    this.checkingPolicy = checkingPolicy;
+    this.typeRegistry = compiler.getTypeRegistry();
+  }
+
+  private static Node getBase(Node n) {
+    Node base = n;
+    while (base.isGetProp()) {
+      base = base.getFirstChild();
+    }
+
+    return base;
+  }
+
+  /*
+   * Get the type of the this in the current scope of traversal
+   */
+  private JSType getTypeOfThisForScope(NodeTraversal t) {
+    JSType typeOfThis = t.getScopeRoot().getJSType();
+    if (typeOfThis == null) {
+      return null;
+    }
+    ObjectType objectType =
+        ObjectType.cast(dereference(typeOfThis));
+    return objectType.getTypeOfThis();
+  }
+
+
+  /*
+   * Determines if thisType is possibly a subtype of thatType.
+   *
+   *  It differs from isSubtype only in that thisType gets expanded
+   *  if it is a union.
+   *
+   *  Common case targeted is a function returning an eventful object
+   *  that may also return a null.
+   */
+  private static boolean isPossiblySubtype(JSType thisType, JSType thatType) {
+    if (thisType == null) {
+      return false;
+    }
+
+    JSType type = thisType;
+
+    if (type.isUnionType()) {
+      for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
+        if (alternate.isSubtype(thatType)) {
+          return true;
+        }
+      }
+    } else {
+      if (type.isSubtype(thatType)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private static JSType dereference(JSType type) {
+    return type == null ? null : type.dereference();
+  }
+
+  /*
+   * Create a unique identification string for Node n, or null if function
+   * called with invalid argument.
+   *
+   * This function is basically used to distinguish between:
+   *   A.B = function() {
+   *     this.eh = new ...
+   *   }
+   * and
+   *   C.D = function() {
+   *     this.eh = new ...
+   *   }
+   *
+   * As well as
+   *   A.B = function() {
+   *     var eh = new ...
+   *   }
+   * and
+   *   C.D = function() {
+   *     var eh = new ...
+   *   }
+   *
+   * Warning: Inheritance is not currently handled.
+   */
+  private static String generateKey(NodeTraversal t, Node n, boolean noLocalVariables) {
+    if (n == null) {
+      return null;
+    }
+    String key;
+
+    Node scopeNode = t.getScopeRoot();
+
+    if (n.isName()) {
+      if (noLocalVariables) {
+        return null;
+      }
+      key = n.getQualifiedName();
+
+      if (scopeNode.isFunction()) {
+        JSType parentScopeType = t.getScope().getParentScope().getTypeOfThis();
+        /*
+         * If the locally defined variable is defined within a function, use
+         * the function name to create ID.
+         */
+        if (!parentScopeType.isGlobalThisType()) {
+          key = parentScopeType.toString() + "~" + key;
+        }
+        key = NodeUtil.getFunctionName(scopeNode) + "=" + key;
+      }
+    } else {
+      /*
+       * Only handle cases such as a.b.c.X and not cases where the
+       * eventful object is stored in an array or uses a function to
+       * determine the index.
+       *
+       * Note: Inheritance changes the name that should be returned here
+       */
+      if (!n.isQualifiedName()) {
+        return null;
+      }
+      key = n.getQualifiedName();
+
+      /*
+       * If it is not a simple variable and doesn't use this, then we assume
+       * global variable.
+       */
+      Node base = getBase(n);
+      if (base != null && base.isThis()) {
+        if (base.getJSType().isUnknownType()) {
+          // Handle anonymous function created in constructor:
+          //
+          // /**
+          // * @extends {goog.SubDisposable}
+          // * @constructor */
+          // speel.Person = function() {
+          //  this.run = function() {
+          //    this.eh = new goog.events.EventHandler();
+          //  }
+          //};
+          key = t.getScope().getParentScope().getTypeOfThis().toString() + "~" + key;
+        } else {
+          if (n.getFirstChild() == null) {
+            key = base.getJSType().toString() + "=" + key;
+          } else {
+            ObjectType objectType =
+                ObjectType.cast(dereference(n.getFirstChild().getJSType()));
+            if (objectType == null) {
+              return null;
+            }
+
+            ObjectType hObjT = objectType;
+            String propertyName = n.getLastChild().getString();
+
+            while (objectType != null) {
+              hObjT = objectType;
+              objectType = objectType.getImplicitPrototype();
+              if (objectType == null) {
+                break;
+              }
+              if (objectType.getDisplayName().endsWith("prototype")) {
+                continue;
+              }
+              if (!objectType.getPropertyNames().contains(propertyName)) {
+                break;
+              }
+            }
+            key = hObjT.toString() + "=" + key;
+          }
+        }
+      }
+    }
+
+    return key;
+  }
+
+  @Override
+  public void process(Node externs, Node root) {
+    // This pass should not have gotten added in this case
+    Preconditions.checkArgument(checkingPolicy != DisposalCheckingPolicy.OFF);
+
+    // Initialize types
+    googDisposableType = compiler.getTypeRegistry().getType(DISPOSABLE_TYPE_NAME);
+    googEventsEventHandlerType = compiler.getTypeRegistry().getType(EVENT_HANDLER_TYPE_NAME);
+
+    /*
+     * Required types not found therefore the kind of pattern considered
+     * will not be found.
+     */
+    if (googEventsEventHandlerType == null || googDisposableType == null) {
+      return;
+    }
+
+    // Seed list of disposable stype
+    eventfulTypes = new HashSet<JSType>();
+    eventfulTypes.add(googEventsEventHandlerType);
+
+    // Construct eventizer graph
+    if (checkingPolicy == DisposalCheckingPolicy.AGGRESSIVE) {
+      NodeTraversal.traverse(compiler, root, new ComputeEventizeTraversal());
+      computeEventful();
+    }
+
+    /*
+     * eventfulObjectMap maps a eventful object's "name" to its corresponding
+     * EventfulObjectState which tracks the state (allocated, disposed of)
+     * as well as allocation site.
+     */
+    eventfulObjectMap = new HashMap<String, EventfulObjectState>();
+
+    // Traverse tree
+    NodeTraversal.traverse(compiler, root, new Traversal());
+
+    /*
+     * Scan eventfulObjectMap for allocated eventful objects that
+     * had no free/dispose/eventlistener-removal call.
+     */
+    for (EventfulObjectState e : eventfulObjectMap.values()) {
+      Node n = e.allocationSite;
+      if (e.seen == SeenType.ALLOCATED) {
+        compiler.report(JSError.make(n.getSourceFileName(), n, EVENTFUL_OBJECT_NOT_DISPOSED));
+      } else if (e.seen == SeenType.ALLOCATED_LOCALLY) {
+        compiler.report(JSError.make(n.getSourceFileName(), n, EVENTFUL_OBJECT_PURELY_LOCAL));
+      }
+    }
+  }
+
+  private void computeEventful() {
+    /*
+     * Topological order of Eventize DAG
+     */
+    String[] order = new String[eventizes.size()];
+
+    /*
+     * Perform topological sort
+     */
+    int white = 0, gray = 1, black = 2;
+    int last = eventizes.size() - 1;
+    Map<String, Integer> color = new HashMap<String, Integer>();
+    Stack<String> dfsStack = new Stack<String>();
+
+    /*
+     * Initialize color.
+     * Some types are only on one or the other side of the
+     * inference.
+     */
+    for (String r : eventizes.keySet()) {
+      color.put(r, white);
+      for (String s : eventizes.get(r)) {
+        color.put(s, white);
+      }
+    }
+
+    int indx = 0;
+    for (String s : eventizes.keySet()) {
+      dfsStack.push(s);
+      while (dfsStack.size() > 0) {
+        String top = dfsStack.pop();
+        if (!color.containsKey(top)) {
+          continue;
+        }
+        if (color.get(top) == white) {
+          color.put(top, gray);
+          dfsStack.push(top);
+          // for v in Adj[s]
+          if (eventizes.containsKey(top)) {
+            for (String v : eventizes.get(top)) {
+              if (color.get(v) == white) {
+                dfsStack.push(v);
+              }
+            }
+          }
+        } else if (color.get(top) == gray && eventizes.containsKey(top)) {
+          order[last - indx] = top;
+          ++indx;
+          color.put(top, black);
+        }
+      }
+    }
+
+    /*
+     * Propagate eventfulness by iterating in topological order
+     */
+    for (String s : order) {
+      if (eventfulTypes.contains(typeRegistry.getType(s))) {
+        for (String v : eventizes.get(s)) {
+          eventfulTypes.add(typeRegistry.getType(v));
+        }
+      }
+    }
+  }
+
+  private JSType maybeReturnDisposedType(Node n, boolean checkDispose) {
+    /*
+     * Checks for:
+     *    - Y.registerDisposable(X)
+     *      (Y has to be of type goog.Disposable)
+     *    - X.dispose()
+     *    - goog.dispose(X)
+     *    - X.removeAll() (X is of type goog.events.EventHandler)
+     *    - <array>.property(X) or Y.push(X)
+     */
+    Node first = n.getFirstChild();
+
+    if (first == null || !first.isQualifiedName()) {
+      return null;
+    }
+    String property = first.getQualifiedName();
+
+    if (property.endsWith(".registerDisposable"))  {
+      /*
+       *  Ensure object is of type disposable
+       */
+      Node base = first.getFirstChild();
+      JSType baseType = base.getJSType();
+
+      if (baseType == null || !isPossiblySubtype(baseType, googDisposableType)) {
+        return null;
+      }
+
+      return n.getLastChild().getJSType();
+    }
+
+    if (checkDispose) {
+      if (property.equals("goog.dispose")) {
+        return n.getLastChild().getJSType();
+      }
+      if (property.endsWith(".dispose")) {
+        /*
+         * n -> call
+         *   n.firstChild -> "dispose"
+         *   n.firstChild.firstChild -> object
+         */
+        return n.getFirstChild().getFirstChild().getJSType();
+      }
+    }
+
+    return null;
+  }
+
+  /*
+   * Compute eventize relationship graph.
+   */
+  private class ComputeEventizeTraversal extends AbstractPostOrderCallback
+      implements ScopedCallback {
+
+    /*
+     * Keep track of whether in the constructor or disposal scope.
+     */
+    Stack<Boolean> isConstructorStack;
+    Stack<Boolean> isDisposalStack;
+
+
+    public ComputeEventizeTraversal() {
+      isConstructorStack = new Stack<Boolean>();
+      isDisposalStack = new Stack<Boolean>();
+      eventizes = new HashMap<String, Set<String>>();
+    }
+
+    private Boolean inConstructorScope() {
+      Preconditions.checkNotNull(isConstructorStack);
+      if (isDisposalStack.size() > 0) {
+        return isConstructorStack.peek();
+      }
+      return null;
+    }
+
+    private Boolean inDisposalScope() {
+      Preconditions.checkNotNull(isDisposalStack);
+      if (isDisposalStack.size() > 0) {
+        return isDisposalStack.peek();
+      }
+      return null;
+    }
+
+    /*
+     * Filter types not interested in for eventize graph
+     */
+    private boolean collectorFilterType(JSType type) {
+      if (type == null) {
+        return true;
+      }
+
+      if (type.isEmptyType() ||
+          type.isUnknownType() ||
+          !isPossiblySubtype(type, googDisposableType)) {
+        return true;
+      }
+
+      return false;
+    }
+
+    /*
+     * Log that thisType eventizes thatType.
+     */
+    private void addEventize(JSType thisType, JSType thatType) {
+      if (collectorFilterType(thisType) ||
+          collectorFilterType(thatType) ||
+          thisType.isEquivalentTo(thatType)) {
+        return;
+      }
+
+      String className = thisType.getDisplayName();
+      if (thatType.isUnionType()) {
+        UnionType ut = thatType.toMaybeUnionType();
+        for (JSType type : ut.getAlternates()) {
+          if (type.isObject()) {
+            addEventizeClass(className, type);
+          }
+        }
+      } else {
+        addEventizeClass(className, thatType);
+      }
+    }
+
+    private void addEventizeClass(String className, JSType thatType) {
+      String propertyJsTypeName = thatType.getDisplayName();
+
+      Set<String> eventize = eventizes.get(propertyJsTypeName);
+      if (eventize == null) {
+        eventize = new HashSet<String>();
+        eventizes.put(propertyJsTypeName, eventize);
+      }
+      eventize.add(className);
+    }
+
+    @Override
+    public void enterScope(NodeTraversal t) {
+      Node n = t.getScopeRoot();
+      boolean isConstructor = false;
+      boolean isInDisposal = false;
+      String functionName = null;
+
+      /*
+       * Scope entered is a function definition
+       */
+      if (n.isFunction()) {
+        functionName = NodeUtil.getFunctionName(n);
+
+        /*
+         *  Skip anonymous functions
+         */
+        if (functionName != null) {
+
+          JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(n);
+          if (jsDocInfo != null) {
+            /*
+             *  Record constructor of a type
+             */
+            if (jsDocInfo.isConstructor()) {
+              isConstructor = true;
+
+              /*
+               * Initialize eventizes relationship
+               */
+              if (t.getScope() != null && t.getScope().getTypeOfThis() != null) {
+                ObjectType objectType = ObjectType.cast(t.getScope().getTypeOfThis().dereference());
+
+                /*
+                 * Eventize due to inheritance
+                 */
+
+                while (objectType != null) {
+                  objectType = objectType.getImplicitPrototype();
+                  if (objectType == null) {
+                    break;
+                  }
+
+                  if (objectType.getDisplayName().endsWith("prototype")) {
+                    continue;
+                  }
+
+                  addEventize(compiler.getTypeRegistry().getType(functionName), objectType);
+
+                  /*
+                   * Don't add transitive eventize edges here, it will be
+                   * taken care of in computeEventful
+                   */
+                  break;
+                }
+              }
+            }
+          }
+
+          /*
+           *  Indicate within a disposeInternal member
+           */
+          if (functionName.endsWith(".disposeInternal")) {
+            isInDisposal = true;
+          }
+        }
+
+        isConstructorStack.push(isConstructor);
+        isDisposalStack.push(isInDisposal);
+      } else {
+        isConstructorStack.push(inConstructorScope());
+        isDisposalStack.push(inDisposalScope());
+      }
+    }
+
+    @Override
+    public void exitScope(NodeTraversal t) {
+      isConstructorStack.pop();
+      isDisposalStack.pop();
+    }
+
+    /*
+     * Is the current node a call to goog.events.unlisten
+     */
+    private void isGoogEventsUnlisten(Node n) {
+      Preconditions.checkArgument(n.getChildCount() > 3);
+
+      Node listener = n.getChildAtIndex(3);
+
+      Node objectWithListener = n.getChildAtIndex(1);
+      if (!objectWithListener.isQualifiedName()) {
+        return;
+      }
+
+      if (listener.isFunction()) {
+        /*
+         * Anonymous function
+         */
+        compiler.report(JSError.make(n.getSourceFileName(), n, UNLISTEN_WITH_ANONBOUND));
+      } else if (listener.isCall()) {
+        if (!listener.getFirstChild().isQualifiedName()) {
+          /*
+           * Anonymous function
+           */
+          compiler.report(JSError.make(n.getSourceFileName(), n, UNLISTEN_WITH_ANONBOUND));
+        } else if (listener.getFirstChild().getQualifiedName().equals("goog.bind")) {
+          /*
+           * Using goog.bind to unlisten
+           */
+          compiler.report(JSError.make(n.getSourceFileName(), n, UNLISTEN_WITH_ANONBOUND));
+        }
+      }
+    }
+
+
+    private void isCalled(NodeTraversal t, Node n) {
+      Node functionCalled = n.getFirstChild();
+      if (functionCalled == null ||
+          !functionCalled.isQualifiedName()) {
+          return;
+      }
+      String functionCalledName = functionCalled.getQualifiedName();
+      JSType typeOfThis = getTypeOfThisForScope(t);
+      if (typeOfThis == null) {
+        return;
+      }
+
+      /*
+       * Class considered eventful if there is an unlisten call in the
+       * disposal.
+       */
+      if (functionCalledName.equals("goog.events.unlisten")) {
+
+        if (inDisposalScope()) {
+          eventfulTypes.add(typeOfThis);
+        }
+        isGoogEventsUnlisten(n);
+      }
+      if (inDisposalScope() &&
+          functionCalledName.equals("goog.events.removeAll")) {
+        eventfulTypes.add(typeOfThis);
+      }
+
+      /*
+       * If member with qualified name gets disposed of when this class
+       * gets disposed, consider the member type as an eventizer of this
+       * class.
+       */
+      JSType disposedType = maybeReturnDisposedType(n, inDisposalScope());
+      if (!collectorFilterType(disposedType)) {
+        addEventize(getTypeOfThisForScope(t), disposedType);
+      }
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getType()) {
+        case Token.CALL:
+          isCalled(t, n);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  private class Traversal extends AbstractPostOrderCallback  implements ScopedCallback {
+    /*
+     * Checks if the input node correspond to the creation of an eventful object
+     */
+    private boolean createsEventfulObject(Node n) {
+      Node first = n.getFirstChild();
+      JSType type = n.getJSType();
+      if (first == null ||
+          !first.isQualifiedName() ||
+          type.isEmptyType() ||
+          type.isUnknownType()) {
+        return false;
+      }
+
+      boolean isOfTypeNeedingDisposal = false;
+      for (JSType disposableType : eventfulTypes) {
+        if (type.isSubtype(disposableType)) {
+          isOfTypeNeedingDisposal = true;
+          break;
+        }
+      }
+      return isOfTypeNeedingDisposal;
+    }
+
+    /*
+     * This function traverses the current scope to see if a locally
+     * defined eventful object is assigned to a live-out variable.
+     *
+     * Note: This function could be called multiple times to traverse
+     * the same scope if multiple local eventful objects are created in the
+     * scope.
+     */
+    private Node localEventfulObjectAssign(
+        NodeTraversal t, Node propertyNode) {
+      Node parent;
+      if (!t.getScope().isGlobal()) {
+        /*
+         * In function
+         */
+        parent = NodeUtil.getFunctionBody(t.getScopeRoot());
+      } else {
+        /*
+         * In global scope
+         */
+        parent = t.getScopeRoot().getFirstChild();
+      }
+
+      /*
+       * Check to see if locally created EventHandler is assigned to field
+       */
+      for (Node sibling : parent.children()) {
+        if (sibling.isExprResult()) {
+          Node assign = sibling.getFirstChild();
+          if (assign.isAssign()) {
+            // assign.getLastChild().isEquivalentTo(propertyNode) did not work
+            if (propertyNode.getQualifiedName().equals(assign.getLastChild().getQualifiedName())) {
+              if (!assign.getFirstChild().isName()) {
+                return assign.getFirstChild();
+              }
+            }
+          }
+        }
+      }
+
+      /*
+       * Eventful object created and assigned to a local variable which is not
+       * assigned to another variable in a way to allow disposal.
+       */
+      String key = generateKey(t, propertyNode, false);
+      if (key == null) {
+        return null;
+      }
+
+      EventfulObjectState e;
+      if (eventfulObjectMap.containsKey(key)) {
+        e = eventfulObjectMap.get(key);
+
+        if (e.seen == SeenType.ALLOCATED) {
+          e.seen = SeenType.ALLOCATED_LOCALLY;
+        }
+      } else {
+        e = new EventfulObjectState();
+        e.seen = SeenType.ALLOCATED_LOCALLY;
+
+        eventfulObjectMap.put(key, e);
+      }
+      e.allocationSite = propertyNode;
+
+
+      return null;
+    }
+
+    /*
+     * Record the creation of a new eventful object.
+     */
+    private void isNew(NodeTraversal t, Node n, Node parent) {
+      if (!createsEventfulObject(n)) {
+        return;
+      }
+
+      /*
+       * Insert allocation site and construct into eventfulObjectMap
+       */
+      String key;
+      Node propertyNode;
+
+      /*
+       * Handles (E is an eventful class):
+       *  - object.something = new E();
+       *  - local = new E();
+       *  - var local = new E();
+       */
+      if (parent.isAssign()) {
+        propertyNode = parent.getFirstChild();
+      } else {
+        propertyNode = parent;
+      }
+
+      /*
+       * Only perform checks for locally defined eventful objects in aggressive
+       * mode to reduce false positives.
+       */
+      if (propertyNode.isName() &&
+          checkingPolicy != DisposalCheckingPolicy.AGGRESSIVE) {
+        return;
+      }
+
+      key = generateKey(t, propertyNode, false);
+      if (key == null) {
+        return;
+      }
+
+      EventfulObjectState e;
+      if (eventfulObjectMap.containsKey(key)) {
+        e = eventfulObjectMap.get(key);
+      } else {
+        e = new EventfulObjectState();
+        e.seen = SeenType.ALLOCATED;
+
+        eventfulObjectMap.put(key, e);
+      }
+      e.allocationSite = propertyNode;
+
+      /*
+       * Check if locally defined eventful object is assigned to global variable
+       * and create an entry mapping to the previous site.
+       */
+      if (propertyNode.isName()) {
+        Node globalVarNode = localEventfulObjectAssign(t, propertyNode);
+        if (globalVarNode != null) {
+          key = generateKey(t, globalVarNode, false);
+          if (key == null) {
+            /*
+             * Local variable is assigned to an array or in a manner requiring
+             * a function call.
+             */
+            e.seen = SeenType.POSSIBLY_DISPOSED;
+            return;
+          }
+          eventfulObjectMap.put(key, e);
+        }
+      }
+    }
+
+    private Node maybeGetValueNodeFromCall(Node n) {
+      /*
+       * Checks for:
+       *    - Y.registerDisposable(X)
+       *      (Y has to be of type goog.Disposable)
+       *    - X.dispose()
+       *    - goog.dispose(X)
+       *    - X.removeAll() (X is of type goog.events.EventHandler)
+       *    - <array>.property(X) or Y.push(X)
+       */
+      Node first = n.getFirstChild();
+
+      if (first == null || !first.isQualifiedName()) {
+        return null;
+      }
+      String property = first.getQualifiedName();
+
+      if (property.endsWith(".registerDisposable"))  {
+        /*
+         *  Ensure object is of type disposable
+         */
+        Node base = first.getFirstChild();
+        JSType baseType = base.getJSType();
+
+        if (baseType == null || !isPossiblySubtype(baseType, googDisposableType)) {
+          return null;
+        }
+
+        return  n.getLastChild();
+      }
+      if (property.equals("goog.dispose")) {
+        return n.getLastChild();
+      }
+
+      /*
+       * n -> call
+       *   n.firstChild -> "dispose" | "removeAll"
+       *   n.firstChild.firstChild -> object
+       */
+      Node calledOn = n.getFirstChild().getFirstChild();
+      if (property.endsWith(".dispose")) {
+        return calledOn;
+      }
+      if (property.endsWith(".removeAll")) {
+        if (calledOn != null) {
+          JSType calledOnType = calledOn.getJSType();
+          if (calledOnType != null &&
+              !calledOnType.isEmptyType() &&
+              !calledOnType.isUnknownType() &&
+              isPossiblySubtype(calledOnType, googEventsEventHandlerType)) {
+            return calledOn;
+          }
+        }
+      }
+
+      Node possiblyArray = first.getFirstChild();
+      if (possiblyArray != null) {
+        JSType possiblyArrayType = possiblyArray.getJSType();
+        if (possiblyArrayType != null && possiblyArrayType.isArrayType()) {
+          return  n.getLastChild();
+        }
+      }
+      /*
+       * Heuristic: a variable used in call to push/addChild gets stored
+       * in object with method push/addChild/addChild_/addPane.
+       */
+      if (property.endsWith(".push") ||
+          property.contains(".add")) {
+        return  n.getLastChild();
+      }
+
+      return null;
+    }
+
+    /*
+     * Look for calls to an eventful object's disposal functions.
+     * (dispose or removeAll will remove all event listeners from
+     * an EventHandler).
+     */
+    private void isCall(NodeTraversal t, Node n) {
+      // Filter the calls to find a "dispose" call
+      Node variableNode = maybeGetValueNodeFromCall(n);
+      if (variableNode == null) {
+        return;
+      }
+
+      // Only consider removals on eventful object
+      boolean isTrackedRemoval = false;
+      JSType vnType = variableNode.getJSType();
+      for (JSType type : eventfulTypes) {
+        if (isPossiblySubtype(vnType, type)) {
+          isTrackedRemoval = true;
+        }
+      }
+      if (!isTrackedRemoval) {
+        return;
+      }
+
+      String key = generateKey(t, variableNode, false);
+      if (key == null) {
+        return;
+      }
+
+      eventfulObjectDisposed(t, variableNode);
+    }
+
+    /**
+     * Dereference a type, autoboxing it and filtering out null.
+     * From {@link CheckAccessControls}
+     */
+    private JSType dereference(JSType type) {
+      return type == null ? null : type.dereference();
+    }
+
+    /*
+     * Track assignments to see if a private field is being
+     * overwritten.
+     *
+     * Assigning to an array element is taken care of by the generateKey
+     * returning null on array ("complex") variable names.
+     */
+    public void isAssign(NodeTraversal t, Node n) {
+      Node assignedTo = n.getFirstChild();
+      JSType assignedToType = assignedTo.getJSType();
+      if (assignedToType == null || assignedToType.isEmptyType()) {
+        return;
+      }
+
+      if (n.getFirstChild().isGetProp()) {
+        boolean isTrackedAssign = false;
+        for (JSType disposalType : eventfulTypes) {
+          if (assignedToType.isSubtype(disposalType)) {
+            isTrackedAssign = true;
+            break;
+          }
+        }
+        if (!isTrackedAssign) {
+          return;
+        }
+
+        JSDocInfo di = n.getJSDocInfo();
+        ObjectType objectType =
+            ObjectType.cast(dereference(n.getFirstChild().getFirstChild().getJSType()));
+        String propertyName = n.getFirstChild().getLastChild().getString();
+
+        boolean fieldIsPrivate = (
+            (di != null) &&
+            (di.getVisibility() == Visibility.PRIVATE));
+
+        /*
+         * See if field is defined as private in superclass
+         */
+        while (objectType != null) {
+          di = null;
+          objectType = objectType.getImplicitPrototype();
+          if (objectType == null) {
+            break;
+          }
+
+          /*
+           * Skip prototype definitions:
+           *   Don't flag a field declared private in assignment as well
+           *   as in prototype declaration
+           * Assumption: The inheritance hierarchy is similar to
+           *   class
+           *   class.prototype
+           *   superclass
+           *   superclass.prototype
+           */
+          if (objectType.getDisplayName().endsWith("prototype")) {
+            continue;
+          }
+
+          di = objectType.getOwnPropertyJSDocInfo(propertyName);
+          if (di != null) {
+            if (fieldIsPrivate || di.getVisibility() == Visibility.PRIVATE) {
+              compiler.report(
+                  t.makeError(n, OVERWRITE_PRIVATE_EVENTFUL_OBJECT));
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    /*
+     * Filter out any eventful objects returned.
+     */
+    private void isReturn(NodeTraversal t, Node n) {
+      Node variableNode = n.getFirstChild();
+      if (variableNode == null) {
+        return;
+      }
+      JSType type = variableNode.getJSType();
+      if (type == null || type.isEmptyType()) {
+        return;
+      }
+
+      boolean isTrackedReturn = false;
+      for (JSType disposalType : eventfulTypes) {
+        if (type.isSubtype(disposalType)) {
+          isTrackedReturn = true;
+          break;
+        }
+      }
+      if (!isTrackedReturn) {
+        return;
+      }
+
+      eventfulObjectDisposed(t, variableNode);
+    }
+
+    /*
+     * Mark an eventful object as being disposed.
+     */
+    private void eventfulObjectDisposed(NodeTraversal t, Node variableNode) {
+      String key = generateKey(t, variableNode, false);
+      if (key == null) {
+        return;
+      }
+
+      EventfulObjectState e = eventfulObjectMap.get(key);
+      if (e == null) {
+        e = new EventfulObjectState();
+        eventfulObjectMap.put(key, e);
+      }
+      e.seen = SeenType.POSSIBLY_DISPOSED;
+    }
+
+    @Override
+    public void enterScope(NodeTraversal t) {
+      /*
+       * Local variables captured in scope are filtered at present.
+       * LiveVariableAnalysis used to filter such variables.
+       */
+      ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
+      LiveVariablesAnalysis liveness =
+          new LiveVariablesAnalysis(cfg, t.getScope(), compiler);
+      liveness.analyze();
+
+      for (Var v : liveness.getEscapedLocals()) {
+        eventfulObjectDisposed(t, v.getNode());
+      }
+    }
+
+    @Override
+    public void exitScope(NodeTraversal t) {
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getType()) {
+        case Token.ASSIGN:
+          isAssign(t, n);
+          break;
+        case Token.CALL:
+          isCall(t, n);
+          break;
+        case Token.NEW:
+          isNew(t, n, parent);
+          break;
+        case Token.RETURN:
+          isReturn(t, n);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+}

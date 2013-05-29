@@ -306,6 +306,11 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(checkAccessControls);
     }
 
+    if (options.checkEventfulObjectDisposalPolicy !=
+        CheckEventfulObjectDisposal.DisposalCheckingPolicy.OFF) {
+      checks.add(checkEventfulObjectDisposal);
+    }
+
     if (options.checkGlobalNamesLevel.isOn()) {
       checks.add(checkGlobalNames);
     }
@@ -1403,6 +1408,16 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new ConstCheck(compiler);
+    }
+  };
+
+  /** Check memory bloat patterns */
+  final PassFactory checkEventfulObjectDisposal =
+      new PassFactory("checkEventfulObjectDisposal", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new CheckEventfulObjectDisposal(compiler,
+          options.checkEventfulObjectDisposalPolicy);
     }
   };
 

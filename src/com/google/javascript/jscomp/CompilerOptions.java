@@ -249,6 +249,26 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   Set<String> extraAnnotationNames;
 
+  /**
+   * Check for patterns that are known to cause memory leaks.
+   */
+  CheckEventfulObjectDisposal.DisposalCheckingPolicy checkEventfulObjectDisposalPolicy;
+
+  public void setCheckEventfulObjectDisposalPolicy(
+      CheckEventfulObjectDisposal.DisposalCheckingPolicy policy) {
+    this.checkEventfulObjectDisposalPolicy = policy;
+
+    // The CheckEventfulObjectDisposal pass requires types so enable inferring types if
+    // this pass is enabled.
+    if (policy != CheckEventfulObjectDisposal.DisposalCheckingPolicy.OFF) {
+      this.inferTypes = true;
+    }
+  }
+  public CheckEventfulObjectDisposal.DisposalCheckingPolicy getCheckEventfulObjectDisposalPolicy() {
+    return checkEventfulObjectDisposalPolicy;
+  }
+
+
   //--------------------------------
   // Optimizations
   //--------------------------------
@@ -890,6 +910,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     computeFunctionSideEffects = false;
     chainCalls = false;
     extraAnnotationNames = null;
+    checkEventfulObjectDisposalPolicy = CheckEventfulObjectDisposal.DisposalCheckingPolicy.OFF;
 
     // Optimizations
     aggressiveRenaming = false;
