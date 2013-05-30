@@ -2781,6 +2781,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       "* @externs \n" +
       "* @field \n" +
       "* @function \n" +
+      "* @hassoydelcall \n" +
+      "* @hassoydeltemplate \n" +
       "* @id \n" +
       "* @ignore \n" +
       "* @inner \n" +
@@ -2796,6 +2798,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       "* @nocompile \n" +
       "* @property \n" +
       "* @requires \n" +
+      "* @requirecss \n" +
       "* @since \n" +
       "* @static \n" +
       "* @supported */");
