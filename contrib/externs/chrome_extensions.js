@@ -91,7 +91,7 @@
  * is the appropriate type when an event's listeners do not take any
  * parameters, however, many events take parameters specific to that event:
  *
- * 1. Create a pseduo-type for the event, for example,
+ * 1. Create a pseudo-type for the event, for example,
  *    chrome.runtime.PortEvent and define the four methods on it.
  * 2. Fully describe the listener/callback's signature, for example,
  *
@@ -127,6 +127,295 @@
  * @const
  */
 var chrome = {};
+
+
+/**
+ * @const
+ * TODO(tbreisacher): Move all chrome.app.* externs into their own file.
+ */
+chrome.app = {};
+
+
+/**
+ * @const
+ * @see http://developer.chrome.com/apps/app.runtime.html
+ */
+chrome.app.runtime = {};
+
+
+/**
+ * @typedef {{id: (string|undefined), items: (!Array.<!Object>|undefined)}}
+ */
+chrome.app.runtime.LaunchData;
+
+
+
+/**
+ * The type of chrome.app.runtime.onLaunched.
+ * @constructor
+ */
+chrome.app.runtime.LaunchEvent = function() {};
+
+
+/**
+ * @param {function(!chrome.app.runtime.LaunchData)} callback
+ * @see http://developer.chrome.com/apps/app.runtime.html#event-onLaunched
+ */
+chrome.app.runtime.LaunchEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(!chrome.app.runtime.LaunchData)} callback
+ */
+chrome.app.runtime.LaunchEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!chrome.app.runtime.LaunchData)} callback
+ * @return {boolean}
+ */
+chrome.app.runtime.LaunchEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.app.runtime.LaunchEvent.prototype.hasListeners = function() {};
+
+
+/** @type {!chrome.app.runtime.LaunchEvent} */
+chrome.app.runtime.onLaunched;
+
+
+/**
+ * @type {!ChromeEvent}
+ * @see http://developer.chrome.com/apps/app.runtime.html#event-onRestarted
+ */
+chrome.app.runtime.onRestarted;
+
+
+/**
+ * @const
+ * @see http://developer.chrome.com/apps/app.window.html
+ */
+chrome.app.window = {};
+
+
+
+/**
+ * @constructor
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow = function() {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.focus = function() {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.fullscreen = function() {};
+
+
+/**
+ * @return {boolean}
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.isFullscreen = function() {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.minimize = function() {};
+
+
+/**
+ * @return {boolean}
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.isMinimized = function() {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.maximize = function() {};
+
+
+/**
+ * @return {boolean}
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.isMaximized = function() {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.restore = function() {};
+
+
+/**
+ * @param {number} left The new left position, in pixels.
+ * @param {number} top The new top position, in pixels.
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.moveTo = function(left, top) {};
+
+
+/**
+ * @param {number} width The new width, in pixels.
+ * @param {number} height The new height, in pixels.
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.resizeTo = function(width, height) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.drawAttention = function() {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.clearAttention = function() {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.close = function() {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.show = function() {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.hide = function() {};
+
+
+/**
+ * @return {!chrome.app.window.Bounds} The current window bounds.
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.getBounds = function() {};
+
+
+/**
+ * @param {!chrome.app.window.Bounds} bounds The new window bounds.
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.setBounds = function(bounds) {};
+
+
+/** @type {!Window} */
+chrome.app.window.AppWindow.prototype.contentWindow;
+
+
+/**
+ * @typedef {{
+ *   left: (number|undefined),
+ *   top: (number|undefined),
+ *   width: (number|undefined),
+ *   height: (number|undefined)
+ * }}
+ * @see http://developer.chrome.com/apps/app.window.html#type-Bounds
+ */
+chrome.app.window.Bounds;
+
+
+/**
+ * @typedef {{
+ *   id: (string|undefined),
+ *   minWidth: (number|undefined),
+ *   minHeight: (number|undefined),
+ *   maxWidth: (number|undefined),
+ *   maxHeight: (number|undefined),
+ *   frame: (string|undefined),
+ *   bounds: (!chrome.app.window.Bounds|undefined),
+ *   transparentBackground: (boolean|undefined),
+ *   hidden: (boolean|undefined),
+ *   resizable: (boolean|undefined),
+ *   singleton: (boolean|undefined)
+ * }}
+ * @see http://developer.chrome.com/apps/app.window.html#method-create
+ */
+chrome.app.window.CreateWindowOptions;
+
+
+/**
+ * @param {string} url URL to create.
+ * @param {!chrome.app.window.CreateWindowOptions=} opt_options The options for
+ *     the new window.
+ * @param {function(!chrome.app.window.AppWindow)=} opt_createWindowCallback
+ *     Callback to be run.
+ * @see http://developer.chrome.com/apps/app.window.html#method-create
+ */
+chrome.app.window.create = function(
+    url, opt_options, opt_createWindowCallback) {};
+
+
+/**
+ * Returns an AppWindow object for the current script context (ie JavaScript
+ * 'window' object).
+ * @return {!chrome.app.window.AppWindow}
+ * @see http://developer.chrome.com/apps/app.window.html#method-current
+ */
+chrome.app.window.current = function() {};
+
+
+/**
+ * @type {!ChromeEvent}
+ * @see http://developer.chrome.com/apps/app.window.html#event-onBoundsChanged
+ */
+chrome.app.window.onBoundsChanged;
+
+
+/**
+ * @type {!ChromeEvent}
+ * @see http://developer.chrome.com/apps/app.window.html#event-onClosed
+ */
+chrome.app.window.onClosed;
+
+
+/**
+ * @type {!ChromeEvent}
+ * @see http://developer.chrome.com/apps/app.window.html#event-onFullscreened
+ */
+chrome.app.window.onFullscreened;
+
+
+/**
+ * @type {!ChromeEvent}
+ * @see http://developer.chrome.com/apps/app.window.html#event-onMaximized
+ */
+chrome.app.window.onMaximized;
+
+
+/**
+ * @type {!ChromeEvent}
+ * @see http://developer.chrome.com/apps/app.window.html#event-onMinimized
+ */
+chrome.app.window.onMinimized;
+
+
+/**
+ * @type {!ChromeEvent}
+ * @see http://developer.chrome.com/apps/app.window.html#event-onRestored
+ */
+chrome.app.window.onRestored;
 
 
 /**
@@ -290,6 +579,7 @@ chrome.runtime.Manifest.prototype.description;
 
 /** @type {!chrome.runtime.Manifest.Oauth2|undefined} */
 chrome.runtime.Manifest.prototype.oauth2;
+
 
 
 /**
@@ -634,6 +924,7 @@ chrome.tabs.reload = function(opt_tabId, opt_reloadProperties, opt_callback) {};
  */
 chrome.tabs.remove = function(tabIds, opt_callback) {};
 
+
 /**
  * @param {number} tabId Tab id.
  * @param {*} request The request value of any type.
@@ -641,6 +932,7 @@ chrome.tabs.remove = function(tabIds, opt_callback) {};
  *     takes a JSON response object sent by the handler of the request.
  */
 chrome.tabs.sendMessage = function(tabId, request, opt_callback) {};
+
 
 /**
  * @param {number} tabId Tab id.
@@ -1183,6 +1475,7 @@ CookieChangeInfo.prototype.cookie;
 /** @type {string} */
 CookieChangeInfo.prototype.cause;
 
+
 /** @const */
 chrome.management = {};
 
@@ -1496,8 +1789,11 @@ chrome.history.onVisited;
  */
 chrome.input = {};
 
+
 /** @const */
 chrome.input.ime = {};
+
+
 
 /**
  * The OnKeyEvent event takes an extra argument.
@@ -1521,11 +1817,13 @@ ChromeInputImeOnKeyEventEvent.prototype.addListener =
  */
 ChromeInputImeOnKeyEventEvent.prototype.removeListener = function(callback) {};
 
+
 /**
  * @param {function(string, !ChromeKeyboardEvent): (boolean|undefined)} callback
  *     callback.
  */
 ChromeInputImeOnKeyEventEvent.prototype.hasListener = function(callback) {};
+
 
 /**
  * @param {function(string, !ChromeKeyboardEvent): (boolean|undefined)} callback
@@ -1604,6 +1902,7 @@ chrome.input.ime.setMenuItems = function(parameters, opt_callback) {};
  */
 chrome.input.ime.updateMenuItems = function(parameters, opt_callback) {};
 
+
 /**
  * @param {string} requestId Request id of the event that was handled. This
  *     should come from keyEvent.requestId.
@@ -1668,6 +1967,7 @@ chrome.pageCapture = {};
  * @param {function(Blob=): void} callback Callback function.
  */
 chrome.pageCapture.saveAsMHTML = function(details, callback) {};
+
 
 /**
  * @const
@@ -2202,6 +2502,7 @@ chrome.pushMessaging.onMessage;
  */
 chrome.pushMessaging.getChannelId =
     function(interactiveOrCallback, opt_callback) {};
+
 
 
 /**
@@ -2975,6 +3276,7 @@ chrome.pushMessaging.Message.prototype.payload;
  * @constructor
  */
 chrome.pushMessaging.ChannelIdResult = function() {};
+
 
 /**
  * @type {string}
