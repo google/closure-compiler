@@ -157,6 +157,12 @@ AudioContext.prototype.createDynamicsCompressor = function() {};
 AudioContext.prototype.createMediaElementSource = function(mediaElement) {};
 
 /**
+ * @param {MediaStream} mediaStream
+ * @return {MediaStreamAudioSourceNode}
+ */
+AudioContext.prototype.createMediaStreamSource = function(mediaStream) {};
+
+/**
  * @param {number} numberOfChannels
  * @param {number} length
  * @param {number} sampleRate
@@ -418,6 +424,12 @@ AudioBufferSourceNode.prototype.noteOff = function(when) {};
  * @extends {AudioSourceNode}
  */
 var MediaElementAudioSourceNode = function() {};
+
+/**
+ * @constructor
+ * @extends {AudioSourceNode}
+ */
+var MediaStreamAudioSourceNode = function() {};
 
 /**
  * @constructor
@@ -852,4 +864,3 @@ Audio.prototype.mozWriteAudio = function(buffer) {};
  * @return {number}
  */
 Audio.prototype.mozCurrentSampleOffset = function() {};
-
