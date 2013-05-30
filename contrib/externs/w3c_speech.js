@@ -73,22 +73,80 @@ HTMLInputElement.prototype.onwebkitspeechchange;
 /**
  * @constructor
  */
-function webkitSpeechGrammar() {}
+function SpeechRecognition() {}
+
+/** @type {SpeechGrammarList} */
+SpeechRecognition.prototype.grammars;
 
 /** @type {string} */
-webkitSpeechGrammar.prototype.src;
+SpeechRecognition.prototype.lang;
+
+/** @type {boolean} */
+SpeechRecognition.prototype.continuous;
+
+/** @type {boolean} */
+SpeechRecognition.prototype.interimResults;
 
 /** @type {number} */
-webkitSpeechGrammar.prototype.weight;
+SpeechRecognition.prototype.maxAlternatives;
+
+/** @type {string} */
+SpeechRecognition.prototype.serviceURI;
+
+/** @type {function()} */
+SpeechRecognition.prototype.start;
+
+/** @type {function()} */
+SpeechRecognition.prototype.stop;
+
+/** @type {function()} */
+SpeechRecognition.prototype.abort;
+
+/** @type {function(Event)} */
+SpeechRecognition.prototype.onaudiostart;
+
+/** @type {function(Event)} */
+SpeechRecognition.prototype.onsoundstart;
+
+/** @type {function(Event)} */
+SpeechRecognition.prototype.onspeechstart;
+
+/** @type {function(Event)} */
+SpeechRecognition.prototype.onspeechend;
+
+/** @type {function(Event)} */
+SpeechRecognition.prototype.onsoundend;
+
+/** @type {function(Event)} */
+SpeechRecognition.prototype.onaudioend;
+
+/** @type {function(SpeechRecognitionEvent)} */
+SpeechRecognition.prototype.onresult;
+
+/** @type {function(SpeechRecognitionEvent)} */
+SpeechRecognition.prototype.onnomatch;
+
+/** @type {function(SpeechRecognitionError)} */
+SpeechRecognition.prototype.onerror;
+
+/** @type {function(Event)} */
+SpeechRecognition.prototype.onstart;
+
+/** @type {function(Event)} */
+SpeechRecognition.prototype.onend;
 
 
 /**
  * @constructor
+ * @extends {Event}
  */
-function webkitSpeechGrammarList() {}
+function SpeechRecognitionError() {}
 
-/** @type {number} */
-webkitSpeechGrammarList.prototype.length;
+/** @type {string} */
+SpeechRecognitionError.prototype.error;
+
+/** @type {string} */
+SpeechRecognitionError.prototype.message;
 
 
 /**
@@ -108,17 +166,14 @@ SpeechRecognitionAlternative.prototype.confidence;
  */
 function SpeechRecognitionResult() {}
 
-/** @type {boolean} */
-SpeechRecognitionResult.prototype.isFinal;
-
 /** @type {number} */
 SpeechRecognitionResult.prototype.length;
 
-/** @type {Document} */
-SpeechRecognitionResult.prototype.emma;
-
 /** @type {function(number): SpeechRecognitionAlternative} */
 SpeechRecognitionResult.prototype.item = function(index) {};
+
+/** @type {boolean} */
+SpeechRecognitionResult.prototype.isFinal;
 
 
 /**
@@ -137,118 +192,82 @@ SpeechRecognitionResultList.prototype.item = function(index) {};
  * @constructor
  * @extends {Event}
  */
-function webkitSpeechRecognitionEvent() {}
-
-/** @type {SpeechRecognitionResult} */
-webkitSpeechRecognitionEvent.prototype.results;
+function SpeechRecognitionEvent() {}
 
 /** @type {number} */
-webkitSpeechRecognitionEvent.prototype.resultIndex;
+SpeechRecognitionEvent.prototype.resultIndex;
 
 /** @type {SpeechRecognitionResultList} */
-webkitSpeechRecognitionEvent.prototype.resultHistory;
+SpeechRecognitionEvent.prototype.results;
+
+/** @type {*} */
+SpeechRecognitionEvent.prototype.interpretation;
+
+/** @type {Document} */
+SpeechRecognitionEvent.prototype.emma;
 
 
 /**
  * @constructor
+ */
+function SpeechGrammar() {}
+
+/** @type {string} */
+SpeechGrammar.prototype.src;
+
+/** @type {number} */
+SpeechGrammar.prototype.weight;
+
+
+/**
+ * @constructor
+ */
+function SpeechGrammarList() {}
+
+/** @type {number} */
+SpeechGrammarList.prototype.length;
+
+/** @type {function(number): SpeechGrammar} */
+SpeechGrammarList.prototype.item = function(index) {};
+
+/** @type {function(string, number)} */
+SpeechGrammarList.prototype.addFromUri = function(src, weight) {};
+
+/** @type {function(string, number)} */
+SpeechGrammarList.prototype.addFromString = function(str, weight) {};
+
+
+// Webkit implementations of Web Speech API
+/**
+ * @constructor
+ * @extends {SpeechGrammarList}
+ */
+function webkitSpeechGrammarList() {}
+
+
+/**
+ * @constructor
+ * @extends {SpeechGrammar}
+ */
+function webkitSpeechGrammar() {}
+
+
+/**
+ * @constructor
+ * @extends {SpeechRecognitionEvent}
+ */
+function webkitSpeechRecognitionEvent() {}
+
+
+/**
+ * @constructor
+ * @extends {SpeechRecognitionError}
  */
 function webkitSpeechRecognitionError() {}
 
-/** @type {number} */
-webkitSpeechRecognitionError.prototype.code;
-
-/** @type {number} */
-webkitSpeechRecognitionError.prototype.OTHER;
-
-/** @type {number} */
-webkitSpeechRecognitionError.prototype.NO_SPEECH;
-
-/** @type {number} */
-webkitSpeechRecognitionError.prototype.ABORTED;
-
-/** @type {number} */
-webkitSpeechRecognitionError.prototype.AUDIO_CAPTURE;
-
-/** @type {number} */
-webkitSpeechRecognitionError.prototype.NETWORK;
-
-/** @type {number} */
-webkitSpeechRecognitionError.prototype.NOT_ALLOWED;
-
-/** @type {number} */
-webkitSpeechRecognitionError.prototype.SERVICE_NOT_ALLOWED;
-
-/** @type {number} */
-webkitSpeechRecognitionError.prototype.BAD_GRAMMAR;
-
-/** @type {number} */
-webkitSpeechRecognitionError.prototype.LANGUAGE_NOT_SUPPORTED;
-
-/** @type {string} */
-webkitSpeechRecognitionError.prototype.message;
-
-/** @type {string} */
-webkitSpeechRecognitionError.prototype.error;
 
 /**
  * @constructor
+ * @extends {SpeechRecognition}
  */
 function webkitSpeechRecognition() {}
-
-/** @type {webkitSpeechGrammarList} */
-webkitSpeechRecognition.prototype.grammars;
-
-/** @type {string} */
-webkitSpeechRecognition.prototype.lang;
-
-/** @type {boolean} */
-webkitSpeechRecognition.prototype.continuous;
-
-/** @type {boolean} */
-webkitSpeechRecognition.prototype.interimResults;
-
-/** @type {number} */
-webkitSpeechRecognition.prototype.maxAlternatives;
-
-/** @type {function(): undefined} */
-webkitSpeechRecognition.prototype.start;
-
-/** @type {function(): undefined} */
-webkitSpeechRecognition.prototype.stop;
-
-/** @type {function(): undefined} */
-webkitSpeechRecognition.prototype.abort;
-
-/** @type {function(Event): (boolean|undefined)} */
-webkitSpeechRecognition.prototype.onaudiostart;
-
-/** @type {function(Event): (boolean|undefined)} */
-webkitSpeechRecognition.prototype.onsoundstart;
-
-/** @type {function(Event): (boolean|undefined)} */
-webkitSpeechRecognition.prototype.onspeechstart;
-
-/** @type {function(Event): (boolean|undefined)} */
-webkitSpeechRecognition.prototype.onaudioend;
-
-/** @type {function(Event): (boolean|undefined)} */
-webkitSpeechRecognition.prototype.onsoundend;
-
-/** @type {function(Event): (boolean|undefined)} */
-webkitSpeechRecognition.prototype.onspeechend;
-
-/** @type {function(Event): (boolean|undefined)} */
-webkitSpeechRecognition.prototype.onend;
-
-/** @type {function(Event): (boolean|undefined)} */
-webkitSpeechRecognition.prototype.onstart;
-
-/** @type {function(webkitSpeechRecognitionEvent): (boolean|undefined)} */
-webkitSpeechRecognition.prototype.onnomatch;
-
-/** @type {function(webkitSpeechRecognitionEvent): (boolean|undefined)} */
-webkitSpeechRecognition.prototype.onresult;
-
-/** @type {function(webkitSpeechRecognitionError): (boolean|undefined)} */
-webkitSpeechRecognition.prototype.onerror;
-
