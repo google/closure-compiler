@@ -955,6 +955,9 @@ chrome.tabs.update = function(tabId, updateProperties, opt_callback) {};
 /** @type {ChromeEvent} */
 chrome.tabs.onActiveChanged;
 
+/** @type {ChromeEvent} */
+chrome.tabs.onActivated;
+
 
 /** @type {ChromeEvent} */
 chrome.tabs.onAttached;
@@ -3282,5 +3285,3 @@ chrome.pushMessaging.ChannelIdResult = function() {};
  * @type {string}
  */
 chrome.pushMessaging.ChannelIdResult.prototype.channelId;
-
-
