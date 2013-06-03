@@ -1267,14 +1267,6 @@ HTMLMediaElement.prototype.muted;
 function HTMLAudioElement() {}
 
 /**
-* @param {string=} src address of the media resource (a URL)
-* @constructor
-* @extends {HTMLAudioElement}
-* @see http://www.w3.org/html/wg/drafts/html/master/embedded-content-0.html#the-audio-element
-*/
-var Audio = function(src) {};
-
-/**
  * @constructor
  * @extends {HTMLMediaElement}
  */
