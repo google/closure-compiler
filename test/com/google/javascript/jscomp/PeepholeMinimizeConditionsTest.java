@@ -522,20 +522,6 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
          "if (x + (y=5) && z && (w,z)) for(;;) foo();");
   }
 
-  public void testFoldReturnResult() {
-    foldSame("function f(){return false;}");
-    foldSame("function f(){return null;}");
-    fold("function f(){return void 0;}",
-         "function f(){return}");
-    fold("function f(){return;}",
-         "function f(){}");
-    foldSame("function f(){return void foo();}");
-    fold("function f(){return undefined;}",
-         "function f(){return}");
-    fold("function f(){if(a()){return undefined;}}",
-         "function f(){if(a()){return}}");
-  }
-
   public void testSubsituteReturn() {
 
     fold("function f() { while(x) { return }}",

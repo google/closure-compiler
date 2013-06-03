@@ -76,19 +76,8 @@ class PeepholeMinimizeConditions
   @SuppressWarnings("fallthrough")
   public Node optimizeSubtree(Node node) {
     switch(node.getType()) {
+      case Token.THROW:
       case Token.RETURN: {
-        Node result = tryRemoveRedundantExit(node);
-        if (result != node) {
-          return result;
-        }
-        result = tryReplaceExitWithBreak(node);
-        if (result != node) {
-          return result;
-        }
-        return tryReduceReturn(node);
-      }
-
-      case Token.THROW: {
         Node result = tryRemoveRedundantExit(node);
         if (result != node) {
           return result;
@@ -267,36 +256,6 @@ class PeepholeMinimizeConditions
       default:
         return false;
     }
-  }
-
-  /**
-   * Reduce "return undefined" or "return void 0" to simply "return".
-   *
-   * @return The original node, maybe simplified.
-   */
-  private Node tryReduceReturn(Node n) {
-    Node result = n.getFirstChild();
-
-    if (result != null) {
-      switch (result.getType()) {
-        case Token.VOID:
-          Node operand = result.getFirstChild();
-          if (!mayHaveSideEffects(operand)) {
-            n.removeFirstChild();
-            reportCodeChange();
-          }
-          break;
-        case Token.NAME:
-          String name = result.getString();
-          if (name.equals("undefined")) {
-            n.removeFirstChild();
-            reportCodeChange();
-          }
-          break;
-      }
-    }
-
-    return n;
   }
 
   /**

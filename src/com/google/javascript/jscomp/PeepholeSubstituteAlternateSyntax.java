@@ -87,6 +87,9 @@ class PeepholeSubstituteAlternateSyntax
         }
         return result;
 
+      case Token.RETURN:
+        return tryReduceReturn(node);
+
       case Token.COMMA:
         return trySplitComma(node);
 
@@ -209,6 +212,35 @@ class PeepholeSubstituteAlternateSyntax
     return n;
   }
 
+  /**
+   * Reduce "return undefined" or "return void 0" to simply "return".
+   *
+   * @return The original node, maybe simplified.
+   */
+  private Node tryReduceReturn(Node n) {
+    Node result = n.getFirstChild();
+
+    if (result != null) {
+      switch (result.getType()) {
+        case Token.VOID:
+          Node operand = result.getFirstChild();
+          if (!mayHaveSideEffects(operand)) {
+            n.removeFirstChild();
+            reportCodeChange();
+          }
+          break;
+        case Token.NAME:
+          String name = result.getString();
+          if (name.equals("undefined")) {
+            n.removeFirstChild();
+            reportCodeChange();
+          }
+          break;
+      }
+    }
+
+    return n;
+  }
 
   private static final ImmutableSet<String> STANDARD_OBJECT_CONSTRUCTORS =
     // String, Number, and Boolean functions return non-object types, whereas
