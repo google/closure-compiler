@@ -262,7 +262,7 @@ CanvasRenderingContext2D.prototype.rect = function(x, y, w, h) {};
  * @param {number} radius
  * @param {number} startAngle
  * @param {number} endAngle
- * @param {boolean} anticlockwise
+ * @param {boolean=} anticlockwise
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.arc = function(
@@ -1265,6 +1265,14 @@ HTMLMediaElement.prototype.muted;
  * @extends {HTMLMediaElement}
  */
 function HTMLAudioElement() {}
+
+/**
+* @param {string=} src address of the media resource (a URL)
+* @constructor
+* @extends {HTMLAudioElement}
+* @see http://www.w3.org/html/wg/drafts/html/master/embedded-content-0.html#the-audio-element
+*/
+var Audio = function(src) {};
 
 /**
  * @constructor
@@ -2543,6 +2551,9 @@ HTMLSelectElement.prototype.autofocus;
  * @type {NodeList}
  */
 HTMLSelectElement.prototype.labels;
+
+/** @type {HTMLCollection} */
+HTMLSelectElement.prototype.selectedOptions;
 
 /** @type {string} */
 HTMLSelectElement.prototype.validationMessage;
