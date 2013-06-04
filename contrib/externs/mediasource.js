@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 /**
- * @fileoverview Definitions for the Media Source Extensions.
+ * @fileoverview Definitions for the Media Source Extensions. Note that the
+ * properties available here are the union of several versions of the spec.
  * @see http://dvcs.w3.org/hg/html-media/raw-file/tip/media-source/media-source.html
  *
  * @externs
@@ -65,6 +66,12 @@ MediaSource.prototype.readyState;
  */
 MediaSource.prototype.endOfStream = function(opt_error) {};
 
+/**
+ * @param {string} type
+ * @return {boolean}
+ */
+MediaSource.isTypeSupported = function(type) {};
+
 
 /**
  * @constructor
@@ -83,11 +90,23 @@ SourceBuffer.prototype.removeEventListener = function(
 /** @override */
 SourceBuffer.prototype.dispatchEvent = function(evt) {};
 
+/** @type {string} */
+SourceBuffer.prototype.appendMode;
+
+/** @type {boolean} */
+SourceBuffer.prototype.updating;
+
 /** @type {TimeRanges} */
 SourceBuffer.prototype.buffered;
 
 /** @type {number} */
 SourceBuffer.prototype.timestampOffset;
+
+/** @type {number} */
+SourceBuffer.prototype.appendWindowStart;
+
+/** @type {number} */
+SourceBuffer.prototype.appendWindowEnd;
 
 /**
  * @param {Uint8Array} data
@@ -95,6 +114,17 @@ SourceBuffer.prototype.timestampOffset;
 SourceBuffer.prototype.append = function(data) {};
 
 /**
+ * @param {ArrayBuffer|ArrayBufferView} data
+ */
+SourceBuffer.prototype.appendBuffer = function(data) {};
+
+/**
  * Abort the current segment append sequence.
  */
 SourceBuffer.prototype.abort = function() {};
+
+/**
+ * @param {number} start
+ * @param {number} end
+ */
+SourceBuffer.prototype.remove = function(start, end) {};
