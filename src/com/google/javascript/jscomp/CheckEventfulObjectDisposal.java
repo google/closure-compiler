@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
@@ -31,6 +32,7 @@ import com.google.javascript.rhino.jstype.UnionType;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -889,20 +891,22 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
       }
     }
 
-    private Node maybeGetValueNodeFromCall(Node n) {
+    private List<Node> maybeGetValueNodesFromCall(Node n) {
       /*
        * Checks for:
        *    - Y.registerDisposable(X)
        *      (Y has to be of type goog.Disposable)
        *    - X.dispose()
        *    - goog.dispose(X)
+       *    - goog.disposeAll(X...)
        *    - X.removeAll() (X is of type goog.events.EventHandler)
-       *    - <array>.property(X) or Y.push(X)
+       *    - <array>.add*(X...) or Y.push(X)
        */
+      List<Node> ret = Lists.newArrayList();
       Node first = n.getFirstChild();
 
       if (first == null || !first.isQualifiedName()) {
-        return null;
+        return ret;
       }
       String property = first.getQualifiedName();
 
@@ -913,14 +917,21 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
         Node base = first.getFirstChild();
         JSType baseType = base.getJSType();
 
-        if (baseType == null || !isPossiblySubtype(baseType, googDisposableType)) {
-          return null;
+        if (baseType != null && isPossiblySubtype(baseType, googDisposableType)) {
+          ret.add(n.getLastChild());
         }
-
-        return  n.getLastChild();
       }
+
+      // Handles goog.dispose(X)
       if (property.equals("goog.dispose")) {
-        return n.getLastChild();
+        ret.add(n.getLastChild());
+      }
+
+      // Handles goog.disposeAll(X_1, X_2, ...)
+      if (property.equals("goog.disposeAll")) {
+        for (Node t = first.getNext(); t != null; t = t.getNext()) {
+          ret.add(t);
+        }
       }
 
       /*
@@ -930,7 +941,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
        */
       Node calledOn = n.getFirstChild().getFirstChild();
       if (property.endsWith(".dispose")) {
-        return calledOn;
+        ret.add(calledOn);
       }
       if (property.endsWith(".removeAll")) {
         if (calledOn != null) {
@@ -939,7 +950,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
               !calledOnType.isEmptyType() &&
               !calledOnType.isUnknownType() &&
               isPossiblySubtype(calledOnType, googEventsEventHandlerType)) {
-            return calledOn;
+            ret.add(calledOn);
           }
         }
       }
@@ -948,19 +959,22 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
       if (possiblyArray != null) {
         JSType possiblyArrayType = possiblyArray.getJSType();
         if (possiblyArrayType != null && possiblyArrayType.isArrayType()) {
-          return  n.getLastChild();
+          ret.add(n.getLastChild());
         }
       }
+
       /*
        * Heuristic: a variable used in call to push/addChild gets stored
-       * in object with method push/addChild/addChild_/addPane.
+       * in object with method push/addChild/addChild_/addChildAt/addPane.
        */
       if (property.endsWith(".push") ||
           property.contains(".add")) {
-        return  n.getLastChild();
+        for (Node t = first.getNext(); t != null; t = t.getNext()) {
+          ret.add(t);
+        }
       }
 
-      return null;
+      return ret;
     }
 
     /*
@@ -970,29 +984,30 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
      */
     private void isCall(NodeTraversal t, Node n) {
       // Filter the calls to find a "dispose" call
-      Node variableNode = maybeGetValueNodeFromCall(n);
-      if (variableNode == null) {
-        return;
-      }
+      List<Node> variableNodes = maybeGetValueNodesFromCall(n);
 
-      // Only consider removals on eventful object
-      boolean isTrackedRemoval = false;
-      JSType vnType = variableNode.getJSType();
-      for (JSType type : eventfulTypes) {
-        if (isPossiblySubtype(vnType, type)) {
-          isTrackedRemoval = true;
+      for (Node variableNode : variableNodes) {
+        Preconditions.checkState(variableNode != null);
+
+        // Only consider removals on eventful object
+        boolean isTrackedRemoval = false;
+        JSType vnType = variableNode.getJSType();
+        for (JSType type : eventfulTypes) {
+          if (isPossiblySubtype(vnType, type)) {
+            isTrackedRemoval = true;
+          }
         }
-      }
-      if (!isTrackedRemoval) {
-        return;
-      }
+        if (!isTrackedRemoval) {
+          continue;
+        }
 
-      String key = generateKey(t, variableNode, false);
-      if (key == null) {
-        return;
-      }
+        String key = generateKey(t, variableNode, false);
+        if (key == null) {
+          continue;
+        }
 
-      eventfulObjectDisposed(t, variableNode);
+        eventfulObjectDisposed(t, variableNode);
+      }
     }
 
     /**
