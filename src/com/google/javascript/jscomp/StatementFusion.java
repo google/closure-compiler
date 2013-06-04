@@ -145,7 +145,8 @@ class StatementFusion extends AbstractPeepholeOptimization {
       case Token.LABEL:
         return isFusableControlStatement(n.getLastChild());
       case Token.BLOCK:
-        return isFusableControlStatement(n.getFirstChild());
+        return !n.isSyntheticBlock() &&
+            isFusableControlStatement(n.getFirstChild());
     }
     return false;
   }
@@ -158,7 +159,7 @@ class StatementFusion extends AbstractPeepholeOptimization {
    * @param last The last statement to fuse (exclusive)
    * @return A single statement that contains all the fused statement as one.
    */
-  private Node fuseIntoOneStatement(Node parent, Node first, Node last) {
+  private static Node fuseIntoOneStatement(Node parent, Node first, Node last) {
     // Nothing to fuse if there is only one statement.
     if (first.getNext() == last) {
       return first;

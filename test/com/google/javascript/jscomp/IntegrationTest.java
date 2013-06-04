@@ -2040,6 +2040,14 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, "START();END()", "{START();{}END()}");
   }
 
+  public void testNoFuseIntoSyntheticBlock() {
+    CompilerOptions options = createCompilerOptions();
+    options.foldConstants = true;
+    options.syntheticBlockStartMarker = "START";
+    options.syntheticBlockEndMarker = "END";
+    testSame(options, "for(;;) { x = 1; {START(); {y = 1} END()} }");
+  }
+
   public void testBug5786871() {
     CompilerOptions options = createCompilerOptions();
     options.ideMode = true;
