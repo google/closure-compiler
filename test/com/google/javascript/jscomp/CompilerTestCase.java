@@ -943,8 +943,9 @@ public abstract class CompilerTestCase extends TestCase  {
             "even though nothing changed",
             hasCodeChanged);
       } else {
-        assertTrue("compiler.reportCodeChange() should have been called",
-            hasCodeChanged);
+        assertTrue("compiler.reportCodeChange() should have been called."
+            + "\nOriginal: " + mainRootClone.toStringTree()
+            + "\nNew: " + mainRoot.toStringTree(), hasCodeChanged);
       }
 
       // Check correctness of the changed-scopes-only traversal

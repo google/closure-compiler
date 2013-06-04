@@ -413,43 +413,47 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   public void minimizeCond(String input, String positive, String negative) {
     Node inputNode = parseExpr(input);
     MinimizedCondition result = PeepholeMinimizeConditions
-        .MinimizedCondition.fromConditionNode(inputNode);
+        .MinimizedCondition.fromConditionNode(inputNode.detachFromParent());
     Node positiveNode = parseExpr(positive);
     Node negativeNode = parseExpr(negative);
-    if (!result.getNode().isEquivalentTo(positiveNode)) {
-      fail("Not equal:\n" + result.getNode().toStringTree()
+    // With counting the leading NOT node:
+    Node positiveResult = result.getShorterRepresentation(true).node;
+    // Without counting the leading NOT node:
+    Node negativeResult = result.getShorterRepresentation(false).node;
+    if (!positiveResult.isEquivalentTo(positiveNode)) {
+      fail("Not equal:\n" + positiveResult.toStringTree()
           + "and:\n" + positiveNode.toStringTree());
     }
-    if (!result.getNegatedNode().isEquivalentTo(negativeNode)) {
-      fail("Not equal:\n" + result.getNegatedNode().toStringTree()
+    if (!negativeResult.isEquivalentTo(negativeNode)) {
+      fail("Not equal:\n" + negativeResult.toStringTree()
           + "and:\n" + negativeNode.toStringTree());
     }
   }
 
   public void testTryMinimizeCondition1() {
-    minimizeCond("x", "x", "!x");
+    minimizeCond("x", "x", "x");
   }
 
   public void testTryMinimizeCondition2() {
-    minimizeCond("!x", "!x", "x");
+    minimizeCond("!x", "!x", "!x");
   }
 
   public void testTryMinimizeCondition3() {
-    minimizeCond("x || y", "x || y", "!x && !y");
+    minimizeCond("!(x || y)", "!x && !y", "!(x || y)");
   }
 
   public void testTryMinimizeCondition4() {
-    minimizeCond("x && y", "x && y", "!x || !y");
+    minimizeCond("!(x && y)", "!x || !y", "!(x && y)");
   }
 
   public void testTryMinimizeCondition5() {
-    minimizeCond("w && x && y && z", "w && x && y && z", "!(w && x && y && z)");
+    minimizeCond("!(x && y && z)", "!(x && y && z)", "!(x && y && z)");
   }
 
   public void testMinimizeCondDemorgan() {
     minimizeCond("x && (y===2 || !f()) && (y===3 || !h())",
         "x && !((y!==2 && f()) || (y!==3 && h()))",
-        "!x || (y!==2 && f()) || (y!==3 && h())");
+        "!(!x || (y!==2 && f()) || (y!==3 && h()))");
   }
 
   public void testMinimizeForCondition() {

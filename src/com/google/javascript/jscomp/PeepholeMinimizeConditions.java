@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -455,6 +455,8 @@ class PeepholeMinimizeConditions
    */
   private Node tryMinimizeExprResult(Node node) {
     Node originalCond = node.getFirstChild();
+    Node placeholder = IR.script();
+    node.replaceChild(originalCond, placeholder);
     MinimizedCondition minCond = (aggressiveMinimization) ?
         MinimizedCondition.fromConditionNode(originalCond) :
           MinimizedCondition.unoptimized(originalCond);
@@ -462,10 +464,10 @@ class PeepholeMinimizeConditions
         minCond.getShorterRepresentation(false);
     if (mNode.node.isNot()) {
       // Remove the leading NOT in the EXPR_RESULT.
-      node.replaceChild(originalCond, mNode.node.removeFirstChild());
+      node.replaceChild(placeholder, mNode.node.removeFirstChild());
       reportCodeChange();
     } else {
-      maybeReplaceNode(originalCond, mNode);
+      replaceNode(placeholder, mNode);
     }
     return node;
   }
@@ -478,6 +480,8 @@ class PeepholeMinimizeConditions
    */
   private Node tryMinimizeHook(Node n) {
     Node originalCond = n.getFirstChild();
+    Node placeholder = IR.script();
+    n.replaceChild(originalCond, placeholder);
     MinimizedCondition minCond = (aggressiveMinimization) ?
         MinimizedCondition.fromConditionNode(originalCond) :
           MinimizedCondition.unoptimized(originalCond);
@@ -485,13 +489,13 @@ class PeepholeMinimizeConditions
         minCond.getShorterRepresentation(false);
     if (mNode.node.isNot()) {
       // Swap the HOOK
-      Node thenBranch = originalCond.getNext();
-      n.replaceChild(originalCond, mNode.node.removeFirstChild());
+      Node thenBranch = n.getFirstChild().getNext();
+      n.replaceChild(placeholder, mNode.node.removeFirstChild());
       n.removeChild(thenBranch);
       n.addChildToBack(thenBranch);
       reportCodeChange();
     } else {
-      maybeReplaceNode(originalCond, mNode);
+      replaceNode(placeholder, mNode);
     }
     return n;
   }
@@ -518,6 +522,9 @@ class PeepholeMinimizeConditions
     Node thenBranch = originalCond.getNext();
     Node elseBranch = thenBranch.getNext();
 
+    Node placeholder = IR.script().srcref(originalCond);
+    n.replaceChild(originalCond, placeholder);
+
     MinimizedCondition.MeasuredNode unnegatedCond;
     MinimizedCondition.MeasuredNode shortCond;
     if (aggressiveMinimization) {
@@ -535,6 +542,7 @@ class PeepholeMinimizeConditions
           originalCond, 0, false);
       shortCond = unnegatedCond;
     }
+    originalCond = null;
 
     if (elseBranch == null) {
       if (isFoldableExpressBlock(thenBranch)) {
@@ -543,6 +551,7 @@ class PeepholeMinimizeConditions
           // Keep opportunities for CollapseProperties such as
           // a.longIdentifier || a.longIdentifier = ... -> var a = ...;
           // until CollapseProperties has been run.
+          replaceNode(placeholder, unnegatedCond);
           return n;
         }
 
@@ -568,11 +577,11 @@ class PeepholeMinimizeConditions
           // there is no immediate code size win. However, two extra pair of
           // {}, we would have to think twice. (unless we know for sure the
           // we can further optimize its parent.
-          maybeReplaceNode(originalCond, shortCond);
+          replaceNode(placeholder, shortCond);
           return n;
         }
 
-        n.removeChild(originalCond);
+        n.removeChild(placeholder);
         Node and = IR.and(shortCond.node, expr.removeFirstChild()).srcref(n);
         Node newExpr = NodeUtil.newExpr(and);
         parent.replaceChild(n, newExpr);
@@ -599,7 +608,7 @@ class PeepholeMinimizeConditions
                   IR.and(
                       unnegatedCond.node,
                       innerCond.detachFromParent())
-                      .srcref(originalCond));
+                      .srcref(placeholder));
               n.addChildrenToBack(innerThenBranch.detachFromParent());
               reportCodeChange();
               // Not worth trying to fold the current IF-ELSE into && because
@@ -609,7 +618,7 @@ class PeepholeMinimizeConditions
           }
         }
       }
-      maybeReplaceNode(originalCond, unnegatedCond);
+      replaceNode(placeholder, unnegatedCond);
       return n;
     }
 
@@ -621,7 +630,7 @@ class PeepholeMinimizeConditions
     // if(!x)foo();else bar(); -> if(x)bar();else foo();
     // An additional set of curly braces isn't worth it.
     if (shortCond.node.isNot() && !consumesDanglingElse(elseBranch)) {
-      n.replaceChild(originalCond, shortCond.node.removeFirstChild());
+      n.replaceChild(placeholder, shortCond.node.removeFirstChild());
       n.removeChild(thenBranch);
       n.addChildToBack(thenBranch);
       reportCodeChange();
@@ -632,7 +641,7 @@ class PeepholeMinimizeConditions
     if (isReturnExpressBlock(thenBranch) && isReturnExpressBlock(elseBranch)) {
       Node thenExpr = getBlockReturnExpression(thenBranch);
       Node elseExpr = getBlockReturnExpression(elseBranch);
-      n.removeChild(originalCond);
+      n.removeChild(placeholder);
       thenExpr.detachFromParent();
       elseExpr.detachFromParent();
 
@@ -663,10 +672,10 @@ class PeepholeMinimizeConditions
               // NOTE - there are some circumstances where we can
               // proceed even if there are side effects...
               !mayEffectMutableState(lhs) &&
-              (!mayHaveSideEffects(originalCond) ||
+              (!mayHaveSideEffects(unnegatedCond.node) ||
                   (thenOp.isAssign() && thenOp.getFirstChild().isName()))) {
 
-            n.removeChild(originalCond);
+            n.removeChild(placeholder);
             Node assignName = thenOp.removeFirstChild();
             Node thenExpr = thenOp.removeFirstChild();
             Node elseExpr = elseOp.getLastChild();
@@ -684,7 +693,7 @@ class PeepholeMinimizeConditions
         }
       }
       // if(x)foo();else bar(); -> x?foo():bar()
-      n.removeChild(originalCond);
+      n.removeChild(placeholder);
       thenOp.detachFromParent();
       elseOp.detachFromParent();
       Node expr = IR.exprResult(
@@ -712,7 +721,7 @@ class PeepholeMinimizeConditions
           && name1.getString().equals(maybeName2.getString())) {
         Node thenExpr = name1.removeChildren();
         Node elseExpr = elseAssign.getLastChild().detachFromParent();
-        originalCond.detachFromParent();
+        placeholder.detachFromParent();
         Node hookNode = IR.hook(shortCond.node, thenExpr, elseExpr)
                             .srcref(n);
         var.detachFromParent();
@@ -737,7 +746,7 @@ class PeepholeMinimizeConditions
           && maybeName1.getString().equals(name2.getString())) {
         Node thenExpr = thenAssign.getLastChild().detachFromParent();
         Node elseExpr = name2.removeChildren();
-        originalCond.detachFromParent();
+        placeholder.detachFromParent();
         Node hookNode = IR.hook(shortCond.node, thenExpr, elseExpr)
                             .srcref(n);
         var.detachFromParent();
@@ -749,7 +758,7 @@ class PeepholeMinimizeConditions
       }
     }
 
-    maybeReplaceNode(originalCond, unnegatedCond);
+    replaceNode(placeholder, unnegatedCond);
     return n;
   }
 
@@ -999,22 +1008,22 @@ class PeepholeMinimizeConditions
   private Node tryMinimizeCondition(Node n) {
     n = performConditionSubstitutions(n);
     if (aggressiveMinimization) {
+      Node placeholder = IR.script();
+      n.getParent().replaceChild(n, placeholder);
       MinimizedCondition minCond = MinimizedCondition.fromConditionNode(n);
-      return maybeReplaceNode(n, minCond.getShorterRepresentation(true));
+      return replaceNode(placeholder,
+          minCond.getShorterRepresentation(true));
     } else {
       return n;
     }
   }
 
-  private Node maybeReplaceNode(Node lhs, MinimizedCondition.MeasuredNode rhs) {
-    if (!rhs.changed) {
-      return lhs;
-    }
-    // Removed for performance reasons.
-    // Preconditions.checkState(!lhs.isEquivalentTo(rhs.node));
+  private Node replaceNode(Node lhs, MinimizedCondition.MeasuredNode rhs) {
     Node parent = lhs.getParent();
     parent.replaceChild(lhs, rhs.node);
-    reportCodeChange();
+    if (rhs.changed) {
+      reportCodeChange();
+    }
     return rhs.node;
   }
 
@@ -1036,21 +1045,11 @@ class PeepholeMinimizeConditions
       }
 
       private MeasuredNode negate() {
-        return addNot().change();
-      }
-
-      private MeasuredNode change() {
-        this.changed = true;
-        return this;
-      }
-
-      private MeasuredNode addNot() {
+        this.change();
         int complementOperator;
         switch (node.getType()) {
           default:
-            node = new Node(Token.NOT, node).srcref(node);
-            length += estimateCostOneLevel(node);
-            return this;
+            return this.addNot();
           // Otherwise a binary operator with a complement.
           case Token.EQ:
             complementOperator = Token.NE;
@@ -1067,7 +1066,17 @@ class PeepholeMinimizeConditions
         }
         // Clone entire tree and just change operator.
         node.setType(complementOperator);
+        return this;
+      }
+
+      private MeasuredNode change() {
         this.changed = true;
+        return this;
+      }
+
+      private MeasuredNode addNot() {
+        node = new Node(Token.NOT, node).srcref(node);
+        length += estimateCostOneLevel(node);
         return this;
       }
 
@@ -1123,20 +1132,35 @@ class PeepholeMinimizeConditions
       negative = n.change();
     }
 
+    static MinimizedCondition fromConditionNode(Node n) {
+      switch (n.getType()) {
+        case Token.NOT:
+        case Token.AND:
+        case Token.OR:
+        case Token.HOOK:
+        case Token.COMMA:
+          return computeMinimizedCondition(n);
+        default:
+          return unoptimized(n);
+      }
+    }
+
     /** Minimize the condition at the given node.
      *
      *  @param n The conditional expression tree to minimize.
-     *   This may be still connected to a tree and will be cloned as necessary.
+     *   This must be removed from the tree before being passed in connected.
      *  @return A MinimizedCondition object representing that tree.
      */
-    static MinimizedCondition fromConditionNode(Node n) {
+    private static MinimizedCondition computeMinimizedCondition(Node n) {
+      Preconditions.checkArgument(n.getParent() == null);
       switch (n.getType()) {
         case Token.NOT: {
-          MinimizedCondition subtree = fromConditionNode(n.getFirstChild());
-          ImmutableSet<MeasuredNode> positiveAsts = ImmutableSet.of(
+          MinimizedCondition subtree =
+              computeMinimizedCondition(n.getFirstChild().detachFromParent());
+          ImmutableList<MeasuredNode> positiveAsts = ImmutableList.of(
               subtree.positive.cloneTree().addNot(),
               subtree.negative.cloneTree());
-          ImmutableSet<MeasuredNode> negativeAsts = ImmutableSet.of(
+          ImmutableList<MeasuredNode> negativeAsts = ImmutableList.of(
               subtree.negative.negate(),
               subtree.positive);
           return new MinimizedCondition(
@@ -1147,16 +1171,18 @@ class PeepholeMinimizeConditions
         case Token.OR: {
           int opType = n.getType();
           int complementType = opType == Token.AND ? Token.OR : Token.AND;
-          MinimizedCondition leftSubtree = fromConditionNode(n.getFirstChild());
-          MinimizedCondition rightSubtree = fromConditionNode(n.getLastChild());
-          ImmutableSet<MeasuredNode> positiveAsts = ImmutableSet.of(
+          MinimizedCondition leftSubtree =
+              computeMinimizedCondition(n.getFirstChild().detachFromParent());
+          MinimizedCondition rightSubtree =
+              computeMinimizedCondition(n.getLastChild().detachFromParent());
+          ImmutableList<MeasuredNode> positiveAsts = ImmutableList.of(
               MeasuredNode.addNode(new Node(opType).srcref(n),
                   leftSubtree.positive.cloneTree(),
                   rightSubtree.positive.cloneTree()),
               MeasuredNode.addNode(new Node(complementType).srcref(n),
                   leftSubtree.negative.cloneTree(),
                   rightSubtree.negative.cloneTree()).negate());
-          ImmutableSet<MeasuredNode> negativeAsts = ImmutableSet.of(
+          ImmutableList<MeasuredNode> negativeAsts = ImmutableList.of(
               MeasuredNode.addNode(new Node(opType).srcref(n),
                   leftSubtree.positive,
                   rightSubtree.positive).negate(),
@@ -1171,8 +1197,10 @@ class PeepholeMinimizeConditions
           Node cond = n.getFirstChild();
           Node thenNode = cond.getNext();
           Node elseNode = thenNode.getNext();
-          MinimizedCondition thenSubtree = fromConditionNode(thenNode);
-          MinimizedCondition elseSubtree = fromConditionNode(elseNode);
+          MinimizedCondition thenSubtree =
+              computeMinimizedCondition(thenNode.detachFromParent());
+          MinimizedCondition elseSubtree =
+              computeMinimizedCondition(elseNode.detachFromParent());
           MeasuredNode posTree = MeasuredNode.addNode(
               new Node(Token.HOOK, cond.cloneTree()).srcref(n),
               thenSubtree.positive,
@@ -1185,7 +1213,8 @@ class PeepholeMinimizeConditions
         }
         case Token.COMMA: {
           Node lhs = n.getFirstChild();
-          MinimizedCondition rhsSubtree = fromConditionNode(lhs.getNext());
+          MinimizedCondition rhsSubtree =
+              computeMinimizedCondition(lhs.getNext().detachFromParent());
           MeasuredNode posTree = MeasuredNode.addNode(
               new Node(Token.COMMA, lhs.cloneTree()).srcref(n),
               rhsSubtree.positive);
@@ -1194,23 +1223,29 @@ class PeepholeMinimizeConditions
               rhsSubtree.negative);
           return new MinimizedCondition(posTree, negTree);
         }
-        default:
-          return unoptimized(n);
+        default: {
+          MeasuredNode pos = new MeasuredNode(n, 0, false);
+          MeasuredNode neg = pos.cloneTree().negate();
+          return new MinimizedCondition(pos, neg);
+        }
       }
     }
 
+    /** Return a MeasuredNode of the given condition node, without minimizing
+     * the result.
+    *
+    *  @param n The conditional expression tree to minimize.
+    *   This must be removed from the tree before being passed in connected.
+    *  @return A MinimizedCondition object representing that tree.
+    */
     static MinimizedCondition unoptimized(Node n) {
-      MeasuredNode pos = new MeasuredNode(n.cloneTree(), 0, false);
-      MeasuredNode neg = pos.cloneTree().negate();
+      Preconditions.checkArgument(n.getParent() == null);
+      MeasuredNode pos = new MeasuredNode(n, 0, false);
+      // In the unoptimized case, we want to always return the positive side,
+      // so we set the negative side to a SCRIPT node (never valid inside an
+      // expression) with an unreasonably high length so that it's never chosen.
+      MeasuredNode neg = new MeasuredNode(IR.script(), Integer.MAX_VALUE, true);
       return new MinimizedCondition(pos, neg);
-    }
-
-    Node getNode() {
-      return positive.node;
-    }
-
-    Node getNegatedNode() {
-      return negative.node;
     }
 
     /** Return the shorter representation of the original condition node.
@@ -1226,10 +1261,11 @@ class PeepholeMinimizeConditions
      *    to that passed to #fromConditionNode().
      */
     MeasuredNode getShorterRepresentation(boolean countLeadingNot) {
-     if (countLeadingNot || positive.length <= negative.length) {
+     if (countLeadingNot || positive.node.isNot()
+         || positive.length <= negative.length) {
        return positive;
      } else {
-       return negative.negate();
+       return negative.addNot();
      }
     }
 
