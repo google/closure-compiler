@@ -23,7 +23,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,7 +37,11 @@ import java.util.logging.Logger;
  */
 class PhaseOptimizer implements CompilerPass {
 
-  // This ordering is computed offline by running with compute_phase_ordering.
+  // NOTE(user): There used to be some code that tried various orderings of
+  // loopable passes and picked the fastest one. This code became stale
+  // gradually and I decided to remove it. It was also never tried after the
+  // new pass scheduler was written. If we need to revisit this order in the
+  // future, we should write new code to do it.
   @VisibleForTesting
   static final List<String> OPTIMAL_ORDER = ImmutableList.of(
      "deadAssignmentsElimination",
@@ -74,12 +77,6 @@ class PhaseOptimizer implements CompilerPass {
 
   private double progress = 0.0;
   private double progressStep = 0.0;
-
-  // The following static properties are only used for computing optimal
-  // phase orderings. They should not be touched by normal compiler runs.
-  private static boolean randomizeLoops = false;
-  private static List<List<String>> loopsRun = Lists.newArrayList();
-
   private final ProgressRange progressRange;
 
   // These fields are used during optimization loops.
@@ -122,29 +119,6 @@ class PhaseOptimizer implements CompilerPass {
     this.inLoop = false;
     this.crossScopeReporting = false;
     this.timestamp = this.lastChange = START_TIME;
-  }
-
-  /**
-   * Randomizes loops. This should only be used when computing optimal phase
-   * orderings.
-   */
-  static void randomizeLoops() {
-    randomizeLoops = true;
-  }
-
-  /**
-   * Get the phase ordering of loops during this run.
-   * Returns an empty list when the loops are not randomized.
-   */
-  static List<List<String>> getLoopsRun() {
-    return loopsRun;
-  }
-
-  /**
-   * Clears the phase ordering of loops during this run.
-   */
-  static void clearLoopsRun() {
-    loopsRun.clear();
   }
 
   /**
@@ -409,11 +383,7 @@ class PhaseOptimizer implements CompilerPass {
     public void process(Node externs, Node root) {
       Preconditions.checkState(!inLoop, "Nested loops are forbidden");
       inLoop = true;
-      if (randomizeLoops) {
-        randomizePasses();
-      } else {
-        optimizePasses();
-      }
+      optimizePasses();
 
       // Set up function-change tracking
       scopeHandler = new ScopedChangeHandler();
@@ -475,11 +445,6 @@ class PhaseOptimizer implements CompilerPass {
         inLoop = false;
         compiler.removeChangeHandler(scopeHandler);
       }
-    }
-
-    /** Re-arrange the passes in a random order. */
-    private void randomizePasses() {
-      Collections.shuffle(myPasses);
     }
 
     /** Re-arrange the passes in an optimal order. */

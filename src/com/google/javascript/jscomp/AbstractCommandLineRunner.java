@@ -131,8 +131,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   private static final String OUTPUT_MARKER = "%output%";
   private static final String OUTPUT_MARKER_JS_STRING = "%output|jsstring%";
 
-  private final RunTimeStats runTimeStats = new RunTimeStats();
-
   AbstractCommandLineRunner() {
     this(System.out, System.err);
   }
@@ -369,15 +367,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   public final void run() {
     int result = 0;
     int runs = 1;
-    if (config.computePhaseOrdering) {
-      runs = NUM_RUNS_TO_DETERMINE_OPTIMAL_ORDER;
-      PhaseOptimizer.randomizeLoops();
-    }
     try {
       for (int i = 0; i < runs && result == 0; i++) {
-        runTimeStats.recordStartRun();
         result = doRun();
-        runTimeStats.recordEndRun();
       }
     } catch (AbstractCommandLineRunner.FlagUsageException e) {
       System.err.println(e.getMessage());
@@ -385,10 +377,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     } catch (Throwable t) {
       t.printStackTrace();
       result = -2;
-    }
-
-    if (config.computePhaseOrdering) {
-      runTimeStats.outputBestPhaseOrdering();
     }
 
     try {
@@ -815,10 +803,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   int processResults(Result result, List<JSModule> modules, B options)
        throws FlagUsageException, IOException {
-    if (config.computePhaseOrdering) {
-      return 0;
-    }
-
     if (config.printPassGraph) {
       if (compiler.getRoot() == null) {
         return 1;
@@ -1531,53 +1515,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     return rootRelativePathsMap;
   }
 
-  private class RunTimeStats {
-    private long bestRunTime = Long.MAX_VALUE;
-    private long worstRunTime = Long.MIN_VALUE;
-    private long lastStartTime = 0;
-    private List<List<String>> loopedPassesInBestRun = null;
-
-    /**
-     * Record the start of a run.
-     */
-    private void recordStartRun() {
-      lastStartTime = System.currentTimeMillis();
-      PhaseOptimizer.clearLoopsRun();
-    }
-
-    /**
-     * Record the end of a run.
-     */
-    private void recordEndRun() {
-      long endTime = System.currentTimeMillis();
-      long length = endTime - lastStartTime;
-      worstRunTime = Math.max(length, worstRunTime);
-      if (length < bestRunTime) {
-        loopedPassesInBestRun = PhaseOptimizer.getLoopsRun();
-        bestRunTime = length;
-      }
-    }
-
-    /**
-     * Print the best phase loop to stderr.
-     */
-    private void outputBestPhaseOrdering() {
-      try {
-        jsOutput.append("Best time: " + bestRunTime + "\n");
-        jsOutput.append("Worst time: " + worstRunTime + "\n");
-
-        int i = 1;
-        for (List<String> loop : loopedPassesInBestRun) {
-          jsOutput.append(
-              "\nLoop " + i + ":\n" + Joiner.on("\n").join(loop) + "\n");
-          i++;
-        }
-      } catch (IOException e) {
-        throw new RuntimeException("unexpected exception", e);
-      }
-    }
-  }
-
   /**
    * Configurations for the command line configs. Designed for easy
    * building, so that we can decouple the flags-parsing library from
@@ -1592,17 +1529,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     /** Prints out the parse tree and exits */
     CommandLineConfig setPrintTree(boolean printTree) {
       this.printTree = printTree;
-      return this;
-    }
-
-    private boolean computePhaseOrdering = false;
-
-    /**
-     * Runs the compile job many times, then prints out the best phase
-     * ordering from this run
-     */
-    CommandLineConfig setComputePhaseOrdering(boolean computePhaseOrdering) {
-      this.computePhaseOrdering = computePhaseOrdering;
       return this;
     }
 
