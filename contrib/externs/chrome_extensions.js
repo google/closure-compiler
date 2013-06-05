@@ -320,6 +320,30 @@ chrome.app.window.AppWindow.prototype.getBounds = function() {};
 chrome.app.window.AppWindow.prototype.setBounds = function(bounds) {};
 
 
+/** @type {ChromeEvent} */
+chrome.app.window.AppWindow.prototype.onBoundsChanged;
+
+
+/** @type {ChromeEvent} */
+chrome.app.window.AppWindow.prototype.onClosed;
+
+
+/** @type {ChromeEvent} */
+chrome.app.window.AppWindow.prototype.onFullscreened;
+
+
+/** @type {ChromeEvent} */
+chrome.app.window.AppWindow.prototype.onMinimized;
+
+
+/** @type {ChromeEvent} */
+chrome.app.window.AppWindow.prototype.onMaximized;
+
+
+/** @type {ChromeEvent} */
+chrome.app.window.AppWindow.prototype.onRestored;
+
+
 /** @type {!Window} */
 chrome.app.window.AppWindow.prototype.contentWindow;
 
