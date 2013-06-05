@@ -276,6 +276,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   boolean aggressiveRenaming;
   boolean alternateRenaming; // triggers RenameVars2.
 
+  /** Prefer commas over semicolons when doing statement fusion */
+  boolean aggressiveFusion;
+
   /** Folds constants (e.g. (2 + 3) to 5) */
   public boolean foldConstants;
 

@@ -2045,7 +2045,13 @@ public class IntegrationTest extends IntegrationTestCase {
     options.foldConstants = true;
     options.syntheticBlockStartMarker = "START";
     options.syntheticBlockEndMarker = "END";
-    testSame(options, "for(;;) { x = 1; {START(); {y = 1} END()} }");
+    options.aggressiveFusion = false;
+    testSame(options, "for(;;) { x = 1; {START(); {z = 3} END()} }");
+    testSame(options, "x = 1; y = 2; {START(); {z = 3} END()} f()");
+    options.aggressiveFusion = true;
+    testSame(options, "x = 1; {START(); {z = 3} END()} f()");
+    test(options, "x = 1; y = 3; {START(); {z = 3} END()} f()",
+                  "x = 1, y = 3; {START(); {z = 3} END()} f()");
   }
 
   public void testBug5786871() {

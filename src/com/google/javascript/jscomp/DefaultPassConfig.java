@@ -841,14 +841,14 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Verify that all the passes are one-time passes. */
-  private void assertAllOneTimePasses(List<PassFactory> passes) {
+  private static void assertAllOneTimePasses(List<PassFactory> passes) {
     for (PassFactory pass : passes) {
       Preconditions.checkState(pass.isOneTimePass());
     }
   }
 
   /** Verify that all the passes are multi-run passes. */
-  private void assertAllLoopablePasses(List<PassFactory> passes) {
+  private static void assertAllLoopablePasses(List<PassFactory> passes) {
     for (PassFactory pass : passes) {
       Preconditions.checkState(!pass.isOneTimePass());
     }
@@ -1114,7 +1114,7 @@ public class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(AbstractCompiler compiler) {
       final boolean late = true;
       return new PeepholeOptimizationsPass(compiler,
-            new StatementFusion(),
+            new StatementFusion(options.aggressiveFusion),
             new PeepholeRemoveDeadCode(),
             new PeepholeMinimizeConditions(late),
             new PeepholeSubstituteAlternateSyntax(late),
