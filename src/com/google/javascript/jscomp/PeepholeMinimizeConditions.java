@@ -33,7 +33,7 @@ import java.util.Comparator;
  * Also rewrites conditional statements as expressions by replacing them
  * with HOOKs and short-circuit binary operators.
  *
- * Based on PeepholeSubstituteAlternateSyntax by
+ * Based on PeepholeSubstituteAlternateSyntax
  */
 class PeepholeMinimizeConditions
   extends AbstractPeepholeOptimization {
