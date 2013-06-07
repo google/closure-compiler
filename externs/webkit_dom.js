@@ -142,6 +142,12 @@ Console.prototype.dir = function(value) {};
 Console.prototype.dirxml = function(var_args) {};
 
 /**
+ * @param {!Object} data
+ * @param {*=} opt_columns
+ */
+Console.prototype.table = function(data, opt_columns) {};
+
+/**
  * @return {undefined}
  */
 Console.prototype.trace = function() {};
@@ -189,7 +195,14 @@ Console.prototype.timeStamp = function(value) {};
  */
 Console.prototype.group = function(var_args) {};
 
+/**
+ * @param {...*} var_args
+ */
+Console.prototype.groupCollapsed = function(var_args) {};
+
 Console.prototype.groupEnd = function() {};
+
+Console.prototype.clear = function() {};
 
 /** @type {MemoryInfo} */
 Console.prototype.memory;
