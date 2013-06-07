@@ -515,7 +515,7 @@ Array.prototype.shift = function() {};
  * @param {*=} opt_end Zero-based index at which to end extraction.  slice
  *     extracts up to but not including end.
  * @return {!Array.<T>}
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array.<T>|string}
  * @template T
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/slice
@@ -586,7 +586,7 @@ Array.prototype.unshift = function(var_args) {};
  * @param {?function(?, T, number, !Array.<T>) : R} callback
  * @param {*=} opt_initialValue
  * @return {R}
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array.<T>|string}
  * @template T,R
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/reduce
  */
@@ -599,7 +599,7 @@ Array.prototype.reduce = function(callback, opt_initialValue) {};
  * @param {?function(?, T, number, !Array.<T>) : R} callback
  * @param {*=} opt_initialValue
  * @return {R}
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array.<T>|string}
  * @template T,R
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/reduceRight
  */
@@ -610,7 +610,7 @@ Array.prototype.reduceRight = function(callback, opt_initialValue) {};
  * @param {?function(this:S, T, number, !Array.<T>): ?} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array.<T>|string}
  * @template T,S
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/every
  */
@@ -621,7 +621,7 @@ Array.prototype.every = function(callback, opt_thisobj) {};
  * @param {?function(this:S, T, number, !Array.<T>): ?} callback
  * @param {S=} opt_thisobj
  * @return {!Array.<T>}
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array.<T>|string}
  * @template T,S
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/filter
  */
@@ -631,7 +631,7 @@ Array.prototype.filter = function(callback, opt_thisobj) {};
  * Available in ECMAScript 5, Mozilla 1.6+.
  * @param {?function(this:S, T, number, !Array.<T>): ?} callback
  * @param {S=} opt_thisobj
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array.<T>|string}
  * @template T,S
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/forEach
  */
@@ -642,7 +642,7 @@ Array.prototype.forEach = function(callback, opt_thisobj) {};
  * @param {T} obj
  * @param {number=} opt_fromIndex
  * @return {number}
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array.<T>|string}
  * @nosideeffects
  * @template T
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/indexOf
@@ -654,7 +654,7 @@ Array.prototype.indexOf = function(obj, opt_fromIndex) {};
  * @param {T} obj
  * @param {number=} opt_fromIndex
  * @return {number}
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array.<T>|string}
  * @nosideeffects
  * @template T
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/lastIndexOf
@@ -666,7 +666,7 @@ Array.prototype.lastIndexOf = function(obj, opt_fromIndex) {};
  * @param {?function(this:S, T, number, !Array.<T>): R} callback
  * @param {S=} opt_thisobj
  * @return {!Array.<R>}
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array.<T>|string}
  * @template T,S,R
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/map
  */
@@ -677,7 +677,7 @@ Array.prototype.map = function(callback, opt_thisobj) {};
  * @param {?function(this:S, T, number, !Array.<T>): ?} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array.<T>|string}
  * @template T,S
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/some
  */
