@@ -26,3 +26,6 @@
 // it as a constant, because that would just be extra work for
 // the compiler.
 var $jscomp = {};
+
+/** Locals for goog.scope */
+$jscomp.scope = {};

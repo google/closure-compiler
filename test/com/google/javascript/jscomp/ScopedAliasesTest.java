@@ -39,6 +39,9 @@ public class ScopedAliasesTest extends CompilerTestCase {
       "goog.scope(function() {";
   private static final String GOOG_SCOPE_END_BLOCK = "});";
 
+  private static final String SCOPE_NAMESPACE =
+      "var $jscomp = {}; $jscomp.scope = {};";
+
   private static String EXTERNS = "var window;";
 
   AliasTransformationHandler transformationHandler =
@@ -491,15 +494,32 @@ public class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testNonAliasLocal() {
-    testScopedFailure("var x = 10", ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
-    testScopedFailure("var x = goog.dom + 10",
-        ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
-    testScopedFailure("var x = goog['dom']",
-        ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
-    testScopedFailure("var x = goog.dom, y = 10",
-        ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
     testScopedFailure("function f() {}",
         ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
+  }
+
+  public void testOkAliasLocal() {
+    testScoped("var x = 10;",
+               SCOPE_NAMESPACE + "$jscomp.scope.x = 10");
+    testScoped("var x = goog['dom'];",
+               SCOPE_NAMESPACE + "$jscomp.scope.x = goog['dom']");
+    testScoped("var x = 10, y = 9;",
+               SCOPE_NAMESPACE + "$jscomp.scope.x = 10; $jscomp.scope.y = 9;");
+    testScoped("var x = 10, y = 9; goog.getX = function () { return x + y; }",
+               SCOPE_NAMESPACE + "$jscomp.scope.x = 10; $jscomp.scope.y = 9;" +
+               "goog.getX = function () { " +
+               "    return $jscomp.scope.x + $jscomp.scope.y; }");
+  }
+
+  public void testAliasReassign() {
+    testScopedFailure("var x = 3; x = 5;",
+        ScopedAliases.GOOG_SCOPE_ALIAS_REDEFINED);
+  }
+
+  public void testMultipleLocals() {
+    test("goog.scope(function () { var x = 3; });" +
+         "goog.scope(function () { var x = 4; });",
+         SCOPE_NAMESPACE + "$jscomp.scope.x = 3; $jscomp.scope.x$1 = 4");
   }
 
   // Alias Recording Tests

@@ -17,8 +17,10 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
@@ -109,6 +111,8 @@ class ScopedAliases implements HotSwapCompilerPass {
   static final DiagnosticType GOOG_SCOPE_NON_ALIAS_LOCAL = DiagnosticType.error(
       "JSC_GOOG_SCOPE_NON_ALIAS_LOCAL",
       "The local variable {0} is in a goog.scope and is not an alias.");
+
+  private Multiset<String> scopedAliasNames = HashMultiset.create();
 
   ScopedAliases(AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
@@ -257,7 +261,7 @@ class ScopedAliases implements HotSwapCompilerPass {
     // normalization (before optimizations). We run it here on a limited
     // set of variables, but only as a last resort (because this will screw
     // up warning messages downstream).
-    private final Set<String> forbiddenLocals = Sets.newHashSet();
+    private final Set<String> forbiddenLocals = Sets.newHashSet("$jscomp");
     private boolean hasNamespaceShadows = false;
 
     private boolean hasErrors = false;
@@ -349,32 +353,63 @@ class ScopedAliases implements HotSwapCompilerPass {
       for (Var v : scope.getVarIterable()) {
         Node n = v.getNode();
         Node parent = n.getParent();
-        if (parent.isVar() &&
-            n.hasChildren() && n.getFirstChild().isQualifiedName()) {
-          String name = n.getString();
-          Var aliasVar = scope.getVar(name);
-          aliases.put(name, aliasVar);
-
-          String qualifiedName =
-              aliasVar.getInitialValue().getQualifiedName();
-          transformation.addAlias(name, qualifiedName);
-
-          int rootIndex = qualifiedName.indexOf(".");
-          if (rootIndex != -1) {
-            String qNameRoot = qualifiedName.substring(0, rootIndex);
-            if (!aliases.containsKey(qNameRoot)) {
-              forbiddenLocals.add(qNameRoot);
-            }
-          }
+        boolean isVarAssign = parent.isVar() && n.hasChildren();
+        if (isVarAssign && n.getFirstChild().isQualifiedName()) {
+          recordAlias(v);
         } else if (v.isBleedingFunction()) {
           // Bleeding functions already get a BAD_PARAMETERS error, so just
           // do nothing.
         } else if (parent.getType() == Token.LP) {
           // Parameters of the scope function also get a BAD_PARAMETERS
           // error.
+        } else if (isVarAssign) {
+          Node value = v.getInitialValue().detachFromParent();
+          String name = n.getString();
+          int nameCount = scopedAliasNames.count(name);
+          scopedAliasNames.add(name);
+          String globalName =
+              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
+
+          compiler.ensureLibraryInjected("base");
+
+          // Add $jscomp.scope.name = EXPR;
+          // Make sure we copy over all the jsdoc and debug info.
+          Node newDecl = NodeUtil.newQualifiedNameNodeDeclaration(
+              compiler.getCodingConvention(),
+              globalName,
+              value,
+              v.getJSDocInfo())
+              .useSourceInfoIfMissingFromForTree(n);
+          NodeUtil.setDebugInformation(
+              newDecl.getFirstChild().getFirstChild(), n, name);
+          parent.getParent().addChildBefore(newDecl, parent);
+
+          // Rewrite "var name = EXPR;" to "var name = $jscomp.scope.name;"
+          v.getNameNode().addChildToFront(
+              NodeUtil.newQualifiedNameNode(
+                  compiler.getCodingConvention(), globalName, n, name));
+
+          recordAlias(v);
         } else {
-          // TODO(robbyw): Support using locals for private variables.
+          // Do not allow hoisted functions or other kinds of local symbols.
           report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+        }
+      }
+    }
+
+    private void recordAlias(Var aliasVar) {
+      String name = aliasVar.getName();
+      aliases.put(name, aliasVar);
+
+      String qualifiedName =
+        aliasVar.getInitialValue().getQualifiedName();
+      transformation.addAlias(name, qualifiedName);
+
+      int rootIndex = qualifiedName.indexOf(".");
+      if (rootIndex != -1) {
+        String qNameRoot = qualifiedName.substring(0, rootIndex);
+        if (!aliases.containsKey(qNameRoot)) {
+          forbiddenLocals.add(qNameRoot);
         }
       }
     }
