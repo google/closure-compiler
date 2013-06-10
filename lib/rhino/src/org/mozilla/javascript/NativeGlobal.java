@@ -161,7 +161,7 @@ public class NativeGlobal implements Serializable, IdFunctionCall
                         result = false;
                     } else {
                         double d = ScriptRuntime.toNumber(args[0]);
-                        result = (d == d
+                        result = (!Double.isNaN(d)
                                   && d != Double.POSITIVE_INFINITY
                                   && d != Double.NEGATIVE_INFINITY);
                     }
@@ -175,7 +175,7 @@ public class NativeGlobal implements Serializable, IdFunctionCall
                         result = true;
                     } else {
                         double d = ScriptRuntime.toNumber(args[0]);
-                        result = (d != d);
+                        result = (Double.isNaN(d));
                     }
                     return ScriptRuntime.wrapBoolean(result);
                 }
@@ -390,7 +390,7 @@ public class NativeGlobal implements Serializable, IdFunctionCall
         int mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
         if (args.length > 1) { // the 'mask' argument.  Non-ECMA.
             double d = ScriptRuntime.toNumber(args[1]);
-            if (d != d || ((mask = (int) d) != d) ||
+            if (Double.isNaN(d) || ((mask = (int) d) != d) ||
                 0 != (mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH)))
             {
                 throw Context.reportRuntimeError0("msg.bad.esc.mask");

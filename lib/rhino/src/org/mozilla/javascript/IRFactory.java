@@ -2243,7 +2243,7 @@ public final class IRFactory extends Parser
             return ALWAYS_TRUE_BOOLEAN;
           case Token.NUMBER: {
             double num = node.getDouble();
-            if (num == num && num != 0.0) {
+            if (!Double.isNaN(num) && num != 0.0) {
                 return ALWAYS_TRUE_BOOLEAN;
             } else {
                 return ALWAYS_FALSE_BOOLEAN;

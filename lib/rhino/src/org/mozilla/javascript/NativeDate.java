@@ -181,7 +181,7 @@ final class NativeDate extends IdScriptableObject
                 Object tv = ScriptRuntime.toPrimitive(o, ScriptRuntime.NumberClass);
                 if (tv instanceof Number) {
                     double d = ((Number) tv).doubleValue();
-                    if (d != d || Double.isInfinite(d)) {
+                    if (Double.isNaN(d) || Double.isInfinite(d)) {
                         return null;
                     }
                 }
@@ -220,7 +220,7 @@ final class NativeDate extends IdScriptableObject
           case Id_toString:
           case Id_toTimeString:
           case Id_toDateString:
-            if (t == t) {
+            if (!Double.isNaN(t)) {
                 return date_format(t, id);
             }
             return js_NaN_date_str;
@@ -228,13 +228,13 @@ final class NativeDate extends IdScriptableObject
           case Id_toLocaleString:
           case Id_toLocaleTimeString:
           case Id_toLocaleDateString:
-            if (t == t) {
+            if (!Double.isNaN(t)) {
                 return toLocale_helper(t, id);
             }
             return js_NaN_date_str;
 
           case Id_toUTCString:
-            if (t == t) {
+            if (!Double.isNaN(t)) {
                 return js_toUTCString(t);
             }
             return js_NaN_date_str;
@@ -249,7 +249,7 @@ final class NativeDate extends IdScriptableObject
           case Id_getYear:
           case Id_getFullYear:
           case Id_getUTCFullYear:
-            if (t == t) {
+            if (!Double.isNaN(t)) {
                 if (id != Id_getUTCFullYear) t = LocalTime(t);
                 t = YearFromTime(t);
                 if (id == Id_getYear) {
@@ -266,7 +266,7 @@ final class NativeDate extends IdScriptableObject
 
           case Id_getMonth:
           case Id_getUTCMonth:
-            if (t == t) {
+            if (!Double.isNaN(t)) {
                 if (id == Id_getMonth) t = LocalTime(t);
                 t = MonthFromTime(t);
             }
@@ -274,7 +274,7 @@ final class NativeDate extends IdScriptableObject
 
           case Id_getDate:
           case Id_getUTCDate:
-            if (t == t) {
+            if (!Double.isNaN(t)) {
                 if (id == Id_getDate) t = LocalTime(t);
                 t = DateFromTime(t);
             }
@@ -282,7 +282,7 @@ final class NativeDate extends IdScriptableObject
 
           case Id_getDay:
           case Id_getUTCDay:
-            if (t == t) {
+            if (!Double.isNaN(t)) {
                 if (id == Id_getDay) t = LocalTime(t);
                 t = WeekDay(t);
             }
@@ -290,7 +290,7 @@ final class NativeDate extends IdScriptableObject
 
           case Id_getHours:
           case Id_getUTCHours:
-            if (t == t) {
+            if (!Double.isNaN(t)) {
                 if (id == Id_getHours) t = LocalTime(t);
                 t = HourFromTime(t);
             }
@@ -298,7 +298,7 @@ final class NativeDate extends IdScriptableObject
 
           case Id_getMinutes:
           case Id_getUTCMinutes:
-            if (t == t) {
+            if (!Double.isNaN(t)) {
                 if (id == Id_getMinutes) t = LocalTime(t);
                 t = MinFromTime(t);
             }
@@ -306,7 +306,7 @@ final class NativeDate extends IdScriptableObject
 
           case Id_getSeconds:
           case Id_getUTCSeconds:
-            if (t == t) {
+            if (!Double.isNaN(t)) {
                 if (id == Id_getSeconds) t = LocalTime(t);
                 t = SecFromTime(t);
             }
@@ -314,14 +314,14 @@ final class NativeDate extends IdScriptableObject
 
           case Id_getMilliseconds:
           case Id_getUTCMilliseconds:
-            if (t == t) {
+            if (!Double.isNaN(t)) {
                 if (id == Id_getMilliseconds) t = LocalTime(t);
                 t = msFromTime(t);
             }
             return ScriptRuntime.wrapNumber(t);
 
           case Id_getTimezoneOffset:
-            if (t == t) {
+            if (!Double.isNaN(t)) {
                 t = (t - LocalTime(t)) / msPerMinute;
             }
             return ScriptRuntime.wrapNumber(t);
@@ -357,10 +357,10 @@ final class NativeDate extends IdScriptableObject
             {
                 double year = ScriptRuntime.toNumber(args, 0);
 
-                if (year != year || Double.isInfinite(year)) {
+                if (Double.isNaN(year) || Double.isInfinite(year)) {
                     t = ScriptRuntime.NaN;
                 } else {
-                    if (t != t) {
+                    if (Double.isNaN(t)) {
                         t = 0;
                     } else {
                         t = LocalTime(t);
@@ -388,7 +388,7 @@ final class NativeDate extends IdScriptableObject
     }
 
     private String toISOString() {
-        if (date == date) {
+        if (!Double.isNaN(date)) {
             synchronized (isoFormat) {
                 return isoFormat.format(new Date((long) date));
             }
@@ -714,7 +714,7 @@ final class NativeDate extends IdScriptableObject
 
     private static double TimeClip(double d)
     {
-        if (d != d ||
+        if (Double.isNaN(d) ||
             d == Double.POSITIVE_INFINITY ||
             d == Double.NEGATIVE_INFINITY ||
             Math.abs(d) > HalfTimeDomain)
@@ -756,7 +756,7 @@ final class NativeDate extends IdScriptableObject
         for (loop = 0; loop < MAXARGS; loop++) {
             if (loop < args.length) {
                 d = ScriptRuntime.toNumber(args[loop]);
-                if (d != d || Double.isInfinite(d)) {
+                if (Double.isNaN(d) || Double.isInfinite(d)) {
                     return ScriptRuntime.NaN;
                 }
                 array[loop] = ScriptRuntime.toInteger(args[loop]);
@@ -1265,7 +1265,7 @@ final class NativeDate extends IdScriptableObject
         double result;
 
         /* just return NaN if the date is already NaN */
-        if (date != date)
+        if (Double.isNaN(date))
             return date;
 
         /* Satisfy the ECMA rule that if a function is called with
@@ -1380,7 +1380,7 @@ final class NativeDate extends IdScriptableObject
 
         /* return NaN if date is NaN and we're not setting the year,
          * If we are, use 0 as the time. */
-        if (date != date) {
+        if (Double.isNaN(date)) {
             if (args.length < 3) {
                 return ScriptRuntime.NaN;
             } else {

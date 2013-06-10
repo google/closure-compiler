@@ -3033,12 +3033,12 @@ switch (op) {
             return false;
         } else if (x == UniqueTag.DOUBLE_MARK) {
             double d = frame.sDbl[i];
-            return d == d && d != 0.0;
+            return !Double.isNaN(d) && d != 0.0;
         } else if (x == null || x == Undefined.instance) {
             return false;
         } else if (x instanceof Number) {
             double d = ((Number)x).doubleValue();
-            return (d == d && d != 0.0);
+            return (!Double.isNaN(d) && d != 0.0);
         } else if (x instanceof Boolean) {
             return ((Boolean)x).booleanValue();
         } else {

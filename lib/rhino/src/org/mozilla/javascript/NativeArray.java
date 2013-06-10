@@ -365,7 +365,7 @@ public class NativeArray extends IdScriptableObject implements List
     }
 
     private static long toArrayIndex(double d) {
-        if (d == d) {
+        if (!Double.isNaN(d)) {
             long index = ScriptRuntime.toUint32(d);
             if (index == d && index != 4294967295L) {
                 return index;

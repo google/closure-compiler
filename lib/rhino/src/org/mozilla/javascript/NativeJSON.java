@@ -307,7 +307,7 @@ public final class NativeJSON extends IdScriptableObject
 
         if (value instanceof Number) {
             double d = ((Number) value).doubleValue();
-            if (d == d && d != Double.POSITIVE_INFINITY &&
+            if (!Double.isNaN(d) && d != Double.POSITIVE_INFINITY &&
                 d != Double.NEGATIVE_INFINITY)
             {
                 return ScriptRuntime.toString(value);

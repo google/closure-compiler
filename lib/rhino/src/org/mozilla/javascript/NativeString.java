@@ -484,7 +484,7 @@ final class NativeString extends IdScriptableObject
         String search = ScriptRuntime.toString(args, 0);
         double end = ScriptRuntime.toNumber(args, 1);
 
-        if (end != end || end > target.length())
+        if (Double.isNaN(end) || end > target.length())
             end = target.length();
         else if (end < 0)
             end = 0;
