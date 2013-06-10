@@ -2686,8 +2686,6 @@ public class IntegrationTest extends IntegrationTestCase {
         "\nEstimated GzReduction\\(bytes\\): [0-9]+" +
         "\nEstimated Size\\(bytes\\): [0-9]+" +
         "\nEstimated GzSize\\(bytes\\): [0-9]+" +
-        "\nTotal Size\\(bytes\\): -?[0-9]+" +
-        "\nTotal GzSize\\(bytes\\): -?[0-9]+" +
         "\n\nLog:\n" +
         "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize.*",
         Pattern.DOTALL);

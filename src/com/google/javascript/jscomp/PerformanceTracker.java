@@ -57,14 +57,17 @@ public class PerformanceTracker {
   private int changes = 0;
   private int loopRuns = 0;
   private int loopChanges = 0;
+
+  // The following fields for tracking size changes are just estimates.
+  // They do not take into account preserved license blocks, newline padding,
+  // or pretty printing (if enabled), since they don't use CodePrinter.
+  // To get exact sizes, call compiler.toSource() for the final generated code.
   private int codeSize = -1;  // estimate
   private int gzCodeSize = -1;  // estimate
   private int diff = 0;  // estimate
   private int gzDiff = 0;  // estimate
-  private long finalCodeSize = -1;  // exact
-  private long finalGzSize = -1;  // exact
 
-  private Deque<Stats> currentPass = new ArrayDeque<Stats>();
+  private final Deque<Stats> currentPass = new ArrayDeque<Stats>();
 
   /** Summary stats by pass name. */
   private final Map<String, Stats> summary = Maps.newHashMap();
@@ -205,11 +208,6 @@ public class PerformanceTracker {
     return summaryCopy;
   }
 
-  public void setFinalSizes(long finalCodeSize, long finalGzSize) {
-    this.finalCodeSize = finalCodeSize;
-    this.finalGzSize = finalGzSize;
-  }
-
   class CmpEntries implements Comparator<Entry<String, Stats>> {
     @Override
     public int compare(Entry<String, Stats> e1, Entry<String, Stats> e2) {
@@ -274,8 +272,6 @@ public class PerformanceTracker {
           "\nEstimated GzReduction(bytes): " + String.valueOf(gzDiff) +
           "\nEstimated Size(bytes): " + String.valueOf(codeSize) +
           "\nEstimated GzSize(bytes): " + String.valueOf(gzCodeSize) +
-          "\nTotal Size(bytes): " + String.valueOf(finalCodeSize) +
-          "\nTotal GzSize(bytes): " + String.valueOf(finalGzSize) +
           "\n\n");
 
       output.write("Log:\n" +
