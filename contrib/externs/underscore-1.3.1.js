@@ -332,7 +332,7 @@ _.without = function(array, var_args) {};
 /**
  * @param {Array} array
  * @param {boolean=} opt_isSorted
- * @param {Function} opt_iterator
+ * @param {Function=} opt_iterator
  * @return {!Array}
  */
 _.uniq = function(array, opt_isSorted, opt_iterator) {};
@@ -340,7 +340,7 @@ _.uniq = function(array, opt_isSorted, opt_iterator) {};
 /**
  * @param {Array} array
  * @param {boolean=} opt_isSorted
- * @param {Function} opt_iterator
+ * @param {Function=} opt_iterator
  * @return {!Array}
  */
 _.unique = function(array, opt_isSorted, opt_iterator) {};
