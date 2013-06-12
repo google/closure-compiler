@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
@@ -95,16 +96,21 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
   }
 
   // Seed types
-  static final String DISPOSABLE_TYPE_NAME = "goog.Disposable";
-  static final String EVENT_HANDLER_TYPE_NAME = "goog.events.EventHandler";
-  JSType googDisposableType;
-  JSType googEventsEventHandlerType;
+  private static final String DISPOSABLE_TYPE_NAME = "goog.Disposable";
+  private static final String EVENT_HANDLER_TYPE_NAME = "goog.events.EventHandler";
+  private JSType googDisposableType;
+  private JSType googEventsEventHandlerType;
 
   // Eventful types
-  Set<JSType> eventfulTypes;
+  private Set<JSType> eventfulTypes;
 
-  final AbstractCompiler compiler;
-  final JSTypeRegistry typeRegistry;
+  // Dispose methods is a map from regex to argument disposed/all arguments disposed.
+  private Map<String, int[]> disposeMethods;
+  // Member used to signify all arguments should be disposed.
+  public static int[] disposeAll;
+
+  private final AbstractCompiler compiler;
+  private final JSTypeRegistry typeRegistry;
 
   // At the moment only ALLOCATED and POSSIBLY_DISPOSED are used
   private enum SeenType {
@@ -120,24 +126,53 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
   /*
    * The disposal checking policy used.
    */
-  public DisposalCheckingPolicy checkingPolicy;
+  private DisposalCheckingPolicy checkingPolicy;
 
   /*
    * Eventize DAG represented using adjacency lists.
    */
-  public Map<String, Set<String>> eventizes;
+  private Map<String, Set<String>> eventizes;
 
   /*
    * Maps from eventful object name to state.
    */
-  static Map<String, EventfulObjectState> eventfulObjectMap;
+  private static Map<String, EventfulObjectState> eventfulObjectMap;
+
 
   public CheckEventfulObjectDisposal(AbstractCompiler compiler,
       DisposalCheckingPolicy checkingPolicy) {
     this.compiler = compiler;
     this.checkingPolicy = checkingPolicy;
+    this.initializeDisposeMethodsMap();
     this.typeRegistry = compiler.getTypeRegistry();
   }
+
+
+  /**
+   * Add a new call that is used to dispose an JS object.
+   * @param pattern A regular expression that matches the function used to dispose of/register
+   *   an object as disposable
+   * @param argumentsThatAreDisposed An array of integers (ideally sorted) that specifies
+   *   the arguments of the function being disposed
+   */
+  private void addDisposeCall(String pattern, int[] argumentsThatAreDisposed) {
+    this.disposeMethods.put(pattern, argumentsThatAreDisposed);
+  }
+
+
+  /*
+   * Initialize disposeMethods map with calls to dispose calls.
+   */
+  private void initializeDisposeMethodsMap() {
+    this.disposeMethods = Maps.newHashMap();
+
+    // Initialize disposeMethods hashmap
+    this.addDisposeCall("goog.dispose", new int[]{0});
+    this.addDisposeCall("goog.disposeAll", disposeAll);
+    this.addDisposeCall(".push", new int[]{0});
+    this.addDisposeCall(".add", disposeAll);
+  }
+
 
   private static Node getBase(Node n) {
     Node base = n;
@@ -147,6 +182,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
 
     return base;
   }
+
 
   /*
    * Get the type of the this in the current scope of traversal
@@ -922,15 +958,35 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
         }
       }
 
-      // Handles goog.dispose(X)
-      if (property.equals("goog.dispose")) {
-        ret.add(n.getLastChild());
-      }
+      // Call to function known to dispose arguments
+      for (String disposeMethod : disposeMethods.keySet()) {
+        if (property.matches(disposeMethod)) {
+          int[] disposeArguments = disposeMethods.get(disposeMethod);
 
-      // Handles goog.disposeAll(X_1, X_2, ...)
-      if (property.equals("goog.disposeAll")) {
-        for (Node t = first.getNext(); t != null; t = t.getNext()) {
-          ret.add(t);
+          // Dispose all arguments?
+          if (disposeArguments == disposeAll) {
+            for (Node t = first.getNext(); t != null; t = t.getNext()) {
+              ret.add(t);
+            }
+          } else {
+            // Dispose specific arguments only
+            Node t = first.getNext();
+            int tsArgument = 0;
+            for (int index : disposeArguments) {
+              // The current item pointed to by t is beyond that requested in
+              // current array element.
+              if (tsArgument > disposeArguments[index]) {
+                t = first.getNext();
+                tsArgument = 0;
+              }
+              for (; tsArgument < disposeArguments[index] && t != null; ++tsArgument) {
+                t = t.getNext();
+              }
+              if (tsArgument == disposeArguments[index] && t != null) {
+                ret.add(t);
+              }
+            }
+          }
         }
       }
 
@@ -960,17 +1016,6 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
         JSType possiblyArrayType = possiblyArray.getJSType();
         if (possiblyArrayType != null && possiblyArrayType.isArrayType()) {
           ret.add(n.getLastChild());
-        }
-      }
-
-      /*
-       * Heuristic: a variable used in call to push/addChild gets stored
-       * in object with method push/addChild/addChild_/addChildAt/addPane.
-       */
-      if (property.endsWith(".push") ||
-          property.contains(".add")) {
-        for (Node t = first.getNext(); t != null; t = t.getNext()) {
-          ret.add(t);
         }
       }
 

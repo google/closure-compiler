@@ -161,6 +161,40 @@ public class IntegrationTest extends IntegrationTestCase {
          CheckMissingGetCssName.MISSING_GETCSSNAME);
   }
 
+  public void testCheckEventfulDisposalWarningLevels() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckEventfulObjectDisposalPolicy(
+        CheckEventfulObjectDisposal.DisposalCheckingPolicy.ON);
+    String js = "var goog = {};" + "goog.inherits = function(x, y) {};"
+      + "goog.dispose = function(x) {};"
+      + "goog.disposeAll = function(var_args) {};"
+      + "/** @return {*} */ goog.asserts.assert = function(x) { return x; };"
+      + "/** @interface */\n"
+      + "goog.Disposable = function() {};"
+      + "goog.Disposable.prototype.dispose = function() {};"
+      + "/** @param {goog.Disposable} fn */"
+      + "goog.Disposable.prototype.registerDisposable = function(fn) {};"
+      + "/** @implements {goog.Disposable}\n * @constructor */"
+      + "goog.SubDisposable = function() {};"
+      + "/** @inheritDoc */ "
+      + "goog.SubDisposable.prototype.dispose = function() {};"
+      + "/** @inheritDoc */"
+      + "goog.SubDisposable.prototype.registerDisposable = function() {};"
+      + "goog.events = {};"
+      + "/** @extends {goog.SubDisposable}\n *  @constructor */"
+      + "goog.events.EventHandler = function() {};"
+      + "goog.events.EventHandler.prototype.removeAll = function() {};"
+      + "/** @extends {goog.SubDisposable}\n * @constructor */"
+      + "var test = function() { this.eh = new goog.events.EventHandler(); };"
+      + "goog.inherits(test, goog.Disposable);"
+      + "var testObj = new test();";
+
+    test(options, js, CheckEventfulObjectDisposal.EVENTFUL_OBJECT_NOT_DISPOSED);
+
+    options.setWarningLevel(DiagnosticGroups.CHECK_EVENTFUL_OBJECT_DISPOSAL, CheckLevel.OFF);
+    testSame(options, js);
+  }
+
   public void testBug2592659() {
     CompilerOptions options = createCompilerOptions();
     options.closurePass = true;

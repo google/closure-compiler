@@ -76,7 +76,7 @@ public class DiagnosticGroups {
   // If a group is suppressible on a per-file basis, it should be added
   // to parser/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
-      "accessControls, ambiguousFunctionDecl, checkRegExp, " +
+      "accessControls, ambiguousFunctionDecl, checkEventfulObjectDisposal, checkRegExp, " +
       "checkStructDictInheritance, checkTypes, checkVars, const, " +
       "constantProperty, deprecated, duplicateMessage, " +
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
@@ -185,6 +185,13 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("checkTypes",
           TypeValidator.ALL_DIAGNOSTICS,
           TypeCheck.ALL_DIAGNOSTICS);
+
+  public static final DiagnosticGroup CHECK_EVENTFUL_OBJECT_DISPOSAL =
+      DiagnosticGroups.registerGroup("checkEventfulObjectDisposal",
+          CheckEventfulObjectDisposal.EVENTFUL_OBJECT_NOT_DISPOSED,
+          CheckEventfulObjectDisposal.EVENTFUL_OBJECT_PURELY_LOCAL,
+          CheckEventfulObjectDisposal.OVERWRITE_PRIVATE_EVENTFUL_OBJECT,
+          CheckEventfulObjectDisposal.UNLISTEN_WITH_ANONBOUND);
 
   public static final DiagnosticGroup REPORT_UNKNOWN_TYPES =
       DiagnosticGroups.registerGroup("reportUnknownTypes",

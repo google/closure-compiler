@@ -33,6 +33,7 @@ public class CheckEventfulObjectDisposalTest extends CompilerTestCase {
       + "goog.isString = function(x) {};" + "goog.isObject = function(x) {};"
       + "goog.isDefAndNotNull = function(x) {};" + "goog.asserts = {};"
       + "goog.dispose = function(x) {};"
+      + "goog.disposeAll = function(var_args) {};"
       + "/** @return {*} */ goog.asserts.assert = function(x) { return x; };"
       + "/** @interface */\n"
       + "goog.Disposable = goog.abstractMethod;"
@@ -59,7 +60,9 @@ public class CheckEventfulObjectDisposalTest extends CompilerTestCase {
 
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
-    return new CheckEventfulObjectDisposal(compiler, policy);
+    CheckEventfulObjectDisposal compilerPass = new CheckEventfulObjectDisposal(compiler, policy);
+
+    return compilerPass;
   }
 
   public void testNoEventHandler() {
@@ -184,11 +187,35 @@ public class CheckEventfulObjectDisposalTest extends CompilerTestCase {
     testSame(js);
   }
 
-  public void testFreedGoogDispose() {
+  public void testFreedGoogDispose1() {
     String js = CLOSURE_DEFS
         + "/** @extends {goog.SubDisposable}\n * @constructor */"
         + "var test = function() { this.eh = new goog.events.EventHandler();"
         + "goog.dispose(this.eh); };"
+        + "goog.inherits(test, goog.Disposable);"
+        + "var testObj = new test();";
+    testSame(js);
+  }
+
+  public void testNotAllFreedGoogDispose() {
+    String js = CLOSURE_DEFS
+        + "/** @extends {goog.SubDisposable}\n * @constructor */"
+        + "var test = function() {"
+        + "this.eh1 = new goog.events.EventHandler();"
+        + "this.eh2 = new goog.events.EventHandler();"
+        + "goog.dispose(this.eh1, this.eh2); };"
+        + "goog.inherits(test, goog.Disposable);"
+        + "var testObj = new test();";
+    testSame(js, CheckEventfulObjectDisposal.EVENTFUL_OBJECT_NOT_DISPOSED, true);
+  }
+
+  public void testFreedGoogDisposeAll() {
+    String js = CLOSURE_DEFS
+        + "/** @extends {goog.SubDisposable}\n * @constructor */"
+        + "var test = function() { "
+        + "this.eh1 = new goog.events.EventHandler();"
+        + "this.eh2 = new goog.events.EventHandler();"
+        + "goog.disposeAll(this.eh1, this.eh2); };"
         + "goog.inherits(test, goog.Disposable);"
         + "var testObj = new test();";
     testSame(js);
@@ -229,4 +256,22 @@ public class CheckEventfulObjectDisposalTest extends CompilerTestCase {
         + "var testObj = new test();";
     testSame(js, CheckEventfulObjectDisposal.OVERWRITE_PRIVATE_EVENTFUL_OBJECT, true);
   }
+
+  /*
+   // TODO(user): update & enable when custom dispose call API is implemented
+  public void testCustomDispose() {
+    policy = CheckEventfulObjectDisposal.DisposalCheckingPolicy.AGGRESSIVE;
+    customDispose = Maps.newHashMap();
+    customDispose.put("helpers.disp", new int[]{0});
+    String js = CLOSURE_DEFS
+        + "helpers.disp = function(todispose, ctx) {"
+        + " ctx.registerDisposable(todispose);"
+        + " return todispose;"
+        + "};"
+        + "var x = helpers.disp(new goog.events.EventHandler(), OBJ);"
+        + "var y = new goog.events.EventHandler();"
+        + "helpers.disp(y, OBJ);";
+    testSame(js);
+  }
+  */
 }
