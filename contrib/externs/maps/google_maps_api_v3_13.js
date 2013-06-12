@@ -3685,6 +3685,11 @@ google.maps.StreetViewPanoramaOptions.prototype.clickToGo;
 /**
  * @type {boolean}
  */
+google.maps.StreetViewPanoramaOptions.prototype.disableDefaultUI;
+
+/**
+ * @type {boolean}
+ */
 google.maps.StreetViewPanoramaOptions.prototype.disableDoubleClickZoom;
 
 /**
