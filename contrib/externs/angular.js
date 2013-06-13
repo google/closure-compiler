@@ -202,6 +202,7 @@ angular.module = function(name, opt_requires, opt_configFn) {};
 
 /**
  * @typedef {{
+ *   $attr: Object.<string,string>,
  *   $normalize: function(string): string,
  *   $observe: function(string, function(*)): function(*),
  *   $set: function(string, ?(string|boolean), boolean=, string=)
