@@ -26,9 +26,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
+import com.google.common.io.CharSource;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
-import com.google.common.io.InputSupplier;
 
 import java.io.File;
 import java.io.IOException;
@@ -130,17 +130,16 @@ public class WhitelistWarningsGuard extends WarningsGuard {
    */
   public static Set<String> loadWhitelistedJsWarnings(File file) {
     return loadWhitelistedJsWarnings(
-        Files.newReaderSupplier(file, Charsets.UTF_8));
+        Files.asCharSource(file, Charsets.UTF_8));
   }
 
   /**
    * Loads legacy warnings list from the file.
    * @return The lines of the file.
    */
-  protected static Set<String> loadWhitelistedJsWarnings(
-      InputSupplier<? extends Reader> supplier) {
+  protected static Set<String> loadWhitelistedJsWarnings(CharSource supplier) {
     try {
-      return loadWhitelistedJsWarnings(supplier.getInput());
+      return loadWhitelistedJsWarnings(supplier.openStream());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
