@@ -22,9 +22,9 @@
 
 
 /**
- * @param {Object} selfObj Specifies the object to which |this| should point
- *     when the function is run. If the value is null or undefined, it will
- *     default to the global object.
+ * @param {Object|undefined} selfObj Specifies the object to which |this| should
+ *     point when the function is run. If the value is null or undefined, it
+ *     will default to the global object.
  * @param {...*} var_args Additional arguments that are partially
  *     applied to fn.
  * @return {!Function} A partially-applied form of the Function on which
@@ -122,7 +122,7 @@ Object.defineProperties = function(obj, props) {};
 /**
  * @param {!Object} obj
  * @param {string} prop
- * @return {Object.<ObjectPropertyDescriptor>}
+ * @return {!ObjectPropertyDescriptor|undefined}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
  */
@@ -131,7 +131,7 @@ Object.getOwnPropertyDescriptor = function(obj, prop) {};
 
 /**
  * @param {!Object} obj
- * @return {Array.<string>}
+ * @return {!Array.<string>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/keys
  */
@@ -140,7 +140,7 @@ Object.keys = function(obj) {};
 
 /**
  * @param {!Object} obj
- * @return {Array.<string>}
+ * @return {!Array.<string>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/getOwnPropertyNames
  */
