@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 Closure Compiler Authors
+ * Copyright 2008 The Closure Compiler Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -443,8 +443,8 @@ CSSProperties.prototype.webkitMatchNearestMailBlockquoteColor;
 /** @type {string} */ CSSProperties.prototype.webkitWrapThrough;
 /** @type {string} */ CSSProperties.prototype.webkitWritingMode;
 
-/** 
- * @constructor 
+/**
+ * @constructor
  * @param {number} x
  * @param {number} y
  */

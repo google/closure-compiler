@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 Closure Compiler Authors
+ * Copyright 2008 The Closure Compiler Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -525,7 +525,7 @@ Array.prototype.slice = function(opt_begin, opt_end) {};
 /**
  * Sorts the elements of an array in place.
  *
- * @param {function(T,T):number=} opt_compareFunction Specifies a function that 
+ * @param {function(T,T):number=} opt_compareFunction Specifies a function that
  *     defines the sort order.
  * @this {{length: number}|Array.<T>}
  * @template T
