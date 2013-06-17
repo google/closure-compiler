@@ -200,6 +200,21 @@ angular.mock = {};
  */
 angular.module = function(name, opt_requires, opt_configFn) {};
 
+angular.noop = function() {};
+
+/**
+ * @param {Object|Array|Date|string|number} obj
+ * @param {boolean=} opt_pretty
+ * @return {string}
+ */
+angular.toJson = function(obj, opt_pretty) {};
+
+/**
+ * @param {string} s
+ * @return {string}
+ */
+angular.uppercase = function(s) {};
+
 /**
  * @typedef {{
  *   $attr: Object.<string,string>,
@@ -574,8 +589,6 @@ angular.Module.name = '';
  */
 angular.Module.requires;
 
-angular.noop = function() {};
-
 /**
  * @typedef {{
  *   $$phase: string,
@@ -691,19 +704,6 @@ angular.Scope.Event.stopPropagation = function() {};
 
 /** @type {angular.Scope} */
 angular.Scope.Event.targetScope;
-
-/**
- * @param {Object|Array|Date|string|number} obj
- * @param {boolean=} opt_pretty
- * @return {string}
- */
-angular.toJson = function(obj, opt_pretty) {};
-
-/**
- * @param {string} s
- * @return {string}
- */
-angular.uppercase = function(s) {};
 
 /**
  * @type {Object}
@@ -824,6 +824,18 @@ angular.$exceptionHandler;
  * @typedef {function(string): !Function}
  */
 angular.$filter;
+
+/**
+ * The 'orderBy' filter is available through $filterProvider and AngularJS
+ * injection; but is not accessed through a documented public API of AngularJS.
+ * <p>In current AngularJS version the injection is satisfied by
+ * angular.orderByFunction, where the implementation is found.
+ * <p>See http://docs.angularjs.org/api/ng.filter:orderBy.
+ * @typedef {function(Array,
+ *     (string|function(?):*|Array.<(string|function(?):*)>),
+ *     boolean=): Array}
+ */
+angular.$filter.orderBy;
 
 /******************************************************************************
  * $filterProvider Service
