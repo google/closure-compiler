@@ -115,7 +115,6 @@ public class PerformanceTracker {
   }
 
   void recordPassStart(String passName, boolean isOneTime) {
-    Preconditions.checkState(summaryCopy == null);
     currentPass.push(new Stats(passName, isOneTime));
     codeChange.reset();
   }
@@ -128,7 +127,6 @@ public class PerformanceTracker {
    * @param runtime execution time in milliseconds
    */
   void recordPassStop(String passName, long runtime) {
-    Preconditions.checkState(summaryCopy == null);
     Stats logStats = currentPass.pop();
     Preconditions.checkState(passName.equals(logStats.pass));
 
