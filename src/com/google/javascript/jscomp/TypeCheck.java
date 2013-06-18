@@ -1827,8 +1827,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (functionType.isConstructor() &&
           !functionType.isNativeObjectType() &&
           (functionType.getReturnType().isUnknownType() ||
-           functionType.getReturnType().isVoidType() ||
-           !isExtern)) {
+           functionType.getReturnType().isVoidType())) {
         report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
       }
 

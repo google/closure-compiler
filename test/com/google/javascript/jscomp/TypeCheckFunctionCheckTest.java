@@ -185,13 +185,18 @@ public class TypeCheckFunctionCheckTest extends CompilerTestCase {
         "Foo.staticMethod(1);",
         TypeCheck.WRONG_ARGUMENT_COUNT);
 
-    // Constructor calls require new keyword
-    testSame(METHOD_DEFS + "Bar();", TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
+    // Constructor calls require "new" keyword
+    testSame(METHOD_DEFS + "Foo();", TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
 
-    // Extern constructor calls require new keyword
+    // Constructors with explicit return type can be called without
+    // the "new" keyword
+    testSame(METHOD_DEFS + "Bar();", null);
+
+    // Extern constructor calls require "new" keyword
     testSame(METHOD_DEFS, "Foo();", TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
 
-    // Extern constructor call without new keyword
+    // Extern constructor with explicit return type can be called without
+    // the "new" keyword
     testSame(METHOD_DEFS, "Bar();", null);
   }
 

@@ -197,6 +197,15 @@ public class CheckMissingReturnTest extends CompilerTestCase {
         "finally { a = 5; } return 2;");
   }
 
+  public void testConstructors() {
+    testSame("/** @constructor */ function foo() {} ");
+
+    final String ConstructorWithReturn = "/** @constructor \n" +
+        " * @return {!foo} */ function foo() {" +
+        " if (!(this instanceof foo)) { return new foo; } }";
+    testSame(ConstructorWithReturn);
+  }
+
   private static String createFunction(String returnType, String body) {
     return "/** @return {" + returnType + "} */ function foo() {" + body + "}";
   }
