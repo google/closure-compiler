@@ -19,17 +19,10 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Tests for {@link PassFactory}.
@@ -2691,39 +2684,6 @@ public class IntegrationTest extends IntegrationTestCase {
     }
     original.append(";");
     test(options, original.toString(), "var x = " + numAdds + ";");
-  }
-
-  // Checks that the summary and the log in the output of PerformanceTracker
-  // have the expected number of columns
-  public void testPerfTracker() {
-    ByteArrayOutputStream output = new ByteArrayOutputStream();
-    PrintStream outstream = new PrintStream(output);
-    Compiler compiler = new Compiler(outstream);
-    CompilerOptions options = new CompilerOptions();
-    List<SourceFile> inputs = Lists.newArrayList();
-    List<SourceFile> externs = Lists.newArrayList();
-
-    options.setTracerMode(TracerMode.ALL);
-    inputs.add(SourceFile.fromCode("foo", "function fun(){}"));
-    compiler.compile(externs, inputs, options);
-    outstream.flush();
-    outstream.close();
-    Pattern p = Pattern.compile(
-        ".*Summary:\npass,runtime,runs,changingRuns,reduction,gzReduction" +
-        ".*TOTAL:" +
-        "\nRuntime\\(ms\\): [0-9]+" +
-        "\n#Runs: [0-9]+" +
-        "\n#Changing runs: [0-9]+" +
-        "\n#Loopable runs: [0-9]+" +
-        "\n#Changing loopable runs: [0-9]+" +
-        "\nEstimated Reduction\\(bytes\\): [0-9]+" +
-        "\nEstimated GzReduction\\(bytes\\): [0-9]+" +
-        "\nEstimated Size\\(bytes\\): [0-9]+" +
-        "\nEstimated GzSize\\(bytes\\): [0-9]+" +
-        "\n\nLog:\n" +
-        "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize.*",
-        Pattern.DOTALL);
-    assertTrue(p.matcher(output.toString()).matches());
   }
 
   // isEquivalentTo returns false for alpha-equivalent nodes

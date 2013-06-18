@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -38,8 +39,14 @@ import java.util.Map.Entry;
 import java.util.zip.GZIPOutputStream;
 
 /**
+ * A PerformanceTracker collects statistics about the runtime of each pass, and
+ * how much a pass impacts the size of the compiled output, before and after
+ * gzip.
+ *
  */
 public class PerformanceTracker {
+
+  private static final int DEFAULT_WHEN_SIZE_UNTRACKED = -1;
 
   private final Node jsRoot;
   private final boolean trackSize;
@@ -49,8 +56,8 @@ public class PerformanceTracker {
   // if there is any.
   private final RecentChange codeChange = new RecentChange();
 
-  private int initCodeSize = -1;
-  private int initGzCodeSize = -1;
+  private int initCodeSize = DEFAULT_WHEN_SIZE_UNTRACKED;
+  private int initGzCodeSize = DEFAULT_WHEN_SIZE_UNTRACKED;
 
   private int runtime = 0;
   private int runs = 0;
@@ -62,10 +69,10 @@ public class PerformanceTracker {
   // They do not take into account preserved license blocks, newline padding,
   // or pretty printing (if enabled), since they don't use CodePrinter.
   // To get exact sizes, call compiler.toSource() for the final generated code.
-  private int codeSize = -1;  // estimate
-  private int gzCodeSize = -1;  // estimate
-  private int diff = 0;  // estimate
-  private int gzDiff = 0;  // estimate
+  private int codeSize = DEFAULT_WHEN_SIZE_UNTRACKED;
+  private int gzCodeSize = DEFAULT_WHEN_SIZE_UNTRACKED;
+  private int diff = 0;
+  private int gzDiff = 0;
 
   private final Deque<Stats> currentPass = new ArrayDeque<Stats>();
 
@@ -73,27 +80,10 @@ public class PerformanceTracker {
   private final Map<String, Stats> summary = Maps.newHashMap();
 
   // To share with the rest of the program
-  private ImmutableMap<String, Stats> summaryCopy = null;
+  private ImmutableMap<String, Stats> summaryCopy;
 
   /** Stats for each run of a compiler pass. */
   private final List<Stats> log = Lists.newArrayList();
-
-  /** For each pass, keep track of the runtime, the size changes, etc */
-  public static class Stats {
-    Stats(String pass, boolean iot) {
-      this.pass = pass;
-      this.isOneTime = iot;
-    }
-    public final String pass;
-    public final boolean isOneTime;
-    public long runtime = 0;
-    public int runs = 0;
-    public int changes = 0;
-    public int diff = 0;  // estimate
-    public int gzDiff = 0;  // estimate
-    public int size;  // estimate
-    public int gzSize;  // estimate
-  }
 
   PerformanceTracker(Node jsRoot, TracerMode mode) {
     this.jsRoot = jsRoot;
@@ -115,7 +105,8 @@ public class PerformanceTracker {
 
       case OFF:
       default:
-        throw new UnsupportedOperationException();
+        throw new IllegalArgumentException(
+            "PerformanceTracker can't work without tracer data.");
     }
   }
 
@@ -124,21 +115,22 @@ public class PerformanceTracker {
   }
 
   void recordPassStart(String passName, boolean isOneTime) {
+    Preconditions.checkState(summaryCopy == null);
     currentPass.push(new Stats(passName, isOneTime));
     codeChange.reset();
   }
 
   /**
-   * Record that a pass has stopped.
+   * Collects information about a pass P after P finishes running, eg, how much
+   * time P took and what was its impact on code size.
    *
-   * @param passName Short name of the pass.
-   * @param result Execution time.
+   * @param passName short name of the pass
+   * @param runtime execution time in milliseconds
    */
-  void recordPassStop(String passName, long result) {
+  void recordPassStop(String passName, long runtime) {
+    Preconditions.checkState(summaryCopy == null);
     Stats logStats = currentPass.pop();
-    if (!passName.equals(logStats.pass)) {
-      throw new RuntimeException(passName + " is not running.");
-    }
+    Preconditions.checkState(passName.equals(logStats.pass));
 
     // After parsing, initialize codeSize and gzCodeSize
     if (passName.equals(Compiler.PARSING_PASS_NAME) && trackSize) {
@@ -159,9 +151,9 @@ public class PerformanceTracker {
     }
 
     // Update fields that aren't related to code size
-    logStats.runtime = result;
+    logStats.runtime = runtime;
     logStats.runs = 1;
-    summaryStats.runtime += result;
+    summaryStats.runtime += runtime;
     summaryStats.runs += 1;
     if (codeChange.hasCodeChanged()) {
       logStats.changes = 1;
@@ -203,16 +195,33 @@ public class PerformanceTracker {
     return gzCodeSize;
   }
 
+  @VisibleForTesting
+  int getChanges() {
+    calcTotalStats();
+    return changes;
+  }
+
+  @VisibleForTesting
+  int getLoopChanges() {
+    calcTotalStats();
+    return loopChanges;
+  }
+
+  @VisibleForTesting
+  int getRuns() {
+    calcTotalStats();
+    return runs;
+  }
+
+  @VisibleForTesting
+  int getLoopRuns() {
+    calcTotalStats();
+    return loopRuns;
+  }
+
   public ImmutableMap<String, Stats> getStats() {
     calcTotalStats();
     return summaryCopy;
-  }
-
-  class CmpEntries implements Comparator<Entry<String, Stats>> {
-    @Override
-    public int compare(Entry<String, Stats> e1, Entry<String, Stats> e2) {
-      return (int) (e1.getValue().runtime - e2.getValue().runtime);
-    }
   }
 
   private void calcTotalStats() {
@@ -234,33 +243,40 @@ public class PerformanceTracker {
       gzDiff += stats.gzDiff;
     }
     Preconditions.checkState(!trackSize || initCodeSize == diff + codeSize);
-    Preconditions.checkState(!trackGzSize ||
-        initGzCodeSize == gzDiff + gzCodeSize);
+    Preconditions.checkState(!trackGzSize
+        || initGzCodeSize == gzDiff + gzCodeSize);
   }
 
+  /**
+   * Prints a summary, which contains aggregate stats for all runs of each pass
+   * and a log, which contains stats for each individual run.
+   */
   public void outputTracerReport(PrintStream pstr) {
     JvmMetrics.maybeWriteJvmMetrics(pstr, "verbose:pretty:all");
     OutputStreamWriter output = new OutputStreamWriter(pstr);
     try {
       calcTotalStats();
 
-      ArrayList<Entry<String, Stats>> a = new ArrayList<Entry<String, Stats>>();
+      ArrayList<Entry<String, Stats>> statEntries = Lists.newArrayList();
       for (Entry<String, Stats> entry : summary.entrySet()) {
-        a.add(entry);
+        statEntries.add(entry);
       }
-      Collections.sort(a, new CmpEntries());
+      Collections.sort(statEntries,
+          new Comparator<Entry<String, Stats>>() {
+            @Override
+            public int compare(
+                Entry<String, Stats> e1, Entry<String, Stats> e2) {
+              return (int) (e1.getValue().runtime - e2.getValue().runtime);
+            }
+          });
 
       output.write("Summary:\n" +
           "pass,runtime,runs,changingRuns,reduction,gzReduction\n");
-      for (Entry<String, Stats> entry : a) {
+      for (Entry<String, Stats> entry : statEntries) {
         String key = entry.getKey();
         Stats stats = entry.getValue();
-        output.write(key + "," +
-            String.valueOf(stats.runtime) + "," +
-            String.valueOf(stats.runs) + "," +
-            String.valueOf(stats.changes) + "," +
-            String.valueOf(stats.diff) + "," +
-            String.valueOf(stats.gzDiff) + "\n");
+        output.write(String.format("%s,%d,%d,%d,%d,%d\n", key, stats.runtime,
+            stats.runs, stats.changes, stats.diff, stats.gzDiff));
       }
       output.write("\nTOTAL:" +
           "\nRuntime(ms): " + String.valueOf(runtime) +
@@ -277,25 +293,38 @@ public class PerformanceTracker {
       output.write("Log:\n" +
           "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize\n");
       for (Stats stats : log) {
-        output.write(stats.pass + "," +
-            String.valueOf(stats.runtime) + "," +
-            String.valueOf(stats.runs) + "," +
-            String.valueOf(stats.changes) + "," +
-            String.valueOf(stats.diff) + "," +
-            String.valueOf(stats.gzDiff) + "," +
-            String.valueOf(stats.size) + "," +
-            String.valueOf(stats.gzSize) + "\n");
+        output.write(String.format("%s,%d,%d,%d,%d,%d,%d,%d\n",
+            stats.pass, stats.runtime, stats.runs, stats.changes,
+            stats.diff, stats.gzDiff, stats.size, stats.gzSize));
       }
       output.write("\n");
       output.close();
     } catch (IOException e) {
-      e.printStackTrace();
+      throw new RuntimeException("Failed to write statistics to output.", e);
     }
   }
 
   /**
-   * Purely use to get a code size estimate and not generate any code at all.
+   * A Stats object contains statistics about a pass run, such as running time,
+   * size changes, etc
    */
+  public static class Stats {
+    Stats(String pass, boolean iot) {
+      this.pass = pass;
+      this.isOneTime = iot;
+    }
+    public final String pass;
+    public final boolean isOneTime;
+    public long runtime = 0;
+    public int runs = 0;
+    public int changes = 0;
+    public int diff = 0;
+    public int gzDiff = 0;
+    public int size;
+    public int gzSize;
+  }
+
+  /** An object to get a gzsize estimate; it doesn't generate code. */
   private final class CodeSizeEstimatePrinter extends CodeConsumer {
     private int size = 0;
     private char lastChar = '\0';

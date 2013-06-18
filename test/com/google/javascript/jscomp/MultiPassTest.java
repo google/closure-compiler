@@ -21,12 +21,10 @@ import com.google.common.collect.Lists;
 import java.util.List;
 
 /**
- */
-
-/**
  * This file contains the only tests that use the infrastructure in
  * CompilerTestCase to run multiple passes and do sanity checks. The other files
  * that use CompilerTestCase unit test a single pass.
+ *
  */
 public class MultiPassTest extends CompilerTestCase {
   private List<PassFactory> passes;
@@ -37,16 +35,17 @@ public class MultiPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    PhaseOptimizer po = new PhaseOptimizer(compiler, null, null);
-    po.consume(passes);
-    po.setSanityCheck(new PassFactory("sanityCheck", false) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new SanityCheck(compiler);
-        }
-      });
-    compiler.setPhaseOptimizer(po);
-    return po;
+    PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null, null);
+    phaseopt.consume(passes);
+    phaseopt.setSanityCheck(
+        new PassFactory("sanityCheck", false) {
+          @Override
+          protected CompilerPass create(AbstractCompiler compiler) {
+            return new SanityCheck(compiler);
+          }
+        });
+    compiler.setPhaseOptimizer(phaseopt);
+    return phaseopt;
   }
 
   public void testInlineVarsAndPeephole() {
@@ -120,74 +119,83 @@ public class MultiPassTest extends CompilerTestCase {
   }
 
   private void addCollapseObjectLiterals() {
-    passes.add(new PassFactory("collapseObjectLiterals", false) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new InlineObjectLiterals(
-              compiler, compiler.getUniqueNameIdSupplier());
-        }
-      });
+    passes.add(
+        new PassFactory("collapseObjectLiterals", false) {
+          @Override
+          protected CompilerPass create(AbstractCompiler compiler) {
+            return new InlineObjectLiterals(
+                compiler, compiler.getUniqueNameIdSupplier());
+          }
+        });
   }
 
   private void addDeadCodeElimination() {
-    passes.add(new PassFactory("removeUnreachableCode", false) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new UnreachableCodeElimination(compiler, true);
-        }
-      });
+    passes.add(
+        new PassFactory("removeUnreachableCode", false) {
+          @Override
+          protected CompilerPass create(AbstractCompiler compiler) {
+            return new UnreachableCodeElimination(compiler, true);
+          }
+        });
   }
 
   private void addInlineFunctions() {
-    passes.add(new PassFactory("inlineFunctions", false) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new InlineFunctions(compiler,
-              compiler.getUniqueNameIdSupplier(), true, true, true, true, true);
-        }
-      });
+    passes.add(
+        new PassFactory("inlineFunctions", false) {
+          @Override
+          protected CompilerPass create(AbstractCompiler compiler) {
+            return new InlineFunctions(
+                compiler, compiler.getUniqueNameIdSupplier(),
+                true, true, true, true, true);
+          }
+        });
   }
 
   private void addInlineVariables() {
-    passes.add(new PassFactory("inlineVariables", false) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new InlineVariables(compiler, InlineVariables.Mode.ALL, true);
-        }
-      });
+    passes.add(
+        new PassFactory("inlineVariables", false) {
+          @Override
+          protected CompilerPass create(AbstractCompiler compiler) {
+            return new InlineVariables(
+                compiler, InlineVariables.Mode.ALL, true);
+          }
+        });
   }
 
   private void addPeephole() {
-    passes.add(new PassFactory("peepholeOptimizations", false) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          final boolean late = false;
-          return new PeepholeOptimizationsPass(compiler,
-              new PeepholeMinimizeConditions(late),
-              new PeepholeSubstituteAlternateSyntax(late),
-              new PeepholeReplaceKnownMethods(late),
-              new PeepholeRemoveDeadCode(),
-              new PeepholeFoldConstants(late),
-              new PeepholeCollectPropertyAssignments());
-        }
-      });
+    passes.add(
+        new PassFactory("peepholeOptimizations", false) {
+          @Override
+          protected CompilerPass create(AbstractCompiler compiler) {
+            final boolean late = false;
+            return new PeepholeOptimizationsPass(compiler,
+                new PeepholeMinimizeConditions(late),
+                new PeepholeSubstituteAlternateSyntax(late),
+                new PeepholeReplaceKnownMethods(late),
+                new PeepholeRemoveDeadCode(),
+                new PeepholeFoldConstants(late),
+                new PeepholeCollectPropertyAssignments());
+          }
+        });
   }
 
   private void addRemoveUnusedClassProperties() {
-    passes.add(new PassFactory("removeUnusedClassProperties", false) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new RemoveUnusedClassProperties(compiler);
-        }
-      });
+    passes.add(
+        new PassFactory("removeUnusedClassProperties", false) {
+          @Override
+          protected CompilerPass create(AbstractCompiler compiler) {
+            return new RemoveUnusedClassProperties(compiler);
+          }
+        });
   }
 
   private void addRemoveUnusedVars() {
-    passes.add(new PassFactory("removeUnusedVars", false) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new RemoveUnusedVars(compiler, false, false, false);
-        }
-      });
+    passes.add(
+        new PassFactory("removeUnusedVars", false) {
+          @Override
+          protected CompilerPass create(AbstractCompiler compiler) {
+            return new RemoveUnusedVars(compiler, false, false, false);
+          }
+        });
   }
 }

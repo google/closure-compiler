@@ -64,10 +64,11 @@ public class PhaseOptimizerTest extends TestCase {
     assertPasses("x", "x", "x", "x");
   }
 
-  public void testLoop3() {
+  public void testSchedulingOfLoopablePasses() {
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", 3);
     addLoopedPass(loop, "y", 1);
+    // The pass iterations can be grouped as: [x y] [x y] [x] [x] [y]
     assertPasses("x", "y", "x", "y", "x", "x", "y");
   }
 
@@ -85,11 +86,12 @@ public class PhaseOptimizerTest extends TestCase {
       optimizer.process(null, dummyRoot);
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
-      assertTrue(e.getMessage().contains(PhaseOptimizer.OPTIMIZE_LOOP_ERROR));
+      assertTrue(e.getMessage(),
+          e.getMessage().contains(PhaseOptimizer.OPTIMIZE_LOOP_ERROR));
     }
   }
 
-  public void testCombined() {
+  public void testSchedulingOfAnyKindOfPasses1() {
     addOneTimePass("a");
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", 3);
@@ -98,7 +100,7 @@ public class PhaseOptimizerTest extends TestCase {
     assertPasses("a", "x", "y", "x", "y", "x", "x", "y", "z");
   }
 
-  public void testConsumption1() {
+  public void testSchedulingOfAnyKindOfPasses2() {
     optimizer.consume(
         Lists.newArrayList(
             createPassFactory("a", 0, true),
@@ -107,10 +109,12 @@ public class PhaseOptimizerTest extends TestCase {
             createPassFactory("d", 1, false),
             createPassFactory("e", 1, true),
             createPassFactory("f", 0, true)));
+    // The pass iterations can be grouped as:
+    // [a] [b c d] [b c d] [c] [b d] [e] [f]
     assertPasses("a", "b", "c", "d", "b", "c", "d", "c", "b", "d", "e", "f");
   }
 
-  public void testConsumption2() {
+  public void testSchedulingOfAnyKindOfPasses3() {
     optimizer.consume(
         Lists.newArrayList(
             createPassFactory("a", 2, false),
@@ -119,7 +123,7 @@ public class PhaseOptimizerTest extends TestCase {
     assertPasses("a", "a", "a", "b", "c", "c");
   }
 
-  public void testConsumption3() {
+  public void testSchedulingOfAnyKindOfPasses4() {
     optimizer.consume(
         Lists.newArrayList(
             createPassFactory("a", 2, true),
