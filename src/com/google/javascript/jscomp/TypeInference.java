@@ -724,20 +724,11 @@ class TypeInference
       scope = traverse(name.getFirstChild(), scope);
     }
 
-    // Object literals can be reflected on other types, or changed with
-    // type casts.
+    // Object literals can be reflected on other types.
     // See CodingConvention#getObjectLiteralCase and goog.object.reflect.
     // Ignore these types of literals.
-    // TODO(nicksantos): There should be an "anonymous object" type that
-    // we can check for here.
     ObjectType objectType = ObjectType.cast(type);
-    if (objectType == null) {
-      return scope;
-    }
-
-    boolean hasLendsName = n.getJSDocInfo() != null &&
-        n.getJSDocInfo().getLendsName() != null;
-    if (objectType.hasReferenceName() && !hasLendsName) {
+    if (objectType == null || n.getBooleanProp(Node.REFLECTED_OBJECT)) {
       return scope;
     }
 

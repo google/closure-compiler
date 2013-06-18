@@ -449,7 +449,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertFalse(x.isPropertyTypeDeclared("alert"));
 
     ObjectType y = (ObjectType) findNameType("y", globalScope);
-    assertEquals("?",
+    assertEquals("function (this:Window, ?): undefined",
         y.getPropertyType("alert").toString());
   }
 
@@ -548,9 +548,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("function (this:I): undefined",
         iPrototype.getPropertyType("baz").toString());
 
-    // should not be null
-    assertNull(globalScope.getVar("I.prototype"));
-    // assertEquals(iPrototype, globalScope.getVar("I.prototype").getType());
+    assertEquals(iPrototype, globalScope.getVar("I.prototype").getType());
   }
 
   // TODO(johnlenz): A syntax for stubs using object literals?

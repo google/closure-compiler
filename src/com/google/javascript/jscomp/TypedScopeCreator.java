@@ -1459,6 +1459,8 @@ final class TypedScopeCreator implements ScopeCreator {
               typeRegistry.getType(objectLiteralCast.typeName));
           if (type != null && type.getConstructor() != null) {
             setDeferredType(objectLiteralCast.objectNode, type);
+            objectLiteralCast.objectNode.putBooleanProp(
+                Node.REFLECTED_OBJECT, true);
           } else {
             compiler.report(JSError.make(t.getSourceName(), n,
                     CONSTRUCTOR_EXPECTED));
@@ -1576,9 +1578,8 @@ final class TypedScopeCreator implements ScopeCreator {
             // what props are going to be on that prototype.
             return;
           }
-          if (qVar.getScope() == scope) {
-            scope.undeclare(qVar);
-          }
+
+          qVar.getScope().undeclare(qVar);
         }
       }
 
@@ -1615,10 +1616,10 @@ final class TypedScopeCreator implements ScopeCreator {
         defineSlot(n, parent, valueType, inferred);
       } else if (rhsValue != null && rhsValue.isTrue()) {
         // We declare these for delegate proxy method properties.
-        FunctionType ownerType =
-            JSType.toMaybeFunctionType(getObjectSlot(ownerName));
-        if (ownerType != null) {
-          JSType ownerTypeOfThis = ownerType.getTypeOfThis();
+        ObjectType ownerType = getObjectSlot(ownerName);
+        FunctionType ownerFnType = JSType.toMaybeFunctionType(ownerType);
+        if (ownerFnType != null) {
+          JSType ownerTypeOfThis = ownerFnType.getTypeOfThis();
           String delegateName = codingConvention.getDelegateSuperclassName();
           JSType delegateType = delegateName == null ?
               null : typeRegistry.getType(delegateName);
@@ -1662,6 +1663,11 @@ final class TypedScopeCreator implements ScopeCreator {
         Node rhsValue, JSType valueType) {
       if (valueType == null) {
         return true;
+      }
+
+      // Prototype sets are always declared.
+      if (qName != null && qName.endsWith(".prototype")) {
+        return false;
       }
 
       boolean inferred = true;

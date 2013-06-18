@@ -103,7 +103,8 @@ public class Node implements Cloneable, Serializable {
       INFERRED_FUNCTION  = 55,    // Marks a function whose parameter types
                                   // have been inferred.
       CHANGE_TIME        = 56,    // For passes that work only on changed funs.
-      LAST_PROP          = 56;    // Unused in the compiler, but keep for Rhino.
+      REFLECTED_OBJECT   = 57,    // An object that's used for goog.object.reflect-style reflection.
+      LAST_PROP          = 57;    // Unused in the compiler, but keep for Rhino.
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -136,6 +137,7 @@ public class Node implements Cloneable, Serializable {
         case SLASH_V:   return "slash_v";
         case INFERRED_FUNCTION:   return "inferred";
         case CHANGE_TIME: return "change_time";
+        case REFLECTED_OBJECT: return "reflected_object";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
