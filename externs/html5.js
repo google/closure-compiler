@@ -1172,6 +1172,36 @@ HTMLInputElement.prototype.step;
  */
 function HTMLMediaElement() {}
 
+/**
+ * @type {number}
+ * @const
+ */
+HTMLMediaElement.HAVE_NOTHING;  // = 0
+
+/**
+ * @type {number}
+ * @const
+ */
+HTMLMediaElement.HAVE_METADATA;  // = 1
+
+/**
+ * @type {number}
+ * @const
+ */
+HTMLMediaElement.HAVE_CURRENT_DATA;  // = 2
+
+/**
+ * @type {number}
+ * @const
+ */
+HTMLMediaElement.HAVE_FUTURE_DATA;  // = 3
+
+/**
+ * @type {number}
+ * @const
+ */
+HTMLMediaElement.HAVE_ENOUGH_DATA;  // = 4
+
 /** @type {MediaError} */
 HTMLMediaElement.prototype.error;
 
