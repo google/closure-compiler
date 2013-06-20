@@ -18,14 +18,11 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.MinimizedCondition.MinimizationStyle;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
-
-import java.util.Collections;
-import java.util.Comparator;
 
 /**
  * A peephole optimization that minimizes conditional expressions
@@ -453,23 +450,21 @@ class PeepholeMinimizeConditions
    * Returns the replacement for n or the original if no replacement was
    * necessary.
    */
-  private Node tryMinimizeExprResult(Node node) {
-    Node originalCond = node.getFirstChild();
-    Node placeholder = IR.script();
-    node.replaceChild(originalCond, placeholder);
+  private Node tryMinimizeExprResult(Node n) {
     MinimizedCondition minCond = (aggressiveMinimization) ?
-        MinimizedCondition.fromConditionNode(originalCond) :
-          MinimizedCondition.unoptimized(originalCond);
+      MinimizedCondition.fromConditionNode(n.getFirstChild()) :
+        MinimizedCondition.unoptimized(n.getFirstChild());
     MinimizedCondition.MeasuredNode mNode =
-        minCond.getShorterRepresentation(false);
-    if (mNode.node.isNot()) {
+        minCond.getMinimized(MinimizationStyle.ALLOW_LEADING_NOT);
+    Node placeholder = minCond.getPlaceholder();
+    if (mNode.getNode().isNot()) {
       // Remove the leading NOT in the EXPR_RESULT.
-      node.replaceChild(placeholder, mNode.node.removeFirstChild());
+      n.replaceChild(placeholder, mNode.getNode().removeFirstChild());
       reportCodeChange();
     } else {
       replaceNode(placeholder, mNode);
     }
-    return node;
+    return n;
   }
 
   /**
@@ -479,18 +474,16 @@ class PeepholeMinimizeConditions
    * necessary.
    */
   private Node tryMinimizeHook(Node n) {
-    Node originalCond = n.getFirstChild();
-    Node placeholder = IR.script();
-    n.replaceChild(originalCond, placeholder);
     MinimizedCondition minCond = (aggressiveMinimization) ?
-        MinimizedCondition.fromConditionNode(originalCond) :
-          MinimizedCondition.unoptimized(originalCond);
+      MinimizedCondition.fromConditionNode(n.getFirstChild()) :
+        MinimizedCondition.unoptimized(n.getFirstChild());
     MinimizedCondition.MeasuredNode mNode =
-        minCond.getShorterRepresentation(false);
-    if (mNode.node.isNot()) {
+        minCond.getMinimized(MinimizationStyle.ALLOW_LEADING_NOT);
+    Node placeholder = minCond.getPlaceholder();
+    if (mNode.getNode().isNot()) {
       // Swap the HOOK
       Node thenBranch = n.getFirstChild().getNext();
-      n.replaceChild(placeholder, mNode.node.removeFirstChild());
+      n.replaceChild(placeholder, mNode.getNode().removeFirstChild());
       n.removeChild(thenBranch);
       n.addChildToBack(thenBranch);
       reportCodeChange();
@@ -522,27 +515,22 @@ class PeepholeMinimizeConditions
     Node thenBranch = originalCond.getNext();
     Node elseBranch = thenBranch.getNext();
 
-    Node placeholder = IR.script().srcref(originalCond);
-    n.replaceChild(originalCond, placeholder);
+    MinimizedCondition minCond = (aggressiveMinimization) ?
+        MinimizedCondition.fromConditionNode(originalCond) :
+          MinimizedCondition.unoptimized(originalCond);
+    originalCond = null;  // originalCond was mutated and should not be used.
+
+    Node placeholder = minCond.getPlaceholder();
 
     MinimizedCondition.MeasuredNode unnegatedCond;
     MinimizedCondition.MeasuredNode shortCond;
-    if (aggressiveMinimization) {
-      MinimizedCondition minCond = MinimizedCondition
-          .fromConditionNode(originalCond);
-      // Compute two minimized representations. The first representation counts
-      // a leading NOT node, and the second ignores a leading NOT node.
-      // If we can fold the if statement into a HOOK or boolean operation,
-      // then the NOT node does not matter, and we prefer the second condition.
-      // If we cannot fold the if statement, then we prefer the first condition.
-      unnegatedCond = minCond.getShorterRepresentation(true);
-      shortCond = minCond.getShorterRepresentation(false);
-    } else {
-      unnegatedCond = new MinimizedCondition.MeasuredNode(
-          originalCond, 0, false);
-      shortCond = unnegatedCond;
-    }
-    originalCond = null;
+    // Compute two minimized representations. The first representation counts
+    // a leading NOT node, and the second ignores a leading NOT node.
+    // If we can fold the if statement into a HOOK or boolean operation,
+    // then the NOT node does not matter, and we prefer the second condition.
+    // If we cannot fold the if statement, then we prefer the first condition.
+    unnegatedCond = minCond.getMinimized(MinimizationStyle.PREFER_UNNEGATED);
+    shortCond = minCond.getMinimized(MinimizationStyle.ALLOW_LEADING_NOT);
 
     if (elseBranch == null) {
       if (isFoldableExpressBlock(thenBranch)) {
@@ -555,10 +543,10 @@ class PeepholeMinimizeConditions
           return n;
         }
 
-        if (shortCond.node.isNot()) {
+        if (shortCond.getNode().isNot()) {
           // if(!x)bar(); -> x||bar();
           Node or = IR.or(
-              shortCond.node.removeFirstChild(),
+              shortCond.getNode().removeFirstChild(),
               expr.removeFirstChild()).srcref(n);
           Node newExpr = NodeUtil.newExpr(or);
           parent.replaceChild(n, newExpr);
@@ -570,7 +558,7 @@ class PeepholeMinimizeConditions
         // Preconditions.checkState(shortCond.isEquivalentTo(unnegatedCond));
 
         // if(x)foo(); -> x&&foo();
-        if (isLowerPrecedence(shortCond.node, AND_PRECEDENCE) &&
+        if (isLowerPrecedence(shortCond.getNode(), AND_PRECEDENCE) &&
             isLowerPrecedence(expr.getFirstChild(),
                 AND_PRECEDENCE)) {
           // One additional set of parentheses is worth the change even if
@@ -582,7 +570,7 @@ class PeepholeMinimizeConditions
         }
 
         n.removeChild(placeholder);
-        Node and = IR.and(shortCond.node, expr.removeFirstChild()).srcref(n);
+        Node and = IR.and(shortCond.getNode(), expr.removeFirstChild()).srcref(n);
         Node newExpr = NodeUtil.newExpr(and);
         parent.replaceChild(n, newExpr);
         reportCodeChange();
@@ -601,12 +589,12 @@ class PeepholeMinimizeConditions
             Node innerElseBranch = innerThenBranch.getNext();
 
             if (innerElseBranch == null &&
-                 !(isLowerPrecedence(unnegatedCond.node, AND_PRECEDENCE) &&
+                 !(isLowerPrecedence(unnegatedCond.getNode(), AND_PRECEDENCE) &&
                    isLowerPrecedence(innerCond, AND_PRECEDENCE))) {
               n.detachChildren();
               n.addChildToBack(
                   IR.and(
-                      unnegatedCond.node,
+                      unnegatedCond.getNode(),
                       innerCond.detachFromParent())
                       .srcref(placeholder));
               n.addChildrenToBack(innerThenBranch.detachFromParent());
@@ -629,8 +617,8 @@ class PeepholeMinimizeConditions
 
     // if(!x)foo();else bar(); -> if(x)bar();else foo();
     // An additional set of curly braces isn't worth it.
-    if (shortCond.node.isNot() && !consumesDanglingElse(elseBranch)) {
-      n.replaceChild(placeholder, shortCond.node.removeFirstChild());
+    if (shortCond.getNode().isNot() && !consumesDanglingElse(elseBranch)) {
+      n.replaceChild(placeholder, shortCond.getNode().removeFirstChild());
       n.removeChild(thenBranch);
       n.addChildToBack(thenBranch);
       reportCodeChange();
@@ -649,7 +637,7 @@ class PeepholeMinimizeConditions
       // can be converted to "return undefined;" or some variant, but
       // that does not help code size.
       Node returnNode = IR.returnNode(
-                            IR.hook(shortCond.node, thenExpr, elseExpr)
+                            IR.hook(shortCond.getNode(), thenExpr, elseExpr)
                                 .srcref(n));
       parent.replaceChild(n, returnNode);
       reportCodeChange();
@@ -672,7 +660,7 @@ class PeepholeMinimizeConditions
               // NOTE - there are some circumstances where we can
               // proceed even if there are side effects...
               !mayEffectMutableState(lhs) &&
-              (!mayHaveSideEffects(unnegatedCond.node) ||
+              (!mayHaveSideEffects(unnegatedCond.getNode()) ||
                   (thenOp.isAssign() && thenOp.getFirstChild().isName()))) {
 
             n.removeChild(placeholder);
@@ -681,7 +669,8 @@ class PeepholeMinimizeConditions
             Node elseExpr = elseOp.getLastChild();
             elseOp.removeChild(elseExpr);
 
-            Node hookNode = IR.hook(shortCond.node, thenExpr, elseExpr).srcref(n);
+            Node hookNode = IR.hook(shortCond.getNode(), thenExpr, elseExpr)
+                .srcref(n);
             Node assign = new Node(thenOp.getType(), assignName, hookNode)
                               .srcref(thenOp);
             Node expr = NodeUtil.newExpr(assign);
@@ -697,7 +686,7 @@ class PeepholeMinimizeConditions
       thenOp.detachFromParent();
       elseOp.detachFromParent();
       Node expr = IR.exprResult(
-          IR.hook(shortCond.node, thenOp, elseOp).srcref(n));
+          IR.hook(shortCond.getNode(), thenOp, elseOp).srcref(n));
       parent.replaceChild(n, expr);
       reportCodeChange();
       return expr;
@@ -722,7 +711,7 @@ class PeepholeMinimizeConditions
         Node thenExpr = name1.removeChildren();
         Node elseExpr = elseAssign.getLastChild().detachFromParent();
         placeholder.detachFromParent();
-        Node hookNode = IR.hook(shortCond.node, thenExpr, elseExpr)
+        Node hookNode = IR.hook(shortCond.getNode(), thenExpr, elseExpr)
                             .srcref(n);
         var.detachFromParent();
         name1.addChildrenToBack(hookNode);
@@ -747,7 +736,7 @@ class PeepholeMinimizeConditions
         Node thenExpr = thenAssign.getLastChild().detachFromParent();
         Node elseExpr = name2.removeChildren();
         placeholder.detachFromParent();
-        Node hookNode = IR.hook(shortCond.node, thenExpr, elseExpr)
+        Node hookNode = IR.hook(shortCond.getNode(), thenExpr, elseExpr)
                             .srcref(n);
         var.detachFromParent();
         name2.addChildrenToBack(hookNode);
@@ -970,7 +959,7 @@ class PeepholeMinimizeConditions
   /**
    * Whether the node type has lower precedence than "precedence"
    */
-  private static boolean isLowerPrecedence(Node n, final int precedence) {
+  static boolean isLowerPrecedence(Node n, final int precedence) {
     return NodeUtil.precedence(n.getType()) < precedence;
   }
 
@@ -1008,11 +997,10 @@ class PeepholeMinimizeConditions
   private Node tryMinimizeCondition(Node n) {
     n = performConditionSubstitutions(n);
     if (aggressiveMinimization) {
-      Node placeholder = IR.script();
-      n.getParent().replaceChild(n, placeholder);
       MinimizedCondition minCond = MinimizedCondition.fromConditionNode(n);
-      return replaceNode(placeholder,
-          minCond.getShorterRepresentation(true));
+      return replaceNode(
+          minCond.getPlaceholder(),
+          minCond.getMinimized(MinimizationStyle.PREFER_UNNEGATED));
     } else {
       return n;
     }
@@ -1020,263 +1008,11 @@ class PeepholeMinimizeConditions
 
   private Node replaceNode(Node lhs, MinimizedCondition.MeasuredNode rhs) {
     Node parent = lhs.getParent();
-    parent.replaceChild(lhs, rhs.node);
-    if (rhs.changed) {
+    parent.replaceChild(lhs, rhs.getNode());
+    if (rhs.isChanged()) {
       reportCodeChange();
     }
-    return rhs.node;
-  }
-
-  /** A class that represents a minimized conditional expression.
-   *  Depending on the context, either the original conditional, or the
-   *  negation of the original conditional may be needed, so this class
-   *  provides ways to access minimized versions of both of those ASTs.
-   */
-  static class MinimizedCondition {
-    static class MeasuredNode {
-      Node node;
-      int length;
-      boolean changed;
-
-      MeasuredNode(Node n, int len, boolean ch) {
-        node = n;
-        length = len;
-        changed = ch;
-      }
-
-      private MeasuredNode negate() {
-        this.change();
-        int complementOperator;
-        switch (node.getType()) {
-          default:
-            return this.addNot();
-          // Otherwise a binary operator with a complement.
-          case Token.EQ:
-            complementOperator = Token.NE;
-            break;
-          case Token.NE:
-            complementOperator = Token.EQ;
-            break;
-          case Token.SHEQ:
-            complementOperator = Token.SHNE;
-            break;
-          case Token.SHNE:
-            complementOperator = Token.SHEQ;
-            break;
-        }
-        // Clone entire tree and just change operator.
-        node.setType(complementOperator);
-        return this;
-      }
-
-      private MeasuredNode change() {
-        this.changed = true;
-        return this;
-      }
-
-      private MeasuredNode addNot() {
-        node = new Node(Token.NOT, node).srcref(node);
-        length += estimateCostOneLevel(node);
-        return this;
-      }
-
-      /** Estimate the number of characters in the textual representation of
-       *  the given node and that will be devoted to negation or parentheses.
-       *  Since these are the only characters that flipping a condition
-       *  according to De Morgan's rule can affect, these are the only ones
-       *  we count.
-       *  Not nodes are counted by the NOT node itself, whereas
-       *  parentheses around an expression are counted by the parent node.
-       *  @param n The node to be checked.
-       *  @return The number of negations and parentheses in the node.
-       */
-      private static int estimateCostOneLevel(Node n) {
-        int cost = 0;
-        if (n.isNot()) {
-          cost++;  // A negation is needed.
-        }
-        int parentPrecedence = NodeUtil.precedence(n.getType());
-        for (Node child = n.getFirstChild();
-            child != null; child = child.getNext()) {
-          if (isLowerPrecedence(child, parentPrecedence)) {
-            cost += 2;  // A pair of parenthesis is needed.
-          }
-        }
-        return cost;
-      }
-
-      MeasuredNode cloneTree() {
-        return new MeasuredNode(node.cloneTree(), length, changed);
-      }
-
-      static MeasuredNode addNode(Node parent, MeasuredNode... children) {
-        int cost = 0;
-        boolean changed = false;
-        for (MeasuredNode child : children) {
-          parent.addChildrenToBack(child.node);
-          cost += child.length;
-          changed = changed || child.changed;
-        }
-        cost += estimateCostOneLevel(parent);
-        return new MeasuredNode(parent, cost, changed);
-      }
-
-    }
-    private final MeasuredNode positive;
-    private final MeasuredNode negative;
-
-    private MinimizedCondition(MeasuredNode p, MeasuredNode n) {
-      Preconditions.checkArgument(p.node.getParent() == null);
-      Preconditions.checkArgument(n.node.getParent() == null);
-      positive = p;
-      negative = n.change();
-    }
-
-    static MinimizedCondition fromConditionNode(Node n) {
-      switch (n.getType()) {
-        case Token.NOT:
-        case Token.AND:
-        case Token.OR:
-        case Token.HOOK:
-        case Token.COMMA:
-          return computeMinimizedCondition(n);
-        default:
-          return unoptimized(n);
-      }
-    }
-
-    /** Minimize the condition at the given node.
-     *
-     *  @param n The conditional expression tree to minimize.
-     *   This must be removed from the tree before being passed in connected.
-     *  @return A MinimizedCondition object representing that tree.
-     */
-    private static MinimizedCondition computeMinimizedCondition(Node n) {
-      Preconditions.checkArgument(n.getParent() == null);
-      switch (n.getType()) {
-        case Token.NOT: {
-          MinimizedCondition subtree =
-              computeMinimizedCondition(n.getFirstChild().detachFromParent());
-          ImmutableList<MeasuredNode> positiveAsts = ImmutableList.of(
-              subtree.positive.cloneTree().addNot(),
-              subtree.negative.cloneTree());
-          ImmutableList<MeasuredNode> negativeAsts = ImmutableList.of(
-              subtree.negative.negate(),
-              subtree.positive);
-          return new MinimizedCondition(
-              Collections.min(positiveAsts, AST_LENGTH_COMPARATOR),
-              Collections.min(negativeAsts, AST_LENGTH_COMPARATOR));
-        }
-        case Token.AND:
-        case Token.OR: {
-          int opType = n.getType();
-          int complementType = opType == Token.AND ? Token.OR : Token.AND;
-          MinimizedCondition leftSubtree =
-              computeMinimizedCondition(n.getFirstChild().detachFromParent());
-          MinimizedCondition rightSubtree =
-              computeMinimizedCondition(n.getLastChild().detachFromParent());
-          ImmutableList<MeasuredNode> positiveAsts = ImmutableList.of(
-              MeasuredNode.addNode(new Node(opType).srcref(n),
-                  leftSubtree.positive.cloneTree(),
-                  rightSubtree.positive.cloneTree()),
-              MeasuredNode.addNode(new Node(complementType).srcref(n),
-                  leftSubtree.negative.cloneTree(),
-                  rightSubtree.negative.cloneTree()).negate());
-          ImmutableList<MeasuredNode> negativeAsts = ImmutableList.of(
-              MeasuredNode.addNode(new Node(opType).srcref(n),
-                  leftSubtree.positive,
-                  rightSubtree.positive).negate(),
-              MeasuredNode.addNode(new Node(complementType).srcref(n),
-                  leftSubtree.negative,
-                  rightSubtree.negative));
-          return new MinimizedCondition(
-              Collections.min(positiveAsts, AST_LENGTH_COMPARATOR),
-              Collections.min(negativeAsts, AST_LENGTH_COMPARATOR));
-        }
-        case Token.HOOK: {
-          Node cond = n.getFirstChild();
-          Node thenNode = cond.getNext();
-          Node elseNode = thenNode.getNext();
-          MinimizedCondition thenSubtree =
-              computeMinimizedCondition(thenNode.detachFromParent());
-          MinimizedCondition elseSubtree =
-              computeMinimizedCondition(elseNode.detachFromParent());
-          MeasuredNode posTree = MeasuredNode.addNode(
-              new Node(Token.HOOK, cond.cloneTree()).srcref(n),
-              thenSubtree.positive,
-              elseSubtree.positive);
-          MeasuredNode negTree = MeasuredNode.addNode(
-              new Node(Token.HOOK, cond.cloneTree()).srcref(n),
-              thenSubtree.negative,
-              elseSubtree.negative);
-          return new MinimizedCondition(posTree, negTree);
-        }
-        case Token.COMMA: {
-          Node lhs = n.getFirstChild();
-          MinimizedCondition rhsSubtree =
-              computeMinimizedCondition(lhs.getNext().detachFromParent());
-          MeasuredNode posTree = MeasuredNode.addNode(
-              new Node(Token.COMMA, lhs.cloneTree()).srcref(n),
-              rhsSubtree.positive);
-          MeasuredNode negTree = MeasuredNode.addNode(
-              new Node(Token.COMMA, lhs.cloneTree()).srcref(n),
-              rhsSubtree.negative);
-          return new MinimizedCondition(posTree, negTree);
-        }
-        default: {
-          MeasuredNode pos = new MeasuredNode(n, 0, false);
-          MeasuredNode neg = pos.cloneTree().negate();
-          return new MinimizedCondition(pos, neg);
-        }
-      }
-    }
-
-    /** Return a MeasuredNode of the given condition node, without minimizing
-     * the result.
-    *
-    *  @param n The conditional expression tree to minimize.
-    *   This must be removed from the tree before being passed in connected.
-    *  @return A MinimizedCondition object representing that tree.
-    */
-    static MinimizedCondition unoptimized(Node n) {
-      Preconditions.checkArgument(n.getParent() == null);
-      MeasuredNode pos = new MeasuredNode(n, 0, false);
-      // In the unoptimized case, we want to always return the positive side,
-      // so we set the negative side to a SCRIPT node (never valid inside an
-      // expression) with an unreasonably high length so that it's never chosen.
-      MeasuredNode neg = new MeasuredNode(IR.script(), Integer.MAX_VALUE, true);
-      return new MinimizedCondition(pos, neg);
-    }
-
-    /** Return the shorter representation of the original condition node.
-     *
-     * @param countLeadingNot When this is false, do not count a leading
-     *  NOT in doing the minimization.
-     *  i.e. Prefer the right side in cases such as:
-     *    !x || !y || z  ==>  !(x && y && !z)
-     *  This is useful in contexts such as IFs or HOOKs where subsequent
-     *  optimizations can efficiently deal with leading NOTs.
-     *
-     *  @return The minimized condition MeasuredNode, with equivalent value
-     *    to that passed to #fromConditionNode().
-     */
-    MeasuredNode getShorterRepresentation(boolean countLeadingNot) {
-     if (countLeadingNot || positive.node.isNot()
-         || positive.length <= negative.length) {
-       return positive;
-     } else {
-       return negative.addNot();
-     }
-    }
-
-    private static final Comparator<MeasuredNode> AST_LENGTH_COMPARATOR =
-        new Comparator<MeasuredNode>() {
-      @Override
-      public int compare(MeasuredNode o1, MeasuredNode o2) {
-        return o1.length - o2.length;
-      }
-    };
-
+    return rhs.getNode();
   }
 
   /**
@@ -1499,5 +1235,4 @@ class PeepholeMinimizeConditions
 
     return n;
   }
-
 }

@@ -16,9 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.PeepholeMinimizeConditions.MinimizedCondition;
-import com.google.javascript.rhino.Node;
-
 /**
  * Tests for {@link PeepholeMinimizeConditions} in isolation.
  * Tests for the interaction of multiple peephole passes are in
@@ -68,13 +65,14 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     test(js, expected);
   }
 
-  void assertResultString(String js, String expected) {
+  private static void assertResultString(String js, String expected) {
     assertResultString(js, expected, false);
   }
 
   // TODO(user): This is same as fold() except it uses string comparison. Any
   // test that needs tell us where a folding is constructing an invalid AST.
-  void assertResultString(String js, String expected, boolean normalize) {
+  private static void assertResultString(String js, String expected,
+      boolean normalize) {
     PeepholeMinimizeConditionsTest scTest
         = new PeepholeMinimizeConditionsTest(false);
 
@@ -401,59 +399,6 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   public void testMinimizeAndOr1() {
     fold("if ((!a || !b) && (d || e)) f()", "(a&&b || !d&&!e) || f()");
-  }
-
-  public Node parseExpr(String input) {
-    Node block = parseExpectedJs(input);
-    Node script = block.getFirstChild();
-    Node exprResult = script.getFirstChild();
-    return exprResult.getFirstChild();
-  }
-
-  public void minimizeCond(String input, String positive, String negative) {
-    Node inputNode = parseExpr(input);
-    MinimizedCondition result = PeepholeMinimizeConditions
-        .MinimizedCondition.fromConditionNode(inputNode.detachFromParent());
-    Node positiveNode = parseExpr(positive);
-    Node negativeNode = parseExpr(negative);
-    // With counting the leading NOT node:
-    Node positiveResult = result.getShorterRepresentation(true).node;
-    // Without counting the leading NOT node:
-    Node negativeResult = result.getShorterRepresentation(false).node;
-    if (!positiveResult.isEquivalentTo(positiveNode)) {
-      fail("Not equal:\n" + positiveResult.toStringTree()
-          + "and:\n" + positiveNode.toStringTree());
-    }
-    if (!negativeResult.isEquivalentTo(negativeNode)) {
-      fail("Not equal:\n" + negativeResult.toStringTree()
-          + "and:\n" + negativeNode.toStringTree());
-    }
-  }
-
-  public void testTryMinimizeCondition1() {
-    minimizeCond("x", "x", "x");
-  }
-
-  public void testTryMinimizeCondition2() {
-    minimizeCond("!x", "!x", "!x");
-  }
-
-  public void testTryMinimizeCondition3() {
-    minimizeCond("!(x || y)", "!x && !y", "!(x || y)");
-  }
-
-  public void testTryMinimizeCondition4() {
-    minimizeCond("!(x && y)", "!x || !y", "!(x && y)");
-  }
-
-  public void testTryMinimizeCondition5() {
-    minimizeCond("!(x && y && z)", "!(x && y && z)", "!(x && y && z)");
-  }
-
-  public void testMinimizeCondDemorgan() {
-    minimizeCond("x && (y===2 || !f()) && (y===3 || !h())",
-        "x && !((y!==2 && f()) || (y!==3 && h()))",
-        "!(!x || (y!==2 && f()) || (y!==3 && h()))");
   }
 
   public void testMinimizeForCondition() {
