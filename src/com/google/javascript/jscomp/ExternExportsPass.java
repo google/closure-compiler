@@ -348,6 +348,13 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
         case Token.VAR:
           definition = definitionParent.getLastChild().getLastChild();
           break;
+        case Token.FUNCTION:
+          if (NodeUtil.isFunctionDeclaration(definitionParent)) {
+            definition = definitionParent;
+          } else {
+            return null;
+          }
+          break;
         default:
             return null;
       }
@@ -496,7 +503,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
           return;
         }
 
-        if (parent.isAssign() || parent.isVar()) {
+        if (parent.isAssign() || parent.isVar() || parent.isFunction()) {
           definitionMap.put(name, parent);
         }
 

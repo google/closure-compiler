@@ -524,6 +524,44 @@ public class ExternExportsPassTest extends TestCase {
         "};\n");
   }
 
+  public void testExportSymbolWithFunctionDefinedAsFunction() {
+
+    compileAndCheck("/**\n" +
+                    " * @param {string} param1\n" +
+                    " * @return {string}\n" +
+                    " */\n" +
+                    "function internalName(param1) {" +
+                      "return param1" +
+                    "};" +
+                    "goog.exportSymbol('externalName', internalName)",
+                    "/**\n" +
+                    " * @param {string} param1\n" +
+                    " * @return {string}\n" +
+                    " */\n" +
+                    "var externalName = function(param1) {\n};\n");
+  }
+
+  public void testExportSymbolWithFunctionAlias() {
+
+    compileAndCheck("/**\n" +
+                    " * @param {string} param1\n" +
+                    " */\n" +
+                    "var y = function(param1) {" +
+                    "};" +
+                    "/**\n" +
+                    " * @param {string} param1\n" +
+                    " * @param {string} param2\n" +
+                    " */\n" +
+                    "var x = function y(param1, param2) {" +
+                    "};" +
+                    "goog.exportSymbol('externalName', y)",
+                    "/**\n" +
+                    " * @param {string} param1\n" +
+                    " * @return {undefined}\n" +
+                    " */\n" +
+                    "var externalName = function(param1) {\n};\n");
+  }
+
   private void compileAndCheck(String js, String expected) {
     Result result = compileAndExportExterns(js);
 
