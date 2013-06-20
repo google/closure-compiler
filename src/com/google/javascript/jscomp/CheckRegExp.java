@@ -77,6 +77,8 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
         RegExpTree.parseRegExp(pattern, flags);
       } catch (IllegalArgumentException ex) {
         t.report(n, MALFORMED_REGEXP, ex.getMessage());
+      } catch (IndexOutOfBoundsException ex) {
+        t.report(n, MALFORMED_REGEXP, ex.getMessage());
       }
     }
   }

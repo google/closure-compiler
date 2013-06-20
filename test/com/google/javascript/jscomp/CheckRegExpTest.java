@@ -69,4 +69,8 @@ public class CheckRegExpTest extends CompilerTestCase {
     // Local RegExp is ok
     testReference("function f() {var RegExp; RegExp.test();}", false);
   }
+
+  public void testInvalidRange() {
+    testSame("\"asdf\".match(/[z-a]/)", CheckRegExp.MALFORMED_REGEXP);
+  }
 }
