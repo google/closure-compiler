@@ -78,7 +78,7 @@ public class DiagnosticGroups {
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, ambiguousFunctionDecl, checkEventfulObjectDisposal, checkRegExp, " +
       "checkStructDictInheritance, checkTypes, checkVars, const, " +
-      "constantProperty, deprecated, duplicateMessage, " +
+      "constantProperty, deprecated, duplicateMessage, es3, " +
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
       "internetExplorerChecks, invalidCasts, misplacedTypeAnnotation, " +
       "missingProperties, missingReturn," +
@@ -231,6 +231,11 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("duplicate",
           SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR,
           TypeValidator.DUP_VAR_DECLARATION);
+
+  public static final DiagnosticGroup ES3 =
+      DiagnosticGroups.registerGroup("es3",
+          RhinoErrorReporter.INVALID_ES3_PROP_NAME,
+          RhinoErrorReporter.TRAILING_COMMA);
 
   public static final DiagnosticGroup ES5_STRICT =
       DiagnosticGroups.registerGroup("es5Strict",

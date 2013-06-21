@@ -30,10 +30,12 @@ import java.util.List;
 public class RhinoErrorReporterTest extends TestCase {
 
   private boolean reportMisplacedTypeAnnotations;
+  private boolean reportEs3Props;
 
   @Override
   protected void setUp() throws Exception {
     reportMisplacedTypeAnnotations = false;
+    reportEs3Props = true;
     super.setUp();
   }
 
@@ -71,20 +73,34 @@ public class RhinoErrorReporterTest extends TestCase {
     String message =
         "Type annotations are not allowed here. " +
         "Are you missing parentheses?";
-    assertWarning(
-        "var x = /** @type {string} */ y;",
-        RhinoErrorReporter.MISPLACED_TYPE_ANNOTATION,
-        message);
     JSError error = assertWarning(
         "var x = /** @type {string} */ y;",
         RhinoErrorReporter.MISPLACED_TYPE_ANNOTATION,
         message);
 
     assertEquals(1, error.getLineNumber());
-
-    // Rhino uses the "beginning" of the line where the comma appears,
-    // for some odd reason.
     assertEquals(0, error.getCharno());
+  }
+
+  public void testInvalidEs3Prop() throws Exception {
+    reportEs3Props = false;
+
+    assertNoWarningOrError("var x = y.function;");
+
+    reportEs3Props = true;
+
+    String message =
+        "Keywords and reserved words are not allowed as unquoted property " +
+        "names in older versions of JavaScript. " +
+        "If you are targeting newer versions of JavaScript, " +
+        "set the appropriate language_in option.";
+    JSError error = assertWarning(
+        "var x = y.function;",
+        RhinoErrorReporter.INVALID_ES3_PROP_NAME,
+        message);
+
+    assertEquals(1, error.getLineNumber());
+    assertEquals(10, error.getCharno());
   }
 
   /**
@@ -135,6 +151,12 @@ public class RhinoErrorReporterTest extends TestCase {
           CheckLevel.WARNING);
     }
 
+    if (!reportEs3Props) {
+      options.setWarningLevel(
+          DiagnosticGroups.ES3,
+          CheckLevel.OFF);
+    }
+
     List<SourceFile> externs = ImmutableList.of();
     List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode("input", code));
@@ -142,6 +164,4 @@ public class RhinoErrorReporterTest extends TestCase {
     compiler.parseInputs();
     return compiler;
   }
-
-
 }

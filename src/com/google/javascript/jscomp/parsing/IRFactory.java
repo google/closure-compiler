@@ -24,6 +24,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.head.ErrorReporter;
 import com.google.javascript.rhino.head.Token.CommentType;
 import com.google.javascript.rhino.head.ast.ArrayLiteral;
@@ -81,13 +82,13 @@ import java.util.Set;
 class IRFactory {
 
   static final String GETTER_ERROR_MESSAGE =
-      "getters are not supported in older versions of JS. " +
-      "If you are targeting newer versions of JS, " +
+      "getters are not supported in older versions of JavaScript. " +
+      "If you are targeting newer versions of JavaScript, " +
       "set the appropriate language_in option.";
 
   static final String SETTER_ERROR_MESSAGE =
-      "setters are not supported in older versions of JS. " +
-      "If you are targeting newer versions of JS, " +
+      "setters are not supported in older versions of JavaScript. " +
+      "If you are targeting newer versions of JavaScript, " +
       "set the appropriate language_in option.";
 
   static final String SUSPICIOUS_COMMENT_WARNING =
@@ -96,6 +97,12 @@ class IRFactory {
 
   static final String MISPLACED_TYPE_ANNOTATION =
       "Type annotations are not allowed here. Are you missing parentheses?";
+
+  static final String INVALID_ES3_PROP_NAME =
+      "Keywords and reserved words are not allowed as unquoted property " +
+      "names in older versions of JavaScript. " +
+      "If you are targeting newer versions of JavaScript, " +
+      "set the appropriate language_in option.";
 
   private final String sourceString;
   private final StaticSourceFile sourceFile;
@@ -152,8 +159,7 @@ class IRFactory {
 
     switch (config.languageMode) {
       case ECMASCRIPT3:
-        // Reserved words are handled by the Rhino parser.
-        reservedKeywords = null;
+        reservedKeywords = null; // use TokenStream.isKeyword instead
         break;
       case ECMASCRIPT5:
         reservedKeywords = ES5_RESERVED_KEYWORDS;
@@ -918,10 +924,17 @@ class IRFactory {
       }
     }
 
-    /**
-     * @return Whether the
-     */
+    private boolean isAllowedProp(String identifier) {
+      if (config.languageMode == LanguageMode.ECMASCRIPT3) {
+        return !TokenStream.isKeyword(identifier);
+      }
+      return true;
+    }
+
     private boolean isReservedKeyword(String identifier) {
+      if (config.languageMode == LanguageMode.ECMASCRIPT3) {
+        return TokenStream.isKeyword(identifier);
+      }
       return reservedKeywords != null && reservedKeywords.contains(identifier);
     }
 
@@ -962,8 +975,14 @@ class IRFactory {
           }
         }
 
-        Node key = transformAsString(el.getLeft());
+        AstNode rawKey = el.getLeft();
+        Node key = transformAsString(rawKey);
         key.setType(Token.STRING_KEY);
+        if (rawKey instanceof Name && !isAllowedProp(key.getString())) {
+          key.putBooleanProp(Node.QUOTED_PROP, true);
+          errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
+              key.getLineno(), "", key.getCharno());
+        }
 
         Node value = transform(el.getRight());
         if (el.isGetter()) {
@@ -1009,8 +1028,17 @@ class IRFactory {
     @Override
     Node processPropertyGet(PropertyGet getNode) {
       Node leftChild = transform(getNode.getTarget());
+      AstNode nodeProp = getNode.getProperty();
+      Node rightChild = transformAsString(nodeProp);
+      int nodeType = Token.GETPROP;
+      if (nodeProp instanceof Name && !isAllowedProp(
+          ((Name) nodeProp).getIdentifier())) {
+        nodeType = Token.GETELEM;
+        errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
+            rightChild.getLineno(), "", rightChild.getCharno());
+      }
       Node newNode = newNode(
-          Token.GETPROP, leftChild, transformAsString(getNode.getProperty()));
+          nodeType, leftChild, rightChild);
       newNode.setLineno(leftChild.getLineno());
       newNode.setCharno(leftChild.getCharno());
       maybeSetLengthFrom(newNode, getNode);

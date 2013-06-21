@@ -56,6 +56,13 @@ class RhinoErrorReporter {
           "Type annotations are not allowed here. " +
           "Are you missing parentheses?");
 
+  static final DiagnosticType INVALID_ES3_PROP_NAME = DiagnosticType.warning(
+      "JSC_INVALID_ES3_PROP_NAME",
+      "Keywords and reserved words are not allowed as unquoted property " +
+      "names in older versions of JavaScript. " +
+      "If you are targeting newer versions of JavaScript, " +
+      "set the appropriate language_in option.");
+
   static final DiagnosticType PARSE_TREE_TOO_DEEP =
       DiagnosticType.error("PARSE_TREE_TOO_DEEP",
           "Parse tree too deep.");
@@ -95,8 +102,14 @@ class RhinoErrorReporter {
             SimpleErrorReporter.getMessage0("msg.bad.jsdoc.tag")),
             BAD_JSDOC_ANNOTATION)
 
+        // Unexpected @type annotations
         .put(Pattern.compile("^Type annotations are not allowed here.*"),
             MISPLACED_TYPE_ANNOTATION)
+
+        // Unexpected @type annotations
+        .put(Pattern.compile("^Keywords and reserved words" +
+            " are not allowed as unquoted property.*"),
+            INVALID_ES3_PROP_NAME)
 
         // Type annotation errors.
         .put(Pattern.compile("^Bad type annotation.*"),

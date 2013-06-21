@@ -888,9 +888,9 @@ public class ParserTest extends BaseJSTypeTestCase {
   public void testReservedKeywords() {
     mode = LanguageMode.ECMASCRIPT3;
 
-    parseError("var boolean;", "missing variable name");
+    parseError("var boolean;", "identifier is a reserved word");
     parseError("function boolean() {};",
-        "missing ( before function parameters.");
+        "identifier is a reserved word");
     parseError("boolean = 1;", "identifier is a reserved word");
     parseError("class = 1;", "identifier is a reserved word");
     parseError("public = 2;", "identifier is a reserved word");
@@ -915,25 +915,27 @@ public class ParserTest extends BaseJSTypeTestCase {
   public void testKeywordsAsProperties() {
     mode = LanguageMode.ECMASCRIPT3;
 
-    parseError("var x = {function: 1};", "invalid property id");
-    parseError("x.function;", "missing name after . operator");
+    parse("var x = {function: 1};", IRFactory.INVALID_ES3_PROP_NAME);
+    parse("x.function;", IRFactory.INVALID_ES3_PROP_NAME);
     parseError("var x = {get x(){} };",
         IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {get function(){} };", "invalid property id");
+    parseError("var x = {get function(){} };", IRFactory.GETTER_ERROR_MESSAGE);
     parseError("var x = {get 'function'(){} };",
         IRFactory.GETTER_ERROR_MESSAGE);
     parseError("var x = {get 1(){} };",
         IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {set function(a){} };", "invalid property id");
+    parseError("var x = {set function(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
     parseError("var x = {set 'function'(a){} };",
         IRFactory.SETTER_ERROR_MESSAGE);
     parseError("var x = {set 1(a){} };",
         IRFactory.SETTER_ERROR_MESSAGE);
-    parseError("var x = {class: 1};", "invalid property id");
-    parseError("x.class;", "missing name after . operator");
-    parse("var x = {let: 1};");
+    parse("var x = {class: 1};", IRFactory.INVALID_ES3_PROP_NAME);
+    parse("var x = {'class': 1};");
+    parse("x.class;", IRFactory.INVALID_ES3_PROP_NAME);
+    parse("x['class'];");
+    parse("var x = {let: 1};");  // 'let' is not reserved in ES3
     parse("x.let;");
-    parse("var x = {yield: 1};");
+    parse("var x = {yield: 1};"); // 'yield' is not reserved in ES3
     parse("x.yield;");
 
     mode = LanguageMode.ECMASCRIPT5;
