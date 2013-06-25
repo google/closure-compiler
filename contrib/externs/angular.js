@@ -955,17 +955,19 @@ angular.$http.defaults;
 angular.$http.pendingRequests;
 
 /**
+ * @typedef {function((string|Object), number,
+ *     function(string=): (string|Object|null), angular.$http.Config)}
+ */
+angular.HttpCallback;
+
+/**
  * @typedef {{
  *   then: function(
  *       ?function(!angular.$http.Response),
  *       function(!angular.$http.Response)=): angular.$http.HttpPromise,
- *   success: function(function(
- *       (string|Object), number, function(string=): (string|Object),
- *       !angular.$http.Config)),
- *   error: function(function(
- *       (string|Object), number, function(string=): (string|Object),
- *       !angular.$http.Config))
- *   }}
+ *   success: function(angular.HttpCallback): angular.$http.HttpPromise,
+ *   error: function(angular.HttpCallback): angular.$http.HttpPromise
+ * }}
  */
 angular.$http.HttpPromise;
 
@@ -978,14 +980,12 @@ angular.$http.HttpPromise.then = function(
     successCallback, opt_errorCallback) {};
 
 /**
- * @param {function((string|Object), number,
- *         function(string):string, Object)} callback
+ * @param {angular.HttpCallback} callback
  */
 angular.$http.HttpPromise.success = function(callback) {};
 
 /**
- * @param {function((string|Object), number,
- *         function(string):string, Object)} callback
+ * @param {angular.HttpCallback} callback
  */
 angular.$http.HttpPromise.error = function(callback) {};
 
