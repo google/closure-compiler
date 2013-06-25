@@ -52,8 +52,8 @@ import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
-import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.AbstractStaticScope;
+import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
 
@@ -701,7 +701,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NO_RESOLVED_TYPE.isDict());
     assertFalse(NO_RESOLVED_TYPE.isAllType());
     assertFalse(NO_RESOLVED_TYPE.isVoidType());
-    assertTrue(NO_RESOLVED_TYPE.isConstructor());
+    assertFalse(NO_RESOLVED_TYPE.isConstructor());
     assertFalse(NO_RESOLVED_TYPE.isInstanceType());
 
     // isSubtype

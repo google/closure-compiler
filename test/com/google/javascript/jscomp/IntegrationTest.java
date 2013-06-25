@@ -70,6 +70,21 @@ public class IntegrationTest extends IntegrationTestCase {
          CLOSURE_COMPILED + "var FOO$BAR = 3;");
   }
 
+  public void testUnresolvedDefine() {
+    CompilerOptions options = new CompilerOptions();
+    options.closurePass = true;
+    options.checkTypes = true;
+    DiagnosticType[] warnings = { ProcessDefines.INVALID_DEFINE_TYPE_ERROR,
+                                  RhinoErrorReporter.TYPE_PARSE_ERROR };
+    String[] input = { "var goog = {};" +
+                       "goog.provide('foo.bar');" +
+                       "/** @define{foo.bar} */ foo.bar = {};" };
+    String[] output = { "var goog = {};" +
+                        "var foo = {};" +
+                        "/** @define{foo.bar} */ foo.bar = {};" };
+    test(options, input, output, warnings);
+  }
+
   public void testBug1956277() {
     CompilerOptions options = createCompilerOptions();
     options.collapseProperties = true;

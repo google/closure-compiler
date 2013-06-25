@@ -70,6 +70,11 @@ class NoResolvedType extends NoType {
   }
 
   @Override
+  public boolean isConstructor() {
+    return false;
+  }
+
+  @Override
   public boolean isSubtype(JSType that) {
     if (JSType.isSubtypeHelper(this, that)) {
       return true;
