@@ -2842,6 +2842,45 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@wizaction \n@wizaction*/", "extra @wizaction tag");
   }
 
+  public void testParseDisposes1() throws Exception {
+    assertTrue(parse("@param x \n * @disposes x */").isDisposes());
+  }
+
+  public void testParseDisposes2() throws Exception {
+    parse("@param x \n * @disposes */",
+        true, "Bad type annotation. @disposes tag missing parameter name");
+  }
+
+  public void testParseDisposes3() throws Exception {
+    assertTrue(parse("@param x \n @param y\n * @disposes x, y */").isDisposes());
+  }
+
+  public void testParseDisposesUnknown() throws Exception {
+    parse("@param x \n * @disposes x,y */",
+        true,
+        "Bad type annotation. @disposes parameter unknown or parameter specified multiple times");
+  }
+
+  public void testParseDisposesMultiple() throws Exception {
+    parse("@param x \n * @disposes x,x */",
+        true,
+        "Bad type annotation. @disposes parameter unknown or parameter specified multiple times");
+  }
+
+  public void testParseDisposesAll1() throws Exception {
+    assertTrue(parse("@param x \n * @disposes * */").isDisposes());
+  }
+
+  public void testParseDisposesAll2() throws Exception {
+    assertTrue(parse("@param x \n * @disposes x,* */").isDisposes());
+  }
+
+  public void testParseDisposesAll3() throws Exception {
+    parse("@param x \n * @disposes *, * */",
+        true,
+        "Bad type annotation. @disposes parameter unknown or parameter specified multiple times");
+  }
+
   public void testTextExtents() {
     parse("@return {@code foo} bar \n *    baz. */",
         true, "Bad type annotation. type not recognized due to syntax error");

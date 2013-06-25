@@ -26,11 +26,14 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -104,10 +107,13 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
   // Eventful types
   private Set<JSType> eventfulTypes;
 
-  // Dispose methods is a map from regex to argument disposed/all arguments disposed.
-  private Map<String, int[]> disposeMethods;
+  /*
+   * Dispose methods is a map from regex to argument disposed/all arguments disposed.
+   * Note: it is assumed that at most one regex match will occur per disposeMethod call.
+   */
+  private Map<String, List<Integer>> disposeMethods;
   // Member used to signify all arguments should be disposed.
-  public static int[] disposeAll;
+  public static final int DISPOSE_ALL = -1;
 
   private final AbstractCompiler compiler;
   private final JSTypeRegistry typeRegistry;
@@ -155,7 +161,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
    * @param argumentsThatAreDisposed An array of integers (ideally sorted) that specifies
    *   the arguments of the function being disposed
    */
-  private void addDisposeCall(String pattern, int[] argumentsThatAreDisposed) {
+  private void addDisposeCall(String pattern, List<Integer> argumentsThatAreDisposed) {
     this.disposeMethods.put(pattern, argumentsThatAreDisposed);
   }
 
@@ -167,10 +173,10 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
     this.disposeMethods = Maps.newHashMap();
 
     // Initialize disposeMethods hashmap
-    this.addDisposeCall("goog.dispose", new int[]{0});
-    this.addDisposeCall("goog.disposeAll", disposeAll);
-    this.addDisposeCall(".push", new int[]{0});
-    this.addDisposeCall(".add", disposeAll);
+    this.addDisposeCall("goog.dispose", new ArrayList<Integer>(Arrays.asList(0)));
+    this.addDisposeCall("goog.disposeAll", new ArrayList<Integer>(Arrays.asList(DISPOSE_ALL)));
+    this.addDisposeCall(".push", new ArrayList<Integer>(Arrays.asList(0)));
+    this.addDisposeCall(".add", new ArrayList<Integer>(Arrays.asList(DISPOSE_ALL)));
   }
 
 
@@ -961,32 +967,35 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
       // Call to function known to dispose arguments
       for (String disposeMethod : disposeMethods.keySet()) {
         if (property.matches(disposeMethod)) {
-          int[] disposeArguments = disposeMethods.get(disposeMethod);
+          List<Integer> disposeArguments = disposeMethods.get(disposeMethod);
 
-          // Dispose all arguments?
-          if (disposeArguments == disposeAll) {
-            for (Node t = first.getNext(); t != null; t = t.getNext()) {
+          // Dispose specific arguments only
+          Node t = first.getNext();
+          int tsArgument = 0;
+          for (Integer disposeArgument : disposeArguments) {
+            // Dispose all arguments?
+            if (disposeArgument == DISPOSE_ALL) {
+              for (Node tt = first.getNext(); tt != null; tt = tt.getNext()) {
+                ret.add(tt);
+              }
+              break;
+            }
+
+            // The current item pointed to by t is beyond that requested in
+            // current array element.
+            if (tsArgument > disposeArgument) {
+              t = first.getNext();
+              tsArgument = 0;
+            }
+            for (; tsArgument < disposeArgument && t != null; ++tsArgument) {
+              t = t.getNext();
+            }
+            if (tsArgument == disposeArgument && t != null) {
               ret.add(t);
             }
-          } else {
-            // Dispose specific arguments only
-            Node t = first.getNext();
-            int tsArgument = 0;
-            for (int index : disposeArguments) {
-              // The current item pointed to by t is beyond that requested in
-              // current array element.
-              if (tsArgument > disposeArguments[index]) {
-                t = first.getNext();
-                tsArgument = 0;
-              }
-              for (; tsArgument < disposeArguments[index] && t != null; ++tsArgument) {
-                t = t.getNext();
-              }
-              if (tsArgument == disposeArguments[index] && t != null) {
-                ret.add(t);
-              }
-            }
           }
+
+          return ret;
         }
       }
 
@@ -1061,6 +1070,45 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
      */
     private JSType dereference(JSType type) {
       return type == null ? null : type.dereference();
+    }
+
+    /*
+     * Check function definitions to add custom dispose methods.
+     */
+    public void isFunction(NodeTraversal t, Node n) {
+      Preconditions.checkArgument(n.isFunction());
+      JSDocInfo jsDocInfo = NodeUtil.getFunctionJSDocInfo(n);
+
+      // Function annotated to dispose of
+      if (jsDocInfo != null && jsDocInfo.isDisposes()) {
+        JSType type = n.getJSType();
+        if (type == null || type.isUnknownType()) {
+          return;
+        }
+
+        FunctionType funType = type.toMaybeFunctionType();
+        Node paramNode = NodeUtil.getFunctionParameters(n).getFirstChild();
+        List<Integer> positionalDisposedParameters = Lists.newArrayList();
+
+        if (jsDocInfo.disposesOf("*")) {
+          positionalDisposedParameters.add(DISPOSE_ALL);
+        } else {
+          // Param types
+          int index = 0;
+          for (Node p : funType.getParameters()) {
+              // Bail out if the paramNode is not there.
+              if (paramNode == null) {
+                break;
+              }
+              if (jsDocInfo.disposesOf(paramNode.getString())) {
+                positionalDisposedParameters.add(index);
+              }
+              paramNode = paramNode.getNext();
+              index++;
+          }
+        }
+        addDisposeCall(NodeUtil.getFunctionName(n), positionalDisposedParameters);
+      }
     }
 
     /*
@@ -1206,6 +1254,9 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
           break;
         case Token.CALL:
           isCall(t, n);
+          break;
+        case Token.FUNCTION:
+          isFunction(t, n);
           break;
         case Token.NEW:
           isNew(t, n, parent);

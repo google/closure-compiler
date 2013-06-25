@@ -838,6 +838,25 @@ public final class JsDocInfoParser {
           }
           return eatTokensUntilEOL();
 
+        case DISPOSES: {
+          ExtractionInfo templateInfo = extractSingleLineBlock();
+          List<String> names = Lists.newArrayList(
+              Splitter.on(',')
+                  .trimResults()
+                  .split(templateInfo.string));
+
+          if (names.size() == 0 || names.get(0).length() == 0) {
+            parser.addTypeWarning("msg.jsdoc.disposeparameter.missing",
+                  stream.getLineno(), stream.getCharno());
+          } else if (!jsdocBuilder.recordDisposesParameter(names)) {
+            parser.addTypeWarning("msg.jsdoc.disposeparameter.error",
+                stream.getLineno(), stream.getCharno());
+          }
+
+          token = templateInfo.token;
+          return token;
+        }
+
         case VERSION:
           ExtractionInfo versionInfo = extractSingleLineBlock();
           String version = versionInfo.string;

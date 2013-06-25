@@ -1073,6 +1073,32 @@ final public class JSDocInfoBuilder {
   }
 
   /**
+   * Returns whether current JSDoc is annotated with {@code @disposes}.
+   */
+  public boolean isDisposesRecorded() {
+    return currentInfo.isDisposes();
+  }
+
+  /**
+   * Records a parameter that gets disposed.
+   *
+   * @return {@code true} if all the parameters was recorded and
+   *     {@code false} if a parameter with the same name was already defined
+   */
+  public boolean recordDisposesParameter(List<String> parameterNames) {
+    for (String parameterName : parameterNames) {
+      if ((currentInfo.hasParameter(parameterName) ||
+          parameterName.equals("*")) &&
+          currentInfo.setDisposedParameter(parameterName)) {
+        populated = true;
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Whether the current doc info has other type tags, like
    * {@code @param} or {@code @return} or {@code @type} or etc.
    */

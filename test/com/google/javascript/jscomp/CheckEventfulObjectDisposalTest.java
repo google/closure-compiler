@@ -257,21 +257,43 @@ public class CheckEventfulObjectDisposalTest extends CompilerTestCase {
     testSame(js, CheckEventfulObjectDisposal.OVERWRITE_PRIVATE_EVENTFUL_OBJECT, true);
   }
 
-  /*
-   // TODO(user): update & enable when custom dispose call API is implemented
-  public void testCustomDispose() {
+  public void testCustomDispose1() {
     policy = CheckEventfulObjectDisposal.DisposalCheckingPolicy.AGGRESSIVE;
-    customDispose = Maps.newHashMap();
-    customDispose.put("helpers.disp", new int[]{0});
     String js = CLOSURE_DEFS
-        + "helpers.disp = function(todispose, ctx) {"
+        + "/** @param todispose\n @param ctx\n @disposes todispose\n */"
+        + "customDispose = function(todispose, ctx) {"
         + " ctx.registerDisposable(todispose);"
         + " return todispose;"
         + "};"
-        + "var x = helpers.disp(new goog.events.EventHandler(), OBJ);"
-        + "var y = new goog.events.EventHandler();"
-        + "helpers.disp(y, OBJ);";
+        + "var x = new goog.events.EventHandler();"
+        + "customDispose(x, OBJ);";
     testSame(js);
   }
-  */
+
+  public void testCustomDispose2() {
+    policy = CheckEventfulObjectDisposal.DisposalCheckingPolicy.AGGRESSIVE;
+    String js = CLOSURE_DEFS
+        + "/** @param todispose\n @param ctx\n @disposes *\n */"
+        + "customDispose = function(todispose, ctx) {"
+        + " ctx.registerDisposable(todispose);"
+        + " return todispose;"
+        + "};"
+        + "var x = new goog.events.EventHandler();"
+        + "var y = new goog.events.EventHandler();"
+        + "customDispose(x, y);";
+    testSame(js);
+  }
+
+  public void testCustomDispose3() {
+    policy = CheckEventfulObjectDisposal.DisposalCheckingPolicy.AGGRESSIVE;
+    String js = CLOSURE_DEFS
+        + "/** @param todispose\n @param ctx\n @disposes todispose\n */"
+        + "customDispose = function(todispose, ctx) {"
+        + " ctx.registerDisposable(todispose);"
+        + " return todispose;"
+        + "};"
+        + "var x = new goog.events.EventHandler();"
+        + "customDispose(OBJ, x);";
+    testSame(js, CheckEventfulObjectDisposal.EVENTFUL_OBJECT_PURELY_LOCAL, true);
+  }
 }

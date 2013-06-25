@@ -94,6 +94,7 @@ public class JSDocInfo implements Serializable {
     Map<String, JSTypeExpression> parameters = null;
     List<JSTypeExpression> thrownTypes = null;
     ImmutableList<String> templateTypeNames = null;
+    Set<String> disposedParameters = null;
 
     // Other information
     String description = null;
@@ -1266,6 +1267,35 @@ public class JSDocInfo implements Serializable {
   void setWizaction(boolean wizaction) {
     lazyInitInfo();
     info.wizaction = wizaction;
+  }
+
+  /**
+   * Returns whether JSDoc is annotated with {@code @disposes} annotation.
+   */
+  public boolean isDisposes() {
+    return (info == null) ? false : info.disposedParameters != null;
+  }
+
+  boolean setDisposedParameter(String parameterName) {
+    lazyInitInfo();
+    // Lazily initialize disposedParameters
+    if (info.disposedParameters == null) {
+      info.disposedParameters = Sets.newHashSet();
+    }
+
+    if (info.disposedParameters.contains(parameterName)) {
+      return false;
+    } else {
+      info.disposedParameters.add(parameterName);
+      return true;
+    }
+  }
+
+  /**
+   * Return whether the function disposes of specified parameter.
+   */
+  public boolean disposesOf(String parameterName) {
+    return isDisposes() && info.disposedParameters.contains(parameterName);
   }
 
   /**

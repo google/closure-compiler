@@ -34,6 +34,7 @@ enum Annotation {
   DEPRECATED,
   DESC,
   DICT,
+  DISPOSES,
   ENUM,
   EXTENDS,
   EXTERNS,
@@ -91,6 +92,7 @@ enum Annotation {
       put("deprecated", Annotation.DEPRECATED).
       put("desc", Annotation.DESC).
       put("dict", Annotation.DICT).
+      put("disposes", Annotation.DISPOSES).
       put("enum", Annotation.ENUM).
       put("export", Annotation.EXPORT).
       put("expose", Annotation.EXPOSE).
