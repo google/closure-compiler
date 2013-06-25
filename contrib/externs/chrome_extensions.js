@@ -979,6 +979,7 @@ chrome.tabs.update = function(tabId, updateProperties, opt_callback) {};
 /** @type {ChromeEvent} */
 chrome.tabs.onActiveChanged;
 
+
 /** @type {ChromeEvent} */
 chrome.tabs.onActivated;
 
@@ -2036,6 +2037,25 @@ chrome.permissions.onAdded;
 
 /** @type {!ChromeEvent} */
 chrome.permissions.onRemoved;
+
+
+/**
+ * @see http://developer.chrome.com/dev/extensions/power.html
+ */
+chrome.power = {};
+
+
+/**
+ * @param {string} level A string describing the degree to which power
+ *     management should be disabled, should be either "system" or "display".
+ */
+chrome.power.requestKeepAwake = function(level) {};
+
+
+/**
+ * Releases a request previously made via requestKeepAwake().
+ */
+chrome.power.releaseKeepAwake = function() {};
 
 
 /**
