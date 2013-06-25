@@ -2326,6 +2326,7 @@ Float64Array.prototype.subarray = function(begin, opt_end) {};
  * @noalias
  * @throws {Error}
  * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays/DataView
  */
 function DataView(buffer, opt_byteOffset, opt_byteLength) {}
 
