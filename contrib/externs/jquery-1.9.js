@@ -1240,6 +1240,7 @@ jQuery.jqXHR.prototype.fail = function(failCallbacks) {};
 jQuery.jqXHR.prototype.onreadystatechange = function (callback) {};
 
 /**
+ * @override
  * @param {function()=} doneFilter
  * @param {function()=} failFilter
  * @param {function()=} progressFilter
