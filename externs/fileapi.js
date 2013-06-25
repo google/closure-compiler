@@ -926,8 +926,9 @@ StorageInfo.prototype.queryUsageAndQuota = function(type, successCallback,
  */
 Window.prototype.webkitStorageInfo;
 
+
 /**
- * @see https://dvcs.w3.org/hg/quota/raw-file/tip/Overview.html#storagequota-interface.
+ * @see http://www.w3.org/TR/quota-api
  * @constructor
  */
 function StorageQuota() {}
@@ -946,3 +947,17 @@ StorageQuota.prototype.requestQuota = function(size, opt_successCallback,
  */
 StorageQuota.prototype.queryUsageAndQuota = function(successCallback,
     opt_errorCallback) {};
+
+
+/**
+ * @see https://code.google.com/p/chromium/issues/detail?id=197116
+ * @type {!StorageQuota}
+ */
+Navigator.prototype.webkitPersistentStorage;
+
+
+/**
+ * @see https://code.google.com/p/chromium/issues/detail?id=197116
+ * @type {!StorageQuota}
+ */
+Navigator.prototype.webkitTemporaryStorage;

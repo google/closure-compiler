@@ -200,10 +200,10 @@ public class CheckMissingReturnTest extends CompilerTestCase {
   public void testConstructors() {
     testSame("/** @constructor */ function foo() {} ");
 
-    final String ConstructorWithReturn = "/** @constructor \n" +
+    final String constructorWithReturn = "/** @constructor \n" +
         " * @return {!foo} */ function foo() {" +
         " if (!(this instanceof foo)) { return new foo; } }";
-    testSame(ConstructorWithReturn);
+    testSame(constructorWithReturn);
   }
 
   private static String createFunction(String returnType, String body) {
