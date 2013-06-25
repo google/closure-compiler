@@ -3520,6 +3520,48 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function (this:base, number): undefined");
   }
 
+  public void testGoodExtends18() throws Exception {
+    testTypes(
+        CLOSURE_DEFS +
+        "/** @constructor\n" +
+        " * @template T */\n" +
+        "function C() {}\n" +
+        "/** @constructor\n" +
+        " * @extends {C.<string>} */\n" +
+        "function D() {};\n" +
+        "goog.inherits(D, C);\n" +
+        "(new D())");
+  }
+
+  public void testGoodExtends19() throws Exception {
+    testTypes(
+        CLOSURE_DEFS +
+        "/** @constructor */\n" +
+        "function C() {}\n" +
+        "" +
+        "/** @interface\n" +
+        " * @template T */\n" +
+        "function D() {}\n" +
+        "/** @param {T} t */\n" +
+        "D.prototype.method;\n" +
+        "" +
+        "/** @constructor\n" +
+        " * @template T\n" +
+        " * @extends {C}\n" +
+        " * @implements {D.<T>} */\n" +
+        "function E() {};\n" +
+        "goog.inherits(E, C);\n" +
+        "/** @override */\n" +
+        "E.prototype.method = function(t) {};\n" +
+        "" +
+        "var e = /** @type {E.<string>} */ (new E());\n" +
+        "e.method(3);",
+        "actual parameter 1 of E.prototype.method does not match formal " +
+        "parameter\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
   public void testBadExtends1() throws Exception {
     testTypes("/** @constructor */function base() {}\n" +
         "/** @constructor\n * @extends {not_base} */function derived() {}\n",

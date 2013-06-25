@@ -716,6 +716,7 @@ final class FunctionTypeBuilder {
   private void maybeSetBaseType(FunctionType fnType) {
     if (!fnType.isInterface() && baseType != null) {
       fnType.setPrototypeBasedOn(baseType);
+      fnType.extendTemplateTypeMapBasedOn(baseType);
     }
   }
 

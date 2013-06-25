@@ -417,11 +417,19 @@ public class FunctionType extends PrototypeObjectType {
     if (baseType.hasReferenceName() ||
         isNativeObjectType() ||
         baseType.isFunctionPrototypeType()) {
-      typeOfThis.extendTemplateTypeMap(baseType.getTemplateTypeMap());
       baseType = new PrototypeObjectType(
           registry, getReferenceName() + ".prototype", baseType);
     }
     setPrototype(baseType, propertyNode);
+  }
+
+  /**
+   * Extends the TemplateTypeMap of the function's this type, based on the
+   * specified type.
+   * @param type
+   */
+  public void extendTemplateTypeMapBasedOn(ObjectType type) {
+    typeOfThis.extendTemplateTypeMap(type.getTemplateTypeMap());
   }
 
   /**

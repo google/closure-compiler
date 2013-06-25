@@ -468,6 +468,10 @@ class TypeValidator {
     ObjectType implicitProto = subObject.getImplicitPrototype();
     ObjectType declaredSuper =
         implicitProto == null ? null : implicitProto.getImplicitPrototype();
+    if (declaredSuper != null && declaredSuper.isTemplatizedType()) {
+      declaredSuper =
+          declaredSuper.toMaybeTemplatizedType().getReferencedType();
+    }
     if (declaredSuper != null &&
         !(superObject instanceof UnknownType) &&
         !declaredSuper.isEquivalentTo(superObject)) {
