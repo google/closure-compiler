@@ -979,7 +979,6 @@ class IRFactory {
         Node key = transformAsString(rawKey);
         key.setType(Token.STRING_KEY);
         if (rawKey instanceof Name && !isAllowedProp(key.getString())) {
-          key.putBooleanProp(Node.QUOTED_PROP, true);
           errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
               key.getLineno(), "", key.getCharno());
         }
@@ -1030,15 +1029,13 @@ class IRFactory {
       Node leftChild = transform(getNode.getTarget());
       AstNode nodeProp = getNode.getProperty();
       Node rightChild = transformAsString(nodeProp);
-      int nodeType = Token.GETPROP;
       if (nodeProp instanceof Name && !isAllowedProp(
           ((Name) nodeProp).getIdentifier())) {
-        nodeType = Token.GETELEM;
         errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
             rightChild.getLineno(), "", rightChild.getCharno());
       }
       Node newNode = newNode(
-          nodeType, leftChild, rightChild);
+          Token.GETPROP, leftChild, rightChild);
       newNode.setLineno(leftChild.getLineno());
       newNode.setCharno(leftChild.getCharno());
       maybeSetLengthFrom(newNode, getNode);

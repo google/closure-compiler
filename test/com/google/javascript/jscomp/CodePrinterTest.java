@@ -30,10 +30,12 @@ import java.util.List;
 public class CodePrinterTest extends TestCase {
   private boolean trustedStrings = true;
   private Compiler lastCompiler = null;
+  private LanguageMode languageMode = LanguageMode.ECMASCRIPT5;
 
   @Override public void setUp() {
     trustedStrings = true;
     lastCompiler = null;
+    languageMode = LanguageMode.ECMASCRIPT5;
   }
 
   Node parse(String js) {
@@ -87,6 +89,7 @@ public class CodePrinterTest extends TestCase {
     options.setTrustedStrings(trustedStrings);
     options.setPrettyPrint(prettyprint);
     options.setLineLengthThreshold(lineThreshold);
+    options.setLanguageOut(languageMode);
     return new CodePrinter.Builder(parse(js)).setCompilerOptions(options)
         .build();
   }
@@ -98,6 +101,7 @@ public class CodePrinterTest extends TestCase {
     options.setPrettyPrint(prettyprint);
     options.setLineLengthThreshold(lineThreshold);
     options.setLineBreak(lineBreak);
+    options.setLanguageOut(languageMode);
     return new CodePrinter.Builder(parse(js)).setCompilerOptions(options)
         .build();
   }
@@ -110,6 +114,7 @@ public class CodePrinterTest extends TestCase {
     options.setLineLengthThreshold(lineThreshold);
     options.setPreferLineBreakAtEndOfFile(preferLineBreakAtEof);
     options.setLineBreak(lineBreak);
+    options.setLanguageOut(languageMode);
     return new CodePrinter.Builder(parse(js)).setCompilerOptions(options)
         .build();
   }
@@ -122,6 +127,7 @@ public class CodePrinterTest extends TestCase {
     options.setPrettyPrint(prettyprint);
     options.setLineLengthThreshold(lineThreshold);
     options.setLineBreak(lineBreak);
+    options.setLanguageOut(languageMode);
     return new CodePrinter.Builder(node).setCompilerOptions(options)
         .setOutputTypes(outputTypes)
         .setTypeRegistry(lastCompiler.getTypeRegistry())
@@ -137,6 +143,7 @@ public class CodePrinterTest extends TestCase {
     options.setPrettyPrint(prettyprint);
     options.setLineLengthThreshold(lineThreshold);
     options.setLineBreak(lineBreak);
+    options.setLanguageOut(languageMode);
     return new CodePrinter.Builder(node).setCompilerOptions(options)
         .setOutputTypes(outputTypes)
         .setTypeRegistry(lastCompiler.getTypeRegistry())
@@ -148,6 +155,7 @@ public class CodePrinterTest extends TestCase {
   String printNode(Node n) {
     CompilerOptions options = new CompilerOptions();
     options.setLineLengthThreshold(CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD);
+    options.setLanguageOut(languageMode);
     return new CodePrinter.Builder(n).setCompilerOptions(options).build();
   }
 
@@ -1338,6 +1346,14 @@ public class CodePrinterTest extends TestCase {
     assertPrint(
       "var x = {get \"()\"() {return 1}}",
       "var x={get \"()\"(){return 1}}");
+
+    languageMode = LanguageMode.ECMASCRIPT5;
+    assertPrintSame("var x={get function(){return 1}}");
+
+    // Getters and setters and not supported in ES3 but if someone sets the
+    // the ES3 output mode on an AST containing them we still produce them.
+    languageMode = LanguageMode.ECMASCRIPT3;
+    assertPrintSame("var x={get function(){return 1}}");
   }
 
   public void testSetter() {
@@ -1357,6 +1373,14 @@ public class CodePrinterTest extends TestCase {
     assertPrint(
       "var x = {set \"(x)\"(y) {return 1}}",
       "var x={set \"(x)\"(y){return 1}}");
+
+    languageMode = LanguageMode.ECMASCRIPT5;
+    assertPrintSame("var x={set function(x){}}");
+
+    // Getters and setters and not supported in ES3 but if someone sets the
+    // the ES3 output mode on an AST containing them we still produce them.
+    languageMode = LanguageMode.ECMASCRIPT3;
+    assertPrintSame("var x={set function(x){}}");
   }
 
   public void testNegCollapse() {
@@ -1519,5 +1543,25 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("var x=/\\u000D/");
     assertPrintSame("var x=/\\u2028/");
     assertPrintSame("var x=/\\u2029/");
+  }
+
+  public void testKeywordProperties1() {
+    languageMode = LanguageMode.ECMASCRIPT5;
+    assertPrintSame("x.foo=2");
+    assertPrintSame("x.function=2");
+
+    languageMode = LanguageMode.ECMASCRIPT3;
+    assertPrintSame("x.foo=2");
+    assertPrint("x.function=2", "x[\"function\"]=2");
+  }
+
+  public void testKeywordProperties2() {
+    languageMode = LanguageMode.ECMASCRIPT5;
+    assertPrintSame("x={foo:2}");
+    assertPrintSame("x={function:2}");
+
+    languageMode = LanguageMode.ECMASCRIPT3;
+    assertPrintSame("x={foo:2}");
+    assertPrint("x={function:2}", "x={\"function\":2}");
   }
 }

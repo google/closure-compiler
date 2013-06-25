@@ -1077,9 +1077,10 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testES3ByDefault() {
+    useStringComparison = true;
     test(
         "var x = f.function",
-        "var x = f['function']",
+        "var x=f[\"function\"];",
         RhinoErrorReporter.INVALID_ES3_PROP_NAME);
   }
 

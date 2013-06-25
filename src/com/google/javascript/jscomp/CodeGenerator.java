@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
@@ -50,12 +51,14 @@ class CodeGenerator {
 
   private final boolean preferSingleQuotes;
   private final boolean trustedStrings;
+  private final LanguageMode languageMode;
 
   private CodeGenerator(CodeConsumer consumer) {
     cc = consumer;
     outputCharsetEncoder = null;
     preferSingleQuotes = false;
     trustedStrings = true;
+    languageMode = LanguageMode.ECMASCRIPT5;
   }
 
   static CodeGenerator forCostEstimation(CodeConsumer consumer) {
@@ -79,6 +82,7 @@ class CodeGenerator {
     }
     this.preferSingleQuotes = options.preferSingleQuotes;
     this.trustedStrings = options.trustedStrings;
+    this.languageMode = options.getLanguageOut();
   }
 
   /**
@@ -475,8 +479,16 @@ class CodeGenerator {
         if (needsParens) {
           add(")");
         }
-        add(".");
-        addIdentifier(last.getString());
+        if (this.languageMode == LanguageMode.ECMASCRIPT3
+            && TokenStream.isKeyword(last.getString())) {
+          // Check for ECMASCRIPT3 keywords.
+          add("[");
+          add(last);
+          add("]");
+        } else {
+          add(".");
+          addIdentifier(last.getString());
+        }
         break;
       }
 
@@ -683,12 +695,13 @@ class CodeGenerator {
             String key = c.getString();
             // Object literal property names don't have to be quoted if they
             // are not JavaScript keywords
-            if (!c.isQuotedString() &&
-                !TokenStream.isKeyword(key) &&
-                TokenStream.isJSIdentifier(key) &&
+            if (!c.isQuotedString()
+                && !(languageMode == LanguageMode.ECMASCRIPT3
+                    && TokenStream.isKeyword(key))
+                && TokenStream.isJSIdentifier(key)
                 // do not encode literally any non-literal characters that
                 // were Unicode escaped.
-                NodeUtil.isLatin(key)) {
+                && NodeUtil.isLatin(key)) {
               add(key);
             } else {
               // Determine if the string is a simple number.
