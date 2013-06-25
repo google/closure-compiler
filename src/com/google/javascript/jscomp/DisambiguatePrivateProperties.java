@@ -15,8 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
+import java.util.Collection;
 
 /**
  * Disambiguate properties by file, when they are private by naming convention.
@@ -25,11 +28,15 @@ class DisambiguatePrivateProperties
    implements NodeTraversal.Callback, CompilerPass {
 
   private final AbstractCompiler compiler;
+  private final ImmutableSet<String> blacklist;
   private String fileid;
   private int id = 0;
 
   DisambiguatePrivateProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
+    CodingConvention convention = this.compiler.getCodingConvention();
+    Collection<String> indirect = convention.getIndirectlyDeclaredProperties();
+    blacklist = ImmutableSet.copyOf(indirect);
   }
 
   @Override
@@ -62,7 +69,8 @@ class DisambiguatePrivateProperties
   private void maybeRename(Node n) {
     CodingConvention convention = compiler.getCodingConvention();
     String prop = n.getString();
-    if (!n.getBooleanProp(Node.QUOTED_PROP) && convention.isPrivate(prop)) {
+    if (!n.getBooleanProp(Node.QUOTED_PROP) && convention.isPrivate(prop)
+        && !blacklist.contains(prop)) {
       n.setString(prop + fileid);
       compiler.reportCodeChange();
     }

@@ -94,6 +94,14 @@ public class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
     test(
         "({set prop_(a){this.a = 1} });",
         "({set prop_$0(a){this.a = 1} });");
+  }
 
+  public void testNoRenameIndirectProps() {
+    useGoogleCodingConvention = true;
+
+    testSame("({}).superClass_;");
+    testSame("({superClass_: 1});");
+    testSame("({get superClass_(){ return 1} });");
+    testSame("({set superClass_(a){this.a = 1} });");
   }
 }
