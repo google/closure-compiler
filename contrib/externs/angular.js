@@ -86,7 +86,7 @@ angular.copy = function(source, opt_dest) {};
 /**
  * @param {(JQLiteSelector|Object)} element
  * @param {(JQLiteSelector|Object)=} opt_context
- * @return {Object}
+ * @return {angular.JQLite}
  */
 angular.element = function(element, opt_context) {};
 
