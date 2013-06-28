@@ -11940,6 +11940,43 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Property bar never defined on A", false);
   }
 
+  public void testNonexistentPropertyAccessStructSubtype() throws Exception {
+    testTypes(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @struct\n" +
+        " */\n" +
+        "var A = function() {};" +
+        "" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @struct\n" +
+        " * @extends {A}\n" +
+        " */\n" +
+        "var B = function() { this.bar = function(){}; };" +
+        "" +
+        "/** @param {A} a */\n" +
+        "function foo(a) {\n" +
+        "  if (a.bar) { a.bar(); }\n" +
+        "}",
+        "Property bar never defined on A", false);
+  }
+
+  public void testNonexistentPropertyAccessStructSubtype2() throws Exception {
+    testTypes(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @struct\n" +
+        " */\n" +
+        "function Foo() {\n" +
+        "  this.x = 123;\n" +
+        "}\n" +
+        "var objlit = /** @struct */ { y: 234 };\n" +
+        "Foo.prototype = objlit;\n" +
+        "var n = objlit.x;\n",
+        "Property x never defined on Foo.prototype", false);
+  }
+
 
   private void testTypes(String js) throws Exception {
     testTypes(js, (String) null);

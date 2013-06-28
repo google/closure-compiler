@@ -743,19 +743,26 @@ public class JSTypeRegistry implements Serializable {
    * Returns whether the given property can possibly be set on the given type.
    */
   public boolean canPropertyBeDefined(JSType type, String propertyName) {
-    if (typesIndexedByProperty.containsKey(propertyName)) {
-      for (JSType alt :
-               typesIndexedByProperty.get(propertyName).getAlternates()) {
-        JSType greatestSubtype = alt.getGreatestSubtype(type);
-        if (!greatestSubtype.isEmptyType()) {
-          // We've found a type with this property. Now we just have to make
-          // sure it's not a type used for internal bookkeeping.
-          RecordType maybeRecordType = greatestSubtype.toMaybeRecordType();
-          if (maybeRecordType != null && maybeRecordType.isSynthetic()) {
-            continue;
-          }
+    if (type.isStruct()) {
+      // We are stricter about "struct" types and only allow access to
+      // properties that to the best of our knowledge are available at creation
+      // time and specifically not properties only defined on subtypes.
+      return type.hasProperty(propertyName);
+    } else {
+      if (typesIndexedByProperty.containsKey(propertyName)) {
+        for (JSType alt :
+                 typesIndexedByProperty.get(propertyName).getAlternates()) {
+          JSType greatestSubtype = alt.getGreatestSubtype(type);
+          if (!greatestSubtype.isEmptyType()) {
+            // We've found a type with this property. Now we just have to make
+            // sure it's not a type used for internal bookkeeping.
+            RecordType maybeRecordType = greatestSubtype.toMaybeRecordType();
+            if (maybeRecordType != null && maybeRecordType.isSynthetic()) {
+              continue;
+            }
 
-          return true;
+            return true;
+          }
         }
       }
     }
