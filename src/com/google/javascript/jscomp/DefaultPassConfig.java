@@ -2167,6 +2167,10 @@ public class DefaultPassConfig extends PassConfig {
     boolean preserveAnonymousFunctionNames =
         options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
     Set<String> reservedNames = Sets.newHashSet();
+    if (options.renamePrefixNamespace != null) {
+      // don't use the prefix name as a global symbol.
+      reservedNames.add(options.renamePrefixNamespace);
+    }
     if (exportedNames != null) {
       reservedNames.addAll(exportedNames);
     }

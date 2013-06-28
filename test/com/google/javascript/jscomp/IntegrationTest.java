@@ -2312,6 +2312,29 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, code, "_.x = null; try { +_.x.FOO; } catch (e) {}");
   }
 
+  public void testRenameCollision() {
+    String code = "" +
+          "/**\n" +
+          " * @fileoverview\n" +
+          " * @suppress {uselessCode}\n" +
+          " */" +
+          "var x = {};\ntry {\n(0,use)(x.FOO);\n} catch (e) {}";
+
+    CompilerOptions options = createCompilerOptions();
+    testSame(options, code);
+
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(
+        options);
+    options.renamePrefixNamespace = "a";
+    options.setVariableRenaming(VariableRenamingPolicy.ALL);
+    WarningLevel.DEFAULT.setOptionsForWarningLevel(options);
+
+    RescopeGlobalSymbols.assumeCrossModuleNames = false;
+
+    test(options, code,
+        "var b = {}; try { (0,window.use)(b.FOO); } catch (c) {}");
+  }
+
   public void testRenamePrefixNamespaceActivatesMoveFunctionDeclarations() {
     CompilerOptions options = createCompilerOptions();
     String code = "var x = f; function f() { return 3; }";
