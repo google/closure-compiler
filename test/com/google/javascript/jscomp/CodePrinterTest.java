@@ -466,6 +466,9 @@ public class CodePrinterTest extends TestCase {
     // Test we correctly handle an in operator inside a comma.
     assertPrintSame("for(x,(y in z);;)foo()");
     assertPrintSame("for(var x,w=(y in z);;)foo()");
+
+    // And in operator inside a hook.
+    assertPrintSame("for(a=c?0:(0 in d);;)foo()");
   }
 
   public void testLiteralProperty() {
