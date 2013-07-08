@@ -139,7 +139,8 @@ class TypedCodeGenerator extends CodeGenerator {
     JSType retType = funType.getReturnType();
     if (retType != null &&
         !retType.isEmptyType() && // There is no annotation for the empty type.
-        !funType.isInterface()) { // Interfaces never return a value.
+        !funType.isInterface() && // Interfaces never return a value.
+        !(funType.isConstructor() && retType.isVoidType())) {
       sb.append(" * ");
       appendAnnotation(sb, "return", retType.toAnnotationString());
       sb.append("\n");

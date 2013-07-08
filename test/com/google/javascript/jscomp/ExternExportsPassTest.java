@@ -271,7 +271,6 @@ public class ExternExportsPassTest extends TestCase {
                     "};" +
                     "goog.exportSymbol('externalName', internalName)",
                     "/**\n" +
-                    " * @return {undefined}\n" +
                     " * @constructor\n" +
                     " */\n" +
                     "var externalName = function() {\n};\n");
@@ -392,7 +391,6 @@ public class ExternExportsPassTest extends TestCase {
         "goog.exportSymbol('Foo', Foo);\n" +
         "goog.exportProperty(Foo.prototype, 'm', Foo.prototype.m);",
         "/**\n" +
-        " * @return {undefined}\n" +
         " * @constructor\n" +
         " */\n" +
         "var Foo = function() {\n};\n" +
@@ -503,7 +501,6 @@ public class ExternExportsPassTest extends TestCase {
     compileAndCheck("/** @constructor */ var a = function() {};" +
                     "goog.exportSymbol('foobar', a)",
                     "/**\n" +
-                    " * @return {undefined}\n" +
                     " * @constructor\n" +
                     " */\n" +
                     "var foobar = function() {\n};\n");
