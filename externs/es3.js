@@ -433,16 +433,13 @@ function Array(var_args) {}
 
 // Functions:
 
-// TODO(nicksantos): Change @this {Object} to @this { {length: number} }
-
-
 /**
  * Returns a new array comprised of this array joined with other array(s)
  * and/or value(s).
  *
  * @param {...*} var_args
  * @return {!Array}
- * @this {Object}
+ * @this {*}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/concat
  */
@@ -455,7 +452,7 @@ Array.prototype.concat = function(var_args) {};
  *     array. The separator is converted to a string if necessary. If omitted,
  *     the array elements are separated with a comma.
  * @return {string}
- * @this {Object}
+ * @this {{length: number}|string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/join
  */
@@ -489,7 +486,7 @@ Array.prototype.push = function(var_args) {};
  * Transposes the elements of an array in place: the first array element becomes the
  * last and the last becomes the first.
  *
- * @this {Object}
+ * @this {{length: number}}
  * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/reverse
  */
@@ -573,7 +570,7 @@ Array.prototype.toString = function() {};
  *
  * @param {...*} var_args
  * @return {number} The new length of the array
- * @this {Object}
+ * @this {{length: number}}
  * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/unshift
  */
