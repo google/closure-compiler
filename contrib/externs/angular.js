@@ -71,7 +71,7 @@ angular.bind = function(self, fn, args) {};
 /**
  * @param {Element|HTMLDocument} element
  * @param {Array.<string|Function>=} opt_modules
- * @return {angular.$injector}
+ * @return {function()}
  */
 angular.bootstrap = function(element, opt_modules) {};
 
