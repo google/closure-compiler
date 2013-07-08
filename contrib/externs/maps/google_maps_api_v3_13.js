@@ -674,6 +674,11 @@ google.maps.DistanceMatrixRequest.prototype.avoidTolls;
 google.maps.DistanceMatrixRequest.prototype.destinations;
 
 /**
+ * @type {boolean}
+ */
+google.maps.DistanceMatrixRequest.prototype.durationInTraffic;
+
+/**
  * @type {Array.<google.maps.LatLng>|Array.<string>}
  */
 google.maps.DistanceMatrixRequest.prototype.origins;
