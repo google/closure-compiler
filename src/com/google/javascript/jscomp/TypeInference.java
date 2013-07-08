@@ -728,7 +728,9 @@ class TypeInference
     // See CodingConvention#getObjectLiteralCase and goog.object.reflect.
     // Ignore these types of literals.
     ObjectType objectType = ObjectType.cast(type);
-    if (objectType == null || n.getBooleanProp(Node.REFLECTED_OBJECT)) {
+    if (objectType == null
+        || n.getBooleanProp(Node.REFLECTED_OBJECT)
+        || objectType.isEnumType()) {
       return scope;
     }
 
@@ -1117,7 +1119,7 @@ class TypeInference
     }
   }
 
-  private void resolvedTemplateType(
+  private static void resolvedTemplateType(
       Map<TemplateType, JSType> map, TemplateType template, JSType resolved) {
     JSType previous = map.get(template);
     if (!resolved.isUnknownType()) {
@@ -1266,7 +1268,7 @@ class TypeInference
    * If we give the anonymous object an inferred property of (number|undefined),
    * then this code will type-check appropriately.
    */
-  private void inferPropertyTypesToMatchConstraint(
+  private static void inferPropertyTypesToMatchConstraint(
       JSType type, JSType constraint) {
     if (type == null || constraint == null) {
       return;

@@ -6810,6 +6810,18 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testEnums() throws Exception {
+    testTypes(
+        "var outer = function() {" +
+        "  /** @enum {number} */" +
+        "  var Level = {" +
+        "    NONE: 0," +
+        "  };" +
+        "  /** @type {!Level} */" +
+        "  var l = Level.NONE;" +
+        "}");
+  }
+
   /**
    * Tests that the || operator is type checked correctly, that is of
    * the type of the first argument or of the second argument. See
