@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -370,6 +371,10 @@ public class DefaultPassConfig extends PassConfig {
 
     // TODO(nicksantos): The order of these passes makes no sense, and needs
     // to be re-arranged.
+
+    if (options.instrumentForCoverage) {
+      passes.add(instrumentForCodeCoverage);
+    }
 
     if (options.runtimeTypeCheck) {
       passes.add(runtimeTypeCheck);
@@ -2282,6 +2287,16 @@ public class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new InstrumentMemoryAllocPass(compiler);
+        }
+      };
+
+  final PassFactory instrumentForCodeCoverage =
+      new PassFactory("instrumentForCodeCoverage", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          // TODO(johnlenz): make global instrumentation an option
+          return new CoverageInstrumentationPass(
+              compiler, CoverageReach.CONDITIONAL);
         }
       };
 

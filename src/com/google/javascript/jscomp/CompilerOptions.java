@@ -876,6 +876,11 @@ public class CompilerOptions implements Serializable, Cloneable {
   transient ErrorHandler errorHandler;
 
   /**
+   * Instrument code for the purpose of collecting coverage data.
+   */
+  public boolean instrumentForCoverage;
+
+  /**
    * Initializes compiler options. All options are disabled by default.
    *
    * Command-line frontends to the compiler should set these properties
@@ -1008,8 +1013,9 @@ public class CompilerOptions implements Serializable, Cloneable {
     propertyInvalidationErrors = Maps.newHashMap();
 
     // Instrumentation
-    instrumentationTemplate = null;
-    instrumentMemoryAllocations = false;
+    instrumentationTemplate = null;  // instrument functions
+    instrumentMemoryAllocations = false; // instrument allocations
+    instrumentForCoverage = false;  // instrument lines
 
     // Output
     printInputDelimiter = false;
@@ -2154,6 +2160,13 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.instrumentMemoryAllocations = instrumentMemoryAllocations;
   }
 
+  /**
+   * Set whether or not code should be modified to provide coverage
+   * information.
+   */
+  public void setInstrumentForCoverage(boolean instrumentForCoverage) {
+    this.instrumentForCoverage = instrumentForCoverage;
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // Enums
