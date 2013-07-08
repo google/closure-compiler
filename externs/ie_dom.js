@@ -1095,6 +1095,7 @@ Element.prototype.onmouseleave;
 Element.prototype.onselectstart;
 
 /**
+ * @type {string}
  * @see http://msdn.microsoft.com/en-us/library/aa752326(VS.85).aspx
  */
 Element.prototype.outerHTML;
