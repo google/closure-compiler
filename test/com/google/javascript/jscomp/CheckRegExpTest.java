@@ -40,7 +40,7 @@ public class CheckRegExpTest extends CompilerTestCase {
   }
 
   public void testRegExp() {
-    // Creating regexp's is ok
+    // Creating RegExp's is OK.
     testReference("RegExp();", false);
     testReference("var x = RegExp();", false);
     testReference("new RegExp();", false);
@@ -49,25 +49,46 @@ public class CheckRegExpTest extends CompilerTestCase {
     // Checking for RegExp instances is OK, as well.
     testReference("x instanceof RegExp;", false);
 
-    // Any other reference isn't
-    testReference("RegExp.test();", true);
-    testReference("var x = RegExp.test();", true);
-    testReference("RegExp.exec();", true);
-    testReference("RegExp.$1;", true);
-    testReference("RegExp.foobar;", true);
-    testReference("delete RegExp;", true);
+    // Comparing for equality with RegExp is OK.
+    testReference("x === RegExp;", false);
+    testReference("x !== RegExp;", false);
+    testReference("switch (x) { case RegExp: }", false);
+    testReference("x == RegExp;", false);
+    testReference("x != RegExp;", false);
 
-    // Aliases aren't allowed
+    // Access to non-magical properties is OK.
+    testReference("RegExp.test();", false);
+    testReference("var x = RegExp.test();", false);
+    testReference("RegExp.exec();", false);
+    testReference("RegExp.foobar;", false);
+
+    // Magical properties aren't allowed.
+    testReference("RegExp.$1;", true);
+    testReference("RegExp.$_;", true);
+    testReference("RegExp.$input;", true);
+    testReference("RegExp.rightContext;", true);
+    testReference("RegExp.multiline;", true);
+
+    // Any other reference isn't allowed.
+    testReference("delete RegExp;", true);
+    testReference("RegExp;", true);
+    testReference("if (RegExp);", true);
+    testReference("if (!RegExp);", true);
+
+    // Aliases aren't allowed.
     testReference("var x = RegExp;", true);
     testReference("f(RegExp);", true);
     testReference("new f(RegExp);", true);
     testReference("var x = RegExp; x.test()", true);
 
-    // No RegExp reference is ok
+    // No RegExp reference is OK.
     testReference("var x;", false);
 
-    // Local RegExp is ok
+    // Local RegExp is OK.
     testReference("function f() {var RegExp; RegExp.test();}", false);
+
+    // Property named 'RegExp' is OK.
+    testReference("var x = {RegExp: {}}; x.RegExp.$1;", false);
   }
 
   public void testInvalidRange() {

@@ -15,10 +15,13 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.regex.RegExpTree;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
+import java.util.Set;
 
 /**
  * Look for references to the global RegExp object that would cause
@@ -36,6 +39,15 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
   static final DiagnosticType MALFORMED_REGEXP = DiagnosticType.warning(
         "JSC_MALFORMED_REGEXP",
         "Malformed Regular Expression: {0}");
+
+  private static final Set<String> REGEXP_PROPERTY_BLACKLIST = ImmutableSet.of(
+      "$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9",
+      "$_", "$input",
+      // The following would also be blacklisted, but they aren't valid
+      // identifiers, so can't be accessed with the '.' operator anyway.
+      // "$*", "$&", "$+", "$`", "$'",
+      "input", "lastMatch", "lastParen", "leftContext", "rightContext",
+      "global", "ignoreCase", "lastIndex", "multiline", "source");
 
   private final AbstractCompiler compiler;
   private boolean globalRegExpPropertiesUsed = false;
@@ -61,8 +73,14 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
         int parentType = parent.getType();
         boolean first = (n == parent.getFirstChild());
         if (!((parentType == Token.NEW && first)
-               || (parentType == Token.CALL && first)
-               || (parentType == Token.INSTANCEOF && !first))) {
+            || (parentType == Token.CALL && first)
+            || (parentType == Token.INSTANCEOF && !first)
+            || parentType == Token.EQ || parentType == Token.NE
+            || parentType == Token.SHEQ || parentType == Token.SHNE
+            || parentType == Token.CASE
+            || (parentType == Token.GETPROP && first
+            && !REGEXP_PROPERTY_BLACKLIST.contains(
+            parent.getLastChild().getString())))) {
           t.report(n, REGEXP_REFERENCE);
           globalRegExpPropertiesUsed = true;
         }
