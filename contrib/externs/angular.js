@@ -71,7 +71,7 @@ angular.bind = function(self, fn, args) {};
 /**
  * @param {Element|HTMLDocument} element
  * @param {Array.<string|Function>=} opt_modules
- * @return {function()}
+ * @return {angular.$injector}
  */
 angular.bootstrap = function(element, opt_modules) {};
 
@@ -1006,10 +1006,10 @@ angular.$http.Response;
 /**
  * @typedef {{
  *   annotate: function((Function|Array.<string|Function>)):Array.<string>,
- *   get: function(string):*,
+ *   get: function(string):(?),
  *   instantiate: function(Function, Object=):Object,
  *   invoke: function(
- *       (Function|Array.<string|Function>), Object=, Object=):*
+ *       (Function|Array.<string|Function>), Object=, Object=):(?)
  *   }}
  */
 angular.$injector;
@@ -1022,7 +1022,7 @@ angular.$injector.annotate = function(fn) {};
 
 /**
  * @param {string} name
- * @return {*}
+ * @return {?}
  */
 angular.$injector.get = function(name) {};
 
@@ -1037,7 +1037,7 @@ angular.$injector.instantiate = function(type, opt_locals) {};
  * @param {(Function|Array.<string|Function>)} fn
  * @param {Object=} opt_self
  * @param {Object=} opt_locals
- * @return {*}
+ * @return {?}
  */
 angular.$injector.invoke = function(fn, opt_self, opt_locals) {};
 
