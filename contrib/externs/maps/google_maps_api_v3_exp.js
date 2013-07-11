@@ -1101,6 +1101,36 @@ google.maps.GeocoderAddressComponent.prototype.short_name;
 google.maps.GeocoderAddressComponent.prototype.types;
 
 /**
+ * @interface
+ */
+google.maps.GeocoderComponentRestrictions = function() {};
+
+/**
+ * @type {string}
+ */
+google.maps.GeocoderComponentRestrictions.prototype.administrativeArea;
+
+/**
+ * @type {string}
+ */
+google.maps.GeocoderComponentRestrictions.prototype.country;
+
+/**
+ * @type {string}
+ */
+google.maps.GeocoderComponentRestrictions.prototype.locality;
+
+/**
+ * @type {string}
+ */
+google.maps.GeocoderComponentRestrictions.prototype.postalCode;
+
+/**
+ * @type {string}
+ */
+google.maps.GeocoderComponentRestrictions.prototype.route;
+
+/**
  * @constructor
  */
 google.maps.GeocoderGeometry = function() {};
@@ -1179,6 +1209,11 @@ google.maps.GeocoderResult.prototype.formatted_address;
  * @type {google.maps.GeocoderGeometry}
  */
 google.maps.GeocoderResult.prototype.geometry;
+
+/**
+ * @type {boolean}
+ */
+google.maps.GeocoderResult.prototype.partial_match;
 
 /**
  * @type {Array.<string>}
@@ -1596,6 +1631,11 @@ google.maps.KmlLayerMetadata.prototype.author;
  * @type {string}
  */
 google.maps.KmlLayerMetadata.prototype.description;
+
+/**
+ * @type {boolean}
+ */
+google.maps.KmlLayerMetadata.prototype.hasScreenOverlays;
 
 /**
  * @type {string}
