@@ -74,6 +74,7 @@ import com.google.javascript.rhino.head.ast.WithStatement;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * IRFactory transforms the new AST to the old AST.
@@ -248,9 +249,8 @@ class IRFactory {
    * Check to see if the given block comment looks like it should be JSDoc.
    */
   private void handleBlockComment(Comment comment) {
-    String value = comment.getValue();
-    if (value.indexOf("/* @") != -1 ||
-        value.indexOf("\n * @") != -1) {
+    Pattern p = Pattern.compile("(/|(\n[ \t]*))\\*[ \t]*@[a-zA-Z]");
+    if (p.matcher(comment.getValue()).find()) {
       errorReporter.warning(
           SUSPICIOUS_COMMENT_WARNING,
           sourceName,

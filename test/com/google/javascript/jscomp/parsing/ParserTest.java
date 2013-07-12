@@ -691,6 +691,33 @@ public class ParserTest extends BaseJSTypeTestCase {
     parse("/* \n * @type {number} */ var x = 3;", SUSPICIOUS_COMMENT_WARNING);
   }
 
+  public void testSuspiciousBlockCommentWarning3() {
+    parse("/* \n *@type {number} */ var x = 3;", SUSPICIOUS_COMMENT_WARNING);
+  }
+
+  public void testSuspiciousBlockCommentWarning4() {
+    parse(
+        "  /*\n" +
+        "   * @type {number}\n" +
+        "   */\n" +
+        "  var x = 3;",
+        SUSPICIOUS_COMMENT_WARNING);
+  }
+
+  public void testSuspiciousBlockCommentWarning5() {
+    parse(
+        "  /*\n" +
+        "   * some random text here\n" +
+        "   * @type {number}\n" +
+        "   */\n" +
+        "  var x = 3;",
+        SUSPICIOUS_COMMENT_WARNING);
+  }
+
+  public void testSuspiciousBlockCommentWarning6() {
+    parse("/* @type{number} */ var x = 3;", SUSPICIOUS_COMMENT_WARNING);
+  }
+
   public void testCatchClauseForbidden() {
     parseError("try { } catch (e if true) {}",
         "Catch clauses are not supported");
