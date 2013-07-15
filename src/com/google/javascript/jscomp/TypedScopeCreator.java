@@ -354,7 +354,7 @@ final class TypedScopeCreator implements ScopeCreator {
     declareNativeType(scope, name, typeRegistry.getNativeType(tId));
   }
 
-  private void declareNativeType(Scope scope, String name, JSType t) {
+  private static void declareNativeType(Scope scope, String name, JSType t) {
     scope.declare(name, null, t, null, false);
   }
 
@@ -1665,9 +1665,15 @@ final class TypedScopeCreator implements ScopeCreator {
         return true;
       }
 
-      // Prototype sets are always declared.
+      // Prototypes of constructors and interfaces are always declared.
       if (qName != null && qName.endsWith(".prototype")) {
-        return false;
+        String className = qName.substring(0, qName.lastIndexOf(".prototype"));
+        Var slot = scope.getSlot(className);
+        JSType classType = slot == null ? null : slot.getType();
+        if (classType != null
+            && (classType.isConstructor() || classType.isInterface())) {
+          return false;
+        }
       }
 
       boolean inferred = true;
