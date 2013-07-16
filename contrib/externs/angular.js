@@ -964,7 +964,7 @@ angular.HttpCallback;
  * @typedef {{
  *   then: function(
  *       ?function(!angular.$http.Response),
- *       function(!angular.$http.Response)=): angular.$http.HttpPromise,
+ *       ?function(!angular.$http.Response)=): angular.$http.HttpPromise,
  *   success: function(angular.HttpCallback): angular.$http.HttpPromise,
  *   error: function(angular.HttpCallback): angular.$http.HttpPromise
  * }}
@@ -973,7 +973,7 @@ angular.$http.HttpPromise;
 
 /**
  * @param {?function(!angular.$http.Response)} successCallback
- * @param {function(!angular.$http.Response)=} opt_errorCallback
+ * @param {?function(!angular.$http.Response)=} opt_errorCallback
  * @return {angular.$http.HttpPromise}
  */
 angular.$http.HttpPromise.then = function(
@@ -1444,7 +1444,7 @@ angular.$q.Promise;
 
 /**
  * @param {?function(?)} successCallback
- * @param {function(?)=} opt_errorCallback
+ * @param {?function(?)=} opt_errorCallback
  * @return {angular.$q.Promise}
  */
 angular.$q.Promise.then = function(successCallback, opt_errorCallback) {};
