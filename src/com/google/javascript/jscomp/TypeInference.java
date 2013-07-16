@@ -725,7 +725,7 @@ class TypeInference
     }
 
     // Object literals can be reflected on other types.
-    // See CodingConvention#getObjectLiteralCase and goog.object.reflect.
+    // See CodingConvention#getObjectLiteralCast and goog.reflect.object
     // Ignore these types of literals.
     ObjectType objectType = ObjectType.cast(type);
     if (objectType == null
