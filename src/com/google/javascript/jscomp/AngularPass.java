@@ -220,14 +220,14 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
         target = n;
         break;
     }
-    // checks that the declaration took place in a block or in a global scope.
-    if (!target.getParent().isScript() && !target.getParent().isBlock()) {
-      compiler.report(t.makeError(n, INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR));
-      return;
-    }
     // checks that it is a function declaration.
     if (fn == null || !fn.isFunction()) {
       compiler.report(t.makeError(n, INJECT_NON_FUNCTION_ERROR));
+      return;
+    }
+    // checks that the declaration took place in a block or in a global scope.
+    if (!target.getParent().isScript() && !target.getParent().isBlock()) {
+      compiler.report(t.makeError(n, INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR));
       return;
     }
     // checks that name is present, which must always be the case unless the
