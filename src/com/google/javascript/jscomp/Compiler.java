@@ -1460,7 +1460,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
-   * Hoists inputs with the @nocompiler annotation out of the inputs.
+   * Hoists inputs with the @nocompile annotation out of the inputs.
    */
   private void hoistNoCompileFiles() {
     boolean staleInputs = false;
