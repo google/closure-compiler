@@ -54,8 +54,8 @@ public class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   public void testSimple3() {
     // A property defined on an object other than "this" can not be removed.
     testSame("y.a = 2");
-    // but doesn't prevent the removal of the definition on 'this'.
-    test("y.a = 2; this.a = 2", "y.a = 2; 2");
+    // and prevents the removal of the definition on 'this'.
+    testSame("y.a = 2; this.a = 2");
     // Some use of the property "a" prevents the removal.
     testSame("y.a = 2; this.a = 1; alert(x.a)");
   }
@@ -146,15 +146,10 @@ public class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   public void testIssue730() {
     // Partial removal of properties can causes problems if the object is
     // sealed.
-    // TODO(johnlenz): should we not allow partial removals?
-    test(
+    testSame(
         "function A() {this.foo = 0;}\n" +
         "function B() {this.a = new A();}\n" +
         "B.prototype.dostuff = function() {this.a.foo++;alert('hi');}\n" +
-        "new B().dostuff();\n",
-        "function A(){0}" +
-        "function B(){this.a=new A}" +
-        "B.prototype.dostuff=function(){this.a.foo++;alert(\"hi\")};" +
-        "new B().dostuff();");
+        "new B().dostuff();\n");
   }
 }

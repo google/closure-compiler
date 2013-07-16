@@ -1891,10 +1891,10 @@ public class IntegrationTest extends IntegrationTestCase {
 
     options.removeUnusedClassProperties = true;
 
-    // This is still a problem when removeUnusedClassProperties are enabled.
+    // This is still not a problem when removeUnusedClassProperties is enabled.
     test(options,
         code,
-        "function a(){Object.seal(this)}" +
+        "function a(){this.b=0;Object.seal(this)}" +
         "(new function(){this.a=new a}).a.b++;" +
         "alert(\"hi\")");
   }
