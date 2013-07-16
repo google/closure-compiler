@@ -1813,6 +1813,51 @@ chrome.history.onVisited;
 
 /**
  * @const
+ * TODO(mek): remove the dev URL once M29 is released to stable
+ * @see https://developer.chrome.com/apps/dev/identity.html
+ * @see https://developer.chrome.com/apps/identity.html
+ */
+chrome.identity = {};
+
+
+/**
+ * @param {(chrome.identity.TokenDetails|function(string=): void)}
+ *     detailsOrCallback Token options or a callback function if no options are
+ *     specified.
+ * @param {function(string=): void=} opt_callback A callback function if options
+ *     are specified.
+ */
+chrome.identity.getAuthToken = function(detailsOrCallback, opt_callback) {};
+
+
+/** @typedef {{interactive: (boolean|undefined)}} */
+chrome.identity.TokenDetails;
+
+
+/**
+ * @param {chrome.identity.InvalidTokenDetails} details
+ * @param {function(): void} callback
+ */
+chrome.identity.removeCachedAuthToken = function(details, callback) {};
+
+
+/** @typedef {{token: string}} */
+chrome.identity.InvalidTokenDetails;
+
+
+/**
+ * @param {chrome.identity.WebAuthFlowDetails} details
+ * @param {function(string=): void} callback
+ */
+chrome.identity.launchWebAuthFlow = function(details, callback) {};
+
+
+/** @typedef {{url: string, interactive: (boolean|undefined)}} */
+chrome.identity.WebAuthFlowDetails;
+
+
+/**
+ * @const
  * @see http://code.google.com/chrome/extensions/input.ime.html
  */
 chrome.input = {};
