@@ -1152,28 +1152,31 @@ jQueryObject.prototype.size = function() {};
 jQueryObject.prototype.slice = function(start, end) {};
 
 /**
- * @param {(string|number)=} duration
- * @param {(function()|string)=} arg2
- * @param {function()=} callback
+ * @param {(Object.<string,*>|string|number)=} optionsOrDuration
+ * @param {(function()|string)=} completeOrEasing
+ * @param {function()=} complete
  * @return {jQueryObject}
  */
-jQueryObject.prototype.slideDown = function(duration, arg2, callback) {};
+jQueryObject.prototype.slideDown =
+    function(optionsOrDuration, completeOrEasing, complete) {};
 
 /**
- * @param {(string|number)=} duration
- * @param {(function()|string)=} arg2
- * @param {function()=} callback
+ * @param {(Object.<string,*>|string|number)=} optionsOrDuration
+ * @param {(function()|string)=} completeOrEasing
+ * @param {function()=} complete
  * @return {jQueryObject}
  */
-jQueryObject.prototype.slideToggle = function(duration, arg2, callback) {};
+jQueryObject.prototype.slideToggle =
+    function(optionsOrDuration, completeOrEasing, complete) {};
 
 /**
- * @param {(string|number)=} duration
- * @param {(function()|string)=} arg2
- * @param {function()=} callback
+ * @param {(Object.<string,*>|string|number)=} optionsOrDuration
+ * @param {(function()|string)=} completeOrEasing
+ * @param {function()=} complete
  * @return {jQueryObject}
  */
-jQueryObject.prototype.slideUp = function(duration, arg2, callback) {};
+jQueryObject.prototype.slideUp =
+    function(optionsOrDuration, completeOrEasing, complete) {};
 
 /**
  * @param {boolean=} clearQueue

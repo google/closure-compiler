@@ -640,25 +640,25 @@ jQueryObject.prototype.hide = function(opt_speed, opt_fn) {};
 jQueryObject.prototype.toggle = function(opt_arg1, opt_fn2, var_args) {};
 
 /**
- * @param {(number|string)=} opt_speed
- * @param {Function=} opt_fn
+ * @param {(Object.<string,*>|number|string)=} optionsOrDuration
+ * @param {Function=} complete
  * @return {jQueryObject}
  */
-jQueryObject.prototype.slideDown = function(opt_speed, opt_fn) {};
+jQueryObject.prototype.slideDown = function(optionsOrDuration, complete) {};
 
 /**
- * @param {(number|string)=} opt_speed
- * @param {Function=} opt_fn
+ * @param {(Object.<string,*>|number|string)=} optionsOrDuration
+ * @param {Function=} complete
  * @return {jQueryObject}
  */
-jQueryObject.prototype.slideUp = function(opt_speed, opt_fn) {};
+jQueryObject.prototype.slideUp = function(optionsOrDuration, complete) {};
 
 /**
- * @param {(number|string)=} opt_speed
- * @param {Function=} opt_fn
+ * @param {(Object.<string,*>|number|string)=} optionsOrDuration
+ * @param {Function=} complete
  * @return {jQueryObject}
  */
-jQueryObject.prototype.slideToggle = function(opt_speed, opt_fn) {};
+jQueryObject.prototype.slideToggle = function(optionsOrDuration, complete) {};
 
 /**
  * @param {(number|string)=} opt_speed
