@@ -1438,7 +1438,7 @@ angular.$q.Deferred.reject = function(opt_reason) {};
 angular.$q.Deferred.promise;
 
 /**
- * @typedef {{then: function(?function(?), function(?)=): angular.$q.Promise}}
+ * @typedef {{then: function(?function(?), ?function(?)=): angular.$q.Promise}}
  */
 angular.$q.Promise;
 
