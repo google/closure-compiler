@@ -718,6 +718,16 @@ public class ParserTest extends BaseJSTypeTestCase {
     parse("/* @type{number} */ var x = 3;", SUSPICIOUS_COMMENT_WARNING);
   }
 
+  public void testSuspiciousBlockCommentWarning7() {
+    // jsdoc tags contain letters only, no underscores etc.
+    parse("/* @cc_on */ var x = 3;");
+  }
+
+  public void testSuspiciousBlockCommentWarning8() {
+    // a jsdoc tag can't be immediately followed by a paren
+    parse("/* @TODO(username) */ var x = 3;");
+  }
+
   public void testCatchClauseForbidden() {
     parseError("try { } catch (e if true) {}",
         "Catch clauses are not supported");
