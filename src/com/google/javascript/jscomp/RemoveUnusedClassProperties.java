@@ -90,12 +90,21 @@ class RemoveUnusedClassProperties
        case Token.GETPROP: {
          String propName = n.getLastChild().getString();
          if (inExterns || isPinningPropertyUse(n)
-             || !n.getFirstChild().isThis()) {
+             || !isKnownClassProperty(n)) {
            used.add(propName);
          } else {
            // This is a definition of a property but it is only removable
            // if it is defined on "this".
            candidates.add(n);
+         }
+         break;
+       }
+
+       case Token.OBJECTLIT: {
+         // Assume any object literal definition might be a reflection on the
+         // class property.
+         for (Node c : n.children()) {
+           used.add(c.getString());
          }
          break;
        }
@@ -113,6 +122,14 @@ class RemoveUnusedClassProperties
          }
          break;
      }
+  }
+
+  private boolean isKnownClassProperty(Node n) {
+    Preconditions.checkState(n.isGetProp());
+    Node target = n.getFirstChild();
+    return target.isThis()
+        || (target.isGetProp()
+            && target.getLastChild().getString().equals("prototype"));
   }
 
   /**
