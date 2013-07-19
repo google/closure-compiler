@@ -2723,6 +2723,16 @@ Document.prototype.webkitCurrentFullScreenElement;
 /** @type {boolean} */
 Document.prototype.webkitFullScreenKeyboardInputAllowed;
 
+// IE 11 implementation.
+// http://msdn.microsoft.com/en-us/library/ie/dn265028(v=vs.85).aspx
+Element.prototype.msRequestFullscreen = function() {};
+
+/** @type {boolean} */
+Document.prototype.msFullscreenEnabled;
+
+/** @type {Element} */
+Document.prototype.msFullscreenElement;
+
 /** @type {number} */
 Element.ALLOW_KEYBOARD_INPUT = 1;
 
