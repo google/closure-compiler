@@ -26,7 +26,7 @@
 
 /**
  * Namespace associated with Google APIs.
- * @type {Object}
+ * @suppress {duplicate}
  */
 var gapi = {};
 
