@@ -76,12 +76,12 @@ public class DiagnosticGroups {
   // If a group is suppressible on a per-file basis, it should be added
   // to parser/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
-      "accessControls, ambiguousFunctionDecl, checkEventfulObjectDisposal, checkRegExp, " +
-      "checkStructDictInheritance, checkTypes, checkVars, const, " +
-      "constantProperty, deprecated, duplicateMessage, es3, " +
+      "accessControls, ambiguousFunctionDecl, checkEventfulObjectDisposal, " +
+      "checkRegExp, checkStructDictInheritance, checkTypes, checkVars, " +
+      "const, constantProperty, deprecated, duplicateMessage, es3, " +
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
       "internetExplorerChecks, invalidCasts, misplacedTypeAnnotation, " +
-      "missingProperties, missingReturn," +
+      "missingProperties, missingProvide, missingRequire, missingReturn," +
       "nonStandardJsDocs, reportUnknownTypes, suspiciousCode, " +
       "strictModuleDepCheck, typeInvalidation, " +
       "undefinedNames, undefinedVars, unknownDefines, uselessCode, " +
@@ -249,9 +249,19 @@ public class DiagnosticGroups {
           StrictModeCheck.DUPLICATE_OBJECT_KEY,
           StrictModeCheck.BAD_FUNCTION_DECLARATION);
 
+  // TODO(johnlenz): Remove this in favor or "missingProvide" which matches
+  // the existing and more popular linter suppression
   public static final DiagnosticGroup CHECK_PROVIDES =
       DiagnosticGroups.registerGroup("checkProvides",
           CheckProvides.MISSING_PROVIDE_WARNING);
+
+  public static final DiagnosticGroup MISSING_PROVIDE =
+      DiagnosticGroups.registerGroup("missingProvide",
+          CheckProvides.MISSING_PROVIDE_WARNING);
+
+  public static final DiagnosticGroup MISSING_REQUIRE =
+      DiagnosticGroups.registerGroup("missingRequire",
+          CheckRequiresForConstructors.MISSING_REQUIRE_WARNING);
 
   public static final DiagnosticGroup DUPLICATE_MESSAGE =
       DiagnosticGroups.registerGroup("duplicateMessage",
