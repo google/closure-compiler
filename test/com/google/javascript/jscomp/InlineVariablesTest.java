@@ -1062,6 +1062,6 @@ public class InlineVariablesTest extends CompilerTestCase {
     testSame(
         "function F() { this.a = 0; }" +
         "F.prototype.inc = function() { this.a++; return 10; };" +
-        "F.prototype.bar = function() { var val = inc(); this.a += val; };");
+        "F.prototype.bar = function() { var x = this.inc(); this.a += x; };");
   }
 }

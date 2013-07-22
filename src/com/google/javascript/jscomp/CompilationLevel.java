@@ -150,6 +150,7 @@ public enum CompilationLevel {
     options.shadowVariables = true;
     options.removeUnusedPrototypeProperties = true;
     options.removeUnusedPrototypePropertiesInExterns = true;
+    options.removeUnusedClassProperties = true;
     options.collapseAnonymousFunctions = true;
     options.collapseProperties = true;
     options.checkGlobalThisLevel = CheckLevel.WARNING;
@@ -188,10 +189,6 @@ public enum CompilationLevel {
         options.disambiguateProperties = true;
         options.ambiguateProperties = true;
         options.inlineProperties = true;
-        // TODO(johnlenz) :removeUnusedClassProperties isn't strictly a
-        // type based pass, but add it here for now because I may have to
-        // make it into one.
-        options.removeUnusedClassProperties = true;
         break;
       case SIMPLE_OPTIMIZATIONS:
         // TODO(johnlenz): enable peephole type based optimization.

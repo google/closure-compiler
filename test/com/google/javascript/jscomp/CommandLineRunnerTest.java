@@ -213,18 +213,26 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testInlineVariables() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    // Verify local var "val" in method "bar" is not inlined over the "inc"
+    // method call (which has side-effects) but "c" is inlined (which can't be
+    // modified by the call).
     test(
         "/** @constructor */ function F() { this.a = 0; }" +
         "F.prototype.inc = function() { this.a++; return 10; };" +
         "F.prototype.bar = function() { " +
-        "  var c = 3; var val = inc(); this.a += val + c;" +
+        "  var c = 3; var val = this.inc(); this.a += val + c;" +
         "};" +
         "window['f'] = new F();" +
-        "window['f']['bar'] = window['f'].bar;",
+        "window['f']['inc'] = window['f'].inc;" +
+        "window['f']['bar'] = window['f'].bar;" +
+        "use(window['f'].a)",
         "function a(){ this.a = 0; }" +
-        "a.prototype.b = function(){ var b=inc(); this.a += b + 3; };" +
+        "a.prototype.b = function(){ this.a++; return 10; };" +
+        "a.prototype.c = function(){ var b=this.b(); this.a += b + 3; };" +
         "window.f = new a;" +
-        "window.f.bar = window.f.b");
+        "window.f.inc = window.f.b;" +
+        "window.f.bar = window.f.c;" +
+        "use(window.f.a);");
   }
 
   public void testTypedAdvanced() {
