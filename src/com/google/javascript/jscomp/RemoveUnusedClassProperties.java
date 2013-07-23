@@ -89,7 +89,9 @@ class RemoveUnusedClassProperties
      switch (n.getType()) {
        case Token.GETPROP: {
          String propName = n.getLastChild().getString();
-         if (inExterns || isPinningPropertyUse(n)
+         if (inExterns
+             || compiler.getCodingConvention().isExported(propName)
+             || isPinningPropertyUse(n)
              || !isKnownClassProperty(n)) {
            used.add(propName);
          } else {
@@ -127,7 +129,9 @@ class RemoveUnusedClassProperties
   private boolean isKnownClassProperty(Node n) {
     Preconditions.checkState(n.isGetProp());
     Node target = n.getFirstChild();
-    return target.isThis();
+    return target.isThis()
+        || (target.isGetProp()
+            && target.getLastChild().getString().equals("prototype"));
   }
 
   /**
