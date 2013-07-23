@@ -415,6 +415,7 @@ public class IntegrationTest extends IntegrationTestCase {
 
   public void testCheckReferencesOn() {
     CompilerOptions options = createCompilerOptions();
+    options.checkSymbols = true;
     options.aggressiveVarCheck = CheckLevel.ERROR;
     test(options, "x = 3; var x = 5;",
          VariableReferenceCheck.UNDECLARED_REFERENCE);
