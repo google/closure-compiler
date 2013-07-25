@@ -66,6 +66,10 @@ public final class JSTypeExpression implements Serializable {
     this.sourceName = sourceName;
   }
 
+  public Node getRootNode() {
+    return root;
+  }
+
   /**
    * Make the given type expression into an optional type expression,
    * if possible.
