@@ -177,29 +177,28 @@ public class IntegrationTest extends IntegrationTestCase {
       + "goog.dispose = function(x) {};"
       + "goog.disposeAll = function(var_args) {};"
       + "/** @return {*} */ goog.asserts.assert = function(x) { return x; };"
+      + "goog.disposable = {};"
       + "/** @interface */\n"
-      + "goog.Disposable = function() {};"
-      + "goog.Disposable.prototype.dispose = function() {};"
+      + "goog.disposable.IDisposable = function() {};"
+      + "goog.disposable.IDisposable.prototype.dispose;"
+      + "/** @implements {goog.disposable.IDisposable}\n * @constructor */\n"
+      + "goog.Disposable = goog.abstractMethod;"
+      + "/** @override */"
+      + "goog.Disposable.prototype.dispose = goog.abstractMethod;"
       + "/** @param {goog.Disposable} fn */"
-      + "goog.Disposable.prototype.registerDisposable = function(fn) {};"
-      + "/** @implements {goog.Disposable}\n * @constructor */"
-      + "goog.SubDisposable = function() {};"
-      + "/** @inheritDoc */ "
-      + "goog.SubDisposable.prototype.dispose = function() {};"
-      + "/** @inheritDoc */"
-      + "goog.SubDisposable.prototype.registerDisposable = function() {};"
+      + "goog.Disposable.prototype.registerDisposable = goog.abstractMethod;"
       + "goog.events = {};"
-      + "/** @extends {goog.SubDisposable}\n *  @constructor */"
+      + "/** @extends {goog.Disposable}\n *  @constructor */"
       + "goog.events.EventHandler = function() {};"
-      + "goog.events.EventHandler.prototype.removeAll = function() {};"
-      + "/** @extends {goog.SubDisposable}\n * @constructor */"
+      + "/** @extends {goog.Disposable}\n * @constructor */"
       + "var test = function() { this.eh = new goog.events.EventHandler(); };"
       + "goog.inherits(test, goog.Disposable);"
       + "var testObj = new test();";
 
     test(options, js, CheckEventfulObjectDisposal.EVENTFUL_OBJECT_NOT_DISPOSED);
 
-    options.setWarningLevel(DiagnosticGroups.CHECK_EVENTFUL_OBJECT_DISPOSAL, CheckLevel.OFF);
+    options.setWarningLevel(DiagnosticGroups.CHECK_EVENTFUL_OBJECT_DISPOSAL,
+        CheckLevel.OFF);
     testSame(options, js);
   }
 
@@ -1768,9 +1767,8 @@ public class IntegrationTest extends IntegrationTestCase {
   public void testDuplicateVariablesInExterns() {
     CompilerOptions options = createCompilerOptions();
     options.checkSymbols = true;
-    externs = ImmutableList.of(
-        SourceFile.fromCode("externs",
-            "var externs = {}; /** @suppress {duplicate} */ var externs = {};"));
+    externs = ImmutableList.of(SourceFile.fromCode("externs",
+        "var externs = {}; /** @suppress {duplicate} */ var externs = {};"));
     testSame(options, "");
   }
 
@@ -2232,17 +2230,20 @@ public class IntegrationTest extends IntegrationTestCase {
 
   public void testCheckProvidesWarning() {
     CompilerOptions options = createCompilerOptions();
-    options.setWarningLevel(DiagnosticGroups.CHECK_PROVIDES, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.CHECK_PROVIDES,
+        CheckLevel.WARNING);
     options.setCheckProvides(CheckLevel.WARNING);
     test(options,
         "/** @constructor */\n" +
         "function f() { var arguments; }",
-        DiagnosticType.warning("JSC_MISSING_PROVIDE", "missing goog.provide(''{0}'')"));
+        DiagnosticType
+        .warning("JSC_MISSING_PROVIDE", "missing goog.provide(''{0}'')"));
   }
 
   public void testSuppressCheckProvidesWarning() {
     CompilerOptions options = createCompilerOptions();
-    options.setWarningLevel(DiagnosticGroups.CHECK_PROVIDES, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.CHECK_PROVIDES,
+        CheckLevel.WARNING);
     options.setCheckProvides(CheckLevel.WARNING);
     testSame(options,
         "/** @constructor\n" +
