@@ -143,13 +143,13 @@ public class LinkedDirectedGraph<N, E>
   }
 
   @Override
-  public List<GraphEdge<N, E>> getEdges(N n1, N n2) {
+  public List<DiGraphEdge<N, E>> getEdges(N n1, N n2) {
     // Since this is a method from a generic graph, edges from both
     // directions must be added to the returning list.
     List<DiGraphEdge<N, E>> forwardEdges = getDirectedGraphEdges(n1, n2);
     List<DiGraphEdge<N, E>> backwardEdges = getDirectedGraphEdges(n2, n1);
     int totalSize = forwardEdges.size() + backwardEdges.size();
-    List<GraphEdge<N, E>> edges = Lists.newArrayListWithCapacity(totalSize);
+    List<DiGraphEdge<N, E>> edges = Lists.newArrayListWithCapacity(totalSize);
     edges.addAll(forwardEdges);
     edges.addAll(backwardEdges);
     return edges;
@@ -309,8 +309,8 @@ public class LinkedDirectedGraph<N, E>
   }
 
   @Override
-  public List<GraphEdge<N, E>> getEdges() {
-    List<GraphEdge<N, E>> result = Lists.newArrayList();
+  public List<DiGraphEdge<N, E>> getEdges() {
+    List<DiGraphEdge<N, E>> result = Lists.newArrayList();
     for (DiGraphNode<N, E> node : nodes.values()) {
       for (DiGraphEdge<N, E> edge : node.getOutEdges()) {
         result.add(edge);
