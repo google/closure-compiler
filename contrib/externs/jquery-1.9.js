@@ -1950,6 +1950,12 @@ jQuery.support.changeBubbles;
 $.support.changeBubbles;
 
 /** @type {boolean} */
+jQuery.support.cors;
+
+/** @type {boolean} */
+$.support.cors;
+
+/** @type {boolean} */
 jQuery.support.cssFloat;
 
 /** @type {boolean} */
