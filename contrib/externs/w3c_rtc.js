@@ -58,7 +58,7 @@ SourceInfo.prototype.facing;
 function MediaStreamTrack() {}
 
 /**
- * @type {!function(!function(!Array.<!SourceInfo>))}
+ * @param {!function(!Array.<!SourceInfo>)} callback
  */
 MediaStreamTrack.getSources = function(callback) {};
 
