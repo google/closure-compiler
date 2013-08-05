@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -648,9 +649,14 @@ class GlobalNamespace
           case Token.NEG:
             break;
           case Token.CALL:
-            type = n == parent.getFirstChild()
-                   ? Ref.Type.CALL_GET
-                   : Ref.Type.ALIASING_GET;
+            if (n == parent.getFirstChild()) {
+              // It is a call target
+              type = Ref.Type.CALL_GET;
+            } else if (isClassDefiningCall(parent)) {
+              type = Ref.Type.DIRECT_GET;
+            } else {
+              type = Ref.Type.ALIASING_GET;
+            }
             break;
           case Token.NEW:
             type = n == parent.getFirstChild()
@@ -683,6 +689,12 @@ class GlobalNamespace
       }
 
       handleGet(module, scope, n, parent, name, type);
+    }
+
+    private boolean isClassDefiningCall(Node callNode) {
+      SubclassRelationship classes =
+          compiler.getCodingConvention().getClassesDefinedByCall(callNode);
+      return classes != null;
     }
 
     /**

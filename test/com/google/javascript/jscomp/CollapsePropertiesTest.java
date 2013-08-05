@@ -1651,4 +1651,42 @@ public class CollapsePropertiesTest extends CompilerTestCase {
         "}",
         null);
   }
+
+  public void testCollapsePropertiesOfClass1() {
+    test(
+        "/** @constructor */\n" +
+        "var namespace = function() {};\n" +
+        "goog.inherits(namespace, Object);\n" +
+        "\n" +
+        "namespace.includeExtraParam = true;\n" +
+        "\n" +
+        "/** @enum {number} */\n" +
+        "namespace.Param = {\n" +
+        "  param1: 1,\n" +
+        "  param2: 2\n" +
+        "};\n" +
+        "\n" +
+        "if (namespace.includeExtraParam) {\n" +
+        "  namespace.Param.optParam = 3;\n" +
+        "}\n" +
+        "\n" +
+        "function f() {\n" +
+        "  var Param = namespace.Param;\n" +
+        "  log(namespace.Param.optParam);\n" +
+        "  log(Param.optParam);\n" +
+        "}",
+        "var namespace = function() {};\n" +
+        "goog.inherits(namespace, Object);\n" +
+        "var namespace$includeExtraParam = true;\n" +
+        "var namespace$Param$param1 = 1;\n" +
+        "var namespace$Param$param2 = 2;\n" +
+        "if (namespace$includeExtraParam) {\n" +
+        "  var namespace$Param$optParam = 3;\n" +
+        "}\n" +
+        "function f() {\n" +
+        "  var Param = null;\n" +
+        "  log(namespace$Param$optParam);\n" +
+        "  log(namespace$Param$optParam);\n" +
+        "}");
+  }
 }
