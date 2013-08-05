@@ -384,8 +384,8 @@ class IRFactory {
   }
 
   /**
-   * Parameter NAMEs are special, because they can have inline type docs
-   * attached.
+   * NAMEs in parameters or variable declarations are special, because they can
+   * have inline type docs attached.
    *
    * function f(/** string &#42;/ x) {}
    * annotates 'x' as a string.
@@ -393,7 +393,7 @@ class IRFactory {
    * @see <a href="http://code.google.com/p/jsdoc-toolkit/wiki/InlineDocs">
    *   Using Inline Doc Comments</a>
    */
-  private Node transformParameter(AstNode node) {
+  private Node transformNodeWithInlineJsDoc(AstNode node) {
     Node irNode = justTransform(node);
     Comment comment = node.getJsDocNode();
     if (comment != null) {
@@ -816,7 +816,7 @@ class IRFactory {
 
       lp.setCharno(position2charno(lparenCharno));
       for (AstNode param : functionNode.getParams()) {
-        Node paramNode = transformParameter(param);
+        Node paramNode = transformNodeWithInlineJsDoc(param);
         // When in ideMode Rhino can generate a param list with only a single
         // ErrorNode. This is transformed into an EMPTY node. Drop this node in
         // ideMode to keep the AST in a valid state.
@@ -1242,7 +1242,15 @@ class IRFactory {
 
     @Override
     Node processVariableInitializer(VariableInitializer initializerNode) {
-      Node node = transform(initializerNode.getTarget());
+      Node node;
+      Comment comment = initializerNode.getTarget().getJsDocNode();
+      // TODO(user): At some point, consider allowing only inline jsdocs for
+      // variable initializers
+      if (comment != null && !comment.getValue().contains("@")) {
+        node = transformNodeWithInlineJsDoc(initializerNode.getTarget());
+      } else {
+        node = transform(initializerNode.getTarget());
+      }
       if (initializerNode.getInitializer() != null) {
         Node initalizer = transform(initializerNode.getInitializer());
         node.addChildToBack(initalizer);

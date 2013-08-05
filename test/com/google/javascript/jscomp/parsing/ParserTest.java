@@ -537,6 +537,13 @@ public class ParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. type not recognized due to syntax error");
   }
 
+  public void testInlineJSDocAttachment5() {
+    Node vardecl = parse("var /** string */ x = 'asdf';").getFirstChild();
+    JSDocInfo info = vardecl.getFirstChild().getJSDocInfo();
+    assertNotNull(info);
+    assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
   public void testIncorrectJSDocDoesNotAlterJSParsing1() throws Exception {
     assertNodeEquality(
         parse("var a = [1,2]"),
