@@ -527,6 +527,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = -1 >>> 1", "x = 2147483647"); // 0x7fffffff
     fold("x = -1 >>> 0", "x = 4294967295"); // 0xffffffff
     fold("x = -2 >>> 0", "x = 4294967294"); // 0xfffffffe
+    fold("x = 0x90000000 >>> 28", "x = 9");
 
     testSame("3000000000 << 1",
          PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
@@ -535,6 +536,8 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("1 << -1",
         PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
     testSame("3000000000 >> 1",
+        PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
+    testSame("0x90000000 >> 28",
         PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
     testSame("1 >> 32",
         PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
