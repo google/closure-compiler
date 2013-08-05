@@ -639,6 +639,7 @@ class GlobalNamespace
       if (parent != null) {
         switch (parent.getType()) {
           case Token.IF:
+          case Token.INSTANCEOF:
           case Token.TYPEOF:
           case Token.VOID:
           case Token.NOT:
@@ -702,6 +703,7 @@ class GlobalNamespace
       Node prev = parent;
       for (Node anc : parent.getAncestors()) {
         switch (anc.getType()) {
+          case Token.INSTANCEOF:
           case Token.EXPR_RESULT:
           case Token.VAR:
           case Token.IF:

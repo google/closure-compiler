@@ -1620,4 +1620,35 @@ public class CollapsePropertiesTest extends CompilerTestCase {
         "use(blob.init)",
         null);
   }
+
+  public void testLocalAliasOfEnumWithInstanceofCheck() {
+    test(
+        "/** @constructor */\n" +
+        "var Enums = function() {\n" +
+        "};\n" +
+        "\n" +
+        "/** @enum {number} */\n" +
+        "Enums.Fruit = {\n" +
+        " APPLE: 1,\n" +
+        " BANANA: 2,\n" +
+        "};\n" +
+        "\n" +
+        "function foo(f) {\n" +
+        " if (f instanceof Enums) { alert('what?'); return; }\n" +
+        "\n" +
+        " var Fruit = Enums.Fruit;\n" +
+        " if (f == Fruit.APPLE) alert('apple');\n" +
+        " if (f == Fruit.BANANA) alert('banana');\n" +
+        "}",
+        "var Enums = function() {};\n" +
+        "var Enums$Fruit$APPLE = 1;\n" +
+        "var Enums$Fruit$BANANA = 2;\n" +
+        "function foo(f) {\n" +
+        " if (f instanceof Enums) { alert('what?'); return; }\n" +
+        " var Fruit = null;\n" +
+        " if (f == Enums$Fruit$APPLE) alert('apple');\n" +
+        " if (f == Enums$Fruit$BANANA) alert('banana');\n" +
+        "}",
+        null);
+  }
 }
