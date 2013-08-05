@@ -411,21 +411,43 @@ MediaStreamConstraintsInterface_.prototype.video;
 var MediaStreamConstraints;
 
 /**
+ * @see {http://dev.w3.org/2011/webrtc/editor/getusermedia.html#
+ *     navigatorusermediaerror-and-navigatorusermediaerrorcallback}
  * @interface
  */
 function NavigatorUserMediaError() {}
 
 /**
  * @type {number}
+ * @deprecated Removed from the standard and some browsers.
  * @const
  */
 NavigatorUserMediaError.prototype.PERMISSION_DENIED;  /** 1 */
 
 /**
  * @type {number}
+ * @deprecated Removed from the standard and some browsers.
  * Read only.
  */
 NavigatorUserMediaError.prototype.code;
+
+/**
+ * @type {string}
+ * Read only.
+ */
+NavigatorUserMediaError.prototype.name;
+
+/**
+ * @type {?string}
+ * Read only.
+ */
+NavigatorUserMediaError.prototype.message;
+
+/**
+ * @type {?string}
+ * Read only.
+ */
+NavigatorUserMediaError.prototype.constraintName;
 
 /**
  * @param {MediaStreamConstraints} constraints A MediaStreamConstraints object.
