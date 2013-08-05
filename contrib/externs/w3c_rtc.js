@@ -36,9 +36,31 @@ var MediaStreamTrackState;
 
 /**
  * @interface
+ */
+function SourceInfo() {}
+
+/** @const {string} */
+SourceInfo.prototype.kind;
+
+/** @const {string} */
+SourceInfo.prototype.id;
+
+/** @const {?string} */
+SourceInfo.prototype.label;
+
+/** @const {boolean} */
+SourceInfo.prototype.facing;
+
+/**
+ * @interface
  * @see http://www.w3.org/TR/mediacapture-streams/#mediastreamtrack
  */
 function MediaStreamTrack() {}
+
+/**
+ * @type {!function(!function(!Array.<!SourceInfo>))}
+ */
+MediaStreamTrack.getSources = function(callback) {};
 
 /**
  * @type {string}
