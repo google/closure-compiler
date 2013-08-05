@@ -1524,7 +1524,10 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("rescopeGlobalSymbols", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new RescopeGlobalSymbols(compiler, options.renamePrefixNamespace);
+      return new RescopeGlobalSymbols(
+          compiler,
+          options.renamePrefixNamespace,
+          options.renamePrefixNamespaceAssumeCrossModuleNames);
     }
   };
 

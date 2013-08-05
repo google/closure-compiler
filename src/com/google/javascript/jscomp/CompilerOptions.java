@@ -485,6 +485,16 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public String renamePrefixNamespace;
 
+  /**
+   * Used by tests of the RescopeGlobalSymbols pass to avoid having declare 2
+   * modules in simple cases.
+   */
+  boolean renamePrefixNamespaceAssumeCrossModuleNames = false;
+
+  void setRenamePrefixNamespaceAssumeCrossModuleNames(boolean assume) {
+    renamePrefixNamespaceAssumeCrossModuleNames = assume;
+  }
+
   /** Aliases true, false, and null to variables with shorter names. */
   public boolean aliasKeywords;
 

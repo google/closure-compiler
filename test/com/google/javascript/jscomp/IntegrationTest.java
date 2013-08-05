@@ -33,7 +33,6 @@ public class IntegrationTest extends IntegrationTestCase {
 
   @Override public void setUp() {
     super.setUp();
-    RescopeGlobalSymbols.assumeCrossModuleNames = true;
   }
 
   private static final String CLOSURE_BOILERPLATE =
@@ -2329,9 +2328,8 @@ public class IntegrationTest extends IntegrationTestCase {
         options);
     options.renamePrefixNamespace = "a";
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
+    options.setRenamePrefixNamespaceAssumeCrossModuleNames(false);
     WarningLevel.DEFAULT.setOptionsForWarningLevel(options);
-
-    RescopeGlobalSymbols.assumeCrossModuleNames = false;
 
     test(options, code,
         "var b = {}; try { (0,window.use)(b.FOO); } catch (c) {}");
@@ -2741,6 +2739,7 @@ public class IntegrationTest extends IntegrationTestCase {
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setCodingConvention(new GoogleCodingConvention());
+    options.setRenamePrefixNamespaceAssumeCrossModuleNames(true);
     return options;
   }
 }
