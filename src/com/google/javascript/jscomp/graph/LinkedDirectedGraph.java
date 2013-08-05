@@ -282,8 +282,8 @@ public class LinkedDirectedGraph<N, E>
   }
 
   @Override
-  public Collection<GraphNode<N, E>> getNodes() {
-    return Collections.<GraphNode<N, E>>unmodifiableCollection(nodes.values());
+  public Collection<DiGraphNode<N, E>> getNodes() {
+    return Collections.<DiGraphNode<N, E>>unmodifiableCollection(nodes.values());
   }
 
   @Override

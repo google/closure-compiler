@@ -31,7 +31,7 @@ import java.util.Collection;
  */
 public interface AdjacencyGraph<N, E> {
   /** Gets an immutable list of all nodes. */
-  Collection<GraphNode<N, E>> getNodes();
+  Collection<? extends GraphNode<N, E>> getNodes();
 
   /**
    * Gets a node from the graph given a value. Values equality are compared

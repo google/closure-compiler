@@ -134,7 +134,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
 
   /** Gets an immutable list of all nodes. */
   @Override
-  public abstract Collection<GraphNode<N, E>> getNodes();
+  public abstract Collection<? extends GraphNode<N, E>> getNodes();
 
   /** Gets an immutable list of all edges. */
   public abstract List<? extends GraphEdge<N, E>> getEdges();
