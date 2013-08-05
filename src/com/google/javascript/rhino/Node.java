@@ -1232,7 +1232,7 @@ public class Node implements Cloneable, Serializable {
    * The iterator does not support the optional operation
    * {@link Iterator#remove()}.</p>
    *
-   * <p>To iterate over a node's siblings, one can write</p>
+   * <p>To iterate over a node's children, one can write</p>
    * <pre>Node n = ...;
    * for (Node child : n.children()) { ...</pre>
    */
