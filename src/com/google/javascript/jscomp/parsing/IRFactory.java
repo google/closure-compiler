@@ -353,12 +353,12 @@ class IRFactory {
     }
   }
 
-  private boolean isPropAccess(AstNode node) {
+  private static boolean isPropAccess(AstNode node) {
     return node.getType() == com.google.javascript.rhino.head.Token.GETPROP
         || node.getType() == com.google.javascript.rhino.head.Token.GETELEM;
   }
 
-  private boolean isExprStmt(AstNode node) {
+  private static boolean isExprStmt(AstNode node) {
     return node.getType() == com.google.javascript.rhino.head.Token.EXPR_RESULT
         || node.getType() == com.google.javascript.rhino.head.Token.EXPR_VOID;
   }
