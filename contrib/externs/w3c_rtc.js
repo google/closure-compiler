@@ -86,35 +86,7 @@ MediaStreamTrack.prototype.label;
 MediaStreamTrack.prototype.enabled;
 
 /**
- * TODO(bemasc): Remove this attribute once browsers are updated
- * @deprecated
- * The number 0.
- * @type {number}
- * @const
- */
-MediaStreamTrack.prototype.LIVE;
-
-/**
- * TODO(bemasc): Remove this attribute once browsers are updated
- * @deprecated
- * The number 1.
- * @type {number}
- * @const
- */
-MediaStreamTrack.prototype.MUTED;
-
-/**
- * TODO(bemasc): Remove this attribute once browsers are updated
- * @deprecated
- * The number 2.
- * @type {number}
- * @const
- */
-MediaStreamTrack.prototype.ENDED;
-
-/**
- * TODO(bemasc): Remove "number" once browsers are updated.
- * @type {number|MediaStreamTrackState}
+ * @type {MediaStreamTrackState}
  * Read only.
  */
 MediaStreamTrack.prototype.readyState;
@@ -154,50 +126,6 @@ function MediaStreamTrackEvent() {}
 MediaStreamTrackEvent.prototype.track;
 
 /**
- * TODO(bemasc): Remove this type once implementations are updated to the
- * new API.
- *
- * @deprecated
- * @interface
- * @see http://www.w3.org/TR/mediacapture-streams/#mediastreamtracklist
- */
-function MediaStreamTrackList() {}
-
-/**
- * @type {number}
- */
-MediaStreamTrackList.prototype.length;
-
-/**
- * @param {number} index
- * @return {?MediaStreamTrack}
- * TODO(bemasc): Get spec clarification: can item() return null for an invalid
- * index?
- * @nosideeffects
- */
-MediaStreamTrackList.prototype.item = function(index) {};
-
-/**
- * @param {!MediaStreamTrack} track
- */
-MediaStreamTrackList.prototype.add = function(track) {};
-
-/**
- * @param {!MediaStreamTrack} track
- */
-MediaStreamTrackList.prototype.remove = function(track) {};
-
-/**
- * @type {?function(!MediaStreamTrackEvent)}
- */
-MediaStreamTrackList.prototype.onaddtrack;
-
-/**
- * @type {?function(!MediaStreamTrackEvent)}
- */
-MediaStreamTrackList.prototype.onremovetrack;
-
-/**
  * @param {!MediaStream|!Array.<!MediaStreamTrack>=} streamOrTracks
  * @constructor
  * @implements {EventTarget}
@@ -231,25 +159,9 @@ MediaStream.prototype.label;
 MediaStream.prototype.id;
 
 /**
- * TODO(bemasc): Remove this property once browsers are updated.
- * @deprecated
- * @type {MediaStreamTrackList}
- * @const
- */
-MediaStream.prototype.audioTracks;
-
-/**
  * @return {!Array.<!MediaStreamTrack>}
  */
 MediaStream.prototype.getAudioTracks = function() {};
-
-/**
- * TODO(bemasc): Remove this property once browsers are updated.
- * @deprecated
- * @type {MediaStreamTrackList}
- * @const
- */
-MediaStream.prototype.videoTracks;
 
 /**
  * @return {!Array.<!MediaStreamTrack>}
@@ -304,16 +216,6 @@ MediaStream.prototype.stop = function() {};
  *                 (!MediaStream|!Array.<!MediaStreamTrack>)=)}
  */
 var webkitMediaStream;
-
-/**
- * @constructor
- * @extends {MediaStream}
- * @private
- * @deprecated
- * TODO(bemasc): Remove LocalMediaStream once users have transitioned to
- * MediaStream.
- */
-function LocalMediaStream() {}
 
 /**
  * This interface defines the available constraint attributes.  These are the
@@ -473,10 +375,8 @@ NavigatorUserMediaError.prototype.constraintName;
 
 /**
  * @param {MediaStreamConstraints} constraints A MediaStreamConstraints object.
- * @param {function(!LocalMediaStream)} successCallback
+ * @param {function(!MediaStream)} successCallback
  *     A NavigatorUserMediaSuccessCallback function.
- *     TODO(bemasc):  Change to function(!MediaStream) when LocalMediaStream is
- *     removed.
  * @param {function(!NavigatorUserMediaError)=} errorCallback A
  *     NavigatorUserMediaErrorCallback function.
  * @see http://dev.w3.org/2011/webrtc/editor/getusermedia.html
@@ -971,13 +871,6 @@ RTCPeerConnection.prototype.remoteDescription;
 
 /**
  * @type {RTCSignalingState}
- * @deprecated
- * Read only.
- */
-RTCPeerConnection.prototype.readyState;
-
-/**
- * @type {RTCSignalingState}
  * Read only.
  */
 RTCPeerConnection.prototype.signalingState;
@@ -1006,25 +899,9 @@ RTCPeerConnection.prototype.iceGatheringState;
 RTCPeerConnection.prototype.iceConnectionState;
 
 /**
- * TODO(bemasc): Remove this attribute once browsers are updated.
- * @deprecated
- * @type {!Array.<!MediaStream>}
- * Read only.
- */
-RTCPeerConnection.prototype.localStreams;
-
-/**
  * @return {!Array.<!MediaStream>}
  */
 RTCPeerConnection.prototype.getLocalStreams = function() {};
-
-/**
- * TODO(bemasc): Remove this attribute once browsers are updated.
- * @deprecated
- * @type {!Array.<!MediaStream>}
- * Read only.
- */
-RTCPeerConnection.prototype.remoteStreams;
 
 /**
  * @return {!Array.<!MediaStream>}
@@ -1078,12 +955,7 @@ RTCPeerConnection.prototype.onicecandidate;
 /**
  * @type {?function(!Event)}
  */
-RTCPeerConnection.prototype.onopen;
-
-/**
- * @type {?function(!Event)}
- */
-RTCPeerConnection.prototype.onstatechange;
+RTCPeerConnection.prototype.onsignalingstatechange;
 
 /**
  * @type {?function(!MediaStreamEvent)}
@@ -1098,12 +970,7 @@ RTCPeerConnection.prototype.onremovestream;
 /**
  * @type {?function(!Event)}
  */
-RTCPeerConnection.prototype.ongatheringchange;
-
-/**
- * @type {?function(!Event)}
- */
-RTCPeerConnection.prototype.onicechange;
+RTCPeerConnection.prototype.oniceconnectionstatechange;
 
 /**
  * @type {?function(!RTCDataChannelEvent)}
