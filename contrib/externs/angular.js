@@ -1305,7 +1305,7 @@ angular.FormController.prototype.$valid;
 angular.$parse;
 
 /**
- * @typedef {function((!angular.Scope|!Object)):*}
+ * @typedef {function((!angular.Scope|!Object), Object=):*}
  */
 angular.$parse.Expression;
 
