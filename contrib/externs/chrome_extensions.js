@@ -130,8 +130,8 @@ var chrome = {};
 
 
 /**
- * @const
  * TODO(tbreisacher): Move all chrome.app.* externs into their own file.
+ * @const
  */
 chrome.app = {};
 
@@ -1813,8 +1813,6 @@ chrome.history.onVisited;
 
 /**
  * @const
- * TODO(mek): remove the dev URL once M29 is released to stable
- * @see https://developer.chrome.com/apps/dev/identity.html
  * @see https://developer.chrome.com/apps/identity.html
  */
 chrome.identity = {};
@@ -2016,8 +2014,19 @@ chrome.input.ime.onKeyEvent;
 chrome.input.ime.onMenuItemActivated;
 
 
-/** @const namespace */
+/**
+ * namespace
+ * @const
+ */
 chrome.mediaGalleries = {};
+
+
+/**
+ * @param {!FileSystem} mediaFileSystem The file system to get metadata for.
+ * @return {!{name: string, galleryId: string, deviceId: (string|undefined),
+ *     isRemovable: boolean, isMediaDevice: boolean}}
+ */
+chrome.mediaGalleries.getMediaFileSystemMetadata = function(mediaFileSystem) {};
 
 
 /**
