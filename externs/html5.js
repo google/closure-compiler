@@ -1165,6 +1165,27 @@ HTMLInputElement.prototype.required;
 /** @type {string} */
 HTMLInputElement.prototype.step;
 
+/** @type {Date} */
+HTMLInputElement.prototype.valueAsDate;
+
+/** @type {number} */
+HTMLInputElement.prototype.valueAsNumber;
+
+/**
+ * Changes the form control's value by the value given in the step attribute
+ * multiplied by opt_n.
+ * @param {number=} opt_n step multiplier.  Defaults to 1.
+ */
+HTMLInputElement.prototype.stepDown = function(opt_n) {};
+
+/**
+ * Changes the form control's value by the value given in the step attribute
+ * multiplied by opt_n.
+ * @param {number=} opt_n step multiplier.  Defaults to 1.
+ */
+HTMLInputElement.prototype.stepUp = function(opt_n) {};
+
+
 
 /**
  * @constructor
