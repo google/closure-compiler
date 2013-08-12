@@ -299,14 +299,8 @@ class InlineVariables implements CompilerPass {
       // reference data is out of sync. We're better off just waiting for
       // the next pass.)
       if (!maybeModifiedArguments &&
-          !staleVars.contains(v) &&
-          referenceInfo.isWellDefined() &&
-          referenceInfo.isAssignedOnceInLifetime() &&
-          // Inlining the variable based solely on well-defined and assigned
-          // once is *NOT* correct. We relax the correctness requirement if
-          // the variable is declared constant.
-          (isInlineableDeclaredConstant(v, referenceInfo) ||
-           referenceInfo.isOnlyAssignmentSameScopeAsDeclaration())) {
+          !staleVars.contains(v) && referenceInfo.isWellDefined() &&
+          referenceInfo.isAssignedOnceInLifetime()) {
         List<Reference> refs = referenceInfo.references;
         for (int i = 1 /* start from a read */; i < refs.size(); i++) {
           Node nameNode = refs.get(i).getNode();

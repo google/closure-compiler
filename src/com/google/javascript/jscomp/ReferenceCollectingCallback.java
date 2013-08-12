@@ -423,7 +423,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       if (ref == null) {
         return false;
       }
-      
+
       // Make sure this assignment is not in a loop.
       for (BasicBlock block = ref.getBasicBlock();
            block != null; block = block.getParent()) {
@@ -431,29 +431,6 @@ class ReferenceCollectingCallback implements ScopedCallback,
           break;
         } else if (block.isLoop) {
           return false;
-        }
-      }
-
-      return true;
-    }
-    
-    /**
-     * @return Whether the variable is only assigned a value once for its
-     *     lifetime.
-     */
-    boolean isOnlyAssignmentSameScopeAsDeclaration() {
-      Reference ref = getOneAndOnlyAssignment();
-      Preconditions.checkNotNull(ref);
-      
-      // Make sure the declaration is the same scope as the assignment.
-      // Otherwise, the variable can be assigned multiple times and possibly
-      // with a different variable.
-      for (BasicBlock block = ref.getBasicBlock();
-           block != null; block = block.getParent()) {
-        if (block.isFunction) {
-          if (ref.getSymbol().getScope() != ref.scope) {
-            return false;
-          }
         }
       }
 
