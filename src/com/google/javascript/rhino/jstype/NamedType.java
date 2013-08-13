@@ -311,8 +311,7 @@ class NamedType extends ProxyObjectType {
   private void handleTypeCycle(ErrorReporter t) {
     setReferencedType(
         registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
-    t.warning("Cycle detected in inheritance chain of type " + reference,
-        sourceName, lineno, charno);
+    warning(t, "Cycle detected in inheritance chain of type " + reference);
     setResolvedTypeInternal(getReferencedType());
   }
 
@@ -340,8 +339,7 @@ class NamedType extends ProxyObjectType {
           ignoreForwardReferencedTypes &&
           registry.isForwardDeclaredType(reference);
       if (!isForwardDeclared && registry.isLastGeneration()) {
-        t.warning("Bad type annotation. Unknown type " + reference,
-            sourceName, lineno, charno);
+        warning(t, "Bad type annotation. Unknown type " + reference);
       } else {
         setReferencedType(
             registry.getNativeObjectType(
@@ -378,6 +376,10 @@ class NamedType extends ProxyObjectType {
       this.validator = validator;
       return true;
     }
+  }
+
+  void warning(ErrorReporter reporter, String message) {
+    reporter.warning(message, sourceName, lineno, charno);
   }
 
   /** Store enough information to define a property at a later time. */

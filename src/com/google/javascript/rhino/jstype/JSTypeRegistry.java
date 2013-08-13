@@ -944,8 +944,7 @@ public class JSTypeRegistry implements Serializable {
     if (type == null) {
       // TODO(user): Each instance should support named type creation using
       // interning.
-      NamedType namedType =
-          new NamedType(this, jsTypeName, sourceName, lineno, charno);
+      NamedType namedType = createNamedType(jsTypeName, sourceName, lineno, charno);
       unresolvedNamedTypes.put(scope, namedType);
       type = namedType;
     }
@@ -1551,9 +1550,13 @@ public class JSTypeRegistry implements Serializable {
    * Creates a named type.
    */
   @VisibleForTesting
-  public JSType createNamedType(String reference,
+  public NamedType createNamedType(String reference,
       String sourceName, int lineno, int charno) {
-    return new NamedType(this, reference, sourceName, lineno, charno);
+    if (reference.endsWith(".")) {
+      return new NamespaceType(this, reference, sourceName, lineno, charno);
+    } else {
+      return new NamedType(this, reference, sourceName, lineno, charno);
+    }
   }
 
   /**
@@ -1648,6 +1651,7 @@ public class JSTypeRegistry implements Serializable {
         JSType namedType = getType(scope, n.getString(), sourceName,
             n.getLineno(), n.getCharno());
         if ((namedType instanceof ObjectType) &&
+            !(namedType instanceof NamespaceType) &&
             !(nonNullableTypeNames.contains(n.getString()))) {
           Node typeList = n.getFirstChild();
           int nAllowedTypes =

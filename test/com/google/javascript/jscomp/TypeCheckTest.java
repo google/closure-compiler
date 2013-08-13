@@ -6364,6 +6364,21 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "g(function(y) { f(y); }, true);");
   }
 
+  public void testNamespaceType1() throws Exception {
+    testTypes(
+        "/** @namespace */ var x = {};" +
+        "/** @param {x.} y */ function f(y) {};",
+        "Parse error. Namespaces not supported yet (x.)");
+  }
+
+  public void testNamespaceType2() throws Exception {
+    testTypes(
+        "/** @namespace */ var x = {};" +
+        "/** @namespace */ x.y = {};" +
+        "/** @param {x.y.} y */ function f(y) {}",
+        "Parse error. Namespaces not supported yet (x.y.)");
+  }
+
   public void testIssue61() throws Exception {
     testTypes(
         "var ns = {};" +

@@ -145,6 +145,13 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. expected closing }");
   }
 
+  public void testParseNamespaceType1() throws Exception {
+    JSDocInfo info = parse("@type {goog.}*/");
+    assertTypeEquals(
+        registry.createNamedType("goog.", null, -1, -1),
+        info.getType());
+  }
+
   public void testTypedefType1() throws Exception {
     JSDocInfo info = parse("@typedef string */");
     assertTrue(info.hasTypedefType());
