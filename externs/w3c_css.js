@@ -2259,3 +2259,27 @@ ClientRect.prototype.width;
  * @see http://www.w3.org/TR/cssom-view/#dom-clientrect-height
  */
 ClientRect.prototype.height;
+
+/**
+ * @constructor
+ * http://www.w3.org/TR/css3-conditional/#CSS-interface
+ */
+function CSSInterface() {}
+
+/**
+ * @param {string} property
+ * @param {string=} opt_value
+ * @return {boolean}
+ */
+CSSInterface.prototype.supports = function(property, opt_value) {};
+
+/**
+ * TODO(nicksantos): This suppress tag probably isn't needed, and
+ * should be removed.
+ * @suppress {duplicate}
+ * @type {CSSInterface}
+ */
+var CSS;
+
+/** @type {CSSInterface} */
+Window.prototype.CSS;
