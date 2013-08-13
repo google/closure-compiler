@@ -22,6 +22,9 @@
  *
  * This relies on html5.js being included for Canvas and Typed Array support.
  *
+ * This includes some extensions defined at
+ * http://www.khronos.org/registry/webgl/extensions/
+ *
  * @externs
  */
 
@@ -3107,3 +3110,46 @@ EXT_texture_filter_anisotropic.prototype.TEXTURE_MAX_ANISOTROPY_EXT;
 
 /** @type {number} */
 EXT_texture_filter_anisotropic.prototype.MAX_TEXTURE_MAX_ANISOTROPY_EXT;
+
+
+
+/**
+ * @see http://www.khronos.org/registry/webgl/extensions/ANGLE_instanced_arrays/
+ * @constructor
+ * @noalias
+ */
+function ANGLE_instanced_arrays() {}
+
+
+/** @type {number} */
+ANGLE_instanced_arrays.prototype.VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE;
+
+
+/**
+ * @param {number} mode Primitive type.
+ * @param {number} first First vertex.
+ * @param {number} count Number of vertices per instance.
+ * @param {number} primcount Number of instances.
+ */
+ANGLE_instanced_arrays.prototype.drawArraysInstancedANGLE = function(
+    mode, first, count, primcount) {};
+
+
+/**
+ * @param {number} mode Primitive type.
+ * @param {number} count Number of vertex indices per instance.
+ * @param {number} type Type of a vertex index.
+ * @param {number} offset Offset to the first vertex index.
+ * @param {number} primcount Number of instances.
+ */
+ANGLE_instanced_arrays.prototype.drawElementsInstancedANGLE = function(
+    mode, count, type, offset, primcount) {};
+
+
+/**
+ * @param {number} index Attribute index.
+ * @param {number} divisor Instance divisor.
+ */
+ANGLE_instanced_arrays.prototype.vertexAttribDivisorANGLE = function(
+    index, divisor) {};
+
