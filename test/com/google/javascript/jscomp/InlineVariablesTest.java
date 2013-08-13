@@ -1064,4 +1064,9 @@ public class InlineVariablesTest extends CompilerTestCase {
         "F.prototype.inc = function() { this.a++; return 10; };" +
         "F.prototype.bar = function() { var x = this.inc(); this.a += x; };");
   }
+
+  public void testExternalIssue1053() {
+    testSame(
+        "var u; function f() { u = Random(); var x = u; f(); alert(x===u)}");
+  }
 }

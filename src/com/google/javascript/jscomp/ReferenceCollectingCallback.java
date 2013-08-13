@@ -428,6 +428,9 @@ class ReferenceCollectingCallback implements ScopedCallback,
       for (BasicBlock block = ref.getBasicBlock();
            block != null; block = block.getParent()) {
         if (block.isFunction) {
+          if (ref.getSymbol().getScope() != ref.scope) {
+            return false;
+          }
           break;
         } else if (block.isLoop) {
           return false;
