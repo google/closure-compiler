@@ -224,6 +224,12 @@ CSSRule.prototype.parentStyleSheet;
 CSSRule.prototype.parentRule;
 
 /**
+ * @type {CSSStyleDeclaration}
+ * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleRule
+ */
+CSSRule.prototype.style;
+
+/**
  * Indicates that the rule is a {@see CSSUnknownRule}.
  * @type {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSRule-ruleType
