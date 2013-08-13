@@ -41,7 +41,6 @@ package com.google.javascript.rhino.jstype;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSTypeRegistry.ResolveMode;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.AbstractStaticScope;
 import com.google.javascript.rhino.testing.MapBasedScope;
@@ -203,70 +202,6 @@ public class JSTypeRegistryTest extends TestCase {
     typeRegistry.setLastGeneration(true);
     typeRegistry.resolveTypesInScope(scope);
     assertFalse(functionType.getReturnType().isUnknownType());
-  }
-
-  public void testTypeResolutionModes() {
-    SimpleErrorReporter reporter = new SimpleErrorReporter();
-
-    JSTypeRegistry lazyExprRegistry = new JSTypeRegistry(reporter);
-    lazyExprRegistry.setResolveMode(ResolveMode.LAZY_EXPRESSIONS);
-
-    JSTypeRegistry lazyNameRegistry = new JSTypeRegistry(reporter);
-    lazyNameRegistry.setResolveMode(ResolveMode.LAZY_NAMES);
-
-    JSTypeRegistry immediateRegistry = new JSTypeRegistry(reporter);
-    immediateRegistry.setResolveMode(ResolveMode.IMMEDIATE);
-
-    Node expr = new Node(Token.QMARK, Node.newString("foo"));
-    StaticScope<JSType> empty = MapBasedScope.emptyScope();
-
-    JSType type = lazyExprRegistry.createFromTypeNodes(
-        expr, "source.js", empty);
-    assertTrue(type instanceof UnresolvedTypeExpression);
-    assertTrue(type.isUnknownType());
-    assertEquals("?", type.toString());
-    assertNull("Unexpected warnings: " + reporter.warnings(),
-        reporter.warnings());
-
-    type = lazyNameRegistry.createFromTypeNodes(
-        expr, "source.js", empty);
-    assertTrue(type instanceof UnionType);
-    assertTrue(type.isUnknownType());
-    assertEquals("(foo|null)", type.toString());
-    assertNull("Unexpected warnings: " + reporter.warnings(),
-        reporter.warnings());
-
-    type = immediateRegistry.createFromTypeNodes(
-        expr, "source.js", empty);
-    assertTrue(type instanceof UnknownType);
-    assertEquals("Expected warnings", 1, reporter.warnings().size());
-  }
-
-  public void testForceResolve() {
-    SimpleErrorReporter reporter = new SimpleErrorReporter();
-
-    JSTypeRegistry lazyExprRegistry = new JSTypeRegistry(reporter);
-    lazyExprRegistry.setResolveMode(ResolveMode.LAZY_EXPRESSIONS);
-
-    Node expr = new Node(Token.QMARK, Node.newString("foo"));
-    StaticScope<JSType> empty = MapBasedScope.emptyScope();
-
-    JSType type = lazyExprRegistry.createFromTypeNodes(
-        expr, "source.js", empty);
-    assertFalse(type.isResolved());
-    assertTrue(type.forceResolve(reporter, empty).isResolved());
-    assertEquals("Expected warnings", 1, reporter.warnings().size());
-  }
-
-  public void testAllTypeResolvesImmediately() {
-    JSTypeRegistry lazyExprRegistry = new JSTypeRegistry(
-        new SimpleErrorReporter());
-    lazyExprRegistry.setResolveMode(ResolveMode.LAZY_EXPRESSIONS);
-
-    Node expr = new Node(Token.STAR);
-    JSType type = lazyExprRegistry.createFromTypeNodes(
-        expr, "source.js", MapBasedScope.emptyScope());
-    assertTrue(type instanceof AllType);
   }
 
   private void assertTypeEquals(JSType a, JSType b) {

@@ -181,36 +181,6 @@ public class JSTypeRegistry implements Serializable {
   private final boolean tolerateUndefinedValues;
 
   /**
-   * The type registry has three modes, which control how type ASTs are
-   * converted to types in {@link #createFromTypeNodes}.
-   */
-  public static enum ResolveMode {
-    /**
-     * Expressions are converted into Unknown blobs that can be
-     * resolved into complex types.
-     */
-    LAZY_EXPRESSIONS,
-
-    /**
-     * Expressions are evaluated. If any names in the expression point to
-     * unknown types, then we create a proxy {@code NamedType} structure
-     * until the type can be resolved.
-     *
-     * This is the legacy way of resolving ways, and may not exist in the
-     * future.
-     */
-    LAZY_NAMES,
-
-    /**
-     * Expressions and type names are evaluated aggressively. A warning
-     * will be emitted if a type name fails to resolve to a real type.
-     */
-    IMMEDIATE
-  }
-
-  private ResolveMode resolveMode = ResolveMode.LAZY_NAMES;
-
-  /**
    * Constructs a new type registry populated with the built-in types.
    */
   public JSTypeRegistry(ErrorReporter reporter) {
@@ -246,18 +216,6 @@ public class JSTypeRegistry implements Serializable {
   public TemplateType getObjectIndexKey() {
     Preconditions.checkNotNull(objectIndexTemplateKey);
     return objectIndexTemplateKey;
-  }
-
-  /**
-   * Set the current resolving mode of the type registry.
-   * @see ResolveMode
-   */
-  public void setResolveMode(ResolveMode mode) {
-    this.resolveMode = mode;
-  }
-
-  ResolveMode getResolveMode() {
-    return resolveMode;
   }
 
   public ErrorReporter getErrorReporter() {
@@ -1614,14 +1572,6 @@ public class JSTypeRegistry implements Serializable {
    */
   public JSType createFromTypeNodes(Node n, String sourceName,
       StaticScope<JSType> scope) {
-    if (resolveMode == ResolveMode.LAZY_EXPRESSIONS) {
-      // If the type expression doesn't contain any names, just
-      // resolve it anyway.
-      boolean hasNames = hasTypeName(n);
-      if (hasNames) {
-        return new UnresolvedTypeExpression(this, n, sourceName);
-      }
-    }
     return createFromTypeNodesInternal(n, sourceName, scope);
   }
 
@@ -1697,9 +1647,6 @@ public class JSTypeRegistry implements Serializable {
       case Token.STRING:
         JSType namedType = getType(scope, n.getString(), sourceName,
             n.getLineno(), n.getCharno());
-        if (resolveMode != ResolveMode.LAZY_NAMES) {
-          namedType = namedType.resolveInternal(reporter, scope);
-        }
         if ((namedType instanceof ObjectType) &&
             !(nonNullableTypeNames.contains(n.getString()))) {
           Node typeList = n.getFirstChild();
