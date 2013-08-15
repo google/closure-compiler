@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
+import com.google.javascript.rhino.Node;
+
 /**
  * Generate exports unit test.
  *
@@ -26,13 +29,15 @@ public class GenerateExportsTest extends CompilerTestCase {
       "function google_exportSymbol(a, b) {}; " +
       "goog.exportProperty = function(a, b, c) {}; ";
 
+  private boolean allowNonGlobalExports = true;
+
   public GenerateExportsTest() {
     super(EXTERNS);
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new GenerateExports(compiler,
+    return new GenerateExports(compiler, allowNonGlobalExports,
         "google_exportSymbol", "goog.exportProperty");
   }
 
@@ -46,6 +51,8 @@ public class GenerateExportsTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     super.enableLineNumberCheck(false);
+
+    this.allowNonGlobalExports  = true;
   }
 
   public void testExportSymbol() {
@@ -86,8 +93,14 @@ public class GenerateExportsTest extends CompilerTestCase {
    * @see FindExportableNodes
    */
   public void testNestedVarAssign() {
+    this.allowNonGlobalExports = false;
     test("var BAR;\n/** @export */var FOO = BAR = 5",
          null, FindExportableNodes.NON_GLOBAL_ERROR);
+
+    this.allowNonGlobalExports = true;
+    test("var BAR;\n/** @export */var FOO = BAR = 5",
+        null, FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
+
   }
 
   /**
@@ -95,13 +108,23 @@ public class GenerateExportsTest extends CompilerTestCase {
    * @see FindExportableNodes
    */
   public void testNestedAssign() {
+    this.allowNonGlobalExports = false;
     test("var BAR;var FOO = {};\n/** @export */FOO.test = BAR = 5",
          null, FindExportableNodes.NON_GLOBAL_ERROR);
+
+    this.allowNonGlobalExports = true;
+    test("var BAR;var FOO = {};\n/** @export */FOO.test = BAR = 5",
+         null, FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
   }
 
   public void testNonGlobalScopeExport() {
+    this.allowNonGlobalExports = false;
     test("(function() { /** @export */var FOO = 5 })()",
          null, FindExportableNodes.NON_GLOBAL_ERROR);
+
+    this.allowNonGlobalExports = true;
+    test("(function() { /** @export */var FOO = 5 })()",
+        null, FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
   }
 
   public void testExportClass() {
@@ -121,5 +144,61 @@ public class GenerateExportsTest extends CompilerTestCase {
     test("/** @enum {string}\n @export */ var E = {A:1, B:2};",
          "/** @enum {string}\n @export */ var E = {A:1, B:2};" +
          "google_exportSymbol('E', E);");
+  }
+
+  public void testExportObjectLit1() {
+    allowExternsChanges(true);
+    String code = "var E = {/** @export */ A:1, B:2};";
+    testSame(code);
+    checkSynthesizedExtern(code, "Object.prototype.A;");
+  }
+
+  public void testExportClassMember1() {
+    allowExternsChanges(true);
+    String code = "var E = function() { /** @export */ this.foo = 1; };";
+    testSame(code);
+    checkSynthesizedExtern(code, "Object.prototype.foo;");
+  }
+
+  public void testExportClassMemberStub() {
+    allowExternsChanges(true);
+    String code = "var E = function() { /** @export */ this.foo; };";
+    testSame(code);
+    checkSynthesizedExtern(code, "Object.prototype.foo;");
+  }
+
+  public void checkSynthesizedExtern(
+      String input, String expectedExtern) {
+    checkSynthesizedExtern("", input, expectedExtern);
+  }
+
+
+  // TODO(johnlenz): make this common code and unify with the VarCheckTest
+  public void checkSynthesizedExtern(
+      String extern, String input, String expectedExtern) {
+    Compiler compiler = createCompiler();
+    CompilerOptions options = getOptions();
+    compiler.init(
+        ImmutableList.of(SourceFile.fromCode("extern", extern)),
+        ImmutableList.of(SourceFile.fromCode("input", input)),
+        options);
+    compiler.parseInputs();
+    assertFalse(compiler.hasErrors());
+
+    Node externsAndJs = compiler.getRoot();
+    Node root = externsAndJs.getLastChild();
+
+    Node externs = externsAndJs.getFirstChild();
+
+    Node expected = compiler.parseTestCode(expectedExtern);
+    assertFalse(compiler.hasErrors());
+
+    (getProcessor(compiler))
+        .process(externs, root);
+
+    String externsCode = compiler.toSource(externs);
+    String expectedCode = compiler.toSource(expected);
+
+    assertEquals(expectedCode, externsCode);
   }
 }

@@ -2708,6 +2708,79 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, code, result);
   }
 
+  public void testExports() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel level = CompilationLevel.ADVANCED_OPTIMIZATIONS;
+    level.setOptionsForCompilationLevel(options);
+    WarningLevel warnings = WarningLevel.DEFAULT;
+    warnings.setOptionsForWarningLevel(options);
+
+    String code = "" +
+        "/** @constructor */ var X = function() {" +
+           "/** @export */ this.abc = 1;};\n" +
+        "/** @constructor */ var Y = function() {" +
+           "/** @export */ this.abc = 1;};\n" +
+        "alert(new X().abc + new Y().abc);";
+
+    // no export enabled, property name not preserved
+    test(options, code,
+        "alert((new function(){this.a = 1}).a + " +
+            "(new function(){this.a = 1}).a);");
+
+    options.generateExports = true;
+
+    // exports enabled, but not local exports
+    test(options,
+        "/** @constructor */ var X = function() {" +
+        "/** @export */ this.abc = 1;};\n",
+        FindExportableNodes.NON_GLOBAL_ERROR);
+
+    options.exportLocalPropertyDefinitions = true;
+
+    // Local exports enabled, but removeUnusedPrototypePropertiesInExterns not
+    // disabled.
+    test(options, code,
+        DefaultPassConfig.CANNOT_USE_EXPORT_LOCALS_AND_EXTERN_PROP_REMOVAL);
+
+    options.removeUnusedPrototypePropertiesInExterns = false;
+
+    // property name preserved due to export
+    test(options, code,
+        "alert((new function(){this.abc = 1}).abc + " +
+            "(new function(){this.abc = 1}).abc);");
+
+    // unreferenced property not removed due to export.
+    test(options, "" +
+        "/** @constructor */ var X = function() {" +
+        "/** @export */ this.abc = 1;};\n" +
+        "/** @constructor */ var Y = function() {" +
+        "/** @export */ this.abc = 1;};\n" +
+        "alert(new X() + new Y());",
+        "alert((new function(){this.abc = 1}) + " +
+            "(new function(){this.abc = 1}));");
+
+    // disambiguate and ambiguate properties respect the exports.
+    options.checkTypes = true;
+    options.disambiguateProperties = true;
+    options.ambiguateProperties = true;
+    options.propertyInvalidationErrors = ImmutableMap.of(
+        "abc", CheckLevel.ERROR);
+
+    test(options, code,
+        "alert((new function(){this.abc = 1}).abc + " +
+            "(new function(){this.abc = 1}).abc);");
+
+    // unreferenced property not removed due to export.
+    test(options, "" +
+        "/** @constructor */ var X = function() {" +
+        "/** @export */ this.abc = 1;};\n" +
+        "/** @constructor */ var Y = function() {" +
+        "/** @export */ this.abc = 1;};\n" +
+        "alert(new X() + new Y());",
+        "alert((new function(){this.abc = 1}) + " +
+            "(new function(){this.abc = 1}));");
+  }
+
   public void testManyAdds() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;

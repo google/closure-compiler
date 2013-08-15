@@ -17,12 +17,14 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.LinkedHashMap;
+import java.util.Set;
 
 /**
  * Records all of the symbols and properties that should be exported.
@@ -41,24 +43,34 @@ import java.util.LinkedHashMap;
  * to all the variables or only the first one.
  *
  */
-public class FindExportableNodes extends AbstractPostOrderCallback {
+class FindExportableNodes extends AbstractPostOrderCallback {
 
   static final DiagnosticType NON_GLOBAL_ERROR =
       DiagnosticType.error("JSC_NON_GLOBAL_ERROR",
           "@export only applies to symbols/properties defined in the " +
           "global scope.");
 
+  static final DiagnosticType EXPORT_ANNOTATION_NOT_ALLOWED =
+      DiagnosticType.error("JSC_EXPORT_ANNOTATION_NOT_ALLOWED",
+          "@export is not supported on this expression.");
+
+  private final AbstractCompiler compiler;
+
   /**
    * It's convenient to be able to iterate over exports in the order in which
    * they are encountered.
    */
-  private final LinkedHashMap<String, GenerateNodeContext> exports;
+  private final LinkedHashMap<String, GenerateNodeContext> exports =
+      Maps.newLinkedHashMap();
 
-  private final AbstractCompiler compiler;
+  private Set<String> externProps = Sets.newLinkedHashSet();
 
-  public FindExportableNodes(AbstractCompiler compiler) {
+  private final boolean allowLocalExports;
+
+  FindExportableNodes(
+      AbstractCompiler compiler, boolean allowLocalExports) {
     this.compiler = compiler;
-    this.exports = Maps.newLinkedHashMap();
+    this.allowLocalExports = allowLocalExports;
   }
 
   @Override
@@ -72,65 +84,92 @@ public class FindExportableNodes extends AbstractPostOrderCallback {
         case Token.FUNCTION:
           if (parent.isScript()) {
             export = NodeUtil.getFunctionName(n);
-            context = new GenerateNodeContext(n, parent, n);
+            context = new GenerateNodeContext(n, Mode.EXPORT);
           }
           break;
+
         case Token.ASSIGN:
           Node grandparent = parent.getParent();
-          if (grandparent != null && grandparent.isScript() &&
-              parent.isExprResult() &&
+          if (parent.isExprResult() &&
               !n.getLastChild().isAssign()) {
-            export = n.getFirstChild().getQualifiedName();
-            context = new GenerateNodeContext(n, grandparent, parent);
+            if (grandparent != null && grandparent.isScript() &&
+                n.getFirstChild().isQualifiedName()) {
+              export = n.getFirstChild().getQualifiedName();
+              context = new GenerateNodeContext(n, Mode.EXPORT);
+            } else if (allowLocalExports && n.getFirstChild().isGetProp()) {
+              Node target = n.getFirstChild();
+              export = target.getLastChild().getString();
+              context = new GenerateNodeContext(n, Mode.EXTERN);
+            }
           }
           break;
+
         case Token.VAR:
           if (parent.isScript()) {
             if (n.getFirstChild().hasChildren() &&
                 !n.getFirstChild().getFirstChild().isAssign()) {
               export = n.getFirstChild().getString();
-              context = new GenerateNodeContext(n, parent, n);
+              context = new GenerateNodeContext(n, Mode.EXPORT);
             }
           }
+          break;
+
+        case Token.GETPROP:
+          if (allowLocalExports && parent.isExprResult()) {
+            export = n.getLastChild().getString();
+            context = new GenerateNodeContext(n, Mode.EXTERN);
+          }
+          break;
+
+        case Token.STRING_KEY:
+          if (allowLocalExports) {
+            export = n.getString();
+            context = new GenerateNodeContext(n, Mode.EXTERN);
+          }
+          break;
       }
 
       if (export != null) {
         exports.put(export, context);
       } else {
-        compiler.report(t.makeError(n, NON_GLOBAL_ERROR));
+        if (allowLocalExports) {
+          compiler.report(t.makeError(n, EXPORT_ANNOTATION_NOT_ALLOWED));
+        } else {
+          compiler.report(t.makeError(n, NON_GLOBAL_ERROR));
+        }
       }
     }
   }
 
-  public LinkedHashMap<String, GenerateNodeContext> getExports() {
+  LinkedHashMap<String, GenerateNodeContext> getExports() {
     return exports;
+  }
+
+  static enum Mode {
+    EXPORT,
+    EXTERN
   }
 
   /**
    * Context holding the node references required for generating the export
    * calls.
    */
-  public static class GenerateNodeContext {
-    private final Node scriptNode;
-    private final Node contextNode;
+  static class GenerateNodeContext {
     private final Node node;
+    private final Mode mode;
 
-    public GenerateNodeContext(Node node, Node scriptNode, Node contextNode) {
+    GenerateNodeContext(
+        Node node, Mode mode) {
       this.node = node;
-      this.scriptNode = scriptNode;
-      this.contextNode = contextNode;
+      this.mode = mode;
     }
 
-    public Node getNode() {
+    Node getNode() {
       return node;
     }
 
-    public Node getScriptNode() {
-      return scriptNode;
-    }
-
-    public Node getContextNode() {
-      return contextNode;
+    public Mode getMode() {
+      return mode;
     }
   }
 }

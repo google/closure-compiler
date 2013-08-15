@@ -693,6 +693,8 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public boolean generateExports;
 
+  boolean exportLocalPropertyDefinitions;
+
   /** Map used in the renaming of CSS class names. */
   public CssRenamingMap cssRenamingMap;
 
@@ -1013,6 +1015,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     appNameStr = "";
     recordFunctionInformation = false;
     generateExports = false;
+    exportLocalPropertyDefinitions = false;
     cssRenamingMap = null;
     cssRenamingWhitelist = null;
     processObjectPropertyString = false;
@@ -1444,6 +1447,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setGenerateExports(boolean generateExports) {
     this.generateExports = generateExports;
+  }
+
+  public void setExportLocalPropertyDefinitions(boolean export) {
+    this.exportLocalPropertyDefinitions = export;
   }
 
   public void setAngularPass(boolean angularPass) {

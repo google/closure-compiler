@@ -64,8 +64,6 @@ class VarCheck extends AbstractPostOrderCallback implements
       "JSC_UNDEFINED_EXTERN_VAR_ERROR",
       "name {0} is not undefined in the externs.");
 
-  private Node synthesizedExternsRoot = null;
-
   // Vars that still need to be declared in externs. These will be declared
   // at the end of the pass, or when we see the equivalent var declared
   // in the normal code.
@@ -160,7 +158,7 @@ class VarCheck extends AbstractPostOrderCallback implements
         } else {
           createSynthesizedExternVar(varName);
           scope.getGlobalScope().declare(varName, n,
-              null, getSynthesizedExternsInput());
+              null, compiler.getSynthesizedExternsInput());
         }
       }
       return;
@@ -263,17 +261,8 @@ class VarCheck extends AbstractPostOrderCallback implements
     }
   }
 
-  /** Lazily create a "new" externs input for undeclared variables. */
-  private CompilerInput getSynthesizedExternsInput() {
-    return compiler.getSynthesizedExternsInput();
-  }
-
   /** Lazily create a "new" externs root for undeclared variables. */
   private Node getSynthesizedExternsRoot() {
-    if (synthesizedExternsRoot == null) {
-      CompilerInput synthesizedExterns = getSynthesizedExternsInput();
-      synthesizedExternsRoot = synthesizedExterns.getAstRoot(compiler);
-    }
-    return synthesizedExternsRoot;
+    return  compiler.getSynthesizedExternsInput().getAstRoot(compiler);
   }
 }
