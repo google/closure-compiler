@@ -38,12 +38,9 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.AbstractStaticScope;
-import com.google.javascript.rhino.testing.MapBasedScope;
 
 import junit.framework.TestCase;
 
