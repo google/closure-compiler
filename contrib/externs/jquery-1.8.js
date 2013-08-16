@@ -66,6 +66,13 @@ function $(arg1, arg2) {}
 jQuery.prototype.add = function(arg1, context) {};
 
 /**
+ * @param {(jQuerySelector|Array.<Element>|string|jQuery)} arg1
+ * @return {!jQuery}
+ * @nosideeffects
+ */
+jQuery.prototype.addBack = function(arg1) {};
+
+/**
  * @param {(string|function(number,String))} arg1
  * @return {!jQuery}
  */
