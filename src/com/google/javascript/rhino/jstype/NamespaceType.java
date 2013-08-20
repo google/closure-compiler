@@ -38,13 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Lists;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.Node;
-
-import java.util.List;
 
 /**
  * A namespace type is a reference to a particular object.
