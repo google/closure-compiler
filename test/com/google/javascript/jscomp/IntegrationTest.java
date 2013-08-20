@@ -2058,8 +2058,8 @@ public class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.foldConstants = true;
     test(options,
-        "if (x < 1 || x > 1 || 1 < x || 1 > x) { alert(x) }",
-        "   (1 > x || 1 < x || 1 < x || 1 > x) && alert(x) ");
+        "if (((x < 1 || x > 1) || 1 < x) || 1 > x) { alert(x) }",
+        "   (((1 > x || 1 < x) || 1 < x) || 1 > x) && alert(x) ");
   }
 
   public void testsyntheticBlockOnDeadAssignments() {

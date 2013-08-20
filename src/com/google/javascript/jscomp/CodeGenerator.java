@@ -127,15 +127,7 @@ class CodeGenerator {
       // the IN_FOR_INIT_CLAUSE one.
       Context rhsContext = getContextForNoInOperator(context);
 
-      // Handle associativity.
-      // e.g. if the parse tree is a * (b * c),
-      // we can simply generate a * b * c.
-      if (last.getType() == type &&
-          NodeUtil.isAssociative(type)) {
-        addExpr(first, p, context);
-        cc.addOp(opstr, true);
-        addExpr(last, p, rhsContext);
-      } else if (NodeUtil.isAssignmentOp(n) && NodeUtil.isAssignmentOp(last)) {
+      if (NodeUtil.isAssignmentOp(n) && NodeUtil.isAssignmentOp(last)) {
         // Assignments are the only right-associative binary operators
         addExpr(first, p, context);
         cc.addOp(opstr, true);

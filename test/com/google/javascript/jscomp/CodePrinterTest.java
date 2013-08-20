@@ -195,9 +195,11 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var a,b,c,d;a || (b&& c) && (a || d)",
         "var a,b,c,d;a||b&&c&&(a||d)");
     assertPrint("var a,b,c; a || (b || c); a * (b * c); a | (b | c)",
-        "var a,b,c;a||b||c;a*b*c;a|b|c");
+        "var a,b,c;a||(b||c);a*(b*c);a|(b|c)");
     assertPrint("var a,b,c; a / b / c;a / (b / c); a - (b - c);",
         "var a,b,c;a/b/c;a/(b/c);a-(b-c)");
+
+    // Nested assignments
     assertPrint("var a,b; a = b = 3;",
         "var a,b;a=b=3");
     assertPrint("var a,b,c,d; a = (b = c = (d = 3));",
@@ -448,7 +450,7 @@ public class CodePrinterTest extends TestCase {
         "var a={};for(var i=(\"length\"in a)+1;i;);");
     assertPrint("var a={};for (var i = (\"length\" in a|| \"size\" in a);;);",
         "var a={};for(var i=(\"length\"in a)||(\"size\"in a);;);");
-    assertPrint("var a={};for (var i = a || a || (\"size\" in a);;);",
+    assertPrint("var a={};for (var i = (a || a) || (\"size\" in a);;);",
         "var a={};for(var i=a||a||(\"size\"in a);;);");
 
     // Test works with unary operators and calls.
@@ -1564,5 +1566,9 @@ public class CodePrinterTest extends TestCase {
     languageMode = LanguageMode.ECMASCRIPT3;
     assertPrintSame("x={foo:2}");
     assertPrint("x={function:2}", "x={\"function\":2}");
+  }
+
+  public void testIssue1062() {
+    assertPrintSame("3*(4%3*5)");
   }
 }

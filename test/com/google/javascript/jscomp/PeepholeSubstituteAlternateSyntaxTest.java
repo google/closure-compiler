@@ -434,7 +434,6 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     test("(goog$partial(f))(a)", "f(a)");
     test("(goog$partial(f,a))(b)", "f(a,b)");
     test("(goog$partial(f,a,b))(c)", "f(a,b,c)");
-
     // Don't rewrite if the bind isn't the immediate call target
     testSame("(goog$bind(f)).call(g)");
   }
@@ -454,6 +453,12 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     test("var a = String('hello')", "var a = '' + 'hello'");
     testSame("var a = String('hello', bar());");
     testSame("var a = String({valueOf: function() { return 1; }});");
+  }
+
+  public void testAssocitivity() {
+    test("var a,b,c; a || (b || c); a * (b * c); a | (b | c)",
+        "var a,b,c; (a || b) || c; (a * b) * c; (a | b) | c");
+    testSame("var a,b,c; a % (b % c); a / (b / c); a - (b - c);");
   }
 
   private static class StringCompareTestCase extends CompilerTestCase {

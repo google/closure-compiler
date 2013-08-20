@@ -99,9 +99,39 @@ class PeepholeSubstituteAlternateSyntax
       case Token.ARRAYLIT:
         return tryMinimizeArrayLiteral(node);
 
+      case Token.MUL:
+      case Token.AND:
+      case Token.OR:
+      case Token.BITOR:
+      case Token.BITXOR:
+      case Token.BITAND:
+        return tryRotateAssociativeOperator(node);
+
       default:
         return node; //Nothing changed
     }
+  }
+
+  private Node tryRotateAssociativeOperator(Node n) {
+    if (!late) {
+      return n;
+    }
+    Preconditions.checkArgument(NodeUtil.isAssociative(n.getType()));
+    Node rhs = n.getLastChild();
+    if (n.getType() == rhs.getType()) {
+      Node parent = n.getParent();
+      Node first = n.getFirstChild().detachFromParent();
+      Node second = rhs.getFirstChild().detachFromParent();
+      Node third = rhs.getLastChild().detachFromParent();
+      Node newLhs = new Node(n.getType(), first, second)
+          .copyInformationFrom(n);
+      Node newRoot = new Node(rhs.getType(), newLhs, third)
+          .copyInformationFrom(rhs);
+      parent.replaceChild(n, newRoot);
+      reportCodeChange();
+      return newRoot;
+    }
+    return n;
   }
 
   private Node tryFoldSimpleFunctionCall(Node n) {

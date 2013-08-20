@@ -1140,6 +1140,17 @@ public class ParserTest extends BaseJSTypeTestCase {
     parse("try {} catch (/** @type {Error} */ e) {}");
   }
 
+  public void testParsingAssociativity() {
+    assertNodeEquality(parse("x * y * z"), parse("(x * y) * z"));
+    assertNodeEquality(parse("x + y + z"), parse("(x + y) + z"));
+    assertNodeEquality(parse("x | y | z"), parse("(x | y) | z"));
+    assertNodeEquality(parse("x & y & z"), parse("(x & y) & z"));
+    assertNodeEquality(parse("x ^ y ^ z"), parse("(x ^ y) ^ z"));
+    // TODO(blickly): Fix rhino to parse || and && left-associatively.
+    assertNodeEquality(parse("x || y || z"), parse("x || (y || z)"));
+    assertNodeEquality(parse("x && y && z"), parse("x && (y && z)"));
+  }
+
   /**
    * Verify that the given code has the given parse errors.
    * @return If in IDE mode, returns a partial tree.
