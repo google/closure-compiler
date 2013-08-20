@@ -16,9 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableList;
-import com.google.javascript.rhino.Node;
-
 /**
  * Generate exports unit test.
  *
@@ -150,55 +147,21 @@ public class GenerateExportsTest extends CompilerTestCase {
     allowExternsChanges(true);
     String code = "var E = {/** @export */ A:1, B:2};";
     testSame(code);
-    checkSynthesizedExtern(code, "Object.prototype.A;");
+    testExternChanges(code, "Object.prototype.A;");
   }
 
   public void testExportClassMember1() {
     allowExternsChanges(true);
     String code = "var E = function() { /** @export */ this.foo = 1; };";
     testSame(code);
-    checkSynthesizedExtern(code, "Object.prototype.foo;");
+    testExternChanges(code, "Object.prototype.foo;");
   }
 
   public void testExportClassMemberStub() {
     allowExternsChanges(true);
     String code = "var E = function() { /** @export */ this.foo; };";
     testSame(code);
-    checkSynthesizedExtern(code, "Object.prototype.foo;");
+    testExternChanges(code, "Object.prototype.foo;");
   }
 
-  public void checkSynthesizedExtern(
-      String input, String expectedExtern) {
-    checkSynthesizedExtern("", input, expectedExtern);
-  }
-
-
-  // TODO(johnlenz): make this common code and unify with the VarCheckTest
-  public void checkSynthesizedExtern(
-      String extern, String input, String expectedExtern) {
-    Compiler compiler = createCompiler();
-    CompilerOptions options = getOptions();
-    compiler.init(
-        ImmutableList.of(SourceFile.fromCode("extern", extern)),
-        ImmutableList.of(SourceFile.fromCode("input", input)),
-        options);
-    compiler.parseInputs();
-    assertFalse(compiler.hasErrors());
-
-    Node externsAndJs = compiler.getRoot();
-    Node root = externsAndJs.getLastChild();
-
-    Node externs = externsAndJs.getFirstChild();
-
-    Node expected = compiler.parseTestCode(expectedExtern);
-    assertFalse(compiler.hasErrors());
-
-    (getProcessor(compiler))
-        .process(externs, root);
-
-    String externsCode = compiler.toSource(externs);
-    String expectedCode = compiler.toSource(expected);
-
-    assertEquals(expectedCode, externsCode);
-  }
 }
