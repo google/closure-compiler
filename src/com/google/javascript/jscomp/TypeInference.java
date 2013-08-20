@@ -570,14 +570,35 @@ class TypeInference
     JSType nodeType = getJSType(obj);
     ObjectType objectType = ObjectType.cast(
         nodeType.restrictByNotNullOrUndefined());
+    boolean propCreationInConstructor = obj.isThis() &&
+        getJSType(syntacticScope.getRootNode()).isConstructor();
+
     if (objectType == null) {
       registry.registerPropertyOnType(propName, nodeType);
     } else {
-      // Don't add the property to @struct objects outside a constructor
       if (nodeType.isStruct() && !objectType.hasProperty(propName)) {
-        if (!(obj.isThis() &&
-              getJSType(syntacticScope.getRootNode()).isConstructor())) {
-          return;
+        // In general, we don't want to define a property on a struct object,
+        // b/c TypeCheck will later check for improper property creation on
+        // structs. There are two exceptions.
+        // 1) If it's a property created inside the constructor, on the newly
+        //    created instance, allow it.
+        // 2) If it's a prototype property, allow it. For example:
+        //    Foo.prototype.bar = baz;
+        //    where Foo.prototype is a struct and the assignment happens at the
+        //    top level and the constructor Foo is defined in the same file.
+        boolean staticPropCreation = false;
+        Node maybeAssignStm = getprop.getParent().getParent();
+        if (syntacticScope.isGlobal() &&
+            NodeUtil.isPrototypePropertyDeclaration(maybeAssignStm)) {
+          String propCreationFilename = maybeAssignStm.getSourceFileName();
+          Node ctor = objectType.getOwnerFunction().getSource();
+          if (ctor != null &&
+              ctor.getSourceFileName().equals(propCreationFilename)) {
+            staticPropCreation = true;
+          }
+        }
+        if (!propCreationInConstructor && !staticPropCreation) {
+          return; // Early return to avoid creating the property below.
         }
       }
 
@@ -604,8 +625,7 @@ class TypeInference
           } else {
             objectType.defineInferredProperty(propName, rightType, getprop);
           }
-        } else if (obj.isThis() &&
-                   getJSType(syntacticScope.getRootNode()).isConstructor()) {
+        } else if (propCreationInConstructor) {
           objectType.defineInferredProperty(propName, rightType, getprop);
         } else {
           registry.registerPropertyOnType(propName, objectType);

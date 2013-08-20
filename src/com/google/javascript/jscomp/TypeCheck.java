@@ -1020,44 +1020,13 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
-  /**
-   * After a struct object is created, we can't add new properties to it, with
-   * one exception. We allow creation of "static" properties like
-   * Foo.prototype.bar = baz;
-   * where Foo.prototype is a struct, if the assignment happens at the top level
-   * and the constructor Foo is defined in the same file.
-   */
   private void checkPropCreation(NodeTraversal t, Node lvalue) {
     if (lvalue.isGetProp()) {
-      Node obj = lvalue.getFirstChild();
+      JSType objType = getJSType(lvalue.getFirstChild());
       Node prop = lvalue.getLastChild();
-      JSType objType = getJSType(obj);
-      String pname = prop.getString();
-
-      if (!objType.isStruct() || objType.hasProperty(pname)) {
-        return;
+      if (objType.isStruct() && !objType.hasProperty(prop.getString())) {
+        report(t, prop, ILLEGAL_PROPERTY_CREATION);
       }
-      Scope s = t.getScope();
-      if (obj.isThis() && getJSType(s.getRootNode()).isConstructor()) {
-        return;
-      }
-      // Prop created outside ctor, check that it's a static prop
-      Node assgnExp = lvalue.getParent();
-      Node assgnStm = assgnExp.getParent();
-      if (objType instanceof ObjectType &&
-          s.isGlobal() &&
-          NodeUtil.isPrototypePropertyDeclaration(assgnStm)) {
-        ObjectType instance =
-            objType.toObjectType().getOwnerFunction().getInstanceType();
-        String file = lvalue.getSourceFileName();
-        Node ctor = instance.getConstructor().getSource();
-        if (ctor != null && ctor.getSourceFileName().equals(file)) {
-          JSType rvalueType = assgnExp.getLastChild().getJSType();
-          instance.defineInferredProperty(pname, rvalueType, lvalue);
-          return;
-        }
-      }
-      report(t, prop, ILLEGAL_PROPERTY_CREATION);
     }
   }
 

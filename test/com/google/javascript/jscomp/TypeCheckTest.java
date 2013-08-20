@@ -4276,6 +4276,29 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               "Bottom.prototype.foo = function() { return 3; };");
   }
 
+  public void testSetprop15() throws Exception {
+    // Create static property on struct
+    testTypes(
+        "/** @interface */\n" +
+        "function Peelable() {};\n" +
+        "/** @return {undefined} */\n" +
+        "Peelable.prototype.peel;\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @struct\n" +
+        " */\n" +
+        "function Fruit() {};\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Fruit}\n" +
+        " * @implements {Peelable}\n" +
+        " */\n" +
+        "function Banana() { };\n" +
+        "function f() {};\n" +
+        "/** @override */\n" +
+        "Banana.prototype.peel = f;");
+  }
+
   public void testGetpropDict1() throws Exception {
     testTypes("/**\n" +
               " * @constructor\n" +
