@@ -17,6 +17,9 @@
 /**
  * @fileoverview Definitions for the Chromium extensions API.
  *
+ * This is the externs file for the Chrome Extensions API.
+ * See https://developer.chrome.com/extensions/
+ *
  * There are several problematic issues regarding Chrome extension APIs and
  * this externs files, including:
  * A. When to add packages to this file
@@ -120,13 +123,6 @@
  * @externs
  *
  */
-
-
-/**
- * namespace
- * @const
- */
-var chrome = {};
 
 
 /**

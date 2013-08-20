@@ -895,6 +895,8 @@ public class CommandLineRunner extends
     // Top-level namespaces
     "google.js",
 
+    "chrome.js",
+
     "deprecated.js",
     "fileapi.js",
     "flash.js",
