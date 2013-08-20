@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for the Google Maps v3.14 API.
+ * @fileoverview Externs for the Google Maps v3.13 API.
  * @see http://code.google.com/apis/maps/documentation/javascript/reference.html
  * @externs
  */
@@ -6449,4 +6449,3 @@ google.maps.weather.WindSpeedUnit = {
   METERS_PER_SECOND: '',
   MILES_PER_HOUR: ''
 };
-
