@@ -6449,3 +6449,4 @@ google.maps.weather.WindSpeedUnit = {
   METERS_PER_SECOND: '',
   MILES_PER_HOUR: ''
 };
+
