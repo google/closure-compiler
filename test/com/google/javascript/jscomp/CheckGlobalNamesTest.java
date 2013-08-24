@@ -336,4 +336,13 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
         "SubFoo.superClazz();",
          UNDEFINED_NAME_WARNING);
   }
+
+  public void testGlobalCatch() throws Exception {
+    testSame(
+        "try {" +
+        "  throw Error();" +
+        "} catch (e) {" +
+        "  console.log(e.name)" +
+        "}");
+  }
 }

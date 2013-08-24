@@ -363,6 +363,7 @@ class GlobalNamespace
                 isSet = true;
                 type = Name.Type.FUNCTION;
                 break;
+              case Token.CATCH:
               case Token.INC:
               case Token.DEC:
                 isSet = true;
