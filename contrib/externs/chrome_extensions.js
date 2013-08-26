@@ -2144,6 +2144,313 @@ chrome.proxy.onProxyError;
 
 /**
  * @const
+ * @see http://developer.chrome.com/apps/socket.html
+ */
+chrome.socket = {};
+
+
+/**
+ * @constructor
+ */
+chrome.socket.CreateInfo = function() {};
+
+
+/** @type {number} */
+chrome.socket.CreateInfo.prototype.socketId;
+
+
+/**
+ * @constructor
+ */
+chrome.socket.ReadInfo = function() {};
+
+
+/** @type {number} */
+chrome.socket.ReadInfo.prototype.resultCode;
+
+
+/** @type {!ArrayBuffer} */
+chrome.socket.ReadInfo.prototype.data;
+
+
+/**
+ * @constructor
+ */
+chrome.socket.WriteInfo = function() {};
+
+
+/** @type {number} */
+chrome.socket.WriteInfo.prototype.bytesWritten;
+
+
+/**
+ * @constructor
+ */
+chrome.socket.RecvFromInfo = function() {};
+
+
+/** @type {number} */
+chrome.socket.RecvFromInfo.prototype.resultCode;
+
+
+/** @type {!ArrayBuffer} */
+chrome.socket.RecvFromInfo.prototype.data;
+
+
+/** @type {string} */
+chrome.socket.RecvFromInfo.prototype.address;
+
+
+/** @type {number} */
+chrome.socket.RecvFromInfo.prototype.port;
+
+
+/**
+ * @constructor
+ */
+chrome.socket.AcceptInfo = function() {};
+
+
+/** @type {number} */
+chrome.socket.AcceptInfo.prototype.resultCode;
+
+
+/** @type {(number|undefined)} */
+chrome.socket.AcceptInfo.prototype.socketId;
+
+
+/**
+ * @constructor
+ */
+chrome.socket.SocketInfo = function() {};
+
+
+/** @type {string} */
+chrome.socket.SocketInfo.prototype.socketType;
+
+
+/** @type {boolean} */
+chrome.socket.SocketInfo.prototype.connected;
+
+
+/** @type {(string|undefined)} */
+chrome.socket.SocketInfo.prototype.peerAddress;
+
+
+/** @type {(number|undefined)} */
+chrome.socket.SocketInfo.prototype.peerPort;
+
+
+/** @type {(string|undefined)} */
+chrome.socket.SocketInfo.prototype.localAddress;
+
+
+/** @type {(number|undefined)} */
+chrome.socket.SocketInfo.prototype.localPort;
+
+
+/**
+ * @constructor
+ */
+chrome.socket.NetworkAdapterInfo = function() {};
+
+
+/** @type {string} */
+chrome.socket.NetworkAdapterInfo.prototype.name;
+
+
+/** @type {string} */
+chrome.socket.NetworkAdapterInfo.prototype.address;
+
+
+/**
+ * @param {string} type The type of socket to create. Must be 'tcp' or 'udp'.
+ * @param {(Object|function(!chrome.socket.CreateInfo))} optionsOrCallback The
+ *     socket options or callback.
+ * @param {function(!chrome.socket.CreateInfo)=} opt_callback Called when the
+ *     socket has been created.
+ */
+chrome.socket.create = function(type, optionsOrCallback, opt_callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket to destroy.
+ */
+chrome.socket.destroy = function(socketId) {};
+
+
+/**
+ * @param {number} socketId The id of the socket.
+ * @param {string} hostname The hostname or IP address of the remote machine.
+ * @param {number} port The port of the remote machine.
+ * @param {function(number)} callback Called when the connection attempt is
+ *     complete.
+ */
+chrome.socket.connect = function(socketId, hostname, port, callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket.
+ * @param {string} address The address of the local machine.
+ * @param {number} port The port of the local machine.
+ * @param {function(number)} callback Called when the bind attempt is complete.
+ */
+chrome.socket.bind = function(socketId, address, port, callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket to disconnect.
+ */
+chrome.socket.disconnect = function(socketId) {};
+
+
+/**
+ * @param {number} socketId The id of the socket to read from.
+ * @param {(number|function(!chrome.socket.ReadInfo))} bufferSizeOrCallback The
+ *     read buffer size or the callback.
+ * @param {function(!chrome.socket.ReadInfo)=} opt_callback Called with data
+ *     that was available to be read without blocking.
+ */
+chrome.socket.read = function(socketId, bufferSizeOrCallback, opt_callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket to write to.
+ * @param {!ArrayBuffer} data The data to write.
+ * @param {function(!chrome.socket.WriteInfo)} callback Called when the write
+ *     operation completes without blocking or an error occurs.
+ */
+chrome.socket.write = function(socketId, data, callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket to read from.
+ * @param {(number|function(!chrome.socket.RecvFromInfo))} bufferSizeOrCallback
+ *     The read buffer size or the callback.
+ * @param {function(!chrome.socket.RecvFromInfo)=} opt_callback Called with data
+ *     that was available to be read without blocking.
+ */
+chrome.socket.recvFrom = function(socketId, bufferSizeOrCallback,
+    opt_callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket to write to.
+ * @param {!ArrayBuffer} data The data to write.
+ * @param {string} address The address of the remote machine.
+ * @param {number} port The port of the remote machine.
+ * @param {function(!chrome.socket.WriteInfo)} callback Called when the write
+ *     operation completes without blocking or an error occurs.
+ */
+chrome.socket.sendTo = function(socketId, data, address, port, callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket to listen on.
+ * @param {string} address The address of the local machine to listen on. Use
+ *     '0' to listen on all addresses.
+ * @param {number} port The port of the local machine.
+ * @param {(number|function(number))} backlogOrCallback The length of the
+ *     socket's listen queue or the callback.
+ * @param {function(number)=} opt_callback Called when the listen operation
+ *     completes.
+ */
+chrome.socket.listen =
+    function(socketId, address, port, backlogOrCallback, opt_callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket to accept a connection on.
+ * @param {function(!chrome.socket.AcceptInfo)} callback Called when a new
+ *     socket is accepted.
+ */
+chrome.socket.accept = function(socketId, callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket to listen on.
+ * @param {boolean} enable If true, enable keep-alive functionality.
+ * @param {(number|function(boolean))} delayOrCallback The delay in seconds
+ *     between the last packet received and the first keepalive probe (default
+ *     is 0) or the callback
+ * @param {function(boolean)=} opt_callback Called when the setKeepAlive attempt
+ *     is complete.
+ */
+chrome.socket.setKeepAlive = function(socketId, enable, delayOrCallback,
+    opt_callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket to listen on.
+ * @param {boolean} noDelay If true, disables Nagle's algorithm.
+ * @param {function(boolean)} callback Called when the setNoDelay attempt is
+ *     complete.
+ */
+chrome.socket.setNoDelay = function(socketId, noDelay, callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket.
+ * @param {function(!chrome.socket.SocketInfo)} callback Called when the state
+ *     is available.
+ */
+chrome.socket.getInfo = function(socketId, callback) {};
+
+
+/**
+ * @param {function(!Array.<!chrome.socket.NetworkAdapterInfo>)} callback Called
+ *     when local adapter information is available.
+ */
+chrome.socket.getNetworkList = function(callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket.
+ * @param {string} address The group address to join. Domain names are not
+ *     supported.
+ * @param {function(number)} callback Called when the join operation is done.
+ */
+chrome.socket.joinGroup = function(socketId, address, callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket.
+ * @param {string} address The group address to leave. Domain names are not
+ *     supported.
+ * @param {function(number)} callback Called when the leave operation is done.
+ */
+chrome.socket.leaveGroup = function(socketId, address, callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket.
+ * @param {number} ttl The time-to-live value.
+ * @param {function(number)} callback Called when the configuration operation is
+ *     done.
+ */
+chrome.socket.setMulticastTimeToLive = function(socketId, ttl, callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket.
+ * @param {boolean} enabled True to enable loopback mode.
+ * @param {function(number)} callback Called when the configuration operation is
+ *     done.
+ */
+chrome.socket.setMulticastLoopbackMode = function(socketId, enabled,
+    callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket.
+ * @param {function(!Array.<string>)} callback Called with an array of string
+ *     groups.
+ */
+chrome.socket.getJoinedGroups = function(socketId, callback) {};
+
+
+/**
+ * @const
  * @see http://code.google.com/chrome/extensions/storage.html
  */
 chrome.storage = {};
