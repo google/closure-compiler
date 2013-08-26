@@ -488,9 +488,13 @@ class DisambiguateProperties<T> implements CompilerPass {
      * Processes a OBJECTLIT node.
      */
     private void handleObjectLit(NodeTraversal t, Node n) {
-      Node child = n.getFirstChild();
-      while (child != null) {
+      for (Node child = n.getFirstChild();
+          child != null;
+          child = child.getNext()) {
         // Maybe STRING, GET, SET
+        if (child.isQuotedString()) {
+          continue;
+        }
 
         // We should never see a mix of numbers and strings.
         String name = child.getString();
@@ -508,7 +512,6 @@ class DisambiguateProperties<T> implements CompilerPass {
                 (type == null ? "null" : type.toString()), n.toString(), ""));
           }
         }
-        child = child.getNext();
       }
     }
 
