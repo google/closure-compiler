@@ -248,6 +248,133 @@ angular.Attributes.$set = function(key, value, opt_writeAttr, opt_attrName) {};
 
 /**
  * @typedef {{
+ *   pre: (function(
+ *       angular.Scope=, angular.JQLite=, angular.Attributes=, Object=)|
+ *       undefined),
+ *   post: (function(
+ *       angular.Scope=, angular.JQLite=, angular.Attributes=, Object=)|
+ *       undefined)
+ *   }}
+ */
+angular.LinkingFunctions;
+
+/**
+ * @param {angular.Scope=} scope
+ * @param {angular.JQLite=} iElement
+ * @param {angular.Attributes=} iAttrs
+ * @param {(Object|Array.<Object>)=} controller
+ */
+angular.LinkingFunctions.pre = function(scope, iElement, iAttrs, controller) {};
+
+/**
+ * @param {angular.Scope=} scope
+ * @param {angular.JQLite=} iElement
+ * @param {angular.Attributes=} iAttrs
+ * @param {(Object|Array.<Object>)=} controller
+ */
+angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
+};
+
+/**
+ * @typedef {{
+ *   compile: (function(
+ *       angular.JQLite=, angular.Attributes=, Function=)|undefined),
+ *   controller: (Function|undefined),
+ *   controllerAs: (string|undefined),
+ *   link: (function(
+ *       angular.Scope=, angular.JQLite=, angular.Attributes=,
+ *       (Object|Array.<Object>)=)|
+ *       undefined),
+ *   name: (string|undefined),
+ *   priority: (number|undefined),
+ *   replace: (boolean|undefined),
+ *   require: (string|Array.<string>|undefined),
+ *   restrict: (string|undefined),
+ *   scope: (boolean|Object.<string, string>|undefined),
+ *   template: (string|undefined),
+ *   templateUrl: (string|undefined),
+ *   terminal: (boolean|undefined),
+ *   transclude: (boolean|string|undefined)
+ *   }}
+ */
+angular.Directive;
+
+/**
+ * @param {angular.JQLite=} tElement
+ * @param {angular.Attributes=} tAttrs
+ * @param {Function=} transclude
+ * @return {Function|angular.LinkingFunctions|undefined}
+ */
+angular.Directive.compile = function(tElement, tAttrs, transclude) {};
+
+angular.Directive.controller = function() {};
+
+/**
+ * @type {string|undefined}
+ */
+angular.Directive.controllerAs;
+
+/**
+ * @param {angular.Scope=} scope
+ * @param {angular.JQLite=} iElement
+ * @param {angular.Attributes=} iAttrs
+ * @param {(Object|Array.<Object>)=} controller
+ */
+angular.Directive.link = function(scope, iElement, iAttrs, controller) {};
+
+/**
+ * @type {(string|undefined)}
+ */
+angular.Directive.name;
+
+/**
+ * @type {(number|undefined)}
+ */
+angular.Directive.priority;
+
+/**
+ * @type {(boolean|undefined)}
+ */
+angular.Directive.replace;
+
+/**
+ * @type {(string|Array.<string>|undefined)}
+ */
+angular.Directive.require;
+
+/**
+ * @type {(string|undefined)}
+ */
+angular.Directive.restrict;
+
+/**
+ * @type {(boolean|Object.<string, string>|undefined)}
+ */
+angular.Directive.scope;
+
+/**
+ * @type {(string|undefined)}
+ * TODO: This can also be a function which returns a string.
+ */
+angular.Directive.template;
+
+/**
+ * @type {(string|undefined)}
+ */
+angular.Directive.templateUrl;
+
+/**
+ * @type {(boolean|undefined)}
+ */
+angular.Directive.terminal;
+
+/**
+ * @type {(boolean|string|undefined)}
+ */
+angular.Directive.transclude;
+
+/**
+ * @typedef {{
  *   addClass: function(string): angular.JQLite,
  *   after: function(JQLiteSelector): angular.JQLite,
  *   append: function(JQLiteSelector): angular.JQLite,
