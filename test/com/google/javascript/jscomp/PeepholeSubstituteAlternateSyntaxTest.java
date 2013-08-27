@@ -455,10 +455,16 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     testSame("var a = String({valueOf: function() { return 1; }});");
   }
 
-  public void testAssocitivity() {
-    test("var a,b,c; a || (b || c); a * (b * c); a | (b | c)",
-        "var a,b,c; (a || b) || c; (a * b) * c; (a | b) | c");
-    testSame("var a,b,c; a % (b % c); a / (b / c); a - (b - c);");
+  public void testRotateAssociativeOperators() {
+    test("a || (b || c); a * (b * c); a | (b | c)",
+        "(a || b) || c; (a * b) * c; (a | b) | c");
+    testSame("a % (b % c); a / (b / c); a - (b - c);");
+    test("a * (b % c);", "b % c * a");
+    test("(a * b) * (c / d)", "c / d * (a * b)");
+    test("c / d * (a * b)", "c / d * a * b");
+    test("(a + b) * (c % d)", "c % d * (a + b)");
+    testSame("(a / b) * (c % d)");
+    testSame("(c = 5) * (c % d)");
   }
 
   private static class StringCompareTestCase extends CompilerTestCase {
