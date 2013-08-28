@@ -34,13 +34,6 @@ class ReorderConstantExpression extends AbstractPeepholeOptimization {
     // if the operator is symmetric
     if (NodeUtil.isSymmetricOperation(subtree)
         || NodeUtil.isRelationalOperation(subtree)) {
-      int type = subtree.getType();
-      int leftType = subtree.getFirstChild().getType();
-      if (type != leftType
-          && NodeUtil.precedence(type) == NodeUtil.precedence(leftType)) {
-        // then flipping would add parens
-        return subtree;
-      }
       // right value is immutable and left is not
       if (NodeUtil.isImmutableValue(subtree.getLastChild())
           && !NodeUtil.isImmutableValue(subtree.getFirstChild())) {

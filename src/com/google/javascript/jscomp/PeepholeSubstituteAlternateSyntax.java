@@ -116,11 +116,10 @@ class PeepholeSubstituteAlternateSyntax
     if (!late) {
       return n;
     }
-    // All commutative operators are also associative
     Preconditions.checkArgument(NodeUtil.isAssociative(n.getType()));
     Node rhs = n.getLastChild();
     if (n.getType() == rhs.getType()) {
-      // Transform a * (b * c) to a * b * c
+      Node parent = n.getParent();
       Node first = n.getFirstChild().detachFromParent();
       Node second = rhs.getFirstChild().detachFromParent();
       Node third = rhs.getLastChild().detachFromParent();
@@ -128,23 +127,9 @@ class PeepholeSubstituteAlternateSyntax
           .copyInformationFrom(n);
       Node newRoot = new Node(rhs.getType(), newLhs, third)
           .copyInformationFrom(rhs);
-      n.getParent().replaceChild(n, newRoot);
+      parent.replaceChild(n, newRoot);
       reportCodeChange();
       return newRoot;
-    } else if (NodeUtil.isCommutative(n.getType()) &&
-               !NodeUtil.mayHaveSideEffects(n)) {
-      // Transform a * (b / c) to b / c * a
-      Node lhs = n.getFirstChild();
-      int precedence = NodeUtil.precedence(n.getType());
-      int lhsPrecedence = NodeUtil.precedence(lhs.getType());
-      int rhsPrecedence = NodeUtil.precedence(rhs.getType());
-      if (rhsPrecedence == precedence &&
-          (lhs.getType() == n.getType() || lhsPrecedence != precedence)) {
-        n.removeChild(rhs);
-        n.addChildToFront(rhs);
-        reportCodeChange();
-        return n;
-      }
     }
     return n;
   }
