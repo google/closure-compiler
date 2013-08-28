@@ -1494,11 +1494,13 @@ Date.prototype.toTimeString = function() {};
 Date.prototype.toUTCString = function() {};
 
 /**
+ * @param {(string|Array.<string>)=} opt_locales
+ * @param {Object=} opt_options
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toLocaleDateString
  */
-Date.prototype.toLocaleDateString = function() {};
+Date.prototype.toLocaleDateString = function(opt_locales, opt_options) {};
 
 /**
  * @param {string} formatString
@@ -1517,11 +1519,13 @@ Date.prototype.toLocaleFormat = function(formatString) {};
 Date.prototype.toLocaleString = function() {};
 
 /**
+ * @param {(string|Array.<string>)=} opt_locales
+ * @param {Object=} opt_options
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toLocaleTimeString
  */
-Date.prototype.toLocaleTimeString = function() {};
+Date.prototype.toLocaleTimeString = function(opt_locales, opt_options) {};
 
 /**
  * @this {Date}
