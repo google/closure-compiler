@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
+
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -105,7 +107,7 @@ public class VarCheckTest extends CompilerTestCase {
 
   public void testMultiplyDeclaredVars1() {
     test("var x = 1; var x = 2;", null,
-         SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
+        VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testMultiplyDeclaredVars2() {
@@ -116,12 +118,12 @@ public class VarCheckTest extends CompilerTestCase {
 
   public void testMultiplyDeclaredVars3() {
     test("try { var x = 1; x *=2; } catch (x) {}", null,
-         SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
+         VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testMultiplyDeclaredVars4() {
     testSame("x;", "var x = 1; var x = 2;",
-         SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR, true);
+        VarCheck.VAR_MULTIPLY_DECLARED_ERROR, true);
   }
 
   public void testVarReferenceInExterns() {
@@ -329,6 +331,38 @@ public class VarCheckTest extends CompilerTestCase {
   public void testVariableInNormalCodeUsedInExterns4() {
     checkSynthesizedExtern(
         "x;", "function x() {}", "var x; x; ");
+  }
+
+  public void testRedeclaration1() {
+     String js = "var a; var a;";
+     test(js, null, VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
+  }
+
+  public void testRedeclaration2() {
+    String js = "var a; /** @suppress {duplicate} */ var a;";
+    testSame(js);
+  }
+
+  public void testRedeclaration3() {
+    String js = " /** @suppress {duplicate} */ var a; var a; ";
+    testSame(js);
+  }
+
+  public void testDuplicateVar() {
+    test("/** @define {boolean} */ var DEF = false; var DEF = true;",
+         null, VAR_MULTIPLY_DECLARED_ERROR);
+  }
+
+  public void testFunctionScopeArguments() {
+    // A var declaration doesn't mask arguments
+    testSame("function f() {var arguments}");
+
+    test("var f = function arguments() {}",
+        null, VarCheck.VAR_ARGUMENTS_SHADOWED_ERROR);
+    test("var f = function (arguments) {}",
+        null, VarCheck.VAR_ARGUMENTS_SHADOWED_ERROR);
+    test("function f() {try {} catch(arguments) {}}",
+        null, VarCheck.VAR_ARGUMENTS_SHADOWED_ERROR);
   }
 
   private final static class VariableTestCheck implements CompilerPass {

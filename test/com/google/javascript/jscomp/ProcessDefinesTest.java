@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR;
-
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.rhino.Node;
@@ -193,11 +191,6 @@ public class ProcessDefinesTest extends CompilerTestCase {
   public void testSimpleReassign3() {
     test("/** @define {boolean} */ var DEF = false;var x;x = DEF = true;",
         "var DEF=true;var x;x=true");
-  }
-
-  public void testDuplicateVar() {
-    test("/** @define {boolean} */ var DEF = false; var DEF = true;",
-         null, VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testAssignBeforeDeclaration1() {

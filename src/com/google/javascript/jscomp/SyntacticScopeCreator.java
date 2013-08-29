@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.InputId;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -38,16 +37,6 @@ class SyntacticScopeCreator implements ScopeCreator {
   // The arguments variable is special, in that it's declared in every local
   // scope, but not explicitly declared.
   private static final String ARGUMENTS = "arguments";
-
-  public static final DiagnosticType VAR_MULTIPLY_DECLARED_ERROR =
-      DiagnosticType.error(
-          "JSC_VAR_MULTIPLY_DECLARED_ERROR",
-          "Variable {0} first declared in {1}");
-
-  public static final DiagnosticType VAR_ARGUMENTS_SHADOWED_ERROR =
-    DiagnosticType.error(
-        "JSC_VAR_ARGUMENTS_SHADOWED_ERROR",
-        "Shadowing \"arguments\" is not allowed");
 
   /**
    * Creates a ScopeCreator.
@@ -190,38 +179,7 @@ class SyntacticScopeCreator implements ScopeCreator {
   private class DefaultRedeclarationHandler implements RedeclarationHandler {
     @Override
     public void onRedeclaration(
-        Scope s, String name, Node n, CompilerInput input) {
-      Node parent = n.getParent();
-
-      // Don't allow multiple variables to be declared at the top-level scope
-      if (scope.isGlobal()) {
-        Scope.Var origVar = scope.getVar(name);
-        Node origParent = origVar.getParentNode();
-        if (origParent.isCatch() &&
-            parent.isCatch()) {
-          // Okay, both are 'catch(x)' variables.
-          return;
-        }
-
-        boolean allowDupe = hasDuplicateDeclarationSuppression(n, origVar);
-
-        if (!allowDupe) {
-          compiler.report(
-              JSError.make(NodeUtil.getSourceName(n), n,
-                           VAR_MULTIPLY_DECLARED_ERROR,
-                           name,
-                           (origVar.input != null
-                            ? origVar.input.getName()
-                            : "??")));
-        }
-      } else if (name.equals(ARGUMENTS) && !NodeUtil.isVarDeclaration(n)) {
-        // Disallow shadowing "arguments" as we can't handle with our current
-        // scope modeling.
-        compiler.report(
-            JSError.make(NodeUtil.getSourceName(n), n,
-                VAR_ARGUMENTS_SHADOWED_ERROR));
-      }
-    }
+        Scope s, String name, Node n, CompilerInput input) {}
   }
 
   /**
@@ -243,32 +201,6 @@ class SyntacticScopeCreator implements ScopeCreator {
     }
   }
 
-
-  /**
-   * @param n The name node to check.
-   * @param origVar The associated Var.
-   * @return Whether duplicated declarations warnings should be suppressed
-   *     for the given node.
-   */
-  static boolean hasDuplicateDeclarationSuppression(Node n, Scope.Var origVar) {
-    Preconditions.checkState(n.isName());
-    Node parent = n.getParent();
-    Node origParent = origVar.getParentNode();
-
-    JSDocInfo info = n.getJSDocInfo();
-    if (info == null) {
-      info = parent.getJSDocInfo();
-    }
-    if (info != null && info.getSuppressions().contains("duplicate")) {
-      return true;
-    }
-
-    info = origVar.nameNode.getJSDocInfo();
-    if (info == null) {
-      info = origParent.getJSDocInfo();
-    }
-    return (info != null && info.getSuppressions().contains("duplicate"));
-  }
 
   /**
    * Generates an untyped global scope from the root of AST of compiler (which

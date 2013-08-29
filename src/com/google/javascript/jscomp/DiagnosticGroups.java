@@ -204,7 +204,7 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup CHECK_VARIABLES =
       DiagnosticGroups.registerGroup("checkVars",
           VarCheck.UNDEFINED_VAR_ERROR,
-          SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR,
+          VarCheck.VAR_MULTIPLY_DECLARED_ERROR,
           VariableReferenceCheck.UNDECLARED_REFERENCE,
           VariableReferenceCheck.REDECLARED_VARIABLE);
 
@@ -231,7 +231,7 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup DUPLICATE_VARS =
       DiagnosticGroups.registerGroup("duplicate",
-          SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR,
+          VarCheck.VAR_MULTIPLY_DECLARED_ERROR,
           TypeValidator.DUP_VAR_DECLARATION,
           VariableReferenceCheck.REDECLARED_VARIABLE);
 

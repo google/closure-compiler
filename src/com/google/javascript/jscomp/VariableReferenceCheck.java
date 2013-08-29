@@ -130,7 +130,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         boolean isDeclaration = reference.isDeclaration();
 
         boolean allowDupe =
-            SyntacticScopeCreator.hasDuplicateDeclarationSuppression(
+            VarCheck.hasDuplicateDeclarationSuppression(
                 reference.getNode(), v);
         if (isDeclaration && !allowDupe) {
           // Look through all the declarations we've found so far, and
@@ -173,7 +173,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             // Special case to deal with var goog = goog || {}
             Node grandparent = reference.getGrandparent();
             if (grandparent.isName()
-                && grandparent.getString() == v.name) {
+                && grandparent.getString().equals(v.name)) {
               continue;
             }
 

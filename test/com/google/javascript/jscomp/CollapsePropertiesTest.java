@@ -113,9 +113,9 @@ public class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testObjLitDeclarationWithDuplicateKeys() {
+    disableNormalize();
     test("var a = {b: 0, b: 1}; var c = a.b;",
-         "var a$b = 0; var a$b = 1; var c = a$b;",
-         SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
+         "var a$b = 0; var a$b = 1; var c = a$b;");
   }
 
   public void testObjLitAssignmentDepth1() {

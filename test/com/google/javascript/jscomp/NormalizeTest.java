@@ -311,8 +311,7 @@ public class NormalizeTest extends CompilerTestCase {
     // TODO(johnlenz): Do we need to handle this differently for "third_party"
     // mode? Remove the previous function definitions?
     test("function f(){} function f(){}",
-         "function f(){} function f(){}",
-         SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
+         "function f(){} function f(){}");
     test("if (a) { function f(){} } else { function f(){} }",
          "if (a) { var f = function (){} } else { f = function (){} }");
   }

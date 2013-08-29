@@ -39,23 +39,6 @@ public class SyntacticScopeCreatorTest extends TestCase {
     return scope;
   }
 
-  /**
-   * Helper to traverse the tree creating the Scope object everywhere.
-   */
-  private static void testScopes(String js, int errorCount) {
-    Compiler compiler = new Compiler();
-    Node root = compiler.parseTestCode(js);
-    NodeTraversal.traverse(
-        compiler, root, new NodeTraversal.AbstractPostOrderCallback() {
-          @Override
-          public
-          void visit(NodeTraversal t, Node n, Node parent) {
-            t.getScope();
-          }
-        });
-    assertEquals(errorCount, compiler.getErrorCount());
-  }
-
   public void testFunctionScope() {
     Scope scope = getScope("function foo() {}\n" +
                            "var x = function bar(a1) {};" +
@@ -92,51 +75,5 @@ public class SyntacticScopeCreatorTest extends TestCase {
         new SyntacticScopeCreator(compiler).createScope(fooNode, null);
     assertEquals(fooNode, fooScope.getRootNode());
     assertTrue(fooScope.isDeclared("x", false));
-  }
-
-  public void testRedeclaration1() {
-     String js = "var a; var a;";
-     int errors = createGlobalScopeHelper(js);
-     assertEquals(1, errors);
-  }
-
-  public void testRedeclaration2() {
-    String js = "var a; /** @suppress {duplicate} */ var a;";
-    int errors = createGlobalScopeHelper(js);
-    assertEquals(0, errors);
-  }
-
-  public void testRedeclaration3() {
-    String js = " /** @suppress {duplicate} */ var a; var a; ";
-    int errors = createGlobalScopeHelper(js);
-    assertEquals(0, errors);
-  }
-
-
-  public void testFunctionScopeArguments() {
-    // A var declaration doesn't mask arguments
-    testScopes("function f() {var arguments}", 0);
-
-    testScopes("var f = function arguments() {}", 1);
-    testScopes("var f = function (arguments) {}", 1);
-    testScopes("function f() {try {} catch(arguments) {}}", 1);
-  }
-
-  /**
-   * Parse the supplied JS and create the global SyntaticScope object.
-   * @return The error count.
-   */
-  private int createGlobalScopeHelper(String js) {
-    Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    options.checkSymbols = true;
-    compiler.initOptions(options);
-
-    Node root = compiler.parseTestCode(js);
-    assertEquals(0, compiler.getErrorCount());
-    Scope globalScope =
-      new SyntacticScopeCreator(compiler).createScope(root, null);
-    assertEquals(root, globalScope.getRootNode());
-    return compiler.getErrorCount();
   }
 }

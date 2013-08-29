@@ -290,7 +290,7 @@ public class CommandLineRunnerTest extends TestCase {
   public void testCheckSymbolsOnForVerbose() {
     args.add("--warning_level=VERBOSE");
     test("x = 3;", VarCheck.UNDEFINED_VAR_ERROR);
-    test("var y; var y;", SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
+    test("var y; var y;", VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testCheckSymbolsOverrideForVerbose() {
@@ -1044,7 +1044,7 @@ public class CommandLineRunnerTest extends TestCase {
     args.add("--jscomp_off=externsValidation");
     args.add("--warning_level=VERBOSE");
     test("var theirVar = {}; var myVar = {}; var myVar = {};",
-         SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
+         VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testGoogAssertStripping() {
