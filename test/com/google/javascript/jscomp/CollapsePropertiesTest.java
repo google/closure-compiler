@@ -1690,6 +1690,43 @@ public class CollapsePropertiesTest extends CompilerTestCase {
         "}");
   }
 
+  public void testCollapsePropertiesOfClass2() {
+    test(
+        "var goog = goog || {};\n" +
+        "goog.addSingletonGetter = function(cls) {};\n" +
+        "\n" +
+        "var a = {};\n" +
+        "\n" +
+        "/** @constructor */\n" +
+        "a.b = function() {};\n" +
+        "goog.addSingletonGetter(a.b);\n" +
+        "a.b.prototype.get = function(key) {};\n" +
+        "\n" +
+        "/** @constructor */\n" +
+        "a.b.c = function() {};\n" +
+        "a.b.c.XXX = new a.b.c();\n" +
+        "\n" +
+        "function f() {\n" +
+        "  var x = a.b.getInstance();\n" +
+        "  var Key = a.b.c;\n" +
+        "  x.get(Key.XXX);\n" +
+        "}",
+
+        "var goog = goog || {};\n" +
+        "var goog$addSingletonGetter = function(cls) {};\n" +
+        "var a$b = function() {};\n" +
+        "goog$addSingletonGetter(a$b);\n" +
+        "a$b.prototype.get = function(key) {};\n" +
+        "var a$b$c = function() {};\n" +
+        "var a$b$c$XXX = new a$b$c();\n" +
+        "\n" +
+        "function f() {\n" +
+        "  var x = a$b.getInstance();\n" +
+        "  var Key = null;\n" +
+        "  x.get(a$b$c$XXX);\n" +
+        "}");
+  }
+
   public void testGlobalCatch() throws Exception {
     testSame(
         "try {" +

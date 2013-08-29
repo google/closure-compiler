@@ -693,9 +693,20 @@ class GlobalNamespace
     }
 
     private boolean isClassDefiningCall(Node callNode) {
+      CodingConvention convention = compiler.getCodingConvention();
+      // Look for goog.inherits, goog.mixin
       SubclassRelationship classes =
-          compiler.getCodingConvention().getClassesDefinedByCall(callNode);
-      return classes != null;
+          convention.getClassesDefinedByCall(callNode);
+      if (classes != null) {
+        return true;
+      }
+
+      // Look for calls to goog.addSingletonGetter calls.
+      String className = convention.getSingletonGetterClassName(callNode);
+      if (className != null) {
+        return true;
+      }
+      return false;
     }
 
     /**
