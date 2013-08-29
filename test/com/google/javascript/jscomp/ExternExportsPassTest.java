@@ -440,7 +440,7 @@ public class ExternExportsPassTest extends TestCase {
     assertEquals(0, clientCompileResult.errors.length);
   }
 
-  public void testWarnOnExportFunctionWithUnknownReturnType() {
+  public void testDontWarnOnExportFunctionWithUnknownReturnType() {
     String librarySource =
       "var InternalName = function() {" +
       "  return 6;" +
@@ -449,7 +449,7 @@ public class ExternExportsPassTest extends TestCase {
 
       Result libraryCompileResult = compileAndExportExterns(librarySource);
 
-      assertEquals(1, libraryCompileResult.warnings.length);
+      assertEquals(0, libraryCompileResult.warnings.length);
       assertEquals(0, libraryCompileResult.errors.length);
   }
 
@@ -565,7 +565,7 @@ public class ExternExportsPassTest extends TestCase {
     assertEquals(expected, result.externExport);
   }
 
-  public void testWarnOnExportFunctionWithUnknownParameterTypes() {
+  public void testDontWarnOnExportFunctionWithUnknownParameterTypes() {
     /* This source is missing types for the b and c parameters */
     String librarySource =
       "/**\n" +
@@ -579,7 +579,7 @@ public class ExternExportsPassTest extends TestCase {
 
       Result libraryCompileResult = compileAndExportExterns(librarySource);
 
-      assertEquals(2, libraryCompileResult.warnings.length);
+      assertEquals(0, libraryCompileResult.warnings.length);
       assertEquals(0, libraryCompileResult.errors.length);
   }
 
