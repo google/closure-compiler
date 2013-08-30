@@ -120,4 +120,9 @@ public class ReorderConstantExpressionTest extends CompilerTestCase {
 
     testSame("a " + op + " b");
   }
+
+  public void testReorderConstantDoesntAddParens() {
+    testSame("a % b * 4");
+    testSame("a * b * 4");
+  }
 }
