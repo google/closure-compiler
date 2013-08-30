@@ -287,9 +287,12 @@ public class AttachJsDocs {
         return new NodePos(n, napos);
 
       case Token.RETURN:
-        res = attachComment(((ReturnStatement) n).getReturnValue(), napos);
-        if (res != null) {
-          return res;
+        AstNode retValue = ((ReturnStatement) n).getReturnValue();
+        if (retValue != null) {
+          res = attachComment(retValue, napos);
+          if (res != null) {
+            return res;
+          }
         }
         return new NodePos(n, napos);
 

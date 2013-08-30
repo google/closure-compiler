@@ -500,6 +500,34 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertEquals(Token.CAST, cast.getType());
   }
 
+  public void testJSDocAttachment19() {
+    Node fn =
+        parse(
+            "function f() { " +
+            "  /** @type {string} */" +
+            "  return;" +
+            "};").getFirstChild();
+    assertEquals(Token.FUNCTION, fn.getType());
+
+    Node ret = fn.getLastChild().getFirstChild();
+    assertEquals(Token.RETURN, ret.getType());
+    assertNull(ret.getJSDocInfo());
+  }
+
+  public void testJSDocAttachment20() {
+    Node fn =
+        parse(
+            "function f() { " +
+            "  /** @type {string} */" +
+            "  if (true) return;" +
+            "};").getFirstChild();
+    assertEquals(Token.FUNCTION, fn.getType());
+
+    Node ret = fn.getLastChild().getFirstChild();
+    assertEquals(Token.IF, ret.getType());
+    assertNull(ret.getJSDocInfo());
+  }
+
   public void testInlineJSDocAttachment1() {
     Node fn = parse("function f(/** string */ x) {}").getFirstChild();
     assertTrue(fn.isFunction());
