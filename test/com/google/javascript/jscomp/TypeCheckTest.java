@@ -6848,6 +6848,33 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testIssue1072() throws Exception {
+    testTypes(
+        "/**\n" +
+        " * @param {string} x\n" +
+        " * @return {number}\n" +
+        " */\n" +
+        "var f1 = function (x) {\n" +
+        "  return 3;\n" +
+        "};\n" +
+        "\n" +
+        "/** Function */\n" +
+        "var f2 = function (x) {\n" +
+        "  if (!x) throw new Error()\n" +
+        "  return /** @type {number} */ (f1('x'))\n" +
+        "}\n" +
+        "\n" +
+        "/**\n" +
+        " * @param {string} x\n" +
+        " */\n" +
+        "var f3 = function (x) {};\n" +
+        "\n" +
+        "f1(f3);",
+        "actual parameter 1 of f1 does not match formal parameter\n" +
+        "found   : function (string): undefined\n" +
+        "required: string");
+  }
+
   public void testEnums() throws Exception {
     testTypes(
         "var outer = function() {" +
