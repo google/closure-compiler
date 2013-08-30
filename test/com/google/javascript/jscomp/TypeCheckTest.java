@@ -11287,6 +11287,21 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "x = fn({});");
   }
 
+  public void testTemplateType19() throws Exception {
+    testTypes(
+        "/**\n" +
+        " * @param {T} t\n" +
+        " * @param {U} u\n" +
+        " * @return {{t:T, u:U}} \n" +
+        " * @template T,U\n" +
+        " */\n" +
+        "function fn(t, u) { return {t:t, u:u}; }\n" +
+        "/** @type {null} */ var x = fn(1, 'str');",
+        "initializing variable\n" +
+        "found   : {t: number, u: string}\n" +
+        "required: null");
+  }
+
   public void disable_testBadTemplateType4() throws Exception {
     // TODO(johnlenz): Add a check for useless of template types.
     // Unless there are at least two references to a Template type in

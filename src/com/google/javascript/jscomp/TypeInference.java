@@ -1177,7 +1177,7 @@ class TypeInference
 
     TemplateTypeReplacer(
         JSTypeRegistry registry, Map<TemplateType, JSType> replacements) {
-      super(registry);
+      super(registry, true);
       this.registry = registry;
       this.replacements = replacements;
     }
