@@ -62,13 +62,13 @@ DeviceAcceleration.prototype.z;
 function DeviceRotationRate() {}
 
 /** @type {?number} */
-DeviceOrientationEvent.prototype.alpha;
+DeviceRotationRate.prototype.alpha;
 
 /** @type {?number} */
-DeviceOrientationEvent.prototype.beta;
+DeviceRotationRate.prototype.beta;
 
 /** @type {?number} */
-DeviceOrientationEvent.prototype.gamma;
+DeviceRotationRate.prototype.gamma;
 
 /**
  * @constructor
