@@ -2251,6 +2251,11 @@ google.maps.MapOptions.prototype.styles;
 google.maps.MapOptions.prototype.tilt;
 
 /**
+ * @type {boolean}
+ */
+google.maps.visualRefresh;
+
+/**
  * @type {number}
  */
 google.maps.MapOptions.prototype.zoom;
