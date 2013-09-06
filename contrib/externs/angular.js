@@ -1108,11 +1108,13 @@ angular.$http.HttpPromise.then = function(
 
 /**
  * @param {angular.HttpCallback} callback
+ * @return {!angular.$http.HttpPromise} Promise for chaining.
  */
 angular.$http.HttpPromise.success = function(callback) {};
 
 /**
  * @param {angular.HttpCallback} callback
+ * @return {!angular.$http.HttpPromise} Promise for chaining.
  */
 angular.$http.HttpPromise.error = function(callback) {};
 
