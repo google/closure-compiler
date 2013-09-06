@@ -64,7 +64,7 @@ class VarCheck extends AbstractPostOrderCallback implements
   static final DiagnosticType UNDEFINED_EXTERN_VAR_ERROR =
     DiagnosticType.warning(
       "JSC_UNDEFINED_EXTERN_VAR_ERROR",
-      "name {0} is not undefined in the externs.");
+      "name {0} is not defined in the externs.");
 
   static final DiagnosticType VAR_MULTIPLY_DECLARED_ERROR =
       DiagnosticType.error(
