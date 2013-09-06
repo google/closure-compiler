@@ -54,11 +54,9 @@ import java.util.List;
 public class ModificationVisitor implements Visitor<JSType> {
 
   private final JSTypeRegistry registry;
-  private final boolean visitProperties;
 
-  public ModificationVisitor(JSTypeRegistry registry, boolean visitProperties) {
+  public ModificationVisitor(JSTypeRegistry registry) {
     this.registry = registry;
-    this.visitProperties = visitProperties;
   }
 
   @Override
@@ -146,29 +144,6 @@ public class ModificationVisitor implements Visitor<JSType> {
 
   @Override
   public JSType caseObjectType(ObjectType objType) {
-    if (!visitProperties
-        || objType.isNominalType()
-        || objType instanceof ProxyObjectType
-        || !objType.isRecordType()) {
-      return objType;
-    }
-
-    boolean changed = false;
-    RecordTypeBuilder builder = new RecordTypeBuilder(registry);
-    for (String prop : objType.getOwnPropertyNames()) {
-      Node propertyNode = objType.getPropertyNode(prop);
-      JSType beforeType = objType.getPropertyType(prop);
-      JSType afterType = beforeType.visit(this);
-      if (beforeType != afterType) {
-        changed = true;
-      }
-      builder.addProperty(prop, afterType, propertyNode);
-    }
-
-    if (changed) {
-      return builder.build();
-    }
-
     return objType;
   }
 
