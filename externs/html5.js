@@ -1445,32 +1445,32 @@ MessagePort.prototype.onmessage;
 function MessageEvent() {}
 
 /**
- * Returns the data of the message.
+ * The data payload of the message.
  * @type {*}
  */
 MessageEvent.prototype.data;
 
 /**
- * Returns the origin of the message, for server-sent events and cross-document
+ * The origin of the message, for server-sent events and cross-document
  * messaging.
  * @type {string}
  */
 MessageEvent.prototype.origin;
 
 /**
- * Returns the last event ID, for server-sent events.
+ * The last event ID, for server-sent events.
  * @type {string}
  */
 MessageEvent.prototype.lastEventId;
 
 /**
- * Returns the last event ID, for server-sent events.
+ * The window that dispatched the event.
  * @type {Window}
  */
 MessageEvent.prototype.source;
 
 /**
- * Returns the Array of MessagePorts sent with the message, for cross-document
+ * The Array of MessagePorts sent with the message, for cross-document
  * messaging and channel messaging.
  * @type {Array.<MessagePort>}
  */
