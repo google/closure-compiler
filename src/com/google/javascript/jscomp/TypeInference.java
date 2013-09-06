@@ -56,7 +56,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Type inference within a script node or a function body, using the data-flow
@@ -1086,23 +1085,6 @@ class TypeInference
         maybeResolveTemplateTypeFromNodes(
             paramFunctionType.getParameters(),
             argFunctionType.getParameters(), resolvedTypes);
-      }
-    } else if (paramType.isRecordType() && !paramType.isNominalType()) {
-      // @param {{foo:T}}
-      ObjectType paramRecordType = paramType.toObjectType();
-      ObjectType argObjectType = argType.restrictByNotNullOrUndefined()
-          .toObjectType();
-      if (argObjectType != null) {
-        Set<String> names = paramRecordType.getPropertyNames();
-        for (String name : names) {
-          if (paramRecordType.hasOwnProperty(name)
-              && argObjectType.hasProperty(name)) {
-            maybeResolveTemplatedType(
-                paramRecordType.getPropertyType(name),
-                argObjectType.getPropertyType(name),
-                resolvedTypes);
-          }
-        }
       }
     } else if (paramType.isTemplatizedType()) {
       // @param {Array.<T>}
