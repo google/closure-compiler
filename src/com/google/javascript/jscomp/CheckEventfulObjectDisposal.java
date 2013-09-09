@@ -194,7 +194,8 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
     int lastPeriod = functionOrMethodName.lastIndexOf('.');
     // If function call has a period it is potentially a method function.
     if (lastPeriod >= 0) {
-      potentiallyTypeName = functionOrMethodName.substring(0, lastPeriod);
+      potentiallyTypeName = functionOrMethodName.substring(0, lastPeriod).
+        replaceFirst(".prototype$", "");
       propertyName = functionOrMethodName.substring(lastPeriod);
       objectType = compiler.getTypeRegistry().getType(potentiallyTypeName);
     } else {
