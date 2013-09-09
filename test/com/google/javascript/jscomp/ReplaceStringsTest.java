@@ -48,7 +48,11 @@ public class ReplaceStringsTest extends CompilerTestCase {
     " * @param {string} name\n" +
     " * @return {!goog.debug.Logger}\n" +
     " */\n" +
-    "goog.debug.Logger.getLogger = function(name){};\n";
+    "goog.debug.Logger.getLogger = function(name){};\n" +
+    "goog.log = {}\n" +
+    "goog.log.getLogger = function(name){};\n" +
+    "goog.log.info = function(logger, msg, opt_ex) {};\n"
+    ;
 
   public ReplaceStringsTest() {
     super(EXTERNS, true);
@@ -78,7 +82,9 @@ public class ReplaceStringsTest extends CompilerTestCase {
         "Error(?)",
         "goog.debug.Trace.startTracer(*)",
         "goog.debug.Logger.getLogger(?)",
-        "goog.debug.Logger.prototype.info(?)"
+        "goog.debug.Logger.prototype.info(?)",
+        "goog.log.getLogger(?)",
+        "goog.log.info(,?)"
         );
     pass = new ReplaceStrings(compiler, "`", names, reserved, previous);
 
@@ -398,6 +404,18 @@ public class ReplaceStringsTest extends CompilerTestCase {
         "throw Error('xyz');",
         "throw Error('d');",
         (new String[] { "d", "xyz" }));
+  }
+
+  public void testLoggerWithNoReplacedParam() {
+    testDebugStrings(
+        "var x = {};" +
+        "x.logger_ = goog.log.getLogger('foo');" +
+        "goog.log.info(x.logger_, 'Some message');",
+        "var x$logger_ = goog.log.getLogger('a');" +
+        "goog.log.info(x$logger_, 'b');",
+        new String[] {
+            "a", "foo",
+            "b", "Some message"});
   }
 
   private void testDebugStrings(String js, String expected,
