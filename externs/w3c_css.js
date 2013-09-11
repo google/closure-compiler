@@ -1543,6 +1543,12 @@ CSSProperties.prototype.quotes;
 
 /**
  * @type {string}
+ * @see http://www.w3.org/TR/css3-ui/#resize
+ */
+CSSProperties.prototype.resize;
+
+/**
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-richness
  */
 CSSProperties.prototype.richness;
