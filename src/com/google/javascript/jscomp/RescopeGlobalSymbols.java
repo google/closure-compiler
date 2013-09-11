@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -64,6 +65,36 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private final boolean assumeCrossModuleNames;
   private final Set<String> crossModuleNames = Sets.newHashSet();
 
+  /**
+   * Constructor for the RescopeGlobalSymbols compiler pass.
+   *
+   * @param compiler The JSCompiler, for reporting code changes.
+   * @param globalSymbolNamespace Name of namespace into which all global
+   *     symbols are transferred.
+   * @param addExtern If true, the compiler will consider the
+   *    globalSymbolNamespace an extern name.
+   * @param assumeCrossModuleNames If true, all global symbols will be assumed
+   *     cross module boundaries and thus require renaming.
+   */
+  RescopeGlobalSymbols(
+      AbstractCompiler compiler,
+      String globalSymbolNamespace,
+      boolean assumeCrossModuleNames) {
+    this(compiler, globalSymbolNamespace, true, assumeCrossModuleNames);
+  }
+
+  /**
+   * Constructor for the RescopeGlobalSymbols compiler pass for use in testing.
+   *
+   * @param compiler The JSCompiler, for reporting code changes.
+   * @param globalSymbolNamespace Name of namespace into which all global
+   *     symbols are transferred.
+   * @param addExtern If true, the compiler will consider the
+   *    globalSymbolNamespace an extern name.
+   * @param assumeCrossModuleNames If true, all global symbols will be assumed
+   *     cross module boundaries and thus require renaming.
+   * VisibleForTesting
+   */
   RescopeGlobalSymbols(
       AbstractCompiler compiler,
       String globalSymbolNamespace,
@@ -73,13 +104,6 @@ final class RescopeGlobalSymbols implements CompilerPass {
     this.globalSymbolNamespace = globalSymbolNamespace;
     this.addExtern = addExtern;
     this.assumeCrossModuleNames = assumeCrossModuleNames;
-  }
-
-  RescopeGlobalSymbols(
-      AbstractCompiler compiler,
-      String globalSymbolNamespace,
-      boolean assumeCrossModuleNames) {
-    this(compiler, globalSymbolNamespace, true, assumeCrossModuleNames);
   }
 
   private boolean isCrossModuleName(String name) {
@@ -235,8 +259,8 @@ final class RescopeGlobalSymbols implements CompilerPass {
       // the suffix.
       if (!var.isExtern() && !var.isGlobal()
           && (name.equals(globalSymbolNamespace)
-              || name.indexOf(
-                  globalSymbolNamespace + DISAMBIGUATION_SUFFIX) == 0)) {
+              || name.startsWith(
+                  globalSymbolNamespace + DISAMBIGUATION_SUFFIX))) {
         n.setString(name + DISAMBIGUATION_SUFFIX);
         compiler.reportCodeChange();
       }
