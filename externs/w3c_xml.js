@@ -325,7 +325,7 @@ XMLHttpRequest.prototype.open = function(method, url, opt_async, opt_user,
 XMLHttpRequest.prototype.setRequestHeader = function(header, value) {};
 
 /**
- * @param {ArrayBuffer|Blob|Document|FormData|string=} opt_data
+ * @param {ArrayBuffer|ArrayBufferView|Blob|Document|FormData|string=} opt_data
  * @return {undefined}
  * @see http://www.w3.org/TR/XMLHttpRequest/#send
  * @see http://dev.w3.org/2006/webapi/XMLHttpRequest-2/#the-send-method
