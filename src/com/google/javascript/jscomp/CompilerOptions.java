@@ -1555,7 +1555,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
-   * Sets how goog.tweak calls are processed.
+   * Sets ECMAScript version to use.
    */
   public void setLanguageIn(LanguageMode languageIn) {
     this.languageIn = languageIn;
