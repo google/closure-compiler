@@ -24,7 +24,6 @@ package com.google.javascript.jscomp;
 public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   private boolean late = true;
-  private boolean aggressive = true;
 
   // TODO(user): Remove this when we no longer need to do string comparison.
   private PeepholeMinimizeConditionsTest(boolean compareAsTree) {
@@ -38,7 +37,6 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     late = true;
-    aggressive = true;
     super.setUp();
     enableLineNumberCheck(true);
     disableNormalize();
@@ -47,7 +45,7 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass = new PeepholeOptimizationsPass(
-        compiler, new PeepholeMinimizeConditions(late, aggressive));
+        compiler, new PeepholeMinimizeConditions(late));
     peepholePass.setRetraverseOnChange(false);
     return peepholePass;
   }

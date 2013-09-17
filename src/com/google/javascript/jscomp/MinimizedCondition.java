@@ -25,12 +25,17 @@ import com.google.javascript.rhino.Token;
 import java.util.Collections;
 import java.util.Comparator;
 
-/** A class that represents a minimized conditional expression.
- *  Depending on the context, a leading NOT node in front of the conditional
- *  may or may not be counted as a cost, so this class provides ways to
- *  access minimized versions of both of those ASTs.
+/**
+ * A class that represents a minimized conditional expression.
+ * This is a conditional expression that has been massaged according to
+ * DeMorgan's laws in order to minimize the length of the source
+ * representation.
+ * <p>
+ * Depending on the context, a leading NOT node in front of the conditional
+ * may or may not be counted as a cost, so this class provides ways to
+ * access minimized versions of both of those abstract syntax trees (ASTs).
  *
- *  @author blickly@google.com (Ben Lickly)
+ * @author blickly@google.com (Ben Lickly)
  */
 class MinimizedCondition {
 
@@ -68,12 +73,12 @@ class MinimizedCondition {
     return this;
   }
 
-  /** Remove the passed condition node from the AST, and then return a
-   *  MinimizedCondition that represents the condition node after
-   *  minimization.
+  /**
+   * Remove the passed condition node from the AST, and then return a
+   * MinimizedCondition that represents the condition node after
+   * minimization.
    */
   static MinimizedCondition fromConditionNode(Node n) {
-    MinimizedCondition minCond;
     switch (n.getType()) {
       case Token.NOT:
       case Token.AND:
@@ -87,16 +92,24 @@ class MinimizedCondition {
     }
   }
 
-  /** Return the shorter representation of the original condition node.
-   *
-   * @param style Whether to count a leading NOT in doing the minimization.
-   *  i.e. Prefer the right side in cases such as:
+  /**
+   * Return the shorter representation of the original condition node.
+   * <p>
+   * Depending on the context, this may require to either penalize or
+   * not the existance of a leading NOT node.
+   * <ul><li>When {@code style} is {@code PREFER_UNNEGATED}, simply try to
+   * minimize the total length of the conditional.</li>
+   * <li>When {@code style} is {@code ALLOW_LEADING_NOT}, prefer the right side
+   * in cases such as:
+   * <br><code>
    *    !x || !y || z  ==>  !(x && y && !z)
-   *  This is useful in contexts such as IFs or HOOKs where subsequent
-   *  optimizations can efficiently deal with leading NOTs.
+   * </code><br>
+   * This is useful in contexts such as IFs or HOOKs where subsequent
+   * optimizations can efficiently deal with leading NOTs.
+   * </li></ul>
    *
-   *  @return The minimized condition MeasuredNode, with equivalent semantics
-   *    to that passed to #fromConditionNode().
+   * @return the minimized condition MeasuredNode, with equivalent semantics
+   *   to that passed to {@link #fromConditionNode}.
    */
   MeasuredNode getMinimized(MinimizationStyle style) {
     if (style == MinimizationStyle.PREFER_UNNEGATED
@@ -108,27 +121,32 @@ class MinimizedCondition {
     }
   }
 
-  /** Return a MeasuredNode of the given condition node, without minimizing
+  /**
+   * Return a MeasuredNode of the given condition node, without minimizing
    * the result.
+   * <p>
+   * Since a MinimizedCondition necessarily must contain two trees, this
+   * method sets the negative side to a {@link Token#SCRIPT} node (never valid
+   * inside an expression) with an unreasonably high length so that it will
+   * never be chosen by {@link #getMinimized}.
    *
-   *  @param n The conditional expression tree to minimize.
-   *   This must be removed from the tree before being passed in connected.
-   *  @return A MinimizedCondition object representing that tree.
+   * @param n the conditional expression tree to minimize.
+   *  This must be connected to the AST, and will be swapped
+   *  with a placeholder node during minimization.
+   * @return a MinimizedCondition object representing that tree.
    */
   static MinimizedCondition unoptimized(Node n) {
     Preconditions.checkNotNull(n.getParent());
     Node placeholder = swapWithPlaceholderNode(n);
     MeasuredNode pos = new MeasuredNode(n, 0, false);
-    // In the unoptimized case, we want to always return the positive side,
-    // so we set the negative side to a SCRIPT node (never valid inside an
-    // expression) with an unreasonably high length so that it's never chosen.
     MeasuredNode neg = new MeasuredNode(IR.script(), Integer.MAX_VALUE, true);
     return new MinimizedCondition(pos, neg).setPlaceholder(placeholder);
   }
 
-  /** Remove the given node from the AST, and replace it with a placeholder
-   *  SCRIPT node.
-   *  @return The new placeholder node.
+  /**
+   * Remove the given node from the AST, and replace it with a placeholder
+   * SCRIPT node.
+   * @return the new placeholder node.
    */
   private static Node swapWithPlaceholderNode(Node n) {
     Preconditions.checkNotNull(n.getParent());
@@ -137,11 +155,13 @@ class MinimizedCondition {
     return placeholder;
   }
 
-  /** Minimize the condition at the given node.
+  /**
+   * Minimize the condition at the given node.
    *
-   *  @param n The conditional expression tree to minimize.
-   *   This must be removed from the tree before being passed in connected.
-   *  @return A MinimizedCondition object representing that tree.
+   * @param n the conditional expression tree to minimize.
+   *  This must be connected to the AST, and will be swapped
+   *  with a placeholder node during minimization.
+   * @return a MinimizedCondition object representing that tree.
    */
   private static MinimizedCondition computeMinimizedCondition(Node n) {
     Preconditions.checkArgument(n.getParent() == null);
@@ -253,27 +273,22 @@ class MinimizedCondition {
 
     private MeasuredNode negate() {
       this.change();
-      int complementOperator;
       switch (node.getType()) {
+        case Token.EQ:
+          node.setType(Token.NE);
+          return this;
+        case Token.NE:
+          node.setType(Token.EQ);
+          return this;
+        case Token.SHEQ:
+          node.setType(Token.SHNE);
+          return this;
+        case Token.SHNE:
+          node.setType(Token.SHEQ);
+          return this;
         default:
           return this.addNot();
-        // Otherwise a binary operator with a complement.
-        case Token.EQ:
-          complementOperator = Token.NE;
-          break;
-        case Token.NE:
-          complementOperator = Token.EQ;
-          break;
-        case Token.SHEQ:
-          complementOperator = Token.SHNE;
-          break;
-        case Token.SHNE:
-          complementOperator = Token.SHEQ;
-          break;
       }
-      // Clone entire tree and just change operator.
-      node.setType(complementOperator);
-      return this;
     }
 
     private MeasuredNode change() {
@@ -287,15 +302,16 @@ class MinimizedCondition {
       return this;
     }
 
-    /** Estimate the number of characters in the textual representation of
+    /**
+     *  Estimate the number of characters in the textual representation of
      *  the given node and that will be devoted to negation or parentheses.
      *  Since these are the only characters that flipping a condition
      *  according to De Morgan's rule can affect, these are the only ones
      *  we count.
      *  Not nodes are counted by the NOT node itself, whereas
      *  parentheses around an expression are counted by the parent node.
-     *  @param n The node to be checked.
-     *  @return The number of negations and parentheses in the node.
+     *  @param n the node to be checked.
+     *  @return the number of negations and parentheses in the node.
      */
     private static int estimateCostOneLevel(Node n) {
       int cost = 0;

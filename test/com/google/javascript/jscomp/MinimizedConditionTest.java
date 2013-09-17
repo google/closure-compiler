@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * Tests for {@link MinimizedCondition} in isolation.
  * Tests for the containing PeepholeMinimizeConditions pass are in
- * PeepholeMinimizeConditionsTest.
+ * {@link PeepholeMinimizeConditionsTest}.
  *
  * @author blickly@google.com (Ben Lickly)
  */
@@ -78,38 +78,28 @@ public class MinimizedConditionTest extends TestCase {
     minCond("!(x && y)", "!x || !y", "!(x && y)");
   }
 
-  public void testMinimizeDemorgan() {
+  public void testMinimizeDemorganSimple() {
     minCond("!(x&&y)", "!x||!y", "!(x&&y)");
     minCond("!(x||y)", "!x&&!y", "!(x||y)");
     minCond("!x||!y", "!x||!y", "!(x&&y)");
     minCond("!x&&!y", "!x&&!y", "!(x||y)");
     minCond("!(x && y && z)", "!(x && y && z)", "!(x && y && z)");
-  }
-
-  public void testMinimizeDemorgan2() {
     minCond("(!a||!b)&&c", "(!a||!b)&&c", "!(a&&b||!c)");
-  }
-
-  public void testMinimizeDemorgan3() {
     minCond("(!a||!b)&&(c||d)", "!(a&&b||!c&&!d)", "!(a&&b||!c&&!d)");
   }
 
-  public void testMinimizeDemorgan4() {
+  public void testMinimizeBug8494751() {
     minCond(
         "x && (y===2 || !f()) && (y===3 || !h())",
         "x && !((y!==2 && f()) || (y!==3 && h()))",
         "!(!x || (y!==2 && f()) || (y!==3 && h()))");
   }
 
-  public void testMinimizeDemorgan5() {
+  public void testMinimizeComplementableOperator() {
     minCond(
         "0===c && (2===a || 1===a)",
         "0===c && (2===a || 1===a)",
         "!(0!==c || 2!==a && 1!==a)");
-  }
-
-  public void testMinimizeDemorgan6() {
-    minCond("!((x,y)&&z)", "(x,!y)||!z", "!((x,y)&&z)");
   }
 
   public void testMinimizeHook() {
@@ -118,6 +108,7 @@ public class MinimizedConditionTest extends TestCase {
 
   public void testMinimizeComma() {
     minCond("!(inc(), test())", "inc(), !test()", "!(inc(), test())");
+    minCond("!((x,y)&&z)", "(x,!y)||!z", "!((x,y)&&z)");
   }
 
 }
