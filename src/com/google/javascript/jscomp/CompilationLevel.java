@@ -135,7 +135,6 @@ public enum CompilationLevel {
     options.extractPrototypeMemberDeclarations = true;
     options.collapseVariableDeclarations = true;
     options.convertToDottedProperties = true;
-    options.rewriteFunctionExpressions = true;
     options.labelRenaming = true;
     options.removeDeadCode = true;
     options.optimizeArgumentsArray = true;
@@ -154,7 +153,7 @@ public enum CompilationLevel {
     options.collapseAnonymousFunctions = true;
     options.collapseProperties = true;
     options.checkGlobalThisLevel = CheckLevel.WARNING;
-    options.rewriteFunctionExpressions = true;
+    options.rewriteFunctionExpressions = false;
     options.smartNameRemoval = true;
     options.inlineConstantVars = true;
     options.setInlineFunctions(Reach.ALL);
