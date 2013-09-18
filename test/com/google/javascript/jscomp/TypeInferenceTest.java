@@ -427,6 +427,14 @@ public class TypeInferenceTest extends TestCase {
     verifySubtypeOf("out2", OBJECT_TYPE);
   }
 
+  public void testAssertElement() {
+    JSType elementType = registry.createObjectType("Element", null,
+        registry.getNativeObjectType(OBJECT_TYPE));
+    assuming("x", elementType);
+    inFunction("out1 = x; goog.asserts.assertElement(x); out2 = x;");
+    verify("out1", elementType);
+  }
+
   public void testAssertObject2() {
     JSType startType = createNullableType(ARRAY_TYPE);
     assuming("x", startType);

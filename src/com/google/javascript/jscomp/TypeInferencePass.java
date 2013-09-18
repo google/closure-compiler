@@ -50,10 +50,10 @@ class TypeInferencePass implements CompilerPass {
     this.scopeCreator = scopeCreator;
 
     assertionFunctionsMap = Maps.newHashMap();
-    for (AssertionFunctionSpec assertionFucntion :
+    for (AssertionFunctionSpec assertionFunction :
         compiler.getCodingConvention().getAssertionFunctions()) {
-      assertionFunctionsMap.put(assertionFucntion.getFunctionName(),
-          assertionFucntion);
+      assertionFunctionsMap.put(assertionFunction.getFunctionName(),
+          assertionFunction);
     }
   }
 
