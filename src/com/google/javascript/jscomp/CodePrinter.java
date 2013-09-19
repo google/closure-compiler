@@ -296,6 +296,7 @@ public final class CodePrinter {
 
     @Override
     void appendBlockEnd() {
+      maybeEndStatement();
       endLine();
       indent--;
       append("}");
@@ -353,6 +354,11 @@ public final class CodePrinter {
       // so it is printed on a separate line.  This allows breakpoints to be
       // placed on the statement.
       return true;
+    }
+
+    @Override
+    void maybeInsertSpace() {
+      add(" ");
     }
 
     /**

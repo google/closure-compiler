@@ -157,6 +157,7 @@ class CodeGenerator {
         }
 
         if (childCount == 3) {
+          cc.maybeInsertSpace();
           add("finally");
           add(last, Context.PRESERVE_BLOCK);
         }
@@ -165,7 +166,10 @@ class CodeGenerator {
 
       case Token.CATCH:
         Preconditions.checkState(childCount == 2);
-        add("catch(");
+        cc.maybeInsertSpace();
+        add("catch");
+        cc.maybeInsertSpace();
+        add("(");
         add(first);
         add(")");
         add(last, Context.PRESERVE_BLOCK);
@@ -409,7 +413,9 @@ class CodeGenerator {
 
       case Token.FOR:
         if (childCount == 4) {
-          add("for(");
+          add("for");
+          cc.maybeInsertSpace();
+          add("(");
           if (first.isVar()) {
             add(first, Context.IN_FOR_INIT_CLAUSE);
           } else {
@@ -424,7 +430,9 @@ class CodeGenerator {
               last, getContextForNonEmptyExpression(context), false);
         } else {
           Preconditions.checkState(childCount == 3);
-          add("for(");
+          add("for");
+          cc.maybeInsertSpace();
+          add("(");
           add(first);
           add("in");
           add(first.getNext());
@@ -438,7 +446,10 @@ class CodeGenerator {
         Preconditions.checkState(childCount == 2);
         add("do");
         addNonEmptyStatement(first, Context.OTHER, false);
-        add("while(");
+        cc.maybeInsertSpace();
+        add("while");
+        cc.maybeInsertSpace();
+        add("(");
         add(last);
         add(")");
         cc.endStatement();
@@ -446,7 +457,9 @@ class CodeGenerator {
 
       case Token.WHILE:
         Preconditions.checkState(childCount == 2);
-        add("while(");
+        add("while");
+        cc.maybeInsertSpace();
+        add("(");
         add(first);
         add(")");
         addNonEmptyStatement(
@@ -552,13 +565,16 @@ class CodeGenerator {
           cc.beginBlock();
         }
 
-        add("if(");
+        add("if");
+        cc.maybeInsertSpace();
+        add("(");
         add(first);
         add(")");
 
         if (hasElse) {
           addNonEmptyStatement(
               first.getNext(), Context.BEFORE_DANGLING_ELSE, false);
+          cc.maybeInsertSpace();
           add("else");
           addNonEmptyStatement(
               last, getContextForNonEmptyExpression(context), false);
@@ -745,6 +761,9 @@ class CodeGenerator {
         }
         add(first);
         add(":");
+        if (!last.isBlock()) {
+          cc.maybeInsertSpace();
+        }
         addNonEmptyStatement(
             last, getContextForNonEmptyExpression(context), true);
         break;
