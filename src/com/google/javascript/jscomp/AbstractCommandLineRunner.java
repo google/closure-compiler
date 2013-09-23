@@ -23,7 +23,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -97,10 +96,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   static final DiagnosticType OUTPUT_SAME_AS_INPUT_ERROR = DiagnosticType.error(
       "JSC_OUTPUT_SAME_AS_INPUT_ERROR",
       "Bad output file (already listed as input file): {0}");
+  static final DiagnosticType NO_TREE_GENERATED_ERROR = DiagnosticType.error(
+      "JSC_NO_TREE_GENERATED_ERROR",
+      "Code contains errors. No tree was generated.");
 
   private final CommandLineConfig config;
 
-  private Appendable jsOutput;
+  private final PrintStream defaultJsOutput;
   private final PrintStream err;
   private A compiler;
 
@@ -137,7 +139,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   AbstractCommandLineRunner(PrintStream out, PrintStream err) {
     this.config = new CommandLineConfig();
-    this.jsOutput = Preconditions.checkNotNull(out);
+    this.defaultJsOutput = Preconditions.checkNotNull(out);
     this.err = Preconditions.checkNotNull(err);
   }
 
@@ -377,14 +379,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     } catch (Throwable t) {
       t.printStackTrace();
       result = -2;
-    }
-
-    try {
-      if (jsOutput instanceof Closeable) {
-        ((Closeable) jsOutput).close();
-      }
-    } catch (IOException e) {
-      throw Throwables.propagate(e);
     }
 
     if (testMode) {
@@ -715,6 +709,25 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
   }
 
+  private Appendable createDefaultOutput() throws IOException {
+    boolean writeOutputToFile = !config.jsOutputFile.isEmpty();
+    File test = new File(config.jsOutputFile);
+    if (writeOutputToFile) {
+      return fileNameToLegacyOutputWriter(config.jsOutputFile);
+    } else {
+      return streamToLegacyOutputWriter(defaultJsOutput);
+    }
+  }
+
+  private static void closeAppendable(Appendable output) throws IOException {
+    if (output instanceof Flushable) {
+      ((Flushable) output).flush();
+    }
+    if (output instanceof Closeable) {
+      ((Closeable) output).close();
+    }
+  }
+
   /**
    * Parses command-line arguments and runs the compiler.
    *
@@ -737,9 +750,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     List<String> outputFileNames = Lists.newArrayList();
     if (writeOutputToFile) {
       outputFileNames.add(config.jsOutputFile);
-      jsOutput = fileNameToLegacyOutputWriter(config.jsOutputFile);
-    } else if (jsOutput instanceof OutputStream) {
-      jsOutput = streamToLegacyOutputWriter((OutputStream) jsOutput);
     }
 
     List<String> jsFiles = config.js;
@@ -788,14 +798,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       }
     }
 
-    int errCode = processResults(result, modules, options);
-    // Flush the output if we are writing to a file.
-    // We can't close yet, because we may need to write phase ordering
-    // info to it later.
-    if (jsOutput instanceof Flushable) {
-      ((Flushable) jsOutput).flush();
-    }
-    return errCode;
+    return processResults(result, modules, options);
   }
 
   /**
@@ -807,9 +810,11 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       if (compiler.getRoot() == null) {
         return 1;
       } else {
+        Appendable jsOutput = createDefaultOutput();
         jsOutput.append(
             DotFormatter.toDot(compiler.getPassConfig().getPassGraph()));
         jsOutput.append('\n');
+        closeAppendable(jsOutput);
         return 0;
       }
     }
@@ -818,21 +823,25 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       if (compiler.getRoot() == null) {
         return 1;
       } else {
+        Appendable jsOutput = createDefaultOutput();
         ControlFlowGraph<Node> cfg = compiler.computeCFG();
         DotFormatter.appendDot(
             compiler.getRoot().getLastChild(), cfg, jsOutput);
         jsOutput.append('\n');
+        closeAppendable(jsOutput);
         return 0;
       }
     }
 
     if (config.printTree) {
       if (compiler.getRoot() == null) {
-        jsOutput.append("Code contains errors; no tree was generated.\n");
+        compiler.report(JSError.make(NO_TREE_GENERATED_ERROR));
         return 1;
       } else {
+        Appendable jsOutput = createDefaultOutput();
         compiler.getRoot().appendStringTree(jsOutput);
         jsOutput.append("\n");
+        closeAppendable(jsOutput);
         return 0;
       }
     }
@@ -889,9 +898,11 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       escaper = getJavascriptEscaper();
     }
 
+    Appendable jsOutput = createDefaultOutput();
     writeOutput(
         jsOutput, compiler, compiler.toSource(), config.outputWrapper,
         marker, escaper);
+    closeAppendable(jsOutput);
   }
 
   private void outputModuleBinaryAndSourceMaps(
