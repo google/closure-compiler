@@ -59,7 +59,8 @@ class VarCheck extends AbstractPostOrderCallback implements
   static final DiagnosticType NAME_REFERENCE_IN_EXTERNS_ERROR =
     DiagnosticType.warning(
       "JSC_NAME_REFERENCE_IN_EXTERNS",
-      "accessing name {0} in externs has no effect");
+      "accessing name {0} in externs has no effect. " +
+      "Perhaps you forgot to add a var keyword?");
 
   static final DiagnosticType UNDEFINED_EXTERN_VAR_ERROR =
     DiagnosticType.warning(
