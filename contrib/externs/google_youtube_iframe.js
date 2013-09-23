@@ -263,6 +263,24 @@ YT.Player.prototype.addEventListener = function(eventName, listenerName) {};
 YT.Player.prototype.destroy = function() {};
 
 
+/**
+ * @return {number}
+ * @nosideeffects
+ */
+YT.Player.prototype.getPlaybackRate = function() {};
+
+
+/** @param {number} suggestedRate */
+YT.Player.prototype.setPlaybackRate = function(suggestedRate) {};
+
+
+/**
+ * @return {!Array.<number>}
+ * @nosideeffects
+ */
+YT.Player.prototype.getAvailablePlaybackRates = function() {};
+
+
 /** @enum */
 YT.PlayerState = {
   ENDED: 0,
