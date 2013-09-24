@@ -48,6 +48,9 @@ enum Annotation {
   INHERIT_DOC,
   INTERFACE,
   JAVA_DISPATCH,
+  JAGGER_INJECT,
+  JAGGER_MODULE,
+  JAGGER_PROVIDE,
   LENDS,
   LICENSE, // same as preserve
   MEANING,
@@ -107,6 +110,9 @@ enum Annotation {
       put("inheritDoc", Annotation.INHERIT_DOC).
       put("interface", Annotation.INTERFACE).
       put("javadispatch", Annotation.JAVA_DISPATCH).
+      put("jaggerInject", Annotation.JAGGER_INJECT).
+      put("jaggerModule", Annotation.JAGGER_MODULE).
+      put("jaggerProvide", Annotation.JAGGER_PROVIDE).
       put("lends", Annotation.LENDS).
       put("license", Annotation.LICENSE).
       put("meaning", Annotation.MEANING).

@@ -2771,7 +2771,6 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testWhitelistedAnnotations() {
     parse(
       "* @addon \n" +
-      "* @ngInject \n" +
       "* @augments \n" +
       "* @base \n" +
       "* @borrows \n" +
@@ -2793,7 +2792,9 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       "* @id \n" +
       "* @ignore \n" +
       "* @inner \n" +
-      "* @wizaction \n" +
+      "* @jaggerInject \n" +
+      "* @jaggerModule \n" +
+      "* @jaggerProvide \n" +
       "* @lends {string} \n" +
       "* @link \n" +
       "* @member \n" +
@@ -2802,13 +2803,16 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       "* @mods \n" +
       "* @name \n" +
       "* @namespace \n" +
+      "* @ngInject \n" +
       "* @nocompile \n" +
       "* @property \n" +
-      "* @requires \n" +
       "* @requirecss \n" +
+      "* @requires \n" +
       "* @since \n" +
       "* @static \n" +
-      "* @supported */");
+      "* @supported\n" +
+      "* @wizaction \n" +
+      "*/");
   }
 
   public void testJsDocInfoPosition() throws IOException {
@@ -2839,6 +2843,30 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseNgInject2() throws Exception {
     parse("@ngInject \n@ngInject*/", "extra @ngInject tag");
+  }
+
+  public void testParseJaggerInject() throws Exception {
+    assertTrue(parse("@jaggerInject*/").isJaggerInject());
+  }
+
+  public void testParseJaggerInjectExtra() throws Exception {
+    parse("@jaggerInject \n@jaggerInject*/", "extra @jaggerInject tag");
+  }
+
+  public void testParseJaggerModule() throws Exception {
+    assertTrue(parse("@jaggerModule*/").isJaggerModule());
+  }
+
+  public void testParseJaggerModuleExtra() throws Exception {
+    parse("@jaggerModule \n@jaggerModule*/", "extra @jaggerModule tag");
+  }
+
+  public void testParseJaggerProvide() throws Exception {
+    assertTrue(parse("@jaggerProvide*/").isJaggerProvide());
+  }
+
+  public void testParseJaggerProvideExtra() throws Exception {
+    parse("@jaggerProvide \n@jaggerProvide*/", "extra @jaggerProvide tag");
   }
 
   public void testParseWizaction1() throws Exception {

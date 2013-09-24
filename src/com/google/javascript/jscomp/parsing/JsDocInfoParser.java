@@ -296,6 +296,33 @@ public final class JsDocInfoParser {
           }
           return eatTokensUntilEOL();
 
+        case JAGGER_INJECT:
+          if (jsdocBuilder.isJaggerInjectRecorded()) {
+            parser.addParserWarning("msg.jsdoc.jaggerInject.extra",
+              stream.getLineno(), stream.getCharno());
+          } else {
+            jsdocBuilder.recordJaggerInject(true);
+          }
+          return eatTokensUntilEOL();
+
+        case JAGGER_MODULE:
+          if (jsdocBuilder.isJaggerModuleRecorded()) {
+            parser.addParserWarning("msg.jsdoc.jaggerModule.extra",
+              stream.getLineno(), stream.getCharno());
+          } else {
+            jsdocBuilder.recordJaggerModule(true);
+          }
+          return eatTokensUntilEOL();
+
+        case JAGGER_PROVIDE:
+          if (jsdocBuilder.isJaggerProvideRecorded()) {
+            parser.addParserWarning("msg.jsdoc.jaggerProvide.extra",
+              stream.getLineno(), stream.getCharno());
+          } else {
+            jsdocBuilder.recordJaggerProvide(true);
+          }
+          return eatTokensUntilEOL();
+
         case AUTHOR:
           if (jsdocBuilder.shouldParseDocumentation()) {
             ExtractionInfo authorInfo = extractSingleLineBlock();

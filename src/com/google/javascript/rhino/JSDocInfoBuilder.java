@@ -1053,6 +1053,66 @@ final public class JSDocInfoBuilder {
   }
 
   /**
+   * Returns whether current JSDoc is annotated with {@code @jaggerInject}.
+   */
+  public boolean isJaggerInjectRecorded() {
+    return currentInfo.isJaggerInject();
+  }
+
+  /**
+   * Records annotation with {@code @jaggerInject}.
+   */
+  public boolean recordJaggerInject(boolean inject) {
+    if (!isJaggerInjectRecorded()) {
+      currentInfo.setJaggerInject(inject);
+      populated = true;
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Returns whether current JSDoc is annotated with {@code @jaggerModule}.
+   */
+  public boolean isJaggerModuleRecorded() {
+    return currentInfo.isJaggerModule();
+  }
+
+  /**
+   * Records annotation with {@code @jaggerModule}.
+   */
+  public boolean recordJaggerModule(boolean jaggerModule) {
+    if (!isJaggerModuleRecorded()) {
+      currentInfo.setJaggerModule(jaggerModule);
+      populated = true;
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Returns whether current JSDoc is annotated with {@code @jaggerProvide}.
+   */
+  public boolean isJaggerProvideRecorded() {
+    return currentInfo.isJaggerProvide();
+  }
+
+  /**
+   * Records annotation with {@code @jaggerProvide}.
+   */
+  public boolean recordJaggerProvide(boolean jaggerProvide) {
+    if (!isJaggerProvideRecorded()) {
+      currentInfo.setJaggerProvide(jaggerProvide);
+      populated = true;
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Returns whether current JSDoc is annotated with {@code @wizaction}.
    */
   public boolean isWizactionRecorded() {

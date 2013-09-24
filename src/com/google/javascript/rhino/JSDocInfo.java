@@ -104,8 +104,16 @@ public class JSDocInfo implements Serializable {
     Set<String> suppressions = null;
     Set<String> modifies = null;
     String lendsName = null;
+
+    // TODO(nnaze): Consider converting the boolean flags to bit fields.
+
     boolean ngInject = false;
     boolean wizaction = false;
+
+    // Tags for Jagger dependency injection prototype
+    boolean jaggerInject = false;
+    boolean jaggerProvide = false;
+    boolean jaggerModule = false;
   }
 
   private static final class LazilyInitializedDocumentation {
@@ -1255,6 +1263,42 @@ public class JSDocInfo implements Serializable {
   void setNgInject(boolean ngInject) {
     lazyInitInfo();
     info.ngInject = ngInject;
+  }
+
+  /**
+   * Returns whether JSDoc is annotated with {@code @jaggerInject} annotation.
+   */
+  public boolean isJaggerInject() {
+    return (info != null) && info.jaggerInject;
+  }
+
+  void setJaggerInject(boolean jaggerInject) {
+    lazyInitInfo();
+    info.jaggerInject = jaggerInject;
+  }
+
+  /**
+   * Returns whether JSDoc is annotated with {@code @jaggerProvide} annotation.
+   */
+  public boolean isJaggerProvide() {
+    return (info != null) && info.jaggerProvide;
+  }
+
+  void setJaggerProvide(boolean jaggerProvide) {
+    lazyInitInfo();
+    info.jaggerProvide = jaggerProvide;
+  }
+
+  /**
+   * Returns whether JSDoc is annotated with {@code @jaggerModule} annotation.
+   */
+  public boolean isJaggerModule() {
+      return (info != null) && info.jaggerModule;
+  }
+
+  void setJaggerModule(boolean jaggerModule) {
+    lazyInitInfo();
+    info.jaggerModule = jaggerModule;
   }
 
   /**
