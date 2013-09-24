@@ -127,9 +127,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   private Map<String, String> parsedModuleWrappers = null;
 
-  // Bookkeeping to measure optimal phase orderings.
-  private static final int NUM_RUNS_TO_DETERMINE_OPTIMAL_ORDER = 100;
-
   private static final String OUTPUT_MARKER = "%output%";
   private static final String OUTPUT_MARKER_JS_STRING = "%output|jsstring%";
 
@@ -711,7 +708,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   private Appendable createDefaultOutput() throws IOException {
     boolean writeOutputToFile = !config.jsOutputFile.isEmpty();
-    File test = new File(config.jsOutputFile);
     if (writeOutputToFile) {
       return fileNameToLegacyOutputWriter(config.jsOutputFile);
     } else {
@@ -1412,7 +1408,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   private void outputModuleGraphJson() throws IOException {
     if (config.outputModuleDependencies != null &&
-        config.outputModuleDependencies != "") {
+        config.outputModuleDependencies.length() != 0) {
       Writer out = fileNameToOutputWriter2(config.outputModuleDependencies);
       printModuleGraphJsonTo(out);
       out.close();
