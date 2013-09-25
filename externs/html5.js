@@ -1725,6 +1725,13 @@ History.prototype.pushState = function(data, title, opt_url) {};
 History.prototype.replaceState = function(data, title, opt_url) {};
 
 /**
+ * Pending state object.
+ * @see https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Manipulating_the_browser_history#Reading_the_current_state
+ * @type {*}
+ */
+History.prototype.state;
+
+/**
  * @see http://www.w3.org/TR/html5/history.html#event-definitions
  * @constructor
  * @extends {Event}
