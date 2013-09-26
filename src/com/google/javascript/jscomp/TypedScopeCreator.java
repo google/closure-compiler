@@ -935,8 +935,8 @@ final class TypedScopeCreator implements ScopeCreator {
           TemplateTypeMap prototypeOwnerTypeMap = null;
           if (prototypeOwner != null &&
               prototypeOwner.getTypeOfThis() != null) {
-              prototypeOwnerTypeMap =
-                  prototypeOwner.getTypeOfThis().getTemplateTypeMap();
+            prototypeOwnerTypeMap =
+                prototypeOwner.getTypeOfThis().getTemplateTypeMap();
           }
 
           FunctionType overriddenType = null;

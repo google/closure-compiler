@@ -326,4 +326,25 @@ public class TemplateTypeMap implements Serializable {
     }
     return false;
   }
+
+  @Override
+  public String toString() {
+    String s = "";
+
+    int len = Math.max(Math.max(templateKeys.size(), templateValues.size()),
+        resolvedTemplateValues.size());
+    s += "{ ";
+    for (int i = 0; i < len; i++) {
+      s += "(";
+      s += (i < templateKeys.size()) ? templateKeys.get(i) : "";
+      s += ",";
+      s += (i < templateValues.size()) ? templateValues.get(i) : "";
+      s += ",";
+      s += (i < resolvedTemplateValues.size()) ? resolvedTemplateValues.get(i) : "";
+      s += ") ";
+    }
+    s += "}";
+
+    return s;
+  }
 }
