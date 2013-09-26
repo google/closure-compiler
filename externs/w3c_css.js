@@ -1799,6 +1799,11 @@ CSSProperties.prototype.transitionProperty;
  */
 CSSProperties.prototype.transitionTimingFunction;
 
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/SVG11/interact.html#PointerEventsProperty
+ */
+CSSProperties.prototype.pointerEvents;
 
 /**
  * TODO(dbeam): Put this in separate file named w3c_cssom.js.
