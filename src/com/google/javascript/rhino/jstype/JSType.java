@@ -617,10 +617,6 @@ public abstract class JSType implements Serializable {
           that.toObjectType().getReferenceName());
     }
 
-    if (isTemplateType() && that.isTemplateType()) {
-      return this == that;
-    }
-
     // Unbox other proxies.
     if (this instanceof ProxyObjectType) {
       return ((ProxyObjectType) this)

@@ -252,9 +252,6 @@ final class FunctionTypeBuilder {
       return this;
     }
 
-    // Propagate the template types, if they exist.
-    templateTypeNames = oldType.getTemplateTypeMap().getTemplateKeys();
-
     returnType = oldType.getReturnType();
     returnTypeInferred = oldType.isReturnTypeInferred();
     if (paramsParent == null) {
@@ -579,14 +576,14 @@ final class FunctionTypeBuilder {
    */
   FunctionTypeBuilder inferTemplateTypeName(
       @Nullable JSDocInfo info, JSType ownerType) {
-    // NOTE: these template type names may override a list
-    // of inherited ones from an overridden function.
     if (info != null &&  !info.getTemplateTypeNames().isEmpty()) {
       ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
       for (String key : info.getTemplateTypeNames()) {
         builder.add(typeRegistry.createTemplateType(key));
       }
       templateTypeNames = builder.build();
+    } else {
+      templateTypeNames = ImmutableList.of();
     }
 
     ImmutableList<TemplateType> keys = templateTypeNames;
