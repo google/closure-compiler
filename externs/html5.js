@@ -1516,7 +1516,9 @@ MessageEvent.prototype.initMessageEventNS = function(namespaceURI, typeArg,
  * is a DataTransfer on WebKit but a ClipboardData on IE. The interfaces are so
  * similar that it's easier to merge them.
  *
- * @see http://dev.w3.org/html5/spec/dnd.html#the-dragevent-and-datatransfer-interfaces
+ * @see http://www.w3.org/TR/2011/WD-html5-20110113/dnd.html
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html
+ * @see http://developers.whatwg.org/dnd.html#datatransferitem
  * @constructor
  * @extends {ClipboardData}
  */
@@ -1572,6 +1574,86 @@ DataTransfer.prototype.addElement = function(elem) {};
  * @type {DataTransfer}
  */
 MouseEvent.prototype.dataTransfer;
+
+/**
+ * HTML5 DataTransferItem class.
+ *
+ * @see http://www.w3.org/TR/2011/WD-html5-20110113/dnd.html
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html
+ * @see http://developers.whatwg.org/dnd.html#datatransferitem
+ * @constructor
+ */
+var DataTransferItem = function() {};
+
+/** @type {string} */
+DataTransferItem.prototype.kind;
+
+/** @type {string} */
+DataTransferItem.prototype.type;
+
+/**
+ * @param {function(string)} callback
+ * @nosideeffects
+ */
+DataTransferItem.prototype.getAsString = function(callback) {};
+
+/**
+ * @return {?File} The file corresponding to this item, or null.
+ * @nosideeffects
+ */
+DataTransferItem.prototype.getAsFile = function() { return null; };
+
+/**
+ * @return {?Entry} The Entry corresponding to this item, or null. Note that
+ * despite its name,this method only works in Chrome, and will eventually
+ * be renamed to {@code getAsEntry}.
+ * @nosideeffects
+ */
+DataTransferItem.prototype.webkitGetAsEntry = function() { return null; };
+
+/**
+ * HTML5 DataTransferItemList class. There are some discrepancies in the docs
+ * on the whatwg.org site. When in doubt, these prototypes match what is
+ * implemented as of Chrome 30.
+ *
+ * @see http://www.w3.org/TR/2011/WD-html5-20110113/dnd.html
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html
+ * @see http://developers.whatwg.org/dnd.html#datatransferitem
+ * @constructor
+ */
+var DataTransferItemList = function() {};
+
+/** @type {number} */
+DataTransferItemList.prototype.length;
+
+/**
+ * @param {number} i File to return from the list.
+ * @return {DataTransferItem} The ith DataTransferItem in the list, or null.
+ * @nosideeffects
+ */
+DataTransferItemList.prototype.item = function(i) { return null; };
+
+/**
+ * Adds an item to the list.
+ * @param {string|!File} data Data for the item being added.
+ * @param {string=} opt_type Mime type of the item being added. MUST be present
+ *     if the {@code data} parameter is a string.
+ */
+DataTransferItemList.prototype.add = function(data, opt_type) {};
+
+/**
+ * Removes an item from the list.
+ * @param {number} i File to remove from the list.
+ */
+DataTransferItemList.prototype.remove = function(i) {};
+
+/**
+ * Removes all items from the list.
+ */
+DataTransferItemList.prototype.clear = function() {};
+
+/** @type {!DataTransferItemList} */
+DataTransfer.prototype.items;
 
 
 /**
