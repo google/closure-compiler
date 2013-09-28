@@ -522,6 +522,28 @@ public class ScopedAliasesTest extends CompilerTestCase {
          SCOPE_NAMESPACE + "$jscomp.scope.x = 3; $jscomp.scope.x$1 = 4");
   }
 
+  public void testIssue1103a() {
+    test("goog.scope(function () {" +
+         "  var a;" +
+         "  foo.bar = function () { a = 1; };" +
+         "});",
+         SCOPE_NAMESPACE + "foo.bar = function () { $jscomp.scope.a = 1; }");
+  }
+
+  public void testIssue1103b() {
+    test("goog.scope(function () {" +
+         "  var a = foo, b, c = 1;" +
+         "});",
+         SCOPE_NAMESPACE + "$jscomp.scope.c=1");
+  }
+
+  public void testIssue1103c() {
+    test("goog.scope(function () {" +
+         "  /** @type {number} */ var a;" +
+         "});",
+         SCOPE_NAMESPACE + "/** @type {number} */ $jscomp.scope.a;");
+  }
+
   // Alias Recording Tests
   // TODO(tylerg) : update these to EasyMock style tests once available
   public void testNoGoogScope() {

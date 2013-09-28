@@ -353,8 +353,8 @@ class ScopedAliases implements HotSwapCompilerPass {
       for (Var v : scope.getVarIterable()) {
         Node n = v.getNode();
         Node parent = n.getParent();
-        boolean isVarAssign = parent.isVar() && n.hasChildren();
-        if (isVarAssign && n.getFirstChild().isQualifiedName()) {
+        boolean isVar = parent.isVar();
+        if (isVar && n.getFirstChild() != null && n.getFirstChild().isQualifiedName()) {
           recordAlias(v);
         } else if (v.isBleedingFunction()) {
           // Bleeding functions already get a BAD_PARAMETERS error, so just
@@ -362,8 +362,10 @@ class ScopedAliases implements HotSwapCompilerPass {
         } else if (parent.getType() == Token.LP) {
           // Parameters of the scope function also get a BAD_PARAMETERS
           // error.
-        } else if (isVarAssign) {
-          Node value = v.getInitialValue().detachFromParent();
+        } else if (isVar) {
+          Node value = n.hasChildren() ?
+              v.getInitialValue().detachFromParent() :
+              null;
           String name = n.getString();
           int nameCount = scopedAliasNames.count(name);
           scopedAliasNames.add(name);
@@ -374,15 +376,17 @@ class ScopedAliases implements HotSwapCompilerPass {
 
           // Add $jscomp.scope.name = EXPR;
           // Make sure we copy over all the jsdoc and debug info.
-          Node newDecl = NodeUtil.newQualifiedNameNodeDeclaration(
-              compiler.getCodingConvention(),
-              globalName,
-              value,
-              v.getJSDocInfo())
-              .useSourceInfoIfMissingFromForTree(n);
-          NodeUtil.setDebugInformation(
-              newDecl.getFirstChild().getFirstChild(), n, name);
-          parent.getParent().addChildBefore(newDecl, parent);
+          if (value != null || v.getJSDocInfo() != null) {
+            Node newDecl = NodeUtil.newQualifiedNameNodeDeclaration(
+                compiler.getCodingConvention(),
+                globalName,
+                value,
+                v.getJSDocInfo())
+                .useSourceInfoIfMissingFromForTree(n);
+            NodeUtil.setDebugInformation(
+                newDecl.getFirstChild().getFirstChild(), n, name);
+            parent.getParent().addChildBefore(newDecl, parent);
+          }
 
           // Rewrite "var name = EXPR;" to "var name = $jscomp.scope.name;"
           v.getNameNode().addChildToFront(

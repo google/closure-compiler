@@ -2364,8 +2364,11 @@ public final class NodeUtil {
     if (nameNode.isName()) {
       result = IR.var(nameNode, value);
       result.setJSDocInfo(info);
-    } else {
+    } else if (value != null) {
       result = IR.exprResult(IR.assign(nameNode, value));
+      result.getFirstChild().setJSDocInfo(info);
+    } else {
+      result = IR.exprResult(nameNode);
       result.getFirstChild().setJSDocInfo(info);
     }
     return result;
