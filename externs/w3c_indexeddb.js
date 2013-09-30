@@ -476,7 +476,7 @@ IDBObjectStore.prototype.add = function(value, key) {};
 IDBObjectStore.prototype['delete'] = function(key) {};
 
 /**
- * @param {IDBKeyType} key The key of the document to retrieve.
+ * @param {IDBKeyType|!IDBKeyRange} key The key of the document to retrieve.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBObjectStore.prototype.get = function(key) {};
@@ -565,13 +565,13 @@ IDBIndex.prototype.openCursor = function(range, direction) {};
 IDBIndex.prototype.openKeyCursor = function(range, direction) {};
 
 /**
- * @param {IDBKeyType} key The id of the object to retrieve.
+ * @param {IDBKeyType|!IDBKeyRange} key The id of the object to retrieve.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBIndex.prototype.get = function(key) {};
 
 /**
- * @param {IDBKeyType} key The id of the object to retrieve.
+ * @param {IDBKeyType|!IDBKeyRange} key The id of the object to retrieve.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBIndex.prototype.getKey = function(key) {};
