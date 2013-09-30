@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
-import com.google.javascript.jscomp.JsMessage.PlaceholderReference;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -29,8 +28,8 @@ import java.util.List;
  * Replaces user-visible messages with appropriate calls to
  * chrome.i18n.getMessage. The first argument to getMessage is the id of the
  * message, as a string. If the message contains placeholders, the second
- * argument is an array of the values being used for the placeholders, in the
- * order they appear in the source code.
+ * argument is an array of the values being used for the placeholders, sorted
+ * by placeholder name.
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
@@ -75,13 +74,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
 
       // Output the placeholders, sorted alphabetically by placeholder name,
       // regardless of what order they appear in the original message.
-      List<String> placeholderNames = Lists.newArrayList();
-      for (CharSequence cs : message.parts()) {
-        if (cs instanceof PlaceholderReference) {
-          String placeholderName = ((PlaceholderReference) cs).getName();
-          placeholderNames.add(placeholderName);
-        }
-      }
+      List<String> placeholderNames = Lists.newArrayList(message.placeholders());
       Collections.sort(placeholderNames);
 
       Node placeholderValueArray = IR.arraylit();

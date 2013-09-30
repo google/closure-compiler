@@ -97,4 +97,32 @@ public class ReplaceMessagesForChromeTest extends CompilerTestCase {
          "var MSG_EXTERNAL_1357902468 = goog.getMsg('Hello world');",
          "var MSG_EXTERNAL_1357902468 = chrome.i18n.getMessage('1357902468');");
   }
+
+  /**
+   * Test that messages are handled correctly if they contain the same
+   * placeholder twice.
+   */
+  public void testReplaceMessageWithDuplicatePlaceholders() {
+    String original = "" +
+        "/** @desc A message that contains two instances of the same placeholder. */\n" +
+        "var MSG_EXTERNAL_987654321 = goog.getMsg(" +
+        "'{$startDiv_1}You are signed in as{$endDiv}{$img}{$startDiv_2}{$name}{$endDiv}'," +
+        "{'startDiv_1': '<div>'," +
+        "'endDiv': '</div>'," +
+        "'img': '<img src=\"http://example.com/photo.png\">'," +
+        "'startDiv_2': '<div class=\"name\">'," +
+        "'name': name});";
+
+    String compiled = "" +
+        "var MSG_EXTERNAL_987654321 = chrome.i18n.getMessage('987654321', " +
+        "[" +
+        "'</div>', " +  // endDiv, only included once, even though it appears twice in the message.
+        "'<img src=\"http://example.com/photo.png\">', " +  // img
+        "name, " +  // name
+        "'<div>', " +  // startDiv_1
+        "'<div class=\"name\">'" +  // startDiv_2
+        "]);";
+
+    test(original, compiled);
+  }
 }
