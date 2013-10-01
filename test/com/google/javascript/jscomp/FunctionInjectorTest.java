@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
-
 import junit.framework.TestCase;
 
 import java.util.List;
@@ -1342,19 +1341,6 @@ public class FunctionInjectorTest extends TestCase {
         "{var a$$inline_0=x();var b$$inline_1=y();bar()}",
         "foo", INLINE_BLOCK);
   }
-
-  public void testIssue1101a() {
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return modifiyX() + a;} foo(x);", "foo",
-        INLINE_DIRECT);
-  }
-
-  public void testIssue1101b() {
-    helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return (x.prop = 2),a;} foo(x.prop);", "foo",
-        INLINE_DIRECT);
-  }
-
 
   /**
    * Test case
