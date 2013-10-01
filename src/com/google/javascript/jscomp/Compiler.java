@@ -663,31 +663,8 @@ public class Compiler extends AbstractCompiler {
 
   @SuppressWarnings("unchecked")
   <T> T runInCompilerThread(final Callable<T> callable) {
-    final boolean dumpTraceReport = options != null && options.tracer.isOn();
     T result = null;
     final Throwable[] exception = new Throwable[1];
-    Callable<T> bootCompilerThread = new Callable<T>() {
-      @Override
-      public T call() {
-        try {
-          compilerThread = Thread.currentThread();
-          if (dumpTraceReport) {
-            Tracer.initCurrentThreadTrace();
-          }
-          return callable.call();
-        } catch (Throwable e) {
-          exception[0] = e;
-        } finally {
-          compilerThread = null;
-          if (dumpTraceReport) {
-            Tracer.logAndClearCurrentThreadTrace();
-            tracker.outputTracerReport(outStream == null ?
-                System.out : outStream);
-          }
-        }
-        return null;
-      }
-    };
 
     Preconditions.checkState(
         compilerThread == null || compilerThread == Thread.currentThread(),
@@ -696,6 +673,32 @@ public class Compiler extends AbstractCompiler {
     // If the compiler thread is available, use it.
     if (useThreads && compilerThread == null) {
       try {
+        final boolean dumpTraceReport =
+            options != null && options.tracer.isOn();
+        Callable<T> bootCompilerThread = new Callable<T>() {
+          @Override
+          public T call() {
+            try {
+              compilerThread = Thread.currentThread();
+              if (dumpTraceReport) {
+                Tracer.initCurrentThreadTrace();
+              }
+              return callable.call();
+            } catch (Throwable e) {
+              exception[0] = e;
+            } finally {
+              compilerThread = null;
+              if (dumpTraceReport) {
+                Tracer.logCurrentThreadTrace();
+                tracker.outputTracerReport(outStream == null ?
+                    System.out : outStream);
+              }
+              Tracer.clearCurrentThreadTrace();
+            }
+            return null;
+          }
+        };
+
         result = compilerExecutor.submit(bootCompilerThread).get();
       } catch (InterruptedException e) {
         throw Throwables.propagate(e);
@@ -707,6 +710,8 @@ public class Compiler extends AbstractCompiler {
         result = callable.call();
       } catch (Exception e) {
         exception[0] = e;
+      } finally {
+        Tracer.clearCurrentThreadTrace();
       }
     }
 
