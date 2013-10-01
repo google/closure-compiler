@@ -618,7 +618,8 @@ angular.JQLite.wrap = function(element) {};
  *   config: function((Function|Array.<string|Function>)):angular.Module,
  *   constant: function(string, *):angular.Module,
  *   controller:
- *       function(string, (Function|Array.<string|Function>)):angular.Module,
+ *       (function(string, (Function|Array.<string|Function>)):angular.Module|
+ *       function(!Object.<(Function|Array.<string|Function>)>):angular.Module),
  *   directive:
  *       (function(string, (Function|Array.<string|Function>)):angular.Module|
  *       function(!Object.<(Function|Array.<string|Function>)>):angular.Module),
