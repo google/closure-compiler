@@ -41,6 +41,7 @@ Window.prototype.JSON;
 
 /**
  * @constructor
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#the-canvas-element
  * @extends {HTMLElement}
  */
 function HTMLCanvasElement() {}
@@ -53,11 +54,12 @@ HTMLCanvasElement.prototype.height;
 
 /**
  * @param {string=} opt_type
+ * @param {...*} var_args
  * @return {string}
  * @throws {Error}
  * @nosideeffects
  */
-HTMLCanvasElement.prototype.toDataURL = function(opt_type) {};
+HTMLCanvasElement.prototype.toDataURL = function(opt_type, var_args) {};
 
 /**
  * @param {string} contextId
