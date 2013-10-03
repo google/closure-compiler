@@ -540,15 +540,13 @@ public class ParserTest extends BaseJSTypeTestCase {
 
   public void testInlineJSDocAttachment2() {
     Node fn = parse(
-        "function f(/**\n" +
-        " * {string}\n" +
-        " */ x) {}").getFirstChild();
+        "function f(/** ? */ x) {}").getFirstChild();
     assertTrue(fn.isFunction());
 
     JSDocInfo info =
         fn.getFirstChild().getNext().getFirstChild().getJSDocInfo();
     assertNotNull(info);
-    assertTypeEquals(STRING_TYPE, info.getType());
+    assertTypeEquals(UNKNOWN_TYPE, info.getType());
   }
 
   public void testInlineJSDocAttachment3() {
@@ -570,6 +568,19 @@ public class ParserTest extends BaseJSTypeTestCase {
     JSDocInfo info = vardecl.getFirstChild().getJSDocInfo();
     assertNotNull(info);
     assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
+  public void testInlineJSDocAttachment6() {
+    Node fn = parse("function f(/** {attr: number} */ x) {}").getFirstChild();
+    assertTrue(fn.isFunction());
+
+    JSDocInfo info =
+        fn.getFirstChild().getNext().getFirstChild().getJSDocInfo();
+    assertNotNull(info);
+    assertTypeEquals(createRecordTypeBuilder().
+        addProperty("attr", NUMBER_TYPE, null).
+        build(),
+        info.getType());
   }
 
   public void testIncorrectJSDocDoesNotAlterJSParsing1() throws Exception {

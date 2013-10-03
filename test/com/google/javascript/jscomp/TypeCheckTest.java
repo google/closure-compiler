@@ -228,6 +228,34 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {(MyType,Null)} */var foo; foo = null;");
   }
 
+
+  public void testTypeCheck25() throws Exception {
+    testTypes("function foo(/** {a: number} */ obj) {};"
+        + "foo({b: 'abc'});",
+        "actual parameter 1 of foo does not match formal parameter\n" +
+            "found   : {a: (number|undefined), b: string}\n" +
+            "required: {a: number}");
+  }
+
+  public void testTypeCheck26() throws Exception {
+    testTypes("function foo(/** {a: number} */ obj) {};"
+        + "foo({a: 'abc'});",
+        "actual parameter 1 of foo does not match formal parameter\n"
+        + "found   : {a: (number|string)}\n"
+        + "required: {a: number}");
+
+  }
+
+  public void testTypeCheck27() throws Exception {
+    testTypes("function foo(/** {a: number} */ obj) {};"
+        + "foo({a: 123});");
+  }
+
+  public void testTypeCheck28() throws Exception {
+    testTypes("function foo(/** ? */ obj) {};"
+        + "foo({a: 123});");
+  }
+
   public void testTypeCheckDefaultExterns() throws Exception {
     testTypes("/** @param {string} x */ function f(x) {}" +
         "f([].length);" ,

@@ -160,13 +160,28 @@ public final class JsDocInfoParser {
   public JSDocInfo parseInlineTypeDoc() {
     skipEOLs();
 
-    Node typeAst = parseAndRecordTypeNode(next());
+    JsDocToken token = next();
+    int lineno = stream.getLineno();
+    int startCharno = stream.getCharno();
+    Node typeAst = parseTypeExpression(token);
+    recordTypeNode(lineno, startCharno, typeAst, token == JsDocToken.LC);
+
     JSTypeExpression expr = createJSTypeExpression(typeAst);
     if (expr != null) {
       jsdocBuilder.recordType(expr);
       return retrieveAndResetParsedJSDocInfo();
     }
     return null;
+  }
+
+  private void recordTypeNode(int lineno, int startCharno, Node typeAst,
+      boolean matchingLC) {
+    if (typeAst != null) {
+      int endLineno = stream.getLineno();
+      int endCharno = stream.getCharno();
+      jsdocBuilder.markTypeNode(
+          typeAst, lineno, startCharno, endLineno, endCharno, matchingLC);
+    }
   }
 
   /**
@@ -1238,20 +1253,8 @@ public final class JsDocInfoParser {
    * @return The type expression found or null if none.
    */
   Node parseAndRecordTypeNode(JsDocToken token) {
-    return parseAndRecordTypeNode(token, token == JsDocToken.LC);
-  }
-
-  /**
-   * Looks for a type expression at the current token and if found,
-   * returns it. Note that this method consumes input.
-   *
-   * @param token The current token.
-   * @param matchingLC Whether the type expression starts with a "{".
-   * @return The type expression found or null if none.
-   */
-  private Node parseAndRecordTypeNode(JsDocToken token, boolean matchingLC) {
     return parseAndRecordTypeNode(token, stream.getLineno(), stream.getCharno(),
-        matchingLC, false);
+        token == JsDocToken.LC, false);
   }
 
   /**
@@ -1288,13 +1291,7 @@ public final class JsDocInfoParser {
     int startCharno = stream.getCharno();
 
     Node typeNode = parseParamTypeExpressionAnnotation(token);
-    if (typeNode != null) {
-      int endLineno = stream.getLineno();
-      int endCharno = stream.getCharno();
-
-      jsdocBuilder.markTypeNode(typeNode, lineno, startCharno,
-          endLineno, endCharno, true);
-    }
+    recordTypeNode(lineno, startCharno, typeNode, true);
     return typeNode;
   }
 
@@ -1323,14 +1320,7 @@ public final class JsDocInfoParser {
       typeNode = parseTypeExpressionAnnotation(token);
     }
 
-    if (typeNode != null) {
-      int endLineno = stream.getLineno();
-      int endCharno = stream.getCharno();
-
-      jsdocBuilder.markTypeNode(
-          typeNode, lineno, startCharno, endLineno, endCharno, matchingLC);
-    }
-
+    recordTypeNode(lineno, startCharno, typeNode, matchingLC);
     return typeNode;
   }
 
@@ -1853,7 +1843,7 @@ public final class JsDocInfoParser {
     if (token == JsDocToken.QMARK) {
       // A QMARK could mean that a type is nullable, or that it's unknown.
       // We use look-ahead 1 to determine whether it's unknown. Otherwise,
-      // we assume it means nullable. There are 5 cases:
+      // we assume it means nullable. There are 8 cases:
       // {?} - right curly
       // {?=} - equals
       // {function(?, number)} - comma
@@ -1861,6 +1851,7 @@ public final class JsDocInfoParser {
       // {function(number, ...[?])} - right bracket
       // {function(): ?|number} - pipe
       // {Array.<?>} - greater than
+      // /** ? */ - EOC (inline types)
       // I'm not a big fan of using look-ahead for this, but it makes
       // the type language a lot nicer.
       token = next();
@@ -1870,7 +1861,8 @@ public final class JsDocInfoParser {
           token == JsDocToken.RC ||
           token == JsDocToken.RP ||
           token == JsDocToken.PIPE ||
-          token == JsDocToken.GT) {
+          token == JsDocToken.GT ||
+          token == JsDocToken.EOC) {
         restoreLookAhead(token);
         return newNode(Token.QMARK);
       }
