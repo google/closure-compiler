@@ -311,11 +311,18 @@ final class FunctionTypeBuilder {
 
   /**
    * Infer the return type from JSDocInfo.
+   * @param fromInlineDoc Indicates whether return type is inferred from inline
+   * doc attached to function name
    */
-  FunctionTypeBuilder inferReturnType(@Nullable JSDocInfo info) {
-    if (info != null && info.hasReturnType()) {
-      returnType = info.getReturnType().evaluate(scope, typeRegistry);
-      returnTypeInferred = false;
+  FunctionTypeBuilder inferReturnType(
+      @Nullable JSDocInfo info, boolean fromInlineDoc) {
+    if (info != null) {
+      JSTypeExpression returnTypeExpr =
+          fromInlineDoc ? info.getType() : info.getReturnType();
+      if (returnTypeExpr != null) {
+        returnType = returnTypeExpr.evaluate(scope, typeRegistry);
+        returnTypeInferred = false;
+      }
     }
 
     return this;

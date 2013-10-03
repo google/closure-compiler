@@ -951,8 +951,21 @@ final class TypedScopeCreator implements ScopeCreator {
               .setContents(getFunctionAnalysisResults(fnRoot))
               .inferFromOverriddenFunction(overriddenType, parametersNode)
               .inferTemplateTypeName(info, prototypeOwner)
-              .inferReturnType(info)
               .inferInheritance(info);
+
+          if (info == null || !info.hasReturnType()) {
+            /**
+             * when there is no {@code @return} annotation, look for inline
+             * return type declaration
+             */
+            if (rValue != null && rValue.isFunction() &&
+                rValue.getFirstChild() != null) {
+              JSDocInfo nameDocInfo = rValue.getFirstChild().getJSDocInfo();
+              builder.inferReturnType(nameDocInfo, true);
+            }
+          } else {
+            builder.inferReturnType(info, false);
+          }
 
           // Infer the context type.
           boolean searchedForThisType = false;

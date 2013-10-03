@@ -783,7 +783,8 @@ class IRFactory {
         isUnnamedFunction = true;
       }
       Node node = newNode(Token.FUNCTION);
-      Node newName = transform(name);
+      // if the function has an inline return annotation, attach it
+      Node newName = transformNodeWithInlineJsDoc(name);
       if (isUnnamedFunction) {
         // Old Rhino tagged the empty name node with the line number of the
         // declaration.

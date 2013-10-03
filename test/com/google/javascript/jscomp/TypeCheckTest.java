@@ -256,6 +256,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         + "foo({a: 123});");
   }
 
+  public void testTypeCheckInlineReturns() throws Exception {
+    testTypes(
+        "function /** string */ foo(x) { return x; }" +
+        "var /** number */ a = foo('abc');",
+        "initializing variable\n"
+        + "found   : string\n"
+        + "required: number");
+  }
+
   public void testTypeCheckDefaultExterns() throws Exception {
     testTypes("/** @param {string} x */ function f(x) {}" +
         "f([].length);" ,
