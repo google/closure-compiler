@@ -1232,6 +1232,18 @@ public class NameAnalyzerTest extends CompilerTestCase {
         "");
   }
 
+  public void testAssignWithCall() {
+    test("var fun, x; (fun = function(){ x; })();",
+        "var x; (function(){ x; })();");
+  }
+
+  // Currently this crashes the compiler because it erroneoursly removes var x
+  // and later a sanity check fails.
+  public void testAssignWithCall2() {
+    test("var fun, x; (123, fun = function(){ x; })();",
+        "(123, function(){ x; })();");
+  }
+
   public void testNestedAssign1() {
     test("var a, b = a = 1, c = 2", "");
   }

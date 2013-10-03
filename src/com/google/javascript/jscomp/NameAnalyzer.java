@@ -575,7 +575,13 @@ final class NameAnalyzer implements CompilerPass {
           } else {
             recordDepScope(nameNode, ns);
           }
-        } else {
+        } else if (!(parent.isCall() && parent.getFirstChild() == n)) {
+          // The rhs of the assignment is the caller, so it's used by the
+          // context. Don't associate it w/ the lhs.
+          // FYI: this fixes only the specific case where the assignment is the
+          // caller expression, but it could be nested deeper in the caller and
+          // we would still get a bug.
+          // See testAssignWithCall2 for an example of this.
           recordDepScope(recordNode, ns);
         }
       }
@@ -845,8 +851,7 @@ final class NameAnalyzer implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!(n.isName() ||
-            NodeUtil.isGet(n) && !parent.isGetProp())) {
+      if (!(n.isName() || (NodeUtil.isGet(n) && !parent.isGetProp()))) {
         // This is not a simple or qualified name.
         return;
       }
@@ -914,7 +919,7 @@ final class NameAnalyzer implements CompilerPass {
 
       // A value whose result is the return value of a function call
       // can be an alias to global object.
-      // Here we add a alias to the general "global" object
+      // Here we add an alias to the general "global" object
       // to act as a placeholder for the actual (unnamed) value.
       if (maybeHiddenAlias(n)) {
         recordAlias(name, WINDOW);
