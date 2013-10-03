@@ -2950,3 +2950,10 @@ Document.prototype.visibilityState;
  * @type {boolean}
  */
 Document.prototype.hidden;
+
+
+/**
+ * @see https://github.com/promises-aplus/promises-spec
+ * @typedef {{then: !Function}}
+ */
+var Thenable;
