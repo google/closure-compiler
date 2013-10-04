@@ -102,23 +102,46 @@ jasmine.Matcher.prototype.toThrow = function(opt_expected) {};
 
 
 /** @constructor */
+jasmine.Spec = function() {};
+
+
+/** @param {Error|string} e */
+jasmine.Spec.prototype.fail = function(e) {};
+
+
+
+/** @constructor */
 jasmine.Spy = function() {};
 
 
-/** @param {Function} fn */
+/**
+ * @param {Function} fn
+ * @return {jasmine.Spy}
+ */
 jasmine.Spy.prototype.andCallFake = function(fn) {};
 
 
-/** @return {void} */
+/** @return {jasmine.Spy} */
 jasmine.Spy.prototype.andCallThrough = function() {};
 
 
-/** @param {*} value */
+/**
+ * @param {*} value
+ * @return {jasmine.Spy}
+ */
 jasmine.Spy.prototype.andReturn = function(value) {};
 
 
-/** @param {Error} exception */
+/**
+ * @param {Error} exception
+ * @return {jasmine.Spy}
+ */
 jasmine.Spy.prototype.andThrow = function(exception) {};
+
+
+/** @type {Array.<Object>} */
+jasmine.Spy.prototype.calls;
+
 
 
 /** @constructor */
@@ -167,7 +190,7 @@ function inject(var_args) {}
 
 /**
  * @param {string} description
- * @param {function()} handler
+ * @param {function(this:jasmine.Spec)} handler
  */
 function it(description, handler) {}
 
