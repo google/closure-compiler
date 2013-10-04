@@ -321,12 +321,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       maybeAddToSymbolTable(left);
       maybeAddStringNodeToSymbolTable(arg);
 
-      // Requires should be removed before runtime.  The one
-      // exception is if the type has not been provided yet, in which case,
-      // we will be doing a later pass that may error, so we can
-      // leave this here this time and let it error next time if it
-      // is still not provided.
-      if (provided != null) {
+      // Requires should be removed before further processing.
+      // Some clients run closure pass multiple times, first with
+      // the checks for broken requires turned off. In these cases, we
+      // allow broken requires to be preserved by the first run to
+      // let them be caught in the subsequent run.
+      if (provided != null || requiresLevel.isOn()) {
         parent.detachFromParent();
         compiler.reportCodeChange();
       }
