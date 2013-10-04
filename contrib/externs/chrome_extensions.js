@@ -66,16 +66,17 @@
  * There are two fundamentally different kinds of pseudo-types: those
  * instantiated in extension code and those instantiated in extension
  * library functions. The latter are returned by library functions or passed
- * to callbacks. Currently, there are no instances of the former in Chrome
- * Extension APIs, however, the app APIs include CreateWindowOptions, defined at
- * http://developer.chrome.com/apps/app.window.html#type-CreateWindowOptions.
+ * to callbacks. The Chrome Extension APIs include one instance of the former
+ * in Permissions, defined at
+ * http://developer.chrome.com/extensions/permissions.html#type-Permissions
  *
  * Those types instantiated in extension code should be declared as typedefs
  * so that object literals and objects created via goog.object are acceptable,
- * for example, a subset of CreateWindowOptions would be:
+ * for example, Permissions would be:
  *
- *   * at-typedef {{id: (string|undefined), singleton: (boolean|undefined)}}
- *   chrome.app.window.CreateWindowOptions;
+ *   * at-typedef {{permissions: (Array.<string>|undefined),
+ *                  origins: (Array.<string>|undefined)}}
+ *   chrome.permissions.Permissions;
  *
  * Those types instantiated in library code should be declared as classes.
  * Always qualify the type name to reduce top-level pollution in this file:
@@ -2053,29 +2054,38 @@ chrome.pageCapture.saveAsMHTML = function(details, callback) {};
  */
 chrome.permissions = {};
 
+/**
+ * @typedef {{
+ *   permissions: (Array.<string>|undefined),
+ *   origins: (Array.<string>|undefined)
+ * }}
+* @see http://developer.chrome.com/extensions/permissions.html#type-Permissions
+*/
+chrome.permissions.Permissions;
 
 /**
- * @param {!Permissions} permissions Permissions.
+ * @param {!chrome.permissions.Permissions} permissions
  * @param {function(boolean): void} callback Callback function.
  */
 chrome.permissions.contains = function(permissions, callback) {};
 
 
 /**
- * @param {function(!Permissions): void} callback Callback function.
+ * @param {function(!chrome.permissions.Permissions): void} callback
+ *     Callback function.
  */
 chrome.permissions.getAll = function(callback) {};
 
 
 /**
- * @param {!Permissions} permissions Permissions.
+ * @param {!chrome.permissions.Permissions} permissions
  * @param {function(boolean): void=} opt_callback Callback function.
  */
 chrome.permissions.remove = function(permissions, opt_callback) {};
 
 
 /**
- * @param {!Permissions} permissions Permissions.
+ * @param {!chrome.permissions.Permissions} permissions
  * @param {function(boolean): void=} opt_callback Callback function.
  */
 chrome.permissions.request = function(permissions, opt_callback) {};
@@ -3332,22 +3342,6 @@ InputContext.prototype.contextID;
 
 /** @type {string} */
 InputContext.prototype.type;
-
-
-
-/**
- * @see http://code.google.com/chrome/extensions/permissions.html#type-Permissions
- * @constructor
- */
-function Permissions() {}
-
-
-/** @type {!Array.<string>} */
-Permissions.prototype.permissions;
-
-
-/** @type {!Array.<string>} */
-Permissions.prototype.origins;
 
 
 
