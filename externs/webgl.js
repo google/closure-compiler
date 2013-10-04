@@ -2835,11 +2835,12 @@ WebGLContextAttributes.prototype.preserveDrawingBuffer;
 
 
 /**
+ * @param {string} eventType
  * @constructor
  * @noalias
  * @extends {Event}
  */
-function WebGLContextEvent() {}
+function WebGLContextEvent(eventType) {}
 
 /**
  * @type {string}
