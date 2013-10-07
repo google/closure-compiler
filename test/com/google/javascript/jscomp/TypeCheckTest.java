@@ -12112,6 +12112,31 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: null");
   }
 
+  public void testTemplatized10() throws Exception {
+    testTypes(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Parent() {};\n" +
+        "\n" +
+        "/** @param {T} x */\n" +
+        "Parent.prototype.method = function(x) {};\n" +
+        "\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Parent.<string>}\n" +
+        " */\n" +
+        "function Child() {};\n" +
+        "Child.prototype = new Parent();\n" +
+        "\n" +
+        "(new Child()).method(123); \n",
+
+        "actual parameter 1 of Parent.prototype.method does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
   public void testUnknownTypeReport() throws Exception {
     compiler.getOptions().setWarningLevel(DiagnosticGroups.REPORT_UNKNOWN_TYPES,
         CheckLevel.WARNING);

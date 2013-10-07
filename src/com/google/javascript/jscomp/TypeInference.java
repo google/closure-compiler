@@ -1346,7 +1346,7 @@ class TypeInference
 
     if (propertyType != null && objType != null) {
       JSType restrictedObjType = objType.restrictByNotNullOrUndefined();
-      if (restrictedObjType.isTemplatizedType()
+      if (!restrictedObjType.getTemplateTypeMap().isEmpty()
           && propertyType.hasAnyTemplateTypes()) {
         TemplateTypeMap typeMap = restrictedObjType.getTemplateTypeMap();
         TemplateTypeMapReplacer replacer = new TemplateTypeMapReplacer(
