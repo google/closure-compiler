@@ -179,7 +179,7 @@ GearsOpenFileOptions.prototype.filter = [];
 /** @constructor */
 function GearsGeolocation() {}
 
-/** @const @type {GearsPosition} */
+/** @const {GearsPosition} */
 GearsGeolocation.prototype.lastPosition;
 
 /**
@@ -218,47 +218,47 @@ GearsGeolocation.prototype.getPermission = function(opt_siteName,
 /** @constructor */
 function GearsCoords() {}
 
-/** @const @type {number} */
+/** @const {number} */
 GearsCoords.prototype.latitude;
 
-/** @const @type {number} */
+/** @const {number} */
 GearsCoords.prototype.longitude;
 
-/** @const @type {number} */
+/** @const {number} */
 GearsCoords.prototype.accuracy;
 
-/** @const @type {number} */
+/** @const {number} */
 GearsCoords.prototype.altitude;
 
-/** @const @type {number} */
+/** @const {number} */
 GearsCoords.prototype.altitudeAccuracy;
 
 
 /** @constructor */
 function GearsPosition() {}
 
-/** @const @type {number} */
+/** @const {number} */
 GearsPosition.prototype.latitude;
 
-/** @const @type {number} */
+/** @const {number} */
 GearsPosition.prototype.longitude;
 
-/** @const @type {number} */
+/** @const {number} */
 GearsPosition.prototype.accuracy;
 
-/** @const @type {number} */
+/** @const {number} */
 GearsPosition.prototype.altitude;
 
-/** @const @type {number} */
+/** @const {number} */
 GearsPosition.prototype.altitudeAccuracy;
 
-/** @const @type {GearsCoords} */
+/** @const {GearsCoords} */
 GearsPosition.prototype.coords;
 
-/** @const @type {Date} */
+/** @const {Date} */
 GearsPosition.prototype.timestamp;
 
-/** @const @type {GearsAddress} */
+/** @const {GearsAddress} */
 GearsPosition.prototype.gearsAddress;
 
 
@@ -287,53 +287,53 @@ GearsPositionOptions.prototype.timeout;
 /** @constructor */
 function GearsPositionError() {}
 
-/** @const @type {number} */
+/** @const {number} */
 GearsPositionError.prototype.code = 0;
 
-/** @const @type {string} */
+/** @const {string} */
 GearsPositionError.prototype.message = '';
 
-/** @const @type {number} */
+/** @const {number} */
 GearsPositionError.prototype.UNKNOWN_ERROR;
 
-/** @const @type {number} */
+/** @const {number} */
 GearsPositionError.prototype.PERMISSION_DENIED;
 
-/** @const @type {number} */
+/** @const {number} */
 GearsPositionError.prototype.POSITION_UNAVAILABLE;
 
-/** @const @type {number} */
+/** @const {number} */
 GearsPositionError.prototype.TIMEOUT;
 
 
 /** @constructor */
 function GearsAddress() {}
 
-/** @const @type {string} */
+/** @const {string} */
 GearsAddress.prototype.streetNumber = '';
 
-/** @const @type {string} */
+/** @const {string} */
 GearsAddress.prototype.street = '';
 
-/** @const @type {string} */
+/** @const {string} */
 GearsAddress.prototype.premises = '';
 
-/** @const @type {string} */
+/** @const {string} */
 GearsAddress.prototype.city = '';
 
-/** @const @type {string} */
+/** @const {string} */
 GearsAddress.prototype.county = '';
 
-/** @const @type {string} */
+/** @const {string} */
 GearsAddress.prototype.region = '';
 
-/** @const @type {string} */
+/** @const {string} */
 GearsAddress.prototype.country = '';
 
-/** @const @type {string} */
+/** @const {string} */
 GearsAddress.prototype.countryCode = '';
 
-/** @const @type {string} */
+/** @const {string} */
 GearsAddress.prototype.postalCode = '';
 
 
