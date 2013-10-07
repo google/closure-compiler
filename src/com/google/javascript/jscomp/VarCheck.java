@@ -182,9 +182,10 @@ class VarCheck extends AbstractPostOrderCallback implements
       if (NodeUtil.isFunctionExpression(parent)) {
         // e.g. [ function foo() {} ], it's okay if "foo" isn't defined in the
         // current scope.
-      } else if (!(scope.isLocal() && ARGUMENTS.equals(varName))) {
+      } else {
+        boolean isArguments = scope.isLocal() && ARGUMENTS.equals(varName);
         // The extern checks are stricter, don't report a second error.
-        if (!strictExternCheck || !t.getInput().isExtern()) {
+        if (!isArguments && !(strictExternCheck && t.getInput().isExtern())) {
           t.report(n, UNDEFINED_VAR_ERROR, varName);
         }
 
