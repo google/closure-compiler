@@ -12137,6 +12137,48 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testTemplatized11() throws Exception {
+    testTypes(
+        "/** \n" +
+        " * @template T\n" +
+        " * @constructor\n" +
+        " */\n" +
+        "function C() {}\n" +
+        "\n" +
+        "/**\n" +
+        " * @param {T|K} a\n" +
+        " * @return {T}\n" +
+        " * @template K\n" +
+        " */\n" +
+        "C.prototype.method = function (a) {};\n" +
+        "\n" +
+        // method returns "?"
+        "/** @type {void} */ var x = new C().method(1);");
+  }
+
+  public void testIssue1058() throws Exception {
+    testTypes(
+        "/**\n" +
+        "  * @constructor\n" +
+        "  * @template CLASS\n" +
+        "  */\n" +
+        "var Class = function() {};\n" +
+        "\n" +
+        "/**\n" +
+        "  * @param {function(CLASS):CLASS} a\n" +
+        "  * @template T\n" +
+        "  */\n" +
+        "Class.prototype.foo = function(a) {\n" +
+        "  return 'string';\n" +
+        "};\n" +
+        "\n" +
+        "/** @param {number} a\n" +
+        "  * @return {string} */\n" +
+        "var a = function(a) { return '' };\n" +
+        "\n" +
+        "new Class().foo(a);");
+  }
+
   public void testUnknownTypeReport() throws Exception {
     compiler.getOptions().setWarningLevel(DiagnosticGroups.REPORT_UNKNOWN_TYPES,
         CheckLevel.WARNING);

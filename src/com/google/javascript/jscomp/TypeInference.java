@@ -28,6 +28,8 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
@@ -1180,13 +1182,22 @@ class TypeInference
    */
   private boolean inferTemplatedTypesForCall(
       Node n, FunctionType fnType) {
-    if (fnType.getTemplateTypeMap().getTemplateKeys().isEmpty()) {
+    final ImmutableList<TemplateType> keys = fnType.getTemplateTypeMap()
+        .getTemplateKeys();
+    if (keys.isEmpty()) {
       return false;
     }
 
     // Try to infer the template types
-    Map<TemplateType, JSType> inferred = inferTemplateTypesFromParameters(
-        fnType, n);
+    Map<TemplateType, JSType> inferred = Maps.filterKeys(
+        inferTemplateTypesFromParameters(fnType, n),
+        new Predicate<TemplateType>() {
+
+          @Override
+          public boolean apply(TemplateType key) {
+            return keys.contains(key);
+          }}
+        );
 
     // Replace all template types. If we couldn't find a replacement, we
     // replace it with UNKNOWN.
