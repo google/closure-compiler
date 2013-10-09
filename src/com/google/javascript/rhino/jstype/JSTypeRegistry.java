@@ -172,7 +172,7 @@ public class JSTypeRegistry implements Serializable {
   private boolean lastGeneration = true;
 
   // The template type name.
-  private Map<String, TemplateType> templateTypes = Maps.newHashMap();
+  private final Map<String, TemplateType> templateTypes = Maps.newHashMap();
 
   // A single empty TemplateTypeMap, which can be safely reused in cases where
   // there are no template types.
@@ -326,7 +326,7 @@ public class JSTypeRegistry implements Serializable {
     ARRAY_FUNCTION_TYPE.getInternalArrowType().returnType =
         ARRAY_FUNCTION_TYPE.getInstanceType();
 
-    ObjectType arrayPrototype = ARRAY_FUNCTION_TYPE.getPrototype();
+    ARRAY_FUNCTION_TYPE.getPrototype(); // Force initialization
     registerNativeType(JSTypeNative.ARRAY_FUNCTION_TYPE, ARRAY_FUNCTION_TYPE);
 
     ObjectType ARRAY_TYPE = ARRAY_FUNCTION_TYPE.getInstanceType();
@@ -337,7 +337,7 @@ public class JSTypeRegistry implements Serializable {
         new FunctionType(this, "Boolean", null,
             createArrowType(createOptionalParameters(ALL_TYPE), BOOLEAN_TYPE),
             null, null, true, true);
-    ObjectType booleanPrototype = BOOLEAN_OBJECT_FUNCTION_TYPE.getPrototype();
+    BOOLEAN_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
     registerNativeType(
         JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE,
         BOOLEAN_OBJECT_FUNCTION_TYPE);
@@ -354,7 +354,7 @@ public class JSTypeRegistry implements Serializable {
                   UNKNOWN_TYPE, UNKNOWN_TYPE, UNKNOWN_TYPE, UNKNOWN_TYPE),
               STRING_TYPE),
           null, null, true, true);
-    ObjectType datePrototype = DATE_FUNCTION_TYPE.getPrototype();
+    DATE_FUNCTION_TYPE.getPrototype(); // Force initialization
     registerNativeType(JSTypeNative.DATE_FUNCTION_TYPE, DATE_FUNCTION_TYPE);
 
     ObjectType DATE_TYPE = DATE_FUNCTION_TYPE.getInstanceType();
@@ -434,7 +434,7 @@ public class JSTypeRegistry implements Serializable {
         new FunctionType(this, "Number", null,
             createArrowType(createOptionalParameters(ALL_TYPE), NUMBER_TYPE),
             null, null, true, true);
-    ObjectType numberPrototype = NUMBER_OBJECT_FUNCTION_TYPE.getPrototype();
+    NUMBER_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
     registerNativeType(
         JSTypeNative.NUMBER_OBJECT_FUNCTION_TYPE, NUMBER_OBJECT_FUNCTION_TYPE);
 
@@ -450,7 +450,7 @@ public class JSTypeRegistry implements Serializable {
     REGEXP_FUNCTION_TYPE.getInternalArrowType().returnType =
         REGEXP_FUNCTION_TYPE.getInstanceType();
 
-    ObjectType regexpPrototype = REGEXP_FUNCTION_TYPE.getPrototype();
+    REGEXP_FUNCTION_TYPE.getPrototype(); // Force initialization
     registerNativeType(JSTypeNative.REGEXP_FUNCTION_TYPE, REGEXP_FUNCTION_TYPE);
 
     ObjectType REGEXP_TYPE = REGEXP_FUNCTION_TYPE.getInstanceType();
@@ -461,7 +461,7 @@ public class JSTypeRegistry implements Serializable {
         new FunctionType(this, "String", null,
             createArrowType(createOptionalParameters(ALL_TYPE), STRING_TYPE),
             null, null, true, true);
-    ObjectType stringPrototype = STRING_OBJECT_FUNCTION_TYPE.getPrototype();
+    STRING_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
     registerNativeType(
         JSTypeNative.STRING_OBJECT_FUNCTION_TYPE, STRING_OBJECT_FUNCTION_TYPE);
 
@@ -1576,21 +1576,6 @@ public class JSTypeRegistry implements Serializable {
   public JSType createFromTypeNodes(Node n, String sourceName,
       StaticScope<JSType> scope) {
     return createFromTypeNodesInternal(n, sourceName, scope);
-  }
-
-  private boolean hasTypeName(Node n) {
-    if (n.getType() == Token.STRING) {
-      return true;
-    }
-
-    for (Node child = n.getFirstChild();
-         child != null; child = child.getNext()) {
-      if (hasTypeName(child)) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   /** @see #createFromTypeNodes(Node, String, StaticScope) */

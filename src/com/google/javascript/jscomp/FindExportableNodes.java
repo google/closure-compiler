@@ -17,14 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.LinkedHashMap;
-import java.util.Set;
 
 /**
  * Records all of the symbols and properties that should be exported.
@@ -62,8 +60,6 @@ class FindExportableNodes extends AbstractPostOrderCallback {
    */
   private final LinkedHashMap<String, GenerateNodeContext> exports =
       Maps.newLinkedHashMap();
-
-  private Set<String> externProps = Sets.newLinkedHashSet();
 
   private final boolean allowLocalExports;
 

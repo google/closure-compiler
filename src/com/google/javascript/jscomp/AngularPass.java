@@ -146,7 +146,7 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
    * @param n the FUNCTION node.
    * @return STRING nodes.
    */
-  private List<Node> createDependenciesList(Node n) {
+  private static List<Node> createDependenciesList(Node n) {
     Preconditions.checkArgument(n.isFunction());
     Node params = NodeUtil.getFunctionParameters(n);
     if (params != null) {
@@ -160,7 +160,7 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
    * @param params PARAM_LIST node.
    * @return array of STRING nodes.
    */
-  private List<Node> createStringsFromParamList(Node params) {
+  private static List<Node> createStringsFromParamList(Node params) {
     Node param = params.getFirstChild();
     ArrayList<Node> names = Lists.newArrayList();
     while (param != null && param.isName()) {
@@ -250,7 +250,7 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
    * @return the assigned intial value, or the rightmost rvalue of an assignment
    * chain, or null.
    */
-  private Node getDeclarationRValue(Node n) {
+  private static Node getDeclarationRValue(Node n) {
     Preconditions.checkNotNull(n);
     Preconditions.checkArgument(n.isVar());
     n = n.getFirstChild().getFirstChild();

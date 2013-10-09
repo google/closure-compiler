@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -71,8 +70,6 @@ final class RescopeGlobalSymbols implements CompilerPass {
    * @param compiler The JSCompiler, for reporting code changes.
    * @param globalSymbolNamespace Name of namespace into which all global
    *     symbols are transferred.
-   * @param addExtern If true, the compiler will consider the
-   *    globalSymbolNamespace an extern name.
    * @param assumeCrossModuleNames If true, all global symbols will be assumed
    *     cross module boundaries and thus require renaming.
    */

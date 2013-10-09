@@ -275,7 +275,7 @@ class JsDocTokenStream {
     }
   }
 
-  private boolean isJSDocString(int c) {
+  private static boolean isJSDocString(int c) {
     switch (c) {
       case '@':
       case '*':
@@ -465,11 +465,11 @@ class JsDocTokenStream {
   private int lineEndChar = -1;
   int lineno;
   private int charno = -1;
-  private int initCharno;
-  private int initLineno;
+  private final int initCharno;
+  private final int initLineno;
 
-  private String sourceString;
-  private int sourceEnd;
+  private final String sourceString;
+  private final int sourceEnd;
 
   // sourceCursor is an index into a small buffer that keeps a
   // sliding window of the source stream.

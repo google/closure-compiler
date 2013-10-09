@@ -57,7 +57,7 @@ import com.google.javascript.rhino.ErrorReporter;
  * }
  * </code>
  *
- * @see https://docs.google.com/document/d/1r37CJ6ZW0zk28IMn1Tu8UKKjs2WcJ-6dNEb3om7FoHQ
+ * @see "https://docs.google.com/document/d/1r37CJ6ZW0zk28IMn1Tu8UKKjs2WcJ-6dNEb3om7FoHQ"
  * @author nicholas.j.santos@gmail.com (Nick Santos)
  */
 class NamespaceType extends NamedType {

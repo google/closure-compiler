@@ -36,7 +36,6 @@ class PeepholeMinimizeConditions
   extends AbstractPeepholeOptimization {
 
   private static final int AND_PRECEDENCE = NodeUtil.precedence(Token.AND);
-  private static final int NOT_PRECEDENCE = NodeUtil.precedence(Token.NOT);
 
   private final boolean late;
 
@@ -943,13 +942,6 @@ class PeepholeMinimizeConditions
    */
   static boolean isLowerPrecedence(Node n, final int precedence) {
     return NodeUtil.precedence(n.getType()) < precedence;
-  }
-
-  /**
-   * Whether the node type has higher precedence than "precedence"
-   */
-  private static boolean isHigherPrecedence(Node n, final int precedence) {
-    return NodeUtil.precedence(n.getType()) > precedence;
   }
 
   /**

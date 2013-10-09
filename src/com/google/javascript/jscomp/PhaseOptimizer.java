@@ -66,7 +66,7 @@ class PhaseOptimizer implements CompilerPass {
   // The time of the last change made to the program by any pass.
   private int lastChange;
   private static final int START_TIME = 0;
-  private Node jsRoot;
+  private final Node jsRoot;
   // Compiler/reportChangeToScope must call reportCodeChange to update all
   // change handlers. This flag prevents double update in ScopedChangeHandler.
   private boolean crossScopeReporting;
@@ -108,9 +108,9 @@ class PhaseOptimizer implements CompilerPass {
       "Fixed point loop exceeded the maximum number of iterations.";
 
   /**
-   * @param compiler the compiler that owns/creates this.
+   * @param comp the compiler that owns/creates this.
    * @param tracker an optional performance tracker
-   * @param progressRange the progress range for the process function or null
+   * @param range the progress range for the process function or null
    *        if progress should not be reported.
    */
   PhaseOptimizer(
