@@ -1707,7 +1707,7 @@ angular.$routeProvider.Params.reloadOnSearch;
  *   JS: string,
  *   RESOURCE_URL: string,
  *   isEnabled: function(): boolean,
- *   parseAs: function(string, string !angular.$parse.Expression,
+ *   parseAs: function(string, string): !angular.$parse.Expression,
  *   getTrusted: function(string, *): string,
  *   trustAs: function(string, string): *,
  *   parseAsHtml: function(string): !angular.$parse.Expression,
@@ -1750,7 +1750,7 @@ angular.$sce.isEnabled = function() {};
 
 /**
  * @param {string} type
- * @param {*} expression
+ * @param {string} expression
  * @return {!angular.$parse.Expression}
  */
 angular.$sce.parseAs = function(type, expression) {};
