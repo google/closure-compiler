@@ -1692,6 +1692,174 @@ angular.$routeProvider.Params.redirectTo;
 /** @type {boolean} */
 angular.$routeProvider.Params.reloadOnSearch;
 
+
+/******************************************************************************
+ * $sce Service
+ *****************************************************************************/
+
+/**
+ * Ref: http://docs.angularjs.org/api/ng.$sce
+ *
+ * @typedef {{
+ *   HTML: string,
+ *   CSS: string,
+ *   URL: string,
+ *   JS: string,
+ *   RESOURCE_URL: string,
+ *   isEnabled: function(): boolean,
+ *   parseAs: function(string, string !angular.$parse.Expression,
+ *   getTrusted: function(string, *): string,
+ *   trustAs: function(string, string): *,
+ *   parseAsHtml: function(string): !angular.$parse.Expression,
+ *   parseAsCss: function(string): !angular.$parse.Expression,
+ *   parseAsUrl: function(string): !angular.$parse.Expression,
+ *   parseAsJs: function(string): !angular.$parse.Expression,
+ *   parseAsResourceUrl: function(string): !angular.$parse.Expression,
+ *   getTrustedHtml: function(*): string,
+ *   getTrustedCss: function(*): string,
+ *   getTrustedUrl: function(*): string,
+ *   getTrustedJs: function(*): string,
+ *   getTrustedResourceUrl: function(*): string,
+ *   trustAsHtml: function(string): *,
+ *   trustAsCss: function(string): *,
+ *   trustAsUrl: function(string): *,
+ *   trustAsJs: function(string): *,
+ *   trustAsResourceUrl: function(string): *
+ *   }}
+ *****************************************************************************/
+angular.$sce;
+
+
+/** @const {string} */
+angular.$sce.HTML;
+
+/** @const {string} */
+angular.$sce.CSS;
+
+/** @const {string} */
+angular.$sce.URL;
+
+/** @const {string} */
+angular.$sce.JS;
+
+/** @const {string} */
+angular.$sce.RESOURCE_URL;
+
+/** @return {boolean} */
+angular.$sce.isEnabled = function() {};
+
+/**
+ * @param {string} type
+ * @param {*} expression
+ * @return {!angular.$parse.Expression}
+ */
+angular.$sce.parseAs = function(type, expression) {};
+
+/**
+ * @param {string} type
+ * @param {*} maybeTrusted
+ * @return {string}
+ */
+angular.$sce.getTrusted = function(type, maybeTrusted) {};
+
+/**
+ * @param {string} type
+ * @param {string} trustedValue
+ * @return {*}
+ */
+angular.$sce.trustAs = function(type, trustedValue) {};
+
+/**
+ * @param {string} expression
+ * @return {!angular.$parse.Expression}
+ */
+angular.$sce.parseAsHtml = function(expression) {};
+
+/**
+ * @param {string} expression
+ * @return {!angular.$parse.Expression}
+ */
+angular.$sce.parseAsCss = function(expression) {};
+
+/**
+ * @param {string} expression
+ * @return {!angular.$parse.Expression}
+ */
+angular.$sce.parseAsUrl = function(expression) {};
+
+/**
+ * @param {string} expression
+ * @return {!angular.$parse.Expression}
+ */
+angular.$sce.parseAsJs = function(expression) {};
+
+/**
+ * @param {string} expression
+ * @return {!angular.$parse.Expression}
+ */
+angular.$sce.parseAsResourceUrl = function(expression) {};
+
+/**
+ * @param {*} maybeTrusted
+ * @return {string}
+ */
+angular.$sce.getTrustedHtml = function(maybeTrusted) {};
+
+/**
+ * @param {*} maybeTrusted
+ * @return {string}
+ */
+angular.$sce.getTrustedCss = function(maybeTrusted) {};
+
+/**
+ * @param {*} maybeTrusted
+ * @return {string}
+ */
+angular.$sce.getTrustedUrl = function(maybeTrusted) {};
+
+/**
+ * @param {*} maybeTrusted
+ * @return {string}
+ */
+angular.$sce.getTrustedJs = function(maybeTrusted) {};
+
+/**
+ * @param {*} maybeTrusted
+ * @return {string}
+ */
+angular.$sce.getTrustedResourceUrl = function(maybeTrusted) {};
+
+/**
+ * @param {string} trustedValue
+ * @return {*}
+ */
+angular.$sce.trustAsHtml = function(trustedValue) {};
+
+/**
+ * @param {string} trustedValue
+ * @return {*}
+ */
+angular.$sce.trustAsCss = function(trustedValue) {};
+
+/**
+ * @param {string} trustedValue
+ * @return {*}
+ */
+angular.$sce.trustAsUrl = function(trustedValue) {};
+
+/**
+ * @param {string} trustedValue
+ * @return {*}
+ */
+angular.$sce.trustAsJs = function(trustedValue) {};
+
+/**
+ * @param {string} trustedValue
+ * @return {*}
+ */
+angular.$sce.trustAsResourceUrl = function(trustedValue) {};
+
+
 /******************************************************************************
  * $timeout Service
  *****************************************************************************/
