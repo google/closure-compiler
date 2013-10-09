@@ -2956,7 +2956,7 @@ chrome.pushMessaging.PushMessageEvent.prototype.hasListeners = function() {};
 
 
 /**
- * @see http://code.google.com/chrome/extensions/extension.html#type-Port
+ * @see https://developer.chrome.com/apps/runtime.html#type-Port
  * @constructor
  */
 function Port() {}
