@@ -44,6 +44,11 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
       DiagnosticType.warning(
           "JSC_SUSPICIOUS_NAN",
           "Comparison again NaN is always false. Did you mean isNaN()?");
+  
+  static final DiagnosticType SUSPICIOUS_IN_OPERATOR =
+      DiagnosticType.warning(
+          "JSC_SUSPICIOUS_IN",
+          "Use of the \"in\" keyword on non-object types throws an exception.");
 
   CheckSuspiciousCode() {
   }
@@ -52,6 +57,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
   public void visit(NodeTraversal t, Node n, Node parent) {
     checkMissingSemicolon(t, n);
     checkNaN(t, n);
+    checkInvalidIn(t, n);
   }
 
   private void checkMissingSemicolon(NodeTraversal t, Node n) {
@@ -103,6 +109,19 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
     if (NodeUtil.isNaN(n)) {
       t.getCompiler().report(
           t.makeError(n.getParent(), SUSPICIOUS_COMPARISON_WITH_NAN));
+    }
+  }
+  
+  private void checkInvalidIn(NodeTraversal t, Node n) {
+    if (n.getType() == Token.IN) {
+      reportIfNonObject(t, n.getLastChild());
+    }
+  }
+
+  private void reportIfNonObject(NodeTraversal t, Node n) {
+    if (NodeUtil.isImmutableResult(n)) {
+      t.getCompiler().report(
+          t.makeError(n.getParent(), SUSPICIOUS_IN_OPERATOR));
     }
   }
 }

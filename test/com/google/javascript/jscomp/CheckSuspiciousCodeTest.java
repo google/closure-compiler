@@ -66,6 +66,17 @@ public class CheckSuspiciousCodeTest extends CompilerTestCase {
     test("for(x in y); x = y;", e);
     test("for(x in y){} x = y;", ok);
   }
+  
+  public void testSuspiciousIn() {
+    testSame("'foo' in 1", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
+    testSame("'foo' in 'test'", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
+    testSame("'foo' in NaN", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
+    testSame("'foo' in undefined", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
+    testSame("'foo' in Infinity", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
+    testSame("'foo' in true", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
+    testSame("'foo' in false", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
+    testSame("'foo' in null", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
+  }
 
   private void testReportNaN(String js) {
     testSame(js, CheckSuspiciousCode.SUSPICIOUS_COMPARISON_WITH_NAN);

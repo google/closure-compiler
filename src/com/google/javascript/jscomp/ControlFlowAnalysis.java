@@ -918,6 +918,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       case Token.INC:
       case Token.DEC:
       case Token.INSTANCEOF:
+      case Token.IN:
         return true;
       case Token.FUNCTION:
         return false;

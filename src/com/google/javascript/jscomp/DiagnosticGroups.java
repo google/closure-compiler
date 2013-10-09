@@ -277,7 +277,8 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup SUSPICIOUS_CODE =
       DiagnosticGroups.registerGroup("suspiciousCode",
           CheckSuspiciousCode.SUSPICIOUS_SEMICOLON,
-          CheckSuspiciousCode.SUSPICIOUS_COMPARISON_WITH_NAN);
+          CheckSuspiciousCode.SUSPICIOUS_COMPARISON_WITH_NAN,
+          CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
 
   /**
    * Adds warning levels by name.
