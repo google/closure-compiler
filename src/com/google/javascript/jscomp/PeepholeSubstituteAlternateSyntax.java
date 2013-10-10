@@ -135,13 +135,16 @@ class PeepholeSubstituteAlternateSyntax
                !NodeUtil.mayHaveSideEffects(n)) {
       // Transform a * (b / c) to b / c * a
       Node lhs = n.getFirstChild();
+      while (lhs.getType() == n.getType()) {
+        lhs = lhs.getFirstChild();
+      }
       int precedence = NodeUtil.precedence(n.getType());
       int lhsPrecedence = NodeUtil.precedence(lhs.getType());
       int rhsPrecedence = NodeUtil.precedence(rhs.getType());
-      if (rhsPrecedence == precedence &&
-          (lhs.getType() == n.getType() || lhsPrecedence != precedence)) {
+      if (rhsPrecedence == precedence && lhsPrecedence != precedence) {
         n.removeChild(rhs);
-        n.addChildToFront(rhs);
+        lhs.getParent().replaceChild(lhs, rhs);
+        n.addChildToBack(lhs);
         reportCodeChange();
         return n;
       }

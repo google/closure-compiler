@@ -460,11 +460,17 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
         "(a || b) || c; (a * b) * c; (a | b) | c");
     testSame("a % (b % c); a / (b / c); a - (b - c);");
     test("a * (b % c);", "b % c * a");
-    test("(a * b) * (c / d)", "c / d * (a * b)");
-    test("c / d * (a * b)", "c / d * a * b");
+    test("a * b * (c / d)", "c / d * b * a");
     test("(a + b) * (c % d)", "c % d * (a + b)");
     testSame("(a / b) * (c % d)");
     testSame("(c = 5) * (c % d)");
+    test("(a + b) * c * (d % e)", "d % e * c * (a + b)");
+    test("!a * c * (d % e)", "d % e * c * !a");
+  }
+
+  public void testNoRotateInfiniteLoop() {
+    test("1/x * (y/1 * (1/z))", "1/x * (y/1) * (1/z)");
+    testSame("1/x * (y/1) * (1/z)");
   }
 
   private static class StringCompareTestCase extends CompilerTestCase {
