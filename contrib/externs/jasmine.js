@@ -158,6 +158,9 @@ jasmine.Helper.prototype.actual;
 /** @type {boolean} */
 jasmine.Helper.prototype.isNot;
 
+/** @type {undefined|function(): string} */
+jasmine.Helper.prototype.message;
+
 
 /** @param {function()} handler */
 function afterEach(handler) {}
