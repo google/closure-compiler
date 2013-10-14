@@ -494,7 +494,7 @@ public class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testNonAliasLocal() {
-    testScopedFailure("function f() {}",
+    testScopedFailure("try { } catch (e) {}",
         ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
   }
 
@@ -509,6 +509,20 @@ public class ScopedAliasesTest extends CompilerTestCase {
                SCOPE_NAMESPACE + "$jscomp.scope.x = 10; $jscomp.scope.y = 9;" +
                "goog.getX = function () { " +
                "    return $jscomp.scope.x + $jscomp.scope.y; }");
+  }
+
+  public void testFunctionDeclaration() {
+    testScoped("if (x) { function f() {} } g(f)",
+               SCOPE_NAMESPACE +
+               "if (x) { $jscomp.scope.f = function () {}; } " +
+               "g($jscomp.scope.f); ");
+  }
+
+  public void testHoistedFunctionDeclaration() {
+    testScoped(" g(f); function f() {} ",
+               SCOPE_NAMESPACE +
+               " $jscomp.scope.f = function () {}; " +
+               "g($jscomp.scope.f); ");
   }
 
   public void testAliasReassign() {
