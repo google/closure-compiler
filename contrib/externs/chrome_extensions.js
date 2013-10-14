@@ -1008,6 +1008,10 @@ chrome.tabs.onRemoved;
 /** @type {ChromeEvent} */
 chrome.tabs.onUpdated;
 
+
+/** @type {ChromeEvent} */
+chrome.tabs.onReplaced;
+
 // DEPRECATED:
 // TODO(user): Remove once all usage has been confirmed to have ended.
 
