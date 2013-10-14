@@ -44,7 +44,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
       DiagnosticType.warning(
           "JSC_SUSPICIOUS_NAN",
           "Comparison again NaN is always false. Did you mean isNaN()?");
-  
+
   static final DiagnosticType SUSPICIOUS_IN_OPERATOR =
       DiagnosticType.warning(
           "JSC_SUSPICIOUS_IN",
@@ -111,7 +111,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
           t.makeError(n.getParent(), SUSPICIOUS_COMPARISON_WITH_NAN));
     }
   }
-  
+
   private void checkInvalidIn(NodeTraversal t, Node n) {
     if (n.getType() == Token.IN) {
       reportIfNonObject(t, n.getLastChild());

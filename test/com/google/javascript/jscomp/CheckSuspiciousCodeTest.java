@@ -66,7 +66,7 @@ public class CheckSuspiciousCodeTest extends CompilerTestCase {
     test("for(x in y); x = y;", e);
     test("for(x in y){} x = y;", ok);
   }
-  
+
   public void testSuspiciousIn() {
     testSame("'foo' in 1", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
     testSame("'foo' in 'test'", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
