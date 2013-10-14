@@ -28,7 +28,6 @@ Window.prototype.opera;
 Window.prototype.opera.postError;
 
 /** @constructor */ function XSLTProcessor() {}
-/** @constructor */ function NodeFilter() {}
 /**
  * @param {*=} opt_text
  * @param {*=} opt_value
