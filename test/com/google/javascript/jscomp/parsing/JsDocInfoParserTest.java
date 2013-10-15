@@ -1359,6 +1359,66 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. @lends tag incompatible with other annotations");
   }
 
+  public void testStackedAnnotation() throws Exception {
+    JSDocInfo info = parse("@const @type {string}*/");
+    assertTrue(info.isConstant());
+    assertTrue(info.hasType());
+    assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
+  public void testStackedAnnotation2() throws Exception {
+    JSDocInfo info = parse("@type {string} @const */");
+    assertTrue(info.isConstant());
+    assertTrue(info.hasType());
+    assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
+  public void testStackedAnnotation3() throws Exception {
+    JSDocInfo info = parse("@const @see {string}*/");
+    assertTrue(info.isConstant());
+    assertFalse(info.hasType());
+  }
+
+  public void testStackedAnnotation4() throws Exception {
+    JSDocInfo info = parse("@constructor @extends {Foo} @implements {Bar}*/");
+    assertTrue(info.isConstructor());
+    assertTrue(info.hasBaseType());
+    assertEquals(1, info.getImplementedInterfaceCount());
+  }
+
+  public void testStackedAnnotation5() throws Exception {
+    JSDocInfo info = parse("@param {number} x @constructor */");
+    assertTrue(info.hasParameterType("x"));
+    assertTrue(info.isConstructor());
+  }
+
+  public void testStackedAnnotation6() throws Exception {
+    JSDocInfo info = parse("@return {number} @constructor */", true);
+    assertTrue(info.hasReturnType());
+    assertTrue(info.isConstructor());
+
+    info = parse("@return {number} @constructor */", false);
+    assertTrue(info.hasReturnType());
+    assertTrue(info.isConstructor());
+  }
+
+  public void testStackedAnnotation7() throws Exception {
+    JSDocInfo info = parse("@return @constructor */");
+    assertTrue(info.hasReturnType());
+    assertTrue(info.isConstructor());
+  }
+
+  public void testStackedAnnotation8() throws Exception {
+    JSDocInfo info = parse("@throws {number} @constructor */", true);
+    assertTrue(!info.getThrownTypes().isEmpty());
+    assertTrue(info.isConstructor());
+
+    info = parse("@return {number} @constructor */", false);
+    assertTrue(info.hasReturnType());
+    assertTrue(info.isConstructor());
+  }
+
+
   public void testParsePreserve() throws Exception {
     Node node = new Node(1);
     this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
@@ -2259,6 +2319,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertEquals("The most important object :-)", jsdoc.getReturnDescription());
   }
 
+  public void testSingleTags2() throws Exception {
+    JSDocInfo jsdoc = parse(
+        "@param {SomeType} a The most important object :-)*/", true);
+
+    assertEquals("The most important object :-)",
+        jsdoc.getDescriptionForParameter("a"));
+  }
+
   public void testSingleTagsReordered() throws Exception {
     JSDocInfo jsdoc
         = parse("@deprecated In favor of the new one!"
@@ -2360,7 +2428,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo.Marker returnDoc =
         assertAnnotationMarker(jsdoc, "return", 0, 0);
     assertDocumentationInMarker(returnDoc,
-        "some long multiline description", 13, 2, 15);
+        "some long multiline description", 14, 2, 15);
     assertEquals(8, returnDoc.getType().getPositionOnStartLine());
     assertEquals(12, returnDoc.getType().getPositionOnEndLine());
   }

@@ -309,7 +309,7 @@ public final class JsDocInfoParser {
           } else {
             jsdocBuilder.recordNgInject(true);
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case JAGGER_INJECT:
           if (jsdocBuilder.isJaggerInjectRecorded()) {
@@ -318,7 +318,7 @@ public final class JsDocInfoParser {
           } else {
             jsdocBuilder.recordJaggerInject(true);
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case JAGGER_MODULE:
           if (jsdocBuilder.isJaggerModuleRecorded()) {
@@ -327,7 +327,7 @@ public final class JsDocInfoParser {
           } else {
             jsdocBuilder.recordJaggerModule(true);
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case JAGGER_PROVIDE:
           if (jsdocBuilder.isJaggerProvideRecorded()) {
@@ -336,7 +336,7 @@ public final class JsDocInfoParser {
           } else {
             jsdocBuilder.recordJaggerProvide(true);
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case AUTHOR:
           if (jsdocBuilder.shouldParseDocumentation()) {
@@ -351,7 +351,7 @@ public final class JsDocInfoParser {
             }
             token = authorInfo.token;
           } else {
-            token = eatTokensUntilEOL(token);
+            token = eatUntilEOLIfNotAnnotation();
           }
           return token;
 
@@ -360,7 +360,7 @@ public final class JsDocInfoParser {
             parser.addParserWarning("msg.jsdoc.consistidgen",
               stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case STRUCT:
           if (!jsdocBuilder.recordStruct()) {
@@ -368,7 +368,7 @@ public final class JsDocInfoParser {
                                   stream.getLineno(),
                                   stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case DICT:
           if (!jsdocBuilder.recordDict()) {
@@ -376,7 +376,7 @@ public final class JsDocInfoParser {
                                   stream.getLineno(),
                                   stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case CONSTRUCTOR:
           if (!jsdocBuilder.recordConstructor()) {
@@ -388,7 +388,7 @@ public final class JsDocInfoParser {
                   stream.getLineno(), stream.getCharno());
             }
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case DEPRECATED:
           if (!jsdocBuilder.recordDeprecated()) {
@@ -419,13 +419,13 @@ public final class JsDocInfoParser {
                   stream.getLineno(), stream.getCharno());
             }
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case DESC:
           if (jsdocBuilder.isDescriptionRecorded()) {
             parser.addParserWarning("msg.jsdoc.desc.extra",
                 stream.getLineno(), stream.getCharno());
-            return eatTokensUntilEOL();
+            return eatUntilEOLIfNotAnnotation();
           } else {
             ExtractionInfo descriptionInfo =
                 extractMultilineTextualBlock(token);
@@ -492,7 +492,7 @@ public final class JsDocInfoParser {
             parser.addTypeWarning(
                 "msg.jsdoc.incompat.type", lineno, charno);
           }
-          token = eatTokensUntilEOL(token);
+          token = eatUntilEOLIfNotAnnotation(token);
           return token;
 
         case EXPORT:
@@ -500,28 +500,28 @@ public final class JsDocInfoParser {
             parser.addParserWarning("msg.jsdoc.export",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case EXPOSE:
           if (!jsdocBuilder.recordExpose()) {
             parser.addParserWarning("msg.jsdoc.expose",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case EXTERNS:
           if (!jsdocBuilder.recordExterns()) {
             parser.addParserWarning("msg.jsdoc.externs",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case JAVA_DISPATCH:
           if (!jsdocBuilder.recordJavaDispatch()) {
             parser.addParserWarning("msg.jsdoc.javadispatch",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case EXTENDS:
         case IMPLEMENTS:
@@ -563,6 +563,8 @@ public final class JsDocInfoParser {
               if (token != JsDocToken.RC) {
                 parser.addTypeWarning("msg.jsdoc.missing.rc",
                     stream.getLineno(), stream.getCharno());
+              } else {
+                token = next();
               }
             } else if (token != JsDocToken.EOL &&
                 token != JsDocToken.EOF && token != JsDocToken.EOC) {
@@ -572,7 +574,7 @@ public final class JsDocInfoParser {
           } else {
             parser.addTypeWarning("msg.no.type.name", lineno, charno);
           }
-          token = eatTokensUntilEOL(token);
+          token = eatUntilEOLIfNotAnnotation(token);
           return token;
 
         case HIDDEN:
@@ -580,7 +582,7 @@ public final class JsDocInfoParser {
             parser.addParserWarning("msg.jsdoc.hidden",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case LENDS:
           skipEOLs();
@@ -606,7 +608,7 @@ public final class JsDocInfoParser {
             parser.addTypeWarning("msg.jsdoc.missing.rc",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case MEANING:
           ExtractionInfo meaningInfo =
@@ -624,24 +626,24 @@ public final class JsDocInfoParser {
             parser.addParserWarning("msg.jsdoc.noalias",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case NO_COMPILE:
           if (!jsdocBuilder.recordNoCompile()) {
             parser.addParserWarning("msg.jsdoc.nocompile",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case NO_TYPE_CHECK:
           if (!jsdocBuilder.recordNoTypeCheck()) {
             parser.addParserWarning("msg.jsdoc.nocheck",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case NOT_IMPLEMENTED:
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case INHERIT_DOC:
         case OVERRIDE:
@@ -649,9 +651,9 @@ public final class JsDocInfoParser {
             parser.addTypeWarning("msg.jsdoc.override",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
-        case THROWS:
+        case THROWS: {
           skipEOLs();
           token = next();
           lineno = stream.getLineno();
@@ -665,7 +667,7 @@ public final class JsDocInfoParser {
             if (type == null) {
               // parsing error reported during recursive descent
               // recovering parsing
-              return eatTokensUntilEOL();
+              return eatUntilEOLIfNotAnnotation();
             }
           }
 
@@ -675,8 +677,10 @@ public final class JsDocInfoParser {
           // Save the throw type.
           jsdocBuilder.recordThrowType(type);
 
+          boolean isAnnotationNext = lookAheadForAnnotation();
+
           // Find the throw's description (if applicable).
-          if (jsdocBuilder.shouldParseDocumentation()) {
+          if (jsdocBuilder.shouldParseDocumentation() && !isAnnotationNext) {
             ExtractionInfo descriptionInfo =
                 extractMultilineTextualBlock(token);
 
@@ -688,9 +692,10 @@ public final class JsDocInfoParser {
 
             token = descriptionInfo.token;
           } else {
-            token = eatTokensUntilEOL(token);
+            token = eatUntilEOLIfNotAnnotation();
           }
           return token;
+        }
 
         case PARAM:
           skipEOLs();
@@ -706,7 +711,7 @@ public final class JsDocInfoParser {
             if (type == null) {
               // parsing error reported during recursive descent
               // recovering parsing
-              return eatTokensUntilEOL();
+              return eatUntilEOLIfNotAnnotation();
             }
             skipEOLs();
             token = next();
@@ -765,14 +770,15 @@ public final class JsDocInfoParser {
           }
 
           if (name == null) {
-            token = eatTokensUntilEOL(token);
+            token = eatUntilEOLIfNotAnnotation(token);
             return token;
           }
 
           jsdocBuilder.markName(name, sourceFile, lineno, charno);
 
           // Find the parameter's description (if applicable).
-          if (jsdocBuilder.shouldParseDocumentation()) {
+          if (jsdocBuilder.shouldParseDocumentation()
+              && token != JsDocToken.ANNOTATION) {
             ExtractionInfo paramDescriptionInfo =
                 extractMultilineTextualBlock(token);
 
@@ -784,8 +790,8 @@ public final class JsDocInfoParser {
             }
 
             token = paramDescriptionInfo.token;
-          } else {
-            token = eatTokensUntilEOL(token);
+          } else if (token != JsDocToken.EOC && token != JsDocToken.EOF) {
+            token = eatUntilEOLIfNotAnnotation();
           }
           return token;
 
@@ -794,21 +800,21 @@ public final class JsDocInfoParser {
             parser.addParserWarning("msg.jsdoc.preservertry",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case NO_SHADOW:
           if (!jsdocBuilder.recordNoShadow()) {
             parser.addParserWarning("msg.jsdoc.noshadow",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case NO_SIDE_EFFECTS:
           if (!jsdocBuilder.recordNoSideEffects()) {
             parser.addParserWarning("msg.jsdoc.nosideeffects",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case MODIFIES:
           token = parseModifiesTag(next());
@@ -819,7 +825,7 @@ public final class JsDocInfoParser {
             parser.addTypeWarning("msg.jsdoc.implicitcast",
                 stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case SEE:
           if (jsdocBuilder.shouldParseDocumentation()) {
@@ -835,7 +841,7 @@ public final class JsDocInfoParser {
 
             token = referenceInfo.token;
           } else {
-            token = eatTokensUntilEOL(token);
+            token = eatUntilEOLIfNotAnnotation();
           }
           return token;
 
@@ -844,7 +850,7 @@ public final class JsDocInfoParser {
             parser.addParserWarning("msg.jsdoc.stableidgen",
               stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case SUPPRESS:
           token = parseSuppressTag(next());
@@ -878,7 +884,7 @@ public final class JsDocInfoParser {
             parser.addParserWarning("msg.jsdoc.wizaction",
               stream.getLineno(), stream.getCharno());
           }
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
 
         case DISPOSES: {
           ExtractionInfo templateInfo = extractSingleLineBlock();
@@ -929,7 +935,7 @@ public final class JsDocInfoParser {
           charno = stream.getCharno();
 
           Node typeNode = null;
-          boolean hasType = lookAheadForTypeAnnotation();
+          boolean hasType = lookAheadForType();
           boolean isAlternateTypeAnnotation =
               (annotation == Annotation.PRIVATE ||
                annotation == Annotation.PROTECTED ||
@@ -1019,8 +1025,16 @@ public final class JsDocInfoParser {
                   break;
                 }
 
+                // TODO(johnlenz): The extractMultilineTextualBlock method
+                // and friends look directly at the stream, regardless of
+                // last token read, so we don't want to read the first
+                // "STRING" out of the stream.
+
+                boolean isAnnotationNext = lookAheadForAnnotation();
+
                 // Find the return's description (if applicable).
-                if (jsdocBuilder.shouldParseDocumentation()) {
+                if (jsdocBuilder.shouldParseDocumentation()
+                    && !isAnnotationNext) {
                   ExtractionInfo returnDescriptionInfo =
                       extractMultilineTextualBlock(token);
 
@@ -1034,7 +1048,7 @@ public final class JsDocInfoParser {
 
                   token = returnDescriptionInfo.token;
                 } else {
-                  token = eatTokensUntilEOL(token);
+                  token = eatUntilEOLIfNotAnnotation();
                 }
                 return token;
 
@@ -1054,7 +1068,7 @@ public final class JsDocInfoParser {
             }
           }
 
-          return eatTokensUntilEOL();
+          return eatUntilEOLIfNotAnnotation();
       }
     }
 
@@ -2382,6 +2396,18 @@ public final class JsDocInfoParser {
     return reportTypeSyntaxWarning("msg.jsdoc.type.syntax");
   }
 
+  private JsDocToken eatUntilEOLIfNotAnnotation() {
+    return eatUntilEOLIfNotAnnotation(next());
+  }
+
+  private JsDocToken eatUntilEOLIfNotAnnotation(JsDocToken token) {
+    if (token == JsDocToken.ANNOTATION) {
+      state = State.SEARCHING_ANNOTATION;
+      return token;
+    }
+    return eatTokensUntilEOL(token);
+  }
+
   /**
    * Eats tokens until {@link JsDocToken#EOL} included, and switches back the
    * state to {@link State#SEARCHING_ANNOTATION}.
@@ -2512,21 +2538,34 @@ public final class JsDocInfoParser {
    * JsDoc descriptions.
    * @return Whether we found a type annotation.
    */
-  private boolean lookAheadForTypeAnnotation() {
-    boolean matchedLc = false;
+  private boolean lookAheadForType() {
+    return lookAheadFor('{');
+  }
+
+  private boolean lookAheadForAnnotation() {
+    return lookAheadFor('@');
+  }
+
+  /**
+   * Look ahead by advancing the character stream.
+   * Does not modify the token stream.
+   * @return Whether we found the char.
+   */
+  private boolean lookAheadFor(char expect) {
+    boolean matched = false;
     int c;
     while (true) {
       c = stream.getChar();
       if (c == ' ') {
         continue;
-      } else if (c == '{') {
-        matchedLc = true;
+      } else if (c == expect) {
+        matched = true;
         break;
       } else {
         break;
       }
     }
     stream.ungetChar(c);
-    return matchedLc;
+    return matched;
   }
 }
