@@ -394,6 +394,8 @@ angular.Directive.transclude;
  *   injector: function(): angular.$injector,
  *   length: number,
  *   next: function(): angular.JQLite,
+ *   on: function(string, Function): angular.JQLite,
+ *   off: function(string=, Function=): angular.JQLite,
  *   parent: function(): angular.JQLite,
  *   prepend: function(JQLiteSelector): angular.JQLite,
  *   prop: function(string, *=): *,
@@ -406,6 +408,7 @@ angular.Directive.transclude;
  *   scope: function(): angular.Scope,
  *   text: function(string=): (angular.JQLite|string),
  *   toggleClass: function(string, boolean=): angular.JQLite,
+ *   triggerHandler: function(string, *=): angular.JQLite,
  *   unbind: function(string=, Function=): angular.JQLite,
  *   val: function(string=): (angular.JQLite|string),
  *   wrap: function(JQLiteSelector): angular.JQLite
@@ -525,6 +528,20 @@ angular.JQLite.length;
 angular.JQLite.next = function() {};
 
 /**
+ * @param {string} type
+ * @param {Function} fn
+ * @return {angular.JQLite}
+ */
+angular.JQLite.on = function(type, fn) {};
+
+/**
+ * @param {string=} opt_type
+ * @param {Function=} opt_fn
+ * @return {angular.JQLite}
+ */
+angular.JQLite.off = function(opt_type, opt_fn) {};
+
+/**
  * @return {angular.JQLite}
  */
 angular.JQLite.parent = function() {};
@@ -593,6 +610,13 @@ angular.JQLite.text = function(opt_value) {};
  * @return {angular.JQLite}
  */
 angular.JQLite.toggleClass = function(name, opt_condition) {};
+
+/**
+ * @param {string} type
+ * @param {*=} opt_value
+ * @return {angular.JQLite}
+ */
+angular.JQLite.triggerHandler = function(type, opt_value) {};
 
 /**
  * @param {string=} opt_type
