@@ -1190,6 +1190,10 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(parse("x && y && z"), parse("x && (y && z)"));
   }
 
+  public void testIssue1116() {
+    parse("/**/");
+  }
+
   /**
    * Verify that the given code has the given parse errors.
    * @return If in IDE mode, returns a partial tree.

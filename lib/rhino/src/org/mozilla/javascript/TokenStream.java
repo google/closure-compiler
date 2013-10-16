@@ -754,6 +754,12 @@ class TokenStream
                     if (matchChar('*')) {
                         lookForSlash = true;
                         commentType = Token.CommentType.JSDOC;
+
+                        // Special case /**/, which is a normal block comment.
+                        if (matchChar('/')) {
+                          commentType = Token.CommentType.BLOCK_COMMENT;
+                          return Token.COMMENT;
+                        }
                     } else {
                         commentType = Token.CommentType.BLOCK_COMMENT;
                     }
