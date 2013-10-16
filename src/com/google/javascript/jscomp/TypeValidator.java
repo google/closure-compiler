@@ -82,12 +82,6 @@ class TypeValidator {
           "from: {0}\n" +
           "to  : {1}");
 
-  static final DiagnosticType UNNECESSARY_CAST =
-      DiagnosticType.disabled("JSC_UNNECESSARY_CAST",
-          "unnecessary cast\n" +
-          "from: {0}\n" +
-          "to  : {1}");
-
   static final DiagnosticType TYPE_MISMATCH_WARNING =
       DiagnosticType.warning(
           "JSC_TYPE_MISMATCH",
@@ -510,23 +504,6 @@ class TypeValidator {
     if (!type.canCastTo(castType)) {
       registerMismatch(type, castType, report(t.makeError(n, INVALID_CAST,
           type.toString(), castType.toString())));
-    }
-  }
-
-  /**
-   * Expect that casting type to castType is necessary. A cast is considered
-   * unnecessary if type is a subtype of castType, or identical to castType.
-   *
-   * @param t The node traversal.
-   * @param n The node where warnings should point.
-   * @param castType The type being cast to.
-   * @param type The type being cast from.
-   */
-  void expectCastIsNecessary(NodeTraversal t, Node n, JSType castType, JSType type) {
-    if (type.isEquivalentTo(castType) ||
-        (type.isSubtype(castType) && !castType.isSubtype(type))) {
-      report(t.makeError(n, UNNECESSARY_CAST,
-          type.toString(), castType.toString()));
     }
   }
 

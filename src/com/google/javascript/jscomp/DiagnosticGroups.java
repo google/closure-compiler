@@ -120,10 +120,6 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("invalidCasts",
           TypeValidator.INVALID_CAST);
 
-  public static final DiagnosticGroup UNNECESSARY_CASTS =
-      DiagnosticGroups.registerGroup("unnecessaryCasts",
-          TypeValidator.UNNECESSARY_CAST);
-
   public static final DiagnosticGroup FILEOVERVIEW_JSDOC =
       DiagnosticGroups.registerDeprecatedGroup("fileoverviewTags");
 
