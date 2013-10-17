@@ -1511,12 +1511,15 @@ Date.prototype.toLocaleDateString = function(opt_locales, opt_options) {};
 Date.prototype.toLocaleFormat = function(formatString) {};
 
 /**
+ * @param {string|Array.<string>=} opt_locales
+ * @param {Object=} opt_options
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toLocaleString
+ * @see http://www.ecma-international.org/ecma-402/1.0/#sec-13.3.1
  * @override
  */
-Date.prototype.toLocaleString = function() {};
+Date.prototype.toLocaleString = function(opt_locales, opt_options) {};
 
 /**
  * @param {(string|Array.<string>)=} opt_locales
