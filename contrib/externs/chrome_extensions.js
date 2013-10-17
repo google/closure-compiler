@@ -3687,8 +3687,8 @@ chrome.pushMessaging.ChannelIdResult.prototype.channelId;
 
 
 /**
- * The {@code chrome.fileSystem} API makes use of the FileEntry type defined in
- * {@code javascript/externs/fileapi.js}.
+ * The {@code chrome.fileSystem} API makes use of the Entry and FileEntry types
+ * defined in {@code javascript/externs/fileapi.js}.
  * @const
  * @see http://developer.chrome.com/apps/fileSystem.html
  */
@@ -3696,8 +3696,8 @@ chrome.fileSystem = {};
 
 
 /**
- * @param {!FileEntry} entry The file entry to get the display path for. The
- *     entry can originally be obtained through
+ * @param {!Entry} entry The entry to get the display path for. The entry can
+ *     originally be obtained through
  *     {@code chrome.fileSystem.chooseEntry} or
  *     {@code chrome.fileSystem.restoreEntry}.
  * @param {function(string)} callback A success callback.
@@ -3707,15 +3707,15 @@ chrome.fileSystem.getDisplayPath = function(entry, callback) {};
 
 
 /**
- * @param {!FileEntry} entry The file entry to get a writable entry for.
- * @param {function(!FileEntry)} callback A success callback.
+ * @param {!Entry} entry The entry to get a writable entry for.
+ * @param {function(!Entry)} callback A success callback.
  * @see http://developer.chrome.com/apps/fileSystem.html#method-getWritableEntry
  */
 chrome.fileSystem.getWriteableEntry = function(entry, callback) {};
 
 
 /**
- * @param {!FileEntry} entry The file entry to query writability.
+ * @param {!Entry} entry The entry to query writability.
  * @param {function(boolean)} callback A success callback.
  * @see http://developer.chrome.com/apps/fileSystem.html#method-isWritableEntry
  */
@@ -3748,9 +3748,9 @@ chrome.fileSystem.ChooseEntryOptions;
 
 /**
  * @param {!chrome.fileSystem.ChooseEntryOptions|
- *     function(!FileEntry=, !Array.<!FileEntry>=)} optionsOrCallback The
+ *     function(Entry=, !Array.<!FileEntry>=)} optionsOrCallback The
  *     options for the file prompt or the callback.
- * @param {function(!FileEntry=, !Array.<!FileEntry>=)=} opt_callback A success
+ * @param {function(Entry=, !Array.<!FileEntry>=)=} opt_callback A success
  *     callback, if arg1 is options.
  * @see http://developer.chrome.com/apps/fileSystem.html#method-chooseEntry
  */
@@ -3759,7 +3759,7 @@ chrome.fileSystem.chooseEntry = function(optionsOrCallback, opt_callback) {};
 
 /**
  * @param {string} id The ID of the file entry to restore.
- * @param {function(!FileEntry)} callback A success callback.
+ * @param {function(!Entry)} callback A success callback.
  * @see http://developer.chrome.com/apps/fileSystem.html#method-restoreEntry
  */
 chrome.fileSystem.restoreEntry = function(id, callback) {};
@@ -3774,7 +3774,7 @@ chrome.fileSystem.isRestorable = function(id, callback) {};
 
 
 /**
- * @param {!FileEntry} entry The file entry to regain access to.
+ * @param {!Entry} entry The entry to regain access to.
  * @return {string} The ID that can be passed to restoreEntry to regain access
  *     to the given file entry.
  * @see http://developer.chrome.com/apps/fileSystem.html#method-retainEntry
