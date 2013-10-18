@@ -796,7 +796,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   public void setTracerMode(TracerMode mode) {
-    tracer = mode;
+    this.tracer = mode;
   }
 
   private boolean colorizeErrorOutput;
@@ -2097,10 +2097,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setInputDelimiter(String inputDelimiter) {
     this.inputDelimiter = inputDelimiter;
-  }
-
-  public void setTracer(TracerMode tracer) {
-    this.tracer = tracer;
   }
 
   public void setErrorFormat(ErrorFormat errorFormat) {

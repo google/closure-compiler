@@ -430,6 +430,12 @@ public class CommandLineRunner extends
         usage = "A whitelist of tag names in JSDoc. You may specify multiple")
     private List<String> extraAnnotationName = Lists.newArrayList();
 
+    @Option(name = "--tracer_mode",
+        usage = "Shows the duration of each compiler pass and the impact to " +
+        "the compiled output size. Options: ALL, RAW_SIZE, TIMING_ONLY, OFF")
+    private CompilerOptions.TracerMode tracerMode =
+        CompilerOptions.TracerMode.OFF;
+
     @Argument
     private List<String> arguments = Lists.newArrayList();
 
@@ -781,7 +787,8 @@ public class CommandLineRunner extends
           .setCommonJSModulePathPrefix(flags.commonJsPathPrefix)
           .setTransformAMDToCJSModules(flags.transformAmdModules)
           .setWarningsWhitelistFile(flags.warningsWhitelistFile)
-          .setAngularPass(flags.angularPass);
+          .setAngularPass(flags.angularPass)
+          .setTracerMode(flags.tracerMode);
     }
   }
 
