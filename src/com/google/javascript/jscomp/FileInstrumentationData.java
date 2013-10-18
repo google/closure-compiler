@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
  * Holds instrumentation details related to a file, namely, the filename,
  * the array name used in instrumentation, and the lines which were
  * instrumented (in encoded form).
- * @author praveenk@google.com (Praveen Kumashi)
  */
 class FileInstrumentationData {
   private final BitField instrumentedBits;
