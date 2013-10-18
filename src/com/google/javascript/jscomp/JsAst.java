@@ -44,6 +44,11 @@ public class JsAst implements SourceAst {
     this.fileName = sourceFile.getName();
   }
 
+  public JsAst(Node script) {
+    this(new SourceFile(script.getSourceFileName()));
+    this.root = script;
+  }
+
   @Override
   public Node getAstRoot(AbstractCompiler compiler) {
     if (root == null) {
