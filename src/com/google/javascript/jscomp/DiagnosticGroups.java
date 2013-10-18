@@ -120,6 +120,10 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("invalidCasts",
           TypeValidator.INVALID_CAST);
 
+  public static final DiagnosticGroup UNNECESSARY_CASTS =
+      DiagnosticGroups.registerGroup("unnecessaryCasts",
+          TypeValidator.UNNECESSARY_CAST);
+
   public static final DiagnosticGroup FILEOVERVIEW_JSDOC =
       DiagnosticGroups.registerDeprecatedGroup("fileoverviewTags");
 
@@ -285,6 +289,10 @@ public class DiagnosticGroups {
    */
   void setWarningLevel(CompilerOptions options,
       String name, CheckLevel level) {
+    if (name == "unnecessaryCasts") {
+      System.err.println(level);
+      (new RuntimeException()).printStackTrace();
+    }
     DiagnosticGroup group = forName(name);
     Preconditions.checkNotNull(group, "No warning class for name: %s", name);
     options.setWarningLevel(group, level);

@@ -64,6 +64,7 @@ class TypeValidator {
   private final JSType allValueTypes;
   private boolean shouldReport = true;
   private final JSType nullOrUndefined;
+  private final boolean reportUnnecessaryCasts;
 
   // TODO(nicksantos): Provide accessors to better filter the list of type
   // mismatches. For example, if we pass (Cake|null) where only Cake is
@@ -79,6 +80,12 @@ class TypeValidator {
   static final DiagnosticType INVALID_CAST =
       DiagnosticType.warning("JSC_INVALID_CAST",
           "invalid cast - must be a subtype or supertype\n" +
+          "from: {0}\n" +
+          "to  : {1}");
+
+  static final DiagnosticType UNNECESSARY_CAST =
+      DiagnosticType.disabled("JSC_UNNECESSARY_CAST",
+          "unnecessary cast\n" +
           "from: {0}\n" +
           "to  : {1}");
 
@@ -142,6 +149,8 @@ class TypeValidator {
         STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, NULL_TYPE, VOID_TYPE);
     this.nullOrUndefined = typeRegistry.createUnionType(
         NULL_TYPE, VOID_TYPE);
+    this.reportUnnecessaryCasts = ((Compiler) compiler).getOptions().enables(
+        DiagnosticGroups.UNNECESSARY_CASTS);
   }
 
   /**
@@ -504,6 +513,27 @@ class TypeValidator {
     if (!type.canCastTo(castType)) {
       registerMismatch(type, castType, report(t.makeError(n, INVALID_CAST,
           type.toString(), castType.toString())));
+    }
+  }
+
+  /**
+   * Expect that casting type to castType is necessary. A cast is considered
+   * unnecessary if type is a subtype of castType, or identical to castType.
+   *
+   * @param t The node traversal.
+   * @param n The node where warnings should point.
+   * @param castType The type being cast to.
+   * @param type The type being cast from.
+   */
+  void expectCastIsNecessary(NodeTraversal t, Node n, JSType castType, JSType type) {
+    if (!reportUnnecessaryCasts) {
+      return;
+    }
+
+    if (type.isEquivalentTo(castType) ||
+        (type.isSubtype(castType) && !castType.isSubtype(type))) {
+      report(t.makeError(n, UNNECESSARY_CAST,
+          type.toString(), castType.toString()));
     }
   }
 
