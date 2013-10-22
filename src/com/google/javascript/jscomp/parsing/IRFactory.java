@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
@@ -73,6 +74,8 @@ import com.google.javascript.rhino.head.ast.WhileLoop;
 import com.google.javascript.rhino.head.ast.WithStatement;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -106,6 +109,7 @@ class IRFactory {
       "set the appropriate language_in option.";
 
   private final String sourceString;
+  private final List<Integer> newlines;
   private final StaticSourceFile sourceFile;
   private final String sourceName;
   private final Config config;
@@ -147,7 +151,15 @@ class IRFactory {
                     Config config,
                     ErrorReporter errorReporter) {
     this.sourceString = sourceString;
+    this.newlines = Lists.newArrayList();
     this.sourceFile = sourceFile;
+
+    // Pre-generate all the newlines in the file.
+    for (int charNo = 0; true; charNo++) {
+      charNo = sourceString.indexOf('\n', charNo);
+      if (charNo == -1) break;
+      newlines.add(Integer.valueOf(charNo));
+    }
 
     // Sometimes this will be null in tests.
     this.sourceName = sourceFile == null ? null : sourceFile.getName();
@@ -513,7 +525,14 @@ class IRFactory {
   }
 
   private int position2charno(int position) {
-    int lineIndex = sourceString.lastIndexOf('\n', position);
+    int newlineIndex = Collections.binarySearch(newlines, position);
+    int lineIndex = -1;
+    if (newlineIndex >= 0) {
+      lineIndex = newlines.get(newlineIndex);
+    } else if (newlineIndex <= -2) {
+      lineIndex = newlines.get(-newlineIndex - 2);
+    }
+
     if (lineIndex == -1) {
       return position;
     } else {
