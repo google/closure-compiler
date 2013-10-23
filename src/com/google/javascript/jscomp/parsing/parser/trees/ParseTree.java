@@ -1,0 +1,298 @@
+/*
+ * Copyright 2011 The Closure Compiler Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.javascript.jscomp.parsing.parser.trees;
+
+import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
+
+/**
+ * An abstract syntax tree for JavaScript parse trees.
+ * Immutable.
+ * A plain old data structure. Should include data members and simple accessors only.
+ *
+ * Derived classes should have a 'Tree' suffix. Each concrete derived class should have a
+ * ParseTreeType whose name matches the derived class name.
+ *
+ * A parse tree derived from source should have a non-null location. A parse tree that is
+ * synthesized by the compiler may have a null location.
+ *
+ * When adding a new subclass of ParseTree you must also do the following:
+ *   - add a new entry to ParseTreeType
+ *   - add ParseTree.asXTree()
+ *   - modify ParseTreeVisitor.visit(ParseTree) for new ParseTreeType
+ *   - add ParseTreeVisitor.visit(XTree)
+ *   - modify ParseTreeTransformer.transform(ParseTree) for new ParseTreeType
+ *   - add ParseTreeTransformer.transform(XTree)
+ *   - add ParseTreeWriter.visit(XTree)
+ *   - add ParseTreeValidator.visit(XTree)
+ */
+public class ParseTree {
+  public final ParseTreeType type;
+  public final SourceRange location;
+
+  protected ParseTree(ParseTreeType type, SourceRange location) {
+    this.type = type;
+    this.location = location;
+  }
+
+  public ArgumentListTree asArgumentList() { return (ArgumentListTree) this; }
+  public ArrayLiteralExpressionTree asArrayLiteralExpression() {
+    return (ArrayLiteralExpressionTree) this; }
+  public ArrayPatternTree asArrayPattern() { return (ArrayPatternTree) this; }
+  public AwaitStatementTree asAsyncStatement() { return (AwaitStatementTree) this; }
+  public BinaryOperatorTree asBinaryOperator() { return (BinaryOperatorTree) this; }
+  public BlockTree asBlock() { return (BlockTree) this; }
+  public BreakStatementTree asBreakStatement() { return (BreakStatementTree) this; }
+  public CallExpressionTree asCallExpression() { return (CallExpressionTree) this; }
+  public CaseClauseTree asCaseClause() { return (CaseClauseTree) this; }
+  public CatchTree asCatch() { return (CatchTree) this; }
+  public ClassDeclarationTree asClassDeclaration() { return (ClassDeclarationTree) this; }
+  public ClassExpressionTree asClassExpression() { return (ClassExpressionTree) this; }
+  public CommaExpressionTree asCommaExpression() { return (CommaExpressionTree) this; }
+  public ConditionalExpressionTree asConditionalExpression() {
+    return (ConditionalExpressionTree) this; }
+  public ContinueStatementTree asContinueStatement() { return (ContinueStatementTree) this; }
+  public DebuggerStatementTree asDebuggerStatement() { return (DebuggerStatementTree) this; }
+  public DefaultClauseTree asDefaultClause() { return (DefaultClauseTree) this; }
+  public DefaultParameterTree asDefaultParameter() { return (DefaultParameterTree) this; }
+  public DoWhileStatementTree asDoWhileStatement() { return (DoWhileStatementTree) this; }
+  public EmptyStatementTree asEmptyStatement() { return (EmptyStatementTree) this; }
+  public ExportDeclarationTree asExportDeclaration() { return (ExportDeclarationTree) this; }
+  public ExpressionStatementTree asExpressionStatement() { return (ExpressionStatementTree) this; }
+  public FieldDeclarationTree asFieldDeclaration() { return (FieldDeclarationTree) this; }
+  public FinallyTree asFinally() { return (FinallyTree) this; }
+  public ForEachStatementTree asForEachStatement() { return (ForEachStatementTree) this; }
+  public ForInStatementTree asForInStatement() { return (ForInStatementTree) this; }
+  public FormalParameterListTree asFormalParameterList() { return (FormalParameterListTree) this; }
+  public ForStatementTree asForStatement() { return (ForStatementTree) this; }
+  public FunctionDeclarationTree asFunctionDeclaration() { return (FunctionDeclarationTree) this; }
+  public GetAccessorTree asGetAccessor() { return (GetAccessorTree) this; }
+  public IdentifierExpressionTree asIdentifierExpression() {
+    return (IdentifierExpressionTree) this; }
+  public IfStatementTree asIfStatement() { return (IfStatementTree) this; }
+  public ImportDeclarationTree asImportDeclaration() { return (ImportDeclarationTree) this; }
+  public ImportPathTree asImportPath() { return (ImportPathTree) this; }
+  public ImportSpecifierTree asImportSpecifier() { return (ImportSpecifierTree) this; }
+  public LabelledStatementTree asLabelledStatement() { return (LabelledStatementTree) this; }
+  public LiteralExpressionTree asLiteralExpression() { return (LiteralExpressionTree) this; }
+  public MemberExpressionTree asMemberExpression() { return (MemberExpressionTree) this; }
+  public MemberLookupExpressionTree asMemberLookupExpression() {
+    return (MemberLookupExpressionTree) this; }
+  public MissingPrimaryExpressionTree asMissingPrimaryExpression() {
+    return (MissingPrimaryExpressionTree) this; }
+  public MixinTree asMixin() { return (MixinTree) this; }
+  public MixinResolveTree asMixinResolve() { return (MixinResolveTree) this; }
+  public MixinResolveListTree asMixinResolveList() { return (MixinResolveListTree) this; }
+  public ModuleDefinitionTree asModuleDefinition() { return (ModuleDefinitionTree) this; }
+  public NewExpressionTree asNewExpression() { return (NewExpressionTree) this; }
+  public NullTree asNull() { return (NullTree) this; }
+  public ObjectLiteralExpressionTree asObjectLiteralExpression() {
+    return (ObjectLiteralExpressionTree) this; }
+  public ObjectPatternTree asObjectPattern() { return (ObjectPatternTree) this; }
+  public ObjectPatternFieldTree asObjectPatternField() { return (ObjectPatternFieldTree) this; }
+  public ParenExpressionTree asParenExpression() { return (ParenExpressionTree) this; }
+  public PostfixExpressionTree asPostfixExpression() { return (PostfixExpressionTree) this; }
+  public ProgramTree asProgram() { return (ProgramTree) this; }
+  public PropertyNameAssignmentTree asPropertyNameAssignment() {
+    return (PropertyNameAssignmentTree) this; }
+  public RequiresMemberTree asRequiresMember() { return (RequiresMemberTree) this; }
+  public RestParameterTree asRestParameter() { return (RestParameterTree) this; }
+  public ReturnStatementTree asReturnStatement() { return (ReturnStatementTree) this; }
+  public SetAccessorTree asSetAccessor() { return (SetAccessorTree) this; }
+  public SpreadExpressionTree asSpreadExpression() { return (SpreadExpressionTree) this; }
+  public SpreadPatternElementTree asSpreadPatternElement() {
+    return (SpreadPatternElementTree) this; }
+  public SuperExpressionTree asSuperExpression() { return (SuperExpressionTree) this; }
+  public SwitchStatementTree asSwitchStatement() { return (SwitchStatementTree) this; }
+  public ThisExpressionTree asThisExpression() { return (ThisExpressionTree) this; }
+  public ThrowStatementTree asThrowStatement() { return (ThrowStatementTree) this; }
+  public TraitDeclarationTree asTraitDeclaration() { return (TraitDeclarationTree) this; }
+  public TryStatementTree asTryStatement() { return (TryStatementTree) this; }
+  public UnaryExpressionTree asUnaryExpression() { return (UnaryExpressionTree) this; }
+  public VariableDeclarationListTree asVariableDeclarationList() {
+    return (VariableDeclarationListTree) this; }
+  public VariableDeclarationTree asVariableDeclaration() {
+    return (VariableDeclarationTree) this; }
+  public VariableStatementTree asVariableStatement() { return (VariableStatementTree) this; }
+  public WhileStatementTree asWhileStatement() { return (WhileStatementTree) this; }
+  public WithStatementTree asWithStatement() { return (WithStatementTree) this; }
+  public YieldStatementTree asYieldStatement() { return (YieldStatementTree) this; }
+
+  public final boolean isNull() {
+    return this.type == ParseTreeType.NULL;
+  }
+
+  public boolean isPattern() {
+    switch (type) {
+      case ARRAY_PATTERN:
+      case OBJECT_PATTERN:
+        return true;
+      case PAREN_EXPRESSION:
+        return this.asParenExpression().expression.isPattern();
+      default:
+        return false;
+    }
+  }
+
+  public boolean isLeftHandSideExpression() {
+    switch (this.type) {
+    case THIS_EXPRESSION:
+    case CLASS_EXPRESSION:
+    case SUPER_EXPRESSION:
+    case IDENTIFIER_EXPRESSION:
+    case LITERAL_EXPRESSION:
+    case ARRAY_LITERAL_EXPRESSION:
+    case OBJECT_LITERAL_EXPRESSION:
+    case NEW_EXPRESSION:
+    case MEMBER_EXPRESSION:
+    case MEMBER_LOOKUP_EXPRESSION:
+    case CALL_EXPRESSION:
+    case FUNCTION_DECLARATION:
+      return true;
+    case PAREN_EXPRESSION:
+      return this.asParenExpression().expression.isLeftHandSideExpression();
+    default:
+      return false;
+    }
+  }
+
+  // TODO: enable classes and traits
+  public boolean isAssignmentExpression() {
+    switch (this.type) {
+    case FUNCTION_DECLARATION:
+    case BINARY_OPERATOR:
+    case THIS_EXPRESSION:
+    case IDENTIFIER_EXPRESSION:
+    case LITERAL_EXPRESSION:
+    case ARRAY_LITERAL_EXPRESSION:
+    case OBJECT_LITERAL_EXPRESSION:
+    case MISSING_PRIMARY_EXPRESSION:
+    case CONDITIONAL_EXPRESSION:
+    case UNARY_EXPRESSION:
+    case POSTFIX_EXPRESSION:
+    case MEMBER_EXPRESSION:
+    case NEW_EXPRESSION:
+    case CALL_EXPRESSION:
+    case MEMBER_LOOKUP_EXPRESSION:
+    case PAREN_EXPRESSION:
+    case SUPER_EXPRESSION:
+      return true;
+    default:
+      return false;
+    }
+  }
+
+  // ECMA 262 11.2:
+  // MemberExpression :
+  //    PrimaryExpression
+  //    FunctionExpression
+  //    MemberExpression [ Expression ]
+  //    MemberExpression . IdentifierName
+  //    new MemberExpression Arguments
+  public boolean isMemberExpression() {
+    switch (this.type) {
+      // PrimaryExpression
+      case THIS_EXPRESSION:
+      case CLASS_EXPRESSION:
+      case SUPER_EXPRESSION:
+      case IDENTIFIER_EXPRESSION:
+      case LITERAL_EXPRESSION:
+      case ARRAY_LITERAL_EXPRESSION:
+      case OBJECT_LITERAL_EXPRESSION:
+      case PAREN_EXPRESSION:
+      // FunctionExpression
+      case FUNCTION_DECLARATION:
+      // MemberExpression [ Expression ]
+      case MEMBER_LOOKUP_EXPRESSION:
+      // MemberExpression . IdentifierName
+      case MEMBER_EXPRESSION:
+      // CallExpression:
+      //   CallExpression . IdentifierName
+      case CALL_EXPRESSION:
+        return true;
+
+      // new MemberExpression Arguments
+      case NEW_EXPRESSION:
+        return asNewExpression().arguments != null;
+    }
+
+    return false;
+  }
+
+  public boolean isExpression() {
+    return isAssignmentExpression()
+        || this.type == ParseTreeType.COMMA_EXPRESSION;
+  }
+
+  public boolean isAssignmentOrSpread() {
+    return isAssignmentExpression()
+        || this.type == ParseTreeType.SPREAD_EXPRESSION;
+  }
+
+  public boolean isRestParameter() {
+    return this.type == ParseTreeType.REST_PARAMETER;
+  }
+
+  public boolean isSpreadPatternElement() {
+    return this.type == ParseTreeType.SPREAD_PATTERN_ELEMENT;
+  }
+
+  /**
+   * In V8 any source element may appear where statement appears in the ECMA grammar.
+   */
+  public boolean isStatement() {
+    return isSourceElement();
+  }
+
+  /**
+   * This function reflects the ECMA standard, or what we would expect to become the ECMA standard.
+   * Most places use isStatement instead which reflects where code on the web diverges from the
+   * standard.
+   */
+  public boolean isStatementStandard() {
+    switch (this.type) {
+    case BLOCK:
+    case AWAIT_STATEMENT:
+    case VARIABLE_STATEMENT:
+    case EMPTY_STATEMENT:
+    case EXPRESSION_STATEMENT:
+    case IF_STATEMENT:
+    case DO_WHILE_STATEMENT:
+    case WHILE_STATEMENT:
+    case FOR_EACH_STATEMENT:
+    case FOR_IN_STATEMENT:
+    case FOR_STATEMENT:
+    case CONTINUE_STATEMENT:
+    case BREAK_STATEMENT:
+    case RETURN_STATEMENT:
+    case YIELD_STATEMENT:
+    case WITH_STATEMENT:
+    case SWITCH_STATEMENT:
+    case LABELLED_STATEMENT:
+    case THROW_STATEMENT:
+    case TRY_STATEMENT:
+    case DEBUGGER_STATEMENT:
+      return true;
+    default:
+      return false;
+    }
+  }
+
+  public boolean isSourceElement() {
+    return isStatementStandard() || this.type == ParseTreeType.FUNCTION_DECLARATION;
+  }
+
+}
