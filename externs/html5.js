@@ -1192,6 +1192,7 @@ HTMLInputElement.prototype.stepUp = function(opt_n) {};
 /**
  * @constructor
  * @extends {HTMLElement}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement
  */
 function HTMLMediaElement() {}
 
@@ -1261,13 +1262,22 @@ HTMLMediaElement.prototype.readyState;
 /** @type {boolean} */
 HTMLMediaElement.prototype.seeking;
 
-/** @type {number} */
+/**
+ * The current time, in seconds.
+ * @type {number}
+ */
 HTMLMediaElement.prototype.currentTime;
 
-/** @type {number} */
+/**
+ * The start time, in seconds.
+ * @type {number}
+ */
 HTMLMediaElement.prototype.startTime;
 
-/** @type {number} */
+/**
+ * The length of the media in seconds.
+ * @type {number}
+ */
 HTMLMediaElement.prototype.duration;
 
 /** @type {boolean} */
@@ -1307,7 +1317,10 @@ HTMLMediaElement.prototype.pause = function() {};
 /** @type {boolean} */
 HTMLMediaElement.prototype.controls;
 
-/** @type {number} */
+/**
+ * The audio volume, from 0.0 (silent) to 1.0 (loudest).
+ * @type {number}
+ */
 HTMLMediaElement.prototype.volume;
 
 /** @type {boolean} */
