@@ -2058,6 +2058,7 @@ chrome.pageCapture.saveAsMHTML = function(details, callback) {};
  */
 chrome.permissions = {};
 
+
 /**
  * @typedef {{
  *   permissions: (Array.<string>|undefined),
@@ -2066,6 +2067,7 @@ chrome.permissions = {};
 * @see http://developer.chrome.com/extensions/permissions.html#type-Permissions
 */
 chrome.permissions.Permissions;
+
 
 /**
  * @param {!chrome.permissions.Permissions} permissions
@@ -2163,6 +2165,7 @@ chrome.proxy.onProxyError;
 chrome.socket = {};
 
 
+
 /**
  * @constructor
  */
@@ -2171,6 +2174,7 @@ chrome.socket.CreateInfo = function() {};
 
 /** @type {number} */
 chrome.socket.CreateInfo.prototype.socketId;
+
 
 
 /**
@@ -2187,6 +2191,7 @@ chrome.socket.ReadInfo.prototype.resultCode;
 chrome.socket.ReadInfo.prototype.data;
 
 
+
 /**
  * @constructor
  */
@@ -2195,6 +2200,7 @@ chrome.socket.WriteInfo = function() {};
 
 /** @type {number} */
 chrome.socket.WriteInfo.prototype.bytesWritten;
+
 
 
 /**
@@ -2219,6 +2225,7 @@ chrome.socket.RecvFromInfo.prototype.address;
 chrome.socket.RecvFromInfo.prototype.port;
 
 
+
 /**
  * @constructor
  */
@@ -2231,6 +2238,7 @@ chrome.socket.AcceptInfo.prototype.resultCode;
 
 /** @type {(number|undefined)} */
 chrome.socket.AcceptInfo.prototype.socketId;
+
 
 
 /**
@@ -2261,6 +2269,7 @@ chrome.socket.SocketInfo.prototype.localAddress;
 
 /** @type {(number|undefined)} */
 chrome.socket.SocketInfo.prototype.localPort;
+
 
 
 /**
@@ -4105,3 +4114,80 @@ chrome.musicManagerPrivate = {};
  * @param {function(string): void} callback
  */
 chrome.musicManagerPrivate.getDeviceId = function(callback) {};
+
+
+/**
+ * @const
+ */
+chrome.mediaGalleriesPrivate = {};
+
+
+/**
+ * @typedef {function({deviceId: string, deviceName: string}): void}
+ */
+chrome.mediaGalleriesPrivate.DeviceCallback;
+
+
+/**
+ * @typedef {function({galleryId: string}): void}
+ */
+chrome.mediaGalleriesPrivate.GalleryChangeCallback;
+
+
+/**
+ * @typedef {function({galleryId: string, success: boolean}): void}
+ */
+chrome.mediaGalleriesPrivate.AddGalleryWatchCallback;
+
+
+/**
+ * @param {string} galleryId
+ * @param {!chrome.mediaGalleriesPrivate.AddGalleryWatchCallback} callback
+ */
+chrome.mediaGalleriesPrivate.addGalleryWatch = function(galleryId, callback) {};
+
+
+/**
+ * @type {!chrome.mediaGalleriesPrivate.DeviceEvent}
+ */
+chrome.mediaGalleriesPrivate.onDeviceAttached;
+
+
+/**
+ * @type {!chrome.mediaGalleriesPrivate.DeviceEvent}
+ */
+chrome.mediaGalleriesPrivate.onDeviceDetached;
+
+
+/**
+ * @type {!chrome.mediaGalleriesPrivate.GalleryChangeEvent}
+ */
+chrome.mediaGalleriesPrivate.onGalleryChanged;
+
+
+
+/**
+ * @interface
+ */
+chrome.mediaGalleriesPrivate.DeviceEvent = function() {};
+
+
+/**
+ * @param {!chrome.mediaGalleriesPrivate.DeviceCallback} callback
+ */
+chrome.mediaGalleriesPrivate.DeviceEvent.prototype.addListener =
+    function(callback) {};
+
+
+
+/**
+ * @interface
+ */
+chrome.mediaGalleriesPrivate.GalleryChangeEvent = function() {};
+
+
+/**
+ * @param {!chrome.mediaGalleriesPrivate.GalleryChangeCallback} callback
+ */
+chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.addListener =
+    function(callback) {};
