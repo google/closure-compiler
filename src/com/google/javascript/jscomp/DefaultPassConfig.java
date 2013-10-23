@@ -428,6 +428,12 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(tightenTypesBuilder);
     }
 
+    // Running this pass again fixes b/11163486, removing unused methods that
+    // share the same name as methods called from unused code.
+    if (options.smartNameRemoval) {
+      passes.add(smartNamePass);
+    }
+
     // Property disambiguation should only run once and needs to be done
     // soon after type checking, both so that it can make use of type
     // information and so that other passes can take advantage of the renamed
@@ -1770,6 +1776,8 @@ public class DefaultPassConfig extends PassConfig {
    * starting with minimum set of names.
    */
   final PassFactory smartNamePass = new PassFactory("smartNamePass", true) {
+    private boolean hasWrittenFile = false;
+
     @Override
     protected CompilerPass create(final AbstractCompiler compiler) {
       return new CompilerPass() {
@@ -1781,8 +1789,14 @@ public class DefaultPassConfig extends PassConfig {
           String reportPath = options.reportPath;
           if (reportPath != null) {
             try {
-              Files.write(na.getHtmlReport(), new File(reportPath),
-                  Charsets.UTF_8);
+              if (hasWrittenFile) {
+                Files.append(na.getHtmlReport(), new File(reportPath),
+                    Charsets.UTF_8);
+              } else {
+                Files.write(na.getHtmlReport(), new File(reportPath),
+                    Charsets.UTF_8);
+                hasWrittenFile = true;
+              }
             } catch (IOException e) {
               compiler.report(JSError.make(REPORT_PATH_IO_ERROR, reportPath));
             }
