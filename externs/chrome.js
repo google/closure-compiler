@@ -29,8 +29,13 @@
  */
 var chrome = {};
 
-/** @const Make the chrome namespace available via window, window.top, etc. */
+
+/**
+ * Make the chrome namespace available via window, window.top, etc.
+ * @const
+ */
 window.chrome;
+
 
 /**
  * Returns an object representing current load times. Note that the properties
@@ -42,6 +47,8 @@ window.chrome;
  * @return {function(): !ChromeLoadTimes}
  */
 chrome.loadTimes = function() {};
+
+
 
 /**
  * The data object given by chrome.loadTimes().
@@ -112,6 +119,7 @@ ChromeLoadTimes.prototype.connectionInfo;
 chrome.csi = function() {};
 
 
+
 /**
  * The data object given by chrome.csi().
  * @constructor
@@ -148,7 +156,7 @@ ChromeCsiInfo.prototype.tran;
 
 
 /**
- * @param {string|!ArrayBuffer} message
+ * @param {string|!ArrayBuffer|!Object} message
  * @see https://developers.google.com/native-client/devguide/tutorial
  */
 HTMLEmbedElement.prototype.postMessage = function(message) {};
