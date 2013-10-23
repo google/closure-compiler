@@ -145,3 +145,10 @@ ChromeCsiInfo.prototype.pageT;
 
 /** @type {number} */
 ChromeCsiInfo.prototype.tran;
+
+
+/**
+ * @param {string|!ArrayBuffer} message
+ * @see https://developers.google.com/native-client/devguide/tutorial
+ */
+HTMLEmbedElement.prototype.postMessage = function(message) {};
