@@ -3780,3 +3780,143 @@ chrome.fileSystem.isRestorable = function(id, callback) {};
  * @see http://developer.chrome.com/apps/fileSystem.html#method-retainEntry
  */
 chrome.fileSystem.retainEntry = function(entry) {};
+
+
+/**
+ * @see http://developer.chrome.com/extensions/alarms.html
+ * @const
+ */
+chrome.alarms = {};
+
+
+/**
+ * Creates an alarm. Near the time(s) specified by alarmInfo, the onAlarm event
+ * is fired. If there is another alarm with the same name (or no name if none is
+ * specified), it will be cancelled and replaced by this alarm.
+ * @param {string|!chrome.alarms.AlarmCreateInfo} nameOrAlarmCreateInfo Either
+ *     the name to identify this alarm or the info used to create the alarm. If
+ *     no name is passed, the empty string is used to identify the alarm.
+ * @param {!chrome.alarms.AlarmCreateInfo=} opt_alarmInfo If a name was passed
+ *     as arg1, the info used to create the alarm.
+ * @see http://developer.chrome.com/extensions/alarms.html#method-create
+ */
+chrome.alarms.create = function(nameOrAlarmCreateInfo, opt_alarmInfo) {};
+
+
+/**
+ * Retrieves details about the specified alarm.
+ * @param {string|!function(!chrome.alarms.Alarm)} nameOrCallback The name
+ *     of the alarm to get or the callback to invoke with the alarm. If no name
+ *     is passed, the empty string is used to get the alarm.
+ * @param {!function(!chrome.alarms.Alarm)=} opt_callback If a name was passed
+ *     as arg1, the callback to invoke with the alarm.
+ * @see http://developer.chrome.com/extensions/alarms.html#method-get
+ */
+chrome.alarms.get = function(nameOrCallback, opt_callback) {};
+
+
+/**
+ * Gets an array of all the alarms.
+ * @param {function(!Array.<!chrome.alarms.Alarm>)} callback
+ * @see http://developer.chrome.com/extensions/alarms.html#method-getAll
+ */
+chrome.alarms.getAll = function(callback) {};
+
+
+/**
+ * Clears the alarm with the given name.
+ * @param {string=} opt_name
+ * @see http://developer.chrome.com/extensions/alarms.html#method-clear
+ */
+chrome.alarms.clear = function(opt_name) {};
+
+
+/**
+ * Clears all alarms.
+ * @see http://developer.chrome.com/extensions/alarms.html#method-clearAll
+ */
+chrome.alarms.clearAll = function() {};
+
+
+/**
+ * Fired when an alarm has elapsed. Useful for event pages.
+ * @type {!chrome.alarms.AlarmEvent}
+ * @see http://developer.chrome.com/extensions/alarms.html#event-onAlarm
+ */
+chrome.alarms.onAlarm;
+
+
+
+/**
+ * @constructor
+ */
+chrome.alarms.AlarmEvent = function() {};
+
+
+/**
+ * @param {function(!chrome.alarms.Alarm): void} callback
+ */
+chrome.alarms.AlarmEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(!chrome.alarms.Alarm): void} callback
+ */
+chrome.alarms.AlarmEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!chrome.alarms.Alarm): void} callback
+ * @return {boolean}
+ */
+chrome.alarms.AlarmEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.alarms.AlarmEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * @interface
+ * @see http://developer.chrome.com/extensions/alarms.html#type-Alarm
+ */
+chrome.alarms.Alarm = function() {};
+
+
+/**
+ * Name of this alarm.
+ * @type {string}
+ */
+chrome.alarms.Alarm.prototype.name;
+
+
+/**
+ * Time at which this alarm was scheduled to fire, in milliseconds past the
+ * epoch (e.g. Date.now() + n). For performance reasons, the alarm may have been
+ * delayed an arbitrary amount beyond this.
+ * @type {number}
+ */
+chrome.alarms.Alarm.prototype.scheduledTime;
+
+
+/**
+ * If not null, the alarm is a repeating alarm and will fire again in
+ * periodInMinutes minutes.
+ * @type {?number}
+ */
+chrome.alarms.Alarm.prototype.periodInMinutes;
+
+
+
+/**
+ * @typedef {{
+ *   when: (number|undefined),
+ *   delayInMinutes: (number|undefined),
+ *   periodInMinutes: (number|undefined)
+ * }}
+ * @see http://developer.chrome.com/extensions/alarms.html#method-create
+ */
+chrome.alarms.AlarmCreateInfo;
