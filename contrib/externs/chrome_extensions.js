@@ -3783,8 +3783,8 @@ chrome.fileSystem.retainEntry = function(entry) {};
 
 
 /**
- * @see http://developer.chrome.com/extensions/alarms.html
  * @const
+ * @see http://developer.chrome.com/extensions/alarms.html
  */
 chrome.alarms = {};
 
@@ -3910,7 +3910,6 @@ chrome.alarms.Alarm.prototype.scheduledTime;
 chrome.alarms.Alarm.prototype.periodInMinutes;
 
 
-
 /**
  * @typedef {{
  *   when: (number|undefined),
@@ -3920,3 +3919,177 @@ chrome.alarms.Alarm.prototype.periodInMinutes;
  * @see http://developer.chrome.com/extensions/alarms.html#method-create
  */
 chrome.alarms.AlarmCreateInfo;
+
+
+/**
+ * @see http://developer.chrome.com/extensions/notifications.html
+ * @const
+ */
+chrome.notifications = {};
+
+
+/**
+ * @typedef {{
+ *   title: string,
+ *   iconUrl: (string|undefined)
+ * }}
+ * @see http://developer.chrome.com/extensions/notifications.html#type-NotificationOptions
+ */
+chrome.notifications.NotificationButton;
+
+
+/**
+ * @typedef {{
+ *   title: string,
+ *   message: string
+ * }}
+ * @see http://developer.chrome.com/extensions/notifications.html#type-NotificationOptions
+ */
+chrome.notifications.NotificationItem;
+
+
+/**
+ * @typedef {{
+ *   type: (string|undefined),
+ *   iconUrl: (string|undefined),
+ *   title: (string|undefined),
+ *   message: (string|undefined),
+ *   contextMessage: (string|undefined),
+ *   priority: (number|undefined),
+ *   eventTime: (number|undefined),
+ *   buttons: (!Array.<!chrome.notifications.NotificationButton>|undefined),
+ *   imageUrl: (string|undefined),
+ *   items: (!Array.<!chrome.notifications.NotificationItem>|undefined),
+ *   progress: (number|undefined),
+ *   isClickable: (boolean|undefined)
+ * }}
+ * @see http://developer.chrome.com/extensions/notifications.html#type-NotificationOptions
+ */
+chrome.notifications.NotificationOptions;
+
+
+/**
+ * @typedef {function(string): void}
+ * @see http://developer.chrome.com/extensions/notifications.html#method-create
+ * @see http://developer.chrome.com/extensions/notifications.html#event-onClicked
+ */
+chrome.notifications.StringCallback;
+
+
+/**
+ * @typedef {function(boolean): void}
+ * @see http://developer.chrome.com/extensions/notifications.html#method-update
+ * @see http://developer.chrome.com/extensions/notifications.html#method-clear
+ */
+chrome.notifications.BooleanCallback;
+
+
+/**
+ * @typedef {function(!Object): void}
+ * @see http://developer.chrome.com/extensions/notifications.html#method-getAll
+ */
+chrome.notifications.ObjectCallback;
+
+
+/**
+ * @typedef {function(string, boolean): void}
+ * @see http://developer.chrome.com/extensions/notifications.html#event-onClosed
+ */
+chrome.notifications.ClosedCallback;
+
+
+/**
+ * @typedef {function(string, number): void}
+ * @see http://developer.chrome.com/extensions/notifications.html#event-onButtonClicked
+ */
+chrome.notifications.ButtonCallback;
+
+
+/**
+ * @param {string} notificationId
+ * @param {!chrome.notifications.NotificationOptions} options
+ * @param {!chrome.notifications.StringCallback} callback
+ * @see http://developer.chrome.com/extensions/notifications.html#method-create
+ */
+chrome.notifications.create = function(notificationId, options, callback) {};
+
+
+/**
+ * @param {string} notificationId
+ * @param {!chrome.notifications.NotificationOptions} options
+ * @param {!chrome.notifications.BooleanCallback} callback
+ * @see http://developer.chrome.com/extensions/notifications.html#method-update
+ */
+chrome.notifications.update = function(notificationId, options, callback) {};
+
+
+/**
+ * @param {string} notificationId
+ * @param {!chrome.notifications.BooleanCallback} callback
+ * @see http://developer.chrome.com/extensions/notifications.html#method-clear
+ */
+chrome.notifications.clear = function(notificationId, callback) {};
+
+
+/**
+ * @type {!chrome.notifications.ClosedEvent}
+ * @see http://developer.chrome.com/extensions/notifications.html#event-onClosed
+ */
+chrome.notifications.onClosed;
+
+
+/**
+ * @type {!chrome.notifications.ClickedEvent}
+ * @see http://developer.chrome.com/extensions/notifications.html#event-onClicked
+ */
+chrome.notifications.onClicked;
+
+
+/**
+ * @type {!chrome.notifications.ButtonClickedEvent}
+ * @see http://developer.chrome.com/extensions/notifications.html#event-onButtonClicked
+ */
+chrome.notifications.onButtonClicked;
+
+
+
+/**
+ * @interface
+ * @see http://developer.chrome.com/extensions/notifications.html#event-onClosed
+ */
+chrome.notifications.ClosedEvent = function() {};
+
+
+/**
+ * @param {!chrome.notifications.ClosedCallback} callback
+ */
+chrome.notifications.ClosedEvent.prototype.addListener = function(callback) {};
+
+
+
+/**
+ * @interface
+ * @see http://developer.chrome.com/extensions/notifications.html#event-onClicked
+ */
+chrome.notifications.ClickedEvent = function() {};
+
+
+/**
+ * @param {!chrome.notifications.StringCallback} callback
+ */
+chrome.notifications.ClickedEvent.prototype.addListener = function(callback) {};
+
+
+
+/**
+ * @interface
+ * @see http://developer.chrome.com/extensions/notifications.html#event-onButtonClicked
+ */
+chrome.notifications.ButtonClickedEvent = function() {};
+
+
+/**
+ * @param {!chrome.notifications.ButtonCallback} callback
+ */
+chrome.notifications.ButtonClickedEvent.prototype.addListener =
+    function(callback) {};
