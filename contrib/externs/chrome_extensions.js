@@ -4093,3 +4093,15 @@ chrome.notifications.ButtonClickedEvent = function() {};
  */
 chrome.notifications.ButtonClickedEvent.prototype.addListener =
     function(callback) {};
+
+
+/**
+ * @const
+ */
+chrome.musicManagerPrivate = {};
+
+
+/**
+ * @param {function(string): void} callback
+ */
+chrome.musicManagerPrivate.getDeviceId = function(callback) {};
