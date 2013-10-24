@@ -94,6 +94,40 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
              "(new Foo).method()"));
   }
 
+  public void testNoMovePrototypeMethodRedeclaration1() {
+    // don't move if it can be overwritten when a sibling module is loaded.
+    testSame(createModuleStar(
+             "function Foo() {}" +
+             "Foo.prototype.method = function() {};",
+             // Module 2
+             "Foo.prototype.method = function() {};",
+             // Module 3
+             "(new Foo).method()"));
+  }
+
+  public void testNoMovePrototypeMethodRedeclaration2() {
+    // don't move if it can be overwritten when a later module is loaded.
+    testSame(createModuleChain(
+             "function Foo() {}" +
+             "Foo.prototype.method = function() {};",
+             // Module 2
+             "(new Foo).method()",
+             // Module 3
+             "Foo.prototype.method = function() {};"));
+  }
+
+  public void testNoMovePrototypeMethodRedeclaration3() {
+    // Note: it is reasonable to move the method in this case,
+    // but it is difficult enough to prove that we don't.
+    testSame(createModuleChain(
+             "function Foo() {}" +
+             "Foo.prototype.method = function() {};",
+             // Module 2
+             "Foo.prototype.method = function() {};",
+             // Module 3
+             "(new Foo).method()"));
+  }
+
   public void testMovePrototypeRecursiveMethod() {
     test(createModuleChain(
              "function Foo() {}" +

@@ -140,16 +140,23 @@ class CrossModuleMethodMotion implements CompilerPass {
         }
 
         Node value = prop.getValue();
-        if (moduleGraph.dependsOn(deepestCommonModuleRef, prop.getModule()) &&
-            value.isFunction()) {
-          Node valueParent = value.getParent();
-          if (valueParent.isGetterDef()
-              || valueParent.isSetterDef()) {
-            // TODO(johnlenz): a GET or SET can't be deferred like a normal
+        // Only attempt to move normal functions.
+        if (!value.isFunction()
+            // A GET or SET can't be deferred like a normal
             // FUNCTION property definition as a mix-in would get the result
             // of a GET instead of the function itself.
+            || value.getParent().isGetterDef()
+            || value.getParent().isSetterDef()) {
+          continue;
+        }
+
+        if (moduleGraph.dependsOn(deepestCommonModuleRef, prop.getModule())) {
+          if (hasUnmovableRedeclaration(nameInfo, prop)) {
+            // If it has been redeclared on the same object, skip it.
             continue;
           }
+
+          Node valueParent = value.getParent();
           Node proto = prop.getPrototype();
           int stubId = idGenerator.newId();
 
@@ -193,6 +200,24 @@ class CrossModuleMethodMotion implements CompilerPass {
       compiler.getNodeForCodeInsertion(null).addChildrenToFront(
           declarations.removeChildren());
     }
+  }
+
+  static boolean hasUnmovableRedeclaration(NameInfo nameInfo, Property prop) {
+    for (Symbol symbol : nameInfo.getDeclarations()) {
+      if (!(symbol instanceof Property)) {
+        continue;
+      }
+      Property otherProp = (Property) symbol;
+      // It is possible to do better here if the dependencies are well defined
+      // but redefinitions are usually in optional modules so it isn't likely
+      // worth the effort to check.
+      if (prop != otherProp
+          && prop.getRootVar() == otherProp.getRootVar()
+          && prop.getModule() != otherProp.getModule()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   static class IdGenerator implements Serializable {
