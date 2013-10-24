@@ -35,6 +35,12 @@ var jasmine = {};
 jasmine.createSpy = function(name) {};
 
 
+/**
+ * @param {string} baseName
+ * @param {Array} methodNames
+ */
+jasmine.createSpyObj = function(baseName, methodNames) {};
+
 
 /** @constructor */
 jasmine.Matcher = function() {};
@@ -139,9 +145,20 @@ jasmine.Spy.prototype.andReturn = function(value) {};
 jasmine.Spy.prototype.andThrow = function(exception) {};
 
 
+/** @type {number} */
+jasmine.Spy.prototype.callCount;
+
+
 /** @type {Array.<Object>} */
 jasmine.Spy.prototype.calls;
 
+
+/** @type {*} */
+jasmine.Spy.prototype.mostRecentCall;
+
+
+/** @type {!Array} */
+jasmine.Spy.prototype.mostRecentCall.args;
 
 
 /** @constructor */
