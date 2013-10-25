@@ -18,6 +18,7 @@ package com.google.debugging.sourcemap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.debugging.sourcemap.Base64VLQ.CharIterator;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder;
@@ -52,6 +53,9 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
   /** originalFile path ==> original line ==> target mappings */
   private Map<String, Map<Integer, Collection<OriginalMapping>>>
       reverseSourceMapping;
+  private String sourceRoot;
+  private Map<String, Object> extensions = Maps.newLinkedHashMap();
+
 
   public SourceMapConsumerV3() {
 
@@ -122,6 +126,17 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
       names = getJavaStringArray(sourceMapRoot.getJSONArray("names"));
 
       lines = Lists.newArrayListWithCapacity(lineCount);
+
+      if (sourceMapRoot.has("sourceRoot")) {
+        sourceRoot = sourceMapRoot.getString("sourceRoot");
+      }
+
+      for (Object objkey : Lists.newArrayList(sourceMapRoot.keys())) {
+        String key = (String) objkey;
+        if (key.startsWith("x_")) {
+          extensions.put(key, sourceMapRoot.get(key));
+        }
+      }
 
       new MappingBuilder(lineMap).build();
     } catch (JSONException ex) {
@@ -265,6 +280,21 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
       }
     }
   }
+
+  public String getSourceRoot(){
+    return this.sourceRoot;
+  }
+
+  /**
+   * Returns all extensions and their values (which can be any json value)
+   * in a Map object.
+   *
+   * @return The extension list
+   */
+  public Map<String, Object> getExtensions(){
+    return this.extensions;
+  }
+
 
   private String[] getJavaStringArray(JSONArray array) throws JSONException {
     int len = array.length();

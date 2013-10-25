@@ -21,6 +21,9 @@ import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMap.Format;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.LinkedHashMap;
@@ -82,10 +85,10 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
                    "\"mappings\":\"AAAAA,QAASA,UAAS,CAACC,UAAD,CAAaC,UAAb," +
-                       "CAAyB,CAAE,IAAIC,QAAU,SAAhB;\",\n" +
+                   "CAAyB,CAAE,IAAIC,QAAU,SAAhB;\",\n" +
                    "\"sources\":[\"testcode\"],\n" +
                    "\"names\":[\"__BASIC__\",\"__PARAM1__\",\"__PARAM2__\"," +
-                       "\"__VAR__\"]\n" +
+                   "\"__VAR__\"]\n" +
                    "}\n");
   }
 
@@ -304,7 +307,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":6,\n" +
         "\"mappings\":\"A;;;;IAGIA,IAAIC,CAAJD;AAA8xCE,CAA9xCF,CAAkyCG," +
-            "CAAlyCH,CAAsyCI;\",\n" +
+        "CAAlyCH,CAAsyCI;\",\n" +
         "\"sources\":[\"c:\\\\myfile.js\"],\n" +
         "\"names\":[\"foo\",\"a\",\"c\",\"d\",\"e\"]\n" +
         "}\n");
@@ -478,6 +481,59 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
     generator.appendTo(mapContents, "out.js");
 
     check(inputs, output.toString(), mapContents.toString());
+  }
+
+  public void testSourceMapExtensions() throws Exception {
+    //generating the json
+    SourceMapGeneratorV3 mapper = new SourceMapGeneratorV3();
+    mapper.addExtension("google_foo", new JSONObject());
+    mapper.addExtension("google_test", new JSONObject("{\"number\" : 1}"));
+    mapper.addExtension("google_array", new JSONArray("[]"));
+    mapper.addExtension("google_int", new Integer(2));
+    mapper.addExtension("google_str", "Some text");
+
+    mapper.removeExtension("google_foo");
+    StringBuilder out = new StringBuilder();
+    mapper.appendTo(out, "out.js");
+
+    assertTrue(mapper.hasExtension("google_test"));
+
+    //reading & checking the extension properties
+    JSONObject sourceMap = new JSONObject(out.toString());
+
+    assertFalse(sourceMap.has("x_google_foo"));
+    assertFalse(sourceMap.has("google_test"));
+    assertEquals(1, sourceMap.getJSONObject("x_google_test").getInt("number"));
+    assertEquals(0, sourceMap.getJSONArray("x_google_array").length());
+    assertEquals(2, sourceMap.getInt("x_google_int"));
+    assertEquals("Some text", sourceMap.getString("x_google_str"));
+  }
+
+  public void testSourceRoot() throws Exception{
+    SourceMapGeneratorV3 mapper = new SourceMapGeneratorV3();
+
+    //checking absence of sourceRoot
+    StringBuilder out = new StringBuilder();
+    mapper.appendTo(out, "out.js");
+    JSONObject mapping = new JSONObject(out.toString());
+
+    assertEquals(3, mapping.getInt("version"));
+    assertFalse(mapping.has("sourceRoot"));
+
+    out = new StringBuilder();
+    mapper.setSourceRoot("");
+    mapper.appendTo(out, "out2.js");
+    mapping = new JSONObject(out.toString());
+
+    assertFalse(mapping.has("sourceRoot"));
+
+    //checking sourceRoot
+    out = new StringBuilder();
+    mapper.setSourceRoot("http://url/path");
+    mapper.appendTo(out, "out3.js");
+    mapping = new JSONObject(out.toString());
+
+    assertEquals("http://url/path", mapping.getString("sourceRoot"));
   }
 
   FilePosition count(String js) {
