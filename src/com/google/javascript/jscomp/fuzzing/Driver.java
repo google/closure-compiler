@@ -43,12 +43,7 @@ public class Driver {
     return compiler;
   }
 
-  public Compiler compile(Node root) {
-    Node script = new Node(Token.SCRIPT, root);
-    script.setSourceFileForTesting("fuzzedFile");
-    InputId inputId = new InputId("fuzzedInput");
-    script.setInputId(inputId);
-
+  public Compiler compile(Node script) {
     CompilerInput input = new CompilerInput(new JsAst(script));
     JSModule jsModule = new JSModule("fuzzedModule");
     jsModule.add(input);
@@ -59,31 +54,49 @@ public class Driver {
     return compiler;
   }
 
+  Node getScript(Node root) {
+    return getScript(new Node[]{root});
+  }
+
+  Node getScript(Node[] elements) {
+    Node script = new Node(Token.SCRIPT, elements);
+    InputId inputId = new InputId("fuzzedInput");
+    script.setInputId(inputId);
+    script.setSourceFileForTesting(inputId.getIdName());
+    return script;
+  }
+
   private CompilerOptions getOptions() {
     CompilerOptions options = new CompilerOptions();
     return options;
   }
 
   public static void main(String[] args) {
-    int numberOfRuns = Integer.valueOf(args[0]);
-    int maxASTSize = Integer.valueOf(args[1]);
+    int numberOfRuns = 1;
+    if (args.length >= 1) {
+      numberOfRuns = Integer.valueOf(args[0]);
+    }
+
+    int maxASTSize = 10;
+    if (args.length >= 2) {
+      maxASTSize = Integer.valueOf(args[1]);
+    }
     Driver driver = new Driver();
     for (int i = 0; i < numberOfRuns; i++) {
       long seed = System.currentTimeMillis();
       Random random = new Random(seed);
       System.out.println("Seed: " + seed);
       Fuzzer fuzzer = new Fuzzer(random);
-      Node root = new Node(Token.EXPR_RESULT,
-          fuzzer.generateExpression(maxASTSize));
-      String code = Fuzzer.getPrettyCode(root);
-      System.out.print(code);
+      Node[] nodes = fuzzer.generateProgram(maxASTSize);
+      Node script = driver.getScript(nodes);
+      String code = Fuzzer.getPrettyCode(script);
+      System.out.println(code.trim());
 
-      Compiler compiler = driver.compile(root);
+      Compiler compiler = driver.compile(script);
       Result result = compiler.getResult();
       if (result.success) {
         System.out.println("Success!\n");
       }
     }
   }
-
 }
