@@ -463,6 +463,10 @@ public class DefaultPassConfig extends PassConfig {
     // as during the checks phase.
     passes.add(checkConsts);
 
+    // Detects whether invocations of the method goog.string.Const.from are done
+    // with an argument which is a string literal.
+    passes.add(checkConstParams);
+
     // The Caja library adds properties to Object.prototype, which breaks
     // most for-in loops.  This adds a check to each loop that skips
     // any property matching /___$/.
@@ -1427,6 +1431,15 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new ConstCheck(compiler);
+    }
+  };
+
+  /** Checks that the arguments are constants */
+  final PassFactory checkConstParams =
+      new PassFactory("checkConstParams", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new ConstParamCheck(compiler);
     }
   };
 
