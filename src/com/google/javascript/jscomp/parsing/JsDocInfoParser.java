@@ -1901,6 +1901,18 @@ public final class JsDocInfoParser {
   }
 
   /**
+   * ContextTypeExpression := BasicTypeExpression | '?'
+   * For expressions on the right hand side of a this: or new:
+   */
+  private Node parseContextTypeExpression(JsDocToken token) {
+    if (token == JsDocToken.QMARK) {
+      return newNode(Token.QMARK);
+    } else {
+      return parseBasicTypeExpression(token);
+    }
+  }
+
+  /**
    * BasicTypeExpression := '*' | 'null' | 'undefined' | TypeName
    *     | FunctionType | UnionType | RecordType | ArrayType
    */
@@ -2003,7 +2015,7 @@ public final class JsDocInfoParser {
             skipEOLs();
             Node contextType = wrapNode(
                 isThis ? Token.THIS : Token.NEW,
-                parseTypeName(next()));
+                parseContextTypeExpression(next()));
             if (contextType == null) {
               return null;
             }

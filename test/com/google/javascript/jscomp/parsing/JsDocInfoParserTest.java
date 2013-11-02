@@ -581,6 +581,20 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertFalse(type.isNominalConstructor());
   }
 
+  public void testStructuralConstructor2() throws Exception {
+    JSType type = testParseType(
+        "function (new:?)",
+        // toString skips unknowns, but isConstructor reveals the truth.
+        "function (): ?");
+    assertTrue(type.isConstructor());
+    assertFalse(type.isNominalConstructor());
+  }
+
+  public void testStructuralConstructor3() throws Exception {
+    resolve(parse("@type {function (new:*)} */").getType(),
+        "constructed type must be an object type");
+  }
+
   public void testNominalConstructor() throws Exception {
     ObjectType type = testParseType("Array", "(Array|null)").dereference();
     assertTrue(type.getConstructor().isNominalConstructor());
