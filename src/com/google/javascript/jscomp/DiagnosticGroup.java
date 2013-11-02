@@ -67,7 +67,7 @@ public class DiagnosticGroup implements Serializable {
       Maps.newHashMap();
 
   /** Create a diagnostic group that matches only the given type. */
-  public static DiagnosticGroup forType(DiagnosticType type) {
+  public static synchronized DiagnosticGroup forType(DiagnosticType type) {
     if (!singletons.containsKey(type)) {
       singletons.put(type, new DiagnosticGroup(type));
     }
