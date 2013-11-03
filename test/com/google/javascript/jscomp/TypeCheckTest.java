@@ -1286,7 +1286,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAdd14() throws Exception {
-    testTypes("/** @type {(null,string)} */ var a = null;" +
+    testTypes("/** @type {(null,string)} */ var a = unknown;" +
         "/** @type {number} */ var b = 5;" +
         "/** @type {boolean} */ var c = a + b;",
         "initializing variable\n" +
@@ -1304,7 +1304,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAdd16() throws Exception {
-    testTypes("/** @type {(undefined,string)} */ var a = undefined;" +
+    testTypes("/** @type {(undefined,string)} */ var a = unknown;" +
         "/** @type {number} */ var b = 5;" +
         "/** @type {boolean} */ var c = a + b;",
         "initializing variable\n" +
@@ -1314,7 +1314,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testAdd17() throws Exception {
     testTypes("/** @type {number} */ var a = 5;" +
-        "/** @type {(undefined,string)} */ var b = undefined;" +
+        "/** @type {(undefined,string)} */ var b = unknown;" +
         "/** @type {boolean} */ var c = a + b;",
         "initializing variable\n" +
         "found   : (number|string)\n" +
@@ -6100,19 +6100,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testSwitchCase4() throws Exception {
     testTypes("/** @type {(string,Null)} */" +
-        "var a = 'foo';" +
+        "var a = unknown;" +
         "switch (a) { case 'A':break; case null:break; }");
   }
 
   public void testSwitchCase5() throws Exception {
     testTypes("/** @type {(String,Null)} */" +
-        "var a = new String('foo');" +
+        "var a = unknown;" +
         "switch (a) { case 'A':break; case null:break; }");
   }
 
   public void testSwitchCase6() throws Exception {
     testTypes("/** @type {(Number,Null)} */" +
-        "var a = new Number(5);" +
+        "var a = unknown;" +
         "switch (a) { case 5:break; case null:break; }");
   }
 
@@ -6905,6 +6905,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "  var x = this.c2_.prop;\n" +
         "}",
         "Property prop never defined on C2");
+  }
+
+  public void testIssue1056() throws Exception {
+    testTypes(
+        "/** @type {Array} */ var x = null;" +
+        "x.push('hi');",
+        "No properties on this expression\n" +
+        "found   : null\n" +
+        "required: Object");
   }
 
   public void testIssue1072() throws Exception {

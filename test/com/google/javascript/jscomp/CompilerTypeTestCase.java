@@ -90,7 +90,8 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
       "Arguments.prototype.length;\n" +
       "/** @type {!Arguments} */\n" +
       "var arguments;" +
-      "" + ACTIVE_X_OBJECT_DEF;
+      "" + ACTIVE_X_OBJECT_DEF +
+      "/** @type {?} */ var unknown;"; // For producing unknowns in tests.
 
   protected Compiler compiler;
 

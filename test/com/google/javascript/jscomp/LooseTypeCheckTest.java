@@ -971,7 +971,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAdd14() throws Exception {
-    testTypes("/** @type {(null,string)} */ var a = null;" +
+    testTypes("/** @type {(null,string)} */ var a = unknown;" +
         "/** @type {number} */ var b = 5;" +
         "/** @type {boolean} */ var c = a + b;",
         "initializing variable\n" +
@@ -989,7 +989,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAdd16() throws Exception {
-    testTypes("/** @type {(undefined,string)} */ var a = undefined;" +
+    testTypes("/** @type {(undefined,string)} */ var a = unknown;" +
         "/** @type {number} */ var b = 5;" +
         "/** @type {boolean} */ var c = a + b;",
         "initializing variable\n" +
@@ -999,7 +999,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   public void testAdd17() throws Exception {
     testTypes("/** @type {number} */ var a = 5;" +
-        "/** @type {(undefined,string)} */ var b = undefined;" +
+        "/** @type {(undefined,string)} */ var b = unknown;" +
         "/** @type {boolean} */ var c = a + b;",
         "initializing variable\n" +
         "found   : (number|string)\n" +
