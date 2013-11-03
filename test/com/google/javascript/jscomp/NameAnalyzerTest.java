@@ -1017,6 +1017,14 @@ public class NameAnalyzerTest extends CompilerTestCase {
         "};");
   }
 
+  public void testDoNotChangeInstanceOfGetprop() {
+    testSame(
+        "function f(obj) {" +
+        "  if (obj instanceof window.MouseEvent) obj.preventDefault();" +
+        "}" +
+        "window['f'] = f;");
+  }
+
   public void testShortCircuit1() {
     test("var a = b() || 1", "b()");
   }

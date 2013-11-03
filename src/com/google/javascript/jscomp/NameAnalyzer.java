@@ -231,6 +231,9 @@ final class NameAnalyzer implements CompilerPass {
     /** Whether the name is used in a instanceof check */
     boolean hasInstanceOfReference = false;
 
+    /** Whether the name is directly set */
+    boolean hasSetterReference = false;
+
     /**
      * Output the node as a string
      *
@@ -687,6 +690,7 @@ final class NameAnalyzer implements CompilerPass {
       JsName jsn = getName(name, true);
       JsNameRefNode nameRefNode = new JsNameRefNode(jsn, node);
       refNodes.add(nameRefNode);
+      jsn.hasSetterReference = true;
 
       // Now, look at all parent names and record that their properties have
       // been written to.
@@ -880,14 +884,25 @@ final class NameAnalyzer implements CompilerPass {
         return;
       }
 
-      if (parent.isInstanceOf() &&
-          parent.getLastChild() == n &&
-          // Don't cover GETELEMs with a global root node.
-          n.isQualifiedName()) {
+      // instanceof checks are not handled like regular read references.
+      boolean isInstanceOfCheck = parent.isInstanceOf() &&
+          parent.getLastChild() == n;
+      if (isInstanceOfCheck) {
         JsName checkedClass = getName(nameInfo.name, true);
-        refNodes.add(new InstanceOfCheckNode(checkedClass, n));
-        checkedClass.hasInstanceOfReference = true;
-        return;
+
+        // If we know where this constructor is created, and we
+        // know we can find all 'new' calls on it, then treat
+        // this as a special reference. It will be replaced with
+        // false if there are no other references, because we
+        // know the class can't be instantiated.
+        if (checkedClass.hasSetterReference &&
+            !nameInfo.isExternallyReferenceable &&
+            // Exclude GETELEMs.
+            n.isQualifiedName()) {
+          refNodes.add(new InstanceOfCheckNode(checkedClass, n));
+          checkedClass.hasInstanceOfReference = true;
+          return;
+        }
       }
 
       // Determine which name might be potentially referring to this one by
