@@ -21,6 +21,9 @@
   -->
   <property name="test.class" value="*Test"/>
 
+  <!-- Use -Dtest.method in conjunction with the one-test rule. -->
+  <property name="test.method" value=""/>
+
   <!--
     Use -Dtest.fork to specify whether or not to fork the process.
     Some machines run better with forking turned off.
@@ -369,6 +372,31 @@
           <include name="**/${test.class}.class" />
         </fileset>
       </batchtest>
+    </junit>
+    <junitreport>
+       <fileset dir="build/testoutput" includes="*.xml"/>
+       <report todir="build/testoutput"/>
+    </junitreport>
+    <fail if="junit.failure"
+          message="Unit tests failed. See build/testoutput/index.html" />
+  </target>
+
+  <target name="one-test"
+          depends="compile-tests"
+          description="Compile and execute one JUnit test 
+                       specified with -Dtest.class and -Dtest.method.">
+    <mkdir dir="build/testoutput"/>
+    <junit printsummary="on" fork="${test.fork}"
+           forkmode="once" showoutput="true"
+           failureproperty="junit.failure">
+      <classpath refid="allclasspath.path" />
+      <classpath>
+        <pathelement location="${build.dir}/test" />
+      </classpath>
+      <test todir="build/testoutput" name="${test.class}" methods="${test.method}">
+        <formatter type="brief" usefile="false" />
+        <formatter type="xml" />
+      </test>
     </junit>
     <junitreport>
        <fileset dir="build/testoutput" includes="*.xml"/>
