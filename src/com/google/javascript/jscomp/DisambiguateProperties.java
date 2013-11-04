@@ -910,6 +910,12 @@ class DisambiguateProperties<T> implements CompilerPass {
           foundType = maybeType;
         }
       }
+
+      // Unwrap templatized types, they are not unique at runtime.
+      if (foundType != null && foundType.isTemplatizedType()) {
+        foundType = foundType.toMaybeTemplatizedType().getReferencedType();
+      }
+
       return foundType;
     }
 

@@ -129,7 +129,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(true, js, js, expected);
   }
 
-  public void testPrototypeAndInstance() {
+  public void testPrototypeAndInstance1() {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype.a = 0;\n"
@@ -142,11 +142,43 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
 
   public void testPrototypeAndInstance2() {
     String js = ""
+        + "/** @constructor @template T */ "
+        + "function Foo() {"
+        + "  this.a = 0;"
+        + "}\n"
+        + "/** @type {Foo.<string>} */\n"
+        + "var f1 = new Foo;\n"
+        + "f1.a = 0;"
+        + "/** @type {Foo.<string>} */\n"
+        + "var f2 = new Foo;\n"
+        + "f2.a = 0;";
+    testSets(false, js, js, "{a=[[Foo]]}");
+    // TODO(johnlenz): if we ever finish type tightening, it will need to
+    // be updated to support templated classes.
+    // testSets(true, js, js, "{a=[[Foo]]}");
+  }
+
+  public void testPrototypeAndInstance3() {
+    String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype.a = 0;\n"
         + "new Foo().a = 0;";
     testSets(false, js, js, "{a=[[Foo.prototype]]}");
     testSets(true, js, js, "{a=[[Foo.prototype]]}");
+  }
+
+  public void testPrototypeAndInstance4() {
+    String js = ""
+        + "/** @constructor @template T */ "
+        + "function Foo() {}\n"
+        + "Foo.prototype.a = 0;\n"
+        + "/** @type {Foo.<string>} */\n"
+        + "var f = new Foo;\n"
+        + "f.a = 0;";
+    testSets(false, js, js, "{a=[[Foo.prototype]]}");
+    // TODO(johnlenz): if we ever finish type tightening, it will need to
+    // be updated to support templated classes.
+    // testSets(true, js, js, "{a=[[Foo]]}");
   }
 
   public void testTwoTypes1() {
@@ -257,6 +289,28 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
 
     testSets(false, js, output, "{a=[[Foo.prototype]]}");
     testSets(true, js, output, "{a=[[Foo.prototype]]}");
+  }
+
+  public void testTwoTypes5() {
+    String js = ""
+        + "/** @constructor @template T */ function Foo() { this.a = 0; }\n"
+        + "/** @type Foo.<string> */\n"
+        + "var F = new Foo;\n"
+        + "F.a = 0;"
+        + "/** @constructor @template T */ function Bar() { this.a = 0; }\n"
+        + "/** @type Bar.<string> */\n"
+        + "var B = new Bar;\n"
+        + "B.a = 0;";
+    String output = ""
+        + "function Foo(){ this.Foo$a = 0; }"
+        + "var F=new Foo;"
+        + "F.Foo$a=0;"
+        + "function Bar(){ this.Bar$a = 0; }"
+        + "var B=new Bar;"
+        + "B.Bar$a=0";
+    testSets(false, js, output, "{a=[[Bar], [Foo]]}");
+    // TODO(johnlenz): type tighten doesn't support template types
+    // testSets(true, js, output, "{a=[[Bar], [Foo]]}");
   }
 
   public void testTwoFields() {
