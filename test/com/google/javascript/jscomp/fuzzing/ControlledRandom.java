@@ -26,7 +26,7 @@ import java.util.Random;
  */
 public class ControlledRandom extends Random {
   public ControlledRandom() {
-    super();
+    super(123);
   }
   /**
    * @param seed
