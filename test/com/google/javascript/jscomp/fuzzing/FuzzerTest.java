@@ -210,7 +210,7 @@ public class FuzzerTest extends TestCase{
     Fuzzer fuzzer = spy(new Fuzzer(random));
     int budget = 1;
     fuzzer.generateExpression(budget);
-    verify(fuzzer).generateLiteral(budget);
+    verify(fuzzer, never()).generateIdentifier(budget, true);
     verify(fuzzer, never()).generateFunctionCall(budget);
     verify(fuzzer, never()).generateUnaryExpression(budget);
     budget = 2;
@@ -325,4 +325,17 @@ public class FuzzerTest extends TestCase{
     assertEquals("continue testLabel;", code.trim());
   }
 
+  public void testDeterministicProgramGenerating() {
+    Random random = new Random(123);
+    Fuzzer fuzzer = new Fuzzer(random);
+    Node[] nodes1 = fuzzer.generateProgram(100);
+    String code1 = Fuzzer.getPrettyCode(Fuzzer.buildScript(nodes1));
+
+    random = new Random(123);
+    fuzzer = new Fuzzer(random);
+    Node[] nodes2 = fuzzer.generateProgram(100);
+    String code2 = Fuzzer.getPrettyCode(Fuzzer.buildScript(nodes2));
+
+    assertEquals(code1, code2);
+  }
 }

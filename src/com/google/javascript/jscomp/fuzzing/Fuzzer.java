@@ -19,6 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodePrinter;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -55,6 +56,9 @@ public class Fuzzer {
         if (expr == Expression.FUNCTION_CALL &&
             symbolTable.getSize() == 0 && budget < 4) {
           continue;
+        } else if (expr == Expression.IDENTIFIER &&
+            symbolTable.getSize() == 0) {
+          continue;
         } else {
           pmf.put(expr, expr.weight);
         }
@@ -64,6 +68,8 @@ public class Fuzzer {
         new DiscreteDistribution<Expression>(random, pmf);
     Expression expr = dd.nextItem();
     switch (expr) {
+      case THIS: return generateThis(budget);
+      case IDENTIFIER: return generateIdentifier(budget, true);
       case LITERAL: return generateLiteral(budget);
       case FUNCTION_CALL: return generateFunctionCall(budget);
       case UNARY_EXPR: return generateUnaryExpression(budget);
@@ -72,6 +78,11 @@ public class Fuzzer {
       case TERNARY_EXPR: return generateTernaryExpression(budget);
     }
     return null;
+  }
+
+  Node generateThis(int budget) {
+    Preconditions.checkArgument(budget >= 1);
+    return new Node(Token.THIS);
   }
 
   Node generateLiteral(int budget) {
@@ -640,7 +651,7 @@ public class Fuzzer {
           new Node(Token.CATCH, generateIdentifier(1, false),
           generateBlock(catchAndFinallyBudgets[0] - 1)));
     } else {
-      // not enough budget for finally block, give all budget to catch block
+      // not enough budget for catch block, give all budget to finally block
       catchAndFinallyBudgets[1] = budget - 1 - bodyBudget;
     }
     tryStmt.addChildToBack(catchBlock);
@@ -684,9 +695,9 @@ public class Fuzzer {
       for (int i = 1; i < numComponents; i++) {
         body.addChildToBack(generateSourceElement(componentBudgets[i]));
       }
-      symbolTable.removeScope();
-      functionNesting--;
     }
+    symbolTable.removeScope();
+    functionNesting--;
     Node function = new Node(Token.FUNCTION,
         name, paramList, body);
     return function;
@@ -708,7 +719,9 @@ public class Fuzzer {
   }
 
   Node[] generateProgram(int budget) {
-    int numElements = random.nextInt(budget) + 1;
+    // Heuristically limit the length of program to 1/5 of the budget to
+    // increase the complexity of the program
+    int numElements = random.nextInt(budget) / 5 + 1;
     if (numElements > 0) {
       int[] elemBudgets = distribute(budget, numElements, 1);
       Node[] elements = new Node[numElements];
@@ -737,6 +750,18 @@ public class Fuzzer {
     builder.setPrettyPrint(true);
     builder.setLineBreak(true);
     return builder.build();
+  }
+
+  public static Node buildScript(Node ast) {
+    return buildScript(new Node[]{ast});
+  }
+
+  public static Node buildScript(Node[] elements) {
+    Node script = new Node(Token.SCRIPT, elements);
+    InputId inputId = new InputId("fuzzedInput");
+    script.setInputId(inputId);
+    script.setSourceFileForTesting(inputId.getIdName());
+    return script;
   }
 
   /**

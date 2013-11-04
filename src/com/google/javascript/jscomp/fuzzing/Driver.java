@@ -22,9 +22,7 @@ import com.google.javascript.jscomp.JSModule;
 import com.google.javascript.jscomp.JsAst;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,18 +52,6 @@ public class Driver {
     return compiler;
   }
 
-  Node getScript(Node root) {
-    return getScript(new Node[]{root});
-  }
-
-  Node getScript(Node[] elements) {
-    Node script = new Node(Token.SCRIPT, elements);
-    InputId inputId = new InputId("fuzzedInput");
-    script.setInputId(inputId);
-    script.setSourceFileForTesting(inputId.getIdName());
-    return script;
-  }
-
   private CompilerOptions getOptions() {
     CompilerOptions options = new CompilerOptions();
     options.checkSymbols = true;
@@ -89,7 +75,7 @@ public class Driver {
       System.out.println("Seed: " + seed);
       Fuzzer fuzzer = new Fuzzer(random);
       Node[] nodes = fuzzer.generateProgram(maxASTSize);
-      Node script = driver.getScript(nodes);
+      Node script = Fuzzer.buildScript(nodes);
       String code = Fuzzer.getPrettyCode(script);
       System.out.println(code.trim());
 

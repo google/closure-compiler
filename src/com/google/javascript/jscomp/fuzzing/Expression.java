@@ -19,6 +19,8 @@ package com.google.javascript.jscomp.fuzzing;
  * @author zplin@google.com (Zhongpeng Lin)
  */
 public enum Expression {
+  THIS(1, 1),
+  IDENTIFIER(1, 1),
   LITERAL(1, 1),
   FUNCTION_CALL(2, 1),
   UNARY_EXPR(2, 1),
