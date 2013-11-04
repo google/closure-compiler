@@ -2848,6 +2848,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       "* @constructs \n" +
       "* @default \n" +
       "* @description \n" +
+      "* @enhance \n" +
+      "* @enhanceable \n" +
       "* @event \n" +
       "* @example \n" +
       "* @exception \n" +
