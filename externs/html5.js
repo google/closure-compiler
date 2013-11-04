@@ -2958,10 +2958,40 @@ Window.prototype.MozMutationObserver;
 Document.prototype.visibilityState;
 
 /**
+ * @type {string}
+ */
+Document.prototype.mozVisibilityState;
+
+/**
+ * @type {string}
+ */
+Document.prototype.webkitVisibilityState;
+
+/**
+ * @type {string}
+ */
+Document.prototype.msVisibilityState;
+
+/**
  * @see http://www.w3.org/TR/page-visibility/
  * @type {boolean}
  */
 Document.prototype.hidden;
+
+/**
+ * @type {boolean}
+ */
+Document.prototype.mozHidden;
+
+/**
+ * @type {boolean}
+ */
+Document.prototype.webkitHidden;
+
+/**
+ * @type {boolean}
+ */
+Document.prototype.msHidden;
 
 
 /**
