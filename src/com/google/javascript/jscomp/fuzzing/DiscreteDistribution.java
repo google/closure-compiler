@@ -24,6 +24,7 @@ import java.util.Random;
 
 /**
  * @param <T> The type of items
+ * UNDER DEVELOPMENT. DO NOT USE!
  * @author zplin@google.com (Zhongpeng Lin)
  */
 public class DiscreteDistribution<T> {

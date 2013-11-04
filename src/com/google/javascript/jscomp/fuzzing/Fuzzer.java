@@ -39,33 +39,39 @@ public class Fuzzer {
   private int switchNesting = 0;
   private int functionNesting = 0;
   Stack<String> currentLabels = new Stack<String>();
+  SymbolTable symbolTable;
 
   public Fuzzer(Random random) {
     this.random = random;
+    symbolTable = new SymbolTable(random);
+    symbolTable.addScope();
   }
 
   Node generateExpression(int budget) {
-    int rand;
     Preconditions.checkArgument(budget >= 1);
-    if (budget < 2) {
-      rand = 0;
-    } else if (budget < 3) {
-      rand = random.nextInt(4);
-    } else if (budget < 4) {
-      rand = random.nextInt(6);
-    } else {
-      rand = random.nextInt(7);
+    Map<Expression, Double> pmf = Maps.newHashMap();
+    for (Expression expr : Expression.values()) {
+      if (expr.minBudget <= budget) {
+        if (expr == Expression.FUNCTION_CALL &&
+            symbolTable.getSize() == 0 && budget < 4) {
+          continue;
+        } else {
+          pmf.put(expr, expr.weight);
+        }
+      }
     }
-    switch (rand) {
-      case 0: return generateLiteral(budget);
-      case 1: return generateCallableExpression(budget);
-      case 2: return generateFunctionCall(budget);
-      case 3: return generateUnaryExpression(budget);
-      case 4: return generateBinaryExpression(budget);
-      case 5: return generateFunctionExpression(budget);
-      case 6: return generateTernaryExpression(budget);
-      default: return null;
+    DiscreteDistribution<Expression> dd =
+        new DiscreteDistribution<Expression>(random, pmf);
+    Expression expr = dd.nextItem();
+    switch (expr) {
+      case LITERAL: return generateLiteral(budget);
+      case FUNCTION_CALL: return generateFunctionCall(budget);
+      case UNARY_EXPR: return generateUnaryExpression(budget);
+      case BINARY_EXPR: return generateBinaryExpression(budget);
+      case FUNCTION_EXPR: return generateFunctionExpression(budget);
+      case TERNARY_EXPR: return generateTernaryExpression(budget);
     }
+    return null;
   }
 
   Node generateLiteral(int budget) {
@@ -99,9 +105,19 @@ public class Fuzzer {
     return Node.newString(StringGenerator.getString(random));
   }
 
-  Node generateIdentifier(int budget) {
+  Node generateIdentifier(int budget, boolean getExistingOne) {
+    Preconditions.checkArgument(!getExistingOne || symbolTable.getSize() > 0);
     Preconditions.checkArgument(budget >= 1);
-    return Node.newString(Token.NAME, StringGenerator.getString(random));
+    if (getExistingOne) {
+      return Node.newString(Token.NAME, symbolTable.getRandomSymbol());
+    } else {
+      String identifier;
+      do {
+        identifier = StringGenerator.getString(random);
+      } while (symbolTable.containsInCurrentScope(identifier));
+      symbolTable.addSymbol(identifier);
+      return Node.newString(Token.NAME, identifier);
+    }
   }
 
   Node generateNullLiteral(int budget) {
@@ -165,13 +181,20 @@ public class Fuzzer {
   }
 
   Node generateAssignableExpression(int budget) {
+    Preconditions.checkArgument(budget >= 3 || symbolTable.getSize() > 0);
     if (budget < 3) {
-      return generateIdentifier(budget);
+      return generateIdentifier(budget, true);
     } else {
-      switch (random.nextInt(3)) {
-        case 0: return generateIdentifier(budget);
-        case 1: return generateGetProp(budget);
-        case 2: return generateGetElem(budget);
+      int rand;
+      if (symbolTable.getSize() > 0) {
+        rand = random.nextInt(3);
+      } else {
+        rand = random.nextInt(2);
+      }
+      switch (rand) {
+        case 0: return generateGetProp(budget);
+        case 1: return generateGetElem(budget);
+        case 2: return generateIdentifier(budget, true);
         default: return null;
       }
     }
@@ -198,13 +221,23 @@ public class Fuzzer {
   }
 
   Node generateFunctionCall(int budget, boolean isNew) {
-    // a function call at least needs two nodes: one for the root, one for the
-    // function name
-    Preconditions.checkArgument(budget >= 2);
-    int numArgs = random.nextInt(budget - 1);
-    int[] subBudgets = distribute(budget - 1, numArgs + 1, 1);
+    // A function call needs at least two nodes: one for the CALL node and one
+    // for the callee (when the symbol table isn't empty).
+    Preconditions.checkArgument((budget >= 2 && symbolTable.getSize() > 0) ||
+        budget >= 4);
+    int remainingBudget;
+    if (symbolTable.getSize() == 0) {
+      // allocate enough budget to callable expression when the symbol table is
+      // empty
+      remainingBudget = budget - 3;
+    } else {
+      remainingBudget = budget - 1;
+    }
+    int numArgs = random.nextInt(remainingBudget);
+    int[] subBudgets = distribute(remainingBudget, numArgs + 1, 1);
 
-    Node target = generateCallableExpression(subBudgets[0]);
+    Node target = generateCallableExpression(
+        subBudgets[0] + budget - 1 - remainingBudget);
     Node node;
     if (isNew) {
       node = new Node(Token.NEW, target);
@@ -218,7 +251,8 @@ public class Fuzzer {
     return node;
   }
 
-  Node generateCallableExpression(int budget) {
+  private Node generateCallableExpression(int budget) {
+    Preconditions.checkArgument(budget >= 3 || symbolTable.getSize() > 0);
     if (budget < 3) {
       return generateAssignableExpression(budget);
     }
@@ -233,52 +267,58 @@ public class Fuzzer {
     Preconditions.checkArgument(budget >= 2);
     Node node = null;
     Node target;
-    switch (random.nextInt(11)) {
+    int rand;
+    if (symbolTable.getSize() == 0 && budget < 4) {
+      rand = random.nextInt(6);
+    } else {
+      rand = random.nextInt(11);
+    }
+    switch (rand) {
       case 0:
-        target = generateAssignableExpression(budget - 1);
-        node = new Node(Token.INC, target);
-        node.putBooleanProp(Node.INCRDECR_PROP, true);
-        break;
-      case 1:
-        target = generateAssignableExpression(budget - 1);
-        node = new Node(Token.DEC, target);
-        node.putBooleanProp(Node.INCRDECR_PROP, true);
-        break;
-      case 2:
-        target = generateAssignableExpression(budget - 1);
-        node = new Node(Token.DELPROP, target);
-        break;
-      case 3:
         target = generateExpression(budget - 1);
         node = new Node(Token.VOID, target);
         break;
-      case 4:
+      case 1:
         target = generateExpression(budget - 1);
         node = new Node(Token.TYPEOF, target);
         break;
-      case 5:
-        target = generateAssignableExpression(budget - 1);
-        node = new Node(Token.INC, target);
-        break;
-      case 6:
-        target = generateAssignableExpression(budget - 1);
-        node = new Node(Token.DEC, target);
-        break;
-      case 7:
+      case 2:
         target = generateExpression(budget - 1);
         node = new Node(Token.POS, target);
         break;
-      case 8:
+      case 3:
         target = generateExpression(budget - 1);
         node = new Node(Token.NEG, target);
         break;
-      case 9:
+      case 4:
         target = generateExpression(budget - 1);
         node = new Node(Token.BITNOT, target);
         break;
-      case 10:
+      case 5:
         target = generateExpression(budget - 1);
         node = new Node(Token.NOT, target);
+        break;
+      case 6:
+        target = generateAssignableExpression(budget - 1);
+        node = new Node(Token.INC, target);
+        break;
+      case 7:
+        target = generateAssignableExpression(budget - 1);
+        node = new Node(Token.DEC, target);
+        break;
+      case 8:
+        target = generateAssignableExpression(budget - 1);
+        node = new Node(Token.DELPROP, target);
+        break;
+      case 9:
+        target = generateAssignableExpression(budget - 1);
+        node = new Node(Token.INC, target);
+        node.putBooleanProp(Node.INCRDECR_PROP, true);
+        break;
+      case 10:
+        target = generateAssignableExpression(budget - 1);
+        node = new Node(Token.DEC, target);
+        node.putBooleanProp(Node.INCRDECR_PROP, true);
         break;
     }
     return node;
@@ -297,10 +337,16 @@ public class Fuzzer {
         Token.ASSIGN_URSH, Token.ASSIGN_BITAND, Token.ASSIGN_BITXOR,
         Token.ASSIGN_BITOR);
 
-    int index = random.nextInt(operators.size());
-    Node left, right;
     int[] subBudgets = distribute(budget - 1, 2, 1);
-    if (index < operators.indexOf(Token.ASSIGN)) {
+    int index;
+    int firstAssignIndex = operators.indexOf(Token.ASSIGN);
+    if (subBudgets[0] < 3 && symbolTable.getSize() == 0) {
+      index = random.nextInt(firstAssignIndex);
+    } else {
+      index = random.nextInt(operators.size());
+    }
+    Node left, right;
+    if (index < firstAssignIndex) {
       left = generateExpression(subBudgets[0]);
     } else {
       // Assignments
@@ -320,7 +366,11 @@ public class Fuzzer {
   }
 
   Node generateFunctionExpression(int budget) {
-    return generateFunction(budget, random.nextInt(2) == 0);
+    if (budget < 4) {
+      return generateFunction(budget, true);
+    } else {
+      return generateFunction(budget, random.nextInt(2) == 0);
+    }
   }
 
   Node generateStatement(int budget) {
@@ -383,7 +433,7 @@ public class Fuzzer {
    */
   Node generateVariableStatement(int budget) {
     Preconditions.checkArgument(budget >= 1);
-    Node identifier = generateIdentifier(budget);
+    Node identifier = generateIdentifier(budget, false);
     Node node = new Node(Token.VAR, identifier);
     if (budget > 1) {
       Node assn = generateExpression(budget - 1);
@@ -472,9 +522,13 @@ public class Fuzzer {
     loopNesting++;
     int[] componentBudgets = distribute(budget, 3, 1);
     Node iterator;
-    iterator = random.nextInt(2) == 0 ?
-        generateAssignableExpression(componentBudgets[0]) :
-          generateVariableStatement(componentBudgets[0]);
+    if (componentBudgets[0] < 3 && symbolTable.getSize() == 0) {
+      iterator = generateVariableStatement(componentBudgets[0]);
+    } else {
+      iterator = random.nextInt(2) == 0 ?
+          generateAssignableExpression(componentBudgets[0]) :
+            generateVariableStatement(componentBudgets[0]);
+    }
     Node expr = generateExpression(componentBudgets[1]);
     Node block = generateBlock(componentBudgets[2]);
     loopNesting--;
@@ -582,7 +636,8 @@ public class Fuzzer {
     int[] catchAndFinallyBudgets = distribute(budget - 1 - bodyBudget, 2, 0);
     Node catchBlock = new Node(Token.BLOCK);
     if (catchAndFinallyBudgets[0] > 3) {
-      catchBlock.addChildToBack(new Node(Token.CATCH, generateIdentifier(1),
+      catchBlock.addChildToBack(
+          new Node(Token.CATCH, generateIdentifier(1, false),
           generateBlock(catchAndFinallyBudgets[0] - 1)));
     } else {
       // not enough budget for finally block, give all budget to catch block
@@ -596,14 +651,19 @@ public class Fuzzer {
 
   private Node generateFunction(int budget, boolean anonymous) {
     int remainingBudget;
+    Node name;
     if (anonymous) {
       Preconditions.checkArgument(budget >= 3);
+      name = Node.newString(Token.NAME, "");
       remainingBudget = budget - 3;
     } else {
       Preconditions.checkArgument(budget >= 4);
+      name = generateIdentifier(1, false);
       remainingBudget = budget - 4;
     }
+    // param list is in the new scope
     functionNesting++;
+    symbolTable.addScope();
     Node paramList = new Node(Token.PARAM_LIST);
     Node body = new Node(Token.BLOCK);
     int numComponents = random.nextInt(remainingBudget + 1);
@@ -617,15 +677,16 @@ public class Fuzzer {
       int[] componentBudgets = distribute(remainingBudget + 1, numComponents, 1);
       componentBudgets[0]--;
       for (int i = 0; i < componentBudgets[0]; i++) {
-        paramList.addChildToBack(generateIdentifier(1));
+        paramList.addChildToBack(generateIdentifier(1, false));
       }
       for (int i = 1; i < numComponents; i++) {
         body.addChildToBack(generateSourceElement(componentBudgets[i]));
       }
+      symbolTable.removeScope();
+      functionNesting--;
     }
     Node function = new Node(Token.FUNCTION,
-        generateIdentifier(1), paramList, body);
-    functionNesting--;
+        name, paramList, body);
     return function;
   }
 
@@ -680,7 +741,7 @@ public class Fuzzer {
    * Divide budget randomly into n shares, guarantee that each share has at
    * least min budget.
    */
-  private int[] distribute(int budget, int n, int min) {
+  int[] distribute(int budget, int n, int min) {
     int[] subBudgets = new int[n];
     for (int i = 0; i < n; i++) {
       subBudgets[i] = min;

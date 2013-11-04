@@ -68,6 +68,7 @@ public class Driver {
 
   private CompilerOptions getOptions() {
     CompilerOptions options = new CompilerOptions();
+    options.checkSymbols = true;
     return options;
   }
 

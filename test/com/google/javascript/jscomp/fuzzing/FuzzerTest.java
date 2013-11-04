@@ -100,28 +100,11 @@ public class FuzzerTest extends TestCase{
     assertTrue(code.endsWith("}"));
   }
 
-//  @Test
-//  public void testGenerateLiteral() {
-//    Random random = new Random(System.currentTimeMillis());
-//    Fuzzer fuzzer = spy(new Fuzzer(random));
-//    int budget = 0;
-//    fuzzer.generateLiteral(budget);
-//    verify(fuzzer, never()).generateNullLiteral(budget);
-//    verify(fuzzer, never()).generateBooleanLiteral(budget);
-//    verify(fuzzer, never()).generateNumericLiteral(budget);
-//    verify(fuzzer, never()).generateStringLiteral(budget);
-//    verify(fuzzer, never()).generateArrayLiteral(budget);
-//    verify(fuzzer, never()).generateObjectLiteral(budget);
-//    budget = 1;
-//    fuzzer.generateLiteral(budget);
-//    verify(fuzzer, never()).generateRegularExpressionLiteral(budget);
-//  }
-
   public void testPostfixExpressions() {
-    int[] overriddenValues = {0, 1};
+    int[] overriddenValues = {9, 10};
     String[] postfixes = {"++", "--"};
     for (int i = 0; i < postfixes.length; i++) {
-      ControlledRandom random = new ControlledRandom(1);
+      ControlledRandom random = new ControlledRandom();
       random.addOverride(1, overriddenValues[i]);
       Fuzzer fuzzer = new Fuzzer(random);
       Node node = fuzzer.generateUnaryExpression(10);
@@ -131,21 +114,20 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testPrefixExpressions() {
-    int[] overriddenValues = {2, 3, 4, 5, 6, 7, 8, 9, 10};
-    String[] prefixes = {"delete ", "void", "typeof", "++", "--", "+", "-",
-        "~", "!"};
+    int[] overriddenValues = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+    String[] prefixes = {"void", "typeof", "+", "-", "~", "!", "++", "--", "delete"};
     for (int i = 0; i < prefixes.length; i++) {
-      ControlledRandom random = new ControlledRandom(1);
+      ControlledRandom random = new ControlledRandom();
       random.addOverride(1, overriddenValues[i]);
       Fuzzer fuzzer = new Fuzzer(random);
       Node node = fuzzer.generateUnaryExpression(10);
-      String code = Fuzzer.getPrettyCode(node);
+      String code = Fuzzer.getPrettyCode(node).trim();
       assertTrue(code.startsWith(prefixes[i]));
     }
   }
 
   public void testNewExpression() {
-    ControlledRandom random = new ControlledRandom(1);
+    ControlledRandom random = new ControlledRandom();
     Fuzzer fuzzer = new Fuzzer(random);
     Node node = fuzzer.generateFunctionCall(10, true);
     String code = Fuzzer.getPrettyCode(node);
@@ -153,26 +135,11 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testCallExpression() {
-    ControlledRandom random = new ControlledRandom(1);
+    ControlledRandom random = new ControlledRandom();
     Fuzzer fuzzer = new Fuzzer(random);
     Node node = fuzzer.generateFunctionCall(10, false);
     String code = Fuzzer.getPrettyCode(node);
     assertFalse(code.startsWith("new "));
-  }
-
-  public void testBinaryExpressions() {
-    String[] operators = {"*", "/", "%", "+", "-", "<<", ">>", ">>>", "<", ">",
-        "<=", ">=", "instanceof", "in", "==", "!=", "===", "!==", "&", "^",
-        "|", "&&", "||", "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=",
-        ">>>=", "&=", "^=", "|="};
-    for (int i = 0; i < operators.length; i++) {
-      ControlledRandom random = new ControlledRandom();
-      random.addOverride(1, i);
-      Fuzzer fuzzer = new Fuzzer(random);
-      Node node = fuzzer.generateBinaryExpression(3);
-      String code = Fuzzer.getPrettyCode(node);
-      assertNotSame(-1, code.indexOf(" " + operators[i] + " "));
-    }
   }
 
   public void testTrinaryExpression() {
@@ -183,22 +150,6 @@ public class FuzzerTest extends TestCase{
     assertNotSame(-1, code.indexOf(" ? "));
     assertTrue(code.indexOf(" : ") > code.indexOf(" ? "));
   }
-
-//  public void testExpression() {
-//    Random random = new Random(System.currentTimeMillis());
-//    Fuzzer fuzzer = spy(new Fuzzer(random));
-//    int budget = 1;
-//    fuzzer.generateExpression(budget);
-//    verify(fuzzer).generateLiteral(budget);
-//    verify(fuzzer, never()).generateCallableExpression(budget);
-//    verify(fuzzer, never()).generateFunctionCall(budget);
-//    verify(fuzzer, never()).generateUnaryExpression(budget);
-//    budget = 2;
-//    fuzzer.generateExpression(budget);
-//    verify(fuzzer, never()).generateBinaryExpression(budget);
-//    budget = 3;
-//    verify(fuzzer, never()).generateTernaryExpression(budget);
-//  }
 
   public void testVariableStatement() {
     Random random = new Random();
@@ -261,7 +212,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testThrowStatement() {
-    ControlledRandom random = new ControlledRandom(1);
+    ControlledRandom random = new ControlledRandom();
     Fuzzer fuzzer = new Fuzzer(random);
     Node throwStatement = fuzzer.generateThrow(10);
     String code = Fuzzer.getPrettyCode(throwStatement);
@@ -269,7 +220,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testTryStatement() {
-    ControlledRandom random = new ControlledRandom(3);
+    ControlledRandom random = new ControlledRandom();
     Fuzzer fuzzer = new Fuzzer(random);
     Node tryStatement = fuzzer.generateTry(20);
     String code = Fuzzer.getPrettyCode(tryStatement);
