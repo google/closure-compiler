@@ -20,6 +20,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.graph.LatticeElement;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -34,18 +35,29 @@ interface JoinOp<L extends LatticeElement> extends Function<List<L>, L> {
   abstract static class BinaryJoinOp<L extends LatticeElement>
       implements JoinOp<L> {
     @Override
-    public final L apply(List<L> values) {
+    public L apply(List<L> values) {
       Preconditions.checkArgument(!values.isEmpty());
       int size = values.size();
       if (size == 1) {
         return values.get(0);
       } else if (size == 2) {
         return apply(values.get(0), values.get(1));
-      } else {
+      } else if (size <= 16) {
+        // Do a Tree merge which request the least number of merges
         int mid = computeMidPoint(size);
         return apply(
             apply(values.subList(0, mid)),
             apply(values.subList(mid, size)));
+      } else {
+        // If the merge set is getting out of hand, avoid tree merges as it is
+        // more memory intense. Instead, stick with linear merges that requires
+        // more merges but less memory. This avoids GC trashing.
+        Iterator<L> iter = values.iterator();
+        L result = iter.next(); // Never null, we have 16+ values.
+        while (iter.hasNext()) {
+          result = apply(result, iter.next());
+        }
+        return result;
       }
     }
 

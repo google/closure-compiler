@@ -1107,6 +1107,18 @@ public class TypeInferenceTest extends TestCase {
         getType("out").toString());
   }
 
+  public void testLotsOfBranchesGettingMerged() {
+    String code = "var a = -1;\n";
+    code += "switch(foo()) { \n";
+    for (int i = 0; i < 100; i++) {
+      code += "case " + i + ": a = " + i + "; break; \n";
+    }
+    code += "default: a = undefined; break;\n";
+    code += "}\n";
+    inFunction(code);
+    assertEquals("(number|undefined)", getType("a").toString());
+  }
+
   public void testIssue785() {
     inFunction("/** @param {string|{prop: (string|undefined)}} x */" +
                "function f(x) {}" +
