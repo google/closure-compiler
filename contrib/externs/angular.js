@@ -1116,6 +1116,7 @@ angular.HttpCallback;
  * @typedef {{
  *   then: function(
  *       ?function(!angular.$http.Response),
+ *       ?function(!angular.$http.Response)=,
  *       ?function(!angular.$http.Response)=): angular.$http.HttpPromise,
  *   success: function(angular.HttpCallback): angular.$http.HttpPromise,
  *   error: function(angular.HttpCallback): angular.$http.HttpPromise
@@ -1592,7 +1593,8 @@ angular.$q.Deferred.reject = function(opt_reason) {};
 angular.$q.Deferred.promise;
 
 /**
- * @typedef {{then: function(?function(?), ?function(?)=): angular.$q.Promise}}
+ * @typedef {{then: function(?function(?), ?function(?)=, ?function(?)=):
+ *     angular.$q.Promise}}
  */
 angular.$q.Promise;
 
