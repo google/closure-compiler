@@ -30,7 +30,6 @@ import java.util.Stack;
 public class SymbolTable {
   private Stack<List<String>> storage = new Stack<List<String>>();
   private Random random;
-  private DiscreteDistribution<List<String>> distribution = null;
   private int size = 0;
 
   public SymbolTable(Random random) {
@@ -44,26 +43,32 @@ public class SymbolTable {
   public void removeScope() {
     size -= storage.peek().size();
     storage.pop();
-    distribution = null;
   }
 
   public void addSymbol(String symbol) {
     storage.peek().add(symbol);
     size++;
-    distribution = null;
-  }
-
-  boolean containsInCurrentScope(String symbol) {
-    return storage.peek().indexOf(symbol) != -1;
   }
 
   public int getSize() {
     return size;
   }
 
-  public String getRandomSymbol() {
-    Preconditions.checkArgument(getSize() > 0);
-    List<String> scope = getRandomScope();
+  public int getNumScopes() {
+    return storage.size();
+  }
+
+  public boolean hasNonLocals() {
+    return size - storage.peek().size() > 0;
+  }
+
+  public String getRandomSymbol(boolean excludeLocal) {
+    if (excludeLocal) {
+      Preconditions.checkArgument(getNumScopes() > 1);
+    } else {
+      Preconditions.checkArgument(getNumScopes() > 0);
+    }
+    List<String> scope = getRandomScope(excludeLocal);
     return scope.get(random.nextInt(scope.size()));
   }
 
@@ -71,14 +76,19 @@ public class SymbolTable {
    * Get a scope randomly. The more variables/function the scope has, the more
    * likely it will be chosen
    */
-  private List<String> getRandomScope() {
-    if (distribution == null) {
-      HashMap<List<String>, Double> pmf = new HashMap<List<String>, Double>();
-      for (List<String> scope : storage) {
-        pmf.put(scope, Double.valueOf(scope.size()));
-      }
-      distribution = new DiscreteDistribution<List<String>>(random, pmf);
+  private List<String> getRandomScope(boolean excludeLocal) {
+    HashMap<List<String>, Double> pmf = new HashMap<List<String>, Double>();
+    int i;
+    for (i = 0; i < storage.size() - 1; i++) {
+      List<String> scope = storage.get(i);
+      pmf.put(scope, Double.valueOf(scope.size()));
     }
+    if (!excludeLocal) {
+      List<String> scope = storage.get(i);
+      pmf.put(scope, Double.valueOf(scope.size()));
+    }
+    DiscreteDistribution<List<String>> distribution =
+        new DiscreteDistribution<List<String>>(random, pmf);
     return distribution.nextItem();
   }
 }

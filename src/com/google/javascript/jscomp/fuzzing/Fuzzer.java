@@ -41,6 +41,7 @@ public class Fuzzer {
   private int functionNesting = 0;
   Stack<String> currentLabels = new Stack<String>();
   SymbolTable symbolTable;
+  private int counter = 0;
 
   public Fuzzer(Random random) {
     this.random = random;
@@ -120,12 +121,15 @@ public class Fuzzer {
     Preconditions.checkArgument(!getExistingOne || symbolTable.getSize() > 0);
     Preconditions.checkArgument(budget >= 1);
     if (getExistingOne) {
-      return Node.newString(Token.NAME, symbolTable.getRandomSymbol());
+      return Node.newString(Token.NAME, symbolTable.getRandomSymbol(false));
     } else {
       String identifier;
-      do {
-        identifier = StringGenerator.getString(random);
-      } while (symbolTable.containsInCurrentScope(identifier));
+      // allow 1/10 chance of variable shadowing
+      if (symbolTable.hasNonLocals() && random.nextInt(10) < 1) {
+        identifier = symbolTable.getRandomSymbol(true);
+      } else {
+        identifier = "x_" + nextNumber();
+      }
       symbolTable.addSymbol(identifier);
       return Node.newString(Token.NAME, identifier);
     }
@@ -145,11 +149,11 @@ public class Fuzzer {
   Node generateRegularExpressionLiteral(int budget) {
     Preconditions.checkArgument(budget >= 2);
     if (budget < 3) {
-      Node[] children = {Node.newString("abc")};
+      Node[] children = {Node.newString(StringGenerator.getString(random))};
       Node node = new Node(Token.REGEXP, children);
       return node;
     } else {
-      Node[] children = {Node.newString("abc"), Node.newString("g")};
+      Node[] children = {Node.newString(StringGenerator.getString(random)), Node.newString("g")};
       Node node = new Node(Token.REGEXP, children);
       return node;
     }
@@ -623,7 +627,7 @@ public class Fuzzer {
     Preconditions.checkArgument(budget >= 3);
     String labelName;
     do {
-      labelName = StringGenerator.getString(random);
+      labelName = "x_" + nextNumber();
     } while (currentLabels.search(labelName) != -1);
     Node name = Node.newString(
         Token.LABEL_NAME, labelName);
@@ -737,7 +741,7 @@ public class Fuzzer {
   private Node generatePropertyName() {
     String name;
     if (random.nextInt(2) == 0) {
-      name = StringGenerator.getString(random);
+      name = StringGenerator.getPropertyName(random);
     } else {
       name = String.valueOf(random.nextInt(LARGEST_NUMBER));
     }
@@ -793,4 +797,9 @@ public class Fuzzer {
     }
     return subBudgets;
   }
+
+  private int nextNumber() {
+    return counter++;
+  }
+
 }

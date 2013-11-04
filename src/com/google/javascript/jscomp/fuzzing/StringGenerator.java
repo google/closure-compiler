@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.common.base.Joiner;
+
 import java.util.Random;
 
 /**
@@ -82,8 +84,20 @@ public class StringGenerator {
       };
 
   public static String getString(Random random) {
-    String adj = ADJECTIVES[random.nextInt(ADJECTIVES.length)];
-    String animal = ANIMALS[random.nextInt(ANIMALS.length)];
-    return adj + animal;
+    Joiner joiner = Joiner.on(' ');
+    return joiner.join(getCombination(random));
+  }
+
+  public static String getPropertyName(Random random) {
+    Joiner joiner = Joiner.on("");
+    String[] combination = getCombination(random);
+    return joiner.join(combination[0].toLowerCase(), combination[1]);
+  }
+
+  private static String[] getCombination(Random random) {
+    String[] result = new String[2];
+    result[0] = ADJECTIVES[random.nextInt(ADJECTIVES.length)];
+    result[1] = ANIMALS[random.nextInt(ANIMALS.length)];
+    return result;
   }
 }
