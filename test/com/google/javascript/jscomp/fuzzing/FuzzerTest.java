@@ -15,6 +15,11 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -100,6 +105,22 @@ public class FuzzerTest extends TestCase{
     assertTrue(code.endsWith("}"));
   }
 
+  public void testGenerateLiteral() {
+    Random random = new Random(System.currentTimeMillis());
+    Fuzzer fuzzer = spy(new Fuzzer(random));
+    int budget = 0;
+    fuzzer.generateLiteral(budget);
+    verify(fuzzer, never()).generateNullLiteral(budget);
+    verify(fuzzer, never()).generateBooleanLiteral(budget);
+    verify(fuzzer, never()).generateNumericLiteral(budget);
+    verify(fuzzer, never()).generateStringLiteral(budget);
+    verify(fuzzer, never()).generateArrayLiteral(budget);
+    verify(fuzzer, never()).generateObjectLiteral(budget);
+    budget = 1;
+    fuzzer.generateLiteral(budget);
+    verify(fuzzer, never()).generateRegularExpressionLiteral(budget);
+  }
+
   public void testPostfixExpressions() {
     int[] overriddenValues = {9, 10};
     String[] postfixes = {"++", "--"};
@@ -142,6 +163,39 @@ public class FuzzerTest extends TestCase{
     assertFalse(code.startsWith("new "));
   }
 
+  public void testNoAssignmentWhenLeftExpressionHasNotEnoughBudget() {
+    int budget = 5;
+    Fuzzer fuzzer = spy(new Fuzzer(new Random()));
+    doReturn(new int[]{budget / 2, budget / 2}).
+      when(fuzzer).distribute(budget - 1, 2, 1);
+    String[] assignments = {"=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=",
+        ">>>=", "&=", "^=", "|="};
+    Node node = fuzzer.generateBinaryExpression(budget);
+
+    for (int i = 0; i < assignments.length; i++) {
+      String code = Fuzzer.getPrettyCode(node);
+      assertEquals(-1, code.indexOf(" " + assignments[i] + " "));
+    }
+  }
+
+  public void testGenerateBinaryExpression() {
+    int budget = 50;
+    String[] operators = {"*", "/", "%", "+", "-", "<<", ">>", ">>>", "<", ">",
+        "<=", ">=", "instanceof", "in", "==", "!=", "===", "!==", "&", "^",
+        "|", "&&", "||", "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=",
+        ">>>=", "&=", "^=", "|="};
+    for (int i = 0; i < operators.length; i++) {
+      Random random = spy(new Random());
+      doReturn(i).when(random).nextInt(operators.length);
+      Fuzzer fuzzer = spy(new Fuzzer(random));
+      doReturn(new int[]{budget / 2, budget / 2}).
+        when(fuzzer).distribute(budget - 1, 2, 1);
+      Node node = fuzzer.generateBinaryExpression(budget);
+      String code = Fuzzer.getPrettyCode(node);
+      assertNotSame(-1, code.indexOf(" " + operators[i] + " "));
+    }
+  }
+
   public void testTrinaryExpression() {
     Random random = new Random();
     Fuzzer fuzzer = new Fuzzer(random);
@@ -149,6 +203,22 @@ public class FuzzerTest extends TestCase{
     String code = Fuzzer.getPrettyCode(node);
     assertNotSame(-1, code.indexOf(" ? "));
     assertTrue(code.indexOf(" : ") > code.indexOf(" ? "));
+  }
+
+  public void testExpression() {
+    Random random = new Random();
+    Fuzzer fuzzer = spy(new Fuzzer(random));
+    int budget = 1;
+    fuzzer.generateExpression(budget);
+    verify(fuzzer).generateLiteral(budget);
+    verify(fuzzer, never()).generateFunctionCall(budget);
+    verify(fuzzer, never()).generateUnaryExpression(budget);
+    budget = 2;
+    fuzzer.generateExpression(budget);
+    verify(fuzzer, never()).generateBinaryExpression(budget);
+    verify(fuzzer, never()).generateFunctionExpression(budget);
+    budget = 3;
+    verify(fuzzer, never()).generateTernaryExpression(budget);
   }
 
   public void testVariableStatement() {

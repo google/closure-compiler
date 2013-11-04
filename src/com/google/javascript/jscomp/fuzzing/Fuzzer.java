@@ -645,7 +645,9 @@ public class Fuzzer {
     }
     tryStmt.addChildToBack(catchBlock);
     // finally block
-    tryStmt.addChildToBack(generateBlock(catchAndFinallyBudgets[1]));
+    if (catchAndFinallyBudgets[1] > 0) {
+      tryStmt.addChildToBack(generateBlock(catchAndFinallyBudgets[1]));
+    }
     return tryStmt;
   }
 
