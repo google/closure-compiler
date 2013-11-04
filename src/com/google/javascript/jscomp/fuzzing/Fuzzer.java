@@ -38,7 +38,6 @@ public class Fuzzer {
   protected final Random random;
   private int loopNesting = 0;
   private int switchNesting = 0;
-  private int functionNesting = 0;
   Stack<String> currentLabels = new Stack<String>();
   SymbolTable symbolTable;
   private int counter = 0;
@@ -381,11 +380,8 @@ public class Fuzzer {
   }
 
   Node generateFunctionExpression(int budget) {
-    if (budget < 4) {
-      return generateFunction(budget, true);
-    } else {
-      return generateFunction(budget, random.nextInt(2) == 0);
-    }
+    Preconditions.checkArgument(budget >= 3);
+    return generateFunction(budget, true);
   }
 
   Node generateStatement(int budget) {
@@ -393,7 +389,7 @@ public class Fuzzer {
     Map<Statement, Double> pmf = Maps.newHashMap();
     for (Statement stmt : Statement.values()) {
       if (stmt.minBudget <= budget) {
-        if (stmt == Statement.RETURN && functionNesting == 0) {
+        if (stmt == Statement.RETURN && symbolTable.getNumScopes() < 2) {
           continue;
         } else if (stmt == Statement.BREAK
             && loopNesting == 0 && switchNesting == 0) {
@@ -666,21 +662,27 @@ public class Fuzzer {
     return tryStmt;
   }
 
-  private Node generateFunction(int budget, boolean anonymous) {
+  private Node generateFunction(int budget, boolean isExpression) {
     int remainingBudget;
     Node name;
-    if (anonymous) {
+    if (isExpression) {
       Preconditions.checkArgument(budget >= 3);
-      name = Node.newString(Token.NAME, "");
-      remainingBudget = budget - 3;
+      symbolTable.addScope();
+      if (budget >= 4 && random.nextInt(2) == 0) {
+        // the name of function expression is only visible in the function
+        name = generateIdentifier(1, false);
+        remainingBudget = budget - 4;
+      } else {
+        name = Node.newString(Token.NAME, "");
+        remainingBudget = budget - 3;
+      }
     } else {
       Preconditions.checkArgument(budget >= 4);
       name = generateIdentifier(1, false);
       remainingBudget = budget - 4;
+      symbolTable.addScope();
     }
     // param list is in the new scope
-    functionNesting++;
-    symbolTable.addScope();
     Node paramList = new Node(Token.PARAM_LIST);
     Node body = new Node(Token.BLOCK);
     int numComponents = random.nextInt(remainingBudget + 1);
@@ -701,7 +703,6 @@ public class Fuzzer {
       }
     }
     symbolTable.removeScope();
-    functionNesting--;
     Node function = new Node(Token.FUNCTION,
         name, paramList, body);
     return function;
