@@ -1603,6 +1603,13 @@ chrome.idle = {};
 chrome.idle.queryState = function(thresholdSeconds, callback) {};
 
 
+/**
+ * @param {number} intervalInSeconds Threshold, in seconds, used to determine
+ *    when the system is in an idle state.
+ */
+chrome.idle.setDetectionInterval = function(intervalInSeconds) {};
+
+
 /** @type {ChromeEvent} */
 chrome.idle.onStateChanged;
 
