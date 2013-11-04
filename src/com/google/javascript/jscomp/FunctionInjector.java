@@ -38,11 +38,19 @@ import java.util.Set;
 class FunctionInjector {
 
   private final AbstractCompiler compiler;
-  private final Supplier<String> safeNameIdSupplier;
   private final boolean allowDecomposition;
   private Set<String> knownConstants = Sets.newHashSet();
   private final boolean assumeStrictThis;
   private final boolean assumeMinimumCapture;
+  private final Supplier<String> safeNameIdSupplier;
+  private final Supplier<String> throwawayNameSupplier =
+      new Supplier<String>() {
+    private int nextId = 0;
+    @Override
+    public String get() {
+      return String.valueOf(nextId++);
+    }
+  };
 
   /**
    * @param allowDecomposition Whether an effort should be made to break down
@@ -205,7 +213,7 @@ class FunctionInjector {
     }
 
     if (mode == InliningMode.DIRECT) {
-      return canInlineReferenceDirectly(callNode, fnNode);
+      return canInlineReferenceDirectly(callNode, fnNode, needAliases);
     } else {
       return canInlineReferenceAsStatementBlock(
           t, callNode, fnNode, needAliases);
@@ -687,12 +695,10 @@ class FunctionInjector {
    * </pre>
    */
   private CanInlineResult canInlineReferenceDirectly(
-      Node callNode, Node fnNode) {
+      Node callNode, Node fnNode, Set<String> namesToAlias) {
     if (!isDirectCallNodeReplacementPossible(fnNode)) {
       return CanInlineResult.NO;
     }
-
-    Node block = fnNode.getLastChild();
 
     // CALL NODE: [ NAME, ARG1, ARG2, ... ]
     Node cArg = callNode.getFirstChild().getNext();
@@ -713,33 +719,17 @@ class FunctionInjector {
       }
     }
 
-    // FUNCTION NODE -> LP NODE: [ ARG1, ARG2, ... ]
-    Node fnParam = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
-    while (cArg != null || fnParam != null) {
-      // For each named parameter check if a mutable argument use more than one.
-      if (fnParam != null) {
-        if (cArg != null) {
-          // Check for arguments that are evaluated more than once.
-          // Note: Unlike block inlining, there it is not possible that a
-          // parameter reference will be in a loop.
-          if (NodeUtil.mayEffectMutableState(cArg, compiler)
-              && NodeUtil.getNameReferenceCount(
-                  block, fnParam.getString()) > 1) {
-            return CanInlineResult.NO;
-          }
-        }
-
-        // Move to the next name.
-        fnParam = fnParam.getNext();
-      }
-
-      // For every call argument check for side-effects, even if there
-      // isn't a named parameter to match.
-      if (cArg != null) {
-        if (NodeUtil.mayHaveSideEffects(cArg, compiler)) {
-          return CanInlineResult.NO;
-        }
-        cArg = cArg.getNext();
+    Map<String, Node> args =
+        FunctionArgumentInjector.getFunctionCallParameterMap(
+            fnNode, callNode, this.throwawayNameSupplier);
+    boolean hasArgs = !args.isEmpty();
+    if (hasArgs) {
+      // Limit the inlining
+      Set<String> allNamesToAlias = Sets.newHashSet(namesToAlias);
+      FunctionArgumentInjector.maybeAddTempsForCallArguments(
+          fnNode, args, allNamesToAlias, compiler.getCodingConvention());
+      if (!allNamesToAlias.isEmpty()) {
+        return CanInlineResult.NO;
       }
     }
 

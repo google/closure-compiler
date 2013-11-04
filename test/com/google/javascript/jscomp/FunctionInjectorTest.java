@@ -1342,6 +1342,18 @@ public class FunctionInjectorTest extends TestCase {
         "foo", INLINE_BLOCK);
   }
 
+  public void testIssue1101a() {
+    helperCanInlineReferenceToFunction(CanInlineResult.NO,
+        "function foo(a){return modifiyX() + a;} foo(x);", "foo",
+        INLINE_DIRECT);
+  }
+
+  public void testIssue1101b() {
+    helperCanInlineReferenceToFunction(CanInlineResult.NO,
+        "function foo(a){return (x.prop = 2),a;} foo(x.prop);", "foo",
+        INLINE_DIRECT);
+  }
+
   /**
    * Test case
    *
