@@ -42,9 +42,11 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * A visitor implementation that enables type substitutions.
@@ -54,9 +56,12 @@ import java.util.List;
 public class ModificationVisitor implements Visitor<JSType> {
 
   private final JSTypeRegistry registry;
+  private final boolean visitProperties;
+  private final Set<JSType> seenTypes = Sets.newIdentityHashSet();
 
-  public ModificationVisitor(JSTypeRegistry registry) {
+  public ModificationVisitor(JSTypeRegistry registry, boolean visitProperties) {
     this.registry = registry;
+    this.visitProperties = visitProperties;
   }
 
   @Override
@@ -144,6 +149,36 @@ public class ModificationVisitor implements Visitor<JSType> {
 
   @Override
   public JSType caseObjectType(ObjectType objType) {
+    if (!visitProperties
+        || objType.isNominalType()
+        || objType instanceof ProxyObjectType
+        || !objType.isRecordType()) {
+      return objType;
+    }
+
+    if (seenTypes.contains(objType)) {
+      return objType;
+    }
+    seenTypes.add(objType);
+
+    boolean changed = false;
+    RecordTypeBuilder builder = new RecordTypeBuilder(registry);
+    for (String prop : objType.getOwnPropertyNames()) {
+      Node propertyNode = objType.getPropertyNode(prop);
+      JSType beforeType = objType.getPropertyType(prop);
+      JSType afterType = beforeType.visit(this);
+      if (beforeType != afterType) {
+        changed = true;
+      }
+      builder.addProperty(prop, afterType, propertyNode);
+    }
+
+    seenTypes.remove(objType);
+
+    if (changed) {
+      return builder.build();
+    }
+
     return objType;
   }
 
@@ -230,5 +265,22 @@ public class ModificationVisitor implements Visitor<JSType> {
 
   private boolean isNativeFunctionType(FunctionType type) {
     return type.isNativeObjectType();
+  }
+
+  @Override
+  public JSType caseNamedType(NamedType type) {
+    // The internals of a named type aren't interesting.
+    return type;
+  }
+
+  @Override
+  public JSType caseProxyObjectType(ProxyObjectType type) {
+    // Be careful not to unwrap a type unless it has changed.
+    JSType beforeType = type.getReferencedTypeInternal();
+    JSType replacement = beforeType.visit(this);
+    if (replacement != beforeType) {
+      return replacement;
+    }
+    return type;
   }
 }

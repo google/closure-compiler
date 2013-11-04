@@ -38,7 +38,9 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.ProxyObjectType;
 import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplatizedType;
@@ -265,6 +267,16 @@ public abstract class ChainableReverseAbstractInterpreter
       public JSType caseTemplateType(TemplateType templateType) {
         return caseObjectType(templateType);
       }
+
+      @Override
+      public JSType caseNamedType(NamedType type) {
+        return caseProxyObjectType(type);
+      }
+
+      @Override
+      public JSType caseProxyObjectType(ProxyObjectType type) {
+        return type.visitReferenceType(this);
+      }
     };
 
 
@@ -354,6 +366,16 @@ public abstract class ChainableReverseAbstractInterpreter
       public JSType caseTemplateType(TemplateType templateType) {
         return caseObjectType(templateType);
       }
+
+      @Override
+      public JSType caseNamedType(NamedType type) {
+        return caseProxyObjectType(type);
+      }
+
+      @Override
+      public JSType caseProxyObjectType(ProxyObjectType type) {
+        return type.visitReferenceType(this);
+      }
     };
 
   /**
@@ -432,6 +454,16 @@ public abstract class ChainableReverseAbstractInterpreter
     @Override
     public JSType caseTemplateType(TemplateType templateType) {
       return caseObjectType(templateType);
+    }
+
+    @Override
+    public JSType caseNamedType(NamedType type) {
+      return caseProxyObjectType(type);
+    }
+
+    @Override
+    public JSType caseProxyObjectType(ProxyObjectType type) {
+      return type.visitReferenceType(this);
     }
   }
 

@@ -32,6 +32,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.Scope.Var;
@@ -58,6 +59,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Type inference within a script node or a function body, using the data-flow
@@ -1035,6 +1037,7 @@ class TypeInference
     }
 
     Map<TemplateType, JSType> resolvedTypes = Maps.newIdentityHashMap();
+    Set<JSType> seenTypes = Sets.newIdentityHashSet();
 
     Node callTarget = call.getFirstChild();
     if (NodeUtil.isGet(callTarget)) {
@@ -1042,14 +1045,16 @@ class TypeInference
       maybeResolveTemplatedType(
           fnType.getTypeOfThis(),
           getJSType(obj),
-          resolvedTypes);
+          resolvedTypes,
+          seenTypes);
     }
 
     if (call.hasMoreThanOneChild()) {
       maybeResolveTemplateTypeFromNodes(
           fnType.getParameters(),
           call.getChildAtIndex(1).siblings(),
-          resolvedTypes);
+          resolvedTypes,
+          seenTypes);
     }
     return resolvedTypes;
   }
@@ -1057,7 +1062,7 @@ class TypeInference
   private void maybeResolveTemplatedType(
       JSType paramType,
       JSType argType,
-      Map<TemplateType, JSType> resolvedTypes) {
+      Map<TemplateType, JSType> resolvedTypes, Set<JSType> seenTypes) {
     if (paramType.isTemplateType()) {
       // @param {T}
       resolvedTemplateType(
@@ -1066,7 +1071,7 @@ class TypeInference
       // @param {Array.<T>|NodeList|Arguments|{length:number}}
       UnionType unionType = paramType.toMaybeUnionType();
       for (JSType alernative : unionType.getAlternates()) {
-        maybeResolveTemplatedType(alernative, argType, resolvedTypes);
+        maybeResolveTemplatedType(alernative, argType, resolvedTypes, seenTypes);
       }
     } else if (paramType.isFunctionType()) {
       FunctionType paramFunctionType = paramType.toMaybeFunctionType();
@@ -1078,15 +1083,39 @@ class TypeInference
         // infer from return type of the function type
         maybeResolveTemplatedType(
             paramFunctionType.getTypeOfThis(),
-            argFunctionType.getTypeOfThis(), resolvedTypes);
+            argFunctionType.getTypeOfThis(), resolvedTypes, seenTypes);
         // infer from return type of the function type
         maybeResolveTemplatedType(
             paramFunctionType.getReturnType(),
-            argFunctionType.getReturnType(), resolvedTypes);
+            argFunctionType.getReturnType(), resolvedTypes, seenTypes);
         // infer from parameter types of the function type
         maybeResolveTemplateTypeFromNodes(
             paramFunctionType.getParameters(),
-            argFunctionType.getParameters(), resolvedTypes);
+            argFunctionType.getParameters(), resolvedTypes, seenTypes);
+      }
+    } else if (paramType.isRecordType() && !paramType.isNominalType()) {
+      // @param {{foo:T}}
+      if(!seenTypes.contains(paramType)) {
+        seenTypes.add(paramType);
+        ObjectType paramRecordType = paramType.toObjectType();
+        ObjectType argObjectType = argType.restrictByNotNullOrUndefined()
+            .toObjectType();
+        if (argObjectType != null
+            && !argObjectType.isUnknownType()
+            && !argObjectType.isEmptyType()) {
+          Set<String> names = paramRecordType.getPropertyNames();
+          for (String name : names) {
+            if (paramRecordType.hasOwnProperty(name)
+                && argObjectType.hasProperty(name)) {
+              maybeResolveTemplatedType(
+                  paramRecordType.getPropertyType(name),
+                  argObjectType.getPropertyType(name),
+                  resolvedTypes,
+                  seenTypes);
+            }
+          }
+        }
+        seenTypes.remove(paramType);
       }
     } else if (paramType.isTemplatizedType()) {
       // @param {Array.<T>}
@@ -1106,7 +1135,7 @@ class TypeInference
           maybeResolveTemplatedType(
               paramTypeMap.getTemplateType(key),
               argTypeMap.getTemplateType(key),
-              resolvedTypes);
+              resolvedTypes, seenTypes);
         }
       }
     }
@@ -1115,27 +1144,28 @@ class TypeInference
   private void maybeResolveTemplateTypeFromNodes(
       Iterable<Node> declParams,
       Iterable<Node> callParams,
-      Map<TemplateType, JSType> resolvedTypes) {
+      Map<TemplateType, JSType> resolvedTypes, Set<JSType> seenTypes) {
     maybeResolveTemplateTypeFromNodes(
-        declParams.iterator(), callParams.iterator(), resolvedTypes);
+        declParams.iterator(), callParams.iterator(), resolvedTypes, seenTypes);
   }
 
   private void maybeResolveTemplateTypeFromNodes(
       Iterator<Node> declParams,
       Iterator<Node> callParams,
-      Map<TemplateType, JSType> resolvedTypes) {
+      Map<TemplateType, JSType> resolvedTypes,
+      Set<JSType> seenTypes) {
     while (declParams.hasNext() && callParams.hasNext()) {
       Node declParam = declParams.next();
       maybeResolveTemplatedType(
           getJSType(declParam),
           getJSType(callParams.next()),
-          resolvedTypes);
+          resolvedTypes, seenTypes);
       if (declParam.isVarArgs()) {
         while (callParams.hasNext()) {
           maybeResolveTemplatedType(
               getJSType(declParam),
               getJSType(callParams.next()),
-              resolvedTypes);
+              resolvedTypes, seenTypes);
         }
       }
     }
@@ -1161,7 +1191,7 @@ class TypeInference
 
     TemplateTypeReplacer(
         JSTypeRegistry registry, Map<TemplateType, JSType> replacements) {
-      super(registry);
+      super(registry, true);
       this.registry = registry;
       this.replacements = replacements;
     }

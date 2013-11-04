@@ -53,7 +53,7 @@ import java.util.Collections;
  * @see TemplatizedType
  *
  */
-class ProxyObjectType extends ObjectType {
+public class ProxyObjectType extends ObjectType {
   private static final long serialVersionUID = 1L;
 
   private JSType referencedType;
@@ -313,9 +313,13 @@ class ProxyObjectType extends ObjectType {
         referencedObjType.getTemplateTypes();
   }
 
+  public <T> T visitReferenceType(Visitor<T> visitor) {
+    return referencedType.visit(visitor);
+  }
+
   @Override
   public <T> T visit(Visitor<T> visitor) {
-    return referencedType.visit(visitor);
+    return visitor.caseProxyObjectType(this);
   }
 
   @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {

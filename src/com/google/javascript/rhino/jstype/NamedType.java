@@ -79,7 +79,7 @@ import java.util.List;
  * much that has to be changed.<p>
  *
  */
-class NamedType extends ProxyObjectType {
+public class NamedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
   private final String reference;
@@ -404,5 +404,10 @@ class NamedType extends ProxyObjectType {
       target.defineProperty(
           propertyName, type, inferred, propertyNode);
     }
+  }
+
+  @Override
+  public <T> T visit(Visitor<T> visitor) {
+    return visitor.caseNamedType(this);
   }
 }

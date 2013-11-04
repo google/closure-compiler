@@ -102,6 +102,16 @@ public interface Visitor<T> {
   T caseNullType();
 
   /**
+   * Named type's case.
+   */
+  T caseNamedType(NamedType type);
+
+  /**
+   * Proxy type's case.
+   */
+  T caseProxyObjectType(ProxyObjectType type);
+
+  /**
    * Number value type's case.
    */
   T caseNumberType();

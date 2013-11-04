@@ -11348,6 +11348,147 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: Foo.<string>");
   }
 
+  public void testTemplateType15() throws Exception {
+    testTypes(
+        "/**" +
+        " * @param {{foo:T}} p\n" +
+        " * @return {T} \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function fn(p) { return p.foo; }\n" +
+        "/** @type {!Object} */ var x;" +
+        "x = fn({foo:3});",
+        "assignment\n" +
+        "found   : number\n" +
+        "required: Object");
+  }
+
+  public void testTemplateType16() throws Exception {
+    testTypes(
+        "/** @constructor */ function C() {\n" +
+        "  /** @type {number} */ this.foo = 1\n" +
+        "}\n" +
+        "/**\n" +
+        " * @param {{foo:T}} p\n" +
+        " * @return {T} \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function fn(p) { return p.foo; }\n" +
+        "/** @type {!Object} */ var x;" +
+        "x = fn(new C());",
+        "assignment\n" +
+        "found   : number\n" +
+        "required: Object");
+  }
+
+  public void testTemplateType17() throws Exception {
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "C.prototype.foo = 1;\n" +
+        "/**\n" +
+        " * @param {{foo:T}} p\n" +
+        " * @return {T} \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function fn(p) { return p.foo; }\n" +
+        "/** @type {!Object} */ var x;" +
+        "x = fn(new C());",
+        "assignment\n" +
+        "found   : number\n" +
+        "required: Object");
+  }
+
+  public void testTemplateType18() throws Exception {
+    // Until template types can be restricted to exclude undefined, they
+    // are always optional.
+    testTypes(
+        "/** @constructor */ function C() {}\n" +
+        "C.prototype.foo = 1;\n" +
+        "/**\n" +
+        " * @param {{foo:T}} p\n" +
+        " * @return {T} \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function fn(p) { return p.foo; }\n" +
+        "/** @type {!Object} */ var x;" +
+        "x = fn({});");
+  }
+
+
+  public void testTemplateType19() throws Exception {
+    testTypes(
+        "/**\n" +
+        " * @param {T} t\n" +
+        " * @param {U} u\n" +
+        " * @return {{t:T, u:U}} \n" +
+        " * @template T,U\n" +
+        " */\n" +
+        "function fn(t, u) { return {t:t, u:u}; }\n" +
+        "/** @type {null} */ var x = fn(1, 'str');",
+        "initializing variable\n" +
+        "found   : {t: number, u: string}\n" +
+        "required: null");
+  }
+
+  public void testTemplateTypeRecursion1() throws Exception {
+    testTypes(
+        "/** @typedef {{a: D2}} */\n" +
+        "var D1;\n" +
+        "\n" +
+        "/** @typedef {{b: D1}} */\n" +
+        "var D2;\n" +
+        "\n" +
+        "fn(x);\n" +
+        "\n" +
+        "\n" +
+        "/**\n" +
+        " * @param {!D1} s\n" +
+        " * @template T\n" +
+        " */\n" +
+        "var fn = function(s) {};"
+        );
+  }
+
+  public void testTemplateTypeRecursion2() throws Exception {
+    testTypes(
+        "/** @typedef {{a: D2}} */\n" +
+        "var D1;\n" +
+        "\n" +
+        "/** @typedef {{b: D1}} */\n" +
+        "var D2;\n" +
+        "\n" +
+        "/** @type {D1} */ var x;" +
+        "fn(x);\n" +
+        "\n" +
+        "\n" +
+        "/**\n" +
+        " * @param {!D1} s\n" +
+        " * @template T\n" +
+        " */\n" +
+        "var fn = function(s) {};"
+        );
+  }
+
+  public void testTemplateTypeRecursion3() throws Exception {
+    testTypes(
+        "/** @typedef {{a: function(D2)}} */\n" +
+        "var D1;\n" +
+        "\n" +
+        "/** @typedef {{b: D1}} */\n" +
+        "var D2;\n" +
+        "\n" +
+        "/** @type {D1} */ var x;" +
+        "fn(x);\n" +
+        "\n" +
+        "\n" +
+        "/**\n" +
+        " * @param {!D1} s\n" +
+        " * @template T\n" +
+        " */\n" +
+        "var fn = function(s) {};"
+        );
+  }
+
   public void disable_testBadTemplateType4() throws Exception {
     // TODO(johnlenz): Add a check for useless of template types.
     // Unless there are at least two references to a Template type in
