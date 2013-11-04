@@ -1207,6 +1207,10 @@ public class Compiler extends AbstractCompiler {
     return typeRegistry;
   }
 
+  final void setTypeRegistry(JSTypeRegistry typeRegistry) {
+    this.typeRegistry = typeRegistry;
+  }
+
   @Override
   public MemoizedScopeCreator getTypedScopeCreator() {
     return getPassConfig().getTypedScopeCreator();
