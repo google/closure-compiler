@@ -3084,7 +3084,7 @@ public final class NodeUtil {
   }
 
   /** Find the best JSDoc for the given node. */
-  static JSDocInfo getBestJSDocInfo(Node n) {
+  public static JSDocInfo getBestJSDocInfo(Node n) {
     JSDocInfo info = n.getJSDocInfo();
     if (info == null) {
       Node parent = n.getParent();
