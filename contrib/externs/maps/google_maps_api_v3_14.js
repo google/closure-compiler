@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for the Google Maps v3.13 API.
+ * @fileoverview Externs for the Google Maps v3.14 API.
  * @see http://code.google.com/apis/maps/documentation/javascript/reference.html
  * @externs
  */
@@ -1360,16 +1360,66 @@ google.maps.IconSequence.prototype.repeat;
 
 /**
  * @param {google.maps.ImageMapTypeOptions|Object.<string>} opts
+ * @implements {google.maps.MapType}
  * @extends {google.maps.MVCObject}
  * @constructor
  */
 google.maps.ImageMapType = function(opts) {};
 
 /**
+ * @type {string}
+ */
+google.maps.ImageMapType.prototype.alt;
+
+/**
+ * @type {number}
+ */
+google.maps.ImageMapType.prototype.maxZoom;
+
+/**
+ * @type {number}
+ */
+google.maps.ImageMapType.prototype.minZoom;
+
+/**
+ * @type {string}
+ */
+google.maps.ImageMapType.prototype.name;
+
+/**
+ * @type {google.maps.Projection}
+ */
+google.maps.ImageMapType.prototype.projection;
+
+/**
+ * @type {number}
+ */
+google.maps.ImageMapType.prototype.radius;
+
+/**
+ * @type {google.maps.Size}
+ */
+google.maps.ImageMapType.prototype.tileSize;
+
+/**
  * @nosideeffects
  * @return {number}
  */
 google.maps.ImageMapType.prototype.getOpacity = function() {};
+
+/**
+ * @param {google.maps.Point} tileCoord
+ * @param {number} zoom
+ * @param {Document} ownerDocument
+ * @return {Node}
+ */
+google.maps.ImageMapType.prototype.getTile = function(tileCoord, zoom, ownerDocument) {};
+
+/**
+ * @param {Node} tile
+ * @return {undefined}
+ */
+google.maps.ImageMapType.prototype.releaseTile = function(tile) {};
 
 /**
  * @param {number} opacity
@@ -1666,6 +1716,11 @@ google.maps.KmlLayerOptions.prototype.map;
  * @type {boolean}
  */
 google.maps.KmlLayerOptions.prototype.preserveViewport;
+
+/**
+ * @type {boolean}
+ */
+google.maps.KmlLayerOptions.prototype.screenOverlays;
 
 /**
  * @type {boolean}
@@ -3892,10 +3947,60 @@ google.maps.StrokePosition = {
 /**
  * @param {Array.<google.maps.MapTypeStyle>} styles
  * @param {(google.maps.StyledMapTypeOptions|Object.<string>)=} opt_options
+ * @implements {google.maps.MapType}
  * @extends {google.maps.MVCObject}
  * @constructor
  */
 google.maps.StyledMapType = function(styles, opt_options) {};
+
+/**
+ * @type {string}
+ */
+google.maps.StyledMapType.prototype.alt;
+
+/**
+ * @type {number}
+ */
+google.maps.StyledMapType.prototype.maxZoom;
+
+/**
+ * @type {number}
+ */
+google.maps.StyledMapType.prototype.minZoom;
+
+/**
+ * @type {string}
+ */
+google.maps.StyledMapType.prototype.name;
+
+/**
+ * @type {google.maps.Projection}
+ */
+google.maps.StyledMapType.prototype.projection;
+
+/**
+ * @type {number}
+ */
+google.maps.StyledMapType.prototype.radius;
+
+/**
+ * @type {google.maps.Size}
+ */
+google.maps.StyledMapType.prototype.tileSize;
+
+/**
+ * @param {google.maps.Point} tileCoord
+ * @param {number} zoom
+ * @param {Document} ownerDocument
+ * @return {Node}
+ */
+google.maps.StyledMapType.prototype.getTile = function(tileCoord, zoom, ownerDocument) {};
+
+/**
+ * @param {Node} tile
+ * @return {undefined}
+ */
+google.maps.StyledMapType.prototype.releaseTile = function(tile) {};
 
 /**
  * @interface
@@ -5578,189 +5683,6 @@ google.maps.places.TextSearchRequest.prototype.types;
 
 // Namespace
 google.maps.visualization = {};
-
-/**
- * @param {(google.maps.visualization.DemographicsLayerOptions|Object.<string>)=} opt_opts
- * @constructor
- */
-google.maps.visualization.DemographicsLayer = function(opt_opts) {};
-
-/**
- * @nosideeffects
- * @return {google.maps.Map}
- */
-google.maps.visualization.DemographicsLayer.prototype.getMap = function() {};
-
-/**
- * @nosideeffects
- * @return {google.maps.visualization.DemographicsQuery}
- */
-google.maps.visualization.DemographicsLayer.prototype.getQuery = function() {};
-
-/**
- * @nosideeffects
- * @return {Array.<google.maps.visualization.DemographicsStyle>}
- */
-google.maps.visualization.DemographicsLayer.prototype.getStyle = function() {};
-
-/**
- * @param {google.maps.Map} map
- * @return {undefined}
- */
-google.maps.visualization.DemographicsLayer.prototype.setMap = function(map) {};
-
-/**
- * @param {google.maps.visualization.DemographicsLayerOptions|Object.<string>} options
- * @return {undefined}
- */
-google.maps.visualization.DemographicsLayer.prototype.setOptions = function(options) {};
-
-/**
- * @param {google.maps.visualization.DemographicsQuery} query
- * @return {undefined}
- */
-google.maps.visualization.DemographicsLayer.prototype.setQuery = function(query) {};
-
-/**
- * @param {Array.<google.maps.visualization.DemographicsStyle>} style
- * @return {undefined}
- */
-google.maps.visualization.DemographicsLayer.prototype.setStyle = function(style) {};
-
-/**
- * @interface
- */
-google.maps.visualization.DemographicsLayerOptions = function() {};
-
-/**
- * @type {boolean}
- */
-google.maps.visualization.DemographicsLayerOptions.prototype.clickable;
-
-/**
- * @type {google.maps.Map}
- */
-google.maps.visualization.DemographicsLayerOptions.prototype.map;
-
-/**
- * @type {google.maps.visualization.DemographicsQuery}
- */
-google.maps.visualization.DemographicsLayerOptions.prototype.query;
-
-/**
- * @type {Array.<google.maps.visualization.DemographicsStyle>}
- */
-google.maps.visualization.DemographicsLayerOptions.prototype.style;
-
-/**
- * @type {string}
- */
-google.maps.visualization.DemographicsLayerOptions.prototype.suppressInfoWindows;
-
-/**
- * @interface
- */
-google.maps.visualization.DemographicsPolygonOptions = function() {};
-
-/**
- * @type {string}
- */
-google.maps.visualization.DemographicsPolygonOptions.prototype.fillColor;
-
-/**
- * @type {google.maps.visualization.DemographicsPropertyStyle}
- */
-google.maps.visualization.DemographicsPolygonOptions.prototype.fillColorStyle;
-
-/**
- * @type {number}
- */
-google.maps.visualization.DemographicsPolygonOptions.prototype.fillOpacity;
-
-/**
- * @type {google.maps.visualization.DemographicsPropertyStyle}
- */
-google.maps.visualization.DemographicsPolygonOptions.prototype.fillOpacityStyle;
-
-/**
- * @type {string}
- */
-google.maps.visualization.DemographicsPolygonOptions.prototype.strokeColor;
-
-/**
- * @type {google.maps.visualization.DemographicsPropertyStyle}
- */
-google.maps.visualization.DemographicsPolygonOptions.prototype.strokeColorStyle;
-
-/**
- * @type {number}
- */
-google.maps.visualization.DemographicsPolygonOptions.prototype.strokeOpacity;
-
-/**
- * @type {google.maps.visualization.DemographicsPropertyStyle}
- */
-google.maps.visualization.DemographicsPolygonOptions.prototype.strokeOpacityStyle;
-
-/**
- * @type {number}
- */
-google.maps.visualization.DemographicsPolygonOptions.prototype.strokeWeight;
-
-/**
- * @interface
- */
-google.maps.visualization.DemographicsPropertyStyle = function() {};
-
-/**
- * @type {string}
- */
-google.maps.visualization.DemographicsPropertyStyle.prototype.expression;
-
-/**
- * @type {Array.<string>}
- */
-google.maps.visualization.DemographicsPropertyStyle.prototype.gradient;
-
-/**
- * @type {number}
- */
-google.maps.visualization.DemographicsPropertyStyle.prototype.max;
-
-/**
- * @type {number}
- */
-google.maps.visualization.DemographicsPropertyStyle.prototype.min;
-
-/**
- * @interface
- */
-google.maps.visualization.DemographicsQuery = function() {};
-
-/**
- * @type {string}
- */
-google.maps.visualization.DemographicsQuery.prototype.from;
-
-/**
- * @type {string}
- */
-google.maps.visualization.DemographicsQuery.prototype.where;
-
-/**
- * @interface
- */
-google.maps.visualization.DemographicsStyle = function() {};
-
-/**
- * @type {google.maps.visualization.DemographicsPolygonOptions|Object.<string>}
- */
-google.maps.visualization.DemographicsStyle.prototype.polygonOptions;
-
-/**
- * @type {string}
- */
-google.maps.visualization.DemographicsStyle.prototype.where;
 
 /**
  * @extends {google.maps.MVCObject}
