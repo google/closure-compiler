@@ -20,16 +20,23 @@
  */
 
 
-/** @constructor */
+/**
+ * @constructor
+ * @deprecated
+ */
 function GearsFactory() {}
 
 /**
  * @param {*=} opt_classVersion
  * @return {Object}
+ * @deprecated
  */
 GearsFactory.prototype.create = function(className, opt_classVersion) {};
 
-/** @return {string} */
+/**
+ * @return {string}
+ * @deprecated
+ */
 GearsFactory.prototype.getBuildInfo = function() {};
 
 /**
@@ -37,6 +44,7 @@ GearsFactory.prototype.getBuildInfo = function() {};
  * @param {*=} opt_imageUrl
  * @param {*=} opt_extraMessage
  * @return {boolean}
+ * @deprecated
  */
 GearsFactory.prototype.getPermission = function(opt_siteName,
                                                 opt_imageUrl,
@@ -45,7 +53,10 @@ GearsFactory.prototype.getPermission = function(opt_siteName,
 /** @type {boolean} */
 GearsFactory.prototype.hasPermission = false;
 
-/** @param {Object} globalObject */
+/**
+ * @param {Object} globalObject
+ * @deprecated
+ */
 GearsFactory.prototype.privateSetGlobalObject = function(globalObject) {};
 
 /** @type {string} */
