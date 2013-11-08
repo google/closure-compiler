@@ -19,7 +19,6 @@ import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -32,23 +31,21 @@ public class DiscreteDistribution<T> {
   private List<T> items;
   private List<Double> weights;
 
-  public DiscreteDistribution(Random random, Map<T, Double> pmf) {
+  public DiscreteDistribution(Random random,
+      ArrayList<T> items, ArrayList<Double> weights) {
     this.random = random;
-    items = new ArrayList<T>(pmf.size());
-    weights = new ArrayList<Double>(pmf.size());
+    this.items = items;
+    this.weights = weights;
     double sum = 0;
 
-    for (T item : pmf.keySet()) {
-      double p = pmf.get(item);
-      Preconditions.checkArgument(p >= 0);
-      Preconditions.checkArgument(!Double.isInfinite(p));
-      Preconditions.checkArgument(!Double.isNaN(p));
-      weights.add(p);
-      sum += p;
-      items.add(item);
+    for (Double w : weights) {
+      Preconditions.checkArgument(w >= 0);
+      Preconditions.checkArgument(!Double.isInfinite(w));
+      Preconditions.checkArgument(!Double.isNaN(w));
+      sum += w;
     }
 
-    for (int i = 0; i < pmf.size(); i++) {
+    for (int i = 0; i < weights.size(); i++) {
       weights.set(i, weights.get(i) / sum);
     }
   }

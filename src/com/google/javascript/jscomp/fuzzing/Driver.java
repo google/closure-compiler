@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerInput;
@@ -29,7 +30,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -53,22 +54,21 @@ public class Driver {
   private CompilationLevel compilationLevel =
       CompilationLevel.SIMPLE_OPTIMIZATIONS;
 
-  public Compiler compile(String code) {
+  public Result compile(String code) throws IOException {
     Compiler compiler = new Compiler();
-    compiler.compile(Arrays.asList(SourceFile.fromCode("[externs]", "")),
+    return compiler.compile(CommandLineRunner.getDefaultExterns(),
         Arrays.asList(SourceFile.fromCode("[fuzzedCode]", code)), getOptions());
-    return compiler;
   }
 
-  public Compiler compile(Node script) {
+  public Result compile(Node script) throws IOException {
     CompilerInput input = new CompilerInput(new SyntheticAst(script));
     JSModule jsModule = new JSModule("fuzzedModule");
     jsModule.add(input);
 
     Compiler compiler = new Compiler();
-    compiler.compileModules(
-        new ArrayList<SourceFile>(), Arrays.asList(jsModule), getOptions());
-    return compiler;
+    return compiler.compileModules(
+        CommandLineRunner.getDefaultExterns(),
+        Arrays.asList(jsModule), getOptions());
   }
 
   private CompilerOptions getOptions() {
@@ -77,7 +77,7 @@ public class Driver {
     return options;
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     Driver driver = new Driver();
     CmdLineParser parser = new CmdLineParser(driver);
     try {
@@ -92,10 +92,10 @@ public class Driver {
         String code = Fuzzer.getPrettyCode(script);
         System.out.println(code.trim());
 
-        Compiler compiler = driver.compile(script);
-        Result result = compiler.getResult();
+        Result result = driver.compile(script);
         if (result.success) {
-          System.out.println("Success!\n");
+          System.out.println("Success! [" + i + " of " + driver.numberOfRuns +
+              "]\n");
         }
       }
     } catch (CmdLineException e) {

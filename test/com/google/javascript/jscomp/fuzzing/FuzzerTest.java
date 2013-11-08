@@ -165,7 +165,7 @@ public class FuzzerTest extends TestCase{
 
   public void testNoAssignmentWhenLeftExpressionHasNotEnoughBudget() {
     int budget = 5;
-    Fuzzer fuzzer = spy(new Fuzzer(new Random()));
+    Fuzzer fuzzer = spy(new Fuzzer(new ControlledRandom()));
     doReturn(new int[]{budget / 2, budget / 2}).
       when(fuzzer).distribute(budget - 1, 2, 1);
     String[] assignments = {"=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=",

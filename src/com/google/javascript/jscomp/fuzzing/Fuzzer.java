@@ -17,14 +17,13 @@ package com.google.javascript.jscomp.fuzzing;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodePrinter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 
@@ -45,12 +44,12 @@ public class Fuzzer {
   public Fuzzer(Random random) {
     this.random = random;
     symbolTable = new SymbolTable(random);
-    symbolTable.addScope();
   }
 
   Node generateExpression(int budget) {
     Preconditions.checkArgument(budget >= 1);
-    Map<Expression, Double> pmf = Maps.newHashMap();
+    ArrayList<Expression> expressions = Lists.newArrayList();
+    ArrayList<Double> weights = Lists.newArrayList();
     for (Expression expr : Expression.values()) {
       if (expr.minBudget <= budget) {
         if (expr == Expression.FUNCTION_CALL &&
@@ -60,12 +59,14 @@ public class Fuzzer {
             symbolTable.getSize() == 0) {
           continue;
         } else {
-          pmf.put(expr, expr.weight);
+          expressions.add(expr);
+          weights.add(expr.weight);
+
         }
       }
     }
     DiscreteDistribution<Expression> dd =
-        new DiscreteDistribution<Expression>(random, pmf);
+        new DiscreteDistribution<Expression>(random, expressions, weights);
     Expression expr = dd.nextItem();
     switch (expr) {
       case THIS: return generateThis(budget);
@@ -385,8 +386,8 @@ public class Fuzzer {
   }
 
   Node generateStatement(int budget) {
-    // probability mass function (pmf) for the discrete distribution
-    Map<Statement, Double> pmf = Maps.newHashMap();
+    ArrayList<Statement> statements = Lists.newArrayList();
+    ArrayList<Double> weights = Lists.newArrayList();
     for (Statement stmt : Statement.values()) {
       if (stmt.minBudget <= budget) {
         if (stmt == Statement.RETURN && symbolTable.getNumScopes() < 2) {
@@ -397,12 +398,13 @@ public class Fuzzer {
         } else if (stmt == Statement.CONTINUE && loopNesting == 0) {
           continue;
         } else {
-          pmf.put(stmt, stmt.weight);
+          statements.add(stmt);
+          weights.add(stmt.weight);
         }
       }
     }
     DiscreteDistribution<Statement> dd =
-        new DiscreteDistribution<Statement>(random, pmf);
+        new DiscreteDistribution<Statement>(random, statements, weights);
     Statement stmt = dd.nextItem();
     switch (stmt) {
       case BLOCK: return generateBlock(budget);

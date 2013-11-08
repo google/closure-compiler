@@ -17,9 +17,9 @@ package com.google.javascript.jscomp.fuzzing;
 
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.Stack;
@@ -30,14 +30,30 @@ import java.util.Stack;
 public class SymbolTable {
   private Stack<List<String>> storage = new Stack<List<String>>();
   private Random random;
-  private int size = 0;
+  private int size;
 
   public SymbolTable(Random random) {
     this.random = random;
+    ArrayList<String> globalScope = Lists.newArrayList(
+        "Array",
+        "Boolean",
+        "Function",
+        "Number",
+        "Object",
+        "RegExp",
+        "String",
+        "Error",
+        "JSON",
+        "Math",
+        "NaN",
+        "undefined");
+    size = globalScope.size();
+    storage.push(globalScope);
   }
 
   public void addScope() {
-    storage.push(new ArrayList<String>());
+    ArrayList<String> newScope = Lists.newArrayList("arguments");
+    storage.push(newScope);
   }
 
   public void removeScope() {
@@ -77,18 +93,19 @@ public class SymbolTable {
    * likely it will be chosen
    */
   private List<String> getRandomScope(boolean excludeLocal) {
-    HashMap<List<String>, Double> pmf = new HashMap<List<String>, Double>();
+    ArrayList<List<String>> scopes = new ArrayList<List<String>>(storage);
+    ArrayList<Double> weights = Lists.newArrayListWithCapacity(getNumScopes());
     int i;
     for (i = 0; i < storage.size() - 1; i++) {
-      List<String> scope = storage.get(i);
-      pmf.put(scope, Double.valueOf(scope.size()));
+      List<String> s = storage.get(i);
+      weights.add(Double.valueOf(s.size()));
     }
     if (!excludeLocal) {
-      List<String> scope = storage.get(i);
-      pmf.put(scope, Double.valueOf(scope.size()));
+      List<String> s = storage.get(i);
+      weights.add(Double.valueOf(s.size()));
     }
     DiscreteDistribution<List<String>> distribution =
-        new DiscreteDistribution<List<String>>(random, pmf);
+        new DiscreteDistribution<List<String>>(random, scopes, weights);
     return distribution.nextItem();
   }
 }
