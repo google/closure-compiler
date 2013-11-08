@@ -24,6 +24,4 @@
 // TODO(nicksantos): We should delete this file and put this in
 // the common externs.
 
-/** @type {Console} */
-var console;
-
+// TODO(blickly): Delete this file.
