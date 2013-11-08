@@ -280,64 +280,6 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
          });
   }
 
-  public void testClassMovement_instanceof() {
-    test(createModuleStar(
-             // m1
-             "function f(){} f.prototype.bar=function (){};" +
-             "1 instanceof f;",
-             // m2
-             "var a = new f();"),
-         new String[] {
-           "'undefined' != typeof f && 1 instanceof f;",
-           "function f(){} f.prototype.bar=function (){};" +
-           "var a = new f();"
-         });
-  }
-
-  public void testClassMovement_instanceof2() {
-    test(createModuleStar(
-             // m1
-             "function f(){} f.prototype.bar=function (){};" +
-             "(true && 1 instanceof f);",
-             // m2
-             "var a = new f();"),
-         new String[] {
-           "(true && ('undefined' != typeof f && 1 instanceof f));",
-           "function f(){} f.prototype.bar=function (){};" +
-           "var a = new f();"
-         });
-  }
-
-  public void testClassMovement_instanceof3() {
-    testSame(createModuleStar(
-             // m1
-             "function f(){} f.prototype.bar=function (){};" +
-             "f instanceof 1",
-             // m2
-             "var a = new f();"));
-  }
-
-  public void testClassMovement_instanceof_noRewriteRequired() {
-    testSame(createModuleStar(
-             // m1
-             "function f(){} f.prototype.bar=function (){};" +
-             "1 instanceof f;" +
-             "new f;",
-             // m2
-             "var a = new f();"));
-  }
-
-  public void testClassMovement_instanceof_noRewriteRequired2() {
-    testSame(createModuleChain(
-             // m1
-             "function f(){} f.prototype.bar=function (){};" +
-             "new f;",
-             // m2
-             "1 instanceof f;",
-             // m3
-             "var a = new f();"));
-  }
-
   public void testClassMovement2() {
     // NOTE: this is the result of two iterations
     test(createModuleChain(
