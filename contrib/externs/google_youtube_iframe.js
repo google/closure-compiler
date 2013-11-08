@@ -182,6 +182,13 @@ YT.Player.prototype.getVideoBytesTotal = function() {};
  * @return {number}
  * @nosideeffects
  */
+YT.Player.prototype.getVideoLoadedFraction = function() {};
+
+
+/**
+ * @return {number}
+ * @nosideeffects
+ */
 YT.Player.prototype.getVideoStartBytes = function() {};
 
 
