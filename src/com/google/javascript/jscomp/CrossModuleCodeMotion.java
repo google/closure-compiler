@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -59,6 +60,9 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
   private final Map<Scope.Var, NamedInfo> namedInfo =
       new LinkedHashMap<Var, NamedInfo>();
 
+  private final Map<Node, InstanceofInfo> instanceofNodes =
+      new LinkedHashMap<Node, InstanceofInfo>();
+
   /**
    * Creates an instance.
    *
@@ -78,6 +82,9 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
 
       // Traverse the tree and find the modules where a var is declared + used
       NodeTraversal.traverse(compiler, root, this);
+
+      // Make is so we can ignore constructor references in instanceof.
+      makeInstanceOfCodeOrderIndependent();
 
       // Move the functions + variables to a deeper module [if possible]
       moveCode();
@@ -158,6 +165,10 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
         deepestModule =
             graph.getDeepestCommonDependencyInclusive(m, deepestModule);
       }
+    }
+
+    boolean isUsedInOrDependencyOfModule(JSModule m) {
+      return m == deepestModule || graph.dependsOn(m, deepestModule);
     }
 
     /**
@@ -307,8 +318,12 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
           info.allowMove = false;
         }
       } else {
-        // Otherwise, it's a reference
-        processReference(t, info, name);
+        if (parent.isInstanceOf() && parent.getLastChild() == n) {
+          instanceofNodes.put(parent, new InstanceofInfo(t.getModule(), info));
+        } else {
+          // Otherwise, it's a reference
+          processReference(t, info, name);
+        }
       }
     }
   }
@@ -421,5 +436,71 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
     }
 
     return false;
+  }
+
+  /**
+   * Transforms instanceof usages into an expression that short circuits to
+   * false if tested with a constructor that is undefined. This allows ignoring
+   * instanceof with respect to cross module code motion.
+   */
+  private void makeInstanceOfCodeOrderIndependent() {
+    Node tmp = IR.block();
+    for (Map.Entry<Node, InstanceofInfo> entry : instanceofNodes.entrySet()) {
+      Node n = entry.getKey();
+      InstanceofInfo info = entry.getValue();
+      if (!info.namedInfo.allowMove || !info.mustBeGuardedByTypeof()) {
+        continue;
+      }
+      // In order for the compiler pass to be idempotent, this checks whether
+      // the instanceof is already wrapped in the code that is generated below.
+      Node parent = n.getParent();
+      if (parent.isAnd() && parent.getLastChild() == n
+          && parent.getFirstChild().isNE()) {
+        Node ne = parent.getFirstChild();
+        if (ne.getFirstChild().isString()
+            && "undefined".equals(ne.getFirstChild().getString())
+            && ne.getLastChild().isTypeOf()) {
+          Node ref = ne.getLastChild().getFirstChild();
+          if (ref.isEquivalentTo(n.getLastChild())) {
+            continue;
+          }
+        }
+      }
+      // Wrap "foo instanceof Bar" in
+      // "('undefined' != typeof Bar && foo instanceof Bar)"
+      Node reference = n.getLastChild().cloneNode();
+      Preconditions.checkState(reference.isName());
+      n.getParent().replaceChild(n, tmp);
+      Node and = IR.and(
+          new Node(Token.NE,
+              IR.string("undefined"),
+              new Node(Token.TYPEOF, reference)
+          ),
+          n
+      );
+      and.useSourceInfoIfMissingFromForTree(n);
+      tmp.getParent().replaceChild(tmp, and);
+      compiler.reportCodeChange();
+    }
+  }
+
+  private class InstanceofInfo {
+    private final JSModule module;
+    private final NamedInfo namedInfo;
+
+    InstanceofInfo(JSModule module, NamedInfo namedInfo) {
+      this.module = module;
+      this.namedInfo = namedInfo;
+    }
+
+    /**
+     * Returns true if this instance of instanceof is in a deeper module than
+     * the deepest module (by reference) of the related name.
+     * In that case the name may be undefined when the instanceof runs and we
+     * have to guard it with typeof.
+     */
+    boolean mustBeGuardedByTypeof() {
+      return !this.namedInfo.isUsedInOrDependencyOfModule(this.module);
+    }
   }
 }
