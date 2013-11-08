@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -279,6 +280,18 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   }
 
   /**
+   * A predicate for matching anything except function nodes.
+   */
+  private static class MatchUnnamedBreak implements Predicate<Node>{
+    @Override
+    public boolean apply(Node n) {
+      return n.isBreak() && !n.hasChildren();
+    }
+  }
+
+  static final Predicate<Node> MATCH_UNNAMED_BREAK = new MatchUnnamedBreak();
+
+  /**
    * Remove useless switches and cases.
    */
   private Node tryOptimizeSwitch(Node n) {
@@ -320,12 +333,14 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         }
         if (caseMatches != TernaryValue.UNKNOWN) {
           Node block, lastStm;
-          // Skip cases until you find one whose last stm is a break
+          // Skip cases until you find one whose last stm is a removable break
           while (cur != null) {
             block = cur.getLastChild();
             lastStm = block.getLastChild();
             cur = cur.getNext();
-            if (lastStm != null && lastStm.isBreak()) {
+            if (lastStm != null
+                && lastStm.isBreak()
+                && !lastStm.hasChildren()) {
               block.removeChild(lastStm);
               reportCodeChange();
               break;
@@ -340,9 +355,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
           cur = cond.getNext();
           if (cur != null && cur.getNext() == null) {
             block = cur.getLastChild();
-            if (!(NodeUtil.containsType(block, Token.BREAK,
+            if (!(NodeUtil.has(block, MATCH_UNNAMED_BREAK,
                 NodeUtil.MATCH_NOT_FUNCTION))) {
               cur.removeChild(block);
+              block.setIsSyntheticBlock(false);
               n.getParent().replaceChild(n, block);
               reportCodeChange();
               return block;
