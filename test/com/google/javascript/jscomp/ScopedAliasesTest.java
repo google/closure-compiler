@@ -345,6 +345,14 @@ public class ScopedAliasesTest extends CompilerTestCase {
         + "/** @type {{x: number}} */ types.expected;");
   }
 
+  public void testObjectJsDoc2() {
+    testTypes(
+        "var x = goog$Timer;",
+        ""
+        + "/** @type {{someKey: x}} */ types.actual;"
+        + "/** @type {{someKey: goog$Timer}} */ types.expected;");
+  }
+
   public void testUnionJsDoc() {
     testTypes(
         "var x = goog.Timer;",
@@ -589,6 +597,27 @@ public class ScopedAliasesTest extends CompilerTestCase {
     assertEquals(1, spy.constructedAliases.size());
     AliasSpy aliasSpy = (AliasSpy) spy.constructedAliases.get(0);
     assertEquals("goog", aliasSpy.observedDefinitions.get("g"));
+  }
+
+  public void testRecordOneAlias2() {
+    String fullJsCode = GOOG_SCOPE_START_BLOCK
+        + "var g$1 = goog;\n g$1.dom.createElement(g$1.dom.TagName.DIV);\n"
+        + GOOG_SCOPE_END_BLOCK;
+    String expectedJsCode = "goog.dom.createElement(goog.dom.TagName.DIV);\n";
+
+    TransformationHandlerSpy spy = new TransformationHandlerSpy();
+    transformationHandler = spy;
+    test(fullJsCode, expectedJsCode);
+
+    assertTrue(spy.observedPositions.containsKey("testcode"));
+    List<SourcePosition<AliasTransformation>> positions =
+        spy.observedPositions.get("testcode");
+    assertEquals(1, positions.size());
+    verifyAliasTransformationPosition(1, 0, 2, 1, positions.get(0));
+
+    assertEquals(1, spy.constructedAliases.size());
+    AliasSpy aliasSpy = (AliasSpy) spy.constructedAliases.get(0);
+    assertEquals("goog", aliasSpy.observedDefinitions.get("g$1"));
   }
 
   public void testRecordMultipleAliases() {

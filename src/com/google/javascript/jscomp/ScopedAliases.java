@@ -234,7 +234,10 @@ class ScopedAliases implements HotSwapCompilerPass {
       String aliasExpanded =
           Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
       Preconditions.checkState(typeName.startsWith(aliasName));
-      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
+      String replacement =
+          aliasExpanded + typeName.substring(aliasName.length());
+      aliasReference.setString(replacement);
+
     }
   }
 
