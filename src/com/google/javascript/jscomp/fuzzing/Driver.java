@@ -15,14 +15,19 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerInput;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.JSModule;
-import com.google.javascript.jscomp.JsAst;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.SyntheticAst;
 import com.google.javascript.rhino.Node;
+
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +38,20 @@ import java.util.Random;
  * @author zplin@google.com (Zhongpeng Lin)
  */
 public class Driver {
+  @Option(name = "--number_of_runs",
+      usage = "The number of runs of the fuzzer. Default: 1")
+  private int numberOfRuns = 1;
+
+  @Option(name = "--max_ast_size",
+      usage = "The max number of nodes in the generated ASTs. Default: 100")
+  private int maxASTSize = 100;
+
+  @Option(name = "--compilation_level",
+      usage = "Specifies the compilation level to use. Options: " +
+      "WHITESPACE_ONLY, SIMPLE_OPTIMIZATIONS, ADVANCED_OPTIMIZATIONS. " +
+      "Default: SIMPLE_OPTIMIZATIONS")
+  private CompilationLevel compilationLevel =
+      CompilationLevel.SIMPLE_OPTIMIZATIONS;
 
   public Compiler compile(String code) {
     Compiler compiler = new Compiler();
@@ -42,7 +61,7 @@ public class Driver {
   }
 
   public Compiler compile(Node script) {
-    CompilerInput input = new CompilerInput(new JsAst(script));
+    CompilerInput input = new CompilerInput(new SyntheticAst(script));
     JSModule jsModule = new JSModule("fuzzedModule");
     jsModule.add(input);
 
@@ -54,36 +73,35 @@ public class Driver {
 
   private CompilerOptions getOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.checkSymbols = true;
+    compilationLevel.setOptionsForCompilationLevel(options);
     return options;
   }
 
   public static void main(String[] args) {
-    int numberOfRuns = 1;
-    if (args.length >= 1) {
-      numberOfRuns = Integer.valueOf(args[0]);
-    }
-
-    int maxASTSize = 10;
-    if (args.length >= 2) {
-      maxASTSize = Integer.valueOf(args[1]);
-    }
     Driver driver = new Driver();
-    for (int i = 0; i < numberOfRuns; i++) {
-      long seed = System.currentTimeMillis();
-      Random random = new Random(seed);
-      System.out.println("Seed: " + seed);
-      Fuzzer fuzzer = new Fuzzer(random);
-      Node[] nodes = fuzzer.generateProgram(maxASTSize);
-      Node script = Fuzzer.buildScript(nodes);
-      String code = Fuzzer.getPrettyCode(script);
-      System.out.println(code.trim());
+    CmdLineParser parser = new CmdLineParser(driver);
+    try {
+      parser.parseArgument(args);
+      for (int i = 0; i < driver.numberOfRuns; i++) {
+        long seed = System.currentTimeMillis();
+        Random random = new Random(seed);
+        System.out.println("Seed: " + seed);
+        Fuzzer fuzzer = new Fuzzer(random);
+        Node[] nodes = fuzzer.generateProgram(driver.maxASTSize);
+        Node script = Fuzzer.buildScript(nodes);
+        String code = Fuzzer.getPrettyCode(script);
+        System.out.println(code.trim());
 
-      Compiler compiler = driver.compile(script);
-      Result result = compiler.getResult();
-      if (result.success) {
-        System.out.println("Success!\n");
+        Compiler compiler = driver.compile(script);
+        Result result = compiler.getResult();
+        if (result.success) {
+          System.out.println("Success!\n");
+        }
       }
+    } catch (CmdLineException e) {
+      // handling of wrong arguments
+      System.err.println(e.getMessage());
+      parser.printUsage(System.err);
     }
   }
 }

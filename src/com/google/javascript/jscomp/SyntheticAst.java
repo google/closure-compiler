@@ -39,6 +39,12 @@ public class SyntheticAst implements SourceAst {
     clearAst();
   }
 
+  public SyntheticAst(Node root) {
+    this.inputId = new InputId(root.getSourceFileName());
+    this.sourceFile = new SourceFile(root.getSourceFileName());
+    this.root = root;
+  }
+
   @Override
   public Node getAstRoot(AbstractCompiler compiler) {
     return root;
