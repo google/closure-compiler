@@ -210,12 +210,6 @@ Console.prototype.memory;
 /** @type {Console} */
 Window.prototype.console;
 
-/** 
- * @type {Console}
- * @suppress {duplicate}
- */
-var console;
-
 /**
  * @type {Console}
  * @suppress {duplicate}
