@@ -317,6 +317,21 @@ chrome.app.window.AppWindow.prototype.getBounds = function() {};
 chrome.app.window.AppWindow.prototype.setBounds = function(bounds) {};
 
 
+/**
+ * @return {boolean}
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.isAlwaysOnTop = function() {};
+
+
+/**
+ * @param {boolean} alwaysOnTop Set whether the window should stay above most
+ *     other windows.
+ * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
+ */
+chrome.app.window.AppWindow.prototype.setAlwaysOnTop = function(alwaysOnTop) {};
+
+
 /** @type {ChromeEvent} */
 chrome.app.window.AppWindow.prototype.onBoundsChanged;
 
