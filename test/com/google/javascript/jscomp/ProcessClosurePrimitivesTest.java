@@ -43,6 +43,7 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
   private String additionalCode;
   private String additionalEndCode;
   private boolean addAdditionalNamespace;
+  private boolean preserveGoogRequires;
 
   public ProcessClosurePrimitivesTest() {
     enableLineNumberCheck(true);
@@ -52,18 +53,20 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
     additionalCode = null;
     additionalEndCode = null;
     addAdditionalNamespace = false;
+    preserveGoogRequires = false;
   }
 
   @Override public CompilerPass getProcessor(final Compiler compiler) {
     if ((additionalCode == null) && (additionalEndCode == null)) {
       return new ProcessClosurePrimitives(
-          compiler, null, CheckLevel.ERROR);
+          compiler, null, CheckLevel.ERROR, preserveGoogRequires);
     } else {
       return new CompilerPass() {
         @Override
         public void process(Node externs, Node root) {
           // Process the original code.
-          new ProcessClosurePrimitives(compiler, null, CheckLevel.OFF)
+          new ProcessClosurePrimitives(
+              compiler, null, CheckLevel.OFF, preserveGoogRequires)
               .process(externs, root);
 
           // Inject additional code at the beginning.
@@ -101,7 +104,8 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
           }
 
           // Process the tree a second time.
-          new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR)
+          new ProcessClosurePrimitives(
+              compiler, null, CheckLevel.ERROR, preserveGoogRequires)
               .process(externs, root);
         }
       };
@@ -269,6 +273,14 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
     test("goog.provide('foo'); var x = 3; goog.require('foo'); something();",
          "var foo={}; var x = 3; something();");
     testSame("foo.require('foo.bar');");
+  }
+
+  public void testPreserveGoogRequires() {
+    preserveGoogRequires = true;
+    test("goog.provide('foo'); goog.require('foo');",
+         "var foo={}; goog.require('foo');");
+    test("goog.provide('foo'); goog.require('foo'); var a = {};",
+        "var foo = {}; goog.require('foo'); var a = {};");
   }
 
   public void testRequireErrorCases() {

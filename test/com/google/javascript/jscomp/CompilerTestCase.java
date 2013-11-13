@@ -810,7 +810,7 @@ public abstract class CompilerTestCase extends TestCase  {
         // Only run process closure primitives once, if asked.
         if (closurePassEnabled && i == 0) {
           recentChange.reset();
-          new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR)
+          new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false)
               .process(null, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }

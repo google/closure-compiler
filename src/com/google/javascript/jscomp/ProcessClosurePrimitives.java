@@ -128,14 +128,17 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private final CheckLevel requiresLevel;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
   private final List<Node> defineCalls = Lists.newArrayList();
+  private final boolean preserveGoogRequires;
 
   ProcessClosurePrimitives(AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
-      CheckLevel requiresLevel) {
+      CheckLevel requiresLevel,
+      boolean preserveGoogRequires) {
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
     this.moduleGraph = compiler.getModuleGraph();
     this.requiresLevel = requiresLevel;
+    this.preserveGoogRequires = preserveGoogRequires;
 
     // goog is special-cased because it is provided in Closure's base library.
     providedNames.put(GOOG,
@@ -326,7 +329,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       // the checks for broken requires turned off. In these cases, we
       // allow broken requires to be preserved by the first run to
       // let them be caught in the subsequent run.
-      if (provided != null || requiresLevel.isOn()) {
+      if (!preserveGoogRequires && (provided != null || requiresLevel.isOn())) {
         parent.detachFromParent();
         compiler.reportCodeChange();
       }

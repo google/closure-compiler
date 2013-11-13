@@ -12568,7 +12568,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         0, compiler.getErrorCount());
 
     // For processing goog.addDependency for forward typedefs.
-    new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR)
+    new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false)
         .process(null, n);
 
     CodingConvention convention = compiler.getCodingConvention();

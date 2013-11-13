@@ -626,6 +626,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Processes goog.provide() and goog.require() calls */
   public boolean closurePass;
 
+  /** Do not strip goog.require() calls from the code. */
+  public boolean preserveGoogRequires;
+
   /** Processes jQuery aliases */
   public boolean jqueryPass;
 
@@ -998,6 +1001,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     markAsCompiled = false;
     removeTryCatchFinally = false;
     closurePass = false;
+    preserveGoogRequires = false;
     jqueryPass = false;
     angularPass = false;
     removeAbstractMethods = true;
@@ -1999,6 +2003,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setClosurePass(boolean closurePass) {
     this.closurePass = closurePass;
+  }
+
+  public void setPreserveGoogRequires(boolean preserveGoogRequires) {
+    this.preserveGoogRequires = preserveGoogRequires;
   }
 
   public void setGatherCssNames(boolean gatherCssNames) {

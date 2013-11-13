@@ -973,7 +973,8 @@ public class DefaultPassConfig extends PassConfig {
       final ProcessClosurePrimitives pass = new ProcessClosurePrimitives(
           compiler,
           preprocessorSymbolTable,
-          options.brokenClosureRequiresLevel);
+          options.brokenClosureRequiresLevel,
+          options.preserveGoogRequires);
 
       return new HotSwapCompilerPass() {
         @Override
