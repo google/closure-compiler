@@ -124,6 +124,7 @@ public class Driver {
         logger.log(Level.SEVERE, "Fuzzer error!\nSeed: " + seed, e);
       }
       Node script = Fuzzer.buildScript(nodes);
+      String code = Fuzzer.getPrettyCode(script);
       try {
         Result result = driver.compile(script);
         if (result.success && result.warnings.length == 0) {
@@ -131,20 +132,20 @@ public class Driver {
           StringBuffer sb = new StringBuffer("Seed: ");
           sb.append(seed);
           sb.append("\nJavaScript: ");
-          sb.append(Fuzzer.getPrettyCode(script));
-          logger.info(sb.toString());
+          sb.append(code);
+          logger.fine(sb.toString());
         } else {
           StringBuffer sb = new StringBuffer("Compilation Failed!\nSeed: ");
           sb.append(seed);
           sb.append("\nJavaScript: ");
-          sb.append(Fuzzer.getPrettyCode(script));
+          sb.append(code);
           logger.warning(sb.toString());
         }
       } catch (Exception e) {
         StringBuffer sb = new StringBuffer("Compiler error!\nSeed: ");
         sb.append(seed);
         sb.append("\nJavaScript: ");
-        sb.append(Fuzzer.getPrettyCode(script));
+        sb.append(code);
         logger.log(Level.SEVERE, sb.toString(), e);
       }
     }

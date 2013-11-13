@@ -106,7 +106,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testGenerateLiteral() {
-    Random random = new Random(System.currentTimeMillis());
+    Random random = new ControlledRandom();
     Fuzzer fuzzer = spy(new Fuzzer(random));
     int budget = 0;
     fuzzer.generateLiteral(budget);
@@ -197,7 +197,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testTrinaryExpression() {
-    Random random = new Random();
+    Random random = new ControlledRandom();
     Fuzzer fuzzer = new Fuzzer(random);
     Node node = fuzzer.generateTernaryExpression(4);
     String code = Fuzzer.getPrettyCode(node);
@@ -206,7 +206,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testExpression() {
-    Random random = new Random();
+    Random random = new ControlledRandom();
     Fuzzer fuzzer = spy(new Fuzzer(random));
     int budget = 1;
     fuzzer.generateExpression(budget);
@@ -230,14 +230,14 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testEmptyStatement() {
-    Random random = new Random();
+    Random random = new ControlledRandom();
     Fuzzer fuzzer = new Fuzzer(random);
     Node emptyStmt = fuzzer.generateEmptyStatement(10);
     assertEquals(Token.EMPTY, emptyStmt.getType());
   }
 
   public void testIfStatement() {
-    Random random = new Random();
+    Random random = new ControlledRandom();
     Fuzzer fuzzer = new Fuzzer(random);
     Node ifStatement = fuzzer.generateIfStatement(10);
     String code = Fuzzer.getPrettyCode(ifStatement);
@@ -310,7 +310,7 @@ public class FuzzerTest extends TestCase{
     random.addOverride(1, 0);
     Fuzzer fuzzer = new Fuzzer(random);
     Scope scope = fuzzer.scopeManager.localScope();
-    scope.labels.push("testLabel");
+    scope.labels.add("testLabel");
     Node breakStmt = fuzzer.generateBreak(10);
     String code = Fuzzer.getPrettyCode(breakStmt);
     assertEquals("break testLabel;", code.trim());
@@ -321,7 +321,7 @@ public class FuzzerTest extends TestCase{
     random.addOverride(1, 0);
     Fuzzer fuzzer = new Fuzzer(random);
     Scope scope = fuzzer.scopeManager.localScope();
-    scope.labels.push("testLabel");
+    scope.labels.add("testLabel");
     Node breakStmt = fuzzer.generateContinue(10);
     String code = Fuzzer.getPrettyCode(breakStmt);
     assertEquals("continue testLabel;", code.trim());

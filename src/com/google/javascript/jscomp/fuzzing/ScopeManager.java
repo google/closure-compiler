@@ -19,16 +19,16 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Stack;
 
 /**
  * @author zplin@google.com (Zhongpeng Lin)
  */
 public class ScopeManager {
-  private Stack<Scope> scopeStack = new Stack<Scope>();
+  private ArrayDeque<Scope> scopeStack = new ArrayDeque<Scope>();
   // Random generator for getting random scope/symbol for fuzzer
   private Random random;
   // Total number of symbols currently available
@@ -54,7 +54,7 @@ public class ScopeManager {
     scopeStack.push(globalScope);
   }
 
-  public void addScope() {
+  public void addFunctionScope() {
     Scope newScope = new Scope();
     newScope.symbols = Lists.newArrayList("arguments");
     numSym++;
@@ -112,17 +112,15 @@ public class ScopeManager {
    * likely it will be chosen
    */
   private Scope getRandomScope(boolean excludeLocal) {
-    ArrayList<Scope> scopes = new ArrayList<Scope>(getNumScopes());
+    ArrayList<Scope> scopes = new ArrayList<Scope>(scopeStack);
     ArrayList<Double> weights = Lists.newArrayListWithCapacity(getNumScopes());
     int i;
     for (i = 0; i < scopeStack.size() - 1; i++) {
-      Scope s = scopeStack.get(i);
-      scopes.add(s);
+      Scope s = scopes.get(i);
       weights.add(Double.valueOf(s.symbols.size()));
     }
     if (!excludeLocal) {
-      Scope s = scopeStack.get(i);
-      scopes.add(s);
+      Scope s = scopes.get(i);
       weights.add(Double.valueOf(s.symbols.size()));
     }
     DiscreteDistribution<Scope> distribution =

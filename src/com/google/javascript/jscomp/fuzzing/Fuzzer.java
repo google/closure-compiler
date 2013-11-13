@@ -25,7 +25,6 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Stack;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -552,7 +551,7 @@ public class Fuzzer {
   Node generateContinue(int budget) {
     Preconditions.checkArgument(budget >= 1);
     Node node = new Node(Token.CONTINUE);
-    Stack<String> currentLabels = scopeManager.localScope().labels;
+    ArrayList<String> currentLabels = scopeManager.localScope().labels;
     int index = random.nextInt(currentLabels.size() + 1);
     if (index < currentLabels.size()) {
       node.addChildToBack(
@@ -564,7 +563,7 @@ public class Fuzzer {
   Node generateBreak(int budget) {
     Preconditions.checkArgument(budget >= 1);
     Node node = new Node(Token.BREAK);
-    Stack<String> currentLabels = scopeManager.localScope().labels;
+    ArrayList<String> currentLabels = scopeManager.localScope().labels;
     int index = random.nextInt(currentLabels.size() + 1);
     if (index < currentLabels.size()) {
       node.addChildToBack(
@@ -627,17 +626,17 @@ public class Fuzzer {
   Node generateLabelledStatement(int budget) {
     Preconditions.checkArgument(budget >= 3);
     String labelName;
-    Stack<String> currentLabels = scopeManager.localScope().labels;
+    ArrayList<String> currentLabels = scopeManager.localScope().labels;
     do {
       labelName = "x_" + nextNumber();
-    } while (currentLabels.search(labelName) != -1);
+    } while (currentLabels.indexOf(labelName) != -1);
     Node name = Node.newString(
         Token.LABEL_NAME, labelName);
     Node node = new Node(Token.LABEL, name);
-    currentLabels.push(labelName);
+    currentLabels.add(labelName);
     Node statement = generateStatement(budget - 2);
     node.addChildToBack(statement);
-    currentLabels.pop();
+    currentLabels.remove(currentLabels.size() - 1);
     return node;
   }
 
@@ -673,7 +672,7 @@ public class Fuzzer {
     Node name;
     if (isExpression) {
       Preconditions.checkArgument(budget >= 3);
-      scopeManager.addScope();
+      scopeManager.addFunctionScope();
       if (budget >= 4 && random.nextInt(2) == 0) {
         // the name of function expression is only visible in the function
         name = generateIdentifier(1);
@@ -686,7 +685,7 @@ public class Fuzzer {
       Preconditions.checkArgument(budget >= 4);
       name = generateIdentifier(1);
       remainingBudget = budget - 4;
-      scopeManager.addScope();
+      scopeManager.addFunctionScope();
     }
     // param list is in the new scope
     Node paramList = new Node(Token.PARAM_LIST);

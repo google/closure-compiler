@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp.fuzzing;
 
 import java.util.ArrayList;
-import java.util.Stack;
 
 /**
  * Data structure for holding information in each scope
@@ -25,5 +24,5 @@ class Scope {
   ArrayList<String> symbols = new ArrayList<String>();
   int loopNesting = 0;
   int switchNesting = 0;
-  Stack<String> labels = new Stack<String>();
+  ArrayList<String> labels = new ArrayList<String>();
 }
