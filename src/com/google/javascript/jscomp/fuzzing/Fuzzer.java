@@ -115,16 +115,16 @@ public class Fuzzer {
 
   Node generateIdentifier(int budget) {
     Preconditions.checkArgument(budget >= 1);
-    String identifier = null;
+    String name = null;
     // allow 1/10 chance of variable shadowing
     if (scopeManager.hasNonLocals() && random.nextInt(10) < 1) {
-      identifier = scopeManager.getRandomSymbol(true);
+      name = scopeManager.getRandomSymbol(true);
     }
-    if (identifier == null){
-      identifier = "x_" + nextNumber();
+    if (name == null){
+      name = "x_" + nextNumber();
     }
-    scopeManager.addSymbol(identifier);
-    return Node.newString(Token.NAME, identifier);
+    scopeManager.addSymbol(name);
+    return Node.newString(Token.NAME, name);
   }
 
   Node getExistingIdentifier(int budget) {
@@ -652,9 +652,16 @@ public class Fuzzer {
     int[] catchAndFinallyBudgets = distribute(budget - 1 - bodyBudget, 2, 0);
     Node catchBlock = new Node(Token.BLOCK);
     if (catchAndFinallyBudgets[0] > 3) {
+      /**
+       * The catch block is in the same scope as the try statement,
+       * the catch parameter e is injected into the scope when the block
+       * starts and removed from the scope when the block ends.
+       */
+      Node param = generateIdentifier(1);
       catchBlock.addChildToBack(
-          new Node(Token.CATCH, generateIdentifier(1),
+          new Node(Token.CATCH, param,
           generateBlock(catchAndFinallyBudgets[0] - 1)));
+      scopeManager.removeSymbol(param.getQualifiedName());
     } else {
       // not enough budget for catch block, give all budget to finally block
       catchAndFinallyBudgets[1] = budget - 1 - bodyBudget;
@@ -807,5 +814,4 @@ public class Fuzzer {
   private int nextNumber() {
     return counter++;
   }
-
 }

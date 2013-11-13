@@ -71,6 +71,12 @@ public class ScopeManager {
     numSym++;
   }
 
+  public void removeSymbol(String symbol) {
+    if (localSymbols().remove(symbol)) {
+      numSym--;
+    }
+  }
+
   private ArrayList<String> localSymbols() {
     return scopeStack.peek().symbols;
   }

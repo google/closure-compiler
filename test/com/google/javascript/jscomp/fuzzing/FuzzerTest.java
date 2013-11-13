@@ -290,7 +290,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testTryStatement() {
-    ControlledRandom random = new ControlledRandom();
+    Random random = new Random(456);
     Fuzzer fuzzer = new Fuzzer(random);
     Node tryStatement = fuzzer.generateTry(20);
     String code = Fuzzer.getPrettyCode(tryStatement);
