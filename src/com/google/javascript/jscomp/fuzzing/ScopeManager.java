@@ -27,14 +27,17 @@ import java.util.Stack;
 /**
  * @author zplin@google.com (Zhongpeng Lin)
  */
-public class SymbolTable {
-  private Stack<List<String>> storage = new Stack<List<String>>();
+public class ScopeManager {
+  private Stack<Scope> scopeStack = new Stack<Scope>();
+  // Random generator for getting random scope/symbol for fuzzer
   private Random random;
-  private int size;
+  // Total number of symbols currently available
+  private int numSym;
 
-  public SymbolTable(Random random) {
+  public ScopeManager(Random random) {
     this.random = random;
-    ArrayList<String> globalScope = Lists.newArrayList(
+    Scope globalScope = new Scope();
+    globalScope.symbols = Lists.newArrayList(
         "Array",
         "Boolean",
         "Function",
@@ -47,35 +50,45 @@ public class SymbolTable {
         "Math",
         "NaN",
         "undefined");
-    size = globalScope.size();
-    storage.push(globalScope);
+    numSym = globalScope.symbols.size();
+    scopeStack.push(globalScope);
   }
 
   public void addScope() {
-    ArrayList<String> newScope = Lists.newArrayList("arguments");
-    storage.push(newScope);
+    Scope newScope = new Scope();
+    newScope.symbols = Lists.newArrayList("arguments");
+    numSym++;
+    scopeStack.push(newScope);
   }
 
   public void removeScope() {
-    size -= storage.peek().size();
-    storage.pop();
+    numSym -= localSymbols().size();
+    scopeStack.pop();
   }
 
   public void addSymbol(String symbol) {
-    storage.peek().add(symbol);
-    size++;
+    localSymbols().add(symbol);
+    numSym++;
+  }
+
+  private ArrayList<String> localSymbols() {
+    return scopeStack.peek().symbols;
+  }
+
+  public Scope localScope() {
+    return scopeStack.peek();
   }
 
   public int getSize() {
-    return size;
+    return numSym;
   }
 
   public int getNumScopes() {
-    return storage.size();
+    return scopeStack.size();
   }
 
   public boolean hasNonLocals() {
-    return size - storage.peek().size() > 0;
+    return scopeStack.size() > 1;
   }
 
   public String getRandomSymbol(boolean excludeLocal) {
@@ -84,9 +97,9 @@ public class SymbolTable {
     } else {
       Preconditions.checkArgument(getNumScopes() > 0);
     }
-    List<String> scope = getRandomScope(excludeLocal);
-    String sym = scope.get(random.nextInt(scope.size()));
-    if (excludeLocal && storage.peek().indexOf(sym) != -1) {
+    List<String> symbols = getRandomScope(excludeLocal).symbols;
+    String sym = symbols.get(random.nextInt(symbols.size()));
+    if (excludeLocal && localSymbols().indexOf(sym) != -1) {
       // the symbol has been shadowed
       return null;
     } else {
@@ -95,23 +108,25 @@ public class SymbolTable {
   }
 
   /**
-   * Get a scope randomly. The more variables/function the scope has, the more
+   * Get a scope randomly. The more variables/functions the scope has, the more
    * likely it will be chosen
    */
-  private List<String> getRandomScope(boolean excludeLocal) {
-    ArrayList<List<String>> scopes = new ArrayList<List<String>>(storage);
+  private Scope getRandomScope(boolean excludeLocal) {
+    ArrayList<Scope> scopes = new ArrayList<Scope>(getNumScopes());
     ArrayList<Double> weights = Lists.newArrayListWithCapacity(getNumScopes());
     int i;
-    for (i = 0; i < storage.size() - 1; i++) {
-      List<String> s = storage.get(i);
-      weights.add(Double.valueOf(s.size()));
+    for (i = 0; i < scopeStack.size() - 1; i++) {
+      Scope s = scopeStack.get(i);
+      scopes.add(s);
+      weights.add(Double.valueOf(s.symbols.size()));
     }
     if (!excludeLocal) {
-      List<String> s = storage.get(i);
-      weights.add(Double.valueOf(s.size()));
+      Scope s = scopeStack.get(i);
+      scopes.add(s);
+      weights.add(Double.valueOf(s.symbols.size()));
     }
-    DiscreteDistribution<List<String>> distribution =
-        new DiscreteDistribution<List<String>>(random, scopes, weights);
+    DiscreteDistribution<Scope> distribution =
+        new DiscreteDistribution<Scope>(random, scopes, weights);
     return distribution.nextItem();
   }
 }

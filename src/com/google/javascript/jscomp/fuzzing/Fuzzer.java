@@ -35,15 +35,12 @@ public class Fuzzer {
   // the largest number for random number literals
   private static final int LARGEST_NUMBER = 1000;
   protected final Random random;
-  private int loopNesting = 0;
-  private int switchNesting = 0;
-  Stack<String> currentLabels = new Stack<String>();
-  SymbolTable symbolTable;
+  ScopeManager scopeManager;
   private int counter = 0;
 
   public Fuzzer(Random random) {
     this.random = random;
-    symbolTable = new SymbolTable(random);
+    scopeManager = new ScopeManager(random);
   }
 
   Node generateExpression(int budget) {
@@ -53,10 +50,10 @@ public class Fuzzer {
     for (Expression expr : Expression.values()) {
       if (expr.minBudget <= budget) {
         if (expr == Expression.FUNCTION_CALL &&
-            symbolTable.getSize() == 0 && budget < 4) {
+            scopeManager.getSize() == 0 && budget < 4) {
           continue;
         } else if (expr == Expression.IDENTIFIER &&
-            symbolTable.getSize() == 0) {
+            scopeManager.getSize() == 0) {
           continue;
         } else {
           expressions.add(expr);
@@ -70,7 +67,7 @@ public class Fuzzer {
     Expression expr = dd.nextItem();
     switch (expr) {
       case THIS: return generateThis(budget);
-      case IDENTIFIER: return generateIdentifier(budget, true);
+      case IDENTIFIER: return getExistingIdentifier(budget);
       case LITERAL: return generateLiteral(budget);
       case FUNCTION_CALL: return generateFunctionCall(budget);
       case UNARY_EXPR: return generateUnaryExpression(budget);
@@ -117,23 +114,24 @@ public class Fuzzer {
     return Node.newString(StringGenerator.getString(random));
   }
 
-  Node generateIdentifier(int budget, boolean getExistingOne) {
-    Preconditions.checkArgument(!getExistingOne || symbolTable.getSize() > 0);
+  Node generateIdentifier(int budget) {
     Preconditions.checkArgument(budget >= 1);
-    if (getExistingOne) {
-      return Node.newString(Token.NAME, symbolTable.getRandomSymbol(false));
-    } else {
-      String identifier = null;
-      // allow 1/10 chance of variable shadowing
-      if (symbolTable.hasNonLocals() && random.nextInt(10) < 1) {
-        identifier = symbolTable.getRandomSymbol(true);
-      }
-      if (identifier == null){
-        identifier = "x_" + nextNumber();
-      }
-      symbolTable.addSymbol(identifier);
-      return Node.newString(Token.NAME, identifier);
+    String identifier = null;
+    // allow 1/10 chance of variable shadowing
+    if (scopeManager.hasNonLocals() && random.nextInt(10) < 1) {
+      identifier = scopeManager.getRandomSymbol(true);
     }
+    if (identifier == null){
+      identifier = "x_" + nextNumber();
+    }
+    scopeManager.addSymbol(identifier);
+    return Node.newString(Token.NAME, identifier);
+  }
+
+  Node getExistingIdentifier(int budget) {
+    Preconditions.checkState(scopeManager.getSize() > 0);
+    Preconditions.checkArgument(budget >= 1);
+    return Node.newString(Token.NAME, scopeManager.getRandomSymbol(false));
   }
 
   Node generateNullLiteral(int budget) {
@@ -197,12 +195,12 @@ public class Fuzzer {
   }
 
   Node generateAssignableExpression(int budget) {
-    Preconditions.checkArgument(budget >= 3 || symbolTable.getSize() > 0);
+    Preconditions.checkArgument(budget >= 3 || scopeManager.getSize() > 0);
     if (budget < 3) {
-      return generateIdentifier(budget, true);
+      return getExistingIdentifier(budget);
     } else {
       int rand;
-      if (symbolTable.getSize() > 0) {
+      if (scopeManager.getSize() > 0) {
         rand = random.nextInt(3);
       } else {
         rand = random.nextInt(2);
@@ -210,7 +208,7 @@ public class Fuzzer {
       switch (rand) {
         case 0: return generateGetProp(budget);
         case 1: return generateGetElem(budget);
-        case 2: return generateIdentifier(budget, true);
+        case 2: return getExistingIdentifier(budget);
         default: return null;
       }
     }
@@ -239,10 +237,10 @@ public class Fuzzer {
   Node generateFunctionCall(int budget, boolean isNew) {
     // A function call needs at least two nodes: one for the CALL node and one
     // for the callee (when the symbol table isn't empty).
-    Preconditions.checkArgument((budget >= 2 && symbolTable.getSize() > 0) ||
+    Preconditions.checkArgument((budget >= 2 && scopeManager.getSize() > 0) ||
         budget >= 4);
     int remainingBudget;
-    if (symbolTable.getSize() == 0) {
+    if (scopeManager.getSize() == 0) {
       // allocate enough budget to callable expression when the symbol table is
       // empty
       remainingBudget = budget - 3;
@@ -268,7 +266,7 @@ public class Fuzzer {
   }
 
   private Node generateCallableExpression(int budget) {
-    Preconditions.checkArgument(budget >= 3 || symbolTable.getSize() > 0);
+    Preconditions.checkArgument(budget >= 3 || scopeManager.getSize() > 0);
     if (budget < 3) {
       return generateAssignableExpression(budget);
     }
@@ -284,7 +282,7 @@ public class Fuzzer {
     Node node = null;
     Node target;
     int rand;
-    if (symbolTable.getSize() == 0 && budget < 4) {
+    if (scopeManager.getSize() == 0 && budget < 4) {
       rand = random.nextInt(6);
     } else {
       rand = random.nextInt(11);
@@ -356,7 +354,7 @@ public class Fuzzer {
     int[] subBudgets = distribute(budget - 1, 2, 1);
     int index;
     int firstAssignIndex = operators.indexOf(Token.ASSIGN);
-    if (subBudgets[0] < 3 && symbolTable.getSize() == 0) {
+    if (subBudgets[0] < 3 && scopeManager.getSize() == 0) {
       index = random.nextInt(firstAssignIndex);
     } else {
       index = random.nextInt(operators.size());
@@ -389,14 +387,15 @@ public class Fuzzer {
   Node generateStatement(int budget) {
     ArrayList<Statement> statements = Lists.newArrayList();
     ArrayList<Double> weights = Lists.newArrayList();
+    Scope scope = scopeManager.localScope();
     for (Statement stmt : Statement.values()) {
       if (stmt.minBudget <= budget) {
-        if (stmt == Statement.RETURN && symbolTable.getNumScopes() < 2) {
+        if (stmt == Statement.RETURN && scopeManager.getNumScopes() < 2) {
           continue;
         } else if (stmt == Statement.BREAK
-            && loopNesting == 0 && switchNesting == 0) {
+            && scope.loopNesting == 0 && scope.switchNesting == 0) {
           continue;
-        } else if (stmt == Statement.CONTINUE && loopNesting == 0) {
+        } else if (stmt == Statement.CONTINUE && scope.loopNesting == 0) {
           continue;
         } else {
           statements.add(stmt);
@@ -447,7 +446,7 @@ public class Fuzzer {
    */
   Node generateVariableStatement(int budget) {
     Preconditions.checkArgument(budget >= 1);
-    Node identifier = generateIdentifier(budget, false);
+    Node identifier = generateIdentifier(budget);
     Node node = new Node(Token.VAR, identifier);
     if (budget > 1) {
       Node assn = generateExpression(budget - 1);
@@ -491,18 +490,19 @@ public class Fuzzer {
     Preconditions.checkArgument(budget >= 3);
     int[] componentBudgets = distribute(budget - 1, 2, 1);
     Node expr = generateExpression(componentBudgets[0]);
-    loopNesting++;
+    Scope scope = scopeManager.localScope();
+    scope.loopNesting++;
     Node stmt = generateBlock(componentBudgets[1]);
-    loopNesting--;
+    scope.loopNesting--;
     return new Node(Token.WHILE, expr, stmt);
   }
 
   Node generateDoWhile(int budget) {
     Preconditions.checkArgument(budget >= 3);
     int[] componentBudgets = distribute(budget - 1, 2, 1);
-    loopNesting++;
+    scopeManager.localScope().loopNesting++;
     Node stmt = generateBlock(componentBudgets[0]);
-    loopNesting--;
+    scopeManager.localScope().loopNesting--;
     Node expr = generateExpression(componentBudgets[1]);
     return new Node(Token.DO, stmt, expr);
   }
@@ -525,18 +525,18 @@ public class Fuzzer {
         new Node(Token.EMPTY) : generateExpression(headerBudgets[1]);
     increment = headerBudgets[2] == 0 ?
         new Node(Token.EMPTY) : generateExpression(headerBudgets[2]);
-    loopNesting++;
+    scopeManager.localScope().loopNesting++;
     body = generateBlock(bodyBudget);
-    loopNesting--;
+    scopeManager.localScope().loopNesting--;
     return new Node(Token.FOR, initializer, condition, increment, body);
   }
 
   Node generateForIn(int budget) {
     Preconditions.checkArgument(budget >= 4);
-    loopNesting++;
+    scopeManager.localScope().loopNesting++;
     int[] componentBudgets = distribute(budget, 3, 1);
     Node iterator;
-    if (componentBudgets[0] < 3 && symbolTable.getSize() == 0) {
+    if (componentBudgets[0] < 3 && scopeManager.getSize() == 0) {
       iterator = generateVariableStatement(componentBudgets[0]);
     } else {
       iterator = random.nextInt(2) == 0 ?
@@ -545,13 +545,14 @@ public class Fuzzer {
     }
     Node expr = generateExpression(componentBudgets[1]);
     Node block = generateBlock(componentBudgets[2]);
-    loopNesting--;
+    scopeManager.localScope().loopNesting--;
     return new Node(Token.FOR, iterator, expr, block);
   }
 
   Node generateContinue(int budget) {
     Preconditions.checkArgument(budget >= 1);
     Node node = new Node(Token.CONTINUE);
+    Stack<String> currentLabels = scopeManager.localScope().labels;
     int index = random.nextInt(currentLabels.size() + 1);
     if (index < currentLabels.size()) {
       node.addChildToBack(
@@ -563,6 +564,7 @@ public class Fuzzer {
   Node generateBreak(int budget) {
     Preconditions.checkArgument(budget >= 1);
     Node node = new Node(Token.BREAK);
+    Stack<String> currentLabels = scopeManager.localScope().labels;
     int index = random.nextInt(currentLabels.size() + 1);
     if (index < currentLabels.size()) {
       node.addChildToBack(
@@ -582,7 +584,7 @@ public class Fuzzer {
 
   Node generateSwitch(int budget) {
     Preconditions.checkArgument(budget >= 2);
-    switchNesting++;
+    scopeManager.localScope().switchNesting++;
     int numCases = budget > 2 ? random.nextInt(budget - 2) : 0;
     /* use budget instead of budget -1 because expression node will get 1 more
      * than its minimal requirement. */
@@ -618,13 +620,14 @@ public class Fuzzer {
       clause.addChildrenToBack(block);
       switchStmt.addChildToBack(clause);
     }
-    switchNesting--;
+    scopeManager.localScope().switchNesting--;
     return switchStmt;
   }
 
   Node generateLabelledStatement(int budget) {
     Preconditions.checkArgument(budget >= 3);
     String labelName;
+    Stack<String> currentLabels = scopeManager.localScope().labels;
     do {
       labelName = "x_" + nextNumber();
     } while (currentLabels.search(labelName) != -1);
@@ -651,7 +654,7 @@ public class Fuzzer {
     Node catchBlock = new Node(Token.BLOCK);
     if (catchAndFinallyBudgets[0] > 3) {
       catchBlock.addChildToBack(
-          new Node(Token.CATCH, generateIdentifier(1, false),
+          new Node(Token.CATCH, generateIdentifier(1),
           generateBlock(catchAndFinallyBudgets[0] - 1)));
     } else {
       // not enough budget for catch block, give all budget to finally block
@@ -670,10 +673,10 @@ public class Fuzzer {
     Node name;
     if (isExpression) {
       Preconditions.checkArgument(budget >= 3);
-      symbolTable.addScope();
+      scopeManager.addScope();
       if (budget >= 4 && random.nextInt(2) == 0) {
         // the name of function expression is only visible in the function
-        name = generateIdentifier(1, false);
+        name = generateIdentifier(1);
         remainingBudget = budget - 4;
       } else {
         name = Node.newString(Token.NAME, "");
@@ -681,9 +684,9 @@ public class Fuzzer {
       }
     } else {
       Preconditions.checkArgument(budget >= 4);
-      name = generateIdentifier(1, false);
+      name = generateIdentifier(1);
       remainingBudget = budget - 4;
-      symbolTable.addScope();
+      scopeManager.addScope();
     }
     // param list is in the new scope
     Node paramList = new Node(Token.PARAM_LIST);
@@ -699,13 +702,13 @@ public class Fuzzer {
       int[] componentBudgets = distribute(remainingBudget + 1, numComponents, 1);
       componentBudgets[0]--;
       for (int i = 0; i < componentBudgets[0]; i++) {
-        paramList.addChildToBack(generateIdentifier(1, false));
+        paramList.addChildToBack(generateIdentifier(1));
       }
       for (int i = 1; i < numComponents; i++) {
         body.addChildToBack(generateSourceElement(componentBudgets[i]));
       }
     }
-    symbolTable.removeScope();
+    scopeManager.removeScope();
     Node function = new Node(Token.FUNCTION,
         name, paramList, body);
     return function;

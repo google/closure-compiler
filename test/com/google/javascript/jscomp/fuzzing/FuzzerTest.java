@@ -210,7 +210,7 @@ public class FuzzerTest extends TestCase{
     Fuzzer fuzzer = spy(new Fuzzer(random));
     int budget = 1;
     fuzzer.generateExpression(budget);
-    verify(fuzzer, never()).generateIdentifier(budget, true);
+    verify(fuzzer, never()).getExistingIdentifier(budget);
     verify(fuzzer, never()).generateFunctionCall(budget);
     verify(fuzzer, never()).generateUnaryExpression(budget);
     budget = 2;
@@ -309,7 +309,8 @@ public class FuzzerTest extends TestCase{
     ControlledRandom random = new ControlledRandom();
     random.addOverride(1, 0);
     Fuzzer fuzzer = new Fuzzer(random);
-    fuzzer.currentLabels.push("testLabel");
+    Scope scope = fuzzer.scopeManager.localScope();
+    scope.labels.push("testLabel");
     Node breakStmt = fuzzer.generateBreak(10);
     String code = Fuzzer.getPrettyCode(breakStmt);
     assertEquals("break testLabel;", code.trim());
@@ -319,7 +320,8 @@ public class FuzzerTest extends TestCase{
     ControlledRandom random = new ControlledRandom();
     random.addOverride(1, 0);
     Fuzzer fuzzer = new Fuzzer(random);
-    fuzzer.currentLabels.push("testLabel");
+    Scope scope = fuzzer.scopeManager.localScope();
+    scope.labels.push("testLabel");
     Node breakStmt = fuzzer.generateContinue(10);
     String code = Fuzzer.getPrettyCode(breakStmt);
     assertEquals("continue testLabel;", code.trim());
