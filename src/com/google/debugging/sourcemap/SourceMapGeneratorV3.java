@@ -44,6 +44,26 @@ import javax.annotation.Nullable;
  */
 public class SourceMapGeneratorV3 implements SourceMapGenerator {
 
+  /**
+   * This interface provides the merging strategy when an extension conflict
+   * appears because of merging two source maps on method
+   * {@link #mergeMapSection}.
+   */
+  public interface ExtensionMergeAction {
+
+    /**
+     * Returns the merged value between two extensions with the same name when
+     * merging two source maps
+     *
+     * @param extensionKey The extension name in conflict
+     * @param currentValue The extension value in the current source map
+     * @param newValue The extension value in the input source map
+     * @return The merged value
+     */
+    Object merge(String extensionKey, Object currentValue,
+        Object newValue);
+  }
+
   private static final int UNMAPPED = -1;
 
 
@@ -254,12 +274,53 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
     }
   }
 
+  /**
+   * Merges current mapping with {@code mapSectionContents} considering the
+   * offset {@code (line, column)}. Any extension in the map section will be
+   * ignored.
+   *
+   * @param line The line offset
+   * @param column The column offset
+   * @param mapSectionContents The map section to be appended
+   * @throws SourceMapParseException
+   */
   public void mergeMapSection(int line, int column, String mapSectionContents)
       throws SourceMapParseException {
-     setStartingPosition(line, column);
-     SourceMapConsumerV3 section = new SourceMapConsumerV3();
-     section.parse(mapSectionContents);
-     section.visitMappings(new ConsumerEntryVisitor());
+    setStartingPosition(line, column);
+    SourceMapConsumerV3 section = new SourceMapConsumerV3();
+    section.parse(mapSectionContents);
+    section.visitMappings(new ConsumerEntryVisitor());
+  }
+
+  /**
+   * Works like {@link #mergeMapSection(int, int, String)}, except that
+   * extensions from the @{code mapSectionContents} are merged to the top level
+   * source map. For conflicts a {@code mergeAction} is performed.
+   *
+   * @param line The line offset
+   * @param column The column offset
+   * @param mapSectionContents The map section to be appended
+   * @param mergeAction The merge action for conflicting extensions
+   * @throws SourceMapParseException
+   */
+  public void mergeMapSection(int line, int column, String mapSectionContents,
+      ExtensionMergeAction mergeAction)
+      throws SourceMapParseException {
+    setStartingPosition(line, column);
+    SourceMapConsumerV3 section = new SourceMapConsumerV3();
+    section.parse(mapSectionContents);
+    section.visitMappings(new ConsumerEntryVisitor());
+    for (Entry<String, Object> entry : section.getExtensions().entrySet()) {
+       String extensionKey = entry.getKey();
+       if (extensions.containsKey(extensionKey)) {
+         extensions.put(extensionKey,
+             mergeAction.merge(extensionKey,
+                               extensions.get(extensionKey),
+                               entry.getValue()));
+       } else {
+         extensions.put(extensionKey, entry.getValue());
+       }
+     }
   }
 
   /**
@@ -333,7 +394,7 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
       if (objValue instanceof String){
         value = JSONObject.quote(value);
       }
-      appendField(out, "x_" + key, value);
+      appendField(out, key, value);
     }
 
     out.append("\n}\n");
@@ -355,13 +416,19 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
    * any value accepted by json, eg. string, JSONObject, JSONArray, etc.
    * {@link org.json.JSONObject#put(String, Object)}
    *
-   * Extensions have the format x_orgranization_field (based on V3 proposal),
-   * a prefix 'x_' will be automatically added when serializing the json object.
+   * Extensions must follow the format x_orgranization_field (based on V3
+   * proposal), otherwise a {@code SourceMapParseExtension} will be thrown.
    *
    * @param name The name of the extension with format organization_field
    * @param object The value of the extension as a valid json value
+   * @throws SourceMapParseException  if extension name is malformed
    */
-  public void addExtension(String name, Object object) {
+  public void addExtension(String name, Object object)
+      throws SourceMapParseException{
+    if (!name.startsWith("x_")){
+      throw new SourceMapParseException("Extension '" + name +
+                                        "' must start with 'x_'");
+    }
     this.extensions.put(name, object);
   }
 
@@ -384,6 +451,17 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
    */
   public boolean hasExtension(String name) {
     return this.extensions.containsKey(name);
+  }
+
+  /**
+   * Returns the value mapped by the specified extension
+   * or {@code null} if this extension does not exist.
+   *
+   * @param name
+   * @return the extension value or {@code null}
+   */
+  public Object getExtension(String name) {
+    return this.extensions.get(name);
   }
 
   /**
