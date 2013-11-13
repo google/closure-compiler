@@ -85,7 +85,13 @@ public class SymbolTable {
       Preconditions.checkArgument(getNumScopes() > 0);
     }
     List<String> scope = getRandomScope(excludeLocal);
-    return scope.get(random.nextInt(scope.size()));
+    String sym = scope.get(random.nextInt(scope.size()));
+    if (excludeLocal && storage.peek().indexOf(sym) != -1) {
+      // the symbol has been shadowed
+      return null;
+    } else {
+      return sym;
+    }
   }
 
   /**

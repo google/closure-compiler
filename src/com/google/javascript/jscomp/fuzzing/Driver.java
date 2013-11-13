@@ -33,6 +33,8 @@ import org.kohsuke.args4j.Option;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -48,11 +50,20 @@ public class Driver {
   private int maxASTSize = 100;
 
   @Option(name = "--compilation_level",
-      usage = "Specifies the compilation level to use. Options: " +
-      "WHITESPACE_ONLY, SIMPLE_OPTIMIZATIONS, ADVANCED_OPTIMIZATIONS. " +
+      usage = "Specifies the compilation level to use. " +
       "Default: SIMPLE_OPTIMIZATIONS")
   private CompilationLevel compilationLevel =
       CompilationLevel.SIMPLE_OPTIMIZATIONS;
+
+  @Option(name = "--seed",
+      usage = "Specifies the seed for the fuzzer. "
+          + "If not given, System.currentTimeMillis() will be used")
+  private long seed = -1;
+
+  @Option(name = "--logging_level",
+      usage = "Specifies the logging level for the driver. "
+          + "Default: INFO")
+  private LoggingLevel level = LoggingLevel.INFO;
 
   public Result compile(String code) throws IOException {
     Compiler compiler = new Compiler();
@@ -66,6 +77,7 @@ public class Driver {
     jsModule.add(input);
 
     Compiler compiler = new Compiler();
+    compiler.setTimeout(30);
     return compiler.compileModules(
         CommandLineRunner.getDefaultExterns(),
         Arrays.asList(jsModule), getOptions());
@@ -77,31 +89,90 @@ public class Driver {
     return options;
   }
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
     Driver driver = new Driver();
     CmdLineParser parser = new CmdLineParser(driver);
     try {
       parser.parseArgument(args);
-      for (int i = 0; i < driver.numberOfRuns; i++) {
-        long seed = System.currentTimeMillis();
-        Random random = new Random(seed);
-        System.out.println("Seed: " + seed);
-        Fuzzer fuzzer = new Fuzzer(random);
-        Node[] nodes = fuzzer.generateProgram(driver.maxASTSize);
-        Node script = Fuzzer.buildScript(nodes);
-        String code = Fuzzer.getPrettyCode(script);
-        System.out.println(code.trim());
-
-        Result result = driver.compile(script);
-        if (result.success) {
-          System.out.println("Success! [" + i + " of " + driver.numberOfRuns +
-              "]\n");
-        }
-      }
     } catch (CmdLineException e) {
       // handling of wrong arguments
       System.err.println(e.getMessage());
       parser.printUsage(System.err);
+      System.exit(1);
+    }
+    Logger logger = Logger.getLogger(Driver.class.getName());
+    logger.setLevel(driver.level.getLevel());
+    if (driver.seed != -1) {
+      // When user specifies seed, only run once
+      driver.numberOfRuns = 1;
+    }
+    for (int i = 0; i < driver.numberOfRuns; i++) {
+      logger.info("Running fuzzer [" + i + " of " +
+          driver.numberOfRuns + "]");
+      long seed;
+      if (driver.seed == -1) {
+        seed = System.currentTimeMillis();
+      } else {
+        seed = driver.seed;
+      }
+      Random random = new Random(seed);
+      Fuzzer fuzzer = new Fuzzer(random);
+      Node[] nodes = null;
+      try {
+        nodes = fuzzer.generateProgram(driver.maxASTSize);
+      } catch (Exception e) {
+        logger.log(Level.SEVERE, "Fuzzer error!\nSeed: " + seed, e);
+      }
+      Node script = Fuzzer.buildScript(nodes);
+      try {
+        Result result = driver.compile(script);
+        if (result.success && result.warnings.length == 0) {
+          logger.info("Compilation Succeeded!\n");
+          StringBuffer sb = new StringBuffer("Seed: ");
+          sb.append(seed);
+          sb.append("\nJavaScript: ");
+          sb.append(Fuzzer.getPrettyCode(script));
+          logger.info(sb.toString());
+        } else {
+          StringBuffer sb = new StringBuffer("Compilation Failed!\nSeed: ");
+          sb.append(seed);
+          sb.append("\nJavaScript: ");
+          sb.append(Fuzzer.getPrettyCode(script));
+          logger.warning(sb.toString());
+        }
+      } catch (Exception e) {
+        StringBuffer sb = new StringBuffer("Compiler error!\nSeed: ");
+        sb.append(seed);
+        sb.append("\nJavaScript: ");
+        sb.append(Fuzzer.getPrettyCode(script));
+        logger.log(Level.SEVERE, sb.toString(), e);
+      }
+    }
+    System.out.println("Done!");
+    System.exit(0);
+  }
+
+  enum LoggingLevel {
+    OFF(Level.OFF),
+    SEVERE(Level.SEVERE),
+    WARNING(Level.WARNING),
+    INFO(Level.INFO),
+    CONFIG(Level.CONFIG),
+    FINE(Level.FINE),
+    FINER(Level.FINER),
+    FINEST(Level.FINEST),
+    ALL(Level.ALL);
+
+    private Level level;
+
+    private LoggingLevel(Level l) {
+      level = l;
+    }
+    /**
+     * @return the level
+     */
+    public Level getLevel() {
+      return level;
     }
   }
 }

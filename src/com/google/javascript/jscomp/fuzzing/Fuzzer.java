@@ -123,11 +123,12 @@ public class Fuzzer {
     if (getExistingOne) {
       return Node.newString(Token.NAME, symbolTable.getRandomSymbol(false));
     } else {
-      String identifier;
+      String identifier = null;
       // allow 1/10 chance of variable shadowing
       if (symbolTable.hasNonLocals() && random.nextInt(10) < 1) {
         identifier = symbolTable.getRandomSymbol(true);
-      } else {
+      }
+      if (identifier == null){
         identifier = "x_" + nextNumber();
       }
       symbolTable.addSymbol(identifier);
@@ -219,7 +220,7 @@ public class Fuzzer {
     Preconditions.checkArgument(budget >= 3);
     // GetProp itself is size one, right expression is size one
     Node left = generateExpression(budget - 2);
-    Node right = generateStringLiteral(1);
+    Node right = Node.newString(StringGenerator.getPropertyName(random));
     return new Node(Token.GETPROP, left, right);
   }
 

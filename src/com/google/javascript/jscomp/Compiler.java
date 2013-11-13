@@ -60,7 +60,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -147,6 +150,8 @@ public class Compiler extends AbstractCompiler {
    * unique.
    */
   private int uniqueNameId = 0;
+
+  private int timeout = 0;
 
   /**
    * Whether to assume there are references to the RegExp Global object
@@ -661,6 +666,14 @@ public class Compiler extends AbstractCompiler {
     useThreads = false;
   }
 
+  /**
+   * Sets the timeout when Compiler is run in a thread
+   * @param timeout seconds to wait before timeout
+   */
+  public void setTimeout(int timeout) {
+    this.timeout = timeout;
+  }
+
   @SuppressWarnings("unchecked")
   <T> T runInCompilerThread(final Callable<T> callable) {
     T result = null;
@@ -699,10 +712,17 @@ public class Compiler extends AbstractCompiler {
           }
         };
 
-        result = compilerExecutor.submit(bootCompilerThread).get();
+        Future<T> future = compilerExecutor.submit(bootCompilerThread);
+        if (timeout > 0) {
+          result = future.get(timeout, TimeUnit.SECONDS);
+        } else {
+          result = future.get();
+        }
       } catch (InterruptedException e) {
         throw Throwables.propagate(e);
       } catch (ExecutionException e) {
+        throw Throwables.propagate(e);
+      } catch (TimeoutException e) {
         throw Throwables.propagate(e);
       }
     } else {
