@@ -567,7 +567,8 @@ public abstract class JSType implements Serializable {
   /**
    * An equivalence visitor.
    */
-  boolean checkEquivalenceHelper(JSType that, EquivalenceMethod eqMethod) {
+  boolean checkEquivalenceHelper(
+      final JSType that, EquivalenceMethod eqMethod) {
     if (this == that) {
       return true;
     }
@@ -613,12 +614,15 @@ public abstract class JSType implements Serializable {
     }
 
     if (isNominalType() && that.isNominalType()) {
-      return toObjectType().getReferenceName().equals(
-          that.toObjectType().getReferenceName());
+      // TODO(johnlenz): is this valid across scopes?
+      return getConcreteNominalTypeName(this.toObjectType()).equals(
+          getConcreteNominalTypeName(that.toObjectType()));
     }
 
     if (isTemplateType() && that.isTemplateType()) {
-      return this == that;
+      // TemplateType are they same only if they are object identical,
+      // which we check at the start of this function.
+      return false;
     }
 
     // Unbox other proxies.
@@ -638,7 +642,19 @@ public abstract class JSType implements Serializable {
     // instance of each sub-type will ever be created in a given registry, so
     // there is no need to verify members. If the object pointers are not
     // identical, then the type member must be different.
-    return this == that;
+    return false;
+  }
+
+  // Named types may be proxies of concrete types.
+  private String getConcreteNominalTypeName(ObjectType objType) {
+    if (objType instanceof ProxyObjectType) {
+      ObjectType internal = ((ProxyObjectType) objType)
+          .getReferencedObjTypeInternal();
+      if (internal != null && internal.isNominalType()) {
+        return getConcreteNominalTypeName(internal);
+      }
+    }
+    return objType.getReferenceName();
   }
 
   public static boolean isEquivalent(JSType typeA, JSType typeB) {
