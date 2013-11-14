@@ -29,8 +29,9 @@ import java.util.regex.Pattern;
 class ExportTestFunctions implements CompilerPass {
 
   private static final Pattern TEST_FUNCTIONS_NAME_PATTERN =
-      Pattern.compile("^(?:((\\w+\\.)+prototype\\.)*" +
-                      "(setUpPage|setUp|tearDown|tearDownPage|test\\w+))$");
+      Pattern.compile(
+          "^(?:((\\w+\\.)+prototype\\.)*" +
+          "(setUpPage|setUp|shouldRunTests|tearDown|tearDownPage|test\\w+))$");
 
   private AbstractCompiler compiler;
   private final String exportSymbolFunction;

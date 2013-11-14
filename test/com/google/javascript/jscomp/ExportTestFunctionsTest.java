@@ -70,6 +70,9 @@ public class ExportTestFunctionsTest extends CompilerTestCase {
          "function setUp(){} google_exportSymbol('setUp',setUp)");
     test("function setUpPage() {}",
          "function setUpPage(){} google_exportSymbol('setUpPage',setUpPage)");
+    test("function shouldRunTests() {}",
+         "function shouldRunTests(){}"
+             + "google_exportSymbol('shouldRunTests',shouldRunTests)");
     test("function tearDown() {}",
          "function tearDown(){} google_exportSymbol('tearDown',tearDown)");
     test("function tearDownPage() {}",
@@ -99,6 +102,9 @@ public class ExportTestFunctionsTest extends CompilerTestCase {
     test("var setUpPage = function() {}",
          "var setUpPage = function() {}; " +
          "google_exportSymbol('setUpPage',setUpPage)");
+    test("var shouldRunTests = function() {}",
+         "var shouldRunTests = function() {}; " +
+         "google_exportSymbol('shouldRunTests',shouldRunTests)");
     test("var tearDown = function() {}",
          "var tearDown = function() {}; " +
          "google_exportSymbol('tearDown',tearDown)");
@@ -118,6 +124,11 @@ public class ExportTestFunctionsTest extends CompilerTestCase {
          "Foo = {}; Foo.prototype.setUpPage = function() {};"
          + "google_exportProperty(Foo.prototype, 'setUpPage', "
          + "Foo.prototype.setUpPage);");
+
+    test("Foo = {}; Foo.prototype.shouldRunTests = function() {};",
+         "Foo = {}; Foo.prototype.shouldRunTests = function() {};"
+         + "google_exportProperty(Foo.prototype, 'shouldRunTests', "
+         + "Foo.prototype.shouldRunTests);");
 
     test("Foo = {}; Foo.prototype.testBar = function() {};",
          "Foo = {}; Foo.prototype.testBar = function() {};"
