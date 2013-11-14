@@ -15,7 +15,10 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.common.base.Preconditions;
+
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Data structure for holding information in each scope
@@ -24,5 +27,21 @@ class Scope {
   ArrayList<String> symbols = new ArrayList<String>();
   int loopNesting = 0;
   int switchNesting = 0;
-  ArrayList<String> labels = new ArrayList<String>();
+  ArrayList<String> loopLabels = new ArrayList<String>();
+  ArrayList<String> otherLabels = new ArrayList<String>();
+
+  String randomLabelForContinue(Random random) {
+    Preconditions.checkState(loopLabels.size() > 0);
+    return loopLabels.get(random.nextInt(loopLabels.size()));
+  }
+
+  String randomLabelForBreak(Random random) {
+    Preconditions.checkState(loopLabels.size() + otherLabels.size() > 0);
+    int rand = random.nextInt(loopLabels.size() + otherLabels.size());
+    if (rand < loopLabels.size()) {
+      return loopLabels.get(rand);
+    } else {
+      return otherLabels.get(rand - loopLabels.size());
+    }
+  }
 }

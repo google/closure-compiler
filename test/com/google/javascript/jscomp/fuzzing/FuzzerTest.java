@@ -310,7 +310,7 @@ public class FuzzerTest extends TestCase{
     random.addOverride(1, 0);
     Fuzzer fuzzer = new Fuzzer(random);
     Scope scope = fuzzer.scopeManager.localScope();
-    scope.labels.add("testLabel");
+    scope.otherLabels.add("testLabel");
     Node breakStmt = fuzzer.generateBreak(10);
     String code = Fuzzer.getPrettyCode(breakStmt);
     assertEquals("break testLabel;", code.trim());
@@ -321,7 +321,7 @@ public class FuzzerTest extends TestCase{
     random.addOverride(1, 0);
     Fuzzer fuzzer = new Fuzzer(random);
     Scope scope = fuzzer.scopeManager.localScope();
-    scope.labels.add("testLabel");
+    scope.loopLabels.add("testLabel");
     Node breakStmt = fuzzer.generateContinue(10);
     String code = Fuzzer.getPrettyCode(breakStmt);
     assertEquals("continue testLabel;", code.trim());

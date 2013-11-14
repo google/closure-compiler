@@ -383,7 +383,7 @@ public class Fuzzer {
     return generateFunction(budget, true);
   }
 
-  Node generateStatement(int budget) {
+  private Statement decideStatementTypeToGenerate(int budget) {
     ArrayList<Statement> statements = Lists.newArrayList();
     ArrayList<Double> weights = Lists.newArrayList();
     Scope scope = scopeManager.localScope();
@@ -404,8 +404,16 @@ public class Fuzzer {
     }
     DiscreteDistribution<Statement> dd =
         new DiscreteDistribution<Statement>(random, statements, weights);
-    Statement stmt = dd.nextItem();
-    switch (stmt) {
+    return dd.nextItem();
+  }
+
+  Node generateStatement(int budget) {
+    Statement stmt = decideStatementTypeToGenerate(budget);
+    return generateStatementForType(stmt, budget);
+  }
+
+  private Node generateStatementForType(Statement type, int budget) {
+    switch (type) {
       case BLOCK: return generateBlock(budget);
       case VAR: return generateVariableStatement(budget);
       case EMPTY: return generateEmptyStatement(budget);
@@ -551,11 +559,12 @@ public class Fuzzer {
   Node generateContinue(int budget) {
     Preconditions.checkArgument(budget >= 1);
     Node node = new Node(Token.CONTINUE);
-    ArrayList<String> currentLabels = scopeManager.localScope().labels;
-    int index = random.nextInt(currentLabels.size() + 1);
-    if (index < currentLabels.size()) {
+    Scope localScope = scopeManager.localScope();
+    if (localScope.loopLabels.size() > 0 &&
+        random.nextInt(2) == 0) {
       node.addChildToBack(
-          Node.newString(Token.LABEL_NAME, currentLabels.get(index)));
+          Node.newString(Token.LABEL_NAME,
+              localScope.randomLabelForContinue(random)));
     }
     return node;
   }
@@ -563,11 +572,12 @@ public class Fuzzer {
   Node generateBreak(int budget) {
     Preconditions.checkArgument(budget >= 1);
     Node node = new Node(Token.BREAK);
-    ArrayList<String> currentLabels = scopeManager.localScope().labels;
-    int index = random.nextInt(currentLabels.size() + 1);
-    if (index < currentLabels.size()) {
+    Scope localScope = scopeManager.localScope();
+    if (localScope.loopLabels.size() + localScope.otherLabels.size() > 0 &&
+        random.nextInt(2) == 0) {
       node.addChildToBack(
-          Node.newString(Token.LABEL_NAME, currentLabels.get(index)));
+          Node.newString(Token.LABEL_NAME,
+              localScope.randomLabelForBreak(random)));
     }
     return node;
   }
@@ -625,18 +635,26 @@ public class Fuzzer {
 
   Node generateLabelledStatement(int budget) {
     Preconditions.checkArgument(budget >= 3);
-    String labelName;
-    ArrayList<String> currentLabels = scopeManager.localScope().labels;
-    do {
-      labelName = "x_" + nextNumber();
-    } while (currentLabels.indexOf(labelName) != -1);
+    String labelName = "x_" + nextNumber();
     Node name = Node.newString(
         Token.LABEL_NAME, labelName);
     Node node = new Node(Token.LABEL, name);
+    Statement stmtType = decideStatementTypeToGenerate(budget - 2);
+    Scope localScope = scopeManager.localScope();
+    ArrayList<String> currentLabels;
+    switch (stmtType) {
+      case FOR:
+      case FOR_IN:
+      case WHILE:
+      case DO_WHILE:
+        currentLabels = localScope.loopLabels;
+        break;
+      default:
+        currentLabels = localScope.otherLabels;
+    }
     currentLabels.add(labelName);
-    Node statement = generateStatement(budget - 2);
-    node.addChildToBack(statement);
-    currentLabels.remove(currentLabels.size() - 1);
+    node.addChildToBack(generateStatementForType(stmtType, budget - 2));
+    currentLabels.remove(labelName);
     return node;
   }
 
