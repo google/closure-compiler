@@ -59,7 +59,7 @@ public interface Visitor<T> {
   /**
    * Bottom type's case.
    */
-  T caseNoType();
+  T caseNoType(NoType type);
 
   /**
    * Enum element type's case.

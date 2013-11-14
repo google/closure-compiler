@@ -65,8 +65,8 @@ public class ModificationVisitor implements Visitor<JSType> {
   }
 
   @Override
-  public JSType caseNoType() {
-    return getNativeType(JSTypeNative.NO_TYPE);
+  public JSType caseNoType(NoType type) {
+    return type;
   }
 
   @Override

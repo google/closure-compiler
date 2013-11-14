@@ -11430,6 +11430,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: null");
   }
 
+  public void testTemplateTypeWithUnresolvedType() throws Exception {
+    testClosureTypes(
+        "var goog = {};\n" +
+        "goog.addDependency = function(a,b,c){};\n" +
+        "goog.addDependency('a.js', ['Color'], []);\n" +
+
+        "/** @interface @template T */ function C() {}\n" +
+        "/** @return {!Color} */ C.prototype.method;\n" +
+
+        "/** @constructor @implements {C} */ function D() {}\n" +
+        "/** @override */ D.prototype.method = function() {};", null);  // no warning expected.
+  }
+
   public void testTemplateTypeRecursion1() throws Exception {
     testTypes(
         "/** @typedef {{a: D2}} */\n" +

@@ -20,7 +20,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
@@ -39,6 +38,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.NamedType;
+import com.google.javascript.rhino.jstype.NoType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.ProxyObjectType;
 import com.google.javascript.rhino.jstype.StaticSlot;
@@ -209,8 +209,8 @@ public abstract class ChainableReverseAbstractInterpreter
       }
 
       @Override
-      public JSType caseNoType() {
-        return getNativeType(NO_TYPE);
+      public JSType caseNoType(NoType type) {
+        return type;
       }
 
       @Override
@@ -308,8 +308,8 @@ public abstract class ChainableReverseAbstractInterpreter
       }
 
       @Override
-      public JSType caseNoType() {
-        return getNativeType(NO_TYPE);
+      public JSType caseNoType(NoType type) {
+        return type;
       }
 
       @Override
@@ -422,8 +422,8 @@ public abstract class ChainableReverseAbstractInterpreter
     }
 
     @Override
-    public JSType caseNoType() {
-      return getNativeType(NO_TYPE);
+    public JSType caseNoType(NoType type) {
+      return type;
     }
 
     @Override
