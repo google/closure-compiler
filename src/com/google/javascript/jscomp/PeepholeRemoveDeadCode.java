@@ -479,10 +479,9 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
               return false;
           }
         }
-      } else {
-        // Look at the fallthrough case
-        executingCase = executingCase.getNext();
       }
+      // Look at the fallthrough case
+      executingCase = executingCase.getNext();
     }
     return true;
   }

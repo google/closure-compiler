@@ -311,6 +311,8 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("switch(a){default: break; case 1:break;}", "");
     fold("switch(a){default: var b; break; case 1: var c; break;}",
         "var c; var b;");
+    fold("var x=1; switch(x) { case 1: var y; }",
+        "var y; var x=1;");
 
     // Can't remove cases if a default exists.
     foldSame("function f() {switch(a){default: return; case 1: break;}}");
