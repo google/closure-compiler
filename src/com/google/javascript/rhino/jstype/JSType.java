@@ -613,11 +613,8 @@ public abstract class JSType implements Serializable {
     }
 
     if (isNominalType() && that.isNominalType()) {
-      // TODO(johnlenz): is this valid across scopes?
-      if (toObjectType().getReferenceName().equals(
-          that.toObjectType().getReferenceName())) {
-        return true;
-      }
+      return toObjectType().getReferenceName().equals(
+          that.toObjectType().getReferenceName());
     }
 
     if (isTemplateType() && that.isTemplateType()) {
