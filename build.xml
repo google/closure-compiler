@@ -27,9 +27,9 @@
   -->
   <property name="test.fork" value="true"/>
 
-  <!-- Force java 6 -->
-  <property name="ant.build.javac.source" value="1.6" />
-  <property name="ant.build.javac.target" value="1.6" />
+  <!-- Force java 7 -->
+  <property name="ant.build.javac.source" value="1.7" />
+  <property name="ant.build.javac.target" value="1.7" />
 
   <!-- define other variables -->
   <property name="javac.debug" value="on" />
@@ -406,7 +406,7 @@
         <pathelement location="${gen.dir}" />
       </sourcepath>
       <classpath refid="allclasspath.path" />
-      <link href="http://java.sun.com/javase/6/docs/api/" />
+      <link href="http://docs.oracle.com/javase/7/docs/api/" />
     </javadoc>
   </target>
 
