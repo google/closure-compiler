@@ -1137,6 +1137,47 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, code, "");
   }
 
+  public void testSmartNamePassBug11163486() {
+    CompilerOptions options = createCompilerOptions();
+
+    options.checkTypes = true;
+    options.disambiguateProperties = true;
+    options.removeDeadCode = true;
+    options.removeUnusedPrototypeProperties = true;
+    options.smartNameRemoval = true;
+
+    String code = "/** @constructor */ function A() {} " +
+        "A.prototype.foo = function() { " +
+        "  window.console.log('A'); " +
+        "}; " +
+        "/** @constructor */ function B() {} " +
+        "B.prototype.foo = function() { " +
+        "  window.console.log('B'); " +
+        "};" +
+        "window['main'] = function() { " +
+        "  var a = window['a'] = new A; " +
+        "  a.foo(); " +
+        "  window['b'] = new B; " +
+        "}; " +
+        "function notCalled() { " +
+        "  var something = {}; " +
+        "  something.foo(); " +
+        "}";
+
+    String expected = "function A() {} " +
+        "A.prototype.A_prototype$foo = function() { " +
+        "  window.console.log('A'); " +
+        "}; " +
+        "function B() {} " +
+        "window['main'] = function() { " +
+        "  var a = window['a'] = new A; " +
+        "  a.A_prototype$foo(); " +
+        "  window['b'] = new B; " +
+        "}";
+
+    test(options, code, expected);
+  }
+
   public void testDeadAssignmentsElimination() {
     CompilerOptions options = createCompilerOptions();
     String code = "function f() { var x = 3; 4; x = 5; return x; } f(); ";
