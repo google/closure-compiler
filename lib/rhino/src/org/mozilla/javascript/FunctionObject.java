@@ -345,6 +345,7 @@ public class FunctionObject extends BaseFunction
      * and {@link #convertArg(Context, Scriptable, Object, int)}
      * for type conversion.
      */
+    @Deprecated
     public static Object convertArg(Context cx, Scriptable scope,
                                     Object arg, Class<?> desired)
     {

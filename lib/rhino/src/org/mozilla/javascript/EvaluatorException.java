@@ -59,6 +59,7 @@ public class EvaluatorException extends RhinoException
     /**
      * @deprecated Use {@link RhinoException#sourceName()} from the super class.
      */
+    @Deprecated
     public String getSourceName()
     {
         return sourceName();
@@ -67,6 +68,7 @@ public class EvaluatorException extends RhinoException
     /**
      * @deprecated Use {@link RhinoException#lineNumber()} from the super class.
      */
+    @Deprecated
     public int getLineNumber()
     {
         return lineNumber();
@@ -75,6 +77,7 @@ public class EvaluatorException extends RhinoException
     /**
      * @deprecated Use {@link RhinoException#columnNumber()} from the super class.
      */
+    @Deprecated
     public int getColumnNumber()
     {
         return columnNumber();
@@ -83,6 +86,7 @@ public class EvaluatorException extends RhinoException
     /**
      * @deprecated Use {@link RhinoException#lineSource()} from the super class.
      */
+    @Deprecated
     public String getLineSource()
     {
         return lineSource();

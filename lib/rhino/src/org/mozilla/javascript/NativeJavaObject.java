@@ -143,6 +143,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Serializable
 @deprecated Use {@link Context#getWrapFactory()} together with calling {@link
 WrapFactory#wrap(Context, Scriptable, Object, Class)}
 */
+    @Deprecated
     public static Object wrap(Scriptable scope, Object obj, Class<?> staticType) {
 
         Context cx = Context.getContext();
@@ -455,6 +456,7 @@ WrapFactory#wrap(Context, Scriptable, Object, Class)}
      * @deprecated as of 1.5 Release 4
      * @see org.mozilla.javascript.Context#jsToJava(Object, Class)
      */
+    @Deprecated
     public static Object coerceType(Class<?> type, Object value)
     {
         return coerceTypeImpl(type, value);

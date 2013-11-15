@@ -66,6 +66,7 @@ public abstract class NativeFunction extends BaseFunction
      * For backwards compatibility keep an old method name used by
      * Batik and possibly others.
      */
+    @Deprecated
     public String jsGet_name()
     {
         return getFunctionName();

@@ -147,6 +147,7 @@ public class ClassCache implements Serializable
      * The method always returns false.
      * @see #setInvokerOptimizationEnabled(boolean enabled)
      */
+    @Deprecated
     public boolean isInvokerOptimizationEnabled()
     {
         return false;
@@ -161,6 +162,7 @@ public class ClassCache implements Serializable
      * small speed increase that can be gained using generated proxy class
      * to replace reflection.
      */
+    @Deprecated
     public synchronized void setInvokerOptimizationEnabled(boolean enabled)
     {
     }

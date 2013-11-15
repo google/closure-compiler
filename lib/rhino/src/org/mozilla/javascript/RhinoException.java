@@ -224,6 +224,7 @@ public abstract class RhinoException extends RuntimeException
      * @return a script stack dump
      * @since 1.6R6
      */
+    @Deprecated
     public String getScriptStackTrace(FilenameFilter filter)
     {
         return getScriptStackTrace();

@@ -302,6 +302,7 @@ public class Context
      * this class, consider using {@link #Context(ContextFactory)} constructor
      * instead in the subclasses' constructors.
      */
+    @Deprecated
     public Context()
     {
         this(ContextFactory.getGlobal());
@@ -373,6 +374,7 @@ public class Context
      * @see ContextFactory#enterContext(Context)
      * @see ContextFactory#call(ContextAction)
      */
+    @Deprecated
     public static Context enter(Context cx)
     {
         return enter(cx, ContextFactory.getGlobal());
@@ -444,6 +446,7 @@ public class Context
      * ContextFactory.
      * @return The result of {@link ContextAction#run(Context)}.
      */
+    @Deprecated
     public static Object call(ContextAction action)
     {
         return call(ContextFactory.getGlobal(), action);
@@ -496,6 +499,7 @@ public class Context
      * @see ContextFactory#addListener(org.mozilla.javascript.ContextFactory.Listener)
      * @see ContextFactory#getGlobal()
      */
+    @Deprecated
     public static void addContextListener(ContextListener listener)
     {
         // Special workaround for the debugger
@@ -525,6 +529,7 @@ public class Context
      * @see ContextFactory#removeListener(org.mozilla.javascript.ContextFactory.Listener)
      * @see ContextFactory#getGlobal()
      */
+    @Deprecated
     public static void removeContextListener(ContextListener listener)
     {
         ContextFactory.getGlobal().addListener(listener);
@@ -1258,6 +1263,7 @@ public class Context
      * @see #compileReader(Reader in, String sourceName, int lineno,
      *                     Object securityDomain)
      */
+    @Deprecated
     public final Script compileReader(Scriptable scope, Reader in,
                                       String sourceName, int lineno,
                                       Object securityDomain)
@@ -1630,6 +1636,7 @@ public class Context
      * @deprecated
      * @see #toObject(Object, Scriptable)
      */
+    @Deprecated
     public static Scriptable toObject(Object value, Scriptable scope,
                                       Class<?> staticType)
     {
@@ -1702,6 +1709,7 @@ public class Context
      *         Note that {@link #jsToJava(Object, Class)} throws
      *         {@link EvaluatorException} instead.
      */
+    @Deprecated
     public static Object toType(Object value, Class<?> desiredType)
         throws IllegalArgumentException
     {
@@ -2029,6 +2037,7 @@ public class Context
      * @see ClassCache#get(Scriptable)
      * @see ClassCache#setCachingEnabled(boolean)
      */
+    @Deprecated
     public static void setCachingEnabled(boolean cachingEnabled)
     {
     }
