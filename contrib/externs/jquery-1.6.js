@@ -1872,7 +1872,7 @@ jQuery.prototype.toggleClass = function(arg1, flag) {};
 jQuery.prototype.trigger = function(arg1, extraParameters) {};
 
 /**
- * @param {string} eventType
+ * @param {string|jQuery.event} eventType
  * @param {Array.<*>} extraParameters
  * @return {*}
  */
