@@ -29,6 +29,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.OptionDef;
+import org.kohsuke.args4j.spi.FieldSetter;
 import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
@@ -40,6 +41,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.lang.reflect.AnnotatedElement;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
@@ -563,6 +565,14 @@ public class CommandLineRunner extends
       @Override public void addValue(String value) throws CmdLineException {
         proxy.addValue(value);
         guardLevels.add(new GuardLevel(value, level));
+      }
+
+      @Override public FieldSetter asFieldSetter() {
+        return proxy.asFieldSetter();
+      }
+
+      @Override public AnnotatedElement asAnnotatedElement() {
+        return proxy.asAnnotatedElement();
       }
     }
 
