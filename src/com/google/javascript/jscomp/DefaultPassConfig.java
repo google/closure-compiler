@@ -430,9 +430,10 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(tightenTypesBuilder);
     }
 
-    // Running this pass again fixes b/11163486, removing unused methods that
-    // share the same name as methods called from unused code.
-    if (options.smartNameRemoval) {
+    // Running this pass before disambiguate properties allow the removing
+    // unused methods that share the same name as methods called from unused
+    // code.
+    if (options.extraSmartNameRemoval && options.smartNameRemoval) {
       passes.add(smartNamePass);
     }
 

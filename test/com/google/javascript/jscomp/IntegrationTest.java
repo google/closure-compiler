@@ -1145,6 +1145,7 @@ public class IntegrationTest extends IntegrationTestCase {
     options.removeDeadCode = true;
     options.removeUnusedPrototypeProperties = true;
     options.smartNameRemoval = true;
+    options.extraSmartNameRemoval = true;
 
     String code = "/** @constructor */ function A() {} " +
         "A.prototype.foo = function() { " +

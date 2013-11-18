@@ -325,6 +325,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Removes code associated with unused global names */
   public boolean smartNameRemoval;
 
+  /** Removes code associated with unused global names */
+  boolean extraSmartNameRemoval;
+
   /** Removes code that will never execute */
   public boolean removeDeadCode;
 
@@ -953,6 +956,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     inlineVariables = false;
     inlineLocalVariables = false;
     smartNameRemoval = false;
+    extraSmartNameRemoval = false;
     removeDeadCode = false;
     extractPrototypeMemberDeclarations = false;
     removeUnusedPrototypeProperties = false;
@@ -1786,6 +1790,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setSmartNameRemoval(boolean smartNameRemoval) {
     this.smartNameRemoval = smartNameRemoval;
+  }
+
+  public void setExtraSmartNameRemoval(boolean smartNameRemoval) {
+    this.extraSmartNameRemoval = smartNameRemoval;
   }
 
   public void setRemoveDeadCode(boolean removeDeadCode) {
