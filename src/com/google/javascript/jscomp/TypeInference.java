@@ -1037,12 +1037,25 @@ class TypeInference
       JSType iArgumentType = getJSType(iArgument);
       inferPropertyTypesToMatchConstraint(iArgumentType, iParameterType);
 
-      // TODO(johnlenz): Filter out non-function types
-      // (such as null and undefined) as
+      // If the parameter to the call is a function expression, propagate the
+      // function signature from the call site to the function node.
+
+      // Filter out non-function types (such as null and undefined) as
       // we only care about FUNCTION subtypes here.
-      FunctionType restrictedParameter = iParameterType
-          .restrictByNotNullOrUndefined()
-          .toMaybeFunctionType();
+      FunctionType restrictedParameter = null;
+      if (iParameterType.isUnionType()) {
+        UnionType union = iParameterType.toMaybeUnionType();
+        for (JSType alternative : union.getAlternates()) {
+          if (alternative.isFunctionType()) {
+            // There is only one function type per union.
+            restrictedParameter = alternative.toMaybeFunctionType();
+            break;
+          }
+        }
+      } else {
+        restrictedParameter = iParameterType.toMaybeFunctionType();
+      }
+
       if (restrictedParameter != null
           && iArgument.isFunction()
           && iArgumentType.isFunctionType()) {

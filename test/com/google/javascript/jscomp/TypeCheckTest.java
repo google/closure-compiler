@@ -11612,6 +11612,20 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "f(x);\n");  // no warning expected.
   }
 
+  public void testTemplatedFunctionInUnion1() throws Exception {
+    testTypes(
+        "/**\n" +
+        "* @param {T} x\n" +
+        "* @param {function(this:T, ...)|{fn:Function}} z\n" +
+        "* @template T\n" +
+        "*/\n" +
+        "function f(x, z) {}\n" +
+        "f([], function() { /** @type {string} */ var x = this });",
+        "initializing variable\n" +
+        "found   : Array\n" +
+        "required: string");
+  }
+
   public void testTemplateTypeRecursion1() throws Exception {
     testTypes(
         "/** @typedef {{a: D2}} */\n" +
