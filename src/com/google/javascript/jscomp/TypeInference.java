@@ -43,6 +43,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.BooleanLiteralSet;
+import com.google.javascript.rhino.jstype.FunctionBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -1039,18 +1040,48 @@ class TypeInference
       // TODO(johnlenz): Filter out non-function types
       // (such as null and undefined) as
       // we only care about FUNCTION subtypes here.
-      JSType restrictedParameter = iParameterType
+      FunctionType restrictedParameter = iParameterType
           .restrictByNotNullOrUndefined()
           .toMaybeFunctionType();
-      if (restrictedParameter != null) {
-        if (iArgument.isFunction() &&
-            iArgumentType.isFunctionType() &&
-            iArgument.getJSDocInfo() == null) {
-          iArgument.setJSType(restrictedParameter);
-        }
+      if (restrictedParameter != null
+          && iArgument.isFunction()
+          && iArgumentType.isFunctionType()) {
+        FunctionType argFnType = iArgumentType.toMaybeFunctionType();
+        boolean declared = iArgument.getJSDocInfo() != null;
+        iArgument.setJSType(
+            matchFunction(restrictedParameter, argFnType, declared));
       }
       i++;
     }
+  }
+
+  /**
+   * Take the current function type, and try to match the expected function
+   * type. This is a form of backwards-inference, like record-type constraint
+   * matching.
+   */
+  private FunctionType matchFunction(
+      FunctionType expectedType, FunctionType currentType, boolean declared) {
+    if (declared) {
+      // If the function was declared but it doesn't have a known "this"
+      // but the expected type does, back fill it.
+      if (currentType.getTypeOfThis().isUnknownType()
+          && !expectedType.getTypeOfThis().isUnknownType()) {
+        FunctionType replacement = new FunctionBuilder(registry)
+            .copyFromOtherFunction(currentType)
+            .withTypeOfThis(expectedType.getTypeOfThis())
+            .build();
+         return replacement;
+      }
+    } else {
+      // For now, we just make sure the current type has enough
+      // arguments to match the expected type, and return the
+      // expected type if it does.
+      if (currentType.getMaxArguments() <= expectedType.getMaxArguments()) {
+        return expectedType;
+      }
+    }
+    return currentType;
   }
 
   private Map<TemplateType, JSType> inferTemplateTypesFromParameters(
@@ -1118,7 +1149,7 @@ class TypeInference
       }
     } else if (paramType.isRecordType() && !paramType.isNominalType()) {
       // @param {{foo:T}}
-      if(!seenTypes.contains(paramType)) {
+      if (!seenTypes.contains(paramType)) {
         seenTypes.add(paramType);
         ObjectType paramRecordType = paramType.toObjectType();
         ObjectType argObjectType = argType.restrictByNotNullOrUndefined()

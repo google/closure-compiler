@@ -6943,6 +6943,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testIssue1123() throws Exception {
+    testTypes(
+        "/** @param {function(number)} g */ function f(g) {}" +
+        "f(function(a, b) {})",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : function (?, ?): undefined\n" +
+        "required: function (number): ?");
+  }
+
   public void testEnums() throws Exception {
     testTypes(
         "var outer = function() {" +
@@ -11045,7 +11054,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "* @param {function(): boolean} fn\n" +
         "*/\n" +
         "function f(fn) {}\n" +
-        "f(function(g) { });\n",
+        "f(function() { });\n",
         null,
         false);
   }
@@ -11437,6 +11446,24 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "initializing variable\n" +
         "found   : {t: number, u: string}\n" +
         "required: null");
+  }
+
+  public void testTemplateType20() throws Exception {
+    // "this" types is inferred when the parameters are declared.
+    testTypes(
+        "/** @constructor */ function C() {\n" +
+        "  /** @type {void} */ this.x;\n" +
+        "}\n" +
+        "/**\n" +
+        "* @param {T} x\n" +
+        "* @param {function(this:T, ...)} y\n" +
+        "* @template T\n" +
+        "*/\n" +
+        "function f(x, y) {}\n" +
+        "f(new C, /** @param {number} a */ function(a) {this.x = a;});",
+        "assignment to property x of C\n" +
+        "found   : number\n" +
+        "required: undefined");
   }
 
   public void testTemplateTypeWithUnresolvedType() throws Exception {
@@ -12277,7 +12304,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "var arr;\n" +
         "var out4 = goog.array.filter(" +
         "   arr," +
-        "   function(item,index,src) {out = item;});",
+        "   function(item,index,src) {out = item; return false});",
         "assignment\n" +
         "found   : string\n" +
         "required: number");
