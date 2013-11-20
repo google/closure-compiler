@@ -2513,6 +2513,139 @@ chrome.storage.local;
 chrome.storage.onChanged;
 
 
+/** @const */
+chrome.system = {};
+
+
+/**
+ * @const
+ * @see http://developer.chrome.com/apps/system_display.html
+ */
+chrome.system.display = {};
+
+
+/** @type {ChromeEvent} */
+chrome.system.display.onDisplayChanged;
+
+
+/**
+ * @constructor
+ */
+chrome.system.display.Bounds = function() {};
+
+
+/** @type {number} */
+chrome.system.display.Bounds.left;
+
+
+/** @type {number} */
+chrome.system.display.Bounds.top;
+
+
+/** @type {number} */
+chrome.system.display.Bounds.width;
+
+
+/** @type {number} */
+chrome.system.display.Bounds.height;
+
+
+/**
+ * @typedef {{
+ *   left: (number|undefined),
+ *   top: (number|undefined),
+ *   right: (number|undefined),
+ *   bottom: (number|undefined)
+ * }}
+ */
+chrome.system.display.Insets;
+
+
+/**
+ * @constructor
+ */
+chrome.system.display.DisplayInfo = function() {};
+
+
+/** @type {string} */
+chrome.system.display.DisplayInfo.id;
+
+
+/** @type {string} */
+chrome.system.display.DisplayInfo.name;
+
+
+/** @type {string} */
+chrome.system.display.DisplayInfo.mirroringSourceId;
+
+
+/** @type {boolean} */
+chrome.system.display.DisplayInfo.isPrimary;
+
+
+/** @type {boolean} */
+chrome.system.display.DisplayInfo.isInternal;
+
+
+/** @type {boolean} */
+chrome.system.display.DisplayInfo.isEnabled;
+
+
+/** @type {number} */
+chrome.system.display.DisplayInfo.dpiX;
+
+
+/** @type {number} */
+chrome.system.display.DisplayInfo.dpiY;
+
+
+/** @type {number} */
+chrome.system.display.DisplayInfo.rotation;
+
+
+/** @type {chrome.system.display.Bounds} */
+chrome.system.display.DisplayInfo.bounds;
+
+
+/** @type {chrome.system.display.Insets} */
+chrome.system.display.DisplayInfo.overscan;
+
+
+/** @type {chrome.system.display.Bounds} */
+chrome.system.display.DisplayInfo.workArea;
+
+
+/**
+ * @typedef {{
+ *   mirroringSourceId: (string|undefined),
+ *   isPrimary: (boolean|undefined),
+ *   overscan: (!chrome.system.display.Insets|undefined),
+ *   rotation: (number|undefined),
+ *   boundsOriginX: (number|undefined),
+ *   boundsOriginY: (number|undefined)
+ * }}
+ */
+chrome.system.display.SettableDisplayInfo;
+
+
+/**
+ * @param {function(!Array.<!chrome.system.display.DisplayInfo>)}
+ *     callback Called with an array of objects representing display info.
+ */
+chrome.system.display.getInfo = function(callback) {};
+
+
+/**
+ * @param {string} id The display's unique identifier.
+ * @param {!chrome.system.display.SettableDisplayInfo} info The information
+ *     about display properties that should be changed.
+ * @param {function()=} opt_callback The callback to execute when the display
+ *     info has been changed.
+ */
+chrome.system.display.setDisplayProperties =
+    function(id, info, opt_callback) {};
+
+
 /**
  * @const
  * @see http://code.google.com/chrome/extensions/types.html
