@@ -8340,6 +8340,41 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     );
   }
 
+  public void testNoUnnecessaryCastNoResolvedType() throws Exception {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.UNNECESSARY_CASTS, CheckLevel.WARNING);
+    testClosureTypes(
+        "var goog = {};\n" +
+        "goog.addDependency = function(a,b,c){};\n" +
+        // A is NoResolvedType.
+        "goog.addDependency('a.js', ['A'], []);\n" +
+
+        // B is a normal type.
+        "/** @constructor @struct */ function B() {}\n" +
+
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function C() { this.t; }\n" +
+
+        "/**\n" +
+        " * @param {!C.<T>} c\n" +
+        " * @return {T}\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function getT(c) { return c.t; }\n" +
+
+        "/** @type {!C.<!A>} */\n" +
+        "var c = new C();\n" +
+
+        // Casting from NoResolvedType.
+        "var b = /** @type {!B} */ (getT(c));\n" +
+
+        // Casting to NoResolvedType.
+        "var a = /** @type {!A} */ (new B());\n",
+        null);  // No warning expected.
+  }
+
   public void testNestedCasts() throws Exception {
     testTypes("/** @constructor */var T = function() {};\n" +
         "/** @constructor */var V = function() {};\n" +
@@ -12754,6 +12789,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   private void testClosureTypesMultipleWarnings(
       String js, List<String> descriptions) throws Exception {
+    compiler.initOptions(compiler.getOptions());
     Node n = compiler.parseTestCode(js);
     Node externs = new Node(Token.BLOCK);
     Node externAndJsRoot = new Node(Token.BLOCK, externs, n);

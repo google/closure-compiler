@@ -530,6 +530,12 @@ class TypeValidator {
       return;
     }
 
+    // If either type is "no resolved type" don't report an error, because we can't
+    // know if the cast is necessary or not.
+    if (type.isNoResolvedType() || castType.isNoResolvedType()) {
+      return;
+    }
+
     if (type.isEquivalentTo(castType) ||
         (type.isSubtype(castType) && !castType.isSubtype(type))) {
       report(t.makeError(n, UNNECESSARY_CAST,
