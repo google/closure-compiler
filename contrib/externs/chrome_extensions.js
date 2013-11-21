@@ -4304,12 +4304,14 @@ chrome.mediaGalleriesPrivate.addGalleryWatch = function(galleryId, callback) {};
 
 /**
  * @type {!chrome.mediaGalleriesPrivate.DeviceEvent}
+ * @deprecated Use {chrome.system.storage.onAttach}.
  */
 chrome.mediaGalleriesPrivate.onDeviceAttached;
 
 
 /**
  * @type {!chrome.mediaGalleriesPrivate.DeviceEvent}
+ * @deprecated Use {chrome.system.storage.onDetach}.
  */
 chrome.mediaGalleriesPrivate.onDeviceDetached;
 
@@ -4323,12 +4325,14 @@ chrome.mediaGalleriesPrivate.onGalleryChanged;
 
 /**
  * @interface
+ * @deprecated Use {chrome.system.storage.DeviceEvent}.
  */
 chrome.mediaGalleriesPrivate.DeviceEvent = function() {};
 
 
 /**
  * @param {!chrome.mediaGalleriesPrivate.DeviceCallback} callback
+ * @deprecated Use {chrome.system.storage.DeviceEvent.addListener}.
  */
 chrome.mediaGalleriesPrivate.DeviceEvent.prototype.addListener =
     function(callback) {};
@@ -4346,3 +4350,122 @@ chrome.mediaGalleriesPrivate.GalleryChangeEvent = function() {};
  */
 chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.addListener =
     function(callback) {};
+
+
+
+/**
+ * Event whose listeners take a string parameter.
+ * @constructor
+ */
+chrome.system.StringEvent = function() {};
+
+
+/** @param {function(string): void} callback */
+chrome.system.StringEvent.prototype.addListener = function(callback) {};
+
+
+/** @param {function(string): void} callback */
+chrome.system.StringEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(string): void} callback
+ * @return {boolean}
+ */
+chrome.system.StringEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+chrome.system.StringEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * @const
+ * @see http://developer.chrome.com/apps/system_storage.html
+ */
+chrome.system.storage = {};
+
+
+
+/** @constructor */
+chrome.system.storage.StorageUnitInfo = function() {};
+
+
+/** @type {string} */
+chrome.system.storage.StorageUnitInfo.id;
+
+
+/** @type {string} */
+chrome.system.storage.StorageUnitInfo.name;
+
+
+/** @type {string} Any of 'fixed', 'removable', or 'unknown' */
+chrome.system.storage.StorageUnitInfo.type;
+
+
+/** @type {number} */
+chrome.system.storage.StorageUnitInfo.capacity;
+
+
+
+/**
+ * Event whose listeners take a StorageUnitInfoEvent parameter.
+ * @constructor
+ */
+chrome.system.storage.StorageUnitInfoEvent = function() {};
+
+
+/** @param {function(!chrome.system.storage.StorageUnitInfo): void} callback */
+chrome.system.storage.StorageUnitInfoEvent.prototype.addListener =
+    function(callback) {};
+
+
+/** @param {function(!chrome.system.storage.StorageUnitInfo): void} callback */
+chrome.system.storage.StorageUnitInfoEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!chrome.system.storage.StorageUnitInfo): void} callback
+ * @return {boolean}
+ */
+chrome.system.storage.StorageUnitInfoEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/** @return {boolean} */
+chrome.system.storage.StorageUnitInfoEvent.prototype.hasListeners =
+    function() {};
+
+
+/** @type {chrome.system.storage.StorageUnitInfoEvent} */
+chrome.system.storage.onAttached;
+
+
+/** @type {!chrome.system.StringEvent} */
+chrome.system.storage.onDetached;
+
+
+/**
+ * Gets the storage information from the system.
+ * @param {function(!Array.<!chrome.system.storage.StorageUnitInfo>)} callback
+ */
+chrome.system.storage.getInfo = function(callback) {};
+
+
+/**
+ * Ejects a removable storage device.
+ * @param {string} id The transient device ID from StorageUnitInfo.
+ * @param {function(string)} callback Callback function where the value
+ *     is any of: "success", "in_use", "no_such_device", "failure"
+ */
+chrome.system.storage.ejectDevice = function(id, callback) {};
+
+
+/**
+ * Gets the available capacity of a specified storage device.
+ * @param {string} id The transient device ID from StorageUnitInfo.
+ * @param {function(Object.<string, number>)} callback A callback function that
+ *     accepts an object with {@code id} and {@code availableCapacity} fields.
+ */
+chrome.system.storage.getAvailableCapacity = function(id, callback) {};
