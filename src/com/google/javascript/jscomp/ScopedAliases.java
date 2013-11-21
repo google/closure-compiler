@@ -255,6 +255,9 @@ class ScopedAliases implements HotSwapCompilerPass {
     // This map is temporary and cleared for each scope.
     private final Map<String, Var> aliases = Maps.newHashMap();
 
+    // Also temporary and cleared for each scope.
+    private final Set<Node> injectedDecls = Sets.newHashSet();
+
     // Suppose you create an alias.
     // var x = goog.x;
     // As a side-effect, this means you can shadow the namespace 'goog'
@@ -311,6 +314,7 @@ class ScopedAliases implements HotSwapCompilerPass {
 
       if (t.getScopeDepth() == 2) {
         renameNamespaceShadows(t);
+        injectedDecls.clear();
         aliases.clear();
         forbiddenLocals.clear();
         transformation = null;
@@ -427,6 +431,7 @@ class ScopedAliases implements HotSwapCompilerPass {
             } else {
               grandparent.addChildBefore(newDecl, varNode);
             }
+            injectedDecls.add(newDecl.getFirstChild());
           }
 
           // Rewrite "var name = EXPR;" to "var name = $jscomp.scope.name;"
@@ -573,8 +578,10 @@ class ScopedAliases implements HotSwapCompilerPass {
           aliasUsages.add(new AliasedNode(aliasVar, n));
         }
 
+        // When we inject declarations, we duplicate jsdoc. Make sure
+        // we only process that jsdoc once.
         JSDocInfo info = n.getJSDocInfo();
-        if (info != null) {
+        if (info != null && !injectedDecls.contains(n)) {
           for (Node node : info.getTypeNodes()) {
             fixTypeNode(node);
           }

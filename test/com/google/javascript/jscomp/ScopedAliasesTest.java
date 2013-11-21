@@ -566,6 +566,22 @@ public class ScopedAliasesTest extends CompilerTestCase {
          SCOPE_NAMESPACE + "/** @type {number} */ $jscomp.scope.a;");
   }
 
+  public void testIssue1144() {
+    test("var ns = {};" +
+         "ns.sub = {};" +
+         "/** @constructor */ ns.sub.C = function () {};" +
+         "goog.scope(function () {" +
+         "  var sub = ns.sub;" +
+         "  /** @type {sub.C} */" +
+         "  var x = null;" +
+         "});",
+         SCOPE_NAMESPACE +
+         "var ns = {};" +
+         "ns.sub = {};" +
+         "/** @constructor */ ns.sub.C = function () {};" +
+         "$jscomp.scope.x = null;");
+  }
+
   // Alias Recording Tests
   // TODO(tylerg) : update these to EasyMock style tests once available
   public void testNoGoogScope() {
