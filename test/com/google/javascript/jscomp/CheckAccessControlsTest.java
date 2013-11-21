@@ -360,6 +360,24 @@ public class CheckAccessControlsTest extends CompilerTestCase {
     });
   }
 
+  public void testPrivateAccessForProperties5() {
+    test(new String[] {
+          "/** @constructor */\n" +
+          "function Parent () {\n" +
+          "  /** @private */\n" +
+          "  this.prop = 'foo';\n" +
+          "};",
+          "/**\n" +
+          " * @constructor\n" +
+          " * @extends {Parent}\n" +
+          " */\n" +
+          "function Child() {\n" +
+          "  this.prop = 'asdf';\n" +
+          "}\n" +
+          "Child.prototype = new Parent();"
+        }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
   public void testNoPrivateAccessForProperties1() {
     test(new String[] {
       "/** @constructor */ function Foo() {} (new Foo).bar_();",

@@ -516,12 +516,15 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
           // private access is not allowed outside the file from a different
           // enclosing class.
+          JSType accessedType = getprop.getFirstChild().getJSType();
+          String readableTypeName = ownerType.equals(accessedType) ?
+              validator.getReadableJSTypeName(getprop.getFirstChild(), true) :
+              ownerType.toString();
           compiler.report(
               t.makeError(getprop,
                   BAD_PRIVATE_PROPERTY_ACCESS,
                   propertyName,
-                  validator.getReadableJSTypeName(
-                      getprop.getFirstChild(), true)));
+                  readableTypeName));
         } else if (visibility == Visibility.PROTECTED) {
           // There are 3 types of legal accesses of a protected property:
           // 1) Accesses in the same file
