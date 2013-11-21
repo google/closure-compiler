@@ -807,10 +807,14 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
 
     // Transform "(a = 2) ? x =2 : y" into "a=2,x=2"
-    n.detachChildren();
     Node branchToKeep = condValue.toBoolean(true) ? thenBody : elseBody;
     Node replacement;
-    if (mayHaveSideEffects(cond)) {
+    boolean condHasSideEffects = mayHaveSideEffects(cond);
+    // Must detach after checking for side effects, to ensure that the parents
+    // of nodes are set correctly.
+    n.detachChildren();
+
+    if (condHasSideEffects) {
       replacement = IR.comma(cond, branchToKeep).srcref(n);
     } else {
       replacement = branchToKeep;
