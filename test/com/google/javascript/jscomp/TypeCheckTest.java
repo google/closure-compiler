@@ -12646,6 +12646,12 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "could not determine the type of this expression");
   }
 
+  public void testUnknownForIn() throws Exception  {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.REPORT_UNKNOWN_TYPES,
+        CheckLevel.WARNING);
+    testTypes("var x = {'a':1}; var y; \n for(\ny\n in x) {}");
+  }
+
   public void testUnknownTypeDisabledByDefault() throws Exception {
     testTypes("function id(x) { return x; }");
   }

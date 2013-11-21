@@ -1379,6 +1379,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return false;
     }
 
+    // Not need to type first key in for in.
+    if (NodeUtil.isForIn(parent) && parent.getFirstChild() == n) {
+      return false;
+    }
+
     JSType type = n.getJSType();
     if (type == null) {
       type = getNativeType(UNKNOWN_TYPE);
