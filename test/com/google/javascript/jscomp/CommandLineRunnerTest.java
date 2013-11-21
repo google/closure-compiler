@@ -390,6 +390,11 @@ public class CommandLineRunnerTest extends TestCase {
          "window.foo = 'foo';");
   }
 
+  public void testGetMsgWiringNoWarnings() throws Exception {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    test("/** @desc A bad foo. */ var MSG_FOO = 1;", "");
+  }
+
   public void testCssNameWiring() throws Exception {
     test("var goog = {}; goog.getCssName = function() {};" +
          "goog.setCssNameMapping = function() {};" +

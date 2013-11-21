@@ -1027,7 +1027,7 @@ public class DefaultPassConfig extends PassConfig {
           /* warn about message dupes */
           true,
           /* allow messages with goog.getMsg */
-          JsMessage.Style.getFromParams(true, false),
+          JsMessage.Style.CLOSURE,
           /* if we can't find a translation, don't worry about it. */
           false);
     }
@@ -1042,7 +1042,7 @@ public class DefaultPassConfig extends PassConfig {
           /* warn about message dupes */
           true,
           /* allow messages with goog.getMsg */
-          JsMessage.Style.getFromParams(true, false));
+          JsMessage.Style.CLOSURE);
     }
   };
 
