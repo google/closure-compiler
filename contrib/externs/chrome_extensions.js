@@ -2535,19 +2535,19 @@ chrome.system.display.Bounds = function() {};
 
 
 /** @type {number} */
-chrome.system.display.Bounds.left;
+chrome.system.display.Bounds.prototype.left;
 
 
 /** @type {number} */
-chrome.system.display.Bounds.top;
+chrome.system.display.Bounds.prototype.top;
 
 
 /** @type {number} */
-chrome.system.display.Bounds.width;
+chrome.system.display.Bounds.prototype.width;
 
 
 /** @type {number} */
-chrome.system.display.Bounds.height;
+chrome.system.display.Bounds.prototype.height;
 
 
 /**
@@ -2568,51 +2568,51 @@ chrome.system.display.DisplayInfo = function() {};
 
 
 /** @type {string} */
-chrome.system.display.DisplayInfo.id;
+chrome.system.display.DisplayInfo.prototype.id;
 
 
 /** @type {string} */
-chrome.system.display.DisplayInfo.name;
+chrome.system.display.DisplayInfo.prototype.name;
 
 
 /** @type {string} */
-chrome.system.display.DisplayInfo.mirroringSourceId;
+chrome.system.display.DisplayInfo.prototype.mirroringSourceId;
 
 
 /** @type {boolean} */
-chrome.system.display.DisplayInfo.isPrimary;
+chrome.system.display.DisplayInfo.prototype.isPrimary;
 
 
 /** @type {boolean} */
-chrome.system.display.DisplayInfo.isInternal;
+chrome.system.display.DisplayInfo.prototype.isInternal;
 
 
 /** @type {boolean} */
-chrome.system.display.DisplayInfo.isEnabled;
+chrome.system.display.DisplayInfo.prototype.isEnabled;
 
 
 /** @type {number} */
-chrome.system.display.DisplayInfo.dpiX;
+chrome.system.display.DisplayInfo.prototype.dpiX;
 
 
 /** @type {number} */
-chrome.system.display.DisplayInfo.dpiY;
+chrome.system.display.DisplayInfo.prototype.dpiY;
 
 
 /** @type {number} */
-chrome.system.display.DisplayInfo.rotation;
+chrome.system.display.DisplayInfo.prototype.rotation;
 
 
-/** @type {chrome.system.display.Bounds} */
-chrome.system.display.DisplayInfo.bounds;
+/** @type {!chrome.system.display.Bounds} */
+chrome.system.display.DisplayInfo.prototype.bounds;
 
 
-/** @type {chrome.system.display.Insets} */
-chrome.system.display.DisplayInfo.overscan;
+/** @type {!chrome.system.display.Insets} */
+chrome.system.display.DisplayInfo.prototype.overscan;
 
 
-/** @type {chrome.system.display.Bounds} */
-chrome.system.display.DisplayInfo.workArea;
+/** @type {!chrome.system.display.Bounds} */
+chrome.system.display.DisplayInfo.prototype.workArea;
 
 
 /**
