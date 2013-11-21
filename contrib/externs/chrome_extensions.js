@@ -2884,7 +2884,7 @@ ExtensionInfo.prototype.appLaunchUrl;
 
 
 /** @type {string} */
-ExtensionInfo.prototype.homePageUrl;
+ExtensionInfo.prototype.homepageUrl;
 
 
 /** @type {string} */
