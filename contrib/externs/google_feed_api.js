@@ -62,7 +62,7 @@ google.feeds.Feed.XML_FORMAT;
 
 /**
  * A global method that returns a list of feeds that match the given query, and
- * has no return value. 
+ * has no return value.
  * @param {string} query - supplies the search query for the list of feeds.
  * @param {function(google.feeds.FindFeedResult)} callback - supplies the
  *     callback function that processes the result object asynchronously.
@@ -72,12 +72,12 @@ google.feeds.findFeeds = function (query, callback) { };
 /**
  * A cross-browser implementation of the DOM function getElementsByTagNameNS
  * @param {Node} node supplies a node from the XML DOM to search within.
- * @param {string} ns supplies the namespace URI. The value "*" matches 
+ * @param {string} ns supplies the namespace URI. The value "*" matches
  *     all tags.
  * @param {string} localName supplies the tag name for the search
- * @return {NodeList} The elements with a given local name and namespace URI. 
- *     The elements are returned in the order in which they are encountered in 
- *     a preorder traversal of the document tree. 
+ * @return {NodeList} The elements with a given local name and namespace URI.
+ *     The elements are returned in the order in which they are encountered in
+ *     a preorder traversal of the document tree.
  */
 google.feeds.Feed.prototype.getElementsByTagNameNS =
     function (node, ns, localName) { };
