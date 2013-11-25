@@ -747,6 +747,41 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns true iff this node defines a namespace, such as goog or goog.math.
+   */
+  static boolean isNamespaceDecl(Node n) {
+    String qname;
+    Node initializer;
+    if (n.getParent().isVar()) {
+      JSDocInfo jsdoc = getBestJSDocInfo(n);
+      if (jsdoc == null || !jsdoc.isConstant()) {
+        return false;
+      }
+      qname = n.getString();
+      initializer = n.getFirstChild();
+    } else if (n.isExprResult()) {
+      Node expr = n.getFirstChild();
+      if (!expr.isAssign() || !expr.getFirstChild().isGetProp()) {
+        return false;
+      }
+      qname = expr.getFirstChild().getQualifiedName();
+      initializer = expr.getLastChild();
+    } else {
+      return false;
+    }
+    if (isEmptyObjectLit(initializer)) {
+      return true;
+    }
+    return initializer.isOr() &&
+        qname.equals(initializer.getFirstChild().getQualifiedName()) &&
+        isEmptyObjectLit(initializer.getLastChild());
+  }
+
+  static boolean isEmptyObjectLit(Node n) {
+    return n.isObjectLit() && n.getChildCount() == 0;
+  }
+
+  /**
    * Creates an EXPR_RESULT.
    *
    * @param child The expression itself.
