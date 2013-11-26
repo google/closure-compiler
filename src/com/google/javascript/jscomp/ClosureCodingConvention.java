@@ -258,7 +258,8 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   @Override
   public List<String> identifyTypeDeclarationCall(Node n) {
     Node callName = n.getFirstChild();
-    if ("goog.addDependency".equals(callName.getQualifiedName()) &&
+    String callNameQualifiedString = callName.getQualifiedName();
+    if ("goog.addDependency".equals(callNameQualifiedString) &&
         n.getChildCount() >= 3) {
       Node typeArray = callName.getNext().getNext();
       if (typeArray.isArrayLit()) {
@@ -272,6 +273,16 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
         return typeNames;
       }
     }
+
+    // Identify forward declaration of form goog.forwardDeclare('foo.bar')
+    if ("goog.forwardDeclare".equals(callNameQualifiedString) &&
+        n.getChildCount() == 2) {
+      Node typeDeclaration = n.getChildAtIndex(1);
+      if (typeDeclaration.isString()) {
+        return Lists.newArrayList(typeDeclaration.getString());
+      }
+    }
+
     return super.identifyTypeDeclarationCall(n);
   }
 

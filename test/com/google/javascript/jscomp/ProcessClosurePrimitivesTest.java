@@ -321,6 +321,20 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
     assertFalse(compiler.getTypeRegistry().isForwardDeclaredType("C"));
   }
 
+  public void testForwardDeclarations() {
+    test("goog.forwardDeclare('A.B')", "");
+
+    Compiler compiler = getLastCompiler();
+    assertTrue(compiler.getTypeRegistry().isForwardDeclaredType("A.B"));
+    assertFalse(compiler.getTypeRegistry().isForwardDeclaredType("C.D"));
+
+    test("goog.forwardDeclare();", "",
+        ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
+
+    test("goog.forwardDeclare('A.B', 'C.D');", "",
+        ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
+  }
+
   public void testValidSetCssNameMapping() {
     test("goog.setCssNameMapping({foo:'bar',\"biz\":'baz'});", "");
     CssRenamingMap map = getLastCompiler().getCssRenamingMap();

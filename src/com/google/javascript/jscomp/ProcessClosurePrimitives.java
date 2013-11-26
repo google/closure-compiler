@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -29,6 +30,7 @@ import com.google.javascript.rhino.Token;
 
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -111,6 +113,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   static final DiagnosticType BASE_CLASS_ERROR = DiagnosticType.error(
       "JSC_BASE_CLASS_ERROR",
       "incorrect use of goog.base: {0}");
+
+  static final DiagnosticType INVALID_FORWARD_DECLARE = DiagnosticType.error(
+      "JSC_INVALID_FORWARD_DECLARE",
+      "Malformed goog.forwardDeclaration");
 
   /** The root Closure namespace */
   static final String GOOG = "goog";
@@ -236,20 +242,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
                   exportedVariables.add(arg.getString().substring(0, dot));
                 }
               }
+            } else if ("forwardDeclare".equals(methodName)){
+              processForwardDeclare(t, n, parent);
             } else if ("addDependency".equals(methodName)) {
-              CodingConvention convention = compiler.getCodingConvention();
-              List<String> typeDecls =
-                  convention.identifyTypeDeclarationCall(n);
-              if (typeDecls != null) {
-                for (String typeDecl : typeDecls) {
-                  compiler.getTypeRegistry().forwardDeclareType(typeDecl);
-                }
-              }
-
-              // We can't modify parent, so just create a node that will
-              // get compiled out.
-              parent.replaceChild(n, IR.number(0));
-              compiler.reportCodeChange();
+              processAddDependency(n, parent);
             } else if ("setCssNameMapping".equals(methodName)) {
               processSetCssNameMapping(t, n, parent);
             }
@@ -760,6 +756,56 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       return false;
     }
     return true;
+  }
+
+  /**
+   * Process a goog.addDependency() call and record any forward declarations.
+   */
+  private void processAddDependency(Node n, Node parent) {
+    CodingConvention convention = compiler.getCodingConvention();
+    List<String> typeDecls =
+        convention.identifyTypeDeclarationCall(n);
+
+    // TODO(nnaze): Use of addDependency() should someday cause a warning
+    // as we migrate users to explicit goog.forwardDeclare() calls.
+    if (typeDecls != null) {
+      for (String typeDecl : typeDecls) {
+        compiler.getTypeRegistry().forwardDeclareType(typeDecl);
+      }
+    }
+
+    // We can't modify parent, so just create a node that will
+    // get compiled out.
+    parent.replaceChild(n, IR.number(0));
+    compiler.reportCodeChange();
+  }
+
+  /**
+   * Process a goog.forwardDeclare() call and record the specified forward
+   * declaration.
+   */
+  private void processForwardDeclare(NodeTraversal t, Node n, Node parent) {
+    CodingConvention convention = compiler.getCodingConvention();
+
+    String typeDeclaration = null;
+    try {
+      typeDeclaration = Iterables.getOnlyElement(
+          convention.identifyTypeDeclarationCall(n));
+    } catch (NullPointerException | NoSuchElementException |
+          IllegalArgumentException e) {
+      compiler.report(
+          t.makeError(n, INVALID_FORWARD_DECLARE,
+              "A single type could not identified for the goog.forwardDeclare " +
+              "statement"));
+    }
+
+    if (typeDeclaration != null) {
+      compiler.getTypeRegistry().forwardDeclareType(typeDeclaration);
+
+      // Forward declaration was recorded and we can remove the call.
+      parent.detachFromParent();
+      compiler.reportCodeChange();
+    }
   }
 
   /**
