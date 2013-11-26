@@ -919,8 +919,6 @@ public class CommandLineRunner extends
     "deprecated.js",
     "fileapi.js",
     "flash.js",
-    "gears_symbols.js",
-    "gears_types.js",
     "gecko_xml.js",
     "html5.js",
     "ie_vml.js",
