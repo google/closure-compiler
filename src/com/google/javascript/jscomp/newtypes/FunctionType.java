@@ -279,26 +279,28 @@ public class FunctionType {
       return true;
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    for (int i = 0; i < other.requiredFormals.size(); i++) {
+    int i = 0;
+    for (; i < other.requiredFormals.size(); i++) {
       JSType formalType = other.getFormalType(i);
       builder.addReqFormal(formalType.isUnknown() ? JSType.BOTTOM : formalType);
     }
-    for (int i = 0; i < other.optionalFormals.size(); i++) {
-      JSType formalType = other.getFormalType(i);
+    for (int j = 0; j < other.optionalFormals.size(); j++) {
+      JSType formalType = other.getFormalType(i + j);
       builder.addOptFormal(formalType.isUnknown() ? JSType.BOTTOM : formalType);
     }
     if (other.restFormals != null) {
       JSType formalType = other.restFormals;
       builder.addOptFormal(formalType.isUnknown() ? JSType.BOTTOM : formalType);
     }
-    if (this.getReturnType().isUnknown()) {
+    if (this.returnType.isUnknown()) {
       builder.addRetType(JSType.UNKNOWN);
     } else {
-      builder.addRetType(other.getReturnType());
+      builder.addRetType(other.returnType);
     }
     if (other.isLoose()) {
       builder.addLoose();
     }
+    builder.addClass(other.klass);
     FunctionType newOther = builder.buildFunction();
     return newOther.equals(join(this, newOther));
   }

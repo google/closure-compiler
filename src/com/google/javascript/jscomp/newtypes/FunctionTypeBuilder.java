@@ -41,6 +41,7 @@ public class FunctionTypeBuilder {
   private JSType returnType = null;
   private boolean loose = false;
   private NominalType klass;
+  private NominalType receiverType; // Only used to build DeclaredFunctionType
 
   public FunctionTypeBuilder addReqFormal(JSType t) {
     if (!optionalFormals.isEmpty() || restFormals != null) {
@@ -85,11 +86,17 @@ public class FunctionTypeBuilder {
     return this;
   }
 
+  public FunctionTypeBuilder addReceiverType(NominalType cl) {
+    receiverType = cl;
+    return this;
+  }
+
   public DeclaredFunctionType buildDeclaration() {
     Preconditions.checkState(loose == false);
     Preconditions.checkState(outerVars.isEmpty());
     return DeclaredFunctionType.make(
-        requiredFormals, optionalFormals, restFormals, returnType, klass);
+        requiredFormals, optionalFormals, restFormals, returnType,
+        klass, receiverType);
   }
 
   public FunctionType buildFunction() {

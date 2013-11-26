@@ -38,19 +38,24 @@ public class DeclaredFunctionType {
   private final List<JSType> optionalFormals;
   private final JSType restFormals;
   private final JSType returnType;
+  // Non-null iff this is a constructor
   private final NominalType klass;
+  // Non-null iff this is a prototype method
+  private final NominalType receiverType;
 
   private DeclaredFunctionType(
       List<JSType> requiredFormals,
       List<JSType> optionalFormals,
       JSType restFormals,
       JSType retType,
-      NominalType klass) {
+      NominalType klass,
+      NominalType receiverType) {
     this.requiredFormals = requiredFormals;
     this.optionalFormals = optionalFormals;
     this.restFormals = restFormals;
     this.returnType = retType;
     this.klass = klass;
+    this.receiverType = receiverType;
   }
 
   public FunctionType toFunctionType() {
@@ -72,7 +77,8 @@ public class DeclaredFunctionType {
       List<JSType> optionalFormals,
       JSType restFormals,
       JSType retType,
-      NominalType klass) {
+      NominalType klass,
+      NominalType receiverType) {
     if (requiredFormals == null) {
       requiredFormals = Lists.newArrayList();
     }
@@ -80,7 +86,8 @@ public class DeclaredFunctionType {
       optionalFormals = Lists.newArrayList();
     }
     return new DeclaredFunctionType(
-        requiredFormals, optionalFormals, restFormals, retType, klass);
+        requiredFormals, optionalFormals, restFormals, retType,
+        klass, receiverType);
   }
 
   // 0-indexed
@@ -116,6 +123,10 @@ public class DeclaredFunctionType {
     return klass;
   }
 
+  public NominalType getReceiverType() {
+    return receiverType;
+  }
+
   public DeclaredFunctionType withTypeInfoFromSuper(
       DeclaredFunctionType superType) {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
@@ -137,6 +148,7 @@ public class DeclaredFunctionType {
     }
     builder.addRetType(returnType != null ? returnType : superType.returnType);
     builder.addClass(klass);
+    builder.addReceiverType(receiverType);
     return builder.buildDeclaration();
   }
 

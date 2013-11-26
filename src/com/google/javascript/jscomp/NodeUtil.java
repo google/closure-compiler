@@ -2604,6 +2604,20 @@ public final class NodeUtil {
   }
 
   /**
+   * @return Whether the node represents a prototype method.
+   */
+  static boolean isPrototypeMethod(Node n) {
+    if (!n.isFunction()) {
+      return false;
+    }
+    Node assignNode = n.getParent();
+    if (!assignNode.isAssign()) {
+      return false;
+    }
+    return isPrototypePropertyDeclaration(assignNode.getParent());
+  }
+
+  /**
    * @return The class name part of a qualified prototype name.
    */
   static Node getPrototypeClassName(Node qName) {

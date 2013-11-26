@@ -260,7 +260,6 @@ public class NewTypeInference implements CompilerPass {
       } else {
         summaryType = summaryType.withProperty("prototype", JSType.TOP_OBJECT);
       }
-      System.out.println("fun name: " + fnName + " type " + summaryType);
       env = envPutType(env, fnName, summaryType);
     }
     initEdgeEnvs(env);
@@ -666,8 +665,7 @@ public class NewTypeInference implements CompilerPass {
       case Token.THIS: {
         Preconditions.checkState(
             currentScope.isConstructor() || currentScope.isPrototypeMethod());
-        JSType thisType =
-            currentScope.getConstructorType().toFunctionType().getReturnType();
+        JSType thisType = currentScope.getDeclaredTypeOf("this");
         return new EnvTypePair(inEnv, thisType);
       }
       case Token.NAME: { // Fwd
@@ -1261,8 +1259,7 @@ public class NewTypeInference implements CompilerPass {
       case Token.THIS: {
         Preconditions.checkState(
             currentScope.isConstructor() || currentScope.isPrototypeMethod());
-        JSType thisType =
-            currentScope.getConstructorType().toFunctionType().getReturnType();
+        JSType thisType = currentScope.getDeclaredTypeOf("this");
         return new EnvTypePair(outEnv, thisType);
       }
       case Token.NAME: { // Bwd

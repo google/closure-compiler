@@ -40,6 +40,7 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -151,6 +152,9 @@ class GlobalTypeInfo {
 
     nominaltypesByNode = null;
     propertyDefs = null;
+    for (Scope s : scopes) {
+      s.finalizeScope();
+    }
     // The jsdoc parser doesn't have access to the error functions in the jscomp
     // package, so we collect its warnings here.
     for (String warningText : typeParser.getWarnings()) {
@@ -420,17 +424,21 @@ class GlobalTypeInfo {
       Preconditions.checkArgument(fn.isFunction());
       Scope fnScope = computeFnDeclaredType(fn, currentScope);
       scopes.addFirst(fnScope);
-      String fnName = getFunInternalName(fn);
-      // Don't put methods in the local fun defs.
-      if (TypeUtils.isIdentifier(fnName)) {
-        if (currentScope.isDefinedLocally(fnName)) {
-          warnings.add(JSError.make(
-              fn, VariableReferenceCheck.REDECLARED_VARIABLE, fnName));
-        } else {
+      String fnName = NodeUtil.getFunctionName(fn);
+      String internalName = getFunInternalName(fn);
+      if (currentScope.isDefinedLocally(fnName)) {
+        warnings.add(JSError.make(
+            fn, VariableReferenceCheck.REDECLARED_VARIABLE, fnName));
+      } else {
+        currentScope.putLocalFunDef(internalName, fnScope);
+        if (fnName != null && !TypeUtils.isIdentifier(fnName)) {
+          // Qualified names will be removed in finalizeScope
           currentScope.putLocalFunDef(fnName, fnScope);
         }
       }
-      undeclaredVars.removeAll(fnName);
+      if (fnName != null && TypeUtils.isIdentifier(fnName)) {
+        undeclaredVars.removeAll(fnName);
+      }
       scopeWorkset.add(fnScope);
       return fnScope;
     }
@@ -450,8 +458,7 @@ class GlobalTypeInfo {
 
       // We only add properties to the prototype of a class if the
       // property creations are in the same scope as the constructor
-      // TODO(blickly): Allow namespace.Ctorname style constructors
-      if (currentScope.isLocalFunDef(ctorName)) {
+      if (currentScope.isDefinedLocally(ctorName)) {
         Scope ctorScope = currentScope.getScope(ctorName);
         NominalType classType = ctorScope.getDeclaredType().getClassType();
         if (classType == null) {
@@ -528,8 +535,7 @@ class GlobalTypeInfo {
     }
 
     private void visitClassPropertyDeclaration(Node getPropNode) {
-      NominalType thisType =
-          currentScope.getConstructorType().getClassType();
+      NominalType thisType = currentScope.getThisType();
       String pname = getPropNode.getLastChild().getString();
       // TODO(blickly): Support @param, @return style fun declarations here.
       JSType declaredType =
@@ -573,6 +579,7 @@ class GlobalTypeInfo {
       // Compute the types of formals and the return type
       FunctionTypeBuilder builder =
           typeParser.getFunctionType(fnDoc, fn, parentScope);
+
       // Look at other annotations, eg, @constructor
       String functionName = getFunInternalName(fn);
       if (fnDoc != null) {
@@ -595,7 +602,6 @@ class GlobalTypeInfo {
             }
           }
         }
-
         NominalType nominalType = nominaltypesByNode.get(fn);
         if (fnDoc.isConstructor()) {
           if (parentClass != null) {
@@ -612,6 +618,14 @@ class GlobalTypeInfo {
               typeParser.getExtendedInterfaces(fnDoc, parentScope));
           builder.addClass(nominalType);
         }
+      }
+
+      if (NodeUtil.isPrototypeMethod(fn)) {
+        Node lhsNode = fn.getParent().getFirstChild();
+        String className =
+            NodeUtil.getPrototypeClassName(lhsNode).getQualifiedName();
+        builder.addReceiverType(parentScope.getScope(className)
+            .getDeclaredType().getClassType());
       }
       return new Scope(fn, parentScope, formals, builder.buildDeclaration());
     }
@@ -692,14 +706,8 @@ class GlobalTypeInfo {
     }
 
     public boolean isPrototypeMethod() {
-      if (!root.isFunction()) {
-        return false;
-      }
-      Node assignNode = root.getParent();
-      if (!assignNode.isAssign()) {
-        return false;
-      }
-      return NodeUtil.isPrototypePropertyDeclaration(assignNode.getParent());
+      Preconditions.checkState(root != null);
+      return NodeUtil.isPrototypeMethod(root);
     }
 
     private void putLocalFunDef(String name, Scope scope) {
@@ -756,18 +764,6 @@ class GlobalTypeInfo {
       return outerVars.contains(name);
     }
 
-    public DeclaredFunctionType getConstructorType() {
-      Preconditions.checkState(isConstructor() || isPrototypeMethod());
-      if (isConstructor()) {
-        return declaredType;
-      } else {
-        Node lhsNode = root.getParent().getFirstChild();
-        String className =
-            NodeUtil.getPrototypeClassName(lhsNode).getQualifiedName();
-        return getScope(className).getDeclaredType();
-      }
-    }
-
     @Override
     public JSType getNamedTypeByName(String name) {
       Preconditions.checkState(localClassDefs != null);
@@ -782,9 +778,17 @@ class GlobalTypeInfo {
       return null;
     }
 
+    private NominalType getThisType() {
+      if (isConstructor()) {
+        return getDeclaredType().getClassType();
+      }
+      Preconditions.checkState(isPrototypeMethod());
+      return getDeclaredType().getReceiverType();
+    }
+
     public JSType getDeclaredTypeOf(String name) {
       if ("this".equals(name)) {
-        return getConstructorType().toFunctionType().getReturnType();
+        return JSType.fromObjectType(ObjectType.fromClass(getThisType()));
       }
       int formalIndex = formals.indexOf(name);
       if (formalIndex != -1) {
@@ -853,6 +857,18 @@ class GlobalTypeInfo {
 
     void addClassType(String name, NominalType klass) {
       localClassDefs.put(name, klass);
+    }
+
+    void finalizeScope() {
+      Iterator<String> it = localFunDefs.keySet().iterator();
+      while (it.hasNext()) {
+        String name = it.next();
+        if (!TypeUtils.isIdentifier(name)) {
+          it.remove();
+        }
+      }
+      localNamespaces = null;
+      localClassDefs = null;
     }
   }
 }
