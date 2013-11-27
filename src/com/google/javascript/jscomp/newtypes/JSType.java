@@ -40,6 +40,10 @@ public class JSType {
   private static final int NULL_MASK = 0x20;
   private static final int NON_SCALAR_MASK = 0x40;
   private static final int END_MASK = NON_SCALAR_MASK * 2;
+  // When either of the next two bits is set, the rest of the type isn't
+  // guaranteed to be in a consistent state.
+  private static final int TRUTHY_MASK = 0x100;
+  private static final int FALSY_MASK = 0x200;
   // Room to grow.
   private static final int UNKNOWN_MASK = 0x7fffffff; // @type {?}
   private static final int TOP_MASK = 0xffffffff; // @type {*}
@@ -91,17 +95,18 @@ public class JSType {
   public static final JSType BOOLEAN = new JSType(TRUE_MASK | FALSE_MASK);
   public static final JSType BOTTOM = new JSType(BOTTOM_MASK);
   public static final JSType FALSE_TYPE = new JSType(FALSE_MASK);
+  public static final JSType FALSY = new JSType(FALSY_MASK);
   public static final JSType NULL = new JSType(NULL_MASK);
   public static final JSType NUMBER = new JSType(NUMBER_MASK);
   public static final JSType STRING = new JSType(STRING_MASK);
   public static final JSType TOP = new JSType(TOP_MASK);
   public static final JSType TOP_SCALAR = new JSType(TOP_SCALAR_MASK);
   public static final JSType TRUE_TYPE = new JSType(TRUE_MASK);
+  public static final JSType TRUTHY = new JSType(TRUTHY_MASK);
   public static final JSType UNDEFINED = new JSType(UNDEFINED_MASK);
   public static final JSType UNKNOWN = new JSType(UNKNOWN_MASK);
 
   public static final JSType TOP_OBJECT = fromObjectType(ObjectType.TOP_OBJECT);
-
   private static JSType TOP_FUNCTION = null;
 
   public static JSType topFunction() {
@@ -129,6 +134,14 @@ public class JSType {
 
   public boolean isFalse() {
     return FALSE_MASK == type;
+  }
+
+  public boolean isTruthy() {
+    return TRUTHY_MASK == type || TRUE_MASK == type;
+  }
+
+  public boolean isFalsy() {
+    return FALSY_MASK == type || FALSE_MASK == type;
   }
 
   public boolean isBoolean() {
@@ -191,11 +204,30 @@ public class JSType {
   public JSType specialize(JSType other) {
     if (other.isTop() || other.isUnknown()) {
       return this;
+    } else if (other.isTruthy()) {
+      return makeTruthy();
+    } else if (other.isFalsy()) {
+      return makeFalsy();
     } else if (this.isTop() || this.isUnknown()) {
       return other.withLocation(this.location);
     }
     return new JSType(this.type & other.type, this.location,
         ObjectType.specializeSet(this.objs, other.objs));
+  }
+
+  private JSType makeTruthy() {
+    if (this.isTop() || this.isUnknown()) {
+      return this;
+    }
+    return new JSType(type & ~NULL_MASK & ~FALSE_MASK & ~UNDEFINED_MASK,
+        location, objs);
+  }
+
+  private JSType makeFalsy() {
+    if (this.isTop() || this.isUnknown()) {
+      return this;
+    }
+    return new JSType(type & ~TRUE_MASK & ~NON_SCALAR_MASK, location, null);
   }
 
   // Meet two types, location agnostic
@@ -222,12 +254,21 @@ public class JSType {
   }
 
   public JSType negate() {
-    if (isTrue()) {
-      return JSType.FALSE_TYPE;
-    } else if (isFalse()) {
-      return JSType.TRUE_TYPE;
+    if (isTruthy()) {
+      return FALSY;
+    } else if (isFalsy()) {
+      return TRUTHY;
     }
-    return JSType.BOOLEAN;
+    return this;
+  }
+
+  public JSType toBoolean() {
+    if (isTruthy()) {
+      return TRUE_TYPE;
+    } else if (isFalsy()) {
+      return FALSE_TYPE;
+    }
+    return BOOLEAN;
   }
 
   public boolean isSubtypeOf(JSType other) {

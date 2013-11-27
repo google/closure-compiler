@@ -457,10 +457,10 @@ public class NewTypeInference implements CompilerPass {
             JSType specializedType;
             switch (outEdge.getValue()) {
               case ON_TRUE:
-                specializedType = JSType.TRUE_TYPE;
+                specializedType = JSType.TRUTHY;
                 break;
               case ON_FALSE:
-                specializedType = JSType.FALSE_TYPE;
+                specializedType = JSType.FALSY;
                 break;
               default:
                 throw new RuntimeException(
@@ -707,19 +707,19 @@ public class NewTypeInference implements CompilerPass {
       case Token.OR: {
         Node lhs = expr.getFirstChild();
         Node rhs = expr.getLastChild();
-        if ((specializedType.isTrue() && exprKind == Token.AND) ||
-            (specializedType.isFalse() && exprKind == Token.OR)) {
+        if ((specializedType.isTruthy() && exprKind == Token.AND) ||
+            (specializedType.isFalsy() && exprKind == Token.OR)) {
           EnvTypePair lhsPair =
               analyzeExprFwd(lhs, inEnv, JSType.TOP, specializedType);
           EnvTypePair rhsPair =
               analyzeExprFwd(rhs, lhsPair.env, JSType.TOP, specializedType);
           return rhsPair;
-        } else if ((specializedType.isFalse() && exprKind == Token.AND) ||
-                   (specializedType.isTrue() && exprKind == Token.OR)) {
+        } else if ((specializedType.isFalsy() && exprKind == Token.AND) ||
+                   (specializedType.isTruthy() && exprKind == Token.OR)) {
           EnvTypePair shortCircuitPair =
               analyzeExprFwd(lhs, inEnv, JSType.TOP, specializedType);
-          JSType negatedType = specializedType.isTrue() ?
-              JSType.FALSE_TYPE : JSType.TRUE_TYPE;
+          JSType negatedType = specializedType.isTruthy() ?
+              JSType.FALSY : JSType.TRUTHY;
           EnvTypePair lhsPair =
               analyzeExprFwd(lhs, inEnv, JSType.TOP, negatedType);
           EnvTypePair rhsPair =
@@ -780,7 +780,7 @@ public class NewTypeInference implements CompilerPass {
               ctorType.toString()));
         }
         if (ctorFunType == null || !ctorFunType.isConstructor() ||
-            (!specializedType.isTrue() && !specializedType.isFalse())) {
+            (!specializedType.isTruthy() && !specializedType.isFalsy())) {
           ctorPair.type = JSType.BOOLEAN;
           return ctorPair;
         }
@@ -788,7 +788,7 @@ public class NewTypeInference implements CompilerPass {
         // We are in a specialized context *and* we know the constructor type
         JSType instanceType = ctorFunType.getTypeOfThis();
         objPair = analyzeExprFwd(obj, inEnv, JSType.TOP,
-            specializedType.isTrue() ?
+            specializedType.isTruthy() ?
             objPair.type.specialize(instanceType) :
             objPair.type.removeType(instanceType));
         ctorPair = analyzeExprFwd(ctor, objPair.env, JSType.topFunction());
@@ -900,13 +900,13 @@ public class NewTypeInference implements CompilerPass {
         EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
         EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
 
-        if ((exprKind == Token.SHEQ && specializedType.isTrue()) ||
-            (exprKind == Token.SHNE && specializedType.isFalse())) {
+        if ((exprKind == Token.SHEQ && specializedType.isTruthy()) ||
+            (exprKind == Token.SHNE && specializedType.isFalsy())) {
           JSType meetType = JSType.meet(lhsPair.type, rhsPair.type);
           lhsPair = analyzeExprFwd(lhs, rhsPair.env, JSType.TOP, meetType);
           rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.TOP, meetType);
-        } else if ((exprKind == Token.SHEQ && specializedType.isFalse()) ||
-            (exprKind == Token.SHNE && specializedType.isTrue())) {
+        } else if ((exprKind == Token.SHEQ && specializedType.isFalsy()) ||
+            (exprKind == Token.SHNE && specializedType.isTruthy())) {
           JSType lhsType = lhsPair.type;
           JSType rhsType = rhsPair.type;
           if (lhsType.equals(JSType.NULL) ||
@@ -1072,7 +1072,7 @@ public class NewTypeInference implements CompilerPass {
       case Token.NOT: {
         EnvTypePair pair = analyzeExprFwd(
             expr.getFirstChild(), inEnv, JSType.TOP, specializedType.negate());
-        pair.type = pair.type.negate();
+        pair.type = pair.type.negate().toBoolean();
         return pair;
       }
       case Token.GETELEM: {
@@ -1110,7 +1110,7 @@ public class NewTypeInference implements CompilerPass {
       return new EnvTypePair(pair.env, requiredType);
     }
     JSType resultType = objType.getProp(pname);
-    if (!specializedType.isBoolean()) {
+    if (!specializedType.isTruthy() && !specializedType.isFalsy()) {
       if (!objType.mayHaveProp(pname)) {
         warnings.add(JSError.make(propAccessNode, TypeCheck.INEXISTENT_PROPERTY,
                 pname, objType.toString()));
@@ -1121,7 +1121,7 @@ public class NewTypeInference implements CompilerPass {
             propAccessNode, NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY,
             pname, objType.toString()));
       }
-    } else if (receiver.isName() && specializedType.equals(JSType.TRUE_TYPE)) {
+    } else if (receiver.isName() && specializedType.isTruthy()) {
       String objName = receiver.getQualifiedName();
       objType = objType.withPropertyRequired(pname);
       pair.env = envPutType(pair.env, objName, objType);

@@ -270,18 +270,17 @@ class GlobalTypeInfo {
     }
 
     private void initFnScope(Node fn, Scope parentScope) {
-      String fnName = NodeUtil.getFunctionName(fn);
-      // We don't want to use qualified names here
-      if (fnName == null || !TypeUtils.isIdentifier(fnName)) {
-        fnName = "%anon_fun" + funCounter;
+      String qname = NodeUtil.getFunctionName(fn);
+      // Qualified names also need a gensymed name.
+      if (qname == null || !TypeUtils.isIdentifier(qname)) {
+        anonFunNames.put(fn, "%anon_fun" + funCounter);
         funCounter++;
-        anonFunNames.put(fn, fnName);
       }
       JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
       if (fnDoc != null && (fnDoc.isConstructor() || fnDoc.isInterface())) {
-        NominalType klass = new NominalType(fnName, fnDoc.isInterface());
+        NominalType klass = new NominalType(qname, fnDoc.isInterface());
         nominaltypesByNode.put(fn, klass);
-        parentScope.addClassType(fnName, klass);
+        parentScope.addClassType(qname, klass);
       }
     }
   }
