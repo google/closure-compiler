@@ -3708,6 +3708,12 @@ google.maps.StreetViewPanorama.prototype.getZoom = function() {};
 google.maps.StreetViewPanorama.prototype.registerPanoProvider = function(provider) {};
 
 /**
+ * @param {google.maps.StreetViewPanoramaOptions|Object.<string>} options
+ * @return {undefined}
+ */
+google.maps.StreetViewPanorama.prototype.setOptions = function(options) {};
+
+/**
  * @param {string} pano
  * @return {undefined}
  */
@@ -5685,10 +5691,11 @@ google.maps.places.TextSearchRequest.prototype.types;
 google.maps.visualization = {};
 
 /**
+ * @param {google.maps.visualization.DynamicMapsEngineLayerOptions|Object.<string>} options
  * @extends {google.maps.MVCObject}
  * @constructor
  */
-google.maps.visualization.DynamicMapsEngineLayer = function() {};
+google.maps.visualization.DynamicMapsEngineLayer = function(options) {};
 
 /**
  * @param {string} featureId
