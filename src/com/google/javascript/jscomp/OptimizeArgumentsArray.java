@@ -202,7 +202,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
       // Bail on anything but argument[c] access where c is a constant.
       // TODO(user): We might not need to bail out all the time, there might
       // be more cases that we can cover.
-      if (!getElem.isGetElem()) {
+      if (!getElem.isGetElem() || ref != getElem.getFirstChild()) {
         return false;
       }
 

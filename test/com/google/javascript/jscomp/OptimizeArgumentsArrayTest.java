@@ -163,4 +163,8 @@ public class OptimizeArgumentsArrayTest extends CompilerTestCase {
   public void testNoOptimizationWhenArgumentIsUsedAsFunctionCall() {
     testSame("function f() {arguments[0]()}");
   }
+
+  public void testUnusualArgumentsUsage() {
+    testSame("function f(x) { x[arguments]; }");
+  }
 }
