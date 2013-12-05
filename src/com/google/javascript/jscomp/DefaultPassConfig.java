@@ -2226,20 +2226,6 @@ public class DefaultPassConfig extends PassConfig {
       reservedNames.addAll(exportedNames);
     }
     reservedNames.addAll(ParserRunner.getReservedVars());
-    if (options.alternateRenaming) {
-      RenameVars2 rn = new RenameVars2(
-          compiler,
-          options.renamePrefix,
-          options.variableRenaming == VariableRenamingPolicy.LOCAL,
-          preserveAnonymousFunctionNames,
-          options.generatePseudoNames,
-          options.shadowVariables,
-          prevVariableMap,
-          reservedChars,
-          reservedNames);
-      rn.process(externs, root);
-      return rn.getVariableMap();
-    }
     RenameVars rn = new RenameVars(
         compiler,
         options.renamePrefix,

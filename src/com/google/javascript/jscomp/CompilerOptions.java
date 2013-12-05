@@ -274,7 +274,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   //--------------------------------
 
   boolean aggressiveRenaming;
-  boolean alternateRenaming; // triggers RenameVars2.
 
   /** Prefer commas over semicolons when doing statement fusion */
   boolean aggressiveFusion;
@@ -940,7 +939,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
     // Optimizations
     aggressiveRenaming = false;
-    alternateRenaming = false;
     foldConstants = false;
     coalesceVariableNames = false;
     deadAssignmentElimination = false;
@@ -1734,10 +1732,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setAggressiveRenaming(boolean aggressive) {
     this.aggressiveRenaming = aggressive;
-  }
-
-  public void setAlternateRenaming(boolean altnerate) {
-    this.alternateRenaming = altnerate;
   }
 
   public void setFoldConstants(boolean foldConstants) {
