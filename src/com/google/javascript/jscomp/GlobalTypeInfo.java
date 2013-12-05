@@ -131,13 +131,21 @@ class GlobalTypeInfo {
     return anonFunNames.get(n);
   }
 
-  void prepareAst(Node root) {
+  void prepareAst(Node externs, Node root) {
+    Preconditions.checkArgument(externs.isSyntheticBlock());
     Preconditions.checkArgument(root.isSyntheticBlock());
     Scope rootScope = new Scope(root, null, new ArrayList<String>(), null);
     scopes.addFirst(rootScope);
 
+    CollectNamedTypes rootCnt = new CollectNamedTypes(rootScope);
+    new NodeTraversal(compiler, rootCnt).traverse(externs);
+    new NodeTraversal(compiler, rootCnt).traverse(root);
+    ProcessScope rootPs = new ProcessScope(rootScope);
+    new NodeTraversal(compiler, rootPs).traverse(externs);
+    new NodeTraversal(compiler, rootPs).traverse(root);
+    rootPs.finishProcessingScope();
+
     // loop through the workset (outer-to-inner scopes)
-    scopeWorkset.addFirst(rootScope);
     while (!scopeWorkset.isEmpty()) {
       Scope s = scopeWorkset.removeFirst();
       Node scopeBody = s.getBody();

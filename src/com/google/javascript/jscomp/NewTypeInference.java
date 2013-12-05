@@ -131,7 +131,7 @@ public class NewTypeInference implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     jsRoot = root;
-    symbolTable.prepareAst(root);
+    symbolTable.prepareAst(externs, root);
     for (Scope scope : symbolTable.getScopes()) {
       analyzeFunction(scope);
     }
