@@ -15,15 +15,17 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Random;
 
@@ -31,313 +33,307 @@ import java.util.Random;
  * @author zplin@google.com (Zhongpeng Lin)
  */
 public class FuzzerTest extends TestCase{
+  private Random random;
+  private ScopeManager scopeManager;
+  private StringNumberGenerator snGenerator;
+  private JSONObject config;
+
+  @Override
+  public void setUp() {
+    random = new Random(123);
+    scopeManager = new ScopeManager(random);
+    snGenerator = new StringNumberGenerator(random);
+    config = TestConfig.getConfig();
+  }
 
   public void testGenerateArray() {
-    ControlledRandom random = new ControlledRandom();
-    int arraySize = 9;
-    random.addOverride(1, arraySize);
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node node = fuzzer.generateArrayLiteral(10);
-    String code = Fuzzer.getPrettyCode(node);
+    ArrayFuzzer fuzzer =
+        new ArrayFuzzer(random, scopeManager, config, snGenerator);
+    int budget = 10;
+    Node node = fuzzer.generate(budget);
+    String code = ArrayFuzzer.getPrettyCode(node);
     assertTrue(code.startsWith("["));
     assertTrue(code.endsWith("]"));
-    assertEquals(arraySize, code.split(",").length);
+    JSONObject config = fuzzer.config;
+    assertTrue(
+        "\nGenerated code: \n" + code,
+        code.split(",").length <
+            (int) (config.optJSONObject("array").optDouble("maxLength") *
+                (budget - 1)));
   }
 
   public void testGenerateNull() {
-    ControlledRandom random = new ControlledRandom();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node node = fuzzer.generateNullLiteral(30);
-    assertEquals("null", Fuzzer.getPrettyCode(node));
+    SimpleFuzzer fuzzer = new SimpleFuzzer(Token.NULL, "null");
+    Node node = fuzzer.generate(30);
+    assertEquals("null", SimpleFuzzer.getPrettyCode(node));
   }
 
-  public void testGenerateTrue() {
-    ControlledRandom random = new ControlledRandom();
-    random.addOverride(1, 1);
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node node = fuzzer.generateBooleanLiteral(10);
-    assertEquals("true", Fuzzer.getPrettyCode(node));
+  public void testGenerateBoolean() {
+    BooleanFuzzer fuzzer = new BooleanFuzzer(random);
+    Node node = fuzzer.generate(10);
+    String code = BooleanFuzzer.getPrettyCode(node).trim();
+    assertTrue(
+        "\nGenerated code: \n" + code,
+        code.equals("true") || code.equals("false"));
   }
-
-  public void testGenerateFalse() {
-    ControlledRandom random = new ControlledRandom();
-    random.addOverride(1, 0);
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node node = fuzzer.generateBooleanLiteral(10);
-    assertEquals("false", Fuzzer.getPrettyCode(node));
-  }
-
   public void testGenerateNumeric() {
-    ControlledRandom random = new ControlledRandom();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node node = fuzzer.generateNumericLiteral(10);
-    String code = Fuzzer.getPrettyCode(node);
+    NumericFuzzer fuzzer = new NumericFuzzer(random, config, snGenerator);
+    Node node = fuzzer.generate(10);
+    String code = NumericFuzzer.getPrettyCode(node);
     for (int i = 0; i < code.length(); i++) {
-      assertTrue(code.charAt(i) >= '0');
-      assertTrue(code.charAt(i) <= '9');
+      assertTrue("\nGenerated code: \n" + code, code.charAt(i) >= '0');
+      assertTrue("\nGenerated code: \n" + code, code.charAt(i) <= '9');
     }
   }
 
   public void testGenerateString() {
-    ControlledRandom random = new ControlledRandom();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node node = fuzzer.generateStringLiteral(10);
-    String code = Fuzzer.getPrettyCode(node);
-    assertTrue(code.startsWith("\""));
-    assertTrue(code.endsWith("\""));
+    StringFuzzer fuzzer = new StringFuzzer(snGenerator);
+    Node node = fuzzer.generate(10);
+    String code = StringFuzzer.getPrettyCode(node);
+    assertTrue("\nGenerated code: \n" + code, code.startsWith("\""));
+    assertTrue("\nGenerated code: \n" + code, code.endsWith("\""));
   }
 
   public void testGenerateRegex() {
-    ControlledRandom random = new ControlledRandom();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node node = fuzzer.generateRegularExpressionLiteral(10);
-    String code = Fuzzer.getPrettyCode(node);
-    assertTrue(code.startsWith("/"));
+    RegularExprFuzzer fuzzer = new RegularExprFuzzer(snGenerator);
+    Node node = fuzzer.generate(10);
+    String code = RegularExprFuzzer.getPrettyCode(node);
+    assertTrue("\nGenerated code: \n" + code, code.startsWith("/"));
     assertNotSame('/', code.charAt(1));
   }
 
   public void testGenerateObjectLiteral() {
-    ControlledRandom random = new ControlledRandom();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node node = fuzzer.generateObjectLiteral(10);
-    String code = Fuzzer.getPrettyCode(node);
-    assertTrue(code.startsWith("{"));
-    assertTrue(code.endsWith("}"));
+    ObjectFuzzer fuzzer = new ObjectFuzzer(
+        random, scopeManager, config, snGenerator);
+    Node node = fuzzer.generate(10);
+    String code = ObjectFuzzer.getPrettyCode(node);
+    assertTrue("\nGenerated code: \n" + code, code.startsWith("{"));
+    assertTrue("\nGenerated code: \n" + code, code.endsWith("}"));
   }
 
-  public void testGenerateLiteral() {
-    Random random = new ControlledRandom();
-    Fuzzer fuzzer = spy(new Fuzzer(random));
+  public void testGenerateLiteral() throws JSONException {
     int budget = 0;
-    fuzzer.generateLiteral(budget);
-    verify(fuzzer, never()).generateNullLiteral(budget);
-    verify(fuzzer, never()).generateBooleanLiteral(budget);
-    verify(fuzzer, never()).generateNumericLiteral(budget);
-    verify(fuzzer, never()).generateStringLiteral(budget);
-    verify(fuzzer, never()).generateArrayLiteral(budget);
-    verify(fuzzer, never()).generateObjectLiteral(budget);
+    LiteralFuzzer literalFuzzer = new LiteralFuzzer(random, scopeManager, config, snGenerator);
+    LiteralFuzzer spyFuzzer = spy(literalFuzzer);
+    doThrow(new RuntimeException("Not enough budget for literal")).
+    when(spyFuzzer).generate(budget);
     budget = 1;
-    fuzzer.generateLiteral(budget);
-    verify(fuzzer, never()).generateRegularExpressionLiteral(budget);
-  }
+    leaveOneSubtype(literalFuzzer.getOwnConfig(), "null");
+    Node node = literalFuzzer.generate(budget);
+    String code = AbstractFuzzer.getPrettyCode(node);
+    assertEquals("null", code.trim());
+}
 
-  public void testPostfixExpressions() {
-    int[] overriddenValues = {9, 10};
+  public void testPostfixExpressions() throws JSONException {
     String[] postfixes = {"++", "--"};
+    String[] types = {"postInc", "postDec"};
     for (int i = 0; i < postfixes.length; i++) {
-      ControlledRandom random = new ControlledRandom();
-      random.addOverride(1, overriddenValues[i]);
-      Fuzzer fuzzer = new Fuzzer(random);
-      Node node = fuzzer.generateUnaryExpression(10);
-      String code = Fuzzer.getPrettyCode(node);
+      setUp();
+      UnaryExprFuzzer fuzzer = new UnaryExprFuzzer(
+          random, scopeManager, config, snGenerator);
+      leaveOneSubtype(fuzzer.getOwnConfig(), types[i]);
+      Node node = fuzzer.generate(10);
+      String code = UnaryExprFuzzer.getPrettyCode(node);
       assertTrue(code.endsWith(postfixes[i]));
     }
   }
 
-  public void testPrefixExpressions() {
-    int[] overriddenValues = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-    String[] prefixes = {"void", "typeof", "+", "-", "~", "!", "++", "--", "delete"};
+  public void testPrefixExpressions() throws JSONException {
+    String[] prefixes =
+      {"void", "typeof", "+", "-", "~", "!", "++", "--", "delete"};
+    String[] types = {"void", "typeof", "pos", "neg", "bitNot", "not", "inc",
+        "dec", "delProp"};
     for (int i = 0; i < prefixes.length; i++) {
-      ControlledRandom random = new ControlledRandom();
-      random.addOverride(1, overriddenValues[i]);
-      Fuzzer fuzzer = new Fuzzer(random);
-      Node node = fuzzer.generateUnaryExpression(10);
-      String code = Fuzzer.getPrettyCode(node).trim();
+      setUp();
+      UnaryExprFuzzer fuzzer = new UnaryExprFuzzer(
+          random, scopeManager, config, snGenerator);
+      leaveOneSubtype(fuzzer.getOwnConfig(), types[i]);
+      Node node = fuzzer.generate(10);
+      String code = UnaryExprFuzzer.getPrettyCode(node);
       assertTrue(code.startsWith(prefixes[i]));
     }
   }
 
-  public void testNewExpression() {
-    ControlledRandom random = new ControlledRandom();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node node = fuzzer.generateFunctionCall(10, true);
-    String code = Fuzzer.getPrettyCode(node);
+  public void testNewExpression() throws JSONException {
+    FunctionCallFuzzer fuzzer =
+        new FunctionCallFuzzer(random, scopeManager, config, snGenerator);
+    leaveOneSubtype(fuzzer.getOwnConfig(), "constructorCall");
+    Node node = fuzzer.generate(10);
+    String code = FunctionCallFuzzer.getPrettyCode(node);
     assertTrue(code.startsWith("new "));
   }
 
-  public void testCallExpression() {
-    ControlledRandom random = new ControlledRandom();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node node = fuzzer.generateFunctionCall(10, false);
-    String code = Fuzzer.getPrettyCode(node);
+  public void testCallExpression() throws JSONException {
+    FunctionCallFuzzer fuzzer =
+        new FunctionCallFuzzer(random, scopeManager, config, snGenerator);
+    leaveOneSubtype(fuzzer.getOwnConfig(), "normalCall");
+    Node node = fuzzer.generate(10);
+    String code = FunctionCallFuzzer.getPrettyCode(node);
     assertFalse(code.startsWith("new "));
   }
 
-  public void testNoAssignmentWhenLeftExpressionHasNotEnoughBudget() {
-    int budget = 5;
-    Fuzzer fuzzer = spy(new Fuzzer(new ControlledRandom()));
-    doReturn(new int[]{budget / 2, budget / 2}).
-      when(fuzzer).distribute(budget - 1, 2, 1);
-    String[] assignments = {"=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=",
-        ">>>=", "&=", "^=", "|="};
-    Node node = fuzzer.generateBinaryExpression(budget);
-
-    for (int i = 0; i < assignments.length; i++) {
-      String code = Fuzzer.getPrettyCode(node);
-      assertEquals(-1, code.indexOf(" " + assignments[i] + " "));
-    }
-  }
-
-  public void testGenerateBinaryExpression() {
+  public void testGenerateBinaryExpression() throws JSONException {
     int budget = 50;
     String[] operators = {"*", "/", "%", "+", "-", "<<", ">>", ">>>", "<", ">",
         "<=", ">=", "instanceof", "in", "==", "!=", "===", "!==", "&", "^",
         "|", "&&", "||", "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=",
         ">>>=", "&=", "^=", "|="};
+    String[] types = {"mul", "div", "mod", "add", "sub", "lsh", "rsh", "ursh",
+        "lt", "gt", "le", "ge", "instanceof", "in", "eq", "ne", "sheq", "shne",
+        "bitAnd", "bitXor", "bitOr", "and", "or", "assign", "assignMul",
+        "assignDiv", "assignMod", "assignAdd", "assignSub", "assignLsh",
+        "assignRsh", "assignUrsh", "assignBitAnd", "assignBitXor",
+        "assignBitOr"};
     for (int i = 0; i < operators.length; i++) {
-      Random random = spy(new Random());
-      doReturn(i).when(random).nextInt(operators.length);
-      Fuzzer fuzzer = spy(new Fuzzer(random));
-      doReturn(new int[]{budget / 2, budget / 2}).
-        when(fuzzer).distribute(budget - 1, 2, 1);
-      Node node = fuzzer.generateBinaryExpression(budget);
-      String code = Fuzzer.getPrettyCode(node);
+      Random random = new Random(123);
+      BinaryExprFuzzer fuzzer =
+          new BinaryExprFuzzer(random, scopeManager, config, snGenerator);
+      leaveOneSubtype(fuzzer.getOwnConfig(), types[i]);
+      Node node = fuzzer.generate(budget);
+      String code = BinaryExprFuzzer.getPrettyCode(node).trim();
       assertNotSame(-1, code.indexOf(" " + operators[i] + " "));
     }
   }
 
   public void testTrinaryExpression() {
-    Random random = new ControlledRandom();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node node = fuzzer.generateTernaryExpression(4);
-    String code = Fuzzer.getPrettyCode(node);
+    TernaryExprFuzzer fuzzer =
+        new TernaryExprFuzzer(random, scopeManager, config, snGenerator);
+    Node node = fuzzer.generate(4);
+    String code = TernaryExprFuzzer.getPrettyCode(node);
     assertNotSame(-1, code.indexOf(" ? "));
     assertTrue(code.indexOf(" : ") > code.indexOf(" ? "));
   }
 
-  public void testExpression() {
-    Random random = new ControlledRandom();
-    Fuzzer fuzzer = spy(new Fuzzer(random));
-    int budget = 1;
-    fuzzer.generateExpression(budget);
-    verify(fuzzer, never()).getExistingIdentifier(budget);
-    verify(fuzzer, never()).generateFunctionCall(budget);
-    verify(fuzzer, never()).generateUnaryExpression(budget);
-    budget = 2;
-    fuzzer.generateExpression(budget);
-    verify(fuzzer, never()).generateBinaryExpression(budget);
-    verify(fuzzer, never()).generateFunctionExpression(budget);
-    budget = 3;
-    verify(fuzzer, never()).generateTernaryExpression(budget);
-  }
-
   public void testVariableStatement() {
-    Random random = new Random();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node node = fuzzer.generateVariableStatement(10);
-    String code = Fuzzer.getPrettyCode(node);
+    VarFuzzer fuzzer = new VarFuzzer(random, scopeManager, config, snGenerator);
+    Node node = fuzzer.generate(10);
+    String code = VarFuzzer.getPrettyCode(node);
     assertTrue(code.startsWith("var "));
   }
 
   public void testEmptyStatement() {
-    Random random = new ControlledRandom();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node emptyStmt = fuzzer.generateEmptyStatement(10);
+    SimpleFuzzer fuzzer = new SimpleFuzzer(Token.EMPTY, "empty");
+    Node emptyStmt = fuzzer.generate(10);
     assertEquals(Token.EMPTY, emptyStmt.getType());
   }
 
   public void testIfStatement() {
-    Random random = new ControlledRandom();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node ifStatement = fuzzer.generateIfStatement(10);
-    String code = Fuzzer.getPrettyCode(ifStatement);
+    IfFuzzer fuzzer = new IfFuzzer(random, scopeManager, config, snGenerator);
+    Node ifStatement = fuzzer.generate(10);
+    String code = IfFuzzer.getPrettyCode(ifStatement);
     assertTrue(code.startsWith("if ("));
   }
 
   public void testWhileStatement() {
-    ControlledRandom random = new ControlledRandom();
-    random.addOverride(1, 1);
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node whileStatement = fuzzer.generateWhile(10);
-    String code = Fuzzer.getPrettyCode(whileStatement);
+    WhileFuzzer fuzzer =
+        new WhileFuzzer(random, scopeManager, config, snGenerator);
+    Node whileStatement = fuzzer.generate(10);
+    String code = WhileFuzzer.getPrettyCode(whileStatement);
     assertTrue(code.startsWith("while ("));
   }
 
   public void testDoWhileStatement() {
-    ControlledRandom random = new ControlledRandom();
-    random.addOverride(1, 0);
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node doStatement = fuzzer.generateDoWhile(10);
-    String code = Fuzzer.getPrettyCode(doStatement);
+    DoWhileFuzzer fuzzer =
+        new DoWhileFuzzer(random, scopeManager, config, snGenerator);
+    Node doStatement = fuzzer.generate(10);
+    String code = DoWhileFuzzer.getPrettyCode(doStatement);
     assertTrue(code.startsWith("do {"));
     assertTrue(code.trim().endsWith(");"));
 
   }
 
   public void testForStatement() {
-    ControlledRandom random = new ControlledRandom();
-    random.addOverride(1, 0);
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node forStatement = fuzzer.generateFor(10);
-    String code = Fuzzer.getPrettyCode(forStatement);
+    ForFuzzer fuzzer = new ForFuzzer(random, scopeManager, config, snGenerator);
+    Node forStatement = fuzzer.generate(10);
+    String code = ForFuzzer.getPrettyCode(forStatement);
     assertTrue(code.startsWith("for ("));
   }
 
+  public void testForInStatement() {
+    ForInFuzzer fuzzer =
+        new ForInFuzzer(random, scopeManager, config, snGenerator);
+    Node forInStatement = fuzzer.generate(10);
+    String code = ForInFuzzer.getPrettyCode(forInStatement);
+    assertTrue("\nGenerated code: \n" + code, code.startsWith("for ("));
+    assertTrue("\nGenerated code: \n" + code, code.contains(" in "));
+  }
+
   public void testSwitchStatement() {
-    ControlledRandom random = new ControlledRandom();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node switchStmt = fuzzer.generateSwitch(20);
-    String code = Fuzzer.getPrettyCode(switchStmt);
-    assertTrue(code.startsWith("switch("));
+    SwitchFuzzer fuzzer =
+        new SwitchFuzzer(random, scopeManager, config, snGenerator);
+    Node switchStmt = fuzzer.generate(20);
+    String code = SwitchFuzzer.getPrettyCode(switchStmt);
+    assertTrue("\nGenerated code: \n" + code, code.startsWith("switch("));
   }
 
   public void testThrowStatement() {
-    ControlledRandom random = new ControlledRandom();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node throwStatement = fuzzer.generateThrow(10);
-    String code = Fuzzer.getPrettyCode(throwStatement);
-    assertTrue(code.startsWith("throw"));
+    ThrowFuzzer fuzzer =
+        new ThrowFuzzer(random, scopeManager, config, snGenerator);
+    Node throwStatement = fuzzer.generate(10);
+    String code = ThrowFuzzer.getPrettyCode(throwStatement);
+    assertTrue("\nGenerated code: \n" + code, code.startsWith("throw"));
   }
 
   public void testTryStatement() {
-    Random random = new Random(456);
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node tryStatement = fuzzer.generateTry(20);
-    String code = Fuzzer.getPrettyCode(tryStatement);
-    assertTrue(code.startsWith("try {"));
+    TryFuzzer fuzzer = new TryFuzzer(random, scopeManager, config, snGenerator);
+    Node tryStatement = fuzzer.generate(20);
+    String code = TryFuzzer.getPrettyCode(tryStatement);
+    assertTrue("\nGenerated code: \n" + code, code.startsWith("try {"));
   }
 
   public void testFunctionDeclaration() {
-    ControlledRandom random = new ControlledRandom();
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node functionDecl = fuzzer.generateFunctionDeclaration(20);
-    String code = Fuzzer.getPrettyCode(functionDecl);
-    assertTrue(code.startsWith("function "));
+    FunctionFuzzer fuzzer =
+        new FunctionFuzzer(random, scopeManager, config, snGenerator, false);
+    Node functionDecl = fuzzer.generate(20);
+    String code = FunctionFuzzer.getPrettyCode(functionDecl);
+    assertTrue("\nGenerated code: \n" + code, code.startsWith("function "));
   }
 
-  public void testBreakStatement() {
-    ControlledRandom random = new ControlledRandom();
-    random.addOverride(1, 0);
-    Fuzzer fuzzer = new Fuzzer(random);
+  public void testBreakStatement() throws JSONException {
+    BreakFuzzer fuzzer = new BreakFuzzer(random, scopeManager, config);
+    fuzzer.getOwnConfig().put("toLabel", 1);
     Scope scope = fuzzer.scopeManager.localScope();
     scope.otherLabels.add("testLabel");
-    Node breakStmt = fuzzer.generateBreak(10);
-    String code = Fuzzer.getPrettyCode(breakStmt);
+    Node breakStmt = fuzzer.generate(10);
+    String code = BreakFuzzer.getPrettyCode(breakStmt);
     assertEquals("break testLabel;", code.trim());
   }
 
-  public void testContinueStatement() {
-    ControlledRandom random = new ControlledRandom();
-    random.addOverride(1, 0);
-    Fuzzer fuzzer = new Fuzzer(random);
+  public void testContinueStatement() throws JSONException {
+    ContinueFuzzer fuzzer = new ContinueFuzzer(random, scopeManager, config);
+    fuzzer.getOwnConfig().put("toLabel", 1);
     Scope scope = fuzzer.scopeManager.localScope();
     scope.loopLabels.add("testLabel");
-    Node breakStmt = fuzzer.generateContinue(10);
-    String code = Fuzzer.getPrettyCode(breakStmt);
+    Node continueStmt = fuzzer.generate(10);
+    String code = ContinueFuzzer.getPrettyCode(continueStmt);
     assertEquals("continue testLabel;", code.trim());
   }
 
   public void testDeterministicProgramGenerating() {
-    Random random = new Random(123);
-    Fuzzer fuzzer = new Fuzzer(random);
-    Node[] nodes1 = fuzzer.generateProgram(100);
-    String code1 = Fuzzer.getPrettyCode(Fuzzer.buildScript(nodes1));
+    ScriptFuzzer fuzzer = new ScriptFuzzer(random, config);
+    Node nodes = fuzzer.generate(100);
+    String code1 = ScriptFuzzer.getPrettyCode(nodes);
 
+    setUp();
     random = new Random(123);
-    fuzzer = new Fuzzer(random);
-    Node[] nodes2 = fuzzer.generateProgram(100);
-    String code2 = Fuzzer.getPrettyCode(Fuzzer.buildScript(nodes2));
+    fuzzer = new ScriptFuzzer(random, config);
+    nodes = fuzzer.generate(100);
+    String code2 = ScriptFuzzer.getPrettyCode(nodes);
 
     assertEquals(code1, code2);
+  }
+  private static void leaveOneSubtype(JSONObject typeConfig, String subtypeName)
+      throws JSONException {
+    JSONObject weightConfig = typeConfig.getJSONObject("weights");
+    JSONArray names = weightConfig.names();
+
+    for (int i = 0; i < names.length(); i++) {
+      String name = names.getString(i);
+      if (name.equals(subtypeName)) {
+        weightConfig.put(name, 1);
+      } else {
+        weightConfig.put(name, 0);
+      }
+    }
   }
 }

@@ -292,7 +292,7 @@ Local Modifications: None
 
 ---
 Code in
-lib/objenesis.ar
+lib/objenesis.jar
 URL: http://objenesis.org
 Version: 1.2
 License: Apache 2.0 license

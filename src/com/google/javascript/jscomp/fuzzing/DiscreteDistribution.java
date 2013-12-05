@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * @param <T> The type of items
  * UNDER DEVELOPMENT. DO NOT USE!
+ * @param <T> The type of items
  * @author zplin@google.com (Zhongpeng Lin)
  */
 public class DiscreteDistribution<T> {
@@ -56,7 +56,7 @@ public class DiscreteDistribution<T> {
 
       for (int i = 0; i < weights.size(); i++) {
           sum += weights.get(i);
-          if (randomValue < sum) {
+          if (Double.compare(randomValue, sum) <= 0) {
               return items.get(i);
           }
       }

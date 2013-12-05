@@ -20,12 +20,15 @@ import com.google.common.base.Joiner;
 import java.util.Random;
 
 /**
- * Generates random strings to be used in, for example, string literals,
+ * Generates strings and numbers to be used in, for example, string literals,
  * variable names
  * UNDER DEVELOPMENT. DO NOT USE!
  * @author zplin@google.com (Zhongpeng Lin)
  */
-public class StringGenerator {
+public class StringNumberGenerator {
+  private static final int LARGEST_NUMBER = 1000;
+  private Random random;
+  private int counter = 0;
   private static final String[] ADJECTIVES = {
       "Amazing",
       "Breezy",
@@ -83,18 +86,30 @@ public class StringGenerator {
       "Zebra"
       };
 
-  public static String getString(Random random) {
-    Joiner joiner = Joiner.on(' ');
-    return joiner.join(getCombination(random));
+  public StringNumberGenerator(Random random) {
+    this.random = random;
   }
 
-  public static String getPropertyName(Random random) {
+  public String getString() {
+    Joiner joiner = Joiner.on(' ');
+    return joiner.join(getCombination());
+  }
+
+  public String getPropertyName() {
     Joiner joiner = Joiner.on("");
-    String[] combination = getCombination(random);
+    String[] combination = getCombination();
     return joiner.join(combination[0].toLowerCase(), combination[1]);
   }
 
-  private static String[] getCombination(Random random) {
+  public int getNextNumber() {
+    return counter++;
+  }
+
+  public int getRandomNumber() {
+    return random.nextInt(LARGEST_NUMBER);
+  }
+
+  private String[] getCombination() {
     String[] result = new String[2];
     result[0] = ADJECTIVES[random.nextInt(ADJECTIVES.length)];
     result[1] = ANIMALS[random.nextInt(ANIMALS.length)];

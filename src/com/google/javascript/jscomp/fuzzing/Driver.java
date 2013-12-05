@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.common.io.Files;
 import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
@@ -26,11 +27,15 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SyntheticAst;
 import com.google.javascript.rhino.Node;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Level;
@@ -42,7 +47,10 @@ import java.util.logging.Logger;
  */
 public class Driver {
   @Option(name = "--number_of_runs",
-      usage = "The number of runs of the fuzzer. Default: 1")
+      usage = "The number of runs of the fuzzer. "
+          + "If the number given is less than 1, the driver will run until "
+          + "first error (either in Fuzzer or Compiler) is found. "
+          + "Default: 1")
   private int numberOfRuns = 1;
 
   @Option(name = "--max_ast_size",
@@ -65,7 +73,12 @@ public class Driver {
           + "Default: INFO")
   private LoggingLevel level = LoggingLevel.INFO;
 
+  @Option(name = "--config",
+      usage = "Specifies the configuration file")
+  private String configFileName;
+
   public Result compile(String code) throws IOException {
+    Compiler.setLoggingLevel(level.getLevel());
     Compiler compiler = new Compiler();
     return compiler.compile(CommandLineRunner.getDefaultExterns(),
         Arrays.asList(SourceFile.fromCode("[fuzzedCode]", code)), getOptions());
@@ -76,6 +89,7 @@ public class Driver {
     JSModule jsModule = new JSModule("fuzzedModule");
     jsModule.add(input);
 
+    Compiler.setLoggingLevel(level.getLevel());
     Compiler compiler = new Compiler();
     compiler.setTimeout(30);
     return compiler.compileModules(
@@ -89,7 +103,22 @@ public class Driver {
     return options;
   }
 
-  public static void main(String[] args) {
+  private JSONObject getConfig() {
+    File file = new File(configFileName);
+    try {
+      return new JSONObject(Files.toString(
+          file, StandardCharsets.UTF_8));
+    } catch (JSONException | IOException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  private boolean forever() {
+    return numberOfRuns < 1;
+  }
+
+  public static void main(String[] args) throws Exception {
     Driver driver = new Driver();
     CmdLineParser parser = new CmdLineParser(driver);
     try {
@@ -106,7 +135,7 @@ public class Driver {
       // When user specifies seed, only run once
       driver.numberOfRuns = 1;
     }
-    for (int i = 0; i < driver.numberOfRuns; i++) {
+    for (int i = 0; driver.forever() || i < driver.numberOfRuns; i++) {
       logger.info("Running fuzzer [" + i + " of " +
           driver.numberOfRuns + "]");
       long seed;
@@ -116,15 +145,20 @@ public class Driver {
         seed = driver.seed;
       }
       Random random = new Random(seed);
-      Fuzzer fuzzer = new Fuzzer(random);
-      Node[] nodes = null;
+      ScriptFuzzer fuzzer = new ScriptFuzzer(
+          random, driver.getConfig());
+      Node script = null;
       try {
-        nodes = fuzzer.generateProgram(driver.maxASTSize);
+        script = fuzzer.generate(driver.maxASTSize);
       } catch (Exception e) {
         logger.log(Level.SEVERE, "Fuzzer error!\nSeed: " + seed, e);
+        if (driver.forever()) {
+          break;
+        } else {
+          continue;
+        }
       }
-      Node script = Fuzzer.buildScript(nodes);
-      String code = Fuzzer.getPrettyCode(script);
+      String code = ScriptFuzzer.getPrettyCode(script);
       try {
         Result result = driver.compile(script);
         if (result.success && result.warnings.length == 0) {
@@ -137,9 +171,10 @@ public class Driver {
         } else {
           StringBuffer sb = new StringBuffer("Compilation Failed!\nSeed: ");
           sb.append(seed);
-          sb.append("\nJavaScript: ");
-          sb.append(code);
           logger.warning(sb.toString());
+          sb = new StringBuffer("JavaScript: ");
+          sb.append(code);
+          logger.info(sb.toString());
         }
       } catch (Exception e) {
         StringBuffer sb = new StringBuffer("Compiler error!\nSeed: ");
@@ -147,9 +182,11 @@ public class Driver {
         sb.append("\nJavaScript: ");
         sb.append(code);
         logger.log(Level.SEVERE, sb.toString(), e);
+        if (driver.forever()) {
+          break;
+        }
       }
     }
-    System.out.println("Done!");
     System.exit(0);
   }
 
