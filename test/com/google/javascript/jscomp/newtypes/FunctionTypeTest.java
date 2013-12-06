@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.newtypes.JSType.BOTTOM;
 import static com.google.javascript.jscomp.newtypes.JSType.NUMBER;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 
 import junit.framework.TestCase;
@@ -37,8 +38,11 @@ public class FunctionTypeTest extends TestCase {
       null, null, null, null, new NominalType("Foo", false), null, false);
 
   private static FunctionType parse(String typestring) {
-    return (new JSTypeCreatorFromJSDoc()).getTypeFromNode(
+    JSTypeCreatorFromJSDoc parser = new JSTypeCreatorFromJSDoc();
+    FunctionType result = parser.getTypeFromNode(
         JsDocInfoParser.parseTypeString(typestring), null).getFunType();
+    assertEquals(ImmutableSet.of(), parser.getWarnings());
+    return result;
   }
 
   public void testUnknownsInFunctions() {

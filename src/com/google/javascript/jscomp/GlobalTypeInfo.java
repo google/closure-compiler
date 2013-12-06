@@ -597,7 +597,7 @@ class GlobalTypeInfo {
                 fn, EXTENDS_NOT_ON_CTOR_OR_INTERF, functionName));
           } else {
             Node docNode = fnDoc.getBaseType().getRootNode();
-            if (typeParser.hasClassTypeInitialized(docNode, parentScope)) {
+            if (typeParser.hasKnownType(docNode, parentScope)) {
               parentClass = typeParser.getClassType(docNode, parentScope);
               if (parentClass == null) {
                 warnings.add(JSError.make(fn, EXTENDS_NON_OBJECT, functionName,

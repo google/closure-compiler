@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -38,7 +37,7 @@ import java.util.Set;
 public class JSTypeCreatorFromJSDoc {
 
   /** Exception for when unrecognized type names are encountered */
-  public static class UnknownTypeException extends RuntimeException {
+  public static class UnknownTypeException extends Exception {
     UnknownTypeException(String cause) {
       super(cause);
     }
@@ -73,8 +72,17 @@ public class JSTypeCreatorFromJSDoc {
 
   // Very similar to JSTypeRegistry#createFromTypeNodesInternal
   // n is a jsdoc node, not an AST node; the same class (Node) is used for both
-  @VisibleForTesting
   JSType getTypeFromNode(Node n, DeclaredTypeRegistry registry) {
+    try {
+      return getTypeFromNodeHelper(n, registry);
+    } catch (UnknownTypeException e) {
+      warn("Unknown type", n);
+      return null;
+    }
+  }
+
+  private JSType getTypeFromNodeHelper(Node n, DeclaredTypeRegistry registry)
+      throws UnknownTypeException {
     Preconditions.checkNotNull(n);
     switch (n.getType()) {
       case Token.LC: {
@@ -91,7 +99,7 @@ public class JSTypeCreatorFromJSDoc {
             fieldName = fieldName.substring(1, fieldName.length() - 1);
           }
           JSType fieldType =
-              getTypeFromNode(fieldTypeNode.getLastChild(), registry);
+              getTypeFromNodeHelper(fieldTypeNode.getLastChild(), registry);
           // TODO(blickly): Allow optional properties
           fields.put(fieldName, fieldType);
         }
@@ -122,12 +130,12 @@ public class JSTypeCreatorFromJSDoc {
         JSType union = JSType.BOTTOM;
         for (Node child = n.getFirstChild(); child != null;
              child = child.getNext()) {
-          union = JSType.join(union, getTypeFromNode(child, registry));
+          union = JSType.join(union, getTypeFromNodeHelper(child, registry));
         }
         return union;
       }
       case Token.BANG: {
-        return getTypeFromNode(n.getFirstChild(), registry)
+        return getTypeFromNodeHelper(n.getFirstChild(), registry)
           .removeType(JSType.NULL);
       }
       case Token.QMARK: {
@@ -135,7 +143,7 @@ public class JSTypeCreatorFromJSDoc {
         if (child == null) {
           return JSType.UNKNOWN;
         } else {
-          return JSType.join(JSType.NULL, getTypeFromNode(child, registry));
+          return JSType.join(JSType.NULL, getTypeFromNodeHelper(child, registry));
         }
       }
       case Token.STAR:
@@ -150,14 +158,14 @@ public class JSTypeCreatorFromJSDoc {
               switch (arg.getType()) {
                 case Token.EQUALS:
                   builder.addOptFormal(
-                      getTypeFromNode(arg.getFirstChild(), registry));
+                      getTypeFromNodeHelper(arg.getFirstChild(), registry));
                   break;
                 case Token.ELLIPSIS:
                   builder.addRestFormals(
-                      getTypeFromNode(arg.getFirstChild(), registry));
+                      getTypeFromNodeHelper(arg.getFirstChild(), registry));
                   break;
                 default:
-                  builder.addReqFormal(getTypeFromNode(arg, registry));
+                  builder.addReqFormal(getTypeFromNodeHelper(arg, registry));
                   break;
               }
             } catch (IllegalStateException e) {
@@ -167,7 +175,7 @@ public class JSTypeCreatorFromJSDoc {
           }
           child = child.getNext();
         }
-        builder.addRetType(getTypeFromNode(child, registry));
+        builder.addRetType(getTypeFromNodeHelper(child, registry));
         return builder.buildType();
       }
       default:
@@ -176,11 +184,10 @@ public class JSTypeCreatorFromJSDoc {
     }
   }
 
-  public boolean hasClassTypeInitialized(
+  public boolean hasKnownType(
       Node n, DeclaredTypeRegistry registry) {
-    Preconditions.checkArgument(n.getType() == Token.BANG);
     try {
-      getTypeFromNode(n, registry);
+      getTypeFromNodeHelper(n, registry);
     } catch (UnknownTypeException e) {
       return false;
     }
@@ -198,7 +205,12 @@ public class JSTypeCreatorFromJSDoc {
       JSDocInfo jsdoc, DeclaredTypeRegistry registry) {
     ImmutableSet.Builder<NominalType> builder = ImmutableSet.builder();
     for (JSTypeExpression texp: jsdoc.getImplementedInterfaces()) {
-      builder.add(getClassType(texp.getRootNode(), registry));
+      Node expRoot = texp.getRootNode();
+      if (hasKnownType(expRoot, registry)) {
+        builder.add(getClassType(expRoot, registry));
+      } else {
+        warn("Cannot implement unknown type", expRoot);
+      }
     }
     return builder.build();
   }
@@ -271,8 +283,8 @@ public class JSTypeCreatorFromJSDoc {
         }
         switch (paramType.getType()) {
           case Token.EQUALS:
-            builder.addOptFormal(
-                getTypeFromNode(paramType.getFirstChild(), registry));
+            builder.addOptFormal(getTypeFromNode(
+                    paramType.getFirstChild(), registry));
             break;
           case Token.ELLIPSIS:
             if (!warnedForMissingTypes) {
@@ -283,7 +295,8 @@ public class JSTypeCreatorFromJSDoc {
             }
             break;
           default:
-            builder.addReqFormal(getTypeFromNode(paramType, registry));
+            builder.addReqFormal(
+                getTypeFromNode(paramType, registry));
             break;
         }
         paramType = paramType.getNext();

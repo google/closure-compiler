@@ -29,6 +29,7 @@ import static com.google.javascript.jscomp.newtypes.JSType.UNKNOWN;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.Node;
 
@@ -50,7 +51,10 @@ public class JSTypeTest extends TestCase {
   private static JSType parse(String typestring) {
     Node typeAst = JsDocInfoParser.parseTypeString(typestring);
     assertTrue(typeAst != null);
-    return (new JSTypeCreatorFromJSDoc()).getTypeFromNode(typeAst, null);
+    JSTypeCreatorFromJSDoc parser = new JSTypeCreatorFromJSDoc();
+    JSType result = parser.getTypeFromNode(typeAst, null);
+    assertEquals(ImmutableSet.of(), parser.getWarnings());
+    return result;
   }
 
   private static void parseAndCompareTypes(String typestring, JSType expected) {
