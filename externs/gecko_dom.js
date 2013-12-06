@@ -865,7 +865,7 @@ Element.prototype.appendChild = function(child) {};
 
 /**
  * @override
- * @return {Element}
+ * @return {!Element}
  */
 Element.prototype.cloneNode = function(deep) {};
 
@@ -906,7 +906,7 @@ Element.prototype.normalize = function() {};
 
 /**
  * @param {Node} removedNode
- * @return {Node}
+ * @return {!Node}
  * @override
  */
 Element.prototype.removeChild = function(removedNode) {};
