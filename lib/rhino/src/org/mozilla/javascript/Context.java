@@ -181,6 +181,7 @@ public class Context
          * @deprecated In previous releases, this name was given to
          * FEATURE_PARENT_PROTO_PROPERTIES.
          */
+    @Deprecated
     public static final int FEATURE_PARENT_PROTO_PROPRTIES = 5;
 
     /**
