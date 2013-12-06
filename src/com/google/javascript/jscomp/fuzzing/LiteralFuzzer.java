@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import org.json.JSONObject;
@@ -37,6 +38,10 @@ class LiteralFuzzer extends Dispatcher {
   protected void initCandidates() {
     candidates = new AbstractFuzzer[]{
         new SimpleFuzzer(Token.NULL, "null"),
+        // treating global values as literal
+        new GlobalValueFuzzer("undefined"),
+        new GlobalValueFuzzer("Infinity"),
+        new GlobalValueFuzzer("NaN"),
         new BooleanFuzzer(random),
         new NumericFuzzer(random, config, snGenerator),
         new StringFuzzer(snGenerator),
@@ -52,5 +57,37 @@ class LiteralFuzzer extends Dispatcher {
   @Override
   protected String getConfigName() {
     return "literal";
+  }
+
+  private class GlobalValueFuzzer extends AbstractFuzzer {
+    private String value;
+    GlobalValueFuzzer(String value) {
+      this.value = value;
+    }
+
+    /* (non-Javadoc)
+     * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#isEnough(int)
+     */
+    @Override
+    protected boolean isEnough(int budget) {
+      return budget >= 1;
+    }
+
+    /* (non-Javadoc)
+     * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
+     */
+    @Override
+    protected Node generate(int budget) {
+      return Node.newString(Token.NAME, value);
+    }
+
+    /* (non-Javadoc)
+     * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#getConfigName()
+     */
+    @Override
+    protected String getConfigName() {
+      return value;
+    }
+
   }
 }

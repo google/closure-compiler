@@ -107,6 +107,9 @@ class TestConfig {
           "  \"literal\": {\n" +
           "    \"weights\": {\n" +
           "        \"null\": 1,\n" +
+          "        \"undefined\": 1,\n" +
+          "        \"Infinity\": 1,\n" +
+          "        \"NaN\": 1,\n" +
           "        \"boolean\": 1,\n" +
           "        \"numeric\": 1,\n" +
           "        \"string\": 1,\n" +
@@ -209,7 +212,7 @@ class TestConfig {
           "  \"program\": {\n" +
           "    \"maxLength\": 0.1\n" +
           "  }\n" +
-          "}");
+          "}\n");
     } catch (JSONException e) {
       e.printStackTrace();
       return null;

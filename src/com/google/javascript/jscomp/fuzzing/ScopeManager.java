@@ -47,9 +47,7 @@ public class ScopeManager {
         "String",
         "Error",
         "JSON",
-        "Math",
-        "NaN",
-        "undefined");
+        "Math");
     numSym = globalScope.symbols.size();
     scopeStack.push(globalScope);
   }
