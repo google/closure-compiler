@@ -38,23 +38,23 @@ public class ScopeManager {
     this.random = random;
     Scope globalScope = new Scope();
     globalScope.symbols = Lists.newArrayList(
-        "Array",
-        "Boolean",
-        "Function",
-        "Number",
-        "Object",
-        "RegExp",
-        "String",
-        "Error",
-        "JSON",
-        "Math");
+        new Symbol("Array", Type.FUNCTION),
+        new Symbol("Boolean", Type.FUNCTION),
+        new Symbol("Function", Type.FUNCTION),
+        new Symbol("Object", Type.FUNCTION),
+        new Symbol("RegExp", Type.FUNCTION),
+        new Symbol("String", Type.FUNCTION),
+        new Symbol("Error", Type.FUNCTION),
+        new Symbol("JSON", Type.FUNCTION),
+        new Symbol("Math", Type.OBJECT),
+        new Symbol("Number", Type.FUNCTION));
     numSym = globalScope.symbols.size();
     scopeStack.push(globalScope);
   }
 
-  public void addFunctionScope() {
+  public void addScope() {
     Scope newScope = new Scope();
-    newScope.symbols = Lists.newArrayList("arguments");
+    newScope.symbols = Lists.newArrayList(new Symbol("arguments", Type.ARRAY));
     numSym++;
     scopeStack.push(newScope);
   }
@@ -64,18 +64,25 @@ public class ScopeManager {
     scopeStack.pop();
   }
 
-  public void addSymbol(String symbol) {
+  public void addSymbol(Symbol symbol) {
     localSymbols().add(symbol);
     numSym++;
   }
 
-  public void removeSymbol(String symbol) {
-    if (localSymbols().remove(symbol)) {
+  public void removeSymbol(String symbolName) {
+    Symbol symbol = null;
+    for (Symbol s : localSymbols()) {
+      if (s.name.equals(symbolName)) {
+        symbol = s;
+        break;
+      }
+    }
+    if (symbol != null && localSymbols().remove(symbol)) {
       numSym--;
     }
   }
 
-  private ArrayList<String> localSymbols() {
+  private ArrayList<Symbol> localSymbols() {
     return scopeStack.peek().symbols;
   }
 
@@ -95,40 +102,45 @@ public class ScopeManager {
     return scopeStack.size() > 1;
   }
 
-  public String getRandomSymbol(boolean excludeLocal) {
+  public Symbol getRandomSymbol(boolean excludeLocal) {
+    return getRandomSymbol(null, excludeLocal);
+  }
+
+  public Symbol getRandomSymbol(Type type, boolean excludeLocal) {
     if (excludeLocal) {
       Preconditions.checkArgument(getNumScopes() > 1);
     } else {
       Preconditions.checkArgument(getNumScopes() > 0);
     }
-    List<String> symbols = getRandomScope(excludeLocal).symbols;
-    String sym = symbols.get(random.nextInt(symbols.size()));
+
+    List<Symbol> symbols = new ArrayList<>();
+    ArrayList<Scope> scopes = new ArrayList<Scope>(scopeStack);
+    int i;
+    if (excludeLocal) {
+      i = 1;
+    } else {
+      i = 0;
+    }
+    while (i < scopes.size()) {
+      Scope scope = scopes.get(i);
+      for (Symbol s : scope.symbols) {
+        if (type == null || s.type == type) {
+          symbols.add(s);
+        }
+      }
+      i++;
+    }
+
+    int numCandidates = symbols.size();
+    if (numCandidates == 0) {
+      return null;
+    }
+    Symbol sym = symbols.get(random.nextInt(numCandidates));
     if (excludeLocal && localSymbols().indexOf(sym) != -1) {
       // the symbol has been shadowed
       return null;
     } else {
       return sym;
     }
-  }
-
-  /**
-   * Get a scope randomly. The more variables/functions the scope has, the more
-   * likely it will be chosen
-   */
-  private Scope getRandomScope(boolean excludeLocal) {
-    ArrayList<Scope> scopes = new ArrayList<Scope>(scopeStack);
-    ArrayList<Double> weights = Lists.newArrayListWithCapacity(getNumScopes());
-    int i;
-    for (i = 0; i < scopeStack.size() - 1; i++) {
-      Scope s = scopes.get(i);
-      weights.add(Double.valueOf(s.symbols.size()));
-    }
-    if (!excludeLocal) {
-      Scope s = scopes.get(i);
-      weights.add(Double.valueOf(s.symbols.size()));
-    }
-    DiscreteDistribution<Scope> distribution =
-        new DiscreteDistribution<Scope>(random, scopes, weights);
-    return distribution.nextItem();
   }
 }

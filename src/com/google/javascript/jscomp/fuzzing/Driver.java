@@ -327,8 +327,8 @@ public class Driver {
           return true;
         }
 
-        if (error1.contains("TypeError: number is not a function") &&
-            error2.contains("TypeError: number is not a function")) {
+        if (error1.contains("TypeError: undefined is not a function") &&
+            error2.contains("TypeError: undefined is not a function")) {
           return true;
         }
       }

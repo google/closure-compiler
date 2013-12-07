@@ -121,7 +121,9 @@ class FunctionCallFuzzer extends Dispatcher {
       @Override
       protected void initCandidates() {
         candidates = new AbstractFuzzer[] {
-            new AssignableExprFuzzer(random, scopeManager, config, snGenerator),
+            new ExistingIdentifierFuzzer(scopeManager, Type.FUNCTION),
+            new GetPropFuzzer(random, scopeManager, config, snGenerator),
+            new GetElemFuzzer(random, scopeManager, config, snGenerator),
             new FunctionFuzzer(random, scopeManager, config, snGenerator, true)
           };
       }

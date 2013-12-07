@@ -58,7 +58,7 @@ class FunctionFuzzer extends AbstractFuzzer {
     Node name;
     if (isExpression) {
       Preconditions.checkArgument(budget >= 3);
-      scopeManager.addFunctionScope();
+      scopeManager.addScope();
       if (budget >= 4 && random.nextInt(2) == 0) {
         // the name of function expression is only visible in the function
         name = getIdFuzzer().generate(1);
@@ -71,23 +71,32 @@ class FunctionFuzzer extends AbstractFuzzer {
       Preconditions.checkArgument(budget >= 4);
       name = getIdFuzzer().generate(1);
       paramBodyBudget = budget - 3;
-      scopeManager.addFunctionScope();
+      scopeManager.addScope();
     }
-    int numComponents =
-        generateLength(paramBodyBudget - 1) + 1;
-    AbstractFuzzer[] fuzzers = new AbstractFuzzer[numComponents];
+    int numParams = random.nextInt(getOwnConfig().optInt("maxParams") + 1);
+    int bodyBudget = paramBodyBudget - numParams - 1;
+    Node params =
+        new ParamListFuzzer(random, scopeManager, config, snGenerator).
+        generate(numParams);
+
+    int numStmts =
+        generateLength(bodyBudget);
+    if (numStmts < 1) {
+      // guarantee that the function body has at least a statement
+      numStmts = 1;
+    }
+    AbstractFuzzer[] fuzzers = new AbstractFuzzer[numStmts];
     Arrays.fill(
         fuzzers,
         new SourceElementFuzzer(random, scopeManager, config, snGenerator));
-    fuzzers[0] = new ParamListFuzzer(random, scopeManager, config, snGenerator);
     Node[] components = distribute(paramBodyBudget, fuzzers);
     Node body = new Node(Token.BLOCK);
-    for (int i = 1; i < numComponents; i++) {
+    for (int i = 0; i < numStmts; i++) {
       body.addChildToBack(components[i]);
     }
     scopeManager.removeScope();
     return new Node(Token.FUNCTION,
-        name, components[0], body);
+        name, params, body);
   }
 
   /**

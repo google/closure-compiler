@@ -23,9 +23,15 @@ import com.google.javascript.rhino.Token;
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class ExistingIdentifierFuzzer extends AbstractFuzzer {
+  Type type;
 
   ExistingIdentifierFuzzer(ScopeManager scopeManager) {
     this.scopeManager = scopeManager;
+  }
+
+  ExistingIdentifierFuzzer(ScopeManager scopeManager, Type type) {
+    this.scopeManager = scopeManager;
+    this.type = type;
   }
 
   /* (non-Javadoc)
@@ -34,7 +40,8 @@ class ExistingIdentifierFuzzer extends AbstractFuzzer {
   @Override
   protected Node generate(int budget) {
     Preconditions.checkState(scopeManager.getSize() > 0, "No symbol defined.");
-    return Node.newString(Token.NAME, scopeManager.getRandomSymbol(false));
+    return Node.newString(
+        Token.NAME, scopeManager.getRandomSymbol(type, false).name);
   }
 
   /* (non-Javadoc)

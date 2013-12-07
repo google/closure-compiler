@@ -24,7 +24,7 @@ import java.util.Random;
  * Data structure for holding information in each scope
  */
 class Scope {
-  ArrayList<String> symbols = new ArrayList<String>();
+  ArrayList<Symbol> symbols = new ArrayList<>();
   int loopNesting = 0;
   int switchNesting = 0;
   ArrayList<String> loopLabels = new ArrayList<String>();

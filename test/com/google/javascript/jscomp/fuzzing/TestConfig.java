@@ -27,7 +27,7 @@ class TestConfig {
       return new JSONObject(
           "{\n" +
           "  \"script\": {\n" +
-          "    \"maxLength\": 0.1\n" +
+          "    \"maxLength\": 0.05\n" +
           "  },\n" +
           "  \"sourceElement\": {\n" +
           "    \"weights\": {\n" +
@@ -36,6 +36,7 @@ class TestConfig {
           "    }\n" +
           "  },\n" +
           "  \"function\": {\n" +
+          "    \"maxParams\": 5,\n" +
           "    \"maxLength\": 0.1\n" +
           "  },\n" +
           "\n" +
@@ -151,7 +152,9 @@ class TestConfig {
           "  },\n" +
           "  \"callableExpr\": {\n" +
           "    \"weights\": {\n" +
-          "        \"assignableExpr\": 1,\n" +
+          "        \"getProp\": 1,\n" +
+          "        \"getElem\": 1,\n" +
+          "        \"existingIdentifier\": 1,\n" +
           "        \"function\": 1\n" +
           "    }\n" +
           "  },\n" +
@@ -212,7 +215,7 @@ class TestConfig {
           "  \"program\": {\n" +
           "    \"maxLength\": 0.1\n" +
           "  }\n" +
-          "}\n");
+          "}");
     } catch (JSONException e) {
       e.printStackTrace();
       return null;
