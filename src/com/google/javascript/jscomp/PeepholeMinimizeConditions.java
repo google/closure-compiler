@@ -113,7 +113,8 @@ class PeepholeMinimizeConditions
     Node block = n.getLastChild();
     Node maybeIf = block.getFirstChild();
     if (maybeIf != null && maybeIf.isIf()) {
-      Node maybeBreak = maybeIf.getChildAtIndex(1).getFirstChild();
+      Node thenBlock = maybeIf.getChildAtIndex(1);
+      Node maybeBreak = thenBlock.getFirstChild();
       if (maybeBreak != null && maybeBreak.isBreak()
           && !maybeBreak.hasChildren()) {
 
@@ -122,6 +123,7 @@ class PeepholeMinimizeConditions
           block.replaceChild(maybeIf,
               maybeIf.getLastChild().detachFromParent());
         } else {
+          NodeUtil.redeclareVarsInsideBranch(thenBlock);
           block.removeFirstChild();
         }
 

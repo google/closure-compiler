@@ -430,6 +430,8 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold("for(;a;) { if (b) break; if (c) break; }",
          "for(;(a && !b);) if (c) break;");
     fold("for(;(a && !b);) if (c) break;", "for(;(a && !b) && !c;);");
+    fold("for(;;) { if (foo) { break; var x; } } x;",
+        "var x; for(;!foo;) {} x;");
 
     // 'while' is normalized to 'for'
     enableNormalize(true);
