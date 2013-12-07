@@ -193,7 +193,7 @@ public class NewTypeInference implements CompilerPass {
     if (currentScope.isFunction()) {
       Set<String> formalsAndOuters = currentScope.getOuterVars();
       formalsAndOuters.addAll(currentScope.getFormals());
-      if (currentScope.isConstructor() || currentScope.isPrototypeMethod()) {
+      if (currentScope.hasThis()) {
         formalsAndOuters.add("this");
       }
       for (String name : formalsAndOuters) {
@@ -238,7 +238,7 @@ public class NewTypeInference implements CompilerPass {
     Set<String> varNames = currentScope.getOuterVars();
     varNames.addAll(currentScope.getFormals());
     varNames.addAll(currentScope.getLocals());
-    if (currentScope.isConstructor() || currentScope.isPrototypeMethod()) {
+    if (currentScope.hasThis()) {
       varNames.add("this");
     }
     for (String varName : varNames) {
@@ -680,8 +680,10 @@ public class NewTypeInference implements CompilerPass {
         return new EnvTypePair(env, result);
       }
       case Token.THIS: {
-        Preconditions.checkState(
-            currentScope.isConstructor() || currentScope.isPrototypeMethod());
+        if (!currentScope.hasThis()) {
+          warnings.add(JSError.make(expr, CheckGlobalThis.GLOBAL_THIS));
+          return new EnvTypePair(inEnv, JSType.UNKNOWN);
+        }
         JSType thisType = currentScope.getDeclaredTypeOf("this");
         return new EnvTypePair(inEnv, thisType);
       }
@@ -1274,8 +1276,10 @@ public class NewTypeInference implements CompilerPass {
         return new EnvTypePair(env, result);
       }
       case Token.THIS: {
-        Preconditions.checkState(
-            currentScope.isConstructor() || currentScope.isPrototypeMethod());
+        // TODO(blickly): Infer a loose type for this if we're in a function.
+        if (!currentScope.hasThis()) {
+          return new EnvTypePair(outEnv, JSType.UNKNOWN);
+        }
         JSType thisType = currentScope.getDeclaredTypeOf("this");
         return new EnvTypePair(outEnv, thisType);
       }
@@ -1614,7 +1618,15 @@ public class NewTypeInference implements CompilerPass {
   private LValueResult analyzeLValueFwd(
       Node expr, TypeEnv inEnv, JSType type, boolean isRecursiveCall) {
     switch (expr.getType()) {
-      case Token.THIS:
+      case Token.THIS: {
+        if (currentScope.hasThis()) {
+          return new LValueResult(inEnv, envGetType(inEnv, "this"),
+              currentScope.getDeclaredTypeOf("this"), "this");
+        } else {
+          warnings.add(JSError.make(expr, CheckGlobalThis.GLOBAL_THIS));
+          return new LValueResult(inEnv, JSType.UNKNOWN, null, null);
+        }
+      }
       case Token.NAME: {
         String varName = expr.getQualifiedName();
         JSType varType = envGetType(inEnv, varName);
@@ -1724,7 +1736,7 @@ public class NewTypeInference implements CompilerPass {
         JSType propDeclType = lvalue.type.getDeclaredProp(pname);
         JSType slicedObjType = propDeclType == null ?
             objType.withoutProperty(props) :
-            objType.withProperty(props, propDeclType);
+            objType.withDeclaredProperty(props, propDeclType);
         lvalue.env = envPutType(lvalue.env, objName, slicedObjType);
       }
     }

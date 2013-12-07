@@ -119,6 +119,14 @@ public class DeclaredFunctionType {
     return returnType;
   }
 
+  public NominalType getThisType() {
+    if (klass != null) {
+      return klass;
+    } else {
+      return receiverType;
+    }
+  }
+
   public NominalType getClassType() {
     return klass;
   }

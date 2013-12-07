@@ -151,6 +151,11 @@ public class JSTypeCreatorFromJSDoc {
       case Token.FUNCTION: {
         FunctionTypeBuilder builder = new FunctionTypeBuilder();
         Node child = n.getFirstChild();
+        if (child.getType() == Token.THIS) {
+          builder.addReceiverType(
+              getClassType(child.getFirstChild(), registry));
+          child = child.getNext();
+        }
         if (child.getType() == Token.PARAM_LIST) {
           for (Node arg = child.getFirstChild(); arg != null;
                arg = arg.getNext()) {
@@ -195,7 +200,6 @@ public class JSTypeCreatorFromJSDoc {
   }
 
   public NominalType getClassType(Node n, DeclaredTypeRegistry registry) {
-    Preconditions.checkArgument(n.getType() == Token.BANG);
     JSType wrappedClass = getTypeFromNode(n, registry);
     Preconditions.checkState(wrappedClass != null);
     return wrappedClass.getClassTypeIfUnique();
@@ -260,6 +264,11 @@ public class JSTypeCreatorFromJSDoc {
     boolean warnedForMissingTypes = false;
     boolean warnedForInlineJsdoc = false;
 
+    if (childJsdoc.getType() == Token.THIS) {
+      builder.addReceiverType(
+          getClassType(childJsdoc.getFirstChild(), registry));
+      childJsdoc = childJsdoc.getNext();
+    }
     if (childJsdoc.getType() == Token.PARAM_LIST) {
       paramType = childJsdoc.getFirstChild();
       childJsdoc = childJsdoc.getNext(); // go to the return type

@@ -542,7 +542,7 @@ class GlobalTypeInfo {
     }
 
     private void visitClassPropertyDeclaration(Node getPropNode) {
-      NominalType thisType = currentScope.getThisType();
+      NominalType thisType = currentScope.getDeclaredType().getThisType();
       String pname = getPropNode.getLastChild().getString();
       // TODO(blickly): Support @param, @return style fun declarations here.
       JSType declaredType =
@@ -771,6 +771,13 @@ class GlobalTypeInfo {
       return outerVars.contains(name);
     }
 
+    boolean hasThis() {
+      if (isFunction() && getDeclaredType().getThisType() != null) {
+        return true;
+      }
+      return false;
+    }
+
     @Override
     public JSType getNamedTypeByName(String name) {
       Preconditions.checkState(localClassDefs != null);
@@ -785,17 +792,13 @@ class GlobalTypeInfo {
       return null;
     }
 
-    private NominalType getThisType() {
-      if (isConstructor()) {
-        return getDeclaredType().getClassType();
-      }
-      Preconditions.checkState(isPrototypeMethod());
-      return getDeclaredType().getReceiverType();
-    }
-
     public JSType getDeclaredTypeOf(String name) {
       if ("this".equals(name)) {
-        return JSType.fromObjectType(ObjectType.fromClass(getThisType()));
+        if (!hasThis()) {
+          return null;
+        }
+        return JSType.fromObjectType(ObjectType.fromClass(
+            getDeclaredType().getThisType()));
       }
       int formalIndex = formals.indexOf(name);
       if (formalIndex != -1) {
