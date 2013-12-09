@@ -1581,7 +1581,7 @@ jQuery.now = function() {};
 $.now = function() {};
 
 /**
- * @param {(string|Object.<string,*>)} arg1
+ * @param {(string|Object.<string,*>)=} arg1
  * @param {(string|function(!jQuery.event=))=} selector
  * @param {function(!jQuery.event=)=} handler
  * @return {!jQuery}
