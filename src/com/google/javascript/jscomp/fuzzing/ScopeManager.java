@@ -45,7 +45,7 @@ public class ScopeManager {
         new Symbol("RegExp", Type.FUNCTION),
         new Symbol("String", Type.FUNCTION),
         new Symbol("Error", Type.FUNCTION),
-        new Symbol("JSON", Type.FUNCTION),
+        new Symbol("JSON", Type.OBJECT),
         new Symbol("Math", Type.OBJECT),
         new Symbol("Number", Type.FUNCTION));
     numSym = globalScope.symbols.size();
@@ -70,6 +70,13 @@ public class ScopeManager {
   }
 
   public void removeSymbol(String symbolName) {
+    Symbol symbol = searchLocalFor(symbolName);
+    if (symbol != null && localSymbols().remove(symbol)) {
+      numSym--;
+    }
+  }
+
+  private Symbol searchLocalFor(String symbolName) {
     Symbol symbol = null;
     for (Symbol s : localSymbols()) {
       if (s.name.equals(symbolName)) {
@@ -77,9 +84,7 @@ public class ScopeManager {
         break;
       }
     }
-    if (symbol != null && localSymbols().remove(symbol)) {
-      numSym--;
-    }
+    return symbol;
   }
 
   private ArrayList<Symbol> localSymbols() {
@@ -136,7 +141,7 @@ public class ScopeManager {
       return null;
     }
     Symbol sym = symbols.get(random.nextInt(numCandidates));
-    if (excludeLocal && localSymbols().indexOf(sym) != -1) {
+    if (excludeLocal && searchLocalFor(sym.name) != null) {
       // the symbol has been shadowed
       return null;
     } else {

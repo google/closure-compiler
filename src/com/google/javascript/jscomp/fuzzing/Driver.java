@@ -48,6 +48,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,10 +59,9 @@ import java.util.logging.Logger;
 public class Driver {
   @Option(name = "--number_of_runs",
       usage = "The number of runs of the fuzzer. "
-          + "If the number given is less than 1, the driver will run until "
-          + "first error (either in Fuzzer or Compiler) is found. "
-          + "Default: 1")
-  private int numberOfRuns = 1;
+          + "If this option is missing, the driver will run until "
+          + "first error (either in Fuzzer or Compiler) is found. ")
+  private int numberOfRuns = -1;
 
   @Option(name = "--max_ast_size",
       usage = "The max number of nodes in the generated ASTs. Default: 100")
@@ -75,6 +75,7 @@ public class Driver {
 
   @Option(name = "--seed",
       usage = "Specifies the seed for the fuzzer. "
+          + "It will override --number_of_runs to 1. "
           + "If not given, System.currentTimeMillis() will be used")
   private long seed = -1;
 
@@ -92,6 +93,7 @@ public class Driver {
   private boolean execute = false;
 
   private Logger logger;
+  private JSONObject config;
 
   public Result compile(String code) throws IOException {
     Compiler.setLoggingLevel(level.getLevel());
@@ -120,26 +122,31 @@ public class Driver {
   }
 
   private JSONObject getConfig() {
-    File file = new File(configFileName);
-    try {
-      return new JSONObject(Files.toString(
-          file, StandardCharsets.UTF_8));
-    } catch (JSONException | IOException e) {
-      e.printStackTrace();
-      return null;
+    if (config == null) {
+      File file = new File(configFileName);
+      try {
+        config = new JSONObject(Files.toString(
+            file, StandardCharsets.UTF_8));
+      } catch (JSONException | IOException e) {
+        e.printStackTrace();
+      }
     }
+    return config;
   }
 
   private Logger getLogger() {
     if (logger == null) {
       logger = Logger.getLogger(Driver.class.getName());
       logger.setLevel(level.getLevel());
+      for (Handler handler : logger.getHandlers()) {
+        handler.setLevel(Level.ALL);
+      }
     }
     return logger;
   }
 
   private boolean forever() {
-    return numberOfRuns < 1;
+    return numberOfRuns == -1;
   }
 
   private Node fuzz() {
@@ -224,16 +231,21 @@ public class Driver {
       String debugInfo = sb.toString();
       try {
         Result result = compile(script);
-        if (result.success && result.warnings.length == 0) {
-          getLogger().info("Compilation Succeeded!");
-          getLogger().info(debugInfo);
+        if (result.success) {
+          if (result.warnings.length == 0) {
+            getLogger().info(debugInfo);
+          } else {
+            getLogger().warning(debugInfo);
+          }
         } else {
-          getLogger().warning("Compilation Failed!");
-          getLogger().info(debugInfo);
+          getLogger().severe(debugInfo);
+          if (forever()) {
+            break;
+          }
         }
       } catch (Exception e) {
-        getLogger().log(Level.SEVERE, "Compiler error!\n", e);
-        getLogger().warning(debugInfo);
+        getLogger().log(Level.SEVERE, "Compiler Crashed!", e);
+        getLogger().severe(debugInfo);
         if (forever()) {
           break;
         }
@@ -317,18 +329,22 @@ public class Driver {
           return true;
         }
 
-        // the script throws the same exception
+        // both scripts throw an exception
         String lineSeparator = System.getProperty("line.separator");
         String[] lines1 = error1.trim().split(lineSeparator);
         String[] lines2 = error2.trim().split(lineSeparator);
         if (lines1.length == lines2.length &&
-            lines1[1].trim().startsWith("throw") &&
-            lines2[1].trim().startsWith("throw")) {
+            lines1[1].trim().contains("throw") &&
+            lines2[1].trim().contains("throw")) {
           return true;
         }
 
         if (error1.contains("TypeError: undefined is not a function") &&
             error2.contains("TypeError: undefined is not a function")) {
+          return true;
+        }
+        if (error1.contains("TypeError: number is not a function") &&
+            error2.contains("TypeError: number is not a function")) {
           return true;
         }
       }

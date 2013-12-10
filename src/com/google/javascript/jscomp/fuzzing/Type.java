@@ -24,4 +24,5 @@ enum Type {
   OBJECT,
   ARRAY,
   STRING
+  //TODO(zplin) include other types when necessary, e.g., boolean
 }

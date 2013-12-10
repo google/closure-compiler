@@ -40,7 +40,10 @@ class IdentifierFuzzer extends AbstractFuzzer {
     if (scopeManager.hasNonLocals() &&
         random.nextDouble() <
         config.optJSONObject("identifier").optDouble("shadow")) {
-      name = scopeManager.getRandomSymbol(true).name;
+      Symbol symbol = scopeManager.getRandomSymbol(true);
+      if (symbol != null) {
+        name = symbol.name;
+      }
     }
     if (name == null){
       name = "x_" + snGenerator.getNextNumber();
