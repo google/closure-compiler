@@ -23,6 +23,7 @@ package com.google.javascript.jscomp;
 public class CrossModuleCodeMotionTest extends CompilerTestCase {
 
   private static final String EXTERNS = "alert";
+  private boolean parentModuleCanSeeSymbolsDeclaredInChildren = false;
 
   public CrossModuleCodeMotionTest() {
     super(EXTERNS);
@@ -30,12 +31,16 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = false;
     super.enableLineNumberCheck(true);
   }
 
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
-    return new CrossModuleCodeMotion(compiler, compiler.getModuleGraph());
+    return new CrossModuleCodeMotion(
+        compiler,
+        compiler.getModuleGraph(),
+        parentModuleCanSeeSymbolsDeclaredInChildren);
   }
 
   public void testFunctionMovement1() {
@@ -281,6 +286,7 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
   }
 
   public void testClassMovement_instanceof() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = true;
     test(createModuleStar(
              // m1
              "function f(){} f.prototype.bar=function (){};" +
@@ -294,7 +300,18 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
          });
   }
 
+  public void testClassMovement_instanceofTurnedOff() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = false;
+    testSame(createModuleStar(
+             // m1
+             "function f(){} f.prototype.bar=function (){};" +
+             "1 instanceof f;",
+             // m2
+             "var a = new f();"));
+  }
+
   public void testClassMovement_instanceof2() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = true;
     test(createModuleStar(
              // m1
              "function f(){} f.prototype.bar=function (){};" +
@@ -309,6 +326,7 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
   }
 
   public void testClassMovement_instanceof3() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = true;
     testSame(createModuleStar(
              // m1
              "function f(){} f.prototype.bar=function (){};" +
@@ -318,6 +336,7 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
   }
 
   public void testClassMovement_instanceof_noRewriteRequired() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = true;
     testSame(createModuleStar(
              // m1
              "function f(){} f.prototype.bar=function (){};" +
@@ -328,6 +347,7 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
   }
 
   public void testClassMovement_instanceof_noRewriteRequired2() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = true;
     testSame(createModuleChain(
              // m1
              "function f(){} f.prototype.bar=function (){};" +

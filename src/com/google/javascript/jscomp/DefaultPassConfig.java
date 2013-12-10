@@ -1914,7 +1914,10 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("crossModuleCodeMotion", false) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new CrossModuleCodeMotion(compiler, compiler.getModuleGraph());
+      return new CrossModuleCodeMotion(
+          compiler,
+          compiler.getModuleGraph(),
+          options.parentModuleCanSeeSymbolsDeclaredInChildren);
     }
   };
 

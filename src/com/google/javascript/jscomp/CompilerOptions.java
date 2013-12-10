@@ -302,6 +302,13 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Move code to a deeper module */
   public boolean crossModuleCodeMotion;
 
+  /**
+   * Whether when module B depends on module A and module B declares a symbol,
+   * this symbol can be seen in A after B has been loaded. This is often true,
+   * but may not be true when loading code using nested eval.
+   */
+  boolean parentModuleCanSeeSymbolsDeclaredInChildren;
+
   /** Merge two variables together as one. */
   public boolean coalesceVariableNames;
 
@@ -949,6 +956,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     assumeClosuresOnlyCaptureReferences = false;
     inlineProperties = false;
     crossModuleCodeMotion = false;
+    parentModuleCanSeeSymbolsDeclaredInChildren = false;
     crossModuleMethodMotion = false;
     inlineGetters = false;
     inlineVariables = false;
@@ -1756,6 +1764,12 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setCrossModuleCodeMotion(boolean crossModuleCodeMotion) {
     this.crossModuleCodeMotion = crossModuleCodeMotion;
+  }
+
+  public void setParentModuleCanSeeSymbolsDeclaredInChildren(
+      boolean parentModuleCanSeeSymbolsDeclaredInChildren) {
+    this.parentModuleCanSeeSymbolsDeclaredInChildren =
+        parentModuleCanSeeSymbolsDeclaredInChildren;
   }
 
   public void setCoalesceVariableNames(boolean coalesceVariableNames) {

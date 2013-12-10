@@ -63,14 +63,21 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
   private final Map<Node, InstanceofInfo> instanceofNodes =
       new LinkedHashMap<Node, InstanceofInfo>();
 
+  private final boolean parentModuleCanSeeSymbolsDeclaredInChildren;
+
   /**
    * Creates an instance.
    *
    * @param compiler The compiler
    */
-  CrossModuleCodeMotion(AbstractCompiler compiler, JSModuleGraph graph) {
+  CrossModuleCodeMotion(
+      AbstractCompiler compiler,
+      JSModuleGraph graph,
+      boolean parentModuleCanSeeSymbolsDeclaredInChildren) {
     this.compiler = compiler;
     this.graph = graph;
+    this.parentModuleCanSeeSymbolsDeclaredInChildren =
+        parentModuleCanSeeSymbolsDeclaredInChildren;
   }
 
   @Override
@@ -84,7 +91,9 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
       NodeTraversal.traverse(compiler, root, this);
 
       // Make is so we can ignore constructor references in instanceof.
-      makeInstanceOfCodeOrderIndependent();
+      if (parentModuleCanSeeSymbolsDeclaredInChildren) {
+        makeInstanceOfCodeOrderIndependent();
+      }
 
       // Move the functions + variables to a deeper module [if possible]
       moveCode();
@@ -321,7 +330,8 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
           info.allowMove = false;
         }
       } else {
-        if (parent.isInstanceOf() && parent.getLastChild() == n) {
+        if (parentModuleCanSeeSymbolsDeclaredInChildren &&
+            parent.isInstanceOf() && parent.getLastChild() == n) {
           instanceofNodes.put(parent, new InstanceofInfo(t.getModule(), info));
         } else {
           // Otherwise, it's a reference
