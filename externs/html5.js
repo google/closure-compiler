@@ -1113,6 +1113,24 @@ HTMLElement.prototype.hidden;
 /** @type {boolean} */
 HTMLElement.prototype.spellcheck;
 
+/**
+ * @see http://www.w3.org/TR/components-intro/
+ * @return {!Element}
+ */
+HTMLElement.prototype.createShadowRoot;
+
+/**
+ * @see http://www.w3.org/TR/components-intro/
+ * @return {!Element}
+ */
+HTMLElement.prototype.webkitCreateShadowRoot;
+
+/**
+ * @see http://www.w3.org/TR/components-intro/
+ * @type {function()}
+ */
+HTMLElement.prototype.createdCallback;
+
 /** @type {string} */
 HTMLAnchorElement.prototype.hash;
 
@@ -3008,6 +3026,14 @@ Document.prototype.webkitHidden;
  * @type {boolean}
  */
 Document.prototype.msHidden;
+
+/**
+ * @see http://www.w3.org/TR/components-intro/
+ * @see http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-register
+ * @param {string} type
+ * @param {{extends: (string|undefined), prototype: (Object|undefined)}} options
+ */
+Document.prototype.register;
 
 
 /**
