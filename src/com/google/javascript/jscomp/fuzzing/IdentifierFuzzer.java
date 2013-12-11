@@ -18,17 +18,13 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class IdentifierFuzzer extends AbstractFuzzer {
-  IdentifierFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+
+  IdentifierFuzzer(FuzzingContext context) {
+    super(context);
   }
   /* (non-Javadoc)
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
@@ -37,16 +33,18 @@ class IdentifierFuzzer extends AbstractFuzzer {
   protected Node generate(int budget) {
     String name = null;
     // allow variable shadowing
+    ScopeManager scopeManager = context.scopeManager;
     if (scopeManager.hasNonLocals() &&
-        random.nextDouble() <
-        config.optJSONObject("identifier").optDouble("shadow")) {
-      Symbol symbol = scopeManager.getRandomSymbol(true);
+        context.random.nextDouble() <
+        getOwnConfig().optDouble("shadow")) {
+      Symbol symbol = scopeManager.getRandomSymbol(
+          ScopeManager.EXCLUDE_EXTERNS | ScopeManager.EXCLUDE_LOCALS);
       if (symbol != null) {
         name = symbol.name;
       }
     }
     if (name == null){
-      name = "x_" + snGenerator.getNextNumber();
+      name = "x_" + context.snGenerator.getNextNumber();
     }
     scopeManager.addSymbol(new Symbol(name));
     return Node.newString(Token.NAME, name);

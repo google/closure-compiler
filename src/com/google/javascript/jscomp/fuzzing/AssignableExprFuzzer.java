@@ -15,27 +15,31 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
-import org.json.JSONObject;
-
-import java.util.Random;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class AssignableExprFuzzer extends Dispatcher {
+  Type type;
 
-  AssignableExprFuzzer(
-      Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  AssignableExprFuzzer(FuzzingContext context) {
+    super(context);
+  }
+
+  AssignableExprFuzzer(FuzzingContext context, Type type) {
+    super(context);
+    this.type = type;
   }
 
   @Override
   protected void initCandidates() {
+    ExistingIdentifierFuzzer idFuzzer = context.strict ?
+        new ExistingIdentifierFuzzer(context, type, true) :
+        new ExistingIdentifierFuzzer(context);
     candidates = new AbstractFuzzer[] {
-        new ExistingIdentifierFuzzer(scopeManager),
-        new GetPropFuzzer(random, scopeManager, config, snGenerator),
-        new GetElemFuzzer(random, scopeManager, config, snGenerator)
+        idFuzzer,
+        new GetPropFuzzer(context),
+        new GetElemFuzzer(context)
     };
   }
 

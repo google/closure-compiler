@@ -18,17 +18,12 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class ForInFuzzer extends AbstractFuzzer {
-  public ForInFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  ForInFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -44,22 +39,22 @@ class ForInFuzzer extends AbstractFuzzer {
    */
   @Override
   protected Node generate(int budget) {
-    scopeManager.localScope().loopNesting++;
+    Scope localScope = context.scopeManager.localScope();
+    localScope.loopNesting++;
     AbstractFuzzer[] fuzzers = {
-      new ForInItemFuzzer(random, scopeManager, config, snGenerator),
-      new ExpressionFuzzer(random, scopeManager, config, snGenerator),
-      new BlockFuzzer(random, scopeManager, config, snGenerator)
+      new ForInItemFuzzer(context),
+      new ExpressionFuzzer(context),
+      new BlockFuzzer(context)
     };
     Node[] components = distribute(budget - 1, fuzzers);
-    scopeManager.localScope().loopNesting--;
+    localScope.loopNesting--;
     return new Node(Token.FOR, components);
   }
 
   private class ForInItemFuzzer extends Dispatcher {
 
-    ForInItemFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-        StringNumberGenerator snGenerator) {
-      super(random, scopeManager, config, snGenerator);
+    ForInItemFuzzer(FuzzingContext context) {
+      super(context);
     }
 
     /* (non-Javadoc)
@@ -68,8 +63,8 @@ class ForInFuzzer extends AbstractFuzzer {
     @Override
     protected void initCandidates() {
       candidates = new AbstractFuzzer[] {
-          new AssignableExprFuzzer(random, scopeManager, config, snGenerator),
-          new VarFuzzer(random, scopeManager, config, snGenerator)
+          new AssignableExprFuzzer(context),
+          new VarFuzzer(context)
       };
     }
 

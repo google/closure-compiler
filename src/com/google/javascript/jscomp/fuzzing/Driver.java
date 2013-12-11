@@ -149,13 +149,9 @@ public class Driver {
     return numberOfRuns == -1;
   }
 
-  private Node fuzz() {
-    if (seed == -1) {
-      seed = System.currentTimeMillis();
-    }
-    Random random = new Random(seed);
-    ScriptFuzzer fuzzer = new ScriptFuzzer(
-        random, getConfig());
+  private Node fuzz(Random random) {
+    FuzzingContext context = new FuzzingContext(random, getConfig(), execute);
+    ScriptFuzzer fuzzer = new ScriptFuzzer(context);
     Node script = null;
     try {
       script = fuzzer.generate(maxASTSize);
@@ -201,11 +197,9 @@ public class Driver {
       return true;
     } else {
       StringBuilder sb =
-          new StringBuilder("Different runtime errors!\nSeed: ").append(seed);
+          new StringBuilder("Different runtime errors!");
       sb.append("\nError1:").append(error1);
-      sb.append("\nJavaScript1: \n").append(js1);
       sb.append("\nError2:").append(error2);
-      sb.append("\nJavaScript2: \n").append(js2);
       getLogger().severe(sb.toString());
       return false;
     }
@@ -216,45 +210,51 @@ public class Driver {
       // When user specifies seed, only run once
       numberOfRuns = 1;
     }
+    long currentSeed;
     for (int i = 0; forever() || i < numberOfRuns; i++) {
+      currentSeed = seed == -1 ? System.currentTimeMillis() : seed;
       getLogger().info("Running fuzzer [" + i + " of " +
           numberOfRuns + "]");
-      Node script = fuzz();
+      Random random = currentSeed == -1 ? new Random(currentSeed) :
+        new Random(currentSeed);
+      Node script = fuzz(random);
       if (script == null) {
         if (forever()) {
           break;
         }
       }
       String code1 = ScriptFuzzer.getPrettyCode(script);
-      StringBuffer sb = new StringBuffer("Seed: ").append(seed);
-      sb.append("\nJavaScript: ").append(code1);
-      String debugInfo = sb.toString();
+      StringBuffer debugInfo = new StringBuffer("Seed: ").append(currentSeed);
+      debugInfo.append("\nJavaScript: ").append(code1);
       try {
         Result result = compile(script);
         if (result.success) {
           if (result.warnings.length == 0) {
-            getLogger().info(debugInfo);
+            getLogger().info(debugInfo.toString());
           } else {
-            getLogger().warning(debugInfo);
+            getLogger().warning(debugInfo.toString());
           }
         } else {
-          getLogger().severe(debugInfo);
+          getLogger().severe(debugInfo.toString());
           if (forever()) {
             break;
           }
         }
       } catch (Exception e) {
         getLogger().log(Level.SEVERE, "Compiler Crashed!", e);
-        getLogger().severe(debugInfo);
+        getLogger().severe(debugInfo.toString());
         if (forever()) {
           break;
         }
       }
       String code2 = ScriptFuzzer.getPrettyCode(script);
-      getLogger().info("Compiled Code: " + code2);
+      debugInfo.append("Compiled Code: " + code2);
       if (execute) {
-        if (!executeJS(code1, code2) && forever()) {
-          break;
+        if (!executeJS(code1, code2)) {
+          getLogger().severe(debugInfo.toString());
+          if (forever()) {
+            break;
+          }
         }
       }
     }
@@ -339,14 +339,14 @@ public class Driver {
           return true;
         }
 
-        if (error1.contains("TypeError: undefined is not a function") &&
-            error2.contains("TypeError: undefined is not a function")) {
-          return true;
-        }
-        if (error1.contains("TypeError: number is not a function") &&
-            error2.contains("TypeError: number is not a function")) {
-          return true;
-        }
+//        if (error1.contains("TypeError: undefined is not a function") &&
+//            error2.contains("TypeError: undefined is not a function")) {
+//          return true;
+//        }
+//        if (error1.contains("TypeError: number is not a function") &&
+//            error2.contains("TypeError: number is not a function")) {
+//          return true;
+//        }
       }
       return false;
     }

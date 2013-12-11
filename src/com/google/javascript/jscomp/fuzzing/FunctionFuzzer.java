@@ -19,10 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
 import java.util.Arrays;
-import java.util.Random;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -30,10 +27,9 @@ import java.util.Random;
 class FunctionFuzzer extends AbstractFuzzer {
   private boolean isExpression;
   private IdentifierFuzzer idFuzzer;
-  public FunctionFuzzer(Random random, ScopeManager scopeManager,
-      JSONObject config, StringNumberGenerator snGenerator,
+  public FunctionFuzzer(FuzzingContext context,
       boolean isExpression) {
-    super(random, scopeManager, config, snGenerator);
+    super(context);
     this.isExpression = isExpression;
   }
 
@@ -56,10 +52,11 @@ class FunctionFuzzer extends AbstractFuzzer {
   protected Node generate(int budget) {
     int paramBodyBudget;
     Node name;
+    ScopeManager scopeManager = context.scopeManager;
     if (isExpression) {
       Preconditions.checkArgument(budget >= 3);
       scopeManager.addScope();
-      if (budget >= 4 && random.nextInt(2) == 0) {
+      if (budget >= 4 && context.random.nextInt(2) == 0) {
         // the name of function expression is only visible in the function
         name = getIdFuzzer().generate(1);
         paramBodyBudget = budget - 3;
@@ -73,10 +70,10 @@ class FunctionFuzzer extends AbstractFuzzer {
       paramBodyBudget = budget - 3;
       scopeManager.addScope();
     }
-    int numParams = random.nextInt(getOwnConfig().optInt("maxParams") + 1);
+    int numParams = context.random.nextInt(getOwnConfig().optInt("maxParams") + 1);
     int bodyBudget = paramBodyBudget - numParams - 1;
     Node params =
-        new ParamListFuzzer(random, scopeManager, config, snGenerator).
+        new ParamListFuzzer(context).
         generate(numParams);
 
     int numStmts =
@@ -88,7 +85,7 @@ class FunctionFuzzer extends AbstractFuzzer {
     AbstractFuzzer[] fuzzers = new AbstractFuzzer[numStmts];
     Arrays.fill(
         fuzzers,
-        new SourceElementFuzzer(random, scopeManager, config, snGenerator));
+        new SourceElementFuzzer(context));
     Node[] components = distribute(paramBodyBudget, fuzzers);
     Node body = new Node(Token.BLOCK);
     for (int i = 0; i < numStmts; i++) {
@@ -104,16 +101,15 @@ class FunctionFuzzer extends AbstractFuzzer {
    */
   private IdentifierFuzzer getIdFuzzer() {
     if (idFuzzer == null) {
-      idFuzzer = new IdentifierFuzzer(random, scopeManager, config, snGenerator);
+      idFuzzer = new IdentifierFuzzer(context);
     }
     return idFuzzer;
   }
 
   private class ParamListFuzzer extends AbstractFuzzer {
 
-    ParamListFuzzer(Random random, ScopeManager scopeManager,
-        JSONObject config, StringNumberGenerator snGenerator) {
-      super(random, scopeManager, config, snGenerator);
+    ParamListFuzzer(FuzzingContext context) {
+      super(context);
     }
 
     /* (non-Javadoc)

@@ -21,8 +21,9 @@ import com.google.javascript.rhino.Node;
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class StringFuzzer extends AbstractFuzzer {
-  StringFuzzer(StringNumberGenerator snGenerator) {
-    this.snGenerator = snGenerator;
+
+  StringFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -30,7 +31,7 @@ class StringFuzzer extends AbstractFuzzer {
    */
   @Override
   protected Node generate(int budget) {
-    return Node.newString(snGenerator.getString());
+    return Node.newString(context.snGenerator.getString());
   }
 
   /* (non-Javadoc)

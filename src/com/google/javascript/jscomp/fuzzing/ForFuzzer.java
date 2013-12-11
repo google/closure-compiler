@@ -18,18 +18,13 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class ForFuzzer extends AbstractFuzzer {
 
-  public ForFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  ForFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -49,17 +44,17 @@ class ForFuzzer extends AbstractFuzzer {
         (int) ((budget - 1) * getOwnConfig().optDouble("headBudget"));
     int bodyBudget = budget - 1 - totalHeaderBudget;
     ExpressionFuzzer exprFuzzer =
-        new ExpressionFuzzer(random, scopeManager, config, snGenerator);
+        new ExpressionFuzzer(context);
     AbstractFuzzer[] fuzzers = {
-        new ForInitializerFuzzer(random, scopeManager, config, snGenerator),
+        new ForInitializerFuzzer(context),
         exprFuzzer, exprFuzzer};
 
     Node[] headers = distribute(totalHeaderBudget, fuzzers);
     Node node = new Node(Token.FOR, headers);
-    scopeManager.localScope().loopNesting++;
-    Node body = new BlockFuzzer(random, scopeManager, config, snGenerator).
+    context.scopeManager.localScope().loopNesting++;
+    Node body = new BlockFuzzer(context).
         generate(bodyBudget);
-    scopeManager.localScope().loopNesting--;
+    context.scopeManager.localScope().loopNesting--;
     node.addChildToBack(body);
     return node;
   }
@@ -74,9 +69,9 @@ class ForFuzzer extends AbstractFuzzer {
   }
 
   private class ForInitializerFuzzer extends Dispatcher {
-    ForInitializerFuzzer(Random random, ScopeManager scopeManager,
-        JSONObject config, StringNumberGenerator snGenerator) {
-      super(random, scopeManager, config, snGenerator);
+
+    ForInitializerFuzzer(FuzzingContext context) {
+      super(context);
     }
 
     /* (non-Javadoc)
@@ -85,8 +80,8 @@ class ForFuzzer extends AbstractFuzzer {
     @Override
     protected void initCandidates() {
       candidates = new AbstractFuzzer[] {
-        new VarFuzzer(random, scopeManager, config, snGenerator),
-        new ExpressionFuzzer(random, scopeManager, config, snGenerator)
+        new VarFuzzer(context),
+        new ExpressionFuzzer(context)
       };
     }
 

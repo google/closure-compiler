@@ -27,17 +27,19 @@ import java.util.Random;
 /**
  * @author zplin@google.com (Zhongpeng Lin)
  */
-public class ScopeManager {
+class ScopeManager {
   private ArrayDeque<Scope> scopeStack = new ArrayDeque<Scope>();
   // Random generator for getting random scope/symbol for fuzzer
   private Random random;
   // Total number of symbols currently available
   private int numSym;
+  static final int EXCLUDE_LOCALS = 1;
+  static final int EXCLUDE_EXTERNS = 1 << 1;
 
   public ScopeManager(Random random) {
     this.random = random;
-    Scope globalScope = new Scope();
-    globalScope.symbols = Lists.newArrayList(
+    Scope externs = new Scope();
+    externs.symbols = Lists.newArrayList(
         new Symbol("Array", Type.FUNCTION),
         new Symbol("Boolean", Type.FUNCTION),
         new Symbol("Function", Type.FUNCTION),
@@ -48,8 +50,10 @@ public class ScopeManager {
         new Symbol("JSON", Type.OBJECT),
         new Symbol("Math", Type.OBJECT),
         new Symbol("Number", Type.FUNCTION));
-    numSym = globalScope.symbols.size();
-    scopeStack.push(globalScope);
+    scopeStack.push(externs);
+    // global scope
+    scopeStack.push(new Scope());
+    numSym = 0;
   }
 
   public void addScope() {
@@ -99,41 +103,41 @@ public class ScopeManager {
     return numSym;
   }
 
-  public int getNumScopes() {
-    return scopeStack.size();
+  public boolean isInFunction() {
+    return scopeStack.size() > 2;
   }
 
   public boolean hasNonLocals() {
-    return scopeStack.size() > 1;
+    return numSym - localSymbols().size() > 0;
   }
 
-  public Symbol getRandomSymbol(boolean excludeLocal) {
-    return getRandomSymbol(null, excludeLocal);
+  public Symbol getRandomSymbol(int flags) {
+    return getRandomSymbol(null, flags);
   }
 
-  public Symbol getRandomSymbol(Type type, boolean excludeLocal) {
-    if (excludeLocal) {
-      Preconditions.checkArgument(getNumScopes() > 1);
-    } else {
-      Preconditions.checkArgument(getNumScopes() > 0);
+  public Symbol getRandomSymbol(Type type, int flags) {
+    int minScopes = 1;
+    boolean excludeLocals = (flags & EXCLUDE_LOCALS) != 0;
+    if (excludeLocals) {
+      minScopes++;
     }
+    boolean excludeExterns = (flags & EXCLUDE_EXTERNS) != 0;
+    if (excludeExterns) {
+      minScopes++;
+    }
+    Preconditions.checkArgument(scopeStack.size() >= minScopes);
 
     List<Symbol> symbols = new ArrayList<>();
     ArrayList<Scope> scopes = new ArrayList<Scope>(scopeStack);
-    int i;
-    if (excludeLocal) {
-      i = 1;
-    } else {
-      i = 0;
-    }
-    while (i < scopes.size()) {
+    int start = excludeLocals ? 1 : 0;
+    int end = excludeExterns ? scopes.size() - 1 : scopes.size();
+    for (int i = start; i < end; i++) {
       Scope scope = scopes.get(i);
       for (Symbol s : scope.symbols) {
         if (type == null || s.type == type) {
           symbols.add(s);
         }
       }
-      i++;
     }
 
     int numCandidates = symbols.size();
@@ -141,7 +145,7 @@ public class ScopeManager {
       return null;
     }
     Symbol sym = symbols.get(random.nextInt(numCandidates));
-    if (excludeLocal && searchLocalFor(sym.name) != null) {
+    if (excludeLocals && searchLocalFor(sym.name) != null) {
       // the symbol has been shadowed
       return null;
     } else {

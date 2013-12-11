@@ -17,19 +17,13 @@ package com.google.javascript.jscomp.fuzzing;
 
 import com.google.javascript.rhino.Node;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class NumericFuzzer extends AbstractFuzzer {
 
-  NumericFuzzer(Random random, JSONObject config, StringNumberGenerator snGenerator) {
-    this.random = random;
-    this.snGenerator = snGenerator;
-    this.config = config;
+  NumericFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -37,7 +31,7 @@ class NumericFuzzer extends AbstractFuzzer {
    */
   @Override
   protected Node generate(int budget) {
-    return Node.newNumber(random.nextInt(getOwnConfig().optInt("max")));
+    return Node.newNumber(context.random.nextInt(getOwnConfig().optInt("max")));
   }
 
   /* (non-Javadoc)

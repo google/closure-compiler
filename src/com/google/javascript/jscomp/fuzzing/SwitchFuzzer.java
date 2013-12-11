@@ -18,18 +18,15 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
 import java.util.Arrays;
-import java.util.Random;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class SwitchFuzzer extends AbstractFuzzer {
-  public SwitchFuzzer(Random random, ScopeManager scopeManager,
-      JSONObject config, StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+
+  SwitchFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -45,20 +42,19 @@ class SwitchFuzzer extends AbstractFuzzer {
    */
   @Override
   protected Node generate(int budget) {
-    int numCases = budget > 2 ? random.nextInt(budget - 2) : 0;
+    int numCases = budget > 2 ? context.random.nextInt(budget - 2) : 0;
     AbstractFuzzer[] fuzzers = new AbstractFuzzer[numCases + 1];
     CaseFuzzer caseFuzzer =
-        new CaseFuzzer(random, scopeManager, config, snGenerator, Token.CASE);
+        new CaseFuzzer(context, Token.CASE);
     Arrays.fill(fuzzers, caseFuzzer);
     fuzzers[0] =
-        new ExpressionFuzzer(random, scopeManager, config, snGenerator);
+        new ExpressionFuzzer(context);
     if (numCases > 0) {
-      int defaultClauseIndex = random.nextInt(numCases);
+      int defaultClauseIndex = context.random.nextInt(numCases);
       fuzzers[defaultClauseIndex + 1] =
-          new CaseFuzzer(
-              random, scopeManager, config, snGenerator, Token.DEFAULT);
+          new CaseFuzzer(context, Token.DEFAULT);
     }
-    Scope localScope = scopeManager.localScope();
+    Scope localScope = context.scopeManager.localScope();
     localScope.switchNesting++;
     Node[] components = distribute(budget - 1, fuzzers);
     localScope.switchNesting--;
@@ -67,9 +63,8 @@ class SwitchFuzzer extends AbstractFuzzer {
 
   private class CaseFuzzer extends AbstractFuzzer {
     private int nodeType;
-    CaseFuzzer(Random random, ScopeManager scopeManager,
-        JSONObject config, StringNumberGenerator snGenerator, int nodeType) {
-      super(random, scopeManager, config, snGenerator);
+    CaseFuzzer(FuzzingContext context, int nodeType) {
+      super(context);
       this.nodeType = nodeType;
     }
 
@@ -98,12 +93,12 @@ class SwitchFuzzer extends AbstractFuzzer {
           valueBudget = 1;
         }
         clause.addChildToBack(
-            new ExpressionFuzzer(random, scopeManager, config, snGenerator).
+            new ExpressionFuzzer(context).
             generate(valueBudget));
         budget -= valueBudget;
       }
       // increase budget by one to generate the synthetic block node for free
-      Node block = new BlockFuzzer(random, scopeManager, config, snGenerator).
+      Node block = new BlockFuzzer(context).
           generate(budget + 1);
       // set it synthetic to conform the requirement from the compiler
       block.setIsSyntheticBlock(true);

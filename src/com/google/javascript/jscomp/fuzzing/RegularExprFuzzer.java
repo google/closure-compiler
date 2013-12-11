@@ -23,8 +23,8 @@ import com.google.javascript.rhino.Token;
  */
 class RegularExprFuzzer extends AbstractFuzzer {
 
-  RegularExprFuzzer(StringNumberGenerator snGenerator) {
-    this.snGenerator = snGenerator;
+  RegularExprFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -33,11 +33,12 @@ class RegularExprFuzzer extends AbstractFuzzer {
   @Override
   protected Node generate(int budget) {
     if (budget < 3) {
-      Node[] children = {Node.newString(snGenerator.getString())};
+      Node[] children = {Node.newString(context.snGenerator.getString())};
       Node node = new Node(Token.REGEXP, children);
       return node;
     } else {
-      Node[] children = {Node.newString(snGenerator.getString()), Node.newString("g")};
+      Node[] children =
+        {Node.newString(context.snGenerator.getString()), Node.newString("g")};
       Node node = new Node(Token.REGEXP, children);
       return node;
     }

@@ -18,18 +18,15 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
 import java.util.Arrays;
-import java.util.Random;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class ObjectFuzzer extends AbstractFuzzer {
-  ObjectFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+
+  ObjectFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -51,14 +48,14 @@ class ObjectFuzzer extends AbstractFuzzer {
     remainingBudget -= objectLength;
     ExpressionFuzzer[] fuzzers = new ExpressionFuzzer[objectLength];
     Arrays.fill(fuzzers,
-        new ExpressionFuzzer(random, scopeManager, config, snGenerator));
+        new ExpressionFuzzer(context));
     Node[] values = distribute(remainingBudget, fuzzers);
     for (int i = 0; i < objectLength; i++) {
       String name;
-      if (random.nextInt(2) == 0) {
-        name = snGenerator.getPropertyName();
+      if (context.random.nextInt(2) == 0) {
+        name = context.snGenerator.getPropertyName();
       } else {
-        name = String.valueOf(snGenerator.getRandomNumber());
+        name = String.valueOf(context.snGenerator.getRandomNumber());
       }
       Node key = Node.newString(Token.STRING_KEY, name);
 

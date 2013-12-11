@@ -18,17 +18,13 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class ReturnFuzzer extends AbstractFuzzer {
-  public ReturnFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+
+  ReturnFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -36,7 +32,7 @@ class ReturnFuzzer extends AbstractFuzzer {
    */
   @Override
   protected boolean isEnough(int budget) {
-    if (scopeManager.getNumScopes() > 1) {
+    if (context.scopeManager.isInFunction()) {
       return budget >= 1;
     } else {
       return false;
@@ -50,9 +46,9 @@ class ReturnFuzzer extends AbstractFuzzer {
   protected Node generate(int budget) {
     Node node = new Node(Token.RETURN);
     if (budget > 1 &&
-        random.nextDouble() < getOwnConfig().optDouble("hasValue")) {
+        context.random.nextDouble() < getOwnConfig().optDouble("hasValue")) {
       node.addChildToBack(
-          new ExpressionFuzzer(random, scopeManager, config, snGenerator).
+          new ExpressionFuzzer(context).
           generate(budget - 1));
     }
     return node;

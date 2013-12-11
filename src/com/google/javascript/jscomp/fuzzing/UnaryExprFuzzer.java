@@ -19,18 +19,13 @@ import com.google.common.base.CaseFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class UnaryExprFuzzer extends Dispatcher {
 
-  UnaryExprFuzzer(Random random, ScopeManager scopeManager,
-      JSONObject config, StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  UnaryExprFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -41,8 +36,7 @@ class UnaryExprFuzzer extends Dispatcher {
     Operator[] operators = Operator.values();
     candidates = new UnaryExprGenerator[operators.length];
     for (int i = 0; i < operators.length; i++) {
-      candidates[i] = new UnaryExprGenerator(
-          random, scopeManager, config, snGenerator, operators[i]);
+      candidates[i] = new UnaryExprGenerator(context, operators[i]);
     }
   }
 
@@ -50,21 +44,18 @@ class UnaryExprFuzzer extends Dispatcher {
     Operator operator;
     private AbstractFuzzer target;
 
-    UnaryExprGenerator(Random random, ScopeManager scopeManager,
-        JSONObject config, StringNumberGenerator snGenerator,
+    UnaryExprGenerator(FuzzingContext context,
         Operator operator) {
-      super(random, scopeManager, config, snGenerator);
+      super(context);
       this.operator = operator;
     }
 
     private AbstractFuzzer getTarget() {
       if (target == null) {
         if (operator.hasSideEffect) {
-          target = new AssignableExprFuzzer(
-              random, scopeManager, config, snGenerator);
+          target = new AssignableExprFuzzer(context);
         } else {
-          target = new ExpressionFuzzer(
-              random, scopeManager, config, snGenerator);
+          target = new ExpressionFuzzer(context);
         }
       }
       return target;

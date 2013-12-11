@@ -17,18 +17,13 @@ package com.google.javascript.jscomp.fuzzing;
 
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class StatementFuzzer extends Dispatcher {
 
-  public StatementFuzzer(Random random, ScopeManager scopeManager,
-      JSONObject config, StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  StatementFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -37,22 +32,22 @@ class StatementFuzzer extends Dispatcher {
   @Override
   protected void initCandidates() {
     candidates = new AbstractFuzzer[] {
-        new BlockFuzzer(random, scopeManager, config, snGenerator),
-        new VarFuzzer(random, scopeManager, config, snGenerator),
+        new BlockFuzzer(context),
+        new VarFuzzer(context),
         new SimpleFuzzer(Token.EMPTY, "empty"),
-        new ExprStmtFuzzer(random, scopeManager, config, snGenerator),
-        new IfFuzzer(random, scopeManager, config, snGenerator),
-        new WhileFuzzer(random, scopeManager, config, snGenerator),
-        new DoWhileFuzzer(random, scopeManager, config, snGenerator),
-        new ForFuzzer(random, scopeManager, config, snGenerator),
-        new ForInFuzzer(random, scopeManager, config, snGenerator),
-        new ContinueFuzzer(random, scopeManager, config),
-        new BreakFuzzer(random, scopeManager, config),
-        new ReturnFuzzer(random, scopeManager, config, snGenerator),
-        new SwitchFuzzer(random, scopeManager, config, snGenerator),
-        new LabelFuzzer(random, scopeManager, config, snGenerator),
-        new ThrowFuzzer(random, scopeManager, config, snGenerator),
-        new TryFuzzer(random, scopeManager, config, snGenerator)
+        new ExprStmtFuzzer(context),
+        new IfFuzzer(context),
+        new WhileFuzzer(context),
+        new DoWhileFuzzer(context),
+        new ForFuzzer(context),
+        new ForInFuzzer(context),
+        new ContinueFuzzer(context),
+        new BreakFuzzer(context),
+        new ReturnFuzzer(context),
+        new SwitchFuzzer(context),
+        new LabelFuzzer(context),
+        new ThrowFuzzer(context),
+        new TryFuzzer(context)
     };
   }
 

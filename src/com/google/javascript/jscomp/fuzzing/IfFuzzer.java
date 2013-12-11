@@ -18,19 +18,15 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
 import java.util.Arrays;
-import java.util.Random;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class IfFuzzer extends AbstractFuzzer {
 
-  public IfFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  IfFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -50,15 +46,15 @@ class IfFuzzer extends AbstractFuzzer {
     if (budget <= 3) {
       numComponents = 2;
     } else {
-      numComponents =
-          random.nextDouble() < getOwnConfig().optDouble("hasElse") ? 3 : 2;
+      numComponents = context.random.nextDouble() <
+          getOwnConfig().optDouble("hasElse") ? 3 : 2;
     }
     AbstractFuzzer[] fuzzers = new AbstractFuzzer[numComponents];
     BlockFuzzer blockFuzzer =
-        new BlockFuzzer(random, scopeManager, config, snGenerator);
+        new BlockFuzzer(context);
     Arrays.fill(fuzzers, blockFuzzer);
     fuzzers[0] =
-        new ExpressionFuzzer(random, scopeManager, config, snGenerator);
+        new ExpressionFuzzer(context);
     Node[] components = distribute(budget - 1, fuzzers);
     return new Node(Token.IF, components);
   }

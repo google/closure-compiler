@@ -18,18 +18,15 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
 import java.util.Arrays;
-import java.util.Random;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class ArrayFuzzer extends AbstractFuzzer {
-  ArrayFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+
+  ArrayFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -44,8 +41,7 @@ class ArrayFuzzer extends AbstractFuzzer {
     int arraySize = generateLength(budget - 1);
     if (arraySize > 0) {
       AbstractFuzzer[] fuzzers = new AbstractFuzzer[arraySize];
-      Arrays.fill(fuzzers, new ExpressionFuzzer(
-          random, scopeManager, config, snGenerator));
+      Arrays.fill(fuzzers, new ExpressionFuzzer(context));
       Node[] elements = distribute(budget - 1, fuzzers);
       for (int i = 0; i < arraySize; i++) {
         node.addChildToBack(elements[i]);

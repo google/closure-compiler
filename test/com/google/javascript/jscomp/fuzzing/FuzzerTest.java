@@ -33,32 +33,28 @@ import java.util.Random;
  * @author zplin@google.com (Zhongpeng Lin)
  */
 public class FuzzerTest extends TestCase{
-  private Random random;
-  private ScopeManager scopeManager;
-  private StringNumberGenerator snGenerator;
-  private JSONObject config;
+  private FuzzingContext context;
 
   @Override
   public void setUp() {
-    random = new Random(123);
-    scopeManager = new ScopeManager(random);
-    snGenerator = new StringNumberGenerator(random);
-    config = TestConfig.getConfig();
+    Random random = new Random(123);
+    JSONObject config = TestConfig.getConfig();
+    context = new FuzzingContext(random, config, true);
   }
 
   public void testGenerateArray() {
     ArrayFuzzer fuzzer =
-        new ArrayFuzzer(random, scopeManager, config, snGenerator);
+        new ArrayFuzzer(context);
     int budget = 10;
     Node node = fuzzer.generate(budget);
     String code = ArrayFuzzer.getPrettyCode(node);
     assertTrue(code.startsWith("["));
     assertTrue(code.endsWith("]"));
-    JSONObject config = fuzzer.config;
+    JSONObject config = fuzzer.getOwnConfig();
     assertTrue(
         "\nGenerated code: \n" + code,
         code.split(",").length <
-            (int) (config.optJSONObject("array").optDouble("maxLength") *
+            (int) (config.optDouble("maxLength") *
                 (budget - 1)));
   }
 
@@ -69,7 +65,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testGenerateBoolean() {
-    BooleanFuzzer fuzzer = new BooleanFuzzer(random);
+    BooleanFuzzer fuzzer = new BooleanFuzzer(context);
     Node node = fuzzer.generate(10);
     String code = BooleanFuzzer.getPrettyCode(node).trim();
     assertTrue(
@@ -77,7 +73,7 @@ public class FuzzerTest extends TestCase{
         code.equals("true") || code.equals("false"));
   }
   public void testGenerateNumeric() {
-    NumericFuzzer fuzzer = new NumericFuzzer(random, config, snGenerator);
+    NumericFuzzer fuzzer = new NumericFuzzer(context);
     Node node = fuzzer.generate(10);
     String code = NumericFuzzer.getPrettyCode(node);
     for (int i = 0; i < code.length(); i++) {
@@ -87,7 +83,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testGenerateString() {
-    StringFuzzer fuzzer = new StringFuzzer(snGenerator);
+    StringFuzzer fuzzer = new StringFuzzer(context);
     Node node = fuzzer.generate(10);
     String code = StringFuzzer.getPrettyCode(node);
     assertTrue("\nGenerated code: \n" + code, code.startsWith("\""));
@@ -95,7 +91,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testGenerateRegex() {
-    RegularExprFuzzer fuzzer = new RegularExprFuzzer(snGenerator);
+    RegularExprFuzzer fuzzer = new RegularExprFuzzer(context);
     Node node = fuzzer.generate(10);
     String code = RegularExprFuzzer.getPrettyCode(node);
     assertTrue("\nGenerated code: \n" + code, code.startsWith("/"));
@@ -103,8 +99,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testGenerateObjectLiteral() {
-    ObjectFuzzer fuzzer = new ObjectFuzzer(
-        random, scopeManager, config, snGenerator);
+    ObjectFuzzer fuzzer = new ObjectFuzzer(context);
     Node node = fuzzer.generate(10);
     String code = ObjectFuzzer.getPrettyCode(node);
     assertTrue("\nGenerated code: \n" + code, code.startsWith("{"));
@@ -113,7 +108,7 @@ public class FuzzerTest extends TestCase{
 
   public void testGenerateLiteral() throws JSONException {
     int budget = 0;
-    LiteralFuzzer literalFuzzer = new LiteralFuzzer(random, scopeManager, config, snGenerator);
+    LiteralFuzzer literalFuzzer = new LiteralFuzzer(context);
     LiteralFuzzer spyFuzzer = spy(literalFuzzer);
     doThrow(new RuntimeException("Not enough budget for literal")).
     when(spyFuzzer).generate(budget);
@@ -129,8 +124,7 @@ public class FuzzerTest extends TestCase{
     String[] types = {"postInc", "postDec"};
     for (int i = 0; i < postfixes.length; i++) {
       setUp();
-      UnaryExprFuzzer fuzzer = new UnaryExprFuzzer(
-          random, scopeManager, config, snGenerator);
+      UnaryExprFuzzer fuzzer = new UnaryExprFuzzer(context);
       leaveOneSubtype(fuzzer.getOwnConfig(), types[i]);
       Node node = fuzzer.generate(10);
       String code = UnaryExprFuzzer.getPrettyCode(node);
@@ -145,8 +139,7 @@ public class FuzzerTest extends TestCase{
         "dec", "delProp"};
     for (int i = 0; i < prefixes.length; i++) {
       setUp();
-      UnaryExprFuzzer fuzzer = new UnaryExprFuzzer(
-          random, scopeManager, config, snGenerator);
+      UnaryExprFuzzer fuzzer = new UnaryExprFuzzer(context);
       leaveOneSubtype(fuzzer.getOwnConfig(), types[i]);
       Node node = fuzzer.generate(10);
       String code = UnaryExprFuzzer.getPrettyCode(node);
@@ -156,7 +149,7 @@ public class FuzzerTest extends TestCase{
 
   public void testNewExpression() throws JSONException {
     FunctionCallFuzzer fuzzer =
-        new FunctionCallFuzzer(random, scopeManager, config, snGenerator);
+        new FunctionCallFuzzer(context);
     leaveOneSubtype(fuzzer.getOwnConfig(), "constructorCall");
     Node node = fuzzer.generate(10);
     String code = FunctionCallFuzzer.getPrettyCode(node);
@@ -165,7 +158,7 @@ public class FuzzerTest extends TestCase{
 
   public void testCallExpression() throws JSONException {
     FunctionCallFuzzer fuzzer =
-        new FunctionCallFuzzer(random, scopeManager, config, snGenerator);
+        new FunctionCallFuzzer(context);
     leaveOneSubtype(fuzzer.getOwnConfig(), "normalCall");
     Node node = fuzzer.generate(10);
     String code = FunctionCallFuzzer.getPrettyCode(node);
@@ -185,9 +178,10 @@ public class FuzzerTest extends TestCase{
         "assignRsh", "assignUrsh", "assignBitAnd", "assignBitXor",
         "assignBitOr"};
     for (int i = 0; i < operators.length; i++) {
-      Random random = new Random(123);
+      context =
+          new FuzzingContext(new Random(123), TestConfig.getConfig(), true);
       BinaryExprFuzzer fuzzer =
-          new BinaryExprFuzzer(random, scopeManager, config, snGenerator);
+          new BinaryExprFuzzer(context);
       leaveOneSubtype(fuzzer.getOwnConfig(), types[i]);
       Node node = fuzzer.generate(budget);
       String code = BinaryExprFuzzer.getPrettyCode(node).trim();
@@ -197,7 +191,7 @@ public class FuzzerTest extends TestCase{
 
   public void testTrinaryExpression() {
     TernaryExprFuzzer fuzzer =
-        new TernaryExprFuzzer(random, scopeManager, config, snGenerator);
+        new TernaryExprFuzzer(context);
     Node node = fuzzer.generate(4);
     String code = TernaryExprFuzzer.getPrettyCode(node);
     assertNotSame(-1, code.indexOf(" ? "));
@@ -205,7 +199,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testVariableStatement() {
-    VarFuzzer fuzzer = new VarFuzzer(random, scopeManager, config, snGenerator);
+    VarFuzzer fuzzer = new VarFuzzer(context);
     Node node = fuzzer.generate(10);
     String code = VarFuzzer.getPrettyCode(node);
     assertTrue(code.startsWith("var "));
@@ -218,7 +212,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testIfStatement() {
-    IfFuzzer fuzzer = new IfFuzzer(random, scopeManager, config, snGenerator);
+    IfFuzzer fuzzer = new IfFuzzer(context);
     Node ifStatement = fuzzer.generate(10);
     String code = IfFuzzer.getPrettyCode(ifStatement);
     assertTrue(code.startsWith("if ("));
@@ -226,7 +220,7 @@ public class FuzzerTest extends TestCase{
 
   public void testWhileStatement() {
     WhileFuzzer fuzzer =
-        new WhileFuzzer(random, scopeManager, config, snGenerator);
+        new WhileFuzzer(context);
     Node whileStatement = fuzzer.generate(10);
     String code = WhileFuzzer.getPrettyCode(whileStatement);
     assertTrue(code.startsWith("while ("));
@@ -234,7 +228,7 @@ public class FuzzerTest extends TestCase{
 
   public void testDoWhileStatement() {
     DoWhileFuzzer fuzzer =
-        new DoWhileFuzzer(random, scopeManager, config, snGenerator);
+        new DoWhileFuzzer(context);
     Node doStatement = fuzzer.generate(10);
     String code = DoWhileFuzzer.getPrettyCode(doStatement);
     assertTrue(code.startsWith("do {"));
@@ -243,7 +237,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testForStatement() {
-    ForFuzzer fuzzer = new ForFuzzer(random, scopeManager, config, snGenerator);
+    ForFuzzer fuzzer = new ForFuzzer(context);
     Node forStatement = fuzzer.generate(10);
     String code = ForFuzzer.getPrettyCode(forStatement);
     assertTrue(code.startsWith("for ("));
@@ -251,7 +245,7 @@ public class FuzzerTest extends TestCase{
 
   public void testForInStatement() {
     ForInFuzzer fuzzer =
-        new ForInFuzzer(random, scopeManager, config, snGenerator);
+        new ForInFuzzer(context);
     Node forInStatement = fuzzer.generate(10);
     String code = ForInFuzzer.getPrettyCode(forInStatement);
     assertTrue("\nGenerated code: \n" + code, code.startsWith("for ("));
@@ -260,7 +254,7 @@ public class FuzzerTest extends TestCase{
 
   public void testSwitchStatement() {
     SwitchFuzzer fuzzer =
-        new SwitchFuzzer(random, scopeManager, config, snGenerator);
+        new SwitchFuzzer(context);
     Node switchStmt = fuzzer.generate(20);
     String code = SwitchFuzzer.getPrettyCode(switchStmt);
     assertTrue("\nGenerated code: \n" + code, code.startsWith("switch("));
@@ -268,14 +262,14 @@ public class FuzzerTest extends TestCase{
 
   public void testThrowStatement() {
     ThrowFuzzer fuzzer =
-        new ThrowFuzzer(random, scopeManager, config, snGenerator);
+        new ThrowFuzzer(context);
     Node throwStatement = fuzzer.generate(10);
     String code = ThrowFuzzer.getPrettyCode(throwStatement);
     assertTrue("\nGenerated code: \n" + code, code.startsWith("throw"));
   }
 
   public void testTryStatement() {
-    TryFuzzer fuzzer = new TryFuzzer(random, scopeManager, config, snGenerator);
+    TryFuzzer fuzzer = new TryFuzzer(context);
     Node tryStatement = fuzzer.generate(20);
     String code = TryFuzzer.getPrettyCode(tryStatement);
     assertTrue("\nGenerated code: \n" + code, code.startsWith("try {"));
@@ -283,16 +277,16 @@ public class FuzzerTest extends TestCase{
 
   public void testFunctionDeclaration() {
     FunctionFuzzer fuzzer =
-        new FunctionFuzzer(random, scopeManager, config, snGenerator, false);
+        new FunctionFuzzer(context, false);
     Node functionDecl = fuzzer.generate(20);
     String code = FunctionFuzzer.getPrettyCode(functionDecl);
     assertTrue("\nGenerated code: \n" + code, code.startsWith("function "));
   }
 
   public void testBreakStatement() throws JSONException {
-    BreakFuzzer fuzzer = new BreakFuzzer(random, scopeManager, config);
+    BreakFuzzer fuzzer = new BreakFuzzer(context);
     fuzzer.getOwnConfig().put("toLabel", 1);
-    Scope scope = fuzzer.scopeManager.localScope();
+    Scope scope = context.scopeManager.localScope();
     scope.otherLabels.add("testLabel");
     Node breakStmt = fuzzer.generate(10);
     String code = BreakFuzzer.getPrettyCode(breakStmt);
@@ -300,9 +294,9 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testContinueStatement() throws JSONException {
-    ContinueFuzzer fuzzer = new ContinueFuzzer(random, scopeManager, config);
+    ContinueFuzzer fuzzer = new ContinueFuzzer(context);
     fuzzer.getOwnConfig().put("toLabel", 1);
-    Scope scope = fuzzer.scopeManager.localScope();
+    Scope scope = context.scopeManager.localScope();
     scope.loopLabels.add("testLabel");
     Node continueStmt = fuzzer.generate(10);
     String code = ContinueFuzzer.getPrettyCode(continueStmt);
@@ -310,13 +304,14 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testDeterministicProgramGenerating() {
-    ScriptFuzzer fuzzer = new ScriptFuzzer(random, config);
+    ScriptFuzzer fuzzer = new ScriptFuzzer(context);
     Node nodes = fuzzer.generate(100);
     String code1 = ScriptFuzzer.getPrettyCode(nodes);
 
     setUp();
-    random = new Random(123);
-    fuzzer = new ScriptFuzzer(random, config);
+    context =
+        new FuzzingContext(new Random(123), TestConfig.getConfig(), true);
+    fuzzer = new ScriptFuzzer(context);
     nodes = fuzzer.generate(100);
     String code2 = ScriptFuzzer.getPrettyCode(nodes);
 

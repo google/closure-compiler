@@ -23,18 +23,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 abstract class Dispatcher extends AbstractFuzzer {
-  protected AbstractFuzzer[] candidates;
-
-  Dispatcher(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  Dispatcher(FuzzingContext context) {
+    super(context);
   }
+
+  protected AbstractFuzzer[] candidates;
 
   @Override
   protected boolean isEnough(int budget) {
@@ -86,7 +84,7 @@ abstract class Dispatcher extends AbstractFuzzer {
       }
     } while (validFuzzers.size() == 0);
     DiscreteDistribution<AbstractFuzzer> dd =
-        new DiscreteDistribution<>(random, validFuzzers, weights);
+        new DiscreteDistribution<>(context.random, validFuzzers, weights);
     return dd.nextItem();
   }
 

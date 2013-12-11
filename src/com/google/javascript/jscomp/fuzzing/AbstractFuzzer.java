@@ -22,31 +22,20 @@ import com.google.javascript.rhino.Node;
 import org.json.JSONObject;
 
 import java.util.Arrays;
-import java.util.Random;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 abstract class AbstractFuzzer {
-  protected Random random;
-  protected ScopeManager scopeManager;
-  protected JSONObject config;
-  protected StringNumberGenerator snGenerator;
+  protected FuzzingContext context;
 
-  protected AbstractFuzzer() {
-  }
-
-  AbstractFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    this.random = random;
-    this.scopeManager = scopeManager;
-    this.config = config;
-    this.snGenerator = snGenerator;
+  AbstractFuzzer(FuzzingContext context) {
+    this.context = context;
   }
 
   protected JSONObject getOwnConfig() {
-    Preconditions.checkNotNull(config);
-    return config.optJSONObject(getConfigName());
+    Preconditions.checkNotNull(context.config);
+    return context.config.optJSONObject(getConfigName());
   }
 
   /**
@@ -69,7 +58,7 @@ abstract class AbstractFuzzer {
       double[] rands = new double[numNodes];
       double sum = 0;
       for (int i = 0; i < numNodes; i++) {
-        rands[i] = random.nextDouble();
+        rands[i] = context.random.nextDouble();
         sum += rands[i];
       }
       for (int i = 0; i < numNodes; i++) {
@@ -79,7 +68,7 @@ abstract class AbstractFuzzer {
       }
     }
     while (budget > 0) {
-      subBudgets[random.nextInt(numNodes)]++;
+      subBudgets[context.random.nextInt(numNodes)]++;
       budget--;
     }
     Node[] nodes = new Node[numNodes];
@@ -96,7 +85,7 @@ abstract class AbstractFuzzer {
   protected abstract String getConfigName();
 
   protected int generateLength(int budget) {
-    return random.nextInt(
+    return context.random.nextInt(
         (int) (budget * getOwnConfig().optDouble("maxLength")) + 1);
   }
 

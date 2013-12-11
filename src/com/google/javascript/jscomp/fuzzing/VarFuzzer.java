@@ -18,18 +18,13 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 public class VarFuzzer extends AbstractFuzzer {
 
-  public VarFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  VarFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -46,11 +41,10 @@ public class VarFuzzer extends AbstractFuzzer {
   @Override
   protected Node generate(int budget) {
     Node identifier =
-        new IdentifierFuzzer(random, scopeManager, config, snGenerator).
-        generate(1);
+        new IdentifierFuzzer(context).generate(1);
     Node node = new Node(Token.VAR, identifier);
     ExpressionFuzzer exprFuzzer =
-        new ExpressionFuzzer(random, scopeManager, config, snGenerator);
+        new ExpressionFuzzer(context);
     if (exprFuzzer.isEnough(budget - 2)) {
       Node assn = exprFuzzer.generate(budget - 2);
       identifier.addChildToBack(assn);

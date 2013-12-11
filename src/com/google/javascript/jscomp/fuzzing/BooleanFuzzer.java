@@ -18,14 +18,13 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class BooleanFuzzer extends AbstractFuzzer {
-  BooleanFuzzer(Random random) {
-    this.random = random;
+
+  BooleanFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -33,7 +32,7 @@ class BooleanFuzzer extends AbstractFuzzer {
    */
   @Override
   protected Node generate(int budget) {
-    return random.nextInt(2) == 0 ?
+    return context.random.nextInt(2) == 0 ?
         new Node(Token.FALSE) : new Node(Token.TRUE);
   }
 

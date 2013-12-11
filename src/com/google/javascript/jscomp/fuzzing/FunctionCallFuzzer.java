@@ -18,18 +18,13 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class FunctionCallFuzzer extends Dispatcher {
 
-  FunctionCallFuzzer(Random random, ScopeManager scopeManager,
-      JSONObject config, StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  FunctionCallFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -38,9 +33,9 @@ class FunctionCallFuzzer extends Dispatcher {
   @Override
   protected void initCandidates() {
     CallFuzzer constructorFuzzer =
-        new CallFuzzer(random, scopeManager, config, snGenerator, true);
+        new CallFuzzer(context, true);
     CallFuzzer normalCallFuzzer =
-        new CallFuzzer(random, scopeManager, config, snGenerator, false);
+        new CallFuzzer(context, false);
     candidates = new AbstractFuzzer[]{constructorFuzzer, normalCallFuzzer};
   }
 
@@ -48,9 +43,8 @@ class FunctionCallFuzzer extends Dispatcher {
     private int nodeType;
     private CallableExprFuzzer callableExprFuzzer;
     private String configName;
-    CallFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-        StringNumberGenerator snGenerator, boolean isConstructor) {
-      super(random, scopeManager, config, snGenerator);
+    CallFuzzer(FuzzingContext context, boolean isConstructor) {
+      super(context);
       if (isConstructor) {
         nodeType = Token.NEW;
         configName = "constructorCall";
@@ -83,11 +77,11 @@ class FunctionCallFuzzer extends Dispatcher {
       }
       // max number of arguments divided by maxParamBudget
       double argLength = getOwnConfig().optDouble("argLength");
-      int numArgs = random.nextInt((int) (maxParamBudget * argLength) + 1);
+      int numArgs = context.random.nextInt((int) (maxParamBudget * argLength) + 1);
       AbstractFuzzer[] fuzzers = new AbstractFuzzer[numArgs + 1];
       fuzzers[0] = getCallableExprFuzzer();
       ExpressionFuzzer exprFuzzer =
-          new ExpressionFuzzer(random, scopeManager, config, snGenerator);
+          new ExpressionFuzzer(context);
       for (int i = 1; i <= numArgs; i++) {
         fuzzers[i] = exprFuzzer;
       }
@@ -101,8 +95,7 @@ class FunctionCallFuzzer extends Dispatcher {
      */
     private CallableExprFuzzer getCallableExprFuzzer() {
       if (callableExprFuzzer == null) {
-        callableExprFuzzer = new CallableExprFuzzer(
-            random, scopeManager, config, snGenerator);
+        callableExprFuzzer = new CallableExprFuzzer(context);
 
       }
       return callableExprFuzzer;
@@ -110,9 +103,8 @@ class FunctionCallFuzzer extends Dispatcher {
 
     private class CallableExprFuzzer extends Dispatcher {
 
-      CallableExprFuzzer(Random random, ScopeManager scopeManager,
-          JSONObject config, StringNumberGenerator snGenerator) {
-        super(random, scopeManager, config, snGenerator);
+      CallableExprFuzzer(FuzzingContext context) {
+        super(context);
       }
 
       /* (non-Javadoc)
@@ -120,11 +112,14 @@ class FunctionCallFuzzer extends Dispatcher {
        */
       @Override
       protected void initCandidates() {
+        ExistingIdentifierFuzzer idFuzzer = context.strict ?
+            new ExistingIdentifierFuzzer(context, Type.FUNCTION, false) :
+            new ExistingIdentifierFuzzer(context);
         candidates = new AbstractFuzzer[] {
-            new ExistingIdentifierFuzzer(scopeManager, Type.FUNCTION),
-            new GetPropFuzzer(random, scopeManager, config, snGenerator),
-            new GetElemFuzzer(random, scopeManager, config, snGenerator),
-            new FunctionFuzzer(random, scopeManager, config, snGenerator, true)
+            idFuzzer,
+            new GetPropFuzzer(context),
+            new GetElemFuzzer(context),
+            new FunctionFuzzer(context, true)
           };
       }
 

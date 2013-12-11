@@ -19,20 +19,15 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
 import java.util.Arrays;
-import java.util.Random;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 public class ScriptFuzzer extends AbstractFuzzer {
-  public ScriptFuzzer(Random random, JSONObject config) {
-    this.random = random;
-    this.config = config;
-    this.scopeManager = new ScopeManager(random);
-    this.snGenerator = new StringNumberGenerator(random);
+
+  ScriptFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -54,7 +49,7 @@ public class ScriptFuzzer extends AbstractFuzzer {
       SourceElementFuzzer[] fuzzers = new SourceElementFuzzer[numElements];
       Arrays.fill(
           fuzzers,
-          new SourceElementFuzzer(random, scopeManager, config, snGenerator));
+          new SourceElementFuzzer(context));
       Node[] elements = distribute(budget - 1, fuzzers);
       script = new Node(Token.SCRIPT, elements);
     } else {

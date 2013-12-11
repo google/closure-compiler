@@ -24,14 +24,17 @@ import com.google.javascript.rhino.Token;
  */
 class ExistingIdentifierFuzzer extends AbstractFuzzer {
   Type type;
+  boolean excludeExterns;
 
-  ExistingIdentifierFuzzer(ScopeManager scopeManager) {
-    this.scopeManager = scopeManager;
+  ExistingIdentifierFuzzer(FuzzingContext context) {
+    super(context);
   }
 
-  ExistingIdentifierFuzzer(ScopeManager scopeManager, Type type) {
-    this.scopeManager = scopeManager;
+  ExistingIdentifierFuzzer(FuzzingContext context,
+      Type type, boolean excludeExterns) {
+    super(context);
     this.type = type;
+    this.excludeExterns = excludeExterns;
   }
 
   /* (non-Javadoc)
@@ -39,9 +42,15 @@ class ExistingIdentifierFuzzer extends AbstractFuzzer {
    */
   @Override
   protected Node generate(int budget) {
-    Preconditions.checkState(scopeManager.getSize() > 0, "No symbol defined.");
+    Preconditions.checkState(
+        isEnough(1),
+        "No symbol defined.");
+    int flags = 0;
+    if (excludeExterns) {
+      flags = ScopeManager.EXCLUDE_EXTERNS;
+    }
     return Node.newString(
-        Token.NAME, scopeManager.getRandomSymbol(type, false).name);
+        Token.NAME, context.scopeManager.getRandomSymbol(type, flags).name);
   }
 
   /* (non-Javadoc)
@@ -49,7 +58,8 @@ class ExistingIdentifierFuzzer extends AbstractFuzzer {
    */
   @Override
   protected boolean isEnough(int budget) {
-    return scopeManager.getSize() > 0 && budget >= 1;
+    return (context.scopeManager.getSize() > 0 || !excludeExterns)
+        && budget >= 1;
   }
 
   /* (non-Javadoc)

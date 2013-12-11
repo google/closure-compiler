@@ -19,18 +19,13 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class DoWhileFuzzer extends AbstractFuzzer {
 
-  public DoWhileFuzzer(Random random, ScopeManager scopeManager,
-      JSONObject config, StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  DoWhileFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -48,12 +43,12 @@ class DoWhileFuzzer extends AbstractFuzzer {
   protected Node generate(int budget) {
     Preconditions.checkArgument(budget >= 3);
     AbstractFuzzer[] fuzzers = {
-        new BlockFuzzer(random, scopeManager, config, snGenerator),
-        new ExpressionFuzzer(random, scopeManager, config, snGenerator)
+        new BlockFuzzer(context),
+        new ExpressionFuzzer(context)
     };
-    scopeManager.localScope().loopNesting++;
+    context.scopeManager.localScope().loopNesting++;
     Node[] components = distribute(budget, fuzzers);
-    scopeManager.localScope().loopNesting--;
+    context.scopeManager.localScope().loopNesting--;
     return new Node(Token.DO, components);
   }
 

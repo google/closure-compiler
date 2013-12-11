@@ -18,19 +18,13 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 public class BreakFuzzer extends AbstractFuzzer {
-  public BreakFuzzer(Random random, ScopeManager scopeManager,
-      JSONObject config) {
-    this.random = random;
-    this.scopeManager = scopeManager;
-    this.config = config;
+
+  BreakFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -38,7 +32,7 @@ public class BreakFuzzer extends AbstractFuzzer {
    */
   @Override
   protected boolean isEnough(int budget) {
-    Scope scope = scopeManager.localScope();
+    Scope scope = context.scopeManager.localScope();
     if (scope.loopNesting + scope.switchNesting > 0) {
       return budget >= 1;
     } else {
@@ -52,14 +46,14 @@ public class BreakFuzzer extends AbstractFuzzer {
   @Override
   protected Node generate(int budget) {
     Node node = new Node(Token.BREAK);
-    Scope localScope = scopeManager.localScope();
+    Scope localScope = context.scopeManager.localScope();
     double toLabel = getOwnConfig().optDouble("toLabel");
     if (budget > 1 &&
         localScope.loopLabels.size() + localScope.otherLabels.size() > 0 &&
-        random.nextDouble() < toLabel) {
+        context.random.nextDouble() < toLabel) {
       node.addChildToBack(
           Node.newString(Token.LABEL_NAME,
-              localScope.randomLabelForBreak(random)));
+              localScope.randomLabelForBreak(context.random)));
     }
     return node;
   }

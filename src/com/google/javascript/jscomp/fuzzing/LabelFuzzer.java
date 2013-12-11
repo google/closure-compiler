@@ -18,18 +18,15 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 public class LabelFuzzer extends AbstractFuzzer {
-  public LabelFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+
+  LabelFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -45,15 +42,15 @@ public class LabelFuzzer extends AbstractFuzzer {
    */
   @Override
   protected Node generate(int budget) {
-    String labelName = "x_" + snGenerator.getNextNumber();
+    String labelName = "x_" + context.snGenerator.getNextNumber();
     Node name = Node.newString(
         Token.LABEL_NAME, labelName);
 
     StatementFuzzer stmtFuzzer =
-        new StatementFuzzer(random, scopeManager, config, snGenerator);
+        new StatementFuzzer(context);
     AbstractFuzzer selectedFuzzer = stmtFuzzer.selectFuzzer(budget - 2);
 
-    Scope localScope = scopeManager.localScope();
+    Scope localScope = context.scopeManager.localScope();
     ArrayList<String> currentLabels;
     if (selectedFuzzer instanceof ForFuzzer ||
         selectedFuzzer instanceof ForInFuzzer ||

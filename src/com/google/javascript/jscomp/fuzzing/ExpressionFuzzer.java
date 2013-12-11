@@ -17,18 +17,13 @@ package com.google.javascript.jscomp.fuzzing;
 
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class ExpressionFuzzer extends Dispatcher {
 
-  ExpressionFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  ExpressionFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -38,13 +33,13 @@ class ExpressionFuzzer extends Dispatcher {
   protected void initCandidates() {
     candidates = new AbstractFuzzer[] {
         new SimpleFuzzer(Token.THIS, "this"),
-        new ExistingIdentifierFuzzer(scopeManager),
-        new LiteralFuzzer(random, scopeManager, config, snGenerator),
-        new FunctionCallFuzzer(random, scopeManager, config, snGenerator),
-        new UnaryExprFuzzer(random, scopeManager, config, snGenerator),
-        new BinaryExprFuzzer(random, scopeManager, config, snGenerator),
-        new TernaryExprFuzzer(random, scopeManager, config, snGenerator),
-        new FunctionFuzzer(random, scopeManager, config, snGenerator, true)
+        new ExistingIdentifierFuzzer(context),
+        new LiteralFuzzer(context),
+        new FunctionCallFuzzer(context),
+        new UnaryExprFuzzer(context),
+        new BinaryExprFuzzer(context),
+        new TernaryExprFuzzer(context),
+        new FunctionFuzzer(context, true)
       };
   }
 

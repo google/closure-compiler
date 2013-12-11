@@ -18,19 +18,16 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class ExprStmtFuzzer extends AbstractFuzzer {
-  private ExpressionFuzzer exprFuzzer;
-  ExprStmtFuzzer(Random random, ScopeManager scopeManager,
-      JSONObject config, StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  ExprStmtFuzzer(FuzzingContext context) {
+    super(context);
   }
+
+  private ExpressionFuzzer exprFuzzer;
+
 
   /* (non-Javadoc)
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#isEnough(int)
@@ -52,7 +49,7 @@ class ExprStmtFuzzer extends AbstractFuzzer {
   private ExpressionFuzzer getExprFuzzer() {
     if (exprFuzzer == null) {
       exprFuzzer =
-          new ExpressionFuzzer(random, scopeManager, config, snGenerator);
+          new ExpressionFuzzer(context);
     }
     return exprFuzzer;
   }

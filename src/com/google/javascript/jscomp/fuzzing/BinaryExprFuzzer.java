@@ -19,18 +19,13 @@ import com.google.common.base.CaseFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 public class BinaryExprFuzzer extends Dispatcher {
 
-  public BinaryExprFuzzer(Random random, ScopeManager scopeManager,
-      JSONObject config, StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  BinaryExprFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -41,8 +36,7 @@ public class BinaryExprFuzzer extends Dispatcher {
     Operator[] operators = Operator.values();
     candidates = new BinaryExprGenerator[operators.length];
     for (int i = 0; i < operators.length; i++) {
-      candidates[i] = new BinaryExprGenerator(
-          random, scopeManager, config, snGenerator, operators[i]);
+      candidates[i] = new BinaryExprGenerator(context, operators[i]);
     }
   }
 
@@ -50,9 +44,8 @@ public class BinaryExprFuzzer extends Dispatcher {
     private Operator operator;
     private AbstractFuzzer left, right;
     private String configName;
-    BinaryExprGenerator(Random random, ScopeManager scopeManager,
-      JSONObject config, StringNumberGenerator snGenerator, Operator operator) {
-      super(random, scopeManager, config, snGenerator);
+    BinaryExprGenerator(FuzzingContext context, Operator operator) {
+      super(context);
       this.configName = CaseFormat.UPPER_UNDERSCORE.to(
           CaseFormat.LOWER_CAMEL, operator.name());
       this.operator = operator;
@@ -72,8 +65,8 @@ public class BinaryExprFuzzer extends Dispatcher {
     private AbstractFuzzer getLeft() {
       if (left == null) {
         left = operator.hasSideEffect() ?
-          new AssignableExprFuzzer(random, scopeManager, config, snGenerator) :
-          new ExpressionFuzzer(random, scopeManager, config, snGenerator);
+          new AssignableExprFuzzer(context) :
+          new ExpressionFuzzer(context);
       }
       return left;
     }
@@ -82,7 +75,7 @@ public class BinaryExprFuzzer extends Dispatcher {
 
     private AbstractFuzzer getRight() {
       if (right == null) {
-        right = new ExpressionFuzzer(random, scopeManager, config, snGenerator);
+        right = new ExpressionFuzzer(context);
       }
       return right;
     }

@@ -25,6 +25,7 @@ class SimpleFuzzer extends AbstractFuzzer {
   private int type;
   private String configName;
   SimpleFuzzer(int type, String configName) {
+    super(null);
     this.type = type;
     this.configName = configName;
   }

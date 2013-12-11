@@ -15,32 +15,25 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import org.json.JSONObject;
+
+import java.util.Random;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
-public class SourceElementFuzzer extends Dispatcher {
+class FuzzingContext {
+  Random random;
+  ScopeManager scopeManager;
+  JSONObject config;
+  boolean strict;
+  StringNumberGenerator snGenerator;
 
-  SourceElementFuzzer(FuzzingContext context) {
-    super(context);
-  }
-
-  /* (non-Javadoc)
-   * @see com.google.javascript.jscomp.fuzzing.Dispatcher#initCandidates()
-   */
-  @Override
-  protected void initCandidates() {
-    candidates = new AbstractFuzzer[] {
-      new StatementFuzzer(context),
-      new FunctionFuzzer(context, false)
-    };
-  }
-
-  /* (non-Javadoc)
-   * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#getConfigName()
-   */
-  @Override
-  protected String getConfigName() {
-    return "sourceElement";
+  FuzzingContext(Random random , JSONObject config, boolean strict) {
+    this.random = random;
+    this.scopeManager = new ScopeManager(random);
+    this.snGenerator = new StringNumberGenerator(random);
+    this.config = config;
+    this.strict = strict;
   }
 }

@@ -18,17 +18,13 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class LiteralFuzzer extends Dispatcher {
-  LiteralFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+
+  LiteralFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -42,12 +38,12 @@ class LiteralFuzzer extends Dispatcher {
         new GlobalValueFuzzer("undefined"),
         new GlobalValueFuzzer("Infinity"),
         new GlobalValueFuzzer("NaN"),
-        new BooleanFuzzer(random),
-        new NumericFuzzer(random, config, snGenerator),
-        new StringFuzzer(snGenerator),
-        new ArrayFuzzer(random, scopeManager, config, snGenerator),
-        new ObjectFuzzer(random, scopeManager, config, snGenerator),
-        new RegularExprFuzzer(snGenerator)
+        new BooleanFuzzer(context),
+        new NumericFuzzer(context),
+        new StringFuzzer(context),
+        new ArrayFuzzer(context),
+        new ObjectFuzzer(context),
+        new RegularExprFuzzer(context)
       };
   }
 
@@ -62,6 +58,7 @@ class LiteralFuzzer extends Dispatcher {
   private class GlobalValueFuzzer extends AbstractFuzzer {
     private String value;
     GlobalValueFuzzer(String value) {
+      super(null);
       this.value = value;
     }
 

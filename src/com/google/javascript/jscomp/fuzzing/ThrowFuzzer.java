@@ -18,17 +18,13 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 public class ThrowFuzzer extends AbstractFuzzer {
-  public ThrowFuzzer(Random random, ScopeManager scopeManager,
-      JSONObject config, StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+
+  ThrowFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -46,7 +42,7 @@ public class ThrowFuzzer extends AbstractFuzzer {
   protected Node generate(int budget) {
     return new Node(
         Token.THROW,
-        new ExpressionFuzzer(random, scopeManager, config, snGenerator).
+        new ExpressionFuzzer(context).
         generate(budget - 1));
   }
 

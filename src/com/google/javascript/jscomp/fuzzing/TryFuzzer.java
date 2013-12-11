@@ -18,18 +18,15 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
 import java.util.Arrays;
-import java.util.Random;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class TryFuzzer extends AbstractFuzzer {
-  public TryFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-      StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+
+  TryFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -46,9 +43,9 @@ class TryFuzzer extends AbstractFuzzer {
   @Override
   protected Node generate(int budget) {
     AbstractFuzzer[] fuzzers = {
-        new BlockFuzzer(random, scopeManager, config, snGenerator),
-        new CatchFuzzer(random, scopeManager, config, snGenerator),
-        new FinallyFuzzer(random, scopeManager, config, snGenerator)
+        new BlockFuzzer(context),
+        new CatchFuzzer(context),
+        new FinallyFuzzer(context)
     };
     Node[] components = distribute(budget - 1, fuzzers);
     if (components[2] == null) {
@@ -63,9 +60,9 @@ class TryFuzzer extends AbstractFuzzer {
   }
 
   private class CatchFuzzer extends AbstractFuzzer {
-    CatchFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-        StringNumberGenerator snGenerator) {
-      super(random, scopeManager, config, snGenerator);
+
+    CatchFuzzer(FuzzingContext context) {
+      super(context);
     }
 
     /* (non-Javadoc)
@@ -89,13 +86,12 @@ class TryFuzzer extends AbstractFuzzer {
          * starts and removed from the scope when the block ends.
          */
         Node param =
-            new IdentifierFuzzer(random, scopeManager, config, snGenerator).
+            new IdentifierFuzzer(context).
             generate(1);
         catchBlock.addChildToBack(
             new Node(Token.CATCH, param,
-            new BlockFuzzer(random, scopeManager, config, snGenerator).
-            generate(budget - 1)));
-        scopeManager.removeSymbol(param.getQualifiedName());
+            new BlockFuzzer(context).generate(budget - 1)));
+        context.scopeManager.removeSymbol(param.getQualifiedName());
       }
       return catchBlock;
     }
@@ -111,9 +107,8 @@ class TryFuzzer extends AbstractFuzzer {
 
   private class FinallyFuzzer extends BlockFuzzer {
 
-    FinallyFuzzer(Random random, ScopeManager scopeManager, JSONObject config,
-        StringNumberGenerator snGenerator) {
-      super(random, scopeManager, config, snGenerator);
+    FinallyFuzzer(FuzzingContext context) {
+      super(context);
     }
 
     @Override

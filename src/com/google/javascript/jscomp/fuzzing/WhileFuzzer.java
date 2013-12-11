@@ -18,18 +18,13 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import org.json.JSONObject;
-
-import java.util.Random;
-
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class WhileFuzzer extends AbstractFuzzer {
 
-  public WhileFuzzer(Random random, ScopeManager scopeManager,
-      JSONObject config, StringNumberGenerator snGenerator) {
-    super(random, scopeManager, config, snGenerator);
+  WhileFuzzer(FuzzingContext context) {
+    super(context);
   }
 
   /* (non-Javadoc)
@@ -46,10 +41,10 @@ class WhileFuzzer extends AbstractFuzzer {
   @Override
   protected Node generate(int budget) {
     AbstractFuzzer[] fuzzers = {
-        new ExpressionFuzzer(random, scopeManager, config, snGenerator),
-        new BlockFuzzer(random, scopeManager, config, snGenerator)
+        new ExpressionFuzzer(context),
+        new BlockFuzzer(context)
     };
-    Scope scope = scopeManager.localScope();
+    Scope scope = context.scopeManager.localScope();
     scope.loopNesting++;
     Node[] components = distribute(budget - 1, fuzzers);
     scope.loopNesting--;
