@@ -196,18 +196,36 @@ class GlobalTypeInfo {
         // TODO(blickly): Can we optimize this to skip unnecessary iterations?
         for (String pname : superClass.getAllPropsOfClass()) {
           PropertyDef propDef = propertyDefs.get(nominalType, pname);
-          if (propDef != null && propDef.methodScope != null) {
-            DeclaredFunctionType propDeclType =
-                propDef.methodScope.getDeclaredType();
-            PropertyDef inheritedPropDef = propertyDefs.get(superClass, pname);
-            propDeclType = propDeclType.withTypeInfoFromSuper(
-                    inheritedPropDef.methodScope.getDeclaredType());
-            propDef.methodScope.setDeclaredType(propDeclType);
+          PropertyDef inheritedPropDef = propertyDefs.get(superClass, pname);
+          if (inheritedPropDef != null &&
+              inheritedPropDef.methodScope != null) {
+            // TODO(blickly): Save DeclaredFunctionTypes somewhere other than
+            // inside Scopes so that we can access them even for methods that
+            // do not create a Scope at definition site.
+            DeclaredFunctionType propDeclType;
+            if (propDef == null || propDef.methodScope == null) {
+              propDeclType = inheritedPropDef.methodScope.getDeclaredType();
+            } else {
+              DeclaredFunctionType funDeclType =
+                  propDef.methodScope.getDeclaredType();
+              DeclaredFunctionType inheritedFunDeclType =
+                  inheritedPropDef.methodScope.getDeclaredType();
+              propDeclType =
+                  funDeclType.withTypeInfoFromSuper(inheritedFunDeclType);
+              propDef.methodScope.setDeclaredType(propDeclType);
+            }
             nominalType.addProtoProperty(pname,
                 JSType.fromFunctionType(propDeclType.toFunctionType()));
           }
           JSType inheritedPropType = superClass.getPropDeclaredType(pname);
+          if (inheritedPropType == null) {
+            // No need to go further for undeclared props.
+            continue;
+          }
           JSType localPropType = nominalType.getPropDeclaredType(pname);
+          System.out.println("nominalType: " + nominalType + "." + pname +
+              " inheritedPropType: " + inheritedPropType + " localPropType: " +
+              localPropType);
           if (!localPropType.isSubtypeOf(inheritedPropType)) {
             warnings.add(JSError.make(
                 propertyDefs.get(nominalType, pname).defSite,
@@ -240,7 +258,7 @@ class GlobalTypeInfo {
               // Add property from interface to class
               nominalType.addProtoProperty(pname, inheritedPropType);
             } else if (propDef.methodScope != null) {
-              // If we are looking at a method defintion, munging may be needed
+              // If we are looking at a method definition, munging may be needed
               DeclaredFunctionType propDeclType =
                   propDef.methodScope.getDeclaredType();
               propDeclType = propDeclType.withTypeInfoFromSuper(
@@ -466,8 +484,7 @@ class GlobalTypeInfo {
       // We only add properties to the prototype of a class if the
       // property creations are in the same scope as the constructor
       if (currentScope.isDefinedLocally(ctorName)) {
-        Scope ctorScope = currentScope.getScope(ctorName);
-        NominalType classType = ctorScope.getDeclaredType().getClassType();
+        NominalType classType = currentScope.getNominalType(ctorName);
         if (classType == null) {
           // We don't look at assignments to prototypes of non-constructors.
           return;
@@ -507,8 +524,7 @@ class GlobalTypeInfo {
       Node getPropNode = assignNode.getFirstChild();
       String ctorName = getPropNode.getFirstChild().getQualifiedName();
       Preconditions.checkState(currentScope.isLocalFunDef(ctorName));
-      Scope ctorScope = currentScope.getScope(ctorName);
-      NominalType classType = ctorScope.getDeclaredType().getClassType();
+      NominalType classType = currentScope.getNominalType(ctorName);
       String pname = getPropNode.getLastChild().getString();
       JSType propDeclType =
           getTypeDeclarationFromJsdoc(assignNode, currentScope);
@@ -778,16 +794,25 @@ class GlobalTypeInfo {
       return false;
     }
 
-    @Override
-    public JSType getNamedTypeByName(String name) {
+    NominalType getNominalType(String name) {
       Preconditions.checkState(localClassDefs != null);
       NominalType klass = localClassDefs.get(name);
       if (klass != null) {
-        return JSType.join(
-            JSType.fromObjectType(ObjectType.fromClass(klass)), JSType.NULL);
+        return klass;
       }
       if (parent != null) {
-        return parent.getNamedTypeByName(name);
+        return parent.getNominalType(name);
+      }
+      return null;
+    }
+
+    @Override
+    public JSType getNominalTypeAsJstype(String name) {
+      Preconditions.checkState(localClassDefs != null);
+      NominalType klass = getNominalType(name);
+      if (klass != null) {
+        return JSType.join(
+            JSType.fromObjectType(ObjectType.fromClass(klass)), JSType.NULL);
       }
       return null;
     }

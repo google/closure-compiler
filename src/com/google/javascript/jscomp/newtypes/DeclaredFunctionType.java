@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import java.util.List;
@@ -98,7 +97,7 @@ public class DeclaredFunctionType {
     } else if (argpos < numReqFormals + optionalFormals.size()) {
       return optionalFormals.get(argpos - numReqFormals);
     } else {
-      Preconditions.checkState(restFormals != null);
+      // TODO(blickly): Distinguish between undeclared varargs and no varargs.
       return restFormals;
     }
   }

@@ -398,12 +398,16 @@ public class NewTypeInference implements CompilerPass {
         }
         case Token.BLOCK:
         case Token.EMPTY:
+        case Token.SCRIPT:
           inEnv = outEnv;
           break;
         case Token.FOR: // TODO(blickly): Analyze these statements
         case Token.WHILE:
         case Token.DO:
         case Token.IF:
+        case Token.TRY:
+        case Token.CATCH:
+        case Token.BREAK:
           inEnv = outEnv;
           break;
         default:
@@ -535,13 +539,7 @@ public class NewTypeInference implements CompilerPass {
     int optArity = declType.getOptionalArity();
     for (String formal : fn.getFormals()) {
       formalType = fn.getDeclaredTypeOf(formal);
-      if (formalType != null) {
-        if (formalIndex < reqArity) {
-          builder.addReqFormal(formalType);
-        } else if (formalIndex < optArity) {
-          builder.addOptFormal(formalType);
-        }
-      } else {
+      if (formalType == null) {
         formalType = envGetType(entryEnv, formal);
         // TODO(user): fix so we get the adjusted end-of-fwd type for objs too
         if (!formalType.hasNonScalar() || formalType.getFunType() != null) {
@@ -551,7 +549,12 @@ public class NewTypeInference implements CompilerPass {
           }
         }
         // TODO(blickly): Use location to infer polymorphism
-        builder.addReqFormal(formalType.withLocation(null));
+        formalType = formalType.withLocation(null);
+      }
+      if (formalIndex < reqArity) {
+        builder.addReqFormal(formalType);
+      } else if (formalIndex < optArity) {
+        builder.addOptFormal(formalType);
       }
       formalIndex++;
     }
@@ -977,7 +980,9 @@ public class NewTypeInference implements CompilerPass {
         return new EnvTypePair(rhsPair.env, JSType.BOOLEAN);
       }
       case Token.GETPROP:
-        Preconditions.checkState(!NodeUtil.isAssignmentOp(expr.getParent()));
+        Preconditions.checkState(
+            !NodeUtil.isAssignmentOp(expr.getParent()) ||
+            !NodeUtil.isLValue(expr));
         return analyzePropAccessFwd(
             expr.getFirstChild(), expr.getLastChild().getString(),
             inEnv, requiredType, specializedType);
@@ -1104,6 +1109,11 @@ public class NewTypeInference implements CompilerPass {
         EnvTypePair pair = analyzeExprFwd(index, inEnv);
         pair = analyzeExprFwd(receiver, pair.env, JSType.TOP_OBJECT);
         pair.type = requiredType;
+        return pair;
+      }
+      case Token.VOID: {
+        EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
+        pair.type = JSType.UNDEFINED;
         return pair;
       }
       case Token.EQ:
@@ -1426,7 +1436,9 @@ public class NewTypeInference implements CompilerPass {
         return new EnvTypePair(lvalue.env, JSType.NUMBER);
       }
       case Token.GETPROP: {
-        Preconditions.checkState(!NodeUtil.isAssignmentOp(expr.getParent()));
+        Preconditions.checkState(
+            !NodeUtil.isAssignmentOp(expr.getParent()) ||
+            !NodeUtil.isLValue(expr));
         return analyzePropAccessBwd(expr.getFirstChild(),
             expr.getLastChild().getString(), outEnv, requiredType);
       }
@@ -1516,6 +1528,11 @@ public class NewTypeInference implements CompilerPass {
         EnvTypePair pair = analyzeExprBwd(receiver, outEnv, JSType.TOP_OBJECT);
         pair = analyzeExprBwd(index, pair.env);
         pair.type = requiredType;
+        return pair;
+      }
+      case Token.VOID: {
+        EnvTypePair pair = analyzeExprBwd(expr.getFirstChild(), outEnv);
+        pair.type = JSType.UNDEFINED;
         return pair;
       }
       case Token.EQ:

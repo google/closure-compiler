@@ -107,6 +107,8 @@ public class JSTypeCreatorFromJSDoc {
       }
       case Token.EMPTY: // for function types that don't declare a return type
         return JSType.UNKNOWN;
+      case Token.VOID:
+        return JSType.UNDEFINED;
       case Token.STRING:
         String typeName = n.getString();
         if (typeName.equals("boolean")) {
@@ -115,12 +117,12 @@ public class JSTypeCreatorFromJSDoc {
           return JSType.NULL;
         } else if (typeName.equals("number")) {
           return JSType.NUMBER;
-        }  else if (typeName.equals("string")) {
+        } else if (typeName.equals("string")) {
           return JSType.STRING;
         } else if (typeName.equals("undefined")) {
           return JSType.UNDEFINED;
         } else { // it must be a class name
-          JSType namedType = registry.getNamedTypeByName(typeName);
+          JSType namedType = registry.getNominalTypeAsJstype(typeName);
           if (namedType != null) {
             return namedType;
           }
@@ -154,6 +156,9 @@ public class JSTypeCreatorFromJSDoc {
         if (child.getType() == Token.THIS) {
           builder.addReceiverType(
               getClassType(child.getFirstChild(), registry));
+          child = child.getNext();
+        } else if (child.getType() == Token.NEW) {
+          builder.addClass(getClassType(child.getFirstChild(), registry));
           child = child.getNext();
         }
         if (child.getType() == Token.PARAM_LIST) {
@@ -201,7 +206,9 @@ public class JSTypeCreatorFromJSDoc {
 
   public NominalType getClassType(Node n, DeclaredTypeRegistry registry) {
     JSType wrappedClass = getTypeFromNode(n, registry);
-    Preconditions.checkState(wrappedClass != null);
+    if (wrappedClass == null) {
+      return null;
+    }
     return wrappedClass.getClassTypeIfUnique();
   }
 
@@ -267,6 +274,9 @@ public class JSTypeCreatorFromJSDoc {
     if (childJsdoc.getType() == Token.THIS) {
       builder.addReceiverType(
           getClassType(childJsdoc.getFirstChild(), registry));
+      childJsdoc = childJsdoc.getNext();
+    } else if (childJsdoc.getType() == Token.NEW) {
+      builder.addClass(getClassType(childJsdoc.getFirstChild(), registry));
       childJsdoc = childJsdoc.getNext();
     }
     if (childJsdoc.getType() == Token.PARAM_LIST) {

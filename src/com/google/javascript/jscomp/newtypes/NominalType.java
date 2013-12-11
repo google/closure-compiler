@@ -133,8 +133,13 @@ public class NominalType {
 
   public JSType getPropDeclaredType(String pname) {
     Property p = getProp(pname);
-    Preconditions.checkState(p != null);
+    if (p == null) {
+      return null;
+    } else if (p.getDeclaredType() == null && superClass != null) {
+      return superClass.getPropDeclaredType(pname);
+    }
     return p.getDeclaredType();
+
   }
 
   boolean isSubclassOf(NominalType other) {
