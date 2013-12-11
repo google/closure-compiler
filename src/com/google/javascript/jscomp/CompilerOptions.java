@@ -481,6 +481,14 @@ public class CompilerOptions implements Serializable, Cloneable {
   boolean shadowVariables;
 
   /**
+   * Use a renaming heuristic with better stability across source
+   * changes.  With this option each symbol is more likely to receive
+   * the same name between builds.  The cost may be a slight increase
+   * in code size.
+   */
+  boolean preferStableNames;
+
+  /**
    * Generate pseudo names for variables and properties for debugging purposes.
    */
   public boolean generatePseudoNames;
@@ -990,6 +998,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     labelRenaming = false;
     generatePseudoNames = false;
     shadowVariables = false;
+    preferStableNames = false;
     renamePrefix = null;
     aliasKeywords = false;
     collapseProperties = false;
@@ -1899,6 +1908,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setReserveRawExports(boolean reserveRawExports) {
     this.reserveRawExports = reserveRawExports;
+  }
+
+  public void setPreferStableNames(boolean preferStableNames) {
+    this.preferStableNames = preferStableNames;
   }
 
   public void setGeneratePseudoNames(boolean generatePseudoNames) {

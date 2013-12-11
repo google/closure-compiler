@@ -45,6 +45,13 @@ import javax.annotation.Nullable;
  *
  */
 final class RenameVars implements CompilerPass {
+
+  /**
+   * Limit on number of locals in a scope for temporary local renaming
+   * when {@code preferStableNames} is true.
+   */
+  private static final int MAX_LOCALS_IN_SCOPE_TO_TEMP_RENAME = 1000;
+
   private final AbstractCompiler compiler;
 
   /** List of global NAME nodes */
@@ -127,6 +134,8 @@ final class RenameVars implements CompilerPass {
 
   private final boolean shouldShadow;
 
+  private final boolean preferStableNames;
+
   /** Characters that shouldn't be used in variable names. */
   private final char[] reservedCharacters;
 
@@ -140,18 +149,18 @@ final class RenameVars implements CompilerPass {
   RenameVars(AbstractCompiler compiler, String prefix,
       boolean localRenamingOnly, boolean preserveFunctionExpressionNames,
       boolean generatePseudoNames, boolean shouldShadow,
-      VariableMap prevUsedRenameMap,
+      boolean preferStableNames, VariableMap prevUsedRenameMap,
       @Nullable char[] reservedCharacters,
       @Nullable Set<String> reservedNames) {
     this(compiler, prefix, localRenamingOnly, preserveFunctionExpressionNames,
-        generatePseudoNames, shouldShadow, prevUsedRenameMap,
+        generatePseudoNames, shouldShadow, preferStableNames, prevUsedRenameMap,
         reservedCharacters, reservedNames, null);
 
   }
   RenameVars(AbstractCompiler compiler, String prefix,
       boolean localRenamingOnly, boolean preserveFunctionExpressionNames,
       boolean generatePseudoNames, boolean shouldShadow,
-      VariableMap prevUsedRenameMap,
+      boolean preferStableNames, VariableMap prevUsedRenameMap,
       @Nullable char[] reservedCharacters,
       @Nullable Set<String> reservedNames,
       @Nullable NameGenerator nameGenerator) {
@@ -167,6 +176,7 @@ final class RenameVars implements CompilerPass {
     this.prevUsedRenameMap = prevUsedRenameMap;
     this.reservedCharacters = reservedCharacters;
     this.shouldShadow = shouldShadow;
+    this.preferStableNames = preferStableNames;
     if (reservedNames == null) {
       this.reservedNames = Sets.newHashSet();
     } else {
@@ -208,7 +218,8 @@ final class RenameVars implements CompilerPass {
 
     @Override
     public void enterScope(NodeTraversal t) {
-      if (t.inGlobalScope()) {
+      if (t.inGlobalScope() ||
+          !shouldTemporarilyRenameLocalsInScope(t.getScope())) {
         return;
       }
       Iterator<Var> it = t.getScope().getVars();
@@ -285,8 +296,10 @@ final class RenameVars implements CompilerPass {
         recordPseudoName(n);
       }
 
-      if (local) {
-        // Local var: assign a new name
+      if (local && shouldTemporarilyRenameLocalsInScope(var.getScope())) {
+        // Give local variables a temporary name based on the
+        // variable's index in the scope to enable name reuse across
+        // locals in independent scopes.
         String tempName = LOCAL_VAR_PREFIX + getLocalVarIndex(var);
         incCount(tempName);
         localNameNodes.add(n);
@@ -586,10 +599,26 @@ final class RenameVars implements CompilerPass {
       } else {
         num += localBleedingFunctionsPerScope.get(s).size();
       }
-
-      num += s.getVarCount();
+      if (shouldTemporarilyRenameLocalsInScope(s)) {
+        num += s.getVarCount();
+      }
       s = s.getParent();
     }
     return num;
+  }
+
+  /**
+   * Returns true if the local variables in a scope should be given
+   * temporary names (eg, 'L 123') prior to renaming to allow reuse of
+   * names across scopes.  With {@code preferStableNames}, temporary
+   * renaming is disabled if the number of locals in the scope is
+   * above a heuristic threshold to allow effective reuse of rename
+   * maps (see {@code prevUsedRenameMap}).  In scopes with many
+   * variables the temporary name given to a variable is unlikely to
+   * be the same temporary name used when the rename map was created.
+   */
+  private boolean shouldTemporarilyRenameLocalsInScope(Scope s) {
+    return (!preferStableNames ||
+        s.getVarCount() <= MAX_LOCALS_IN_SCOPE_TO_TEMP_RENAME);
   }
 }

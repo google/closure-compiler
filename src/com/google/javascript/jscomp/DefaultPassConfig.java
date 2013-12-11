@@ -2236,6 +2236,7 @@ public class DefaultPassConfig extends PassConfig {
         preserveAnonymousFunctionNames,
         options.generatePseudoNames,
         options.shadowVariables,
+        options.preferStableNames,
         prevVariableMap,
         reservedChars,
         reservedNames);

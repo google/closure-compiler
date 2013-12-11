@@ -16,11 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 
@@ -40,6 +43,7 @@ public class RenameVarsTest extends CompilerTestCase {
   private boolean useGoogleCodingConvention = true;
   private boolean generatePseudoNames = false;
   private boolean shouldShadow = false;
+  private boolean preferStableNames = false;
   private boolean withNormalize = false;
   private NameGenerator nameGenerator = null;
 
@@ -60,7 +64,7 @@ public class RenameVarsTest extends CompilerTestCase {
     } else {
       pass =  renameVars = new RenameVars(compiler, prefix,
           localRenamingOnly, preserveFunctionExpressionNames,
-          generatePseudoNames, shouldShadow,
+          generatePseudoNames, shouldShadow, preferStableNames,
           previouslyUsedMap, null, null, nameGenerator);
     }
 
@@ -90,6 +94,7 @@ public class RenameVarsTest extends CompilerTestCase {
     preserveFunctionExpressionNames = false;
     generatePseudoNames = false;
     shouldShadow = false;
+    preferStableNames = false;
     nameGenerator = null;
 
     // TODO(johnlenz): Enable Normalize during these tests.
@@ -585,6 +590,38 @@ public class RenameVarsTest extends CompilerTestCase {
     assertVariableMapsEqual(expectedRenameMap, renameMap);
   }
 
+  public void testPreferStableNames() {
+    preferStableNames = true;
+    // Locals in scopes with too many local variables (>1000) should
+    // not receive temporary names (eg, 'L 123').  These locals will
+    // appear in the name maps with the same name as in the code (eg,
+    // 'a0' in this case).
+    test(createManyVarFunction(1000), null);
+    assertEquals(null, renameVars.getVariableMap().lookupNewName("a0"));
+    assertEquals("b", renameVars.getVariableMap().lookupNewName("L 0"));
+    test(createManyVarFunction(1001), null);
+    assertEquals("b", renameVars.getVariableMap().lookupNewName("a0"));
+    assertEquals(null, renameVars.getVariableMap().lookupNewName("L 0"));
+
+    // With {@code preferStableNames} off locals should
+    // unconditionally receive temporary names.
+    preferStableNames = false;
+    test(createManyVarFunction(1000), null);
+    assertEquals(null, renameVars.getVariableMap().lookupNewName("a0"));
+    assertEquals("b", renameVars.getVariableMap().lookupNewName("L 0"));
+    test(createManyVarFunction(1001), null);
+    assertEquals(null, renameVars.getVariableMap().lookupNewName("a0"));
+    assertEquals("b", renameVars.getVariableMap().lookupNewName("L 0"));
+  }
+
+  private static String createManyVarFunction(int numVars) {
+    List<String> locals = new ArrayList<String>();
+    for (int i = 0; i < numVars; i++) {
+      locals.add("a" + Integer.toString(i));
+    }
+    return "function foo() { var " + Joiner.on(",").join(locals) + "; }";
+  }
+
   private VariableMap makeVariableMap(String... keyValPairs) {
     Preconditions.checkArgument(keyValPairs.length % 2 == 0);
 
@@ -616,7 +653,7 @@ public class RenameVarsTest extends CompilerTestCase {
               compiler, null, CheckLevel.WARNING, false);
       closurePass.process(externs, root);
       renameVars = new RenameVars(compiler, prefix,
-          false, false, false, false, previouslyUsedMap, null,
+          false, false, false, false, false, previouslyUsedMap, null,
           closurePass.getExportedVariableNames(), null);
       renameVars.process(externs, root);
     }
