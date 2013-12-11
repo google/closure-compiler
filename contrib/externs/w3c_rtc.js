@@ -106,6 +106,12 @@ MediaStreamTrack.prototype.onunmute;
  */
 MediaStreamTrack.prototype.onended;
 
+/**
+ * @return {!MediaStreamTrack}
+ */
+MediaStreamTrack.prototype.clone = function() {};
+
+/** @return {void} */
 MediaStreamTrack.prototype.stop = function() {};
 
 /**
