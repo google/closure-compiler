@@ -59,13 +59,13 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         return tryFoldIf(subtree);
       case Token.WHILE:
         return tryFoldWhile(subtree);
-       case Token.FOR: {
-          Node condition = NodeUtil.getConditionExpression(subtree);
-          if (condition != null) {
-            tryFoldForCondition(condition);
-          }
+      case Token.FOR: {
+        Node condition = NodeUtil.getConditionExpression(subtree);
+        if (condition != null) {
+          tryFoldForCondition(condition);
         }
         return tryFoldFor(subtree);
+      }
       case Token.DO:
         return tryFoldDo(subtree);
       case Token.TRY:

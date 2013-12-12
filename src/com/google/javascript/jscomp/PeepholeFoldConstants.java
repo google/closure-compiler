@@ -1384,24 +1384,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return n;
   }
 
-  private boolean isAssignmentTarget(Node n) {
-    Node parent = n.getParent();
-    if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
-        || parent.isInc()
-        || parent.isDec()) {
-      // If GETPROP/GETELEM is used as assignment target the object literal is
-      // acting as a temporary we can't fold it here:
-      //    "{a:x}.a += 1" is not "x += 1"
-      return true;
-    }
-    return false;
-  }
-
   private Node tryFoldArrayAccess(Node n, Node left, Node right) {
     // If GETPROP/GETELEM is used as assignment target the array literal is
     // acting as a temporary we can't fold it here:
     //    "[][0] += 1"
-    if (isAssignmentTarget(n)) {
+    if (NodeUtil.isAssignmentTarget(n)) {
       return n;
     }
 
@@ -1461,7 +1448,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (isAssignmentTarget(n)) {
+    if (NodeUtil.isAssignmentTarget(n)) {
       // If GETPROP/GETELEM is used as assignment target the object literal is
       // acting as a temporary we can't fold it here:
       //    "{a:x}.a += 1" is not "x += 1"

@@ -785,6 +785,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldSame("x = [foo(), 0][1]");
     fold("x = [0, foo()][1]", "x = foo()");
     foldSame("x = [0, foo()][0]");
+    foldSame("for([1][0] in {});");
   }
 
   public void testFoldComplex() {
