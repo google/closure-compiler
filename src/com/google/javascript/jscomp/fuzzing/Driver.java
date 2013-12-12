@@ -194,7 +194,11 @@ public class Driver {
       if (error1.length() > 0) {
         getLogger().warning("JavaScript runtime error: " + error1);
       }
-      return true;
+      if (getLogger().getLevel().intValue() > Level.WARNING.intValue()) {
+        return true;
+      } else {
+        return false;
+      }
     } else {
       StringBuilder sb =
           new StringBuilder("Different runtime errors!");
@@ -248,7 +252,7 @@ public class Driver {
         }
       }
       String code2 = ScriptFuzzer.getPrettyCode(script);
-      debugInfo.append("Compiled Code: " + code2);
+      debugInfo.append("\nCompiled Code: " + code2);
       if (execute) {
         if (!executeJS(code1, code2)) {
           getLogger().severe(debugInfo.toString());
@@ -303,7 +307,20 @@ public class Driver {
     private String js;
     private Process process;
     NodeRunner(String js) {
-      this.js = js;
+      this.js = "try {" + js +
+          "} catch (e) {"
+          // catching all errors
+          + "if (e instanceof SyntaxError) {"
+          // want to know more information about SyntaxError
+          + "console.error(e.message);"
+          + "} else if (e instanceof Error) {"
+          + "console.error(e.name);"
+          + "} else if (typeof(e) == \"object\" || typeof(e) == \"function\") {"
+          + "console.error(typeof(e));"
+          + "} else {"
+          + "console.error(e);"
+          + "}"
+          + "}";
     }
 
     /* (non-Javadoc)
@@ -328,25 +345,6 @@ public class Driver {
         if (error1.equals(error2)) {
           return true;
         }
-
-        // both scripts throw an exception
-        String lineSeparator = System.getProperty("line.separator");
-        String[] lines1 = error1.trim().split(lineSeparator);
-        String[] lines2 = error2.trim().split(lineSeparator);
-        if (lines1.length == lines2.length &&
-            lines1[1].trim().contains("throw") &&
-            lines2[1].trim().contains("throw")) {
-          return true;
-        }
-
-//        if (error1.contains("TypeError: undefined is not a function") &&
-//            error2.contains("TypeError: undefined is not a function")) {
-//          return true;
-//        }
-//        if (error1.contains("TypeError: number is not a function") &&
-//            error2.contains("TypeError: number is not a function")) {
-//          return true;
-//        }
       }
       return false;
     }
