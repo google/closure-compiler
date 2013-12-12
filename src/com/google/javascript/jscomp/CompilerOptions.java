@@ -637,9 +637,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Sets the special "COMPILED" value to true */
   public boolean markAsCompiled;
 
-  /** Removes try...catch...finally blocks for easier debugging */
-  public boolean removeTryCatchFinally;
-
   /** Processes goog.provide() and goog.require() calls */
   public boolean closurePass;
 
@@ -1018,7 +1015,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     syntheticBlockEndMarker = null;
     locale = null;
     markAsCompiled = false;
-    removeTryCatchFinally = false;
     closurePass = false;
     preserveGoogRequires = false;
     jqueryPass = false;
@@ -2024,10 +2020,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setMarkAsCompiled(boolean markAsCompiled) {
     this.markAsCompiled = markAsCompiled;
-  }
-
-  public void setRemoveTryCatchFinally(boolean removeTryCatchFinally) {
-    this.removeTryCatchFinally = removeTryCatchFinally;
   }
 
   public void setClosurePass(boolean closurePass) {

@@ -857,10 +857,6 @@ public class Compiler extends AbstractCompiler {
       return;
     }
 
-    if (options.removeTryCatchFinally) {
-      removeTryCatchFinally();
-    }
-
     if (options.getTweakProcessing().shouldStrip() ||
         !options.stripTypes.isEmpty() ||
         !options.stripNameSuffixes.isEmpty() ||
@@ -907,17 +903,6 @@ public class Compiler extends AbstractCompiler {
 
   private void runSanityCheck() {
     sanityCheck.create(this).process(externsRoot, jsRoot);
-  }
-
-  /**
-   * Removes try/catch/finally statements for easier debugging.
-   */
-  void removeTryCatchFinally() {
-    logger.fine("Remove try/catch/finally");
-    startPass("removeTryCatchFinally");
-    RemoveTryCatch r = new RemoveTryCatch(this);
-    process(r);
-    endPass();
   }
 
   /**
