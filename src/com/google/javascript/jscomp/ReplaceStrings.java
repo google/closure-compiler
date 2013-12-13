@@ -221,7 +221,14 @@ class ReplaceStrings extends AbstractPostOrderCallback
           Node rhs = calledFn.getLastChild();
           if (rhs.isName() || rhs.isString()) {
             String methodName = rhs.getString();
-            Collection<String> classes = methods.get(methodName);
+            String originalMethodName =
+                (String) rhs.getParent().getProp(Node.ORIGINALNAME_PROP);
+            Collection<String> classes;
+            if (originalMethodName != null) {
+              classes = methods.get(originalMethodName);
+            } else {
+              classes = methods.get(methodName);
+            }
             if (classes != null) {
               Node lhs = calledFn.getFirstChild();
               if (lhs.getJSType() != null) {

@@ -19,11 +19,13 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.ReplaceStrings.Result;
 import com.google.javascript.rhino.Node;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -34,6 +36,16 @@ public class ReplaceStringsTest extends CompilerTestCase {
   private ReplaceStrings pass;
   private Set<String> reserved;
   private VariableMap previous;
+  private boolean runDisambiguateProperties = false;
+
+  private final List<String> functionsToInspect = Lists.newArrayList(
+      "Error(?)",
+      "goog.debug.Trace.startTracer(*)",
+      "goog.debug.Logger.getLogger(?)",
+      "goog.debug.Logger.prototype.info(?)",
+      "goog.log.getLogger(?)",
+      "goog.log.info(,?)"
+      );
 
   private final static String EXTERNS =
     "var goog = {};\n" +
@@ -57,6 +69,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
   public ReplaceStringsTest() {
     super(EXTERNS, true);
     enableNormalize();
+    parseTypeInfo = true;
   }
 
   @Override
@@ -71,27 +84,33 @@ public class ReplaceStringsTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     super.enableLineNumberCheck(false);
-    super.enableTypeCheck(CheckLevel.OFF);
+    super.enableTypeCheck(CheckLevel.WARNING);
     reserved = Collections.emptySet();
     previous = null;
   }
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
-    List<String> names = Lists.newArrayList(
-        "Error(?)",
-        "goog.debug.Trace.startTracer(*)",
-        "goog.debug.Logger.getLogger(?)",
-        "goog.debug.Logger.prototype.info(?)",
-        "goog.log.getLogger(?)",
-        "goog.log.info(,?)"
-        );
-    pass = new ReplaceStrings(compiler, "`", names, reserved, previous);
+    pass = new ReplaceStrings(
+        compiler, "`", functionsToInspect, reserved, previous);
 
     return new CompilerPass() {
         @Override
         public void process(Node externs, Node js) {
+          Map<String, CheckLevel> propertiesToErrorFor =
+              Maps.<String, CheckLevel>newHashMap();
+          propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
+
           new CollapseProperties(compiler, true, true).process(externs, js);
+          if (runDisambiguateProperties) {
+            SourceInformationAnnotator sia =
+                new SourceInformationAnnotator(
+                    "test", false /* doSanityChecks */);
+            NodeTraversal.traverse(compiler, js, sia);
+
+            DisambiguateProperties.forJSTypeSystem(
+                compiler, propertiesToErrorFor).process(externs, js);
+          }
           pass.process(externs, js);
         }
       };
@@ -416,6 +435,47 @@ public class ReplaceStringsTest extends CompilerTestCase {
         new String[] {
             "a", "foo",
             "b", "Some message"});
+  }
+
+  public void testWithDisambiguateProperties() throws Exception {
+    runDisambiguateProperties = true;
+    functionsToInspect.add("A.prototype.f(?)");
+    functionsToInspect.add("C.prototype.f(?)");
+
+    String js =
+        "/** @constructor */function A() {}\n"
+        + "/** @param {string} p\n"
+        + "  * @return {string} */\n"
+        + "A.prototype.f = function(p) {return 'a' + p;};\n"
+        + "/** @constructor */function B() {}\n"
+        + "/** @param {string} p\n"
+        + "  * @return {string} */\n"
+        + "B.prototype.f = function(p) {return p + 'b';};\n"
+        + "/** @constructor */function C() {}\n"
+        + "/** @param {string} p\n"
+        + "  * @return {string} */\n"
+        + "C.prototype.f = function(p) {return 'c' + p + 'c';};\n"
+        + "/** @type {A|B} */var ab = 1 ? new B : new A;\n"
+        + "/** @type {string} */var n = ab.f('not replaced');\n"
+        + "(new A).f('replaced with a');"
+        + "(new C).f('replaced with b');";
+
+    String output =
+        "function A() {}\n"
+        + "A.prototype.A_prototype$f = function(p) { return'a'+p; };\n"
+        + "function B() {}\n"
+        + "B.prototype.A_prototype$f = function(p) { return p+'b'; };\n"
+        + "function C() {}\n"
+        + "C.prototype.C_prototype$f = function(p) { return'c'+p+'c'; };\n"
+        + "var ab = 1 ? new B : new A;\n"
+        + "var n = ab.A_prototype$f('not replaced');\n"
+        + "(new A).A_prototype$f('a');"
+        + "(new C).C_prototype$f('b');";
+
+    testDebugStrings(js, output,
+        new String[] {
+            "a", "replaced with a",
+            "b", "replaced with b"});
   }
 
   private void testDebugStrings(String js, String expected,

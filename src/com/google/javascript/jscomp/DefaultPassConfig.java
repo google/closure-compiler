@@ -419,12 +419,6 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(collapseProperties);
     }
 
-    // ReplaceStrings runs after CollapseProperties in order to simplify
-    // pulling in values of constants defined in enums structures.
-    if (!options.replaceStringsFunctionDescriptions.isEmpty()) {
-      passes.add(replaceStrings);
-    }
-
     // Tighten types based on actual usage.
     if (options.tightenTypes) {
       passes.add(tightenTypesBuilder);
@@ -492,6 +486,15 @@ public class DefaultPassConfig extends PassConfig {
     // the code removing passes.
     if (options.closurePass) {
       passes.add(closureOptimizePrimitives);
+    }
+
+    // ReplaceStrings runs after CollapseProperties in order to simplify
+    // pulling in values of constants defined in enums structures. It also runs
+    // after disambiguate properties and smart name removal so that it can
+    // correctly identify logging types and can replace references to string
+    // expressions.
+    if (!options.replaceStringsFunctionDescriptions.isEmpty()) {
+      passes.add(replaceStrings);
     }
 
     // TODO(user): This forces a first crack at crossModuleCodeMotion

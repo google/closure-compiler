@@ -1410,7 +1410,8 @@ public class Compiler extends AbstractCompiler {
         if (options.sourceMapOutputPath != null ||
             options.nameReferenceReportPath != null ||
             options.isExternExportsEnabled() ||
-            options.externExportsPath != null) {
+            options.externExportsPath != null ||
+            !options.replaceStringsFunctionDescriptions.isEmpty()) {
 
           // Annotate the nodes in the tree with information from the
           // input file. This information is used to construct the SourceMap.
