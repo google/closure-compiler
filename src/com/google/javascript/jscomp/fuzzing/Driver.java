@@ -59,8 +59,7 @@ import java.util.logging.Logger;
 public class Driver {
   @Option(name = "--number_of_runs",
       usage = "The number of runs of the fuzzer. "
-          + "If this option is missing, the driver will run until "
-          + "first error (either in Fuzzer or Compiler) is found. ")
+          + "If this option is missing, the driver will run forever")
   private int numberOfRuns = -1;
 
   @Option(name = "--max_ast_size",
@@ -91,6 +90,10 @@ public class Driver {
   @Option(name = "--execute",
       usage = "Whether to execute the generated JavaScript")
   private boolean execute = false;
+
+  @Option(name = "--stop_on_error",
+      usage = "Whether to stop fuzzing once an error is found")
+  private boolean stopOnError = false;
 
   private Logger logger;
   private JSONObject config;
@@ -145,10 +148,6 @@ public class Driver {
     return logger;
   }
 
-  private boolean forever() {
-    return numberOfRuns == -1;
-  }
-
   private Node fuzz(Random random) {
     FuzzingContext context = new FuzzingContext(random, getConfig(), execute);
     ScriptFuzzer fuzzer = new ScriptFuzzer(context);
@@ -165,19 +164,19 @@ public class Driver {
     ExecutorService executor = Executors.newCachedThreadPool();
     NodeRunner node1 = new NodeRunner(js1);
     NodeRunner node2 = new NodeRunner(js2);
-    String error1 = null, error2 = null;
+    String[] output1 = null, output2 = null;
     try {
       // set the timeout to maxASTSize milliseconds
-      List<Future<String>>  futures = executor.invokeAll(
+      List<Future<String[]>>  futures = executor.invokeAll(
           Lists.newArrayList(node1, node2), maxASTSize, TimeUnit.MILLISECONDS);
 
-      Future<String> future1 = futures.get(0);
+      Future<String[]> future1 = futures.get(0);
       if (!future1.isCancelled()) {
-        error1 = future1.get();
+        output1 = future1.get();
       }
-      Future<String> future2 = futures.get(1);
+      Future<String[]> future2 = futures.get(1);
       if (!future2.isCancelled()) {
-        error2 = future2.get();
+        output2 = future2.get();
       }
     } catch (InterruptedException e) {
       getLogger().log(Level.INFO, "Timeout in executing JavaScript", e);
@@ -187,23 +186,42 @@ public class Driver {
       node1.process.destroy();
       node2.process.destroy();
     }
-    if (error1 == null && error2 == null) {
+    if (output1 == null && output2 == null) {
       getLogger().info("Infinite loop!");
       return true;
-    } else if (NodeRunner.isSame(error1, error2)) {
-      if (error1.length() > 0) {
-        getLogger().warning("JavaScript runtime error: " + error1);
+    } else if (NodeRunner.isSame(output1, output2)) {
+      boolean hasError = false;
+      if (output1 != null && output1[1].length() > 0) {
+        getLogger().warning("First JavaScript has a runtime error: " +
+            output1[1]);
+        hasError = true;
       }
-      if (getLogger().getLevel().intValue() > Level.WARNING.intValue()) {
-        return true;
-      } else {
+      if (output2 != null && output2[1].length() > 0) {
+        getLogger().warning("Second JavaScript has a runtime error: " +
+            output2[1]);
+        hasError = true;
+      }
+      if (hasError &&
+          getLogger().getLevel().intValue() < Level.WARNING.intValue()) {
         return false;
+      } else {
+        return true;
       }
     } else {
       StringBuilder sb =
-          new StringBuilder("Different runtime errors!");
-      sb.append("\nError1:").append(error1);
-      sb.append("\nError2:").append(error2);
+          new StringBuilder("Different outputs!");
+      sb.append("\nOutput 1:");
+      if (output1 != null) {
+        sb.append(output1[0]).append(output1[1]);
+      } else {
+        sb.append("null");
+      }
+      sb.append("\nOutput 2:");
+      if (output2 != null) {
+        sb.append(output2[0]).append(output2[1]);
+      } else {
+        sb.append("null");
+      }
       getLogger().severe(sb.toString());
       return false;
     }
@@ -215,7 +233,7 @@ public class Driver {
       numberOfRuns = 1;
     }
     long currentSeed;
-    for (int i = 0; forever() || i < numberOfRuns; i++) {
+    for (int i = 0; numberOfRuns == -1 || i < numberOfRuns; i++) {
       currentSeed = seed == -1 ? System.currentTimeMillis() : seed;
       getLogger().info("Running fuzzer [" + i + " of " +
           numberOfRuns + "]");
@@ -223,7 +241,7 @@ public class Driver {
         new Random(currentSeed);
       Node script = fuzz(random);
       if (script == null) {
-        if (forever()) {
+        if (stopOnError) {
           break;
         }
       }
@@ -240,14 +258,14 @@ public class Driver {
           }
         } else {
           getLogger().severe(debugInfo.toString());
-          if (forever()) {
+          if (stopOnError) {
             break;
           }
         }
       } catch (Exception e) {
         getLogger().log(Level.SEVERE, "Compiler Crashed!", e);
         getLogger().severe(debugInfo.toString());
-        if (forever()) {
+        if (stopOnError) {
           break;
         }
       }
@@ -256,7 +274,7 @@ public class Driver {
       if (execute) {
         if (!executeJS(code1, code2)) {
           getLogger().severe(debugInfo.toString());
-          if (forever()) {
+          if (stopOnError) {
             break;
           }
         }
@@ -303,50 +321,45 @@ public class Driver {
     }
   }
 
-  static class NodeRunner implements Callable<String> {
+  static class NodeRunner implements Callable<String[]> {
     private String js;
     private Process process;
     NodeRunner(String js) {
-      this.js = "try {" + js +
-          "} catch (e) {"
-          // catching all errors
-          + "if (e instanceof SyntaxError) {"
-          // want to know more information about SyntaxError
-          + "console.error(e.message);"
-          + "} else if (e instanceof Error) {"
-          + "console.error(e.name);"
-          + "} else if (typeof(e) == \"object\" || typeof(e) == \"function\") {"
-          + "console.error(typeof(e));"
+      this.js = "process.on('uncaughtException', function(e) {"
+          // hanlding and logging all errors
+          + "if (e instanceof Error) {"
+          + "console.log(e.name);"
           + "} else {"
-          + "console.error(e);"
+          + "console.log(typeof(e));"
           + "}"
-          + "}";
+          + "});"
+          + js;
     }
 
     /* (non-Javadoc)
      * @see java.util.concurrent.Callable#call()
      */
     @Override
-    public String call() throws IOException {
+    public String[] call() throws IOException {
       String[] command = {"node", "-e", js};
       Runtime runtime = Runtime.getRuntime();
       process = runtime.exec(command);
-      return CharStreams.toString(
+      String[] results = new String[2];
+      results[0] = CharStreams.toString(
+          new InputStreamReader(process.getInputStream()));
+      results[1] = CharStreams.toString(
           new InputStreamReader(process.getErrorStream()));
+      return results;
     }
 
-    public static boolean isSame(String error1, String error2) {
-      if (error1 == null && error2 == null) {
+    public static boolean isSame(String[] output1, String[] output2) {
+      if (output1 == null && output2 == null) {
         return true;
-      } else if (error1 == null || error2 == null) {
+      } else if (output1 == null || output2 == null) {
         return false;
       } else {
-        // exact match
-        if (error1.equals(error2)) {
-          return true;
-        }
+        return output1[0].equals(output2[0]);
       }
-      return false;
     }
   }
 }
