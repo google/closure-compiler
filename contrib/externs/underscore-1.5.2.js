@@ -34,163 +34,183 @@ function _(obj) {}
 // Collection functions
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {Object=} opt_context
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, VALUE, ?, ?)} iterator
+ * @param {CONTEXT=} opt_context
+ * @template CONTEXT, VALUE
  */
 _.each = function(obj, iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {Object=} opt_context
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, VALUE, ?, ?)} iterator
+ * @param {CONTEXT=} opt_context
+ * @template CONTEXT, VALUE
  */
 _.forEach = function(obj, iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {Object=} opt_context
- * @return {!Array}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, VALUE, ?, ?) : RETURN} iterator
+ * @param {CONTEXT=} opt_context
+ * @return {!Array.<RETURN>}
+ * @template CONTEXT, VALUE, RETURN
  */
 _.map = function(obj, iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {Object=} opt_context
- * @return {!Array}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, VALUE, ?, ?) : RETURN} iterator
+ * @param {CONTEXT=} opt_context
+ * @return {!Array.<RETURN>}
+ * @template CONTEXT, VALUE, RETURN
  */
 _.collect = function(obj, iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {*} memo
- * @param {Object=} opt_context
- * @return {!*}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, ?, VALUE, ?, ?) : RETURN} iterator
+ * @param {?} memo
+ * @param {CONTEXT=} opt_context
+ * @return {RETURN}
+ * @template CONTEXT, VALUE, RETURN
  */
 _.reduce = function(obj, iterator, memo, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {*} memo
- * @param {Object=} opt_context
- * @return {!*}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, ?, VALUE, ?, ?) : RETURN} iterator
+ * @param {?} memo
+ * @param {CONTEXT=} opt_context
+ * @return {RETURN}
+ * @template CONTEXT, VALUE, RETURN
  */
 _.inject = function(obj, iterator, memo, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {*} memo
- * @param {Object=} opt_context
- * @return {!*}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, ?, VALUE, ?, ?) : RETURN} iterator
+ * @param {?} memo
+ * @param {CONTEXT=} opt_context
+ * @return {RETURN}
+ * @template CONTEXT, VALUE, RETURN
  */
 _.foldl = function(obj, iterator, memo, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {*} memo
- * @param {Object=} opt_context
- * @return {!*}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, ?, VALUE, ?, ?) : RETURN} iterator
+ * @param {?} memo
+ * @param {CONTEXT=} opt_context
+ * @return {RETURN}
+ * @template CONTEXT, VALUE, RETURN
  */
 _.reduceRight = function(obj, iterator, memo, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {*} memo
- * @param {Object=} opt_context
- * @return {!*}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, ?, VALUE, ?, ?) : RETURN} iterator
+ * @param {VALUE} memo
+ * @param {CONTEXT=} opt_context
+ * @return {RETURN}
+ * @template CONTEXT, VALUE, RETURN
  */
 _.foldr = function(obj, iterator, memo, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {Object=} opt_context
- * @return {!*}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, VALUE, ?, ?) : ?} iterator
+ * @param {CONTEXT=} opt_context
+ * @return {VALUE|undefined}
+ * @template CONTEXT, VALUE
  */
 _.find = function(obj, iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {Object=} opt_context
- * @return {!*}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, VALUE, ?, ?) : ?} iterator
+ * @param {CONTEXT=} opt_context
+ * @return {VALUE|undefined}
+ * @template CONTEXT, VALUE
  */
 _.detect = function(obj, iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {Object=} opt_context
- * @return {!Array}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, VALUE, ?, ?) : ?} iterator
+ * @param {CONTEXT=} opt_context
+ * @return {!Array.<VALUE>}
+ * @template CONTEXT, VALUE
  */
 _.filter = function(obj, iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {Object=} opt_context
- * @return {!Array}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, VALUE, ?, ?) : ?} iterator
+ * @param {CONTEXT=} opt_context
+ * @return {!Array.<VALUE>}
+ * @template CONTEXT, VALUE
  */
 _.select = function(obj, iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
  * @param {Object} properties
- * @return {!Array}
+ * @return {!Array.<VALUE>}
+ * @template VALUE
  */
 _.where = function(obj, properties) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Object} properties
- * @return {*}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {Object.<string, ?>} properties
+ * @return {VALUE|undefined}
+ * @template VALUE
  */
 _.findWhere = function(obj, properties) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {Object=} opt_context
- * @return {!Array}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, VALUE, ?, ?) : ?} iterator
+ * @param {CONTEXT=} opt_context
+ * @return {!Array.<VALUE>}
+ * @template CONTEXT, VALUE
  */
 _.reject = function(obj, iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {Object=} opt_context
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {(function(this:CONTEXT, VALUE, ?, ?) : ?)=} opt_iterator
+ * @param {CONTEXT=} opt_context
  * @return {boolean}
+ * @template CONTEXT, VALUE
  */
-_.every = function(obj, iterator, opt_context) {};
+_.every = function(obj, opt_iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} iterator
- * @param {Object=} opt_context
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {(function(this:CONTEXT, VALUE, ?, ?) : ?)=} opt_iterator
+ * @param {CONTEXT=} opt_context
  * @return {boolean}
+ * @template CONTEXT, VALUE
  */
-_.all = function(obj, iterator, opt_context) {};
+_.all = function(obj, opt_iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function=} opt_iterator
- * @param {Object=} opt_context
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {(function(this:CONTEXT, VALUE, ?, ?) : ?)=} opt_iterator
+ * @param {CONTEXT=} opt_context
  * @return {boolean}
+ * @template CONTEXT, VALUE
  */
 _.some = function(obj, opt_iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function=} opt_iterator
- * @param {Object=} opt_context
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {(function(this:CONTEXT, VALUE, ?, ?) : ?)=} opt_iterator
+ * @param {CONTEXT=} opt_context
  * @return {boolean}
+ * @template CONTEXT, VALUE
  */
 _.any = function(obj, opt_iterator, opt_context) {};
 
@@ -216,70 +236,79 @@ _.include = function(obj, target) {};
 _.invoke = function(obj, method, var_args) {};
 
 /**
- * @param {Array.<Object>} obj
+ * @param {Array.<Object.<?, VALUE>>} obj
  * @param {string} key
- * @return {!Array}
+ * @return {!Array.<VALUE>}
+ * @template VALUE
  */
 _.pluck = function(obj, key) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} opt_iterator
- * @param {Object=} opt_context
- * @return {!*}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, VALUE, ?, ?) : ?} opt_iterator
+ * @param {CONTEXT=} opt_context
+ * @return {VALUE}
+ * @template CONTEXT, VALUE
  */
 _.max = function(obj, opt_iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {Function} opt_iterator
- * @param {Object=} opt_context
- * @return {!*}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {function(this:CONTEXT, VALUE, ?, ?) : ?} opt_iterator
+ * @param {CONTEXT=} opt_context
+ * @return {VALUE}
+ * @template CONTEXT, VALUE
  */
 _.min = function(obj, opt_iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {string|Function} iterator
- * @param {Object=} opt_context
- * @return {!Array}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {string|function(this:CONTEXT, VALUE, ?, ?) : ?} iterator
+ * @param {CONTEXT=} opt_context
+ * @return {!Array.<VALUE>}
+ * @template CONTEXT, VALUE
  */
 _.sortBy = function(obj, iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {string|Function} iterator
- * @param {Object=} opt_context
- * @return {!Object}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {string|function(this:CONTEXT, VALUE, ?, ?) : ?} iterator
+ * @param {CONTEXT=} opt_context
+ * @return {!Object.<Array.<VALUE>>}
+ * @template CONTEXT, VALUE
  */
 _.groupBy = function(obj, iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {string|Function} iterator
- * @param {Object=} opt_context
- * @return {!Object}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {string|function(this:CONTEXT, VALUE, ?, ?) : ?} iterator
+ * @param {CONTEXT=} opt_context
+ * @return {!Object.<?, VALUE>}
+ * @template CONTEXT, VALUE
  */
 _.indexBy = function(obj, iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @param {string|Function} iterator
- * @param {Object=} opt_context
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @param {string|function(this:CONTEXT, VALUE, ?, ?) : ?} iterator
+ * @param {CONTEXT=} opt_context
  * @return {!Object.<?,Number>}
+ * @template CONTEXT, VALUE
  */
 _.countBy = function(obj, iterator, opt_context) {};
 
 /**
- * @param {Object|Array} obj
- * @return {!Array}
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
+ * @return {!Array.<VALUE>}
+ * @template VALUE
  */
 _.shuffle = function(obj) {};
 
 /**
- * @param {Object|Array} obj
+ * @param {Object.<?, VALUE>|Array.<VALUE>} obj
  * @param {number=} opt_n
- * @return {!number|Array}
+ * @return {!VALUE|Array.<VALUE>}
+ * @template VALUE
  */
 _.sample = function(obj, opt_n) {};
 
@@ -291,71 +320,80 @@ _.toArray = function(iterable) {};
 
 /**
  * @param {Object|Array} obj
- * @return {!number}
+ * @return {number}
  */
 _.size = function(obj) {};
 
 // Array functions
 
 /**
- * @param {Array} array
+ * @param {Array.<VALUE>} array
  * @param {number=} opt_n
- * @return {!*}
+ * @return {VALUE|!Array.<VALUE>}
+ * @template VALUE
  */
 _.first = function(array, opt_n) {};
 
 /**
- * @param {Array} array
+ * @param {Array.<VALUE>} array
  * @param {number=} opt_n
- * @return {!*}
+ * @return {VALUE|!Array.<VALUE>}
+ * @template VALUE
  */
 _.head = function(array, opt_n) {};
 
 /**
- * @param {Array} array
+ * @param {Array.<VALUE>} array
  * @param {number=} opt_n
- * @return {!*}
+ * @return {VALUE|!Array.<VALUE>}
+ * @template VALUE
  */
 _.take = function(array, opt_n) {};
 
 /**
- * @param {Array} array
- * @param {number=} opt_n
- * @return {!Array}
+ * @param {Array.<VALUE>} array
+ * @param {number} opt_n
+ * @return {!Array.<VALUE>}
+ * @template VALUE
  */
 _.initial = function(array, opt_n) {};
 
 /**
- * @param {Array} array
+ * @param {Array.<VALUE>} array
  * @param {number=} opt_n
- * @return {!Array}
+ * @return {VALUE|!Array.<VALUE>}
+ * @template VALUE
  */
 _.last = function(array, opt_n) {};
 
 /**
- * @param {Array} array
+ * @param {Array.<VALUE>} array
  * @param {number=} opt_n
- * @return {!*}
+ * @return {!Array.<VALUE>}
+ * @template VALUE
  */
 _.rest = function(array, opt_n) {};
 
 /**
- * @param {Array} array
+ * @param {Array.<VALUE>} array
  * @param {number=} opt_n
- * @return {!*}
+ * @return {!Array.<VALUE>}
+ * @template VALUE
  */
 _.tail = function(array, opt_n) {};
 
 /**
- * @param {Array} array
+ * @param {Array.<VALUE>} array
  * @param {number=} opt_n
- * @return {!*}
+ * @return {!Array.<VALUE>}
+ * @template VALUE
  */
 _.drop = function(array, opt_n) {};
 
 /**
- * @param {Array} array
- * @return {!Array}
+ * @param {!Array.<VALUE>} array
+ * @return {!Array.<!VALUE>}
+ * @template VALUE
  */
 _.compact = function(array) {};
 
@@ -367,9 +405,10 @@ _.compact = function(array) {};
 _.flatten = function(array, opt_shallow) {};
 
 /**
- * @param {Array} array
- * @param {...*} var_args
- * @return {!Array}
+ * @param {!Array.<VALUE>} array
+ * @param {...VALUE} var_args
+ * @return {!Array.<VALUE>}
+ * @template VALUE
  */
 _.without = function(array, var_args) {};
 
@@ -393,20 +432,24 @@ _.intersection = function(arrays) {};
 _.difference = function(array, arrays) {};
 
 /**
- * @param {Array} array
+ * @param {!Array.<VALUE>} array
  * @param {boolean=} opt_isSorted
- * @param {Function=} opt_iterator
- * @return {!Array}
+ * @param {(function(this:CONTEXT, VALUE, ?, ?) : RETURN)=} opt_iterator
+ * @param {CONTEXT=} opt_context
+ * @return {!Array.<RETURN>}
+ * @template CONTEXT, VALUE, RETURN
  */
-_.uniq = function(array, opt_isSorted, opt_iterator) {};
+_.uniq = function(array, opt_isSorted, opt_iterator, opt_context) {};
 
 /**
- * @param {Array} array
+ * @param {!Array.<VALUE>} array
  * @param {boolean=} opt_isSorted
- * @param {Function=} opt_iterator
- * @return {!Array}
+ * @param {(function(this:CONTEXT, VALUE, ?, ?) : RETURN)=} opt_iterator
+ * @param {CONTEXT=} opt_context
+ * @return {!Array.<RETURN>}
+ * @template CONTEXT, VALUE, RETURN
  */
-_.unique = function(array, opt_isSorted, opt_iterator) {};
+_.unique = function(array, opt_isSorted, opt_iterator, opt_context) {};
 
 /**
  * @param {...Array} arrays
@@ -415,7 +458,7 @@ _.unique = function(array, opt_isSorted, opt_iterator) {};
 _.zip = function(arrays) {};
 
 /**
- * @param {Array} list
+ * @param {!Array} list
  * @param {Array=} opt_values
  * @return {!Object}
  */
@@ -425,7 +468,7 @@ _.object = function(list, opt_values) {};
  * @param {Array} array
  * @param {*} item
  * @param {boolean=} opt_isSorted
- * @return {!number}
+ * @return {number}
  */
 _.indexOf = function(array, item, opt_isSorted) {};
 
@@ -433,16 +476,17 @@ _.indexOf = function(array, item, opt_isSorted) {};
  * @param {Array} array
  * @param {*} item
  * @param {number=} opt_fromindex
- * @return {!number}
+ * @return {number}
  */
 _.lastIndexOf = function(array, item, opt_fromindex) {};
 
 /**
- * @param {Array} list
- * @param {*} obj
- * @param {Function} opt_iterator
- * @param {Object=} opt_context
- * @return {!number}
+ * @param {Array.<VALUE>} list
+ * @param {VALUE} obj
+ * @param {(function(this:CONTEXT, VALUE) : ?)=} opt_iterator
+ * @param {CONTEXT=} opt_context
+ * @return {number}
+ * @template CONTEXT, VALUE
  */
 _.sortedIndex = function(list, obj, opt_iterator, opt_context) {};
 
@@ -538,20 +582,22 @@ _.compose = function(funcs) {};
 _.keys = function(obj) {};
 
 /**
- * @param {Object} obj
- * @return {!Array}
+ * @param {Object.<?, VALUE>} obj
+ * @return {!Array.<VALUE>}
+ * @template VALUE
  */
 _.values = function(obj) {};
 
 /**
  * @param {Object} obj
- * @return {!Array.<Array>}
+ * @return {!Array.<!Array>}
  */
 _.pairs = function(obj) {};
 
 /**
- * @param {Object} obj
- * @return {!Object}
+ * @param {Object.<K, V>} obj
+ * @return {!Object.<V, K>}
+ * @template K, V
  */
 _.invert = function(obj) {};
 
@@ -574,16 +620,18 @@ _.methods = function(obj) {};
 _.extend = function(obj, objs) {};
 
 /**
- * @param {Object} obj
- * @param {...string|Array.<string>} keys
- * @return {Object}
+ * @param {Object.<K, V>} obj
+ * @param {...K|Array.<K>} keys
+ * @return {Object.<K, V>}
+ * @template K, V
  */
 _.pick = function(obj, keys) {};
 
 /**
- * @param {Object} obj
+ * @param {Object.<K, V>} obj
  * @param {...string|Array.<string>} keys
- * @return {Object}
+ * @return {Object.<K, V>}
+ * @template K, V
  */
 _.omit = function(obj, keys) {};
 
@@ -594,15 +642,17 @@ _.omit = function(obj, keys) {};
 _.defaults = function(obj, defs) {};
 
 /**
- * @param {Object} obj
- * @return {Object}
+ * @param {Object.<K, V>} obj
+ * @return {Object.<K, V>}
+ * @template K, V
  */
 _.clone = function(obj) {};
 
 /**
- * @param {Object} obj
- * @param {Function} interceptor
- * @return {Object} obj
+ * @param {Object.<K, V>} obj
+ * @param {function(Object.<K, V>)} interceptor
+ * @return {Object.<K, V>} obj
+ * @template K, V
  */
 _.tap = function(obj, interceptor) {};
 
@@ -718,8 +768,9 @@ _.isUndefined = function(obj) {};
 _.noConflict = function() {};
 
 /**
- * @param {*} value
- * @return {*}
+ * @param {VALUE} value
+ * @return {VALUE}
+ * @template VALUE
  */
 _.identity = function(value) {};
 
