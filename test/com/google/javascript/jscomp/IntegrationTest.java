@@ -2168,6 +2168,18 @@ public class IntegrationTest extends IntegrationTestCase {
         "function f(a) { a += 'x'; return a += 'y'; }");
   }
 
+  public void testIssue1168() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS
+        .setOptionsForCompilationLevel(options);
+    test(options,
+        "while (function () {\n" +
+        " function f(){};\n" +
+        " L: while (void(f += 3)) {}\n" +
+        "}) {}",
+        "for( ; function(){} ; );");
+  }
+
   public void testIssue284() {
     CompilerOptions options = createCompilerOptions();
     options.smartNameRemoval = true;

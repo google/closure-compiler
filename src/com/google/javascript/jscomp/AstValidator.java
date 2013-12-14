@@ -312,7 +312,7 @@ public class AstValidator implements CompilerPass {
 
   private void validateLabel(Node n) {
     validateNodeType(Token.LABEL, n);
-    validateChildCount(n, 2);
+    validateChildCount(n, Token.arity(Token.LABEL));
     validateLabelName(n.getFirstChild());
     validateStatement(n.getLastChild());
   }
@@ -320,7 +320,7 @@ public class AstValidator implements CompilerPass {
   private void validateLabelName(Node n) {
     validateNodeType(Token.LABEL_NAME, n);
     validateNonEmptyString(n);
-    validateChildCount(n, 0);
+    validateChildCount(n, Token.arity(Token.LABEL_NAME));
   }
 
   private void validateNonEmptyString(Node n) {
@@ -339,18 +339,18 @@ public class AstValidator implements CompilerPass {
   private void validateName(Node n) {
     validateNodeType(Token.NAME, n);
     validateNonEmptyString(n);
-    validateChildCount(n, 0);
+    validateChildCount(n, Token.arity(Token.NAME));
   }
 
   private void validateOptionalName(Node n) {
     validateNodeType(Token.NAME, n);
     validateNonNullString(n);
-    validateChildCount(n, 0);
+    validateChildCount(n, Token.arity(Token.NAME));
   }
 
   private void validateFunctionStatement(Node n) {
     validateNodeType(Token.FUNCTION, n);
-    validateChildCount(n, 3);
+    validateChildCount(n, Token.arity(Token.FUNCTION));
     validateName(n.getFirstChild());
     validateParameters(n.getChildAtIndex(1));
     validateBlock(n.getLastChild());
@@ -358,7 +358,7 @@ public class AstValidator implements CompilerPass {
 
   private void validateFunctionExpression(Node n) {
     validateNodeType(Token.FUNCTION, n);
-    validateChildCount(n, 3);
+    validateChildCount(n, Token.arity(Token.FUNCTION));
     validateOptionalName(n.getFirstChild());
     validateParameters(n.getChildAtIndex(1));
     validateBlock(n.getLastChild());
@@ -441,21 +441,21 @@ public class AstValidator implements CompilerPass {
 
   private void validateWith(Node n) {
     validateNodeType(Token.WITH, n);
-    validateChildCount(n, 2);
+    validateChildCount(n, Token.arity(Token.WITH));
     validateExpression(n.getFirstChild());
     validateBlock(n.getLastChild());
   }
 
   private void validateWhile(Node n) {
     validateNodeType(Token.WHILE, n);
-    validateChildCount(n, 2);
+    validateChildCount(n, Token.arity(Token.WHILE));
     validateExpression(n.getFirstChild());
     validateBlock(n.getLastChild());
   }
 
   private void validateDo(Node n) {
     validateNodeType(Token.DO, n);
-    validateChildCount(n, 2);
+    validateChildCount(n, Token.arity(Token.DO));
     validateBlock(n.getFirstChild());
     validateExpression(n.getLastChild());
   }
@@ -473,7 +473,7 @@ public class AstValidator implements CompilerPass {
 
   private void validateExprStmt(Node n) {
     validateNodeType(Token.EXPR_RESULT, n);
-    validateChildCount(n, 1);
+    validateChildCount(n, Token.arity(Token.EXPR_RESULT));
     validateExpression(n.getFirstChild());
   }
 
@@ -487,7 +487,7 @@ public class AstValidator implements CompilerPass {
 
   private void validateThrow(Node n) {
     validateNodeType(Token.THROW, n);
-    validateChildCount(n, 1);
+    validateChildCount(n, Token.arity(Token.THROW));
     validateExpression(n.getFirstChild());
   }
 
@@ -537,7 +537,7 @@ public class AstValidator implements CompilerPass {
 
   private void validateCatch(Node n) {
     validateNodeType(Token.CATCH, n);
-    validateChildCount(n, 2);
+    validateChildCount(n, Token.arity(Token.CATCH));
     validateName(n.getFirstChild());
     validateBlock(n.getLastChild());
   }
@@ -575,13 +575,13 @@ public class AstValidator implements CompilerPass {
 
   private void validateDefault(Node n) {
     validateNodeType(Token.DEFAULT_CASE, n);
-    validateChildCount(n, 1);
+    validateChildCount(n, Token.arity(Token.DEFAULT_CASE));
     validateSyntheticBlock(n.getLastChild());
   }
 
   private void validateCase(Node n) {
     validateNodeType(Token.CASE, n);
-    validateChildCount(n, 2);
+    validateChildCount(n, Token.arity(Token.CASE));
     validateExpression(n.getFirstChild());
     validateSyntheticBlock(n.getLastChild());
   }
@@ -599,7 +599,7 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateAssignmentExpression(Node n) {
-    validateChildCount(n, 2);
+    validateChildCount(n, Token.arity(n.getType()));
     validateAssignmentTarget(n.getFirstChild());
     validateExpression(n.getLastChild());
   }
@@ -619,7 +619,7 @@ public class AstValidator implements CompilerPass {
 
   private void validateGetProp(Node n) {
     validateNodeType(Token.GETPROP, n);
-    validateChildCount(n, 2);
+    validateChildCount(n, Token.arity(Token.GETPROP));
     validateExpression(n.getFirstChild());
     Node prop = n.getLastChild();
     validateNodeType(Token.STRING, prop);
@@ -637,7 +637,7 @@ public class AstValidator implements CompilerPass {
 
   private void validateString(Node n) {
     validateNodeType(Token.STRING, n);
-    validateChildCount(n, 0);
+    validateChildCount(n, Token.arity(Token.STRING));
     try {
       // Validate that getString doesn't throw
       n.getString();
@@ -648,7 +648,7 @@ public class AstValidator implements CompilerPass {
 
   private void validateNumber(Node n) {
     validateNodeType(Token.NUMBER, n);
-    validateChildCount(n, 0);
+    validateChildCount(n, Token.arity(Token.NUMBER));
     try {
       // Validate that getDouble doesn't throw
       n.getDouble();
@@ -691,7 +691,7 @@ public class AstValidator implements CompilerPass {
 
   private void validateObjectLitGetKey(Node n) {
     validateNodeType(Token.GETTER_DEF, n);
-    validateChildCount(n, 1);
+    validateChildCount(n, Token.arity(Token.GETTER_DEF));
     validateObjectLiteralKeyName(n);
     Node function = n.getFirstChild();
     validateFunctionExpression(function);
@@ -707,7 +707,7 @@ public class AstValidator implements CompilerPass {
 
   private void validateObjectLitSetKey(Node n) {
     validateNodeType(Token.SETTER_DEF, n);
-    validateChildCount(n, 1);
+    validateChildCount(n, Token.arity(Token.SETTER_DEF));
     validateObjectLiteralKeyName(n);
     Node function = n.getFirstChild();
     validateFunctionExpression(function);
@@ -723,7 +723,7 @@ public class AstValidator implements CompilerPass {
 
   private void validateObjectLitStringKey(Node n) {
     validateNodeType(Token.STRING_KEY, n);
-    validateChildCount(n, 1);
+    validateChildCount(n, Token.arity(Token.STRING_KEY));
     validateObjectLiteralKeyName(n);
     validateExpression(n.getFirstChild());
   }
@@ -742,18 +742,18 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateUnaryOp(Node n) {
-    validateChildCount(n, 1);
+    validateChildCount(n, Token.arity(n.getType()));
     validateExpression(n.getFirstChild());
   }
 
   private void validateBinaryOp(Node n) {
-    validateChildCount(n, 2);
+    validateChildCount(n, Token.arity(n.getType()));
     validateExpression(n.getFirstChild());
     validateExpression(n.getLastChild());
   }
 
   private void validateTrinaryOp(Node n) {
-    validateChildCount(n, 3);
+    validateChildCount(n, Token.arity(n.getType()));
     Node first = n.getFirstChild();
     validateExpression(first);
     validateExpression(first.getNext());

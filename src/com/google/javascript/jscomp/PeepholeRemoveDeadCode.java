@@ -872,13 +872,20 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return n;
     }
 
+    Node parent = n.getParent();
     NodeUtil.redeclareVarsInsideBranch(n);
     if (!mayHaveSideEffects(cond)) {
-      NodeUtil.removeChild(n.getParent(), n);
+      NodeUtil.removeChild(parent, n);
     } else {
       Node statement = IR.exprResult(cond.detachFromParent())
           .copyInformationFrom(cond);
-      n.getParent().replaceChild(n, statement);
+      if (parent.isLabel()) {
+        Node block = IR.block();
+        block.copyInformationFrom(statement);
+        block.addChildToFront(statement);
+        statement = block;
+      }
+      parent.replaceChild(n, statement);
     }
     reportCodeChange();
     return null;
