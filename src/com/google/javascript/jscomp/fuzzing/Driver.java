@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
@@ -27,6 +29,7 @@ import com.google.javascript.jscomp.JSModule;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SyntheticAst;
+import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.rhino.Node;
 
 import org.json.JSONException;
@@ -40,6 +43,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -113,6 +117,7 @@ public class Driver {
     Compiler.setLoggingLevel(level.getLevel());
     Compiler compiler = new Compiler();
     compiler.setTimeout(30);
+    compiler.disableThreads();
     return compiler.compileModules(
         CommandLineRunner.getDefaultExterns(),
         Arrays.asList(jsModule), getOptions());
@@ -121,6 +126,7 @@ public class Driver {
   private CompilerOptions getOptions() {
     CompilerOptions options = new CompilerOptions();
     compilationLevel.setOptionsForCompilationLevel(options);
+    options.variableRenaming = VariableRenamingPolicy.OFF;
     return options;
   }
 
@@ -148,8 +154,7 @@ public class Driver {
     return logger;
   }
 
-  private Node fuzz(Random random) {
-    FuzzingContext context = new FuzzingContext(random, getConfig(), execute);
+  private Node fuzz(FuzzingContext context) {
     ScriptFuzzer fuzzer = new ScriptFuzzer(context);
     Node script = null;
     try {
@@ -239,7 +244,8 @@ public class Driver {
           numberOfRuns + "]");
       Random random = currentSeed == -1 ? new Random(currentSeed) :
         new Random(currentSeed);
-      Node script = fuzz(random);
+      FuzzingContext context = new FuzzingContext(random, getConfig(), execute);
+      Node script = fuzz(context);
       if (script == null) {
         if (stopOnError) {
           break;
@@ -271,15 +277,58 @@ public class Driver {
       }
       String code2 = ScriptFuzzer.getPrettyCode(script);
       debugInfo.append("\nCompiled Code: " + code2);
+      String setUpCode = getSetupCode(context.scopeManager);
+//      System.out.print(setUpCode);
       if (execute) {
-        if (!executeJS(code1, code2)) {
+        if (!executeJS(setUpCode + code1, setUpCode + code2)) {
           getLogger().severe(debugInfo.toString());
           if (stopOnError) {
             break;
           }
         }
       }
+      getLogger().info(debugInfo.toString());
     }
+  }
+
+  private String getSetupCode(ScopeManager scopeManager) {
+    Collection<String> vars = Collections2.transform(
+        Lists.newArrayList(scopeManager.localScope().symbols),
+        new Function<Symbol, String>() {
+          @Override
+          public String apply(Symbol s) {
+            return s.name;
+          }
+        });
+    String setUpCode = "function toString(value) {\n" +
+        "    if (value instanceof Array) {\n" +
+        "        var string = \"\";\n" +
+        "        for (var i in value) {\n" +
+        "            string += toString(value[i]);\n" +
+        "        }\n" +
+        "        return string;\n" +
+        "    } else if (value instanceof Function) {\n" +
+        "        return value.length;\n" +
+        "    } else {\n" +
+        "        return value;\n" +
+        "    }\n" +
+        "}\n" +
+        "\n" +
+        "process.on('uncaughtException', function(e) {\n" +
+        "    console.log(\"Errors: \");\n" +
+        "    if (e instanceof Error) {\n" +
+        "        console.log(e.name);\n" +
+        "    } else {\n" +
+        "        console.log(typeof(e));\n" +
+        "    }\n" +
+        "});\n" +
+        "\n" +
+        "process.on(\"exit\", function(e) {\n" +
+        "    console.log(\"Variables:\");\n" +
+        "    var allvars = " + vars + ";\n" +
+        "    console.log(toString(allvars));\n" +
+        "});";
+    return setUpCode;
   }
 
   public static void main(String[] args) throws Exception {
@@ -325,15 +374,7 @@ public class Driver {
     private String js;
     private Process process;
     NodeRunner(String js) {
-      this.js = "process.on('uncaughtException', function(e) {"
-          // hanlding and logging all errors
-          + "if (e instanceof Error) {"
-          + "console.log(e.name);"
-          + "} else {"
-          + "console.log(typeof(e));"
-          + "}"
-          + "});"
-          + js;
+      this.js = js;
     }
 
     /* (non-Javadoc)
