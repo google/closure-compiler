@@ -107,7 +107,18 @@ public class JSType {
   public static final JSType UNKNOWN = new JSType(UNKNOWN_MASK);
 
   public static final JSType TOP_OBJECT = fromObjectType(ObjectType.TOP_OBJECT);
+  public static final JSType NULL_OR_UNDEF =
+      new JSType(NULL_MASK | UNDEFINED_MASK);
   private static JSType TOP_FUNCTION = null;
+
+  private static final JSType TOP_MINUS_NULL = new JSType(
+      TRUE_MASK | FALSE_MASK | NUMBER_MASK | STRING_MASK | UNDEFINED_MASK |
+      NON_SCALAR_MASK,
+      null, ImmutableSet.of(ObjectType.TOP_OBJECT));
+  private static final JSType TOP_MINUS_UNDEF = new JSType(
+      TRUE_MASK | FALSE_MASK | NUMBER_MASK | STRING_MASK | NULL_MASK |
+      NON_SCALAR_MASK,
+      null, ImmutableSet.of(ObjectType.TOP_OBJECT));
 
   public static JSType topFunction() {
     if (TOP_FUNCTION == null) {
@@ -146,6 +157,11 @@ public class JSType {
 
   public boolean isBoolean() {
     return (type & ~BOOLEAN_MASK) == 0 && (type & BOOLEAN_MASK) != 0;
+  }
+
+  public boolean isNullOrUndef() {
+    int mask = NULL_MASK | UNDEFINED_MASK;
+    return type != 0 && (type | mask) == mask;
   }
 
   public boolean isScalar() {
@@ -285,6 +301,12 @@ public class JSType {
   }
 
   public JSType removeType(JSType other) {
+    if ((isTop() || isUnknown()) && other.equals(NULL)) {
+      return TOP_MINUS_NULL;
+    }
+    if ((isTop() || isUnknown()) && other.equals(UNDEFINED)) {
+      return TOP_MINUS_UNDEF;
+    }
     if (other.equals(NULL) || other.equals(UNDEFINED)) {
       return new JSType(type & ~other.type, location, objs);
     }
@@ -293,10 +315,11 @@ public class JSType {
     }
     Preconditions.checkState(
         (other.type & ~NON_SCALAR_MASK) == 0 && other.objs.size() == 1);
-    ObjectType objToRemove = Iterables.getOnlyElement(other.objs);
+    NominalType otherKlass =
+        Iterables.getOnlyElement(other.objs).getClassType();
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj: objs) {
-      if (!Objects.equal(obj.getClassType(), objToRemove.getClassType())) {
+      if (!Objects.equal(obj.getClassType(), otherKlass)) {
         newObjs.add(obj);
       }
     }

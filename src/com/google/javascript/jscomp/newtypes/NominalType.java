@@ -284,9 +284,9 @@ public class NominalType {
 
   // If we try to mutate the class after the AST-preparation phase, error.
   public NominalType finalizeNominalType() {
-    System.out.println("Class " + name +
-        " created with class properties: " + classProps +
-        " and prototype properties: " + protoProps);
+    // System.out.println("Class " + name +
+    //     " created with class properties: " + classProps +
+    //     " and prototype properties: " + protoProps);
     this.classProps = ImmutableMap.copyOf(classProps);
     this.protoProps = ImmutableMap.copyOf(protoProps);
     addCtorProperty("prototype", createProtoObject());

@@ -223,9 +223,9 @@ class GlobalTypeInfo {
             continue;
           }
           JSType localPropType = nominalType.getPropDeclaredType(pname);
-          System.out.println("nominalType: " + nominalType + "." + pname +
-              " inheritedPropType: " + inheritedPropType + " localPropType: " +
-              localPropType);
+          // System.out.println("nominalType: " + nominalType + "." + pname +
+          //     " inheritedPropType: " + inheritedPropType +
+          //  " localPropType: " + localPropType);
           if (!localPropType.isSubtypeOf(inheritedPropType)) {
             warnings.add(JSError.make(
                 propertyDefs.get(nominalType, pname).defSite,

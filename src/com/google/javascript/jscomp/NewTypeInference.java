@@ -119,6 +119,7 @@ public class NewTypeInference implements CompilerPass {
   Scope currentScope;
   GlobalTypeInfo symbolTable;
   static final String RETVAL_ID = "%return";
+  private static boolean debugging = false;
 
   NewTypeInference(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -140,6 +141,12 @@ public class NewTypeInference implements CompilerPass {
     }
     for (JSError warning : warnings) {
       compiler.report(warning);
+    }
+  }
+
+  private static void println(Object obj) {
+    if (debugging) {
+      System.out.println(obj);
     }
   }
 
@@ -228,7 +235,7 @@ public class NewTypeInference implements CompilerPass {
       }
       entryEnv = envPutType(entryEnv, fnName, summaryType);
     }
-    System.out.println("Keeping env: " + entryEnv);
+    println("Keeping env: " + entryEnv);
     envs.put(entryOutEdge, entryEnv);
   }
 
@@ -327,19 +334,18 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private void analyzeFunction(Scope scope) {
-    System.out.println("=== Analyzing function: " +
-        scope.getReadableName() + " ===");
+    println("=== Analyzing function: " + scope.getReadableName() + " ===");
     currentScope = scope;
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
     cfa.process(null, scope.getRoot());
     cfg = cfa.getCfg();
-    System.out.println(cfg);
+    println(cfg);
     // The size is > 1 when multiple files are compiled
     // Preconditions.checkState(cfg.getEntry().getOutEdges().size() == 1);
     List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset =
         Lists.newLinkedList();
     buildWorkset(cfg.getEntry(), workset);
-    /* System.out.println("Workset: " + workset); */
+    /* println("Workset: " + workset); */
     Collections.reverse(workset);
     initEdgeEnvsBwd();
     analyzeFunctionBwd(workset);
@@ -361,8 +367,8 @@ public class NewTypeInference implements CompilerPass {
       }
       TypeEnv outEnv = getOutEnv(n);
       TypeEnv inEnv;
-      System.out.println("\tBWD Statment: " + n);
-      System.out.println("\t\toutEnv: " + outEnv);
+      println("\tBWD Statment: " + n);
+      println("\t\toutEnv: " + outEnv);
       switch (n.getType()) {
         case Token.EXPR_RESULT:
           inEnv = analyzeExprBwd(n.getFirstChild(), outEnv, JSType.TOP).env;
@@ -419,7 +425,7 @@ public class NewTypeInference implements CompilerPass {
             break;
           }
       }
-      System.out.println("\t\tinEnv: " + inEnv);
+      println("\t\tinEnv: " + inEnv);
       setInEnv(n, inEnv);
     }
   }
@@ -433,8 +439,8 @@ public class NewTypeInference implements CompilerPass {
       TypeEnv inEnv = getInEnv(n);
       TypeEnv outEnv = null;
 
-      System.out.println("\tFWD Statment: " + n);
-      System.out.println("\t\tinEnv: " + inEnv);
+      println("\tFWD Statment: " + n);
+      println("\t\tinEnv: " + inEnv);
       boolean conditional = false;
       switch (n.getType()) {
         case Token.FUNCTION:
@@ -444,8 +450,7 @@ public class NewTypeInference implements CompilerPass {
           outEnv = inEnv;
           break;
         case Token.EXPR_RESULT:
-          System.out.println("\tsemi " +
-              Token.name(n.getFirstChild().getType()));
+          println("\tsemi " + Token.name(n.getFirstChild().getType()));
           outEnv = analyzeExprFwd(n.getFirstChild(), inEnv, JSType.TOP).env;
           break;
         case Token.RETURN: {
@@ -518,7 +523,7 @@ public class NewTypeInference implements CompilerPass {
       }
 
       if (!conditional) {
-        System.out.println("\t\toutEnv: " + outEnv);
+        println("\t\toutEnv: " + outEnv);
         setOutEnv(n, outEnv);
       }
     }
@@ -563,7 +568,7 @@ public class NewTypeInference implements CompilerPass {
     }
 
     for (String outer : fn.getOuterVars()) {
-      System.out.println("Free var " + outer + " going in summary");
+      println("Free var " + outer + " going in summary");
       JSType outerType = envGetType(entryEnv, outer);
       for (String taintedVarName : taints.get(outer)) {
         JSType taintType = envGetType(exitEnv, taintedVarName);
@@ -590,8 +595,8 @@ public class NewTypeInference implements CompilerPass {
       }
     }
     JSType summary = builder.buildType();
-    System.out.println("Function summary for " + fn.getReadableName());
-    System.out.println("\t" + summary);
+    println("Function summary for " + fn.getReadableName());
+    println("\t" + summary);
     summaries.put(fn, summary);
   }
 
@@ -701,7 +706,7 @@ public class NewTypeInference implements CompilerPass {
             currentScope.isLocalFunDef(varName) ||
             currentScope.isOuterVar(varName)) {
           JSType inferredType = envGetType(inEnv, varName);
-          System.out.println(varName + "'s inferredType: " + inferredType +
+          println(varName + "'s inferredType: " + inferredType +
               " requiredType:  " + requiredType);
           if (!inferredType.isSubtypeOf(requiredType)) {
             // Propagate incorrect type so that context catches the mismatch
@@ -711,7 +716,7 @@ public class NewTypeInference implements CompilerPass {
           // If preciseType is bottom, there is a condition that can't be true,
           // but that's not necessarily a type error.
           JSType preciseType = inferredType.specialize(specializedType);
-          System.out.println(varName + "'s preciseType: " + preciseType);
+          println(varName + "'s preciseType: " + preciseType);
           if (currentScope.isUndeclaredFormal(varName) &&
               requiredType.hasNonScalar()) {
             // In the bwd direction, we may infer a loose type and then join w/
@@ -721,7 +726,7 @@ public class NewTypeInference implements CompilerPass {
           return EnvTypePair.addBinding(inEnv, varName, preciseType);
         }
 
-        System.out.println("Found global variable " + varName);
+        println("Found global variable " + varName);
         // For now, we don't warn for global variables
         return new EnvTypePair(inEnv, JSType.UNKNOWN);
       }
@@ -766,7 +771,8 @@ public class NewTypeInference implements CompilerPass {
               Token.name(expr.getType()),
               JSType.NUMBER.toString(), pair.type.toString()));
         }
-        return new EnvTypePair(pair.env, JSType.NUMBER);
+        pair.type = JSType.NUMBER;
+        return pair;
       }
       case Token.TYPEOF: {
         // TODO(user): recognize patterns like (typeof x === 'string')
@@ -865,7 +871,8 @@ public class NewTypeInference implements CompilerPass {
               Token.name(expr.getType()),
               JSType.NUMBER.toString(), rhsPair.type.toString()));
         }
-        return new EnvTypePair(rhsPair.env, JSType.NUMBER);
+        rhsPair.type = JSType.NUMBER;
+        return rhsPair;
       }
       case Token.ASSIGN: { // Fwd
         Node lhs = expr.getFirstChild();
@@ -944,6 +951,10 @@ public class NewTypeInference implements CompilerPass {
         rhsPair.type = JSType.BOOLEAN;
         return rhsPair;
       }
+      case Token.EQ:
+      case Token.NE:
+        return analyzeNonStrictComparisonFwd(
+            expr, inEnv, requiredType, specializedType);
       case Token.LT:
       case Token.GT:
       case Token.LE:
@@ -977,7 +988,8 @@ public class NewTypeInference implements CompilerPass {
                   "matching scalar types",
                   lhsType.toString() + ", " + rhsType.toString()));
         }
-        return new EnvTypePair(rhsPair.env, JSType.BOOLEAN);
+        rhsPair.type = JSType.BOOLEAN;
+        return rhsPair;
       }
       case Token.GETPROP:
         Preconditions.checkState(
@@ -1069,7 +1081,7 @@ public class NewTypeInference implements CompilerPass {
               collectTypesForFreeVarsFwd(callee, tmpEnv);
             } else {
               JSType expectedRetType = requiredType;
-              System.out.println("Updating deferred check with ret: " +
+              println("Updating deferred check with ret: " +
                   expectedRetType + " and args: " + argTypes);
               DeferredCheck dc;
               if (expr.isCall()) {
@@ -1116,8 +1128,6 @@ public class NewTypeInference implements CompilerPass {
         pair.type = JSType.UNDEFINED;
         return pair;
       }
-      case Token.EQ:
-      case Token.NE:
       case Token.ARRAYLIT:
       case Token.ASSIGN_ADD:
         return new EnvTypePair(inEnv, requiredType);
@@ -1125,6 +1135,47 @@ public class NewTypeInference implements CompilerPass {
         throw new RuntimeException("Unhandled expression type: "
             + Token.name(expr.getType()));
     }
+  }
+
+  private EnvTypePair analyzeNonStrictComparisonFwd(
+      Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
+    int tokenType = expr.getType();
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
+    EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
+    JSType lhsType = lhsPair.type;
+    JSType rhsType = rhsPair.type;
+
+    if (tokenType == Token.EQ && specializedType.isTruthy() ||
+        tokenType == Token.NE && specializedType.isFalsy()) {
+      if (lhsType.isNullOrUndef()) {
+        rhsPair = analyzeExprFwd(
+            rhs, lhsPair.env, JSType.TOP, JSType.NULL_OR_UNDEF);
+      } else if (rhsType.isNullOrUndef()) {
+        lhsPair = analyzeExprFwd(lhs, inEnv, JSType.TOP, JSType.NULL_OR_UNDEF);
+        rhsPair = analyzeExprFwd(rhs, lhsPair.env);
+      } else if (!JSType.NULL_OR_UNDEF.isSubtypeOf(lhsType)) {
+        rhsType = rhsType.removeType(JSType.NULL).removeType(JSType.UNDEFINED);
+        rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.TOP, rhsType);
+      } else if (!JSType.NULL_OR_UNDEF.isSubtypeOf(rhsType)) {
+        lhsType = lhsType.removeType(JSType.NULL).removeType(JSType.UNDEFINED);
+        lhsPair = analyzeExprFwd(lhs, inEnv, JSType.TOP, lhsType);
+        rhsPair = analyzeExprFwd(rhs, lhsPair.env);
+      }
+    } else if (tokenType == Token.EQ && specializedType.isFalsy() ||
+        tokenType == Token.NE && specializedType.isTruthy()) {
+      if (lhsType.isNullOrUndef()) {
+        rhsType = rhsType.removeType(JSType.NULL).removeType(JSType.UNDEFINED);
+        rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.TOP, rhsType);
+      } else if (rhsType.isNullOrUndef()) {
+        lhsType = lhsType.removeType(JSType.NULL).removeType(JSType.UNDEFINED);
+        lhsPair = analyzeExprFwd(lhs, inEnv, JSType.TOP, lhsType);
+        rhsPair = analyzeExprFwd(rhs, lhsPair.env);
+      }
+    }
+    rhsPair.type = JSType.BOOLEAN;
+    return rhsPair;
   }
 
   private EnvTypePair analyzePropAccessFwd(Node receiver, String pname,
@@ -1241,7 +1292,7 @@ public class NewTypeInference implements CompilerPass {
     JSType looseFunctionType =
         builder.addRetType(looseRetType).addLoose().buildType();
     looseFunctionType.getFunType().checkValid();
-    System.out.println("loose function type is " + looseFunctionType);
+    println("loose function type is " + looseFunctionType);
     EnvTypePair calleePair = analyzeExprBwd(callee, tmpEnv, looseFunctionType);
     return new EnvTypePair(calleePair.env,
         retType.isTop() ? JSType.UNKNOWN : retType);
@@ -1357,9 +1408,10 @@ public class NewTypeInference implements CompilerPass {
       case Token.URSH: { // Binary operations on numbers
         Node lhs = expr.getFirstChild();
         Node rhs = expr.getLastChild();
-        EnvTypePair rhsPair = analyzeExprBwd(rhs, outEnv, JSType.NUMBER);
-        EnvTypePair lhsPair = analyzeExprBwd(lhs, rhsPair.env, JSType.NUMBER);
-        return new EnvTypePair(lhsPair.env, JSType.NUMBER);
+        TypeEnv rhsEnv = analyzeExprBwd(rhs, outEnv, JSType.NUMBER).env;
+        EnvTypePair pair = analyzeExprBwd(lhs, rhsEnv, JSType.NUMBER);
+        pair.type = JSType.NUMBER;
+        return pair;
       }
       case Token.ADD: {
         Node lhs = expr.getFirstChild();
@@ -1380,11 +1432,15 @@ public class NewTypeInference implements CompilerPass {
         return lhsPair;
       }
       case Token.SHEQ:
-      case Token.SHNE: {
+      case Token.SHNE:
+      case Token.EQ:
+      case Token.NE: {
         Node lhs = expr.getFirstChild();
         Node rhs = expr.getLastChild();
         TypeEnv rhsEnv = analyzeExprBwd(rhs, outEnv).env;
-        return analyzeExprBwd(lhs, rhsEnv);
+        EnvTypePair pair = analyzeExprBwd(lhs, rhsEnv);
+        pair.type = JSType.BOOLEAN;
+        return pair;
       }
       case Token.LT:
       case Token.GT:
@@ -1397,11 +1453,13 @@ public class NewTypeInference implements CompilerPass {
         JSType meetType = JSType.meet(lhsPair.type, rhsPair.type);
         if (meetType.isBottom()) {
           // Type mismatch, the fwd direction will warn; don't reanalyze
-          return new EnvTypePair(lhsPair.env, JSType.BOOLEAN);
+          lhsPair.type = JSType.BOOLEAN;
+          return lhsPair;
         }
         rhsPair = analyzeExprBwd(rhs, outEnv, meetType);
         lhsPair = analyzeExprBwd(lhs, rhsPair.env, meetType);
-        return new EnvTypePair(lhsPair.env, JSType.BOOLEAN);
+        lhsPair.type = JSType.BOOLEAN;
+        return lhsPair;
       }
       case Token.ASSIGN: { // Bwd
         Node lhs = expr.getFirstChild();
@@ -1429,7 +1487,6 @@ public class NewTypeInference implements CompilerPass {
       case Token.ASSIGN_MOD: {
         Node lhs = expr.getFirstChild();
         Node rhs = expr.getLastChild();
-
         EnvTypePair pair = analyzeExprBwd(rhs, outEnv, JSType.NUMBER);
         LValueResult lvalue =
             analyzeLValueBwd(lhs, pair.env, JSType.NUMBER, false);
@@ -1497,7 +1554,7 @@ public class NewTypeInference implements CompilerPass {
               if (s.getDeclaredType().getReturnType() == null) {
                 expectedRetType = requiredType;
               }
-              System.out.println("Putting deferred check of function: " +
+              println("Putting deferred check of function: " +
                   calleeName + " with ret: " + expectedRetType);
               DeferredCheck dc = new DeferredCheck(expr, currentScope, s);
               dc.updateReturn(expectedRetType);
@@ -1535,8 +1592,6 @@ public class NewTypeInference implements CompilerPass {
         pair.type = JSType.UNDEFINED;
         return pair;
       }
-      case Token.EQ:
-      case Token.NE:
       case Token.ARRAYLIT:
       case Token.ASSIGN_ADD:
         return new EnvTypePair(outEnv, requiredType);
@@ -1839,7 +1894,7 @@ public class NewTypeInference implements CompilerPass {
     private void runCheck(
         Map<Scope, JSType> summaries, Collection<JSError> warnings) {
       FunctionType fnSummary = summaries.get(this.calleeScope).getFunType();
-      System.out.println(
+      println(
           "Running deferred check of function: " +
           calleeScope.getReadableName() +
           " with FunctionSummary of: " + fnSummary +

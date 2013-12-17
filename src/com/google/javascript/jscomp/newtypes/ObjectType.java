@@ -53,8 +53,8 @@ public class ObjectType {
     this.isLoose = isLoose;
   }
 
-  static ObjectType makeObjectType(NominalType klass, Map<String, Property> props,
-      FunctionType fn, boolean isLoose) {
+  static ObjectType makeObjectType(NominalType klass,
+      Map<String, Property> props, FunctionType fn, boolean isLoose) {
     if (props == null) {
       props = ImmutableMap.of();
     }
