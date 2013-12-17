@@ -46,7 +46,7 @@ jasmine.createSpyObj = function(baseName, methodNames) {};
 jasmine.Clock = function() {};
 
 
-/** @type {!Clock} */
+/** @type {!jasmine.Clock} */
 jasmine.Clock.installed;
 
 
