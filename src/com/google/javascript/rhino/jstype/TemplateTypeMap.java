@@ -43,7 +43,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 /**
  * Manages a mapping from TemplateType to its resolved JSType. Provides utility
@@ -195,20 +194,24 @@ public class TemplateTypeMap implements Serializable {
    */
   public boolean checkEquivalenceHelper(
       TemplateTypeMap that, EquivalenceMethod eqMethod) {
-    ImmutableList<TemplateType> thisKeys = getTemplateKeys();
-    ImmutableList<TemplateType> thatKeys = that.getTemplateKeys();
+    return checkEquivalenceHelper(eqMethod, this, that)
+        && checkEquivalenceHelper(eqMethod, that, this);
+  }
 
-    EquivalenceMatch[] thatMatches = new EquivalenceMatch[thatKeys.size()];
-    Arrays.fill(thatMatches, EquivalenceMatch.NO_KEY_MATCH);
+  private static boolean checkEquivalenceHelper(EquivalenceMethod eqMethod,
+    TemplateTypeMap thisMap,
+    TemplateTypeMap thatMap) {
+    ImmutableList<TemplateType> thisKeys = thisMap.getTemplateKeys();
+    ImmutableList<TemplateType> thatKeys = thatMap.getTemplateKeys();
 
     for (int i = 0; i < thisKeys.size(); i++) {
       TemplateType thisKey = thisKeys.get(i);
-      JSType thisType = getResolvedTemplateType(thisKey);
+      JSType thisType = thisMap.getResolvedTemplateType(thisKey);
       EquivalenceMatch thisMatch = EquivalenceMatch.NO_KEY_MATCH;
 
       for (int j = 0; j < thatKeys.size(); j++) {
         TemplateType thatKey = thatKeys.get(j);
-        JSType thatType = that.getResolvedTemplateType(thatKey);
+        JSType thatType = thatMap.getResolvedTemplateType(thatKey);
 
         // Cross-compare every key-value pair in this TemplateTypeMap with
         // those in that TemplateTypeMap. Update the Equivalence match for both
@@ -222,9 +225,6 @@ public class TemplateTypeMap implements Serializable {
           if (thisMatch != EquivalenceMatch.VALUE_MATCH) {
             thisMatch = newMatchType;
           }
-          if (thatMatches[j] != EquivalenceMatch.VALUE_MATCH) {
-            thatMatches[j] = newMatchType;
-          }
         }
       }
 
@@ -232,13 +232,6 @@ public class TemplateTypeMap implements Serializable {
         return false;
       }
     }
-
-    for (int i = 0; i < thatMatches.length; i++) {
-      if (failedEquivalenceCheck(thatMatches[i], eqMethod)) {
-        return false;
-      }
-    }
-
     return true;
   }
 
@@ -247,7 +240,7 @@ public class TemplateTypeMap implements Serializable {
    * condition for an equivalence check, given the EquivalenceMethod used for
    * the check.
    */
-  private boolean failedEquivalenceCheck(
+  private static boolean failedEquivalenceCheck(
       EquivalenceMatch eqMatch, EquivalenceMethod eqMethod) {
     return eqMatch == EquivalenceMatch.VALUE_MISMATCH ||
         (eqMatch == EquivalenceMatch.NO_KEY_MATCH &&
