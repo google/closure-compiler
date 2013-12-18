@@ -2180,6 +2180,15 @@ public class IntegrationTest extends IntegrationTestCase {
         "for( ; function(){} ; );");
   }
 
+  public void testIssue1131() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS
+        .setOptionsForCompilationLevel(options);
+    test(options,
+         "function f(k) { return k(k); } alert(f(f));",
+         "function a(b) { return b(b); } alert(a(a));");
+  }
+
   public void testIssue284() {
     CompilerOptions options = createCompilerOptions();
     options.smartNameRemoval = true;
