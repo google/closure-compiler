@@ -18,7 +18,7 @@
  * @fileoverview Definitions for the Chromium extensions API.
  *
  * This is the externs file for the Chrome Extensions API.
- * See https://developer.chrome.com/extensions/
+ * See http://developer.chrome.com/extensions/
  *
  * There are several problematic issues regarding Chrome extension APIs and
  * this externs files, including:
@@ -461,8 +461,14 @@ chrome.app.window.onRestored;
 chrome.extension = {};
 
 
-/** @type {!Object.<string,string>|undefined} */
-chrome.extension.lastError;
+/** @type {!Object|undefined} */
+chrome.extension.lastError = {};
+
+
+/**
+ * @type {string|undefined}
+ */
+chrome.extension.lastError.message;
 
 
 /** @type {boolean|undefined} */
@@ -572,8 +578,14 @@ chrome.extension.onRequestExternal;
 chrome.runtime = {};
 
 
-/** @type {!Object.<string,string>|undefined} */
-chrome.runtime.lastError;
+/** @type {!Object|undefined} */
+chrome.runtime.lastError = {};
+
+
+/**
+ * @type {string|undefined}
+ */
+chrome.runtime.lastError.message;
 
 
 /** @type {string} */
@@ -645,6 +657,11 @@ chrome.runtime.getManifest = function() {};
  */
 chrome.runtime.getURL = function(path) {};
 
+/**
+ * @param {string} url This may be used to clean up server-side data, do
+ *     analytics, and implement surveys. Maximum 255 characters.
+ */
+chrome.runtime.setUninstallUrl = function(url) {};
 
 /**
  * Reloads the app or extension.
@@ -653,9 +670,17 @@ chrome.runtime.reload = function() {};
 
 
 /**
- * @param {function(string, !Object=): void} callback
+ * @param {function(string, !Object=): void} callback Called with "throttled",
+ *     "no_update", or "update_available". If an update is available, the object
+ *     contains more information about the available update.
  */
 chrome.runtime.requestUpdateCheck = function(callback) {};
+
+/**
+ * Restart the ChromeOS device when the app runs in kiosk mode. Otherwise, it's
+ * no-op.
+ */
+chrome.runtime.restart = function() {};
 
 
 /**
@@ -671,6 +696,15 @@ chrome.runtime.connect = function(
 
 
 /**
+ * @see http://developer.chrome.com/extensions/runtime.html#method-connectNative
+ * @param {string} application Name of the registered native messaging host to
+ *     connect to, like 'com.google.your_product'.
+ * @return {!Port} New port.
+ */
+chrome.runtime.connectNative = function(application) {};
+
+
+/**
  * @param {string|*} extensionIdOrMessage Either the extensionId to send the
  *     message to, in which case the message is passed as the next arg, or the
  *     message itself.
@@ -682,6 +716,33 @@ chrome.runtime.connect = function(
  */
 chrome.runtime.sendMessage = function(
     extensionIdOrMessage, opt_messageOrCallback, opt_callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/extensions/runtime.html#method-sendNativeMessage
+ * @param {string} application Name of the registered native messaging host to
+ *     connect to, like 'com.google.your_product'.
+ * @param {Object} message The message that will be passed to the native
+ *     messaging host.
+ * @param {function(*)=} opt_callback Called with the response message sent by
+ *     the native messaging host. If an error occurs while connecting to the
+ *     native messaging host, the callback will be called with no arguments and
+ *     chrome.runtime.lastError will be set to the error message.
+ */
+chrome.runtime.sendNativeMessage = function(
+    application, message, opt_callback) {};
+
+/**
+ *
+ * @param {function(!Object)} callback
+ */
+chrome.runtime.getPlatformInfo = function(callback) {};
+
+
+/**
+ * @param {function(!DirectoryEntry)} callback
+ */
+chrome.runtime.getPackageDirectoryEntry = function(callback) {};
 
 
 /** @type {!chrome.runtime.PortEvent} */
@@ -718,6 +779,40 @@ chrome.runtime.onSuspendCanceled;
 
 /** @type {!chrome.runtime.ObjectEvent} */
 chrome.runtime.onUpdateAvailable;
+
+
+/**
+ * @constructor
+ */
+chrome.runtime.onRestartRequired = function() {};
+
+
+/**
+ * @param {function(string)} callback
+ */
+chrome.runtime.onRestartRequired.prototype.addListener = function(
+    callback) {};
+
+
+/**
+ * @param {function(string)} callback
+ */
+chrome.runtime.onRestartRequired.prototype.removeListener = function(
+    callback) {};
+
+
+/**
+ * @param {function(string)} callback
+ * @return {boolean}
+ */
+chrome.runtime.onRestartRequired.prototype.hasListener = function(
+    callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.runtime.onRestartRequired.prototype.hasListeners = function() {};
 
 
 
@@ -789,7 +884,7 @@ chrome.runtime.PortEvent.prototype.hasListeners = function() {};
 
 /**
  * Event whose listeners take a MessageSender and additional parameters.
- * @see https://developer.chrome.com/dev/apps/runtime.html#event-onMessage
+ * @see http://developer.chrome.com/dev/apps/runtime.html#event-onMessage
  * @constructor
  */
 chrome.runtime.MessageSenderEvent = function() {};
@@ -1836,7 +1931,7 @@ chrome.history.onVisited;
 
 /**
  * @const
- * @see https://developer.chrome.com/apps/identity.html
+ * @see http://developer.chrome.com/apps/identity.html
  */
 chrome.identity = {};
 
@@ -3124,7 +3219,7 @@ chrome.pushMessaging.PushMessageEvent.prototype.hasListeners = function() {};
 
 
 /**
- * @see https://developer.chrome.com/apps/runtime.html#type-Port
+ * @see http://developer.chrome.com/apps/runtime.html#type-Port
  * @constructor
  */
 function Port() {}
@@ -4196,6 +4291,20 @@ chrome.notifications.clear = function(notificationId, callback) {};
 
 
 /**
+ * @see http://developer.chrome.com/extensions/notifications.html#method-getAll
+ * @param {!chrome.notifications.ObjectCallback} callback
+ */
+chrome.notifications.getAll = function(callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/extensions/notifications.html#method-getPermissionLevel
+ * @param {function(string)} callback takes 'granted' or 'denied'
+ */
+chrome.notifications.getPermissionLevel = function(callback) {};
+
+
+/**
  * @type {!chrome.notifications.ClosedEvent}
  * @see http://developer.chrome.com/extensions/notifications.html#event-onClosed
  */
@@ -4469,3 +4578,285 @@ chrome.system.storage.ejectDevice = function(id, callback) {};
  *     accepts an object with {@code id} and {@code availableCapacity} fields.
  */
 chrome.system.storage.getAvailableCapacity = function(id, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html
+ * @const
+ */
+chrome.usb = {};
+
+
+/** @constructor */
+chrome.usb.Device = function Device() {};
+
+
+/** @type {number} */
+chrome.usb.Device.prototype.device;
+
+
+/** @type {number} */
+chrome.usb.Device.prototype.vendorId;
+
+
+/** @type {number} */
+chrome.usb.Device.prototype.productId;
+
+
+/** @constructor */
+chrome.usb.ConnectionHandle = function ConnectionHandle() {};
+
+
+/** @type {number} */
+chrome.usb.ConnectionHandle.prototype.handle;
+
+
+/** @type {number} */
+chrome.usb.ConnectionHandle.prototype.vendorId;
+
+
+/** @type {number} */
+chrome.usb.ConnectionHandle.prototype.productId;
+
+
+/**
+ * @typedef {{
+ *   direction: string,
+ *   endpoint: number,
+ *   length: (number|undefined),
+ *   data: (!ArrayBuffer|undefined)
+ * }}
+ */
+chrome.usb.GenericTransferInfo;
+
+/**
+ * @typedef {{
+ *   direction: string,
+ *   recipient: string,
+ *   requestType: string,
+ *   request: number,
+ *   value: number,
+ *   index: number,
+ *   length: (number|undefined),
+ *   data: (ArrayBuffer|undefined)
+ * }}
+ */
+chrome.usb.ControlTransferInfo;
+
+
+/** @constructor */
+chrome.usb.TransferResultInfo = function TransferResultInfo() {};
+
+
+/** @type {number|undefined} */
+chrome.usb.TransferResultInfo.prototype.resultCode;
+
+
+/** @type {!ArrayBuffer|undefined} */
+chrome.usb.TransferResultInfo.prototype.data;
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-getDevices
+ * @param {!Object} options The properties to search for on target devices.
+ * @param {function(!Array.<!chrome.usb.Device>)} callback Invoked with a list
+ *     of |Device|s on complete.
+ */
+chrome.usb.getDevices = function(options, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-requestAccess
+ * @param {!chrome.usb.Device} device The device to request access to.
+ * @param {number} interfaceId
+ * @param {function(boolean)} callback
+ */
+chrome.usb.requestAccess = function(device, interfaceId, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-openDevice
+ * @param {!chrome.usb.Device} device The device to open.
+ * @param {function(!chrome.usb.ConnectionHandle=)} callback Invoked with the
+ *     created ConnectionHandle on complete.
+ */
+chrome.usb.openDevice = function(device, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-findDevices
+ * @param {!Object} options The properties to search for on target devices.
+ * @param {function(!Array.<!chrome.usb.ConnectionHandle>)} callback Invoked
+ *     with the opened ConnectionHandle on complete.
+ */
+chrome.usb.findDevices = function(options, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-closeDevice
+ * @param {!chrome.usb.ConnectionHandle} handle The connection handle to close.
+ * @param {function()=} callback The callback to invoke once the device is
+ *     closed.
+ */
+chrome.usb.closeDevice = function(handle, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-listInterfaces
+ * @param {!chrome.usb.ConnectionHandle} handle The device from which the
+ *     interfaces should be listed.
+ * @param {function(!Array.<!Object>)} callback The callback to invoke when the
+ *     interfaces are enumerated.
+ */
+chrome.usb.listInterfaces = function(handle, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-claimInterface
+ * @param {!chrome.usb.ConnectionHandle} handle The device on which the
+ *     interface is to be claimed.
+ * @param {number} interfaceNumber
+ * @param {function()} callback The callback to invoke once the interface is
+ *     claimed.
+ */
+chrome.usb.claimInterface = function(handle, interfaceNumber, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-releaseInterface
+ * @param {!chrome.usb.ConnectionHandle} handle The device on which the
+ *     interface is to be released.
+ * @param {number} interfaceNumber
+ * @param {function()} callback The callback to invoke once the interface is
+ *     released.
+ */
+chrome.usb.releaseInterface = function(handle, interfaceNumber, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-setInterfaceAlternateSetting
+ * @param {!chrome.usb.ConnectionHandle} handle The device on which the
+ *     interface settings are to be set.
+ * @param {number} interfaceNumber
+ * @param {number} alternateSetting The alternate setting to set.
+ * @param {function()} callback The callback to invoke once the interface
+ *     setting is set.
+ */
+chrome.usb.setInterfaceAlternateSetting = function(
+    handle, interfaceNumber, alternateSetting, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-controlTransfer
+ * @param {!chrome.usb.ConnectionHandle} handle A connection handle to make the
+ *     transfer on.
+ * @param {!chrome.usb.ControlTransferInfo} transferInfo The parameters to the
+ *     transfer.
+ * @param {function(!chrome.usb.TransferResultInfo)} callback Invoked once the
+ *     transfer has completed.
+ */
+chrome.usb.controlTransfer = function(handle, transferInfo, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-bulkTransfer
+ * @param {!chrome.usb.ConnectionHandle} handle A connection handle to make
+ *     the transfer on.
+ * @param {!chrome.usb.GenericTransferInfo} transferInfo The parameters to the
+ *     transfer. See GenericTransferInfo.
+ * @param {function(!chrome.usb.TransferResultInfo)} callback Invoked once the
+ *     transfer has completed.
+ */
+chrome.usb.bulkTransfer = function(handle, transferInfo, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-interruptTransfer
+ * @param {!chrome.usb.ConnectionHandle} handle A connection handle to make the
+ *     transfer on.
+ * @param {!chrome.usb.GenericTransferInfo} transferInfo The parameters to the
+ *     transfer. See GenericTransferInfo.
+ * @param {function(!chrome.usb.TransferResultInfo)} callback Invoked once the
+ *     transfer has completed.
+ */
+chrome.usb.interruptTransfer = function(handle, transferInfo, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-isochronousTransfer
+ * @param {!chrome.usb.ConnectionHandle} handle A connection handle to make the
+ *     transfer on.
+ * @param {!Object} transferInfo The parameters to the transfer. See
+ *     IsochronousTransferInfo.
+ * @param {function(!chrome.usb.TransferResultInfo)} callback Invoked once the
+ *     transfer has been completed.
+ */
+chrome.usb.isochronousTransfer = function(handle, transferInfo, callback) {};
+
+
+/**
+ * @see http://developer.chrome.com/apps/usb.html#method-resetDevice
+ * @param {!chrome.usb.ConnectionHandle} handle A connection handle to reset.
+ * @param {function(boolean)} callback Invoked once the device is reset with a
+ *     boolean indicating whether the reset completed successfully.
+ */
+chrome.usb.resetDevice = function(handle, callback) {};
+
+
+/** @const */
+chrome.screenlockPrivate = {};
+
+
+/**
+ * @param {string} message Displayed on the unlock screen.
+ */
+chrome.screenlockPrivate.showMessage = function(message) {};
+
+
+/**
+ * @param {function(boolean)} callback
+ */
+chrome.screenlockPrivate.getLocked = function(callback) {};
+
+
+/**
+ * @param {boolean} locked If true and the screen is unlocked, locks the screen.
+ *     If false and the screen is locked, unlocks the screen.
+ */
+chrome.screenlockPrivate.setLocked = function(locked) {};
+
+
+/** @constructor */
+chrome.screenlockPrivate.BooleanEvent = function() {};
+
+
+/**
+ * @param {function(boolean)} callback
+ */
+chrome.screenlockPrivate.BooleanEvent.prototype.addListener = function(
+    callback) {};
+
+
+/**
+ * @param {function(boolean)} callback
+ */
+chrome.screenlockPrivate.BooleanEvent.prototype.removeListener = function(
+    callback) {};
+
+
+/**
+ * @param {function(boolean)} callback
+ * @return {boolean}
+ */
+chrome.screenlockPrivate.BooleanEvent.prototype.hasListener = function(
+    callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.screenlockPrivate.BooleanEvent.prototype.hasListeners = function() {};
+
+
+/** @type {!chrome.screenlockPrivate.BooleanEvent} */
+chrome.screenlockPrivate.onChanged;
