@@ -244,9 +244,32 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract boolean acceptConstKeyword();
 
   /**
-   * Returns the parser configuration.
+   * Represents the different contexts for which the compiler could have
+   * distinct configurations.
    */
-  abstract Config getParserConfig();
+  static enum ConfigContext {
+    /**
+     * Normal JavaScript.
+     */
+    DEFAULT,
+
+    /**
+     * Externs files.
+     */
+    EXTERNS
+  }
+
+  /**
+   * Returns the parser configuration for the default context.
+   */
+  final Config getParserConfig() {
+    return getParserConfig(ConfigContext.DEFAULT);
+  }
+
+  /**
+   * Returns the parser configuration for the specified context.
+   */
+  abstract Config getParserConfig(ConfigContext context);
 
   /**
    * Returns true if type checking is enabled.
