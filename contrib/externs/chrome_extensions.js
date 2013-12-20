@@ -641,6 +641,9 @@ chrome.runtime.Manifest.Oauth2 = function() {};
 /** @type {string} */
 chrome.runtime.Manifest.Oauth2.prototype.client_id;
 
+/**@type {!Array.<string>} */
+chrome.runtime.Manifest.Oauth2.prototype.scopes;
+
 
 /**
  * http://developer.chrome.com/extensions/runtime.html#method-getManifest
