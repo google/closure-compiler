@@ -296,7 +296,9 @@ public class PerformanceTracker {
             stats.diff, stats.gzDiff, stats.size, stats.gzSize));
       }
       output.write("\n");
-      output.close();
+      // output can be System.out, so don't close it to not lose subsequent
+      // error messages. Flush to ensure that you will see the tracer report.
+      output.flush();
     } catch (IOException e) {
       throw new RuntimeException("Failed to write statistics to output.", e);
     }

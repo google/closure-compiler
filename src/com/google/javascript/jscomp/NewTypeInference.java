@@ -144,10 +144,19 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
-  private static void println(Object obj) {
+  private static void println(Object ... objs) {
     if (debugging) {
-      System.out.println(obj);
+      StringBuilder b = new StringBuilder();
+      for (Object obj: objs) {
+        b.append(obj == null ? "null" : obj.toString());
+      }
+      System.out.println(b.toString());
     }
+  }
+
+  private static Node getConditionExpression(Node n) {
+    return NodeUtil.isForIn(n) ?
+        n.getFirstChild() : NodeUtil.getConditionExpression(n);
   }
 
   private TypeEnv getInEnv(Node n) {
@@ -235,7 +244,7 @@ public class NewTypeInference implements CompilerPass {
       }
       entryEnv = envPutType(entryEnv, fnName, summaryType);
     }
-    println("Keeping env: " + entryEnv);
+    println("Keeping env: ", entryEnv);
     envs.put(entryOutEdge, entryEnv);
   }
 
@@ -290,23 +299,25 @@ public class NewTypeInference implements CompilerPass {
     if (seen.contains(dn) || dn == cfg.getImplicitReturn()) {
       return;
     }
-    switch (dn.getValue().getType()) {
+    Node currentNode = dn.getValue();
+    switch (currentNode.getType()) {
       case Token.DO:
       case Token.WHILE:
-      case Token.FOR: // Do the loop body first, then the loop follow.
+      case Token.FOR:
+        // Do the loop body first, then the loop follow.
         // For DO loops, we do BODY-CONDT-CONDF-FOLLOW
         // Since CONDT is currently unused, this could be optimized.
+        List<DiGraphEdge<Node, ControlFlowGraph.Branch>> outEdges =
+            cfg.getOutEdges(dn.getValue());
         seen.add(dn);
         workset.add(dn);
-        for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge :
-            cfg.getOutEdges(dn.getValue())) {
+        for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : outEdges) {
           if (outEdge.getValue() == ControlFlowGraph.Branch.ON_TRUE) {
             buildWorksetHelper(outEdge.getDestination(), workset, seen);
           }
         }
         workset.add(dn);
-        for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge :
-            cfg.getOutEdges(dn.getValue())) {
+        for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : outEdges) {
           if (outEdge.getValue() == ControlFlowGraph.Branch.ON_FALSE) {
             buildWorksetHelper(outEdge.getDestination(), workset, seen);
           }
@@ -334,7 +345,7 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private void analyzeFunction(Scope scope) {
-    println("=== Analyzing function: " + scope.getReadableName() + " ===");
+    println("=== Analyzing function: ", scope.getReadableName(), " ===");
     currentScope = scope;
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
     cfa.process(null, scope.getRoot());
@@ -345,7 +356,7 @@ public class NewTypeInference implements CompilerPass {
     List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset =
         Lists.newLinkedList();
     buildWorkset(cfg.getEntry(), workset);
-    /* println("Workset: " + workset); */
+    /* println("Workset: ", workset); */
     Collections.reverse(workset);
     initEdgeEnvsBwd();
     analyzeFunctionBwd(workset);
@@ -367,8 +378,8 @@ public class NewTypeInference implements CompilerPass {
       }
       TypeEnv outEnv = getOutEnv(n);
       TypeEnv inEnv;
-      println("\tBWD Statment: " + n);
-      println("\t\toutEnv: " + outEnv);
+      println("\tBWD Statment: ", n);
+      println("\t\toutEnv: ", outEnv);
       switch (n.getType()) {
         case Token.EXPR_RESULT:
           inEnv = analyzeExprBwd(n.getFirstChild(), outEnv, JSType.TOP).env;
@@ -403,17 +414,23 @@ public class NewTypeInference implements CompilerPass {
           break;
         }
         case Token.BLOCK:
+        case Token.BREAK:
+        case Token.CONTINUE:
         case Token.EMPTY:
         case Token.SCRIPT:
           inEnv = outEnv;
           break;
-        case Token.FOR: // TODO(blickly): Analyze these statements
-        case Token.WHILE:
         case Token.DO:
+        case Token.FOR:
         case Token.IF:
-        case Token.TRY:
+        case Token.WHILE:
+          inEnv = analyzeExprBwd(getConditionExpression(n), outEnv).env;
+          break;
+        case Token.TRY: // TODO(blickly): Analyze these statements
         case Token.CATCH:
-        case Token.BREAK:
+        case Token.SWITCH:
+        case Token.CASE:
+        case Token.DEFAULT_CASE:
           inEnv = outEnv;
           break;
         default:
@@ -425,7 +442,7 @@ public class NewTypeInference implements CompilerPass {
             break;
           }
       }
-      println("\t\tinEnv: " + inEnv);
+      println("\t\tinEnv: ", inEnv);
       setInEnv(n, inEnv);
     }
   }
@@ -439,18 +456,20 @@ public class NewTypeInference implements CompilerPass {
       TypeEnv inEnv = getInEnv(n);
       TypeEnv outEnv = null;
 
-      println("\tFWD Statment: " + n);
-      println("\t\tinEnv: " + inEnv);
+      println("\tFWD Statment: ", n);
+      println("\t\tinEnv: ", inEnv);
       boolean conditional = false;
       switch (n.getType()) {
-        case Token.FUNCTION:
         case Token.BLOCK:
+        case Token.BREAK:
+        case Token.CONTINUE:
+        case Token.FUNCTION:
         case Token.EMPTY:
         case Token.SCRIPT:
           outEnv = inEnv;
           break;
         case Token.EXPR_RESULT:
-          println("\tsemi " + Token.name(n.getFirstChild().getType()));
+          println("\tsemi ", Token.name(n.getFirstChild().getType()));
           outEnv = analyzeExprFwd(n.getFirstChild(), inEnv, JSType.TOP).env;
           break;
         case Token.RETURN: {
@@ -477,7 +496,7 @@ public class NewTypeInference implements CompilerPass {
         case Token.FOR:
         case Token.WHILE: {
           conditional = true;
-          Node cond = NodeUtil.getConditionExpression(n);
+          Node cond = getConditionExpression(n);
           for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge :
                cfg.getOutEdges(n)) {
             JSType specializedType;
@@ -504,12 +523,14 @@ public class NewTypeInference implements CompilerPass {
             outEnv = processVarDeclaration(nameNode, outEnv);
           }
           break;
-        case Token.TRY:
-        case Token.CATCH: // TODO(blickly): Analyze these statements
         case Token.THROW:
-        case Token.BREAK:
-        case Token.CONTINUE:
+          outEnv = analyzeExprFwd(n.getFirstChild(), inEnv).env;
+          break;
+        case Token.TRY: // TODO(blickly): Analyze these statements
+        case Token.CATCH:
         case Token.SWITCH:
+        case Token.CASE:
+        case Token.DEFAULT_CASE:
           outEnv = inEnv;
           break;
         default:
@@ -523,7 +544,7 @@ public class NewTypeInference implements CompilerPass {
       }
 
       if (!conditional) {
-        println("\t\toutEnv: " + outEnv);
+        println("\t\toutEnv: ", outEnv);
         setOutEnv(n, outEnv);
       }
     }
@@ -568,7 +589,7 @@ public class NewTypeInference implements CompilerPass {
     }
 
     for (String outer : fn.getOuterVars()) {
-      println("Free var " + outer + " going in summary");
+      println("Free var ", outer, " going in summary");
       JSType outerType = envGetType(entryEnv, outer);
       for (String taintedVarName : taints.get(outer)) {
         JSType taintType = envGetType(exitEnv, taintedVarName);
@@ -595,8 +616,8 @@ public class NewTypeInference implements CompilerPass {
       }
     }
     JSType summary = builder.buildType();
-    println("Function summary for " + fn.getReadableName());
-    println("\t" + summary);
+    println("Function summary for ", fn.getReadableName());
+    println("\t", summary);
     summaries.put(fn, summary);
   }
 
@@ -661,6 +682,8 @@ public class NewTypeInference implements CompilerPass {
         requiredType != null && !requiredType.isBottom());
     int exprKind = expr.getType();
     switch (exprKind) {
+      case Token.EMPTY: // can be created by a FOR with empty condition
+        return new EnvTypePair(inEnv, JSType.UNKNOWN);
       case Token.FUNCTION: {
         String fnName = symbolTable.getFunInternalName(expr);
         return new EnvTypePair(inEnv, envGetType(inEnv, fnName));
@@ -706,8 +729,8 @@ public class NewTypeInference implements CompilerPass {
             currentScope.isLocalFunDef(varName) ||
             currentScope.isOuterVar(varName)) {
           JSType inferredType = envGetType(inEnv, varName);
-          println(varName + "'s inferredType: " + inferredType +
-              " requiredType:  " + requiredType);
+          println(varName, "'s inferredType: ", inferredType,
+              " requiredType:  ", requiredType);
           if (!inferredType.isSubtypeOf(requiredType)) {
             // Propagate incorrect type so that context catches the mismatch
             return new EnvTypePair(inEnv, inferredType);
@@ -716,7 +739,7 @@ public class NewTypeInference implements CompilerPass {
           // If preciseType is bottom, there is a condition that can't be true,
           // but that's not necessarily a type error.
           JSType preciseType = inferredType.specialize(specializedType);
-          println(varName + "'s preciseType: " + preciseType);
+          println(varName, "'s preciseType: ", preciseType);
           if (currentScope.isUndeclaredFormal(varName) &&
               requiredType.hasNonScalar()) {
             // In the bwd direction, we may infer a loose type and then join w/
@@ -726,7 +749,7 @@ public class NewTypeInference implements CompilerPass {
           return EnvTypePair.addBinding(inEnv, varName, preciseType);
         }
 
-        println("Found global variable " + varName);
+        println("Found global variable ", varName);
         // For now, we don't warn for global variables
         return new EnvTypePair(inEnv, JSType.UNKNOWN);
       }
@@ -969,8 +992,8 @@ public class NewTypeInference implements CompilerPass {
         } else if (lhsPair.type.isUnknown() && rhsPair.type.isScalar()) {
           lhsPair = analyzeExprFwd(lhs, inEnv, rhsPair.type);
           rhsPair = analyzeExprFwd(rhs, lhsPair.env, rhsPair.type);
-        } else if (lhs.isQualifiedName() && lhsPair.type.isUnknown() &&
-            rhs.isQualifiedName() && rhsPair.type.isUnknown()) {
+        } else if (lhs.isVar() && lhsPair.type.isUnknown() &&
+            rhs.isVar() && rhsPair.type.isUnknown()) {
           TypeEnv env = envPutType(
               rhsPair.env, lhs.getQualifiedName(), JSType.TOP_SCALAR);
           env = envPutType(
@@ -1081,8 +1104,8 @@ public class NewTypeInference implements CompilerPass {
               collectTypesForFreeVarsFwd(callee, tmpEnv);
             } else {
               JSType expectedRetType = requiredType;
-              println("Updating deferred check with ret: " +
-                  expectedRetType + " and args: " + argTypes);
+              println("Updating deferred check with ret: ", expectedRetType,
+                  " and args: ", argTypes);
               DeferredCheck dc;
               if (expr.isCall()) {
                 dc = deferredChecks.get(expr);
@@ -1128,8 +1151,12 @@ public class NewTypeInference implements CompilerPass {
         pair.type = JSType.UNDEFINED;
         return pair;
       }
+      case Token.VAR: // Can happen iff its parent is a for/in.
       case Token.ARRAYLIT:
       case Token.ASSIGN_ADD:
+      case Token.IN:
+      case Token.DELPROP:
+      case Token.REGEXP:
         return new EnvTypePair(inEnv, requiredType);
       default:
         throw new RuntimeException("Unhandled expression type: "
@@ -1292,7 +1319,7 @@ public class NewTypeInference implements CompilerPass {
     JSType looseFunctionType =
         builder.addRetType(looseRetType).addLoose().buildType();
     looseFunctionType.getFunType().checkValid();
-    println("loose function type is " + looseFunctionType);
+    println("loose function type is ", looseFunctionType);
     EnvTypePair calleePair = analyzeExprBwd(callee, tmpEnv, looseFunctionType);
     return new EnvTypePair(calleePair.env,
         retType.isTop() ? JSType.UNKNOWN : retType);
@@ -1311,6 +1338,8 @@ public class NewTypeInference implements CompilerPass {
         requiredType != null && !requiredType.isBottom());
     int exprKind = expr.getType();
     switch (exprKind) {
+      case Token.EMPTY: // can be created by a FOR with empty condition
+        return new EnvTypePair(outEnv, JSType.UNKNOWN);
       case Token.FUNCTION: {
         String fnName = symbolTable.getFunInternalName(expr);
         return new EnvTypePair(outEnv, envGetType(outEnv, fnName));
@@ -1337,7 +1366,7 @@ public class NewTypeInference implements CompilerPass {
         return new EnvTypePair(env, result);
       }
       case Token.THIS: {
-        // TODO(blickly): Infer a loose type for this if we're in a function.
+        // TODO(blickly): Infer a loose type for THIS if we're in a function.
         if (!currentScope.hasThis()) {
           return new EnvTypePair(outEnv, JSType.UNKNOWN);
         }
@@ -1554,8 +1583,8 @@ public class NewTypeInference implements CompilerPass {
               if (s.getDeclaredType().getReturnType() == null) {
                 expectedRetType = requiredType;
               }
-              println("Putting deferred check of function: " +
-                  calleeName + " with ret: " + expectedRetType);
+              println("Putting deferred check of function: ", calleeName,
+                  " with ret: ", expectedRetType);
               DeferredCheck dc = new DeferredCheck(expr, currentScope, s);
               dc.updateReturn(expectedRetType);
               deferredChecks.put(expr, dc);
@@ -1592,12 +1621,16 @@ public class NewTypeInference implements CompilerPass {
         pair.type = JSType.UNDEFINED;
         return pair;
       }
+      case Token.VAR: // Can happen iff its parent is a for/in.
       case Token.ARRAYLIT:
       case Token.ASSIGN_ADD:
+      case Token.IN:
+      case Token.DELPROP:
+      case Token.REGEXP:
         return new EnvTypePair(outEnv, requiredType);
       default:
         throw new RuntimeException("BWD: Unhandled expression type: "
-            + Token.name(expr.getType()));
+            + Token.name(expr.getType()) + " with parent: " + expr.getParent());
     }
   }
 
@@ -1837,7 +1870,14 @@ public class NewTypeInference implements CompilerPass {
   }
 
   public TypeEnv getFinalTypeEnv() {
-    return getInEnv(cfg.getImplicitReturn().getValue());
+    Node n = cfg.getImplicitReturn().getValue();
+    if (cfg.getInEdges(n).size() == 0) {
+      // This function only exits with THROWs
+      TypeEnv e = new TypeEnv();
+      return envPutType(e, RETVAL_ID, JSType.BOTTOM);
+    } else {
+      return getInEnv(n);
+    }
   }
 
   @VisibleForTesting // Only used from tests
@@ -1887,7 +1927,6 @@ public class NewTypeInference implements CompilerPass {
     }
 
     void updateArgTypes(List<JSType> argTypes) {
-      Preconditions.checkState(this.argTypes == null);
       this.argTypes = argTypes;
     }
 
@@ -1895,10 +1934,9 @@ public class NewTypeInference implements CompilerPass {
         Map<Scope, JSType> summaries, Collection<JSError> warnings) {
       FunctionType fnSummary = summaries.get(this.calleeScope).getFunType();
       println(
-          "Running deferred check of function: " +
-          calleeScope.getReadableName() +
-          " with FunctionSummary of: " + fnSummary +
-          " and callsite ret: " + expectedRetType + " args: " + argTypes);
+          "Running deferred check of function: ", calleeScope.getReadableName(),
+          " with FunctionSummary of: ", fnSummary, " and callsite ret: ",
+          expectedRetType, " args: ", argTypes);
       if (!fnSummary.getReturnType().isSubtypeOf(this.expectedRetType)) {
         warnings.add(JSError.make(
             this.callSite, INVALID_INFERRED_RETURN_TYPE,
@@ -1944,7 +1982,6 @@ public class NewTypeInference implements CompilerPass {
           callSite, callerScope, calleeScope, expectedRetType, argTypes);
     }
   }
-
 
   /**
    * A persistent map from variables to abstract values (types)

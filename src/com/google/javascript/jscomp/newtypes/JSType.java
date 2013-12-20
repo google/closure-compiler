@@ -356,6 +356,7 @@ public class JSType {
     return Iterables.getOnlyElement(objs).getClassType();
   }
 
+  /** Turns the class-less object of this type (if any) into a loose object */
   public JSType withLoose() {
     Preconditions.checkNotNull(this.objs);
     return new JSType(
