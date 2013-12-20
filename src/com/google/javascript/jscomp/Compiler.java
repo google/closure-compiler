@@ -704,8 +704,6 @@ public class Compiler extends AbstractCompiler {
               compilerThread = null;
               if (dumpTraceReport) {
                 Tracer.logCurrentThreadTrace();
-                tracker.outputTracerReport(outStream == null ?
-                    System.out : outStream);
               }
               Tracer.clearCurrentThreadTrace();
             }
@@ -784,6 +782,10 @@ public class Compiler extends AbstractCompiler {
       runSanityCheck();
     }
     setProgress(1.0, "recordFunctionInformation");
+
+    if (tracker != null) {
+      tracker.outputTracerReport(outStream == null ? System.out : outStream);
+    }
   }
 
   public void parse() {
