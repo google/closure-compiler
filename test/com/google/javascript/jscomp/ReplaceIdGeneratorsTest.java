@@ -410,6 +410,21 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
          "f6 = 'AAAAMQ';");
   }
 
+  public void testNonLiteralParam1() {
+    testSame(new String[] {"/** @idGenerator */ var id = function() {}; " +
+                           "var x = 'foo';" +
+                           "id(x);"},
+        null,
+        ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
+  }
+
+  public void testNonLiteralParam2() {
+    testSame(new String[] {"/** @idGenerator */ var id = function() {}; " +
+                           "id('foo' + 'bar');"},
+        null,
+        ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
+  }
+
   public void testLocalCall() {
     testSame(new String[] {"/** @idGenerator */ var id = function() {}; " +
                            "function Foo() { id('foo'); }"},
