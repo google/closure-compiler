@@ -18,6 +18,8 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.Set;
+
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
@@ -41,7 +43,7 @@ class ExprStmtFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     Node expr = getExprFuzzer().generate(budget - 1);
     return new Node(Token.EXPR_RESULT, expr);
   }

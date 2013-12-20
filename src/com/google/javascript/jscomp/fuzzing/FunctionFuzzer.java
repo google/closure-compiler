@@ -20,6 +20,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Arrays;
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -49,7 +50,7 @@ class FunctionFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     int paramBodyBudget;
     Node name;
     ScopeManager scopeManager = context.scopeManager;
@@ -124,7 +125,7 @@ class FunctionFuzzer extends AbstractFuzzer {
      * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
      */
     @Override
-    protected Node generate(int budget) {
+    protected Node generate(int budget, Set<Type> types) {
       Node node = new Node(Token.PARAM_LIST);
       for (int i = 0; i < budget - 1; i++) {
         node.addChildToBack(getIdFuzzer().generate(1));

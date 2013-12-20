@@ -19,6 +19,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Arrays;
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -41,7 +42,7 @@ class TryFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     AbstractFuzzer[] fuzzers = {
         new BlockFuzzer(context),
         new CatchFuzzer(context),
@@ -77,7 +78,7 @@ class TryFuzzer extends AbstractFuzzer {
      * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
      */
     @Override
-    protected Node generate(int budget) {
+    protected Node generate(int budget, Set<Type> types) {
       Node catchBlock = new Node(Token.BLOCK);
       if (isEnough(budget)) {
         /**

@@ -18,6 +18,8 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.Set;
+
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
@@ -32,7 +34,7 @@ class GetElemFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     AbstractFuzzer[] fuzzers = {getExprFuzzer(), getExprFuzzer()};
     Node[] components = distribute(budget - 1, fuzzers);
     return new Node(Token.GETELEM, components[0], components[1]);

@@ -15,8 +15,11 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -31,7 +34,7 @@ class RegularExprFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     if (budget < 3) {
       Node[] children = {Node.newString(context.snGenerator.getString())};
       Node node = new Node(Token.REGEXP, children);
@@ -58,6 +61,11 @@ class RegularExprFuzzer extends AbstractFuzzer {
   @Override
   protected String getConfigName() {
     return "regularExpr";
+  }
+
+  @Override
+  protected Set<Type> supportedTypes() {
+    return Sets.newHashSet(Type.OBJECT);
   }
 
 }

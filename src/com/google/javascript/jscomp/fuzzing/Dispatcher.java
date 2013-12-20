@@ -17,21 +17,23 @@ package com.google.javascript.jscomp.fuzzing;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 abstract class Dispatcher extends AbstractFuzzer {
+  private Set<Type> supportedTypes;
   Dispatcher(FuzzingContext context) {
     super(context);
   }
-
   protected AbstractFuzzer[] candidates;
 
   @Override
@@ -52,18 +54,37 @@ abstract class Dispatcher extends AbstractFuzzer {
   }
 
   /* (non-Javadoc)
-   * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
+   * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int, Set<Type>)
    */
   @Override
-  protected Node generate(int budget) {
-    AbstractFuzzer fuzzer = selectFuzzer(budget);
-    return fuzzer.generate(budget);
+  protected Node generate(int budget, Set<Type> types) {
+    AbstractFuzzer fuzzer = selectFuzzer(budget, types);
+    return fuzzer.generate(budget, types);
   }
 
-  protected AbstractFuzzer selectFuzzer(int budget) {
+  @Override
+  protected Set<Type> supportedTypes() {
+    if (supportedTypes == null) {
+      supportedTypes = Sets.newHashSet();
+      for (AbstractFuzzer fuzzer : getCandidates()) {
+        supportedTypes.addAll(fuzzer.supportedTypes());
+      }
+    }
+    return supportedTypes;
+  }
+
+  protected AbstractFuzzer selectFuzzer(int budget, Set<Type> types) {
     Preconditions.checkNotNull(
         getCandidates(),
         "Candidate fuzzers need to be initialized before being used.");
+    ArrayList<AbstractFuzzer> typeCorrectCandidates;
+    typeCorrectCandidates = Lists.newArrayList();
+    for (AbstractFuzzer fuzzer : getCandidates()) {
+      if (!Sets.intersection(fuzzer.supportedTypes(), types).
+          isEmpty()) {
+        typeCorrectCandidates.add(fuzzer);
+      }
+    }
     JSONObject weightConfig = getOwnConfig().optJSONObject("weights");
     ArrayList<AbstractFuzzer> validFuzzers = Lists.newArrayList();
     ArrayList<Double> weights = Lists.newArrayList();
@@ -72,7 +93,7 @@ abstract class Dispatcher extends AbstractFuzzer {
     do {
       // increase the budget until it is enough for some fuzzers
       budget += stepSize;
-      for (AbstractFuzzer fuzzer : getCandidates()) {
+      for (AbstractFuzzer fuzzer : typeCorrectCandidates) {
         if (fuzzer.isEnough(budget)) {
           validFuzzers.add(fuzzer);
           try {

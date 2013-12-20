@@ -18,6 +18,8 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.Set;
+
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
@@ -38,7 +40,7 @@ class ForInFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     Scope localScope = context.scopeManager.localScope();
     localScope.loopNesting++;
     AbstractFuzzer[] fuzzers = {

@@ -59,7 +59,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testGenerateNull() {
-    SimpleFuzzer fuzzer = new SimpleFuzzer(Token.NULL, "null");
+    SimpleFuzzer fuzzer = new SimpleFuzzer(Token.NULL, "null", Type.OBJECT);
     Node node = fuzzer.generate(30);
     assertEquals("null", SimpleFuzzer.getPrettyCode(node));
   }
@@ -206,7 +206,7 @@ public class FuzzerTest extends TestCase{
   }
 
   public void testEmptyStatement() {
-    SimpleFuzzer fuzzer = new SimpleFuzzer(Token.EMPTY, "empty");
+    SimpleFuzzer fuzzer = new SimpleFuzzer(Token.EMPTY, "empty", Type.UNDEFINED);
     Node emptyStmt = fuzzer.generate(10);
     assertEquals(Token.EMPTY, emptyStmt.getType());
   }

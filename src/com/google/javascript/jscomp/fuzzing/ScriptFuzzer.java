@@ -20,6 +20,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Arrays;
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -42,7 +43,7 @@ public class ScriptFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  public Node generate(int budget) {
+  public Node generate(int budget, Set<Type> types) {
     int numElements = generateLength(budget - 1);
     Node script;
     if (numElements > 0) {

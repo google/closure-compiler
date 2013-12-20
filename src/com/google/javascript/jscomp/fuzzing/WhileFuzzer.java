@@ -18,6 +18,8 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.Set;
+
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
@@ -39,7 +41,7 @@ class WhileFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     AbstractFuzzer[] fuzzers = {
         new ExpressionFuzzer(context),
         new BlockFuzzer(context)
@@ -59,4 +61,19 @@ class WhileFuzzer extends AbstractFuzzer {
     return "while";
   }
 
+  @Override
+  protected Node fuzz(AbstractFuzzer fuzzer, int budget) {
+    if (fuzzer instanceof ExpressionFuzzer) {
+      Set<Type> types = fuzzer.supportedTypes();
+      /*
+       * someLabel: while(void(xxx)) {} often causes compiler to crash when
+       * compiling from AST. Because while(undefined) {} only produce dead code,
+       * we could safely remove it.
+       */
+      types.remove(Type.UNDEFINED);
+      return fuzzer.generate(budget, types);
+    } else {
+      return fuzzer.generate(budget);
+    }
+  }
 }

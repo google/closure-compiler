@@ -44,12 +44,19 @@ class ScopeManager {
         new Symbol("Boolean", Type.FUNCTION),
         new Symbol("Function", Type.FUNCTION),
         new Symbol("Object", Type.FUNCTION),
-        new Symbol("RegExp", Type.FUNCTION),
         new Symbol("String", Type.FUNCTION),
         new Symbol("Error", Type.FUNCTION),
         new Symbol("JSON", Type.OBJECT),
         new Symbol("Math", Type.OBJECT),
-        new Symbol("Number", Type.FUNCTION));
+        new Symbol("Number", Type.FUNCTION),
+        new Symbol("isFinite", Type.FUNCTION),
+        new Symbol("parseFloat", Type.FUNCTION),
+        new Symbol("parseInt", Type.FUNCTION),
+        new Symbol("decodeURI", Type.FUNCTION),
+        new Symbol("decodeURIComponent", Type.FUNCTION),
+        new Symbol("encodeURI", Type.FUNCTION),
+        new Symbol("encodeURIComponent", Type.FUNCTION),
+        new Symbol("isNaN", Type.FUNCTION));
     scopeStack.push(externs);
     // global scope
     scopeStack.push(new Scope());

@@ -16,12 +16,14 @@
 package com.google.javascript.jscomp.fuzzing;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodePrinter;
 import com.google.javascript.rhino.Node;
 
 import org.json.JSONObject;
 
 import java.util.Arrays;
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -46,7 +48,11 @@ abstract class AbstractFuzzer {
    * @param budget When the budget is not enough, it will try to generate a node
    * with minimal budget
    */
-  protected abstract Node generate(int budget);
+  protected abstract Node generate(int budget, Set<Type> types);
+
+  protected Node generate(int budget) {
+    return generate(budget, supportedTypes());
+  }
 
   protected Node[] distribute(int budget, AbstractFuzzer[] fuzzers) {
     Preconditions.checkArgument(fuzzers.length > 0);
@@ -94,5 +100,13 @@ abstract class AbstractFuzzer {
     builder.setPrettyPrint(true);
     builder.setLineBreak(true);
     return builder.build();
+  }
+
+  /**
+   * @return All types by default. Subclasses may override to limit the
+   * supported types
+   */
+  protected Set<Type> supportedTypes() {
+    return Sets.newHashSet(Type.values());
   }
 }

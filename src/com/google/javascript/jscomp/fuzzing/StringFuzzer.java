@@ -15,7 +15,10 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
+
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -30,7 +33,7 @@ class StringFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     return Node.newString(context.snGenerator.getString());
   }
 
@@ -48,6 +51,11 @@ class StringFuzzer extends AbstractFuzzer {
   @Override
   protected String getConfigName() {
     return "string";
+  }
+
+  @Override
+  protected Set<Type> supportedTypes() {
+    return Sets.newHashSet(Type.STRING);
   }
 
 }

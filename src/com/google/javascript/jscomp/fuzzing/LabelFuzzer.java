@@ -19,6 +19,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -41,14 +42,14 @@ public class LabelFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     String labelName = "x_" + context.snGenerator.getNextNumber();
     Node name = Node.newString(
         Token.LABEL_NAME, labelName);
 
     StatementFuzzer stmtFuzzer =
         new StatementFuzzer(context);
-    AbstractFuzzer selectedFuzzer = stmtFuzzer.selectFuzzer(budget - 2);
+    AbstractFuzzer selectedFuzzer = stmtFuzzer.selectFuzzer(budget - 2, types);
 
     Scope localScope = context.scopeManager.localScope();
     ArrayList<String> currentLabels;

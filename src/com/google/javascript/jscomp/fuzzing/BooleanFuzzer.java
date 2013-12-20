@@ -15,8 +15,11 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -31,7 +34,7 @@ class BooleanFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     return context.random.nextInt(2) == 0 ?
         new Node(Token.FALSE) : new Node(Token.TRUE);
   }
@@ -52,4 +55,8 @@ class BooleanFuzzer extends AbstractFuzzer {
     return "boolean";
   }
 
+  @Override
+  protected Set<Type> supportedTypes() {
+    return Sets.newHashSet(Type.BOOLEAN);
+  }
 }

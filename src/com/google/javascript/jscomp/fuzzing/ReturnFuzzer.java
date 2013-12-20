@@ -18,6 +18,8 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.Set;
+
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
@@ -43,7 +45,7 @@ class ReturnFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     Node node = new Node(Token.RETURN);
     if (budget > 1 &&
         context.random.nextDouble() < getOwnConfig().optDouble("hasValue")) {

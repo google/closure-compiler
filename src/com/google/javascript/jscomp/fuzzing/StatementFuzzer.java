@@ -34,7 +34,7 @@ class StatementFuzzer extends Dispatcher {
     candidates = new AbstractFuzzer[] {
         new BlockFuzzer(context),
         new VarFuzzer(context),
-        new SimpleFuzzer(Token.EMPTY, "empty"),
+        new SimpleFuzzer(Token.EMPTY, "empty", Type.UNDEFINED),
         new ExprStmtFuzzer(context),
         new IfFuzzer(context),
         new WhileFuzzer(context),

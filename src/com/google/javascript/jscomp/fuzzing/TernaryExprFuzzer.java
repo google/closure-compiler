@@ -19,6 +19,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Arrays;
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -36,7 +37,7 @@ class TernaryExprFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     AbstractFuzzer[] fuzzers = new AbstractFuzzer[3];
     Arrays.fill(fuzzers, getExprFuzzer());
     Node[] components = distribute(budget - 1, fuzzers);

@@ -19,6 +19,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Arrays;
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -41,7 +42,7 @@ class SwitchFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     int numCases = budget > 2 ? context.random.nextInt(budget - 2) : 0;
     AbstractFuzzer[] fuzzers = new AbstractFuzzer[numCases + 1];
     CaseFuzzer caseFuzzer =
@@ -84,7 +85,7 @@ class SwitchFuzzer extends AbstractFuzzer {
      * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
      */
     @Override
-    protected Node generate(int budget) {
+    protected Node generate(int budget, Set<Type> types) {
       Node clause = new Node(nodeType);
       if (nodeType == Token.CASE) {
         int valueBudget =

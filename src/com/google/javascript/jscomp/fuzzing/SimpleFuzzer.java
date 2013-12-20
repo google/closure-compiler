@@ -15,27 +15,33 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
+
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class SimpleFuzzer extends AbstractFuzzer {
 
-  private int type;
+  private int nodeType;
   private String configName;
-  SimpleFuzzer(int type, String configName) {
+  private Type dataType;
+
+  SimpleFuzzer(int nodeType, String configName, Type dataType) {
     super(null);
-    this.type = type;
+    this.nodeType = nodeType;
     this.configName = configName;
+    this.dataType = dataType;
   }
 
   /* (non-Javadoc)
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
-    return new Node(type);
+  protected Node generate(int budget, Set<Type> types) {
+    return new Node(nodeType);
   }
 
   /* (non-Javadoc)
@@ -54,4 +60,8 @@ class SimpleFuzzer extends AbstractFuzzer {
     return configName;
   }
 
+  @Override
+  protected Set<Type> supportedTypes() {
+    return Sets.newHashSet(dataType);
+  }
 }

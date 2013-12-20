@@ -16,13 +16,17 @@
 package com.google.javascript.jscomp.fuzzing;
 
 /**
- * Common JavaScript data types
+ * JavaScript data types
+ *
+ * According to Clause 8 of ECMA-262 Edition 5.1, there are 6 types. FUNTION is
+ * added in this enum to represent callable objects
  */
 enum Type {
   FUNCTION,
   NUMBER,
   OBJECT,
   ARRAY,
-  STRING
-  //TODO(zplin) include other types when necessary, e.g., boolean
+  STRING,
+  BOOLEAN,
+  UNDEFINED
 }

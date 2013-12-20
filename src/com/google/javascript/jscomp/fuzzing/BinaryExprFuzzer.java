@@ -16,8 +16,11 @@
 package com.google.javascript.jscomp.fuzzing;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -55,11 +58,20 @@ public class BinaryExprFuzzer extends Dispatcher {
      * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
      */
     @Override
-    protected Node generate(int budget) {
+    protected Node generate(int budget, Set<Type> types) {
       Node[] operands = distribute(
           budget - 1, new AbstractFuzzer[] {getLeft(),  getRight()});
 
       return new Node(operator.nodeType, operands);
+    }
+
+    @Override
+    protected Node fuzz(AbstractFuzzer fuzzer, int budget) {
+      if (context.strict && fuzzer == getRight()) {
+        return fuzzer.generate(budget, operator.rightTypes);
+      } else {
+        return fuzzer.generate(budget);
+      }
     }
 
     private AbstractFuzzer getLeft() {
@@ -117,8 +129,8 @@ public class BinaryExprFuzzer extends Dispatcher {
     GT(Token.GT),
     LE(Token.LE),
     GE(Token.GE),
-    INSTANCEOF(Token.INSTANCEOF),
-    IN(Token.IN),
+    INSTANCEOF(Token.INSTANCEOF, Sets.newHashSet(Type.FUNCTION)),
+    IN(Token.IN, Sets.newHashSet(Type.OBJECT)),
     EQ(Token.EQ),
     NE(Token.NE),
     SHEQ(Token.SHEQ),
@@ -142,8 +154,16 @@ public class BinaryExprFuzzer extends Dispatcher {
     ASSIGN_BIT_OR(Token.ASSIGN_BITOR);
 
     int nodeType;
+    Set<Type> rightTypes;
+
     Operator(int nodeType) {
       this.nodeType = nodeType;
+      rightTypes = Sets.newHashSet(Type.values());
+    }
+
+    Operator(int nodeType, Set<Type> rightTypes) {
+      this.nodeType = nodeType;
+      this.rightTypes = rightTypes;
     }
 
     boolean hasSideEffect() {

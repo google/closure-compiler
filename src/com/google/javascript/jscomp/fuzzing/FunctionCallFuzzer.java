@@ -18,6 +18,8 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.Set;
+
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
@@ -70,7 +72,7 @@ class FunctionCallFuzzer extends Dispatcher {
      * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
      */
     @Override
-    protected Node generate(int budget) {
+    protected Node generate(int budget, Set<Type> types) {
       int maxParamBudget = budget - 2;
       if (maxParamBudget < 0) {
         maxParamBudget = 0;

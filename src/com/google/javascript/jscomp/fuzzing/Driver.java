@@ -68,7 +68,7 @@ public class Driver {
 
   @Option(name = "--max_ast_size",
       usage = "The max number of nodes in the generated ASTs. Default: 100")
-  private int maxASTSize = 100;
+  private int maxASTSize;
 
   @Option(name = "--compilation_level",
       usage = "Specifies the compilation level to use. " +
@@ -88,6 +88,7 @@ public class Driver {
   private LoggingLevel level = LoggingLevel.INFO;
 
   @Option(name = "--config",
+      required = true,
       usage = "Specifies the configuration file")
   private String configFileName;
 
@@ -156,13 +157,7 @@ public class Driver {
 
   private Node fuzz(FuzzingContext context) {
     ScriptFuzzer fuzzer = new ScriptFuzzer(context);
-    Node script = null;
-    try {
-      script = fuzzer.generate(maxASTSize);
-    } catch (Exception e) {
-      getLogger().log(Level.SEVERE, "Fuzzer error!\nSeed: " + seed, e);
-    }
-    return script;
+    return fuzzer.generate(maxASTSize);
   }
 
   private boolean executeJS(String js1, String js2) {
@@ -245,10 +240,15 @@ public class Driver {
       Random random = currentSeed == -1 ? new Random(currentSeed) :
         new Random(currentSeed);
       FuzzingContext context = new FuzzingContext(random, getConfig(), execute);
-      Node script = fuzz(context);
-      if (script == null) {
+      Node script = null;
+      try {
+        script = fuzz(context);
+      } catch (RuntimeException e) {
+        getLogger().log(Level.SEVERE, "Fuzzer error: ", e);
         if (stopOnError) {
           break;
+        } else {
+          continue;
         }
       }
       String code1 = ScriptFuzzer.getPrettyCode(script);
@@ -297,15 +297,16 @@ public class Driver {
         new Function<Symbol, String>() {
           @Override
           public String apply(Symbol s) {
-            return s.name;
+            return "'" + s.name + "'=" + s.name;
           }
         });
     String setUpCode = "function toString(value) {\n" +
         "    if (value instanceof Array) {\n" +
-        "        var string = \"\";\n" +
+        "        var string = \"[\";\n" +
         "        for (var i in value) {\n" +
-        "            string += toString(value[i]);\n" +
+        "            string += toString(value[i]) + \",\";\n" +
         "        }\n" +
+        "        string += ']';\n" +
         "        return string;\n" +
         "    } else if (value instanceof Function) {\n" +
         "        return value.length;\n" +
@@ -327,7 +328,8 @@ public class Driver {
         "    console.log(\"Variables:\");\n" +
         "    var allvars = " + vars + ";\n" +
         "    console.log(toString(allvars));\n" +
-        "});";
+        "});\n" +
+        "";
     return setUpCode;
   }
 

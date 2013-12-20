@@ -15,10 +15,12 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Arrays;
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -33,7 +35,7 @@ class ObjectFuzzer extends AbstractFuzzer {
    * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
    */
   @Override
-  protected Node generate(int budget) {
+  protected Node generate(int budget, Set<Type> types) {
     Node objectLit = new Node(Token.OBJECTLIT);
     int remainingBudget = budget - 1;
     if (remainingBudget < 0) {
@@ -81,4 +83,8 @@ class ObjectFuzzer extends AbstractFuzzer {
     return "object";
   }
 
+  @Override
+  protected Set<Type> supportedTypes() {
+    return Sets.newHashSet(Type.OBJECT);
+  }
 }

@@ -16,8 +16,11 @@
 package com.google.javascript.jscomp.fuzzing;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -66,7 +69,7 @@ class UnaryExprFuzzer extends Dispatcher {
      * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
      */
     @Override
-    protected Node generate(int budget) {
+    protected Node generate(int budget, Set<Type> types) {
       Node node = new Node(operator.nodeType, getTarget().generate(budget - 1));
       if (operator == Operator.POST_INC || operator == Operator.POST_DEC) {
         node.putBooleanProp(Node.INCRDECR_PROP, true);
@@ -95,30 +98,33 @@ class UnaryExprFuzzer extends Dispatcher {
           CaseFormat.LOWER_CAMEL, operator.name());
     }
 
+    @Override
+    protected Set<Type> supportedTypes() {
+      return operator.supportedTypes;
+    }
   }
 
   private enum Operator {
-    VOID(Token.VOID),
-    TYPEOF(Token.TYPEOF),
-    POS(Token.POS),
-    NEG(Token.NEG),
-    BIT_NOT(Token.BITNOT),
-    NOT(Token.NOT),
-    INC(Token.INC, true),
-    DEC(Token.DEC, true),
-    DEL_PROP(Token.DELPROP, true),
-    POST_INC(Token.INC, true),
-    POST_DEC(Token.DEC, true);
+    VOID(Token.VOID, false, Sets.newHashSet(Type.UNDEFINED)),
+    TYPEOF(Token.TYPEOF, false, Sets.newHashSet(Type.STRING)),
+    POS(Token.POS, false, Sets.newHashSet(Type.NUMBER)),
+    NEG(Token.NEG, false, Sets.newHashSet(Type.NUMBER)),
+    BIT_NOT(Token.BITNOT, false, Sets.newHashSet(Type.NUMBER)),
+    NOT(Token.NOT, false, Sets.newHashSet(Type.BOOLEAN)),
+    INC(Token.INC, true, Sets.newHashSet(Type.NUMBER)),
+    DEC(Token.DEC, true, Sets.newHashSet(Type.NUMBER)),
+    DEL_PROP(Token.DELPROP, true, Sets.newHashSet(Type.BOOLEAN)),
+    POST_INC(Token.INC, true, Sets.newHashSet(Type.NUMBER)),
+    POST_DEC(Token.DEC, true, Sets.newHashSet(Type.NUMBER));
 
     int nodeType;
     boolean hasSideEffect;
-    Operator(int nodeType) {
-      this(nodeType, false);
-    }
+    Set<Type> supportedTypes;
 
-    Operator(int nodeType, boolean hasSideEffect) {
+    Operator(int nodeType, boolean hasSideEffect, Set<Type> supportedTypes) {
       this.nodeType = nodeType;
       this.hasSideEffect = hasSideEffect;
+      this.supportedTypes = supportedTypes;
     }
   }
 

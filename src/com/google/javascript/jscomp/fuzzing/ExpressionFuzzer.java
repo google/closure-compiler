@@ -32,7 +32,7 @@ class ExpressionFuzzer extends Dispatcher {
   @Override
   protected void initCandidates() {
     candidates = new AbstractFuzzer[] {
-        new SimpleFuzzer(Token.THIS, "this"),
+        new SimpleFuzzer(Token.THIS, "this", Type.OBJECT),
         new ExistingIdentifierFuzzer(context),
         new LiteralFuzzer(context),
         new FunctionCallFuzzer(context),

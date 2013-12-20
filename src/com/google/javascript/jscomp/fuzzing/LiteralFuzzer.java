@@ -15,8 +15,11 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
+import java.util.Set;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
@@ -33,17 +36,17 @@ class LiteralFuzzer extends Dispatcher {
   @Override
   protected void initCandidates() {
     candidates = new AbstractFuzzer[]{
-        new SimpleFuzzer(Token.NULL, "null"),
+        new SimpleFuzzer(Token.NULL, "null", Type.OBJECT),
         // treating global values as literal
-        new GlobalValueFuzzer("undefined"),
-        new GlobalValueFuzzer("Infinity"),
-        new GlobalValueFuzzer("NaN"),
+        new GlobalValueFuzzer("undefined", Type.UNDEFINED),
+        new GlobalValueFuzzer("Infinity", Type.NUMBER),
+        new GlobalValueFuzzer("NaN", Type.NUMBER),
         new BooleanFuzzer(context),
         new NumericFuzzer(context),
         new StringFuzzer(context),
         new ArrayFuzzer(context),
+        new RegularExprFuzzer(context),
         new ObjectFuzzer(context),
-        new RegularExprFuzzer(context)
       };
   }
 
@@ -57,9 +60,11 @@ class LiteralFuzzer extends Dispatcher {
 
   private class GlobalValueFuzzer extends AbstractFuzzer {
     private String value;
-    GlobalValueFuzzer(String value) {
+    private Type type;
+    GlobalValueFuzzer(String value, Type type) {
       super(null);
       this.value = value;
+      this.type = type;
     }
 
     /* (non-Javadoc)
@@ -74,7 +79,7 @@ class LiteralFuzzer extends Dispatcher {
      * @see com.google.javascript.jscomp.fuzzing.AbstractFuzzer#generate(int)
      */
     @Override
-    protected Node generate(int budget) {
+    protected Node generate(int budget, Set<Type> types) {
       return Node.newString(Token.NAME, value);
     }
 
@@ -86,5 +91,9 @@ class LiteralFuzzer extends Dispatcher {
       return value;
     }
 
+    @Override
+    protected Set<Type> supportedTypes() {
+      return Sets.newHashSet(type);
+    }
   }
 }
