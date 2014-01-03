@@ -289,10 +289,6 @@ public class DiagnosticGroups {
    */
   void setWarningLevel(CompilerOptions options,
       String name, CheckLevel level) {
-    if (name == "unnecessaryCasts") {
-      System.err.println(level);
-      (new RuntimeException()).printStackTrace();
-    }
     DiagnosticGroup group = forName(name);
     Preconditions.checkNotNull(group, "No warning class for name: %s", name);
     options.setWarningLevel(group, level);
