@@ -345,4 +345,10 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
         "  console.log(e.name)" +
         "}");
   }
+
+  public void testQuotedProperty() throws Exception {
+    // x['a'] and x.a will be different after renaming
+    testSame("var x = {'a': 1}; alert(x.a);",
+             UNDEFINED_NAME_WARNING);
+  }
 }

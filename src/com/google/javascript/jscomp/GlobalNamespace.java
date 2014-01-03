@@ -326,7 +326,14 @@ class GlobalNamespace
           isSet = true;
           switch (n.getType()) {
             case Token.STRING_KEY:
-              type = getValueType(n.getFirstChild());
+              if (n.isQuotedString()) {
+                // We do not want to create a name object for quoted strings.
+                // This ensures that we will warn if you reference a property
+                // as both quoted and unquoted.
+                return;
+              } else {
+                type = getValueType(n.getFirstChild());
+              }
               break;
             case Token.GETTER_DEF:
               type = Name.Type.GET;

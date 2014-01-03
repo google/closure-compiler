@@ -437,7 +437,7 @@ public class CollapsePropertiesTest extends CompilerTestCase {
 
   public void testObjLitWithQuotedKeyThatDoesNotGetRead() {
     test("var a = {}; a.b = {c: 0, 'd': 1}; var e = a.b.c;",
-         "var a$b$c = 0; var a$b$d = 1; var e = a$b$c;");
+         "var a$b$c = 0; var e = a$b$c;");
   }
 
   public void testObjLitWithQuotedKeyThatGetsRead() {
@@ -829,7 +829,7 @@ public class CollapsePropertiesTest extends CompilerTestCase {
 
   public void testObjLitWithUnusedNumericKey() {
     test("var a = {40: {}, c: {}}; var e = a.c;",
-         "var a$1 = {}; var a$c = {}; var e = a$c");
+         "var a$c = {}; var e = a$c");
   }
 
   public void testObjLitWithNonIdentifierKeys() {

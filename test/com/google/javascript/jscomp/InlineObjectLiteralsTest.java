@@ -348,6 +348,12 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
         "   '[object Function]';");
   }
 
+  public void testIssue1173() {
+    testSameLocal(
+        "var a = {'b': 1, 'c': 2};" +
+        "alert(a.c);");
+  }
+
   public void testNoInlineDeletedProperties() {
     testSameLocal(
         "var foo = {bar:1};" +

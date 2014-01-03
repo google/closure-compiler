@@ -2189,6 +2189,16 @@ public class IntegrationTest extends IntegrationTestCase {
          "function a(b) { return b(b); } alert(a(a));");
   }
 
+  public void testIssue1173() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS
+        .setOptionsForCompilationLevel(options);
+    test(options,
+         "var a = {'b': 1, 'c': 2, 'd': 3};" +
+         "if (a.hasOwnProperty('b')) { alert(a.c); };",
+         "var a = {b: 1, c: 2, d: 3}; a.e('b') && alert(a.a);");
+  }
+
   public void testIssue284() {
     CompilerOptions options = createCompilerOptions();
     options.smartNameRemoval = true;

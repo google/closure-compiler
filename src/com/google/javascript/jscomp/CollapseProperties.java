@@ -989,8 +989,8 @@ class CollapseProperties implements CompilerPass {
       Node value = key.getFirstChild();
       nextKey = key.getNext();
 
-      // A get or a set can not be rewritten as a VAR.
-      if (key.isGetterDef() || key.isSetterDef()) {
+      // A get or a set or quoted prop can not be rewritten as a VAR.
+      if (!NodeUtil.isOptimizableObjectLitKey(key)) {
         continue;
       }
 

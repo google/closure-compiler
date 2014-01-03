@@ -220,9 +220,7 @@ class InlineObjectLiterals implements CompilerPass {
         // Also, ES5 getters/setters aren't handled by this pass.
         for (Node child = val.getFirstChild(); child != null;
              child = child.getNext()) {
-          if (child.isGetterDef() ||
-              child.isSetterDef()) {
-            // ES5 get/set not supported.
+          if (!NodeUtil.isOptimizableObjectLitKey(child)) {
             return false;
           }
 
