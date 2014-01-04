@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
@@ -3439,5 +3440,11 @@ public final class NodeUtil {
           }
         },
         Predicates.<Node>alwaysTrue());
+  }
+
+  static JSDocInfo createConstantJsDoc() {
+    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+    builder.recordConstancy();
+    return builder.build(null);
   }
 }

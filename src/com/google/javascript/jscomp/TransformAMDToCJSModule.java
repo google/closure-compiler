@@ -134,15 +134,20 @@ class TransformAMDToCJSModule implements CompilerPass {
     }
 
     /**
-     * When define is called with an object literal, assign it to exports and
+     * When define is called with an object literal, assign it to module.exports and
      * we're done.
      */
     private void handleDefineObjectLiteral(Node parent, Node onlyExport,
         Node script) {
       onlyExport.getParent().removeChild(onlyExport);
       script.replaceChild(parent,
-          IR.exprResult(IR.assign(IR.name("exports"), onlyExport))
-              .copyInformationFromForTree(onlyExport));
+          IR.exprResult(
+              IR.assign(
+                  NodeUtil.newQualifiedNameNode(
+                      compiler.getCodingConvention(),
+                      "module.exports"),
+                  onlyExport))
+          .copyInformationFromForTree(onlyExport));
       compiler.reportCodeChange();
     }
 

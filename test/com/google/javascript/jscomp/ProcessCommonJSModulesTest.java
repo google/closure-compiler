@@ -66,7 +66,7 @@ public class ProcessCommonJSModulesTest extends CompilerTestCase {
         "var name = require('name');" +
         "exports.foo = 1;",
         "goog.provide('module$test');" +
-        "var module$test = {};" +
+        "/** @const */ var module$test = {};" +
         "goog.require('module$name');" +
         "var name$$module$test = module$name;" +
         "module$test.foo = 1;");
@@ -74,12 +74,34 @@ public class ProcessCommonJSModulesTest extends CompilerTestCase {
         "var name = require('name');" +
         "module.exports = function() {};",
         "goog.provide('module$test');" +
-        "var module$test = {};" +
         "goog.require('module$name');" +
         "var name$$module$test = module$name;" +
-        "module$test.module$exports = function() {};" +
-        "if(module$test.module$exports)" +
-        "module$test=module$test.module$exports");
+        "/** @const */ var module$test = function () {};");
+  }
+
+  public void testPropertyExports() {
+    setFilename("test");
+    test(
+        "exports.one = 1;" +
+        "module.exports.obj = {};" +
+        "module.exports.obj.two = 2;",
+        "goog.provide('module$test');" +
+        "/** @const */ var module$test = {};" +
+        "module$test.one = 1;" +
+        "module$test.obj = {};" +
+        "module$test.obj.two = 2;");
+  }
+
+  public void testModuleExportsWrittenWithExportsRefs() {
+    setFilename("test");
+    test(
+        "exports.one = 1;" +
+        "module.exports = {};",
+        "goog.provide('module$test');" +
+        "var module$test = {};" +
+        "var exports$$module$test = module$test;" +
+        "exports$$module$test.one = 1;" +
+        "module$test = {};");
   }
 
   public void testVarRenaming() {

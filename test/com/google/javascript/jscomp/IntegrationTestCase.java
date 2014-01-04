@@ -92,7 +92,7 @@ abstract class IntegrationTestCase extends TestCase {
         0, compiler.getErrors().length + compiler.getWarnings().length);
 
     Node root = compiler.getRoot().getLastChild();
-    Node expectedRoot = parse(compiled, options, normalizeResults);
+    Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
     String explanation = expectedRoot.checkTreeEquals(root);
     assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
         "\nResult: " + compiler.toSource(root) +
@@ -137,7 +137,7 @@ abstract class IntegrationTestCase extends TestCase {
 
     if (compiled != null) {
       Node root = compiler.getRoot().getLastChild();
-      Node expectedRoot = parse(compiled, options, normalizeResults);
+      Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
       String explanation = expectedRoot.checkTreeEquals(root);
       assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
           "\nResult: " + compiler.toSource(root) +
@@ -156,7 +156,7 @@ abstract class IntegrationTestCase extends TestCase {
 
     if (compiled != null) {
       Node root = compiler.getRoot().getLastChild();
-      Node expectedRoot = parse(compiled, options, normalizeResults);
+      Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
       String explanation = expectedRoot.checkTreeEquals(root);
       assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
           "\nResult: " + compiler.toSource(root) +
@@ -194,6 +194,21 @@ abstract class IntegrationTestCase extends TestCase {
         externs, Lists.newArrayList(CompilerTestCase.createModuleChain(original)),
         options);
     return compiler;
+  }
+
+  /**
+   * Parse the expected code to compare against.
+   * We want to run this with similar parsing options, but don't
+   * want to run the commonjs preprocessing passes (so that we can use this
+   * to test the commonjs code).
+   */
+  protected Node parseExpectedCode(
+      String[] original, CompilerOptions options, boolean normalize) {
+    boolean oldProcessCommonJsModules = options.processCommonJSModules;
+    options.processCommonJSModules = false;
+    Node expectedRoot = parse(original, options, normalize);
+    options.processCommonJSModules = oldProcessCommonJsModules;
+    return expectedRoot;
   }
 
   protected Node parse(

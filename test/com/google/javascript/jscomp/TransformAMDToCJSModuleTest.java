@@ -77,7 +77,7 @@ public class TransformAMDToCJSModuleTest extends CompilerTestCase {
   }
 
   public void testObjectLit() {
-    test("define({foo: 'bar'})", "exports={foo: 'bar'}");
+    test("define({foo: 'bar'})", "module.exports={foo: 'bar'}");
   }
 
   public void testPlugins() {
