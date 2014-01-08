@@ -141,10 +141,45 @@ chrome.app.runtime = {};
 
 
 /**
- * @typedef {{id: (string|undefined), items: (!Array.<!Object>|undefined)}}
+ * @constructor
+ * @see http://developer.chrome.com/apps/app_runtime.html
  */
-chrome.app.runtime.LaunchData;
+chrome.app.runtime.LaunchItem = function() {};
 
+
+/** @type {!FileEntry} */
+chrome.app.runtime.LaunchItem.prototype.entry;
+
+
+/** @type {string} */
+chrome.app.runtime.LaunchItem.prototype.type;
+
+
+/**
+ * @constructor
+ * @see http://developer.chrome.com/apps/app_runtime.html
+ */
+chrome.app.runtime.LaunchData = function() {};
+
+
+/** @type {string|undefined} */
+chrome.app.runtime.LaunchData.prototype.id;
+
+
+/** @type {!Array.<!chrome.app.runtime.LaunchItem>|undefined} */
+chrome.app.runtime.LaunchData.prototype.items;
+
+
+/** @type {string|undefined} */
+chrome.app.runtime.LaunchData.prototype.url;
+
+
+/** @type {string|undefined} */
+chrome.app.runtime.LaunchData.prototype.referrerUrl;
+
+
+/** @type {boolean|undefined} */
+chrome.app.runtime.LaunchData.prototype.isKioskSession;
 
 
 /**
