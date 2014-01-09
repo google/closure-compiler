@@ -234,9 +234,31 @@ public class ProcessCommonJSModules implements CompilerPass {
 
         Node newVar = IR.var(newName)
             .copyInformationFromForTree(ref.getParent());
-        newVar.getFirstChild().addChildToFront(
-            ref.getNext().detachFromParent());
+        Node rhsValue = ref.getNext().detachFromParent();
+        newVar.getFirstChild().addChildToFront(rhsValue);
         newVar.setJSDocInfo(NodeUtil.createConstantJsDoc());
+
+        // If the rValue is an object literal, check each property to see if
+        // it's an alias, and if it is, copy the annotation over.
+        // This is a common idiom to export a set of constructors.
+        if (rhsValue.isObjectLit()) {
+          Scope globalScope = new SyntacticScopeCreator(compiler)
+              .createScope(script, null);
+          for (Node key = rhsValue.getFirstChild();
+               key != null; key = key.getNext()) {
+            if (key.getJSDocInfo() == null
+                && key.getFirstChild().isName()) {
+              Var aliasedVar =
+                  globalScope.getVar(key.getFirstChild().getString());
+              JSDocInfo info =
+                  aliasedVar == null ? null : aliasedVar.getJSDocInfo();
+              if (info != null &&
+                  info.getVisibility() != JSDocInfo.Visibility.PRIVATE) {
+                key.setJSDocInfo(info);
+              }
+            }
+          }
+        }
 
         Node assign = ref.getParent();
         Node exprResult = assign.getParent();

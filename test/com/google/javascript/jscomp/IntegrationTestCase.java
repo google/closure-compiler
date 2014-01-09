@@ -46,7 +46,14 @@ abstract class IntegrationTestCase extends TestCase {
         + "/** @return {string} */ var widgetToken = function() {};\n"
         + "function alert(message) {}"
         + "function Object() {}"
-        + "Object.seal;"));
+        + "Object.seal;"
+        + "/**\n"
+        + " * @param {...*} var_args\n"
+        + " * @constructor\n"
+        + " */\n"
+        + "function Function(var_args) {}\n"
+        + "/** @param {...*} var_args */\n"
+        + "Function.prototype.call = function (var_args) {};"));
 
   protected List<SourceFile> externs = DEFAULT_EXTERNS;
 
