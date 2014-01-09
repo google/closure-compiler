@@ -646,7 +646,7 @@ final class NameAnalyzer implements CompilerPass {
             JsName nameInfo = getName(nameNode.getString(), true);
             recordSet(nameInfo.name, nameNode);
           }
-        } else if (NodeUtil.isOptimizableObjectLitKey(n)) {
+        } else if (NodeUtil.isObjectLitKey(n)) {
           NameInformation ns = createNameInformation(t, n);
           if (ns != null) {
             recordSet(ns.name, n);
@@ -1416,7 +1416,7 @@ final class NameAnalyzer implements CompilerPass {
           name = "";
         }
         rootNameNode = rootNameNode.getFirstChild();
-      } else if (NodeUtil.isOptimizableObjectLitKey(rootNameNode)) {
+      } else if (NodeUtil.isObjectLitKey(rootNameNode)) {
         name = "." + rootNameNode.getString() + name;
 
         // Check if this is an object literal assigned to something.

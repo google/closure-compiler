@@ -28,9 +28,6 @@ import java.util.Set;
 /**
  * Checks references to undefined properties of global variables.
  *
- * This does a far more precise analysis than type-checking, but it
- * is limited to global objects.
- *
  * @author nicksantos@google.com (Nick Santos)
  */
 class CheckGlobalNames implements CompilerPass {

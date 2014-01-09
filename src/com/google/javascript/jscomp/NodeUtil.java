@@ -2147,14 +2147,6 @@ public final class NodeUtil {
   }
 
   /**
-   * Determines whether a node represents an unquoted object literal key without
-   * getters or setters.
-   */
-  static boolean isOptimizableObjectLitKey(Node n) {
-    return n.isStringKey() && !n.isQuotedString();
-  }
-
-  /**
    * Get the name of an object literal key.
    *
    * @param key A node
