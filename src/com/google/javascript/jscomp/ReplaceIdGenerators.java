@@ -330,8 +330,9 @@ class ReplaceIdGenerators implements CompilerPass {
       }
 
       Node arg = n.getFirstChild().getNext();
-
-      if (arg.isString()) {
+      if (arg == null) {
+        compiler.report(t.makeError(n, INVALID_GENERATOR_PARAMETER));
+      } else if (arg.isString()) {
         String rename = getObfuscatedName(
             arg, callName, nameGenerator, arg.getString());
         parent.replaceChild(n, IR.string(rename));

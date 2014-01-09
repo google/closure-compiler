@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER;
+
 import com.google.common.collect.ImmutableMap;
 
 
@@ -483,6 +485,18 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "var id = function() {};\n" +
         "function Foo() { id('foo'); }\n",
         ReplaceIdGenerators.MISSING_NAME_MAP_FOR_GENERATOR);
+  }
+
+  public void testBadGenerator1() {
+    testSame("/** @idGenerator */ id = function() {};" +
+         "foo.bar = id()",
+         INVALID_GENERATOR_PARAMETER);
+  }
+
+  public void testBadGenerator2() {
+    testSame("/** @consistentIdGenerator */ id = function() {};" +
+         "foo.bar = id()",
+         INVALID_GENERATOR_PARAMETER);
   }
 
   private void testMap(String code, String expected, String expectedMap) {
