@@ -561,3 +561,37 @@ for the purpose of Test-driven Development (TDD) or Behavior Driven Development
     <td>None</td>
   </tr>
 </table>
+
+### Node.js Closure Compiler Externs
+
+<table>
+  <tr>
+    <td>Code Path</td>
+    <td><code>contrib/nodejs</code></td>
+  </tr>
+
+  <tr>
+    <td>URL</td>
+    <td>https://github.com/dcodeIO/node.js-closure-compiler-externs</td>
+  </tr>
+  
+  <tr>
+    <td>Version</td>
+    <td>e891b4fbcf5f466cc4307b0fa842a7d8163a073a</td>
+  </tr>
+  
+  <tr>
+    <td>License</td>
+    <td>Apache 2.0 license</td>
+  </tr>
+  
+  <tr>
+    <td>Description</td>
+    <td>Type contracts for NodeJS APIs</td>
+  </tr>
+  
+  <tr>
+    <td>Local Modifications</td>
+    <td>Substantial changes to make them compatible with NpmCommandLineRunner.</td>
+  </tr>
+</table>
