@@ -47,16 +47,16 @@ public class ObjectTypeTest extends TestCase {
   }
 
   public void testClassSubtyping() {
-    ObjectType foo = ObjectType.fromClass(new NominalType("Foo", false));
-    ObjectType bar = ObjectType.fromClass(new NominalType("Bar", false));
+    ObjectType foo = ObjectType.fromClass(NominalType.makeClass("Foo"));
+    ObjectType bar = ObjectType.fromClass(NominalType.makeClass("Bar"));
     assertTrue(foo.isSubtypeOf(foo));
     assertFalse(foo.isSubtypeOf(bar));
   }
 
   public void testObjectUnions() {
-    ObjectType foo = ObjectType.fromClass(new NominalType("Foo", false));
-    ObjectType bar = ObjectType.fromClass(new NominalType("Bar", false));
-    ObjectType baz = ObjectType.fromClass(new NominalType("Baz", false));
+    ObjectType foo = ObjectType.fromClass(NominalType.makeClass("Foo"));
+    ObjectType bar = ObjectType.fromClass(NominalType.makeClass("Bar"));
+    ObjectType baz = ObjectType.fromClass(NominalType.makeClass("Baz"));
     ObjectType topObj = ObjectType.TOP_OBJECT;
     ObjectType withPNum = topObj.withProperty("p", NUMBER);
     ObjectType fooWithPNum = foo.withProperty("p", NUMBER);
@@ -87,12 +87,12 @@ public class ObjectTypeTest extends TestCase {
   }
 
   public void testSimpleClassInheritance() {
-    NominalType parentClass = new NominalType("Parent", false);
-    NominalType child1Class = new NominalType("Child1", false);
-    NominalType child2Class = new NominalType("Child2", false);
+    NominalType parentClass = NominalType.makeClass("Parent");
+    NominalType child1Class = NominalType.makeClass("Child1");
+    NominalType child2Class = NominalType.makeClass("Child2");
     child1Class.addSuperClass(parentClass);
     child2Class.addSuperClass(parentClass);
-    ObjectType foo = ObjectType.fromClass(new NominalType("Foo", false));
+    ObjectType foo = ObjectType.fromClass(NominalType.makeClass("Foo"));
     ObjectType parent = ObjectType.fromClass(parentClass);
     ObjectType child1 = ObjectType.fromClass(child1Class);
     ObjectType child2 = ObjectType.fromClass(child2Class);

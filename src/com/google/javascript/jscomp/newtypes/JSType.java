@@ -107,9 +107,12 @@ public class JSType {
   public static final JSType UNKNOWN = new JSType(UNKNOWN_MASK);
 
   public static final JSType TOP_OBJECT = fromObjectType(ObjectType.TOP_OBJECT);
+  private static JSType TOP_FUNCTION = null;
+
+  // Some commonly used types
   public static final JSType NULL_OR_UNDEF =
       new JSType(NULL_MASK | UNDEFINED_MASK);
-  private static JSType TOP_FUNCTION = null;
+  public static final JSType NUM_OR_STR = new JSType(NUMBER_MASK | STRING_MASK);
 
   private static final JSType TOP_MINUS_NULL = new JSType(
       TRUE_MASK | FALSE_MASK | NUMBER_MASK | STRING_MASK | UNDEFINED_MASK |
@@ -420,9 +423,10 @@ public class JSType {
   }
 
   public JSType withoutProperty(String qname) {
-    Preconditions.checkState(this.objs != null);
-    return new JSType(this.type, this.location,
-        ObjectType.withoutProperty(this.objs, qname));
+    return this.objs == null ?
+        this :
+        new JSType(this.type, this.location,
+            ObjectType.withoutProperty(this.objs, qname));
   }
 
   public JSType withProperty(String qname, JSType type) {
@@ -440,13 +444,11 @@ public class JSType {
         ObjectType.withDeclaredProperty(this.objs, qname, type));
   }
 
-  public JSType withPropertyRequired(String pname) {
-    if (isUnknown()) {
-      return this;
-    }
-    Preconditions.checkState(this.objs != null);
-    return new JSType(this.type, this.location,
-        ObjectType.withPropertyRequired(this.objs, pname));
+  public JSType withPropertyRequired(String qname) {
+    return (isUnknown() || this.objs == null) ?
+        this :
+        new JSType(this.type, this.location,
+            ObjectType.withPropertyRequired(this.objs, qname));
   }
 
   @Override

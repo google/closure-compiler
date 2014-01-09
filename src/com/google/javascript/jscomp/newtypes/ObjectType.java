@@ -167,7 +167,7 @@ public class ObjectType {
     return newObjs.build();
   }
 
-  ObjectType withPropertyRequired(String qname) {
+  private ObjectType withPropertyRequired(String qname) {
     Preconditions.checkArgument(TypeUtils.isIdentifier(qname));
     Map<String, Property> newProps = Maps.newHashMap(this.props);
     Property oldProp = this.props.get(qname);

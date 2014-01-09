@@ -43,9 +43,17 @@ public class NominalType {
   private final boolean isInterface;
   private ImmutableSet<String> allProps = null;
 
-  public NominalType(String name, boolean isInterface) {
+  private NominalType(String name, boolean isInterface) {
     this.name = name;
     this.isInterface = isInterface;
+  }
+
+  public static NominalType makeClass(String name) {
+    return new NominalType(name, false);
+  }
+
+  public static NominalType makeInterface(String name) {
+    return new NominalType(name, true);
   }
 
   public boolean isClass() {

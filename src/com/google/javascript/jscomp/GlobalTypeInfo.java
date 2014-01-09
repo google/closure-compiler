@@ -97,6 +97,7 @@ class GlobalTypeInfo {
   // scopes. The type inference relies on this fact to process deeper scopes
   // before shallower scopes.
   private final Deque<Scope> scopes = Lists.newLinkedList();
+  private Scope globalScope;
   private final Deque<Scope> scopeWorkset = Lists.newLinkedList();
   private final Set<JSError> warnings = Sets.newHashSet();
   private final JSTypeCreatorFromJSDoc typeParser =
@@ -112,16 +113,20 @@ class GlobalTypeInfo {
     this.compiler = compiler;
   }
 
-  public Collection<Scope> getScopes() {
+  Collection<Scope> getScopes() {
     return scopes;
   }
 
-  public Collection<JSError> getWarnings() {
+  Scope getGlobalScope() {
+    return globalScope;
+  }
+
+  Collection<JSError> getWarnings() {
     return warnings;
   }
 
   // Differs from the similar method in Scope class on how it treats qnames.
-  public String getFunInternalName(Node n) {
+  String getFunInternalName(Node n) {
     Preconditions.checkState(n.isFunction());
     String nonAnonFnName = NodeUtil.getFunctionName(n);
     // We don't want to use qualified names here
@@ -131,16 +136,17 @@ class GlobalTypeInfo {
     return anonFunNames.get(n);
   }
 
+  // This method is the entry point
   void prepareAst(Node externs, Node root) {
     Preconditions.checkArgument(externs.isSyntheticBlock());
     Preconditions.checkArgument(root.isSyntheticBlock());
-    Scope rootScope = new Scope(root, null, new ArrayList<String>(), null);
-    scopes.addFirst(rootScope);
+    globalScope = new Scope(root, null, new ArrayList<String>(), null);
+    scopes.addFirst(globalScope);
 
-    CollectNamedTypes rootCnt = new CollectNamedTypes(rootScope);
+    CollectNamedTypes rootCnt = new CollectNamedTypes(globalScope);
     new NodeTraversal(compiler, rootCnt).traverse(externs);
     new NodeTraversal(compiler, rootCnt).traverse(root);
-    ProcessScope rootPs = new ProcessScope(rootScope);
+    ProcessScope rootPs = new ProcessScope(globalScope);
     new NodeTraversal(compiler, rootPs).traverse(externs);
     new NodeTraversal(compiler, rootPs).traverse(root);
     rootPs.finishProcessingScope();
@@ -304,7 +310,8 @@ class GlobalTypeInfo {
       }
       JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
       if (fnDoc != null && (fnDoc.isConstructor() || fnDoc.isInterface())) {
-        NominalType klass = new NominalType(qname, fnDoc.isInterface());
+        NominalType klass = fnDoc.isInterface() ?
+            NominalType.makeInterface(qname) : NominalType.makeClass(qname);
         nominaltypesByNode.put(fn, klass);
         parentScope.addClassType(qname, klass);
       }
@@ -327,25 +334,6 @@ class GlobalTypeInfo {
     ProcessScope(Scope currentScope) {
       this.currentScope = currentScope;
       this.undeclaredVars = HashMultimap.create();
-    }
-
-    private JSType getVarTypeFromAnnotation(Node nameNode) {
-      Preconditions.checkArgument(nameNode.getParent().isVar());
-      Node varNode = nameNode.getParent();
-      JSType varType = getTypeDeclarationFromJsdoc(varNode, currentScope);
-      if (varNode.getChildCount() > 1 && varType != null) {
-        warnings.add(JSError.make(varNode, TypeCheck.MULTIPLE_VAR_DEF));
-      }
-      String varName = nameNode.getQualifiedName();
-      JSType nameNodeType = getTypeDeclarationFromJsdoc(nameNode, currentScope);
-      if (nameNodeType != null) {
-        if (varType != null) {
-          warnings.add(JSError.make(nameNode, DUPLICATE_JSDOC, varName));
-        }
-        return nameNodeType;
-      } else {
-        return varType;
-      }
     }
 
     void finishProcessingScope() {
@@ -371,7 +359,10 @@ class GlobalTypeInfo {
           if (name == null || "undefined".equals(name) || parent.isFunction()) {
             return;
           }
-          if (parent.isVar()) {
+          // NOTE(user): Handle local scopes introduced by catch properly,
+          // after we decide what to do with variables in general, eg, will we
+          // use unique numeric ids?
+          if (parent.isVar() || parent.isCatch()) {
             if (currentScope.isDefinedLocally(name)) {
               warnings.add(JSError.make(
                   n, VariableReferenceCheck.REDECLARED_VARIABLE, name));
@@ -384,11 +375,11 @@ class GlobalTypeInfo {
               Node initializer = n.getFirstChild();
               if (initializer != null && initializer.isFunction()) {
                 visitFunctionDef(initializer);
-              } else if (initializer != null &&
-                  NodeUtil.isNamespaceDecl(n)) {
+              } else if (initializer != null && NodeUtil.isNamespaceDecl(n)) {
                 currentScope.addNamespace(name);
               } else {
-                currentScope.addLocal(name, getVarTypeFromAnnotation(n));
+                currentScope.addLocal(name, parent.isVar() ?
+                    getVarTypeFromAnnotation(n) : JSType.UNKNOWN);
               }
             }
           } else if (currentScope.isOuterVarEarly(name)) {
@@ -455,10 +446,10 @@ class GlobalTypeInfo {
         warnings.add(JSError.make(
             fn, VariableReferenceCheck.REDECLARED_VARIABLE, fnName));
       } else {
-        currentScope.putLocalFunDef(internalName, fnScope);
+        currentScope.addLocalFunDef(internalName, fnScope);
         if (fnName != null && !TypeUtils.isIdentifier(fnName)) {
           // Qualified names will be removed in finalizeScope
-          currentScope.putLocalFunDef(fnName, fnScope);
+          currentScope.addLocalFunDef(fnName, fnScope);
         }
       }
       if (fnName != null && TypeUtils.isIdentifier(fnName)) {
@@ -507,8 +498,7 @@ class GlobalTypeInfo {
             new PropertyDef(exprResult, methodScope));
         // Add the property to the class with the appropriate type.
         if (propDeclType != null) {
-          if (mayWarnAboutExistingProp(
-              classType, pname, propDeclType, expr)) {
+          if (mayWarnAboutExistingProp(classType, pname, expr)) {
             return;
           }
           classType.addProtoProperty(pname, propDeclType);
@@ -564,7 +554,7 @@ class GlobalTypeInfo {
       JSType declaredType =
           getTypeDeclarationFromJsdoc(getPropNode.getParent(), currentScope);
       if (declaredType != null) {
-        mayWarnAboutExistingProp(thisType, pname, declaredType, getPropNode);
+        mayWarnAboutExistingProp(thisType, pname, getPropNode);
         thisType.addClassProperty(pname, declaredType);
       } else {
         thisType.addUndeclaredClassProperty(pname);
@@ -573,8 +563,8 @@ class GlobalTypeInfo {
           new PropertyDef(getPropNode.getParent().getParent(), null));
     }
 
-    boolean mayWarnAboutExistingProp(NominalType classType, String pname,
-        JSType propTypeFromJsdoc, Node propCreationNode) {
+    private boolean mayWarnAboutExistingProp(
+        NominalType classType, String pname, Node propCreationNode) {
       if (classType.mayHaveOwnProp(pname) &&
           classType.getPropDeclaredType(pname) != null) {
         warnings.add(JSError.make(propCreationNode, DUPLICATE_PROPERTY_JSDOC,
@@ -652,9 +642,29 @@ class GlobalTypeInfo {
       }
       return new Scope(fn, parentScope, formals, builder.buildDeclaration());
     }
+
+    private JSType getVarTypeFromAnnotation(Node nameNode) {
+      Preconditions.checkArgument(nameNode.getParent().isVar());
+      Node varNode = nameNode.getParent();
+      JSType varType = getTypeDeclarationFromJsdoc(varNode, currentScope);
+      if (varNode.getChildCount() > 1 && varType != null) {
+        warnings.add(JSError.make(varNode, TypeCheck.MULTIPLE_VAR_DEF));
+      }
+      String varName = nameNode.getQualifiedName();
+      JSType nameNodeType = getTypeDeclarationFromJsdoc(nameNode, currentScope);
+      if (nameNodeType != null) {
+        if (varType != null) {
+          warnings.add(JSError.make(nameNode, DUPLICATE_JSDOC, varName));
+        }
+        return nameNodeType;
+      } else {
+        return varType;
+      }
+    }
+
   }
 
-  static class PropertyDef {
+  private static class PropertyDef {
     Node defSite; // The expression result of the property definition
     Scope methodScope; // null for non-method property declarations
 
@@ -704,7 +714,7 @@ class GlobalTypeInfo {
     }
 
     // TODO(user): don't return null for anonymous functions
-    public String getReadableName() {
+    String getReadableName() {
       return name;
     }
 
@@ -712,15 +722,15 @@ class GlobalTypeInfo {
       this.declaredType = declaredType;
     }
 
-    public DeclaredFunctionType getDeclaredType() {
+    DeclaredFunctionType getDeclaredType() {
       return declaredType;
     }
 
-    public boolean isFunction() {
+    boolean isFunction() {
       return root.isFunction();
     }
 
-    public boolean isConstructor() {
+    boolean isConstructor() {
       if (!root.isFunction()) {
         return false;
       }
@@ -728,12 +738,12 @@ class GlobalTypeInfo {
       return fnDoc != null && fnDoc.isConstructor();
     }
 
-    public boolean isPrototypeMethod() {
+    boolean isPrototypeMethod() {
       Preconditions.checkState(root != null);
       return NodeUtil.isPrototypeMethod(root);
     }
 
-    private void putLocalFunDef(String name, Scope scope) {
+    private void addLocalFunDef(String name, Scope scope) {
       localFunDefs.put(name, scope);
     }
 
@@ -794,7 +804,8 @@ class GlobalTypeInfo {
       return false;
     }
 
-    NominalType getNominalType(String name) {
+    // Only used during symbol-table construction, not during type inference.
+    private NominalType getNominalType(String name) {
       Preconditions.checkState(localClassDefs != null);
       NominalType klass = localClassDefs.get(name);
       if (klass != null) {
@@ -817,7 +828,7 @@ class GlobalTypeInfo {
       return null;
     }
 
-    public JSType getDeclaredTypeOf(String name) {
+    JSType getDeclaredTypeOf(String name) {
       if ("this".equals(name)) {
         if (!hasThis()) {
           return null;

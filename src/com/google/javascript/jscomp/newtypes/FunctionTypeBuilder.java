@@ -41,7 +41,8 @@ public class FunctionTypeBuilder {
   private JSType returnType = null;
   private boolean loose = false;
   private NominalType klass;
-  private NominalType receiverType; // Only used to build DeclaredFunctionType
+  // Only used to build DeclaredFunctionType for prototype methods
+  private NominalType receiverType;
 
   public FunctionTypeBuilder addReqFormal(JSType t) {
     if (!optionalFormals.isEmpty() || restFormals != null) {
