@@ -1109,7 +1109,10 @@ public class Compiler extends AbstractCompiler {
     return input;
   }
 
-  private CompilerInput putCompilerInput(InputId id, CompilerInput input) {
+  CompilerInput putCompilerInput(InputId id, CompilerInput input) {
+    if (inputsById == null) {
+      inputsById = Maps.newHashMap();
+    }
     input.setCompiler(this);
     return inputsById.put(id, input);
   }
@@ -1547,8 +1550,10 @@ public class Compiler extends AbstractCompiler {
         new TransformAMDToCJSModule(this).process(null, root);
       }
       if (options.processCommonJSModules) {
-        ProcessCommonJSModules cjs = new ProcessCommonJSModules(this,
-            options.commonJSModulePathPrefix);
+        ProcessCommonJSModules cjs = new ProcessCommonJSModules(
+            this,
+            ES6ModuleLoader.createNaiveLoader(
+                this, options.commonJSModulePathPrefix));
         cjs.process(null, root);
         JSModule m = cjs.getModule();
         if (m != null) {

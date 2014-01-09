@@ -129,7 +129,6 @@ public class CompilerTest extends TestCase {
         SourceFile.fromCode("gin.js", "require('missing')"));
     Compiler compiler = initCompilerForCommonJS(
         inputs, ImmutableList.of("module$gin"));
-    compiler.processAMDAndCommonJSModules();
 
     assertEquals(1, compiler.getErrorManager().getErrorCount());
     String error = compiler.getErrorManager().getErrors()[0].toString();

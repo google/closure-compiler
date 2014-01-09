@@ -31,7 +31,10 @@ public class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ProcessCommonJSModules(compiler, "foo/bar/", false);
+    return new ProcessCommonJSModules(
+        compiler,
+        ES6ModuleLoader.createNaiveLoader(compiler, "foo/bar/"),
+        false);
   }
 
   @Override
@@ -127,16 +130,6 @@ public class ProcessCommonJSModulesTest extends CompilerTestCase {
   }
 
   public void testModuleName() {
-    assertEquals("module$foo$baz",
-        ProcessCommonJSModules.toModuleName("./baz.js", "foo/bar.js"));
-    assertEquals("module$foo$baz_bar",
-        ProcessCommonJSModules.toModuleName("./baz-bar.js", "foo/bar.js"));
-    assertEquals("module$baz",
-        ProcessCommonJSModules.toModuleName("../baz.js", "foo/bar.js"));
-    assertEquals("module$baz",
-        ProcessCommonJSModules.toModuleName("../../baz.js", "foo/bar/abc.js"));
-    assertEquals("module$baz", ProcessCommonJSModules.toModuleName(
-        "../../../baz.js", "foo/bar/abc/xyz.js"));
     setFilename("foo/bar");
     test(
         "var name = require('name');",
@@ -149,17 +142,6 @@ public class ProcessCommonJSModulesTest extends CompilerTestCase {
         "var module$foo$bar = {};" +
         "goog.require('module$foo$name');" +
         "var name$$module$foo$bar = module$foo$name;");
-
-  }
-
-  public void testGuessModuleName() {
-    ProcessCommonJSModules pass = new ProcessCommonJSModules(null, "foo");
-    assertEquals("module$baz",
-        pass.guessCJSModuleName("foo/baz.js"));
-    assertEquals("module$baz",
-        pass.guessCJSModuleName("foo\\baz.js"));
-    assertEquals("module$bar$baz",
-        pass.guessCJSModuleName("foo\\bar\\baz.js"));
   }
 
   public void testSortInputs() throws Exception {

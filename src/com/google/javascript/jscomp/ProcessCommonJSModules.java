@@ -39,42 +39,47 @@ import java.util.regex.Pattern;
  * ordering.
  */
 public class ProcessCommonJSModules implements CompilerPass {
-  // According to the spec, the forward slash should be the delimite on
-  // all platforms.
-  private static final String MODULE_SLASH = "/";
-
-  public static final String DEFAULT_FILENAME_PREFIX = "." + MODULE_SLASH;
+  private static final String MODULE_SLASH = ES6ModuleLoader.MODULE_SLASH;
+  public static final String DEFAULT_FILENAME_PREFIX =
+      "." + ES6ModuleLoader.MODULE_SLASH;
 
   private static final String MODULE_NAME_SEPARATOR = "\\$";
   private static final String MODULE_NAME_PREFIX = "module$";
 
   private static final String EXPORTS = "exports";
 
-  private final AbstractCompiler compiler;
-  private final String filenamePrefix;
+  static final DiagnosticType LOAD_ERROR = DiagnosticType.error(
+      "JSC_ES6_MODULE_LOAD_ERROR",
+      "Failed to load module \"{0}\"");
+
+  private final Compiler compiler;
+  private final ES6ModuleLoader loader;
   private final boolean reportDependencies;
   private JSModule module;
 
-  ProcessCommonJSModules(AbstractCompiler compiler, String filenamePrefix) {
-    this(compiler, filenamePrefix, true);
+  ProcessCommonJSModules(Compiler compiler, ES6ModuleLoader loader) {
+    this(compiler, loader, true);
   }
 
-  ProcessCommonJSModules(AbstractCompiler compiler, String filenamePrefix,
+  ProcessCommonJSModules(Compiler compiler, ES6ModuleLoader loader,
       boolean reportDependencies) {
     this.compiler = compiler;
-    this.filenamePrefix = filenamePrefix.endsWith(MODULE_SLASH) ?
-        filenamePrefix : filenamePrefix + MODULE_SLASH;
+    this.loader = loader;
     this.reportDependencies = reportDependencies;
+  }
+
+  void process(CompilerInput input) {
+    compiler.putCompilerInput(input.getInputId(), input);
+    Node root = input.getAstRoot(compiler);
+    if (!compiler.hasHaltingErrors()) {
+      process(null, root);
+    }
   }
 
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal
         .traverse(compiler, root, new ProcessCommonJsModulesCallback());
-  }
-
-  String guessCJSModuleName(String filename) {
-    return toModuleName(normalizeSourceName(filename));
   }
 
   /**
@@ -94,40 +99,11 @@ public class ProcessCommonJSModules implements CompilerPass {
     return MODULE_NAME_PREFIX +
         filename.replaceAll("^\\." + Pattern.quote(MODULE_SLASH), "")
             .replaceAll(Pattern.quote(MODULE_SLASH), MODULE_NAME_SEPARATOR)
-            .replaceAll("\\.js$", "").replaceAll("-", "_");
-  }
-
-  /**
-   * Turn a filename into a moduleName with support for relative addressing
-   * with ./ and ../ based on currentFilename;
-   */
-  public static String toModuleName(String requiredFilename,
-      String currentFilename) {
-    requiredFilename = requiredFilename.replaceAll("\\.js$", "");
-    currentFilename = currentFilename.replaceAll("\\.js$", "");
-
-    if (requiredFilename.startsWith("." + MODULE_SLASH) ||
-        requiredFilename.startsWith(".." + MODULE_SLASH)) {
-      try {
-        requiredFilename = (new URI(currentFilename)).resolve(new URI(requiredFilename))
-            .toString();
-      } catch (URISyntaxException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    return toModuleName(requiredFilename);
-  }
-
-  private String normalizeSourceName(String filename) {
-    // The DOS command shell will normalize "/" to "\", so we have to
-    // wrestle it back.
-    filename = filename.replace("\\", "/");
-
-    if (filename.indexOf(filenamePrefix) == 0) {
-      filename = filename.substring(filenamePrefix.length());
-    }
-
-    return filename;
+            .replaceAll(Pattern.quote("\\"), MODULE_NAME_SEPARATOR)
+            .replaceAll("\\.js$", "")
+            .replaceAll("-", "_")
+            .replaceAll(":", "_")
+            .replaceAll("\\.", "");
   }
 
   /**
@@ -171,8 +147,15 @@ public class ProcessCommonJSModules implements CompilerPass {
      * to be a direct reference to name of require module.
      */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
-      String moduleName = toModuleName(require.getChildAtIndex(1).getString(),
-          normalizeSourceName(t.getSourceName()));
+      String requireName = require.getChildAtIndex(1).getString();
+      String loadAddress = loader.locate(requireName, t.getInput());
+      try {
+        loader.load(loadAddress);
+      } catch (ES6ModuleLoader.LoadFailedException e) {
+        t.makeError(require, LOAD_ERROR, requireName);
+      }
+
+      String moduleName = toModuleName(loadAddress);
       Node moduleRef = IR.name(moduleName).srcref(require);
       parent.replaceChild(require, moduleRef);
       Node script = getCurrentScriptNode(parent);
@@ -195,7 +178,8 @@ public class ProcessCommonJSModules implements CompilerPass {
           "ProcessCommonJSModules supports only one invocation per " +
           "CompilerInput / script node");
 
-      String moduleName = guessCJSModuleName(script.getSourceFileName());
+      String moduleName = toModuleName(
+          loader.getLoadAddress(t.getInput()));
 
       // Rename vars to not conflict in global scope.
       NodeTraversal.traverse(compiler, script, new SuffixVarsCallback(

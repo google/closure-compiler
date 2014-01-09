@@ -131,7 +131,7 @@ public class JSModule implements DependencyInfo, Serializable {
   /** Adds a dependency on another module. */
   public void addDependency(JSModule dep) {
     Preconditions.checkNotNull(dep);
-    Preconditions.checkState(dep != this);
+    Preconditions.checkState(dep != this, "Cannot add dependency on self", this);
     deps.add(dep);
   }
 
