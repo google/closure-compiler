@@ -378,6 +378,11 @@ public class DefaultPassConfig extends PassConfig {
   @Override
   protected List<PassFactory> getOptimizations() {
     List<PassFactory> passes = Lists.newArrayList();
+
+    // Gather property names in externs so they can be queried by the
+    // optimising passes.
+    passes.add(gatherExternProperties);
+
     passes.add(garbageCollectChecks);
 
     // TODO(nicksantos): The order of these passes makes no sense, and needs
@@ -2347,6 +2352,15 @@ public class DefaultPassConfig extends PassConfig {
           // TODO(johnlenz): make global instrumentation an option
           return new CoverageInstrumentationPass(
               compiler, CoverageReach.CONDITIONAL);
+        }
+      };
+
+  /** Extern property names gathering pass. */
+  final PassFactory gatherExternProperties =
+      new PassFactory("gatherExternProperties", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new GatherExternProperties(compiler);
         }
       };
 

@@ -31,6 +31,7 @@ public class MultiPassTest extends CompilerTestCase {
 
   public MultiPassTest() {
     enableNormalize();
+    enableGatherExternProperties();
   }
 
   @Override

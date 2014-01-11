@@ -38,17 +38,17 @@ import java.util.Set;
 class RemoveUnusedClassProperties
     implements CompilerPass, NodeTraversal.Callback {
   final AbstractCompiler compiler;
-  private boolean inExterns;
   private Set<String> used = Sets.newHashSet();
   private List<Node> candidates = Lists.newArrayList();
 
   RemoveUnusedClassProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
+    used.addAll(compiler.getExternProperties());
   }
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRoots(compiler, this, externs, root);
+    NodeTraversal.traverse(compiler, root, this);
     removeUnused();
   }
 
@@ -78,9 +78,6 @@ class RemoveUnusedClassProperties
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    if (n.isScript()) {
-      this.inExterns = n.getStaticSourceFile().isExtern();
-    }
     return true;
   }
 
@@ -89,8 +86,7 @@ class RemoveUnusedClassProperties
      switch (n.getType()) {
        case Token.GETPROP: {
          String propName = n.getLastChild().getString();
-         if (inExterns
-             || compiler.getCodingConvention().isExported(propName)
+         if (compiler.getCodingConvention().isExported(propName)
              || isPinningPropertyUse(n)
              || !isKnownClassProperty(n)) {
            used.add(propName);

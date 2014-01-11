@@ -29,6 +29,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -419,6 +420,18 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    *     returns null.
    */
   abstract Node ensureLibraryInjected(String resourceName);
+
+  /**
+   * Sets the names of the properties defined in externs.
+   * @param externProperties The set of property names defined in externs.
+   */
+  abstract void setExternProperties(Set<String> externProperties);
+
+  /**
+   * Gets the names of the properties defined in externs or null if
+   * GatherExternProperties pass was not run yet.
+   */
+  abstract Set<String> getExternProperties();
 
    /**
     * Stores the "new" Rhino parse tree for a given source file.

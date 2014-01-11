@@ -239,6 +239,8 @@ public class Compiler extends AbstractCompiler {
   private volatile double progress = 0.0;
   private String lastPassName;
 
+  private Set<String> externProperties = null;
+
   /**
    * Creates a Compiler that reports errors and warnings to its logger.
    */
@@ -2483,6 +2485,16 @@ public class Compiler extends AbstractCompiler {
     } else {
       progress = newProgress;
     }
+  }
+
+  @Override
+  void setExternProperties(Set<String> externProperties) {
+    this.externProperties = externProperties;
+  }
+
+  @Override
+  Set<String> getExternProperties() {
+    return externProperties;
   }
 
   /**

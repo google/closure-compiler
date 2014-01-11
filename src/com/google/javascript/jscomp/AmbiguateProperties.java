@@ -86,7 +86,7 @@ class AmbiguateProperties implements CompilerPass {
   private final Map<String, Property> propertyMap = Maps.newHashMap();
 
   /** Property names that don't get renamed */
-  private final Set<String> externedNames = Sets.newHashSet();
+  private final Set<String> externedNames;
 
   /** Names to which properties shouldn't be renamed, to avoid name conflicts */
   private final Set<String> quotedNames = Sets.newHashSet();
@@ -154,6 +154,8 @@ class AmbiguateProperties implements CompilerPass {
       addInvalidatingType(mis.typeA);
       addInvalidatingType(mis.typeB);
     }
+
+    externedNames = compiler.getExternProperties();
   }
 
   /**
@@ -190,7 +192,6 @@ class AmbiguateProperties implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, externs, new ProcessExterns());
     NodeTraversal.traverse(compiler, root, new ProcessProperties());
 
     Set<String> reservedNames =
@@ -425,27 +426,6 @@ class AmbiguateProperties implements CompilerPass {
     @Override
     public void setAnnotation(Annotation data) {
       annotation = data;
-    }
-  }
-
-  /** A traversal callback that collects externed property names. */
-  private class ProcessExterns extends AbstractPostOrderCallback {
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
-        case Token.GETPROP:
-          Node dest = n.getFirstChild().getNext();
-          externedNames.add(dest.getString());
-          break;
-        case Token.OBJECTLIT:
-          for (Node child = n.getFirstChild();
-               child != null;
-               child = child.getNext()) {
-            // names: STRING, GET, SET
-            externedNames.add(child.getString());
-          }
-          break;
-      }
     }
   }
 

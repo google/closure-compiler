@@ -33,6 +33,7 @@ public class InlinePropertiesTest extends CompilerTestCase {
     enableNormalize();
     enableTypeCheck(CheckLevel.WARNING);
     enableClosurePass();
+    enableGatherExternProperties();
   }
 
   @Override

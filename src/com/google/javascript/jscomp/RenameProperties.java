@@ -201,13 +201,13 @@ class RenameProperties implements CompilerPass {
     } else {
       this.affinityGraph = null;
     }
+    externedNames.addAll(compiler.getExternProperties());
   }
 
   @Override
   public void process(Node externs, Node root) {
     Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
 
-    NodeTraversal.traverse(compiler, externs, new ProcessExterns());
     NodeTraversal.traverse(compiler, root, new ProcessProperties());
 
     Set<String> reservedNames =
@@ -363,33 +363,6 @@ class RenameProperties implements CompilerPass {
       }
     }
     return new VariableMap(map.build());
-  }
-
-  // -------------------------------------------------------------------------
-
-  /**
-   * A traversal callback that collects externed property names.
-   */
-  private class ProcessExterns extends AbstractPostOrderCallback {
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
-        case Token.GETPROP:
-          Node dest = n.getFirstChild().getNext();
-          if (dest.isString()) {
-            externedNames.add(dest.getString());
-          }
-          break;
-        case Token.OBJECTLIT:
-          for (Node child = n.getFirstChild();
-               child != null;
-               child = child.getNext()) {
-            externedNames.add(child.getString());
-          }
-          break;
-      }
-    }
   }
 
 

@@ -69,6 +69,7 @@ public class InlineProperties implements CompilerPass {
   InlineProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
     buildInvalidatingTypeSet();
+    invalidateExternProperties();
   }
 
   // TODO(johnlenz): this is a direct copy of the invalidation code
@@ -95,6 +96,13 @@ public class InlineProperties implements CompilerPass {
     for (TypeMismatch mis : compiler.getTypeValidator().getMismatches()) {
       addInvalidatingType(mis.typeA);
       addInvalidatingType(mis.typeB);
+    }
+  }
+
+  private void invalidateExternProperties() {
+    // Invalidate properties defined in externs.
+    for (String name : compiler.getExternProperties()) {
+      props.put(name, INVALIDATED);
     }
   }
 
@@ -155,10 +163,9 @@ public class InlineProperties implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRoots(
-        compiler, new GatherCandidates(), externs, root);
-    NodeTraversal.traverseRoots(
-        compiler, new ReplaceCandidates(), externs, root);
+    // Find and replace the properties in non-extern AST.
+    NodeTraversal.traverse(compiler, root, new GatherCandidates());
+    NodeTraversal.traverse(compiler, root, new ReplaceCandidates());
   }
 
   class GatherCandidates extends AbstractPostOrderCallback {
@@ -169,10 +176,7 @@ public class InlineProperties implements CompilerPass {
       String propName = null;
       if (n.isGetProp()) {
         propName = n.getLastChild().getString();
-        if (t.getInput().isExtern()) {
-          // Any extern reference invalidates
-          invalidatingPropRef = true;
-        } else if (parent.isAssign()) {
+        if (parent.isAssign()) {
           invalidatingPropRef = !maybeCandidateDefinition(t, n, parent);
         } else if (NodeUtil.isLValue(n)) {
           // Other LValue references invalidate
@@ -186,15 +190,10 @@ public class InlineProperties implements CompilerPass {
         }
       } else if (n.isStringKey()) {
         propName = n.getString();
-        if (t.getInput().isExtern()) {
-          // Any extern reference invalidates
-          invalidatingPropRef = true;
-        } else {
-          // For now, any object literal key invalidates
-          // TODO(johnlenz): support prototype properties like:
-          //   foo.prototype = { a: 1, b: 2 };
-          invalidatingPropRef = true;
-        }
+        // For now, any object literal key invalidates
+        // TODO(johnlenz): support prototype properties like:
+        //   foo.prototype = { a: 1, b: 2 };
+        invalidatingPropRef = true;
       }
 
       if (invalidatingPropRef) {

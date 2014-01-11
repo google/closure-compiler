@@ -29,6 +29,7 @@ public class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
 
   public RemoveUnusedClassPropertiesTest() {
     super(EXTERNS);
+    enableGatherExternProperties();
   }
 
   @Override

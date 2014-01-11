@@ -41,6 +41,7 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
     enableNormalize();
     enableTypeCheck(CheckLevel.WARNING);
     enableClosurePass();
+    enableGatherExternProperties();
   }
 
   @Override

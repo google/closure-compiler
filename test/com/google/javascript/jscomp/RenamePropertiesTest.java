@@ -42,6 +42,7 @@ public class RenamePropertiesTest extends CompilerTestCase {
   public RenamePropertiesTest() {
     super(EXTERNS);
     enableNormalize();
+    enableGatherExternProperties();
   }
 
   @Override

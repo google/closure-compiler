@@ -69,6 +69,8 @@ public abstract class CompilerTestCase extends TestCase  {
   /** Whether to the test compiler pass before the type check. */
   protected boolean runTypeCheckAfterProcessing = false;
 
+  private boolean gatherExternPropertiesEnabled = false;
+
   /** Whether the Normalize pass runs before pass being tested. */
   private boolean normalizeEnabled = false;
 
@@ -326,6 +328,10 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   void enableComputeSideEffects() {
     computeSideEffects  = true;
+  }
+
+  void enableGatherExternProperties() {
+    gatherExternPropertiesEnabled = true;
   }
 
   /**
@@ -838,6 +844,10 @@ public abstract class CompilerTestCase extends TestCase  {
         if (markNoSideEffects && i == 0) {
           MarkNoSideEffectCalls mark = new MarkNoSideEffectCalls(compiler);
           mark.process(externsRoot, mainRoot);
+        }
+
+        if (gatherExternPropertiesEnabled && i == 0) {
+          (new GatherExternProperties(compiler)).process(externsRoot, mainRoot);
         }
 
         recentChange.reset();
