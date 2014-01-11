@@ -160,6 +160,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract TypeValidator getTypeValidator();
 
   /**
+   * Used only by the new type inference
+   */
+  abstract GlobalTypeInfo getSymbolTable();
+
+  abstract void setSymbolTable(GlobalTypeInfo symbolTable);
+
+  /**
    * Parses code for injecting.
    */
   abstract Node parseSyntheticCode(String code);

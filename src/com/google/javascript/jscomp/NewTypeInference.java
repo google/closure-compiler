@@ -128,13 +128,12 @@ public class NewTypeInference implements CompilerPass {
     this.envs = Maps.newHashMap();
     this.summaries = Maps.newHashMap();
     this.deferredChecks = Maps.newHashMap();
-    this.symbolTable = new GlobalTypeInfo(compiler);
   }
 
   @Override
   public void process(Node externs, Node root) {
     jsRoot = root;
-    symbolTable.prepareAst(externs, root);
+    symbolTable = compiler.getSymbolTable();
 
     // The type inference needs to know about the Array and RegExp types, in
     // order to handle array and regexp literals. This info comes from externs.

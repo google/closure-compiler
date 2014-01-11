@@ -55,7 +55,7 @@ import java.util.Set;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-class GlobalTypeInfo {
+class GlobalTypeInfo implements CompilerPass {
 
   static final DiagnosticType DUPLICATE_JSDOC = DiagnosticType.warning(
       "JSC_DUPLICATE_JSDOC",
@@ -136,8 +136,8 @@ class GlobalTypeInfo {
     return anonFunNames.get(n);
   }
 
-  // This method is the entry point
-  void prepareAst(Node externs, Node root) {
+  @Override
+  public void process(Node externs, Node root) {
     Preconditions.checkArgument(externs.isSyntheticBlock());
     Preconditions.checkArgument(root.isSyntheticBlock());
     globalScope = new Scope(root, null, new ArrayList<String>(), null);
@@ -176,6 +176,8 @@ class GlobalTypeInfo {
       warnings.add(JSError.make(
           root, RhinoErrorReporter.BAD_JSDOC_ANNOTATION, warningText));
     }
+
+    compiler.setSymbolTable(this);
   }
 
   /** Report all errors that must be checked at the end of GlobalTypeInfo */

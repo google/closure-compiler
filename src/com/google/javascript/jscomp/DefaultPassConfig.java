@@ -287,6 +287,7 @@ public class DefaultPassConfig extends PassConfig {
     checks.add(createEmptyPass("beforeTypeChecking"));
 
     if (options.useNewTypeInference) {
+      checks.add(symbolTableForNewTypeInference);
       checks.add(newTypeInference);
     }
 
@@ -1251,8 +1252,16 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
+  final PassFactory symbolTableForNewTypeInference =
+      new PassFactory("GlobalTypeInfo", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new GlobalTypeInfo(compiler);
+        }
+      };
+
   final PassFactory newTypeInference =
-      new PassFactory("newTypeInferencePassFactory", true) {
+      new PassFactory("NewTypeInference", true) {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new NewTypeInference(compiler);
