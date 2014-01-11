@@ -43,10 +43,48 @@ jasmine.createSpyObj = function(baseName, methodNames) {};
 
 
 /** @constructor */
+jasmine.TimeProvider = function() {};
+
+
+/**
+ * @param {Function} cb
+ * @param {number} time
+ * @return {string}
+ */
+jasmine.TimeProvider.prototype.setTimeout = function(cb, time) {};
+
+
+/**
+ * @param {Function} cb
+ * @param {number} time
+ * @return {string}
+ */
+jasmine.TimeProvider.prototype.setInterval = function(cb, time) {};
+
+
+/**
+ * @param {string} id
+ */
+jasmine.TimeProvider.prototype.clearTimeout = function(id) {};
+
+
+/**
+ * @param {string} id
+ */
+jasmine.TimeProvider.prototype.clearInterval = function(id) {};
+
+
+/**
+ * @type {number}
+ */
+jasmine.TimeProvider.prototype.nowMillis;
+
+
+/** @constructor */
 jasmine.Clock = function() {};
 
 
-/** @type {!jasmine.Clock} */
+/** @type {!jasmine.TimeProvider} */
 jasmine.Clock.installed;
 
 
@@ -68,6 +106,10 @@ jasmine.Matcher = function() {};
 
 /** @type {jasmine.Matcher} */
 jasmine.Matcher.prototype.not;
+
+
+/** @type {*} */
+jasmine.Matcher.prototype.actual;
 
 
 /** @param {*} value */
@@ -142,7 +184,10 @@ jasmine.Spec.prototype.fail = function(e) {};
 
 
 
-/** @constructor */
+/**
+ * @constructor
+ * @extends {Function}
+ */
 jasmine.Spy = function() {};
 
 
@@ -215,6 +260,18 @@ jasmine.Helper.prototype.message;
 jasmine.JsApiReporter = function() {};
 
 
+/** @type {!Array.<string>} */
+jasmine.JsApiReporter.prototype.messages;
+
+
+/** @type {boolean} */
+jasmine.JsApiReporter.prototype.finished;
+
+
+/** @return {!Array.<{id:string,name:string,type:string,children:!Array}>} id */
+jasmine.JsApiReporter.prototype.suites = function() {};
+
+
 /** @return {boolean} */
 jasmine.JsApiReporter.prototype.isInitialized = function() {};
 
@@ -233,6 +290,21 @@ jasmine.JsApiReporter.prototype.getReport = function() {};
 
 /** @return {number} */
 jasmine.JsApiReporter.prototype.getRunTime = function() {};
+
+
+/** @param {Object} runner */
+jasmine.JsApiReporter.prototype.reportRunnerStarting = function(runner) {};
+
+
+/** @return {Object} runner */
+jasmine.JsApiReporter.prototype.reportRunnerResults = function(runner) {};
+
+
+/**
+ * @param {string} id
+ * @return {{messages:Array,result:string}}
+ */
+jasmine.JsApiReporter.prototype.resultsForSpec = function(id) {};
 
 
 /** @constructor */
