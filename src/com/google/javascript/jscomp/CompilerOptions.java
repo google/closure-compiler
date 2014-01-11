@@ -103,6 +103,9 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   boolean inferTypes;
 
+  // The new type inference is a work in progress. Don't use.
+  boolean useNewTypeInference;
+
   /**
    * Configures the compiler to skip as many passes as possible.
    */
@@ -1646,6 +1649,14 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public boolean getInferTypes() {
     return inferTypes;
+  }
+
+  public boolean getNewTypeInference() {
+    return useNewTypeInference;
+  }
+
+  public void setNewTypeInference(boolean enable) {
+    useNewTypeInference = enable;
   }
 
   /**

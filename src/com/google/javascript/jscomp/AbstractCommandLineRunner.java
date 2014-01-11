@@ -354,6 +354,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.commonJSModulePathPrefix = config.commonJSModulePathPrefix;
     options.angularPass = config.angularPass;
     options.tracer = config.tracerMode;
+    options.useNewTypeInference = config.useNewTypeInference;
   }
 
   protected final A getCompiler() {
@@ -2015,6 +2016,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     CommandLineConfig setTracerMode(CompilerOptions.TracerMode tracerMode) {
       this.tracerMode = tracerMode;
+      return this;
+    }
+
+    private boolean useNewTypeInference = false;
+
+    CommandLineConfig setNewTypeInference(boolean useNewTypeInference) {
+      this.useNewTypeInference = useNewTypeInference;
       return this;
     }
   }

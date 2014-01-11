@@ -438,6 +438,10 @@ public class CommandLineRunner extends
     private CompilerOptions.TracerMode tracerMode =
         CompilerOptions.TracerMode.OFF;
 
+    @Option(name = "--new_type_inf",
+        usage = "In development new type inference pass. DO NOT USE!")
+    private boolean useNewTypeInference = false;
+
     @Argument
     private List<String> arguments = Lists.newArrayList();
 
@@ -798,7 +802,8 @@ public class CommandLineRunner extends
           .setTransformAMDToCJSModules(flags.transformAmdModules)
           .setWarningsWhitelistFile(flags.warningsWhitelistFile)
           .setAngularPass(flags.angularPass)
-          .setTracerMode(flags.tracerMode);
+          .setTracerMode(flags.tracerMode)
+          .setNewTypeInference(flags.useNewTypeInference);
     }
   }
 

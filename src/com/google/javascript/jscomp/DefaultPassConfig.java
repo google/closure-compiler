@@ -286,6 +286,10 @@ public class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass("beforeTypeChecking"));
 
+    if (options.useNewTypeInference) {
+      checks.add(newTypeInference);
+    }
+
     if (options.checkTypes || options.inferTypes) {
       checks.add(resolveTypes);
       checks.add(inferTypes);
@@ -835,8 +839,7 @@ public class DefaultPassConfig extends PassConfig {
   final PassFactory stripSideEffectProtection =
       new PassFactory("stripSideEffectProtection", true) {
     @Override
-    protected CompilerPass create(final AbstractCompiler
-        compiler) {
+    protected CompilerPass create(final AbstractCompiler compiler) {
       return new CheckSideEffects.StripProtection(compiler);
     }
   };
@@ -1242,6 +1245,14 @@ public class DefaultPassConfig extends PassConfig {
       };
     }
   };
+
+  final PassFactory newTypeInference =
+      new PassFactory("newTypeInferencePassFactory", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new NewTypeInference(compiler);
+        }
+      };
 
   final HotSwapPassFactory inferJsDocInfo =
       new HotSwapPassFactory("inferJsDocInfo", true) {
