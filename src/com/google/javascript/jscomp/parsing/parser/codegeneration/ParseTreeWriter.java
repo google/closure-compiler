@@ -104,17 +104,6 @@ public final class ParseTreeWriter extends ParseTreeVisitor {
   }
 
   @Override
-  public void visit(AwaitStatementTree tree) {
-    write(TokenType.AWAIT);
-    if (tree.identifier != null) {
-      write(tree.identifier);
-      write(TokenType.EQUAL);
-    }
-    visitAny(tree.expression);
-    write(TokenType.SEMI_COLON);
-  }
-
-  @Override
   protected void visit(BinaryOperatorTree tree) {
     visitAny(tree.left);
     write(tree.operator);
@@ -434,28 +423,6 @@ public final class ParseTreeWriter extends ParseTreeVisitor {
   }
 
   @Override
-  protected void visit(MixinTree tree) {
-    write(PredefinedName.MIXIN);
-    write(tree.name);
-    visitAny(tree.mixinResolves);
-    write(TokenType.SEMI_COLON);
-  }
-
-  @Override
-  protected void visit(MixinResolveTree tree) {
-    write(tree.from);
-    write(TokenType.COLON);
-    write(tree.to);
-  }
-
-  @Override
-  protected void visit(MixinResolveListTree tree) {
-    write(TokenType.OPEN_CURLY);
-    writeList(tree.resolves, TokenType.COMMA, false);
-    write(TokenType.CLOSE_CURLY);
-  }
-
-  @Override
   protected void visit(ModuleDefinitionTree tree) {
     write(PredefinedName.MODULE);
     write(tree.name);
@@ -595,15 +562,6 @@ public final class ParseTreeWriter extends ParseTreeVisitor {
   @Override
   protected void visit(ThisExpressionTree tree) {
     write(TokenType.THIS);
-  }
-
-  @Override
-  protected void visit(TraitDeclarationTree tree) {
-    write(PredefinedName.TRAIT);
-    write(tree.name);
-    write(TokenType.OPEN_CURLY);
-    visitList(tree.elements);
-    write(TokenType.CLOSE_CURLY);
   }
 
   @Override

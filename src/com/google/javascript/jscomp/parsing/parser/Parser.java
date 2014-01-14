@@ -100,7 +100,6 @@ public class Parser {
   }
 
   // ClassDeclaration
-  // TraitDeclaration
   // ModuleDeclaration
   // TODO: ImportDeclaration
   // TODO: ScriptBlock
@@ -109,7 +108,6 @@ public class Parser {
   /*
   private boolean peekScriptElement() {
     return peekClassDeclaration() ||
-            peekTraitDeclaration() ||
             peekModuleDeclaration() ||
             peekSourceElement();
   }
@@ -118,9 +116,6 @@ public class Parser {
   private ParseTree parseScriptElement() {
     if (peekClassDeclaration()) {
       return parseClassDeclaration();
-    }
-    if (peekTraitDeclaration()) {
-      return parseTraitDeclaration();
     }
     if (peekModuleDeclaration()) {
       return parseModuleDeclaration();
@@ -149,7 +144,6 @@ public class Parser {
   }
 
   // ClassDeclaration
-  // TraitDeclaration
   // ImportDeclaration
   // ExportDeclaration
   // ModuleDeclaration
@@ -158,7 +152,6 @@ public class Parser {
   // FunctionDeclaration
   private boolean peekModuleElement() {
     return peekClassDeclaration() ||
-           peekTraitDeclaration() ||
            peekImportDeclaration() ||
            peekExportDeclaration() ||
            peekModuleDeclaration() ||
@@ -259,7 +252,6 @@ public class Parser {
   // export  FunctionDeclaration
   // export  ConstStatement
   // export  ClassDeclaration
-  // export  TraitDeclaration
   // export  module  ModuleDefinition
   // TODO: export  module ModuleLoad (',' ModuleLoad)* ';'
   // TODO: export  ExportPath (',' ExportPath)* ';'
@@ -277,7 +269,6 @@ public class Parser {
       export = parseVariableStatement();
       break;
     case FUNCTION:
-    case POUND:
       export = parseFunctionDeclaration();
       break;
     case CLASS:
@@ -286,8 +277,6 @@ public class Parser {
     case IDENTIFIER:
       if (peekModuleDefinition()) {
         export = parseModuleDefinition();
-      } else if (peekTraitDeclaration()) {
-        export = parseTraitDeclaration();
       } else {
         throw new RuntimeException("UNDONE: export ModuleLoad | ExportPath");
       }
@@ -308,80 +297,6 @@ public class Parser {
 
   private ParseTree parseModuleDeclaration() {
     return parseModuleDefinition();
-  }
-
-  private boolean peekTraitDeclaration() {
-    return peekPredefinedString(PredefinedName.TRAIT);
-  }
-
-  private ParseTree parseTraitDeclaration() {
-    SourcePosition start = getTreeStartLocation();
-    eatId(); // trait
-    IdentifierToken name = eatId();
-    eat(TokenType.OPEN_CURLY);
-    ImmutableList<ParseTree> elements = parseTraitElements();
-    eat(TokenType.CLOSE_CURLY);
-    return new TraitDeclarationTree(getTreeLocation(start), name, elements);
-  }
-
-  private ImmutableList<ParseTree> parseTraitElements() {
-    ImmutableList.Builder<ParseTree> result = ImmutableList.<ParseTree>builder();
-
-    while (peekTraitElement()) {
-      result.add(parseTraitElement());
-    }
-
-    return result.build();
-  }
-
-  private boolean peekTraitElement() {
-    // TODO: require statement
-    // TODO: mixin statement
-    // TODO: access modifiers
-    switch (peekType()) {
-    case FUNCTION:
-    case POUND:
-    case IDENTIFIER:
-      return true;
-    default:
-      return false;
-    }
-  }
-
-  private ParseTree parseTraitElement() {
-    // TODO: fields?
-    // TODO: allow static in traits?
-    // TODO: access modifiers
-    if (peekGetAccessor(false)) {
-      return parseGetAccessor();
-    }
-    if (peekSetAccessor(false)) {
-      return parseSetAccessor();
-    }
-    if (peekMixin()) {
-      return parseMixin();
-    }
-    if (peekRequiresMember()) {
-      return parseRequiresMember();
-    }
-
-    return parseMethodDeclaration(false);
-  }
-
-  private boolean peekRequiresMember() {
-    return peekPredefinedString(PredefinedName.REQUIRES) && peek(1, TokenType.IDENTIFIER);
-  }
-
-  private ParseTree parseRequiresMember() {
-    SourcePosition start = getTreeStartLocation();
-    eatId(); // requires
-    IdentifierToken name = eatId();
-    eat(TokenType.SEMI_COLON);
-    return new RequiresMemberTree(getTreeLocation(start), name);
-  }
-
-  private boolean peekMixin() {
-    return peekPredefinedString(PredefinedName.MIXIN) && peek(1, TokenType.IDENTIFIER);
   }
 
   private boolean peekClassDeclaration() {
@@ -416,7 +331,6 @@ public class Parser {
   private boolean peekClassElement() {
     switch (peekType()) {
     case FUNCTION:
-    case POUND:
     case IDENTIFIER:
     case VAR:
     case CONST:
@@ -431,18 +345,11 @@ public class Parser {
     if (peekMethodDeclaration()){
       return parseMethodDeclaration(true);
     }
-    // TODO: access modifiers
     if (peekGetAccessor(true)) {
       return parseGetAccessor();
     }
     if (peekSetAccessor(true)) {
       return parseSetAccessor();
-    }
-    if (peekMixin()) {
-      return parseMixin();
-    }
-    if (peekRequiresMember()) {
-      return parseRequiresMember();
     }
 
     return parseFieldDeclaration();
@@ -476,44 +383,6 @@ public class Parser {
     eat(TokenType.SEMI_COLON);
     return new FieldDeclarationTree(
         getTreeLocation(start), isStatic, isConst, declarations.build());
-  }
-
-  private ParseTree parseMixin() {
-    SourcePosition start = getTreeStartLocation();
-    eatId(); // mixin
-    IdentifierToken name = eatId();
-    MixinResolveListTree mixinResolves = null;
-    if (peek(TokenType.OPEN_CURLY)) {
-      mixinResolves = parseMixinResolves();
-    }
-    eat(TokenType.SEMI_COLON);
-    return new MixinTree(getTreeLocation(start), name, mixinResolves);
-  }
-
-  private MixinResolveListTree parseMixinResolves() {
-    SourcePosition start = getTreeStartLocation();
-    ImmutableList.Builder<ParseTree> result = ImmutableList.<ParseTree>builder();
-
-    eat(TokenType.OPEN_CURLY);
-    while (peek(TokenType.IDENTIFIER)) {
-      result.add(parseMixinResolve());
-      if (null == eatOpt(TokenType.COMMA)){
-        break;
-      }
-    }
-    eat(TokenType.CLOSE_CURLY);
-
-    return new MixinResolveListTree(getTreeLocation(start), result.build());
-  }
-
-  private ParseTree parseMixinResolve() {
-    SourcePosition start = getTreeStartLocation();
-    // TODO: need distinguishing syntax for 'requires' resolves
-    // requires x,
-    IdentifierToken from = eatId();
-    eat(TokenType.COLON);
-    IdentifierToken to = eatId();
-    return new MixinResolveTree(getTreeLocation(start), from, to);
   }
 
   private ParseTree parseMethodDeclaration(boolean allowStatic) {
@@ -556,7 +425,8 @@ public class Parser {
   }
 
   private boolean peekFunction(int index) {
-    return peek(index, TokenType.FUNCTION) || peek(index, TokenType.POUND);
+    // TODO(johnlenz): short function syntax
+    return peek(index, TokenType.FUNCTION);
   }
 
   // 13 Function Definition
@@ -681,8 +551,6 @@ public class Parser {
     switch (peekType()) {
     case OPEN_CURLY:
       return parseBlock();
-    case AWAIT:
-      return parseAsyncStatement();
     case CONST:
     case VAR:
       return parseVariableStatement();
@@ -735,7 +603,6 @@ public class Parser {
   private boolean peekStatementStandard() {
     switch (peekType()) {
     case OPEN_CURLY:
-    case AWAIT:
     case VAR:
     case CONST:
     case SEMI_COLON:
@@ -1095,22 +962,6 @@ public class Parser {
     return new YieldStatementTree(getTreeLocation(start), expression);
   }
 
-  // Parkour: The async Statement
-  // TODO: async should be an expression, not a statement
-  // async [ identifier = ] expression;
-  private ParseTree parseAsyncStatement() {
-    SourcePosition start = getTreeStartLocation();
-    eat(TokenType.AWAIT);
-    IdentifierToken identifier = null;
-    if (peek(TokenType.IDENTIFIER) && peek(1, TokenType.EQUAL)) {
-      identifier = eatId();
-      eat(TokenType.EQUAL);
-    }
-    ParseTree expression = parseExpression();
-    eatPossibleImplicitSemiColon();
-    return new AwaitStatementTree(getTreeLocation(start), identifier, expression);
-  }
-
   // 12.10 The with Statement
   private ParseTree parseWithStatement() {
     SourcePosition start = getTreeStartLocation();
@@ -1213,9 +1064,9 @@ public class Parser {
     return new TryStatementTree(getTreeLocation(start), body, catchBlock, finallyBlock);
   }
 
-  private ParseTree parseCatch() {
+  private CatchTree parseCatch() {
     SourcePosition start = getTreeStartLocation();
-    ParseTree catchBlock;
+    CatchTree catchBlock;
     eat(TokenType.CATCH);
     eat(TokenType.OPEN_PAREN);
     IdentifierToken exceptionName = eatId();
@@ -1225,7 +1076,7 @@ public class Parser {
     return catchBlock;
   }
 
-  private ParseTree parseFinallyBlock() {
+  private FinallyTree parseFinallyBlock() {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.FINALLY);
     BlockTree finallyBlock = parseBlock();
@@ -2176,7 +2027,8 @@ public class Parser {
   private boolean peekImplicitSemiColon() {
     return getNextLine() > getLastLine()
         || peek(TokenType.SEMI_COLON)
-        || peek(TokenType.CLOSE_CURLY);
+        || peek(TokenType.CLOSE_CURLY)
+        || peek(TokenType.END_OF_FILE);
   }
 
   /**

@@ -39,7 +39,6 @@ public class ParseTreeTransformer {
     case ARGUMENT_LIST: return transform(tree.asArgumentList());
     case ARRAY_LITERAL_EXPRESSION: return transform(tree.asArrayLiteralExpression());
     case ARRAY_PATTERN: return transform(tree.asArrayPattern());
-    case AWAIT_STATEMENT: return transform(tree.asAsyncStatement());
     case BINARY_OPERATOR: return transform(tree.asBinaryOperator());
     case BLOCK: return transform(tree.asBlock());
     case BREAK_STATEMENT: return transform(tree.asBreakStatement());
@@ -76,9 +75,6 @@ public class ParseTreeTransformer {
     case MEMBER_EXPRESSION: return transform(tree.asMemberExpression());
     case MEMBER_LOOKUP_EXPRESSION: return transform(tree.asMemberLookupExpression());
     case MISSING_PRIMARY_EXPRESSION: return transform(tree.asMissingPrimaryExpression());
-    case MIXIN: return transform(tree.asMixin());
-    case MIXIN_RESOLVE: return transform(tree.asMixinResolve());
-    case MIXIN_RESOLVE_LIST: return transform(tree.asMixinResolveList());
     case MODULE_DEFINITION: return transform(tree.asModuleDefinition());
     case NEW_EXPRESSION: return transform(tree.asNewExpression());
     case NULL: return transform(tree.asNull());
@@ -99,7 +95,6 @@ public class ParseTreeTransformer {
     case SWITCH_STATEMENT: return transform(tree.asSwitchStatement());
     case THIS_EXPRESSION: return transform(tree.asThisExpression());
     case THROW_STATEMENT: return transform(tree.asThrowStatement());
-    case TRAIT_DECLARATION: return transform(tree.asTraitDeclaration());
     case TRY_STATEMENT: return transform(tree.asTryStatement());
     case UNARY_EXPRESSION: return transform(tree.asUnaryExpression());
     case VARIABLE_DECLARATION: return transform(tree.asVariableDeclaration());
@@ -189,14 +184,6 @@ public class ParseTreeTransformer {
       return tree;
     }
     return createArrayPattern(elements);
-  }
-
-  protected ParseTree transform(AwaitStatementTree tree) {
-    ParseTree expression = transformAny(tree.expression);
-    if (tree.expression == expression) {
-      return tree;
-    }
-    return new AwaitStatementTree(null, tree.identifier, expression);
   }
 
   protected ParseTree transform(BinaryOperatorTree tree) {
@@ -472,26 +459,6 @@ public class ParseTreeTransformer {
     throw new RuntimeException("Should never transform trees that had errors during parse");
   }
 
-  protected ParseTree transform(MixinTree tree) {
-    MixinResolveListTree mixinResolves = (MixinResolveListTree) transformAny(tree.mixinResolves);
-    if (mixinResolves == tree.mixinResolves) {
-      return tree;
-    }
-    return createMixin(tree.name, mixinResolves);
-  }
-
-  protected ParseTree transform(MixinResolveTree tree) {
-    return tree;
-  }
-
-  protected ParseTree transform(MixinResolveListTree tree) {
-    ImmutableList<ParseTree> resolves = transformList(tree.resolves);
-    if (resolves == tree.resolves) {
-      return tree;
-    }
-    return createMixinResolveList(resolves);
-  }
-
   protected ParseTree transform(ModuleDefinitionTree tree) {
     ImmutableList<ParseTree> elements = transformList(tree.elements);
     if (elements == tree.elements) {
@@ -634,14 +601,6 @@ public class ParseTreeTransformer {
       return tree;
     }
     return createThrowStatement(value);
-  }
-
-  protected ParseTree transform(TraitDeclarationTree tree) {
-    ImmutableList<ParseTree> elements = transformList(tree.elements);
-    if (elements == tree.elements) {
-      return tree;
-    }
-    return createTraitDeclaration(tree.name, elements);
   }
 
   protected ParseTree transform(TryStatementTree tree) {

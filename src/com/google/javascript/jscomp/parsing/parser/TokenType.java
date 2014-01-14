@@ -134,7 +134,6 @@ public enum TokenType {
 
   // Harmony extensions
   SPREAD("..."),
-  AWAIT(),
   ;
 
   public final String value;

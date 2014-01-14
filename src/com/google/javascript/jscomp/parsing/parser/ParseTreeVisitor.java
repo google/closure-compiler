@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * A base class for traversing a ParseTree in top down (pre-Order) traversal.
  *
- * A node is visited before its children. Derived classes may (but are not obligated) to
+ * A node is visited before its children. Derived classes may (but are not obligated to)
  * override the specific visit(XTree) methods to add custom processing for specific ParseTree
  * types. An override of a visit(XTree) method is responsible for visiting its children.
  */
@@ -38,7 +38,6 @@ public class ParseTreeVisitor {
     case ARGUMENT_LIST: visit(tree.asArgumentList()); break;
     case ARRAY_LITERAL_EXPRESSION: visit(tree.asArrayLiteralExpression()); break;
     case ARRAY_PATTERN: visit(tree.asArrayPattern()); break;
-    case AWAIT_STATEMENT: visit(tree.asAsyncStatement()); break;
     case BINARY_OPERATOR: visit(tree.asBinaryOperator()); break;
     case BLOCK: visit(tree.asBlock()); break;
     case BREAK_STATEMENT: visit(tree.asBreakStatement()); break;
@@ -75,9 +74,6 @@ public class ParseTreeVisitor {
     case MEMBER_EXPRESSION: visit(tree.asMemberExpression()); break;
     case MEMBER_LOOKUP_EXPRESSION: visit(tree.asMemberLookupExpression()); break;
     case MISSING_PRIMARY_EXPRESSION: visit(tree.asMissingPrimaryExpression()); break;
-    case MIXIN: visit(tree.asMixin()); break;
-    case MIXIN_RESOLVE: visit(tree.asMixinResolve()); break;
-    case MIXIN_RESOLVE_LIST: visit(tree.asMixinResolveList()); break;
     case MODULE_DEFINITION: visit(tree.asModuleDefinition()); break;
     case NEW_EXPRESSION: visit(tree.asNewExpression()); break;
     case OBJECT_LITERAL_EXPRESSION: visit(tree.asObjectLiteralExpression()); break;
@@ -97,7 +93,6 @@ public class ParseTreeVisitor {
     case SWITCH_STATEMENT: visit(tree.asSwitchStatement()); break;
     case THIS_EXPRESSION: visit(tree.asThisExpression()); break;
     case THROW_STATEMENT: visit(tree.asThrowStatement()); break;
-    case TRAIT_DECLARATION: visit(tree.asTraitDeclaration()); break;
     case TRY_STATEMENT: visit(tree.asTryStatement()); break;
     case UNARY_EXPRESSION: visit(tree.asUnaryExpression()); break;
     case VARIABLE_DECLARATION: visit(tree.asVariableDeclaration()); break;
@@ -130,10 +125,6 @@ public class ParseTreeVisitor {
     for (ParseTree element : tree.elements) {
       visitAny(element);
     }
-  }
-
-  protected void visit(AwaitStatementTree tree) {
-    visitAny(tree.expression);
   }
 
   protected void visit(BinaryOperatorTree tree) {
@@ -291,17 +282,6 @@ public class ParseTreeVisitor {
   protected void visit(MissingPrimaryExpressionTree tree) {
   }
 
-  protected void visit(MixinTree tree) {
-    visitAny(tree.mixinResolves);
-  }
-
-  protected void visit(MixinResolveTree tree) {
-  }
-
-  protected void visit(MixinResolveListTree tree) {
-    visitList(tree.resolves);
-  }
-
   protected void visit(ModuleDefinitionTree tree) {
     visitList(tree.elements);
   }
@@ -377,10 +357,6 @@ public class ParseTreeVisitor {
 
   protected void visit(ThrowStatementTree tree) {
     visitAny(tree.value);
-  }
-
-  protected void visit(TraitDeclarationTree tree) {
-    visitList(tree.elements);
   }
 
   protected void visit(TryStatementTree tree) {

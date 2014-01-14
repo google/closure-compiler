@@ -135,11 +135,6 @@ public class ParseTreeValidator extends ParseTreeVisitor {
   }
 
   @Override
-  public void visit(AwaitStatementTree tree) {
-    checkVisit(tree.expression.isExpression(), tree.expression, "async must be expression");
-  }
-
-  @Override
   protected void visit(BinaryOperatorTree tree) {
     switch (tree.operator.type) {
     // assignment
@@ -253,7 +248,6 @@ public class ParseTreeValidator extends ParseTreeVisitor {
       case FUNCTION_DECLARATION:
       case GET_ACCESSOR:
       case SET_ACCESSOR:
-      case MIXIN:
       case REQUIRES_MEMBER:
       case FIELD_DECLARATION:
         break;
@@ -303,7 +297,6 @@ public class ParseTreeValidator extends ParseTreeVisitor {
     case FUNCTION_DECLARATION:
     case MODULE_DEFINITION:
     case CLASS_DECLARATION:
-    case TRAIT_DECLARATION:
       break;
     default:
         fail(tree.declaration, "expected valid export tree");
@@ -456,22 +449,13 @@ public class ParseTreeValidator extends ParseTreeVisitor {
   }
 
   @Override
-  protected void visit(MixinResolveListTree tree) {
-    for (ParseTree resolve : tree.resolves) {
-      check(resolve.type == ParseTreeType.MIXIN_RESOLVE, resolve,
-          "mixin resolve expected");
-    }
-  }
-
-  @Override
   protected void visit(ModuleDefinitionTree tree) {
     for (ParseTree element : tree.elements) {
       check((element.isStatement() && element.type != ParseTreeType.BLOCK) ||
             element.type == ParseTreeType.CLASS_DECLARATION ||
             element.type == ParseTreeType.EXPORT_DECLARATION ||
             element.type == ParseTreeType.IMPORT_DECLARATION ||
-            element.type == ParseTreeType.MODULE_DEFINITION ||
-            element.type == ParseTreeType.TRAIT_DECLARATION,
+            element.type == ParseTreeType.MODULE_DEFINITION,
             element,
             "module element expected");
     }
@@ -539,7 +523,6 @@ public class ParseTreeValidator extends ParseTreeVisitor {
     for (ParseTree sourceElement : tree.sourceElements) {
       checkVisit(sourceElement.isSourceElement()
           || sourceElement.type == ParseTreeType.CLASS_DECLARATION
-          || sourceElement.type == ParseTreeType.TRAIT_DECLARATION
           || sourceElement.type == ParseTreeType.MODULE_DEFINITION,
           sourceElement,
           "global source element expected");
@@ -586,23 +569,6 @@ public class ParseTreeValidator extends ParseTreeVisitor {
         checkVisit(caseClause.type == ParseTreeType.CASE_CLAUSE,
             caseClause, "case or default clause expected");
       }
-    }
-  }
-
-  @Override
-  protected void visit(TraitDeclarationTree tree) {
-    for (ParseTree element : tree.elements) {
-      switch (element.type) {
-      case FUNCTION_DECLARATION:
-      case GET_ACCESSOR:
-      case SET_ACCESSOR:
-      case MIXIN:
-      case REQUIRES_MEMBER:
-        break;
-      default:
-        fail(element, "trait element expected");
-      }
-      visitAny(element);
     }
   }
 

@@ -551,14 +551,6 @@ public final class ParseTreeFactory {
     return createMemberExpression(createThisExpression(), memberName);
   }
 
-  public static MixinTree createMixin(IdentifierToken name, MixinResolveListTree mixinResolves) {
-    return new MixinTree(null, name, mixinResolves);
-  }
-
-  public static MixinResolveListTree createMixinResolveList(ImmutableList<ParseTree> resolves) {
-    return new MixinResolveListTree(null, resolves);
-  }
-
   public static NewExpressionTree createNewExpression(
       ParseTree operand, ArgumentListTree arguments) {
     return new NewExpressionTree(null, operand, arguments);
@@ -664,11 +656,6 @@ public final class ParseTreeFactory {
 
   public static ThrowStatementTree createThrowStatement(ParseTree value) {
     return new ThrowStatementTree(null, value);
-  }
-
-  public static TraitDeclarationTree createTraitDeclaration(
-      IdentifierToken name, ImmutableList<ParseTree> elements) {
-    return new TraitDeclarationTree(null, name, elements);
   }
 
   public static TryStatementTree createTryFinallyStatement(

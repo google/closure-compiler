@@ -52,7 +52,6 @@ public class ParseTree {
   public ArrayLiteralExpressionTree asArrayLiteralExpression() {
     return (ArrayLiteralExpressionTree) this; }
   public ArrayPatternTree asArrayPattern() { return (ArrayPatternTree) this; }
-  public AwaitStatementTree asAsyncStatement() { return (AwaitStatementTree) this; }
   public BinaryOperatorTree asBinaryOperator() { return (BinaryOperatorTree) this; }
   public BlockTree asBlock() { return (BlockTree) this; }
   public BreakStatementTree asBreakStatement() { return (BreakStatementTree) this; }
@@ -93,9 +92,6 @@ public class ParseTree {
     return (MemberLookupExpressionTree) this; }
   public MissingPrimaryExpressionTree asMissingPrimaryExpression() {
     return (MissingPrimaryExpressionTree) this; }
-  public MixinTree asMixin() { return (MixinTree) this; }
-  public MixinResolveTree asMixinResolve() { return (MixinResolveTree) this; }
-  public MixinResolveListTree asMixinResolveList() { return (MixinResolveListTree) this; }
   public ModuleDefinitionTree asModuleDefinition() { return (ModuleDefinitionTree) this; }
   public NewExpressionTree asNewExpression() { return (NewExpressionTree) this; }
   public NullTree asNull() { return (NullTree) this; }
@@ -119,7 +115,6 @@ public class ParseTree {
   public SwitchStatementTree asSwitchStatement() { return (SwitchStatementTree) this; }
   public ThisExpressionTree asThisExpression() { return (ThisExpressionTree) this; }
   public ThrowStatementTree asThrowStatement() { return (ThrowStatementTree) this; }
-  public TraitDeclarationTree asTraitDeclaration() { return (TraitDeclarationTree) this; }
   public TryStatementTree asTryStatement() { return (TryStatementTree) this; }
   public UnaryExpressionTree asUnaryExpression() { return (UnaryExpressionTree) this; }
   public VariableDeclarationListTree asVariableDeclarationList() {
@@ -265,7 +260,6 @@ public class ParseTree {
   public boolean isStatementStandard() {
     switch (this.type) {
     case BLOCK:
-    case AWAIT_STATEMENT:
     case VARIABLE_STATEMENT:
     case EMPTY_STATEMENT:
     case EXPRESSION_STATEMENT:

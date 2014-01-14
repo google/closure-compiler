@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 The Closure Compiler Authors.
+ * Copyright 2014 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,23 @@
 
 package com.google.javascript.jscomp.parsing.parser.trees;
 
-import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-public class AwaitStatementTree extends ParseTree {
-
-  public final IdentifierToken identifier;
-  public final ParseTree expression;
-
-  public AwaitStatementTree(SourceRange location,
-      IdentifierToken identifier, ParseTree expression) {
-    super(ParseTreeType.AWAIT_STATEMENT, location);
-    this.identifier = identifier;
-    this.expression = expression;
+/** placeholder class */
+public class Comment {
+  public static enum Type {
+    BLOCK,
+    LINE,
+    JSDOC
   }
 
+  public final String value;
+  public final SourceRange location;
+  public final Type type;
+
+  public Comment(String value, SourceRange location, Type type) {
+    this.value = value;
+    this.location = location;
+    this.type = type;
+  }
 }
