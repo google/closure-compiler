@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
@@ -95,11 +94,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
   // All the real NameInfo for prototype properties, hashed by the name
   // of the property that they represent.
-  private final Map<String, NameInfo> propertyNameInfo = Maps.newHashMap();
+  private final Map<String, NameInfo> propertyNameInfo = Maps.newLinkedHashMap();
 
   // All the NameInfo for global functions, hashed by the name of the
   // global variable that it's assigned to.
-  private final Map<String, NameInfo> varNameInfo = Maps.newHashMap();
+  private final Map<String, NameInfo> varNameInfo = Maps.newLinkedHashMap();
 
   /**
    * Creates a new pass for analyzing prototype properties.
@@ -154,7 +153,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     FixedPointGraphTraversal<NameInfo, JSModule> t =
         FixedPointGraphTraversal.newTraversal(new PropagateReferences());
     t.computeFixedPoint(symbolGraph,
-        Sets.newHashSet(externNode, globalNode));
+        ImmutableSet.of(externNode, globalNode));
   }
 
   /**
@@ -558,7 +557,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     JSModule getModule();
   }
 
-  private enum SymbolType {
+  private static enum SymbolType {
     PROPERTY,
     VAR;
   }

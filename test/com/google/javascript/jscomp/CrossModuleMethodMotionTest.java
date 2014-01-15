@@ -265,13 +265,13 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
          new String[] {
              STUB_DECLARATIONS +
              "function Foo() {}" +
-             "Foo.prototype.baz = JSCompiler_stubMethod(1);",
+             "Foo.prototype.baz = JSCompiler_stubMethod(0);",
              // Module 2
-             "Foo.prototype.callBaz = JSCompiler_stubMethod(0);",
+             "Foo.prototype.callBaz = JSCompiler_stubMethod(1);",
              // Module 3
-             "Foo.prototype.baz = JSCompiler_unstubMethod(1, function() {});" +
              "Foo.prototype.callBaz = " +
-             "  JSCompiler_unstubMethod(0, function() { this.baz(); });" +
+             "  JSCompiler_unstubMethod(1, function() { this.baz(); });" +
+             "Foo.prototype.baz = JSCompiler_unstubMethod(0, function() {});" +
              "(new Foo).callBaz()"
          });
   }
