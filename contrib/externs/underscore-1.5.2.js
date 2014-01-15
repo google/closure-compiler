@@ -292,7 +292,7 @@ _.indexBy = function(obj, iterator, opt_context) {};
  * @param {Object.<?, VALUE>|Array.<VALUE>} obj
  * @param {string|function(this:CONTEXT, VALUE, ?, ?) : ?} iterator
  * @param {CONTEXT=} opt_context
- * @return {!Object.<?,Number>}
+ * @return {!Object.<?, number>}
  * @template CONTEXT, VALUE
  */
 _.countBy = function(obj, iterator, opt_context) {};
