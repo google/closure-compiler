@@ -785,7 +785,8 @@ public class NewTypeInference implements CompilerPass {
           // but that's not necessarily a type error.
           JSType preciseType = inferredType.specialize(specializedType);
           println(varName, "'s preciseType: ", preciseType);
-          if (currentScope.isUndeclaredFormal(varName) &&
+          if (!preciseType.isBottom() &&
+              currentScope.isUndeclaredFormal(varName) &&
               requiredType.hasNonScalar()) {
             // In the bwd direction, we may infer a loose type and then join w/
             // top and forget it. That's why we also loosen types going fwd.
@@ -865,8 +866,9 @@ public class NewTypeInference implements CompilerPass {
         ctorPair = analyzeExprFwd(ctor, objPair.env, JSType.topFunction());
         JSType ctorType = ctorPair.type;
         FunctionType ctorFunType = ctorType.getFunType();
-        if (!ctorType.isSubtypeOf(JSType.topFunction()) ||
-            !ctorFunType.isConstructor()) {
+        if (!ctorType.isUnknown() &&
+            (!ctorType.isSubtypeOf(JSType.topFunction()) ||
+                !ctorFunType.isConstructor())) {
           warnInvalidOperand(
               ctor, Token.INSTANCEOF, "a constructor function", ctorType);
         }
@@ -1321,9 +1323,12 @@ public class NewTypeInference implements CompilerPass {
     recvType = pair.type;
     // The warning depends on whether we are testing for the existence of a
     // property.
-    if ((specializedType.isTruthy() || specializedType.isFalsy()) ?
-        JSType.BOTTOM.equals(JSType.meet(recvType, JSType.TOP_OBJECT)) :
-        !recvType.isSubtypeOf(JSType.TOP_OBJECT)) {
+    boolean isNotAnObject =
+        JSType.BOTTOM.equals(JSType.meet(recvType, JSType.TOP_OBJECT));
+    boolean mayNotBeAnObject = !recvType.isSubtypeOf(JSType.TOP_OBJECT);
+    if (isNotAnObject ||
+        (!specializedType.isTruthy() && !specializedType.isFalsy() &&
+            mayNotBeAnObject)) {
       warnings.add(JSError.make(
           receiver, PROPERTY_ACCESS_ON_NONOBJECT, pname, recvType.toString()));
       return new EnvTypePair(pair.env, requiredType);
@@ -1859,7 +1864,7 @@ public class NewTypeInference implements CompilerPass {
     return env.putType(varName, type);
   }
 
-  class LValueResult {
+  private class LValueResult {
     TypeEnv env;
     JSType type;
     JSType declType;
@@ -1897,7 +1902,8 @@ public class NewTypeInference implements CompilerPass {
             currentScope.getDeclaredTypeOf(varName),
             varType.hasNonScalar() ? varName : null);
       }
-      case Token.NEW: {
+      case Token.NEW:
+      case Token.CALL: {
         EnvTypePair pair = analyzeExprFwd(expr, inEnv, type);
         return new LValueResult(pair.env, pair.type, null, null);
       }
@@ -1960,7 +1966,8 @@ public class NewTypeInference implements CompilerPass {
         return new LValueResult(pair.env, pair.type, declType,
             pair.type.hasNonScalar() ? name : null);
       }
-      case Token.NEW: {
+      case Token.NEW:
+      case Token.CALL: {
         EnvTypePair pair = analyzeExprBwd(expr, outEnv, type);
         return new LValueResult(pair.env, pair.type, null, null);
       }

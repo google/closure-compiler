@@ -367,7 +367,7 @@ public class JSType {
   }
 
   public JSType getProp(String qName) {
-    if (isUnknown()) {
+    if (isBottom() || isUnknown()) {
       return UNKNOWN;
     }
     Preconditions.checkState(objs != null);
@@ -473,6 +473,10 @@ public class JSType {
         }
         if (tags == 0) { // Found all types in the union
           return Joiner.on("|").join(types);
+        } else if (tags == TRUTHY_MASK) {
+          return "truthy";
+        } else if (tags == FALSY_MASK) {
+          return "falsy";
         } else {
           return "Unrecognized type: " + tags;
         }
