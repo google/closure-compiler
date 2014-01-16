@@ -7199,6 +7199,31 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "var map;");
   }
 
+  public void testBug12441160() throws Exception {
+    testTypes(
+        "/** @param {string} a */ \n" +
+        "function use(a) {};\n" +
+        "/**\n" +
+        " * @param {function(this:THIS)} fn\n" +
+        " * @param {THIS} context \n" +
+        " * @constructor\n" +
+        " * @template THIS\n" +
+        " */\n" +
+        "var P = function(fn, context) {}\n" +
+        "\n" +
+        "/** @constructor */\n" +
+        "function C() { /** @type {number} */ this.a = 1; }\n" +
+        "\n" +
+        "/** @return {P} */ \n" +
+        "C.prototype.method = function() {\n" +
+        "   return new P(function() { use(this.a); }, this);\n" +
+        "};\n" +
+        "\n",
+        "actual parameter 1 of use does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
   public void testTypedefBeforeUse() throws Exception {
     testTypes(
         "/** @typedef {Object.<string, number>} */" +

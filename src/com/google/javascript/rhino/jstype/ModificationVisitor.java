@@ -95,8 +95,7 @@ public class ModificationVisitor implements Visitor<JSType> {
       return type;
     }
 
-    // TODO(johnlenz): remove this simplifying assumption...
-    if (!type.isOrdinaryFunction()) {
+    if (!type.isOrdinaryFunction() && !type.isConstructor()) {
       return type;
     }
 
@@ -131,11 +130,13 @@ public class ModificationVisitor implements Visitor<JSType> {
     }
 
     if (changed) {
-      FunctionBuilder builder = new FunctionBuilder(registry);
-      builder.withParams(paramBuilder);
-      builder.withReturnType(afterReturn);
-      builder.withTypeOfThis(afterThis);
-      builder.withTemplateKeys(type.getTemplateTypeMap().getUnfilledTemplateKeys());
+      FunctionBuilder builder = new FunctionBuilder(registry)
+          .setIsConstructor(type.isConstructor())
+          .withParams(paramBuilder)
+          .withReturnType(afterReturn)
+          .withTypeOfThis(afterThis)
+          .withTemplateKeys(
+              type.getTemplateTypeMap().getUnfilledTemplateKeys());
       return builder.build();
     }
 
