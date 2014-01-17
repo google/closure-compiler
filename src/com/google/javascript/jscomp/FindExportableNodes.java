@@ -118,6 +118,8 @@ class FindExportableNodes extends AbstractPostOrderCallback {
           break;
 
         case Token.STRING_KEY:
+        case Token.GETTER_DEF:
+        case Token.SETTER_DEF:
           if (allowLocalExports) {
             export = n.getString();
             context = new GenerateNodeContext(n, Mode.EXTERN);
@@ -128,10 +130,13 @@ class FindExportableNodes extends AbstractPostOrderCallback {
       if (export != null) {
         exports.put(export, context);
       } else {
-        if (allowLocalExports) {
-          compiler.report(t.makeError(n, EXPORT_ANNOTATION_NOT_ALLOWED));
-        } else {
-          compiler.report(t.makeError(n, NON_GLOBAL_ERROR));
+        // Don't produce extra warnings for functions values of object literals
+        if (!n.isFunction() || !NodeUtil.isObjectLitKey(parent)) {
+          if (allowLocalExports) {
+            compiler.report(t.makeError(n, EXPORT_ANNOTATION_NOT_ALLOWED));
+          } else {
+            compiler.report(t.makeError(n, NON_GLOBAL_ERROR));
+          }
         }
       }
     }
