@@ -2010,6 +2010,10 @@ chrome.identity.launchWebAuthFlow = function(details, callback) {};
 chrome.identity.WebAuthFlowDetails;
 
 
+/** @type {ChromeEvent} */
+chrome.identity.onSignInChanged;
+
+
 /**
  * @const
  * @see http://code.google.com/chrome/extensions/input.ime.html
