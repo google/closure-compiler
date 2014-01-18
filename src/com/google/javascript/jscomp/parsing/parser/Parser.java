@@ -66,19 +66,16 @@ public class Parser {
   private final ErrorReporter errorReporter;
   private Token lastToken;
   private final Config config;
+  private final CommentRecorder commentRecorder = new CommentRecorder();
 
   public Parser(Config config, ErrorReporter errorReporter, SourceFile source, int offset) {
-    this(config, errorReporter, new Scanner(errorReporter, source, offset));
+    this.config = config;
+    this.errorReporter = errorReporter;
+    this.scanner = new Scanner(errorReporter, commentRecorder, source, offset);
   }
 
   public Parser(Config config, ErrorReporter errorReporter, SourceFile source) {
-    this(config, errorReporter, new Scanner(errorReporter, source));
-  }
-
-  private Parser(Config config, ErrorReporter errorReporter, Scanner scanner) {
-    this.config = config;
-    this.scanner = scanner;
-    this.errorReporter = errorReporter;
+    this(config, errorReporter, source, 0);
   }
 
   public static class Config {
@@ -89,6 +86,20 @@ public class Parser {
     }
   }
 
+  private static class CommentRecorder implements Scanner.CommentRecorder{
+    private ImmutableList.Builder<Comment> comments =
+        ImmutableList.<Comment>builder();
+    @Override
+    public void recordComment(
+        Comment.Type type, SourceRange range, String value) {
+      comments.add(new Comment(value, range, type));
+    }
+
+    private ImmutableList<Comment> getComments() {
+      return comments.build();
+    }
+  }
+
   // 14 Program
   public ProgramTree parseProgram() {
     Timer t = new Timer("Parse Program");
@@ -96,7 +107,8 @@ public class Parser {
     ImmutableList<ParseTree> sourceElements = parseGlobalSourceElements();
     eat(TokenType.END_OF_FILE);
     t.end();
-    return new ProgramTree(getTreeLocation(start), sourceElements);
+    return new ProgramTree(
+        getTreeLocation(start), sourceElements, commentRecorder.getComments());
   }
 
   private ImmutableList<ParseTree> parseGlobalSourceElements() {

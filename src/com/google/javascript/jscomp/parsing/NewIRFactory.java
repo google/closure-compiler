@@ -1172,7 +1172,8 @@ class NewIRFactory {
     @Override
     Node processStringLiteral(LiteralExpressionTree literalTree) {
       LiteralToken token = literalTree.literalToken.asLiteral();
-      String value = token.value;
+      String value = normalizeString(token.value);
+
       Node n = newStringNode(value);
       if (value.indexOf('\u000B') != -1) {
         // NOTE(nicksantos): In JavaScript, there are 3 ways to
@@ -1197,6 +1198,100 @@ class NewIRFactory {
         }
       }
       return n;
+    }
+
+    private String normalizeString(String value) {
+      StringBuilder result = new StringBuilder();
+      int start = 1; // skip the leading quote
+      int cur = value.indexOf('\\');
+      if (cur == -1) {
+        // short circuit no escapes.
+        return value;
+      }
+      while (cur != -1) {
+        if (cur - start > 0) {
+          result.append(value.substring(start, cur));
+        }
+        cur += 1; // skip the escape char.
+        char c = value.charAt(cur);
+        switch (c) {
+          case '\'':
+          case '"':
+          case '\\':
+            result.append(c);
+            break;
+          case 'b':
+            result.append('\b');
+            break;
+          case 'f':
+            result.append('\f');
+            break;
+          case 'n':
+            result.append('\n');
+            break;
+          case 'r':
+            result.append('\r');
+            break;
+          case 't':
+            result.append('\t');
+            break;
+          case 'v':
+            result.append('\u000B');
+            break;
+          case '\n':
+            // line continuation, skip the line break
+            break;
+          case '0':
+            // TODO(johnlenz): support octal?
+            result.append('\0');
+            break;
+          case 'x':
+            result.append((char)(
+                hexdigit(value.charAt(cur + 1)) * 16
+                + hexdigit(value.charAt(cur + 2))));
+            cur += 2;
+            break;
+          case 'u':
+            result.append((char)(
+                hexdigit(value.charAt(cur + 1)) * 16 * 16 * 16
+                + hexdigit(value.charAt(cur + 2)) * 16 * 16
+                + hexdigit(value.charAt(cur + 3)) * 16
+                + hexdigit(value.charAt(cur + 4))));
+            cur += 4;
+            break;
+          default:
+            result.append(c);
+            break;
+        }
+        start = cur + 1;
+        cur = value.indexOf('\\', start);
+      }
+      result.append(value.substring(start, value.length() -1));
+      // skip the trailing quote.
+
+      return result.toString();
+    }
+
+    int hexdigit(char c) {
+      switch (c) {
+        case '0': return 0;
+        case '1': return 1;
+        case '2': return 2;
+        case '3': return 3;
+        case '4': return 4;
+        case '5': return 5;
+        case '6': return 6;
+        case '7': return 7;
+        case '8': return 8;
+        case '9': return 9;
+        case 'a': case 'A': return 10;
+        case 'b': case 'B': return 11;
+        case 'c': case 'C': return 12;
+        case 'd': case 'D': return 13;
+        case 'e': case 'E': return 14;
+        case 'f': case 'F': return 15;
+      }
+      throw new IllegalStateException("unexpected: " + c);
     }
 
     @Override

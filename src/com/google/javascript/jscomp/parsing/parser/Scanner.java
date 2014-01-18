@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
+import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
@@ -37,15 +38,23 @@ public class Scanner {
   private final SourceFile source;
   private final LinkedList<Token> currentTokens = new LinkedList<Token>();
   private int index;
+  private final CommentRecorder commentRecorder;
 
-  public Scanner(ErrorReporter errorReporter, SourceFile source) {
-    this(errorReporter, source, 0);
+  public Scanner(ErrorReporter errorReporter, CommentRecorder commentRecorder,
+      SourceFile source) {
+    this(errorReporter, commentRecorder, source, 0);
   }
 
-  public Scanner(ErrorReporter errorReporter, SourceFile file, int offset) {
+  public Scanner(ErrorReporter errorReporter, CommentRecorder commentRecorder,
+      SourceFile file, int offset) {
     this.errorReporter = errorReporter;
+    this.commentRecorder = commentRecorder;
     this.source = file;
     this.index = offset;
+  }
+
+  public interface CommentRecorder {
+    void recordComment(Comment.Type type, SourceRange range, String value);
   }
 
   private LineNumberTable getLineNumberTable() {
@@ -286,22 +295,42 @@ public class Scanner {
   }
 
   private void skipSingleLineComment() {
+    int startOffset = index;
     while (!isAtEnd() && !isLineTerminator(peekChar())) {
       nextChar();
     }
+    SourceRange range = getLineNumberTable().getSourceRange(startOffset, index);
+    String value = this.source.contents.substring(startOffset, index);
+    recordComment(Comment.Type.LINE, range, value);
+  }
+
+  private void recordComment(
+      Comment.Type type, SourceRange range, String value) {
+    commentRecorder.recordComment(type, range, value);
   }
 
   private void skipMultiLineComment() {
+    int startOffset = index;
     nextChar(); // '/'
     nextChar(); // '*'
     while (!isAtEnd() && (peekChar() != '*' || peekChar(1) != '/')) {
       nextChar();
     }
-    if (isAtEnd()) {
+    if (!isAtEnd()) {
+      nextChar();
+      nextChar();
+      Comment.Type type = (index - startOffset > 4
+          && this.source.contents.charAt(startOffset + 2) == '*')
+          ? Comment.Type.JSDOC
+          : Comment.Type.BLOCK;
+      SourceRange range = getLineNumberTable().getSourceRange(
+          startOffset, index);
+      String value = this.source.contents.substring(
+          startOffset, index);
+      recordComment(type, range, value);
+    } else {
       reportError("unterminated comment");
     }
-    nextChar();
-    nextChar();
   }
 
   private Token scanToken() {

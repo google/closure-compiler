@@ -527,7 +527,7 @@ public class ParseTreeTransformer {
     if (elements == tree.sourceElements) {
       return tree;
     }
-    return new ProgramTree(null, elements);
+    return new ProgramTree(null, elements, tree.sourceComments);
   }
 
   protected ParseTree transform(PropertyNameAssignmentTree tree) {

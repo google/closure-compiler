@@ -592,7 +592,7 @@ public final class ParseTreeFactory {
   }
 
   public static ProgramTree createProgramTree(ImmutableList<ParseTree> sourceElements) {
-    return new ProgramTree(null, sourceElements);
+    return new ProgramTree(null, sourceElements, ImmutableList.<Comment>of());
   }
 
   public static PropertyNameAssignmentTree createPropertyNameAssignment(

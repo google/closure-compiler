@@ -675,14 +675,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
             createScript(new Node(Token.EXPR_RESULT, Node.newNumber(3.0)))),
         new ParserResult(
             "var a = b;",
-             createScript(new Node(Token.VAR, a)))
-        // TODO(johnlenz): reenable
-        /*
+             createScript(new Node(Token.VAR, a))),
         new ParserResult(
             "\"hell\\\no\\ world\\\n\\\n!\"",
              createScript(new Node(Token.EXPR_RESULT,
              Node.newString(Token.STRING, "hello world!"))))
-        */
         );
 
     for (ParserResult testCase : testCases) {
