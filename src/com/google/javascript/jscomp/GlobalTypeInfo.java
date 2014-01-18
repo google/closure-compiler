@@ -708,11 +708,8 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private Node getBody() {
-      if (root.isFunction()) {
-        return NodeUtil.getFunctionBody(root);
-      } else { // top-level scope
-        return root;
-      }
+      Preconditions.checkState(root.isFunction());
+      return NodeUtil.getFunctionBody(root);
     }
 
     // TODO(user): don't return null for anonymous functions

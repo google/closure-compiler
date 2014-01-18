@@ -1036,8 +1036,8 @@ public class NewTypeInference implements CompilerPass {
         } else if (lhsPair.type.isUnknown() && rhsPair.type.isScalar()) {
           lhsPair = analyzeExprFwd(lhs, inEnv, rhsPair.type);
           rhsPair = analyzeExprFwd(rhs, lhsPair.env, rhsPair.type);
-        } else if (lhs.isVar() && lhsPair.type.isUnknown() &&
-            rhs.isVar() && rhsPair.type.isUnknown()) {
+        } else if (lhs.isName() && lhsPair.type.isUnknown() &&
+            rhs.isName() && rhsPair.type.isUnknown()) {
           TypeEnv env = envPutType(
               rhsPair.env, lhs.getQualifiedName(), JSType.TOP_SCALAR);
           env = envPutType(
@@ -1241,13 +1241,10 @@ public class NewTypeInference implements CompilerPass {
       case Token.VAR: { // Can happen iff its parent is a for/in.
         Node vdecl = expr.getFirstChild();
         String name = vdecl.getQualifiedName();
-        Node rhs = vdecl.getFirstChild();
-        TypeEnv env = inEnv;
-        if (rhs != null) {
-          env = analyzeExprFwd(rhs, inEnv).env;
-        }
+        // For/in can never have rhs of its VAR
+        Preconditions.checkState(!vdecl.hasChildren());
         return new EnvTypePair(
-            envPutType(env, name, JSType.STRING), JSType.STRING);
+            envPutType(inEnv, name, JSType.STRING), JSType.STRING);
       }
       case Token.REGEXP:
         return new EnvTypePair(inEnv, regexpType);
@@ -1763,13 +1760,10 @@ public class NewTypeInference implements CompilerPass {
       case Token.VAR: { // Can happen iff its parent is a for/in.
         Node vdecl = expr.getFirstChild();
         String name = vdecl.getQualifiedName();
-        Node rhs = vdecl.getFirstChild();
-        TypeEnv env = outEnv;
-        if (rhs != null) {
-          env = analyzeExprBwd(rhs, outEnv).env;
-        }
+        // For/in can never have rhs of its VAR
+        Preconditions.checkState(!vdecl.hasChildren());
         return new EnvTypePair(
-            envPutType(env, name, JSType.UNKNOWN), JSType.UNKNOWN);
+            envPutType(outEnv, name, JSType.UNKNOWN), JSType.UNKNOWN);
       }
       case Token.REGEXP:
         return new EnvTypePair(outEnv, regexpType);

@@ -142,14 +142,6 @@ public class JSType {
     return UNKNOWN_MASK == type;
   }
 
-  public boolean isTrue() {
-    return TRUE_MASK == type;
-  }
-
-  public boolean isFalse() {
-    return FALSE_MASK == type;
-  }
-
   public boolean isTruthy() {
     return TRUTHY_MASK == type || TRUE_MASK == type;
   }
