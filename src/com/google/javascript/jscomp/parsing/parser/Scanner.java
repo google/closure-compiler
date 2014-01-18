@@ -297,6 +297,9 @@ public class Scanner {
     while (!isAtEnd() && (peekChar() != '*' || peekChar(1) != '/')) {
       nextChar();
     }
+    if (isAtEnd()) {
+      reportError("unterminated comment");
+    }
     nextChar();
     nextChar();
   }

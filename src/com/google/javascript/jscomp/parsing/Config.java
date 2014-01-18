@@ -68,18 +68,27 @@ public class Config {
   final boolean acceptConstKeyword;
 
   /**
-   * Annotation names.
+   * Use the experimental parser
    */
+  final boolean useExperimentalParser;
 
   Config(Set<String> annotationWhitelist, Set<String> suppressionNames,
       boolean isIdeMode, LanguageMode languageMode,
       boolean acceptConstKeyword) {
+    this(annotationWhitelist, suppressionNames, isIdeMode, languageMode,
+        acceptConstKeyword, false);
+  }
+
+  Config(Set<String> annotationWhitelist, Set<String> suppressionNames,
+      boolean isIdeMode, LanguageMode languageMode,
+      boolean acceptConstKeyword, boolean useExperimentalParser) {
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
     this.parseJsDocDocumentation = isIdeMode;
     this.suppressionNames = suppressionNames;
     this.isIdeMode = isIdeMode;
     this.languageMode = languageMode;
     this.acceptConstKeyword = acceptConstKeyword;
+    this.useExperimentalParser = useExperimentalParser;
   }
 
   /**

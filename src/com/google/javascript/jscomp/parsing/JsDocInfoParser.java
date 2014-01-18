@@ -127,7 +127,19 @@ public final class JsDocInfoParser {
   }
 
   JsDocInfoParser(JsDocTokenStream stream,
-                  Comment commentNode,
+      Comment commentNode,
+      Node associatedNode,
+      Config config,
+      ErrorReporter errorReporter) {
+    this(stream,
+        commentNode != null ? commentNode.getValue() : null,
+        commentNode != null ? commentNode.getPosition() : 0,
+        associatedNode, config, errorReporter);
+  }
+
+  JsDocInfoParser(JsDocTokenStream stream,
+                  String comment,
+                  int commentPosition,
                   Node associatedNode,
                   Config config,
                   ErrorReporter errorReporter) {
@@ -139,9 +151,9 @@ public final class JsDocInfoParser {
         ? null : associatedNode.getStaticSourceFile();
 
     this.jsdocBuilder = new JSDocInfoBuilder(config.parseJsDocDocumentation);
-    if (commentNode != null) {
-      this.jsdocBuilder.recordOriginalCommentString(commentNode.getValue());
-      this.jsdocBuilder.recordOriginalCommentPosition(commentNode.getPosition());
+    if (comment != null) {
+      this.jsdocBuilder.recordOriginalCommentString(comment);
+      this.jsdocBuilder.recordOriginalCommentPosition(commentPosition);
     }
     this.annotationNames = config.annotationNames;
     this.suppressionNames = config.suppressionNames;

@@ -65,18 +65,28 @@ public class Parser {
   private final Scanner scanner;
   private final ErrorReporter errorReporter;
   private Token lastToken;
+  private final Config config;
 
-  public Parser(ErrorReporter errorReporter, SourceFile source, int offset) {
-    this(errorReporter, new Scanner(errorReporter, source, offset));
+  public Parser(Config config, ErrorReporter errorReporter, SourceFile source, int offset) {
+    this(config, errorReporter, new Scanner(errorReporter, source, offset));
   }
 
-  public Parser(ErrorReporter errorReporter, SourceFile source) {
-    this(errorReporter, new Scanner(errorReporter, source));
+  public Parser(Config config, ErrorReporter errorReporter, SourceFile source) {
+    this(config, errorReporter, new Scanner(errorReporter, source));
   }
 
-  private Parser(ErrorReporter errorReporter, Scanner scanner) {
+  private Parser(Config config, ErrorReporter errorReporter, Scanner scanner) {
+    this.config = config;
     this.scanner = scanner;
     this.errorReporter = errorReporter;
+  }
+
+  public static class Config {
+    public final boolean warnTrailingCommas;
+
+    public Config(boolean warnTrailingCommas) {
+      this.warnTrailingCommas = warnTrailingCommas;
+    }
   }
 
   // 14 Program
@@ -1182,7 +1192,9 @@ public class Parser {
     ImmutableList.Builder<ParseTree> elements = ImmutableList.<ParseTree>builder();
 
     eat(TokenType.OPEN_SQUARE);
+    Token trailingCommaToken = null;
     while (peek(TokenType.COMMA) || peek(TokenType.SPREAD) || peekAssignmentExpression()) {
+      trailingCommaToken = null;
       if (peek(TokenType.COMMA)) {
         elements.add(NullTree.Instance);
       } else {
@@ -1193,10 +1205,13 @@ public class Parser {
         }
       }
       if (!peek(TokenType.CLOSE_SQUARE)) {
-        eat(TokenType.COMMA);
+        trailingCommaToken = eat(TokenType.COMMA);
       }
     }
     eat(TokenType.CLOSE_SQUARE);
+
+    maybeReportTrailingComma(trailingCommaToken);
+
     return new ArrayLiteralExpressionTree(
         getTreeLocation(start), elements.build());
   }
@@ -1207,14 +1222,29 @@ public class Parser {
     ImmutableList.Builder<ParseTree> result = ImmutableList.<ParseTree>builder();
 
     eat(TokenType.OPEN_CURLY);
+    Token commaToken = null;
     while (peekPropertyAssignment()) {
+      commaToken = null;
       result.add(parsePropertyAssignment());
-      if (eatOpt(TokenType.COMMA) == null) {
+      commaToken = eatOpt(TokenType.COMMA);
+      if (commaToken == null) {
         break;
       }
     }
     eat(TokenType.CLOSE_CURLY);
+
+    maybeReportTrailingComma(commaToken);
+
     return new ObjectLiteralExpressionTree(getTreeLocation(start), result.build());
+  }
+
+  void maybeReportTrailingComma(Token commaToken) {
+    if (commaToken != null && config.warnTrailingCommas) {
+      // In ES3 mode warn about trailing commas which aren't accepted by
+      // older browsers (such as IE8).
+      errorReporter.reportWarning(commaToken.location.start,
+          "Trailing comma is not legal in an ECMA-262 object initializer");
+    }
   }
 
   private boolean peekPropertyAssignment() {
@@ -1222,19 +1252,23 @@ public class Parser {
   }
 
   private boolean peekPropertyName(int tokenIndex) {
-    switch (peekType(tokenIndex)) {
+    TokenType type = peekType(tokenIndex);
+    switch (type) {
     case IDENTIFIER:
     case STRING:
     case NUMBER:
       return true;
     default:
-      return false;
+      return Keywords.isKeyword(type);
     }
   }
 
   private ParseTree parsePropertyAssignment() {
-    switch (peekType()) {
-    case IDENTIFIER:
+    TokenType type = peekType();
+    if (type == TokenType.STRING
+        || type == TokenType.NUMBER
+        || type == TokenType.IDENTIFIER
+        || Keywords.isKeyword(type)) {
       if (peekGetAccessor(false)) {
         return parseGetAccessor();
       } else if (peekSetAccessor(false)) {
@@ -1242,10 +1276,7 @@ public class Parser {
       } else {
         return parsePropertyNameAssignment();
       }
-    case STRING:
-    case NUMBER:
-      return parsePropertyNameAssignment();
-    default:
+    } else {
       throw new RuntimeException("unreachable");
     }
   }
@@ -1268,7 +1299,7 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     boolean isStatic = eatOpt(TokenType.STATIC) != null;
     eatId(); // get
-    Token propertyName = nextToken();
+    Token propertyName = eatObjectLiteralPropertyName();
     eat(TokenType.OPEN_PAREN);
     eat(TokenType.CLOSE_PAREN);
     BlockTree body = parseFunctionBody();
@@ -1284,7 +1315,7 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     boolean isStatic = eatOpt(TokenType.STATIC) != null;
     eatId(); // set
-    Token propertyName = nextToken();
+    Token propertyName = eatObjectLiteralPropertyName();
     eat(TokenType.OPEN_PAREN);
     IdentifierToken parameter = eatId();
     eat(TokenType.CLOSE_PAREN);
@@ -1295,7 +1326,7 @@ public class Parser {
 
   private ParseTree parsePropertyNameAssignment() {
     SourcePosition start = getTreeStartLocation();
-    Token name = nextToken();
+    Token name = eatObjectLiteralPropertyName();
     eat(TokenType.COLON);
     ParseTree value = parseAssignmentExpression();
     return new PropertyNameAssignmentTree(getTreeLocation(start), name, value);
@@ -1730,10 +1761,12 @@ public class Parser {
         eat(TokenType.OPEN_SQUARE);
         ParseTree member = parseExpression();
         eat(TokenType.CLOSE_SQUARE);
-        operand = new MemberLookupExpressionTree(getTreeLocation(start), operand, member);
+        operand = new MemberLookupExpressionTree(
+            getTreeLocation(start), operand, member);
       } else {
         eat(TokenType.PERIOD);
-        operand = new MemberExpressionTree(getTreeLocation(start), operand, eatId());
+        operand = new MemberExpressionTree(
+            getTreeLocation(start), operand, eatIdOrKeywordAsId());
       }
     }
     return operand;
@@ -2074,6 +2107,34 @@ public class Parser {
     return (IdentifierToken) result;
   }
 
+  private Token eatObjectLiteralPropertyName() {
+    Token token = peekToken();
+    switch (token.type) {
+      case STRING:
+      case NUMBER:
+        return nextToken();
+      case IDENTIFIER:
+      default:
+        return eatIdOrKeywordAsId();
+    }
+  }
+
+  /**
+   * Shorthand for eat(TokenType.IDENTIFIER)
+   */
+  private IdentifierToken eatIdOrKeywordAsId() {
+    Token token = nextToken();
+    if (token.type == TokenType.IDENTIFIER) {
+      return (IdentifierToken) token;
+    } else if (Keywords.isKeyword(token.type)) {
+      return new IdentifierToken(
+          token.location, Keywords.get(token.type).toString());
+    } else {
+      reportExpectedError(token, TokenType.IDENTIFIER);
+    }
+    return null;
+  }
+
   /**
    * Consumes the next token. If the consumed token is not of the expected type then
    * report an error and return null. Otherwise return the consumed token.
@@ -2200,9 +2261,10 @@ public class Parser {
    * </pre>
    */
   private Parser createLookaheadParser() {
-    return new Parser(new MutedErrorReporter(),
-                      this.scanner.getFile(),
-                      this.scanner.getOffset());
+    return new Parser(config,
+        new MutedErrorReporter(),
+        this.scanner.getFile(),
+        this.scanner.getOffset());
   }
 
   /**

@@ -19,6 +19,9 @@ package com.google.javascript.jscomp.parsing;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
+import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.head.CompilerEnvirons;
 import com.google.javascript.rhino.head.Context;
@@ -45,6 +48,8 @@ public class ParserRunner {
   private static Set<String> suppressionNames = null;
   private static Set<String> reservedVars = null;
 
+  private static boolean useExperimentalParser = false;
+
   // Should never need to instantiate class of static methods.
   private ParserRunner() {}
 
@@ -55,9 +60,18 @@ public class ParserRunner {
   }
 
   public static Config createConfig(boolean isIdeMode,
+      LanguageMode languageMode,
+      boolean acceptConstKeyword,
+      Set<String> extraAnnotationNames) {
+    return createConfig(isIdeMode, languageMode, acceptConstKeyword,
+        extraAnnotationNames, false);
+  }
+
+  public static Config createConfig(boolean isIdeMode,
                                     LanguageMode languageMode,
                                     boolean acceptConstKeyword,
-                                    Set<String> extraAnnotationNames) {
+                                    Set<String> extraAnnotationNames,
+                                    boolean useExperimentalParser) {
     initResourceConfig();
     Set<String> effectiveAnnotationNames;
     if (extraAnnotationNames == null) {
@@ -67,7 +81,7 @@ public class ParserRunner {
       effectiveAnnotationNames.addAll(extraAnnotationNames);
     }
     return new Config(effectiveAnnotationNames, suppressionNames,
-        isIdeMode, languageMode, acceptConstKeyword);
+        isIdeMode, languageMode, acceptConstKeyword, useExperimentalParser);
   }
 
   public static Set<String> getReservedVars() {
@@ -109,6 +123,27 @@ public class ParserRunner {
                                   Config config,
                                   ErrorReporter errorReporter,
                                   Logger logger) throws IOException {
+    if (!useExperimentalParser) {
+      return parseEs5(sourceFile, sourceString, config, errorReporter, logger);
+    } else {
+      return parseEs6(sourceFile, sourceString, config, errorReporter, logger);
+    }
+  }
+
+  /**
+   * Parses the JavaScript text given by a reader using Rhino.
+   *
+   * @param sourceString Source code from the file.
+   * @param errorReporter An error.
+   * @param logger A logger.
+   * @return The AST of the given text.
+   * @throws IOException
+   */
+  public static ParseResult parseEs5(StaticSourceFile sourceFile,
+                                  String sourceString,
+                                  Config config,
+                                  ErrorReporter errorReporter,
+                                  Logger logger) throws IOException {
     Context cx = Context.enter();
     cx.setErrorReporter(errorReporter);
     cx.setLanguageVersion(Context.VERSION_1_5);
@@ -144,6 +179,96 @@ public class ParserRunner {
       root.setIsSyntheticBlock(true);
     }
     return new ParseResult(root, astRoot);
+  }
+
+  private static class Es6ErrorReporter
+      extends com.google.javascript.jscomp.parsing.parser.util.ErrorReporter {
+    private ErrorReporter reporter;
+    private boolean errorSeen = false;
+    private boolean isIdeMode;
+    private String sourceString;
+
+    Es6ErrorReporter(
+        ErrorReporter reporter, String sourceString, Config config) {
+      this.reporter = reporter;
+      this.isIdeMode = config.isIdeMode;
+      this.sourceString = sourceString;
+    }
+
+    @Override
+    protected void reportMessage(
+        SourcePosition location, String kind, String format,
+        Object... arguments) {
+      String message = SimpleFormat.format("%s",
+          SimpleFormat.format(format, arguments));
+
+      // TODO(johnlenz): get source line from source string.
+      String sourceLine = "";
+
+      switch (kind) {
+        case "Error":
+          if (isIdeMode || !errorSeen) {
+            errorSeen = true;
+            this.reporter.error(
+                message, location.source.name,
+                location.line, sourceLine, location.offset);
+          }
+          break;
+        case "Warning":
+          this.reporter.warning(
+              message, location.source.name,
+              location.line, sourceLine, location.offset);
+          break;
+        default:
+          throw new IllegalStateException("Unexpected:" + kind);
+      }
+    }
+
+    @Override
+    protected void reportMessage(SourcePosition location, String message) {
+      throw new IllegalStateException("Not called directly");
+    }
+  }
+
+  /**
+   * Parses the JavaScript text using the ES6 parser.
+   *
+   * @param sourceString Source code from the file.
+   * @param errorReporter An error.
+   * @param logger A logger.
+   * @return The AST of the given text.
+   * @throws IOException
+   */
+  public static ParseResult parseEs6(StaticSourceFile sourceFile,
+                                  String sourceString,
+                                  Config config,
+                                  ErrorReporter errorReporter,
+                                  Logger logger) throws IOException {
+    Es6ErrorReporter es6ErrorReporter =
+        new Es6ErrorReporter(errorReporter, sourceString, config);
+    com.google.javascript.jscomp.parsing.parser.SourceFile file =
+        new com.google.javascript.jscomp.parsing.parser.SourceFile(
+            sourceFile.getName(), sourceString);
+    com.google.javascript.jscomp.parsing.parser.Parser.Config es6config =
+        new com.google.javascript.jscomp.parsing.parser.Parser.Config(
+            config.languageMode == LanguageMode.ECMASCRIPT3);
+    com.google.javascript.jscomp.parsing.parser.Parser p =
+        new com.google.javascript.jscomp.parsing.parser.Parser(
+            es6config, es6ErrorReporter, file);
+    ProgramTree tree = null;
+    try {
+      tree = p.parseProgram();
+    } catch (EvaluatorException e) {
+      logger.info(
+          "Error parsing " + sourceFile.getName() + ": " + e.getMessage());
+    }
+    Node root = null;
+    if (tree != null && (!es6ErrorReporter.hadError() || config.isIdeMode)) {
+      root = NewIRFactory.transformTree(
+          tree, sourceFile, sourceString, config, errorReporter);
+      root.setIsSyntheticBlock(true);
+    }
+    return new ParseResult(root, null);
   }
 
   /**

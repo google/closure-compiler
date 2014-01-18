@@ -105,6 +105,10 @@ public enum Keywords {
     return get(value) != null;
   }
 
+  public static boolean isKeyword(TokenType token) {
+    return get(token) != null;
+  }
+
   public static TokenType getTokenType(String value) {
     return keywordsByName.get(value).type;
   }
