@@ -67,7 +67,12 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         return tryFoldFor(subtree);
       }
       case Token.DO:
-        return tryFoldDo(subtree);
+        Node foldedDo = tryFoldDoAway(subtree);
+        if (foldedDo.isDo()) {
+          return tryFoldEmptyDo(foldedDo);
+        }
+        return foldedDo;
+
       case Token.TRY:
         return tryFoldTry(subtree);
       default:
@@ -896,7 +901,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * statements that were in the loop in a BLOCK node.
    * The block will be removed in a later pass, if possible.
    */
-  Node tryFoldDo(Node n) {
+  Node tryFoldDoAway(Node n) {
     Preconditions.checkArgument(n.isDo());
 
     Node cond = NodeUtil.getConditionExpression(n);
@@ -923,6 +928,29 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
     reportCodeChange();
 
+    return block;
+  }
+
+  /**
+   * Removes DOs that have empty bodies into FORs, which are
+   * much easier for the CFA to analyze.
+   */
+  Node tryFoldEmptyDo(Node n) {
+    Preconditions.checkArgument(n.isDo());
+
+    Node body = NodeUtil.getLoopCodeBlock(n);
+    if (body.isBlock() && !body.hasChildren()) {
+      Node cond = NodeUtil.getConditionExpression(n);
+      Node whileNode =
+          IR.forNode(IR.empty().srcref(n),
+                     cond.detachFromParent(),
+                     IR.empty().srcref(n),
+                     body.detachFromParent())
+          .srcref(n);
+      n.getParent().replaceChild(n, whileNode);
+      reportCodeChange();
+      return whileNode;
+    }
     return n;
   }
 

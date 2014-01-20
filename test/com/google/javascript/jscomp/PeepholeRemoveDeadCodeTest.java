@@ -222,6 +222,10 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("do { foo(); break; } while(0)");
   }
 
+  public void testFoldEmptyDo() {
+    fold("do { } while(true);", "for (;;);");
+  }
+
   public void testMinimizeWhileConstantCondition() {
     fold("while(true) foo()", "while(true) foo()");
     fold("while(0) foo()", "");

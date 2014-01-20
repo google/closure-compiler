@@ -2180,6 +2180,15 @@ public class IntegrationTest extends IntegrationTestCase {
         "for( ; function(){} ; );");
   }
 
+  public void testIssue1198() throws Exception {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS
+        .setOptionsForCompilationLevel(options);
+    test(options,
+         "function f(x) { return 1; do { x(); } while (true); }",
+         "function f(a) { return 1; }");
+  }
+
   public void testIssue1131() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS

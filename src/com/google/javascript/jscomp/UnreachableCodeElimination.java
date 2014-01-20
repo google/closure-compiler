@@ -210,9 +210,14 @@ class UnreachableCodeElimination implements CompilerPass {
       }
 
       switch (n.getType()) {
+        // In the CFG, the only incoming edges the the DO node are from
+        // breaks/continues and the condition. The edge from the previous
+        // statement connects directly to the body of the DO.
+        //
         // Removing an unreachable DO node is messy b/c it means we still have
-        // to execute one iteration. If the DO's body has breaks in the middle,
-        // it can get even more tricky and code size might actually increase.
+        // to execute one iteration of the body. If the DO's body has breaks in
+        // the middle, it can get even more tricky and code size might actually
+        // increase.
         case Token.DO:
           return;
 

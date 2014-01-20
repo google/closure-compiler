@@ -195,6 +195,12 @@ public class IR {
     return new Node(Token.DO, body, cond);
   }
 
+  public static Node whileNode(Node cond, Node body) {
+    Preconditions.checkState(body.isBlock());
+    Preconditions.checkState(mayBeExpression(cond));
+    return new Node(Token.WHILE, cond, body);
+  }
+
   public static Node forIn(Node target, Node cond, Node body) {
     Preconditions.checkState(target.isVar() || mayBeExpression(target));
     Preconditions.checkState(mayBeExpression(cond));
