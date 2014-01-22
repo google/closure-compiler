@@ -2827,15 +2827,11 @@ chrome.webNavigation.onCommitted;
 
 
 /** @type {ChromeEvent} */
-chrome.webNavigation.onCompleted;
-
-
-/** @type {ChromeEvent} */
-chrome.webNavigation.onCreatedNavigationTarget;
-
-
-/** @type {ChromeEvent} */
 chrome.webNavigation.onDOMContentLoaded;
+
+
+/** @type {ChromeEvent} */
+chrome.webNavigation.onCompleted;
 
 
 /** @type {ChromeEvent} */
@@ -2843,7 +2839,19 @@ chrome.webNavigation.onErrorOccurred;
 
 
 /** @type {ChromeEvent} */
+chrome.webNavigation.onCreatedNavigationTarget;
+
+
+/** @type {ChromeEvent} */
 chrome.webNavigation.onReferenceFragmentUpdated;
+
+
+/** @type {ChromeEvent} */
+chrome.webNavigation.onTabReplaced;
+
+
+/** @type {ChromeEvent} */
+chrome.webNavigation.onHistoryStateUpdated;
 
 
 
