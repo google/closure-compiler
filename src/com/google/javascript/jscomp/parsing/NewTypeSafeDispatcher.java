@@ -34,7 +34,9 @@ import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree
 import com.google.javascript.jscomp.parsing.parser.trees.FinallyTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForInStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.FormalParameterListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FunctionDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.GetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LabelledStatementTree;
@@ -49,7 +51,9 @@ import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.PostfixExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
+import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThrowStatementTree;
@@ -65,53 +69,57 @@ import com.google.javascript.jscomp.parsing.parser.trees.WithStatementTree;
  * Type safe dispatcher interface for use with new ES6 parser ASTs.
  */
 abstract class NewTypeSafeDispatcher<T> {
-  abstract T processArrayLiteral(ArrayLiteralExpressionTree arrayLiteralExpressionTree);
-  abstract T processAstRoot(ProgramTree programTree);
-  abstract T processBlock(BlockTree blockTree);
+  abstract T processArrayLiteral(ArrayLiteralExpressionTree tree);
+  abstract T processAstRoot(ProgramTree tree);
+  abstract T processBlock(BlockTree tree);
   abstract T processBreakStatement(BreakStatementTree breakStatementTree);
-  abstract T processCatchClause(CatchTree catchTree);
-  abstract T processConditionalExpression(ConditionalExpressionTree conditionalExpressionTree);
-  abstract T processContinueStatement(ContinueStatementTree continueStatementTree);
-  abstract T processDoLoop(DoWhileStatementTree doWhileStatementTree);
-  abstract T processElementGet(MemberLookupExpressionTree memberLookupExpressionTree);
-  abstract T processEmptyStatement(EmptyStatementTree emptyStatementTree);
-  abstract T processExpressionStatement(ExpressionStatementTree expressionStatementTree);
-  abstract T processForInLoop(ForInStatementTree forInStatementTree);
-  abstract T processForLoop(ForStatementTree forStatementTree);
-  abstract T processFunctionCall(CallExpressionTree callExpressionTree);
-  abstract T processFunction(FunctionDeclarationTree functionDeclarationTree);
-  abstract T processIfStatement(IfStatementTree ifStatementTree);
-  abstract T processBinaryExpression(BinaryOperatorTree binaryOperatorTree);
-  abstract T processLabeledStatement(LabelledStatementTree labelledStatementTree);
-  abstract T processName(IdentifierExpressionTree identifierExpressionTree);
-  abstract T processNewExpression(NewExpressionTree newExpressionTree);
-  abstract T processNumberLiteral(LiteralExpressionTree literalNode);
-  abstract T processObjectLiteral(ObjectLiteralExpressionTree objectLiteralExpressionTree);
-  abstract T processParenthesizedExpression(ParenExpressionTree parenExpressionTree);
-  abstract T processPropertyGet(MemberExpressionTree memberExpressionTree);
-  abstract T processRegExpLiteral(LiteralExpressionTree literalNode);
-  abstract T processReturnStatement(ReturnStatementTree returnStatementTree);
-  abstract T processStringLiteral(LiteralExpressionTree literalNode);
-  abstract T processSwitchCase(CaseClauseTree caseClauseTree);
-  abstract T processSwitchStatement(SwitchStatementTree switchStatementTree);
-  abstract T processThrowStatement(ThrowStatementTree throwStatementTree);
-  abstract T processTryStatement(TryStatementTree tryStatementTree);
-  abstract T processUnaryExpression(UnaryExpressionTree unaryExpressionTree);
-  abstract T processVariableStatement(VariableStatementTree variableStatementTree);
-  abstract T processVariableDeclarationList(VariableDeclarationListTree decl);
+  abstract T processCatchClause(CatchTree tree);
+  abstract T processConditionalExpression(ConditionalExpressionTree tree);
+  abstract T processContinueStatement(ContinueStatementTree tree);
+  abstract T processDoLoop(DoWhileStatementTree tree);
+  abstract T processElementGet(MemberLookupExpressionTree tree);
+  abstract T processEmptyStatement(EmptyStatementTree tree);
+  abstract T processExpressionStatement(ExpressionStatementTree tree);
+  abstract T processForInLoop(ForInStatementTree tree);
+  abstract T processForLoop(ForStatementTree tree);
+  abstract T processFunctionCall(CallExpressionTree tree);
+  abstract T processFunction(FunctionDeclarationTree tree);
+  abstract T processIfStatement(IfStatementTree tree);
+  abstract T processBinaryExpression(BinaryOperatorTree tree);
+  abstract T processLabeledStatement(LabelledStatementTree tree);
+  abstract T processName(IdentifierExpressionTree tree);
+  abstract T processNewExpression(NewExpressionTree tree);
+  abstract T processNumberLiteral(LiteralExpressionTree tree);
+  abstract T processObjectLiteral(ObjectLiteralExpressionTree tree);
+  abstract T processParenthesizedExpression(ParenExpressionTree tree);
+  abstract T processPropertyGet(MemberExpressionTree tree);
+  abstract T processRegExpLiteral(LiteralExpressionTree tree);
+  abstract T processReturnStatement(ReturnStatementTree tree);
+  abstract T processStringLiteral(LiteralExpressionTree tree);
+  abstract T processSwitchCase(CaseClauseTree tree);
+  abstract T processSwitchStatement(SwitchStatementTree tree);
+  abstract T processThrowStatement(ThrowStatementTree tree);
+  abstract T processTryStatement(TryStatementTree tree);
+  abstract T processUnaryExpression(UnaryExpressionTree tree);
+  abstract T processVariableStatement(VariableStatementTree tree);
+  abstract T processVariableDeclarationList(VariableDeclarationListTree tree);
   abstract T processVariableDeclaration(VariableDeclarationTree decl);
-  abstract T processWhileLoop(WhileStatementTree whileStatementTree);
-  abstract T processWithStatement(WithStatementTree withStatementTree);
+  abstract T processWhileLoop(WhileStatementTree tree);
+  abstract T processWithStatement(WithStatementTree tree);
 
-  abstract T processDebuggerStatement(DebuggerStatementTree asDebuggerStatement);
-  abstract T processThisExpression(ThisExpressionTree asThisExpression);
-  abstract T processSwitchDefault(DefaultClauseTree asDefaultClause);
-  abstract T processBooleanLiteral(LiteralExpressionTree literalNode);
-  abstract T processNullLiteral(LiteralExpressionTree literalNode);
+  abstract T processDebuggerStatement(DebuggerStatementTree tree);
+  abstract T processThisExpression(ThisExpressionTree tree);
+  abstract T processSwitchDefault(DefaultClauseTree tree);
+  abstract T processBooleanLiteral(LiteralExpressionTree tree);
+  abstract T processNullLiteral(LiteralExpressionTree tree);
   abstract T processNull(NullTree literalNode);
   abstract T processPostfixExpression(PostfixExpressionTree tree);
   abstract T processCommaExpression(CommaExpressionTree tree);
   abstract T processFinally(FinallyTree tree);
+  abstract T processGetAccessor(GetAccessorTree tree);
+  abstract T processSetAccessor(SetAccessorTree tree);
+  abstract T processPropertyNameAssignment(PropertyNameAssignmentTree tree);
+  abstract T processFormalParameterList(FormalParameterListTree tree);
 
   abstract T processMissingExpression(MissingPrimaryExpressionTree tree);
 
@@ -124,6 +132,7 @@ abstract class NewTypeSafeDispatcher<T> {
         return processNumberLiteral(expr);
       case STRING:
         return processStringLiteral(expr);
+      case FALSE:
       case TRUE:
         return processBooleanLiteral(expr);
       case NULL:
@@ -230,15 +239,14 @@ abstract class NewTypeSafeDispatcher<T> {
       case MISSING_PRIMARY_EXPRESSION:
         return processMissingExpression(node.asMissingPrimaryExpression());
 
-      // Not handled directly
-      case SET_ACCESSOR:
-        break;
-      case GET_ACCESSOR:
-        break;
       case PROPERTY_NAME_ASSIGNMENT:
-        break;
+        return processPropertyNameAssignment(node.asPropertyNameAssignment());
+      case GET_ACCESSOR:
+        return processGetAccessor(node.asGetAccessor());
+      case SET_ACCESSOR:
+        return processSetAccessor(node.asSetAccessor());
       case FORMAL_PARAMETER_LIST:
-        break;
+        return processFormalParameterList(node.asFormalParameterList());
 
       case ARRAY_PATTERN:
       case OBJECT_PATTERN:

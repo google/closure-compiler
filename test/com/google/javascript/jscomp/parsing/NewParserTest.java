@@ -264,7 +264,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertEquals(8, op.getCharno());
   }
 
-  public void disable_testJSDocAttachment1() {
+  public void testJSDocAttachment1() {
     Node varNode = parse("/** @type number */var a;").getFirstChild();
 
     // VAR
@@ -279,7 +279,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNull(nameNode.getJSDocInfo());
   }
 
-  public void disable_testJSDocAttachment2() {
+  public void testJSDocAttachment2() {
     Node varNode = parse("/** @type number */var a,b;").getFirstChild();
 
     // VAR
@@ -299,7 +299,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNull(nameNode2.getJSDocInfo());
   }
 
-  public void disable_testJSDocAttachment3() {
+  public void testJSDocAttachment3() {
     Node assignNode = parse(
         "/** @type number */goog.FOO = 5;").getFirstChild().getFirstChild();
     assertEquals(Token.ASSIGN, assignNode.getType());
@@ -308,7 +308,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(NUMBER_TYPE, info.getType());
   }
 
-  public void disable_testJSDocAttachment4() {
+  public void testJSDocAttachment4() {
     Node varNode = parse(
         "var a, /** @define {number} */ b = 5;").getFirstChild();
 
@@ -328,7 +328,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(NUMBER_TYPE, info.getType());
   }
 
-  public void disable_testJSDocAttachment5() {
+  public void testJSDocAttachment5() {
     Node varNode = parse(
         "var /** @type number */a, /** @define {number} */b = 5;")
         .getFirstChild();
@@ -357,7 +357,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
    * Tests that a JSDoc comment in an unexpected place of the code does not
    * propagate to following code due to {@link JSDocInfo} aggregation.
    */
-  public void disable_testJSDocAttachment6() throws Exception {
+  public void testJSDocAttachment6() throws Exception {
     Node functionNode = parse(
         "var a = /** @param {number} index */5;" +
         "/** @return boolean */function f(index){}")
@@ -371,7 +371,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(UNKNOWN_TYPE, info.getReturnType());
   }
 
-  public void disable_testJSDocAttachment7() {
+  public void testJSDocAttachment7() {
     Node varNode = parse("/** */var a;").getFirstChild();
 
     // VAR
@@ -383,7 +383,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNull(nameNode.getJSDocInfo());
   }
 
-  public void disable_testJSDocAttachment8() {
+  public void testJSDocAttachment8() {
     Node varNode = parse("/** x */var a;").getFirstChild();
 
     // VAR
@@ -395,7 +395,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNull(nameNode.getJSDocInfo());
   }
 
-  public void disable_testJSDocAttachment9() {
+  public void testJSDocAttachment9() {
     Node varNode = parse("/** \n x */var a;").getFirstChild();
 
     // VAR
@@ -407,7 +407,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNull(nameNode.getJSDocInfo());
   }
 
-  public void disable_testJSDocAttachment10() {
+  public void testJSDocAttachment10() {
     Node varNode = parse("/** x\n */var a;").getFirstChild();
 
     // VAR
@@ -419,7 +419,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNull(nameNode.getJSDocInfo());
   }
 
-  public void disable_testJSDocAttachment11() {
+  public void testJSDocAttachment11() {
     Node varNode =
        parse("/** @type {{x : number, 'y' : string, z}} */var a;")
         .getFirstChild();
@@ -442,7 +442,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNull(nameNode.getJSDocInfo());
   }
 
-  public void disable_testJSDocAttachment12() {
+  public void testJSDocAttachment12() {
     Node varNode =
        parse("var a = {/** @type {Object} */ b: c};")
         .getFirstChild();
@@ -451,22 +451,22 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNotNull(objectLitNode.getFirstChild().getJSDocInfo());
   }
 
-  public void disable_testJSDocAttachment13() {
+  public void testJSDocAttachment13() {
     Node varNode = parse("/** foo */ var a;").getFirstChild();
     assertNotNull(varNode.getJSDocInfo());
   }
 
-  public void disable_testJSDocAttachment14() {
+  public void testJSDocAttachment14() {
     Node varNode = parse("/** */ var a;").getFirstChild();
     assertNull(varNode.getJSDocInfo());
   }
 
-  public void disable_testJSDocAttachment15() {
+  public void testJSDocAttachment15() {
     Node varNode = parse("/** \n * \n */ var a;").getFirstChild();
     assertNull(varNode.getJSDocInfo());
   }
 
-  public void disable_testJSDocAttachment16() {
+  public void testJSDocAttachment16() {
     Node exprCall =
         parse("/** @private */ x(); function f() {};").getFirstChild();
     assertEquals(Token.EXPR_RESULT, exprCall.getType());
@@ -474,7 +474,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNotNull(exprCall.getFirstChild().getJSDocInfo());
   }
 
-  public void disable_testJSDocAttachment17() {
+  public void testJSDocAttachment17() {
     Node fn =
         parse(
             "function f() { " +
@@ -485,7 +485,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertEquals(Token.CAST, cast.getType());
   }
 
-  public void disable_testJSDocAttachment18() {
+  public void testJSDocAttachment18() {
     Node fn =
         parse(
             "function f() { " +
@@ -497,7 +497,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertEquals(Token.CAST, cast.getType());
   }
 
-  public void disable_testJSDocAttachment19() {
+  public void testJSDocAttachment19() {
     Node fn =
         parse(
             "function f() { " +
@@ -511,7 +511,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNull(ret.getJSDocInfo());
   }
 
-  public void disable_testJSDocAttachment20() {
+  public void testJSDocAttachment20() {
     Node fn =
         parse(
             "function f() { " +
@@ -525,7 +525,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNull(ret.getJSDocInfo());
   }
 
-  public void disable_testInlineJSDocAttachment1() {
+  public void testInlineJSDocAttachment1() {
     Node fn = parse("function f(/** string */ x) {}").getFirstChild();
     assertTrue(fn.isFunction());
 
@@ -535,7 +535,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
-  public void disable_testInlineJSDocAttachment2() {
+  public void testInlineJSDocAttachment2() {
     Node fn = parse(
         "function f(/** ? */ x) {}").getFirstChild();
     assertTrue(fn.isFunction());
@@ -546,13 +546,13 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(UNKNOWN_TYPE, info.getType());
   }
 
-  public void disable_testInlineJSDocAttachment3() {
+  public void testInlineJSDocAttachment3() {
     parse(
         "function f(/** @type {string} */ x) {}",
         "Bad type annotation. type not recognized due to syntax error");
   }
 
-  public void disable_testInlineJSDocAttachment4() {
+  public void testInlineJSDocAttachment4() {
     parse(
         "function f(/**\n" +
         " * @type {string}\n" +
@@ -560,14 +560,15 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. type not recognized due to syntax error");
   }
 
-  public void disable_testInlineJSDocAttachment5() {
+  public void testInlineJSDocAttachment5() {
     Node vardecl = parse("var /** string */ x = 'asdf';").getFirstChild();
     JSDocInfo info = vardecl.getFirstChild().getJSDocInfo();
     assertNotNull(info);
+    assertTrue(info.hasType());
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
-  public void disable_testInlineJSDocAttachment6() {
+  public void testInlineJSDocAttachment6() {
     Node fn = parse("function f(/** {attr: number} */ x) {}").getFirstChild();
     assertTrue(fn.isFunction());
 
@@ -580,21 +581,21 @@ public class NewParserTest extends BaseJSTypeTestCase {
         info.getType());
   }
 
-  public void disable_testIncorrectJSDocDoesNotAlterJSParsing1() throws Exception {
+  public void testIncorrectJSDocDoesNotAlterJSParsing1() throws Exception {
     assertNodeEquality(
         parse("var a = [1,2]"),
         parse("/** @type Array.<number*/var a = [1,2]",
             MISSING_GT_MESSAGE));
   }
 
-  public void disable_testIncorrectJSDocDoesNotAlterJSParsing2() throws Exception {
+  public void testIncorrectJSDocDoesNotAlterJSParsing2() throws Exception {
     assertNodeEquality(
         parse("var a = [1,2]"),
         parse("/** @type {Array.<number}*/var a = [1,2]",
             MISSING_GT_MESSAGE));
   }
 
-  public void disable_testIncorrectJSDocDoesNotAlterJSParsing3() throws Exception {
+  public void testIncorrectJSDocDoesNotAlterJSParsing3() throws Exception {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parse("/** @param {Array.<number} nums */" +
@@ -602,7 +603,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
             MISSING_GT_MESSAGE));
   }
 
-  public void disable_testIncorrectJSDocDoesNotAlterJSParsing4() throws Exception {
+  public void testIncorrectJSDocDoesNotAlterJSParsing4() throws Exception {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parse("/** @return boolean */" +
@@ -616,7 +617,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
             "C.prototype.say=function(nums) {alert(nums.join(','));};"));
   }
 
-  public void disable_testIncorrectJSDocDoesNotAlterJSParsing6() throws Exception {
+  public void testIncorrectJSDocDoesNotAlterJSParsing6() throws Exception {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parse("/** @param {bool!*%E$} */" +
@@ -625,7 +626,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
             "Bad type annotation. expecting a variable name in a @param tag"));
   }
 
-  public void disable_testIncorrectJSDocDoesNotAlterJSParsing7() throws Exception {
+  public void testIncorrectJSDocDoesNotAlterJSParsing7() throws Exception {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parse("/** @see */" +
@@ -633,7 +634,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
               "@see tag missing description"));
   }
 
-  public void disable_testIncorrectJSDocDoesNotAlterJSParsing8() throws Exception {
+  public void testIncorrectJSDocDoesNotAlterJSParsing8() throws Exception {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parse("/** @author */" +
@@ -641,7 +642,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
               "@author tag missing author"));
   }
 
-  public void disable_testIncorrectJSDocDoesNotAlterJSParsing9() throws Exception {
+  public void testIncorrectJSDocDoesNotAlterJSParsing9() throws Exception {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parse("/** @someillegaltag */" +
@@ -728,19 +729,19 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "'}' expected");
   }
 
-  public void disable_testSuspiciousBlockCommentWarning1() {
+  public void testSuspiciousBlockCommentWarning1() {
     parse("/* @type {number} */ var x = 3;", SUSPICIOUS_COMMENT_WARNING);
   }
 
-  public void disable_testSuspiciousBlockCommentWarning2() {
+  public void testSuspiciousBlockCommentWarning2() {
     parse("/* \n * @type {number} */ var x = 3;", SUSPICIOUS_COMMENT_WARNING);
   }
 
-  public void disable_testSuspiciousBlockCommentWarning3() {
+  public void testSuspiciousBlockCommentWarning3() {
     parse("/* \n *@type {number} */ var x = 3;", SUSPICIOUS_COMMENT_WARNING);
   }
 
-  public void disable_testSuspiciousBlockCommentWarning4() {
+  public void testSuspiciousBlockCommentWarning4() {
     parse(
         "  /*\n" +
         "   * @type {number}\n" +
@@ -749,7 +750,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
         SUSPICIOUS_COMMENT_WARNING);
   }
 
-  public void disable_testSuspiciousBlockCommentWarning5() {
+  public void testSuspiciousBlockCommentWarning5() {
     parse(
         "  /*\n" +
         "   * some random text here\n" +
@@ -759,16 +760,16 @@ public class NewParserTest extends BaseJSTypeTestCase {
         SUSPICIOUS_COMMENT_WARNING);
   }
 
-  public void disable_testSuspiciousBlockCommentWarning6() {
+  public void testSuspiciousBlockCommentWarning6() {
     parse("/* @type{number} */ var x = 3;", SUSPICIOUS_COMMENT_WARNING);
   }
 
-  public void disable_testSuspiciousBlockCommentWarning7() {
+  public void testSuspiciousBlockCommentWarning7() {
     // jsdoc tags contain letters only, no underscores etc.
     parse("/* @cc_on */ var x = 3;");
   }
 
-  public void disable_testSuspiciousBlockCommentWarning8() {
+  public void testSuspiciousBlockCommentWarning8() {
     // a jsdoc tag can't be immediately followed by a paren
     parse("/* @TODO(username) */ var x = 3;");
   }
@@ -873,7 +874,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "':' expected");
   }
 
-  public void disable_testFileOverviewJSDoc1() {
+  public void testFileOverviewJSDoc1() {
     Node n = parse("/** @fileoverview Hi mom! */ function Foo() {}");
     assertEquals(Token.FUNCTION, n.getFirstChild().getType());
     assertTrue(n.getJSDocInfo() != null);
@@ -901,7 +902,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
             .getFirstChild().getType());
   }
 
-  public void disable_testFileOverviewJSDoc2() {
+  public void testFileOverviewJSDoc2() {
     Node n = parse("/** @fileoverview Hi mom! */ " +
         "/** @constructor */ function Foo() {}");
     assertTrue(n.getJSDocInfo() != null);
@@ -919,8 +920,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     Node number = objectLit.getFirstChild();
     assertEquals(Token.STRING_KEY, number.getType());
-    // TODO(johnlenz): reenable
-    // assertNotNull(number.getJSDocInfo());
+    assertNotNull(number.getJSDocInfo());
   }
 
   // TODO(johnlenz): check duplication and scoping later or build the basic
@@ -970,7 +970,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("/** this is a comment ", "unterminated comment");
   }
 
-  public void disable_testParseBlockDescription() {
+  public void testParseBlockDescription() {
     Node n = parse("/** This is a variable. */ var x;");
     Node var = n.getFirstChild();
     assertNotNull(var.getJSDocInfo());
@@ -996,9 +996,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "identifier is a reserved word");
     parseError("boolean = 1;", "identifier is a reserved word");
 
-    // parseError("class = 1;", // "identifier is a reserved word");
-    //    "'identifier' expected");
-
+    // TODO(johnlenz): reenable
+    // parseError("class = 1;", "identifier is a reserved word");
     // parseError("public = 2;", "identifier is a reserved word");
 
     mode = LanguageMode.ECMASCRIPT5;

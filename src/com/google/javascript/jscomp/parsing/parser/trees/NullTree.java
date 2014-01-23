@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
  * Represents a null parse tree element.
  */
 public final class NullTree extends ParseTree {
-  private NullTree(SourceRange location) {
+  public NullTree(SourceRange location) {
     super(ParseTreeType.NULL, location);
   }
 

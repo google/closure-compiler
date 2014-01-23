@@ -134,21 +134,22 @@ public final class JsDocInfoParser {
     this(stream,
         commentNode != null ? commentNode.getValue() : null,
         commentNode != null ? commentNode.getPosition() : 0,
-        associatedNode, config, errorReporter);
+        associatedNode,
+        associatedNode != null ? associatedNode.getStaticSourceFile() : null,
+        config, errorReporter);
   }
 
   JsDocInfoParser(JsDocTokenStream stream,
                   String comment,
                   int commentPosition,
                   Node associatedNode,
+                  StaticSourceFile sourceFile,
                   Config config,
                   ErrorReporter errorReporter) {
     this.stream = stream;
-    this.associatedNode = associatedNode;
 
-    // Sometimes this will be null in tests.
-    this.sourceFile = associatedNode == null
-        ? null : associatedNode.getStaticSourceFile();
+    this.associatedNode = associatedNode;
+    this.sourceFile = sourceFile;
 
     this.jsdocBuilder = new JSDocInfoBuilder(config.parseJsDocDocumentation);
     if (comment != null) {
@@ -2405,9 +2406,7 @@ public final class JsDocInfoParser {
     // The Node type choice is arbitrary.
     Node templateNode = IR.script();
     templateNode.setStaticSourceFile(
-      this.associatedNode != null ?
-      this.associatedNode.getStaticSourceFile() :
-      null);
+      this.sourceFile);
     return templateNode;
   }
 

@@ -461,9 +461,7 @@ public class Parser {
   private ParseTree parseFunctionDeclarationTail(
       SourcePosition start, boolean isStatic) {
     IdentifierToken name = eatId();
-    eat(TokenType.OPEN_PAREN);
     FormalParameterListTree formalParameterList = parseFormalParameterList();
-    eat(TokenType.CLOSE_PAREN);
     BlockTree functionBody = parseFunctionBody();
     return new FunctionDeclarationTree(
         getTreeLocation(start), name, isStatic, formalParameterList, functionBody);
@@ -473,15 +471,17 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     nextToken(); // function or #
     IdentifierToken name = eatIdOpt();
-    eat(TokenType.OPEN_PAREN);
     FormalParameterListTree formalParameterList = parseFormalParameterList();
-    eat(TokenType.CLOSE_PAREN);
     BlockTree functionBody = parseFunctionBody();
     return new FunctionDeclarationTree(
         getTreeLocation(start), name, false, formalParameterList, functionBody);
   }
 
   private FormalParameterListTree parseFormalParameterList() {
+    SourcePosition listStart = getTreeStartLocation();
+    eat(TokenType.OPEN_PAREN);
+
+
     // FormalParameterList :
     //   ... Identifier
     //   FormalParameterListNoRest
@@ -521,7 +521,10 @@ public class Parser {
       }
     }
 
-    return new FormalParameterListTree(null, result.build());
+    eat(TokenType.CLOSE_PAREN);
+
+    return new FormalParameterListTree(
+        getTreeLocation(listStart), result.build());
   }
 
   private DefaultParameterTree parseDefaultParameter() {
@@ -909,17 +912,24 @@ public class Parser {
 
   // 12.6.3 The for Statement
   private ParseTree parseForStatement(SourcePosition start, ParseTree initializer) {
+    if (initializer == null) {
+      initializer = new NullTree(getTreeLocation(getTreeStartLocation()));
+    }
     eat(TokenType.SEMI_COLON);
 
     ParseTree condition = null;
     if (!peek(TokenType.SEMI_COLON)) {
       condition = parseExpression();
+    } else {
+      condition = new NullTree(getTreeLocation(getTreeStartLocation()));
     }
     eat(TokenType.SEMI_COLON);
 
     ParseTree increment = null;
     if (!peek(TokenType.CLOSE_PAREN)) {
       increment = parseExpression();
+    } else {
+      increment = new NullTree(getTreeLocation(getTreeStartLocation()));
     }
     eat(TokenType.CLOSE_PAREN);
     ParseTree body = parseStatement();
@@ -1208,7 +1218,7 @@ public class Parser {
     while (peek(TokenType.COMMA) || peek(TokenType.SPREAD) || peekAssignmentExpression()) {
       trailingCommaToken = null;
       if (peek(TokenType.COMMA)) {
-        elements.add(NullTree.Instance);
+        elements.add(new NullTree(getTreeLocation(getTreeStartLocation())));
       } else {
         if (peek(TokenType.SPREAD)) {
           elements.add(parseSpreadExpression());
