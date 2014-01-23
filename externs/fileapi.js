@@ -463,11 +463,12 @@ FileError.prototype.code;
 function FileReader() {}
 
 /** @override */
-FileReader.prototype.addEventListener = function(type, listener, useCapture) {};
+FileReader.prototype.addEventListener = function(type, listener, opt_useCapture)
+    {};
 
 /** @override */
-FileReader.prototype.removeEventListener = function(type, listener, useCapture)
-    {};
+FileReader.prototype.removeEventListener = function(type, listener,
+    opt_useCapture) {};
 
 /** @override */
 FileReader.prototype.dispatchEvent = function(evt) {};

@@ -717,11 +717,11 @@ function DOMApplicationCache() {}
 
 /** @override */
 DOMApplicationCache.prototype.addEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 DOMApplicationCache.prototype.removeEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 DOMApplicationCache.prototype.dispatchEvent = function(evt) {};
@@ -861,11 +861,11 @@ function WebWorker() {}
 
 /** @override */
 WebWorker.prototype.addEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 WebWorker.prototype.removeEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 WebWorker.prototype.dispatchEvent = function(evt) {};
@@ -902,11 +902,11 @@ function Worker(opt_arg0) {}
 
 /** @override */
 Worker.prototype.addEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 Worker.prototype.removeEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 Worker.prototype.dispatchEvent = function(evt) {};
@@ -954,11 +954,11 @@ function SharedWorker(scriptURL, opt_name) {}
 
 /** @override */
 SharedWorker.prototype.addEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 SharedWorker.prototype.removeEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 SharedWorker.prototype.dispatchEvent = function(evt) {};
@@ -1435,11 +1435,11 @@ function MessagePort() {}
 
 /** @override */
 MessagePort.prototype.addEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 MessagePort.prototype.removeEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 MessagePort.prototype.dispatchEvent = function(evt) {};
@@ -1739,11 +1739,11 @@ function WebSocket(url, opt_protocol) {}
 
 /** @override */
 WebSocket.prototype.addEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 WebSocket.prototype.removeEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 WebSocket.prototype.dispatchEvent = function(evt) {};
@@ -1976,11 +1976,11 @@ function XMLHttpRequestEventTarget() {}
 
 /** @override */
 XMLHttpRequestEventTarget.prototype.addEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 XMLHttpRequestEventTarget.prototype.removeEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 XMLHttpRequestEventTarget.prototype.dispatchEvent = function(evt) {};

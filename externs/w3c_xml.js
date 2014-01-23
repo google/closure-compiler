@@ -295,11 +295,11 @@ function XMLHttpRequest() {}
 
 /** @override */
 XMLHttpRequest.prototype.addEventListener =
-    function(type, listener, useCapture) {};
+    function(type, listener, opt_useCapture) {};
 
 /** @override */
 XMLHttpRequest.prototype.removeEventListener =
-    function(type, listener, useCapture) {};
+    function(type, listener, opt_useCapture) {};
 
 /** @override */
 XMLHttpRequest.prototype.dispatchEvent = function(evt) {};

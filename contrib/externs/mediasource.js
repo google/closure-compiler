@@ -29,11 +29,11 @@ function MediaSource() {}
 
 /** @override */
 MediaSource.prototype.addEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 MediaSource.prototype.removeEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 MediaSource.prototype.dispatchEvent = function(evt) {};
@@ -81,11 +81,11 @@ function SourceBuffer() {}
 
 /** @override */
 SourceBuffer.prototype.addEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 SourceBuffer.prototype.removeEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 SourceBuffer.prototype.dispatchEvent = function(evt) {};

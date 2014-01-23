@@ -141,11 +141,11 @@ function MediaStream(streamOrTracks) {}
 
 /** @override */
 MediaStream.prototype.addEventListener = function(type, listener,
-    useCapture) {};
+    opt_useCapture) {};
 
 /** @override */
 MediaStream.prototype.removeEventListener = function(type, listener,
-    useCapture) {};
+    opt_useCapture) {};
 
 /** @override */
 MediaStream.prototype.dispatchEvent = function(evt) {};
@@ -822,11 +822,11 @@ function RTCPeerConnection(configuration, constraints) {}
 
 /** @override */
 RTCPeerConnection.prototype.addEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 RTCPeerConnection.prototype.removeEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 RTCPeerConnection.prototype.dispatchEvent = function(evt) {};

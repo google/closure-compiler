@@ -912,7 +912,8 @@ Element.prototype.normalize = function() {};
 Element.prototype.removeChild = function(removedNode) {};
 
 /** @override */
-Element.prototype.removeEventListener = function(type, handler, useCapture) {};
+Element.prototype.removeEventListener = function(type, handler, opt_useCapture)
+    {};
 
 /** @override */
 Element.prototype.replaceChild = function(insertedNode, replacedNode) {};

@@ -31,11 +31,11 @@ function EventSource(url, opt_eventSourceInitDict) {}
 
 /** @override */
 EventSource.prototype.addEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 EventSource.prototype.removeEventListener = function(
-    type, listener, useCapture) {};
+    type, listener, opt_useCapture) {};
 
 /** @override */
 EventSource.prototype.dispatchEvent = function(evt) {};

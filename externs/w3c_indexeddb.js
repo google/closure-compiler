@@ -242,11 +242,12 @@ Window.prototype.webkitIDBRequest;
 function IDBRequest() {}
 
 /** @override */
-IDBRequest.prototype.addEventListener = function(type, listener, useCapture) {};
+IDBRequest.prototype.addEventListener =
+    function(type, listener, opt_useCapture) {};
 
 /** @override */
 IDBRequest.prototype.removeEventListener =
-    function(type, listener, useCapture) {};
+    function(type, listener, opt_useCapture) {};
 
 /** @override */
 IDBRequest.prototype.dispatchEvent = function(evt) {};
@@ -410,11 +411,11 @@ IDBDatabase.prototype.onversionchange = function() {};
 
 /** @override */
 IDBDatabase.prototype.addEventListener =
-    function(type, listener, useCapture) {};
+    function(type, listener, opt_useCapture) {};
 
 /** @override */
 IDBDatabase.prototype.removeEventListener =
-    function(type, listener, useCapture) {};
+    function(type, listener, opt_useCapture) {};
 
 /** @override */
 IDBDatabase.prototype.dispatchEvent = function(evt) {};
