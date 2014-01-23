@@ -60,13 +60,13 @@ public class DeclaredFunctionType {
   public FunctionType toFunctionType() {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     for (JSType formal : requiredFormals) {
-      builder.addReqFormal(formal == null ? JSType.UNKNOWN : formal);
+      builder.addReqFormal(formal == null ? TypeConsts.UNKNOWN : formal);
     }
     for (JSType formal : optionalFormals) {
-      builder.addOptFormal(formal == null ? JSType.UNKNOWN : formal);
+      builder.addOptFormal(formal == null ? TypeConsts.UNKNOWN : formal);
     }
     builder.addRestFormals(restFormals == null ? null : restFormals);
-    builder.addRetType(returnType == null ? JSType.UNKNOWN : returnType);
+    builder.addRetType(returnType == null ? TypeConsts.UNKNOWN : returnType);
     builder.addClass(klass);
     return builder.buildFunction();
   }

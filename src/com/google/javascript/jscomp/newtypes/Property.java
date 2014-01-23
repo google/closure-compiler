@@ -27,7 +27,7 @@ import com.google.common.base.Preconditions;
 class Property {
   private final JSType inferredType;
   private final JSType declaredType;
-  private boolean isOptional;
+  private final boolean isOptional;
 
   Property(JSType inferredType, JSType declaredType, boolean isOptional) {
     this.inferredType = inferredType;
