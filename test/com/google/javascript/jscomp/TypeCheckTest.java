@@ -12664,6 +12664,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "new Class().foo(a);");
   }
 
+  public void testDeterminacyIssue() throws Exception {
+    testTypes(
+        "(function() {\n" +
+        "    /** @constructor */\n" +
+        "    var ImageProxy = function() {};\n" +
+        "    /** @constructor */\n" +
+        "    var FeedReader = function() {};\n" +
+        "    /** @type {ImageProxy} */\n" +
+        "    FeedReader.x = new ImageProxy();\n" +
+        "})();");
+  }
+
+
   public void testUnknownTypeReport() throws Exception {
     compiler.getOptions().setWarningLevel(DiagnosticGroups.REPORT_UNKNOWN_TYPES,
         CheckLevel.WARNING);
