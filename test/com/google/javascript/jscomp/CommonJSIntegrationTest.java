@@ -53,6 +53,21 @@ public class CommonJSIntegrationTest extends IntegrationTestCase {
          TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
+
+  public void testCrossModuleTypeAnnotation() {
+    test(createCompilerOptions(),
+         new String[] {
+           "/** @constructor */ function Hello() {} " +
+           "/** @type {!Hello} */ var hello = new Hello();" +
+           "module.exports = Hello;"
+         },
+         new String[] {
+           "function Hello$$module$i0(){}" +
+           "var hello$$module$i0 = new Hello$$module$i0();" +
+           "var module$i0 = Hello$$module$i0;"
+         });
+  }
+
   @Override
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();

@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
 import java.net.URI;
@@ -366,6 +367,13 @@ public class ProcessCommonJSModules implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      JSDocInfo info = n.getJSDocInfo();
+      if (info != null) {
+        for (Node typeNode : info.getTypeNodes()) {
+          fixTypeNode(t, typeNode);
+        }
+      }
+
       if (n.isName()) {
         String name = n.getString();
         if (suffix.equals(name)) {
@@ -382,6 +390,30 @@ public class ProcessCommonJSModules implements CompilerPass {
           n.setString(name + "$$" + suffix);
           n.putProp(Node.ORIGINALNAME_PROP, name);
         }
+      }
+    }
+
+    /**
+     * Replace type name references.
+     */
+    private void fixTypeNode(NodeTraversal t, Node typeNode) {
+      if (typeNode.isString()) {
+        String name = typeNode.getString();
+        int endIndex = name.indexOf('.');
+        if (endIndex == -1) {
+          endIndex = name.length();
+        }
+        String baseName = name.substring(0, endIndex);
+        Scope.Var var = t.getScope().getVar(baseName);
+        if (var != null && var.isGlobal()) {
+          typeNode.setString(baseName + "$$" + suffix + name.substring(endIndex));
+          typeNode.putProp(Node.ORIGINALNAME_PROP, name);
+        }
+      }
+
+      for (Node child = typeNode.getFirstChild(); child != null;
+           child = child.getNext()) {
+        fixTypeNode(t, child);
       }
     }
   }
