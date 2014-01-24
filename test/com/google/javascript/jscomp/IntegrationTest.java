@@ -2231,6 +2231,20 @@ public class IntegrationTest extends IntegrationTestCase {
         "a.b.c.myFunc = function(x) {};");
   }
 
+  public void testIssue1204() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS
+        .setOptionsForCompilationLevel(options);
+    WarningLevel.VERBOSE
+        .setOptionsForWarningLevel(options);
+    test(options,
+         "goog.scope(function () {" +
+         "  /** @constructor */ function F(x) { this.x = x; }" +
+         "  alert(new F(1));" +
+         "});",
+         "alert(new function(){}(1));");
+  }
+
   public void testCodingConvention() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());

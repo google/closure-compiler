@@ -51,6 +51,12 @@ public class ScopedAliasesTest extends CompilerTestCase {
     super(EXTERNS);
   }
 
+  @Override
+  public void tearDown() throws Exception {
+    super.tearDown();
+    disableTypeCheck();
+  }
+
   private void testScoped(String code, String expected) {
     test(GOOG_SCOPE_START_BLOCK + code + GOOG_SCOPE_END_BLOCK, expected);
   }
@@ -582,6 +588,20 @@ public class ScopedAliasesTest extends CompilerTestCase {
          "$jscomp.scope.x = null;");
   }
 
+  public void testTypeCheck() {
+    enableTypeCheck(CheckLevel.WARNING);
+    runTypeCheckAfterProcessing = true;
+    test("goog.scope(function () {" +
+         "  /** @constructor */ function F() {}" +
+         "  /** @return {F} */ function createFoo() { return 1; }" +
+         "});",
+         SCOPE_NAMESPACE +
+         "$jscomp.scope.createFoo = function() { return 1; };" +
+         "$jscomp.scope.F = function() { };",
+         null,
+         TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
   // Alias Recording Tests
   // TODO(tylerg) : update these to EasyMock style tests once available
   public void testNoGoogScope() {
@@ -708,6 +728,11 @@ public class ScopedAliasesTest extends CompilerTestCase {
   @Override
   protected ScopedAliases getProcessor(Compiler compiler) {
     return new ScopedAliases(compiler, null, transformationHandler);
+  }
+
+  @Override
+  public int getNumRepetitions() {
+    return 1;
   }
 
   private static class TransformationHandlerSpy
