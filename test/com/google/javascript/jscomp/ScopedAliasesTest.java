@@ -75,6 +75,20 @@ public class ScopedAliasesTest extends CompilerTestCase {
                "goog.dom.createElement(goog.dom.TagName.DIV);");
   }
 
+  public void testSourceInfo() {
+    testScoped("var d = dom;\n" +
+               "var e = event;\n" +
+               "alert(e.EventType.MOUSEUP);\n" +
+               "alert(d.TagName.DIV);\n",
+               "alert(event.EventType.MOUSEUP); alert(dom.TagName.DIV);");
+    Node root = getLastCompiler().getRoot();
+    Node dom = findQualifiedNameNode("dom", root);
+    Node event = findQualifiedNameNode("event", root);
+    assertTrue("Dom line: " + dom.getLineno() +
+               "\nEvent line: " + event.getLineno(),
+               dom.getLineno() > event.getLineno());
+  }
+
   public void testTransitive() {
     testScoped("var d = goog.dom;var DIV = d.TagName.DIV;d.createElement(DIV);",
         "goog.dom.createElement(goog.dom.TagName.DIV);");

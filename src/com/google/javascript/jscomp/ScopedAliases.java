@@ -216,8 +216,9 @@ class ScopedAliases implements HotSwapCompilerPass {
     @Override
     public void applyAlias() {
       Node aliasDefinition = aliasVar.getInitialValue();
-      aliasReference.getParent().replaceChild(
-          aliasReference, aliasDefinition.cloneTree());
+      Node replacement = aliasDefinition.cloneTree();
+      replacement.useSourceInfoFromForTree(aliasReference);
+      aliasReference.getParent().replaceChild(aliasReference, replacement);
     }
   }
 
