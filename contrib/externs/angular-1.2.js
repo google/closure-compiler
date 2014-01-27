@@ -254,28 +254,34 @@ angular.Attributes.$set = function(key, value, opt_writeAttr, opt_attrName) {};
 /**
  * @typedef {{
  *   pre: (function(
- *       angular.Scope=, angular.JQLite=, angular.Attributes=, Object=)|
+ *           !angular.Scope=,
+ *           !angular.JQLite=,
+ *           !angular.Attributes=,
+ *           (!Object|!Array.<!Object>)=)|
  *       undefined),
  *   post: (function(
- *       angular.Scope=, angular.JQLite=, angular.Attributes=, Object=)|
+ *           !angular.Scope=,
+ *           !angular.JQLite=,
+ *           !angular.Attributes=,
+ *           (!Object|Array.<!Object>)=)|
  *       undefined)
  *   }}
  */
 angular.LinkingFunctions;
 
 /**
- * @param {angular.Scope=} scope
- * @param {angular.JQLite=} iElement
- * @param {angular.Attributes=} iAttrs
- * @param {(Object|Array.<Object>)=} controller
+ * @param {!angular.Scope=} scope
+ * @param {!angular.JQLite=} iElement
+ * @param {!angular.Attributes=} iAttrs
+ * @param {(!Object|!Array.<!Object>)=} controller
  */
 angular.LinkingFunctions.pre = function(scope, iElement, iAttrs, controller) {};
 
 /**
- * @param {angular.Scope=} scope
- * @param {angular.JQLite=} iElement
- * @param {angular.Attributes=} iAttrs
- * @param {(Object|Array.<Object>)=} controller
+ * @param {!angular.Scope=} scope
+ * @param {!angular.JQLite=} iElement
+ * @param {!angular.Attributes=} iAttrs
+ * @param {(!Object|!Array.<!Object>)=} controller
  */
 angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
 };
@@ -287,8 +293,9 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
  *   controller: (Function|undefined),
  *   controllerAs: (string|undefined),
  *   link: (function(
- *       angular.Scope=, angular.JQLite=, angular.Attributes=,
- *       (Object|Array.<Object>)=)|
+ *       !angular.Scope=, !angular.JQLite=, !angular.Attributes=,
+ *       (!Object|!Array.<!Object>)=)|
+ *       !angular.LinkingFunctions|
  *       undefined),
  *   name: (string|undefined),
  *   priority: (number|undefined),
@@ -320,12 +327,14 @@ angular.Directive.controller = function() {};
 angular.Directive.controllerAs;
 
 /**
- * @param {angular.Scope=} scope
- * @param {angular.JQLite=} iElement
- * @param {angular.Attributes=} iAttrs
- * @param {(Object|Array.<Object>)=} controller
+ * @type {(
+ *   function(!angular.Scope=, !angular.JQLite=, !angular.Attributes=,
+ *     (!Object|!Array.<!Object>)=)|
+ *   !angular.LinkingFunctions|
+ *   undefined
+ * )}
  */
-angular.Directive.link = function(scope, iElement, iAttrs, controller) {};
+angular.Directive.link;
 
 /**
  * @type {(string|undefined)}
@@ -1606,7 +1615,8 @@ angular.$provide.value = function(name, object) {};
 
 /**
  * @typedef {{
- *   all: function(Array.<angular.$q.Promise>): angular.$q.Promise,
+ *   all: function((Object.<angular.$q.Promise>|Array.<angular.$q.Promise>)):
+ *       angular.$q.Promise,
  *   defer: function():angular.$q.Deferred,
  *   reject: function(*):angular.$q.Promise,
  *   when: function(*):angular.$q.Promise
@@ -1615,8 +1625,8 @@ angular.$provide.value = function(name, object) {};
 angular.$q;
 
 /**
- * @param {Array.<angular.$q.Promise>} promises
- * @return {angular.$q.Promise}
+ * @param {!Object.<!angular.$q.Promise>|Array.<!angular.$q.Promise>} promises
+ * @return {!angular.$q.Promise}
  */
 angular.$q.all = function(promises) {};
 
