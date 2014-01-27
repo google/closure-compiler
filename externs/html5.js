@@ -3033,7 +3033,7 @@ Document.prototype.msHidden;
  * @param {string} type
  * @param {{extends: (string|undefined), prototype: (Object|undefined)}} options
  */
-Document.prototype.register;
+Document.prototype.registerElement;
 
 
 /**
