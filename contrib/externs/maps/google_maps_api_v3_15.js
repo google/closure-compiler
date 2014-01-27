@@ -5206,7 +5206,7 @@ google.maps.places.PlaceDetailsRequest = function() {};
 google.maps.places.PlaceDetailsRequest.prototype.reference;
 
 /**
- * @constructor
+ * @interface
  */
 google.maps.places.PlaceGeometry = function() {};
 
@@ -5247,7 +5247,7 @@ google.maps.places.PlacePhoto.prototype.width;
 google.maps.places.PlacePhoto.prototype.getUrl = function(opts) {};
 
 /**
- * @constructor
+ * @interface
  */
 google.maps.places.PlaceResult = function() {};
 
@@ -5375,6 +5375,11 @@ google.maps.places.PlaceReview.prototype.author_name;
  * @type {string}
  */
 google.maps.places.PlaceReview.prototype.author_url;
+
+/**
+ * @type {string}
+ */
+google.maps.places.PlaceReview.prototype.language;
 
 /**
  * @type {string}
@@ -5729,6 +5734,12 @@ google.maps.visualization.DynamicMapsEngineLayer.prototype.getMapId = function()
 
 /**
  * @nosideeffects
+ * @return {number}
+ */
+google.maps.visualization.DynamicMapsEngineLayer.prototype.getOpacity = function() {};
+
+/**
+ * @nosideeffects
  * @return {google.maps.visualization.MapsEngineStatus}
  */
 google.maps.visualization.DynamicMapsEngineLayer.prototype.getStatus = function() {};
@@ -5756,6 +5767,12 @@ google.maps.visualization.DynamicMapsEngineLayer.prototype.setMap = function(map
  * @return {undefined}
  */
 google.maps.visualization.DynamicMapsEngineLayer.prototype.setMapId = function(mapId) {};
+
+/**
+ * @param {number} opacity
+ * @return {undefined}
+ */
+google.maps.visualization.DynamicMapsEngineLayer.prototype.setOpacity = function(opacity) {};
 
 /**
  * @param {google.maps.visualization.DynamicMapsEngineLayerOptions|Object.<string>} options
@@ -5797,6 +5814,11 @@ google.maps.visualization.DynamicMapsEngineLayerOptions.prototype.map;
  * @type {string}
  */
 google.maps.visualization.DynamicMapsEngineLayerOptions.prototype.mapId;
+
+/**
+ * @type {number}
+ */
+google.maps.visualization.DynamicMapsEngineLayerOptions.prototype.opacity;
 
 /**
  * @type {boolean}
@@ -5999,6 +6021,12 @@ google.maps.visualization.MapsEngineLayer.prototype.getMapId = function() {};
 
 /**
  * @nosideeffects
+ * @return {number}
+ */
+google.maps.visualization.MapsEngineLayer.prototype.getOpacity = function() {};
+
+/**
+ * @nosideeffects
  * @return {google.maps.visualization.MapsEngineLayerProperties}
  */
 google.maps.visualization.MapsEngineLayer.prototype.getProperties = function() {};
@@ -6032,6 +6060,12 @@ google.maps.visualization.MapsEngineLayer.prototype.setMap = function(map) {};
  * @return {undefined}
  */
 google.maps.visualization.MapsEngineLayer.prototype.setMapId = function(mapId) {};
+
+/**
+ * @param {number} opacity
+ * @return {undefined}
+ */
+google.maps.visualization.MapsEngineLayer.prototype.setOpacity = function(opacity) {};
 
 /**
  * @param {google.maps.visualization.MapsEngineLayerOptions|Object.<string>} options
@@ -6073,6 +6107,11 @@ google.maps.visualization.MapsEngineLayerOptions.prototype.map;
  * @type {string}
  */
 google.maps.visualization.MapsEngineLayerOptions.prototype.mapId;
+
+/**
+ * @type {number}
+ */
+google.maps.visualization.MapsEngineLayerOptions.prototype.opacity;
 
 /**
  * @type {boolean}
