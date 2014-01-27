@@ -433,12 +433,14 @@ public final class ParseTreeFactory {
 
   public static FunctionDeclarationTree createFunctionExpression(
       FormalParameterListTree formalParameterList, BlockTree functionBody) {
-    return new FunctionDeclarationTree(null, null, false, formalParameterList, functionBody);
+    return new FunctionDeclarationTree(
+        null, null, false, true, formalParameterList, functionBody);
   }
 
   public static FunctionDeclarationTree createFunctionDeclaration(
       IdentifierToken name, FormalParameterListTree formalParameterList, BlockTree functionBody) {
-    return new FunctionDeclarationTree(null, name, false, formalParameterList, functionBody);
+    return new FunctionDeclarationTree(
+        null, name, false, false, formalParameterList, functionBody);
   }
 
   public static FunctionDeclarationTree createFunctionDeclaration(

@@ -211,13 +211,13 @@ public class ParserRunner {
             errorSeen = true;
             this.reporter.error(
                 message, location.source.name,
-                location.line, sourceLine, location.offset);
+                location.line + 1, sourceLine, location.column);
           }
           break;
         case "Warning":
           this.reporter.warning(
               message, location.source.name,
-              location.line, sourceLine, location.offset);
+              location.line + 1, sourceLine, location.column);
           break;
         default:
           throw new IllegalStateException("Unexpected:" + kind);

@@ -226,8 +226,8 @@ class NewIRFactory {
         config, errorReporter, tree.sourceComments);
 
     // don't call transform as we don't want standard jsdoc handling.
-    Node irNode = irFactory.justTransform(tree);
-    irFactory.setSourceInfo(irNode, tree);
+    Node n = irFactory.justTransform(tree);
+    irFactory.setSourceInfo(n, tree);
 
     if (tree.sourceComments != null) {
       for (Comment comment : tree.sourceComments) {
@@ -240,9 +240,79 @@ class NewIRFactory {
       }
     }
 
-    irFactory.setFileOverviewJsDoc(irNode);
+    irFactory.setFileOverviewJsDoc(n);
 
-    return irNode;
+    irFactory.validateAllTypeAnnotations(n);
+
+    return n;
+  }
+
+  private void validateAllTypeAnnotations(Node n) {
+    validateTypeAnnotations(n);
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+      validateAllTypeAnnotations(c);
+    }
+  }
+
+  @SuppressWarnings("incomplete-switch")
+  private void validateTypeAnnotations(Node n) {
+    JSDocInfo info = n.getJSDocInfo();
+    if (info != null && info.hasType()) {
+      boolean valid = false;
+      switch (n.getType()) {
+        // Casts are valid
+        case Token.CAST:
+          valid = true;
+          break;
+        // Variable declarations are valid
+        case Token.VAR:
+          valid = true;
+          break;
+        // Function declarations are valid
+        case Token.FUNCTION:
+          valid = isFunctionDeclaration(n);
+          break;
+        // Object literal properties, catch declarations and variable
+        // initializers are valid.
+        case Token.NAME:
+          Node parent = n.getParent();
+          switch (parent.getType()) {
+            case Token.STRING_KEY:
+            case Token.GETTER_DEF:
+            case Token.SETTER_DEF:
+            case Token.CATCH:
+            case Token.FUNCTION:
+            case Token.VAR:
+            case Token.LP:
+              valid = true;
+              break;
+          }
+          break;
+        // Object literal properties are valid
+        case Token.STRING_KEY:
+        case Token.GETTER_DEF:
+        case Token.SETTER_DEF:
+          valid = true;
+          break;
+        // Property assignments are valid, if at the root of an expression.
+        case Token.ASSIGN:
+          valid = n.getParent().isExprResult()
+            && (n.getFirstChild().isGetProp() || n.getFirstChild().isGetElem());
+          break;
+        case Token.GETPROP:
+          valid = n.getParent().isExprResult() && n.getQualifiedName() != null;
+          break;
+        case Token.CALL:
+          valid = info.isDefine();
+          break;
+      }
+
+      if (!valid) {
+        errorReporter.warning(MISPLACED_TYPE_ANNOTATION,
+            sourceName,
+            n.getLineno(), "", n.getCharno());
+      }
+    }
   }
 
   private void setFileOverviewJsDoc(Node irNode) {
@@ -353,10 +423,47 @@ class NewIRFactory {
   }
 
   private JSDocInfo handleJsDoc(ParseTree node) {
-    if (node.type == ParseTreeType.EXPRESSION_STATEMENT) {
+    if (!shouldAttachJSDocHere(node)) {
       return null;
     }
     return handleJsDoc(getJsDoc(node));
+  }
+
+  private boolean shouldAttachJSDocHere(ParseTree tree) {
+    switch (tree.type) {
+      case EXPRESSION_STATEMENT:
+        return false;
+      case LABELLED_STATEMENT:
+        return false;
+      case CALL_EXPRESSION:
+      case BINARY_OPERATOR:
+      case MEMBER_EXPRESSION:
+      case MEMBER_LOOKUP_EXPRESSION:
+        ParseTree nearest = findNearestNode(tree);
+        if (nearest.type == ParseTreeType.PAREN_EXPRESSION) {
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  }
+
+  private ParseTree findNearestNode(ParseTree tree) {
+    switch (tree.type) {
+      case EXPRESSION_STATEMENT:
+        return findNearestNode(tree.asExpressionStatement().expression);
+      case CALL_EXPRESSION:
+        return findNearestNode(tree.asCallExpression().operand);
+      case BINARY_OPERATOR:
+        return findNearestNode(tree.asBinaryOperator().left);
+      case MEMBER_EXPRESSION:
+        return findNearestNode(tree.asMemberExpression().operand);
+      case MEMBER_LOOKUP_EXPRESSION:
+        return findNearestNode(tree.asMemberLookupExpression().operand);
+      default:
+        return tree;
+    }
   }
 
   private JSDocInfo handleJsDoc(
@@ -364,105 +471,18 @@ class NewIRFactory {
     return handleJsDoc(getJsDoc(token));
   }
 
-  static final boolean ENABLE_TYPE_ANNOTATION_CHECKS = false;
-
-  @SuppressWarnings("incomplete-switch")
-  private void validateTypeAnnotations(JSDocInfo info, ParseTree node) {
-    // TODO(johnlenz) : reenable this check.
-    if (!ENABLE_TYPE_ANNOTATION_CHECKS) {
-      return;
-    }
-
-    if (info.hasType()) {
-      boolean valid = false;
-      switch (node.type) {
-        // Casts are valid
-        case PAREN_EXPRESSION:
-          valid = true;
-          break;
-        // Variable declarations are valid
-        case VARIABLE_STATEMENT:
-        case VARIABLE_DECLARATION:
-          valid = true;
-          break;
-        // Function declarations are valid
-        case FUNCTION_DECLARATION:
-          valid = isFunctionDeclaration(node.asFunctionDeclaration());
-          break;
-        // Object literal properties, catch declarations and variable
-        // initializers are valid.
-        case IDENTIFIER_EXPRESSION:
-          ParseTree parent = getParent(node);
-          valid = parent.type == ParseTreeType.PROPERTY_NAME_ASSIGNMENT
-              || parent.type == ParseTreeType.GET_ACCESSOR
-              || parent.type == ParseTreeType.SET_ACCESSOR
-              || parent.type == ParseTreeType.CATCH
-              || parent.type == ParseTreeType.FUNCTION_DECLARATION
-              || (parent.type == ParseTreeType.VARIABLE_DECLARATION &&
-                  node == (parent.asVariableDeclaration()).lvalue);
-          break;
-        // Object literal properties are valid
-        case PROPERTY_NAME_ASSIGNMENT:
-          valid = true;
-          break;
-
-        // Property assignments are valid, if at the root of an expression.
-        case BINARY_OPERATOR:
-          BinaryOperatorTree binop = node.asBinaryOperator();
-          if (binop.operator.type == TokenType.EQUAL) {
-            valid = isExpressionStatement(getParent(node))
-                && isPropAccess(binop.left);
-          }
-          break;
-
-        // Property definitions are valid, if at the root of an expression.
-        case MEMBER_EXPRESSION:
-        case MEMBER_LOOKUP_EXPRESSION:
-          valid = isExpressionStatement(getParent(node));
-          break;
-
-        case CALL_EXPRESSION:
-          valid = info.isDefine();
-          break;
-      }
-
-      if (!valid) {
-        errorReporter.warning(MISPLACED_TYPE_ANNOTATION,
-            sourceName,
-            node.location.start.line, "", 0);
-      }
-    }
+  private boolean isFunctionDeclaration(Node n) {
+    return n.isFunction() && isStmtContainer(n.getParent());
   }
 
-  private boolean isExpressionStatement(ParseTree node) {
-    return node.type == ParseTreeType.EXPRESSION_STATEMENT;
-  }
-
-  private boolean isFunctionDeclaration(FunctionDeclarationTree node) {
-    return isStmtContainer(getParent(node));
-  }
-
-  private boolean isStmtContainer(ParseTree node) {
-    return node.type == ParseTreeType.BLOCK ||
-        node.type == ParseTreeType.PROGRAM;
-  }
-
-  private ParseTree getParent(ParseTree tree) {
-    Preconditions.checkNotNull(tree);
-    // TODO(johnlenz): keep track of the current stack of nodes being visited.
-    return null;
-  }
-
-  private static boolean isPropAccess(ParseTree node) {
-    return node.type == ParseTreeType.MEMBER_EXPRESSION
-        || node.type == ParseTreeType.MEMBER_LOOKUP_EXPRESSION;
+  private boolean isStmtContainer(Node n) {
+    return n.isBlock() || n.isScript();
   }
 
   private Node transform(ParseTree tree) {
     JSDocInfo info = handleJsDoc(tree);
     Node node = justTransform(tree);
     if (info != null) {
-      validateTypeAnnotations(info, tree);
       node = maybeInjectCastNode(tree, info, node);
       attachJSDoc(info, node);
     }
@@ -471,28 +491,8 @@ class NewIRFactory {
   }
 
   private void attachJSDoc(JSDocInfo info, Node n) {
-    switch (n.getType()) {
-      case Token.EXPR_RESULT:
-        attachJSDoc(info, n.getFirstChild());
-        break;
-      case Token.LABEL:
-        attachJSDoc(info, n.getLastChild());
-        break;
-      case Token.THROW:
-      case Token.RETURN:
-      case Token.IF:
-      case Token.DO:
-      case Token.FOR:
-      case Token.WHILE:
-      case Token.SWITCH:
-      case Token.CASE:
-      case Token.DEFAULT_CASE:
-        break;
-
-      default:
-        n.setJSDocInfo(info);
-        break;
-    }
+    info.setAssociatedNode(n);
+    n.setJSDocInfo(info);
   }
 
   private Node maybeInjectCastNode(ParseTree node, JSDocInfo info, Node irNode) {
@@ -576,15 +576,6 @@ class NewIRFactory {
     return charno(node.location.start);
   }
 
-  private int lineno(com.google.javascript.jscomp.parsing.parser.Token token) {
-    // location lines start at zero, our AST starts at 1.
-    return lineno(token.location.start);
-  }
-
-  private int charno(com.google.javascript.jscomp.parsing.parser.Token token) {
-    return charno(token.location.start);
-  }
-
   private int lineno(SourcePosition location) {
     // location lines start at zero, our AST starts at 1.
     return location.line + 1;
@@ -632,7 +623,6 @@ class NewIRFactory {
    * file-level JSDoc comments (@fileoverview and @license).
    *
    * @param node The JsDoc Comment node to parse.
-   * @param irNode
    * @return A JsDocInfoParser. Will contain either fileoverview JsDoc, or
    *     normal JsDoc, or no JsDoc (if the method parses to the wrong level).
    */
@@ -921,50 +911,37 @@ class NewIRFactory {
     }
 
     @Override
-    Node processFunction(FunctionDeclarationTree functionNode) {
-      IdentifierToken name = functionNode.name;
-      Boolean isUnnamedFunction = false;
+    Node processFunction(FunctionDeclarationTree functionTree) {
+      IdentifierToken name = functionTree.name;
       Node newName;
       if (name != null) {
         newName = processNameWithInlineJSDoc(name);
       } else {
-        /*
-        int functionType = functionNode.getFunctionType();
-        if (functionType != FunctionNode.FUNCTION_EXPRESSION) {
+        if (!functionTree.isExpression) {
           errorReporter.error(
             "unnamed function statement",
             sourceName,
-            functionNode.getLineno(), "", 0);
+            lineno(functionTree), "", charno(functionTree));
 
           // Return the bare minimum to put the AST in a valid state.
           return newNode(Token.EXPR_RESULT, Node.newNumber(0));
         }
-        */
-        isUnnamedFunction = true;
 
         newName = newStringNode(Token.NAME, "");
 
         // Old Rhino tagged the empty name node with the line number of the
         // declaration.
-        newName.setLineno(lineno(functionNode));
-        newName.setCharno(charno(functionNode));
-        /*
-        // TODO(bowdidge) Mark line number of paren correctly.
-        // Same problem as below - the left paren might not be on the
-        // same line as the function keyword.
-        int lpColumn = functionNode.getAbsolutePosition() +
-            functionNode.getLp();
-        newName.setCharno(position2charno(lpColumn));
-        */
+        newName.setLineno(lineno(functionTree));
+        newName.setCharno(charno(functionTree));
         maybeSetLength(newName, 0);
       }
 
       Node node = newNode(Token.FUNCTION);
 
       node.addChildToBack(newName);
-      node.addChildToBack(transform(functionNode.formalParameterList));
+      node.addChildToBack(transform(functionTree.formalParameterList));
 
-      Node bodyNode = transform(functionNode.functionBody);
+      Node bodyNode = transform(functionTree.functionBody);
       if (!bodyNode.isBlock()) {
         // When in ideMode the parser tries to parse some constructs the
         // compiler doesn't support, repair it here.
@@ -1235,10 +1212,6 @@ class NewIRFactory {
       }
       Node newNode = newNode(
           Token.GETPROP, leftChild, rightChild);
-      // What is this for?
-      //newNode.setLineno(leftChild.getLineno());
-      //newNode.setCharno(leftChild.getCharno());
-      //maybeSetLengthFrom(newNode, getNode);
       return newNode;
     }
 
@@ -1697,7 +1670,7 @@ class NewIRFactory {
         case 'b':
         case 'B': {
           long v = 0;
-          int c = 2;
+          int c = 1;
           while (++c < length) {
             v = (v * 2) + binarydigit(value.charAt(c));
           }
@@ -1706,7 +1679,7 @@ class NewIRFactory {
         case 'o':
         case 'O': {
           long v = 0;
-          int c = 2;
+          int c = 1;
           while (++c < length) {
             v = (v * 8) + octaldigit(value.charAt(c));
           }
@@ -1715,7 +1688,7 @@ class NewIRFactory {
         case 'x':
         case 'X': {
           long v = 0;
-          int c = 2;
+          int c = 1;
           while (++c < length) {
             v = (v * 16) + hexdigit(value.charAt(c));
           }
@@ -1726,7 +1699,7 @@ class NewIRFactory {
           errorReporter.warning(INVALID_ES5_STRICT_OCTAL, sourceName,
               lineno(location.start), "", charno(location.start));
           long v = 0;
-          int c = 1;
+          int c = 0;
           while (++c < length) {
             v = (v * 8) + octaldigit(value.charAt(c));
           }

@@ -503,12 +503,13 @@ public class NewParserTest extends BaseJSTypeTestCase {
             "function f() { " +
             "  /** @type {string} */" +
             "  return;" +
-            "};").getFirstChild();
+            "};",
+            MISPLACED_TYPE_ANNOTATION).getFirstChild();
     assertEquals(Token.FUNCTION, fn.getType());
 
     Node ret = fn.getLastChild().getFirstChild();
     assertEquals(Token.RETURN, ret.getType());
-    assertNull(ret.getJSDocInfo());
+    assertNotNull(ret.getJSDocInfo());
   }
 
   public void testJSDocAttachment20() {
@@ -517,12 +518,12 @@ public class NewParserTest extends BaseJSTypeTestCase {
             "function f() { " +
             "  /** @type {string} */" +
             "  if (true) return;" +
-            "};").getFirstChild();
+            "};", MISPLACED_TYPE_ANNOTATION).getFirstChild();
     assertEquals(Token.FUNCTION, fn.getType());
 
     Node ret = fn.getLastChild().getFirstChild();
     assertEquals(Token.IF, ret.getType());
-    assertNull(ret.getJSDocInfo());
+    assertNotNull(ret.getJSDocInfo());
   }
 
   public void testInlineJSDocAttachment1() {
@@ -1125,7 +1126,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "'(' expected");
   }
 
-  public void disable_testMisplacedTypeAnnotation1() {
+  public void testMisplacedTypeAnnotation1() {
     // misuse with COMMA
     parse(
         "var o = {};" +
@@ -1133,35 +1134,35 @@ public class NewParserTest extends BaseJSTypeTestCase {
         MISPLACED_TYPE_ANNOTATION);
   }
 
-  public void disable_testMisplacedTypeAnnotation2() {
+  public void testMisplacedTypeAnnotation2() {
     // missing parentheses for the cast.
     parse(
         "var o = /** @type {string} */ getValue();",
         MISPLACED_TYPE_ANNOTATION);
   }
 
-  public void disable_testMisplacedTypeAnnotation3() {
+  public void testMisplacedTypeAnnotation3() {
     // missing parentheses for the cast.
     parse(
         "var o = 1 + /** @type {string} */ value;",
         MISPLACED_TYPE_ANNOTATION);
   }
 
-  public void disable_testMisplacedTypeAnnotation4() {
+  public void testMisplacedTypeAnnotation4() {
     // missing parentheses for the cast.
     parse(
         "var o = /** @type {!Array.<string>} */ ['hello', 'you'];",
         MISPLACED_TYPE_ANNOTATION);
   }
 
-  public void disable_testMisplacedTypeAnnotation5() {
+  public void testMisplacedTypeAnnotation5() {
     // missing parentheses for the cast.
     parse(
         "var o = (/** @type {!Foo} */ {});",
         MISPLACED_TYPE_ANNOTATION);
   }
 
-  public void disable_testMisplacedTypeAnnotation6() {
+  public void testMisplacedTypeAnnotation6() {
     parse("var o = /** @type {function():string} */ function() {return 'str';}",
         MISPLACED_TYPE_ANNOTATION);
   }

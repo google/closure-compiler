@@ -464,7 +464,8 @@ public class Parser {
     FormalParameterListTree formalParameterList = parseFormalParameterList();
     BlockTree functionBody = parseFunctionBody();
     return new FunctionDeclarationTree(
-        getTreeLocation(start), name, isStatic, formalParameterList, functionBody);
+        getTreeLocation(start), name, isStatic, false,
+        formalParameterList, functionBody);
   }
 
   private ParseTree parseFunctionExpression() {
@@ -474,7 +475,8 @@ public class Parser {
     FormalParameterListTree formalParameterList = parseFormalParameterList();
     BlockTree functionBody = parseFunctionBody();
     return new FunctionDeclarationTree(
-        getTreeLocation(start), name, false, formalParameterList, functionBody);
+        getTreeLocation(start), name, false, true,
+        formalParameterList, functionBody);
   }
 
   private FormalParameterListTree parseFormalParameterList() {
@@ -806,7 +808,10 @@ public class Parser {
     eat(TokenType.OPEN_PAREN);
     ParseTree condition = parseExpression();
     eat(TokenType.CLOSE_PAREN);
-    eatPossibleImplicitSemiColon();
+    // The semicolon after the "do-while" is optional.
+    if (peek(TokenType.SEMI_COLON)) {
+      eat(TokenType.SEMI_COLON);
+    }
     return new DoWhileStatementTree(getTreeLocation(start), body, condition);
   }
 
