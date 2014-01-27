@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Charsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.collect.ImmutableMap;
 
 import junit.framework.TestCase;
@@ -41,7 +42,7 @@ public class VariableMapTest extends TestCase {
   public void cycleTest(ImmutableMap<String, String> map)
       throws ParseException {
     VariableMap in = new VariableMap(map);
-    String serialized = new String(in.toBytes(), Charsets.UTF_8);
+    String serialized = new String(in.toBytes(), UTF_8);
     VariableMap out = VariableMap.fromBytes(serialized.getBytes());
     assertMapsEquals(in.toMap(), out.toMap());
   }
@@ -56,7 +57,7 @@ public class VariableMapTest extends TestCase {
 
   public void testToBytes() {
     VariableMap vm = new VariableMap(ImmutableMap.of("AAA", "a", "BBB", "b"));
-    String serialized = new String(vm.toBytes(), Charsets.UTF_8);
+    String serialized = new String(vm.toBytes(), UTF_8);
     assertTrue(serialized.endsWith("\n"));
 
     List<String> lines = Arrays.asList(serialized.split("\n"));
