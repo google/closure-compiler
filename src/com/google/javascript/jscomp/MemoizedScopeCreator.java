@@ -90,7 +90,7 @@ class MemoizedScopeCreator
   Collection<Scope> getAllMemoizedScopes() {
     // Return scopes in reverse order of creation so that IIFEs will
     // come before the global scope.
-    List temp = Lists.newArrayList(scopes.values());
+    List<Scope> temp = Lists.newArrayList(scopes.values());
     Collections.reverse(temp);
     return Collections.unmodifiableCollection(temp);
   }
