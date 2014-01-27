@@ -132,7 +132,7 @@ public class FunctionType {
 
   // This function is a subtype of every function (callable in all contexts)
   static final FunctionType BOTTOM_FUNCTION = FunctionType.normalized(
-      null, null, TypeConsts.TOP, TypeConsts.BOTTOM, null, null, false);
+      null, null, JSType.TOP, JSType.BOTTOM, null, null, false);
 
   // We want to warn about argument mismatch, so we don't consider a function
   // with N required arguments to have restFormals of type TOP.
@@ -142,7 +142,7 @@ public class FunctionType {
   // Theoretically, the top function takes an infinite number of required
   // arguments of type BOTTOM and returns TOP. If this function is ever called,
   // it's a type error. Despite that, we want to represent it and not go
-  // directly to TOP, to avoid spurious warnings.
+  // directly to JSType.TOP, to avoid spurious warnings.
   // Eg, after an IF, we may see a type (number | top_function); this type could
   // get specialized to number and used legitimately.
 
@@ -282,18 +282,18 @@ public class FunctionType {
     int i = 0;
     for (; i < other.requiredFormals.size(); i++) {
       JSType formalType = other.getFormalType(i);
-      builder.addReqFormal(formalType.isUnknown() ? TypeConsts.BOTTOM : formalType);
+      builder.addReqFormal(formalType.isUnknown() ? JSType.BOTTOM : formalType);
     }
     for (int j = 0; j < other.optionalFormals.size(); j++) {
       JSType formalType = other.getFormalType(i + j);
-      builder.addOptFormal(formalType.isUnknown() ? TypeConsts.BOTTOM : formalType);
+      builder.addOptFormal(formalType.isUnknown() ? JSType.BOTTOM : formalType);
     }
     if (other.restFormals != null) {
       JSType formalType = other.restFormals;
-      builder.addOptFormal(formalType.isUnknown() ? TypeConsts.BOTTOM : formalType);
+      builder.addOptFormal(formalType.isUnknown() ? JSType.BOTTOM : formalType);
     }
     if (this.returnType.isUnknown()) {
-      builder.addRetType(TypeConsts.UNKNOWN);
+      builder.addRetType(JSType.UNKNOWN);
     } else {
       builder.addRetType(other.returnType);
     }

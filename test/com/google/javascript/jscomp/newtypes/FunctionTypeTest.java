@@ -18,8 +18,8 @@ package com.google.javascript.jscomp.newtypes;
 
 import static com.google.javascript.jscomp.newtypes.FunctionType.BOTTOM_FUNCTION;
 import static com.google.javascript.jscomp.newtypes.FunctionType.TOP_FUNCTION;
-import static com.google.javascript.jscomp.newtypes.TypeConsts.BOTTOM;
-import static com.google.javascript.jscomp.newtypes.TypeConsts.NUMBER;
+import static com.google.javascript.jscomp.newtypes.JSType.BOTTOM;
+import static com.google.javascript.jscomp.newtypes.JSType.NUMBER;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

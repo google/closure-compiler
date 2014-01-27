@@ -43,7 +43,7 @@ public class JSTypeCreatorFromJSDoc {
     }
   }
 
-  private final SimpleErrorReporter reporter = new SimpleErrorReporter();
+  private SimpleErrorReporter reporter = new SimpleErrorReporter();
 
   public JSType getNodeTypeDeclaration(
       JSDocInfo jsdoc, DeclaredTypeRegistry registry) {
@@ -106,21 +106,21 @@ public class JSTypeCreatorFromJSDoc {
         return JSType.fromObjectType(ObjectType.fromProperties(fields));
       }
       case Token.EMPTY: // for function types that don't declare a return type
-        return TypeConsts.UNKNOWN;
+        return JSType.UNKNOWN;
       case Token.VOID:
-        return TypeConsts.UNDEFINED;
+        return JSType.UNDEFINED;
       case Token.STRING:
         String typeName = n.getString();
         if (typeName.equals("boolean")) {
-          return TypeConsts.BOOLEAN;
+          return JSType.BOOLEAN;
         } else if (typeName.equals("null")) {
-          return TypeConsts.NULL;
+          return JSType.NULL;
         } else if (typeName.equals("number")) {
-          return TypeConsts.NUMBER;
+          return JSType.NUMBER;
         } else if (typeName.equals("string")) {
-          return TypeConsts.STRING;
+          return JSType.STRING;
         } else if (typeName.equals("undefined")) {
-          return TypeConsts.UNDEFINED;
+          return JSType.UNDEFINED;
         } else { // it must be a class name
           JSType namedType = registry.getNominalTypeAsJstype(typeName);
           if (namedType != null) {
@@ -129,7 +129,7 @@ public class JSTypeCreatorFromJSDoc {
           throw new UnknownTypeException("Unhandled type: " + typeName);
         }
       case Token.PIPE: {
-        JSType union = TypeConsts.BOTTOM;
+        JSType union = JSType.BOTTOM;
         for (Node child = n.getFirstChild(); child != null;
              child = child.getNext()) {
           union = JSType.join(union, getTypeFromNodeHelper(child, registry));
@@ -138,18 +138,18 @@ public class JSTypeCreatorFromJSDoc {
       }
       case Token.BANG: {
         return getTypeFromNodeHelper(n.getFirstChild(), registry)
-          .removeType(TypeConsts.NULL);
+          .removeType(JSType.NULL);
       }
       case Token.QMARK: {
         Node child = n.getFirstChild();
         if (child == null) {
-          return TypeConsts.UNKNOWN;
+          return JSType.UNKNOWN;
         } else {
-          return JSType.join(TypeConsts.NULL, getTypeFromNodeHelper(child, registry));
+          return JSType.join(JSType.NULL, getTypeFromNodeHelper(child, registry));
         }
       }
       case Token.STAR:
-        return TypeConsts.TOP;
+        return JSType.TOP;
       case Token.FUNCTION: {
         FunctionTypeBuilder builder = new FunctionTypeBuilder();
         Node child = n.getFirstChild();

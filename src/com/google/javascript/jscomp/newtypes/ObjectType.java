@@ -172,7 +172,7 @@ public class ObjectType {
     Map<String, Property> newProps = Maps.newHashMap(this.props);
     Property oldProp = this.props.get(qname);
     Property newProp = oldProp == null ?
-        new Property(TypeConsts.UNKNOWN, null, false) :
+        new Property(JSType.UNKNOWN, null, false) :
         new Property(oldProp.getType(), oldProp.getDeclaredType(), false);
     newProps.put(qname, newProp);
     return ObjectType.makeObjectType(klass, newProps, fn, isLoose);
@@ -433,7 +433,7 @@ public class ObjectType {
   JSType getProp(String qname) {
     Property p = getLeftmostProp(qname);
     if (TypeUtils.isIdentifier(qname)) {
-      return p == null ? TypeConsts.UNDEFINED : p.getType();
+      return p == null ? JSType.UNDEFINED : p.getType();
     } else {
       Preconditions.checkState(p != null);
       return p.getType().getProp(TypeUtils.getPropPath(qname));

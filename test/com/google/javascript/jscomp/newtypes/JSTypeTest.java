@@ -16,16 +16,16 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import static com.google.javascript.jscomp.newtypes.TypeConsts.BOOLEAN;
-import static com.google.javascript.jscomp.newtypes.TypeConsts.BOTTOM;
-import static com.google.javascript.jscomp.newtypes.TypeConsts.FALSE_TYPE;
-import static com.google.javascript.jscomp.newtypes.TypeConsts.NULL;
-import static com.google.javascript.jscomp.newtypes.TypeConsts.NUMBER;
-import static com.google.javascript.jscomp.newtypes.TypeConsts.STRING;
-import static com.google.javascript.jscomp.newtypes.TypeConsts.TOP;
-import static com.google.javascript.jscomp.newtypes.TypeConsts.TRUE_TYPE;
-import static com.google.javascript.jscomp.newtypes.TypeConsts.UNDEFINED;
-import static com.google.javascript.jscomp.newtypes.TypeConsts.UNKNOWN;
+import static com.google.javascript.jscomp.newtypes.JSType.BOOLEAN;
+import static com.google.javascript.jscomp.newtypes.JSType.BOTTOM;
+import static com.google.javascript.jscomp.newtypes.JSType.FALSE_TYPE;
+import static com.google.javascript.jscomp.newtypes.JSType.NULL;
+import static com.google.javascript.jscomp.newtypes.JSType.NUMBER;
+import static com.google.javascript.jscomp.newtypes.JSType.STRING;
+import static com.google.javascript.jscomp.newtypes.JSType.TOP;
+import static com.google.javascript.jscomp.newtypes.JSType.TRUE_TYPE;
+import static com.google.javascript.jscomp.newtypes.JSType.UNDEFINED;
+import static com.google.javascript.jscomp.newtypes.JSType.UNKNOWN;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

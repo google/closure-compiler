@@ -16,8 +16,8 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import static com.google.javascript.jscomp.newtypes.UnionType.NUMBER;
-import static com.google.javascript.jscomp.newtypes.UnionType.STRING;
+import static com.google.javascript.jscomp.newtypes.JSType.NUMBER;
+import static com.google.javascript.jscomp.newtypes.JSType.STRING;
 
 import com.google.common.collect.ImmutableSet;
 

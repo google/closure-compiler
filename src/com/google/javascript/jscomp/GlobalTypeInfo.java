@@ -32,7 +32,6 @@ import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 import com.google.javascript.jscomp.newtypes.NominalType;
 import com.google.javascript.jscomp.newtypes.ObjectType;
-import com.google.javascript.jscomp.newtypes.TypeConsts;
 import com.google.javascript.jscomp.newtypes.TypeUtils;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -382,7 +381,7 @@ class GlobalTypeInfo implements CompilerPass {
                 currentScope.addNamespace(name);
               } else {
                 currentScope.addLocal(name, parent.isVar() ?
-                    getVarTypeFromAnnotation(n) : TypeConsts.UNKNOWN);
+                    getVarTypeFromAnnotation(n) : JSType.UNKNOWN);
               }
             }
           } else if (currentScope.isOuterVarEarly(name)) {
@@ -542,7 +541,7 @@ class GlobalTypeInfo implements CompilerPass {
       JSType newType = currentScope.getDeclaredTypeOf(leftmost);
       if (declType == null) {
         newType = newType.withProperty(
-            TypeUtils.getPropPath(qname), TypeConsts.UNKNOWN);
+            TypeUtils.getPropPath(qname), JSType.UNKNOWN);
       } else {
         newType = newType.withDeclaredProperty(
             TypeUtils.getPropPath(qname), declType);
@@ -823,7 +822,7 @@ class GlobalTypeInfo implements CompilerPass {
       NominalType klass = getNominalType(name);
       if (klass != null) {
         return JSType.join(
-            JSType.fromObjectType(ObjectType.fromClass(klass)), TypeConsts.NULL);
+            JSType.fromObjectType(ObjectType.fromClass(klass)), JSType.NULL);
       }
       return null;
     }
@@ -889,7 +888,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     void addNamespace(String name) {
       Preconditions.checkState(!isDefinedLocally(name));
-      locals.put(name, TypeConsts.TOP_OBJECT);
+      locals.put(name, JSType.TOP_OBJECT);
       localNamespaces.add(name);
     }
 

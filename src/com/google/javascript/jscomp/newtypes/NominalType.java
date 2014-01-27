@@ -230,7 +230,7 @@ public class NominalType {
     if (mayHaveProp(pname)) {
       return;
     }
-    classProps.put(pname, new Property(TypeConsts.UNKNOWN, null, false));
+    classProps.put(pname, new Property(JSType.UNKNOWN, null, false));
   }
 
   //////////// Prototype Properties
@@ -248,7 +248,7 @@ public class NominalType {
   public void addUndeclaredProtoProperty(String pname) {
     if (!protoProps.containsKey(pname) ||
         protoProps.get(pname).getDeclaredType() == null) {
-      protoProps.put(pname, new Property(TypeConsts.UNKNOWN, null, false));
+      protoProps.put(pname, new Property(JSType.UNKNOWN, null, false));
     }
   }
 
@@ -275,7 +275,7 @@ public class NominalType {
     if (ctorProps.containsKey(pname)) {
       return;
     }
-    ctorProps.put(pname, new Property(TypeConsts.UNKNOWN, null, false));
+    ctorProps.put(pname, new Property(JSType.UNKNOWN, null, false));
   }
 
   public JSType getCtorPropDeclaredType(String pname) {
