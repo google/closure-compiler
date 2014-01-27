@@ -1360,34 +1360,72 @@ final class TypedScopeCreator implements ScopeCreator {
       // Check if this is constant, and if it has a known type.
       if (isConstantSymbol(info, lValue)) {
         if (rValue != null) {
-          JSDocInfo rValueInfo = rValue.getJSDocInfo();
-          if (rValueInfo != null && rValueInfo.hasType()) {
-            // If rValue has a type-cast, we use the type in the type-cast.
-            return rValueInfo.getType().evaluate(scope, typeRegistry);
-          } else if (rValue.getJSType() != null
-              && !rValue.getJSType().isUnknownType()) {
-            // If rValue's type was already computed during scope creation,
-            // then we can safely use that.
-            return rValue.getJSType();
-          } else if (rValue.isOr()) {
-            // Check for a very specific JS idiom:
-            // var x = x || TYPE;
-            // This is used by Closure's base namespace for esoteric
-            // reasons.
-            Node firstClause = rValue.getFirstChild();
-            Node secondClause = firstClause.getNext();
-            boolean namesMatch = firstClause.isName()
-                && lValue.isName()
-                && firstClause.getString().equals(lValue.getString());
-            if (namesMatch && secondClause.getJSType() != null
-                && !secondClause.getJSType().isUnknownType()) {
-              return secondClause.getJSType();
-            }
+          JSType rValueType = getDeclaredRValueType(lValue, rValue);
+          if (rValueType != null) {
+            return rValueType;
           }
         }
       }
 
       return getDeclaredTypeInAnnotation(lValue, info);
+    }
+
+    /**
+     * Check for common idioms of a typed R-value assigned to a const L-value.
+     *
+     * Normally, we would only want this sort of propagation to happen under
+     * type inference. But we want a declared const to be nameable in a type
+     * annotation, so we need to figure out the type before we try to resolve
+     * the annotation.
+     */
+    private JSType getDeclaredRValueType(Node lValue, Node rValue) {
+      // If rValue has a type-cast, we use the type in the type-cast.
+      JSDocInfo rValueInfo = rValue.getJSDocInfo();
+      if (rValue.isCast() && rValueInfo != null && rValueInfo.hasType()) {
+        return rValueInfo.getType().evaluate(scope, typeRegistry);
+      }
+
+      // Check if the type has already been computed during scope-creation.
+      // This is mostly useful for literals like BOOLEAN, NUMBER, STRING, and
+      // OBJECT_LITERAL
+      JSType type = rValue.getJSType();
+      if (type != null && !type.isUnknownType()) {
+        return type;
+      }
+
+      // If rValue is a name, try looking it up in the current scope.
+      if (rValue.isQualifiedName()) {
+        String name = rValue.getQualifiedName();
+        Var slot = scope.getVar(name);
+        if (slot == null || slot.isTypeInferred()) {
+          return null;
+        }
+
+        type = slot.getType();
+        if (type != null && !type.isUnknownType()) {
+          return type;
+        }
+      }
+
+      // Check for a very specific JS idiom:
+      // var x = x || TYPE;
+      // This is used by Closure's base namespace for esoteric
+      // reasons, so we only really care about that case.
+      if (rValue.isOr()) {
+        Node firstClause = rValue.getFirstChild();
+        Node secondClause = firstClause.getNext();
+        boolean namesMatch = firstClause.isName()
+            && lValue.isName()
+            && firstClause.getString().equals(lValue.getString());
+        if (namesMatch) {
+          type = secondClause.getJSType();
+          if (type != null && !type.isUnknownType()) {
+            return type;
+          }
+        }
+      }
+
+      return null;
     }
 
     private FunctionType getFunctionType(@Nullable Var v) {

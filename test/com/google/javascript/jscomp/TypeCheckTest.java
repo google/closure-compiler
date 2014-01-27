@@ -5107,6 +5107,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testConstructorAlias11() throws Exception {
+    testTypes(
+        "/**\n * @param {number} x \n * @constructor */ " +
+        "var Foo = function(x) {};" +
+        "/** @const */ var FooAlias = Foo;" +
+        "/** @const */ var FooAlias2 = FooAlias;" +
+        "/** @return {FooAlias2} */ function foo() { " +
+        "  return 1; }",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: (FooAlias2|null)");
+  }
+
   public void testClosure1() throws Exception {
     testClosureTypes(
         CLOSURE_DEFS +
