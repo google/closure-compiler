@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -965,7 +966,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       }
       return Charset.forName(config.charset);
     }
-    return Charsets.UTF_8;
+    return UTF_8;
   }
 
   /**
@@ -1003,7 +1004,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       }
       return Charset.forName(config.charset);
     }
-    return Charsets.UTF_8;
+    return UTF_8;
   }
 
   protected List<SourceFile> createExterns() throws FlagUsageException,

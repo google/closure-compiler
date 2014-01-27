@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Charsets;
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -71,7 +72,7 @@ class CodeGenerator {
     cc = consumer;
 
     Charset outputCharset = options.getOutputCharset();
-    if (outputCharset == null || outputCharset == Charsets.US_ASCII) {
+    if (outputCharset == null || outputCharset == US_ASCII) {
       // If we want our default (pretending to be UTF-8, but escaping anything
       // outside of straight ASCII), then don't use the encoder, but
       // just special-case the code.  This keeps the normal path through

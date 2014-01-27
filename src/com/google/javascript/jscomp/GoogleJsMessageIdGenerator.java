@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.JsMessage.IdGenerator;
 import com.google.javascript.jscomp.JsMessage.PlaceholderReference;
@@ -101,7 +102,7 @@ public class GoogleJsMessageIdGenerator implements IdGenerator {
      * bytes and then fingerprinting those bytes.
      */
     private static long fingerprint(String str) {
-      byte[] tmp = str.getBytes(Charsets.UTF_8);
+      byte[] tmp = str.getBytes(UTF_8);
       return FP.fingerprint(tmp, 0, tmp.length);
     }
 

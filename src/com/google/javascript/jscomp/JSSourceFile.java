@@ -17,8 +17,9 @@
 package com.google.javascript.jscomp;
 
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +46,7 @@ public class JSSourceFile extends SourceFile implements Serializable {
   }
 
   public static JSSourceFile fromFile(String fileName) {
-    return new JSSourceFile(SourceFile.fromFile(fileName, Charsets.UTF_8));
+    return new JSSourceFile(SourceFile.fromFile(fileName, UTF_8));
   }
 
   public static JSSourceFile fromFile(File file, Charset charSet) {
@@ -53,7 +54,7 @@ public class JSSourceFile extends SourceFile implements Serializable {
   }
 
   public static JSSourceFile fromFile(File file) {
-    return new JSSourceFile(SourceFile.fromFile(file, Charsets.UTF_8));
+    return new JSSourceFile(SourceFile.fromFile(file, UTF_8));
   }
 
   public static JSSourceFile fromCode(String fileName, String code) {

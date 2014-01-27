@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -1836,10 +1837,10 @@ public class DefaultPassConfig extends PassConfig {
             try {
               if (hasWrittenFile) {
                 Files.append(na.getHtmlReport(), new File(reportPath),
-                    Charsets.UTF_8);
+                    UTF_8);
               } else {
                 Files.write(na.getHtmlReport(), new File(reportPath),
-                    Charsets.UTF_8);
+                    UTF_8);
                 hasWrittenFile = true;
               }
             } catch (IOException e) {
@@ -2456,7 +2457,7 @@ public class DefaultPassConfig extends PassConfig {
           try {
             Files.write(DotFormatter.toDot(gc.getNameReferenceGraph()),
                 new File(graphFileName),
-                Charsets.UTF_8);
+                UTF_8);
           } catch (IOException e) {
             compiler.report(
                 JSError.make(
@@ -2482,7 +2483,7 @@ public class DefaultPassConfig extends PassConfig {
                 new NameReferenceGraphReport(gc.getNameReferenceGraph());
             Files.write(report.getHtmlReport(),
                 new File(reportFileName),
-                Charsets.UTF_8);
+                UTF_8);
           } catch (IOException e) {
             compiler.report(
                 JSError.make(

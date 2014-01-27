@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Charsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -130,7 +131,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
    */
   public static Set<String> loadWhitelistedJsWarnings(File file) {
     return loadWhitelistedJsWarnings(
-        Files.asCharSource(file, Charsets.UTF_8));
+        Files.asCharSource(file, UTF_8));
   }
 
   /**

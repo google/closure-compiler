@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
@@ -113,7 +114,7 @@ public class VariableMap {
    */
   public byte[] toBytes() {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    Writer writer = new OutputStreamWriter(baos, Charsets.UTF_8);
+    Writer writer = new OutputStreamWriter(baos, UTF_8);
     try {
       for (Map.Entry<String, String> entry : map.entrySet()) {
         writer.write(escape(entry.getKey()));
@@ -139,7 +140,7 @@ public class VariableMap {
    */
   public static VariableMap fromBytes(byte[] bytes) throws ParseException {
     Iterable<String> lines = LINE_SPLITTER.split(
-        new String(bytes, Charsets.UTF_8));
+        new String(bytes, UTF_8));
 
     ImmutableMap.Builder<String, String> map = ImmutableMap.builder();
 

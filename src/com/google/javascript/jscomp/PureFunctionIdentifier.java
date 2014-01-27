@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Charsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
@@ -1118,7 +1119,7 @@ class PureFunctionIdentifier implements CompilerPass {
         try {
           Files.write(pureFunctionIdentifier.getDebugReport(),
               new File(reportPath),
-              Charsets.UTF_8);
+              UTF_8);
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
