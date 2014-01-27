@@ -35,12 +35,12 @@ import junit.framework.TestCase;
  */
 public class FunctionTypeTest extends TestCase {
   private static final FunctionType fooConstructor = FunctionType.normalized(
-      null, null, null, null, NominalType.makeClass("Foo"), null, false);
+      null, null, null, null, NominalType.makeClass("Foo"), null, null, false);
 
   private static FunctionType parse(String typestring) {
     JSTypeCreatorFromJSDoc parser = new JSTypeCreatorFromJSDoc();
     FunctionType result = parser.getTypeFromNode(
-        JsDocInfoParser.parseTypeString(typestring), null).getFunType();
+        JsDocInfoParser.parseTypeString(typestring), null, null).getFunType();
     assertEquals(ImmutableSet.of(), parser.getWarnings());
     return result;
   }

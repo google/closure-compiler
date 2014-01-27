@@ -585,6 +585,8 @@ class GlobalTypeInfo implements CompilerPass {
 
       // TODO(user): warn if multiple jsdocs for a fun
 
+      // TODO(blickly): Add type variables to scopes to handle nested @template
+
       // Collect the names of the formals
       ArrayList<String> formals = Lists.newArrayList();
       for (Node param = NodeUtil.getFunctionParameters(fn).getFirstChild();

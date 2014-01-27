@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -50,7 +51,8 @@ public class JSTypeCreatorFromJSDoc {
     if (jsdoc == null) {
       return null;
     }
-    return getTypeFromJSTypeExpression(jsdoc.getType(), registry);
+    // TODO(blickly): Pass @template info into getTypeFromJSTypeExpression
+    return getTypeFromJSTypeExpression(jsdoc.getType(), registry, null);
   }
 
   public Set<String> getWarnings() {
@@ -61,27 +63,32 @@ public class JSTypeCreatorFromJSDoc {
     return warnings;
   }
 
-  public JSType getTypeFromJSTypeExpression(
-      JSTypeExpression expr, DeclaredTypeRegistry registry) {
+  private JSType getTypeFromJSTypeExpression(
+      JSTypeExpression expr, DeclaredTypeRegistry registry,
+      ImmutableList<String> typeParameters) {
     if (expr == null) {
       return null;
     }
-    JSType result = getTypeFromNode(expr.getRootNode(), registry);
+    JSType result = getTypeFromNode(expr.getRootNode(), registry,
+        typeParameters);
     return result;
   }
 
   // Very similar to JSTypeRegistry#createFromTypeNodesInternal
   // n is a jsdoc node, not an AST node; the same class (Node) is used for both
-  JSType getTypeFromNode(Node n, DeclaredTypeRegistry registry) {
+  JSType getTypeFromNode(Node n, DeclaredTypeRegistry registry,
+      ImmutableList<String> typeParameters) {
     try {
-      return getTypeFromNodeHelper(n, registry);
+      return getTypeFromNodeHelper(n, registry, typeParameters);
     } catch (UnknownTypeException e) {
       warn("Unknown type", n);
       return null;
     }
   }
 
-  private JSType getTypeFromNodeHelper(Node n, DeclaredTypeRegistry registry)
+  private JSType getTypeFromNodeHelper(
+      Node n, DeclaredTypeRegistry registry,
+      ImmutableList<String> typeParameters)
       throws UnknownTypeException {
     Preconditions.checkNotNull(n);
     switch (n.getType()) {
@@ -99,7 +106,8 @@ public class JSTypeCreatorFromJSDoc {
             fieldName = fieldName.substring(1, fieldName.length() - 1);
           }
           JSType fieldType =
-              getTypeFromNodeHelper(fieldTypeNode.getLastChild(), registry);
+              getTypeFromNodeHelper(
+                  fieldTypeNode.getLastChild(), registry, typeParameters);
           // TODO(blickly): Allow optional properties
           fields.put(fieldName, fieldType);
         }
@@ -121,6 +129,9 @@ public class JSTypeCreatorFromJSDoc {
           return JSType.STRING;
         } else if (typeName.equals("undefined")) {
           return JSType.UNDEFINED;
+        } else if (typeParameters != null &&
+            typeParameters.contains(typeName)) {
+          return JSType.fromTypeVar(typeName);
         } else { // it must be a class name
           JSType namedType = registry.getNominalTypeAsJstype(typeName);
           if (namedType != null) {
@@ -132,20 +143,23 @@ public class JSTypeCreatorFromJSDoc {
         JSType union = JSType.BOTTOM;
         for (Node child = n.getFirstChild(); child != null;
              child = child.getNext()) {
-          union = JSType.join(union, getTypeFromNodeHelper(child, registry));
+          union = JSType.join(union,
+              getTypeFromNodeHelper(child, registry, typeParameters));
         }
         return union;
       }
       case Token.BANG: {
-        return getTypeFromNodeHelper(n.getFirstChild(), registry)
-          .removeType(JSType.NULL);
+        return getTypeFromNodeHelper(
+            n.getFirstChild(), registry, typeParameters)
+            .removeType(JSType.NULL);
       }
       case Token.QMARK: {
         Node child = n.getFirstChild();
         if (child == null) {
           return JSType.UNKNOWN;
         } else {
-          return JSType.join(JSType.NULL, getTypeFromNodeHelper(child, registry));
+          return JSType.join(JSType.NULL,
+              getTypeFromNodeHelper(child, registry, typeParameters));
         }
       }
       case Token.STAR:
@@ -168,14 +182,17 @@ public class JSTypeCreatorFromJSDoc {
               switch (arg.getType()) {
                 case Token.EQUALS:
                   builder.addOptFormal(
-                      getTypeFromNodeHelper(arg.getFirstChild(), registry));
+                      getTypeFromNodeHelper(
+                          arg.getFirstChild(), registry, typeParameters));
                   break;
                 case Token.ELLIPSIS:
                   builder.addRestFormals(
-                      getTypeFromNodeHelper(arg.getFirstChild(), registry));
+                      getTypeFromNodeHelper(
+                          arg.getFirstChild(), registry, typeParameters));
                   break;
                 default:
-                  builder.addReqFormal(getTypeFromNodeHelper(arg, registry));
+                  builder.addReqFormal(
+                      getTypeFromNodeHelper(arg, registry, typeParameters));
                   break;
               }
             } catch (IllegalStateException e) {
@@ -185,7 +202,8 @@ public class JSTypeCreatorFromJSDoc {
           }
           child = child.getNext();
         }
-        builder.addRetType(getTypeFromNodeHelper(child, registry));
+        builder.addRetType(
+            getTypeFromNodeHelper(child, registry, typeParameters));
         return builder.buildType();
       }
       default:
@@ -197,7 +215,7 @@ public class JSTypeCreatorFromJSDoc {
   public boolean hasKnownType(
       Node n, DeclaredTypeRegistry registry) {
     try {
-      getTypeFromNodeHelper(n, registry);
+      getTypeFromNodeHelper(n, registry, null);
     } catch (UnknownTypeException e) {
       return false;
     }
@@ -205,7 +223,7 @@ public class JSTypeCreatorFromJSDoc {
   }
 
   public NominalType getClassType(Node n, DeclaredTypeRegistry registry) {
-    JSType wrappedClass = getTypeFromNode(n, registry);
+    JSType wrappedClass = getTypeFromNode(n, registry, null);
     if (wrappedClass == null) {
       return null;
     }
@@ -303,7 +321,7 @@ public class JSTypeCreatorFromJSDoc {
         switch (paramType.getType()) {
           case Token.EQUALS:
             builder.addOptFormal(getTypeFromNode(
-                    paramType.getFirstChild(), registry));
+                    paramType.getFirstChild(), registry, null));
             break;
           case Token.ELLIPSIS:
             if (!warnedForMissingTypes) {
@@ -314,8 +332,7 @@ public class JSTypeCreatorFromJSDoc {
             }
             break;
           default:
-            builder.addReqFormal(
-                getTypeFromNode(paramType, registry));
+            builder.addReqFormal(getTypeFromNode(paramType, registry, null));
             break;
         }
         paramType = paramType.getNext();
@@ -325,8 +342,8 @@ public class JSTypeCreatorFromJSDoc {
 
     if (paramType != null) {
       if (paramType.getType() == Token.ELLIPSIS) {
-        builder.addRestFormals(
-            getTypeFromNode(paramType.getFirstChild(), registry));
+        builder.addRestFormals(getTypeFromNode(
+                paramType.getFirstChild(), registry, null));
       } else {
         warn("The function has fewer formal parameters than the types " +
             "declared in the JSDoc", funNode);
@@ -341,7 +358,7 @@ public class JSTypeCreatorFromJSDoc {
       warn("The function cannot have both an @type jsdoc and @return " +
           "jsdoc. Ignoring @return jsdoc.", funNode);
     }
-    builder.addRetType(getTypeFromNode(childJsdoc, registry));
+    builder.addRetType(getTypeFromNode(childJsdoc, registry, null));
 
     return builder;
   }
@@ -352,6 +369,8 @@ public class JSTypeCreatorFromJSDoc {
     Preconditions.checkArgument(!ignoreJsdoc || jsdoc == null);
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     Node params = funNode.getFirstChild().getNext();
+    ImmutableList<String> typeParameters =
+        jsdoc == null ? null : jsdoc.getTemplateTypeNames();
     for (Node param = params.getFirstChild();
          param != null;
          param = param.getNext()) {
@@ -372,7 +391,7 @@ public class JSTypeCreatorFromJSDoc {
       }
       JSType fnParamType = null;
       if (jsdocNode != null) {
-        fnParamType = getTypeFromNode(jsdocNode, registry);
+        fnParamType = getTypeFromNode(jsdocNode, registry, typeParameters);
       }
       if (inlineParamType != null) {
         // TODO(user): The support for inline optional parameters is currently
@@ -399,7 +418,8 @@ public class JSTypeCreatorFromJSDoc {
         warn("Found two JsDoc comments for the return type", funNode);
       }
     } else {
-      builder.addRetType(getTypeFromJSTypeExpression(retTypeExp, registry));
+      builder.addRetType(
+          getTypeFromJSTypeExpression(retTypeExp, registry, typeParameters));
     }
 
     return builder;

@@ -41,6 +41,8 @@ public class FunctionType {
   private final ImmutableMap<String, JSType> outerVarPreconditions;
   // non-null iff this is a constructor
   private final NominalType klass;
+  // Non-null iff this function has an @template annotation
+  private final ImmutableList<String> typeParameters;
 
   private FunctionType(
       ImmutableList<JSType> requiredFormals,
@@ -49,6 +51,7 @@ public class FunctionType {
       JSType retType,
       NominalType klass,
       ImmutableMap<String, JSType> outerVars,
+      ImmutableList<String> typeParameters,
       boolean isLoose) {
     this.requiredFormals = requiredFormals;
     this.optionalFormals = optionalFormals;
@@ -56,6 +59,7 @@ public class FunctionType {
     this.returnType = retType;
     this.klass = klass;
     this.outerVarPreconditions = outerVars;
+    this.typeParameters = typeParameters;
     this.isLoose = isLoose;
   }
 
@@ -82,7 +86,7 @@ public class FunctionType {
     }
     return new FunctionType(
         requiredFormals, optionalFormals, restFormals, returnType, klass,
-        outerVarPreconditions, true);
+        outerVarPreconditions, typeParameters, true);
   }
 
   static FunctionType normalized(
@@ -92,6 +96,7 @@ public class FunctionType {
       JSType retType,
       NominalType klass,
       Map<String, JSType> outerVars,
+      ImmutableList<String> typeParameters,
       boolean isLoose) {
     if (requiredFormals == null) {
       requiredFormals = ImmutableList.of();
@@ -116,7 +121,9 @@ public class FunctionType {
         ImmutableList.copyOf(requiredFormals),
         ImmutableList.copyOf(optionalFormals),
         restFormals, retType, klass,
-        ImmutableMap.copyOf(outerVars), isLoose);
+        ImmutableMap.copyOf(outerVars),
+        typeParameters,
+        isLoose);
   }
 
   @VisibleForTesting
@@ -127,12 +134,12 @@ public class FunctionType {
       JSType retType) {
     return JSType.fromFunctionType(FunctionType.normalized(
         requiredFormals, optionalFormals, restFormals, retType,
-        null, null, false));
+        null, null, null, false));
   }
 
   // This function is a subtype of every function (callable in all contexts)
   static final FunctionType BOTTOM_FUNCTION = FunctionType.normalized(
-      null, null, JSType.TOP, JSType.BOTTOM, null, null, false);
+      null, null, JSType.TOP, JSType.BOTTOM, null, null, null, false);
 
   // We want to warn about argument mismatch, so we don't consider a function
   // with N required arguments to have restFormals of type TOP.
@@ -151,10 +158,10 @@ public class FunctionType {
   // is ever called, a warning is inevitable.
   public static final FunctionType TOP_FUNCTION = new FunctionType(
       // Call the constructor directly to set fields to null
-      null, null, null, null, null, null, false);
+      null, null, null, null, null, null, null, false);
   public static final FunctionType LOOSE_TOP_FUNCTION = new FunctionType(
       // Call the constructor directly to set fields to null
-      null, null, null, null, null, null, true);
+      null, null, null, null, null, null, null, true);
 
   public boolean isTopFunction() {
     if (requiredFormals == null) {
@@ -412,6 +419,40 @@ public class FunctionType {
       return false;
     }
     return true;
+  }
+
+  FunctionType instantiateGenerics(ImmutableList<JSType> concreteTypes) {
+    // We aren't yet handling @templated constructors
+    Preconditions.checkState(klass == null);
+    ImmutableMap<String, JSType> concreteMapping =
+        mapFromLists(typeParameters, concreteTypes);
+    FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    for (JSType reqFormal : requiredFormals) {
+      builder.addReqFormal(reqFormal.substituteGenerics(concreteMapping));
+    }
+    for (JSType optFormal : optionalFormals) {
+      builder.addOptFormal(optFormal.substituteGenerics(concreteMapping));
+    }
+    builder.addRestFormals(restFormals.substituteGenerics(concreteMapping));
+    builder.addRetType(returnType.substituteGenerics(concreteMapping));
+    if (isLoose) {
+      builder.addLoose();
+    }
+    // TODO(blickly): Do we need instatiation here?
+    for (String var : outerVarPreconditions.keySet()) {
+      builder.addOuterVarPrecondition(var, outerVarPreconditions.get(var));
+    }
+    // The returned FunctionType will have no typeParameters
+    return builder.buildFunction();
+  }
+
+  private ImmutableMap<String, JSType> mapFromLists(
+      List<String> keys, List<JSType> values) {
+    ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
+    for (int i = 0; i < keys.size(); i++) {
+      builder.put(keys.get(i), values.get(i));
+    }
+    return builder.build();
   }
 
   @Override

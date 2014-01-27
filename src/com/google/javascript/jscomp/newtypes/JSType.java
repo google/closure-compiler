@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -39,7 +40,8 @@ public class JSType {
   private static final int FALSE_MASK = 0x10;
   private static final int NULL_MASK = 0x20;
   private static final int NON_SCALAR_MASK = 0x40;
-  private static final int END_MASK = NON_SCALAR_MASK * 2;
+  private static final int TYPEVAR_MASK = 0x80;
+  private static final int END_MASK = TYPEVAR_MASK * 2;
   // When either of the next two bits is set, the rest of the type isn't
   // guaranteed to be in a consistent state.
   private static final int TRUTHY_MASK = 0x100;
@@ -55,9 +57,13 @@ public class JSType {
   private final int type;
   // objs is null for scalar types
   private final ImmutableSet<ObjectType> objs;
+  // typeVar is null for non-generic types
+  private final String typeVar;
   private final String location;
 
-  private JSType(int type, String location, ImmutableSet<ObjectType> objs) {
+  private JSType(int type, String location, ImmutableSet<ObjectType> objs,
+      String typeVar) {
+    this.typeVar = typeVar;
     this.location = location;
     if (objs == null) {
       this.type = type;
@@ -73,17 +79,21 @@ public class JSType {
   }
 
   private JSType(int type) {
-    this(type, null, null);
+    this(type, null, null, null);
   }
 
   // Factory method for wrapping a function in a JSType
   public static JSType fromFunctionType(FunctionType fn) {
     return new JSType(NON_SCALAR_MASK, null,
-        ImmutableSet.of(ObjectType.fromFunction(fn)));
+        ImmutableSet.of(ObjectType.fromFunction(fn)), null);
   }
 
   public static JSType fromObjectType(ObjectType obj) {
-    return new JSType(NON_SCALAR_MASK, null, ImmutableSet.of(obj));
+    return new JSType(NON_SCALAR_MASK, null, ImmutableSet.of(obj), null);
+  }
+
+  static JSType fromTypeVar(String template) {
+    return new JSType(TYPEVAR_MASK, null, null, template);
   }
 
   boolean isValidType() {
@@ -117,11 +127,11 @@ public class JSType {
   private static final JSType TOP_MINUS_NULL = new JSType(
       TRUE_MASK | FALSE_MASK | NUMBER_MASK | STRING_MASK | UNDEFINED_MASK |
       NON_SCALAR_MASK,
-      null, ImmutableSet.of(ObjectType.TOP_OBJECT));
+      null, ImmutableSet.of(ObjectType.TOP_OBJECT), null);
   private static final JSType TOP_MINUS_UNDEF = new JSType(
       TRUE_MASK | FALSE_MASK | NUMBER_MASK | STRING_MASK | NULL_MASK |
       NON_SCALAR_MASK,
-      null, ImmutableSet.of(ObjectType.TOP_OBJECT));
+      null, ImmutableSet.of(ObjectType.TOP_OBJECT), null);
 
   public static JSType topFunction() {
     if (TOP_FUNCTION == null) {
@@ -205,10 +215,31 @@ public class JSType {
     } else if (lhs.isUnknown() || rhs.isUnknown()) {
       return UNKNOWN;
     }
+    // For now, simply crash on joining two type vars. In the future, we can
+    // either support sets or fall back to ? in this (probably uncommon) case.
+    Preconditions.checkState(lhs.typeVar == null || rhs.typeVar == null);
     return new JSType(
         lhs.type | rhs.type,
         Objects.equal(lhs.location, rhs.location) ? lhs.location : null,
-        ObjectType.joinSets(lhs.objs, rhs.objs));
+        ObjectType.joinSets(lhs.objs, rhs.objs),
+        lhs.typeVar != null ? lhs.typeVar : rhs.typeVar);
+  }
+
+  JSType substituteGenerics(ImmutableMap<String, JSType> concreteTypes) {
+    ImmutableSet<ObjectType> newObjs = null;
+    if (objs != null) {
+      ImmutableSet.Builder<ObjectType> newObjsBuilder = ImmutableSet.builder();
+      for (ObjectType obj : objs) {
+        // newObjsBuilder.add(obj.substituteGenerics(concreteTypes));
+      }
+      newObjs = newObjsBuilder.build();
+    }
+    JSType current = new JSType(type & ~TYPEVAR_MASK, location, newObjs, null);
+    if ((type & TYPEVAR_MASK) != 0) {
+      JSType concrete = concreteTypes.get(typeVar);
+      current = JSType.join(current, concrete);
+    }
+    return current;
   }
 
   // Specialize this type by meeting with other, but keeping location
@@ -222,8 +253,9 @@ public class JSType {
     } else if (this.isTop() || this.isUnknown()) {
       return other.withLocation(this.location);
     }
+    // TODO(blickly): specialize should lose its typeVar like meet does
     return new JSType(this.type & other.type, this.location,
-        ObjectType.specializeSet(this.objs, other.objs));
+        ObjectType.specializeSet(this.objs, other.objs), typeVar);
   }
 
   private JSType makeTruthy() {
@@ -231,14 +263,15 @@ public class JSType {
       return this;
     }
     return new JSType(type & ~NULL_MASK & ~FALSE_MASK & ~UNDEFINED_MASK,
-        location, objs);
+        location, objs, typeVar);
   }
 
   private JSType makeFalsy() {
     if (this.isTop() || this.isUnknown()) {
       return this;
     }
-    return new JSType(type & ~TRUE_MASK & ~NON_SCALAR_MASK, location, null);
+    return new JSType(
+        type & ~TRUE_MASK & ~NON_SCALAR_MASK, location, null, typeVar);
   }
 
   // Meet two types, location agnostic
@@ -252,8 +285,10 @@ public class JSType {
     } else if (rhs.isUnknown()) {
       return lhs;
     }
+    String typeVar = lhs.typeVar != null && lhs.typeVar.equals(rhs.typeVar) ?
+        lhs.typeVar : null;
     return new JSType(lhs.type & rhs.type, null,
-        ObjectType.meetSets(lhs.objs, rhs.objs));
+        ObjectType.meetSets(lhs.objs, rhs.objs), typeVar);
   }
 
   public static JSType plus(JSType lhs, JSType rhs) {
@@ -303,7 +338,7 @@ public class JSType {
       return TOP_MINUS_UNDEF;
     }
     if (other.equals(NULL) || other.equals(UNDEFINED)) {
-      return new JSType(type & ~other.type, location, objs);
+      return new JSType(type & ~other.type, location, objs, typeVar);
     }
     if (objs == null) {
       return this;
@@ -318,11 +353,11 @@ public class JSType {
         newObjs.add(obj);
       }
     }
-    return new JSType(type, location, newObjs.build());
+    return new JSType(type, location, newObjs.build(), typeVar);
   }
 
   public JSType withLocation(String location) {
-    return new JSType(type, location, objs);
+    return new JSType(type, location, objs, typeVar);
   }
 
   public String getLocation() {
@@ -355,7 +390,8 @@ public class JSType {
   public JSType withLoose() {
     Preconditions.checkNotNull(this.objs);
     return new JSType(
-        this.type, this.location, ObjectType.withLooseObjects(this.objs));
+        this.type, this.location,
+        ObjectType.withLooseObjects(this.objs), typeVar);
   }
 
   public JSType getProp(String qName) {
@@ -418,7 +454,7 @@ public class JSType {
     return this.objs == null ?
         this :
         new JSType(this.type, this.location,
-            ObjectType.withoutProperty(this.objs, qname));
+            ObjectType.withoutProperty(this.objs, qname), typeVar);
   }
 
   public JSType withProperty(String qname, JSType type) {
@@ -427,20 +463,20 @@ public class JSType {
     }
     Preconditions.checkState(this.objs != null);
     return new JSType(this.type, this.location,
-        ObjectType.withProperty(this.objs, qname, type));
+        ObjectType.withProperty(this.objs, qname, type), typeVar);
   }
 
   public JSType withDeclaredProperty(String qname, JSType type) {
     Preconditions.checkState(this.objs != null && this.location == null);
     return new JSType(this.type, null,
-        ObjectType.withDeclaredProperty(this.objs, qname, type));
+        ObjectType.withDeclaredProperty(this.objs, qname, type), typeVar);
   }
 
   public JSType withPropertyRequired(String qname) {
     return (isUnknown() || this.objs == null) ?
         this :
         new JSType(this.type, this.location,
-            ObjectType.withPropertyRequired(this.objs, qname));
+            ObjectType.withPropertyRequired(this.objs, qname), typeVar);
   }
 
   @Override
@@ -453,13 +489,13 @@ public class JSType {
       case BOTTOM_MASK:
       case TOP_MASK:
       case UNKNOWN_MASK:
-        return tagToString(type, null);
+        return tagToString(type, null, null);
       default:
         int tags = type;
         Set<String> types = Sets.newTreeSet();
         for (int mask = 1; mask != END_MASK; mask <<= 1) {
           if ((tags & mask) != 0) {
-            types.add(tagToString(mask, objs));
+            types.add(tagToString(mask, objs, typeVar));
             tags = tags & ~mask;  // Remove current mask from union
           }
         }
@@ -487,7 +523,7 @@ public class JSType {
    * Takes a type tag with a single bit set (including the non-scalar bit),
    * and prints the string representation of that single type.
    */
-  private static String tagToString(int tag, Set<ObjectType> objs) {
+  private static String tagToString(int tag, Set<ObjectType> objs, String T) {
     switch (tag) {
       case TRUE_MASK:
       case FALSE_MASK:
@@ -512,6 +548,8 @@ public class JSType {
         return "undefined";
       case UNKNOWN_MASK:
         return "unknown";
+      case TYPEVAR_MASK:
+        return T;
       default: // Must be a union type.
         return null;
     }

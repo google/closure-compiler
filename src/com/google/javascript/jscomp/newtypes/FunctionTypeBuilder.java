@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -43,6 +44,8 @@ public class FunctionTypeBuilder {
   private NominalType klass;
   // Only used to build DeclaredFunctionType for prototype methods
   private NominalType receiverType;
+  // Non-null iff this function has an @template annotation
+  private ImmutableList<String> typeParameters;
 
   public FunctionTypeBuilder addReqFormal(JSType t) {
     if (!optionalFormals.isEmpty() || restFormals != null) {
@@ -87,6 +90,12 @@ public class FunctionTypeBuilder {
     return this;
   }
 
+  public FunctionTypeBuilder addTypeParameters(
+      ImmutableList<String> typeParameters) {
+    this.typeParameters = typeParameters;
+    return this;
+  }
+
   public FunctionTypeBuilder addReceiverType(NominalType cl) {
     receiverType = cl;
     return this;
@@ -97,13 +106,13 @@ public class FunctionTypeBuilder {
     Preconditions.checkState(outerVars.isEmpty());
     return DeclaredFunctionType.make(
         requiredFormals, optionalFormals, restFormals, returnType,
-        klass, receiverType);
+        klass, receiverType, typeParameters);
   }
 
   public FunctionType buildFunction() {
     FunctionType result = FunctionType.normalized(
         requiredFormals, optionalFormals,
-        restFormals, returnType, klass, outerVars, loose);
+        restFormals, returnType, klass, outerVars, typeParameters, loose);
     result.checkValid();
     return result;
   }

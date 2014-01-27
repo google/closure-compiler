@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.util.List;
@@ -41,6 +42,8 @@ public class DeclaredFunctionType {
   private final NominalType klass;
   // Non-null iff this is a prototype method
   private final NominalType receiverType;
+  // Non-null iff this function has an @template annotation
+  private ImmutableList<String> typeParameters;
 
   private DeclaredFunctionType(
       List<JSType> requiredFormals,
@@ -48,13 +51,15 @@ public class DeclaredFunctionType {
       JSType restFormals,
       JSType retType,
       NominalType klass,
-      NominalType receiverType) {
+      NominalType receiverType,
+      ImmutableList<String> typeParameters) {
     this.requiredFormals = requiredFormals;
     this.optionalFormals = optionalFormals;
     this.restFormals = restFormals;
     this.returnType = retType;
     this.klass = klass;
     this.receiverType = receiverType;
+    this.typeParameters = typeParameters;
   }
 
   public FunctionType toFunctionType() {
@@ -68,6 +73,7 @@ public class DeclaredFunctionType {
     builder.addRestFormals(restFormals == null ? null : restFormals);
     builder.addRetType(returnType == null ? JSType.UNKNOWN : returnType);
     builder.addClass(klass);
+    builder.addTypeParameters(typeParameters);
     return builder.buildFunction();
   }
 
@@ -77,7 +83,8 @@ public class DeclaredFunctionType {
       JSType restFormals,
       JSType retType,
       NominalType klass,
-      NominalType receiverType) {
+      NominalType receiverType,
+      ImmutableList<String> typeParameters) {
     if (requiredFormals == null) {
       requiredFormals = Lists.newArrayList();
     }
@@ -86,7 +93,7 @@ public class DeclaredFunctionType {
     }
     return new DeclaredFunctionType(
         requiredFormals, optionalFormals, restFormals, retType,
-        klass, receiverType);
+        klass, receiverType, typeParameters);
   }
 
   // 0-indexed
