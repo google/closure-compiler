@@ -3041,3 +3041,43 @@ Document.prototype.registerElement;
  * @typedef {{then: !Function}}
  */
 var Thenable;
+
+
+/**
+ * This is not an official DOM interface. It is used to add generic typing
+ * and respective type inference where available.
+ * {@see goog.labs.Thenable} inherits from this making all promises
+ * interoperate.
+ * @interface
+ * @template TYPE
+ */
+var IThenable = function() {};
+
+
+/**
+ * @param {(function(TYPE):
+ *             (RESULT|IThenable.<RESULT>|Thenable))=} opt_onFulfilled
+ * @param {(function(*): *)=} opt_onRejected
+ * @return {IThenable.<RESULT>}
+ * @template RESULT
+ */
+IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
+
+
+/**
+ * @see http://dom.spec.whatwg.org/#futures
+ * @param {function(
+ *             function((TYPE|IThenable.<TYPE>|Thenable)),
+ *             function(*))} resolver
+ * @constructor
+ * @implements {IThenable.<TYPE>}
+ * @template TYPE
+ */
+var Promise = function(resolver) {};
+
+
+/** @override */
+Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
+
+// Intentionally omitted until the spec gets clearer.
+// Promise.prototype.catch
