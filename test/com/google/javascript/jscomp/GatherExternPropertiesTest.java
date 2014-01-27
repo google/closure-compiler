@@ -22,12 +22,21 @@ import com.google.common.collect.Sets;
  * Test case for {@link GatherExternProperties}.
  */
 public class GatherExternPropertiesTest extends CompilerTestCase {
-  @Override
-  protected CompilerPass getProcessor(Compiler compiler) {
-    return new GatherExternProperties(compiler);
+  private boolean gatherPropertiesFromTypes = false;
+
+  public GatherExternPropertiesTest() {
+    super();
+    enableTypeCheck(CheckLevel.WARNING);
   }
 
-  public void testGatherExternProperties() throws Exception {
+  @Override
+  protected CompilerPass getProcessor(Compiler compiler) {
+    return new GatherExternProperties(compiler, gatherPropertiesFromTypes);
+  }
+
+  public void testGatherExternProperties() {
+    gatherPropertiesFromTypes = false;
+
     // Properties.
     assertExternProperties(
         "foo.bar;",
@@ -51,9 +60,130 @@ public class GatherExternPropertiesTest extends CompilerTestCase {
     assertExternProperties(
         "foo['bar'] = {};");
 
-    // Record types not supported yet.
+    // Record types are ignored.
     assertExternProperties(
         "/** @type {{bar: string, baz: string}} */ var foo;");
+  }
+
+  public void testGatherExternPropertiesIncludingRecordTypes() {
+    gatherPropertiesFromTypes = true;
+
+    // Properties.
+    assertExternProperties(
+        "foo.bar;",
+        "bar");
+
+    // Object literals.
+    assertExternProperties(
+        "foo = {bar: null, 'baz': {foobar: null}};",
+        "bar", "baz", "foobar");
+
+    // Object literal with numeric propertic.
+    assertExternProperties(
+        "foo = {0: null};",
+         "0");
+
+    // Top-level variables do not count.
+    assertExternProperties(
+        "var foo;");
+
+    // String-key access does not count.
+    assertExternProperties(
+        "foo['bar'] = {};");
+
+    // Record types on properties.
+    assertExternProperties(
+        "/** @type {{bar: string, baz: string}} */ var foo;",
+        "bar", "baz");
+
+    // Record types in typedef.
+    assertExternProperties(
+        "/** @typedef {{bar: string, baz: string}} */ var FooType;",
+        "bar", "baz");
+
+    // Record types in type unions.
+    assertExternProperties(
+        "/** @type {string|{bar: string}|{baz: string}} */ var foo;",
+        "bar", "baz");
+
+    // Record types in function parameters and return types.
+    assertExternProperties(
+        "/** @type {function(string, {bar: string}): {baz: string}} */\n" +
+        "var foo;",
+        "bar", "baz");
+
+    // Record types as template arguments.
+    assertExternProperties(
+        "/** @type {Array.<{bar: string, baz: string}>} */ var foo;",
+        "bar", "baz");
+
+    // Record types in implemented interfaces.
+    assertExternProperties(
+        "/**\n" +
+        " * @interface\n" +
+        " * @template T\n" +
+        " */\n" +
+        "var Foo;\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @implements {Foo.<{bar: string, baz: string}>}\n" +
+        " */\n" +
+        "var Bar;",
+        "bar", "baz");
+
+    // Record types in extended class.
+    assertExternProperties(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " */\n" +
+        "var Foo = function() {};\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo.<{bar: string, baz: string}>}\n" +
+        " */\n" +
+        "var Bar = function() {};",
+        "bar", "baz");
+
+    // Record types in enum.
+    // Note that "baz" exists only in the type of the enum,
+    // but it is still picked up.
+    assertExternProperties(
+        "/** @enum {{bar: string, baz: (string|undefined)}} */\n" +
+        "var FooEnum = {VALUE: {bar: ''}};",
+        "VALUE", "bar", "baz");
+
+    // Nested record types.
+    assertExternProperties(
+        "/** @type {{bar: string, baz: {foobar: string}}} */ var foo;",
+        "bar", "baz", "foobar");
+
+    // Recursive types.
+    assertExternProperties(
+        "/** @typedef {{a: D2}} */\n" +
+        "var D1;\n" +
+        "\n" +
+        "/** @typedef {{b: D1}} */\n" +
+        "var D2;",
+        "a", "b");
+    assertExternProperties(
+        "/** @typedef {{a: function(D2)}} */\n" +
+        "var D1;\n" +
+        "\n" +
+        "/** @typedef {{b: D1}} */\n" +
+        "var D2;",
+        "a", "b");
+
+    // Record types defined in normal code and referenced in externs should
+    // not bleed-through.
+    testSame(
+        // Externs.
+        "/** @type {NonExternType} */ var foo;",
+        // Normal code.
+        "/** @typedef {{bar: string, baz: string}} */ var NonExternType;",
+        null);
+    // Check that no properties were found.
+    assertEquals(Sets.newHashSet(), getLastCompiler().getExternProperties());
   }
 
   private void assertExternProperties(String externs, String... properties) {

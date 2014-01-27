@@ -585,6 +585,9 @@ public class CompilerOptions implements Serializable, Cloneable {
     specializeInitialModule = enabled;
   }
 
+  /** Whether to gather property names from types in externs. */
+  boolean gatherExternsFromTypes;
+
   //--------------------------------
   // Special-purpose alterations
   //--------------------------------
@@ -1009,6 +1012,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     ambiguateProperties = false;
     anonymousFunctionNaming = AnonymousFunctionNamingPolicy.OFF;
     exportTestFunctions = false;
+    gatherExternsFromTypes = false;
 
     // Alterations
     runtimeTypeCheck = false;

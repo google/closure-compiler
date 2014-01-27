@@ -42,7 +42,7 @@ public class MultiPassTest extends CompilerTestCase {
         new PassFactory("sanityCheck", false) {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
-            return new SanityCheck(compiler);
+            return new SanityCheck(compiler, false);
           }
         });
     compiler.setPhaseOptimizer(phaseopt);
