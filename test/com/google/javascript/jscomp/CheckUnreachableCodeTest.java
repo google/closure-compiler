@@ -121,9 +121,9 @@ public class CheckUnreachableCodeTest extends CompilerTestCase {
 
   public void testReachableTryCatchFinally() {
     testSame("try { } finally {  }");
-    testSame("try { foo(); } finally bar(); ");
+    testSame("try { foo(); } finally { bar() } ");
     testSame("try { foo() } finally { bar() }");
-    testSame("try { foo(); } catch (e) {e()} finally bar(); ");
+    testSame("try { foo(); } catch (e) {e()} finally { bar() }");
     testSame("try { foo() } catch (e) {e()} finally { bar() }");
   }
 

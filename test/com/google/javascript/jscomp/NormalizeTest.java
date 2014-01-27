@@ -71,11 +71,11 @@ public class NormalizeTest extends CompilerTestCase {
     test("for(;;){var b = foo(1), c = foo(2);}",
          "for(;;){var b = foo(1); var c = foo(2)}");
 
-    test("try{var b = foo(1), c = foo(2);} finally foo(3);",
-         "try{var b = foo(1); var c = foo(2)} finally foo(3);");
-    test("try{var b = foo(1),c = foo(2);} finally;",
-         "try{var b = foo(1); var c = foo(2)} finally;");
-    test("try{foo(0);} finally var b = foo(1), c = foo(2);",
+    test("try{var b = foo(1), c = foo(2);} finally { foo(3) }",
+         "try{var b = foo(1); var c = foo(2)} finally { foo(3); }");
+    test("try{var b = foo(1),c = foo(2);} finally {}",
+         "try{var b = foo(1); var c = foo(2)} finally {}");
+    test("try{foo(0);} finally { var b = foo(1), c = foo(2); }",
          "try{foo(0);} finally {var b = foo(1); var c = foo(2)}");
 
     test("switch(a) {default: var b = foo(1), c = foo(2); break;}",
