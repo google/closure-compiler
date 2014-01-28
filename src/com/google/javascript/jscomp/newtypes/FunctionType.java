@@ -421,20 +421,31 @@ public class FunctionType {
     return true;
   }
 
-  FunctionType instantiateGenerics(ImmutableList<JSType> concreteTypes) {
+  public boolean isGeneric() {
+    return typeParameters != null;
+  }
+
+  public List<String> getTypeParameters() {
+    return typeParameters;
+  }
+
+  public FunctionType instantiateGenerics(Map<String, JSType> typeMap) {
     // We aren't yet handling @templated constructors
     Preconditions.checkState(klass == null);
-    ImmutableMap<String, JSType> concreteMapping =
-        mapFromLists(typeParameters, concreteTypes);
+    for (String typeParam: typeMap.keySet()) {
+      Preconditions.checkState(typeParameters.contains(typeParam));
+    }
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     for (JSType reqFormal : requiredFormals) {
-      builder.addReqFormal(reqFormal.substituteGenerics(concreteMapping));
+      builder.addReqFormal(reqFormal.substituteGenerics(typeMap));
     }
     for (JSType optFormal : optionalFormals) {
-      builder.addOptFormal(optFormal.substituteGenerics(concreteMapping));
+      builder.addOptFormal(optFormal.substituteGenerics(typeMap));
     }
-    builder.addRestFormals(restFormals.substituteGenerics(concreteMapping));
-    builder.addRetType(returnType.substituteGenerics(concreteMapping));
+    if (restFormals != null) {
+      builder.addRestFormals(restFormals.substituteGenerics(typeMap));
+    }
+    builder.addRetType(returnType.substituteGenerics(typeMap));
     if (isLoose) {
       builder.addLoose();
     }
@@ -444,15 +455,6 @@ public class FunctionType {
     }
     // The returned FunctionType will have no typeParameters
     return builder.buildFunction();
-  }
-
-  private ImmutableMap<String, JSType> mapFromLists(
-      List<String> keys, List<JSType> values) {
-    ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-    for (int i = 0; i < keys.size(); i++) {
-      builder.put(keys.get(i), values.get(i));
-    }
-    return builder.build();
   }
 
   @Override

@@ -17,9 +17,11 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -38,6 +40,7 @@ import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -108,6 +111,19 @@ public class NewTypeInference implements CompilerPass {
           "The #{0} formal parameter of this function has an invalid type, " +
           "which prevents the function from being called.\n" +
           "Please change the type.");
+
+  static final DiagnosticType CANNOT_INSTANTIATE_TYPE_VAR =
+      DiagnosticType.warning(
+          "JSC_CANNOT_INSTANTIATE_TYPE_VAR",
+          "Illegal instantiation for type variable {0}.\n" +
+          "You can only specify one type. Found {1}.");
+
+  // The difference w/ the previous warning is that for this one we can't
+  // describe the error well.
+  static final DiagnosticType BAD_INSTANTIATION =
+      DiagnosticType.warning(
+          "JSC_BAD_INSTANTIATION",
+          "Couldn't instantiate type {0} with {1}.");
 
   Set<JSError> warnings = Sets.newHashSet();
 
@@ -589,6 +605,9 @@ public class NewTypeInference implements CompilerPass {
     DeclaredFunctionType declType = fn.getDeclaredType();
     int reqArity = declType.getRequiredArity();
     int optArity = declType.getOptionalArity();
+    if (declType.isGeneric()) {
+      builder.addTypeParameters(declType.getTypeParameters());
+    }
     for (String formal : fn.getFormals()) {
       formalType = fn.getDeclaredTypeOf(formal);
       if (formalType == null) {
@@ -1110,19 +1129,24 @@ public class NewTypeInference implements CompilerPass {
               expr, TypeCheck.WRONG_ARGUMENT_COUNT, "",
               Integer.toString(numArgs), Integer.toString(minArity),
               " and at most " + maxArity));
+          return new EnvTypePair(inEnv, requiredType);
+        }
+        if (funType.isGeneric()) {
+          Map<String, JSType> typeMap = calcTypeInstantiation(
+              funType.getTypeParameters(), expr, funType, inEnv, true);
+          funType = funType.instantiateGenerics(typeMap);
         }
         // argTypes collects types of actuals for deferred checks.
         List<JSType> argTypes = Lists.newArrayList();
         TypeEnv tmpEnv = inEnv;
+        Node arg = expr.getChildAtIndex(1);
         for (int i = 0; i < numArgs; i++) {
-          JSType formalType =
-              (i < maxArity) ? funType.getFormalType(i) : JSType.TOP;
+          JSType formalType = funType.getFormalType(i);
           if (formalType.isBottom()) {
             warnings.add(JSError.make(expr, CALL_FUNCTION_WITH_BOTTOM_FORMAL,
                   Integer.toString(i)));
             formalType = JSType.TOP;
           }
-          Node arg = expr.getChildAtIndex(i + 1);
           EnvTypePair pair = analyzeExprFwd(arg, tmpEnv, formalType);
           if (!pair.type.isSubtypeOf(formalType)) {
             warnings.add(JSError.make(arg, INVALID_ARGUMENT_TYPE,
@@ -1130,11 +1154,10 @@ public class NewTypeInference implements CompilerPass {
                     formalType.toString(), pair.type.toString()));
             pair.type = JSType.UNKNOWN; // No deferred check needed.
           }
-          if (i < maxArity) {
-            Preconditions.checkState(!pair.type.equals(JSType.topFunction()));
-            argTypes.add(pair.type);
-          }
+          Preconditions.checkState(!pair.type.equals(JSType.topFunction()));
+          argTypes.add(pair.type);
           tmpEnv = pair.env;
+          arg = arg.getNext();
         }
         JSType retType = funType.getReturnType();
         if (callee.isName()) {
@@ -1259,6 +1282,56 @@ public class NewTypeInference implements CompilerPass {
         throw new RuntimeException("Unhandled expression type: "
             + Token.name(expr.getType()));
     }
+  }
+
+  private Map<String, JSType> calcTypeInstantiation(
+      List<String> templateVars, Node callNode, FunctionType funType,
+      TypeEnv typeEnv, boolean isFwd) {
+    // TODO(user): also use the return type to calc instantiation
+    HashMap<String, Set<JSType>> typeMultimap = Maps.newHashMap();
+    for (String templateVar: templateVars) {
+      typeMultimap.put(templateVar, new HashSet<JSType>());
+    }
+    Node arg = callNode.getChildAtIndex(1);
+    int i = 0;
+    while (arg != null) {
+      EnvTypePair pair = isFwd ?
+          analyzeExprFwd(arg, typeEnv) : analyzeExprBwd(arg, typeEnv);
+      JSType unifTarget = funType.getFormalType(i);
+      JSType unifSource = pair.type;
+      HashMap<String, Set<JSType>> tmpMultimap = JSType.unify(
+          templateVars, unifTarget, unifSource, typeMultimap);
+      if (tmpMultimap == null) {
+        warnings.add(JSError.make(arg, BAD_INSTANTIATION,
+                unifTarget.toString(), unifSource.toString()));
+      } else {
+        typeMultimap = tmpMultimap;
+      }
+      arg = arg.getNext();
+      typeEnv = pair.env;
+      i++;
+    }
+    HashMap<String, JSType> typeMap = Maps.newHashMap();
+    for (String templateVar: templateVars) {
+      Set<JSType> types = typeMultimap.get(templateVar);
+      if (types.size() > 1) {
+        types.remove(JSType.UNKNOWN);
+      }
+      if (types.size() > 1) {
+        Set<String> typeStrings = Sets.newHashSet();
+        for (JSType t: types) {
+          typeStrings.add(t.toString());
+        }
+        warnings.add(JSError.make(callNode, CANNOT_INSTANTIATE_TYPE_VAR,
+                templateVar, Joiner.on(", ").join(typeStrings)));
+        typeMap.put(templateVar, JSType.UNKNOWN);
+      } else if (types.size() == 1) {
+        typeMap.put(templateVar, Iterables.getOnlyElement(types));
+      } else {
+        typeMap.put(templateVar, JSType.UNKNOWN);
+      }
+    }
+    return typeMap;
   }
 
   private EnvTypePair analyzeNonStrictComparisonFwd(
@@ -1678,12 +1751,20 @@ public class NewTypeInference implements CompilerPass {
         } else if (funType.isTopFunction()) {
           return new EnvTypePair(outEnv, requiredType);
         }
-        int arity = funType.getMaxArity();
+        int numArgs = expr.getChildCount() - 1;
+        if (numArgs < funType.getMinArity() ||
+            numArgs > funType.getMaxArity()) {
+          return new EnvTypePair(outEnv, requiredType);
+        }
+        if (funType.isGeneric()) {
+          Map<String, JSType> typeMap = calcTypeInstantiation(
+              funType.getTypeParameters(), expr, funType, outEnv, false);
+          funType = funType.instantiateGenerics(typeMap);
+        }
         TypeEnv tmpEnv = outEnv;
         // In bwd direction, analyze arguments in reverse
         for (int i = expr.getChildCount() - 2; i >= 0; i--) {
-          JSType formalType =
-              i < arity ? funType.getFormalType(i) : JSType.TOP;
+          JSType formalType = funType.getFormalType(i);
           // The type of a formal can be BOTTOM as the result of a join.
           // Don't use this as a requiredType.
           if (formalType.isBottom()) {

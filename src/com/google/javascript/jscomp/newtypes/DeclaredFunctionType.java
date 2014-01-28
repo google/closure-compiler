@@ -141,6 +141,14 @@ public class DeclaredFunctionType {
     return receiverType;
   }
 
+  public boolean isGeneric() {
+    return typeParameters != null;
+  }
+
+  public ImmutableList<String> getTypeParameters() {
+    return typeParameters;
+  }
+
   public DeclaredFunctionType withTypeInfoFromSuper(
       DeclaredFunctionType superType) {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();

@@ -369,8 +369,18 @@ public class JSTypeCreatorFromJSDoc {
     Preconditions.checkArgument(!ignoreJsdoc || jsdoc == null);
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     Node params = funNode.getFirstChild().getNext();
-    ImmutableList<String> typeParameters =
-        jsdoc == null ? null : jsdoc.getTemplateTypeNames();
+    ImmutableList<String> typeParameters = null;
+
+    // TODO(user): need more @template warnings
+    // - warn for multiple @template annotations
+    // - warn for @template annotation w/out usage
+
+    if (jsdoc != null) {
+      typeParameters = jsdoc.getTemplateTypeNames();
+      if (typeParameters.size() > 0) {
+        builder.addTypeParameters(typeParameters);
+      }
+    }
     for (Node param = params.getFirstChild();
          param != null;
          param = param.getNext()) {

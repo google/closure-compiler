@@ -19,11 +19,13 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -97,9 +99,16 @@ public class JSType {
   }
 
   boolean isValidType() {
-    return isUnknown() || isTop() ||
-        ((type & NON_SCALAR_MASK) != 0 && !objs.isEmpty()) ||
-        ((type & NON_SCALAR_MASK) == 0 && objs == null);
+    if (isUnknown() || isTop()) {
+      return true;
+    }
+    if ((type & NON_SCALAR_MASK) != 0 && (objs == null || objs.isEmpty())) {
+      return false;
+    }
+    if ((type & NON_SCALAR_MASK) == 0 && objs != null) {
+      return false;
+    }
+    return ((type & TYPEVAR_MASK) != 0) == (typeVar != null);
   }
 
   public static final JSType BOOLEAN = new JSType(TRUE_MASK | FALSE_MASK);
@@ -217,7 +226,8 @@ public class JSType {
     }
     // For now, simply crash on joining two type vars. In the future, we can
     // either support sets or fall back to ? in this (probably uncommon) case.
-    Preconditions.checkState(lhs.typeVar == null || rhs.typeVar == null);
+    Preconditions.checkState(lhs.typeVar == null || rhs.typeVar == null ||
+        lhs.typeVar.equals(rhs.typeVar));
     return new JSType(
         lhs.type | rhs.type,
         Objects.equal(lhs.location, rhs.location) ? lhs.location : null,
@@ -225,14 +235,18 @@ public class JSType {
         lhs.typeVar != null ? lhs.typeVar : rhs.typeVar);
   }
 
-  JSType substituteGenerics(ImmutableMap<String, JSType> concreteTypes) {
+  JSType substituteGenerics(Map<String, JSType> concreteTypes) {
+    if (isTop() || isUnknown()) {
+      return this;
+    }
     ImmutableSet<ObjectType> newObjs = null;
     if (objs != null) {
       ImmutableSet.Builder<ObjectType> newObjsBuilder = ImmutableSet.builder();
       for (ObjectType obj : objs) {
         // newObjsBuilder.add(obj.substituteGenerics(concreteTypes));
       }
-      newObjs = newObjsBuilder.build();
+      // newObjs = newObjsBuilder.build();
+      newObjs = objs;
     }
     JSType current = new JSType(type & ~TYPEVAR_MASK, location, newObjs, null);
     if ((type & TYPEVAR_MASK) != 0) {
@@ -240,6 +254,41 @@ public class JSType {
       current = JSType.join(current, concrete);
     }
     return current;
+  }
+
+  /** Returns null if it can't unify */
+  public static HashMap<String, Set<JSType>> unify(List<String> templateVars,
+      JSType unifTarget, JSType unifSource,
+      HashMap<String, Set<JSType>> typeMultimap) {
+    String targetTypevar = unifTarget.typeVar;
+    if (targetTypevar != null && templateVars.contains(targetTypevar)) {
+      int ftype = unifTarget.type;
+      int atype = unifSource.type;
+      int newtype = ftype;
+
+      if ((ftype & ~TYPEVAR_MASK) == BOTTOM_MASK) {
+        newtype = atype;
+      } else if (atype == TOP_MASK || atype == UNKNOWN_MASK) {
+        // unifTarget is of the form T|stuff, so can't unify with non-union
+        return null;
+      } else {
+        newtype = atype & ~ftype & ~NON_SCALAR_MASK & ~TYPEVAR_MASK;
+        if (newtype == BOTTOM_MASK) {
+          // nothing left in unifSource to assign to targetTypevar
+          return null;
+        }
+      }
+      JSType unifiedType = new JSType(newtype, null, null, null);
+      typeMultimap.get(unifTarget.typeVar).add(unifiedType);
+    }
+
+    // TODO(user): objects unification
+    // each obj in left must unify w/ exactly one obj in right
+
+    // We don't do fancy unification, eg,
+    // T|number doesn't unify with TOP
+    // Foo<number>|Foo<string> doesn't unify with Foo<T>|Foo<string>
+    return typeMultimap;
   }
 
   // Specialize this type by meeting with other, but keeping location
@@ -253,9 +302,13 @@ public class JSType {
     } else if (this.isTop() || this.isUnknown()) {
       return other.withLocation(this.location);
     }
-    // TODO(blickly): specialize should lose its typeVar like meet does
+    String newTypevar = null;
+    if (typeVar != null && other.typeVar != null &&
+        typeVar.equals(other.typeVar)) {
+      newTypevar = typeVar;
+    }
     return new JSType(this.type & other.type, this.location,
-        ObjectType.specializeSet(this.objs, other.objs), typeVar);
+        ObjectType.specializeSet(this.objs, other.objs), newTypevar);
   }
 
   private JSType makeTruthy() {
