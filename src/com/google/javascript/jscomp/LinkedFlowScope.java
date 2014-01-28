@@ -113,22 +113,11 @@ class LinkedFlowScope implements FlowScope {
       JSType inferredType) {
     Scope functionScope = getFunctionScope();
     if (functionScope.isLocal()) {
-      Var v  = functionScope.getVar(symbol);
-      if (v == null && !functionScope.isBottom()) {
+      if (functionScope.getVar(symbol) == null && !functionScope.isBottom()) {
         functionScope.declare(symbol, node, bottomType, null);
       }
 
-      if (v != null && !v.isTypeInferred()) {
-        JSType declaredType = v.getType();
-        // Use the inferred type over the declared type only if the
-        // inferred type is a strict subtype of the declared type.
-        if (declaredType != null && inferredType.isSubtype(declaredType)
-            && !declaredType.isSubtype(inferredType)) {
-          inferSlotType(symbol, inferredType);
-        }
-      } else {
-        inferSlotType(symbol, inferredType);
-      }
+      inferSlotType(symbol, inferredType);
     }
   }
 
