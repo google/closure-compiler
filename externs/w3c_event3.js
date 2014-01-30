@@ -36,7 +36,7 @@
 KeyboardEvent.prototype.initKeyboardEvent = function(typeArg, canBubbleArg, cancelableArg, viewArg, keyIdentifierArg, keyLocationArg, modifiersList) {};
 
 /** @type {string} */
-KeyboardEvent.prototype['char'];
+KeyboardEvent.prototype.char;
 
 /** @type {string} */
 KeyboardEvent.prototype.key;
