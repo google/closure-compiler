@@ -109,6 +109,23 @@ public enum Keywords {
     return get(token) != null;
   }
 
+  public static boolean isStrictKeyword(TokenType token) {
+    switch(token) {
+      case IMPLEMENTS:
+      case INTERFACE:
+      case LET:
+      case PACKAGE:
+      case PRIVATE:
+      case PROTECTED:
+      case PUBLIC:
+      case STATIC:
+      case YIELD:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   public static TokenType getTokenType(String value) {
     return keywordsByName.get(value).type;
   }

@@ -34,6 +34,8 @@ public class Config {
     ECMASCRIPT3,
     ECMASCRIPT5,
     ECMASCRIPT5_STRICT,
+    ECMASCRIPT6,
+    ECMASCRIPT6_STRICT,
   }
 
   /**

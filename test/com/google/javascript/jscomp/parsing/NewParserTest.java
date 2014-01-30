@@ -669,6 +669,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   @SuppressWarnings("unchecked")
   public void testParse() {
+    mode = LanguageMode.ECMASCRIPT5;
     Node a = Node.newString(Token.NAME, "a");
     a.addChildToFront(Node.newString(Token.NAME, "b"));
     List<ParserResult> testCases = ImmutableList.of(
@@ -815,6 +816,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testLetForbidden3() {
+    mode = LanguageMode.ECMASCRIPT5_STRICT;
     parseError("function f() { var let = 3; }",
         "'identifier' expected");
   }
@@ -924,11 +926,76 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNotNull(number.getJSDocInfo());
   }
 
-  // TODO(johnlenz): check duplication and scoping later or build the basic
-  // scope objects while parsing.
-  public void disable_testDuplicatedParam() {
+  public void testDuplicatedParam() {
     parse("function foo(x, x) {}", "Duplicate parameter name \"x\".");
   }
+
+  public void testLet() {
+    mode = LanguageMode.ECMASCRIPT3;
+    parse("var let");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parse("var let");
+
+    mode = LanguageMode.ECMASCRIPT5_STRICT;
+    parseError("var let", "'identifier' expected");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var let");
+
+    mode = LanguageMode.ECMASCRIPT6_STRICT;
+    parseError("var let", "'identifier' expected");
+  }
+
+  public void testYield() {
+    mode = LanguageMode.ECMASCRIPT3;
+    parse("var yield");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parse("var yield");
+
+    mode = LanguageMode.ECMASCRIPT5_STRICT;
+    parseError("var yield", "'identifier' expected");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var yield");
+
+    mode = LanguageMode.ECMASCRIPT6_STRICT;
+    parseError("var yield", "'identifier' expected");
+  }
+
+  public void testStringContinuations() {
+    mode = LanguageMode.ECMASCRIPT3;
+    parse("'\\\n';",
+        "String continuations are not supported in this language mode.");
+    mode = LanguageMode.ECMASCRIPT5;
+    parse("'\\\n';");
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("'\\\n';");
+  }
+
+  public void testBinaryLiterals() {
+    mode = LanguageMode.ECMASCRIPT3;
+    parse("0b0001;",
+        "Binary integer literals are not supported in this language mode.");
+    mode = LanguageMode.ECMASCRIPT5;
+    parse("0b0001;",
+        "Binary integer literals are not supported in this language mode.");
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("0b0001;");
+  }
+
+  public void testOctalLiterals() {
+    mode = LanguageMode.ECMASCRIPT3;
+    parse("0o0001;",
+        "Octal integer literals are not supported in this language mode.");
+    mode = LanguageMode.ECMASCRIPT5;
+    parse("0o0001;",
+        "Octal integer literals are not supported in this language mode.");
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("0o0001;");
+  }
+
 
   public void testGetter() {
     mode = LanguageMode.ECMASCRIPT3;

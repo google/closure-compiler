@@ -123,6 +123,28 @@ class NewIRFactory {
   static final String INVALID_ES5_STRICT_OCTAL =
       "Octal integer literals are not supported in Ecmascript 5 strict mode.";
 
+  static final String STRING_CONTINUATION_WARNING =
+      "String continuations are not supported in this language mode.";
+
+  static final String BINARY_NUMBER_LITERAL_WARNING =
+      "Binary integer literals are not supported in this language mode.";
+
+  static final String OCTAL_NUMBER_LITERAL_WARNING =
+      "Octal integer literals are not supported in this language mode.";
+
+  static final String DUPLICATE_PARAMETER =
+      "Duplicate parameter name \"%s\".";
+
+  static final String UNLABELED_BREAK =
+      "unlabelled break must be inside loop or switch";
+
+  static final String UNEXPECTED_CONTINUE = "continue must be inside loop";
+
+  static final String UNEXPECTED_LABLED_CONTINUE =
+      "continue can only use labeles of iteration statements";
+
+  static final String UNDEFINED_LABEL = "undefined label \"%s\"";
+
   private final String sourceString;
   private final List<Integer> newlines;
   private final StaticSourceFile sourceFile;
@@ -202,6 +224,12 @@ class NewIRFactory {
       case ECMASCRIPT5_STRICT:
         reservedKeywords = ES5_STRICT_RESERVED_KEYWORDS;
         break;
+      case ECMASCRIPT6:
+        reservedKeywords = ES5_RESERVED_KEYWORDS;
+        break;
+      case ECMASCRIPT6_STRICT:
+        reservedKeywords = ES5_STRICT_RESERVED_KEYWORDS;
+        break;
       default:
         throw new IllegalStateException("unknown language mode");
     }
@@ -242,15 +270,125 @@ class NewIRFactory {
 
     irFactory.setFileOverviewJsDoc(n);
 
-    irFactory.validateAllTypeAnnotations(n);
+    irFactory.validateAll(n);
 
     return n;
   }
 
-  private void validateAllTypeAnnotations(Node n) {
-    validateTypeAnnotations(n);
+  private void validateAll(Node n) {
+    validate(n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      validateAllTypeAnnotations(c);
+      validateAll(c);
+    }
+  }
+
+  private void validate(Node n) {
+    validateTypeAnnotations(n);
+    validateParameters(n);
+    validateBreakContinue(n);
+  }
+
+  private void validateBreakContinue(Node n) {
+    if (n.isBreak() || n.isContinue()) {
+      Node labelName = n.getFirstChild();
+      if (labelName != null) {
+        Node parent = n.getParent();
+        while (!parent.isLabel() || !labelsMatch(parent, labelName)) {
+          if (parent.isFunction() || parent.isScript()) {
+            // report missing label
+            errorReporter.error(
+                String.format(UNDEFINED_LABEL, labelName.getString()),
+                sourceName,
+                n.getLineno(), "", n.getCharno());
+            break;
+          }
+          parent = parent.getParent();
+        }
+        if (parent.isLabel() && labelsMatch(parent, labelName)) {
+          if (n.isContinue() && !isContinueTarget(parent.getLastChild())) {
+            // report invalid continue target
+            errorReporter.error(
+                String.format(
+                    UNEXPECTED_LABLED_CONTINUE, labelName.getString()),
+                sourceName,
+                n.getLineno(), "", n.getCharno());
+          }
+        }
+      } else {
+        if (n.isContinue()) {
+          Node parent = n.getParent();
+          while (!isContinueTarget(parent)) {
+            if (parent.isFunction() || parent.isScript()) {
+              // report invalid continue
+              errorReporter.error(
+                  String.format(UNEXPECTED_CONTINUE),
+                  sourceName,
+                  n.getLineno(), "", n.getCharno());
+              break;
+            }
+            parent = parent.getParent();
+          }
+        } else {
+          Node parent = n.getParent();
+          while (!isBreakTarget(parent)) {
+            if (parent.isFunction() || parent.isScript()) {
+              // report invalid break
+              errorReporter.error(
+                  String.format(UNLABELED_BREAK),
+                  sourceName,
+                  n.getLineno(), "", n.getCharno());
+              break;
+            }
+            parent = parent.getParent();
+          }
+        }
+      }
+    }
+  }
+
+  private boolean isBreakTarget(Node n) {
+    switch (n.getType()) {
+      case Token.FOR:
+      case Token.WHILE:
+      case Token.DO:
+      case Token.SWITCH:
+        return true;
+    }
+    return false;
+  }
+
+  private boolean isContinueTarget(Node n) {
+    switch (n.getType()) {
+      case Token.FOR:
+      case Token.WHILE:
+      case Token.DO:
+        return true;
+    }
+    return false;
+  }
+
+
+  private boolean labelsMatch(Node label, Node labelName) {
+    return label.getFirstChild().getString().equals(labelName.getString());
+  }
+
+  private void validateParameters(Node n) {
+    if (n.isParamList()) {
+      Node c = n.getFirstChild();
+      for (; c != null; c = c.getNext()) {
+        if (!c.isName()) {
+          continue;
+        }
+        Node sibling = c.getNext();
+        for (; sibling != null; sibling = sibling.getNext()) {
+          if (sibling.isName() && c.getString().equals(sibling.getString())) {
+            errorReporter.warning(
+                String.format(DUPLICATE_PARAMETER, c.getString()),
+                sourceName,
+                n.getLineno(), "", n.getCharno());
+          }
+        }
+      }
     }
   }
 
@@ -740,7 +878,7 @@ class NewIRFactory {
         ret.putBooleanProp(Node.QUOTED_PROP, true);
       } else {
         ret = newStringNode(Token.STRING,
-            normalizeString(token.asLiteral().toString()));
+            normalizeString(token.asLiteral()));
         ret.putBooleanProp(Node.QUOTED_PROP, true);
       }
       Preconditions.checkState(ret.isString());
@@ -1253,7 +1391,7 @@ class NewIRFactory {
     @Override
     Node processStringLiteral(LiteralExpressionTree literalTree) {
       LiteralToken token = literalTree.literalToken.asLiteral();
-      String value = normalizeString(token.value);
+      String value = normalizeString(token);
 
       Node n = newStringNode(value);
       if (value.indexOf('\u000B') != -1) {
@@ -1581,7 +1719,8 @@ class NewIRFactory {
     }
   }
 
-  private String normalizeString(String value) {
+  private String normalizeString(LiteralToken token) {
+    String value = token.value;
     StringBuilder result = new StringBuilder();
     int start = 1; // skip the leading quote
     int cur = value.indexOf('\\');
@@ -1620,6 +1759,11 @@ class NewIRFactory {
           result.append('\u000B');
           break;
         case '\n':
+          if (!isEs5OrBetterMode()) {
+            errorReporter.warning(STRING_CONTINUATION_WARNING,
+                sourceName,
+                lineno(token.location.start), "", charno(token.location.start));
+          }
           // line continuation, skip the line break
           break;
         case '0':
@@ -1653,6 +1797,15 @@ class NewIRFactory {
     return result.toString();
   }
 
+  boolean isEs6Mode() {
+    return config.languageMode == LanguageMode.ECMASCRIPT6
+        || config.languageMode == LanguageMode.ECMASCRIPT6_STRICT;
+  }
+
+  boolean isEs5OrBetterMode() {
+    return config.languageMode != LanguageMode.ECMASCRIPT3;
+  }
+
   double normalizeNumber(LiteralToken token) {
     String value = token.value;
     SourceRange location = token.location;
@@ -1669,6 +1822,11 @@ class NewIRFactory {
           return Double.valueOf(value);
         case 'b':
         case 'B': {
+          if (!isEs6Mode()) {
+            errorReporter.warning(BINARY_NUMBER_LITERAL_WARNING,
+                sourceName,
+                lineno(token.location.start), "", charno(token.location.start));
+          }
           long v = 0;
           int c = 1;
           while (++c < length) {
@@ -1678,6 +1836,11 @@ class NewIRFactory {
         }
         case 'o':
         case 'O': {
+          if (!isEs6Mode()) {
+            errorReporter.warning(OCTAL_NUMBER_LITERAL_WARNING,
+                sourceName,
+                lineno(token.location.start), "", charno(token.location.start));
+          }
           long v = 0;
           int c = 1;
           while (++c < length) {

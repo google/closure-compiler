@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.parsing;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.Parser.Config.Mode;
 import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
@@ -250,8 +251,8 @@ public class ParserRunner {
         new com.google.javascript.jscomp.parsing.parser.SourceFile(
             sourceFile.getName(), sourceString);
     com.google.javascript.jscomp.parsing.parser.Parser.Config es6config =
-        new com.google.javascript.jscomp.parsing.parser.Parser.Config(
-            config.languageMode == LanguageMode.ECMASCRIPT3);
+        new com.google.javascript.jscomp.parsing.parser.Parser.Config(mode(
+            config.languageMode));
     com.google.javascript.jscomp.parsing.parser.Parser p =
         new com.google.javascript.jscomp.parsing.parser.Parser(
             es6config, es6ErrorReporter, file);
@@ -269,6 +270,24 @@ public class ParserRunner {
       root.setIsSyntheticBlock(true);
     }
     return new ParseResult(root, null);
+  }
+
+  private static Mode mode(
+      LanguageMode mode) {
+    switch (mode) {
+      case ECMASCRIPT3:
+        return Mode.ES3;
+      case ECMASCRIPT5:
+        return Mode.ES5;
+      case ECMASCRIPT5_STRICT:
+        return Mode.ES5_STRICT;
+      case ECMASCRIPT6:
+        return Mode.ES6;
+      case ECMASCRIPT6_STRICT:
+        return Mode.ES5_STRICT;
+      default:
+        throw new IllegalStateException("unexpected");
+    }
   }
 
   /**

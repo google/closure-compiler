@@ -520,6 +520,27 @@ public class Scanner {
 
   private Token scanPostZero(int beginToken) {
     switch (peekChar()) {
+    case 'b':
+    case 'B':
+      // binary
+      nextChar();
+      if (!isBinaryDigit(peekChar())) {
+        reportError("Binary Integer Literal must contain at least one digit");
+      }
+      skipBinaryDigits();
+      return new LiteralToken(
+          TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
+
+    case 'o':
+    case 'O':
+      // octal
+      nextChar();
+      if (!isOctalDigit(peekChar())) {
+        reportError("Octal Integer Literal must contain at least one digit");
+      }
+      skipOctalDigits();
+      return new LiteralToken(
+          TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
     case 'x':
     case 'X':
       nextChar();
@@ -743,6 +764,47 @@ public class Scanner {
       return ch - 'a' + 10;
     case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
       return ch - 'A' + 10;
+    default:
+      return -1;
+    }
+  }
+
+  private void skipOctalDigits() {
+    while (isOctalDigit(peekChar())) {
+      nextChar();
+    }
+  }
+
+  private static boolean isOctalDigit(char ch) {
+    return valueOfOctalDigit(ch) >= 0;
+  }
+
+  private static int valueOfOctalDigit(char ch) {
+    switch (ch) {
+    case '0': case '1': case '2': case '3': case '4':
+    case '5': case '6': case '7':
+      return ch - '0';
+    default:
+      return -1;
+    }
+  }
+
+  private void skipBinaryDigits() {
+    while (isBinaryDigit(peekChar())) {
+      nextChar();
+    }
+  }
+
+  private static boolean isBinaryDigit(char ch) {
+    return valueOfBinaryDigit(ch) >= 0;
+  }
+
+  private static int valueOfBinaryDigit(char ch) {
+    switch (ch) {
+    case '0':
+      return 0;
+    case '1':
+      return 1;
     default:
       return -1;
     }
