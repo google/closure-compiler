@@ -1271,6 +1271,32 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("/**/");
   }
 
+  public void testRegExp() {
+    assertNodeEquality(parse("/a/"), script(expr(regex("a"))));
+    assertNodeEquality(parse("/\\\\/"), script(expr(regex("\\\\"))));
+    assertNodeEquality(parse("/\\s/"), script(expr(regex("\\s"))));
+    assertNodeEquality(parse("/\\u000A/"), script(expr(regex("\\u000A"))));
+    assertNodeEquality(parse("/[\\]]/"), script(expr(regex("[\\]]"))));
+  }
+
+  private Node script(Node stmt) {
+    Node n = new Node(Token.SCRIPT, stmt);
+    n.setIsSyntheticBlock(true);
+    return n;
+  }
+
+  private Node expr(Node n) {
+    return new Node(Token.EXPR_RESULT, n);
+  }
+
+  private Node regex(String regex) {
+    return new Node(Token.REGEXP, Node.newString(regex));
+  }
+
+  private Node regex(String regex, String flags) {
+    return new Node(Token.REGEXP, Node.newString(regex), Node.newString(flags));
+  }
+
   /**
    * Verify that the given code has the given parse errors.
    * @return If in IDE mode, returns a partial tree.

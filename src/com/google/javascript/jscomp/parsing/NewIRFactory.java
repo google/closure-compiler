@@ -1356,20 +1356,18 @@ class NewIRFactory {
     @Override
     Node processRegExpLiteral(LiteralExpressionTree literalTree) {
       LiteralToken token = literalTree.literalToken.asLiteral();
-      String rawRegex = token.value;
-
-      // TODO(johnlenz): build a proper regex object in the parser
-      int lastSlash = rawRegex.lastIndexOf('/');
-      String value = rawRegex.substring(1, lastSlash);
-      String flags = "";
-      if (lastSlash < rawRegex.length()) {
-        flags = rawRegex.substring(rawRegex.lastIndexOf('/') + 1);
-      }
-
-      Node literalStringNode = newStringNode(value);
+      Node literalStringNode = newStringNode(normalizeRegex(token));
       // TODO(johnlenz): fix the source location.
       setSourceInfo(literalStringNode, token);
       Node node = newNode(Token.REGEXP, literalStringNode);
+
+      String rawRegex = token.value;
+      int lastSlash = rawRegex.lastIndexOf('/');
+      String flags = "";
+      if (lastSlash < rawRegex.length()) {
+        flags = rawRegex.substring(lastSlash + 1);
+      }
+
       if (!flags.isEmpty()) {
         Node flagsNode = newStringNode(flags);
         // TODO(johnlenz): fix the source location.
@@ -1719,15 +1717,22 @@ class NewIRFactory {
     }
   }
 
+  private String normalizeRegex(LiteralToken token) {
+    String value = token.value;
+    int lastSlash = value.lastIndexOf('/');
+    return value.substring(1, lastSlash);
+  }
+
+
   private String normalizeString(LiteralToken token) {
     String value = token.value;
-    StringBuilder result = new StringBuilder();
     int start = 1; // skip the leading quote
     int cur = value.indexOf('\\');
     if (cur == -1) {
       // short circuit no escapes.
       return value.substring(1, value.length() - 1);
     }
+    StringBuilder result = new StringBuilder();
     while (cur != -1) {
       if (cur - start > 0) {
         result.append(value.substring(start, cur));
