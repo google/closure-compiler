@@ -59,7 +59,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    * name).
    */
   private final Map<Var, ReferenceCollection> referenceMap =
-      Maps.newHashMap();
+      Maps.newLinkedHashMap();
 
   /**
    * The stack of basic blocks and scopes the current traversal is in.

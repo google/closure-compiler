@@ -17,8 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
+import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
+import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -37,8 +41,7 @@ import java.util.logging.Logger;
  * - currently it only moves functions + variables
  *
  */
-class CrossModuleCodeMotion extends AbstractPostOrderCallback
-    implements CompilerPass {
+class CrossModuleCodeMotion implements CompilerPass {
 
   private static final Logger logger =
       Logger.getLogger(CrossModuleCodeMotion.class.getName());
@@ -88,7 +91,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
     if (graph != null && graph.getModuleCount() > 1) {
 
       // Traverse the tree and find the modules where a var is declared + used
-      NodeTraversal.traverse(compiler, root, this);
+      collectReferences(root);
 
       // Make is so we can ignore constructor references in instanceof.
       if (parentModuleCanSeeSymbolsDeclaredInChildren) {
@@ -251,16 +254,16 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
   }
 
   /**
-   * Process the references to named variables
+   * Process the reads to named variables
    */
-  private void processReference(NodeTraversal t, NamedInfo info, String name) {
+  private void processRead(Reference ref, NamedInfo info) {
     // A name is recursively defined if:
     //   1: It is calling itself.
     //   2: One of its property calls itself.
     // Recursive definition should not block movement.
-
+    String name = ref.getNode().getString();
     boolean recursive = false;
-    Node rootNode = t.getScope().getRootNode();
+    Node rootNode = ref.getScope().getRootNode();
     if (rootNode.isFunction()) {
 
       // CASE #1:
@@ -275,7 +278,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
         // CASE #2:
         // Suppose name is Foo, we keep look up the scope stack to look for
         // a scope with "Foo.prototype.bar = function() { ..... "
-        for (Scope s = t.getScope();
+        for (Scope s = ref.getScope();
              s.getParent() != null; s = s.getParent()) {
           Node curRoot = s.getRootNode();
           if (curRoot.getParent().isAssign()) {
@@ -294,33 +297,37 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
     }
 
     if (!recursive) {
-      info.addUsedModule(t.getModule());
+      info.addUsedModule(getModule(ref));
     }
   }
 
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
-    if (!n.isName()) {
-      return;
-    }
+  private void collectReferences(Node root) {
+    ReferenceCollectingCallback collector = new ReferenceCollectingCallback(
+        compiler, ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
+        new Predicate<Var>() {
+          @Override public boolean apply(Var var) {
+            // Only collect global and non-exported names.
+            return var.isGlobal() &&
+                !compiler.getCodingConvention().isExported(var.getName());
+          }
+        });
+    NodeTraversal.traverse(compiler, root, collector);
 
-    // Skip empty and exported names
-    String name = n.getString();
-    if (name.isEmpty() || compiler.getCodingConvention().isExported(name)) {
-      return;
+    for (Var v : collector.getAllSymbols()) {
+      ReferenceCollection refCollection = collector.getReferences(v);
+      NamedInfo info = getNamedInfo(v);
+      for (Reference ref : refCollection) {
+        processReference(collector, ref, info);
+      }
     }
+  }
 
-    // If the JSCompiler can't find a Var for this string, then all
-    // bets are off. This sometimes occurs with closures. Alternately, we skip
-    // non-global variables
-    Var v = t.getScope().getVar(name);
-    if (v == null || !v.isGlobal()) {
-      return;
-    }
-
-    NamedInfo info = getNamedInfo(v);
+  private void processReference(
+      ReferenceCollectingCallback collector, Reference ref, NamedInfo info) {
+    Node n = ref.getNode();
+    Node parent = n.getParent();
     if (info.allowMove) {
-      if (maybeProcessDeclaration(t, n, parent, info)) {
+      if (maybeProcessDeclaration(collector, ref, info)) {
         // Check to see if the declaration is conditional starting at the
         // grandparent of the name node. Since a function declaration
         // is considered conditional (the function might not be called)
@@ -332,13 +339,17 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
       } else {
         if (parentModuleCanSeeSymbolsDeclaredInChildren &&
             parent.isInstanceOf() && parent.getLastChild() == n) {
-          instanceofNodes.put(parent, new InstanceofInfo(t.getModule(), info));
+          instanceofNodes.put(parent, new InstanceofInfo(getModule(ref), info));
         } else {
-          // Otherwise, it's a reference
-          processReference(t, info, name);
+          // Otherwise, it's a read
+          processRead(ref, info);
         }
       }
     }
+  }
+
+  private JSModule getModule(Reference ref) {
+    return compiler.getInput(ref.getInputId()).getModule();
   }
 
   /**
@@ -356,21 +367,23 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
    *    NAME.inherits([some other name]);
    * where "movable object" is a literal or a function.
    */
-  private boolean maybeProcessDeclaration(NodeTraversal t, Node name,
-      Node parent, NamedInfo info) {
+  private boolean maybeProcessDeclaration(
+      ReferenceCollectingCallback collector, Reference ref, NamedInfo info) {
+    Node name = ref.getNode();
+    Node parent = name.getParent();
     Node gramps = parent.getParent();
     switch (parent.getType()) {
       case Token.VAR:
-        if (canMoveValue(name.getFirstChild())) {
+        if (canMoveValue(collector, ref.getScope(), name.getFirstChild())) {
           return info.addDeclaration(
-              new Declaration(t.getModule(), name));
+              new Declaration(getModule(ref), name));
         }
         return false;
 
       case Token.FUNCTION:
         if (NodeUtil.isFunctionDeclaration(parent)) {
           return info.addDeclaration(
-              new Declaration(t.getModule(), name));
+              new Declaration(getModule(ref), name));
         }
         return false;
 
@@ -387,9 +400,10 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
                      current.getFirstChild() == child) {
             Node currentParent = current.getParent();
             if (currentParent.isExprResult() &&
-                canMoveValue(current.getLastChild())) {
+                canMoveValue(
+                    collector, ref.getScope(), current.getLastChild())) {
               return info.addDeclaration(
-                  new Declaration(t.getModule(), current));
+                  new Declaration(getModule(ref), current));
             }
           } else {
             return false;
@@ -406,7 +420,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
           if (relationship != null &&
               name.getString().equals(relationship.subclassName)) {
             return info.addDeclaration(
-                new Declaration(t.getModule(), parent));
+                new Declaration(getModule(ref), parent));
           }
         }
         return false;
@@ -419,7 +433,8 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
   /**
    * Determines whether the given value is eligible to be moved across modules.
    */
-  private boolean canMoveValue(Node n) {
+  private boolean canMoveValue(
+      ReferenceCollectingCallback collector, Scope scope, Node n) {
     // the value is only movable if it's
     // a) nothing,
     // b) a constant literal,
@@ -440,12 +455,25 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
       boolean isObjectLit = n.isObjectLit();
       for (Node child = n.getFirstChild(); child != null;
            child = child.getNext()) {
-        if (!canMoveValue(isObjectLit ? child.getFirstChild() : child)) {
+        if (!canMoveValue(collector, scope,
+                          isObjectLit ? child.getFirstChild() : child)) {
           return false;
         }
       }
 
       return true;
+    } else if (n.isName()) {
+      // If the value is guaranteed to never be changed after
+      // this reference, then we can move it.
+      Var v = scope.getVar(n.getString());
+      if (v != null && v.isGlobal()) {
+        ReferenceCollection refCollection = collector.getReferences(v);
+        if (refCollection != null &&
+            refCollection.isWellDefined() &&
+            refCollection.isAssignedOnceInLifetime()) {
+          return true;
+        }
+      }
     }
 
     return false;

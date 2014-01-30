@@ -855,4 +855,23 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
           "x()"
     });
   }
+
+  public void testAbstractMethod() {
+    test(createModuleStar(
+             // m1
+             "var abstractMethod = function () {};" +
+             "function F(){} F.prototype.bar=abstractMethod;" +
+             "function G(){} G.prototype.bar=abstractMethod;",
+             // m2
+             "var f = new F();",
+             // m3
+             "var g = new G();"),
+         new String[] {
+           "var abstractMethod = function () {};",
+           "function F(){} F.prototype.bar=abstractMethod;" +
+           "var f = new F();",
+           "function G(){} G.prototype.bar=abstractMethod;" +
+           "var g = new G();"
+         });
+  }
 }
