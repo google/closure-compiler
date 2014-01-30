@@ -189,16 +189,6 @@ function Object(opt_value) {}
 Object.prototype.constructor = function() {};
 
 /**
- * Evaluates a string of JavaScript code in the context of the specified object.
- * Considered deprecated.
- *
- * @param {string} code
- * @return {Object}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/eval
- */
-Object.prototype.eval = function(code) {};
-
-/**
  * Binds an object's property to a function to be called when that property is
  * looked up.
  * Mozilla-only.
