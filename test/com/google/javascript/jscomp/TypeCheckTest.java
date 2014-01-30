@@ -12825,6 +12825,26 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: function (): undefined");
   }
 
+  public void testBug12722936() throws Exception {
+    // Verify we don't use a weaker type when a
+    // stronger type is known for a slot.
+    testTypes(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function X() {}\n" +
+        "/** @constructor */ function C() {\n" +
+        "  /** @type {!X.<boolean>}*/\n" +
+        "  this.a = new X();\n" +
+        "  /** @type {null} */ var x = this.a;\n" +
+        "};\n" +
+        "\n",
+        "initializing variable\n" +
+        "found   : X.<boolean>\n" +
+        "required: null", false);
+  }
+
 
   private void testTypes(String js) throws Exception {
     testTypes(js, (String) null);
