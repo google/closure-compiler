@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
+import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
+
 
 
 /**
@@ -32,5 +34,14 @@ public final class SourceFile {
     this.name = name;
     this.contents = contents;
     this.lineNumberTable = new LineNumberTable(this);
+  }
+
+  public String getSnippet(SourcePosition position) {
+    int lineStart = lineNumberTable.offsetOfLine(position.line);
+    int lineEnd = lineNumberTable.offsetOfLine(position.line + 1);
+
+    lineStart = Math.min(lineStart, contents.length() - 1);
+    lineEnd = Math.min(lineEnd, contents.length() - 1);
+    return contents.substring(lineStart, lineEnd);
   }
 }

@@ -187,13 +187,15 @@ public class ParserRunner {
     private ErrorReporter reporter;
     private boolean errorSeen = false;
     private boolean isIdeMode;
-    private String sourceString;
+    private com.google.javascript.jscomp.parsing.parser.SourceFile source;
 
     Es6ErrorReporter(
-        ErrorReporter reporter, String sourceString, Config config) {
+        ErrorReporter reporter,
+        com.google.javascript.jscomp.parsing.parser.SourceFile source,
+        Config config) {
       this.reporter = reporter;
       this.isIdeMode = config.isIdeMode;
-      this.sourceString = sourceString;
+      this.source = source;
     }
 
     @Override
@@ -202,10 +204,7 @@ public class ParserRunner {
         Object... arguments) {
       String message = SimpleFormat.format("%s",
           SimpleFormat.format(format, arguments));
-
-      // TODO(johnlenz): get source line from source string.
-      String sourceLine = "";
-
+      String sourceLine = source.getSnippet(location);
       switch (kind) {
         case "Error":
           if (isIdeMode || !errorSeen) {
@@ -245,11 +244,11 @@ public class ParserRunner {
                                   Config config,
                                   ErrorReporter errorReporter,
                                   Logger logger) throws IOException {
-    Es6ErrorReporter es6ErrorReporter =
-        new Es6ErrorReporter(errorReporter, sourceString, config);
     com.google.javascript.jscomp.parsing.parser.SourceFile file =
         new com.google.javascript.jscomp.parsing.parser.SourceFile(
             sourceFile.getName(), sourceString);
+    Es6ErrorReporter es6ErrorReporter =
+        new Es6ErrorReporter(errorReporter, file, config);
     com.google.javascript.jscomp.parsing.parser.Parser.Config es6config =
         new com.google.javascript.jscomp.parsing.parser.Parser.Config(mode(
             config.languageMode));
