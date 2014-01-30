@@ -29,11 +29,17 @@
  */
 function EventSource(url, opt_eventSourceInitDict) {}
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 EventSource.prototype.addEventListener = function(
     type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 EventSource.prototype.removeEventListener = function(
     type, listener, opt_useCapture) {};
 

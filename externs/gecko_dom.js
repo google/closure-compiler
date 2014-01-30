@@ -918,7 +918,10 @@ Element.prototype.normalize = function() {};
  */
 Element.prototype.removeChild = function(removedNode) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 Element.prototype.removeEventListener = function(type, handler, opt_useCapture)
     {};
 

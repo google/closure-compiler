@@ -53,11 +53,17 @@ Notification.permission;
  */
 Notification.requestPermission = function(opt_callback) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 Notification.prototype.addEventListener =
     function(type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 Notification.prototype.removeEventListener =
     function(type, listener, opt_useCapture) {};
 

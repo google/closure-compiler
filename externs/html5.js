@@ -715,11 +715,17 @@ Document.prototype.head;
  */
 function DOMApplicationCache() {}
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 DOMApplicationCache.prototype.addEventListener = function(
     type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 DOMApplicationCache.prototype.removeEventListener = function(
     type, listener, opt_useCapture) {};
 
@@ -859,11 +865,17 @@ function Transferable() {}
  */
 function WebWorker() {}
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 WebWorker.prototype.addEventListener = function(
     type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 WebWorker.prototype.removeEventListener = function(
     type, listener, opt_useCapture) {};
 
@@ -900,11 +912,17 @@ WebWorker.prototype.onerror;
  */
 function Worker(opt_arg0) {}
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 Worker.prototype.addEventListener = function(
     type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 Worker.prototype.removeEventListener = function(
     type, listener, opt_useCapture) {};
 
@@ -952,11 +970,17 @@ Worker.prototype.onerror = function() {};
  */
 function SharedWorker(scriptURL, opt_name) {}
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 SharedWorker.prototype.addEventListener = function(
     type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 SharedWorker.prototype.removeEventListener = function(
     type, listener, opt_useCapture) {};
 
@@ -1433,11 +1457,17 @@ MessageChannel.prototype.port2;
  */
 function MessagePort() {}
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 MessagePort.prototype.addEventListener = function(
     type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 MessagePort.prototype.removeEventListener = function(
     type, listener, opt_useCapture) {};
 
@@ -1737,11 +1767,17 @@ TimeRanges.prototype.end = function(index) { return 0; };
  */
 function WebSocket(url, opt_protocol) {}
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 WebSocket.prototype.addEventListener = function(
     type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 WebSocket.prototype.removeEventListener = function(
     type, listener, opt_useCapture) {};
 
@@ -1974,11 +2010,17 @@ XMLHttpRequest.prototype.mozResponseArrayBuffer;
  */
 function XMLHttpRequestEventTarget() {}
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 XMLHttpRequestEventTarget.prototype.addEventListener = function(
     type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 XMLHttpRequestEventTarget.prototype.removeEventListener = function(
     type, listener, opt_useCapture) {};
 

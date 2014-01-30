@@ -293,11 +293,17 @@ XPathNamespace.XPATH_NAMESPACE_NODE = 13;
  */
 function XMLHttpRequest() {}
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 XMLHttpRequest.prototype.addEventListener =
     function(type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 XMLHttpRequest.prototype.removeEventListener =
     function(type, listener, opt_useCapture) {};
 

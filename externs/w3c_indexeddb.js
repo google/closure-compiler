@@ -241,11 +241,17 @@ Window.prototype.webkitIDBRequest;
  */
 function IDBRequest() {}
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 IDBRequest.prototype.addEventListener =
     function(type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 IDBRequest.prototype.removeEventListener =
     function(type, listener, opt_useCapture) {};
 
@@ -409,11 +415,17 @@ IDBDatabase.prototype.onerror = function() {};
  */
 IDBDatabase.prototype.onversionchange = function() {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 IDBDatabase.prototype.addEventListener =
     function(type, listener, opt_useCapture) {};
 
-/** @override */
+/**
+ * @param {boolean=} opt_useCapture
+ * @override
+ */
 IDBDatabase.prototype.removeEventListener =
     function(type, listener, opt_useCapture) {};
 
