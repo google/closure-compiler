@@ -3323,18 +3323,26 @@ Port.prototype.disconnect = function() {};
 
 
 /**
- * @see * http://code.google.com/chrome/extensions/extension.html#type-MessageSender
+ * @see * http://developer.chrome.com/extensions/runtime.html#type-MessageSender
  * @constructor
  */
 function MessageSender() {}
 
 
-/** @type {Tab} */
+/** @type {!Tab|undefined} */
 MessageSender.prototype.tab;
 
 
-/** @type {string} */
+/** @type {string|undefined} */
 MessageSender.prototype.id;
+
+
+/** @type {string|undefined} */
+MessageSender.prototype.url;
+
+
+/** @type {string|undefined} */
+MessageSender.prototype.tlsChannelId;
 
 
 
