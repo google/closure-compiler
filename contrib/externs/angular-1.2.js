@@ -937,6 +937,62 @@ angular.$anchorScrollProvider;
 angular.$anchorScrollProvider.disableAutoScrolling = function() {};
 
 /******************************************************************************
+ * $animate Service
+ *****************************************************************************/
+
+/**
+ * @constructor
+ */
+angular.$animate;
+
+/**
+ * @param {JQLiteSelector} element
+ * @param {JQLiteSelector} parentElement
+ * @param {JQLiteSelector} afterElement
+ * @param {function()=} opt_doneCallback
+ */
+angular.$animate.prototype.enter = function(
+    element, parentElement, afterElement, opt_doneCallback) {};
+
+/**
+ * @param {JQLiteSelector} element
+ * @param {function()=} opt_doneCallback
+ */
+angular.$animate.prototype.leave = function(element, opt_doneCallback) {};
+
+/**
+ * @param {JQLiteSelector} element
+ * @param {JQLiteSelector} parentElement
+ * @param {JQLiteSelector} afterElement
+ * @param {function()=} opt_doneCallback
+ */
+angular.$animate.prototype.move = function(
+    element, parentElement, afterElement, opt_doneCallback) {};
+
+/**
+ * @param {JQLiteSelector} element
+ * @param {string} className
+ * @param {function()=} opt_doneCallback
+ */
+angular.$animate.prototype.addClass = function(
+    element, className, opt_doneCallback) {};
+
+/**
+ * @param {JQLiteSelector} element
+ * @param {string} className
+ * @param {function()=} opt_doneCallback
+ */
+angular.$animate.prototype.removeClass = function(
+    element, className, opt_doneCallback) {};
+
+/**
+ * @param {boolean=} opt_value
+ * @param {JQLiteSelector=} opt_element
+ * @return {boolean}
+ */
+angular.$animate.prototype.enabled = function(opt_value, opt_element) {};
+
+/******************************************************************************
  * $compile Service
  *****************************************************************************/
 
