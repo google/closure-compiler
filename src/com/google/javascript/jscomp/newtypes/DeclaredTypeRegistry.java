@@ -23,5 +23,5 @@ public interface DeclaredTypeRegistry {
    * Return a JSType from a given named type,
    * or null if the identifier is not defined.
    */
-  public JSType getNominalTypeAsJstype(String name);
+  public JSType lookupTypeByName(String name);
 }

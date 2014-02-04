@@ -111,17 +111,15 @@ public class NewTypeInference implements CompilerPass {
           "which prevents the function from being called.\n" +
           "Please change the type.");
 
-  static final DiagnosticType CANNOT_INSTANTIATE_TYPE_VAR =
+  static final DiagnosticType NOT_UNIQUE_INSTANTIATION =
       DiagnosticType.warning(
-          "JSC_CANNOT_INSTANTIATE_TYPE_VAR",
+          "JSC_NOT_UNIQUE_INSTANTIATION",
           "Illegal instantiation for type variable {0}.\n" +
           "You can only specify one type. Found {1}.");
 
-  // The difference w/ the previous warning is that for this one we can't
-  // describe the error well.
-  static final DiagnosticType BAD_INSTANTIATION =
+  static final DiagnosticType FAILED_TO_UNIFY =
       DiagnosticType.warning(
-          "JSC_BAD_INSTANTIATION",
+          "JSC_FAILED_TO_UNIFY",
           "Could not instantiate type {0} with {1}.");
 
   Set<JSError> warnings = Sets.newHashSet();
@@ -1130,10 +1128,12 @@ public class NewTypeInference implements CompilerPass {
               " and at most " + maxArity));
           return new EnvTypePair(inEnv, requiredType);
         }
+        FunctionType origFunType = funType; // save for later
         if (funType.isGeneric()) {
-          Map<String, JSType> typeMap = calcTypeInstantiation(
-              funType.getTypeParameters(), expr, funType, inEnv, true);
+          Map<String, JSType> typeMap =
+              calcTypeInstantiationFwd(expr, funType, inEnv);
           funType = funType.instantiateGenerics(typeMap);
+          println("Instantiated function type: " + funType);
         }
         // argTypes collects types of actuals for deferred checks.
         List<JSType> argTypes = Lists.newArrayList();
@@ -1166,7 +1166,7 @@ public class NewTypeInference implements CompilerPass {
             // exactly using their summaries, and don't need deferred checks
             if (currentScope.isLocalFunDef(calleeName)) {
               collectTypesForFreeVarsFwd(callee, tmpEnv);
-            } else {
+            } else if (!origFunType.isGeneric()) {
               JSType expectedRetType = requiredType;
               println("Updating deferred check with ret: ", expectedRetType,
                   " and args: ", argTypes);
@@ -1283,19 +1283,30 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
+  private Map<String, JSType> calcTypeInstantiationFwd(
+      Node callNode, FunctionType funType, TypeEnv typeEnv) {
+    return calcTypeInstantiation(callNode, funType, typeEnv, true);
+  }
+
+  private Map<String, JSType> calcTypeInstantiationBwd(
+      Node callNode, FunctionType funType, TypeEnv typeEnv) {
+    return calcTypeInstantiation(callNode, funType, typeEnv, false);
+  }
+
   /*
    * We don't use the requiredType of the context to unify with the return
    * type. There are several difficulties:
    * 1) A polymorhpic function is allowed to return ANY subtype of the
    *    requiredType, so we would need to use a heuristic to determine the type
    *    to unify with.
-   * 2) It's hard to give good error messages in cases like
-   *    id('str') - 5
+   * 2) It's hard to give good error messages in cases like: id('str') - 5
+   *    We want an invalid-operand-type, not a not-unique-instantiation.
+   *
+   * We don't take the arg evaluation order into account during instantiation.
    */
   private Map<String, JSType> calcTypeInstantiation(
-      List<String> templateVars, Node callNode, FunctionType funType,
-      TypeEnv typeEnv, boolean isFwd) {
-
+      Node callNode, FunctionType funType, TypeEnv typeEnv, boolean isFwd) {
+    List<String> templateVars = funType.getTypeParameters();
     Multimap<String, JSType> typeMultimap = HashMultimap.create();
     Node arg = callNode.getChildAtIndex(1);
     int i = 0;
@@ -1305,8 +1316,17 @@ public class NewTypeInference implements CompilerPass {
       JSType unifTarget = funType.getFormalType(i);
       JSType unifSource = pair.type;
       if (!unifTarget.unifyWith(unifSource, templateVars, typeMultimap)) {
-        warnings.add(JSError.make(arg, BAD_INSTANTIATION,
-              unifTarget.toString(), unifSource.toString()));
+        // Unification may fail b/c of types irrelevant to generics, eg,
+        // number vs string.
+        // In this case, don't warn here; we'll show invalid-arg-type later.
+        HashMap<String, JSType> tmpTypeMap = Maps.newHashMap();
+        for (String templateVar: templateVars) {
+          tmpTypeMap.put(templateVar, JSType.UNKNOWN);
+        }
+        if (unifSource.isSubtypeOf(unifTarget.substituteGenerics(tmpTypeMap))) {
+          warnings.add(JSError.make(arg, FAILED_TO_UNIFY,
+                  unifTarget.toString(), unifSource.toString()));
+        }
       }
       arg = arg.getNext();
       typeEnv = pair.env;
@@ -1317,13 +1337,14 @@ public class NewTypeInference implements CompilerPass {
       Collection<JSType> types = typeMultimap.get(templateVar);
       if (types.size() > 1) {
         if (isFwd) {
-          warnings.add(JSError.make(callNode, CANNOT_INSTANTIATE_TYPE_VAR,
+          warnings.add(JSError.make(callNode, NOT_UNIQUE_INSTANTIATION,
                 templateVar, types.toString()));
         }
         typeMap.put(templateVar, JSType.UNKNOWN);
       } else if (types.size() == 1) {
         typeMap.put(templateVar, Iterables.getOnlyElement(types));
       } else {
+        // Put ? for any uninstantiated type variables
         typeMap.put(templateVar, JSType.UNKNOWN);
       }
     }
@@ -1751,9 +1772,10 @@ public class NewTypeInference implements CompilerPass {
             numArgs > funType.getMaxArity()) {
           return new EnvTypePair(outEnv, requiredType);
         }
+        FunctionType origFunType = funType; // save for later
         if (funType.isGeneric()) {
-          Map<String, JSType> typeMap = calcTypeInstantiation(
-              funType.getTypeParameters(), expr, funType, outEnv, false);
+          Map<String, JSType> typeMap =
+              calcTypeInstantiationBwd(expr, funType, outEnv);
           funType = funType.instantiateGenerics(typeMap);
         }
         TypeEnv tmpEnv = outEnv;
@@ -1776,7 +1798,7 @@ public class NewTypeInference implements CompilerPass {
             // exactly using their summaries, and don't need deferred checks
             if (currentScope.isLocalFunDef(calleeName)) {
               tmpEnv = collectTypesForFreeVarsBwd(callee, tmpEnv);
-            } else if (expr.isCall()) {
+            } else if (!origFunType.isGeneric() && expr.isCall()) {
               Scope s = currentScope.getScope(calleeName);
               JSType expectedRetType = JSType.UNKNOWN;
               if (s.getDeclaredType().getReturnType() == null) {

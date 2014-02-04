@@ -477,7 +477,7 @@ class GlobalTypeInfo implements CompilerPass {
       // We only add properties to the prototype of a class if the
       // property creations are in the same scope as the constructor
       if (currentScope.isDefinedLocally(ctorName)) {
-        NominalType classType = currentScope.getNominalType(ctorName);
+        NominalType classType = currentScope.getLocalNominalType(ctorName);
         if (classType == null) {
           // We don't look at assignments to prototypes of non-constructors.
           return;
@@ -516,7 +516,7 @@ class GlobalTypeInfo implements CompilerPass {
       Node getPropNode = assignNode.getFirstChild();
       String ctorName = getPropNode.getFirstChild().getQualifiedName();
       Preconditions.checkState(currentScope.isLocalFunDef(ctorName));
-      NominalType classType = currentScope.getNominalType(ctorName);
+      NominalType classType = currentScope.getLocalNominalType(ctorName);
       String pname = getPropNode.getLastChild().getString();
       JSType propDeclType =
           getTypeDeclarationFromJsdoc(assignNode, currentScope);
@@ -731,7 +731,7 @@ class GlobalTypeInfo implements CompilerPass {
       return root.isFunction();
     }
 
-    boolean isConstructor() {
+    private boolean isConstructor() {
       if (!root.isFunction()) {
         return false;
       }
@@ -739,7 +739,7 @@ class GlobalTypeInfo implements CompilerPass {
       return fnDoc != null && fnDoc.isConstructor();
     }
 
-    boolean isPrototypeMethod() {
+    private boolean isPrototypeMethod() {
       Preconditions.checkState(root != null);
       return NodeUtil.isPrototypeMethod(root);
     }
@@ -760,16 +760,16 @@ class GlobalTypeInfo implements CompilerPass {
       return localFunDefs.containsKey(name);
     }
 
-    boolean isDefinedLocally(String name) {
+    private boolean isDefinedLocally(String name) {
       return locals.containsKey(name) || formals.contains(name) ||
           localFunDefs.containsKey(name) || "this".equals(name);
     }
 
-    boolean isNamespace(String name) {
+    private boolean isNamespace(String name) {
       return localNamespaces.contains(name);
     }
 
-    boolean isVisibleInScope(String name) {
+    private boolean isVisibleInScope(String name) {
       return isDefinedLocally(name) ||
           (parent != null && parent.isVisibleInScope(name));
     }
@@ -805,28 +805,26 @@ class GlobalTypeInfo implements CompilerPass {
       return false;
     }
 
-    // Only used during symbol-table construction, not during type inference.
-    private NominalType getNominalType(String name) {
-      Preconditions.checkState(localClassDefs != null);
-      NominalType klass = localClassDefs.get(name);
-      if (klass != null) {
-        return klass;
-      }
-      if (parent != null) {
-        return parent.getNominalType(name);
-      }
-      return null;
+    private NominalType getLocalNominalType(String name) {
+      return localClassDefs.get(name);
     }
 
+    // Only used during symbol-table construction, not during type inference.
     @Override
-    public JSType getNominalTypeAsJstype(String name) {
-      Preconditions.checkState(localClassDefs != null);
-      NominalType klass = getNominalType(name);
-      if (klass != null) {
-        return JSType.join(
-            JSType.fromObjectType(ObjectType.fromClass(klass)), JSType.NULL);
+    public JSType lookupTypeByName(String name) {
+      if (declaredType != null && declaredType.isGeneric()) {
+        if (declaredType.getTypeParameters().contains(name)) {
+          return JSType.fromTypeVar(name);
+        }
       }
-      return null;
+      if (localClassDefs != null) {
+        NominalType klass = localClassDefs.get(name);
+        if (klass != null) {
+          return JSType.join(
+              JSType.NULL, JSType.fromObjectType(ObjectType.fromClass(klass)));
+        }
+      }
+      return parent == null ? null : parent.lookupTypeByName(name);
     }
 
     JSType getDeclaredTypeOf(String name) {
@@ -883,30 +881,30 @@ class GlobalTypeInfo implements CompilerPass {
       return ImmutableSet.copyOf(locals.keySet());
     }
 
-    void addLocal(String name, JSType declType) {
+    private void addLocal(String name, JSType declType) {
       Preconditions.checkState(!isDefinedLocally(name));
       locals.put(name, declType);
     }
 
-    void addNamespace(String name) {
+    private void addNamespace(String name) {
       Preconditions.checkState(!isDefinedLocally(name));
       locals.put(name, JSType.TOP_OBJECT);
       localNamespaces.add(name);
     }
 
-    void updateTypeOfLocal(String name, JSType newDeclType) {
+    private void updateTypeOfLocal(String name, JSType newDeclType) {
       locals.put(name, newDeclType);
     }
 
-    void addOuterVar(String name) {
+    private void addOuterVar(String name) {
       outerVars.add(name);
     }
 
-    void addClassType(String name, NominalType klass) {
+    private void addClassType(String name, NominalType klass) {
       localClassDefs.put(name, klass);
     }
 
-    void finalizeScope() {
+    private void finalizeScope() {
       Iterator<String> it = localFunDefs.keySet().iterator();
       while (it.hasNext()) {
         String name = it.next();

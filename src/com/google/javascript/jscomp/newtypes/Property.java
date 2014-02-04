@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Multimap;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -130,6 +131,14 @@ class Property {
       return false;
     }
     return true;
+  }
+
+  Property substituteGenerics(Map<String, JSType> concreteTypes) {
+    return new Property(
+        inferredType.substituteGenerics(concreteTypes),
+        declaredType == null ?
+        null : declaredType.substituteGenerics(concreteTypes),
+        isOptional);
   }
 
   @Override

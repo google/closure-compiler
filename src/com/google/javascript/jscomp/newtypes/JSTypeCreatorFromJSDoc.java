@@ -92,53 +92,14 @@ public class JSTypeCreatorFromJSDoc {
       throws UnknownTypeException {
     Preconditions.checkNotNull(n);
     switch (n.getType()) {
-      case Token.LC: {
-        Map<String, JSType> fields = Maps.newHashMap();
-        // For each of the fields in the record type.
-        for (Node fieldTypeNode = n.getFirstChild().getFirstChild();
-             fieldTypeNode != null;
-             fieldTypeNode = fieldTypeNode.getNext()) {
-          Preconditions.checkState(fieldTypeNode.getType() == Token.COLON);
-
-          Node fieldNameNode = fieldTypeNode.getFirstChild();
-          String fieldName = fieldNameNode.getString();
-          if (fieldName.startsWith("'") || fieldName.startsWith("\"")) {
-            fieldName = fieldName.substring(1, fieldName.length() - 1);
-          }
-          JSType fieldType =
-              getTypeFromNodeHelper(
-                  fieldTypeNode.getLastChild(), registry, typeParameters);
-          // TODO(blickly): Allow optional properties
-          fields.put(fieldName, fieldType);
-        }
-        return JSType.fromObjectType(ObjectType.fromProperties(fields));
-      }
+      case Token.LC:
+        return getRecordTypeHelper(n, registry, typeParameters);
       case Token.EMPTY: // for function types that don't declare a return type
         return JSType.UNKNOWN;
       case Token.VOID:
         return JSType.UNDEFINED;
       case Token.STRING:
-        String typeName = n.getString();
-        if (typeName.equals("boolean")) {
-          return JSType.BOOLEAN;
-        } else if (typeName.equals("null")) {
-          return JSType.NULL;
-        } else if (typeName.equals("number")) {
-          return JSType.NUMBER;
-        } else if (typeName.equals("string")) {
-          return JSType.STRING;
-        } else if (typeName.equals("undefined")) {
-          return JSType.UNDEFINED;
-        } else if (typeParameters != null &&
-            typeParameters.contains(typeName)) {
-          return JSType.fromTypeVar(typeName);
-        } else { // it must be a class name
-          JSType namedType = registry.getNominalTypeAsJstype(typeName);
-          if (namedType != null) {
-            return namedType;
-          }
-          throw new UnknownTypeException("Unhandled type: " + typeName);
-        }
+        return getNamedTypeHelper(n, registry, typeParameters);
       case Token.PIPE: {
         JSType union = JSType.BOTTOM;
         for (Node child = n.getFirstChild(); child != null;
@@ -164,52 +125,106 @@ public class JSTypeCreatorFromJSDoc {
       }
       case Token.STAR:
         return JSType.TOP;
-      case Token.FUNCTION: {
-        FunctionTypeBuilder builder = new FunctionTypeBuilder();
-        Node child = n.getFirstChild();
-        if (child.getType() == Token.THIS) {
-          builder.addReceiverType(
-              getClassType(child.getFirstChild(), registry));
-          child = child.getNext();
-        } else if (child.getType() == Token.NEW) {
-          builder.addClass(getClassType(child.getFirstChild(), registry));
-          child = child.getNext();
-        }
-        if (child.getType() == Token.PARAM_LIST) {
-          for (Node arg = child.getFirstChild(); arg != null;
-               arg = arg.getNext()) {
-            try {
-              switch (arg.getType()) {
-                case Token.EQUALS:
-                  builder.addOptFormal(
-                      getTypeFromNodeHelper(
-                          arg.getFirstChild(), registry, typeParameters));
-                  break;
-                case Token.ELLIPSIS:
-                  builder.addRestFormals(
-                      getTypeFromNodeHelper(
-                          arg.getFirstChild(), registry, typeParameters));
-                  break;
-                default:
-                  builder.addReqFormal(
-                      getTypeFromNodeHelper(arg, registry, typeParameters));
-                  break;
-              }
-            } catch (IllegalStateException e) {
-              warn("Wrong parameter order: required parameters are first, " +
-                  "then optional, then varargs", n);
-            }
-          }
-          child = child.getNext();
-        }
-        builder.addRetType(
-            getTypeFromNodeHelper(child, registry, typeParameters));
-        return builder.buildType();
-      }
+      case Token.FUNCTION:
+        return getFunTypeHelper(n, registry, typeParameters);
       default:
         throw new IllegalArgumentException("Unsupported type exp: " +
             Token.name(n.getType()) + " " + n.toStringTree());
     }
+  }
+
+  private JSType getRecordTypeHelper(Node n, DeclaredTypeRegistry registry,
+      ImmutableList<String> typeParameters)
+      throws UnknownTypeException {
+    Map<String, JSType> fields = Maps.newHashMap();
+    // For each of the fields in the record type.
+    for (Node fieldTypeNode = n.getFirstChild().getFirstChild();
+         fieldTypeNode != null;
+         fieldTypeNode = fieldTypeNode.getNext()) {
+      Preconditions.checkState(fieldTypeNode.getType() == Token.COLON);
+      Node fieldNameNode = fieldTypeNode.getFirstChild();
+      String fieldName = fieldNameNode.getString();
+      if (fieldName.startsWith("'") || fieldName.startsWith("\"")) {
+        fieldName = fieldName.substring(1, fieldName.length() - 1);
+      }
+      JSType fieldType = getTypeFromNodeHelper(
+          fieldTypeNode.getLastChild(), registry, typeParameters);
+      // TODO(blickly): Allow optional properties
+      fields.put(fieldName, fieldType);
+    }
+    return JSType.fromObjectType(ObjectType.fromProperties(fields));
+  }
+
+  private JSType getNamedTypeHelper(Node n, DeclaredTypeRegistry registry,
+      ImmutableList<String> typeParameters)
+      throws UnknownTypeException {
+    String typeName = n.getString();
+    if (typeName.equals("boolean")) {
+      return JSType.BOOLEAN;
+    } else if (typeName.equals("null")) {
+      return JSType.NULL;
+    } else if (typeName.equals("number")) {
+      return JSType.NUMBER;
+    } else if (typeName.equals("string")) {
+      return JSType.STRING;
+    } else if (typeName.equals("undefined")) {
+      return JSType.UNDEFINED;
+    } else if (typeParameters != null &&
+        typeParameters.contains(typeName)) {
+      return JSType.fromTypeVar(typeName);
+    } else { // it must be a class name
+      JSType namedType = registry.lookupTypeByName(typeName);
+      if (namedType != null) {
+        return namedType;
+      }
+      throw new UnknownTypeException("Unhandled type: " + typeName);
+    }
+  }
+
+  // Don't confuse with getFunTypeFromAtTypeJsdoc; the function below computes a
+  // type that doesn't have an associated AST node.
+  private JSType getFunTypeHelper(Node n, DeclaredTypeRegistry registry,
+      ImmutableList<String> typeParameters)
+      throws UnknownTypeException {
+    FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    Node child = n.getFirstChild();
+    if (child.getType() == Token.THIS) {
+      builder.addReceiverType(
+          getClassType(child.getFirstChild(), registry));
+      child = child.getNext();
+    } else if (child.getType() == Token.NEW) {
+      builder.addClass(getClassType(child.getFirstChild(), registry));
+      child = child.getNext();
+    }
+    if (child.getType() == Token.PARAM_LIST) {
+      for (Node arg = child.getFirstChild(); arg != null; arg = arg.getNext()) {
+        try {
+          switch (arg.getType()) {
+            case Token.EQUALS:
+              builder.addOptFormal(
+                  getTypeFromNodeHelper(
+                      arg.getFirstChild(), registry, typeParameters));
+              break;
+            case Token.ELLIPSIS:
+              builder.addRestFormals(
+                  getTypeFromNodeHelper(
+                      arg.getFirstChild(), registry, typeParameters));
+              break;
+            default:
+              builder.addReqFormal(
+                  getTypeFromNodeHelper(arg, registry, typeParameters));
+              break;
+          }
+        } catch (IllegalStateException e) {
+          warn("Wrong parameter order: required parameters are first, " +
+              "then optional, then varargs", n);
+        }
+      }
+      child = child.getNext();
+    }
+    builder.addRetType(
+        getTypeFromNodeHelper(child, registry, typeParameters));
+    return builder.buildType();
   }
 
   public boolean hasKnownType(

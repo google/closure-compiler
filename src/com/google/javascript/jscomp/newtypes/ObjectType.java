@@ -517,18 +517,17 @@ public class ObjectType {
    * {@code typeMultimap} to add any new template varaible type bindings.
    * @return Whether unification succeeded
    */
-  boolean unifyWith(
-      ObjectType other,
-      List<String> templateVars,
+  boolean unifyWith(ObjectType other, List<String> templateVars,
       Multimap<String, JSType> typeMultimap) {
     // TODO(blickly): With generic classes, we will need to have klass.unifyWith
     if (klass != other.klass) {
       return false;
     }
-    // TODO(blickly): Use functionType.unifyWith
-    if (fn != other.fn) {
-      throw new RuntimeException("Unification of functions not yet supported");
-
+    if (fn != null) {
+      if (other.fn == null ||
+          !fn.unifyWith(other.fn, templateVars, typeMultimap)) {
+        return false;
+      }
     }
     for (String propName : this.props.keySet()) {
       Property thisProp = props.get(propName);
@@ -541,9 +540,25 @@ public class ObjectType {
     return true;
   }
 
+  ObjectType substituteGenerics(Map<String, JSType> concreteTypes) {
+    Preconditions.checkState(klass == null);
+    ImmutableMap<String, Property> newProps = null;
+    if (props != null) {
+      ImmutableMap.Builder<String, Property> builder = ImmutableMap.builder();
+      for (String p: props.keySet()) {
+        builder.put(p, props.get(p).substituteGenerics(concreteTypes));
+      }
+      newProps = builder.build();
+    }
+    return new ObjectType(null, newProps,
+        fn == null ? null : fn.substituteGenerics(concreteTypes), isLoose);
+  }
+
   @Override
   public String toString() {
-    if (props.isEmpty() && fn != null) {
+    if ((props.isEmpty() ||
+         (props.size() == 1 && props.containsKey("prototype"))) &&
+        fn != null) {
       return fn.toString();
     }
     SortedSet<String> propStrings = Sets.newTreeSet();

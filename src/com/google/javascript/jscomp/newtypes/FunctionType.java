@@ -23,7 +23,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -280,11 +282,13 @@ public class FunctionType {
   }
 
   public boolean isSubtypeOf(FunctionType other) {
+    Preconditions.checkState(!other.isGeneric()); // TODO(user): implement it
     // t1 <= t2 iff t2 = t1 \/ t2 doesn't hold always,
     // so we first create a new type by replacing ? in the right places.
     if (other.isTopFunction()) {
       return true;
     }
+    Preconditions.checkState(!this.isGeneric()); // This should never happen.
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     int i = 0;
     for (; i < other.requiredFormals.size(); i++) {
@@ -429,12 +433,50 @@ public class FunctionType {
     return typeParameters;
   }
 
-  public FunctionType instantiateGenerics(Map<String, JSType> typeMap) {
-    // We aren't yet handling @templated constructors
+  boolean unifyWith(FunctionType other, List<String> templateVars,
+      Multimap<String, JSType> typeMultimap) {
     Preconditions.checkState(klass == null);
-    for (String typeParam: typeMap.keySet()) {
-      Preconditions.checkState(typeParameters.contains(typeParam));
+    Preconditions.checkState(typeParameters == null);
+    Preconditions.checkState(outerVarPreconditions.isEmpty());
+
+    if (requiredFormals.size() != other.requiredFormals.size()) {
+      return false;
     }
+    Iterator<JSType> thisReqFormals = requiredFormals.iterator();
+    Iterator<JSType> otherReqFormals = other.requiredFormals.iterator();
+    while (thisReqFormals.hasNext()) {
+      JSType reqFormal = thisReqFormals.next();
+      JSType otherReqFormal = otherReqFormals.next();
+      if (!reqFormal.unifyWith(otherReqFormal, templateVars, typeMultimap)) {
+        return false;
+      }
+    }
+
+    if (optionalFormals.size() != other.optionalFormals.size()) {
+      return false;
+    }
+    Iterator<JSType> thisOptFormals = optionalFormals.iterator();
+    Iterator<JSType> otherOptFormals = other.optionalFormals.iterator();
+    while (thisOptFormals.hasNext()) {
+      JSType optFormal = thisOptFormals.next();
+      JSType otherOptFormal = otherOptFormals.next();
+      if (!optFormal.unifyWith(otherOptFormal, templateVars, typeMultimap)) {
+        return false;
+      }
+    }
+
+    if (restFormals == null && other.restFormals != null ||
+        restFormals != null && other.restFormals == null) {
+      return false;
+    }
+    if (restFormals != null &&
+        !restFormals.unifyWith(other.restFormals, templateVars, typeMultimap)) {
+      return false;
+    }
+    return returnType.unifyWith(other.returnType, templateVars, typeMultimap);
+  }
+
+  private FunctionType applyInstantiation(Map<String, JSType> typeMap) {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     for (JSType reqFormal : requiredFormals) {
       builder.addReqFormal(reqFormal.substituteGenerics(typeMap));
@@ -455,6 +497,22 @@ public class FunctionType {
     }
     // The returned FunctionType will have no typeParameters
     return builder.buildFunction();
+  }
+
+  FunctionType substituteGenerics(Map<String, JSType> concreteTypes) {
+    Preconditions.checkState(klass == null);
+    Preconditions.checkState(typeParameters == null);
+    Preconditions.checkState(outerVarPreconditions.isEmpty());
+    return applyInstantiation(concreteTypes);
+  }
+
+  public FunctionType instantiateGenerics(Map<String, JSType> typeMap) {
+    // We aren't yet handling @templated constructors
+    Preconditions.checkState(klass == null);
+    for (String typeParam: typeMap.keySet()) {
+      Preconditions.checkState(typeParameters.contains(typeParam));
+    }
+    return applyInstantiation(typeMap);
   }
 
   @Override
@@ -499,6 +557,7 @@ public class FunctionType {
       result += ": " + returnType.toString();
     }
     return result + (isLoose ? " (loose)" : "") +
-        (outerVarPreconditions.isEmpty() ? "" : "\tFV:" + outerVarPreconditions);
+        (outerVarPreconditions.isEmpty() ?
+            "" : "\tFV:" + outerVarPreconditions);
   }
 }
