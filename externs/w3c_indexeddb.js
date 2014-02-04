@@ -208,25 +208,25 @@ webkitIDBDatabaseException.QUOTA_ERR;
  * @const
  * @type {number}
  */
-IDBDatabaseException.code;
+IDBDatabaseException.prototype.code;
 
 /**
  * @const
  * @type {number}
  */
-webkitIDBDatabaseException.code;
+webkitIDBDatabaseException.prototype.code;
 
 /**
  * @const
  * @type {string}
  */
-IDBDatabaseException.message;
+IDBDatabaseException.prototype.message;
 
 /**
  * @const
  * @type {string}
  */
-webkitIDBDatabaseException.message;
+webkitIDBDatabaseException.prototype.message;
 
 /** @type {function(new:IDBRequest)} */
 Window.prototype.IDBRequest;
