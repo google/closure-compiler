@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
@@ -123,7 +122,7 @@ public class NewTypeInference implements CompilerPass {
   static final DiagnosticType BAD_INSTANTIATION =
       DiagnosticType.warning(
           "JSC_BAD_INSTANTIATION",
-          "Couldn't instantiate type {0} with {1}.");
+          "Could not instantiate type {0} with {1}.");
 
   Set<JSError> warnings = Sets.newHashSet();
 
@@ -137,7 +136,7 @@ public class NewTypeInference implements CompilerPass {
   GlobalTypeInfo symbolTable;
   static final String RETVAL_ID = "%return";
   private JSType arrayType, regexpType; // used for array and regexp literals
-  private static boolean debugging = false;
+  private static boolean debugging = true;
 
   NewTypeInference(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -1279,19 +1278,25 @@ public class NewTypeInference implements CompilerPass {
         }
         return new EnvTypePair(env, arrayType);
       default:
-        throw new RuntimeException("Unhandled expression type: "
-            + Token.name(expr.getType()));
+        throw new RuntimeException("Unhandled expression type: " +
+              Token.name(expr.getType()));
     }
   }
 
+  /*
+   * We don't use the requiredType of the context to unify with the return
+   * type. There are several difficulties:
+   * 1) A polymorhpic function is allowed to return ANY subtype of the
+   *    requiredType, so we would need to use a heuristic to determine the type
+   *    to unify with.
+   * 2) It's hard to give good error messages in cases like
+   *    id('str') - 5
+   */
   private Map<String, JSType> calcTypeInstantiation(
       List<String> templateVars, Node callNode, FunctionType funType,
       TypeEnv typeEnv, boolean isFwd) {
-    // TODO(user): also use the return type to calc instantiation
-    HashMap<String, Set<JSType>> typeMultimap = Maps.newHashMap();
-    for (String templateVar: templateVars) {
-      typeMultimap.put(templateVar, new HashSet<JSType>());
-    }
+
+    Multimap<String, JSType> typeMultimap = HashMultimap.create();
     Node arg = callNode.getChildAtIndex(1);
     int i = 0;
     while (arg != null) {
@@ -1299,13 +1304,9 @@ public class NewTypeInference implements CompilerPass {
           analyzeExprFwd(arg, typeEnv) : analyzeExprBwd(arg, typeEnv);
       JSType unifTarget = funType.getFormalType(i);
       JSType unifSource = pair.type;
-      HashMap<String, Set<JSType>> tmpMultimap = JSType.unify(
-          templateVars, unifTarget, unifSource, typeMultimap);
-      if (tmpMultimap == null) {
+      if (!unifTarget.unifyWith(unifSource, templateVars, typeMultimap)) {
         warnings.add(JSError.make(arg, BAD_INSTANTIATION,
-                unifTarget.toString(), unifSource.toString()));
-      } else {
-        typeMultimap = tmpMultimap;
+              unifTarget.toString(), unifSource.toString()));
       }
       arg = arg.getNext();
       typeEnv = pair.env;
@@ -1313,17 +1314,12 @@ public class NewTypeInference implements CompilerPass {
     }
     HashMap<String, JSType> typeMap = Maps.newHashMap();
     for (String templateVar: templateVars) {
-      Set<JSType> types = typeMultimap.get(templateVar);
+      Collection<JSType> types = typeMultimap.get(templateVar);
       if (types.size() > 1) {
-        types.remove(JSType.UNKNOWN);
-      }
-      if (types.size() > 1) {
-        Set<String> typeStrings = Sets.newHashSet();
-        for (JSType t: types) {
-          typeStrings.add(t.toString());
+        if (isFwd) {
+          warnings.add(JSError.make(callNode, CANNOT_INSTANTIATE_TYPE_VAR,
+                templateVar, types.toString()));
         }
-        warnings.add(JSError.make(callNode, CANNOT_INSTANTIATE_TYPE_VAR,
-                templateVar, Joiner.on(", ").join(typeStrings)));
         typeMap.put(templateVar, JSType.UNKNOWN);
       } else if (types.size() == 1) {
         typeMap.put(templateVar, Iterables.getOnlyElement(types));

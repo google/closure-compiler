@@ -21,9 +21,9 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,32 +56,34 @@ public class JSType {
   private static final int TOP_SCALAR_MASK =
       NUMBER_MASK | STRING_MASK | BOOLEAN_MASK | NULL_MASK | UNDEFINED_MASK;
 
-  private final int type;
+  private final int mask;
   // objs is null for scalar types
   private final ImmutableSet<ObjectType> objs;
   // typeVar is null for non-generic types
   private final String typeVar;
   private final String location;
 
-  private JSType(int type, String location, ImmutableSet<ObjectType> objs,
+  private JSType(int mask, String location, ImmutableSet<ObjectType> objs,
       String typeVar) {
     this.typeVar = typeVar;
     this.location = location;
     if (objs == null) {
-      this.type = type;
+      this.mask = mask;
       this.objs = null;
     } else if (objs.size() == 0) {
-      this.type = type & ~NON_SCALAR_MASK;
+      this.mask = mask & ~NON_SCALAR_MASK;
       this.objs = null;
     } else {
-      this.type = type | NON_SCALAR_MASK;
+      this.mask = mask | NON_SCALAR_MASK;
       this.objs = objs;
     }
-    Preconditions.checkState(this.isValidType());
+    Preconditions.checkState(this.isValidType(),
+        "Cannot create type with bits <<<" + mask + ">>>, objs <<<" +
+        objs + ">>>, and typeVar <<<" + typeVar + ">>>");
   }
 
-  private JSType(int type) {
-    this(type, null, null, null);
+  private JSType(int mask) {
+    this(mask, null, null, null);
   }
 
   // Factory method for wrapping a function in a JSType
@@ -102,13 +104,13 @@ public class JSType {
     if (isUnknown() || isTop()) {
       return true;
     }
-    if ((type & NON_SCALAR_MASK) != 0 && (objs == null || objs.isEmpty())) {
+    if ((mask & NON_SCALAR_MASK) != 0 && (objs == null || objs.isEmpty())) {
       return false;
     }
-    if ((type & NON_SCALAR_MASK) == 0 && objs != null) {
+    if ((mask & NON_SCALAR_MASK) == 0 && objs != null) {
       return false;
     }
-    return ((type & TYPEVAR_MASK) != 0) == (typeVar != null);
+    return ((mask & TYPEVAR_MASK) != 0) == (typeVar != null);
   }
 
   public static final JSType BOOLEAN = new JSType(TRUE_MASK | FALSE_MASK);
@@ -150,39 +152,39 @@ public class JSType {
   }
 
   public boolean isTop() {
-    return TOP_MASK == type;
+    return TOP_MASK == mask;
   }
 
   public boolean isBottom() {
-    return BOTTOM_MASK == type;
+    return BOTTOM_MASK == mask;
   }
 
   public boolean isUnknown() {
-    return UNKNOWN_MASK == type;
+    return UNKNOWN_MASK == mask;
   }
 
   public boolean isTruthy() {
-    return TRUTHY_MASK == type || TRUE_MASK == type;
+    return TRUTHY_MASK == mask || TRUE_MASK == mask;
   }
 
   public boolean isFalsy() {
-    return FALSY_MASK == type || FALSE_MASK == type;
+    return FALSY_MASK == mask || FALSE_MASK == mask;
   }
 
   public boolean isBoolean() {
-    return (type & ~BOOLEAN_MASK) == 0 && (type & BOOLEAN_MASK) != 0;
+    return (mask & ~BOOLEAN_MASK) == 0 && (mask & BOOLEAN_MASK) != 0;
   }
 
   public boolean isNullOrUndef() {
-    int mask = NULL_MASK | UNDEFINED_MASK;
-    return type != 0 && (type | mask) == mask;
+    int nullUndefMask = NULL_MASK | UNDEFINED_MASK;
+    return mask != 0 && (mask | nullUndefMask) == nullUndefMask;
   }
 
   public boolean isScalar() {
-    return type == NUMBER_MASK ||
-        type == STRING_MASK ||
-        type == NULL_MASK ||
-        type == UNDEFINED_MASK ||
+    return mask == NUMBER_MASK ||
+        mask == STRING_MASK ||
+        mask == NULL_MASK ||
+        mask == UNDEFINED_MASK ||
         this.isBoolean();
   }
 
@@ -229,7 +231,7 @@ public class JSType {
     Preconditions.checkState(lhs.typeVar == null || rhs.typeVar == null ||
         lhs.typeVar.equals(rhs.typeVar));
     return new JSType(
-        lhs.type | rhs.type,
+        lhs.mask | rhs.mask,
         Objects.equal(lhs.location, rhs.location) ? lhs.location : null,
         ObjectType.joinSets(lhs.objs, rhs.objs),
         lhs.typeVar != null ? lhs.typeVar : rhs.typeVar);
@@ -248,47 +250,168 @@ public class JSType {
       // newObjs = newObjsBuilder.build();
       newObjs = objs;
     }
-    JSType current = new JSType(type & ~TYPEVAR_MASK, location, newObjs, null);
-    if ((type & TYPEVAR_MASK) != 0) {
+    JSType current = new JSType(mask & ~TYPEVAR_MASK, location, newObjs, null);
+    if ((mask & TYPEVAR_MASK) != 0) {
       JSType concrete = concreteTypes.get(typeVar);
       current = JSType.join(current, concrete);
     }
     return current;
   }
 
-  /** Returns null if it can't unify */
-  public static HashMap<String, Set<JSType>> unify(List<String> templateVars,
-      JSType unifTarget, JSType unifSource,
-      HashMap<String, Set<JSType>> typeMultimap) {
-    String targetTypevar = unifTarget.typeVar;
-    if (targetTypevar != null && templateVars.contains(targetTypevar)) {
-      int ftype = unifTarget.type;
-      int atype = unifSource.type;
-      int newtype = ftype;
 
-      if ((ftype & ~TYPEVAR_MASK) == BOTTOM_MASK) {
-        newtype = atype;
-      } else if (atype == TOP_MASK || atype == UNKNOWN_MASK) {
-        // unifTarget is of the form T|stuff, so can't unify with non-union
-        return null;
-      } else {
-        newtype = atype & ~ftype & ~NON_SCALAR_MASK & ~TYPEVAR_MASK;
-        if (newtype == BOTTOM_MASK) {
-          // nothing left in unifSource to assign to targetTypevar
-          return null;
-        }
+  private static void updateTypemap(
+      Multimap<String, JSType> typeMultimap,
+      String templateVar, JSType type) {
+    for (JSType other : typeMultimap.get(templateVar)) {
+      JSType unified = unifyUnknowns(type, other);
+      if (unified != null) {
+        typeMultimap.remove(templateVar, other);
+        type = unified;
       }
-      JSType unifiedType = new JSType(newtype, null, null, null);
-      typeMultimap.get(unifTarget.typeVar).add(unifiedType);
+    }
+    typeMultimap.put(templateVar, type);
+  }
+
+  private static int promoteBoolean(int mask) {
+    if ((mask & (TRUE_MASK | FALSE_MASK)) != 0) {
+      return mask | TRUE_MASK | FALSE_MASK;
+    }
+    return mask;
+  }
+
+  /**
+   * Unify the two types symmetrically, given that we have already instantiated
+   * the type variables of interest in {@code t1} and {@code t2}, treating
+   * JSType.UNKNOWN as a "hole" to be filled.
+   * @return The unified type, or null if unification fails */
+  public static JSType unifyUnknowns(JSType t1, JSType t2) {
+    if (t1.isUnknown()) {
+      return t2;
+    } else if (t2.isUnknown()) {
+      return t1;
+    } else if (t1.isTop() && t2.isTop()) {
+      return TOP;
+    } else if (t1.isTop() || t2.isTop()) {
+      return null;
     }
 
-    // TODO(user): objects unification
-    // each obj in left must unify w/ exactly one obj in right
+    int t1Mask = promoteBoolean(t1.mask);
+    int t2Mask = promoteBoolean(t2.mask);
+    if (t1Mask != t2Mask || t1.typeVar != t2.typeVar) {
+      return null;
+    }
+    // All scalar types are equal
+    if ((t1Mask & NON_SCALAR_MASK) == 0) {
+      return t1;
+    }
+    if (t1.objs.size() != t2.objs.size()) {
+      return null;
+    }
+
+    Set<ObjectType> ununified = Sets.newHashSet(t2.objs);
+    Set<ObjectType> unifiedObjs = Sets.newHashSet();
+    for (ObjectType objType1 : t1.objs) {
+      ObjectType unified = objType1;
+      boolean hasUnified = false;
+      for (ObjectType objType2 : t2.objs) {
+        ObjectType tmp = ObjectType.unifyUnknowns(unified, objType2);
+        if (tmp != null) {
+          hasUnified = true;
+          ununified.remove(objType2);
+          unified = tmp;
+        }
+      }
+      if (!hasUnified) {
+        return null;
+      }
+      unifiedObjs.add(unified);
+    }
+    if (!ununified.isEmpty()) {
+      return null;
+    }
+    return new JSType(
+        t1Mask, null, ImmutableSet.copyOf(unifiedObjs), t1.typeVar);
+  }
+
+  /**
+   * Unify {@code this}, which may contain free type variables,
+   * with {@code other}, a concrete type, modifying the supplied
+   * {@code typeMultimap} to add any new template varaible type bindings.
+   * @return Whether unification succeeded
+   */
+  public boolean unifyWith(
+      JSType other,
+      List<String> templateVars,
+      Multimap<String, JSType> typeMultimap) {
+
+    if (this.isUnknown()) {
+      return true;
+    } else if (this.isTop()) {
+      return other.isTop();
+    } else if (this.mask == TYPEVAR_MASK && templateVars.contains(typeVar)) {
+      updateTypemap(typeMultimap, typeVar, new
+          JSType(promoteBoolean(other.mask), null, other.objs, other.typeVar));
+      return true;
+    } else if (other.isTop()) {
+      return false;
+    } else if (other.isUnknown()) {
+      for (String var : templateVars) {
+        updateTypemap(typeMultimap, var, UNKNOWN);
+      }
+      return true;
+    }
+
+    Set<ObjectType> ununified = ImmutableSet.of();
+    if (other.objs != null) {
+      ununified = Sets.newHashSet(other.objs);
+    }
+    // Each obj in this must unify w/ exactly one obj in other.
+    // However, we don't check that two different objects of this don't unify
+    // with the same other type.
+    if (this.objs != null) {
+      for (ObjectType targetObj : this.objs) {
+        boolean hasUnified = false;
+        for (ObjectType sourceObj : other.objs) {
+          if (targetObj.unifyWith(sourceObj, templateVars, typeMultimap)) {
+            ununified.remove(sourceObj);
+            hasUnified = true;
+          }
+        }
+        if (!hasUnified) {
+          return false;
+        }
+      }
+    }
+
+    String targetTypevar = this.typeVar;
+    if (targetTypevar != null && templateVars.contains(targetTypevar)) {
+      // this is T (|...)
+      int templateMask = 0;
+      if (!ununified.isEmpty()) {
+        templateMask |= NON_SCALAR_MASK;
+      }
+      if ((other.mask & TYPEVAR_MASK) != 0) {
+        templateMask |= TYPEVAR_MASK;
+      }
+      int thisScalarBits = this.mask & ~NON_SCALAR_MASK & ~TYPEVAR_MASK;
+      int otherScalarBits = other.mask & ~NON_SCALAR_MASK & ~TYPEVAR_MASK;
+      templateMask |= otherScalarBits & ~thisScalarBits;
+
+      if (templateMask == BOTTOM_MASK) {
+        // nothing left in other to assign to targetTypevar
+        return false;
+      }
+      JSType templateType = new JSType(
+          promoteBoolean(templateMask), null,
+          ImmutableSet.copyOf(ununified), other.typeVar);
+      updateTypemap(typeMultimap, typeVar, templateType);
+    }
+
 
     // We don't do fancy unification, eg,
     // T|number doesn't unify with TOP
     // Foo<number>|Foo<string> doesn't unify with Foo<T>|Foo<string>
-    return typeMultimap;
+    return true;
   }
 
   // Specialize this type by meeting with other, but keeping location
@@ -307,7 +430,7 @@ public class JSType {
         typeVar.equals(other.typeVar)) {
       newTypevar = typeVar;
     }
-    return new JSType(this.type & other.type, this.location,
+    return new JSType(this.mask & other.mask, this.location,
         ObjectType.specializeSet(this.objs, other.objs), newTypevar);
   }
 
@@ -315,7 +438,7 @@ public class JSType {
     if (this.isTop() || this.isUnknown()) {
       return this;
     }
-    return new JSType(type & ~NULL_MASK & ~FALSE_MASK & ~UNDEFINED_MASK,
+    return new JSType(mask & ~NULL_MASK & ~FALSE_MASK & ~UNDEFINED_MASK,
         location, objs, typeVar);
   }
 
@@ -324,7 +447,7 @@ public class JSType {
       return this;
     }
     return new JSType(
-        type & ~TRUE_MASK & ~NON_SCALAR_MASK, location, null, typeVar);
+        mask & ~TRUE_MASK & ~NON_SCALAR_MASK, location, null, typeVar);
   }
 
   // Meet two types, location agnostic
@@ -340,13 +463,13 @@ public class JSType {
     }
     String typeVar = lhs.typeVar != null && lhs.typeVar.equals(rhs.typeVar) ?
         lhs.typeVar : null;
-    return new JSType(lhs.type & rhs.type, null,
+    return new JSType(lhs.mask & rhs.mask, null,
         ObjectType.meetSets(lhs.objs, rhs.objs), typeVar);
   }
 
   public static JSType plus(JSType lhs, JSType rhs) {
-    int newtype = (lhs.type | rhs.type) & STRING_MASK;
-    if ((lhs.type & ~STRING_MASK) != 0 && (rhs.type & ~STRING_MASK) != 0) {
+    int newtype = (lhs.mask | rhs.mask) & STRING_MASK;
+    if ((lhs.mask & ~STRING_MASK) != 0 && (rhs.mask & ~STRING_MASK) != 0) {
       newtype |= NUMBER_MASK;
     }
     return new JSType(newtype);
@@ -373,7 +496,7 @@ public class JSType {
   public boolean isSubtypeOf(JSType other) {
     if (isUnknown() || other.isUnknown() || other.isTop()) {
       return true;
-    } else if ((type | other.type) != other.type) {
+    } else if ((mask | other.mask) != other.mask) {
       return false;
     } else if (this.objs == null) {
       return true;
@@ -391,13 +514,13 @@ public class JSType {
       return TOP_MINUS_UNDEF;
     }
     if (other.equals(NULL) || other.equals(UNDEFINED)) {
-      return new JSType(type & ~other.type, location, objs, typeVar);
+      return new JSType(mask & ~other.mask, location, objs, typeVar);
     }
     if (objs == null) {
       return this;
     }
     Preconditions.checkState(
-        (other.type & ~NON_SCALAR_MASK) == 0 && other.objs.size() == 1);
+        (other.mask & ~NON_SCALAR_MASK) == 0 && other.objs.size() == 1);
     NominalType otherKlass =
         Iterables.getOnlyElement(other.objs).getClassType();
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
@@ -406,11 +529,11 @@ public class JSType {
         newObjs.add(obj);
       }
     }
-    return new JSType(type, location, newObjs.build(), typeVar);
+    return new JSType(mask, location, newObjs.build(), typeVar);
   }
 
   public JSType withLocation(String location) {
-    return new JSType(type, location, objs, typeVar);
+    return new JSType(mask, location, objs, typeVar);
   }
 
   public String getLocation() {
@@ -418,7 +541,7 @@ public class JSType {
   }
 
   public FunctionType getFunTypeIfSingletonObj() {
-    if (type != NON_SCALAR_MASK || objs.size() > 1) {
+    if (mask != NON_SCALAR_MASK || objs.size() > 1) {
       return null;
     }
     return Iterables.getOnlyElement(objs).getFunType();
@@ -443,7 +566,7 @@ public class JSType {
   public JSType withLoose() {
     Preconditions.checkNotNull(this.objs);
     return new JSType(
-        this.type, this.location,
+        this.mask, this.location,
         ObjectType.withLooseObjects(this.objs), typeVar);
   }
 
@@ -506,7 +629,7 @@ public class JSType {
   public JSType withoutProperty(String qname) {
     return this.objs == null ?
         this :
-        new JSType(this.type, this.location,
+        new JSType(this.mask, this.location,
             ObjectType.withoutProperty(this.objs, qname), typeVar);
   }
 
@@ -515,20 +638,20 @@ public class JSType {
       return this;
     }
     Preconditions.checkState(this.objs != null);
-    return new JSType(this.type, this.location,
+    return new JSType(this.mask, this.location,
         ObjectType.withProperty(this.objs, qname, type), typeVar);
   }
 
   public JSType withDeclaredProperty(String qname, JSType type) {
     Preconditions.checkState(this.objs != null && this.location == null);
-    return new JSType(this.type, null,
+    return new JSType(this.mask, null,
         ObjectType.withDeclaredProperty(this.objs, qname, type), typeVar);
   }
 
   public JSType withPropertyRequired(String qname) {
     return (isUnknown() || this.objs == null) ?
         this :
-        new JSType(this.type, this.location,
+        new JSType(this.mask, this.location,
             ObjectType.withPropertyRequired(this.objs, qname), typeVar);
   }
 
@@ -538,13 +661,13 @@ public class JSType {
   }
 
   private String typeToString() {
-    switch (type) {
+    switch (mask) {
       case BOTTOM_MASK:
       case TOP_MASK:
       case UNKNOWN_MASK:
-        return tagToString(type, null, null);
+        return tagToString(mask, null, null);
       default:
-        int tags = type;
+        int tags = mask;
         Set<String> types = Sets.newTreeSet();
         for (int mask = 1; mask != END_MASK; mask <<= 1) {
           if ((tags & mask) != 0) {
@@ -615,11 +738,11 @@ public class JSType {
     }
     Preconditions.checkArgument(o instanceof JSType);
     JSType t2 = (JSType) o;
-    return this.type == t2.type && Objects.equal(this.objs, t2.objs);
+    return this.mask == t2.mask && Objects.equal(this.objs, t2.objs);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(type, objs);
+    return Objects.hashCode(mask, objs);
   }
 }

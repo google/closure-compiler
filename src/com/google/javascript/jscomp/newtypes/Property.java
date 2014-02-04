@@ -18,6 +18,9 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Multimap;
+
+import java.util.List;
 
 /**
  *
@@ -30,6 +33,7 @@ class Property {
   private boolean isOptional;
 
   Property(JSType inferredType, JSType declaredType, boolean isOptional) {
+    Preconditions.checkArgument(inferredType != null);
     this.inferredType = inferredType;
     this.declaredType = declaredType;
     this.isOptional = isOptional;
@@ -86,6 +90,46 @@ class Property {
         JSType.join(p1.inferredType, p2.inferredType),
         declType,
         p1.isOptional || p2.isOptional);
+  }
+
+  /**
+   * Unify the two types bidirectionally, ignoring type variables, but
+   * treating JSType.UNKNOWN as a "hole" to be filled.
+   * @return The unified type, or null if unification fails
+   */
+  static Property unifyUnknowns(Property p1, Property p2) {
+    JSType unifiedDeclaredType = null;
+    if (p1.declaredType != null && p2.declaredType != null) {
+      unifiedDeclaredType =
+        JSType.unifyUnknowns(p1.declaredType, p2.declaredType);
+      if (unifiedDeclaredType == null) {
+        return null;
+      }
+    }
+    JSType unifiedInferredType =
+        JSType.unifyUnknowns(p1.inferredType, p2.inferredType);
+    if (unifiedInferredType == null) {
+      return null;
+    }
+    return new Property(
+        unifiedInferredType, unifiedDeclaredType,
+        p1.isOptional && p2.isOptional);
+  }
+
+  /** Returns whether unification succeeded */
+  boolean unifyWith(
+      Property other,
+      List<String> templateVars,
+      Multimap<String, JSType> typeMultimap) {
+    if (!inferredType.unifyWith(
+        other.inferredType, templateVars, typeMultimap)) {
+      return false;
+    } else if (declaredType != null && other.declaredType != null &&
+        !declaredType.unifyWith(
+        other.declaredType, templateVars, typeMultimap)) {
+      return false;
+    }
+    return true;
   }
 
   @Override

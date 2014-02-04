@@ -22,8 +22,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -477,6 +479,66 @@ public class ObjectType {
       p = klass.getPropFromClass(objName);
     }
     return p;
+  }
+
+  /**
+   * Unify the two types symmetrically, given that we have already instantiated
+   * the type variables of interest in {@code t1} and {@code t2}, treating
+   * JSType.UNKNOWN as a "hole" to be filled.
+   * @return The unified type, or null if unification fails
+   */
+  static ObjectType unifyUnknowns(ObjectType t1, ObjectType t2) {
+    if (t1.klass != t2.klass) {
+      return null;
+    }
+    // TODO(blickly): Use functionType.unifyWith
+    if (t1.fn != t2.fn) {
+      throw new RuntimeException("Unification of functions not yet supported");
+    }
+    Map<String, Property> newprops = Maps.newHashMap();
+    for (String propName : t1.props.keySet()) {
+      Property prop1 = t1.props.get(propName);
+      Property prop2 = t2.props.get(propName);
+      if (prop2 == null) {
+        return null;
+      }
+      Property p = Property.unifyUnknowns(prop1, prop2);
+      if (p == null) {
+        return null;
+      }
+      newprops.put(propName, p);
+    }
+    return makeObjectType(t1.klass, newprops, t1.fn, t1.isLoose || t2.isLoose);
+  }
+
+  /**
+   * Unify {@code this}, which may contain free type variables,
+   * with {@code other}, a concrete type, modifying the supplied
+   * {@code typeMultimap} to add any new template varaible type bindings.
+   * @return Whether unification succeeded
+   */
+  boolean unifyWith(
+      ObjectType other,
+      List<String> templateVars,
+      Multimap<String, JSType> typeMultimap) {
+    // TODO(blickly): With generic classes, we will need to have klass.unifyWith
+    if (klass != other.klass) {
+      return false;
+    }
+    // TODO(blickly): Use functionType.unifyWith
+    if (fn != other.fn) {
+      throw new RuntimeException("Unification of functions not yet supported");
+
+    }
+    for (String propName : this.props.keySet()) {
+      Property thisProp = props.get(propName);
+      Property otherProp = other.props.get(propName);
+      if (otherProp == null ||
+          !thisProp.unifyWith(otherProp, templateVars, typeMultimap)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override
