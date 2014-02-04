@@ -27,6 +27,7 @@ public final class PredefinedName {
   public static final String APPLY = "apply";
   public static final String ARGUMENTS = "arguments";
   public static final String ARRAY = "Array";
+  public static final String AS = "as";
   public static final String BIND = "bind";
   public static final String CALL = "call";
   public static final String CALLBACK = "callback";
@@ -53,6 +54,7 @@ public final class PredefinedName {
   public static final String FINALLY_FALL_THROUGH = "$finallyFallThrough";
   public static final String FIELD_INITIALIZER_METHOD = "$field_initializer_";
   public static final String FREEZE = "freeze";
+  public static final String FROM = "from";
   public static final String GET = "get";
   public static final String INIT = "$init";
   public static final String IS_DONE = "isDone";
@@ -68,6 +70,7 @@ public final class PredefinedName {
   public static final String NEW_STATE = "$newState";
   public static final String OBJECT = "Object";
   public static final String OBJECT_NAME = "Object";
+  public static final String OF = "of";
   public static final String PARAM = "$param";
   public static final String PROTO = "__proto__";
   public static final String PROTOTYPE = "prototype";

@@ -58,7 +58,7 @@ public class ParseTreeVisitor {
     case EXPRESSION_STATEMENT: visit(tree.asExpressionStatement()); break;
     case FIELD_DECLARATION: visit(tree.asFieldDeclaration()); break;
     case FINALLY: visit(tree.asFinally()); break;
-    case FOR_EACH_STATEMENT: visit(tree.asForEachStatement()); break;
+    case FOR_OF_STATEMENT: visit(tree.asForEachStatement()); break;
     case FOR_IN_STATEMENT: visit(tree.asForInStatement()); break;
     case FOR_STATEMENT: visit(tree.asForStatement()); break;
     case FORMAL_PARAMETER_LIST: visit(tree.asFormalParameterList()); break;
@@ -67,7 +67,6 @@ public class ParseTreeVisitor {
     case IDENTIFIER_EXPRESSION: visit(tree.asIdentifierExpression()); break;
     case IF_STATEMENT: visit(tree.asIfStatement()); break;
     case IMPORT_DECLARATION: visit(tree.asImportDeclaration()); break;
-    case IMPORT_PATH: visit(tree.asImportPath()); break;
     case IMPORT_SPECIFIER: visit(tree.asImportSpecifier()); break;
     case LABELLED_STATEMENT: visit(tree.asLabelledStatement()); break;
     case LITERAL_EXPRESSION: visit(tree.asLiteralExpression()); break;
@@ -210,7 +209,7 @@ public class ParseTreeVisitor {
     visitAny(tree.block);
   }
 
-  protected void visit(ForEachStatementTree tree) {
+  protected void visit(ForOfStatementTree tree) {
     visitAny(tree.initializer);
     visitAny(tree.collection);
     visitAny(tree.body);
@@ -251,13 +250,7 @@ public class ParseTreeVisitor {
   }
 
   protected void visit(ImportDeclarationTree tree) {
-    visitList(tree.importPathList);
-  }
-
-  protected void visit(ImportPathTree tree) {
-    if (tree.importSpecifierSet != null) {
-      visitList(tree.importSpecifierSet);
-    }
+    visitList(tree.importSpecifierList);
   }
 
   protected void visit(ImportSpecifierTree tree) {
@@ -282,8 +275,7 @@ public class ParseTreeVisitor {
   protected void visit(MissingPrimaryExpressionTree tree) {
   }
 
-  protected void visit(ModuleDefinitionTree tree) {
-    visitList(tree.elements);
+  protected void visit(ModuleImportTree tree) {
   }
 
   protected void visit(NewExpressionTree tree) {

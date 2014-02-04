@@ -16,20 +16,19 @@
 
 package com.google.javascript.jscomp.parsing.parser.trees;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
+import com.google.javascript.jscomp.parsing.parser.LiteralToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-public class ModuleDefinitionTree extends ParseTree {
+public class ModuleImportTree extends ParseTree {
 
   public final IdentifierToken name;
-  public final ImmutableList<ParseTree> elements;
+  public final LiteralToken from;
 
-  public ModuleDefinitionTree(SourceRange location, IdentifierToken name,
-      ImmutableList<ParseTree> elements) {
+  public ModuleImportTree(SourceRange location, IdentifierToken name,
+      LiteralToken from) {
     super(ParseTreeType.MODULE_DEFINITION, location);
     this.name = name;
-    this.elements = elements;
+    this.from = from;
   }
-
 }

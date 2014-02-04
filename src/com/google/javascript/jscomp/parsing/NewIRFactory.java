@@ -1811,6 +1811,13 @@ class NewIRFactory {
     return config.languageMode != LanguageMode.ECMASCRIPT3;
   }
 
+  private boolean inStrictContext() {
+    // TODO(johnlenz): in ECMASCRIPT5/6 is a "mixed" mode and we should track the context
+    // that we are in, if we want to support it.
+    return config.languageMode == LanguageMode.ECMASCRIPT5_STRICT
+        || config.languageMode == LanguageMode.ECMASCRIPT6_STRICT;
+  }
+
   double normalizeNumber(LiteralToken token) {
     String value = token.value;
     SourceRange location = token.location;
@@ -1866,12 +1873,16 @@ class NewIRFactory {
         case '4': case '5': case '6': case '7':
           errorReporter.warning(INVALID_ES5_STRICT_OCTAL, sourceName,
               lineno(location.start), "", charno(location.start));
-          long v = 0;
-          int c = 0;
-          while (++c < length) {
-            v = (v * 8) + octaldigit(value.charAt(c));
+          if (!inStrictContext()) {
+            long v = 0;
+            int c = 0;
+            while (++c < length) {
+              v = (v * 8) + octaldigit(value.charAt(c));
+            }
+            return Double.valueOf(v);
+          } else {
+            return Double.valueOf(value);
           }
-          return Double.valueOf(v);
       }
     } else {
       return Double.valueOf(value);

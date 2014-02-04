@@ -17,16 +17,22 @@
 package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
+import com.google.javascript.jscomp.parsing.parser.LiteralToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 public class ImportDeclarationTree extends ParseTree {
-
-  public final ImmutableList<ParseTree> importPathList;
+  public final IdentifierToken defaultBindingIndentifier;
+  public final ImmutableList<ParseTree> importSpecifierList;
+  public final LiteralToken moduleSpecifier;
 
   public ImportDeclarationTree(SourceRange location,
-      ImmutableList<ParseTree> importPathList) {
+      IdentifierToken defaultBindingIndentifier,
+      ImmutableList<ParseTree> importSpecifierList,
+      LiteralToken moduleSpecifier) {
     super(ParseTreeType.IMPORT_DECLARATION, location);
-    this.importPathList = importPathList;
+    this.defaultBindingIndentifier = defaultBindingIndentifier;
+    this.importSpecifierList = importSpecifierList;
+    this.moduleSpecifier = moduleSpecifier;
   }
-
 }

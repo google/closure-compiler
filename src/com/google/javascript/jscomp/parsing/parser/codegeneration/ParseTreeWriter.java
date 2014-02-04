@@ -261,7 +261,7 @@ public final class ParseTreeWriter extends ParseTreeVisitor {
   }
 
   @Override
-  protected void visit(ForEachStatementTree tree) {
+  protected void visit(ForOfStatementTree tree) {
     write(TokenType.FOR);
     write(TokenType.OPEN_PAREN);
     visitAny(tree.initializer);
@@ -358,27 +358,8 @@ public final class ParseTreeWriter extends ParseTreeVisitor {
   @Override
   protected void visit(ImportDeclarationTree tree) {
     write(TokenType.IMPORT);
-    writeList(tree.importPathList, TokenType.COMMA, false);
+    // TODO(johnlenz): implement this if we need this class
     write(TokenType.SEMI_COLON);
-  }
-
-  @Override
-  protected void visit(ImportPathTree tree) {
-    writeTokenList(tree.qualifiedPath, TokenType.PERIOD, false);
-    switch (tree.kind) {
-    case ALL:
-      write(TokenType.PERIOD);
-      write(TokenType.STAR);
-      break;
-    case NONE:
-      break;
-    case SET:
-      write(TokenType.PERIOD);
-      write(TokenType.OPEN_CURLY);
-      writeList(tree.importSpecifierSet, TokenType.COMMA, false);
-      write(TokenType.CLOSE_CURLY);
-      break;
-    }
   }
 
   @Override
@@ -423,13 +404,11 @@ public final class ParseTreeWriter extends ParseTreeVisitor {
   }
 
   @Override
-  protected void visit(ModuleDefinitionTree tree) {
+  protected void visit(ModuleImportTree tree) {
     write(PredefinedName.MODULE);
     write(tree.name);
-    write(TokenType.OPEN_CURLY);
-    writeln();
-    writeList(tree.elements, null, true);
-    write(TokenType.CLOSE_CURLY);
+    write(PredefinedName.FROM);
+    write(tree.from);
     writeln();
   }
 

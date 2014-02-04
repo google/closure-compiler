@@ -325,10 +325,12 @@ public class ParseTreeValidator extends ParseTreeVisitor {
   }
 
   @Override
-  protected void visit(ForEachStatementTree tree) {
+  protected void visit(ForOfStatementTree tree) {
+    /*
     checkVisit(tree.initializer.declarations.size() <= 1,
         tree.initializer,
         "for-each statement may not have more than one variable declaration");
+        */
     checkVisit(tree.collection.isExpression(), tree.collection,
         "expression expected");
     checkVisit(tree.body.isStatement(), tree.body, "statement expected");
@@ -449,16 +451,7 @@ public class ParseTreeValidator extends ParseTreeVisitor {
   }
 
   @Override
-  protected void visit(ModuleDefinitionTree tree) {
-    for (ParseTree element : tree.elements) {
-      check((element.isStatement() && element.type != ParseTreeType.BLOCK) ||
-            element.type == ParseTreeType.CLASS_DECLARATION ||
-            element.type == ParseTreeType.EXPORT_DECLARATION ||
-            element.type == ParseTreeType.IMPORT_DECLARATION ||
-            element.type == ParseTreeType.MODULE_DEFINITION,
-            element,
-            "module element expected");
-    }
+  protected void visit(ModuleImportTree tree) {
   }
 
   @Override

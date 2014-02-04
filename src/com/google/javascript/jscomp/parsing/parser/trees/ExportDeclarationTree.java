@@ -20,12 +20,16 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 public class ExportDeclarationTree extends ParseTree {
 
-  // VariableStatement, FunctionDeclaration or ModuleDeclaration
+  // VariableStatement, Declaration (let, const, function or class),
+  // or default with assignmentExpression
+  public final boolean isDefault;
   public final ParseTree declaration;
 
   public ExportDeclarationTree(SourceRange location,
+      boolean isDefault,
       ParseTree declaration) {
     super(ParseTreeType.EXPORT_DECLARATION, location);
-        this.declaration = declaration;
+    this.isDefault = isDefault;
+    this.declaration = declaration;
   }
 }

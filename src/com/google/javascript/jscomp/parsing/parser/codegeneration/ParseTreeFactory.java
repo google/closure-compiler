@@ -409,9 +409,9 @@ public final class ParseTreeFactory {
     return new FinallyTree(null, block);
   }
 
-  public static ForEachStatementTree createForEachStatement(
+  public static ForOfStatementTree createForEachStatement(
       VariableDeclarationListTree initializer, ParseTree collection, ParseTree body) {
-    return new ForEachStatementTree(null, initializer, collection, body);
+    return new ForOfStatementTree(null, initializer, collection, body);
   }
 
   public static ForInStatementTree createForInStatement(

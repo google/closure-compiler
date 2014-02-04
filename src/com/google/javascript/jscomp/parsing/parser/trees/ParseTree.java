@@ -73,7 +73,7 @@ public class ParseTree {
   public ExpressionStatementTree asExpressionStatement() { return (ExpressionStatementTree) this; }
   public FieldDeclarationTree asFieldDeclaration() { return (FieldDeclarationTree) this; }
   public FinallyTree asFinally() { return (FinallyTree) this; }
-  public ForEachStatementTree asForEachStatement() { return (ForEachStatementTree) this; }
+  public ForOfStatementTree asForEachStatement() { return (ForOfStatementTree) this; }
   public ForInStatementTree asForInStatement() { return (ForInStatementTree) this; }
   public FormalParameterListTree asFormalParameterList() { return (FormalParameterListTree) this; }
   public ForStatementTree asForStatement() { return (ForStatementTree) this; }
@@ -83,7 +83,6 @@ public class ParseTree {
     return (IdentifierExpressionTree) this; }
   public IfStatementTree asIfStatement() { return (IfStatementTree) this; }
   public ImportDeclarationTree asImportDeclaration() { return (ImportDeclarationTree) this; }
-  public ImportPathTree asImportPath() { return (ImportPathTree) this; }
   public ImportSpecifierTree asImportSpecifier() { return (ImportSpecifierTree) this; }
   public LabelledStatementTree asLabelledStatement() { return (LabelledStatementTree) this; }
   public LiteralExpressionTree asLiteralExpression() { return (LiteralExpressionTree) this; }
@@ -92,7 +91,7 @@ public class ParseTree {
     return (MemberLookupExpressionTree) this; }
   public MissingPrimaryExpressionTree asMissingPrimaryExpression() {
     return (MissingPrimaryExpressionTree) this; }
-  public ModuleDefinitionTree asModuleDefinition() { return (ModuleDefinitionTree) this; }
+  public ModuleImportTree asModuleDefinition() { return (ModuleImportTree) this; }
   public NewExpressionTree asNewExpression() { return (NewExpressionTree) this; }
   public NullTree asNull() { return (NullTree) this; }
   public ObjectLiteralExpressionTree asObjectLiteralExpression() {
@@ -266,7 +265,7 @@ public class ParseTree {
     case IF_STATEMENT:
     case DO_WHILE_STATEMENT:
     case WHILE_STATEMENT:
-    case FOR_EACH_STATEMENT:
+    case FOR_OF_STATEMENT:
     case FOR_IN_STATEMENT:
     case FOR_STATEMENT:
     case CONTINUE_STATEMENT:

@@ -269,7 +269,6 @@ abstract class NewTypeSafeDispatcher<T> {
       case MODULE_DEFINITION:
       case EXPORT_DECLARATION:
       case IMPORT_DECLARATION:
-      case IMPORT_PATH:
       case IMPORT_SPECIFIER:
       case REQUIRES_MEMBER:
         return unsupportedLanguageFeature(node, "modules");
@@ -282,7 +281,7 @@ abstract class NewTypeSafeDispatcher<T> {
         break;
       case FIELD_DECLARATION:
         break;
-      case FOR_EACH_STATEMENT:
+      case FOR_OF_STATEMENT:
         break;
 
       default:
