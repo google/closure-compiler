@@ -2243,10 +2243,26 @@ public class CompilerOptions implements Serializable, Cloneable {
     /**
      * Nitpicky, shiny new JavaScript
      */
-    ECMASCRIPT5_STRICT;
+    ECMASCRIPT5_STRICT,
+
+    /**
+     * Experimental JavaScript
+     */
+    ECMASCRIPT6,
+
+    /**
+     * Nitpicky, experimental JavaScript
+     */
+    ECMASCRIPT6_STRICT;
 
     public static LanguageMode fromString(String value) {
-      if (value.equals("ECMASCRIPT5_STRICT") ||
+      if (value.equals("ECMASCRIPT6_STRICT") ||
+          value.equals("ES6_STRICT")) {
+        return CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT;
+      } else if (value.equals("ECMASCRIPT6") ||
+          value.equals("ES6")) {
+        return CompilerOptions.LanguageMode.ECMASCRIPT5;
+      } else if (value.equals("ECMASCRIPT5_STRICT") ||
           value.equals("ES5_STRICT")) {
         return CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT;
       } else if (value.equals("ECMASCRIPT5") ||

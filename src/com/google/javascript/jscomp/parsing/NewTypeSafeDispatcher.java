@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.BreakStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CallExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CaseClauseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CatchTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
@@ -54,6 +55,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
+import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThrowStatementTree;
@@ -120,6 +122,9 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processSetAccessor(SetAccessorTree tree);
   abstract T processPropertyNameAssignment(PropertyNameAssignmentTree tree);
   abstract T processFormalParameterList(FormalParameterListTree tree);
+
+  abstract T processClassDeclaration(ClassDeclarationTree tree);
+  abstract T processSuper(SuperExpressionTree tree);
 
   abstract T processMissingExpression(MissingPrimaryExpressionTree tree);
 
@@ -248,16 +253,16 @@ abstract class NewTypeSafeDispatcher<T> {
       case FORMAL_PARAMETER_LIST:
         return processFormalParameterList(node.asFormalParameterList());
 
+      case CLASS_DECLARATION:
+        return processClassDeclaration(node.asClassDeclaration());
+      case SUPER_EXPRESSION:
+        return processSuper(node.asSuperExpression());
+
       case ARRAY_PATTERN:
       case OBJECT_PATTERN:
       case OBJECT_PATTERN_FIELD:
       case SPREAD_PATTERN_ELEMENT:
         return unsupportedLanguageFeature(node, "destructuring");
-
-      case CLASS_DECLARATION:
-      case CLASS_EXPRESSION:
-      case SUPER_EXPRESSION:
-        return unsupportedLanguageFeature(node, "classes");
 
       case DEFAULT_PARAMETER:
         return unsupportedLanguageFeature(node, "default parameters");
@@ -265,6 +270,9 @@ abstract class NewTypeSafeDispatcher<T> {
         return unsupportedLanguageFeature(node, "rest parameters");
       case SPREAD_EXPRESSION:
         return unsupportedLanguageFeature(node, "spread parameters");
+
+      case FOR_OF_STATEMENT:
+        return unsupportedLanguageFeature(node, "for-of");
 
       case MODULE_DEFINITION:
       case EXPORT_DECLARATION:
@@ -280,8 +288,6 @@ abstract class NewTypeSafeDispatcher<T> {
       case ARGUMENT_LIST:
         break;
       case FIELD_DECLARATION:
-        break;
-      case FOR_OF_STATEMENT:
         break;
 
       default:

@@ -59,7 +59,6 @@ public class ParseTree {
   public CaseClauseTree asCaseClause() { return (CaseClauseTree) this; }
   public CatchTree asCatch() { return (CatchTree) this; }
   public ClassDeclarationTree asClassDeclaration() { return (ClassDeclarationTree) this; }
-  public ClassExpressionTree asClassExpression() { return (ClassExpressionTree) this; }
   public CommaExpressionTree asCommaExpression() { return (CommaExpressionTree) this; }
   public ConditionalExpressionTree asConditionalExpression() {
     return (ConditionalExpressionTree) this; }
@@ -144,7 +143,6 @@ public class ParseTree {
   public boolean isLeftHandSideExpression() {
     switch (this.type) {
     case THIS_EXPRESSION:
-    case CLASS_EXPRESSION:
     case SUPER_EXPRESSION:
     case IDENTIFIER_EXPRESSION:
     case LITERAL_EXPRESSION:
@@ -200,7 +198,6 @@ public class ParseTree {
     switch (this.type) {
       // PrimaryExpression
       case THIS_EXPRESSION:
-      case CLASS_EXPRESSION:
       case SUPER_EXPRESSION:
       case IDENTIFIER_EXPRESSION:
       case LITERAL_EXPRESSION:

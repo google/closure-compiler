@@ -45,7 +45,6 @@ public class ParseTreeVisitor {
     case CASE_CLAUSE: visit(tree.asCaseClause()); break;
     case CATCH: visit(tree.asCatch()); break;
     case CLASS_DECLARATION: visit(tree.asClassDeclaration()); break;
-    case CLASS_EXPRESSION: visit(tree.asClassExpression()); break;
     case COMMA_EXPRESSION: visit(tree.asCommaExpression()); break;
     case CONDITIONAL_EXPRESSION: visit(tree.asConditionalExpression()); break;
     case CONTINUE_STATEMENT: visit(tree.asContinueStatement()); break;
@@ -155,9 +154,6 @@ public class ParseTreeVisitor {
   protected void visit(ClassDeclarationTree tree) {
     visitAny(tree.superClass);
     visitList(tree.elements);
-  }
-
-  protected void visit(ClassExpressionTree tree) {
   }
 
   protected void visit(CommaExpressionTree tree) {

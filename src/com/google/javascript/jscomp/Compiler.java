@@ -2132,6 +2132,14 @@ public class Compiler extends AbstractCompiler {
           parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT5_STRICT);
           externsParserConfig = parserConfig;
           break;
+        case ECMASCRIPT6:
+          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT6);
+          externsParserConfig = parserConfig;
+          break;
+        case ECMASCRIPT6_STRICT:
+          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT6_STRICT);
+          externsParserConfig = parserConfig;
+          break;
         default:
           throw new IllegalStateException("unexpected language mode");
       }

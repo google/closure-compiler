@@ -1279,6 +1279,54 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(parse("/[\\]]/"), script(expr(regex("[\\]]"))));
   }
 
+  public void testClass1() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("class C {}");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parse("class C {}",
+        "this language feature is only supported in es6 mode: class");
+
+    mode = LanguageMode.ECMASCRIPT3;
+    parse("class C {}",
+        "this language feature is only supported in es6 mode: class");
+
+  }
+
+  public void testClass2() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("class C {}");
+
+    parse("class C {\n" +
+          "  member() {}\n" +
+          "  get field() {}\n" +
+          "  set field(a) {}\n" +
+          "}\n");
+
+    parse("class C {\n" +
+        "  static member() {}\n" +
+        "  static get field() {}\n" +
+        "  static set field(a) {}\n" +
+        "}\n");
+  }
+
+  public void testSuper1() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    // TODO(johnlenz): super in global scope should be a syntax error
+    parse("super;");
+
+    parse("function f() {super;};");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parse("super;",
+        "this language feature is only supported in es6 mode: super");
+
+    mode = LanguageMode.ECMASCRIPT3;
+    parse("super;",
+        "this language feature is only supported in es6 mode: super");
+  }
+
   private Node script(Node stmt) {
     Node n = new Node(Token.SCRIPT, stmt);
     n.setIsSyntheticBlock(true);

@@ -1295,6 +1295,7 @@ public final class NodeUtil {
       case Token.EMPTY:  // TODO(johnlenz): remove this.
       case Token.FALSE:
       case Token.FUNCTION:
+      case Token.CLASS:
       case Token.NAME:
       case Token.NULL:
       case Token.NUMBER:
@@ -1303,6 +1304,7 @@ public final class NodeUtil {
       case Token.STRING:
       case Token.STRING_KEY:
       case Token.THIS:
+      case Token.SUPER:
       case Token.TRUE:
         return 15;
       case Token.CAST:

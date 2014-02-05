@@ -327,22 +327,73 @@ class CodeGenerator {
         }
         break;
 
+      // CLASS -> NAME,EXPR|EMPTY,BLOCK
+      case Token.CLASS: {
+          Preconditions.checkState(childCount == 3);
+          boolean classNeedsParens = (context == Context.START_OF_EXPR);
+          if (classNeedsParens) {
+            add("(");
+          }
+
+          Node name = first;
+          Node superClass = first.getNext();
+          Node members = last;
+
+          add("class");
+          if (!name.isEmpty()) {
+            add(name);
+          }
+          if (!superClass.isEmpty()) {
+            add("extends");
+            add(superClass);
+          }
+          add(members);
+          cc.endClass(context == Context.STATEMENT);
+
+          if (classNeedsParens) {
+            add(")");
+          }
+        }
+        break;
+
+      case Token.CLASS_MEMBERS:
+        cc.beginBlock();
+        for (Node c = first; c != null; c = c.getNext()) {
+          add(c);
+          cc.maybeLineBreak();
+        }
+        cc.endBlock(false);
+        break;
+
       case Token.GETTER_DEF:
       case Token.SETTER_DEF:
-        Preconditions.checkState(n.getParent().isObjectLit());
+      case Token.MEMBER_DEF:
+        Preconditions.checkState(n.getParent().isObjectLit()
+            || n.getParent().isClassMembers());
         Preconditions.checkState(childCount == 1);
         Preconditions.checkState(first.isFunction());
 
-        // Get methods are unnamed
+        // The function referenced by the definition should always be unnamed.
         Preconditions.checkState(first.getFirstChild().getString().isEmpty());
-        if (type == Token.GETTER_DEF) {
-          // Get methods have no parameters.
-          Preconditions.checkState(!first.getChildAtIndex(1).hasChildren());
-          add("get ");
-        } else {
-          // Set methods have one parameter.
-          Preconditions.checkState(first.getChildAtIndex(1).hasOneChild());
-          add("set ");
+
+        if (n.isStaticMember()) {
+          add("static ");
+        }
+
+        switch (type) {
+          case Token.GETTER_DEF:
+            // Get methods have no parameters.
+            Preconditions.checkState(!first.getChildAtIndex(1).hasChildren());
+            add("get ");
+            break;
+          case Token.SETTER_DEF:
+            // Set methods have one parameter.
+            Preconditions.checkState(first.getChildAtIndex(1).hasOneChild());
+            add("set ");
+            break;
+          case Token.MEMBER_DEF:
+            // nothing to do.
+            break;
         }
 
         // The name is on the GET or SET node.
@@ -597,6 +648,11 @@ class CodeGenerator {
       case Token.THIS:
         Preconditions.checkState(childCount == 0);
         add("this");
+        break;
+
+      case Token.SUPER:
+        Preconditions.checkState(childCount == 0);
+        add("super");
         break;
 
       case Token.FALSE:

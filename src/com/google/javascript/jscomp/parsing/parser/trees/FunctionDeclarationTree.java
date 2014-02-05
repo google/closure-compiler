@@ -21,21 +21,27 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 public class FunctionDeclarationTree extends ParseTree {
 
+  public static enum Kind {
+    DECLARATION,
+    EXPRESSION,
+    MEMBER,
+  }
+
   public final IdentifierToken name;
   public final FormalParameterListTree formalParameterList;
   public final BlockTree functionBody;
   public final boolean isStatic;
-  public final boolean isExpression;
+  public final Kind kind;
 
   public FunctionDeclarationTree(SourceRange location, IdentifierToken name,
-      boolean isStatic, boolean isExpression,
+      boolean isStatic, Kind kind,
       FormalParameterListTree formalParameterList,
       BlockTree functionBody) {
     super(ParseTreeType.FUNCTION_DECLARATION, location);
 
     this.name = name;
     this.isStatic = isStatic;
-    this.isExpression = isExpression;
+    this.kind = kind;
     this.formalParameterList = formalParameterList;
     this.functionBody = functionBody;
   }

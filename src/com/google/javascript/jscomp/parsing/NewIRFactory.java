@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.BreakStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CallExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CaseClauseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CatchTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
@@ -66,6 +67,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
+import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThrowStatementTree;
@@ -1027,15 +1029,19 @@ class NewIRFactory {
     Node processForLoop(ForStatementTree loopNode) {
       Node node = newNode(
           Token.FOR,
-          tranformOrEmpty(loopNode.initializer),
-          tranformOrEmpty(loopNode.condition),
-          tranformOrEmpty(loopNode.increment));
+          transformOrEmpty(loopNode.initializer),
+          transformOrEmpty(loopNode.condition),
+          transformOrEmpty(loopNode.increment));
       node.addChildToBack(transformBlock(loopNode.body));
       return node;
     }
 
-    Node tranformOrEmpty(ParseTree tree) {
+    Node transformOrEmpty(ParseTree tree) {
       return (tree == null) ? newNode(Token.EMPTY) : transform(tree);
+    }
+
+    Node transformOrEmpty(IdentifierToken token) {
+      return (token == null) ? newNode(Token.EMPTY) : processName(token);
     }
 
     @Override
@@ -1050,12 +1056,15 @@ class NewIRFactory {
 
     @Override
     Node processFunction(FunctionDeclarationTree functionTree) {
+      boolean isMember = (functionTree.kind == FunctionDeclarationTree.Kind.MEMBER);
+      boolean isExpression = (functionTree.kind == FunctionDeclarationTree.Kind.EXPRESSION);
+
       IdentifierToken name = functionTree.name;
       Node newName;
       if (name != null) {
         newName = processNameWithInlineJSDoc(name);
       } else {
-        if (!functionTree.isExpression) {
+        if (!isExpression) {
           errorReporter.error(
             "unnamed function statement",
             sourceName,
@@ -1075,8 +1084,15 @@ class NewIRFactory {
       }
 
       Node node = newNode(Token.FUNCTION);
-
-      node.addChildToBack(newName);
+      if (!isMember) {
+        node.addChildToBack(newName);
+      } else {
+        Node emptyName = newStringNode(Token.NAME, "");
+        emptyName.setLineno(lineno(functionTree));
+        emptyName.setCharno(charno(functionTree));
+        maybeSetLength(emptyName, 0);
+        node.addChildToBack(emptyName);
+      }
       node.addChildToBack(transform(functionTree.formalParameterList));
 
       Node bodyNode = transform(functionTree.functionBody);
@@ -1088,7 +1104,16 @@ class NewIRFactory {
       }
       parseDirectives(bodyNode);
       node.addChildToBack(bodyNode);
-     return node;
+
+      if (functionTree.kind == FunctionDeclarationTree.Kind.MEMBER) {
+        setSourceInfo(node, functionTree);
+        Node member = newStringNode(Token.MEMBER_DEF, name.value);
+        member.addChildToBack(node);
+        member.setStaticMember(functionTree.isStatic);
+        return member;
+      } else {
+        return node;
+      }
     }
 
     @Override
@@ -1297,6 +1322,7 @@ class NewIRFactory {
       Node value = IR.function(dummyName, paramList, body);
       setSourceInfo(value, tree.body);
       key.addChildToFront(value);
+      key.setStaticMember(tree.isStatic);
       return key;
     }
 
@@ -1313,6 +1339,7 @@ class NewIRFactory {
       Node value = IR.function(dummyName, paramList, body);
       setSourceInfo(value, tree.body);
       key.addChildToFront(value);
+      key.setStaticMember(tree.isStatic);
       return key;
     }
 
@@ -1705,6 +1732,40 @@ class NewIRFactory {
         }
       }
       return root;
+    }
+
+    @Override
+    Node processClassDeclaration(ClassDeclarationTree tree) {
+      if (!isEs6Mode()) {
+        es6LanguageFeature(tree, "class");
+      }
+
+      Node name = transformOrEmpty(tree.name);
+      Node superClass = transformOrEmpty(tree.superClass);
+
+      Node body = newNode(Token.CLASS_MEMBERS);
+      setSourceInfo(body, tree);
+      for (ParseTree child : tree.elements) {
+        body.addChildToBack(transform(child));
+      }
+
+      return new Node(Token.CLASS, name, superClass, body);
+    }
+
+    @Override
+    Node processSuper(SuperExpressionTree tree) {
+      if (!isEs6Mode()) {
+        es6LanguageFeature(tree, "super");
+      }
+
+      return new Node(Token.SUPER);
+    }
+
+    void es6LanguageFeature(ParseTree node, String feature) {
+      errorReporter.warning(
+          "this language feature is only supported in es6 mode: " + feature,
+          sourceName,
+          lineno(node), "", charno(node));
     }
 
     @Override

@@ -124,11 +124,17 @@ public class ParserRunner {
                                   Config config,
                                   ErrorReporter errorReporter,
                                   Logger logger) throws IOException {
-    if (!useExperimentalParser) {
+    if (!useExperimentalParser(config)) {
       return parseEs5(sourceFile, sourceString, config, errorReporter, logger);
     } else {
       return parseEs6(sourceFile, sourceString, config, errorReporter, logger);
     }
+  }
+
+  private static boolean useExperimentalParser(Config config) {
+    return useExperimentalParser
+        || config.languageMode == LanguageMode.ECMASCRIPT6
+        || config.languageMode == LanguageMode.ECMASCRIPT6_STRICT;
   }
 
   /**

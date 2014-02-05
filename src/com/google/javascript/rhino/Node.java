@@ -104,7 +104,8 @@ public class Node implements Cloneable, Serializable {
                                   // have been inferred.
       CHANGE_TIME        = 56,    // For passes that work only on changed funs.
       REFLECTED_OBJECT   = 57,    // An object that's used for goog.object.reflect-style reflection.
-      LAST_PROP          = 57;    // Unused in the compiler, but keep for Rhino.
+      STATIC_MEMBER      = 58,    // Set if class member definition is static
+      LAST_PROP          = 58;    // Unused in the compiler, but keep for Rhino.
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -131,13 +132,14 @@ public class Node implements Cloneable, Serializable {
         case DIRECTIVES:         return "directives";
         case DIRECT_EVAL:        return "direct_eval";
         case FREE_CALL:          return "free_call";
-        case STATIC_SOURCE_FILE:    return "source_file";
-        case INPUT_ID:  return "input_id";
-        case LENGTH:    return "length";
-        case SLASH_V:   return "slash_v";
-        case INFERRED_FUNCTION:   return "inferred";
-        case CHANGE_TIME: return "change_time";
-        case REFLECTED_OBJECT: return "reflected_object";
+        case STATIC_SOURCE_FILE: return "source_file";
+        case INPUT_ID:           return "input_id";
+        case LENGTH:             return "length";
+        case SLASH_V:            return "slash_v";
+        case INFERRED_FUNCTION:  return "inferred";
+        case CHANGE_TIME:        return "change_time";
+        case REFLECTED_OBJECT:   return "reflected_object";
+        case STATIC_MEMBER:      return "static";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -1996,6 +1998,25 @@ public class Node implements Cloneable, Serializable {
     return getBooleanProp(EMPTY_BLOCK);
   }
 
+  /**
+   * Sets whether this node is a static member node. This
+   * method is meaningful only on {@link Token#GETTER_DEF},
+   * {@link Token#SETTER_DEF} or {@link Token#MEMBER_DEF} nodes contained
+   * within {@link Token#CLASS}.
+   */
+  public void setStaticMember(boolean isStatic) {
+    putBooleanProp(STATIC_MEMBER, isStatic);
+  }
+
+  /**
+   * Returns whether this node is a variable length argument node. This
+   * method's return value is meaningful only on {@link Token#NAME} nodes
+   * used to define a {@link Token#FUNCTION}'s argument list.
+   */
+  public boolean isStaticMember() {
+    return getBooleanProp(STATIC_MEMBER);
+  }
+
   // There are four values of interest:
   //   global state changes
   //   this state changes
@@ -2262,6 +2283,14 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.CATCH;
   }
 
+  public boolean isClass() {
+    return this.getType() == Token.CLASS;
+  }
+
+  public boolean isClassMembers() {
+    return this.getType() == Token.CLASS_MEMBERS;
+  }
+
   public boolean isComma() {
     return this.getType() == Token.COMMA;
   }
@@ -2350,6 +2379,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.LABEL_NAME;
   }
 
+  public boolean isMemberDef() {
+    return this.getType() == Token.MEMBER_DEF;
+  }
+
   public boolean isName() {
     return this.getType() == Token.NAME;
   }
@@ -2408,6 +2441,10 @@ public class Node implements Cloneable, Serializable {
 
   public boolean isStringKey() {
     return this.getType() == Token.STRING_KEY;
+  }
+
+  public boolean isSuper() {
+    return this.getType() == Token.SUPER;
   }
 
   public boolean isSwitch() {

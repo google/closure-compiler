@@ -170,6 +170,12 @@ abstract class CodeConsumer {
     }
   }
 
+  void endClass(boolean statementContext) {
+    if (statementContext) {
+      endLine();
+    }
+  }
+
   void beginCaseBody() {
     append(":");
   }

@@ -165,11 +165,6 @@ public final class ParseTreeWriter extends ParseTreeVisitor {
   }
 
   @Override
-  protected void visit(ClassExpressionTree tree) {
-    write(TokenType.CLASS);
-  }
-
-  @Override
   protected void visit(CommaExpressionTree tree) {
     writeList(tree.expressions, TokenType.COMMA, false);
   }

@@ -307,9 +307,20 @@ public class Parser {
   }
 
   private ParseTree parseClassDeclaration() {
+    return parseClass(false);
+  }
+
+  private ParseTree parseClassExpression() {
+    return parseClass(true);
+  }
+
+  private ParseTree parseClass(boolean isExpression) {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.CLASS);
-    IdentifierToken name = eatId();
+    IdentifierToken name = null;
+    if (!isExpression || peekId()) {
+      name = eatId();
+    }
     ParseTree superClass = null;
     if (peek(TokenType.EXTENDS)) {
       eat(TokenType.EXTENDS);
@@ -319,7 +330,7 @@ public class Parser {
     ImmutableList<ParseTree> elements = parseClassElements();
     eat(TokenType.CLOSE_CURLY);
     return new ClassDeclarationTree(
-        getTreeLocation(start), name, superClass, elements);
+        getTreeLocation(start), name, isExpression, superClass, elements);
   }
 
   private ImmutableList<ParseTree> parseClassElements() {
@@ -336,18 +347,9 @@ public class Parser {
     // TODO(johnlenz): short function syntax
     Token token = peekToken();
     switch (token.type) {
-      case FUNCTION:
       case STATIC:
-        return true;
       case IDENTIFIER:
-        String value = token.asIdentifier().value;
-        switch (value) {
-          case "get":
-          case "set":
-            return peekId(1);
-          default:
-            return false;
-        }
+        return true;
       default:
         return false;
     }
@@ -366,10 +368,13 @@ public class Parser {
   private ParseTree parseMethodDeclaration(boolean allowStatic) {
     SourcePosition start = getTreeStartLocation();
     boolean isStatic = allowStatic && eatOpt(TokenType.STATIC) != null;
-    if (peekFunction()) {
-      nextToken(); // function or #
-    }
-    return parseFunctionDeclarationTail(start, isStatic);
+    IdentifierToken name = eatId();
+    FormalParameterListTree formalParameterList = parseFormalParameterList();
+    BlockTree functionBody = parseFunctionBody();
+    return new FunctionDeclarationTree(
+        getTreeLocation(start), name, isStatic,
+        FunctionDeclarationTree.Kind.MEMBER,
+        formalParameterList, functionBody);
   }
 
   private boolean peekMethodDeclaration() {
@@ -382,6 +387,10 @@ public class Parser {
   private ParseTree parseSourceElement() {
     if (peekFunction()) {
       return parseFunctionDeclaration();
+    }
+
+    if (peekClassDeclaration()) {
+      return parseClassDeclaration();
     }
 
     // Harmony let block scoped bindings. let can only appear in
@@ -424,7 +433,8 @@ public class Parser {
     FormalParameterListTree formalParameterList = parseFormalParameterList();
     BlockTree functionBody = parseFunctionBody();
     return new FunctionDeclarationTree(
-        getTreeLocation(start), name, isStatic, false,
+        getTreeLocation(start), name, isStatic,
+        FunctionDeclarationTree.Kind.DECLARATION,
         formalParameterList, functionBody);
   }
 
@@ -435,7 +445,8 @@ public class Parser {
     FormalParameterListTree formalParameterList = parseFormalParameterList();
     BlockTree functionBody = parseFunctionBody();
     return new FunctionDeclarationTree(
-        getTreeLocation(start), name, false, true,
+        getTreeLocation(start), name, false,
+        FunctionDeclarationTree.Kind.EXPRESSION,
         formalParameterList, functionBody);
   }
 
@@ -788,6 +799,7 @@ public class Parser {
 
   // 12.6.3 The for Statement
   // 12.6.4 The for-in Statement
+  // The for-of Statement
   private ParseTree parseForStatement() {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.FOR);
@@ -810,14 +822,14 @@ public class Parser {
 
         return parseForInStatement(start, variables);
       } else if (peekPredefinedString(PredefinedName.OF)) {
-        // for-each: only one declaration allowed
+        // for-of: only one declaration allowed
         if (variables.declarations.size() > 1) {
-          reportError("for-each statement may not have more than one variable declaration");
+          reportError("for-of statement may not have more than one variable declaration");
         }
-        // for-each: initializer is illegal
+        // for-of: initializer is illegal
         VariableDeclarationTree declaration = variables.declarations.get(0);
         if (declaration.initializer != null) {
-          reportError("for-each statement may not have initializer");
+          reportError("for-of statement may not have initializer");
         }
 
         return parseForOfStatement(start, variables);
@@ -842,8 +854,8 @@ public class Parser {
     return parseForStatement(start, initializer);
   }
 
-  // The for-each Statement
-  // for  (  { let | var }  identifier  of  expression  )  statement
+  // The for-of Statement
+  // for  (  { let | var }?  identifier  of  expression  )  statement
   private ParseTree parseForOfStatement(
       SourcePosition start, ParseTree initializer) {
     eatPredefinedString(PredefinedName.OF);
@@ -1123,12 +1135,6 @@ public class Parser {
     }
   }
 
-  private ParseTree parseClassExpression() {
-    SourcePosition start = getTreeStartLocation();
-    eat(TokenType.CLASS);
-    return new ClassExpressionTree(getTreeLocation(start));
-  }
-
   private SuperExpressionTree parseSuperExpression() {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.SUPER);
@@ -1282,7 +1288,7 @@ public class Parser {
 
   private Token eatPredefinedString(String string) {
     Token token = eatId();
-    if (!token.asIdentifier().asIdentifier().value.equals(string)) {
+    if (!token.asIdentifier().value.equals(string)) {
       reportExpectedError(token, string);
       return null;
     }

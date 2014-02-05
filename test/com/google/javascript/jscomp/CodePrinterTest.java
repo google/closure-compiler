@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -49,7 +50,7 @@ public class CodePrinterTest extends TestCase {
     options.setTrustedStrings(trustedStrings);
 
     // Allow getters and setters.
-    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
+    options.setLanguageIn(languageMode);
     compiler.initOptions(options);
     Node n = compiler.parseTestCode(js);
 
@@ -1373,11 +1374,19 @@ public class CodePrinterTest extends TestCase {
     languageMode = LanguageMode.ECMASCRIPT5;
     assertPrintSame("var x={get function(){return 1}}");
 
+  }
+
+  public void testGetterInEs3() {
     // Getters and setters and not supported in ES3 but if someone sets the
     // the ES3 output mode on an AST containing them we still produce them.
     languageMode = LanguageMode.ECMASCRIPT3;
-    assertPrintSame("var x={get function(){return 1}}");
+
+    Node getter = Node.newString(Token.GETTER_DEF, "f");
+    getter.addChildToBack(IR.function(IR.name(""), IR.paramList(), IR.block()));
+    assertPrintNode("({get f(){}})",
+        IR.exprResult(IR.objectlit(getter)));
   }
+
 
   public void testSetter() {
     assertPrint("var x = {}", "var x={}");
@@ -1399,11 +1408,18 @@ public class CodePrinterTest extends TestCase {
 
     languageMode = LanguageMode.ECMASCRIPT5;
     assertPrintSame("var x={set function(x){}}");
+  }
 
+  public void testSetterInEs3() {
     // Getters and setters and not supported in ES3 but if someone sets the
     // the ES3 output mode on an AST containing them we still produce them.
     languageMode = LanguageMode.ECMASCRIPT3;
-    assertPrintSame("var x={set function(x){}}");
+
+    Node getter = Node.newString(Token.SETTER_DEF, "f");
+    getter.addChildToBack(IR.function(
+        IR.name(""), IR.paramList(IR.name("a")), IR.block()));
+    assertPrintNode("({set f(a){}})",
+        IR.exprResult(IR.objectlit(getter)));
   }
 
   public void testNegCollapse() {
@@ -1575,7 +1591,13 @@ public class CodePrinterTest extends TestCase {
 
     languageMode = LanguageMode.ECMASCRIPT3;
     assertPrintSame("x.foo=2");
-    assertPrint("x.function=2", "x[\"function\"]=2");
+  }
+
+  public void testKeywordProperties1a() {
+    languageMode = LanguageMode.ECMASCRIPT5;
+    Node nodes = parse("x.function=2");
+    languageMode = LanguageMode.ECMASCRIPT3;
+    assertPrintNode("x[\"function\"]=2", nodes);
   }
 
   public void testKeywordProperties2() {
@@ -1585,10 +1607,48 @@ public class CodePrinterTest extends TestCase {
 
     languageMode = LanguageMode.ECMASCRIPT3;
     assertPrintSame("x={foo:2}");
-    assertPrint("x={function:2}", "x={\"function\":2}");
+  }
+
+  public void testKeywordProperties2a() {
+    languageMode = LanguageMode.ECMASCRIPT5;
+    Node nodes = parse("x={function:2}");
+    languageMode = LanguageMode.ECMASCRIPT3;
+    assertPrintNode("x={\"function\":2}", nodes);
   }
 
   public void testIssue1062() {
     assertPrintSame("3*(4%3*5)");
+  }
+
+  public void testClass() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("class C{}");
+    assertPrintSame("class C extends D{}");
+    assertPrintSame("class C{static member(){}}");
+    assertPrintSame("class C{member(){}get f(){}}");
+    assertPrintSame("var x=class C{}");
+  }
+
+  public void testClassPretty() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrettyPrint(
+        "class C{}",
+        "class C {\n}\n");
+    // TODO(johnlenz): fix line breaks
+    assertPrettyPrint(
+        "class C{member(){}get f(){}}",
+        "class C {\n" +
+        "  member() {\n" +
+        "  }get f() {\n" +
+        "  }\n" +
+        "}\n");
+    assertPrettyPrint(
+        "var x=class C{}",
+        "var x = class C {\n};\n");
+  }
+
+  public void testSuper() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("class C extends D{member(){super.foo()}}");
   }
 }

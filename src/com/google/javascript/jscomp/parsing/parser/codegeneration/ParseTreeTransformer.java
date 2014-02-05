@@ -46,7 +46,6 @@ public class ParseTreeTransformer {
     case CASE_CLAUSE: return transform(tree.asCaseClause());
     case CATCH: return transform(tree.asCatch());
     case CLASS_DECLARATION: return transform(tree.asClassDeclaration());
-    case CLASS_EXPRESSION: return transform(tree.asClassExpression());
     case COMMA_EXPRESSION: return transform(tree.asCommaExpression());
     case CONDITIONAL_EXPRESSION: return transform(tree.asConditionalExpression());
     case CONTINUE_STATEMENT: return transform(tree.asContinueStatement());
@@ -240,10 +239,6 @@ public class ParseTreeTransformer {
       return tree;
     }
     return createClassDeclaration(tree.name, superClass, elements);
-  }
-
-  protected ParseTree transform(ClassExpressionTree tree) {
-    return tree;
   }
 
   protected ParseTree transform(CommaExpressionTree tree) {

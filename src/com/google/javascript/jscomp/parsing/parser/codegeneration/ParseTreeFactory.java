@@ -346,7 +346,13 @@ public final class ParseTreeFactory {
   public static ClassDeclarationTree createClassDeclaration(
       IdentifierToken name, ParseTree superClass,
       ImmutableList<ParseTree> elements) {
-    return new ClassDeclarationTree(null, name, superClass, elements);
+    return new ClassDeclarationTree(null, name, false, superClass, elements);
+  }
+
+  public static ClassDeclarationTree createClassExpression(
+      IdentifierToken name, ParseTree superClass,
+      ImmutableList<ParseTree> elements) {
+    return new ClassDeclarationTree(null, name, true, superClass, elements);
   }
 
   public static CommaExpressionTree createCommaExpression(
@@ -434,13 +440,17 @@ public final class ParseTreeFactory {
   public static FunctionDeclarationTree createFunctionExpression(
       FormalParameterListTree formalParameterList, BlockTree functionBody) {
     return new FunctionDeclarationTree(
-        null, null, false, true, formalParameterList, functionBody);
+        null, null, false,
+        FunctionDeclarationTree.Kind.EXPRESSION,
+        formalParameterList, functionBody);
   }
 
   public static FunctionDeclarationTree createFunctionDeclaration(
       IdentifierToken name, FormalParameterListTree formalParameterList, BlockTree functionBody) {
     return new FunctionDeclarationTree(
-        null, name, false, false, formalParameterList, functionBody);
+        null, name, false,
+        FunctionDeclarationTree.Kind.DECLARATION,
+        formalParameterList, functionBody);
   }
 
   public static FunctionDeclarationTree createFunctionDeclaration(
