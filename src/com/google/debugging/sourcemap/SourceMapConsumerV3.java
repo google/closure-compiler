@@ -108,9 +108,9 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
         throw new SourceMapParseException("Unknown version: " + version);
       }
 
-      String file = sourceMapRoot.getString("file");
-      if (file.isEmpty()) {
-        throw new SourceMapParseException("File entry is missing or empty");
+      if (sourceMapRoot.has("file")
+          && sourceMapRoot.getString("file").isEmpty()) {
+        throw new SourceMapParseException("File entry is empty");
       }
 
       if (sourceMapRoot.has("sections")) {
@@ -119,13 +119,18 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
         return;
       }
 
-      lineCount = sourceMapRoot.getInt("lineCount");
+      lineCount = sourceMapRoot.has("lineCount")
+          ? sourceMapRoot.getInt("lineCount") : -1;
       String lineMap = sourceMapRoot.getString("mappings");
 
       sources = getJavaStringArray(sourceMapRoot.getJSONArray("sources"));
       names = getJavaStringArray(sourceMapRoot.getJSONArray("names"));
 
-      lines = Lists.newArrayListWithCapacity(lineCount);
+      if (lineCount >= 0) {
+        lines = Lists.newArrayListWithCapacity(lineCount);
+      } else {
+        lines = Lists.newArrayList();
+      }
 
       if (sourceMapRoot.has("sourceRoot")) {
         sourceRoot = sourceMapRoot.getString("sourceRoot");
@@ -361,7 +366,7 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
      * Sanity check the entry.
      */
     private void validateEntry(Entry entry) {
-      Preconditions.checkState(line < lineCount);
+      Preconditions.checkState((lineCount < 0) || (line < lineCount));
       Preconditions.checkState(entry.getSourceFileId() == UNMAPPED
           || entry.getSourceFileId() < sources.length);
       Preconditions.checkState(entry.getNameId() == UNMAPPED
