@@ -37,9 +37,9 @@ import java.util.SortedSet;
  */
 public class ObjectType {
   // TODO(user): currently, we can't distinguish between an obj at the top of
-  // the proto chain (klass = null) and an obj for which we can't figure out its
+  // the proto chain (nominalType = null) and an obj for which we can't figure out its
   // class
-  private final NominalType klass;
+  private final NominalType nominalType;
   private final FunctionType fn;
   private final boolean isLoose;
   private final ImmutableMap<String, Property> props;
@@ -47,20 +47,20 @@ public class ObjectType {
   static final ObjectType TOP_OBJECT =
       ObjectType.makeObjectType(null, null, null, false);
 
-  private ObjectType(NominalType klass, ImmutableMap<String, Property> props,
+  private ObjectType(NominalType nominalType, ImmutableMap<String, Property> props,
       FunctionType fn, boolean isLoose) {
-    this.klass = klass;
+    this.nominalType = nominalType;
     this.props = props;
     this.fn = fn;
     this.isLoose = isLoose;
   }
 
-  static ObjectType makeObjectType(NominalType klass,
+  static ObjectType makeObjectType(NominalType nominalType,
       Map<String, Property> props, FunctionType fn, boolean isLoose) {
     if (props == null) {
       props = ImmutableMap.of();
     }
-    return new ObjectType(klass, ImmutableMap.copyOf(props), fn, isLoose);
+    return new ObjectType(nominalType, ImmutableMap.copyOf(props), fn, isLoose);
   }
 
   static ObjectType fromFunction(FunctionType fn) {
@@ -100,7 +100,7 @@ public class ObjectType {
   }
 
   private ObjectType withLoose() {
-    if (this.klass != null) { // Don't loosen nominal types
+    if (this.nominalType != null) { // Don't loosen nominal types
       return this;
     }
     FunctionType fn = this.fn == null ? null : this.fn.withLoose();
@@ -109,7 +109,7 @@ public class ObjectType {
       // It's wrong to warn about a possibly absent property on loose objects.
       newProps.put(pname, this.props.get(pname).withRequired());
     }
-    return ObjectType.makeObjectType(klass, newProps, fn, true);
+    return ObjectType.makeObjectType(nominalType, newProps, fn, true);
   }
 
   static ImmutableSet<ObjectType> withoutProperty(
@@ -144,7 +144,7 @@ public class ObjectType {
           new Property(objProp.getType().withProperty(innerProps, type),
             objProp.getDeclaredType(), objProp.isOptional()));
     }
-    return ObjectType.makeObjectType(klass, newProps, fn, isLoose);
+    return ObjectType.makeObjectType(nominalType, newProps, fn, isLoose);
   }
 
   ObjectType withProperty(String qname, JSType type) {
@@ -177,7 +177,7 @@ public class ObjectType {
         new Property(JSType.UNKNOWN, null, false) :
         new Property(oldProp.getType(), oldProp.getDeclaredType(), false);
     newProps.put(qname, newProp);
-    return ObjectType.makeObjectType(klass, newProps, fn, isLoose);
+    return ObjectType.makeObjectType(nominalType, newProps, fn, isLoose);
   }
 
   static ImmutableSet<ObjectType> withPropertyRequired(
@@ -276,8 +276,8 @@ public class ObjectType {
     if (this.isLoose || obj2.isLoose) {
       return this.isLooseSubtypeOf(obj2);
     }
-    // If klass1 < klass2, we only need to check that the properties of
-    // obj2 are in (obj1 or klass1)
+    // If nominalType1 < nominalType2, we only need to check that the properties of
+    // obj2 are in (obj1 or nominalType1)
     for (String pname : obj2.props.keySet()) {
       Property prop2 = obj2.props.get(pname);
       Property prop1 = this.getLeftmostProp(pname);
@@ -294,9 +294,9 @@ public class ObjectType {
       }
     }
 
-    if ((this.klass == null && obj2.klass != null)
-        || this.klass != null && obj2.klass != null &&
-        !this.klass.isSubclassOf(obj2.klass)) {
+    if ((this.nominalType == null && obj2.nominalType != null)
+        || this.nominalType != null && obj2.nominalType != null &&
+        !this.nominalType.isSubclassOf(obj2.nominalType)) {
       return false;
     }
 
@@ -331,27 +331,27 @@ public class ObjectType {
   }
 
   ObjectType specialize(ObjectType obj2) {
-    Preconditions.checkState(areRelatedClasses(this.klass, obj2.klass));
+    Preconditions.checkState(areRelatedClasses(this.nominalType, obj2.nominalType));
     return ObjectType.makeObjectType(
-        NominalType.pickSubclass(this.klass, obj2.klass),
+        NominalType.pickSubclass(this.nominalType, obj2.nominalType),
         meetPropsHelper(true, this.props, obj2.props),
         (fn == null) ? null : fn.specialize(obj2.fn),
         this.isLoose || obj2.isLoose);
   }
 
   static ObjectType meet(ObjectType obj1, ObjectType obj2) {
-    Preconditions.checkState(areRelatedClasses(obj1.klass, obj2.klass));
+    Preconditions.checkState(areRelatedClasses(obj1.nominalType, obj2.nominalType));
     return ObjectType.makeObjectType(
-        NominalType.pickSubclass(obj1.klass, obj2.klass),
+        NominalType.pickSubclass(obj1.nominalType, obj2.nominalType),
         meetPropsHelper(false, obj1.props, obj2.props),
         FunctionType.meet(obj1.fn, obj2.fn),
         obj1.isLoose || obj2.isLoose);
   }
 
   static ObjectType join(ObjectType obj1, ObjectType obj2) {
-    Preconditions.checkState(areRelatedClasses(obj1.klass, obj2.klass));
+    Preconditions.checkState(areRelatedClasses(obj1.nominalType, obj2.nominalType));
     return ObjectType.makeObjectType(
-        NominalType.pickSuperclass(obj1.klass, obj2.klass),
+        NominalType.pickSuperclass(obj1.nominalType, obj2.nominalType),
         (obj1.isLoose || obj2.isLoose) ?
           joinPropsLoosely(obj1.props, obj2.props) :
           joinProps(obj1.props, obj2.props),
@@ -370,11 +370,11 @@ public class ObjectType {
     for (ObjectType obj2: objs2) {
       boolean addedObj2 = false;
       for (ObjectType obj1: objs1) {
-        NominalType klass1 = obj1.klass;
-        NominalType klass2 = obj2.klass;
-        if (areRelatedClasses(klass1, klass2)) {
-          if (klass2 == null && klass1 != null && !obj1.isSubtypeOf(obj2) ||
-              klass1 == null && klass2 != null && !obj2.isSubtypeOf(obj1)) {
+        NominalType nominalType1 = obj1.nominalType;
+        NominalType nominalType2 = obj2.nominalType;
+        if (areRelatedClasses(nominalType1, nominalType2)) {
+          if (nominalType2 == null && nominalType1 != null && !obj1.isSubtypeOf(obj2) ||
+              nominalType1 == null && nominalType2 != null && !obj2.isSubtypeOf(obj1)) {
             // Don't merge other classes with record types
             break;
           }
@@ -408,7 +408,7 @@ public class ObjectType {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj2: objs2) {
       for (ObjectType obj1: objs1) {
-        if (areRelatedClasses(obj1.klass, obj2.klass)) {
+        if (areRelatedClasses(obj1.nominalType, obj2.nominalType)) {
           newObjs.add(specializeObjs1 ?
               obj1.specialize(obj2) : meet(obj1, obj2));
           break;
@@ -442,8 +442,8 @@ public class ObjectType {
     }
   }
 
-  NominalType getClassType() {
-    return klass;
+  NominalType getNominalType() {
+    return nominalType;
   }
 
   boolean mayHaveProp(String qname) {
@@ -475,8 +475,8 @@ public class ObjectType {
   private Property getLeftmostProp(String qname) {
     String objName = TypeUtils.getQnameRoot(qname);
     Property p = props.get(objName);
-    if (p == null && klass != null) {
-      p = klass.getPropFromClass(objName);
+    if (p == null && nominalType != null) {
+      p = nominalType.getPropFromClass(objName);
     }
     return p;
   }
@@ -488,7 +488,7 @@ public class ObjectType {
    * @return The unified type, or null if unification fails
    */
   static ObjectType unifyUnknowns(ObjectType t1, ObjectType t2) {
-    if (t1.klass != t2.klass) {
+    if (t1.nominalType != t2.nominalType) {
       return null;
     }
     // TODO(blickly): Use functionType.unifyWith
@@ -508,7 +508,7 @@ public class ObjectType {
       }
       newprops.put(propName, p);
     }
-    return makeObjectType(t1.klass, newprops, t1.fn, t1.isLoose || t2.isLoose);
+    return makeObjectType(t1.nominalType, newprops, t1.fn, t1.isLoose || t2.isLoose);
   }
 
   /**
@@ -519,8 +519,8 @@ public class ObjectType {
    */
   boolean unifyWith(ObjectType other, List<String> templateVars,
       Multimap<String, JSType> typeMultimap) {
-    // TODO(blickly): With generic classes, we will need to have klass.unifyWith
-    if (klass != other.klass) {
+    // TODO(blickly): With generic classes, we will need to have nominalType.unifyWith
+    if (nominalType != other.nominalType) {
       return false;
     }
     if (fn != null) {
@@ -541,7 +541,7 @@ public class ObjectType {
   }
 
   ObjectType substituteGenerics(Map<String, JSType> concreteTypes) {
-    Preconditions.checkState(klass == null);
+    Preconditions.checkState(nominalType == null);
     ImmutableMap<String, Property> newProps = null;
     if (props != null) {
       ImmutableMap.Builder<String, Property> builder = ImmutableMap.builder();
@@ -565,8 +565,8 @@ public class ObjectType {
     for (String pname : props.keySet()) {
       propStrings.add(pname + " : " + props.get(pname).toString());
     }
-    String result = klass == null ? "" : klass.name;
-    result += (klass != null && propStrings.isEmpty()) ?
+    String result = nominalType == null ? "" : nominalType.name;
+    result += (nominalType != null && propStrings.isEmpty()) ?
         "" : "{" + Joiner.on(", ").join(propStrings) + "}";
     result += (isLoose ? " (loose)" : "");
     return result;
@@ -580,12 +580,12 @@ public class ObjectType {
     Preconditions.checkArgument(o instanceof ObjectType);
     ObjectType obj2 = (ObjectType) o;
     return Objects.equal(fn, obj2.fn) &&
-        Objects.equal(klass, obj2.klass) &&
+        Objects.equal(nominalType, obj2.nominalType) &&
         Objects.equal(props, obj2.props);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(fn, props, klass);
+    return Objects.hashCode(fn, props, nominalType);
   }
 }

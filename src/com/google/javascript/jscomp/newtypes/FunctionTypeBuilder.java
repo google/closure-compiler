@@ -41,7 +41,7 @@ public class FunctionTypeBuilder {
   private JSType restFormals = null;
   private JSType returnType = null;
   private boolean loose = false;
-  private NominalType klass;
+  private NominalType nominalType;
   // Only used to build DeclaredFunctionType for prototype methods
   private NominalType receiverType;
   // Non-null iff this function has an @template annotation
@@ -85,8 +85,8 @@ public class FunctionTypeBuilder {
     return this;
   }
 
-  public FunctionTypeBuilder addClass(NominalType cl) {
-    klass = cl;
+  public FunctionTypeBuilder addNominalType(NominalType cl) {
+    nominalType = cl;
     return this;
   }
 
@@ -106,13 +106,13 @@ public class FunctionTypeBuilder {
     Preconditions.checkState(outerVars.isEmpty());
     return DeclaredFunctionType.make(
         requiredFormals, optionalFormals, restFormals, returnType,
-        klass, receiverType, typeParameters);
+        nominalType, receiverType, typeParameters);
   }
 
   public FunctionType buildFunction() {
     FunctionType result = FunctionType.normalized(
         requiredFormals, optionalFormals,
-        restFormals, returnType, klass, outerVars, typeParameters, loose);
+        restFormals, returnType, nominalType, outerVars, typeParameters, loose);
     result.checkValid();
     return result;
   }

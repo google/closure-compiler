@@ -38,8 +38,8 @@ public class DeclaredFunctionType {
   private final List<JSType> optionalFormals;
   private final JSType restFormals;
   private final JSType returnType;
-  // Non-null iff this is a constructor
-  private final NominalType klass;
+  // Non-null iff this is a constructor/interface
+  private final NominalType nominalType;
   // Non-null iff this is a prototype method
   private final NominalType receiverType;
   // Non-null iff this function has an @template annotation
@@ -50,14 +50,14 @@ public class DeclaredFunctionType {
       List<JSType> optionalFormals,
       JSType restFormals,
       JSType retType,
-      NominalType klass,
+      NominalType nominalType,
       NominalType receiverType,
       ImmutableList<String> typeParameters) {
     this.requiredFormals = requiredFormals;
     this.optionalFormals = optionalFormals;
     this.restFormals = restFormals;
     this.returnType = retType;
-    this.klass = klass;
+    this.nominalType = nominalType;
     this.receiverType = receiverType;
     this.typeParameters = typeParameters;
   }
@@ -72,7 +72,7 @@ public class DeclaredFunctionType {
     }
     builder.addRestFormals(restFormals == null ? null : restFormals);
     builder.addRetType(returnType == null ? JSType.UNKNOWN : returnType);
-    builder.addClass(klass);
+    builder.addNominalType(nominalType);
     builder.addTypeParameters(typeParameters);
     return builder.buildFunction();
   }
@@ -82,7 +82,7 @@ public class DeclaredFunctionType {
       List<JSType> optionalFormals,
       JSType restFormals,
       JSType retType,
-      NominalType klass,
+      NominalType nominalType,
       NominalType receiverType,
       ImmutableList<String> typeParameters) {
     if (requiredFormals == null) {
@@ -93,7 +93,7 @@ public class DeclaredFunctionType {
     }
     return new DeclaredFunctionType(
         requiredFormals, optionalFormals, restFormals, retType,
-        klass, receiverType, typeParameters);
+        nominalType, receiverType, typeParameters);
   }
 
   // 0-indexed
@@ -126,15 +126,15 @@ public class DeclaredFunctionType {
   }
 
   public NominalType getThisType() {
-    if (klass != null) {
-      return klass;
+    if (nominalType != null) {
+      return nominalType;
     } else {
       return receiverType;
     }
   }
 
-  public NominalType getClassType() {
-    return klass;
+  public NominalType getNominalType() {
+    return nominalType;
   }
 
   public NominalType getReceiverType() {
@@ -169,7 +169,7 @@ public class DeclaredFunctionType {
       builder.addRestFormals(superType.restFormals);
     }
     builder.addRetType(returnType != null ? returnType : superType.returnType);
-    builder.addClass(klass);
+    builder.addNominalType(nominalType);
     builder.addReceiverType(receiverType);
     return builder.buildDeclaration();
   }
@@ -181,6 +181,6 @@ public class DeclaredFunctionType {
         .add("Optional formals", optionalFormals)
         .add("Varargs formals", restFormals)
         .add("Return", returnType)
-        .add("Class", klass).toString();
+        .add("Nominal type", nominalType).toString();
   }
 }

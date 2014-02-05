@@ -641,7 +641,7 @@ public class NewTypeInference implements CompilerPass {
       builder.addOuterVarPrecondition(outer, outerType.withLocation(null));
     }
 
-    builder.addClass(declType.getClassType());
+    builder.addNominalType(declType.getNominalType());
     JSType declRetType = declType.getReturnType();
     JSType actualRetType = envGetType(exitEnv, RETVAL_ID);
 

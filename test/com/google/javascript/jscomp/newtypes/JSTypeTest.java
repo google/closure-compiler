@@ -52,7 +52,7 @@ public class JSTypeTest extends TestCase {
     Node typeAst = JsDocInfoParser.parseTypeString(typestring);
     assertTrue(typeAst != null);
     JSTypeCreatorFromJSDoc parser = new JSTypeCreatorFromJSDoc();
-    JSType result = parser.getTypeFromNode(typeAst, null, null);
+    JSType result = parser.getTypeFromNode(typeAst, null, null, null);
     assertEquals(ImmutableSet.of(), parser.getWarnings());
     return result;
   }

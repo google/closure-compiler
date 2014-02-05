@@ -529,10 +529,10 @@ public class JSType {
     Preconditions.checkState(
         (other.mask & ~NON_SCALAR_MASK) == 0 && other.objs.size() == 1);
     NominalType otherKlass =
-        Iterables.getOnlyElement(other.objs).getClassType();
+        Iterables.getOnlyElement(other.objs).getNominalType();
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj: objs) {
-      if (!Objects.equal(obj.getClassType(), otherKlass)) {
+      if (!Objects.equal(obj.getNominalType(), otherKlass)) {
         newObjs.add(obj);
       }
     }
@@ -562,11 +562,11 @@ public class JSType {
     return Iterables.getOnlyElement(objs).getFunType();
   }
 
-  NominalType getClassTypeIfUnique() {
+  NominalType getNominalTypeIfUnique() {
     if (objs == null || objs.size() > 1) {
       return null;
     }
-    return Iterables.getOnlyElement(objs).getClassType();
+    return Iterables.getOnlyElement(objs).getNominalType();
   }
 
   /** Turns the class-less object of this type (if any) into a loose object */

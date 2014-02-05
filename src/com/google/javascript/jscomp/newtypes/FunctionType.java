@@ -41,27 +41,27 @@ public class FunctionType {
   private final JSType returnType;
   private final boolean isLoose;
   private final ImmutableMap<String, JSType> outerVarPreconditions;
-  // non-null iff this is a constructor
-  private final NominalType klass;
+  // non-null iff this is a constructor/interface
+  private final NominalType nominalType;
   // Non-null iff this function has an @template annotation
-  private final ImmutableList<String> typeParameters;
+  private final ImmutableList<String> templateVars;
 
   private FunctionType(
       ImmutableList<JSType> requiredFormals,
       ImmutableList<JSType> optionalFormals,
       JSType restFormals,
       JSType retType,
-      NominalType klass,
+      NominalType nominalType,
       ImmutableMap<String, JSType> outerVars,
-      ImmutableList<String> typeParameters,
+      ImmutableList<String> templateVars,
       boolean isLoose) {
     this.requiredFormals = requiredFormals;
     this.optionalFormals = optionalFormals;
     this.restFormals = restFormals;
     this.returnType = retType;
-    this.klass = klass;
+    this.nominalType = nominalType;
     this.outerVarPreconditions = outerVars;
-    this.typeParameters = typeParameters;
+    this.templateVars = templateVars;
     this.isLoose = isLoose;
   }
 
@@ -87,8 +87,8 @@ public class FunctionType {
       return LOOSE_TOP_FUNCTION;
     }
     return new FunctionType(
-        requiredFormals, optionalFormals, restFormals, returnType, klass,
-        outerVarPreconditions, typeParameters, true);
+        requiredFormals, optionalFormals, restFormals, returnType, nominalType,
+        outerVarPreconditions, templateVars, true);
   }
 
   static FunctionType normalized(
@@ -96,9 +96,9 @@ public class FunctionType {
       List<JSType> optionalFormals,
       JSType restFormals,
       JSType retType,
-      NominalType klass,
+      NominalType nominalType,
       Map<String, JSType> outerVars,
-      ImmutableList<String> typeParameters,
+      ImmutableList<String> templateVars,
       boolean isLoose) {
     if (requiredFormals == null) {
       requiredFormals = ImmutableList.of();
@@ -122,9 +122,9 @@ public class FunctionType {
     return new FunctionType(
         ImmutableList.copyOf(requiredFormals),
         ImmutableList.copyOf(optionalFormals),
-        restFormals, retType, klass,
+        restFormals, retType, nominalType,
         ImmutableMap.copyOf(outerVars),
-        typeParameters,
+        templateVars,
         isLoose);
   }
 
@@ -178,7 +178,7 @@ public class FunctionType {
   }
 
   public boolean isConstructor() {
-    return klass != null;
+    return nominalType != null;
   }
 
   // 0-indexed
@@ -202,7 +202,7 @@ public class FunctionType {
   public JSType getReturnType() {
     Preconditions.checkArgument(!isTopFunction());
     if (isConstructor()) {
-      return JSType.fromObjectType(ObjectType.fromClass(klass));
+      return getTypeOfThis();
     } else {
       return returnType;
     }
@@ -228,13 +228,13 @@ public class FunctionType {
   }
 
   public JSType getTypeOfThis() {
-    Preconditions.checkNotNull(klass);
-    return JSType.fromObjectType(ObjectType.fromClass(klass));
+    Preconditions.checkNotNull(nominalType);
+    return JSType.fromObjectType(ObjectType.fromClass(nominalType));
   }
 
   public JSType createConstructorObject() {
-    Preconditions.checkState(klass != null);
-    return klass.createConstructorObject(this);
+    Preconditions.checkState(nominalType != null);
+    return nominalType.createConstructorObject(this);
   }
 
   // Returns non-null JSType
@@ -311,7 +311,7 @@ public class FunctionType {
     if (other.isLoose()) {
       builder.addLoose();
     }
-    builder.addClass(other.klass);
+    builder.addNominalType(other.nominalType);
     FunctionType newOther = builder.buildFunction();
     return newOther.equals(join(this, newOther));
   }
@@ -426,18 +426,18 @@ public class FunctionType {
   }
 
   public boolean isGeneric() {
-    return typeParameters != null;
+    return templateVars != null;
   }
 
   public List<String> getTypeParameters() {
-    return typeParameters;
+    return templateVars;
   }
 
   boolean unifyWith(FunctionType other, List<String> templateVars,
       Multimap<String, JSType> typeMultimap) {
-    Preconditions.checkState(klass == null);
-    Preconditions.checkState(typeParameters == null);
-    Preconditions.checkState(outerVarPreconditions.isEmpty());
+    Preconditions.checkState(this.nominalType == null);
+    Preconditions.checkState(this.templateVars == null);
+    Preconditions.checkState(this.outerVarPreconditions.isEmpty());
 
     if (requiredFormals.size() != other.requiredFormals.size()) {
       return false;
@@ -491,26 +491,26 @@ public class FunctionType {
     if (isLoose) {
       builder.addLoose();
     }
+    if (nominalType != null) {
+      builder.addNominalType(nominalType.instantiateGenerics(typeMap));
+    }
     // TODO(blickly): Do we need instatiation here?
     for (String var : outerVarPreconditions.keySet()) {
       builder.addOuterVarPrecondition(var, outerVarPreconditions.get(var));
     }
-    // The returned FunctionType will have no typeParameters
+    // The returned FunctionType will have no templateVars
     return builder.buildFunction();
   }
 
   FunctionType substituteGenerics(Map<String, JSType> concreteTypes) {
-    Preconditions.checkState(klass == null);
-    Preconditions.checkState(typeParameters == null);
+    Preconditions.checkState(templateVars == null);
     Preconditions.checkState(outerVarPreconditions.isEmpty());
     return applyInstantiation(concreteTypes);
   }
 
   public FunctionType instantiateGenerics(Map<String, JSType> typeMap) {
-    // We aren't yet handling @templated constructors
-    Preconditions.checkState(klass == null);
     for (String typeParam: typeMap.keySet()) {
-      Preconditions.checkState(typeParameters.contains(typeParam));
+      Preconditions.checkState(templateVars.contains(typeParam));
     }
     return applyInstantiation(typeMap);
   }
@@ -540,8 +540,8 @@ public class FunctionType {
       return "TOP_FUNCTION" + (isLoose ? " (loose)" : "");
     }
     List<String> formals = Lists.newLinkedList();
-    if (klass != null) {
-      formals.add("new:" + klass.name);
+    if (nominalType != null) {
+      formals.add("new:" + nominalType.name);
     }
     for (JSType formal : requiredFormals) {
       formals.add(formal.toString());

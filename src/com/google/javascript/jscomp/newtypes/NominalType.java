@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -42,18 +43,24 @@ public class NominalType {
   private ImmutableSet<NominalType> interfaces = null;
   private final boolean isInterface;
   private ImmutableSet<String> allProps = null;
+  private final ImmutableList<String> templateVars;
 
-  private NominalType(String name, boolean isInterface) {
+  private NominalType(
+      String name, ImmutableList<String> templateVars, boolean isInterface) {
     this.name = name;
+    this.templateVars =
+        (templateVars == null || templateVars.isEmpty()) ? null : templateVars;
     this.isInterface = isInterface;
   }
 
-  public static NominalType makeClass(String name) {
-    return new NominalType(name, false);
+  public static NominalType makeClass(
+      String name, ImmutableList<String> templateVars) {
+    return new NominalType(name, templateVars, false);
   }
 
-  public static NominalType makeInterface(String name) {
-    return new NominalType(name, true);
+  public static NominalType makeInterface(
+      String name, ImmutableList<String> templateVars) {
+    return new NominalType(name, templateVars, true);
   }
 
   public boolean isClass() {
@@ -63,6 +70,10 @@ public class NominalType {
   /** True iff we have added all properties and made nominal type immutable */
   public boolean isFinalized() {
     return isFinalized;
+  }
+
+  ImmutableList<String> getTemplateVars() {
+    return templateVars;
   }
 
   public void addSuperClass(NominalType superClass) {
@@ -290,6 +301,30 @@ public class NominalType {
         ObjectType.makeObjectType(null, ctorProps, ctorFn, ctorFn.isLoose()));
   }
 
+  NominalType instantiateGenerics(Map<String, JSType> typeMap) {
+    Preconditions.checkState(templateVars != null);
+    for (String typeParam: typeMap.keySet()) {
+      Preconditions.checkState(templateVars.contains(typeParam));
+    }
+    for (String typeParam: templateVars) {
+      Preconditions.checkState(typeMap.containsKey(typeParam));
+    }
+    NominalType result = new NominalType(this.name, null, this.isInterface);
+    // To implement
+    Preconditions.checkState(superClass == null);
+    Preconditions.checkState(interfaces.isEmpty(), "Interfaces not supported: " +
+        interfaces);
+    for (String propName : this.classProps.keySet()) {
+      result.classProps.put(propName,
+          this.classProps.get(propName).substituteGenerics(typeMap));
+    }
+    for (String propName : this.protoProps.keySet()) {
+      result.protoProps.put(propName,
+          this.protoProps.get(propName).substituteGenerics(typeMap));
+    }
+    return result.finalizeNominalType();
+  }
+
   // If we try to mutate the class after the AST-preparation phase, error.
   public NominalType finalizeNominalType() {
     // System.out.println("Class " + name +
@@ -297,9 +332,13 @@ public class NominalType {
     //     " and prototype properties: " + protoProps);
     this.classProps = ImmutableMap.copyOf(classProps);
     this.protoProps = ImmutableMap.copyOf(protoProps);
+    if (this.interfaces == null) {
+      this.interfaces = ImmutableSet.of();
+    }
     addCtorProperty("prototype", createProtoObject());
     this.ctorProps = ImmutableMap.copyOf(ctorProps);
     this.isFinalized = true;
+    this.allProps = null;
     return this;
   }
 
