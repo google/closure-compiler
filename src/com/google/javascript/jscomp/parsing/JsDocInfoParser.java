@@ -2371,8 +2371,12 @@ public final class JsDocInfoParser {
   private Node parseFieldName(JsDocToken token) {
     switch (token) {
       case STRING:
-        String string = stream.getString();
-        return newStringNode(string);
+        String s = stream.getString();
+        Node n = Node.newString(
+            Token.STRING_KEY, s, stream.getLineno(), stream.getCharno())
+            .clonePropsFrom(templateNode);
+        n.setLength(s.length());
+        return n;
 
       default:
         return null;

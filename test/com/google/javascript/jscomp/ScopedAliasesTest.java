@@ -344,6 +344,19 @@ public class ScopedAliasesTest extends CompilerTestCase {
         + "/** @typedef {goog.Timer} */ types.expected;");
   }
 
+  public void testJsDocRecord() {
+    enableTypeCheck(CheckLevel.WARNING);
+    runTypeCheckAfterProcessing = true;
+    test("/** @const */ var ns = {};" +
+         "goog.scope(function () {" +
+         "  var x = goog.Timer;" +
+         "  /** @type {{x: string}} */ ns.y = {'goog.Timer': 'x'};" +
+         "});",
+         " var ns = {}; ns.y = {'goog.Timer': 'x'};",
+         null,
+         TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
   public void testArrayJsDoc() {
     testTypes(
         "var x = goog.Timer;",
