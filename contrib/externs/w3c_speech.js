@@ -271,3 +271,98 @@ function webkitSpeechRecognitionError() {}
  * @extends {SpeechRecognition}
  */
 function webkitSpeechRecognition() {}
+
+
+
+// W3C Web Speech Synthesis API is implemented in Chrome M33
+/**
+ * @type {SpeechSynthesis}
+ * @see https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html#tts-section
+ */
+window.speechSynthesis;
+
+
+/**
+ * @constructor
+ * @param {string} text
+ */
+function SpeechSynthesisUtterance(text) {}
+
+/** @type {string} */
+SpeechSynthesisUtterance.prototype.text;
+
+/** @type {string} */
+SpeechSynthesisUtterance.prototype.lang;
+
+/** @type {SpeechSynthesisVoice} */
+SpeechSynthesisUtterance.prototype.voice;
+
+/**
+ * @param {Event} event
+ */
+SpeechSynthesisUtterance.prototype.onstart = function(event) {};
+
+/**
+ * @param {Event} event
+ */
+SpeechSynthesisUtterance.prototype.onend = function(event) {};
+
+
+/**
+ * @constructor
+ */
+function SpeechSynthesisVoice() {}
+
+/** @type {string} */
+SpeechSynthesisVoice.prototype.voiceURI;
+
+/** @type {string} */
+SpeechSynthesisVoice.prototype.name;
+
+/** @type {string} */
+SpeechSynthesisVoice.prototype.lang;
+
+/** @type {boolean} */
+SpeechSynthesisVoice.prototype.localService;
+
+/** @type {boolean} */
+SpeechSynthesisVoice.prototype.default;
+
+
+/**
+ * @constructor
+ * @extends {Array.<!SpeechSynthesisVoice>}
+ */
+function SpeechSynthesisVoiceList() {}
+
+
+/**
+ * @interface
+ * @extends {EventTarget}
+ */
+function SpeechSynthesis() {}
+
+/**
+ * @param {SpeechSynthesisUtterance} utterance
+ */
+SpeechSynthesis.prototype.speak = function(utterance) {};
+
+/** @type {function()} */
+SpeechSynthesis.prototype.cancel;
+
+/** @type {function()} */
+SpeechSynthesis.prototype.pause;
+
+/** @type {function()} */
+SpeechSynthesis.prototype.resume;
+
+/**
+ * @return {SpeechSynthesisVoiceList}
+ */
+SpeechSynthesis.prototype.getVoices = function() {};
+
+/**
+ * @param {Event} event
+ * @see https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi-errata.html
+ */
+SpeechSynthesis.prototype.onvoiceschanged = function(event) {};
