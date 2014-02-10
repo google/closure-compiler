@@ -647,6 +647,7 @@ Element.prototype.setAttributeNode = function(newAttr) {};
 // http://www.w3.org/TR/DOM-Level-3-Events/#event-types
 
 /** @type {?function (Event)} */ Element.prototype.onabort;
+/** @type {?function (Event)} */ Element.prototype.onbeforeinput;
 /** @type {?function (Event)} */ Element.prototype.onbeforeunload;
 /** @type {?function (Event)} */ Element.prototype.onblur;
 /** @type {?function (Event)} */ Element.prototype.onchange;
@@ -662,6 +663,7 @@ Element.prototype.setAttributeNode = function(newAttr) {};
 /** @type {?function (Event)} */ Element.prototype.onfocus;
 /** @type {?function (Event)} */ Element.prototype.onfocusin;
 /** @type {?function (Event)} */ Element.prototype.onfocusout;
+/** @type {?function (Event)} */ Element.prototype.oninput;
 /** @type {?function (Event)} */ Element.prototype.onkeydown;
 /** @type {?function (Event)} */ Element.prototype.onkeypress;
 /** @type {?function (Event)} */ Element.prototype.onkeyup;
