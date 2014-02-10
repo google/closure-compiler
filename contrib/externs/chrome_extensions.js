@@ -763,14 +763,21 @@ chrome.runtime.connectNative = function(application) {};
  * @param {string|*} extensionIdOrMessage Either the extensionId to send the
  *     message to, in which case the message is passed as the next arg, or the
  *     message itself.
- * @param {(*|function(*): void)=} opt_messageOrCallback The message, if arg1
- *     was the extensionId, or the callback, if arg1 was the message, or
- *     optional.
+ * @param {(*|Object|function(*): void)=} opt_messageOrOptsOrCallback
+ *     One of:
+ *     The message, if arg1 was the extensionId.
+ *     The options for message sending, if arg1 was the message and this
+ *     argument is not a function.
+ *     The callback, if arg1 was the message and this argument is a function.
+ * @param {(Object|function(*): void)=} opt_optsOrCallback
+ *     Either the options for message sending, if arg2 was the message,
+ *     or the callback.
  * @param {function(*): void=} opt_callback The callback function which
  *     takes a JSON response object sent by the handler of the request.
  */
 chrome.runtime.sendMessage = function(
-    extensionIdOrMessage, opt_messageOrCallback, opt_callback) {};
+    extensionIdOrMessage, opt_messageOrOptsOrCallback, opt_optsOrCallback,
+    opt_callback) {};
 
 
 /**
