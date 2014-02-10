@@ -105,10 +105,11 @@ public class Node implements Cloneable, Serializable {
       CHANGE_TIME        = 56,    // For passes that work only on changed funs.
       REFLECTED_OBJECT   = 57,    // An object that's used for goog.object.reflect-style reflection.
       STATIC_MEMBER      = 58,    // Set if class member definition is static
-      GENERATOR          = 59,    // Set if the node is a Generator function or
+      GENERATOR_FN       = 59,    // Set if the node is a Generator function or
                                   // member method.
-      YIELD_FOR          = 60,    // Set if a yield is a "yield all"
-      LAST_PROP          = 60;    // Unused in the compiler, but keep for Rhino.
+      ARROW_FN           = 60,
+      YIELD_FOR          = 61,    // Set if a yield is a "yield all"
+      LAST_PROP          = 61;    // Unused in the compiler, but keep for Rhino.
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -143,7 +144,8 @@ public class Node implements Cloneable, Serializable {
         case CHANGE_TIME:        return "change_time";
         case REFLECTED_OBJECT:   return "reflected_object";
         case STATIC_MEMBER:      return "static_member";
-        case GENERATOR:          return "generator";
+        case GENERATOR_FN:       return "generator_fn";
+        case ARROW_FN:           return "arrow_fn";
         case YIELD_FOR:          return "yield_for";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
@@ -2027,17 +2029,30 @@ public class Node implements Cloneable, Serializable {
    * method is meaningful only on {@link Token#FUNCTION} or
    * {@link Token#MEMBER_DEF} nodes.
    */
-  public void setGenerator(boolean isGenerator) {
-    putBooleanProp(GENERATOR, isGenerator);
+  public void setIsGeneratorFunction(boolean isGenerator) {
+    putBooleanProp(GENERATOR_FN, isGenerator);
   }
 
   /**
-   * Returns whether this node is a variable length argument node. This
-   * method's return value is meaningful only on {@link Token#NAME} nodes
-   * used to define a {@link Token#FUNCTION}'s argument list.
+   * Returns whether this node is a generator function node.
    */
-  public boolean isGenerator() {
-    return getBooleanProp(GENERATOR);
+  public boolean isGeneratorFunction() {
+    return getBooleanProp(GENERATOR_FN);
+  }
+
+  /**
+   * Sets whether this node is a arrow function node. This
+   * method is meaningful only on {@link Token#FUNCTION}
+   */
+  public void setIsArrowFunction(boolean isArrow) {
+    putBooleanProp(ARROW_FN, isArrow);
+  }
+
+  /**
+   * Returns whether this node is a arrow function node.
+   */
+  public boolean isArrowFunction() {
+    return getBooleanProp(ARROW_FN);
   }
 
   /**

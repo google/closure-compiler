@@ -310,19 +310,28 @@ class CodeGenerator {
           throw new Error("Unexpected Node subclass.");
         }
         Preconditions.checkState(childCount == 3);
-        boolean funcNeedsParens = (context == Context.START_OF_EXPR);
+
+        boolean isArrow = n.isArrowFunction();
+        // TODO(johnlenz): properly parenthesize arrow functions
+        boolean funcNeedsParens = (context == Context.START_OF_EXPR)
+            || isArrow;
         if (funcNeedsParens) {
           add("(");
         }
 
-        add("function");
-        if (n.isGenerator()) {
+        if (!isArrow) {
+          add("function");
+        }
+        if (n.isGeneratorFunction()) {
           add("*");
         }
 
         add(first);
 
         add(first.getNext());
+        if (isArrow) {
+          add("=>");
+        }
         add(last, Context.PRESERVE_BLOCK);
         cc.endFunction(context == Context.STATEMENT);
 
@@ -385,7 +394,7 @@ class CodeGenerator {
           add("static ");
         }
 
-        if (n.isGenerator()) {
+        if (n.isGeneratorFunction()) {
           Preconditions.checkState(type == Token.MEMBER_DEF);
           add("*");
         }

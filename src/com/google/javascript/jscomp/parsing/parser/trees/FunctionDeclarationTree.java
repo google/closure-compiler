@@ -25,11 +25,12 @@ public class FunctionDeclarationTree extends ParseTree {
     DECLARATION,
     EXPRESSION,
     MEMBER,
+    ARROW
   }
 
   public final IdentifierToken name;
   public final FormalParameterListTree formalParameterList;
-  public final BlockTree functionBody;
+  public final ParseTree functionBody;
   public final boolean isStatic;
   public final boolean isGenerator;
   public final Kind kind;
@@ -37,7 +38,7 @@ public class FunctionDeclarationTree extends ParseTree {
   public FunctionDeclarationTree(SourceRange location, IdentifierToken name,
       boolean isStatic, boolean isGenerator, Kind kind,
       FormalParameterListTree formalParameterList,
-      BlockTree functionBody) {
+      ParseTree functionBody) {
     super(ParseTreeType.FUNCTION_DECLARATION, location);
 
     this.name = name;

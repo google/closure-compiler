@@ -87,6 +87,7 @@ public enum TokenType {
   CLOSE_ANGLE(">"),
   LESS_EQUAL("<="),
   GREATER_EQUAL(">="),
+  ARROW("=>"),
   EQUAL_EQUAL("=="),
   NOT_EQUAL("!="),
   EQUAL_EQUAL_EQUAL("==="),

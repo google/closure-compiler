@@ -1354,6 +1354,27 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "this language feature is only supported in es6 mode: super");
   }
 
+  public void testArrow1() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parse("()=>1;");
+    parse("()=>{}");
+    parse("(a,b) => a + b;");
+    parse("a => b");
+    parse("a => { return b }");
+    parse("a => b");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parse("a => b",
+        "this language feature is only supported in es6 mode: " +
+        "short function syntax");
+
+    mode = LanguageMode.ECMASCRIPT3;
+    parse("a => b;",
+        "this language feature is only supported in es6 mode: " +
+        "short function syntax");
+  }
+
   private Node script(Node stmt) {
     Node n = new Node(Token.SCRIPT, stmt);
     n.setIsSyntheticBlock(true);
@@ -1366,10 +1387,6 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   private Node regex(String regex) {
     return new Node(Token.REGEXP, Node.newString(regex));
-  }
-
-  private Node regex(String regex, String flags) {
-    return new Node(Token.REGEXP, Node.newString(regex), Node.newString(flags));
   }
 
   /**

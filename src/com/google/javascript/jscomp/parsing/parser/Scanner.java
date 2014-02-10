@@ -405,15 +405,20 @@ public class Scanner {
           return createToken(TokenType.CLOSE_ANGLE, beginToken);
         }
       case '=':
-        if (peek('=')) {
-          nextChar();
-          if (peek('=')) {
+        switch (peekChar()) {
+          case '=':
             nextChar();
-            return createToken(TokenType.EQUAL_EQUAL_EQUAL, beginToken);
-          }
-          return createToken(TokenType.EQUAL_EQUAL, beginToken);
+            if (peek('=')) {
+              nextChar();
+              return createToken(TokenType.EQUAL_EQUAL_EQUAL, beginToken);
+            }
+            return createToken(TokenType.EQUAL_EQUAL, beginToken);
+          case '>':
+            nextChar();
+            return createToken(TokenType.ARROW, beginToken);
+          default:
+            return createToken(TokenType.EQUAL, beginToken);
         }
-        return createToken(TokenType.EQUAL, beginToken);
       case '!':
         if (peek('=')) {
           nextChar();

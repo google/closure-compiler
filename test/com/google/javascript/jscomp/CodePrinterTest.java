@@ -1667,4 +1667,12 @@ public class CodePrinterTest extends TestCase {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("class C{*member(){(yield 1)+(yield 1)}}");
   }
+
+  public void testArrowFunction() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrint("()=>1", "(()=>1)");
+    assertPrint("()=>{}", "(()=>{})");
+    assertPrint("a=>b", "((a)=>b)");
+    assertPrint("(a,b)=>b", "((a,b)=>b)");
+  }
 }

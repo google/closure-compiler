@@ -570,7 +570,7 @@ public class NodeTraversal {
     traverseBranch(args, n);
 
     // Body
-    Preconditions.checkState(body.getNext() == null && body.isBlock(), body);
+    // ES6 "arrow" function may not have a block as a body.
     traverseBranch(body, n);
 
     popScope();

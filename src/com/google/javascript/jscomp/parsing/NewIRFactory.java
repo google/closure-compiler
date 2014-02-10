@@ -1061,12 +1061,23 @@ class NewIRFactory {
 
     @Override
     Node processFunction(FunctionDeclarationTree functionTree) {
+      boolean isDeclaration = (functionTree.kind == FunctionDeclarationTree.Kind.DECLARATION);
       boolean isMember = (functionTree.kind == FunctionDeclarationTree.Kind.MEMBER);
-      boolean isExpression = (functionTree.kind == FunctionDeclarationTree.Kind.EXPRESSION);
+      boolean isArrow = (functionTree.kind == FunctionDeclarationTree.Kind.ARROW);
       boolean isGenerator = functionTree.isGenerator;
 
-      if (isGenerator && !isEs6Mode()) {
-        es6LanguageFeature(functionTree, "generators");
+      if (!isEs6Mode()) {
+        if (isGenerator) {
+          es6LanguageFeature(functionTree, "generators");
+        }
+
+        if (isMember) {
+          es6LanguageFeature(functionTree, "member declarations");
+        }
+
+        if (isArrow) {
+          es6LanguageFeature(functionTree, "short function syntax");
+        }
       }
 
       IdentifierToken name = functionTree.name;
@@ -1074,17 +1085,17 @@ class NewIRFactory {
       if (name != null) {
         newName = processNameWithInlineJSDoc(name);
       } else {
-        if (!isExpression) {
+        if (isDeclaration || isMember) {
           errorReporter.error(
             "unnamed function statement",
             sourceName,
             lineno(functionTree), "", charno(functionTree));
 
           // Return the bare minimum to put the AST in a valid state.
-          return newNode(Token.EXPR_RESULT, Node.newNumber(0));
+          newName = createMissingNameNode();
+        } else {
+          newName = newStringNode(Token.NAME, "");
         }
-
-        newName = newStringNode(Token.NAME, "");
 
         // Old Rhino tagged the empty name node with the line number of the
         // declaration.
@@ -1106,7 +1117,7 @@ class NewIRFactory {
       node.addChildToBack(transform(functionTree.formalParameterList));
 
       Node bodyNode = transform(functionTree.functionBody);
-      if (!bodyNode.isBlock()) {
+      if (!isArrow && !bodyNode.isBlock()) {
         // When in ideMode the parser tries to parse some constructs the
         // compiler doesn't support, repair it here.
         Preconditions.checkState(config.isIdeMode);
@@ -1127,7 +1138,8 @@ class NewIRFactory {
         result = node;
       }
 
-      result.setGenerator(isGenerator);
+      result.setIsGeneratorFunction(isGenerator);
+      result.setIsArrowFunction(isArrow);
 
       return result;
     }
@@ -1677,6 +1689,10 @@ class NewIRFactory {
       // Try to create something valid that ide mode might be able to
       // continue with.
       return createMissingExpressionNode();
+    }
+
+    private Node createMissingNameNode() {
+      return newStringNode(Token.NAME, "__missing_name__");
     }
 
     private Node createMissingExpressionNode() {

@@ -72,11 +72,17 @@ public class Parser {
 
   public Parser(
       Config config, ErrorReporter errorReporter,
-      SourceFile source, int offset) {
+      SourceFile source, int offset, boolean initialGeneratorContext) {
     this.config = config;
     this.errorReporter = errorReporter;
     this.scanner = new Scanner(errorReporter, commentRecorder, source, offset);
-    this.inGeneratorContext.add(false);
+    this.inGeneratorContext.add(initialGeneratorContext);
+  }
+
+  public Parser(
+      Config config, ErrorReporter errorReporter,
+      SourceFile source, int offset) {
+    this(config, errorReporter, source, offset, false);
   }
 
   public Parser(Config config, ErrorReporter errorReporter, SourceFile source) {
@@ -439,6 +445,50 @@ public class Parser {
   private boolean peekFunction(int index) {
     // TODO(johnlenz): short function syntax
     return peek(index, TokenType.FUNCTION);
+  }
+
+  private ParseTree parseArrowFunction(Expression expressionIn) {
+    SourcePosition start = getTreeStartLocation();
+
+    inGeneratorContext.addLast(false);
+
+    FormalParameterListTree formalParameterList;
+    if (peekId()) {
+      ParseTree param = parseIdentifierExpression();
+      formalParameterList = new FormalParameterListTree(getTreeLocation(start),
+          ImmutableList.<ParseTree>of(param));
+    } else {
+      formalParameterList = parseFormalParameterList();
+    }
+    eat(TokenType.ARROW);
+    ParseTree functionBody;
+    if (peek(TokenType.OPEN_CURLY)) {
+      functionBody = parseFunctionBody();
+    } else {
+      functionBody = parseAssignmentExpression();
+    }
+
+    FunctionDeclarationTree declaration =  new FunctionDeclarationTree(
+        getTreeLocation(start), null, false, false,
+        FunctionDeclarationTree.Kind.ARROW,
+        formalParameterList, functionBody);
+
+    inGeneratorContext.removeLast();
+
+    return declaration;
+  }
+
+  private boolean peekArrowFunction() {
+    if (peekId() && peekType(1) == TokenType.ARROW) {
+      return true;
+    } else if (peekType() == TokenType.OPEN_PAREN) {
+      // TODO(johnlenz): determine if we can parse this without the
+      // overhead of forking the parser.
+      Parser p = createLookaheadParser();
+      p.parseFormalParameterList();
+      return !p.errorReporter.hadError() && p.peek(TokenType.ARROW);
+    }
+    return false;
   }
 
   // 13 Function Definition
@@ -1432,6 +1482,10 @@ public class Parser {
       return parseYield(expressionIn);
     }
 
+    if (peekArrowFunction()) {
+      return parseArrowFunction(expressionIn);
+    }
+
     SourcePosition start = getTreeStartLocation();
     ParseTree left = peekParenPatternAssignment()
         ? parseParenPattern()
@@ -2328,7 +2382,8 @@ public class Parser {
     return new Parser(config,
         new MutedErrorReporter(),
         this.scanner.getFile(),
-        this.scanner.getOffset());
+        this.scanner.getOffset(),
+        inGeneratorContext());
   }
 
   /**
