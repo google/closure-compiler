@@ -730,7 +730,6 @@ public class Parser {
   private VariableStatementTree parseVariableStatement() {
     SourcePosition start = getTreeStartLocation();
     VariableDeclarationListTree declarations = parseVariableDeclarationList();
-    checkInitializers(declarations);
     eatPossibleImplicitSemiColon();
     return new VariableStatementTree(getTreeLocation(start), declarations);
   }
@@ -786,10 +785,14 @@ public class Parser {
     ParseTree initializer = null;
     if (peek(TokenType.EQUAL)) {
       initializer = parseInitializer(expressionIn);
-    } else if (binding == TokenType.CONST) {
-      reportError("const variables must have an initializer");
-    } else if (lvalue.isPattern()) {
-      reportError("destructuring must have an initializer");
+    } else if (expressionIn != Expression.NO_IN) {
+      // TODO(johnlenz): this is a bit of a hack, for-in and for-of
+      // disallow "in" and by chance, must not allow initializers
+      if (binding == TokenType.CONST) {  //?
+        reportError("const variables must have an initializer");
+      } else if (lvalue.isPattern()) {
+        reportError("destructuring must have an initializer");
+      }
     }
     return new VariableDeclarationTree(getTreeLocation(start), lvalue, initializer);
   }

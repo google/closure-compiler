@@ -57,7 +57,7 @@ public class ParseTreeTransformer {
     case EXPORT_DECLARATION: return transform(tree.asExportDeclaration());
     case EXPRESSION_STATEMENT: return transform(tree.asExpressionStatement());
     case FINALLY: return transform(tree.asFinally());
-    case FOR_OF_STATEMENT: return transform(tree.asForEachStatement());
+    case FOR_OF_STATEMENT: return transform(tree.asForOfStatement());
     case FOR_IN_STATEMENT: return transform(tree.asForInStatement());
     case FOR_STATEMENT: return transform(tree.asForStatement());
     case FORMAL_PARAMETER_LIST: return transform(tree.asFormalParameterList());

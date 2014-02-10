@@ -2355,6 +2355,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.CONTINUE;
   }
 
+  public boolean isConst() {
+    return this.getType() == Token.CONST;
+  }
+
   public boolean isDebugger() {
     return this.getType() == Token.DEBUGGER;
   }
@@ -2389,6 +2393,10 @@ public class Node implements Cloneable, Serializable {
 
   public boolean isFor() {
     return this.getType() == Token.FOR;
+  }
+
+  public boolean isForOf() {
+    return this.getType() == Token.FOR_OF;
   }
 
   public boolean isFunction() {
@@ -2433,6 +2441,10 @@ public class Node implements Cloneable, Serializable {
 
   public boolean isLabelName() {
     return this.getType() == Token.LABEL_NAME;
+  }
+
+  public boolean isLet() {
+    return this.getType() == Token.LET;
   }
 
   public boolean isMemberDef() {

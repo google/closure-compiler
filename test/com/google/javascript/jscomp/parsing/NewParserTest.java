@@ -782,8 +782,9 @@ public class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testConstForbidden() {
-    parseError("const x = 3;",
-        "unsupported language feature: const declarations");
+    parse("const x = 3;",
+        "this language feature is only supported in es6 mode: " +
+        "const declarations");
   }
 
   public void testDestructuringAssignForbidden() {
@@ -807,16 +808,23 @@ public class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testLetForbidden1() {
-    parseError("let x = 3;", "unsupported language feature: let declarations");
+    parse("let x = 3;",
+        "this language feature is only supported in es6 mode: " +
+        "let declarations");
   }
 
   public void testLetForbidden2() {
-    parseError("function f() { let x = 3; };",
-        "unsupported language feature: let declarations");
+    parse("function f() { let x = 3; };",
+        "this language feature is only supported in es6 mode: " +
+        "let declarations");
   }
 
   public void testLetForbidden3() {
     mode = LanguageMode.ECMASCRIPT5_STRICT;
+    parseError("function f() { var let = 3; }",
+        "'identifier' expected");
+
+    mode = LanguageMode.ECMASCRIPT6_STRICT;
     parseError("function f() { var let = 3; }",
         "'identifier' expected");
   }
@@ -1373,6 +1381,26 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("a => b;",
         "this language feature is only supported in es6 mode: " +
         "short function syntax");
+  }
+
+  public void testForOf1() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parse("for(a of b) c;");
+    parse("for(let a of b) c;");
+    parse("for(const a of b) c;");
+  }
+
+  public void testForOf2() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    // TODO(johnlenz): is this valid?
+    // parse("for(a=1 of b) c;",
+    //     "for-of statement may not have initializer");
+    parseError("for(let a=1 of b) c;",
+        "for-of statement may not have initializer");
+    parseError("for(const a=1 of b) c;",
+        "for-of statement may not have initializer");
   }
 
   private Node script(Node stmt) {

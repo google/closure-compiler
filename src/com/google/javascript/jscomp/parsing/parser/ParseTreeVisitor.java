@@ -56,7 +56,7 @@ public class ParseTreeVisitor {
     case EXPORT_DECLARATION: visit(tree.asExportDeclaration()); break;
     case EXPRESSION_STATEMENT: visit(tree.asExpressionStatement()); break;
     case FINALLY: visit(tree.asFinally()); break;
-    case FOR_OF_STATEMENT: visit(tree.asForEachStatement()); break;
+    case FOR_OF_STATEMENT: visit(tree.asForOfStatement()); break;
     case FOR_IN_STATEMENT: visit(tree.asForInStatement()); break;
     case FOR_STATEMENT: visit(tree.asForStatement()); break;
     case FORMAL_PARAMETER_LIST: visit(tree.asFormalParameterList()); break;

@@ -203,6 +203,16 @@ class CodeGenerator {
         }
         break;
 
+      case Token.CONST:
+        add("const ");
+        addList(first, false, getContextForNoInOperator(context));
+        break;
+
+      case Token.LET:
+        add("let ");
+        addList(first, false, getContextForNoInOperator(context));
+        break;
+
       case Token.LABEL_NAME:
         Preconditions.checkState(!n.getString().isEmpty());
         addIdentifier(n.getString());
@@ -462,11 +472,11 @@ class CodeGenerator {
           add(c, Context.STATEMENT);
 
           // VAR doesn't include ';' since it gets used in expressions
-          if (c.isVar()) {
+          if (c.isVar() || c.isLet() || c.isConst()) {
             cc.endStatement();
           }
 
-          if (c.isFunction()) {
+          if (c.isFunction() || c.isClass()) {
             cc.maybeLineBreak();
           }
 
@@ -511,6 +521,19 @@ class CodeGenerator {
           addNonEmptyStatement(
               last, getContextForNonEmptyExpression(context), false);
         }
+        break;
+
+      case Token.FOR_OF:
+        Preconditions.checkState(childCount == 3);
+        add("for");
+        cc.maybeInsertSpace();
+        add("(");
+        add(first);
+        add("of");
+        add(first.getNext());
+        add(")");
+        addNonEmptyStatement(
+            last, getContextForNonEmptyExpression(context), false);
         break;
 
       case Token.DO:
@@ -962,7 +985,7 @@ class CodeGenerator {
         //   IE6/7 needs a block around DOs.
         Node firstAndOnlyChild = getFirstNonEmptyChild(n);
         boolean alwaysWrapInBlock = cc.shouldPreserveExtraBlocks();
-        if (alwaysWrapInBlock || isOneExactlyFunctionOrDo(firstAndOnlyChild)) {
+        if (alwaysWrapInBlock || isBlockDeclOrDo(firstAndOnlyChild)) {
           cc.beginBlock();
           add(firstAndOnlyChild, Context.STATEMENT);
           cc.maybeLineBreak();
@@ -996,17 +1019,17 @@ class CodeGenerator {
    * @return Whether the Node is a DO or FUNCTION (with or without
    * labels).
    */
-  private boolean isOneExactlyFunctionOrDo(Node n) {
+  private boolean isBlockDeclOrDo(Node n) {
     if (n.isLabel()) {
       Node labeledStatement = n.getLastChild();
       if (!labeledStatement.isBlock()) {
-        return isOneExactlyFunctionOrDo(labeledStatement);
+        return isBlockDeclOrDo(labeledStatement);
       } else {
         // For labels with block children, we need to ensure that a
         // labeled FUNCTION or DO isn't generated when extraneous BLOCKs
         // are skipped.
         if (getNonEmptyChildCount(n, 2) == 1) {
-          return isOneExactlyFunctionOrDo(getFirstNonEmptyChild(n));
+          return isBlockDeclOrDo(getFirstNonEmptyChild(n));
         } else {
           // Either a empty statement or an block with more than one child,
           // way it isn't a FUNCTION or DO.
@@ -1014,7 +1037,16 @@ class CodeGenerator {
         }
       }
     } else {
-      return (n.isFunction() || n.isDo());
+      switch (n.getType()){
+        case Token.LET:
+        case Token.CONST:
+        case Token.FUNCTION:
+        case Token.CLASS:
+        case Token.DO:
+          return true;
+        default:
+          return false;
+      }
     }
   }
 

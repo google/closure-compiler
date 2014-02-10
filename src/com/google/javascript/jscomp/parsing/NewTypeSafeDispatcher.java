@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FinallyTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForInStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ForOfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FormalParameterListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FunctionDeclarationTree;
@@ -127,6 +128,8 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processClassDeclaration(ClassDeclarationTree tree);
   abstract T processSuper(SuperExpressionTree tree);
   abstract T processYield(YieldExpressionTree tree);
+
+  abstract T processForOf(ForOfStatementTree tree);
 
   abstract T processMissingExpression(MissingPrimaryExpressionTree tree);
 
@@ -261,7 +264,8 @@ abstract class NewTypeSafeDispatcher<T> {
         return processSuper(node.asSuperExpression());
       case YIELD_EXPRESSION:
         return processYield(node.asYieldStatement());
-
+      case FOR_OF_STATEMENT:
+        return processForOf(node.asForOfStatement());
 
       case ARRAY_PATTERN:
       case OBJECT_PATTERN:
@@ -275,9 +279,6 @@ abstract class NewTypeSafeDispatcher<T> {
         return unsupportedLanguageFeature(node, "rest parameters");
       case SPREAD_EXPRESSION:
         return unsupportedLanguageFeature(node, "spread parameters");
-
-      case FOR_OF_STATEMENT:
-        return unsupportedLanguageFeature(node, "for-of");
 
       case MODULE_DEFINITION:
       case EXPORT_DECLARATION:

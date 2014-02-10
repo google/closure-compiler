@@ -71,7 +71,7 @@ public class ParseTree {
   public ExportDeclarationTree asExportDeclaration() { return (ExportDeclarationTree) this; }
   public ExpressionStatementTree asExpressionStatement() { return (ExpressionStatementTree) this; }
   public FinallyTree asFinally() { return (FinallyTree) this; }
-  public ForOfStatementTree asForEachStatement() { return (ForOfStatementTree) this; }
+  public ForOfStatementTree asForOfStatement() { return (ForOfStatementTree) this; }
   public ForInStatementTree asForInStatement() { return (ForInStatementTree) this; }
   public FormalParameterListTree asFormalParameterList() { return (FormalParameterListTree) this; }
   public ForStatementTree asForStatement() { return (ForStatementTree) this; }

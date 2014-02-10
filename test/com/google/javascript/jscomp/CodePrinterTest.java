@@ -474,6 +474,13 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("for(a=c?0:(0 in d);;)foo()");
   }
 
+  public void testForOf() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+
+    assertPrintSame("for(a of b)c");
+    assertPrintSame("for(var a of b)c");
+  }
+
   public void testLiteralProperty() {
     assertPrint("(64).toString()", "(64).toString()");
   }
@@ -1623,6 +1630,7 @@ public class CodePrinterTest extends TestCase {
   public void testClass() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("class C{}");
+    assertPrintSame("(class C{})");
     assertPrintSame("class C extends D{}");
     assertPrintSame("class C{static member(){}}");
     assertPrintSame("class C{member(){}get f(){}}");
@@ -1674,5 +1682,26 @@ public class CodePrinterTest extends TestCase {
     assertPrint("()=>{}", "(()=>{})");
     assertPrint("a=>b", "((a)=>b)");
     assertPrint("(a,b)=>b", "((a,b)=>b)");
+  }
+
+  public void testDeclarations() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("let x");
+    assertPrintSame("let x,y");
+    assertPrintSame("let x=1");
+    assertPrintSame("let x=1,y=2");
+    assertPrintSame("if(a){let x}");
+
+    assertPrintSame("const x=1");
+    assertPrintSame("const x=1,y=2");
+    assertPrintSame("if(a){const x=1}");
+
+    assertPrintSame("function f(){}");
+    assertPrintSame("if(a){function f(){}}");
+    assertPrintSame("if(a)(function(){})");
+
+    assertPrintSame("class f{}");
+    assertPrintSame("if(a){class f{}}");
+    assertPrintSame("if(a)(class{})");
   }
 }

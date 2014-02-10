@@ -45,6 +45,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FinallyTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForInStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ForOfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FormalParameterListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FunctionDeclarationTree;
@@ -1031,6 +1032,15 @@ class NewIRFactory {
     }
 
     @Override
+    Node processForOf(ForOfStatementTree loopNode) {
+      return newNode(
+          Token.FOR_OF,
+          transform(loopNode.initializer),
+          transform(loopNode.collection),
+          transformBlock(loopNode.body));
+    }
+
+    @Override
     Node processForLoop(ForStatementTree loopNode) {
       Node node = newNode(
           Token.FOR,
@@ -1068,15 +1078,15 @@ class NewIRFactory {
 
       if (!isEs6Mode()) {
         if (isGenerator) {
-          es6LanguageFeature(functionTree, "generators");
+          maybeWarnEs6Feature(functionTree, "generators");
         }
 
         if (isMember) {
-          es6LanguageFeature(functionTree, "member declarations");
+          maybeWarnEs6Feature(functionTree, "member declarations");
         }
 
         if (isArrow) {
-          es6LanguageFeature(functionTree, "short function syntax");
+          maybeWarnEs6Feature(functionTree, "short function syntax");
         }
       }
 
@@ -1642,14 +1652,26 @@ class NewIRFactory {
 
     @Override
     Node processVariableDeclarationList(VariableDeclarationListTree decl) {
-      if (!config.acceptConstKeyword
-          && decl.declarationType == TokenType.CONST) {
-        unsupportedLanguageFeature(decl, "const declarations");
-      } else if (decl.declarationType == TokenType.LET) {
-        unsupportedLanguageFeature(decl, "let declarations");
+      int declType;
+      switch (decl.declarationType) {
+        case CONST:
+          if (!config.acceptConstKeyword) {
+            maybeWarnEs6Feature(decl, "const declarations");
+          }
+          declType = Token.CONST;
+          break;
+        case LET:
+          maybeWarnEs6Feature(decl, "let declarations");
+          declType = Token.LET;
+          break;
+        case VAR:
+          declType = Token.VAR;
+          break;
+        default:
+          throw new IllegalStateException();
       }
 
-      Node node = newNode(Token.VAR);
+      Node node = newNode(declType);
       for (VariableDeclarationTree child : decl.declarations) {
         node.addChildToBack(
             transformNodeWithInlineJsDoc(child, true));
@@ -1769,7 +1791,7 @@ class NewIRFactory {
     @Override
     Node processClassDeclaration(ClassDeclarationTree tree) {
       if (!isEs6Mode()) {
-        es6LanguageFeature(tree, "class");
+        maybeWarnEs6Feature(tree, "class");
       }
 
       Node name = transformOrEmpty(tree.name);
@@ -1787,7 +1809,7 @@ class NewIRFactory {
     @Override
     Node processSuper(SuperExpressionTree tree) {
       if (!isEs6Mode()) {
-        es6LanguageFeature(tree, "super");
+        maybeWarnEs6Feature(tree, "super");
       }
 
       return new Node(Token.SUPER);
@@ -1803,11 +1825,13 @@ class NewIRFactory {
       return yield;
     }
 
-    void es6LanguageFeature(ParseTree node, String feature) {
-      errorReporter.warning(
-          "this language feature is only supported in es6 mode: " + feature,
-          sourceName,
-          lineno(node), "", charno(node));
+    void maybeWarnEs6Feature(ParseTree node, String feature) {
+      if (!isEs6Mode()) {
+        errorReporter.warning(
+            "this language feature is only supported in es6 mode: " + feature,
+            sourceName,
+            lineno(node), "", charno(node));
+      }
     }
 
     @Override
