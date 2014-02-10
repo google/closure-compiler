@@ -56,7 +56,6 @@ public class ParseTreeTransformer {
     case EMPTY_STATEMENT: return transform(tree.asEmptyStatement());
     case EXPORT_DECLARATION: return transform(tree.asExportDeclaration());
     case EXPRESSION_STATEMENT: return transform(tree.asExpressionStatement());
-    case FIELD_DECLARATION: return transform(tree.asFieldDeclaration());
     case FINALLY: return transform(tree.asFinally());
     case FOR_OF_STATEMENT: return transform(tree.asForEachStatement());
     case FOR_IN_STATEMENT: return transform(tree.asForInStatement());
@@ -83,7 +82,6 @@ public class ParseTreeTransformer {
     case POSTFIX_EXPRESSION: return transform(tree.asPostfixExpression());
     case PROGRAM: return transform(tree.asProgram());
     case PROPERTY_NAME_ASSIGNMENT: return transform(tree.asPropertyNameAssignment());
-    case REQUIRES_MEMBER: return transform(tree.asRequiresMember());
     case REST_PARAMETER: return transform(tree.asRestParameter());
     case RETURN_STATEMENT: return transform(tree.asReturnStatement());
     case SET_ACCESSOR: return transform(tree.asSetAccessor());
@@ -312,14 +310,6 @@ public class ParseTreeTransformer {
     return createExpressionStatement(expression);
   }
 
-  protected ParseTree transform(FieldDeclarationTree tree) {
-    ImmutableList<VariableDeclarationTree> declarations = transformList(tree.declarations);
-    if (declarations == tree.declarations) {
-      return tree;
-    }
-    return createFieldDeclaration(tree.isStatic, tree.isConst, declarations);
-  }
-
   protected ParseTree transform(FinallyTree tree) {
     ParseTree block = transformAny(tree.block);
     if (block == tree.block) {
@@ -516,10 +506,6 @@ public class ParseTreeTransformer {
       return tree;
     }
     return createPropertyNameAssignment(tree.name, value);
-  }
-
-  protected ParseTree transform(RequiresMemberTree tree) {
-    return tree;
   }
 
   protected ParseTree transform(RestParameterTree tree) {

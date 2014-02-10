@@ -55,7 +55,6 @@ public class ParseTreeVisitor {
     case EMPTY_STATEMENT: visit(tree.asEmptyStatement()); break;
     case EXPORT_DECLARATION: visit(tree.asExportDeclaration()); break;
     case EXPRESSION_STATEMENT: visit(tree.asExpressionStatement()); break;
-    case FIELD_DECLARATION: visit(tree.asFieldDeclaration()); break;
     case FINALLY: visit(tree.asFinally()); break;
     case FOR_OF_STATEMENT: visit(tree.asForEachStatement()); break;
     case FOR_IN_STATEMENT: visit(tree.asForInStatement()); break;
@@ -81,7 +80,6 @@ public class ParseTreeVisitor {
     case POSTFIX_EXPRESSION: visit(tree.asPostfixExpression()); break;
     case PROGRAM: visit(tree.asProgram()); break;
     case PROPERTY_NAME_ASSIGNMENT: visit(tree.asPropertyNameAssignment()); break;
-    case REQUIRES_MEMBER: visit(tree.asRequiresMember()); break;
     case REST_PARAMETER: visit(tree.asRestParameter()); break;
     case RETURN_STATEMENT: visit(tree.asReturnStatement()); break;
     case SET_ACCESSOR: visit(tree.asSetAccessor()); break;
@@ -197,10 +195,6 @@ public class ParseTreeVisitor {
     visitAny(tree.expression);
   }
 
-  protected void visit(FieldDeclarationTree tree) {
-    visitList(tree.declarations);
-  }
-
   protected void visit(FinallyTree tree) {
     visitAny(tree.block);
   }
@@ -308,9 +302,6 @@ public class ParseTreeVisitor {
 
   protected void visit(PropertyNameAssignmentTree tree) {
     visitAny(tree.value);
-  }
-
-  protected void visit(RequiresMemberTree tree) {
   }
 
   protected void visit(RestParameterTree tree) {

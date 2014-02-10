@@ -238,18 +238,6 @@ public final class ParseTreeWriter extends ParseTreeVisitor {
   }
 
   @Override
-  protected void visit(FieldDeclarationTree tree) {
-    if (tree.isStatic) {
-      write(TokenType.STATIC);
-    }
-    if (tree.isConst) {
-      write(TokenType.CONST);
-    }
-    writeList(tree.declarations, TokenType.COMMA, false);
-    write(TokenType.SEMI_COLON);
-  }
-
-  @Override
   protected void visit(FinallyTree tree) {
     write(TokenType.FINALLY);
     visitAny(tree.block);
@@ -470,13 +458,6 @@ public final class ParseTreeWriter extends ParseTreeVisitor {
     write(tree.name);
     write(TokenType.COLON);
     visitAny(tree.value);
-  }
-
-  @Override
-  protected void visit(RequiresMemberTree tree) {
-    write(PredefinedName.REQUIRES);
-    write(tree.name);
-    write(TokenType.SEMI_COLON);
   }
 
   @Override

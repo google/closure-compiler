@@ -248,8 +248,6 @@ public class ParseTreeValidator extends ParseTreeVisitor {
       case FUNCTION_DECLARATION:
       case GET_ACCESSOR:
       case SET_ACCESSOR:
-      case REQUIRES_MEMBER:
-      case FIELD_DECLARATION:
         break;
       default:
         fail(element, "class element expected");
@@ -308,14 +306,6 @@ public class ParseTreeValidator extends ParseTreeVisitor {
   protected void visit(ExpressionStatementTree tree) {
     checkVisit(tree.expression.isExpression(), tree.expression,
         "expression expected");
-  }
-
-  @Override
-  protected void visit(FieldDeclarationTree tree) {
-    for (ParseTree declaration : tree.declarations) {
-      checkVisit(declaration.type == ParseTreeType.VARIABLE_DECLARATION,
-          declaration, "variable declaration expected");
-    }
   }
 
   @Override

@@ -404,13 +404,6 @@ public final class ParseTreeFactory {
     return new ExpressionStatementTree(null, expression);
   }
 
-  public static FieldDeclarationTree createFieldDeclaration(
-      boolean isStatic,
-      boolean isConst,
-      ImmutableList<VariableDeclarationTree> declarations) {
-    return new FieldDeclarationTree(null, isStatic, isConst, declarations);
-  }
-
   public static FinallyTree createFinally(ParseTree block) {
     return new FinallyTree(null, block);
   }

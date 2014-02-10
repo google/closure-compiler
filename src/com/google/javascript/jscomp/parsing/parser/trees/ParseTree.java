@@ -70,7 +70,6 @@ public class ParseTree {
   public EmptyStatementTree asEmptyStatement() { return (EmptyStatementTree) this; }
   public ExportDeclarationTree asExportDeclaration() { return (ExportDeclarationTree) this; }
   public ExpressionStatementTree asExpressionStatement() { return (ExpressionStatementTree) this; }
-  public FieldDeclarationTree asFieldDeclaration() { return (FieldDeclarationTree) this; }
   public FinallyTree asFinally() { return (FinallyTree) this; }
   public ForOfStatementTree asForEachStatement() { return (ForOfStatementTree) this; }
   public ForInStatementTree asForInStatement() { return (ForInStatementTree) this; }
@@ -102,7 +101,6 @@ public class ParseTree {
   public ProgramTree asProgram() { return (ProgramTree) this; }
   public PropertyNameAssignmentTree asPropertyNameAssignment() {
     return (PropertyNameAssignmentTree) this; }
-  public RequiresMemberTree asRequiresMember() { return (RequiresMemberTree) this; }
   public RestParameterTree asRestParameter() { return (RestParameterTree) this; }
   public ReturnStatementTree asReturnStatement() { return (ReturnStatementTree) this; }
   public SetAccessorTree asSetAccessor() { return (SetAccessorTree) this; }

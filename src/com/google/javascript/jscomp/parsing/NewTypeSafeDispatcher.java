@@ -283,18 +283,14 @@ abstract class NewTypeSafeDispatcher<T> {
       case EXPORT_DECLARATION:
       case IMPORT_DECLARATION:
       case IMPORT_SPECIFIER:
-      case REQUIRES_MEMBER:
         return unsupportedLanguageFeature(node, "modules");
 
       // TODO(johnlenz): handle these or remove parser support
       case ARGUMENT_LIST:
         break;
-      case FIELD_DECLARATION:
-        break;
 
       default:
         break;
-
     }
     return processIllegalToken(node);
   }
