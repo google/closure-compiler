@@ -136,7 +136,7 @@ Notification.prototype.onshow;
 Notification.prototype.onclick;
 
 /**
- * @type {function(new:Notification, function(string, NotificationOptions))}
+ * @type {function(new:Notification, string, NotificationOptions)}
  */
 window.Notification;
 
