@@ -3081,6 +3081,14 @@ Document.prototype.msHidden;
  */
 Document.prototype.registerElement;
 
+/**
+ * This method is deprecated and should be removed by the end of 2014.
+ * @see http://www.w3.org/TR/components-intro/
+ * @see http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-register
+ * @param {string} type
+ * @param {{extends: (string|undefined), prototype: (Object|undefined)}} options
+ */
+Document.prototype.register;
 
 /**
  * @see https://github.com/promises-aplus/promises-spec
