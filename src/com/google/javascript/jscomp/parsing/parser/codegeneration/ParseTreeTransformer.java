@@ -100,7 +100,7 @@ public class ParseTreeTransformer {
     case VARIABLE_STATEMENT: return transform(tree.asVariableStatement());
     case WHILE_STATEMENT: return transform(tree.asWhileStatement());
     case WITH_STATEMENT: return transform(tree.asWithStatement());
-    case YIELD_STATEMENT: return transform(tree.asYieldStatement());
+    case YIELD_EXPRESSION: return transform(tree.asYieldStatement());
     default:
       throw new RuntimeException("Should never get here!");
     }
@@ -646,7 +646,7 @@ public class ParseTreeTransformer {
     return createWithStatement(expression, body);
   }
 
-  protected ParseTree transform(YieldStatementTree tree) {
+  protected ParseTree transform(YieldExpressionTree tree) {
     ParseTree expression = transformAny(tree.expression);
     if (expression == tree.expression) {
       return tree;

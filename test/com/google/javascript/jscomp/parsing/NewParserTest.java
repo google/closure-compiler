@@ -823,7 +823,12 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testYieldForbidden() {
     parseError("function f() { yield 3; }",
-        "unsupported language feature: generators");
+        "primary expression expected");
+  }
+
+  public void testGenerator() {
+    parse("function* f() { yield 3; }",
+        "this language feature is only supported in es6 mode: generators");
   }
 
   public void testBracelessFunctionForbidden() {
@@ -947,7 +952,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("var let", "'identifier' expected");
   }
 
-  public void testYield() {
+  public void testYield1() {
     mode = LanguageMode.ECMASCRIPT3;
     parse("var yield");
 
@@ -962,6 +967,28 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT6_STRICT;
     parseError("var yield", "'identifier' expected");
+  }
+
+  public void testYield2() {
+    mode = LanguageMode.ECMASCRIPT6_STRICT;
+    parse("function * f() { yield; }");
+    parse("function * f() { yield /a/b; }");
+
+    parseError("function * f() { 1 + yield; }", "primary expression expected");
+    parseError("function * f() { 1 + yield 2; }", "primary expression expected");
+    parseError("function * f() { yield 1 + yield 2; }", "primary expression expected");
+    parseError("function * f() { yield(1) + yield(2); }", "primary expression expected");
+    parse("function * f() { (yield 1) + (yield 2); }"); // OK
+    parse("function * f() { yield * yield; }"); // OK  (yield * (yield))
+    parseError("function * f() { yield + yield; }", "primary expression expected");
+    parse("function * f() { (yield) + (yield); }"); // OK
+  }
+
+  public void testYield3() {
+    mode = LanguageMode.ECMASCRIPT6_STRICT;
+    // TODO(johnlenz): validate "yield" parsing. Firefox rejects this
+    // use of "yield".
+    parseError("function * f() { yield , yield; }");
   }
 
   public void testStringContinuations() {

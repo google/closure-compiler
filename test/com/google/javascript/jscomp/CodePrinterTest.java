@@ -1651,4 +1651,20 @@ public class CodePrinterTest extends TestCase {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("class C extends D{member(){super.foo()}}");
   }
+
+  public void testGeneratorYield1() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("function*f(){yield 1}");
+    assertPrintSame("function*f(){yield 1?0:2}");
+    assertPrintSame("function*f(){yield 1,0}");
+    assertPrintSame("function*f(){1,yield 0}");
+    assertPrintSame("function*f(){yield(a=0)}");
+    assertPrintSame("function*f(){a=yield 0}");
+    assertPrintSame("function*f(){(yield 1)+(yield 1)}");
+  }
+
+  public void testMemberGeneratorYield1() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("class C{*member(){(yield 1)+(yield 1)}}");
+  }
 }

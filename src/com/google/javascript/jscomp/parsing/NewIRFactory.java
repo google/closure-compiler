@@ -78,6 +78,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationTree
 import com.google.javascript.jscomp.parsing.parser.trees.VariableStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.WhileStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.WithStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.YieldExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.rhino.IR;
@@ -273,6 +274,10 @@ class NewIRFactory {
     irFactory.setFileOverviewJsDoc(n);
 
     irFactory.validateAll(n);
+
+    // DEBUG: remove this, verify the tree can be print, remove this.
+    n.toStringTree();
+    //
 
     return n;
   }
@@ -1058,6 +1063,11 @@ class NewIRFactory {
     Node processFunction(FunctionDeclarationTree functionTree) {
       boolean isMember = (functionTree.kind == FunctionDeclarationTree.Kind.MEMBER);
       boolean isExpression = (functionTree.kind == FunctionDeclarationTree.Kind.EXPRESSION);
+      boolean isGenerator = functionTree.isGenerator;
+
+      if (isGenerator && !isEs6Mode()) {
+        es6LanguageFeature(functionTree, "generators");
+      }
 
       IdentifierToken name = functionTree.name;
       Node newName;
@@ -1105,15 +1115,21 @@ class NewIRFactory {
       parseDirectives(bodyNode);
       node.addChildToBack(bodyNode);
 
+      Node result;
+
       if (functionTree.kind == FunctionDeclarationTree.Kind.MEMBER) {
         setSourceInfo(node, functionTree);
         Node member = newStringNode(Token.MEMBER_DEF, name.value);
         member.addChildToBack(node);
         member.setStaticMember(functionTree.isStatic);
-        return member;
+        result = member;
       } else {
-        return node;
+        result = node;
       }
+
+      result.setGenerator(isGenerator);
+
+      return result;
     }
 
     @Override
@@ -1759,6 +1775,16 @@ class NewIRFactory {
       }
 
       return new Node(Token.SUPER);
+    }
+
+    @Override
+    Node processYield(YieldExpressionTree tree) {
+      Node yield = new Node(Token.YIELD);
+      if (tree.expression != null) {
+        yield.addChildToBack(transform(tree.expression));
+      }
+      yield.setYieldFor(tree.isYieldFor);
+      return yield;
     }
 
     void es6LanguageFeature(ParseTree node, String feature) {

@@ -122,7 +122,7 @@ public class ParseTree {
   public VariableStatementTree asVariableStatement() { return (VariableStatementTree) this; }
   public WhileStatementTree asWhileStatement() { return (WhileStatementTree) this; }
   public WithStatementTree asWithStatement() { return (WithStatementTree) this; }
-  public YieldStatementTree asYieldStatement() { return (YieldStatementTree) this; }
+  public YieldExpressionTree asYieldStatement() { return (YieldExpressionTree) this; }
 
   public final boolean isNull() {
     return this.type == ParseTreeType.NULL;
@@ -268,7 +268,7 @@ public class ParseTree {
     case CONTINUE_STATEMENT:
     case BREAK_STATEMENT:
     case RETURN_STATEMENT:
-    case YIELD_STATEMENT:
+    case YIELD_EXPRESSION:
     case WITH_STATEMENT:
     case SWITCH_STATEMENT:
     case LABELLED_STATEMENT:

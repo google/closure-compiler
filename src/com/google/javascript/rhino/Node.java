@@ -105,7 +105,10 @@ public class Node implements Cloneable, Serializable {
       CHANGE_TIME        = 56,    // For passes that work only on changed funs.
       REFLECTED_OBJECT   = 57,    // An object that's used for goog.object.reflect-style reflection.
       STATIC_MEMBER      = 58,    // Set if class member definition is static
-      LAST_PROP          = 58;    // Unused in the compiler, but keep for Rhino.
+      GENERATOR          = 59,    // Set if the node is a Generator function or
+                                  // member method.
+      YIELD_FOR          = 60,    // Set if a yield is a "yield all"
+      LAST_PROP          = 60;    // Unused in the compiler, but keep for Rhino.
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -139,7 +142,9 @@ public class Node implements Cloneable, Serializable {
         case INFERRED_FUNCTION:  return "inferred";
         case CHANGE_TIME:        return "change_time";
         case REFLECTED_OBJECT:   return "reflected_object";
-        case STATIC_MEMBER:      return "static";
+        case STATIC_MEMBER:      return "static_member";
+        case GENERATOR:          return "generator";
+        case YIELD_FOR:          return "yield_for";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -2015,6 +2020,42 @@ public class Node implements Cloneable, Serializable {
    */
   public boolean isStaticMember() {
     return getBooleanProp(STATIC_MEMBER);
+  }
+
+  /**
+   * Sets whether this node is a generator node. This
+   * method is meaningful only on {@link Token#FUNCTION} or
+   * {@link Token#MEMBER_DEF} nodes.
+   */
+  public void setGenerator(boolean isGenerator) {
+    putBooleanProp(GENERATOR, isGenerator);
+  }
+
+  /**
+   * Returns whether this node is a variable length argument node. This
+   * method's return value is meaningful only on {@link Token#NAME} nodes
+   * used to define a {@link Token#FUNCTION}'s argument list.
+   */
+  public boolean isGenerator() {
+    return getBooleanProp(GENERATOR);
+  }
+
+  /**
+   * Sets whether this node is a generator node. This
+   * method is meaningful only on {@link Token#FUNCTION} or
+   * {@link Token#MEMBER_DEF} nodes.
+   */
+  public void setYieldFor(boolean isGenerator) {
+    putBooleanProp(YIELD_FOR, isGenerator);
+  }
+
+  /**
+   * Returns whether this node is a variable length argument node. This
+   * method's return value is meaningful only on {@link Token#NAME} nodes
+   * used to define a {@link Token#FUNCTION}'s argument list.
+   */
+  public boolean isYieldFor() {
+    return getBooleanProp(YIELD_FOR);
   }
 
   // There are four values of interest:

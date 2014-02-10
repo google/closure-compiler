@@ -440,7 +440,7 @@ public final class ParseTreeFactory {
   public static FunctionDeclarationTree createFunctionExpression(
       FormalParameterListTree formalParameterList, BlockTree functionBody) {
     return new FunctionDeclarationTree(
-        null, null, false,
+        null, null, false, false,
         FunctionDeclarationTree.Kind.EXPRESSION,
         formalParameterList, functionBody);
   }
@@ -448,7 +448,7 @@ public final class ParseTreeFactory {
   public static FunctionDeclarationTree createFunctionDeclaration(
       IdentifierToken name, FormalParameterListTree formalParameterList, BlockTree functionBody) {
     return new FunctionDeclarationTree(
-        null, name, false,
+        null, name, false, false,
         FunctionDeclarationTree.Kind.DECLARATION,
         formalParameterList, functionBody);
   }
@@ -630,8 +630,8 @@ public final class ParseTreeFactory {
     return new ReturnStatementTree(null, expression);
   }
 
-  public static YieldStatementTree createYieldStatement(ParseTree expression) {
-    return new YieldStatementTree(null, expression);
+  public static YieldExpressionTree createYieldStatement(ParseTree expression) {
+    return new YieldExpressionTree(null, false, expression);
   }
 
   public static SetAccessorTree createSetAccessor(

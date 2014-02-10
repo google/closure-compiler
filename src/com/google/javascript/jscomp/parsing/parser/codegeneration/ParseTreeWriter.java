@@ -599,7 +599,7 @@ public final class ParseTreeWriter extends ParseTreeVisitor {
   }
 
   @Override
-  protected void visit(YieldStatementTree tree) {
+  protected void visit(YieldExpressionTree tree) {
     write(TokenType.YIELD);
     visitAny(tree.expression);
     write(TokenType.SEMI_COLON);

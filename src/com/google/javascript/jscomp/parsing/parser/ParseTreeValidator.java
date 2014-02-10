@@ -620,7 +620,7 @@ public class ParseTreeValidator extends ParseTreeVisitor {
   }
 
   @Override
-  protected void visit(YieldStatementTree tree) {
+  protected void visit(YieldExpressionTree tree) {
     if (tree.expression != null) {
       checkVisit(tree.expression.isExpression(), tree.expression,
           "expression expected");

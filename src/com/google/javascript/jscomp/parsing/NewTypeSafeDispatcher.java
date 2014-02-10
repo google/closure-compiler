@@ -66,6 +66,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationTree
 import com.google.javascript.jscomp.parsing.parser.trees.VariableStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.WhileStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.WithStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.YieldExpressionTree;
 
 /**
  * Type safe dispatcher interface for use with new ES6 parser ASTs.
@@ -125,6 +126,7 @@ abstract class NewTypeSafeDispatcher<T> {
 
   abstract T processClassDeclaration(ClassDeclarationTree tree);
   abstract T processSuper(SuperExpressionTree tree);
+  abstract T processYield(YieldExpressionTree tree);
 
   abstract T processMissingExpression(MissingPrimaryExpressionTree tree);
 
@@ -257,6 +259,9 @@ abstract class NewTypeSafeDispatcher<T> {
         return processClassDeclaration(node.asClassDeclaration());
       case SUPER_EXPRESSION:
         return processSuper(node.asSuperExpression());
+      case YIELD_EXPRESSION:
+        return processYield(node.asYieldStatement());
+
 
       case ARRAY_PATTERN:
       case OBJECT_PATTERN:
@@ -280,9 +285,6 @@ abstract class NewTypeSafeDispatcher<T> {
       case IMPORT_SPECIFIER:
       case REQUIRES_MEMBER:
         return unsupportedLanguageFeature(node, "modules");
-
-      case YIELD_STATEMENT:
-        return unsupportedLanguageFeature(node, "generators");
 
       // TODO(johnlenz): handle these or remove parser support
       case ARGUMENT_LIST:

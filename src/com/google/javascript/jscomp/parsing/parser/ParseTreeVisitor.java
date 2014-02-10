@@ -98,7 +98,7 @@ public class ParseTreeVisitor {
     case VARIABLE_STATEMENT: visit(tree.asVariableStatement()); break;
     case WHILE_STATEMENT: visit(tree.asWhileStatement()); break;
     case WITH_STATEMENT: visit(tree.asWithStatement()); break;
-    case YIELD_STATEMENT: visit(tree.asYieldStatement()); break;
+    case YIELD_EXPRESSION: visit(tree.asYieldStatement()); break;
     case NULL: visit(tree.asNull()); break;
     default:
       throw new RuntimeException("Unimplemented");
@@ -380,7 +380,7 @@ public class ParseTreeVisitor {
     visitAny(tree.body);
   }
 
-  protected void visit(YieldStatementTree tree) {
+  protected void visit(YieldExpressionTree tree) {
     visitAny(tree.expression);
   }
 }

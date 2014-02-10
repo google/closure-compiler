@@ -316,6 +316,10 @@ class CodeGenerator {
         }
 
         add("function");
+        if (n.isGenerator()) {
+          add("*");
+        }
+
         add(first);
 
         add(first.getNext());
@@ -368,6 +372,7 @@ class CodeGenerator {
       case Token.GETTER_DEF:
       case Token.SETTER_DEF:
       case Token.MEMBER_DEF:
+        n.getParent().toStringTree();
         Preconditions.checkState(n.getParent().isObjectLit()
             || n.getParent().isClassMembers());
         Preconditions.checkState(childCount == 1);
@@ -378,6 +383,11 @@ class CodeGenerator {
 
         if (n.isStaticMember()) {
           add("static ");
+        }
+
+        if (n.isGenerator()) {
+          Preconditions.checkState(type == Token.MEMBER_DEF);
+          add("*");
         }
 
         switch (type) {
@@ -653,6 +663,15 @@ class CodeGenerator {
       case Token.SUPER:
         Preconditions.checkState(childCount == 0);
         add("super");
+        break;
+
+      case Token.YIELD:
+        Preconditions.checkState(childCount == 1);
+        add("yield");
+        if (n.isYieldFor()) {
+          add("*");
+        }
+        addExpr(first, NodeUtil.precedence(type), Context.OTHER);
         break;
 
       case Token.FALSE:

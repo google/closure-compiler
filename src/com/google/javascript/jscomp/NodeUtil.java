@@ -1252,30 +1252,31 @@ public final class NodeUtil {
       case Token.ASSIGN_DIV:
       case Token.ASSIGN_MOD:
       case Token.ASSIGN: return 1;
-      case Token.HOOK:   return 2;  // ?: operator
-      case Token.OR:     return 3;
-      case Token.AND:    return 4;
-      case Token.BITOR:  return 5;
-      case Token.BITXOR: return 6;
-      case Token.BITAND: return 7;
+      case Token.YIELD:  return 2;
+      case Token.HOOK:   return 3;  // ?: operator
+      case Token.OR:     return 4;
+      case Token.AND:    return 5;
+      case Token.BITOR:  return 6;
+      case Token.BITXOR: return 7;
+      case Token.BITAND: return 8;
       case Token.EQ:
       case Token.NE:
       case Token.SHEQ:
-      case Token.SHNE:   return 8;
+      case Token.SHNE:   return 9;
       case Token.LT:
       case Token.GT:
       case Token.LE:
       case Token.GE:
       case Token.INSTANCEOF:
-      case Token.IN:     return 9;
+      case Token.IN:     return 10;
       case Token.LSH:
       case Token.RSH:
-      case Token.URSH:   return 10;
+      case Token.URSH:   return 11;
       case Token.SUB:
-      case Token.ADD:    return 11;
+      case Token.ADD:    return 12;
       case Token.MUL:
       case Token.MOD:
-      case Token.DIV:    return 12;
+      case Token.DIV:    return 13;
       case Token.INC:
       case Token.DEC:
       case Token.NEW:
@@ -1285,7 +1286,7 @@ public final class NodeUtil {
       case Token.NOT:
       case Token.BITNOT:
       case Token.POS:
-      case Token.NEG:    return 13;
+      case Token.NEG:    return 14;
 
       case Token.CALL:
       case Token.GETELEM:

@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.jscomp.parsing.parser.util.Timer;
 
+import java.util.ArrayDeque;
 import java.util.EnumSet;
 
 /**
@@ -67,11 +68,15 @@ public class Parser {
   private Token lastToken;
   private final Config config;
   private final CommentRecorder commentRecorder = new CommentRecorder();
+  private final ArrayDeque<Boolean> inGeneratorContext = new ArrayDeque<>();
 
-  public Parser(Config config, ErrorReporter errorReporter, SourceFile source, int offset) {
+  public Parser(
+      Config config, ErrorReporter errorReporter,
+      SourceFile source, int offset) {
     this.config = config;
     this.errorReporter = errorReporter;
     this.scanner = new Scanner(errorReporter, commentRecorder, source, offset);
+    this.inGeneratorContext.add(false);
   }
 
   public Parser(Config config, ErrorReporter errorReporter, SourceFile source) {
@@ -344,11 +349,11 @@ public class Parser {
   }
 
   private boolean peekClassElement() {
-    // TODO(johnlenz): short function syntax
     Token token = peekToken();
     switch (token.type) {
-      case STATIC:
       case IDENTIFIER:
+      case STAR:
+      case STATIC:
         return true;
       default:
         return false;
@@ -368,19 +373,35 @@ public class Parser {
   private ParseTree parseMethodDeclaration(boolean allowStatic) {
     SourcePosition start = getTreeStartLocation();
     boolean isStatic = allowStatic && eatOpt(TokenType.STATIC) != null;
+    boolean isGenerator = eatOpt(TokenType.STAR) != null;
     IdentifierToken name = eatId();
+    return parseFunctionTail(
+        start, name, isStatic, isGenerator,
+        FunctionDeclarationTree.Kind.MEMBER);
+  }
+
+  private ParseTree parseFunctionTail(
+      SourcePosition start, IdentifierToken name,
+      boolean isStatic, boolean isGenerator,
+      FunctionDeclarationTree.Kind kind) {
+
+    inGeneratorContext.addLast(isGenerator);
+
     FormalParameterListTree formalParameterList = parseFormalParameterList();
     BlockTree functionBody = parseFunctionBody();
-    return new FunctionDeclarationTree(
-        getTreeLocation(start), name, isStatic,
-        FunctionDeclarationTree.Kind.MEMBER,
-        formalParameterList, functionBody);
+    FunctionDeclarationTree declaration =  new FunctionDeclarationTree(
+        getTreeLocation(start), name, isStatic, isGenerator,
+        kind, formalParameterList, functionBody);
+
+    inGeneratorContext.removeLast();
+
+    return declaration;
   }
 
   private boolean peekMethodDeclaration() {
     int index = peek(TokenType.STATIC) ? 1 : 0;
-    return peekFunction(index)
-        || (peekId(index)
+    index += peek(TokenType.STAR) ? 1 : 0;
+    return (peekId(index)
             && peek(index + 1, TokenType.OPEN_PAREN));
   }
 
@@ -423,31 +444,24 @@ public class Parser {
   // 13 Function Definition
   private ParseTree parseFunctionDeclaration() {
     SourcePosition start = getTreeStartLocation();
-    nextToken(); // function or #
-    return parseFunctionDeclarationTail(start, false);
-  }
-
-  private ParseTree parseFunctionDeclarationTail(
-      SourcePosition start, boolean isStatic) {
+    nextToken(); // function
+    boolean isGenerator = eatOpt(TokenType.STAR) != null;
     IdentifierToken name = eatId();
-    FormalParameterListTree formalParameterList = parseFormalParameterList();
-    BlockTree functionBody = parseFunctionBody();
-    return new FunctionDeclarationTree(
-        getTreeLocation(start), name, isStatic,
-        FunctionDeclarationTree.Kind.DECLARATION,
-        formalParameterList, functionBody);
+
+    return parseFunctionTail(
+        start, name, false, isGenerator,
+        FunctionDeclarationTree.Kind.DECLARATION);
   }
 
   private ParseTree parseFunctionExpression() {
     SourcePosition start = getTreeStartLocation();
-    nextToken(); // function or #
+    boolean isGenerator = eatOpt(TokenType.STAR) != null;
+    nextToken(); // function
     IdentifierToken name = eatIdOpt();
-    FormalParameterListTree formalParameterList = parseFormalParameterList();
-    BlockTree functionBody = parseFunctionBody();
-    return new FunctionDeclarationTree(
-        getTreeLocation(start), name, false,
-        FunctionDeclarationTree.Kind.EXPRESSION,
-        formalParameterList, functionBody);
+
+    return parseFunctionTail(
+        start, name, false, isGenerator,
+        FunctionDeclarationTree.Kind.EXPRESSION);
   }
 
   private FormalParameterListTree parseFormalParameterList() {
@@ -568,8 +582,6 @@ public class Parser {
       return parseBreakStatement();
     case RETURN:
       return parseReturnStatement();
-    case YIELD:
-      return parseYieldStatement();
     case WITH:
       return parseWithStatement();
     case SWITCH:
@@ -611,12 +623,12 @@ public class Parser {
     case CONTINUE:
     case BREAK:
     case RETURN:
-    case YIELD:
     case WITH:
     case SWITCH:
     case THROW:
     case TRY:
     case DEBUGGER:
+    case YIELD:
     case IDENTIFIER:
     case THIS:
     case CLASS:
@@ -959,19 +971,6 @@ public class Parser {
     }
     eatPossibleImplicitSemiColon();
     return new ReturnStatementTree(getTreeLocation(start), expression);
-  }
-
-  //Parkour: The yield Statement
-  //  yield  [expression];
-  private ParseTree parseYieldStatement() {
-    SourcePosition start = getTreeStartLocation();
-    eat(TokenType.YIELD);
-    ParseTree expression = null;
-    if (!peekImplicitSemiColon()) {
-      expression = parseExpression();
-    }
-    eatPossibleImplicitSemiColon();
-    return new YieldStatementTree(getTreeLocation(start), expression);
   }
 
   // 12.10 The with Statement
@@ -1397,6 +1396,7 @@ public class Parser {
     case TRUE:
     case TYPEOF:
     case VOID:
+    case YIELD:
       return true;
     default:
       return false;
@@ -1428,8 +1428,11 @@ public class Parser {
   }
 
   private ParseTree parseAssignment(Expression expressionIn) {
-    SourcePosition start = getTreeStartLocation();
+    if (peek(TokenType.YIELD) && inGeneratorContext()) {
+      return parseYield(expressionIn);
+    }
 
+    SourcePosition start = getTreeStartLocation();
     ParseTree left = peekParenPatternAssignment()
         ? parseParenPattern()
         : parseConditional(expressionIn);
@@ -1464,6 +1467,28 @@ public class Parser {
     default:
       return false;
     }
+  }
+
+  private boolean inGeneratorContext() {
+    // disallow yield outside of generators
+    return inGeneratorContext.peekLast();
+  }
+
+  // yield [no line terminator] (*)? AssignExpression
+  // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generator-function-definitions-runtime-semantics-evaluation
+  private ParseTree parseYield(Expression expressionIn) {
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.YIELD);
+    boolean isYieldFor = false;
+    ParseTree expression = null;
+    if (!peekImplicitSemiColon()) {
+      isYieldFor = eatOpt(TokenType.STAR) != null;
+      if (peekAssignmentExpression()) {
+        expression = parseAssignment(expressionIn);
+      }
+    }
+    return new YieldExpressionTree(
+        getTreeLocation(start), isYieldFor, expression);
   }
 
   // 11.12 Conditional Expression
