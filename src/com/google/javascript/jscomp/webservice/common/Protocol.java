@@ -63,6 +63,7 @@ public class Protocol {
     CHARSET("charset"),
     LANGUAGE("language"),
     USE_TYPES_FOR_OPTIMIZATIONS("use_types_for_optimization"),
+    ANGULAR_PASS("angular_pass"),
 
     // Old ROBOCOMP urls.
     RAWJS("rawjs"),
