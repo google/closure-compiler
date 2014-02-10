@@ -338,6 +338,7 @@ FileEntry.prototype.file = function(successCallback, errorCallback) {};
 /**
  * @see http://www.w3.org/TR/FileAPI/#FileErrorInterface
  * @constructor
+ * @extends {DOMError}
  */
 function FileError() {}
 
@@ -452,6 +453,8 @@ FileError.PATH_EXISTS_ERR = 12;
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-code-exception
  * @type {number}
+ * @deprecated Use the 'name' or 'message' attributes of DOMError rather than
+ * 'code'
  */
 FileError.prototype.code;
 
