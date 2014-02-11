@@ -46,6 +46,11 @@ Window.prototype.JSON;
  */
 function HTMLCanvasElement() {}
 
+/**
+ * @type {function(new:HTMLCanvasElement)}
+ */
+Window.prototype.HTMLCanvasElement;
+
 /** @type {number} */
 HTMLCanvasElement.prototype.width;
 
