@@ -79,7 +79,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
       DiagnosticType.error("JSC_MSG_BAD_FALLBACK_SYNTAX",
           String.format(
               "Bad syntax. " +
-              "Expected syntax: goog.getMsgWithFallback(MSG_1, MSG_2)",
+              "Expected syntax: %s(MSG_1, MSG_2)",
               MSG_FALLBACK_FUNCTION_NAME));
 
   static final DiagnosticType FALLBACK_ARG_ERROR =
