@@ -486,7 +486,7 @@ IDBObjectStore.prototype.add = function(value, key) {};
  * @param {IDBKeyType} key The key of this value.
  * @return {!IDBRequest} The IDBRequest object.
  */
-IDBObjectStore.prototype['delete'] = function(key) {};
+IDBObjectStore.prototype.delete = function(key) {};
 
 /**
  * @param {IDBKeyType|!IDBKeyRange} key The key of the document to retrieve.
@@ -691,7 +691,7 @@ IDBCursor.prototype.update = function(value) {};
  * @param {IDBKeyType=} key Continue enumerating the cursor from the specified
  *     key (or next).
  */
-IDBCursor.prototype['continue'] = function(key) {};
+IDBCursor.prototype.continue = function(key) {};
 
 /**
  * @param {number} count Number of times to iterate the cursor.
@@ -702,7 +702,7 @@ IDBCursor.prototype.advance = function(count) {};
  * Note: Must be quoted to avoid parse error.
  * @return {!IDBRequest} The IDBRequest object.
  */
-IDBCursor.prototype['delete'] = function() {};
+IDBCursor.prototype.delete = function() {};
 
 /** @type {function(new:IDBTransaction)} */
 Window.prototype.IDBTransaction;
