@@ -65,7 +65,7 @@ public class FunctionType {
     this.isLoose = isLoose;
   }
 
-  public void checkValid() {
+  void checkValid() {
     if (isTopFunction()) {
       return;
     }
@@ -229,7 +229,7 @@ public class FunctionType {
 
   public JSType getTypeOfThis() {
     Preconditions.checkNotNull(nominalType);
-    return JSType.fromObjectType(ObjectType.fromClass(nominalType));
+    return JSType.fromObjectType(ObjectType.fromNominalType(nominalType));
   }
 
   public JSType createConstructorObject() {
@@ -287,6 +287,9 @@ public class FunctionType {
     // so we first create a new type by replacing ? in the right places.
     if (other.isTopFunction()) {
       return true;
+    }
+    if (isTopFunction()) {
+      return false;
     }
     Preconditions.checkState(!this.isGeneric()); // This should never happen.
     FunctionTypeBuilder builder = new FunctionTypeBuilder();

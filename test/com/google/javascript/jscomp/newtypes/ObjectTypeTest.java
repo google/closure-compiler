@@ -47,16 +47,21 @@ public class ObjectTypeTest extends TestCase {
   }
 
   public void testClassSubtyping() {
-    ObjectType foo = ObjectType.fromClass(NominalType.makeClass("Foo", null));
-    ObjectType bar = ObjectType.fromClass(NominalType.makeClass("Bar", null));
+    ObjectType foo = ObjectType.fromNominalType(
+        NominalType.makeClass("Foo", null));
+    ObjectType bar = ObjectType.fromNominalType(
+        NominalType.makeClass("Bar", null));
     assertTrue(foo.isSubtypeOf(foo));
     assertFalse(foo.isSubtypeOf(bar));
   }
 
   public void testObjectUnions() {
-    ObjectType foo = ObjectType.fromClass(NominalType.makeClass("Foo", null));
-    ObjectType bar = ObjectType.fromClass(NominalType.makeClass("Bar", null));
-    ObjectType baz = ObjectType.fromClass(NominalType.makeClass("Baz", null));
+    ObjectType foo = ObjectType.fromNominalType(
+        NominalType.makeClass("Foo", null));
+    ObjectType bar = ObjectType.fromNominalType(
+        NominalType.makeClass("Bar", null));
+    ObjectType baz = ObjectType.fromNominalType(
+        NominalType.makeClass("Baz", null));
     ObjectType topObj = ObjectType.TOP_OBJECT;
     ObjectType withPNum = topObj.withProperty("p", NUMBER);
     ObjectType fooWithPNum = foo.withProperty("p", NUMBER);
@@ -92,10 +97,11 @@ public class ObjectTypeTest extends TestCase {
     NominalType child2Class = NominalType.makeClass("Child2", null);
     child1Class.addSuperClass(parentClass);
     child2Class.addSuperClass(parentClass);
-    ObjectType foo = ObjectType.fromClass(NominalType.makeClass("Foo", null));
-    ObjectType parent = ObjectType.fromClass(parentClass);
-    ObjectType child1 = ObjectType.fromClass(child1Class);
-    ObjectType child2 = ObjectType.fromClass(child2Class);
+    ObjectType foo = ObjectType.fromNominalType(
+        NominalType.makeClass("Foo", null));
+    ObjectType parent = ObjectType.fromNominalType(parentClass);
+    ObjectType child1 = ObjectType.fromNominalType(child1Class);
+    ObjectType child2 = ObjectType.fromNominalType(child2Class);
     ObjectType parentWithP = parent.withProperty("p", NUMBER);
     ObjectType parentWithOptP = ObjectType.join(parent, parentWithP);
 

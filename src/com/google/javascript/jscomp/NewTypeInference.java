@@ -1519,7 +1519,6 @@ public class NewTypeInference implements CompilerPass {
     JSType looseRetType = retType.isUnknown() ? JSType.BOTTOM : retType;
     JSType looseFunctionType =
         builder.addRetType(looseRetType).addLoose().buildType();
-    looseFunctionType.getFunType().checkValid();
     println("loose function type is ", looseFunctionType);
     EnvTypePair calleePair = analyzeExprBwd(callee, tmpEnv, looseFunctionType);
     return new EnvTypePair(calleePair.env, retType);

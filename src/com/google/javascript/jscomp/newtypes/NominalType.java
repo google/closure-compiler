@@ -135,7 +135,7 @@ public class NominalType {
     return null;
   }
 
-  private Property getProp(String pname) {
+  Property getProp(String pname) {
     if (isInterface) {
       return getPropFromInterface(pname);
     }

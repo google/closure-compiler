@@ -828,8 +828,8 @@ class GlobalTypeInfo implements CompilerPass {
       if (localClassDefs != null) {
         NominalType nominalType = localClassDefs.get(name);
         if (nominalType != null) {
-          return JSType.join(
-              JSType.NULL, JSType.fromObjectType(ObjectType.fromClass(nominalType)));
+          return JSType.join(JSType.NULL,
+              JSType.fromObjectType(ObjectType.fromNominalType(nominalType)));
         }
       }
       return parent == null ? null : parent.lookupTypeByName(name);
@@ -840,7 +840,7 @@ class GlobalTypeInfo implements CompilerPass {
         if (!hasThis()) {
           return null;
         }
-        return JSType.fromObjectType(ObjectType.fromClass(
+        return JSType.fromObjectType(ObjectType.fromNominalType(
             getDeclaredType().getThisType()));
       }
       int formalIndex = formals.indexOf(name);

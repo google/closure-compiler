@@ -70,7 +70,7 @@ public class DeclaredFunctionType {
     for (JSType formal : optionalFormals) {
       builder.addOptFormal(formal == null ? JSType.UNKNOWN : formal);
     }
-    builder.addRestFormals(restFormals == null ? null : restFormals);
+    builder.addRestFormals(restFormals);
     builder.addRetType(returnType == null ? JSType.UNKNOWN : returnType);
     builder.addNominalType(nominalType);
     builder.addTypeParameters(typeParameters);
