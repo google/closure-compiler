@@ -109,7 +109,9 @@ public class Node implements Cloneable, Serializable {
                                   // member method.
       ARROW_FN           = 60,
       YIELD_FOR          = 61,    // Set if a yield is a "yield all"
-      LAST_PROP          = 61;    // Unused in the compiler, but keep for Rhino.
+      EXPORT_DEFAULT     = 62,    // Set if a export is a "default" export
+      EXPORT_ALL_FROM    = 63,    // Set if a export is a "*" export
+      LAST_PROP          = 63;    // Unused in the compiler, but keep for Rhino.
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -147,6 +149,8 @@ public class Node implements Cloneable, Serializable {
         case GENERATOR_FN:       return "generator_fn";
         case ARROW_FN:           return "arrow_fn";
         case YIELD_FOR:          return "yield_for";
+        case EXPORT_DEFAULT:     return "export_default";
+        case EXPORT_ALL_FROM:    return "export_all_from";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }

@@ -350,6 +350,70 @@ class CodeGenerator {
         }
         break;
 
+      case Token.EXPORT:
+        add("export");
+        if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
+          add("default");
+        }
+        if (n.getBooleanProp(Node.EXPORT_ALL_FROM)) {
+          add("*");
+          Preconditions.checkState(first != null && first.isEmpty());
+        } else {
+          add(first);
+        }
+        if (childCount == 2) {
+          add("from");
+          add(last);
+        }
+        cc.endStatement();
+        break;
+
+      case Token.MODULE:
+        add("module");
+        add(first);
+        add("from");
+        add(last);
+        cc.endStatement();
+        break;
+
+      case Token.IMPORT:
+        add("import");
+        Node specList = first.getNext();
+        if (!first.isEmpty()) {
+          add(first);
+          if (specList.hasChildren()) {
+            cc.listSeparator();
+          }
+        }
+        if (specList.hasChildren()) {
+          add(specList);
+        }
+        add("from");
+        add(last);
+        cc.endStatement();
+        break;
+
+      case Token.EXPORT_SPECS:
+      case Token.IMPORT_SPECS:
+        add("{");
+        for (Node c = first; c != null; c = c.getNext()) {
+          if (c != first) {
+            cc.listSeparator();
+          }
+          add(c);
+        }
+        add("}");
+        break;
+
+      case Token.EXPORT_SPEC:
+      case Token.IMPORT_SPEC:
+        add(first);
+        if (first != last) {
+          add("as");
+          add(last);
+        }
+        break;
+
       // CLASS -> NAME,EXPR|EMPTY,BLOCK
       case Token.CLASS: {
           Preconditions.checkState(childCount == 3);
@@ -1016,8 +1080,8 @@ class CodeGenerator {
   }
 
   /**
-   * @return Whether the Node is a DO or FUNCTION (with or without
-   * labels).
+   * @return Whether the Node is a DO or a declaration that is only allowed
+   * in restricted contexts.
    */
   private boolean isBlockDeclOrDo(Node n) {
     if (n.isLabel()) {

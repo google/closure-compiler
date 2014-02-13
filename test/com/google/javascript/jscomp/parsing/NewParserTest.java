@@ -1383,6 +1383,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "short function syntax");
   }
 
+  public void testArrow2() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError("*()=>1;", "primary expression expected");
+  }
+
   public void testForOf1() {
     mode = LanguageMode.ECMASCRIPT6;
 

@@ -293,7 +293,7 @@ public class ParseTreeValidator extends ParseTreeVisitor {
     switch (tree.type) {
     case VARIABLE_STATEMENT:
     case FUNCTION_DECLARATION:
-    case MODULE_DEFINITION:
+    case MODULE_IMPORT:
     case CLASS_DECLARATION:
       break;
     default:
@@ -506,7 +506,7 @@ public class ParseTreeValidator extends ParseTreeVisitor {
     for (ParseTree sourceElement : tree.sourceElements) {
       checkVisit(sourceElement.isSourceElement()
           || sourceElement.type == ParseTreeType.CLASS_DECLARATION
-          || sourceElement.type == ParseTreeType.MODULE_DEFINITION,
+          || sourceElement.type == ParseTreeType.MODULE_IMPORT,
           sourceElement,
           "global source element expected");
     }

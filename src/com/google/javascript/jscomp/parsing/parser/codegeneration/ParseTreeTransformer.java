@@ -72,7 +72,7 @@ public class ParseTreeTransformer {
     case MEMBER_EXPRESSION: return transform(tree.asMemberExpression());
     case MEMBER_LOOKUP_EXPRESSION: return transform(tree.asMemberLookupExpression());
     case MISSING_PRIMARY_EXPRESSION: return transform(tree.asMissingPrimaryExpression());
-    case MODULE_DEFINITION: return transform(tree.asModuleDefinition());
+    case MODULE_IMPORT: return transform(tree.asModuleImport());
     case NEW_EXPRESSION: return transform(tree.asNewExpression());
     case NULL: return transform(tree.asNull());
     case OBJECT_LITERAL_EXPRESSION: return transform(tree.asObjectLiteralExpression());
@@ -299,7 +299,10 @@ public class ParseTreeTransformer {
     if (tree.declaration == declaration) {
       return tree;
     }
-    return new ExportDeclarationTree(null, tree.isDefault, declaration);
+    return new ExportDeclarationTree(null, tree.isDefault, tree.isExportAll,
+        declaration,
+        tree.exportSpecifierList,
+        tree.from);
   }
 
   protected ParseTree transform(ExpressionStatementTree tree) {

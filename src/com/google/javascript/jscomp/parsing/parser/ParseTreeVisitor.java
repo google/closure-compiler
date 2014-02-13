@@ -71,7 +71,7 @@ public class ParseTreeVisitor {
     case MEMBER_EXPRESSION: visit(tree.asMemberExpression()); break;
     case MEMBER_LOOKUP_EXPRESSION: visit(tree.asMemberLookupExpression()); break;
     case MISSING_PRIMARY_EXPRESSION: visit(tree.asMissingPrimaryExpression()); break;
-    case MODULE_DEFINITION: visit(tree.asModuleDefinition()); break;
+    case MODULE_IMPORT: visit(tree.asModuleImport()); break;
     case NEW_EXPRESSION: visit(tree.asNewExpression()); break;
     case OBJECT_LITERAL_EXPRESSION: visit(tree.asObjectLiteralExpression()); break;
     case OBJECT_PATTERN: visit(tree.asObjectPattern()); break;

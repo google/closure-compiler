@@ -172,8 +172,12 @@ public class Token {
         YIELD          = 164, // generators
 
         IMPORT         = 165, // modules
-        EXPORT         = 166,
-        MODULE         = 167,
+        IMPORT_SPECS   = 166,
+        IMPORT_SPEC    = 167,
+        EXPORT         = 168,
+        EXPORT_SPECS   = 169,
+        EXPORT_SPEC    = 170,
+        MODULE         = 171,
 
         // JSDoc-only tokens
         ANNOTATION     = 300,
@@ -310,7 +314,11 @@ public class Token {
           case FOR_OF:          return "FOR_OF";
           case YIELD:           return "YIELD";
           case IMPORT:          return "IMPORT";
+          case IMPORT_SPECS:    return "IMPORT_SPECS";
+          case IMPORT_SPEC:     return "IMPORT_SPEC";
           case EXPORT:          return "EXPORT";
+          case EXPORT_SPECS:    return "EXPORT_SPECS";
+          case EXPORT_SPEC:     return "EXPORT_SPEC";
           case MODULE:          return "MODULE";
         }
 

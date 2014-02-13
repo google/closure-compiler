@@ -1463,6 +1463,8 @@ public class CodePrinterTest extends TestCase {
   }
 
   public void testUnicodeKeyword() {
+    // TODO(johnlenz): verify this is valid in the latest specs.
+
     // keyword "if"
     assertPrint("var \\u0069\\u0066 = 1;", "var i\\u0066=1");
     // keyword "var"
@@ -1703,5 +1705,73 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("class f{}");
     assertPrintSame("if(a){class f{}}");
     assertPrintSame("if(a)(class{})");
+  }
+
+  public void testImports() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrint(
+        "import x from 'foo'",
+        "import x from\"foo\"");
+    assertPrint(
+        "import x, {a as b} from 'foo'",
+        "import x,{a as b}from\"foo\"");
+    assertPrint(
+        "import {a as b, c as d} from 'foo'",
+        "import{a as b,c as d}from\"foo\"");
+    assertPrint(
+        "import x, {a} from 'foo'",
+        "import x,{a}from\"foo\"");
+    assertPrint(
+        "import {a, c} from 'foo'",
+        "import{a,c}from\"foo\"");
+  }
+
+  public void testModuleImports() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrint("module x from 'foo'", "module x from\"foo\"");
+  }
+
+  public void testExports() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    // export declarations
+    assertPrintSame("export var x=1");
+    assertPrintSame("export let x=1");
+    assertPrintSame("export const x=1");
+    assertPrintSame("export function f(){}");
+    assertPrintSame("export class f{}");
+
+    // export all from
+    assertPrint("export * from 'a.b.c'", "export*from\"a.b.c\"");
+
+    // from
+    assertPrint(
+        "export { a } from 'a.b.c'",
+        "export{a}from\"a.b.c\"");
+    assertPrint(
+        "export { a as x } from 'a.b.c'",
+        "export{a as x}from\"a.b.c\"");
+
+    assertPrint(
+        "export { a,b } from 'a.b.c'",
+        "export{a,b}from\"a.b.c\"");
+    assertPrint(
+        "export { a as x, b as y } from 'a.b.c'",
+        "export{a as x,b as y}from\"a.b.c\"");
+
+    assertPrintSame("export{a}");
+    assertPrint(
+        "export { a as x }",
+        "export{a as x}");
+
+    assertPrint(
+        "export { a,b }",
+        "export{a,b}");
+    assertPrint(
+        "export { a as x, b as y }",
+        "export{a as x,b as y}");
+
+    // export default
+    assertPrintSame("export default x");
+    assertPrintSame("export default 1");
   }
 }

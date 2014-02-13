@@ -42,6 +42,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DefaultClauseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DoWhileStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ExportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FinallyTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForInStatementTree;
@@ -52,11 +54,14 @@ import com.google.javascript.jscomp.parsing.parser.trees.FunctionDeclarationTree
 import com.google.javascript.jscomp.parsing.parser.trees.GetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ImportDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LabelledStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberLookupExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MissingPrimaryExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ModuleImportTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
@@ -87,9 +92,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
-
 import com.google.javascript.rhino.head.ErrorReporter;
-
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.List;
@@ -531,7 +534,9 @@ class NewIRFactory {
     Comment closestPreviousComment = null;
     while (currentComment != null &&
         currentComment.location.end.offset <= location.start.offset) {
-      closestPreviousComment = currentComment;
+      if (currentComment.type == Comment.Type.JSDOC) {
+        closestPreviousComment = currentComment;
+      }
       if (this.nextCommentIter.hasNext()) {
         currentComment = this.nextCommentIter.next();
       } else {
@@ -539,9 +544,7 @@ class NewIRFactory {
       }
     }
 
-    return (closestPreviousComment != null
-        && closestPreviousComment.type == Comment.Type.JSDOC)
-        ? closestPreviousComment : null;
+    return closestPreviousComment;
   }
 
   private Comment getJsDoc(ParseTree tree) {
@@ -874,7 +877,7 @@ class NewIRFactory {
      * the string 'a' is quoted, while the name b is turned into a string, but
      * unquoted.
      */
-    private Node transformAsString(
+    private Node processObjecLitKeyAsString(
         com.google.javascript.jscomp.parsing.parser.Token token) {
       Node ret;
       if (token == null) {
@@ -885,8 +888,7 @@ class NewIRFactory {
         ret = transformNumberAsString(token.asLiteral());
         ret.putBooleanProp(Node.QUOTED_PROP, true);
       } else {
-        ret = newStringNode(Token.STRING,
-            normalizeString(token.asLiteral()));
+        ret = processString(token.asLiteral());
         ret.putBooleanProp(Node.QUOTED_PROP, true);
       }
       Preconditions.checkState(ret.isString());
@@ -1251,7 +1253,7 @@ class NewIRFactory {
     Node processName(IdentifierToken identifierToken, boolean asString) {
       Node node;
       if (asString) {
-        node = newStringNode(Token.STRING, identifierToken.toString());
+        node = newStringNode(Token.STRING, identifierToken.value);
       } else {
         JSDocInfo info = handleJsDoc(identifierToken);
         if (identifierToken == null ||
@@ -1261,13 +1263,20 @@ class NewIRFactory {
             sourceName,
             identifierToken.location.start.line, "", 0);
         }
-        node = newStringNode(Token.NAME, identifierToken.toString());
+        node = newStringNode(Token.NAME, identifierToken.value);
         if (info != null) {
           // validateTypeAnnotations(info, identifierToken);
           attachJSDoc(info, node);
         }
       }
       setSourceInfo(node, identifierToken);
+      return node;
+    }
+
+    Node processString(LiteralToken token) {
+      Preconditions.checkState(token.type == TokenType.STRING);
+      Node node = newStringNode(Token.STRING, normalizeString(token));
+      setSourceInfo(node, token);
       return node;
     }
 
@@ -1350,7 +1359,7 @@ class NewIRFactory {
 
     @Override
     Node processGetAccessor(GetAccessorTree tree) {
-      Node key = transformAsString(tree.propertyName);
+      Node key = processObjecLitKeyAsString(tree.propertyName);
       key.setType(Token.GETTER_DEF);
       Node body = transform(tree.body);
       Node dummyName = IR.name("");
@@ -1366,7 +1375,7 @@ class NewIRFactory {
 
     @Override
     Node processSetAccessor(SetAccessorTree tree) {
-      Node key = transformAsString(tree.propertyName);
+      Node key = processObjecLitKeyAsString(tree.propertyName);
       key.setType(Token.SETTER_DEF);
       Node body = transform(tree.body);
       Node dummyName = IR.name("");
@@ -1383,7 +1392,7 @@ class NewIRFactory {
 
     @Override
     Node processPropertyNameAssignment(PropertyNameAssignmentTree tree) {
-      Node key = transformAsString(tree.name);
+      Node key = processObjecLitKeyAsString(tree.name);
       key.setType(Token.STRING_KEY);
       key.addChildToFront(transform(tree.value));
       return key;
@@ -1407,7 +1416,7 @@ class NewIRFactory {
     Node processPropertyGet(MemberExpressionTree getNode) {
       Node leftChild = transform(getNode.operand);
       IdentifierToken nodeProp = getNode.memberName;
-      Node rightChild = transformAsString(nodeProp);
+      Node rightChild = processObjecLitKeyAsString(nodeProp);
       if (!rightChild.isQuotedString() && !isAllowedProp(
           rightChild.getString())) {
         errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
@@ -1454,9 +1463,9 @@ class NewIRFactory {
     @Override
     Node processStringLiteral(LiteralExpressionTree literalTree) {
       LiteralToken token = literalTree.literalToken.asLiteral();
-      String value = normalizeString(token);
 
-      Node n = newStringNode(value);
+      Node n = processString(token);
+      String value = n.getString();
       if (value.indexOf('\u000B') != -1) {
         // NOTE(nicksantos): In JavaScript, there are 3 ways to
         // represent a vertical tab: \v, \x0B, \u000B.
@@ -1803,7 +1812,7 @@ class NewIRFactory {
         body.addChildToBack(transform(child));
       }
 
-      return new Node(Token.CLASS, name, superClass, body);
+      return newNode(Token.CLASS, name, superClass, body);
     }
 
     @Override
@@ -1812,7 +1821,7 @@ class NewIRFactory {
         maybeWarnEs6Feature(tree, "super");
       }
 
-      return new Node(Token.SUPER);
+      return newNode(Token.SUPER);
     }
 
     @Override
@@ -1823,6 +1832,91 @@ class NewIRFactory {
       }
       yield.setYieldFor(tree.isYieldFor);
       return yield;
+    }
+
+    @Override
+    Node processExportDecl(ExportDeclarationTree tree) {
+      maybeWarnEs6Feature(tree, "modules");
+      Node decls = null;
+      if (tree.isExportAll) {
+        Preconditions.checkState(
+            tree.declaration == null &&
+            tree.exportSpecifierList == null);
+      } else if (tree.declaration != null) {
+        Preconditions.checkState(tree.exportSpecifierList == null);
+        decls = transform(tree.declaration);
+      } else {
+        decls = transformList(Token.EXPORT_SPECS, tree.exportSpecifierList);
+      }
+      if (decls == null) {
+        decls = newNode(Token.EMPTY);
+      }
+      Node export = newNode(Token.EXPORT, decls);
+      if (tree.from != null) {
+        Node from = processString(tree.from);
+        export.addChildToBack(from);
+      }
+
+      export.putBooleanProp(Node.EXPORT_ALL_FROM, tree.isExportAll);
+      export.putBooleanProp(Node.EXPORT_DEFAULT, tree.isDefault);
+      return export;
+    }
+
+    @Override
+    Node processExportSpec(ExportSpecifierTree tree) {
+      Node importSpec = newNode(Token.EXPORT_SPEC,
+          processName(tree.importedName));
+      if (tree.destinationName != null) {
+        importSpec.addChildToBack(processName(tree.destinationName));
+      }
+      return importSpec;
+    }
+
+    @Override
+    Node processImportDecl(ImportDeclarationTree tree) {
+      maybeWarnEs6Feature(tree, "modules");
+      Node export = newNode(Token.IMPORT,
+          transformOrEmpty(tree.defaultBindingIndentifier),
+          transformListOrEmpty(Token.IMPORT_SPECS, tree.importSpecifierList),
+          processString(tree.moduleSpecifier));
+      return export;
+    }
+
+    @Override
+    Node processImportSpec(ImportSpecifierTree tree) {
+      Node importSpec = newNode(Token.IMPORT_SPEC,
+          processName(tree.importedName));
+      if (tree.destinationName != null) {
+        importSpec.addChildToBack(processName(tree.destinationName));
+      }
+      return importSpec;
+    }
+
+    @Override
+    Node processModuleImport(ModuleImportTree tree) {
+      maybeWarnEs6Feature(tree, "modules");
+      Node module = newNode(Token.MODULE,
+          processName(tree.name),
+          processString(tree.from));
+      return module;
+    }
+
+    private Node transformList(
+        int type, ImmutableList<ParseTree> list) {
+      Node n = newNode(type);
+      for (ParseTree tree : list) {
+        n.addChildToBack(transform(tree));
+      }
+      return n;
+    }
+
+    private Node transformListOrEmpty(
+        int type, ImmutableList<ParseTree> list) {
+      if (list != null) {
+        return transformList(type, list);
+      } else {
+        return newNode(Token.EMPTY);
+      }
     }
 
     void maybeWarnEs6Feature(ParseTree node, String feature) {

@@ -31,6 +31,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DefaultClauseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DoWhileStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ExportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FinallyTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForInStatementTree;
@@ -41,11 +43,14 @@ import com.google.javascript.jscomp.parsing.parser.trees.FunctionDeclarationTree
 import com.google.javascript.jscomp.parsing.parser.trees.GetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ImportDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LabelledStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberLookupExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MissingPrimaryExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ModuleImportTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
@@ -128,8 +133,13 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processClassDeclaration(ClassDeclarationTree tree);
   abstract T processSuper(SuperExpressionTree tree);
   abstract T processYield(YieldExpressionTree tree);
-
   abstract T processForOf(ForOfStatementTree tree);
+
+  abstract T processExportDecl(ExportDeclarationTree tree);
+  abstract T processExportSpec(ExportSpecifierTree tree);
+  abstract T processImportDecl(ImportDeclarationTree tree);
+  abstract T processImportSpec(ImportSpecifierTree tree);
+  abstract T processModuleImport(ModuleImportTree tree);
 
   abstract T processMissingExpression(MissingPrimaryExpressionTree tree);
 
@@ -267,6 +277,17 @@ abstract class NewTypeSafeDispatcher<T> {
       case FOR_OF_STATEMENT:
         return processForOf(node.asForOfStatement());
 
+      case EXPORT_DECLARATION:
+        return processExportDecl(node.asExportDeclaration());
+      case EXPORT_SPECIFIER:
+        return processExportSpec(node.asExportSpecifier());
+      case IMPORT_DECLARATION:
+        return processImportDecl(node.asImportDeclaration());
+      case IMPORT_SPECIFIER:
+        return processImportSpec(node.asImportSpecifier());
+      case MODULE_IMPORT:
+        return processModuleImport(node.asModuleImport());
+
       case ARRAY_PATTERN:
       case OBJECT_PATTERN:
       case OBJECT_PATTERN_FIELD:
@@ -279,12 +300,6 @@ abstract class NewTypeSafeDispatcher<T> {
         return unsupportedLanguageFeature(node, "rest parameters");
       case SPREAD_EXPRESSION:
         return unsupportedLanguageFeature(node, "spread parameters");
-
-      case MODULE_DEFINITION:
-      case EXPORT_DECLARATION:
-      case IMPORT_DECLARATION:
-      case IMPORT_SPECIFIER:
-        return unsupportedLanguageFeature(node, "modules");
 
       // TODO(johnlenz): handle these or remove parser support
       case ARGUMENT_LIST:

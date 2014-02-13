@@ -17,18 +17,17 @@
 package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
-import com.google.javascript.jscomp.parsing.parser.LiteralToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-public class ModuleImportTree extends ParseTree {
+public class ExportSpecifierTree extends ParseTree {
 
-  public final IdentifierToken name;
-  public final LiteralToken from;
+  public final IdentifierToken importedName;
+  public final IdentifierToken destinationName;
 
-  public ModuleImportTree(SourceRange location, IdentifierToken name,
-      LiteralToken from) {
-    super(ParseTreeType.MODULE_IMPORT, location);
-    this.name = name;
-    this.from = from;
+  public ExportSpecifierTree(SourceRange location,
+      IdentifierToken importedName, IdentifierToken destinationName) {
+    super(ParseTreeType.EXPORT_SPECIFIER, location);
+    this.importedName = importedName;
+    this.destinationName = destinationName;
   }
 }

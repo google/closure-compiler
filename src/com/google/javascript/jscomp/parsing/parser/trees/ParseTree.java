@@ -69,6 +69,7 @@ public class ParseTree {
   public DoWhileStatementTree asDoWhileStatement() { return (DoWhileStatementTree) this; }
   public EmptyStatementTree asEmptyStatement() { return (EmptyStatementTree) this; }
   public ExportDeclarationTree asExportDeclaration() { return (ExportDeclarationTree) this; }
+  public ExportSpecifierTree asExportSpecifier() { return (ExportSpecifierTree) this; }
   public ExpressionStatementTree asExpressionStatement() { return (ExpressionStatementTree) this; }
   public FinallyTree asFinally() { return (FinallyTree) this; }
   public ForOfStatementTree asForOfStatement() { return (ForOfStatementTree) this; }
@@ -89,7 +90,7 @@ public class ParseTree {
     return (MemberLookupExpressionTree) this; }
   public MissingPrimaryExpressionTree asMissingPrimaryExpression() {
     return (MissingPrimaryExpressionTree) this; }
-  public ModuleImportTree asModuleDefinition() { return (ModuleImportTree) this; }
+  public ModuleImportTree asModuleImport() { return (ModuleImportTree) this; }
   public NewExpressionTree asNewExpression() { return (NewExpressionTree) this; }
   public NullTree asNull() { return (NullTree) this; }
   public ObjectLiteralExpressionTree asObjectLiteralExpression() {

@@ -189,6 +189,14 @@ public class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertNotNull(root.getFirstChild().getFirstChild().getJSDocInfo());
   }
 
+  public void testOldJsdocDot2() {
+    Node root = parse(
+        "/** attach */\n" +
+        "// test\n" +
+        "a.b = {};");
+    assertNotNull(root.getFirstChild().getFirstChild().getJSDocInfo());
+  }
+
   // public void testOldJsdocForInLoop1() {
   //   Node root = parse("for /** don't attach */ (var p in {}) {}");
   //   Node fil = root.getFirstChild();

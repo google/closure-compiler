@@ -166,7 +166,7 @@ public class Parser {
     }
 
     if (peekExportDeclaration()) {
-      return parseImportDeclaration();
+      return parseExportDeclaration();
     }
 
     return parseSourceElement();
@@ -179,7 +179,7 @@ public class Parser {
         && !peekImplicitSemiColon(1)
         && peekId(1)
         && peekPredefinedString(2, PredefinedName.FROM)
-        && peek(2, TokenType.STRING);
+        && peek(3, TokenType.STRING);
   }
 
   private ParseTree parseModuleDefinition() {
@@ -266,23 +266,45 @@ public class Parser {
   // export  FunctionDeclaration
   // export  ConstStatement
   // export  ClassDeclaration
-  // export  module  ModuleDefinition
-  // TODO: export  module ModuleLoad (',' ModuleLoad)* ';'
-  // TODO: export  ExportPath (',' ExportPath)* ';'
+  // export  default expression
+  // etc
   private boolean peekExportDeclaration() {
     return peek(TokenType.EXPORT);
   }
 
+  /*
+  ExportDeclaration :
+    export * FromClause ;
+    export ExportClause [NoReference] FromClause ;
+    export ExportClause ;
+    export VariableStatement
+    export Declaration[Default]
+    export default AssignmentExpression ;
+  ExportClause [NoReference] :
+    { }
+    { ExportsList [?NoReference] }
+    { ExportsList [?NoReference] , }
+  ExportsList [NoReference] :
+    ExportSpecifier [?NoReference]
+    ExportsList [?NoReference] , ExportSpecifier [?NoReference]
+  ExportSpecifier [NoReference] :
+    [~NoReference] IdentifierReference
+    [~NoReference] IdentifierReference as IdentifierName
+    [+NoReference] IdentifierName
+    [+NoReference] IdentifierName as IdentifierName
+   */
   private ParseTree parseExportDeclaration() {
     SourcePosition start = getTreeStartLocation();
     boolean isDefault = false;
+    boolean isExportAll = false;
+    boolean isExportSpecifier = false;
     eat(TokenType.EXPORT);
-    ParseTree export;
+    ParseTree export = null;
+    ImmutableList<ParseTree> exportSpecifierList = null;
     switch (peekType()) {
-    case VAR:
-    case LET:
-    case CONST:
-      export = parseVariableStatement();
+    case STAR:
+      isExportAll = true;
+      nextToken();
       break;
     case FUNCTION:
       export = parseFunctionDeclaration();
@@ -292,16 +314,62 @@ public class Parser {
       break;
     case DEFAULT:
       isDefault = true;
+      nextToken();
       export = parseExpression();
       break;
     case OPEN_CURLY:
-      throw new RuntimeException("UNDONE: export ExportSpecifierSet");
+      isExportSpecifier = true;
+      exportSpecifierList = parseExportSpecifierSet();
+      break;
     default:
-      // unreachable
-      export = null;
+      // unreachable, parse as a var decl to get a parse error.
+    case VAR:
+    case LET:
+    case CONST:
+      export = parseVariableDeclarationList();
       break;
     }
-    return new ExportDeclarationTree(getTreeLocation(start), isDefault, export);
+
+    LiteralToken moduleSpecifier = null;
+    if (isExportAll ||
+        (isExportSpecifier && peekPredefinedString(PredefinedName.FROM))) {
+      eatPredefinedString(PredefinedName.FROM);
+      moduleSpecifier = eat(TokenType.STRING).asLiteral();
+    }
+
+    eatPossibleImplicitSemiColon();
+
+    return new ExportDeclarationTree(
+        getTreeLocation(start), isDefault, isExportAll,
+        export, exportSpecifierList, moduleSpecifier);
+  }
+
+  //  ImportSpecifierSet ::= '{' (ImportSpecifier (',' ImportSpecifier)* (,)? )?  '}'
+  private ImmutableList<ParseTree> parseExportSpecifierSet() {
+    ImmutableList.Builder<ParseTree> elements;
+    elements = ImmutableList.<ParseTree>builder();
+    eat(TokenType.OPEN_CURLY);
+    while (peekId()) {
+      elements.add(parseExportSpecifier());
+      if (!peek(TokenType.CLOSE_CURLY)) {
+        eat(TokenType.COMMA);
+      }
+    }
+    eat(TokenType.CLOSE_CURLY);
+    return elements.build();
+  }
+
+  //  ImportSpecifier ::= Identifier ('as' Identifier)?
+  private ParseTree parseExportSpecifier() {
+    SourcePosition start = getTreeStartLocation();
+    IdentifierToken importedName = eatId();
+    IdentifierToken destinationName = null;
+    if (peekPredefinedString(PredefinedName.AS)){
+      eatPredefinedString(PredefinedName.AS);
+      destinationName = eatId();
+    }
+    return new ExportSpecifierTree(
+        getTreeLocation(start), importedName, destinationName);
   }
 
   // ModuleDefinition
