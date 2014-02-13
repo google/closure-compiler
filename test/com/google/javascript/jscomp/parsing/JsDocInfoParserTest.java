@@ -2890,6 +2890,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       "* @namespace \n" +
       "* @ngInject \n" +
       "* @nocompile \n" +
+      "* @pintomodule \n" +
       "* @property \n" +
       "* @requirecss \n" +
       "* @requires \n" +
