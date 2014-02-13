@@ -3105,7 +3105,7 @@ var Thenable;
 /**
  * This is not an official DOM interface. It is used to add generic typing
  * and respective type inference where available.
- * {@see goog.labs.Thenable} inherits from this making all promises
+ * {@see goog.Thenable} inherits from this making all promises
  * interoperate.
  * @interface
  * @template TYPE
