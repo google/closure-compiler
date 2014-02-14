@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
@@ -882,6 +883,13 @@ public final class JsDocInfoParser {
           } else if (!jsdocBuilder.recordTemplateTypeNames(names)) {
             parser.addTypeWarning("msg.jsdoc.template.at.most.once",
                 stream.getLineno(), stream.getCharno());
+          } else {
+            for (String typeName : names) {
+              if (!validTemplateTypeName(typeName)) {
+                parser.addTypeWarning("msg.jsdoc.template.invalid.type.name",
+                    stream.getLineno(), stream.getCharno());
+              }
+            }
           }
 
           token = templateInfo.token;
@@ -1086,6 +1094,15 @@ public final class JsDocInfoParser {
     }
 
     return next();
+  }
+
+  /**
+   * The types in @template annotations must start with a capital letter, and contain
+   * only letters, digits, and underscores.
+   */
+  private static boolean validTemplateTypeName(String name) {
+    return name.length() != 0 && CharMatcher.JAVA_UPPER_CASE.matches(name.charAt(0)) &&
+        CharMatcher.JAVA_LETTER_OR_DIGIT.or(CharMatcher.is('_')).matchesAllOf(name);
   }
 
   /**
