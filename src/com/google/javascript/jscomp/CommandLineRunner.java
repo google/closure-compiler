@@ -893,6 +893,7 @@ public class CommandLineRunner extends
     // JS externs
     "es3.js",
     "es5.js",
+    "intl.js",
 
     // Event APIs
     "w3c_event.js",
@@ -928,6 +929,7 @@ public class CommandLineRunner extends
     "html5.js",
     "ie_vml.js",
     "iphone.js",
+    "v8.js",
     "webstorage.js",
     "w3c_anim_timing.js",
     "w3c_css3d.js",
