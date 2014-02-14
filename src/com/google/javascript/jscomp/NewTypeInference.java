@@ -772,7 +772,8 @@ public class NewTypeInference implements CompilerPass {
             currentScope.isOuterVar(varName)) {
           JSType inferredType = envGetType(inEnv, varName);
           println(varName, "'s inferredType: ", inferredType,
-              " requiredType:  ", requiredType);
+              " requiredType:  ", requiredType,
+              " specializedType:  ", specializedType);
           if (!inferredType.isSubtypeOf(requiredType)) {
             // The inferred type of a variable is always an upper bound, but
             // sometimes it's also a lower bound, eg, if x was the lhs of an =
@@ -783,11 +784,9 @@ public class NewTypeInference implements CompilerPass {
             // In some rare cases, the inferred type is only an upper bound,
             // and we would falsely warn.
             // (These usually include the polymorphic operators += and <.)
-            // We have a heuristic check here to avoid the spurious warnings.
-            // We make it specific to (number|string) on purpose; handle more
-            // types only as you see programs that need it.
+            // We have a heuristic check here to avoid the spurious warnings,
+            // but we also miss some true warnings.
             if (currentScope.getDeclaredTypeOf(varName) == null &&
-                inferredType.equals(JSType.NUM_OR_STR) &&
                 requiredType.isSubtypeOf(inferredType)) {
               inferredType = requiredType;
             } else {
@@ -857,8 +856,6 @@ public class NewTypeInference implements CompilerPass {
         return pair;
       }
       case Token.TYPEOF: {
-        // TODO(user): recognize patterns like (typeof x === 'string')
-        // to improve specializedType
         EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
         pair.type = JSType.STRING;
         return pair;
@@ -1009,6 +1006,18 @@ public class NewTypeInference implements CompilerPass {
       case Token.SHNE: {
         Node lhs = expr.getFirstChild();
         Node rhs = expr.getLastChild();
+
+        if ((specializedType.isTruthy() || specializedType.isFalsy()) &&
+            (lhs.isTypeOf() || rhs.isTypeOf())) {
+          if (lhs.isTypeOf()) {
+            return analyzeSpecializedTypeof(
+                lhs, rhs, exprKind, inEnv, specializedType);
+          } else {
+            return analyzeSpecializedTypeof(
+                rhs, lhs, exprKind, inEnv, specializedType);
+          }
+        }
+
         EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
         EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
 
@@ -1047,9 +1056,9 @@ public class NewTypeInference implements CompilerPass {
         EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
         EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
         // The type of either side can be specialized based on the other side
-        if (lhsPair.type.isScalar() && rhsPair.type.isUnknown()) {
+        if (lhsPair.type.isScalar() && !rhsPair.type.isScalar()) {
           rhsPair = analyzeExprFwd(rhs, lhsPair.env, lhsPair.type);
-        } else if (lhsPair.type.isUnknown() && rhsPair.type.isScalar()) {
+        } else if (rhsPair.type.isScalar()) {
           lhsPair = analyzeExprFwd(lhs, inEnv, rhsPair.type);
           rhsPair = analyzeExprFwd(rhs, lhsPair.env, rhsPair.type);
         } else if (lhs.isName() && lhsPair.type.isUnknown() &&
@@ -1283,6 +1292,49 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
+  private EnvTypePair analyzeSpecializedTypeof(Node typeof, Node typeString,
+      int comparisonOp, TypeEnv inEnv, JSType specializedType) {
+    EnvTypePair pair;
+    Node typeofRand = typeof.getFirstChild();
+    JSType comparedType = getTypeFromString(typeString);
+    if (comparedType.isUnknown()) {
+      pair = analyzeExprFwd(typeofRand, inEnv);
+      pair = analyzeExprFwd(typeString, pair.env);
+    } else if ((specializedType.isTruthy() &&
+         (comparisonOp == Token.SHEQ || comparisonOp == Token.EQ)) ||
+        (specializedType.isFalsy() &&
+         (comparisonOp == Token.SHNE || comparisonOp == Token.NE))) {
+      pair = analyzeExprFwd(typeofRand, inEnv, JSType.UNKNOWN, comparedType);
+    } else {
+      pair = analyzeExprFwd(
+          typeofRand, inEnv, JSType.UNKNOWN, comparedType.negate());
+    }
+    pair.type = specializedType.toBoolean();
+    return pair;
+  }
+
+  private static JSType getTypeFromString(Node typeString) {
+    if (!typeString.isString()) {
+      return JSType.UNKNOWN;
+    }
+    switch (typeString.getString()) {
+      case "number":
+        return JSType.NUMBER;
+      case "string":
+        return JSType.STRING;
+      case "boolean":
+        return JSType.BOOLEAN;
+      case "undefined":
+        return JSType.UNDEFINED;
+      case "function":
+        return JSType.topFunction();
+      case "object":
+        return JSType.join(JSType.NULL, JSType.TOP_OBJECT);
+      default:
+        return JSType.UNKNOWN;
+    }
+  }
+
   private Map<String, JSType> calcTypeInstantiationFwd(
       Node callNode, FunctionType funType, TypeEnv typeEnv) {
     return calcTypeInstantiation(callNode, funType, typeEnv, true);
@@ -1356,6 +1408,18 @@ public class NewTypeInference implements CompilerPass {
     int tokenType = expr.getType();
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
+
+    if ((specializedType.isTruthy() || specializedType.isFalsy()) &&
+        (lhs.isTypeOf() || rhs.isTypeOf())) {
+      if (lhs.isTypeOf()) {
+        return analyzeSpecializedTypeof(
+            lhs, rhs, expr.getType(), inEnv, specializedType);
+      } else {
+        return analyzeSpecializedTypeof(
+            rhs, lhs, expr.getType(), inEnv, specializedType);
+      }
+    }
+
     EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
     EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
     JSType lhsType = lhsPair.type;
@@ -1593,7 +1657,7 @@ public class NewTypeInference implements CompilerPass {
           // If there is a type mismatch, we can propagate the previously
           // inferred type or the required type.
           // Propagating the already inferred type means that the type of the
-          // variable is stable throught the function body.
+          // variable is stable throughout the function body.
           // Propagating the required type means that the type chosen for a
           // formal is the one closest to the function header, which helps
           // generate more intuitive warnings in the fwd direction.

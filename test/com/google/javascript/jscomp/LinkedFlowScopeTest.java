@@ -39,7 +39,7 @@ public class LinkedFlowScopeTest extends CompilerTypeTestCase {
   private FlowScope localEntry;
 
   @Override
-  public void setUp() throws Exception {
+  public void setUp() {
     super.setUp();
 
     globalScope = Scope.createGlobalScope(blockNode);

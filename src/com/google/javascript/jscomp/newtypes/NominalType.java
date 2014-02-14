@@ -16,13 +16,17 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  *
@@ -44,23 +48,32 @@ public class NominalType {
   private final boolean isInterface;
   private ImmutableSet<String> allProps = null;
   private final ImmutableList<String> templateVars;
+  // Each class-definition site has a unique id.
+  // All classes instantiated from the same polymorphic class have the same id.
+  private final int id;
 
   private NominalType(
-      String name, ImmutableList<String> templateVars, boolean isInterface) {
+      String name, ImmutableList<String> templateVars,
+      int id, boolean isInterface) {
     this.name = name;
     this.templateVars =
         (templateVars == null || templateVars.isEmpty()) ? null : templateVars;
+    this.id = id;
     this.isInterface = isInterface;
   }
 
   public static NominalType makeClass(
-      String name, ImmutableList<String> templateVars) {
-    return new NominalType(name, templateVars, false);
+      String name, ImmutableList<String> templateVars, int id) {
+    return new NominalType(name, templateVars, id, false);
   }
 
   public static NominalType makeInterface(
-      String name, ImmutableList<String> templateVars) {
-    return new NominalType(name, templateVars, true);
+      String name, ImmutableList<String> templateVars, int id) {
+    return new NominalType(name, templateVars, id, true);
+  }
+
+  public int getId() {
+    return id;
   }
 
   public boolean isClass() {
@@ -301,6 +314,15 @@ public class NominalType {
         ObjectType.makeObjectType(null, ctorProps, ctorFn, ctorFn.isLoose()));
   }
 
+  NominalType instantiateGenerics(List<JSType> types) {
+    Preconditions.checkState(types.size() == templateVars.size());
+    Map<String, JSType> typeMap = Maps.newHashMap();
+    for (int i = 0; i < templateVars.size(); i++) {
+      typeMap.put(templateVars.get(i), types.get(i));
+    }
+    return instantiateGenerics(typeMap);
+  }
+
   NominalType instantiateGenerics(Map<String, JSType> typeMap) {
     Preconditions.checkState(templateVars != null);
     for (String typeParam: typeMap.keySet()) {
@@ -309,11 +331,12 @@ public class NominalType {
     for (String typeParam: templateVars) {
       Preconditions.checkState(typeMap.containsKey(typeParam));
     }
-    NominalType result = new NominalType(this.name, null, this.isInterface);
+    NominalType result = new NominalType(
+        this.name + genericSuffix(typeMap), null, id, this.isInterface);
     // To implement
     Preconditions.checkState(superClass == null);
-    Preconditions.checkState(interfaces.isEmpty(), "Interfaces not supported: " +
-        interfaces);
+    Preconditions.checkState(interfaces.isEmpty(),
+        "Interfaces not supported: " + interfaces);
     for (String propName : this.classProps.keySet()) {
       result.classProps.put(propName,
           this.classProps.get(propName).substituteGenerics(typeMap));
@@ -323,6 +346,15 @@ public class NominalType {
           this.protoProps.get(propName).substituteGenerics(typeMap));
     }
     return result.finalizeNominalType();
+  }
+
+  private String genericSuffix(Map<String, JSType> typeMap) {
+    List<String> names = Lists.newArrayList();
+    for (String templateVar : templateVars) {
+      names.add(typeMap.get(templateVar).toString());
+    }
+    Preconditions.checkState(!names.isEmpty());
+    return ".<" + Joiner.on(",").join(names) + ">";
   }
 
   // If we try to mutate the class after the AST-preparation phase, error.
@@ -344,6 +376,40 @@ public class NominalType {
 
   @Override
   public String toString() {
-    return name;
+    return name + (templateVars == null ? "" :
+        ".<" + Joiner.on(",").join(templateVars) + ">");
+  }
+
+  // Consider the following class. The instantiations Foo.<number> and
+  // Foo.<string> are identical except the name field, so we must use the name
+  // in hashCode and equals. Unlikely to happen in practice because classes have
+  // properties.
+  //
+  // /**
+  //  * @template T
+  //  * @constructor
+  //  * @param {T} x
+  //  */
+  // function Foo(x) {}
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, name, templateVars, classProps, protoProps,
+        ctorProps, superClass, interfaces, isInterface);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    Preconditions.checkState(o instanceof NominalType);
+    NominalType other = (NominalType) o;
+    return id == other.id &&
+        Objects.equals(name, other.name) &&
+        Objects.equals(templateVars, other.templateVars) &&
+        Objects.equals(classProps, other.classProps) &&
+        Objects.equals(protoProps, other.protoProps) &&
+        Objects.equals(ctorProps, other.ctorProps) &&
+        Objects.equals(superClass, other.superClass) &&
+        Objects.equals(interfaces, other.interfaces) &&
+        Objects.equals(isInterface, other.isInterface);
   }
 }

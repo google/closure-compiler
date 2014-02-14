@@ -51,7 +51,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
       "Suggest.prototype.veryPossible2 = 1;\n";
 
   @Override
-  public void setUp() throws Exception {
+  public void setUp() {
     super.setUp();
     reportMissingOverrides = CheckLevel.WARNING;
   }

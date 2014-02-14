@@ -195,11 +195,24 @@ public class JSTypeCreatorFromJSDoc {
       return JSType.fromTypeVar(typeName);
     } else { // it must be a class name
       JSType namedType = registry.lookupTypeByName(typeName);
-      if (namedType != null) {
+      if (namedType == null) {
+        unknownTypeNames.put(n, typeName);
+        throw new UnknownTypeException("Unhandled type: " + typeName);
+      }
+      if (!n.hasChildren()) {
         return namedType;
       }
-      unknownTypeNames.put(n, typeName);
-      throw new UnknownTypeException("Unhandled type: " + typeName);
+      // Compute instantiation of polymorphic class/interface.
+      Preconditions.checkState(n.getFirstChild().isBlock());
+      ImmutableList.Builder<JSType> typeList = ImmutableList.builder();
+      for (Node child : n.getFirstChild().children()) {
+        JSType childType =
+            getTypeFromNodeHelper(child, ownerType, registry, typeParameters);
+        typeList.add(childType);
+      }
+      NominalType uninstantiated = namedType.getNominalTypeIfUnique();
+      return JSType.fromObjectType(ObjectType.fromNominalType(
+          uninstantiated.instantiateGenerics(typeList.build())));
     }
   }
 

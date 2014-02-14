@@ -35,7 +35,7 @@ import junit.framework.TestCase;
  */
 public class FunctionTypeTest extends TestCase {
   private static final FunctionType fooConstructor = FunctionType.normalized(
-      null, null, null, null, NominalType.makeClass("Foo", null), null, null,
+      null, null, null, null, NominalType.makeClass("Foo", null, 0), null, null,
       false);
 
   private static FunctionType parse(String typestring) {

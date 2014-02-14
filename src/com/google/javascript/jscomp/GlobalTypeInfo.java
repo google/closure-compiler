@@ -105,9 +105,10 @@ class GlobalTypeInfo implements CompilerPass {
       new JSTypeCreatorFromJSDoc();
   private final AbstractCompiler compiler;
   private final Map<Node, String> anonFunNames = Maps.newHashMap();
-  private int funCounter = 1;
+  private int freshId = 1;
   private Map<Node, NominalType> nominaltypesByNode = Maps.newHashMap();
-  private HashBasedTable<NominalType, String, PropertyDef> propertyDefs =
+  // Keyed on NominalType ids and property names
+  private HashBasedTable<Integer, String, PropertyDef> propertyDefs =
       HashBasedTable.create();
 
   GlobalTypeInfo(AbstractCompiler compiler) {
@@ -209,8 +210,9 @@ class GlobalTypeInfo implements CompilerPass {
       if (superClass != null) {
         // TODO(blickly): Can we optimize this to skip unnecessary iterations?
         for (String pname : superClass.getAllPropsOfClass()) {
-          PropertyDef propDef = propertyDefs.get(nominalType, pname);
-          PropertyDef inheritedPropDef = propertyDefs.get(superClass, pname);
+          PropertyDef propDef = propertyDefs.get(nominalType.getId(), pname);
+          PropertyDef inheritedPropDef =
+              propertyDefs.get(superClass.getId(), pname);
           if (inheritedPropDef != null &&
               inheritedPropDef.methodScope != null) {
             // TODO(blickly): Save DeclaredFunctionTypes somewhere other than
@@ -242,7 +244,7 @@ class GlobalTypeInfo implements CompilerPass {
           //  " localPropType: " + localPropType);
           if (!localPropType.isSubtypeOf(inheritedPropType)) {
             warnings.add(JSError.make(
-                propertyDefs.get(nominalType, pname).defSite,
+                propertyDefs.get(nominalType.getId(), pname).defSite,
                 INVALID_PROP_OVERRIDE, pname,
                 inheritedPropType.toString(), localPropType.toString()));
           }
@@ -252,7 +254,8 @@ class GlobalTypeInfo implements CompilerPass {
       // Detect bad inheritance for extended/implemented interfaces
       for (NominalType superInterf: nominalType.getInterfaces()) {
         for (String pname : superInterf.getAllPropsOfInterface()) {
-          PropertyDef inheritedPropDef = propertyDefs.get(superInterf, pname);
+          PropertyDef inheritedPropDef =
+              propertyDefs.get(superInterf.getId(), pname);
           JSType inheritedPropType = superInterf.getPropDeclaredType(pname);
           if (!nominalType.mayHaveProp(pname)) {
             warnings.add(JSError.make(inheritedPropDef.defSite,
@@ -260,7 +263,7 @@ class GlobalTypeInfo implements CompilerPass {
                     pname, superInterf.toString(), nominalType.toString()));
             continue;
           }
-          PropertyDef propDef = propertyDefs.get(nominalType, pname);
+          PropertyDef propDef = propertyDefs.get(nominalType.getId(), pname);
           JSType localPropType = nominalType.getPropDeclaredType(pname);
           if (localPropType != null &&
               !localPropType.isSubtypeOf(inheritedPropType)) {
@@ -313,15 +316,16 @@ class GlobalTypeInfo implements CompilerPass {
       String qname = NodeUtil.getFunctionName(fn);
       // Qualified names also need a gensymed name.
       if (qname == null || !TypeUtils.isIdentifier(qname)) {
-        anonFunNames.put(fn, "%anon_fun" + funCounter);
-        funCounter++;
+        anonFunNames.put(fn, "%anon_fun" + freshId);
+        freshId++;
       }
       JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
       if (fnDoc != null && (fnDoc.isConstructor() || fnDoc.isInterface())) {
         ImmutableList<String> templateVars = fnDoc.getTemplateTypeNames();
         NominalType nominalType = fnDoc.isInterface() ?
-            NominalType.makeInterface(qname, templateVars) :
-            NominalType.makeClass(qname, templateVars);
+            NominalType.makeInterface(qname, templateVars, freshId) :
+            NominalType.makeClass(qname, templateVars, freshId);
+        freshId++;
         nominaltypesByNode.put(fn, nominalType);
         parentScope.addNominalType(qname, nominalType);
       }
@@ -505,7 +509,7 @@ class GlobalTypeInfo implements CompilerPass {
           propDeclType = typeParser.getNodeTypeDeclaration(
               expr.getJSDocInfo(), nominalType, currentScope);
         }
-        propertyDefs.put(nominalType, pname,
+        propertyDefs.put(nominalType.getId(), pname,
             new PropertyDef(exprResult, methodScope));
         // Add the property to the class with the appropriate type.
         if (propDeclType != null) {
@@ -570,7 +574,7 @@ class GlobalTypeInfo implements CompilerPass {
       } else {
         thisType.addUndeclaredClassProperty(pname);
       }
-      propertyDefs.put(thisType, pname,
+      propertyDefs.put(thisType.getId(), pname,
           new PropertyDef(getPropNode.getParent().getParent(), null));
     }
 
@@ -594,8 +598,6 @@ class GlobalTypeInfo implements CompilerPass {
       JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
 
       // TODO(user): warn if multiple jsdocs for a fun
-
-      // TODO(blickly): Add type variables to scopes to handle nested @template
 
       // Collect the names of the formals
       ArrayList<String> formals = Lists.newArrayList();

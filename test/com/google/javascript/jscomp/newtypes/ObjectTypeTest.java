@@ -48,20 +48,20 @@ public class ObjectTypeTest extends TestCase {
 
   public void testClassSubtyping() {
     ObjectType foo = ObjectType.fromNominalType(
-        NominalType.makeClass("Foo", null));
+        NominalType.makeClass("Foo", null, 0));
     ObjectType bar = ObjectType.fromNominalType(
-        NominalType.makeClass("Bar", null));
+        NominalType.makeClass("Bar", null, 1));
     assertTrue(foo.isSubtypeOf(foo));
     assertFalse(foo.isSubtypeOf(bar));
   }
 
   public void testObjectUnions() {
     ObjectType foo = ObjectType.fromNominalType(
-        NominalType.makeClass("Foo", null));
+        NominalType.makeClass("Foo", null, 0));
     ObjectType bar = ObjectType.fromNominalType(
-        NominalType.makeClass("Bar", null));
+        NominalType.makeClass("Bar", null, 1));
     ObjectType baz = ObjectType.fromNominalType(
-        NominalType.makeClass("Baz", null));
+        NominalType.makeClass("Baz", null, 2));
     ObjectType topObj = ObjectType.TOP_OBJECT;
     ObjectType withPNum = topObj.withProperty("p", NUMBER);
     ObjectType fooWithPNum = foo.withProperty("p", NUMBER);
@@ -92,13 +92,13 @@ public class ObjectTypeTest extends TestCase {
   }
 
   public void testSimpleClassInheritance() {
-    NominalType parentClass = NominalType.makeClass("Parent", null);
-    NominalType child1Class = NominalType.makeClass("Child1", null);
-    NominalType child2Class = NominalType.makeClass("Child2", null);
+    NominalType parentClass = NominalType.makeClass("Parent", null, 0);
+    NominalType child1Class = NominalType.makeClass("Child1", null, 1);
+    NominalType child2Class = NominalType.makeClass("Child2", null, 2);
     child1Class.addSuperClass(parentClass);
     child2Class.addSuperClass(parentClass);
     ObjectType foo = ObjectType.fromNominalType(
-        NominalType.makeClass("Foo", null));
+        NominalType.makeClass("Foo", null, 3));
     ObjectType parent = ObjectType.fromNominalType(parentClass);
     ObjectType child1 = ObjectType.fromNominalType(child1Class);
     ObjectType child2 = ObjectType.fromNominalType(child2Class);

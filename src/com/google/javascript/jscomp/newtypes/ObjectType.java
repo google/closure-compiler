@@ -564,7 +564,6 @@ public class ObjectType {
   }
 
   ObjectType substituteGenerics(Map<String, JSType> concreteTypes) {
-    Preconditions.checkState(nominalType == null);
     ImmutableMap<String, Property> newProps = null;
     if (props != null) {
       ImmutableMap.Builder<String, Property> builder = ImmutableMap.builder();
@@ -588,7 +587,7 @@ public class ObjectType {
     for (String pname : props.keySet()) {
       propStrings.add(pname + " : " + props.get(pname).toString());
     }
-    String result = nominalType == null ? "" : nominalType.name;
+    String result = nominalType == null ? "" : nominalType.toString();
     result += (nominalType != null && propStrings.isEmpty()) ?
         "" : "{" + Joiner.on(", ").join(propStrings) + "}";
     result += (isLoose ? " (loose)" : "");

@@ -480,13 +480,17 @@ public class JSType {
     return new JSType(newtype);
   }
 
+  // Only handles scalars
   public JSType negate() {
+    if (isTop() || isUnknown() || objs != null || typeVar != null) {
+      return this;
+    }
     if (isTruthy()) {
       return FALSY;
     } else if (isFalsy()) {
       return TRUTHY;
     }
-    return this;
+    return new JSType(TOP_SCALAR_MASK & ~mask);
   }
 
   public JSType toBoolean() {

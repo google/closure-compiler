@@ -113,7 +113,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  protected void setUp() {
     compiler = new Compiler();
     compiler.initOptions(getOptions());
     registry = compiler.getTypeRegistry();
