@@ -877,7 +877,7 @@ public final class JsDocInfoParser {
                   .trimResults()
                   .split(templateInfo.string));
 
-          if (names.size() == 0 || names.get(0).length() == 0) {
+          if (names.size() == 1 && names.get(0).length() == 0) {
             parser.addTypeWarning("msg.jsdoc.templatemissing",
                   stream.getLineno(), stream.getCharno());
           } else if (!jsdocBuilder.recordTemplateTypeNames(names)) {
@@ -2083,7 +2083,8 @@ public final class JsDocInfoParser {
     }
 
     skipEOLs();
-    Node resultType = parseResultType(next());
+    next();
+    Node resultType = parseResultType();
     if (resultType == null) {
       return null;
     } else {
@@ -2183,13 +2184,13 @@ public final class JsDocInfoParser {
   /**
    * ResultType := <empty> | ':' void | ':' TypeExpression
    */
-  private Node parseResultType(JsDocToken token) {
+  private Node parseResultType() {
     skipEOLs();
     if (!match(JsDocToken.COLON)) {
       return newNode(Token.EMPTY);
     }
 
-    token = next();
+    next();
     skipEOLs();
     if (match(JsDocToken.STRING) && "void".equals(stream.getString())) {
       next();
