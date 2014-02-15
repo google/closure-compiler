@@ -1502,8 +1502,19 @@ public class NewTypeInference implements CompilerPass {
         warnings.add(JSError.make(
             propAccessNode, NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY,
             pname, recvType.toString()));
+      } else if (recvType.hasInferredProp(pname) &&
+          !resultType.isSubtypeOf(requiredType) &&
+          requiredType.isSubtypeOf(resultType)) {
+        // Tighten the inferred type and don't warn.
+        // See Token.NAME fwd for explanation about types as lower/upper bounds.
+        Node propAccess = receiver.getParent();
+        LValueResult lvr = analyzeLValueFwd(propAccess, inEnv, requiredType);
+        TypeEnv updatedEnv =
+            updateLvalueTypeInEnv(lvr.env, propAccess, lvr.ptr, requiredType);
+        return new EnvTypePair(updatedEnv, requiredType);
       }
     }
+
     // Any potential type mismatch will be caught by the context
     return new EnvTypePair(pair.env, resultType);
   }

@@ -585,15 +585,15 @@ public class JSType {
         ObjectType.withLooseObjects(this.objs), typeVar);
   }
 
-  public JSType getProp(String qName) {
+  public JSType getProp(String qname) {
     if (isBottom() || isUnknown()) {
       return UNKNOWN;
     }
     Preconditions.checkState(objs != null);
     JSType ptype = BOTTOM;
     for (ObjectType o : objs) {
-      if (o.mayHaveProp(qName)) {
-        ptype = join(ptype, o.getProp(qName));
+      if (o.mayHaveProp(qname)) {
+        ptype = join(ptype, o.getProp(qname));
       }
     }
     if (ptype.isBottom()) {
@@ -602,38 +602,43 @@ public class JSType {
     return ptype;
   }
 
-  public boolean mayHaveProp(String qName) {
+  public boolean mayHaveProp(String qname) {
     if (objs == null) {
       return false;
     }
     for (ObjectType o : objs) {
-      if (o.mayHaveProp(qName)) {
+      if (o.mayHaveProp(qname)) {
         return true;
       }
     }
     return false;
   }
 
-  public boolean hasProp(String qName) {
+  public boolean hasProp(String qname) {
     if (objs == null) {
       return false;
     }
     for (ObjectType o : objs) {
-      if (!o.hasProp(qName)) {
+      if (!o.hasProp(qname)) {
         return false;
       }
     }
     return true;
   }
 
-  public JSType getDeclaredProp(String qName) {
+  public boolean hasInferredProp(String pname) {
+    Preconditions.checkState(TypeUtils.isIdentifier(pname));
+    return hasProp(pname) && getDeclaredProp(pname) == null;
+  }
+
+  public JSType getDeclaredProp(String qname) {
     if (isUnknown()) {
       return UNKNOWN;
     }
     Preconditions.checkState(objs != null);
     JSType ptype = BOTTOM;
     for (ObjectType o : objs) {
-      JSType declType = o.getDeclaredProp(qName);
+      JSType declType = o.getDeclaredProp(qname);
       if (declType != null) {
         ptype = join(ptype, declType);
       }

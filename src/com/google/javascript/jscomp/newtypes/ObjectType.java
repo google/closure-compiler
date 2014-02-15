@@ -485,7 +485,7 @@ public class ObjectType {
     return true;
   }
 
-  public JSType getDeclaredProp(String pname) {
+  JSType getDeclaredProp(String pname) {
     Preconditions.checkArgument((TypeUtils.isIdentifier(pname)));
     Property p = getLeftmostProp(pname);
     if (p == null) {
