@@ -94,6 +94,10 @@ class GlobalTypeInfo implements CompilerPass {
       "JSC_INTERFACE_WITH_A_BODY",
       "Interface definitions should have an empty body.");
 
+  static final DiagnosticType INHERITANCE_CYCLE = DiagnosticType.warning(
+      "JSC_INHERITANCE_CYCLE",
+      "Cycle detected in inheritance chain of type {0}");
+
   // Invariant: if a scope s1 contains a scope s2, then s2 is before s1 in
   // scopes. The type inference relies on this fact to process deeper scopes
   // before shallower scopes.
@@ -140,16 +144,20 @@ class GlobalTypeInfo implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkArgument(externs.isSyntheticBlock());
+    Preconditions.checkArgument(externs == null || externs.isSyntheticBlock());
     Preconditions.checkArgument(root.isSyntheticBlock());
     globalScope = new Scope(root, null, new ArrayList<String>(), null);
     scopes.addFirst(globalScope);
 
     CollectNamedTypes rootCnt = new CollectNamedTypes(globalScope);
-    new NodeTraversal(compiler, rootCnt).traverse(externs);
+    if (externs != null) {
+      new NodeTraversal(compiler, rootCnt).traverse(externs);
+    }
     new NodeTraversal(compiler, rootCnt).traverse(root);
     ProcessScope rootPs = new ProcessScope(globalScope);
-    new NodeTraversal(compiler, rootPs).traverse(externs);
+    if (externs != null) {
+      new NodeTraversal(compiler, rootPs).traverse(externs);
+    }
     new NodeTraversal(compiler, rootPs).traverse(root);
     rootPs.finishProcessingScope();
 
@@ -632,17 +640,25 @@ class GlobalTypeInfo implements CompilerPass {
         NominalType nominalType = nominaltypesByNode.get(fn);
         if (fnDoc.isConstructor()) {
           if (parentClass != null) {
-            nominalType.addSuperClass(parentClass);
+            if (!nominalType.addSuperClass(parentClass)) {
+              warnings.add(JSError.make(
+                  fn, INHERITANCE_CYCLE, nominalType.toString()));
+            }
           }
-          nominalType.addInterfaces(typeParser.getImplementedInterfaces(
+          boolean noCycles =
+              nominalType.addInterfaces(typeParser.getImplementedInterfaces(
                   fnDoc, ownerType, parentScope));
+          Preconditions.checkState(noCycles);
           builder.addNominalType(nominalType);
         } else if (fnDoc.isInterface()) {
           if (!NodeUtil.isEmptyBlock(NodeUtil.getFunctionBody(fn))) {
             warnings.add(JSError.make(fn, INTERFACE_WITH_A_BODY));
           }
-          nominalType.addInterfaces(
-              typeParser.getExtendedInterfaces(fnDoc, ownerType, parentScope));
+          if (!nominalType.addInterfaces(typeParser.getExtendedInterfaces(
+                  fnDoc, ownerType, parentScope))) {
+            warnings.add(JSError.make(
+                fn, INHERITANCE_CYCLE, nominalType.toString()));
+          }
           builder.addNominalType(nominalType);
         }
       }
@@ -770,7 +786,7 @@ class GlobalTypeInfo implements CompilerPass {
       return localFunDefs.containsKey(name);
     }
 
-    private boolean isDefinedLocally(String name) {
+    boolean isDefinedLocally(String name) {
       return locals.containsKey(name) || formals.contains(name) ||
           localFunDefs.containsKey(name) || "this".equals(name);
     }

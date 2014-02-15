@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +45,7 @@ public class NominalType {
   private Map<String, Property> ctorProps = Maps.newHashMap();
   boolean isFinalized = false;
   private NominalType superClass = null;
-  private ImmutableSet<NominalType> interfaces = null;
+  private ImmutableCollection<NominalType> interfaces = null;
   private final boolean isInterface;
   private ImmutableSet<String> allProps = null;
   private final ImmutableList<String> templateVars;
@@ -89,22 +90,64 @@ public class NominalType {
     return templateVars;
   }
 
-  public void addSuperClass(NominalType superClass) {
-    Preconditions.checkState(!isFinalized);
-    Preconditions.checkState(this.superClass == null);
-    this.superClass = superClass;
+  private boolean hasAncestorClass(NominalType ancestor) {
+    Preconditions.checkState(ancestor.isClass());
+    if (this.id == ancestor.id) {
+      return true;
+    } else if (this.superClass == null) {
+      return false;
+    } else {
+      return this.superClass.hasAncestorClass(ancestor);
+    }
   }
 
-  public void addInterfaces(ImmutableSet<NominalType> interfaces) {
+  /** @return Whether the superclass can be added without creating a cycle. */
+  public boolean addSuperClass(NominalType superClass) {
+    Preconditions.checkState(!isFinalized);
+    Preconditions.checkState(this.superClass == null);
+    if (superClass.hasAncestorClass(this)) {
+      return false;
+    }
+    this.superClass = superClass;
+    return true;
+  }
+
+  private boolean hasAncestorInterface(NominalType ancestor) {
+    Preconditions.checkState(ancestor.isInterface);
+    if (this.id == ancestor.id) {
+      return true;
+    } else if (this.interfaces == null) {
+      return false;
+    } else {
+      for (NominalType superInter : interfaces) {
+        if (superInter.hasAncestorInterface(ancestor)) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+
+  /** @return Whether the interface can be added without creating a cycle. */
+  public boolean addInterfaces(ImmutableCollection<NominalType> interfaces) {
+    Preconditions.checkState(!isFinalized);
     Preconditions.checkState(this.interfaces == null);
+    if (this.isInterface) {
+      for (NominalType interf : interfaces) {
+        if (interf.hasAncestorInterface(this)) {
+          return false;
+        }
+      }
+    }
     this.interfaces = interfaces;
+    return true;
   }
 
   public NominalType getSuperClass() {
     return superClass;
   }
 
-  public ImmutableSet<NominalType> getInterfaces() {
+  public ImmutableCollection<NominalType> getInterfaces() {
     return this.interfaces;
   }
 
@@ -365,7 +408,7 @@ public class NominalType {
     this.classProps = ImmutableMap.copyOf(classProps);
     this.protoProps = ImmutableMap.copyOf(protoProps);
     if (this.interfaces == null) {
-      this.interfaces = ImmutableSet.of();
+      this.interfaces = ImmutableList.of();
     }
     addCtorProperty("prototype", createProtoObject());
     this.ctorProps = ImmutableMap.copyOf(ctorProps);
@@ -394,22 +437,16 @@ public class NominalType {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, templateVars, classProps, protoProps,
-        ctorProps, superClass, interfaces, isInterface);
+    // Since we want NominalTypes to have a consistent hashCode even in the
+    // face of mutation, we limit it to be based only on the immutable
+    // fields.
+    return Objects.hash(id, name);
   }
 
   @Override
   public boolean equals(Object o) {
     Preconditions.checkState(o instanceof NominalType);
     NominalType other = (NominalType) o;
-    return id == other.id &&
-        Objects.equals(name, other.name) &&
-        Objects.equals(templateVars, other.templateVars) &&
-        Objects.equals(classProps, other.classProps) &&
-        Objects.equals(protoProps, other.protoProps) &&
-        Objects.equals(ctorProps, other.ctorProps) &&
-        Objects.equals(superClass, other.superClass) &&
-        Objects.equals(interfaces, other.interfaces) &&
-        Objects.equals(isInterface, other.isInterface);
+    return id == other.id && Objects.equals(name, other.name);
   }
 }

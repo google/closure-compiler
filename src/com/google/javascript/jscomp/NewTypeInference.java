@@ -143,6 +143,12 @@ public class NewTypeInference implements CompilerPass {
     this.deferredChecks = Maps.newHashMap();
   }
 
+  @VisibleForTesting
+  public Scope processForTesting(Node externs, Node root) {
+    process(externs, root);
+    return symbolTable.getGlobalScope();
+  }
+
   @Override
   public void process(Node externs, Node root) {
     jsRoot = root;
@@ -1045,8 +1051,7 @@ public class NewTypeInference implements CompilerPass {
       }
       case Token.EQ:
       case Token.NE:
-        return analyzeNonStrictComparisonFwd(
-            expr, inEnv, requiredType, specializedType);
+        return analyzeNonStrictComparisonFwd(expr, inEnv, specializedType);
       case Token.LT:
       case Token.GT:
       case Token.LE:
@@ -1116,7 +1121,6 @@ public class NewTypeInference implements CompilerPass {
         if (funType == null || funType.isTopFunction()) {
           return new EnvTypePair(inEnv, requiredType);
         } else if (funType.isLoose()) {
-          // TODO(blickly): analyzeLooseConstructor
           return analyzeLooseCallNodeFwd(expr, inEnv, requiredType);
         } else if (expr.isCall() && funType.isConstructor()) {
           warnings.add(JSError.make(
@@ -1404,7 +1408,7 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private EnvTypePair analyzeNonStrictComparisonFwd(
-      Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
+      Node expr, TypeEnv inEnv, JSType specializedType) {
     int tokenType = expr.getType();
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
@@ -1549,7 +1553,7 @@ public class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeLooseCallNodeFwd(
       Node callNode, TypeEnv inEnv, JSType retType) {
-    Preconditions.checkArgument(callNode.isCall());
+    Preconditions.checkArgument(callNode.isCall() || callNode.isNew());
     Node callee = callNode.getFirstChild();
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     TypeEnv tmpEnv = inEnv;
@@ -1569,7 +1573,7 @@ public class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeLooseCallNodeBwd(
       Node callNode, TypeEnv outEnv, JSType retType) {
-    Preconditions.checkArgument(callNode.isCall());
+    Preconditions.checkArgument(callNode.isCall() || callNode.isNew());
     Preconditions.checkNotNull(retType);
     Node callee = callNode.getFirstChild();
     TypeEnv tmpEnv = outEnv;
@@ -1822,7 +1826,6 @@ public class NewTypeInference implements CompilerPass {
         if (funType == null) {
           return new EnvTypePair(outEnv, requiredType);
         } else if (funType.isLoose()) {
-          // TODO(blickly): analyzeLooseConstructor
           return analyzeLooseCallNodeBwd(expr, outEnv, requiredType);
         } else if (expr.isCall() && funType.isConstructor() ||
             expr.isNew() && !funType.isConstructor()) {

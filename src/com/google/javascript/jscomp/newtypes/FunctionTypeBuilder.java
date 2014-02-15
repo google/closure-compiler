@@ -35,6 +35,12 @@ import java.util.Map;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public class FunctionTypeBuilder {
+  class WrongParameterOrderException extends RuntimeException {
+    WrongParameterOrderException(String message) {
+      super(message);
+    }
+  }
+
   private final List<JSType> requiredFormals = Lists.newArrayList();
   private final List<JSType> optionalFormals = Lists.newArrayList();
   private final Map<String, JSType> outerVars = Maps.newHashMap();
@@ -47,18 +53,20 @@ public class FunctionTypeBuilder {
   // Non-null iff this function has an @template annotation
   private ImmutableList<String> typeParameters;
 
-  public FunctionTypeBuilder addReqFormal(JSType t) {
+  public FunctionTypeBuilder addReqFormal(JSType t)
+      throws WrongParameterOrderException {
     if (!optionalFormals.isEmpty() || restFormals != null) {
-      throw new IllegalStateException(
+      throw new WrongParameterOrderException(
           "Cannot add required formal after optional or rest args");
     }
     requiredFormals.add(t);
     return this;
   }
 
-  public FunctionTypeBuilder addOptFormal(JSType t) {
+  public FunctionTypeBuilder addOptFormal(JSType t)
+      throws WrongParameterOrderException {
     if (restFormals != null) {
-      throw new IllegalStateException(
+      throw new WrongParameterOrderException(
           "Cannot add optional formal after rest args");
     }
     optionalFormals.add(t);

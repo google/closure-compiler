@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
@@ -255,7 +254,7 @@ public class JSTypeCreatorFromJSDoc {
                     typeParameters));
               break;
           }
-        } catch (IllegalStateException e) {
+        } catch (FunctionTypeBuilder.WrongParameterOrderException e) {
           warn("Wrong parameter order: required parameters are first, " +
               "then optional, then varargs", n);
         }
@@ -286,9 +285,9 @@ public class JSTypeCreatorFromJSDoc {
     return wrappedClass.getNominalTypeIfUnique();
   }
 
-  public ImmutableSet<NominalType> getImplementedInterfaces(
+  public ImmutableList<NominalType> getImplementedInterfaces(
       JSDocInfo jsdoc, NominalType ownerType, DeclaredTypeRegistry registry) {
-    ImmutableSet.Builder<NominalType> builder = ImmutableSet.builder();
+    ImmutableList.Builder<NominalType> builder = ImmutableList.builder();
     for (JSTypeExpression texp: jsdoc.getImplementedInterfaces()) {
       Node expRoot = texp.getRootNode();
       if (hasKnownType(expRoot, ownerType, registry)) {
@@ -298,9 +297,9 @@ public class JSTypeCreatorFromJSDoc {
     return builder.build();
   }
 
-  public ImmutableSet<NominalType> getExtendedInterfaces(
+  public ImmutableList<NominalType> getExtendedInterfaces(
       JSDocInfo jsdoc, NominalType ownerType, DeclaredTypeRegistry registry) {
-    ImmutableSet.Builder<NominalType> builder = ImmutableSet.builder();
+    ImmutableList.Builder<NominalType> builder = ImmutableList.builder();
     for (JSTypeExpression texp: jsdoc.getExtendedInterfaces()) {
       Node expRoot = texp.getRootNode();
       if (hasKnownType(expRoot, ownerType, registry)) {
@@ -331,7 +330,7 @@ public class JSTypeCreatorFromJSDoc {
       }
       return getFunTypeFromTypicalFunctionJsdoc(
           jsdoc, funNode, ownerType, registry, false);
-    } catch (IllegalStateException e) {
+    } catch (FunctionTypeBuilder.WrongParameterOrderException e) {
       warn("Wrong parameter order: required parameters are first, " +
           "then optional, then varargs. Ignoring jsdoc.", funNode);
       return getFunTypeFromTypicalFunctionJsdoc(

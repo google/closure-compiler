@@ -207,6 +207,10 @@ public class JSType {
     return objs != null;
   }
 
+  public boolean isNullable() {
+    return (mask & NULL_MASK) != 0;
+  }
+
   public static boolean areCompatibleScalarTypes(JSType lhs, JSType rhs) {
     Preconditions.checkArgument(
         lhs.isSubtypeOf(TOP_SCALAR) || rhs.isSubtypeOf(TOP_SCALAR));
@@ -296,7 +300,7 @@ public class JSType {
 
     int t1Mask = promoteBoolean(t1.mask);
     int t2Mask = promoteBoolean(t2.mask);
-    if (t1Mask != t2Mask || t1.typeVar != t2.typeVar) {
+    if (t1Mask != t2Mask || !Objects.equal(t1.typeVar, t2.typeVar)) {
       return null;
     }
     // All scalar types are equal
