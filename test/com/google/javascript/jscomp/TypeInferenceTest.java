@@ -478,11 +478,12 @@ public class TypeInferenceTest extends TestCase {
   }
 
   public void testAssertInstanceof1() {
+    // Test invalid assert (2 params are required)
     JSType startType = createNullableType(ALL_TYPE);
     assuming("x", startType);
     inFunction("out1 = x; goog.asserts.assertInstanceof(x); out2 = x;");
     verify("out1", startType);
-    verify("out2", OBJECT_TYPE);
+    verify("out2", UNKNOWN_TYPE);
   }
 
   public void testAssertInstanceof2() {
@@ -494,11 +495,21 @@ public class TypeInferenceTest extends TestCase {
   }
 
   public void testAssertInstanceof3() {
+    JSType unknownType = registry.getNativeType(UNKNOWN_TYPE);
+    JSType startType = registry.getNativeType(STRING_TYPE);
+    assuming("x", startType);
+    assuming("Foo", unknownType);
+    inFunction("out1 = x; goog.asserts.assertInstanceof(x, Foo); out2 = x;");
+    verify("out1", startType);
+    verify("out2", UNKNOWN_TYPE);
+  }
+
+  public void testAssertInstanceof3a() {
     JSType startType = registry.getNativeType(UNKNOWN_TYPE);
     assuming("x", startType);
     inFunction("out1 = x; goog.asserts.assertInstanceof(x, String); out2 = x;");
     verify("out1", startType);
-    verify("out2", UNKNOWN_TYPE);
+    verify("out2", STRING_OBJECT_TYPE);
   }
 
   public void testAssertInstanceof4() {
@@ -515,6 +526,26 @@ public class TypeInferenceTest extends TestCase {
     inFunction(
         "out1 = x; goog.asserts.assertInstanceof(x, String); var r = x;");
     verify("out1", startType);
+    verify("x", STRING_OBJECT_TYPE);
+  }
+
+  public void testAssertInstanceof6() {
+    JSType startType = createUnionType(OBJECT_TYPE,VOID_TYPE);
+    assuming("x", startType);
+    inFunction(
+        "out1 = x; goog.asserts.assertInstanceof(x, String); var r = x;");
+    verify("out1", startType);
+    verify("x", STRING_OBJECT_TYPE);
+  }
+
+  public void testAssertInstanceof7() {
+    JSType startType = createUnionType(OBJECT_TYPE,VOID_TYPE);
+    assuming("x", startType);
+    inFunction(
+        "out1 = x; var y = goog.asserts.assertInstanceof(x, String); var r = x;");
+    verify("out1", startType);
+    verify("y", STRING_OBJECT_TYPE);
+    verify("r", STRING_OBJECT_TYPE);
     verify("x", STRING_OBJECT_TYPE);
   }
 

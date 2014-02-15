@@ -936,7 +936,11 @@ class TypeInference
     } else {
       // Handle assertions that enforce expressions are of a certain type.
       JSType type = getJSType(assertedNode);
-      narrowed = type.getGreatestSubtype(assertedType);
+      if (assertedType.isUnknownType() || type.isUnknownType()) {
+        narrowed = assertedType;
+      } else {
+        narrowed = type.getGreatestSubtype(assertedType);
+      }
       if (assertedNodeName != null && type.differsFrom(narrowed)) {
         scope = narrowScope(scope, assertedNode, narrowed);
       }

@@ -476,7 +476,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
           }
         }
       }
-      return super.getAssertedType(call, registry);
+      return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
   }
 
