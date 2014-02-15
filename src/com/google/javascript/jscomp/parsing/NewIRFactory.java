@@ -319,8 +319,7 @@ class NewIRFactory {
           if (n.isContinue() && !isContinueTarget(parent.getLastChild())) {
             // report invalid continue target
             errorReporter.error(
-                String.format(
-                    UNEXPECTED_LABLED_CONTINUE, labelName.getString()),
+                UNEXPECTED_LABLED_CONTINUE,
                 sourceName,
                 n.getLineno(), "", n.getCharno());
           }
