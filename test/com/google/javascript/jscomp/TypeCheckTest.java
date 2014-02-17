@@ -6965,6 +6965,35 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: function (number): ?");
   }
 
+  public void testIssue1201() throws Exception {
+    testTypes(
+        "/** @param {function(this:void)} f */ function g(f) {}" +
+        "/** @constructor */ function F() {}" +
+        "/** desc */ F.prototype.bar = function() {};" +
+        "g(new F().bar);",
+        "actual parameter 1 of g does not match formal parameter\n" +
+        "found   : function (this:F): undefined\n" +
+        "required: function (this:undefined): ?");
+  }
+
+  public void testIssue1201b() throws Exception {
+    testTypes(
+        "/** @param {function(this:void)} f */ function g(f) {}" +
+        "/** @constructor */ function F() {}" +
+        "/** desc */ F.prototype.bar = function() {};" +
+        "var f = new F();" +
+        "g(f.bar.bind(f));");
+  }
+
+  public void testIssue1201c() throws Exception {
+    testTypes(
+        "/** @param {function(this:void)} f */ function g(f) {}" +
+        "g(function() { this.alert() })",
+        "No properties on this expression\n" +
+        "found   : undefined\n" +
+        "required: Object");
+  }
+
   public void testEnums() throws Exception {
     testTypes(
         "var outer = function() {" +
