@@ -47,6 +47,8 @@ import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * A central reporter for all type violations: places where the programmer
  * has annotated a variable (or property) with one type, but has assigned
@@ -151,6 +153,27 @@ class TypeValidator {
         NULL_TYPE, VOID_TYPE);
     this.reportUnnecessaryCasts = ((Compiler) compiler).getOptions().enables(
         DiagnosticGroups.UNNECESSARY_CASTS);
+  }
+
+  /**
+   * Utility function for getting a function type from a var.
+   */
+  static FunctionType getFunctionType(@Nullable Var v) {
+    JSType t = v == null ? null : v.getType();
+    ObjectType o = t == null ? null : t.dereference();
+    return JSType.toMaybeFunctionType(o);
+  }
+
+  /**
+   * Utility function for getting an instance type from a var pointing
+   * to the constructor.
+   */
+  static ObjectType getInstanceOfCtor(@Nullable Var v) {
+    FunctionType ctor = getFunctionType(v);
+    if (ctor != null && ctor.isConstructor()) {
+      return ctor.getInstanceType();
+    }
+    return null;
   }
 
   /**

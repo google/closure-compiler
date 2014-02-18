@@ -95,6 +95,56 @@ public class CommonJSIntegrationTest extends IntegrationTestCase {
          TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  public void testCrossModuleSubclass1() {
+    test(createCompilerOptions(),
+         new String[] {
+           "/** @constructor */ function Hello() {} " +
+           "module.exports = Hello;",
+           "/** @const */ var Hello = require('./i0');" +
+           "var util = {inherits: function (x, y){}};" +
+           "/**\n" +
+           " * @constructor\n" +
+           " * @extends {Hello}\n" +
+           " */\n" +
+           "var SubHello = function () {};" +
+           "util.inherits(SubHello, Hello);"
+         },
+         new String[] {
+           "function Hello$$module$i0(){}" +
+           "var module$i0=Hello$$module$i0;",
+           "var module$i1={};" +
+           "var Hello$$module$i1=module$i0;" +
+           "var util$$module$i1={inherits:function(x,y){}};" +
+           "var SubHello$$module$i1=function(){};" +
+           "util$$module$i1.inherits(SubHello$$module$i1,Hello$$module$i1);"
+         });
+  }
+
+  public void testCrossModuleSubclass2() {
+    test(createCompilerOptions(),
+         new String[] {
+           "/** @constructor */ function Hello() {} " +
+           "module.exports = Hello;",
+           "/** @const */ var Hello = require('./i0');" +
+           "var util = {inherits: function (x, y){}};" +
+           "/**\n" +
+           " * @constructor\n" +
+           " * @extends {Hello}\n" +
+           " */\n" +
+           "function SubHello() {}" +
+           "util.inherits(SubHello, Hello);"
+         },
+         new String[] {
+           "function Hello$$module$i0(){}" +
+           "var module$i0=Hello$$module$i0;",
+           "var module$i1={};" +
+           "var Hello$$module$i1=module$i0;" +
+           "var util$$module$i1={inherits:function(x,y){}};" +
+           "function SubHello$$module$i1(){}" +
+           "util$$module$i1.inherits(SubHello$$module$i1,Hello$$module$i1);"
+         });
+  }
+
   @Override
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
