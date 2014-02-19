@@ -85,6 +85,10 @@ jasmine.Clock = function() {};
 
 
 /** @type {!jasmine.TimeProvider} */
+jasmine.Clock.real;
+
+
+/** @type {!jasmine.TimeProvider} */
 jasmine.Clock.installed;
 
 
@@ -101,76 +105,84 @@ jasmine.Clock.prototype.nowMillis;
 
 
 /** @constructor */
-jasmine.Matcher = function() {};
+jasmine.Matchers = function() {};
 
 
-/** @type {jasmine.Matcher} */
-jasmine.Matcher.prototype.not;
+/** @type {jasmine.Matchers} */
+jasmine.Matchers.prototype.not;
 
 
 /** @type {*} */
-jasmine.Matcher.prototype.actual;
+jasmine.Matchers.prototype.actual;
 
 
 /** @param {*} value */
-jasmine.Matcher.prototype.toBe = function(value) {};
+jasmine.Matchers.prototype.toBe = function(value) {};
 
 
 /** @return {void} */
-jasmine.Matcher.prototype.toBeDefined = function() {};
+jasmine.Matchers.prototype.toBeDefined = function() {};
 
 
 /** @return {void} */
-jasmine.Matcher.prototype.toBeFalsy = function() {};
+jasmine.Matchers.prototype.toBeFalsy = function() {};
 
 
 /** @param {*} value */
-jasmine.Matcher.prototype.toBeGreaterThan = function(value) {};
+jasmine.Matchers.prototype.toBeGreaterThan = function(value) {};
 
 
 /** @param {*} value */
-jasmine.Matcher.prototype.toBeLessThan = function(value) {};
-
-
-/** @return {void} */
-jasmine.Matcher.prototype.toBeNull = function() {};
-
-
-/** @return {void} */
-jasmine.Matcher.prototype.toBeTruthy = function() {};
-
-
-/** @return {void} */
-jasmine.Matcher.prototype.toBeUndefined = function() {};
+jasmine.Matchers.prototype.toBeLessThan = function(value) {};
 
 
 /** @param {*} value */
-jasmine.Matcher.prototype.toContain = function(value) {};
-
-
-/** @param {*} value */
-jasmine.Matcher.prototype.toEqual = function(value) {};
+jasmine.Matchers.prototype.toBeCloseTo = function(value, precision) {};
 
 
 /** @return {void} */
-jasmine.Matcher.prototype.toHaveBeenCalled = function() {};
+jasmine.Matchers.prototype.toBeNull = function() {};
+
+
+/** @return {void} */
+jasmine.Matchers.prototype.toBeTruthy = function() {};
+
+
+/** @return {void} */
+jasmine.Matchers.prototype.toBeUndefined = function() {};
+
+
+/** @return {void} */
+jasmine.Matchers.prototype.toBeNaN = function() {};
+
+
+/** @param {*} value */
+jasmine.Matchers.prototype.toContain = function(value) {};
+
+
+/** @param {*} value */
+jasmine.Matchers.prototype.toEqual = function(value) {};
+
+
+/** @return {void} */
+jasmine.Matchers.prototype.toHaveBeenCalled = function() {};
 
 
 /** @param {...*} var_args */
-jasmine.Matcher.prototype.toHaveBeenCalledWith = function(var_args) {};
+jasmine.Matchers.prototype.toHaveBeenCalledWith = function(var_args) {};
 
 
 /** @param {(string|RegExp)} pattern */
-jasmine.Matcher.prototype.toMatch = function(pattern) {};
+jasmine.Matchers.prototype.toMatch = function(pattern) {};
 
 
 /** @param {Error=} opt_expected */
-jasmine.Matcher.prototype.toThrow = function(opt_expected) {};
+jasmine.Matchers.prototype.toThrow = function(opt_expected) {};
 
 
 /**
  * @param {!Object} clazz
- * @return {!jasmine.Matcher}
+ * @return {!jasmine.Matchers}
  */
 jasmine.any = function(clazz) {};
 
@@ -179,9 +191,22 @@ jasmine.any = function(clazz) {};
 jasmine.Spec = function() {};
 
 
+/** @type {undefined|function(): string} */
+jasmine.Spec.prototype.message;
+
+
 /** @param {Error|string} e */
 jasmine.Spec.prototype.fail = function(e) {};
 
+/**
+ * @param {function()=} opt_onComplete
+ */
+jasmine.Spec.prototype.finish = function(opt_onComplete) {};
+
+/**
+ * @param {Object} matchers
+ */
+jasmine.Spec.prototype.addMatchers = function(matchers) {};
 
 
 /**
@@ -239,21 +264,23 @@ jasmine.Spy.prototype.mostRecentCall.args;
 
 
 /** @constructor */
-jasmine.Helper = function() {};
+jasmine.Suite = function() {};
 
 
-/** @param {*} value */
-jasmine.Helper.prototype.addMatchers = function(value) {};
+/**
+ * @param {function()=} opt_onComplete
+ */
+jasmine.Suite.prototype.finish = function(opt_onComplete) {};
 
+/**
+ * @param {function(this:jasmine.Spec)} beforeEachFunction
+ */
+jasmine.Suite.prototype.beforeEach = function(beforeEachFunction) {};
 
-/** @type {*} */
-jasmine.Helper.prototype.actual;
-
-/** @type {boolean} */
-jasmine.Helper.prototype.isNot;
-
-/** @type {undefined|function(): string} */
-jasmine.Helper.prototype.message;
+/**
+ * @param {function(this:jasmine.Spec)} afterEachFunction
+ */
+jasmine.Suite.prototype.afterEach = function(afterEachFunction) {};
 
 
 /** @constructor */
@@ -319,11 +346,11 @@ jasmine.Env.prototype.execute = function() {};
 jasmine.Env.prototype.addReporter = function(reporter) {};
 
 
-/** @param {function()} handler */
+/** @param {function(this:jasmine.Spec)} handler */
 jasmine.Env.prototype.afterEach = function(handler) {};
 
 
-/** @param {function(this:jasmine.Helper)} handler */
+/** @param {function(this:jasmine.Spec)} handler */
 jasmine.Env.prototype.beforeEach = function(handler) {};
 
 
@@ -333,24 +360,24 @@ jasmine.Env.prototype.beforeEach = function(handler) {};
 jasmine.getEnv = function() {};
 
 
-/** @param {function()} handler */
+/** @param {function(this:jasmine.Spec)} handler */
 function afterEach(handler) {}
 
 
-/** @param {function(this:jasmine.Helper)} handler */
+/** @param {function(this:jasmine.Spec)} handler */
 function beforeEach(handler) {}
 
 
 /**
  * @param {string} description
- * @param {function()} handler
+ * @param {function(this:jasmine.Suite)} handler
  */
 function describe(description, handler) {}
 
 
 /**
  * @param {*} expectedValue
- * @return {jasmine.Matcher} matcher
+ * @return {jasmine.Matchers} matcher
  */
 function expect(expectedValue) {}
 
@@ -403,7 +430,7 @@ function waitsFor(handler, opt_message, opt_timeout) {}
 /**
  * @nosideeffects
  * @param {string} description
- * @param {function()} handler
+ * @param {function(this:jasmine.Suite)} handler
  */
 function xdescribe(description, handler) {}
 
@@ -411,6 +438,6 @@ function xdescribe(description, handler) {}
 /**
  * @nosideeffects
  * @param {string} description
- * @param {function()} handler
+ * @param {function(this:jasmine.Spec)} handler
  */
 function xit(description, handler) {}
