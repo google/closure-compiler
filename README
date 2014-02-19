@@ -22,7 +22,7 @@ The Closure Compiler performs checking, instrumentation, and
 optimizations on JavaScript code. The purpose of this README is to
 explain how to build and run the Closure Compiler.
 
-The Closure Compiler requires Java 6 or higher.
+The Closure Compiler requires Java 7 or higher.
 http://www.java.com/
 
 
@@ -65,7 +65,7 @@ Under Eclipse's File menu, click "New > Project ..." and create a
 "Java Project."  You will see an options screen. Give the project a
 name, select "Create project from existing source," and choose the
 root of the checked-out source tree as the existing directory. Verify
-that you are using JRE version 6 or higher.
+that you are using JRE version 7 or higher.
 
 Eclipse can use the build.xml file to discover rules. When you
 navigate to the build.xml file, you will see all the build rules in
