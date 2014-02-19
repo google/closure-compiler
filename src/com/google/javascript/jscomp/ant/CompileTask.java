@@ -329,6 +329,7 @@ public final class CompileTask
     options.generateExports = this.generateExports;
 
     options.setLanguageIn(this.languageIn);
+    options.setOutputCharset(this.outputEncoding);
 
     this.warningLevel.setOptionsForWarningLevel(options);
     options.setManageClosureDependencies(manageDependencies);
