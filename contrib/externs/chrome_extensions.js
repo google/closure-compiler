@@ -417,9 +417,11 @@ chrome.app.window.Bounds;
  *   frame: (string|undefined),
  *   bounds: (!chrome.app.window.Bounds|undefined),
  *   transparentBackground: (boolean|undefined),
+ *   state: (string|undefined),
  *   hidden: (boolean|undefined),
  *   resizable: (boolean|undefined),
- *   singleton: (boolean|undefined)
+ *   alwaysOnTop: (boolean|undefined),
+ *   focused: (boolean|undefined)
  * }}
  * @see http://developer.chrome.com/apps/app.window.html#method-create
  */
