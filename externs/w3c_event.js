@@ -31,7 +31,7 @@ function EventTarget() {}
 
 /**
  * @param {string} type
- * @param {EventListener|function(Event):(boolean|undefined)} listener
+ * @param {EventListener|function(!Event):(boolean|undefined)} listener
  * @param {boolean} useCapture
  * @return {undefined}
  */
@@ -40,7 +40,7 @@ EventTarget.prototype.addEventListener = function(type, listener, useCapture)
 
 /**
  * @param {string} type
- * @param {EventListener|function(Event):(boolean|undefined)} listener
+ * @param {EventListener|function(!Event):(boolean|undefined)} listener
  * @param {boolean} useCapture
  * @return {undefined}
  */
@@ -48,7 +48,7 @@ EventTarget.prototype.removeEventListener = function(type, listener, useCapture)
     {};
 
 /**
- * @param {Event} evt
+ * @param {!Event} evt
  * @return {boolean}
  */
 EventTarget.prototype.dispatchEvent = function(evt) {};
@@ -59,7 +59,7 @@ EventTarget.prototype.dispatchEvent = function(evt) {};
 function EventListener() {}
 
 /**
- * @param {Event} evt
+ * @param {!Event} evt
  * @return {undefined}
  */
 EventListener.prototype.handleEvent = function(evt) {};
