@@ -106,6 +106,45 @@ public class TypeValidatorTest extends CompilerTestCase {
             fromNatives(STRING_TYPE, BOOLEAN_TYPE)));
   }
 
+  /**
+   * Make sure the 'found' and 'required' strings are not identical when there is a mismatch.
+   * See https://code.google.com/p/closure-compiler/issues/detail?id=719.
+   */
+  public void testFunctionMismatchLongTypes() throws Exception {
+    testSame("",
+        "/**\n" +
+        " * @param {{a: string, b: string, c: string, d: string, e: string}} x\n" +
+        " */\n" +
+        "function f(x) {}\n" +
+        "var y = {a:'',b:'',c:'',d:'',e:0};" +
+        "f(y);",
+        TYPE_MISMATCH_WARNING,
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : {a: string, b: string, c: string, d: string, e: (number|string)}\n" +
+        "required: {a: string, b: string, c: string, d: string, e: string}");
+  }
+
+  /**
+   * Same as testFunctionMismatchLongTypes, but with one of the types being a typedef.
+   */
+  public void testFunctionMismatchTypedef() throws Exception {
+    testSame("",
+        "/**\n" +
+        " * @typedef {{a: string, b: string, c: string, d: string, e: string}}\n" +
+        " */\n" +
+        "var t;\n" +
+        "/**\n" +
+        " * @param {t} x\n" +
+        " */\n" +
+        "function f(x) {}\n" +
+        "var y = {a:'',b:'',c:'',d:'',e:0};" +
+        "f(y);",
+        TYPE_MISMATCH_WARNING,
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : {a: string, b: string, c: string, d: string, e: (number|string)}\n" +
+        "required: {a: string, b: string, c: string, d: string, e: string}");
+  }
+
   public void testNullUndefined() {
     testSame("/** @param {string} x */ function f(x) {}\n" +
              "f(/** @type {string|null|undefined} */ ('a'));",

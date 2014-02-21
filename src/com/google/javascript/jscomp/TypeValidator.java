@@ -743,7 +743,13 @@ class TypeValidator {
    */
   private String formatFoundRequired(String description, JSType found,
       JSType required) {
-    return MessageFormat.format(FOUND_REQUIRED, description, found, required);
+    String foundStr = found.toString();
+    String requiredStr = required.toString();
+    if (foundStr.equals(requiredStr)) {
+      foundStr = found.toAnnotationString();
+      requiredStr = required.toAnnotationString();
+    }
+    return MessageFormat.format(FOUND_REQUIRED, description, foundStr, requiredStr);
   }
 
   /**
