@@ -811,6 +811,14 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         null, CONST_PROPERTY_DELETED);
   }
 
+  public void testConstantPropertyInExterns() {
+    String externs = "" +
+        "/** @constructor */ function Foo() {};\n" +
+        "/** @const */ Foo.prototype.PROP;";
+    String js = "var f = new Foo(); f.PROP = 1; f.PROP = 2;";
+    test(externs, js, (String) null, CONST_PROPERTY_REASSIGNED_VALUE, null);
+  }
+
   public void testSuppressConstantProperty() {
     testSame("/** @constructor */ function A() {" +
         "/** @const */ this.bar = 3;}" +

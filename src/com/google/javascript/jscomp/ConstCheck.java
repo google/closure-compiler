@@ -52,7 +52,7 @@ class ConstCheck extends AbstractPostOrderCallback
   @Override
   public void process(Node externs, Node root) {
     Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseRoots(compiler, this, externs, root);
   }
 
   @Override
@@ -60,15 +60,20 @@ class ConstCheck extends AbstractPostOrderCallback
     switch (n.getType()) {
       case Token.NAME:
         if (parent != null &&
-            parent.isVar() &&
-            n.hasChildren()) {
+            parent.isVar()) {
           String name = n.getString();
           Scope.Var var = t.getScope().getVar(name);
           if (isConstant(var)) {
-            if (initializedConstants.contains(var)) {
-              reportError(t, n, name);
-            } else {
+            // If a constant is declared in externs, add it to initializedConstants to indicate
+            // that it is initialized externally.
+            if (n.isFromExterns()) {
               initializedConstants.add(var);
+            } else if (n.hasChildren()) {
+              if (initializedConstants.contains(var)) {
+                reportError(t, n, name);
+              } else {
+                initializedConstants.add(var);
+              }
             }
           }
         }
