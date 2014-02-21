@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -49,7 +50,7 @@ public class JSTypeCreatorFromJSDoc {
   private Map<Node, String> unknownTypeNames = Maps.newHashMap();
 
   public JSType getNodeTypeDeclaration(
-      JSDocInfo jsdoc, NominalType ownerType, DeclaredTypeRegistry registry) {
+      JSDocInfo jsdoc, RawNominalType ownerType, DeclaredTypeRegistry registry) {
     if (jsdoc == null) {
       return null;
     }
@@ -70,7 +71,7 @@ public class JSTypeCreatorFromJSDoc {
   }
 
   private JSType getTypeFromJSTypeExpression(
-      JSTypeExpression expr, NominalType ownerType,
+      JSTypeExpression expr, RawNominalType ownerType,
       DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
     if (expr == null) {
       return null;
@@ -83,7 +84,7 @@ public class JSTypeCreatorFromJSDoc {
   // Very similar to JSTypeRegistry#createFromTypeNodesInternal
   // n is a jsdoc node, not an AST node; the same class (Node) is used for both
   @VisibleForTesting
-  JSType getTypeFromNode(Node n, NominalType ownerType,
+  JSType getTypeFromNode(Node n, RawNominalType ownerType,
       DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
     try {
       return getTypeFromNodeHelper(n, ownerType, registry, typeParameters);
@@ -93,7 +94,7 @@ public class JSTypeCreatorFromJSDoc {
   }
 
   private JSType getTypeFromNodeHelper(
-      Node n, NominalType ownerType, DeclaredTypeRegistry registry,
+      Node n, RawNominalType ownerType, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters)
       throws UnknownTypeException {
     Preconditions.checkNotNull(n);
@@ -139,7 +140,7 @@ public class JSTypeCreatorFromJSDoc {
     }
   }
 
-  private JSType getRecordTypeHelper(Node n, NominalType ownerType,
+  private JSType getRecordTypeHelper(Node n, RawNominalType ownerType,
       DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters)
       throws UnknownTypeException {
@@ -167,15 +168,15 @@ public class JSTypeCreatorFromJSDoc {
     return collection != null && collection.contains(str);
   }
 
-  public static boolean hasTypeVariable(
-      ImmutableList<String> typeParameters, NominalType ownerType,
+  private static boolean hasTypeVariable(
+      ImmutableList<String> typeParameters, RawNominalType ownerType,
       String typeName) {
     return isNonnullAndContains(typeParameters, typeName) ||
         ownerType != null &&
         isNonnullAndContains(ownerType.getTemplateVars(), typeName);
   }
 
-  private JSType getNamedTypeHelper(Node n, NominalType ownerType,
+  private JSType getNamedTypeHelper(Node n, RawNominalType ownerType,
       DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters)
       throws UnknownTypeException {
@@ -217,7 +218,7 @@ public class JSTypeCreatorFromJSDoc {
 
   // Don't confuse with getFunTypeFromAtTypeJsdoc; the function below computes a
   // type that doesn't have an associated AST node.
-  private JSType getFunTypeHelper(Node n, NominalType ownerType,
+  private JSType getFunTypeHelper(Node n, RawNominalType ownerType,
       DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters)
       throws UnknownTypeException {
@@ -267,7 +268,7 @@ public class JSTypeCreatorFromJSDoc {
   }
 
   public boolean hasKnownType(
-      Node n, NominalType ownerType, DeclaredTypeRegistry registry) {
+      Node n, RawNominalType ownerType, DeclaredTypeRegistry registry) {
     try {
       getTypeFromNodeHelper(n, ownerType, registry, null);
     } catch (UnknownTypeException e) {
@@ -276,7 +277,7 @@ public class JSTypeCreatorFromJSDoc {
     return true;
   }
 
-  public NominalType getNominalType(Node n, NominalType ownerType,
+  public NominalType getNominalType(Node n, RawNominalType ownerType,
       DeclaredTypeRegistry registry) {
     JSType wrappedClass = getTypeFromNode(n, ownerType, registry, null);
     if (wrappedClass == null) {
@@ -286,7 +287,7 @@ public class JSTypeCreatorFromJSDoc {
   }
 
   public ImmutableList<NominalType> getImplementedInterfaces(
-      JSDocInfo jsdoc, NominalType ownerType, DeclaredTypeRegistry registry) {
+      JSDocInfo jsdoc, RawNominalType ownerType, DeclaredTypeRegistry registry) {
     ImmutableList.Builder<NominalType> builder = ImmutableList.builder();
     for (JSTypeExpression texp: jsdoc.getImplementedInterfaces()) {
       Node expRoot = texp.getRootNode();
@@ -298,7 +299,7 @@ public class JSTypeCreatorFromJSDoc {
   }
 
   public ImmutableList<NominalType> getExtendedInterfaces(
-      JSDocInfo jsdoc, NominalType ownerType, DeclaredTypeRegistry registry) {
+      JSDocInfo jsdoc, RawNominalType ownerType, DeclaredTypeRegistry registry) {
     ImmutableList.Builder<NominalType> builder = ImmutableList.builder();
     for (JSTypeExpression texp: jsdoc.getExtendedInterfaces()) {
       Node expRoot = texp.getRootNode();
@@ -316,7 +317,7 @@ public class JSTypeCreatorFromJSDoc {
    * of this function must separately handle @constructor, @interface, etc.
    */
   public FunctionTypeBuilder getFunctionType(
-      JSDocInfo jsdoc, Node funNode, NominalType ownerType,
+      JSDocInfo jsdoc, Node funNode, RawNominalType ownerType,
       DeclaredTypeRegistry registry) {
     try {
       if (jsdoc != null && jsdoc.getType() != null) {
@@ -339,7 +340,7 @@ public class JSTypeCreatorFromJSDoc {
   }
 
   private FunctionTypeBuilder getFunTypeFromAtTypeJsdoc(
-      JSDocInfo jsdoc, Node funNode, NominalType ownerType,
+      JSDocInfo jsdoc, Node funNode, RawNominalType ownerType,
       DeclaredTypeRegistry registry) {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     Node childJsdoc = jsdoc.getType().getRootNode().getFirstChild();
@@ -425,7 +426,7 @@ public class JSTypeCreatorFromJSDoc {
   }
 
   private FunctionTypeBuilder getFunTypeFromTypicalFunctionJsdoc(
-      JSDocInfo jsdoc, Node funNode, NominalType ownerType,
+      JSDocInfo jsdoc, Node funNode, RawNominalType ownerType,
       DeclaredTypeRegistry registry,
       boolean ignoreJsdoc /* for when the jsdoc is malformed */) {
     Preconditions.checkArgument(!ignoreJsdoc || jsdoc == null);

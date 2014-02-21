@@ -438,10 +438,18 @@ public class NewTypeInference implements CompilerPass {
             if (rhs == null || currentScope.isLocalFunDef(varName)) {
               continue;
             }
-            JSType requiredType = (declType == null) ?
-                JSType.UNKNOWN : declType;
-            inEnv = analyzeExprBwd(rhs, inEnv,
-                JSType.meet(requiredType, envGetType(outEnv, varName))).env;
+            JSType inferredType = envGetType(outEnv, varName);
+            JSType requiredType;
+            if (declType == null) {
+              requiredType = inferredType;
+            } else {
+              // TODO(user): look if the meet is needed
+              requiredType = JSType.meet(declType, inferredType);
+              if (requiredType.isBottom()) {
+                requiredType = JSType.UNKNOWN;
+              }
+            }
+            inEnv = analyzeExprBwd(rhs, inEnv, requiredType).env;
           }
           break;
         }
@@ -1622,8 +1630,8 @@ public class NewTypeInference implements CompilerPass {
    */
   private EnvTypePair analyzeExprBwd(
       Node expr, TypeEnv outEnv, JSType requiredType) {
-    Preconditions.checkArgument(
-        requiredType != null && !requiredType.isBottom());
+    Preconditions.checkArgument(requiredType != null);
+    Preconditions.checkArgument(!requiredType.isBottom());
     int exprKind = expr.getType();
     switch (exprKind) {
       case Token.EMPTY: // can be created by a FOR with empty condition

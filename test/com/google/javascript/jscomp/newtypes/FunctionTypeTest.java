@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.newtypes.FunctionType.BOTTOM_FUNCTION
 import static com.google.javascript.jscomp.newtypes.FunctionType.TOP_FUNCTION;
 import static com.google.javascript.jscomp.newtypes.JSType.BOTTOM;
 import static com.google.javascript.jscomp.newtypes.JSType.NUMBER;
+import static com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -35,8 +36,9 @@ import junit.framework.TestCase;
  */
 public class FunctionTypeTest extends TestCase {
   private static final FunctionType fooConstructor = FunctionType.normalized(
-      null, null, null, null, NominalType.makeClass("Foo", null, 0), null, null,
-      false);
+      null, null, null, null,
+      NominalType.fromRaw(RawNominalType.makeClass("Foo", null, 0)),
+      null, null, false);
 
   private static FunctionType parse(String typestring) {
     JSTypeCreatorFromJSDoc parser = new JSTypeCreatorFromJSDoc();

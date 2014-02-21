@@ -544,7 +544,7 @@ public class FunctionType {
     }
     List<String> formals = Lists.newLinkedList();
     if (nominalType != null) {
-      formals.add("new:" + nominalType.name);
+      formals.add("new:" + nominalType.getName());
     }
     for (JSType formal : requiredFormals) {
       formals.add(formal.toString());
