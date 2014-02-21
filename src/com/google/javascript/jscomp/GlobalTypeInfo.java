@@ -114,6 +114,8 @@ class GlobalTypeInfo implements CompilerPass {
   // Keyed on NominalType ids and property names
   private HashBasedTable<Integer, String, PropertyDef> propertyDefs =
       HashBasedTable.create();
+  // TODO(user): Eventually attach these to nodes, like the current types.
+  private Map<Node, JSType> castTypes = Maps.newHashMap();
 
   GlobalTypeInfo(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -129,6 +131,12 @@ class GlobalTypeInfo implements CompilerPass {
 
   Collection<JSError> getWarnings() {
     return warnings;
+  }
+
+  JSType getCastType(Node n) {
+    JSType t = castTypes.get(n);
+    Preconditions.checkNotNull(t);
+    return t;
   }
 
   // Differs from the similar method in Scope class on how it treats qnames.
@@ -454,6 +462,9 @@ class GlobalTypeInfo implements CompilerPass {
 
           break;
         }
+        case Token.CAST:
+          castTypes.put(n, getTypeDeclarationFromJsdoc(n, currentScope));
+          break;
       }
     }
 

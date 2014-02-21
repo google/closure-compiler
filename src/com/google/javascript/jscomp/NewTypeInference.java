@@ -1290,6 +1290,16 @@ public class NewTypeInference implements CompilerPass {
           env = analyzeExprFwd(arrayElm, env).env;
         }
         return new EnvTypePair(env, arrayType);
+      case Token.CAST:
+        EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
+        JSType fromType = pair.type;
+        JSType toType = symbolTable.getCastType(expr);
+        if (!toType.isSubtypeOf(fromType) && !fromType.isSubtypeOf(toType)) {
+          warnings.add(JSError.make(expr, TypeValidator.INVALID_CAST,
+                  fromType.toString(), toType.toString()));
+        }
+        pair.type = toType;
+        return pair;
       default:
         throw new RuntimeException("Unhandled expression type: " +
               Token.name(expr.getType()));
@@ -1949,6 +1959,10 @@ public class NewTypeInference implements CompilerPass {
           env = analyzeExprBwd(arrayElm, env).env;
         }
         return new EnvTypePair(env, arrayType);
+      case Token.CAST:
+        EnvTypePair pair = analyzeExprBwd(expr.getFirstChild(), outEnv);
+        pair.type = symbolTable.getCastType(expr);
+        return pair;
       default:
         throw new RuntimeException("BWD: Unhandled expression type: "
             + Token.name(expr.getType()) + " with parent: " + expr.getParent());
