@@ -233,21 +233,6 @@ final class TypedScopeCreator implements ScopeCreator {
 
     scopeBuilder.resolveStubDeclarations();
 
-    // Gather the properties in each function that we found in the
-    // global scope, if that function has a @this type that we can
-    // build properties on.
-    for (Node functionNode : scopeBuilder.nonExternFunctions) {
-      JSType type = functionNode.getJSType();
-      if (type != null && type.isFunctionType()) {
-        FunctionType fnType = type.toMaybeFunctionType();
-        JSType fnThisType = fnType.getTypeOfThis();
-        if (!fnThisType.isUnknownType()) {
-          NodeTraversal.traverse(compiler, functionNode.getLastChild(),
-              scopeBuilder.new CollectProperties(fnThisType));
-        }
-      }
-    }
-
     if (parent == null) {
       codingConvention.defineDelegateProxyPrototypeProperties(
           typeRegistry, newScope, delegateProxyPrototypes,
@@ -974,15 +959,9 @@ final class TypedScopeCreator implements ScopeCreator {
                 info, ownerType.getOwnerFunction().getInstanceType());
             searchedForThisType = true;
           } else if (ownerNode != null && ownerNode.isThis()) {
-            // If 'this' has a type, use that instead.
-            // This is a hack, necessary because CollectProperties (below)
-            // doesn't run with the scope that it's building,
-            // so scope.getTypeOfThis() will be wrong.
+            // If we have a 'this' node, use the scope type.
             JSType injectedThisType = ownerNode.getJSType();
-            builder.inferThisType(
-                info,
-                injectedThisType == null ?
-                scope.getTypeOfThis() : injectedThisType);
+            builder.inferThisType(info, scope.getTypeOfThis());
             searchedForThisType = true;
           }
 
@@ -1334,7 +1313,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * @param rValue The node that {@code n} is being initialized to,
      *     or {@code null} if this is a stub declaration.
      */
-    private JSType getDeclaredType(JSDocInfo info, Node lValue,
+    JSType getDeclaredType(JSDocInfo info, Node lValue,
         @Nullable Node rValue) {
       if (info != null && info.hasType()) {
         return getDeclaredTypeInAnnotation(lValue, info);
@@ -1813,76 +1792,6 @@ final class TypedScopeCreator implements ScopeCreator {
         }
       }
     }
-
-    /**
-     * Collects all declared properties in a function, and
-     * resolves them relative to the global scope.
-     */
-    private final class CollectProperties
-        extends AbstractShallowStatementCallback {
-      private final JSType thisType;
-
-      CollectProperties(JSType thisType) {
-        this.thisType = thisType;
-      }
-
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        if (n.isExprResult()) {
-          Node child = n.getFirstChild();
-          switch (child.getType()) {
-            case Token.ASSIGN:
-              maybeCollectMember(child.getFirstChild(), child,
-                  child.getLastChild());
-              break;
-            case Token.GETPROP:
-              maybeCollectMember(child, child, null);
-              break;
-          }
-        }
-      }
-
-      private void maybeCollectMember(Node member,
-          Node nodeWithJsDocInfo, @Nullable Node value) {
-        JSDocInfo info = nodeWithJsDocInfo.getJSDocInfo();
-
-        // Do nothing if there is no JSDoc type info, or
-        // if the node is not a member expression, or
-        // if the member expression is not of the form: this.someProperty.
-        if (info == null ||
-            !member.isGetProp() ||
-            !member.getFirstChild().isThis()) {
-          return;
-        }
-
-        member.getFirstChild().setJSType(thisType);
-
-        // TODO(johnlenz): We are evaluating these values in the wrong scope:
-        // https://code.google.com/p/closure-compiler/issues/detail?id=926
-        JSType thisObjectType = thisType.toObjectType();
-        if (thisObjectType != null) {
-          ImmutableList<TemplateType> keys =
-              thisObjectType.getTemplateTypeMap().getTemplateKeys();
-          typeRegistry.setTemplateTypeNames(keys);
-        }
-
-        JSType jsType = getDeclaredType(info, member, value);
-
-        if (thisObjectType != null) {
-          typeRegistry.clearTemplateTypeNames();
-        }
-
-        Node name = member.getLastChild();
-        if (jsType != null &&
-            (name.isName() || name.isString()) &&
-            thisType.toObjectType() != null) {
-          thisType.toObjectType().defineDeclaredProperty(
-              name.getString(),
-              jsType,
-              member);
-        }
-      }
-    } // end CollectProperties
   }
 
   /**
@@ -1982,11 +1891,14 @@ final class TypedScopeCreator implements ScopeCreator {
    * local variables.
    */
   private final class LocalScopeBuilder extends AbstractScopeBuilder {
+    private final ObjectType thisTypeForProperties;
+
     /**
      * @param scope The scope that we're building.
      */
     private LocalScopeBuilder(Scope scope) {
       super(scope);
+      thisTypeForProperties = getThisTypeForCollectingProperties();
     }
 
     /**
@@ -2027,12 +1939,61 @@ final class TypedScopeCreator implements ScopeCreator {
       if (n == scope.getRootNode()) {
         return;
       }
+
       if (n.isParamList() && parent == scope.getRootNode()) {
         handleFunctionInputs(parent);
         return;
       }
 
+      // Gather the properties declared in the function,
+      // if that function has a @this type that we can
+      // build properties on.
+      // TODO(nick): It's not clear to me why this is neccessary;
+      // it appears to be papering over bugs in the main analyzer.
+      if (thisTypeForProperties != null && n.getParent().isExprResult()) {
+        if (n.isAssign()) {
+          maybeCollectMember(n.getFirstChild(), n, n.getLastChild());
+        } else if (n.isGetProp()) {
+          maybeCollectMember(n, n, null);
+        }
+      }
+
       super.visit(t, n, parent);
+    }
+
+    private ObjectType getThisTypeForCollectingProperties() {
+      Node rootNode = scope.getRootNode();
+      if (rootNode.isFromExterns()) return null;
+
+      JSType type = rootNode.getJSType();
+      if (type == null || !type.isFunctionType()) return null;
+
+      FunctionType fnType = type.toMaybeFunctionType();
+      JSType fnThisType = fnType.getTypeOfThis();
+      return fnThisType.isUnknownType() ? null : fnThisType.toObjectType();
+    }
+
+    private void maybeCollectMember(Node member,
+        Node nodeWithJsDocInfo, @Nullable Node value) {
+      JSDocInfo info = nodeWithJsDocInfo.getJSDocInfo();
+
+      // Do nothing if there is no JSDoc type info, or
+      // if the node is not a member expression, or
+      // if the member expression is not of the form: this.someProperty.
+      if (info == null ||
+          !member.isGetProp() ||
+          !member.getFirstChild().isThis()) {
+        return;
+      }
+
+      JSType jsType = getDeclaredType(info, member, value);
+      Node name = member.getLastChild();
+      if (jsType != null) {
+        thisTypeForProperties.defineDeclaredProperty(
+            name.getString(),
+            jsType,
+            member);
+      }
     }
 
     /** Handle bleeding functions and function parameters. */

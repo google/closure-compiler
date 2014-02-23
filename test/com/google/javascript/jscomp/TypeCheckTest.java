@@ -6994,6 +6994,35 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: Object");
   }
 
+  public void testIssue926a() throws Exception {
+    testTypes("/** x */ function error() {}" +
+              "/**\n" +
+              " * @constructor\n" +
+              " * @param {string} error\n" +
+              " */\n" +
+              "function C(error) {\n" +
+              " /** @const */ this.e = error;\n" +
+              "}" +
+              "/** @type {number} */ var x = (new C('x')).e;",
+              "initializing variable\n" +
+              "found   : string\n" +
+              "required: number");
+  }
+
+  public void testIssue926b() throws Exception {
+    testTypes("/** @constructor */\n" +
+              "function A() {\n" +
+              " /** @constructor */\n" +
+              " function B() {}\n" +
+              " /** @type {!B} */ this.foo = new B();" +
+              " /** @type {!B} */ var C = new B();" +
+              "}" +
+              "/** @type {number} */ var x = (new A()).foo;",
+              "initializing variable\n" +
+              "found   : B\n" +
+              "required: number");
+  }
+
   public void testEnums() throws Exception {
     testTypes(
         "var outer = function() {" +
