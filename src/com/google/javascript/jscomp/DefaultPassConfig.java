@@ -264,6 +264,11 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(checkVars);
+
+    if (options.inferConsts) {
+      checks.add(inferConsts);
+    }
+
     if (options.computeFunctionSideEffects) {
       checks.add(checkRegExp);
     }
@@ -420,6 +425,10 @@ public class DefaultPassConfig extends PassConfig {
     // the main optimization loop.
     if (options.collapseProperties) {
       passes.add(collapseProperties);
+    }
+
+    if (options.inferConsts) {
+      passes.add(inferConsts);
     }
 
     // Running this pass before disambiguate properties allow the removing
@@ -1154,6 +1163,14 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return new VarCheck(compiler);
+    }
+  };
+
+  /** Infers constants. */
+  final PassFactory inferConsts = new PassFactory("inferConsts", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new InferConsts(compiler);
     }
   };
 

@@ -111,7 +111,8 @@ public class Node implements Cloneable, Serializable {
       YIELD_FOR          = 61,    // Set if a yield is a "yield all"
       EXPORT_DEFAULT     = 62,    // Set if a export is a "default" export
       EXPORT_ALL_FROM    = 63,    // Set if a export is a "*" export
-      LAST_PROP          = 63;    // Unused in the compiler, but keep for Rhino.
+      IS_CONSTANT_VAR    = 64,    // A lexical variable is inferred const
+      LAST_PROP          = 64;    // Unused in the compiler, but keep for Rhino.
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -151,6 +152,7 @@ public class Node implements Cloneable, Serializable {
         case YIELD_FOR:          return "yield_for";
         case EXPORT_DEFAULT:     return "export_default";
         case EXPORT_ALL_FROM:    return "export_all_from";
+        case IS_CONSTANT_VAR:    return "is_constant_var";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }

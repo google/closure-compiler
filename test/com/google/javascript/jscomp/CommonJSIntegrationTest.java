@@ -72,7 +72,7 @@ public class CommonJSIntegrationTest extends IntegrationTestCase {
          new String[] {
            "/** @constructor */ function Hello() {} " +
            "module.exports = Hello;",
-           "/** @const */ var Hello = require('./i0');" +
+           "var Hello = require('./i0');" +
            "/** @type {!Hello} */ var hello = new Hello();"
          },
          new String[] {
@@ -89,7 +89,7 @@ public class CommonJSIntegrationTest extends IntegrationTestCase {
          new String[] {
            "/** @constructor */ function Hello() {} " +
            "module.exports = Hello;",
-           "/** @const */ var Hello = require('./i0');" +
+           "var Hello = require('./i0');" +
            "/** @type {!Hello} */ var hello = 1;"
          },
          TypeValidator.TYPE_MISMATCH_WARNING);
@@ -100,7 +100,7 @@ public class CommonJSIntegrationTest extends IntegrationTestCase {
          new String[] {
            "/** @constructor */ function Hello() {} " +
            "module.exports = Hello;",
-           "/** @const */ var Hello = require('./i0');" +
+           "var Hello = require('./i0');" +
            "var util = {inherits: function (x, y){}};" +
            "/**\n" +
            " * @constructor\n" +
@@ -125,7 +125,7 @@ public class CommonJSIntegrationTest extends IntegrationTestCase {
          new String[] {
            "/** @constructor */ function Hello() {} " +
            "module.exports = Hello;",
-           "/** @const */ var Hello = require('./i0');" +
+           "var Hello = require('./i0');" +
            "var util = {inherits: function (x, y){}};" +
            "/**\n" +
            " * @constructor\n" +
@@ -152,6 +152,7 @@ public class CommonJSIntegrationTest extends IntegrationTestCase {
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     options.processCommonJSModules = true;
     options.closurePass = true;
+    options.inferConsts = true;
     return options;
   }
 }

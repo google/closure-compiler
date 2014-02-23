@@ -1731,6 +1731,10 @@ final class TypedScopeCreator implements ScopeCreator {
         return true;
       }
 
+      if (node.getBooleanProp(Node.IS_CONSTANT_VAR)) {
+        return true;
+      }
+
       switch (node.getType()) {
         case Token.NAME:
           return NodeUtil.isConstantByConvention(
