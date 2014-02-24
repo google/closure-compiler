@@ -333,6 +333,7 @@ public final class CompileTask
 
     this.warningLevel.setOptionsForWarningLevel(options);
     options.setManageClosureDependencies(manageDependencies);
+    options.setTrustedStrings(true);
 
     if (replaceProperties) {
       convertPropertiesMap(options);
