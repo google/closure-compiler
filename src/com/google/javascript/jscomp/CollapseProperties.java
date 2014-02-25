@@ -353,7 +353,7 @@ class CollapseProperties implements CompilerPass {
           new ReferenceCollectingCallback(compiler,
               ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
               Predicates.<Var>equalTo(aliasVar));
-      (new NodeTraversal(compiler, collector)).traverseAtScope(scope);
+      collector.processScope(scope);
 
       ReferenceCollection aliasRefs = collector.getReferences(aliasVar);
       List<AstChange> newNodes = Lists.newArrayList();

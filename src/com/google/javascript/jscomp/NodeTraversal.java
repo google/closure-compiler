@@ -382,6 +382,26 @@ public class NodeTraversal {
   }
 
   /**
+   * Traverse a function out-of-band of normal traversal.
+   *
+   * @param node The function node.
+   * @param scope The scope the function is contained in. Does not fire enter/exit
+   *     callback events for this scope.
+   */
+  void traverseFunctionOutOfBand(Node node, Scope scope) {
+    Preconditions.checkNotNull(scope);
+    Preconditions.checkState(node.isFunction());
+    Preconditions.checkState(scope.getRootNode() != null);
+    if (inputId == null) {
+      inputId = NodeUtil.getInputId(node);
+    }
+    curNode = node.getParent();
+    pushScope(scope, true /* quietly */);
+    traverseBranch(node, curNode);
+    popScope(true /* quietly */);
+  }
+
+  /**
    * Traverses an inner node recursively with a refined scope. An inner node may
    * be any node with a non {@code null} parent (i.e. all nodes except the
    * root).
@@ -393,6 +413,9 @@ public class NodeTraversal {
    */
   protected void traverseInnerNode(Node node, Node parent, Scope refinedScope) {
     Preconditions.checkNotNull(parent);
+    if (inputId == null) {
+      inputId = NodeUtil.getInputId(node);
+    }
     if (refinedScope != null && getScope() != refinedScope) {
       curNode = node;
       pushScope(refinedScope);
@@ -602,18 +625,33 @@ public class NodeTraversal {
 
   /** Creates a new scope (e.g. when entering a function). */
   private void pushScope(Scope s) {
+    pushScope(s, false);
+  }
+
+  /**
+   * Creates a new scope (e.g. when entering a function).
+   * @param quietly Don't fire an enterScope callback.
+   */
+  private void pushScope(Scope s, boolean quietly) {
     Preconditions.checkState(curNode != null);
     compiler.setScope(s.getRootNode());
     scopes.push(s);
     cfgs.push(null);
-    if (scopeCallback != null) {
+    if (!quietly && scopeCallback != null) {
       scopeCallback.enterScope(this);
     }
   }
 
-  /** Pops back to the previous scope (e.g. when leaving a function). */
   private void popScope() {
-    if (scopeCallback != null) {
+    popScope(false);
+  }
+
+  /**
+   * Pops back to the previous scope (e.g. when leaving a function).
+   * @param quietly Don't fire the exitScope callback.
+   */
+  private void popScope(boolean quietly) {
+    if (!quietly && scopeCallback != null) {
       scopeCallback.exitScope(this);
     }
     if (scopeRoots.isEmpty()) {

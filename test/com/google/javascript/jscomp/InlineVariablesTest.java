@@ -1069,4 +1069,85 @@ public class InlineVariablesTest extends CompilerTestCase {
     testSame(
         "var u; function f() { u = Random(); var x = u; f(); alert(x===u)}");
   }
+
+  public void testHoistedFunction1() {
+    test("var x = 1; function f() { return x; }", "function f() { return 1; }");
+  }
+
+  public void testHoistedFunction2() {
+    testSame(
+        "var impl_0;" +
+        "b(a());" +
+        "function a() { impl_0 = {}; }" +
+        "function b() { window['f'] = impl_0; }");
+  }
+
+  public void testHoistedFunction3() {
+    testSame(
+        "var impl_0;" +
+        "b();" +
+        "impl_0 = 1;" +
+        "function b() { window['f'] = impl_0; }");
+  }
+
+  public void testHoistedFunction4() {
+    test(
+        "var impl_0;" +
+        "impl_0 = 1;" +
+        "b();" +
+        "function b() { window['f'] = impl_0; }",
+        "1; b(); function b() { window['f'] = 1; }");
+  }
+
+  public void testHoistedFunction5() {
+    testSame(
+        "a();" +
+        "var debug = 1;" +
+        "function b() { return debug; }" +
+        "function a() { return b(); }");
+  }
+
+  public void testHoistedFunction6() {
+    test(
+        "var debug = 1;" +
+        "a();" +
+        "function b() { return debug; }" +
+        "function a() { return b(); }",
+        "a();" +
+        "function b() { return 1; }" +
+        "function a() { return b(); }");
+  }
+
+  public void testIssue354() {
+    test(
+        "var enabled = true;" +
+        "function Widget() {}" +
+        "Widget.prototype = {" +
+        "  frob: function() {" +
+        "    search();" +
+        "  }" +
+        "};" +
+        "function search() {" +
+        "  if (enabled)" +
+        "    alert(1);" +
+        "  else" +
+        "    alert(2);" +
+        "}" +
+        "window.foo = new Widget();" +
+        "window.bar = search;",
+        "function Widget() {}" +
+        "Widget.prototype = {" +
+        "  frob: function() {" +
+        "    search();" +
+        "  }" +
+        "};" +
+        "function search() {" +
+        "  if (true)" +
+        "    alert(1);" +
+        "  else" +
+        "    alert(2);" +
+        "}" +
+        "window.foo = new Widget();" +
+        "window.bar = search;");
+  }
 }
