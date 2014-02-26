@@ -436,6 +436,11 @@ google.maps.DirectionsRequest = function() {};
 /**
  * @type {boolean}
  */
+google.maps.DirectionsRequest.prototype.avoidFerries;
+
+/**
+ * @type {boolean}
+ */
 google.maps.DirectionsRequest.prototype.avoidHighways;
 
 /**
@@ -657,6 +662,11 @@ google.maps.DistanceMatrixElementStatus = {
  * @interface
  */
 google.maps.DistanceMatrixRequest = function() {};
+
+/**
+ * @type {boolean}
+ */
+google.maps.DistanceMatrixRequest.prototype.avoidFerries;
 
 /**
  * @type {boolean}
@@ -1679,7 +1689,7 @@ google.maps.KmlLayer.prototype.setUrl = function(url) {};
  * @param {number} zIndex
  * @return {undefined}
  */
-google.maps.KmlLayer.prototype.setZIndex = function(The) {};
+google.maps.KmlLayer.prototype.setZIndex = function(zIndex) {};
 
 /**
  * @constructor
@@ -5345,11 +5355,6 @@ google.maps.places.PlaceResult.prototype.rating;
  * @type {string}
  */
 google.maps.places.PlaceResult.prototype.reference;
-
-/**
- * @type {string}
- */
-google.maps.places.PlaceResult.prototype.review_summary;
 
 /**
  * @type {Array.<google.maps.places.PlaceReview>}
