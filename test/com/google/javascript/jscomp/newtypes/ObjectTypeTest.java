@@ -49,20 +49,20 @@ public class ObjectTypeTest extends TestCase {
 
   public void testClassSubtyping() {
     ObjectType foo = ObjectType.fromNominalType(NominalType.fromRaw(
-        RawNominalType.makeClass("Foo", null, 0).finalizeNominalType()));
+        RawNominalType.makeClass("Foo", null).finalizeNominalType()));
     ObjectType bar = ObjectType.fromNominalType(NominalType.fromRaw(
-        RawNominalType.makeClass("Bar", null, 1).finalizeNominalType()));
+        RawNominalType.makeClass("Bar", null).finalizeNominalType()));
     assertTrue(foo.isSubtypeOf(foo));
     assertFalse(foo.isSubtypeOf(bar));
   }
 
   public void testObjectUnions() {
     ObjectType foo = ObjectType.fromNominalType(NominalType.fromRaw(
-        RawNominalType.makeClass("Foo", null, 0).finalizeNominalType()));
+        RawNominalType.makeClass("Foo", null).finalizeNominalType()));
     ObjectType bar = ObjectType.fromNominalType(NominalType.fromRaw(
-        RawNominalType.makeClass("Bar", null, 1).finalizeNominalType()));
+        RawNominalType.makeClass("Bar", null).finalizeNominalType()));
     ObjectType baz = ObjectType.fromNominalType(NominalType.fromRaw(
-        RawNominalType.makeClass("Baz", null, 2).finalizeNominalType()));
+        RawNominalType.makeClass("Baz", null).finalizeNominalType()));
     ObjectType topObj = ObjectType.TOP_OBJECT;
     ObjectType withPNum = topObj.withProperty("p", NUMBER);
     ObjectType fooWithPNum = foo.withProperty("p", NUMBER);
@@ -94,17 +94,17 @@ public class ObjectTypeTest extends TestCase {
 
   public void testSimpleClassInheritance() {
     NominalType parentClass = NominalType.fromRaw(
-        RawNominalType.makeClass("Parent", null, 0).finalizeNominalType());
+        RawNominalType.makeClass("Parent", null).finalizeNominalType());
     NominalType child1Class = NominalType.fromRaw(
-        RawNominalType.makeClass("Child1", null, 1));
+        RawNominalType.makeClass("Child1", null));
     child1Class.getRawNominalType().addSuperClass(parentClass);
     child1Class.getRawNominalType().finalizeNominalType();
     NominalType child2Class = NominalType.fromRaw(
-        RawNominalType.makeClass("Child2", null, 2));
+        RawNominalType.makeClass("Child2", null));
     child2Class.getRawNominalType().addSuperClass(parentClass);
     child2Class.getRawNominalType().finalizeNominalType();
     ObjectType foo = ObjectType.fromNominalType(NominalType.fromRaw(
-        RawNominalType.makeClass("Foo", null, 3).finalizeNominalType()));
+        RawNominalType.makeClass("Foo", null).finalizeNominalType()));
     ObjectType parent = ObjectType.fromNominalType(parentClass);
     ObjectType child1 = ObjectType.fromNominalType(child1Class);
     ObjectType child2 = ObjectType.fromNominalType(child2Class);

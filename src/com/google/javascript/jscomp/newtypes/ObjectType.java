@@ -572,8 +572,12 @@ public class ObjectType {
       }
       newProps = builder.build();
     }
-    return new ObjectType(null, newProps,
-        fn == null ? null : fn.substituteGenerics(concreteTypes), isLoose);
+    return new ObjectType(
+        nominalType == null ? null :
+        nominalType.instantiateGenerics(concreteTypes),
+        newProps,
+        fn == null ? null : fn.substituteGenerics(concreteTypes),
+        isLoose);
   }
 
   @Override

@@ -212,12 +212,12 @@ class GlobalTypeInfo implements CompilerPass {
       Node funNode = workset.removeFirst();
       RawNominalType rawNominalType = nominaltypesByNode.get(funNode);
       NominalType superClass = rawNominalType.getSuperClass();
-      if (superClass != null && !superClass.getRawNominalType().isFinalized()) {
+      if (superClass != null && !superClass.isFinalized()) {
         workset.addLast(funNode);
         continue workset_loop;
       }
       for (NominalType superInterf : rawNominalType.getInterfaces()) {
-        if (!superInterf.getRawNominalType().isFinalized()) {
+        if (!superInterf.isFinalized()) {
           workset.addLast(funNode);
           continue workset_loop;
         }
@@ -225,12 +225,12 @@ class GlobalTypeInfo implements CompilerPass {
 
       // Detect bad inheritance for extended classes
       if (superClass != null) {
+        Preconditions.checkState(superClass.isFinalized());
         // TODO(blickly): Can we optimize this to skip unnecessary iterations?
-        for (String pname :
-            superClass.getRawNominalType().getAllPropsOfClass()) {
+        for (String pname : superClass.getAllPropsOfClass()) {
           PropertyDef propDef = propertyDefs.get(rawNominalType.getId(), pname);
           PropertyDef inheritedPropDef =
-              propertyDefs.get(superClass.getRawNominalType().getId(), pname);
+              propertyDefs.get(superClass.getId(), pname);
           if (inheritedPropDef != null &&
               inheritedPropDef.methodScope != null) {
             // TODO(blickly): Save DeclaredFunctionTypes somewhere other than
@@ -259,11 +259,10 @@ class GlobalTypeInfo implements CompilerPass {
           JSType localPropType = rawNominalType.getPropDeclaredType(pname);
           // System.out.println("nominalType: " + rawNominalType + "." + pname +
           //     " inheritedPropType: " + inheritedPropType +
-          //  " localPropType: " + localPropType);
+          //     " localPropType: " + localPropType);
           if (!localPropType.isSubtypeOf(inheritedPropType)) {
             warnings.add(JSError.make(
-                propertyDefs.get(rawNominalType.getId(), pname).defSite,
-                INVALID_PROP_OVERRIDE, pname,
+                propDef.defSite, INVALID_PROP_OVERRIDE, pname,
                 inheritedPropType.toString(), localPropType.toString()));
           }
         }
@@ -271,10 +270,9 @@ class GlobalTypeInfo implements CompilerPass {
 
       // Detect bad inheritance for extended/implemented interfaces
       for (NominalType superInterf: rawNominalType.getInterfaces()) {
-        for (String pname :
-            superInterf.getRawNominalType().getAllPropsOfInterface()) {
+        for (String pname : superInterf.getAllPropsOfInterface()) {
           PropertyDef inheritedPropDef =
-              propertyDefs.get(superInterf.getRawNominalType().getId(), pname);
+              propertyDefs.get(superInterf.getId(), pname);
           JSType inheritedPropType = superInterf.getPropDeclaredType(pname);
           if (!rawNominalType.mayHaveProp(pname)) {
             warnings.add(JSError.make(inheritedPropDef.defSite,
@@ -342,8 +340,8 @@ class GlobalTypeInfo implements CompilerPass {
       if (fnDoc != null && (fnDoc.isConstructor() || fnDoc.isInterface())) {
         ImmutableList<String> templateVars = fnDoc.getTemplateTypeNames();
         RawNominalType rawNominalType = fnDoc.isInterface() ?
-            RawNominalType.makeInterface(qname, templateVars, freshId) :
-            RawNominalType.makeClass(qname, templateVars, freshId);
+            RawNominalType.makeInterface(qname, templateVars) :
+            RawNominalType.makeClass(qname, templateVars);
         freshId++;
         nominaltypesByNode.put(fn, rawNominalType);
         parentScope.addNominalType(qname, rawNominalType);
@@ -620,6 +618,8 @@ class GlobalTypeInfo implements CompilerPass {
         Node fn, RawNominalType ownerType, Scope parentScope) {
       Preconditions.checkArgument(fn.isFunction());
       JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
+      ImmutableList<String> templateVars =
+          fnDoc == null ? null : fnDoc.getTemplateTypeNames();
 
       // TODO(user): warn if multiple jsdocs for a fun
 
@@ -643,9 +643,10 @@ class GlobalTypeInfo implements CompilerPass {
                 fn, EXTENDS_NOT_ON_CTOR_OR_INTERF, functionName));
           } else {
             Node docNode = fnDoc.getBaseType().getRootNode();
-            if (typeParser.hasKnownType(docNode, ownerType, parentScope)) {
-              parentClass =
-                  typeParser.getNominalType(docNode, ownerType, parentScope);
+            if (typeParser.hasKnownType(
+                docNode, ownerType, parentScope, templateVars)) {
+              parentClass = typeParser.getNominalType(
+                      docNode, ownerType, parentScope, templateVars);
               if (parentClass == null) {
                 warnings.add(JSError.make(fn, EXTENDS_NON_OBJECT, functionName,
                       docNode.toStringTree()));
@@ -663,7 +664,7 @@ class GlobalTypeInfo implements CompilerPass {
           }
           boolean noCycles =
               rawNominalType.addInterfaces(typeParser.getImplementedInterfaces(
-                  fnDoc, ownerType, parentScope));
+                  fnDoc, ownerType, parentScope, templateVars));
           Preconditions.checkState(noCycles);
           builder.addNominalType(NominalType.fromRaw(rawNominalType));
         } else if (fnDoc.isInterface()) {
@@ -671,7 +672,7 @@ class GlobalTypeInfo implements CompilerPass {
             warnings.add(JSError.make(fn, INTERFACE_WITH_A_BODY));
           }
           if (!rawNominalType.addInterfaces(typeParser.getExtendedInterfaces(
-                  fnDoc, ownerType, parentScope))) {
+                  fnDoc, ownerType, parentScope, templateVars))) {
             warnings.add(JSError.make(
                 fn, INHERITANCE_CYCLE, rawNominalType.toString()));
           }

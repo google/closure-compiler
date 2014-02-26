@@ -178,7 +178,7 @@ public class JSTypeCreatorFromJSDoc {
 
   private JSType getNamedTypeHelper(Node n, RawNominalType ownerType,
       DeclaredTypeRegistry registry,
-      ImmutableList<String> typeParameters)
+      ImmutableList<String> outerTypeParameters)
       throws UnknownTypeException {
     String typeName = n.getString();
     if (typeName.equals("boolean")) {
@@ -191,7 +191,7 @@ public class JSTypeCreatorFromJSDoc {
       return JSType.STRING;
     } else if (typeName.equals("undefined")) {
       return JSType.UNDEFINED;
-    } else if (hasTypeVariable(typeParameters, ownerType, typeName)) {
+    } else if (hasTypeVariable(outerTypeParameters, ownerType, typeName)) {
       return JSType.fromTypeVar(typeName);
     } else { // it must be a class name
       JSType namedType = registry.lookupTypeByName(typeName);
@@ -206,13 +206,23 @@ public class JSTypeCreatorFromJSDoc {
       Preconditions.checkState(n.getFirstChild().isBlock());
       ImmutableList.Builder<JSType> typeList = ImmutableList.builder();
       for (Node child : n.getFirstChild().children()) {
-        JSType childType =
-            getTypeFromNodeHelper(child, ownerType, registry, typeParameters);
+        JSType childType = getTypeFromNodeHelper(
+                child, ownerType, registry, outerTypeParameters);
         typeList.add(childType);
       }
       NominalType uninstantiated = namedType.getNominalTypeIfUnique();
+      ImmutableList<JSType> typeArguments = typeList.build();
+      ImmutableList<String> typeParameters =
+          uninstantiated.getRawNominalType().getTemplateVars();
+      if (typeArguments.size() != typeParameters.size()) {
+        warn("Invalid generics instantiation.\n" +
+            "Expected " + typeParameters.size() + " type arguments, but " +
+            typeArguments.size() + " were passed.", n);
+        return JSType.fromObjectType(ObjectType.fromNominalType(
+            uninstantiated));
+      }
       return JSType.fromObjectType(ObjectType.fromNominalType(
-          uninstantiated.instantiateGenerics(typeList.build())));
+          uninstantiated.instantiateGenerics(typeArguments)));
     }
   }
 
@@ -225,12 +235,12 @@ public class JSTypeCreatorFromJSDoc {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     Node child = n.getFirstChild();
     if (child.getType() == Token.THIS) {
-      builder.addReceiverType(
-          getNominalType(child.getFirstChild(), ownerType, registry));
+      builder.addReceiverType(getNominalType(
+          child.getFirstChild(), ownerType, registry, typeParameters));
       child = child.getNext();
     } else if (child.getType() == Token.NEW) {
-      builder.addNominalType(
-          getNominalType(child.getFirstChild(), ownerType, registry));
+      builder.addNominalType(getNominalType(
+          child.getFirstChild(), ownerType, registry, typeParameters));
       child = child.getNext();
     }
     if (child.getType() == Token.PARAM_LIST) {
@@ -268,9 +278,10 @@ public class JSTypeCreatorFromJSDoc {
   }
 
   public boolean hasKnownType(
-      Node n, RawNominalType ownerType, DeclaredTypeRegistry registry) {
+      Node n, RawNominalType ownerType, DeclaredTypeRegistry registry,
+      ImmutableList<String> typeParameters) {
     try {
-      getTypeFromNodeHelper(n, ownerType, registry, null);
+      getTypeFromNodeHelper(n, ownerType, registry, typeParameters);
     } catch (UnknownTypeException e) {
       return false;
     }
@@ -278,8 +289,9 @@ public class JSTypeCreatorFromJSDoc {
   }
 
   public NominalType getNominalType(Node n, RawNominalType ownerType,
-      DeclaredTypeRegistry registry) {
-    JSType wrappedClass = getTypeFromNode(n, ownerType, registry, null);
+      DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
+    JSType wrappedClass =
+        getTypeFromNode(n, ownerType, registry, typeParameters);
     if (wrappedClass == null) {
       return null;
     }
@@ -287,24 +299,28 @@ public class JSTypeCreatorFromJSDoc {
   }
 
   public ImmutableList<NominalType> getImplementedInterfaces(
-      JSDocInfo jsdoc, RawNominalType ownerType, DeclaredTypeRegistry registry) {
+      JSDocInfo jsdoc, RawNominalType ownerType, DeclaredTypeRegistry registry,
+      ImmutableList<String> typeParameters) {
     ImmutableList.Builder<NominalType> builder = ImmutableList.builder();
     for (JSTypeExpression texp: jsdoc.getImplementedInterfaces()) {
       Node expRoot = texp.getRootNode();
-      if (hasKnownType(expRoot, ownerType, registry)) {
-        builder.add(getNominalType(expRoot, ownerType, registry));
+      if (hasKnownType(expRoot, ownerType, registry, typeParameters)) {
+        builder.add(
+            getNominalType(expRoot, ownerType, registry, typeParameters));
       }
     }
     return builder.build();
   }
 
   public ImmutableList<NominalType> getExtendedInterfaces(
-      JSDocInfo jsdoc, RawNominalType ownerType, DeclaredTypeRegistry registry) {
+      JSDocInfo jsdoc, RawNominalType ownerType, DeclaredTypeRegistry registry,
+      ImmutableList<String> typeParameters) {
     ImmutableList.Builder<NominalType> builder = ImmutableList.builder();
     for (JSTypeExpression texp: jsdoc.getExtendedInterfaces()) {
       Node expRoot = texp.getRootNode();
-      if (hasKnownType(expRoot, ownerType, registry)) {
-        builder.add(getNominalType(expRoot, ownerType, registry));
+      if (hasKnownType(expRoot, ownerType, registry, typeParameters)) {
+        builder.add(
+            getNominalType(expRoot, ownerType, registry, typeParameters));
       }
     }
     return builder.build();
@@ -351,11 +367,13 @@ public class JSTypeCreatorFromJSDoc {
 
     if (childJsdoc.getType() == Token.THIS) {
       builder.addReceiverType(
-          getNominalType(childJsdoc.getFirstChild(), ownerType, registry));
+          getNominalType(childJsdoc.getFirstChild(), ownerType, registry,
+            null));
       childJsdoc = childJsdoc.getNext();
     } else if (childJsdoc.getType() == Token.NEW) {
       builder.addNominalType(
-          getNominalType(childJsdoc.getFirstChild(), ownerType, registry));
+          getNominalType(childJsdoc.getFirstChild(), ownerType, registry,
+            null));
       childJsdoc = childJsdoc.getNext();
     }
     if (childJsdoc.getType() == Token.PARAM_LIST) {
