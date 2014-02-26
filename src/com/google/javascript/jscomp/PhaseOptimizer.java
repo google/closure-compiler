@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -269,6 +270,9 @@ class PhaseOptimizer implements CompilerPass {
       // have been processed.
       // Some precondition checks rely on this, eg, in CoalesceVariableNames.
       factory.create(compiler).process(externs, root);
+      if (logger.isLoggable(Level.FINEST)) {
+        logger.finest(compiler.toSource(root));
+      }
       try {
         if (progressRange == null) {
           compiler.setProgress(-1, name);
