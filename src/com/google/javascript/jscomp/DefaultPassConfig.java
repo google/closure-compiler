@@ -464,13 +464,6 @@ public class DefaultPassConfig extends PassConfig {
     // with an argument which is a string literal.
     passes.add(checkConstParams);
 
-    // The Caja library adds properties to Object.prototype, which breaks
-    // most for-in loops.  This adds a check to each loop that skips
-    // any property matching /___$/.
-    if (options.ignoreCajaProperties) {
-      passes.add(ignoreCajaProperties);
-    }
-
     assertAllOneTimePasses(passes);
 
     if (options.smartNameRemoval || options.reportPath != null) {
@@ -1481,15 +1474,6 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return ((functionNames = new FunctionNames(compiler)));
-    }
-  };
-
-  /** Skips Caja-private properties in for-in loops */
-  final PassFactory ignoreCajaProperties =
-      new PassFactory("ignoreCajaProperties", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new IgnoreCajaProperties(compiler);
     }
   };
 

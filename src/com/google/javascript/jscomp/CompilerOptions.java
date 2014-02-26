@@ -618,13 +618,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** A CodingConvention to use during the compile. */
   private CodingConvention codingConvention;
 
-  boolean ignoreCajaProperties;
-
-  /** Add code to skip properties that Caja adds to Object.prototype */
-  public void setIgnoreCajaProperties(boolean enabled) {
-    ignoreCajaProperties = enabled;
-  }
-
   public String syntheticBlockStartMarker;
 
   public String syntheticBlockEndMarker;
@@ -1008,7 +1001,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     // Alterations
     runtimeTypeCheck = false;
     runtimeTypeCheckLogFunction = null;
-    ignoreCajaProperties = false;
     syntheticBlockStartMarker = null;
     syntheticBlockEndMarker = null;
     locale = null;
