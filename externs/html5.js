@@ -2738,11 +2738,59 @@ HTMLButtonElement.prototype.checkValidity = function() {};
 /** @param {string} message */
 HTMLButtonElement.prototype.setCustomValidity = function(message) {};
 
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/html5/forms.html#attr-fs-formaction
+ */
+HTMLButtonElement.prototype.formAction;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/html5/forms.html#attr-fs-formenctype
+ */
+HTMLButtonElement.prototype.formEnctype;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/html5/forms.html#attr-fs-formmethod
+ */
+HTMLButtonElement.prototype.formMethod;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/html5/forms.html#attr-fs-formtarget
+ */
+HTMLButtonElement.prototype.formTarget;
+
 /** @type {boolean} */
 HTMLInputElement.prototype.autofocus;
 
 /** @type {boolean} */
 HTMLInputElement.prototype.formNoValidate;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/html5/forms.html#attr-fs-formaction
+ */
+HTMLInputElement.prototype.formAction;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/html5/forms.html#attr-fs-formenctype
+ */
+HTMLInputElement.prototype.formEnctype;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/html5/forms.html#attr-fs-formmethod
+ */
+HTMLInputElement.prototype.formMethod;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/html5/forms.html#attr-fs-formtarget
+ */
+HTMLInputElement.prototype.formTarget;
 
 /**
  * @const
