@@ -577,7 +577,6 @@ public class NodeTraversal {
   }
 
   /** Examines the functions stack for the last instance of a function node. */
-  @SuppressWarnings("unchecked")
   public Node getEnclosingFunction() {
     if (scopes.size() + scopeRoots.size() < 2) {
       return null;

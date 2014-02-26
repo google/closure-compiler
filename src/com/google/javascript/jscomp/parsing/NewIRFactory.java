@@ -431,7 +431,7 @@ class NewIRFactory {
             case Token.CATCH:
             case Token.FUNCTION:
             case Token.VAR:
-            case Token.LP:
+            case Token.PARAM_LIST:
               valid = true;
               break;
           }

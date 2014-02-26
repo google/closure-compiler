@@ -369,7 +369,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         } else if (v.isBleedingFunction()) {
           // Bleeding functions already get a BAD_PARAMETERS error, so just
           // do nothing.
-        } else if (parent.getType() == Token.LP) {
+        } else if (parent.getType() == Token.PARAM_LIST) {
           // Parameters of the scope function also get a BAD_PARAMETERS
           // error.
         } else if (isVar || isFunctionDecl) {

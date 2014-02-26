@@ -192,14 +192,6 @@ public class Token {
         LC             = 309,  // left curly braces
         COLON          = 310;
 
-    // Transitional definitions
-    // TODO(johnlenz): remove these
-    public final static int
-         DEFAULT        = DEFAULT_CASE,
-         GET            = GETTER_DEF,
-         LP             = PARAM_LIST,
-         SET            = SETTER_DEF;
-
   public static String name(int token) {
         switch (token) {
           case ERROR:           return "ERROR";

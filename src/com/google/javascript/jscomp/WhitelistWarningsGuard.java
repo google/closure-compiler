@@ -225,12 +225,6 @@ public class WhitelistWarningsGuard extends WarningsGuard {
       return this;
     }
 
-    /** We now always record the line number. */
-    @Deprecated
-    public WhitelistBuilder setWithLineNumber(boolean line) {
-      return this;
-    }
-
     @Override
     public void report(CheckLevel level, JSError error) {
       warnings.add(error);

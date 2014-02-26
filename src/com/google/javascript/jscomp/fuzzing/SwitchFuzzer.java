@@ -53,7 +53,7 @@ class SwitchFuzzer extends AbstractFuzzer {
     if (numCases > 0) {
       int defaultClauseIndex = context.random.nextInt(numCases);
       fuzzers[defaultClauseIndex + 1] =
-          new CaseFuzzer(context, Token.DEFAULT);
+          new CaseFuzzer(context, Token.DEFAULT_CASE);
     }
     Scope localScope = context.scopeManager.localScope();
     localScope.switchNesting++;
