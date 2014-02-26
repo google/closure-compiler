@@ -1792,7 +1792,9 @@ angular.$route.routes;
  *   locals: Object.<string, *>,
  *   params: Object.<string, string>,
  *   pathParams: Object.<string, string>,
- *   scope: Object.<string, *>
+ *   scope: Object.<string, *>,
+ *   originalPath: (string|undefined),
+ *   regexp: (RegExp|undefined)
  * }}
  */
 angular.$route.Route;
@@ -1811,6 +1813,12 @@ angular.$route.Route.pathParams;
 
 /** @type {Object.<string, *>} */
 angular.$route.Route.scope;
+
+/** @type {string|undefined} */
+angular.$route.Route.originalPath;
+
+/** @type {RegExp|undefined} */
+angular.$route.Route.regexp;
 
 /******************************************************************************
  * $routeProvider Service
