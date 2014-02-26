@@ -60,11 +60,6 @@ public class DefaultPassConfig extends PassConfig {
   /* Constant name for Closure's locale */
   private static final String CLOSURE_LOCALE_CONSTANT_NAME = "goog.LOCALE";
 
-  // Compiler errors when invalid combinations of passes are run.
-  static final DiagnosticType TIGHTEN_TYPES_WITHOUT_TYPE_CHECK =
-      DiagnosticType.error("JSC_TIGHTEN_TYPES_WITHOUT_TYPE_CHECK",
-          "TightenTypes requires type checking. Please use --check_types.");
-
   static final DiagnosticType CANNOT_USE_PROTOTYPE_AND_VAR =
       DiagnosticType.error("JSC_CANNOT_USE_PROTOTYPE_AND_VAR",
           "Rename prototypes and inline variables cannot be used together.");
@@ -100,11 +95,6 @@ public class DefaultPassConfig extends PassConfig {
    * preprocessing.
    */
   private PreprocessorSymbolTable preprocessorSymbolTable = null;
-
-  /**
-   * A type-tightener to share across optimization passes.
-   */
-  private TightenTypes tightenTypes = null;
 
   /** Names exported by goog.exportSymbol. */
   private Set<String> exportedNames = null;
@@ -428,11 +418,6 @@ public class DefaultPassConfig extends PassConfig {
     // the main optimization loop.
     if (options.collapseProperties) {
       passes.add(collapseProperties);
-    }
-
-    // Tighten types based on actual usage.
-    if (options.tightenTypes) {
-      passes.add(tightenTypesBuilder);
     }
 
     // Running this pass before disambiguate properties allow the removing
@@ -1616,22 +1601,6 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /**
-   * Try to infer the actual types, which may be narrower
-   * than the declared types.
-   */
-  final PassFactory tightenTypesBuilder =
-      new PassFactory("tightenTypes", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      if (!options.checkTypes) {
-        return new ErrorPass(compiler, TIGHTEN_TYPES_WITHOUT_TYPE_CHECK);
-      }
-      tightenTypes = new TightenTypes(compiler);
-      return tightenTypes;
-    }
-  };
-
   /** Disambiguate property names based on the coding convention. */
   final PassFactory disambiguatePrivateProperties =
       new PassFactory("disambiguatePrivateProperties", true) {
@@ -1646,13 +1615,8 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("disambiguateProperties", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      if (tightenTypes == null) {
-        return DisambiguateProperties.forJSTypeSystem(compiler,
-            options.propertyInvalidationErrors);
-      } else {
-        return DisambiguateProperties.forConcreteTypeSystem(
-            compiler, tightenTypes, options.propertyInvalidationErrors);
-      }
+      return DisambiguateProperties.forJSTypeSystem(compiler,
+          options.propertyInvalidationErrors);
     }
   };
 

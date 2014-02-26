@@ -727,12 +727,6 @@ public class IntegrationTest extends IntegrationTestCase {
         "JSCompiler_object_inline_bar_1=3}");
   }
 
-  public void testTightenTypesWithoutTypeCheck() {
-    CompilerOptions options = createCompilerOptions();
-    options.tightenTypes = true;
-    test(options, "", DefaultPassConfig.TIGHTEN_TYPES_WITHOUT_TYPE_CHECK);
-  }
-
   public void testDisambiguateProperties() {
     String code =
         "/** @constructor */ function Foo(){} Foo.prototype.bar = 3;" +

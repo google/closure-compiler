@@ -160,13 +160,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Checks types on expressions */
   public boolean checkTypes;
 
-  boolean tightenTypes;
-
-  /** Tightens types based on a global analysis. Experimental. */
-  public void setTightenTypes(boolean tighten) {
-    tightenTypes = tighten;
-  }
-
   public CheckLevel reportMissingOverride;
 
   /**
@@ -937,7 +930,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     checkSuspiciousCode = false;
     checkControlStructures = false;
     checkTypes = false;
-    tightenTypes = false;
     reportMissingOverride = CheckLevel.OFF;
     checkRequires = CheckLevel.OFF;
     checkProvides = CheckLevel.OFF;

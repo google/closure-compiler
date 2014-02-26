@@ -27,10 +27,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
-import com.google.javascript.jscomp.ConcreteType.ConcreteFunctionType;
-import com.google.javascript.jscomp.ConcreteType.ConcreteInstanceType;
-import com.google.javascript.jscomp.ConcreteType.ConcreteUnionType;
-import com.google.javascript.jscomp.ConcreteType.ConcreteUniqueType;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.jscomp.graph.StandardUnionFind;
@@ -285,14 +281,6 @@ class DisambiguateProperties<T> implements CompilerPass {
       Map<String, CheckLevel> propertiesToErrorFor) {
     return new DisambiguateProperties<JSType>(
         compiler, new JSTypeSystem(compiler), propertiesToErrorFor);
-  }
-
-  static DisambiguateProperties<ConcreteType> forConcreteTypeSystem(
-      AbstractCompiler compiler, TightenTypes tt,
-      Map<String, CheckLevel> propertiesToErrorFor) {
-    return new DisambiguateProperties<ConcreteType>(
-        compiler, new ConcreteTypeSystem(tt, compiler.getCodingConvention()),
-            propertiesToErrorFor);
   }
 
   /**
@@ -964,179 +952,6 @@ class DisambiguateProperties<T> implements CompilerPass {
           }
         }
       }
-    }
-  }
-
-  /** Implementation of TypeSystem using concrete types. */
-  private static class ConcreteTypeSystem implements TypeSystem<ConcreteType> {
-    private final TightenTypes tt;
-    private int nextUniqueId;
-    private CodingConvention codingConvention;
-    private final Set<JSType> invalidatingTypes = Sets.newHashSet();
-
-    // An array of native types that are not tracked by type tightening, and
-    // thus need to be added in if an unknown type is encountered.
-    private static final JSTypeNative [] nativeTypes = new JSTypeNative[] {
-        JSTypeNative.BOOLEAN_OBJECT_TYPE,
-        JSTypeNative.NUMBER_OBJECT_TYPE,
-        JSTypeNative.STRING_OBJECT_TYPE
-    };
-
-    public ConcreteTypeSystem(TightenTypes tt, CodingConvention convention) {
-      this.tt = tt;
-      this.codingConvention = convention;
-    }
-
-    @Override public void addInvalidatingType(JSType type) {
-      checkState(!type.isUnionType());
-      invalidatingTypes.add(type);
-    }
-
-    @Override public StaticScope<ConcreteType> getRootScope() {
-      return tt.getTopScope();
-    }
-
-    @Override public StaticScope<ConcreteType> getFunctionScope(Node decl) {
-      ConcreteFunctionType func = tt.getConcreteFunction(decl);
-      return (func != null) ?
-          func.getScope() : (StaticScope<ConcreteType>) null;
-    }
-
-    @Override
-    public ConcreteType getType(
-        StaticScope<ConcreteType> scope, Node node, String prop) {
-      if (scope != null) {
-        ConcreteType c = tt.inferConcreteType(
-            (TightenTypes.ConcreteScope) scope, node);
-        return maybeAddAutoboxes(c, node, prop);
-      } else {
-        return null;
-      }
-    }
-
-    /**
-     * Add concrete types for autoboxing types if necessary. The concrete type
-     * system does not track native types, like string, so add them if they are
-     * present in the JSType for the node.
-     */
-    private ConcreteType maybeAddAutoboxes(
-        ConcreteType cType, Node node, String prop) {
-      JSType jsType = node.getJSType();
-      if (jsType == null) {
-        return cType;
-      } else if (jsType.isUnknownType()) {
-        for (JSTypeNative nativeType : nativeTypes) {
-          ConcreteType concrete = tt.getConcreteInstance(
-              tt.getTypeRegistry().getNativeObjectType(nativeType));
-          if (concrete != null && !concrete.getPropertyType(prop).isNone()) {
-            cType = cType.unionWith(concrete);
-          }
-        }
-        return cType;
-      }
-
-      return maybeAddAutoboxes(cType, jsType, prop);
-    }
-
-    private ConcreteType maybeAddAutoboxes(
-        ConcreteType cType, JSType jsType, String prop) {
-      jsType = jsType.restrictByNotNullOrUndefined();
-      if (jsType.isUnionType()) {
-        for (JSType alt : jsType.toMaybeUnionType().getAlternates()) {
-          cType = maybeAddAutoboxes(cType, alt, prop);
-        }
-        return cType;
-      } else if (jsType.isEnumElementType()) {
-        return maybeAddAutoboxes(
-            cType, jsType.toMaybeEnumElementType().getPrimitiveType(), prop);
-      }
-
-      if (jsType.autoboxesTo() != null) {
-        JSType autoboxed = jsType.autoboxesTo();
-        return cType.unionWith(tt.getConcreteInstance((ObjectType) autoboxed));
-      } else if (jsType.unboxesTo() != null) {
-        return cType.unionWith(tt.getConcreteInstance((ObjectType) jsType));
-      }
-
-      return cType;
-    }
-
-    @Override public boolean isInvalidatingType(ConcreteType type) {
-      // We will disallow types on functions so that 'prototype' is not renamed.
-      // TODO(user): Support properties on functions as well.
-      return (type == null) || type.isAll() || type.isFunction()
-        || (type.isInstance()
-            && invalidatingTypes.contains(type.toInstance().instanceType));
-    }
-
-    @Override
-    public ImmutableSet<ConcreteType> getTypesToSkipForType(ConcreteType type) {
-      return ImmutableSet.of(type);
-    }
-
-    @Override public boolean isTypeToSkip(ConcreteType type) {
-      // Skip anonymous object literals and enum types.
-      return type.isInstance()
-        && !(type.toInstance().isFunctionPrototype()
-             || type.toInstance().instanceType.isInstanceType());
-    }
-
-    @Override
-    public ConcreteType restrictByNotNullOrUndefined(ConcreteType type) {
-      // These are not represented in concrete types.
-      return type;
-    }
-
-    @Override
-    public Iterable<ConcreteType> getTypeAlternatives(ConcreteType type) {
-      if (type.isUnion()) {
-        return ((ConcreteUnionType) type).getAlternatives();
-      } else {
-        return null;
-      }
-    }
-
-    @Override public ConcreteType getTypeWithProperty(String field,
-                                                      ConcreteType type) {
-      if (type.isInstance()) {
-        ConcreteInstanceType instanceType = (ConcreteInstanceType) type;
-        return instanceType.getInstanceTypeWithProperty(field);
-      } else if (type.isFunction()) {
-        if ("prototype".equals(field)
-            || codingConvention.isSuperClassReference(field)) {
-          return type;
-        }
-      } else if (type.isNone()) {
-        // If the receiver is none, then this code is never reached.  We will
-        // return a new fake type to ensure that this access is renamed
-        // differently from any other, so it can be easily removed.
-        return new ConcreteUniqueType(++nextUniqueId);
-      } else if (type.isUnion()) {
-        // If only one has the property, return that.
-        for (ConcreteType t : ((ConcreteUnionType) type).getAlternatives()) {
-          ConcreteType ret = getTypeWithProperty(field, t);
-          if (ret != null) {
-            return ret;
-          }
-        }
-      }
-      return null;
-    }
-
-    @Override public ConcreteType getInstanceFromPrototype(ConcreteType type) {
-      if (type.isInstance()) {
-        ConcreteInstanceType instanceType = (ConcreteInstanceType) type;
-        if (instanceType.isFunctionPrototype()) {
-          return instanceType.getConstructorType().getInstanceType();
-        }
-      }
-      return null;
-    }
-
-    @Override
-    public void recordInterfaces(ConcreteType type, ConcreteType relatedType,
-        DisambiguateProperties<ConcreteType>.Property p) {
-      // No need to record interfaces when using concrete types.
     }
   }
 }
