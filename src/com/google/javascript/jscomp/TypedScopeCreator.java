@@ -55,7 +55,6 @@ import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
-import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.jscomp.FunctionTypeBuilder.AstFunctionContents;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
