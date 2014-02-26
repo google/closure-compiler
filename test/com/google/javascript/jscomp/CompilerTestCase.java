@@ -461,8 +461,9 @@ public abstract class CompilerTestCase extends TestCase  {
   public void test(String externs, String js, String expected,
                    DiagnosticType error, DiagnosticType warning,
                    String description) {
-    List<SourceFile> externsInputs = ImmutableList.of(
-        SourceFile.fromCode("externs", externs));
+    SourceFile externsFile = SourceFile.fromCode("externs", externs);
+    externsFile.setIsExtern(true);
+    List<SourceFile> externsInputs = ImmutableList.of(externsFile);
     test(externsInputs, js, expected, error, warning, description);
   }
 
