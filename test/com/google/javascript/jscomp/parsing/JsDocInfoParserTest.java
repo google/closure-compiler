@@ -1432,6 +1432,34 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTrue(info.isConstructor());
   }
 
+  public void testStackedAnnotation9() throws Exception {
+    JSDocInfo info = parse("@const @private {string} */", true);
+    assertTrue(info.isConstant());
+    assertTrue(info.hasType());
+    assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
+  public void testStackedAnnotation10() throws Exception {
+    JSDocInfo info = parse("@private @const {string} */", true);
+    assertEquals(Visibility.PRIVATE, info.getVisibility());
+    assertTrue(info.hasType());
+    assertTypeEquals(STRING_TYPE, info.getType());
+    assertTrue(info.isConstant());
+  }
+
+  public void testStackedAnnotation11() throws Exception {
+    JSDocInfo info = parse("@private @const */", true);
+    assertFalse(info.hasType());
+    assertEquals(Visibility.PRIVATE, info.getVisibility());
+    assertTrue(info.isConstant());
+  }
+
+  public void testStackedAnnotation12() throws Exception {
+    JSDocInfo info = parse("@const @private */", true);
+    assertFalse(info.hasType());
+    assertEquals(Visibility.PRIVATE, info.getVisibility());
+    assertTrue(info.isConstant());
+  }
 
   public void testParsePreserve() throws Exception {
     Node node = new Node(1);
