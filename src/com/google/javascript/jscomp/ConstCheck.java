@@ -133,6 +133,8 @@ class ConstCheck extends AbstractPostOrderCallback
    * Reports a reassigned constant error.
    */
   void reportError(NodeTraversal t, Node n, String name) {
-    compiler.report(t.makeError(n, CONST_REASSIGNED_VALUE_ERROR, name));
+    if (n.getJSDocInfo() == null || !n.getJSDocInfo().getSuppressions().contains("const")) {
+      compiler.report(t.makeError(n, CONST_REASSIGNED_VALUE_ERROR, name));
+    }
   }
 }

@@ -145,12 +145,20 @@ public class ConstCheckTest extends CompilerTestCase {
     testError("/** @const */ var xyz = 1; xyz = 3;");
   }
 
-  public void testConstSuppression() {
+  public void testConstSuppressionInFileJsDoc() {
     testSame("/**\n" +
              " * @fileoverview\n" +
              " * @suppress {const}\n" +
              " */\n" +
              "/** @const */ var xyz = 1; xyz = 3;");
+  }
+
+  public void testConstSuppressionOnAssignment() {
+    testSame("/** @const */ var xyz = 1; /** @suppress {const} */ xyz = 3;");
+  }
+
+  public void testConstSuppressionOnInc() {
+    testSame("/** @const */ var xyz = 1; /** @suppress {const} */ xyz++;");
   }
 
   public void testConstNameInExterns() {
