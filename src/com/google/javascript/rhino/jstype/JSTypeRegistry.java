@@ -1680,34 +1680,25 @@ public class JSTypeRegistry implements Serializable {
         }
 
       case Token.FUNCTION:
-        JSType thisType = null;
+        ObjectType thisType = null;
         boolean isConstructor = false;
         Node current = n.getFirstChild();
         if (current.getType() == Token.THIS ||
             current.getType() == Token.NEW) {
           Node contextNode = current.getFirstChild();
-
-          JSType candidateThisType = createFromTypeNodesInternal(
-              contextNode, sourceName, scope);
-
-          // Allow null/undefined 'this' types to indicate that
-          // the function is not called in a deliberate context,
-          // and 'this' access should raise warnings.
-          if (candidateThisType.isNullType() ||
-              candidateThisType.isVoidType()) {
-            thisType = candidateThisType;
-          } else {
-            thisType = ObjectType.cast(
-                candidateThisType.restrictByNotNullOrUndefined());
-            if (thisType == null) {
-              reporter.warning(
-                  SimpleErrorReporter.getMessage0(
-                      current.getType() == Token.THIS ?
-                      "msg.jsdoc.function.thisnotobject" :
-                      "msg.jsdoc.function.newnotobject"),
-                  sourceName,
-                  contextNode.getLineno(), contextNode.getCharno());
-            }
+          thisType =
+              ObjectType.cast(
+                  createFromTypeNodesInternal(
+                      contextNode, sourceName, scope)
+                  .restrictByNotNullOrUndefined());
+          if (thisType == null) {
+            reporter.warning(
+                SimpleErrorReporter.getMessage0(
+                    current.getType() == Token.THIS ?
+                    "msg.jsdoc.function.thisnotobject" :
+                    "msg.jsdoc.function.newnotobject"),
+                sourceName,
+                contextNode.getLineno(), contextNode.getCharno());
           }
 
           isConstructor = current.getType() == Token.NEW;
