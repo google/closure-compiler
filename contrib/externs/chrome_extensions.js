@@ -2202,25 +2202,146 @@ chrome.input.ime.onMenuItemActivated;
 
 /**
  * namespace
+ * @see http://developer.chrome.com/apps/mediaGalleries
  * @const
  */
 chrome.mediaGalleries = {};
 
 
 /**
+ * @param {{interactive: (string|undefined)}|function(!Array.<!FileSystem>)}
+ *     detailsOrCallback A details object for whether the request should be
+ *     interactive if permissions haven't been granted yet or the callback.
+ * @param {function(!Array.<!FileSystem>)=} opt_callback A success callback if
+ *     no details were supplied as arg1.
+ */
+chrome.mediaGalleries.getMediaFileSystems = function(
+    detailsOrCallback, opt_callback) {};
+
+
+/**
+ * @param {function(!Array.<!FileSystem>, string)} callback Callback function.
+ */
+chrome.mediaGalleries.addUserSelectedFolder = function(callback) {};
+
+chrome.mediaGalleries.startMediaScan = function() {};
+
+chrome.mediaGalleries.cancelMediaScan = function() {};
+
+
+/**
+ * @param {function(!Array.<!FileSystem>)} callback Callback function.
+ */
+chrome.mediaGalleries.addScanResults = function(callback) {};
+
+
+/**
+ * @typedef {{
+ *   name: string,
+ *   galleryId: string,
+ *   deviceId: (string|undefined),
+ *   isRemovable: boolean,
+ *   isMediaDevice: boolean,
+ *   isAvailable: boolean
+ * }}
+ */
+chrome.mediaGalleries.MediaFileSystemMetadata;
+
+
+/**
  * @param {!FileSystem} mediaFileSystem The file system to get metadata for.
- * @return {!{name: string, galleryId: string, deviceId: (string|undefined),
- *     isRemovable: boolean, isMediaDevice: boolean}}
+ * @return {!chrome.mediaGalleries.MediaFileSystemMetadata}
  */
 chrome.mediaGalleries.getMediaFileSystemMetadata = function(mediaFileSystem) {};
 
 
 /**
- * @param {?{interactive: (string|undefined)}} details Whether the request
- *     should be interactive if permissions haven't been granted yet.
- * @param {function(!Array.<!FileSystem>)} callback A success callback.
+ * @param {function(!Array.<!chrome.mediaGalleries.MediaFileSystemMetadata>)}
+ *     callback Callback function.
  */
-chrome.mediaGalleries.getMediaFileSystems = function(details, callback) {};
+chrome.mediaGalleries.getAllMediaFileSystemMetadata = function(callback) {};
+
+
+/**
+ * @typedef {{
+ *   mimeType: string,
+ *   height: (number|undefined),
+ *   width: (number|undefined),
+ *   duration: (number|undefined),
+ *   rotation: (number|undefined),
+ *   album: (string|undefined),
+ *   artist: (string|undefined),
+ *   comment: (string|undefined),
+ *   copyright: (string|undefined),
+ *   disc: (number|undefined),
+ *   genre: (string|undefined),
+ *   language: (string|undefined),
+ *   title: (string|undefined),
+ *   track: (number|undefined)
+ * }}
+ */
+chrome.mediaGalleries.MetaData;
+
+
+/**
+ * @param {!Blob} mediaFile The media file for which to get metadata.
+ * @param {{metadataType: (string|undefined)}|
+ *     function(!chrome.mediaGalleries.MetaData)} optionsOrCallback The options
+ *     for the metadata to retrieve or the callback to invoke with the metadata.
+ *     The metadataType should either be 'all' or 'mimeTypeOnly'. Defaults to
+ *     'all' if the metadataType is omitted.
+ * @param {function(!chrome.mediaGalleries.MetaData)=} opt_callback If options
+ *     were passed as arg2, the callback to invoke with the metadata.
+ */
+chrome.mediaGalleries.getMetadata = function(
+    mediaFile, optionsOrCallback, opt_callback) {};
+
+
+/**
+ * namespace
+ * @const
+ */
+chrome.mediaGalleries.onScanProgress = {};
+
+
+/**
+ * @typedef {{
+ *   type: string,
+ *   galleryCount: (number|undefined),
+ *   audioCount: (number|undefined),
+ *   imageCount: (number|undefined),
+ *   videoCount: (number|undefined)
+ * }}
+ */
+chrome.mediaGalleries.onScanProgress.Details;
+
+
+/**
+ * @param {function(!chrome.mediaGalleries.onScanProgress.Details)} callback
+ *     Callback function.
+ */
+chrome.mediaGalleries.onScanProgress.addListener = function(callback) {};
+
+
+/**
+ * @param {function(!chrome.mediaGalleries.onScanProgress.Details)} callback
+ *     Callback function.
+ */
+chrome.mediaGalleries.onScanProgress.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!chrome.mediaGalleries.onScanProgress.Details)} callback
+ *     Callback function.
+ * @return {boolean}
+ */
+chrome.mediaGalleries.onScanProgress.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.mediaGalleries.onScanProgress.hasListeners = function() {};
 
 
 /**
@@ -4148,10 +4269,10 @@ chrome.alarms.create = function(nameOrAlarmCreateInfo, opt_alarmInfo) {};
 
 /**
  * Retrieves details about the specified alarm.
- * @param {string|!function(!chrome.alarms.Alarm)} nameOrCallback The name
+ * @param {string|function(!chrome.alarms.Alarm)} nameOrCallback The name
  *     of the alarm to get or the callback to invoke with the alarm. If no name
  *     is passed, the empty string is used to get the alarm.
- * @param {!function(!chrome.alarms.Alarm)=} opt_callback If a name was passed
+ * @param {function(!chrome.alarms.Alarm)=} opt_callback If a name was passed
  *     as arg1, the callback to invoke with the alarm.
  * @see http://developer.chrome.com/extensions/alarms.html#method-get
  */
