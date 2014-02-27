@@ -120,14 +120,14 @@ class Property {
   /** Returns whether unification succeeded */
   boolean unifyWith(
       Property other,
-      List<String> templateVars,
+      List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
     if (!inferredType.unifyWith(
-        other.inferredType, templateVars, typeMultimap)) {
+        other.inferredType, typeParameters, typeMultimap)) {
       return false;
     } else if (declaredType != null && other.declaredType != null &&
         !declaredType.unifyWith(
-        other.declaredType, templateVars, typeMultimap)) {
+        other.declaredType, typeParameters, typeMultimap)) {
       return false;
     }
     return true;

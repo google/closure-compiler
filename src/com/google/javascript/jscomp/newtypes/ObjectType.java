@@ -540,7 +540,7 @@ public class ObjectType {
    * {@code typeMultimap} to add any new template varaible type bindings.
    * @return Whether unification succeeded
    */
-  boolean unifyWith(ObjectType other, List<String> templateVars,
+  boolean unifyWith(ObjectType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
     // TODO(blickly): With generic classes, we will need to have nominalType.unifyWith
     if (nominalType != other.nominalType) {
@@ -548,7 +548,7 @@ public class ObjectType {
     }
     if (fn != null) {
       if (other.fn == null ||
-          !fn.unifyWith(other.fn, templateVars, typeMultimap)) {
+          !fn.unifyWith(other.fn, typeParameters, typeMultimap)) {
         return false;
       }
     }
@@ -556,7 +556,7 @@ public class ObjectType {
       Property thisProp = props.get(propName);
       Property otherProp = other.props.get(propName);
       if (otherProp == null ||
-          !thisProp.unifyWith(otherProp, templateVars, typeMultimap)) {
+          !thisProp.unifyWith(otherProp, typeParameters, typeMultimap)) {
         return false;
       }
     }

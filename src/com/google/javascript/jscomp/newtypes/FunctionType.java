@@ -44,7 +44,7 @@ public class FunctionType {
   // non-null iff this is a constructor/interface
   private final NominalType nominalType;
   // Non-null iff this function has an @template annotation
-  private final ImmutableList<String> templateVars;
+  private final ImmutableList<String> typeParameters;
 
   private FunctionType(
       ImmutableList<JSType> requiredFormals,
@@ -53,7 +53,7 @@ public class FunctionType {
       JSType retType,
       NominalType nominalType,
       ImmutableMap<String, JSType> outerVars,
-      ImmutableList<String> templateVars,
+      ImmutableList<String> typeParameters,
       boolean isLoose) {
     this.requiredFormals = requiredFormals;
     this.optionalFormals = optionalFormals;
@@ -61,7 +61,7 @@ public class FunctionType {
     this.returnType = retType;
     this.nominalType = nominalType;
     this.outerVarPreconditions = outerVars;
-    this.templateVars = templateVars;
+    this.typeParameters = typeParameters;
     this.isLoose = isLoose;
   }
 
@@ -88,7 +88,7 @@ public class FunctionType {
     }
     return new FunctionType(
         requiredFormals, optionalFormals, restFormals, returnType, nominalType,
-        outerVarPreconditions, templateVars, true);
+        outerVarPreconditions, typeParameters, true);
   }
 
   static FunctionType normalized(
@@ -98,7 +98,7 @@ public class FunctionType {
       JSType retType,
       NominalType nominalType,
       Map<String, JSType> outerVars,
-      ImmutableList<String> templateVars,
+      ImmutableList<String> typeParameters,
       boolean isLoose) {
     if (requiredFormals == null) {
       requiredFormals = ImmutableList.of();
@@ -124,7 +124,7 @@ public class FunctionType {
         ImmutableList.copyOf(optionalFormals),
         restFormals, retType, nominalType,
         ImmutableMap.copyOf(outerVars),
-        templateVars,
+        typeParameters,
         isLoose);
   }
 
@@ -429,17 +429,17 @@ public class FunctionType {
   }
 
   public boolean isGeneric() {
-    return templateVars != null;
+    return typeParameters != null;
   }
 
   public List<String> getTypeParameters() {
-    return templateVars;
+    return typeParameters;
   }
 
-  boolean unifyWith(FunctionType other, List<String> templateVars,
+  boolean unifyWith(FunctionType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
     Preconditions.checkState(this.nominalType == null);
-    Preconditions.checkState(this.templateVars == null);
+    Preconditions.checkState(this.typeParameters == null);
     Preconditions.checkState(this.outerVarPreconditions.isEmpty());
 
     if (requiredFormals.size() != other.requiredFormals.size()) {
@@ -450,7 +450,7 @@ public class FunctionType {
     while (thisReqFormals.hasNext()) {
       JSType reqFormal = thisReqFormals.next();
       JSType otherReqFormal = otherReqFormals.next();
-      if (!reqFormal.unifyWith(otherReqFormal, templateVars, typeMultimap)) {
+      if (!reqFormal.unifyWith(otherReqFormal, typeParameters, typeMultimap)) {
         return false;
       }
     }
@@ -463,7 +463,7 @@ public class FunctionType {
     while (thisOptFormals.hasNext()) {
       JSType optFormal = thisOptFormals.next();
       JSType otherOptFormal = otherOptFormals.next();
-      if (!optFormal.unifyWith(otherOptFormal, templateVars, typeMultimap)) {
+      if (!optFormal.unifyWith(otherOptFormal, typeParameters, typeMultimap)) {
         return false;
       }
     }
@@ -473,10 +473,10 @@ public class FunctionType {
       return false;
     }
     if (restFormals != null &&
-        !restFormals.unifyWith(other.restFormals, templateVars, typeMultimap)) {
+        !restFormals.unifyWith(other.restFormals, typeParameters, typeMultimap)) {
       return false;
     }
-    return returnType.unifyWith(other.returnType, templateVars, typeMultimap);
+    return returnType.unifyWith(other.returnType, typeParameters, typeMultimap);
   }
 
   private FunctionType applyInstantiation(Map<String, JSType> typeMap) {
@@ -501,19 +501,19 @@ public class FunctionType {
     for (String var : outerVarPreconditions.keySet()) {
       builder.addOuterVarPrecondition(var, outerVarPreconditions.get(var));
     }
-    // The returned FunctionType will have no templateVars
+    // The returned FunctionType will have no typeParameters
     return builder.buildFunction();
   }
 
   FunctionType substituteGenerics(Map<String, JSType> concreteTypes) {
-    Preconditions.checkState(templateVars == null);
+    Preconditions.checkState(typeParameters == null);
     Preconditions.checkState(outerVarPreconditions.isEmpty());
     return applyInstantiation(concreteTypes);
   }
 
   public FunctionType instantiateGenerics(Map<String, JSType> typeMap) {
     for (String typeParam: typeMap.keySet()) {
-      Preconditions.checkState(templateVars.contains(typeParam));
+      Preconditions.checkState(typeParameters.contains(typeParam));
     }
     return applyInstantiation(typeMap);
   }

@@ -264,15 +264,15 @@ public class JSType {
 
   private static void updateTypemap(
       Multimap<String, JSType> typeMultimap,
-      String templateVar, JSType type) {
-    for (JSType other : typeMultimap.get(templateVar)) {
+      String typeParam, JSType type) {
+    for (JSType other : typeMultimap.get(typeParam)) {
       JSType unified = unifyUnknowns(type, other);
       if (unified != null) {
-        typeMultimap.remove(templateVar, other);
+        typeMultimap.remove(typeParam, other);
         type = unified;
       }
     }
-    typeMultimap.put(templateVar, type);
+    typeMultimap.put(typeParam, type);
   }
 
   private static int promoteBoolean(int mask) {
@@ -342,13 +342,13 @@ public class JSType {
    * {@code typeMultimap} to add any new template variable type bindings.
    * @return Whether unification succeeded
    */
-  public boolean unifyWith(JSType other, List<String> templateVars,
+  public boolean unifyWith(JSType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
     if (this.isUnknown()) {
       return true;
     } else if (this.isTop()) {
       return other.isTop();
-    } else if (this.mask == TYPEVAR_MASK && templateVars.contains(typeVar)) {
+    } else if (this.mask == TYPEVAR_MASK && typeParameters.contains(typeVar)) {
       updateTypemap(typeMultimap, typeVar, new JSType(
           promoteBoolean(other.mask), null, other.objs, other.typeVar));
       return true;
@@ -369,7 +369,7 @@ public class JSType {
       for (ObjectType targetObj : this.objs) {
         boolean hasUnified = false;
         for (ObjectType sourceObj : other.objs) {
-          if (targetObj.unifyWith(sourceObj, templateVars, typeMultimap)) {
+          if (targetObj.unifyWith(sourceObj, typeParameters, typeMultimap)) {
             ununified.remove(sourceObj);
             hasUnified = true;
           }
@@ -384,7 +384,7 @@ public class JSType {
     String otherTypevar = other.typeVar;
     if (thisTypevar == null) {
       return otherTypevar == null && mask == other.mask;
-    } else if (!templateVars.contains(thisTypevar)) {
+    } else if (!typeParameters.contains(thisTypevar)) {
       return thisTypevar.equals(otherTypevar) && mask == other.mask;
     } else {
       // this is T (|...)

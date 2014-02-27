@@ -1380,7 +1380,7 @@ public class NewTypeInference implements CompilerPass {
    */
   private Map<String, JSType> calcTypeInstantiation(
       Node callNode, FunctionType funType, TypeEnv typeEnv, boolean isFwd) {
-    List<String> templateVars = funType.getTypeParameters();
+    List<String> typeParameters = funType.getTypeParameters();
     Multimap<String, JSType> typeMultimap = HashMultimap.create();
     Node arg = callNode.getChildAtIndex(1);
     int i = 0;
@@ -1389,13 +1389,13 @@ public class NewTypeInference implements CompilerPass {
           analyzeExprFwd(arg, typeEnv) : analyzeExprBwd(arg, typeEnv);
       JSType unifTarget = funType.getFormalType(i);
       JSType unifSource = pair.type;
-      if (!unifTarget.unifyWith(unifSource, templateVars, typeMultimap)) {
+      if (!unifTarget.unifyWith(unifSource, typeParameters, typeMultimap)) {
         // Unification may fail b/c of types irrelevant to generics, eg,
         // number vs string.
         // In this case, don't warn here; we'll show invalid-arg-type later.
         HashMap<String, JSType> tmpTypeMap = Maps.newHashMap();
-        for (String templateVar: templateVars) {
-          tmpTypeMap.put(templateVar, JSType.UNKNOWN);
+        for (String typeParam: typeParameters) {
+          tmpTypeMap.put(typeParam, JSType.UNKNOWN);
         }
         if (unifSource.isSubtypeOf(unifTarget.substituteGenerics(tmpTypeMap))) {
           warnings.add(JSError.make(arg, FAILED_TO_UNIFY,
@@ -1407,19 +1407,19 @@ public class NewTypeInference implements CompilerPass {
       i++;
     }
     HashMap<String, JSType> typeMap = Maps.newHashMap();
-    for (String templateVar: templateVars) {
-      Collection<JSType> types = typeMultimap.get(templateVar);
+    for (String typeParam: typeParameters) {
+      Collection<JSType> types = typeMultimap.get(typeParam);
       if (types.size() > 1) {
         if (isFwd) {
           warnings.add(JSError.make(callNode, NOT_UNIQUE_INSTANTIATION,
-                templateVar, types.toString()));
+                typeParam, types.toString()));
         }
-        typeMap.put(templateVar, JSType.UNKNOWN);
+        typeMap.put(typeParam, JSType.UNKNOWN);
       } else if (types.size() == 1) {
-        typeMap.put(templateVar, Iterables.getOnlyElement(types));
+        typeMap.put(typeParam, Iterables.getOnlyElement(types));
       } else {
         // Put ? for any uninstantiated type variables
-        typeMap.put(templateVar, JSType.UNKNOWN);
+        typeMap.put(typeParam, JSType.UNKNOWN);
       }
     }
     return typeMap;

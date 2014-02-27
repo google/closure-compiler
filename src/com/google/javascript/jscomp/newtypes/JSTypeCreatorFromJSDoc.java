@@ -173,7 +173,7 @@ public class JSTypeCreatorFromJSDoc {
       String typeName) {
     return isNonnullAndContains(typeParameters, typeName) ||
         ownerType != null &&
-        isNonnullAndContains(ownerType.getTemplateVars(), typeName);
+        isNonnullAndContains(ownerType.getTypeParameters(), typeName);
   }
 
   private JSType getNamedTypeHelper(Node n, RawNominalType ownerType,
@@ -213,7 +213,7 @@ public class JSTypeCreatorFromJSDoc {
       NominalType uninstantiated = namedType.getNominalTypeIfUnique();
       ImmutableList<JSType> typeArguments = typeList.build();
       ImmutableList<String> typeParameters =
-          uninstantiated.getRawNominalType().getTemplateVars();
+          uninstantiated.getRawNominalType().getTypeParameters();
       if (typeArguments.size() != typeParameters.size()) {
         warn("Invalid generics instantiation.\n" +
             "Expected " + typeParameters.size() + " type arguments, but " +

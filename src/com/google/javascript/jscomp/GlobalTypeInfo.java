@@ -338,10 +338,10 @@ class GlobalTypeInfo implements CompilerPass {
       }
       JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
       if (fnDoc != null && (fnDoc.isConstructor() || fnDoc.isInterface())) {
-        ImmutableList<String> templateVars = fnDoc.getTemplateTypeNames();
+        ImmutableList<String> typeParameters = fnDoc.getTemplateTypeNames();
         RawNominalType rawNominalType = fnDoc.isInterface() ?
-            RawNominalType.makeInterface(qname, templateVars) :
-            RawNominalType.makeClass(qname, templateVars);
+            RawNominalType.makeInterface(qname, typeParameters) :
+            RawNominalType.makeClass(qname, typeParameters);
         freshId++;
         nominaltypesByNode.put(fn, rawNominalType);
         parentScope.addNominalType(qname, rawNominalType);
@@ -618,7 +618,7 @@ class GlobalTypeInfo implements CompilerPass {
         Node fn, RawNominalType ownerType, Scope parentScope) {
       Preconditions.checkArgument(fn.isFunction());
       JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
-      ImmutableList<String> templateVars =
+      ImmutableList<String> typeParameters =
           fnDoc == null ? null : fnDoc.getTemplateTypeNames();
 
       // TODO(user): warn if multiple jsdocs for a fun
@@ -644,9 +644,9 @@ class GlobalTypeInfo implements CompilerPass {
           } else {
             Node docNode = fnDoc.getBaseType().getRootNode();
             if (typeParser.hasKnownType(
-                docNode, ownerType, parentScope, templateVars)) {
+                docNode, ownerType, parentScope, typeParameters)) {
               parentClass = typeParser.getNominalType(
-                      docNode, ownerType, parentScope, templateVars);
+                      docNode, ownerType, parentScope, typeParameters);
               if (parentClass == null) {
                 warnings.add(JSError.make(fn, EXTENDS_NON_OBJECT, functionName,
                       docNode.toStringTree()));
@@ -664,7 +664,7 @@ class GlobalTypeInfo implements CompilerPass {
           }
           boolean noCycles =
               rawNominalType.addInterfaces(typeParser.getImplementedInterfaces(
-                  fnDoc, ownerType, parentScope, templateVars));
+                  fnDoc, ownerType, parentScope, typeParameters));
           Preconditions.checkState(noCycles);
           builder.addNominalType(NominalType.fromRaw(rawNominalType));
         } else if (fnDoc.isInterface()) {
@@ -672,7 +672,7 @@ class GlobalTypeInfo implements CompilerPass {
             warnings.add(JSError.make(fn, INTERFACE_WITH_A_BODY));
           }
           if (!rawNominalType.addInterfaces(typeParser.getExtendedInterfaces(
-                  fnDoc, ownerType, parentScope, templateVars))) {
+                  fnDoc, ownerType, parentScope, typeParameters))) {
             warnings.add(JSError.make(
                 fn, INHERITANCE_CYCLE, rawNominalType.toString()));
           }
