@@ -796,6 +796,7 @@ class Normalize implements CompilerPass {
         Node value = n.getFirstChild();
         n.removeChild(value);
         Node replacement = IR.assign(n, value);
+        replacement.setJSDocInfo(parent.getJSDocInfo());
         replacement.copyInformationFrom(parent);
         gramps.replaceChild(parent, NodeUtil.newExpr(replacement));
       } else {

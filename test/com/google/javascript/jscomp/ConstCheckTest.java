@@ -157,6 +157,28 @@ public class ConstCheckTest extends CompilerTestCase {
     testSame("/** @const */ var xyz = 1; /** @suppress {const} */ xyz = 3;");
   }
 
+  public void testConstSuppressionOnAddAssign() {
+    testSame("/** @const */ var xyz = 1; /** @suppress {const} */ xyz += 1;");
+  }
+
+  // If there are two 'var' statements for the same variable, and both are in the JS
+  // (not in externs), the second will be normalized to an assignment, and the
+  // JSDoc with the suppression will be on the new node.
+  public void testConstSuppressionOnVar() {
+    String before = "/** @const */ var xyz = 1;\n/** @suppress {const} */ var xyz = 3;";
+    String after = "/** @const */ var xyz = 1;\n/** @suppress {const} */ xyz = 3;";
+    test(before, after, null);
+  }
+
+  // If there are two 'var' statements for the same variable, one in externs and
+  // one in the JS, there is no normalization, and the suppression remains on the
+  // statement in the JS.
+  public void testConstSuppressionOnVarFromExterns() {
+    String externs = "/** @const */ var xyz;";
+    String js = "/** @suppress {const} */ var xyz = 3;";
+    test(externs, js, js, null, null);
+  }
+
   public void testConstSuppressionOnInc() {
     testSame("/** @const */ var xyz = 1; /** @suppress {const} */ xyz++;");
   }

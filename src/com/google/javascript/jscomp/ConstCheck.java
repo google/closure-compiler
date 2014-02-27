@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -133,7 +134,8 @@ class ConstCheck extends AbstractPostOrderCallback
    * Reports a reassigned constant error.
    */
   void reportError(NodeTraversal t, Node n, String name) {
-    if (n.getJSDocInfo() == null || !n.getJSDocInfo().getSuppressions().contains("const")) {
+    JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
+    if (info == null || !info.getSuppressions().contains("const")) {
       compiler.report(t.makeError(n, CONST_REASSIGNED_VALUE_ERROR, name));
     }
   }
