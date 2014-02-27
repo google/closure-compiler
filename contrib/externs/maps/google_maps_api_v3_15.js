@@ -1679,7 +1679,7 @@ google.maps.KmlLayer.prototype.setUrl = function(url) {};
  * @param {number} zIndex
  * @return {undefined}
  */
-google.maps.KmlLayer.prototype.setZIndex = function(The) {};
+google.maps.KmlLayer.prototype.setZIndex = function(zIndex) {};
 
 /**
  * @constructor
