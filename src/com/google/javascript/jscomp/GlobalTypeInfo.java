@@ -207,18 +207,24 @@ class GlobalTypeInfo implements CompilerPass {
   /** Report all errors that must be checked at the end of GlobalTypeInfo */
   private void reportInheritanceErrors() {
     Deque<Node> workset = Lists.newLinkedList(nominaltypesByNode.keySet());
+    int iterations = 0;
+    final int MAX_ITERATIONS = 50000;
   workset_loop:
     while (!workset.isEmpty()) {
+      // TODO(blickly): Fix this infinite loop and remove these counters
+      Preconditions.checkState(iterations < MAX_ITERATIONS);
       Node funNode = workset.removeFirst();
       RawNominalType rawNominalType = nominaltypesByNode.get(funNode);
       NominalType superClass = rawNominalType.getSuperClass();
       if (superClass != null && !superClass.isFinalized()) {
         workset.addLast(funNode);
+        iterations++;
         continue workset_loop;
       }
       for (NominalType superInterf : rawNominalType.getInterfaces()) {
         if (!superInterf.isFinalized()) {
           workset.addLast(funNode);
+          iterations++;
           continue workset_loop;
         }
       }
