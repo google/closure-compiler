@@ -52,6 +52,19 @@ import java.util.Set;
  *
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
+ *
+ * Features left to implement:
+ * - struct/dict
+ * - @override/@inheritDoc
+ * - @const/@final
+ * - @enum
+ * - @typedef
+ * - @define
+ * - @lends
+ * - @private (maybe)
+ * - @protected (maybe)
+ * - separate scope for catch variables
+ * - closure-specific constructs
  */
 public class NewTypeInference implements CompilerPass {
 
