@@ -1348,8 +1348,8 @@ angular.$interpolateProvider.endSymbol;
  *   port: function():number,
  *   protocol: function():string,
  *   replace: function(),
- *   search: function((string|Object.<string, string>)=, ?string=):
- *       (string|!Object.<string, string>),
+ *   search: function((string|Object.<string, string>)=,
+ *       ?(string|Array.<string>)=): (string|!Object.<string, string>),
  *   url: function(string=):string
  *   }}
  */
@@ -1394,7 +1394,7 @@ angular.$location.replace = function() {};
 
 /**
  * @param {(string|Object.<string, string>)=} opt_search
- * @param {?string=} opt_paramValue
+ * @param {?(string|Array.<string>)=} opt_paramValue
  * @return {string|!Object.<string, string>}
  */
 angular.$location.search = function(opt_search, opt_paramValue) {};
