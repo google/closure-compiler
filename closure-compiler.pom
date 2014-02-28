@@ -77,10 +77,6 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
-    <repository>
-      <id>caja</id>
-      <url>http://google-caja.googlecode.com/svn/maven</url>
-    </repository>
   </repositories>
 
   <developers>
@@ -149,14 +145,6 @@
       <artifactId>junit</artifactId>
       <version>4.11</version>
       <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>caja</groupId>
-      <artifactId>caja</artifactId>
-      <version>r4939</version>
-      <scope>test</scope>
-    </dependency>
 
     <dependency>
       <groupId>org.mockito</groupId>

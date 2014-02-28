@@ -11,7 +11,6 @@
         <classpathentry kind="lib" path="lib/json.jar"/>
         <classpathentry kind="lib" path="lib/jsr305.jar"/>
         <classpathentry kind="lib" path="lib/junit.jar"/>
-        <classpathentry kind="lib" path="lib/caja-r4314.jar"/>
         <classpathentry kind="lib" path="lib/protobuf-java.jar"/>
 
         <!--

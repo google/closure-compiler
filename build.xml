@@ -56,10 +56,6 @@
             value="${build.dir}/${ant.project.name}.jar" />
   <property name="num-fuzz-tests" value="10000"/>
 
-  <property name="jsonml.dir" value="${basedir}/src/com/google/javascript/jscomp/jsonml" />
-  <property name="jsonml-classes.dir" value = "${build.dir}/jsonml-classes" />
-  <property name="jsonml-jarfile" value="${build.dir}/secure_compiler.jar" />
-
   <property name="webservice.dir" value="${basedir}/src/com/google/javascript/jscomp/webservice" />
   <property name="webservice-classes.dir" value = "${build.dir}/webservice-classes" />
   <property name="webservice-jarfile" value="${build.dir}/webservice.jar" />
@@ -264,7 +260,7 @@
     </javac>
     <javac srcdir="${src.dir}"
            destdir="${classes.dir}"
-           excludes=".svn,.git,**/jsonml/**,**/webservice/**,**/testing/**"
+           excludes=".svn,.git,**/webservice/**,**/testing/**"
            debug="${javac.debug}">
       <classpath refid="srcclasspath.path" />
     </javac>
@@ -451,11 +447,11 @@
     </jar>
   </target>
 
-  <!-- JsonML package related targets                 -->
+  <!-- webservce package related targets                 -->
   <!-- set the classpath for the project              -->
   <!-- this includes the generated source class files -->
   <!-- and every jar in the /lib directory            -->
-  <path id="jsonml-classpath.path">
+  <path id="webservice-classpath.path">
     <pathelement location="${classes.dir}" />
     <fileset dir="${lib.dir}">
       <include name="*.jar" />
@@ -468,30 +464,6 @@
     </fileset>
   </path>
 
-  <target name="jsonml-compile"
-          description="compile the source code of classes from JsonML package"
-          depends="compile">
-    <mkdir dir="${jsonml-classes.dir}" />
-    <javac srcdir="${jsonml.dir}"
-           destdir="${jsonml-classes.dir}"
-           excludes=".svn,.git"
-           debug="${javac.debug}">
-      <classpath refid="jsonml-classpath.path" />
-    </javac>
-  </target>
-
-  <target name="jsonml-jar"
-          description="package the compiler and JsonML classes"
-          depends="jsonml-compile, compile">
-   <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
-   <jar destfile="${jsonml-jarfile}" update="true">
-     <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
-     <zipfileset src="${buildlib.dir}/rhino.jar"/>
-     <fileset dir="${classes.dir}" />
-     <fileset dir="${jsonml-classes.dir}" />
-   </jar>
-  </target>
-
   <target name="webservice-compile"
           description="compile the source code of classes from the webservice package"
           depends="compile">
@@ -500,7 +472,7 @@
            destdir="${webservice-classes.dir}"
            excludes=".svn,.git"
            debug="${javac.debug}">
-      <classpath refid="jsonml-classpath.path" />
+      <classpath refid="webservice-classpath.path" />
     </javac>
   </target>
 
