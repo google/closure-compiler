@@ -853,7 +853,7 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /** The detail level for the generated source map. */
   public SourceMap.DetailLevel sourceMapDetailLevel =
-      SourceMap.DetailLevel.SYMBOLS;
+      SourceMap.DetailLevel.ALL;
 
   /** The source map file format */
   public SourceMap.Format sourceMapFormat =
