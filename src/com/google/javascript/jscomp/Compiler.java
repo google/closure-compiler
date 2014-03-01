@@ -22,6 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
@@ -1958,6 +1959,8 @@ public class Compiler extends AbstractCompiler {
 
   private CompilerInput synthesizedExternsInput = null;
 
+  private ImmutableMap<String, Node> defaultDefineValues = ImmutableMap.of();
+
   @Override
   void addChangeHandler(CodeChangeHandler handler) {
     codeChangeHandlers.add(handler);
@@ -2606,5 +2609,15 @@ public class Compiler extends AbstractCompiler {
   @Override
   public AstRoot getOldParseTreeByName(String sourceName) {
     return null;
+  }
+
+  @Override
+  void setDefaultDefineValues(ImmutableMap<String, Node> values) {
+    this.defaultDefineValues = values;
+  }
+
+  @Override
+  ImmutableMap<String, Node> getDefaultDefineValues() {
+    return this.defaultDefineValues;
   }
 }

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.parsing.Config;
@@ -453,4 +454,16 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
     * @return The "new" Rhino parse tree for the given source file.
     */
    abstract AstRoot getOldParseTreeByName(String sourceName);
+
+   /**
+    * Stores a map of default @define values.  These values
+    * can be overriden by values specifically set in the CompilerOptions.
+    */
+   abstract void setDefaultDefineValues(ImmutableMap<String, Node> values);
+
+   /**
+    * Gets a map of default @define values.  These values
+    * can be overriden by values specifically set in the CompilerOptions.
+    */
+   abstract ImmutableMap<String, Node> getDefaultDefineValues();
 }

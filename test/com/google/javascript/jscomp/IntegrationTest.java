@@ -2788,6 +2788,63 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, code, result);
   }
 
+  public void testClosureDefines() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
+    level.setOptionsForCompilationLevel(options);
+    WarningLevel warnings = WarningLevel.DEFAULT;
+    warnings.setOptionsForWarningLevel(options);
+
+    String code = "" +
+        "var CLOSURE_DEFINES = {\n" +
+        "  'FOO': 1,\n" +
+        "  'BAR': true\n" +
+        "};\n" +
+        "\n" +
+        "/** @define {number} */ var FOO = 0;\n" +
+        "/** @define {boolean} */ var BAR = false;\n" +
+        "";
+
+    String result = "" +
+        "var CLOSURE_DEFINES = {\n" +
+        "  FOO: 1,\n" +
+        "  BAR: !0\n" +
+        "}," +
+        "FOO = 1," +
+        "BAR = !0" +
+        "";
+
+    test(options, code, result);
+  }
+
+  public void testClosureDefinesDuplicates2() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
+    level.setOptionsForCompilationLevel(options);
+    WarningLevel warnings = WarningLevel.DEFAULT;
+    warnings.setOptionsForWarningLevel(options);
+    options.setDefineToNumberLiteral("FOO", 3);
+
+    String code = "" +
+        "var CLOSURE_DEFINES = {\n" +
+        "  'FOO': 1,\n" +
+        "  'FOO': 2\n" +
+        "};\n" +
+        "\n" +
+        "/** @define {number} */ var FOO = 0;\n" +
+        "";
+
+    String result = "" +
+        "var CLOSURE_DEFINES = {\n" +
+        "  FOO: 1,\n" +
+        "  FOO: 2\n" +
+        "}," +
+        "FOO = 3" +
+        "";
+
+    test(options, code, result);
+  }
+
   public void testExports() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.ADVANCED_OPTIMIZATIONS;

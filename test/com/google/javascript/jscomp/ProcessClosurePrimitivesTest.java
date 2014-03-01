@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.BASE_CLASS_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_DEFINES_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.DUPLICATE_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.EXPECTED_OBJECTLIT_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR;
@@ -1011,5 +1012,27 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
     test(jsdoc + "goog.define();", "", NULL_ARGUMENT_ERROR);
     test(jsdoc + "goog.define('value');", "", NULL_ARGUMENT_ERROR);
     test(jsdoc + "goog.define(5);", "", INVALID_ARGUMENT_ERROR);
+  }
+
+  public void testDefineValues() {
+    testSame("var CLOSURE_DEFINES = {'FOO': 'string'};");
+    testSame("var CLOSURE_DEFINES = {'FOO': true};");
+    testSame("var CLOSURE_DEFINES = {'FOO': false};");
+    testSame("var CLOSURE_DEFINES = {'FOO': 1};");
+    testSame("var CLOSURE_DEFINES = {'FOO': 0xABCD};");
+    testSame("var CLOSURE_DEFINESS = {'FOO': -1};");
+  }
+
+  public void testDefineValuesErrors() {
+    testSame("var CLOSURE_DEFINES = {'FOO': a};",
+        CLOSURE_DEFINES_ERROR, true);
+    testSame("var CLOSURE_DEFINES = {'FOO': 0+1};",
+        CLOSURE_DEFINES_ERROR, true);
+    testSame("var CLOSURE_DEFINES = {'FOO': 'value' + 'value'};",
+        CLOSURE_DEFINES_ERROR, true);
+    testSame("var CLOSURE_DEFINES = {'FOO': !true};",
+        CLOSURE_DEFINES_ERROR, true);
+    testSame("var CLOSURE_DEFINES = {'FOO': -true};",
+        CLOSURE_DEFINES_ERROR, true);
   }
 }

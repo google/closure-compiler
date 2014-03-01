@@ -142,7 +142,8 @@ class ProcessDefines implements CompilerPass {
       compiler.reportCodeChange();
     }
 
-    Set<String> unusedReplacements = dominantReplacements.keySet();
+    Set<String> unusedReplacements = Sets.newHashSet();
+    unusedReplacements.addAll(dominantReplacements.keySet());
     unusedReplacements.removeAll(allDefines.keySet());
     unusedReplacements.removeAll(KNOWN_DEFINES);
     for (String unknownDefine : unusedReplacements) {

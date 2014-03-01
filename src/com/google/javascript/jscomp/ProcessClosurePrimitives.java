@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -27,6 +28,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -116,6 +118,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   static final DiagnosticType BASE_CLASS_ERROR = DiagnosticType.error(
       "JSC_BASE_CLASS_ERROR",
       "incorrect use of {0}.base: {1}");
+
+  static final DiagnosticType CLOSURE_DEFINES_ERROR = DiagnosticType.error(
+      "JSC_CLOSURE_DEFINES_ERROR",
+      "Invalid CLOSURE_DEFINES definition");
 
   static final DiagnosticType INVALID_FORWARD_DECLARE = DiagnosticType.error(
       "JSC_INVALID_FORWARD_DECLARE",
@@ -265,9 +271,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
       case Token.ASSIGN:
       case Token.NAME:
-        // If this is an assignment to a provided name, remove the provided
-        // object.
-        handleCandidateProvideDefinition(t, n, parent);
+        if (n.isName() && n.getString().equals("CLOSURE_DEFINES")) {
+          handleClosureDefinesValues(t, n);
+        } else {
+          // If this is an assignment to a provided name, remove the provided
+          // object.
+          handleCandidateProvideDefinition(t, n, parent);
+        }
         break;
 
       case Token.EXPR_RESULT:
@@ -295,6 +305,39 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           reportBadGoogBaseUse(t, n, "May only be called directly.");
         }
         break;
+    }
+  }
+
+  /**
+   * @param n
+   */
+  private void handleClosureDefinesValues(NodeTraversal t, Node n) {
+    // var CLOSURE_DEFINES = {};
+    if (n.getParent().isVar() && n.hasOneChild() && n.getFirstChild().isObjectLit()) {
+      HashMap<String, Node> builder = new HashMap<>();
+      builder.putAll(compiler.getDefaultDefineValues());
+      for (Node c : n.getFirstChild().children()) {
+         if (c.isStringKey() && isValidDefineValue(c.getFirstChild())) {
+           builder.put(c.getString(), c.getFirstChild().cloneTree());
+         } else {
+           reportBadClosureCommonDefinesDefinition(t, c);
+         }
+      }
+      compiler.setDefaultDefineValues(ImmutableMap.copyOf(builder));
+    }
+  }
+
+  static boolean isValidDefineValue(Node val) {
+    switch (val.getType()) {
+      case Token.STRING:
+      case Token.NUMBER:
+      case Token.TRUE:
+      case Token.FALSE:
+        return true;
+      case Token.NEG:
+        return val.getFirstChild().isNumber();
+      default:
+        return false;
     }
   }
 
@@ -763,6 +806,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private void reportBadBaseMethodUse(
       NodeTraversal t, Node n, String className, String extraMessage) {
     compiler.report(t.makeError(n, BASE_CLASS_ERROR, className, extraMessage));
+  }
+
+  /** Reports an incorrect CLOSURE_DEFINES definition. */
+  private void reportBadClosureCommonDefinesDefinition(
+      NodeTraversal t, Node n) {
+    compiler.report(t.makeError(n, CLOSURE_DEFINES_ERROR));
   }
 
   /**
