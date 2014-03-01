@@ -78,6 +78,7 @@ enum Annotation {
   THROWS,
   TYPE,
   TYPEDEF,
+  UNRESTRICTED,
   VERSION,
   WIZACTION;
 
@@ -141,6 +142,7 @@ enum Annotation {
       put("throws", Annotation.THROWS).
       put("type", Annotation.TYPE).
       put("typedef", Annotation.TYPEDEF).
+      put("unrestricted", Annotation.UNRESTRICTED).
       put("version", Annotation.VERSION).
       put("wizaction", Annotation.WIZACTION).
       build();

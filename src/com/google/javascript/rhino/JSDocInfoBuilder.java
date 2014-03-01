@@ -762,6 +762,24 @@ final public class JSDocInfoBuilder {
 
   /**
    * Records that the {@link JSDocInfo} being built should have its
+   * {@link JSDocInfo#makesUnrestricted()} flag set to {@code true}.
+   *
+   * @return {@code true} if annotation was recorded and {@code false}
+   * if it was already defined or it was incompatible with the existing flags
+   */
+  public boolean recordUnrestricted() {
+    if (hasAnySingletonTypeTags() || currentInfo.isInterface() ||
+        currentInfo.makesDicts() || currentInfo.makesStructs() ||
+        currentInfo.makesUnrestricted()) {
+      return false;
+    }
+    currentInfo.setUnrestricted();
+    populated = true;
+    return true;
+  }
+
+  /**
+   * Records that the {@link JSDocInfo} being built should have its
    * {@link JSDocInfo#makesStructs()} flag set to {@code true}.
    *
    * @return {@code true} if the struct was recorded and {@code false}
@@ -769,7 +787,8 @@ final public class JSDocInfoBuilder {
    */
   public boolean recordStruct() {
     if (hasAnySingletonTypeTags() || currentInfo.isInterface() ||
-        currentInfo.makesDicts() || currentInfo.makesStructs()) {
+        currentInfo.makesDicts() || currentInfo.makesStructs() ||
+        currentInfo.makesUnrestricted()) {
       return false;
     }
     currentInfo.setStruct();
@@ -786,7 +805,8 @@ final public class JSDocInfoBuilder {
    */
   public boolean recordDict() {
     if (hasAnySingletonTypeTags() || currentInfo.isInterface() ||
-        currentInfo.makesDicts() || currentInfo.makesStructs()) {
+        currentInfo.makesDicts() || currentInfo.makesStructs() ||
+        currentInfo.makesUnrestricted()) {
       return false;
     }
     currentInfo.setDict();

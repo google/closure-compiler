@@ -376,6 +376,14 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case UNRESTRICTED:
+          if (!jsdocBuilder.recordUnrestricted()) {
+            parser.addTypeWarning("msg.jsdoc.incompat.type",
+                                  stream.getLineno(),
+                                  stream.getCharno());
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case STRUCT:
           if (!jsdocBuilder.recordStruct()) {
             parser.addTypeWarning("msg.jsdoc.incompat.type",
