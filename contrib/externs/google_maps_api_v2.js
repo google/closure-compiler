@@ -1007,7 +1007,7 @@ GEvent.clearNode = function(source) {};
 /**
  * @param {Object} source
  * @param {string} event
- * @param {...[*]} var_args
+ * @param {...*} var_args
  */
 GEvent.trigger = function(source, event, var_args) {};
 
@@ -1039,7 +1039,7 @@ GEvent.callback = function(object, method) {};
 /**
  * @param {Object} object
  * @param {function(...[*])} method
- * @param {...[*]} var_args
+ * @param {...*} var_args
  * @return {function(...[*])}
  */
 GEvent.callbackArgs = function(object, method, var_args) {};
