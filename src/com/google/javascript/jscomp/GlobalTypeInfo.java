@@ -274,9 +274,12 @@ class GlobalTypeInfo implements CompilerPass {
         }
       }
 
+      Multimap<String, JSType> inheritedPropDefs = HashMultimap.create();
       // Detect bad inheritance for extended/implemented interfaces
       for (NominalType superInterf: rawNominalType.getInterfaces()) {
         for (String pname : superInterf.getAllPropsOfInterface()) {
+          // TODO(blickly): Find more robust way of keeping track of declaration
+          // sites that can work across multiple leves of heirarchy
           PropertyDef inheritedPropDef =
               propertyDefs.get(superInterf.getId(), pname);
           JSType inheritedPropType = superInterf.getPropDeclaredType(pname);
@@ -287,16 +290,17 @@ class GlobalTypeInfo implements CompilerPass {
             continue;
           }
           PropertyDef propDef = propertyDefs.get(rawNominalType.getId(), pname);
-          JSType localPropType = rawNominalType.getPropDeclaredType(pname);
+          JSType localPropType = propDef == null ? null :
+              rawNominalType.getPropDeclaredType(pname);
           if (localPropType != null &&
               !localPropType.isSubtypeOf(inheritedPropType)) {
             warnings.add(JSError.make(
                 propDef.defSite, INVALID_PROP_OVERRIDE, pname,
                 inheritedPropType.toString(), localPropType.toString()));
-          } else if (rawNominalType.isClass()) {
+          } else {
             if (localPropType == null) {
               // Add property from interface to class
-              rawNominalType.addProtoProperty(pname, inheritedPropType);
+              inheritedPropDefs.put(pname, inheritedPropType);
             } else if (propDef.methodScope != null) {
               // If we are looking at a method definition, munging may be needed
               DeclaredFunctionType propDeclType =
@@ -304,11 +308,29 @@ class GlobalTypeInfo implements CompilerPass {
               propDeclType = propDeclType.withTypeInfoFromSuper(
                   inheritedPropDef.methodScope.getDeclaredType());
               propDef.methodScope.setDeclaredType(propDeclType);
-              rawNominalType.addProtoProperty(pname,
+              inheritedPropDefs.put(pname,
                   JSType.fromFunctionType(propDeclType.toFunctionType()));
             }
           }
         }
+      }
+    add_interface_props:
+      for (String pname : inheritedPropDefs.keySet()) {
+        Collection<JSType> defs = inheritedPropDefs.get(pname);
+        Preconditions.checkState(!defs.isEmpty());
+        JSType resultType = JSType.TOP;
+        for (JSType inheritedType : defs) {
+          if (inheritedType.isSubtypeOf(resultType)) {
+            resultType = inheritedType;
+          } else if (!resultType.isSubtypeOf(inheritedType)) {
+            // TOOD(blickly): Fix this error message to include supertype names
+            warnings.add(JSError.make(
+                funNode, TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
+                NodeUtil.getFunctionName(funNode), pname, "", ""));
+            continue add_interface_props;
+          }
+        }
+        rawNominalType.addProtoProperty(pname, resultType);
       }
 
       // Finalize nominal type once all properties are added.
