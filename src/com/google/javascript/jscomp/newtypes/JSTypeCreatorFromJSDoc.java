@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
@@ -298,10 +299,10 @@ public class JSTypeCreatorFromJSDoc {
     return wrappedClass.getNominalTypeIfUnique();
   }
 
-  public ImmutableList<NominalType> getImplementedInterfaces(
+  public ImmutableSet<NominalType> getImplementedInterfaces(
       JSDocInfo jsdoc, RawNominalType ownerType, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters) {
-    ImmutableList.Builder<NominalType> builder = ImmutableList.builder();
+    ImmutableSet.Builder<NominalType> builder = ImmutableSet.builder();
     for (JSTypeExpression texp: jsdoc.getImplementedInterfaces()) {
       Node expRoot = texp.getRootNode();
       if (hasKnownType(expRoot, ownerType, registry, typeParameters)) {
@@ -312,10 +313,10 @@ public class JSTypeCreatorFromJSDoc {
     return builder.build();
   }
 
-  public ImmutableList<NominalType> getExtendedInterfaces(
+  public ImmutableSet<NominalType> getExtendedInterfaces(
       JSDocInfo jsdoc, RawNominalType ownerType, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters) {
-    ImmutableList.Builder<NominalType> builder = ImmutableList.builder();
+    ImmutableSet.Builder<NominalType> builder = ImmutableSet.builder();
     for (JSTypeExpression texp: jsdoc.getExtendedInterfaces()) {
       Node expRoot = texp.getRootNode();
       if (hasKnownType(expRoot, ownerType, registry, typeParameters)) {

@@ -733,6 +733,11 @@ class GlobalTypeInfo implements CompilerPass {
               if (parentClass == null) {
                 warnings.add(JSError.make(fn, EXTENDS_NON_OBJECT, functionName,
                       docNode.toStringTree()));
+              } else if (!parentClass.isClass()) {
+                warnings.add(JSError.make(
+                    fn, TypeCheck.CONFLICTING_EXTENDED_TYPE,
+                    "constructor", functionName));
+                parentClass = null;
               }
             }
           }
@@ -745,17 +750,45 @@ class GlobalTypeInfo implements CompilerPass {
                   fn, INHERITANCE_CYCLE, rawNominalType.toString()));
             }
           }
-          boolean noCycles =
-              rawNominalType.addInterfaces(typeParser.getImplementedInterfaces(
-                  fnDoc, ownerType, parentScope, typeParameters));
+          Set<NominalType> interfaces = Sets.newHashSet(
+                    typeParser.getImplementedInterfaces(
+                        fnDoc, ownerType, parentScope, typeParameters));
+          for (NominalType interf : interfaces) {
+            if (interf.isClass()) {
+              warnings.add(JSError.make(
+                  fn, TypeCheck.CONFLICTING_IMPLEMENTED_TYPE, functionName));
+              interfaces.remove(interf);
+            }
+          }
+          boolean noCycles = rawNominalType.addInterfaces(
+              ImmutableSet.copyOf(interfaces));
           Preconditions.checkState(noCycles);
           builder.addNominalType(NominalType.fromRaw(rawNominalType));
         } else if (fnDoc.isInterface()) {
           if (!NodeUtil.isEmptyBlock(NodeUtil.getFunctionBody(fn))) {
             warnings.add(JSError.make(fn, INTERFACE_WITH_A_BODY));
           }
-          if (!rawNominalType.addInterfaces(typeParser.getExtendedInterfaces(
-                  fnDoc, ownerType, parentScope, typeParameters))) {
+          ImmutableSet<NominalType> implemented =
+                    typeParser.getImplementedInterfaces(
+                        fnDoc, ownerType, parentScope, typeParameters);
+          if (!implemented.isEmpty()) {
+            warnings.add(JSError.make(
+                fn, TypeCheck.CONFLICTING_IMPLEMENTED_TYPE, functionName));
+          }
+          Set<NominalType> interfaces = Sets.newHashSet(
+                    typeParser.getExtendedInterfaces(
+                        fnDoc, ownerType, parentScope, typeParameters));
+          for (NominalType interf : interfaces) {
+            if (interf.isClass()) {
+              warnings.add(JSError.make(
+                  fn, TypeCheck.CONFLICTING_EXTENDED_TYPE,
+                  "interface", functionName));
+              interfaces.remove(interf);
+            }
+          }
+          boolean noCycles = rawNominalType.addInterfaces(
+              ImmutableSet.copyOf(interfaces));
+          if (!noCycles) {
             warnings.add(JSError.make(
                 fn, INHERITANCE_CYCLE, rawNominalType.toString()));
           }

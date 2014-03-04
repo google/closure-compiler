@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -127,7 +126,7 @@ public class NominalType {
     return rawType.superClass.instantiateGenerics(typeMap);
   }
 
-  public ImmutableCollection<NominalType> getInstantiatedInterfaces() {
+  public ImmutableSet<NominalType> getInstantiatedInterfaces() {
     Preconditions.checkState(rawType.isFinalized);
     ImmutableSet.Builder<NominalType> result = ImmutableSet.builder();
     for (NominalType interf : rawType.interfaces) {
@@ -232,7 +231,7 @@ public class NominalType {
     private Map<String, Property> ctorProps = Maps.newHashMap();
     boolean isFinalized = false;
     private NominalType superClass = null;
-    private ImmutableCollection<NominalType> interfaces = null;
+    private ImmutableSet<NominalType> interfaces = null;
     private final boolean isInterface;
     private ImmutableSet<String> allProps = null;
     private final ImmutableList<String> typeParameters;
@@ -308,7 +307,7 @@ public class NominalType {
     }
 
     /** @return Whether the interface can be added without creating a cycle. */
-    public boolean addInterfaces(ImmutableCollection<NominalType> interfaces) {
+    public boolean addInterfaces(ImmutableSet<NominalType> interfaces) {
       Preconditions.checkState(!isFinalized);
       Preconditions.checkState(this.interfaces == null);
       if (this.isInterface) {
@@ -326,7 +325,7 @@ public class NominalType {
       return superClass;
     }
 
-    public ImmutableCollection<NominalType> getInterfaces() {
+    public ImmutableSet<NominalType> getInterfaces() {
       return this.interfaces;
     }
 
@@ -525,7 +524,7 @@ public class NominalType {
       this.classProps = ImmutableMap.copyOf(classProps);
       this.protoProps = ImmutableMap.copyOf(protoProps);
       if (this.interfaces == null) {
-        this.interfaces = ImmutableList.of();
+        this.interfaces = ImmutableSet.of();
       }
       addCtorProperty("prototype", createProtoObject());
       this.ctorProps = ImmutableMap.copyOf(ctorProps);
