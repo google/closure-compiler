@@ -2376,7 +2376,7 @@ public class NativeRegExp extends IdScriptableObject implements Function
             gData.cp = i;
             gData.skipped = i - start;
             for (int j = 0; j < re.parenCount; j++) {
-                gData.parens[j] = -1l;
+                gData.parens[j] = -1L;
             }
             boolean result = executeREBytecode(gData, input, end);
 

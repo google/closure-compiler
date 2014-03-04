@@ -355,7 +355,7 @@ public class FastDtoa {
         // such that:   too_low < buffer * 10^kappa < too_high
         // We use too_high for the digit_generation and stop as soon as possible.
         // If we stop early we effectively round down.
-        DiyFp one = new DiyFp(1l << -w.e(), w.e());
+        DiyFp one = new DiyFp(1L << -w.e(), w.e());
         // Division by one is a shift.
         int integrals = (int)((too_high.f() >>> -one.e()) & 0xffffffffL);
         // Modulo by one is an and.
