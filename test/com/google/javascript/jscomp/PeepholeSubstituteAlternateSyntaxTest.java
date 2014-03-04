@@ -101,6 +101,8 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     // Bogus flags should not fold
     testSame("x = RegExp(\"foobar\", \"bogus\")",
          PeepholeSubstituteAlternateSyntax.INVALID_REGULAR_EXPRESSION_FLAGS);
+    // Don't fold if the argument is not a string. See issue 1260.
+    foldSame("x = new RegExp(y)");
     // Can Fold
     fold("x = new RegExp(\"foobar\")",        "x = /foobar/");
     fold("x = RegExp(\"foobar\")",            "x = /foobar/");

@@ -297,7 +297,6 @@ class PeepholeSubstituteAlternateSyntax
     ImmutableSet.of(
       "Object",
       "Array",
-      "RegExp",
       "Error"
       );
 
@@ -307,26 +306,42 @@ class PeepholeSubstituteAlternateSyntax
   private Node tryFoldStandardConstructors(Node n) {
     Preconditions.checkState(n.isNew());
 
-    // If name normalization has been run then we know that
-    // new Object() does in fact refer to what we think it is
-    // and not some custom-defined Object().
-    if (isASTNormalized()) {
-      if (n.getFirstChild().isName()) {
-        String className = n.getFirstChild().getString();
-        if (STANDARD_OBJECT_CONSTRUCTORS.contains(className)) {
-          n.setType(Token.CALL);
-          n.putBooleanProp(Node.FREE_CALL, true);
-          reportCodeChange();
-        }
-      }
+    if (canFoldStandardConstructors(n)) {
+      n.setType(Token.CALL);
+      n.putBooleanProp(Node.FREE_CALL, true);
+      reportCodeChange();
     }
 
     return n;
   }
 
   /**
-   * Replaces a new Array or Object node with an object literal, unless the
-   * call to Array or Object is to a local function with the same name.
+   * @return Whether "new Object()" can be folded to "Object()" on {@code n}.
+   */
+  private boolean canFoldStandardConstructors(Node n) {
+    // If name normalization has been run then we know that
+    // new Object() does in fact refer to what we think it is
+    // and not some custom-defined Object().
+    if (isASTNormalized() && n.getFirstChild().isName()) {
+      String className = n.getFirstChild().getString();
+      if (STANDARD_OBJECT_CONSTRUCTORS.contains(className)) {
+        return true;
+      }
+      if ("RegExp".equals(className)) {
+        // Fold "new RegExp()" to "RegExp()", but only if the argument is a string.
+        // See issue 1260.
+        if (n.getChildAtIndex(1) == null || n.getChildAtIndex(1).isString()) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Replaces a new Array, Object, or RegExp node with a literal, unless the
+   * call is to a local constructor function with the same name.
    */
   private Node tryFoldLiteralConstructor(Node n) {
     Preconditions.checkArgument(n.isCall()
