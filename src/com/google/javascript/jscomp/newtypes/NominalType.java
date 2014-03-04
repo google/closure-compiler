@@ -98,6 +98,14 @@ public class NominalType {
     return rawType.getId();
   }
 
+  public boolean isClass() {
+    return rawType.isClass();
+  }
+
+  public boolean isInterface() {
+    return !rawType.isClass();
+  }
+
   /** True iff it has all properties and the RawNominalType is immutable */
   public boolean isFinalized() {
     return rawType.isFinalized;
@@ -110,6 +118,24 @@ public class NominalType {
   public ImmutableSet<String> getAllPropsOfClass() {
     return rawType.getAllPropsOfClass();
   }
+
+  public NominalType getInstantiatedSuperclass() {
+    Preconditions.checkState(rawType.isFinalized);
+    if (rawType.superClass == null) {
+      return null;
+    }
+    return rawType.superClass.instantiateGenerics(typeMap);
+  }
+
+  public ImmutableCollection<NominalType> getInstantiatedInterfaces() {
+    Preconditions.checkState(rawType.isFinalized);
+    ImmutableSet.Builder<NominalType> result = ImmutableSet.builder();
+    for (NominalType interf : rawType.interfaces) {
+      result.add(interf.instantiateGenerics(typeMap));
+    }
+    return result.build();
+  }
+
 
   Property getProp(String pname) {
     Property p = rawType.getProp(pname);
