@@ -30,7 +30,9 @@ import java.util.List;
 /**
  * Compiler pass for AngularJS-specific needs. Generates {@code $inject} \
  * properties for functions (class constructors, wrappers, etc) annotated with
- * @ngInject.
+ * @ngInject. Without this pass, AngularJS will not work properly if variable
+ * renaming is enabled, because the function arguments will be renamed.
+ * @see http://docs.angularjs.org/tutorial/step_05#a-note-on-minification
  *
  * <p>For example, the following code:</p>
  * <pre>{@code
