@@ -1064,6 +1064,12 @@ Element.prototype.innerText;
 Element.prototype.isContentEditable;
 
 /**
+ * @see http://msdn.microsoft.com/en-us/library/ms531395(v=vs.85).aspx
+ * NOTE: Left untyped to avoid conflict with subclasses.
+ */
+Element.prototype.load;
+
+/**
  * @param {number} pointerId Id of the pointer that is assign to the element.
  * @see http://msdn.microsoft.com/en-us/library/ie/hh771882(v=vs.85).aspx
  */
@@ -1127,6 +1133,13 @@ Element.prototype.removeBehavior = function(iID) {};
  * @see http://msdn.microsoft.com/en-us/library/aa703996(VS.85).aspx
  */
 Element.prototype.runtimeStyle;
+
+/**
+ * @param {string} sStoreName The arbitrary name assigned to a persistent object
+ *     in a UserData store.
+ * @see http://msdn.microsoft.com/en-us/library/ms531403(v=vs.85).aspx
+ */
+Element.prototype.save = function(sStoreName) {};
 
 /**
  * @param {boolean=} opt_bContainerCapture Events originating in a container are
