@@ -55,7 +55,6 @@ import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
-import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.jscomp.FunctionTypeBuilder.AstFunctionContents;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
@@ -860,10 +859,7 @@ final class TypedScopeCreator implements ScopeCreator {
         @Nullable String name,
         @Nullable JSDocInfo info,
         @Nullable Node lvalueNode) {
-
       FunctionType functionType = null;
-
-      // Global ctor aliases should be registered with the type registry.
       if (rValue != null && rValue.isQualifiedName() && scope.isGlobal()) {
         Var var = scope.getVar(rValue.getQualifiedName());
         if (var != null && var.getType() != null &&
@@ -873,6 +869,8 @@ final class TypedScopeCreator implements ScopeCreator {
               !aliasedType.isNativeObjectType()) {
             functionType = aliasedType;
 
+            // TODO(nick): Remove this. This should already be handled by
+            // normal type resolution.
             if (name != null && scope.isGlobal()) {
               typeRegistry.declareType(name, functionType.getInstanceType());
             }
@@ -1407,12 +1405,6 @@ final class TypedScopeCreator implements ScopeCreator {
       return null;
     }
 
-    private FunctionType getFunctionType(@Nullable Var v) {
-      JSType t = v == null ? null : v.getType();
-      ObjectType o = t == null ? null : t.dereference();
-      return JSType.toMaybeFunctionType(o);
-    }
-
     /**
      * Look for calls that set a delegate method's calling convention.
      */
@@ -1431,26 +1423,16 @@ final class TypedScopeCreator implements ScopeCreator {
       SubclassRelationship relationship =
           codingConvention.getClassesDefinedByCall(n);
       if (relationship != null) {
-        FunctionType superCtor = getFunctionType(
+        ObjectType superClass = TypeValidator.getInstanceOfCtor(
             scope.getVar(relationship.superclassName));
-        FunctionType subCtor = getFunctionType(
+        ObjectType subClass = TypeValidator.getInstanceOfCtor(
             scope.getVar(relationship.subclassName));
-        if (superCtor != null && superCtor.isConstructor() &&
-            subCtor != null && subCtor.isConstructor()) {
-          ObjectType superClass = superCtor.getInstanceType();
-          ObjectType subClass = subCtor.getInstanceType();
-
+        if (superClass != null && subClass != null) {
           // superCtor and subCtor might be structural constructors
           // (like {function(new:Object)}) so we need to resolve them back
           // to the original ctor objects.
-          superCtor = superClass.getConstructor();
-          subCtor = subClass.getConstructor();
-
-          if (relationship.type == SubclassType.INHERITS &&
-              !superClass.isEmptyType() && !subClass.isEmptyType()) {
-            validator.expectSuperType(t, n, superClass, subClass);
-          }
-
+          FunctionType superCtor = superClass.getConstructor();
+          FunctionType subCtor = subClass.getConstructor();
           if (superCtor != null && subCtor != null) {
             codingConvention.applySubclassRelationship(
                 superCtor, subCtor, relationship.type);

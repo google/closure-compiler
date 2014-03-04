@@ -29,6 +29,8 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
+import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -1768,6 +1770,28 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   /**
+   * Validate class-defining calls.
+   * Because JS has no 'native' syntax for defining classes, we need
+   * to do this manually.
+   */
+  private void checkCallConventions(NodeTraversal t, Node n) {
+    SubclassRelationship relationship =
+        compiler.getCodingConvention().getClassesDefinedByCall(n);
+    Scope scope = t.getScope();
+    if (relationship != null) {
+      ObjectType superClass = TypeValidator.getInstanceOfCtor(
+          scope.getVar(relationship.superclassName));
+      ObjectType subClass = TypeValidator.getInstanceOfCtor(
+          scope.getVar(relationship.subclassName));
+      if (relationship.type == SubclassType.INHERITS &&
+          superClass != null && !superClass.isEmptyType() &&
+          subClass != null && !subClass.isEmptyType()) {
+        validator.expectSuperType(t, n, superClass, subClass);
+      }
+    }
+  }
+
+  /**
    * Visits a CALL node.
    *
    * @param t The node traversal object that supplies context, such as the
@@ -1775,6 +1799,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param n The node being visited.
    */
   private void visitCall(NodeTraversal t, Node n) {
+    checkCallConventions(t, n);
+
     Node child = n.getFirstChild();
     JSType childType = getJSType(child).restrictByNotNullOrUndefined();
 
