@@ -2144,15 +2144,23 @@ jQuery.prototype.unwrap = function() {};
 jQuery.prototype.val = function(arg1) {};
 
 /**
- * @param {jQuery.deferred} deferred
- * @param {...jQuery.deferred} deferreds
+ * Note: The official documentation (https://api.jquery.com/jQuery.when/) says
+ * jQuery.when accepts deferreds, but it, actually, accepts any type, e.g.:
+ *
+ * jQuery.when(jQuery.ready, jQuery.ajax(''), jQuery('#my-element'), 1)
+ *
+ * If an argument is not an "observable" (a promise-like object) it is wrapped
+ * into a promise.
+ * @param {*} deferred
+ * @param {...*} deferreds
  * @return {jQuery.Promise}
  */
 jQuery.when = function(deferred, deferreds) {};
 
 /**
- * @param {jQuery.deferred} deferred
- * @param {...jQuery.deferred} deferreds
+ * Note: See jQuery.when().
+ * @param {*} deferred
+ * @param {...*} deferreds
  * @return {jQuery.Promise}
  */
 $.when = function(deferred, deferreds) {};
