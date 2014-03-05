@@ -279,10 +279,6 @@ class NewIRFactory {
 
     irFactory.validateAll(n);
 
-    // DEBUG: remove this, verify the tree can be print, remove this.
-    n.toStringTree();
-    //
-
     return n;
   }
 
@@ -584,6 +580,7 @@ class NewIRFactory {
       case LABELLED_STATEMENT:
         return false;
       case CALL_EXPRESSION:
+      case CONDITIONAL_EXPRESSION:
       case BINARY_OPERATOR:
       case MEMBER_EXPRESSION:
       case MEMBER_LOOKUP_EXPRESSION:
@@ -605,6 +602,8 @@ class NewIRFactory {
         return findNearestNode(tree.asCallExpression().operand);
       case BINARY_OPERATOR:
         return findNearestNode(tree.asBinaryOperator().left);
+      case CONDITIONAL_EXPRESSION:
+        return findNearestNode(tree.asConditionalExpression().condition);
       case MEMBER_EXPRESSION:
         return findNearestNode(tree.asMemberExpression().operand);
       case MEMBER_LOOKUP_EXPRESSION:
