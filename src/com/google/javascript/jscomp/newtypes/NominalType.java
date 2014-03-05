@@ -154,7 +154,8 @@ public class NominalType {
   boolean isSubclassOf(NominalType other) {
     if (rawType.equals(other.rawType)) {
       for (String typeVar :rawType.getTypeParameters()) {
-        Preconditions.checkState(typeMap.containsKey(typeVar));
+        Preconditions.checkState(typeMap.containsKey(typeVar),
+            "Type variable %s not in the domain: %s", typeVar, typeMap.keySet());
         Preconditions.checkState(other.typeMap.containsKey(typeVar));
         if (!typeMap.get(typeVar).isSubtypeOf(other.typeMap.get(typeVar))) {
           return false;
@@ -224,8 +225,8 @@ public class NominalType {
     private final String name;
     // Each instance of the class has these properties by default
     private Map<String, Property> classProps = Maps.newHashMap();
-    // The object pointed to by the prototype property of the constructor of this
-    // class has these properties
+    // The object pointed to by the prototype property of the constructor of
+    // this class has these properties
     private Map<String, Property> protoProps = Maps.newHashMap();
     // The constructor of this class has these "static" properties
     private Map<String, Property> ctorProps = Maps.newHashMap();
@@ -234,6 +235,7 @@ public class NominalType {
     private ImmutableSet<NominalType> interfaces = null;
     private final boolean isInterface;
     private ImmutableSet<String> allProps = null;
+    // Empty iff this type is not generic
     private final ImmutableList<String> typeParameters;
 
     private RawNominalType(
@@ -262,6 +264,10 @@ public class NominalType {
 
     public boolean isClass() {
       return !isInterface;
+    }
+
+    boolean isGeneric() {
+      return !typeParameters.isEmpty();
     }
 
     ImmutableList<String> getTypeParameters() {

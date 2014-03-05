@@ -211,6 +211,10 @@ public class JSType {
     return (mask & NULL_MASK) != 0;
   }
 
+  boolean isTypeVariable() {
+    return (mask & ~TYPEVAR_MASK) == 0;
+  }
+
   public static boolean areCompatibleScalarTypes(JSType lhs, JSType rhs) {
     Preconditions.checkArgument(
         lhs.isSubtypeOf(TOP_SCALAR) || rhs.isSubtypeOf(TOP_SCALAR));
@@ -366,6 +370,9 @@ public class JSType {
     // However, we don't check that two different objects of this don't unify
     // with the same other type.
     if (this.objs != null) {
+      if (other.objs == null) {
+        return false;
+      }
       for (ObjectType targetObj : this.objs) {
         boolean hasUnified = false;
         for (ObjectType sourceObj : other.objs) {
@@ -566,8 +573,14 @@ public class JSType {
     if (objs == null) {
       return null;
     }
-    Preconditions.checkState(objs.size() == 1);
-    return Iterables.getOnlyElement(objs).getFunType();
+    if (objs.size() == 1) { // The common case is fast
+      return Iterables.getOnlyElement(objs).getFunType();
+    }
+    FunctionType result = FunctionType.TOP_FUNCTION;
+    for (ObjectType obj: objs) {
+      result = FunctionType.meet(result, obj.getFunType());
+    }
+    return result;
   }
 
   NominalType getNominalTypeIfUnique() {

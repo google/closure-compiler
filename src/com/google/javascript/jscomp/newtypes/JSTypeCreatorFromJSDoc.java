@@ -50,8 +50,8 @@ public class JSTypeCreatorFromJSDoc {
   // Unknown type names indexed by JSDoc AST node at which they were found.
   private Map<Node, String> unknownTypeNames = Maps.newHashMap();
 
-  public JSType getNodeTypeDeclaration(
-      JSDocInfo jsdoc, RawNominalType ownerType, DeclaredTypeRegistry registry) {
+  public JSType getNodeTypeDeclaration(JSDocInfo jsdoc,
+      RawNominalType ownerType, DeclaredTypeRegistry registry) {
     if (jsdoc == null) {
       return null;
     }
@@ -194,14 +194,27 @@ public class JSTypeCreatorFromJSDoc {
       return JSType.UNDEFINED;
     } else if (hasTypeVariable(outerTypeParameters, ownerType, typeName)) {
       return JSType.fromTypeVar(typeName);
-    } else { // it must be a class name
+    } else { // It's either a type variable or a nominal-type name
       JSType namedType = registry.lookupTypeByName(typeName);
       if (namedType == null) {
         unknownTypeNames.put(n, typeName);
         throw new UnknownTypeException("Unhandled type: " + typeName);
       }
-      if (!n.hasChildren()) {
+      if (namedType.isTypeVariable()) {
         return namedType;
+      }
+      NominalType uninstantiated = namedType.getNominalTypeIfUnique();
+      RawNominalType rawType = uninstantiated.getRawNominalType();
+      if (!rawType.isGeneric() && !n.hasChildren()) {
+        return namedType;
+      }
+      if (!n.hasChildren()) {
+        ImmutableList.Builder<JSType> typeList = ImmutableList.builder();
+        for (String unused: rawType.getTypeParameters()) {
+          typeList.add(JSType.UNKNOWN);
+        }
+        return JSType.fromObjectType(ObjectType.fromNominalType(
+            uninstantiated.instantiateGenerics(typeList.build())));
       }
       // Compute instantiation of polymorphic class/interface.
       Preconditions.checkState(n.getFirstChild().isBlock());
@@ -211,10 +224,8 @@ public class JSTypeCreatorFromJSDoc {
                 child, ownerType, registry, outerTypeParameters);
         typeList.add(childType);
       }
-      NominalType uninstantiated = namedType.getNominalTypeIfUnique();
       ImmutableList<JSType> typeArguments = typeList.build();
-      ImmutableList<String> typeParameters =
-          uninstantiated.getRawNominalType().getTypeParameters();
+      ImmutableList<String> typeParameters = rawType.getTypeParameters();
       if (typeArguments.size() != typeParameters.size()) {
         warn("Invalid generics instantiation.\n" +
             "Expected " + typeParameters.size() + " type arguments, but " +
@@ -255,10 +266,10 @@ public class JSTypeCreatorFromJSDoc {
                       typeParameters));
               break;
             case Token.ELLIPSIS:
-              builder.addRestFormals(
+              Node restNode = arg.getFirstChild();
+              builder.addRestFormals(restNode == null ? JSType.UNKNOWN :
                   getTypeFromNodeHelper(
-                      arg.getFirstChild(), ownerType, registry,
-                      typeParameters));
+                      restNode, ownerType, registry, typeParameters));
               break;
             default:
               builder.addReqFormal(
@@ -302,26 +313,36 @@ public class JSTypeCreatorFromJSDoc {
   public ImmutableSet<NominalType> getImplementedInterfaces(
       JSDocInfo jsdoc, RawNominalType ownerType, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters) {
-    ImmutableSet.Builder<NominalType> builder = ImmutableSet.builder();
-    for (JSTypeExpression texp: jsdoc.getImplementedInterfaces()) {
-      Node expRoot = texp.getRootNode();
-      if (hasKnownType(expRoot, ownerType, registry, typeParameters)) {
-        builder.add(
-            getNominalType(expRoot, ownerType, registry, typeParameters));
-      }
-    }
-    return builder.build();
+    return getInterfacesHelper(
+        jsdoc, ownerType, registry, typeParameters, true);
   }
 
   public ImmutableSet<NominalType> getExtendedInterfaces(
       JSDocInfo jsdoc, RawNominalType ownerType, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters) {
+    return getInterfacesHelper(
+        jsdoc, ownerType, registry, typeParameters, false);
+  }
+
+  private ImmutableSet<NominalType> getInterfacesHelper(
+      JSDocInfo jsdoc, RawNominalType ownerType, DeclaredTypeRegistry registry,
+      ImmutableList<String> typeParameters, boolean implementedIntfs) {
     ImmutableSet.Builder<NominalType> builder = ImmutableSet.builder();
-    for (JSTypeExpression texp: jsdoc.getExtendedInterfaces()) {
+    for (JSTypeExpression texp: (implementedIntfs ?
+          jsdoc.getImplementedInterfaces() :
+          jsdoc.getExtendedInterfaces())) {
       Node expRoot = texp.getRootNode();
       if (hasKnownType(expRoot, ownerType, registry, typeParameters)) {
-        builder.add(
-            getNominalType(expRoot, ownerType, registry, typeParameters));
+        NominalType nt =
+            getNominalType(expRoot, ownerType, registry, typeParameters);
+        if (nt != null && nt.isInterface()) {
+          builder.add(nt);
+        } else {
+          String errorMsg = implementedIntfs ?
+              "Cannot implement non-interface" :
+              "Cannot extend non-interface";
+          warn(errorMsg, jsdoc.getAssociatedNode());
+        }
       }
     }
     return builder.build();
