@@ -203,39 +203,47 @@ public class JSTypeCreatorFromJSDoc {
       if (namedType.isTypeVariable()) {
         return namedType;
       }
-      NominalType uninstantiated = namedType.getNominalTypeIfUnique();
-      RawNominalType rawType = uninstantiated.getRawNominalType();
-      if (!rawType.isGeneric() && !n.hasChildren()) {
-        return namedType;
-      }
-      if (!n.hasChildren()) {
-        ImmutableList.Builder<JSType> typeList = ImmutableList.builder();
-        for (String unused: rawType.getTypeParameters()) {
-          typeList.add(JSType.UNKNOWN);
-        }
-        return JSType.fromObjectType(ObjectType.fromNominalType(
-            uninstantiated.instantiateGenerics(typeList.build())));
-      }
-      // Compute instantiation of polymorphic class/interface.
-      Preconditions.checkState(n.getFirstChild().isBlock());
+      return JSType.join(JSType.NULL, getNominalTypeHelper(
+          namedType, n, ownerType, registry, outerTypeParameters));
+    }
+  }
+
+  private JSType getNominalTypeHelper(JSType namedType, Node n,
+      RawNominalType ownerType, DeclaredTypeRegistry registry,
+      ImmutableList<String> outerTypeParameters)
+      throws UnknownTypeException {
+    NominalType uninstantiated = namedType.getNominalTypeIfUnique();
+    RawNominalType rawType = uninstantiated.getRawNominalType();
+    if (!rawType.isGeneric() && !n.hasChildren()) {
+      return namedType;
+    }
+    if (!n.hasChildren()) {
       ImmutableList.Builder<JSType> typeList = ImmutableList.builder();
-      for (Node child : n.getFirstChild().children()) {
-        JSType childType = getTypeFromNodeHelper(
-                child, ownerType, registry, outerTypeParameters);
-        typeList.add(childType);
-      }
-      ImmutableList<JSType> typeArguments = typeList.build();
-      ImmutableList<String> typeParameters = rawType.getTypeParameters();
-      if (typeArguments.size() != typeParameters.size()) {
-        warn("Invalid generics instantiation.\n" +
-            "Expected " + typeParameters.size() + " type arguments, but " +
-            typeArguments.size() + " were passed.", n);
-        return JSType.fromObjectType(ObjectType.fromNominalType(
-            uninstantiated));
+      for (String unused: rawType.getTypeParameters()) {
+        typeList.add(JSType.UNKNOWN);
       }
       return JSType.fromObjectType(ObjectType.fromNominalType(
-          uninstantiated.instantiateGenerics(typeArguments)));
+          uninstantiated.instantiateGenerics(typeList.build())));
     }
+    // Compute instantiation of polymorphic class/interface.
+    Preconditions.checkState(n.getFirstChild().isBlock());
+    ImmutableList.Builder<JSType> typeList = ImmutableList.builder();
+    for (Node child : n.getFirstChild().children()) {
+      JSType childType = getTypeFromNodeHelper(
+          child, ownerType, registry, outerTypeParameters);
+      typeList.add(childType);
+    }
+    ImmutableList<JSType> typeArguments = typeList.build();
+    ImmutableList<String> typeParameters = rawType.getTypeParameters();
+    if (typeArguments.size() != typeParameters.size()) {
+      warn("Invalid generics instantiation.\n" +
+          "Expected " + typeParameters.size() + " type arguments, but " +
+          typeArguments.size() + " were passed.", n);
+      return JSType.fromObjectType(ObjectType.fromNominalType(
+          uninstantiated));
+    }
+    return JSType.fromObjectType(ObjectType.fromNominalType(
+        uninstantiated.instantiateGenerics(typeArguments)));
   }
 
   // Don't confuse with getFunTypeFromAtTypeJsdoc; the function below computes a

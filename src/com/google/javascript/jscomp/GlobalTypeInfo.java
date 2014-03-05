@@ -960,9 +960,8 @@ class GlobalTypeInfo implements CompilerPass {
       if (localClassDefs != null) {
         RawNominalType rawNominalType = localClassDefs.get(name);
         if (rawNominalType != null) {
-          return JSType.join(JSType.NULL,
-              JSType.fromObjectType(ObjectType.fromNominalType(
-                  NominalType.fromRaw(rawNominalType))));
+          return JSType.fromObjectType(ObjectType.fromNominalType(
+              NominalType.fromRaw(rawNominalType)));
         }
       }
       return parent == null ? null : parent.lookupTypeByName(name);
