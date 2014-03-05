@@ -1140,7 +1140,7 @@ angular.$http;
  *   headers: (Object|undefined),
  *   method: (string|undefined),
  *   params: (Object.<(string|Object)>|undefined),
- *   timeout: (number|undefined),
+ *   timeout: (number|!angular.$q.Promise|undefined),
  *   transformRequest:
  *       (function((string|Object), Object):(string|Object)|
  *       Array.<function((string|Object), Object):(string|Object)>|undefined),
