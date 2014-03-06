@@ -91,6 +91,10 @@ import java.util.zip.ZipInputStream;
  */
 public class CommandLineRunner extends
     AbstractCommandLineRunner<Compiler, CompilerOptions> {
+
+  public static final String OUTPUT_MARKER =
+      AbstractCommandLineRunner.OUTPUT_MARKER;
+
   private static class GuardLevel {
     final String name;
     final CheckLevel level;

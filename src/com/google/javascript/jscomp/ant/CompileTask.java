@@ -75,6 +75,7 @@ public final class CompileTask
   private boolean forceRecompile;
   private String replacePropertiesPrefix;
   private File outputFile;
+  private String outputWrapper;
   private final List<Parameter> defineParams;
   private final List<Parameter> entryPointParams;
   private final List<FileList> externFileLists;
@@ -182,6 +183,13 @@ public final class CompileTask
    */
   public void setOutput(File value) {
     this.outputFile = value;
+  }
+
+  /**
+   * Set output wrapper.
+   */
+  public void setOutputWrapper(String value) {
+    this.outputWrapper = value;
   }
 
   /**
@@ -303,6 +311,21 @@ public final class CompileTask
       Result result = compiler.compile(externs, sources, options);
       if (result.success) {
         StringBuilder source = new StringBuilder(compiler.toSource());
+
+        if (this.outputWrapper != null) {
+          int pos = -1;
+          pos = this.outputWrapper.indexOf(CommandLineRunner.OUTPUT_MARKER);
+          if (pos > -1) {
+            String prefix = this.outputWrapper.substring(0, pos);
+            source.insert(0, prefix);
+
+            // end of outputWrapper
+            int suffixStart = pos + CommandLineRunner.OUTPUT_MARKER.length();
+            String suffix = this.outputWrapper.substring(suffixStart);
+            source.append(suffix);
+          }
+        }
+
         if (result.sourceMap != null) {
           flushSourceMap(result.sourceMap);
           source.append(System.getProperty("line.separator"));
