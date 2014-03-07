@@ -85,51 +85,44 @@ public class CodePrinterTest extends TestCase {
     }
   }
 
-  String parsePrint(String js, boolean prettyprint, int lineThreshold) {
-    CompilerOptions options = new CompilerOptions();
-    options.setTrustedStrings(trustedStrings);
-    options.setPrettyPrint(prettyprint);
-    options.setLineLengthThreshold(lineThreshold);
-    options.setLanguageOut(languageMode);
-    return new CodePrinter.Builder(parse(js)).setCompilerOptions(options)
-        .build();
+  String parsePrint(String js, CompilerOptions options) {
+    return new CodePrinter.Builder(parse(js)).setCompilerOptions(options).build();
   }
 
-  String parsePrint(String js, boolean prettyprint, boolean lineBreak,
-      int lineThreshold) {
+  CompilerOptions newCompilerOptions(boolean prettyprint, int lineThreshold) {
     CompilerOptions options = new CompilerOptions();
     options.setTrustedStrings(trustedStrings);
+    options.setLanguageOut(languageMode);
     options.setPrettyPrint(prettyprint);
     options.setLineLengthThreshold(lineThreshold);
+    return options;
+  }
+
+  CompilerOptions newCompilerOptions(boolean prettyprint, int lineThreshold, boolean lineBreak) {
+    CompilerOptions options = newCompilerOptions(prettyprint, lineThreshold);
     options.setLineBreak(lineBreak);
-    options.setLanguageOut(languageMode);
-    return new CodePrinter.Builder(parse(js)).setCompilerOptions(options)
-        .build();
+    return options;
+  }
+
+  String parsePrint(String js, boolean prettyprint, int lineThreshold) {
+    return parsePrint(js, newCompilerOptions(prettyprint, lineThreshold));
+  }
+
+  String parsePrint(String js, boolean prettyprint, boolean lineBreak, int lineThreshold) {
+    return parsePrint(js, newCompilerOptions(prettyprint, lineThreshold, lineBreak));
   }
 
   String parsePrint(String js, boolean prettyprint, boolean lineBreak,
       boolean preferLineBreakAtEof, int lineThreshold) {
-    CompilerOptions options = new CompilerOptions();
-    options.setTrustedStrings(trustedStrings);
-    options.setPrettyPrint(prettyprint);
-    options.setLineLengthThreshold(lineThreshold);
+    CompilerOptions options = newCompilerOptions(prettyprint, lineThreshold, lineBreak);
     options.setPreferLineBreakAtEndOfFile(preferLineBreakAtEof);
-    options.setLineBreak(lineBreak);
-    options.setLanguageOut(languageMode);
-    return new CodePrinter.Builder(parse(js)).setCompilerOptions(options)
-        .build();
+    return parsePrint(js, options);
   }
 
-  String parsePrint(String js, boolean prettyprint, boolean lineBreak,
-      int lineThreshold, boolean outputTypes) {
-    Node node = parse(js, true);
-    CompilerOptions options = new CompilerOptions();
-    options.setTrustedStrings(trustedStrings);
-    options.setPrettyPrint(prettyprint);
-    options.setLineLengthThreshold(lineThreshold);
-    options.setLineBreak(lineBreak);
-    options.setLanguageOut(languageMode);
-    return new CodePrinter.Builder(node).setCompilerOptions(options)
+  String parsePrint(String js, boolean prettyprint, boolean lineBreak, int lineThreshold,
+      boolean outputTypes) {
+    return new CodePrinter.Builder(parse(js, true))
+        .setCompilerOptions(newCompilerOptions(prettyprint, lineThreshold, lineBreak))
         .setOutputTypes(outputTypes)
         .setTypeRegistry(lastCompiler.getTypeRegistry())
         .build();
@@ -138,14 +131,8 @@ public class CodePrinterTest extends TestCase {
   String parsePrint(String js, boolean prettyprint, boolean lineBreak,
                     int lineThreshold, boolean outputTypes,
                     boolean tagAsStrict) {
-    Node node = parse(js, true);
-    CompilerOptions options = new CompilerOptions();
-    options.setTrustedStrings(trustedStrings);
-    options.setPrettyPrint(prettyprint);
-    options.setLineLengthThreshold(lineThreshold);
-    options.setLineBreak(lineBreak);
-    options.setLanguageOut(languageMode);
-    return new CodePrinter.Builder(node).setCompilerOptions(options)
+    return new CodePrinter.Builder(parse(js, true))
+        .setCompilerOptions(newCompilerOptions(prettyprint, lineThreshold, lineBreak))
         .setOutputTypes(outputTypes)
         .setTypeRegistry(lastCompiler.getTypeRegistry())
         .setTagAsStrict(tagAsStrict)
