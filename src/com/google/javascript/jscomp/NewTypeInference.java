@@ -856,17 +856,23 @@ public class NewTypeInference implements CompilerPass {
                    (specializedType.isTruthy() && exprKind == Token.OR)) {
           EnvTypePair shortCircuitPair =
               analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, specializedType);
-          JSType negatedType = specializedType.isTruthy() ?
-              JSType.FALSY : JSType.TRUTHY;
-          EnvTypePair lhsPair =
-              analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, negatedType);
+          EnvTypePair lhsPair = analyzeExprFwd(
+              lhs, inEnv, JSType.UNKNOWN, specializedType.negate());
           EnvTypePair rhsPair =
               analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, specializedType);
           return EnvTypePair.join(rhsPair, shortCircuitPair);
         } else {
-          EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
-          EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
-          return rhsPair;
+          // Independently of the specializedType, && rhs is only analyzed when
+          // lhs is truthy, and || rhs is only analyzed when lhs is falsy.
+          JSType stopAfterLhsType = exprKind == Token.AND ?
+              JSType.FALSY : JSType.TRUTHY;
+          EnvTypePair shortCircuitPair =
+              analyzeExprFwd(lhs, inEnv, requiredType, stopAfterLhsType);
+          EnvTypePair lhsPair = analyzeExprFwd(
+              lhs, inEnv, JSType.UNKNOWN, stopAfterLhsType.negate());
+          EnvTypePair rhsPair =
+              analyzeExprFwd(rhs, lhsPair.env, requiredType, specializedType);
+          return EnvTypePair.join(rhsPair, shortCircuitPair);
         }
       }
       case Token.INC:
