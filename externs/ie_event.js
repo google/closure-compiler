@@ -178,10 +178,49 @@ MSPointerEvent.MSPOINTER_TYPE_PEN;
 MSPointerEvent.MSPOINTER_TYPE_TOUCH;
 
 /** @type {number} */
+MSPointerEvent.prototype.height;
+
+/** @type {number} */
+MSPointerEvent.prototype.hwTimestamp;
+
+/** @type {boolean} */
+MSPointerEvent.prototype.isPrimary;
+
+/** @type {number} */
 MSPointerEvent.prototype.pointerId;
 
 /** @type {number} */
 MSPointerEvent.prototype.pointerType;
+
+/** @type {number} */
+MSPointerEvent.prototype.pressure;
+
+/** @type {number} */
+MSPointerEvent.prototype.rotation;
+
+/** @type {number} */
+MSPointerEvent.prototype.tiltX;
+
+/** @type {number} */
+MSPointerEvent.prototype.tiltY;
+
+/** @type {number} */
+MSPointerEvent.prototype.timeStamp;
+
+/** @type {number} */
+MSPointerEvent.prototype.width;
+
+/**
+ * @param {number} pointerId
+ * @return {undefined}
+ */
+MSPointerEvent.prototype.msReleasePointerCapture;
+
+/**
+ * @param {number} pointerId
+ * @return {undefined}
+ */
+MSPointerEvent.prototype.msSetPointerCapture;
 
 /**
  * @param {string} typeArg
