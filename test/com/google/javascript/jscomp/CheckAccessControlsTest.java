@@ -217,6 +217,16 @@ public class CheckAccessControlsTest extends CompilerTestCase {
              "Foo.prototype.bar = function() { f(); }");
   }
 
+  public void testNoWarningOnDeclaration() {
+    testSame("/** @constructor */ function F() {\n" +
+             "  /**\n" +
+             "   * @type {number}\n" +
+             "   * @deprecated Use something else.\n" +
+             "   */\n" +
+             "  this.code;\n" +
+             "}");
+  }
+
   public void testNoWarningInDeprecatedClass2() {
     testSame("/** @deprecated */ function f() {} " +
              "/** @constructor \n * @deprecated */ " +

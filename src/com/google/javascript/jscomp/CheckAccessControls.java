@@ -588,6 +588,12 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return false;
     }
 
+    // Don't warn if the node is just declaring the property, not reading it.
+    if (n.isGetProp() && parent.isExprResult() &&
+        n.getJSDocInfo().isDeprecated()) {
+      return false;
+    }
+
     return !canAccessDeprecatedTypes(t);
   }
 
