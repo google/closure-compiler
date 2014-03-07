@@ -33,7 +33,6 @@
  *     $rootScope
  *     $rootScopeProvider
  *     $routeParams
- *     $sanitize
  *     $window
  * TODO: Resolve two issues with angular.$http
  *         1) angular.$http cannot be declared as a callable type.
@@ -1886,6 +1885,12 @@ angular.$routeProvider.Params.redirectTo;
 /** @type {boolean} */
 angular.$routeProvider.Params.reloadOnSearch;
 
+/******************************************************************************
+ * $sanitize Service
+ *****************************************************************************/
+
+/** @typedef {function(string):string} */
+angular.$sanitize;
 
 /******************************************************************************
  * $sce Service
