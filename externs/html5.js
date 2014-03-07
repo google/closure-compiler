@@ -1143,12 +1143,14 @@ HTMLElement.prototype.hidden;
 HTMLElement.prototype.spellcheck;
 
 /**
+ * TODO(nnaze): This must return ShadowRoot.
  * @see http://www.w3.org/TR/components-intro/
  * @return {!Element}
  */
 HTMLElement.prototype.createShadowRoot;
 
 /**
+ * TODO(nnaze): This must return ShadowRoot.
  * @see http://www.w3.org/TR/components-intro/
  * @return {!Element}
  */
@@ -3188,3 +3190,91 @@ Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
 // Intentionally omitted until the spec gets clearer.
 // Promise.prototype.catch
+
+
+/**
+ * Definition of ShadowRoot interface,
+ * @see http://www.w3.org/TR/shadow-dom/#api-shadow-root
+ * @constructor
+ * @extends {DocumentFragment}
+ */
+function ShadowRoot() {}
+
+
+/**
+ * @param {string} id id.
+ * @return {HTMLElement}
+ * @nosideeffects
+ */
+ShadowRoot.prototype.getElementById = function(id) {};
+
+
+/**
+ * @param {string} className
+ * @return {!NodeList}
+ * @nosideeffects
+ */
+ShadowRoot.prototype.getElementsByClassName = function(className) {};
+
+
+/**
+ * @param {string} tagName
+ * @return {!NodeList}
+ * @nosideeffects
+ */
+ShadowRoot.prototype.getElementsByTagName = function(tagName) {};
+
+
+/**
+ * @param {string} namespace
+ * @param {string} localName
+ * @return {!NodeList}
+ * @nosideeffects
+ */
+ShadowRoot.prototype.getElementsByTagNameNS = function(namespace, localName) {};
+
+
+/**
+ * @return {Selection}
+ * @nosideeffects
+ */
+ShadowRoot.prototype.getSelection = function() {};
+
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {Element}
+ * @nosideeffects
+ */
+ShadowRoot.prototype.elementFromPoint = function(x, y) {};
+
+
+/**
+ * @type {boolean}
+ */
+ShadowRoot.prototype.applyAuthorStyles;
+
+
+/**
+ * @type {boolean}
+ */
+ShadowRoot.prototype.resetStyleInheritance;
+
+
+/**
+ * @type {Element}
+ */
+ShadowRoot.prototype.activeElement;
+
+
+/**
+ * @type {string}
+ */
+ShadowRoot.prototype.innerHTML;
+
+
+/**
+ * @type {!StyleSheetList}
+ */
+ShadowRoot.prototype.styleSheets;
