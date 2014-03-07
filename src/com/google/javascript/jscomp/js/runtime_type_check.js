@@ -48,7 +48,7 @@ $jscomp.typecheck.log = function(warning, expr) {};
  * @param {*} expr the expression to check.
  * @param {!Array.<!$jscomp.typecheck.Checker>} checkers the checkers to
  *     use in checking, one of these has to match for checking to succeed.
- * #return {*} the given expression back.
+ * @return {*} the given expression back.
  */
 $jscomp.typecheck.checkType = function(expr, checkers) {
   if ($jscomp.typecheck.suspendChecking) {
@@ -83,7 +83,15 @@ $jscomp.typecheck.checkType = function(expr, checkers) {
  * @private
  */
 $jscomp.typecheck.prettify_ = function(expr) {
-  return $jscomp.typecheck.getClassName_(expr) || String(expr);
+  var className = $jscomp.typecheck.getClassName_(expr);
+  if (className) {
+    return className;
+  }
+  try {
+    return String(expr);
+  }
+  catch (e) {}
+  return '<unknown>';
 };
 
 /**
