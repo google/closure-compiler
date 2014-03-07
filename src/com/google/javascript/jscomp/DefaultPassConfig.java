@@ -839,7 +839,7 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /**
-   * Checks for code that is probably wrong (such as stray expressions).
+   * Removes the "protector" functions that were added by CheckSideEffects.
    */
   final PassFactory stripSideEffectProtection =
       new PassFactory("stripSideEffectProtection", true) {
@@ -1084,11 +1084,9 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("closureCheckGetCssName", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      String blacklist = options.checkMissingGetCssNameBlacklist;
-      Preconditions.checkState(blacklist != null && !blacklist.isEmpty(),
-          "Not checking use of goog.getCssName because of empty blacklist.");
       return new CheckMissingGetCssName(
-          compiler, options.checkMissingGetCssNameLevel, blacklist);
+          compiler, options.checkMissingGetCssNameLevel,
+          options.checkMissingGetCssNameBlacklist);
     }
   };
 
