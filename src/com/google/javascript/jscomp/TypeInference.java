@@ -1355,7 +1355,7 @@ class TypeInference
   }
 
   private BooleanOutcomePair traverseAnd(Node n, FlowScope scope) {
-    return traverseShortCircuitingBinOp(n, scope, true);
+    return traverseShortCircuitingBinOp(n, scope);
   }
 
   private FlowScope traverseChildren(Node n, FlowScope scope) {
@@ -1488,56 +1488,59 @@ class TypeInference
   }
 
   private BooleanOutcomePair traverseOr(Node n, FlowScope scope) {
-    return traverseShortCircuitingBinOp(n, scope, false);
+    return traverseShortCircuitingBinOp(n, scope);
   }
 
   private BooleanOutcomePair traverseShortCircuitingBinOp(
-      Node n, FlowScope scope, boolean condition) {
+      Node n, FlowScope scope) {
+    Preconditions.checkArgument(n.isAnd() || n.isOr());
+    boolean nIsAnd = n.isAnd();
     Node left = n.getFirstChild();
     Node right = n.getLastChild();
 
     // type the left node
-    BooleanOutcomePair leftLiterals =
-        traverseWithinShortCircuitingBinOp(left,
-            scope.createChildFlowScope());
+    BooleanOutcomePair leftOutcome = traverseWithinShortCircuitingBinOp(
+        left, scope.createChildFlowScope());
     JSType leftType = left.getJSType();
 
     // reverse abstract interpret the left node to produce the correct
     // scope in which to verify the right node
     FlowScope rightScope = reverseInterpreter.
-        getPreciserScopeKnowingConditionOutcome(
-            left, leftLiterals.getOutcomeFlowScope(left.getType(), condition),
-            condition);
+        getPreciserScopeKnowingConditionOutcome(left,
+            leftOutcome.getOutcomeFlowScope(left.getType(), nIsAnd),
+            nIsAnd);
 
     // type the right node
-    BooleanOutcomePair rightLiterals =
-        traverseWithinShortCircuitingBinOp(
-            right, rightScope.createChildFlowScope());
+    BooleanOutcomePair rightOutcome = traverseWithinShortCircuitingBinOp(
+        right, rightScope.createChildFlowScope());
     JSType rightType = right.getJSType();
 
     JSType type;
-    BooleanOutcomePair literals;
+    BooleanOutcomePair outcome;
     if (leftType != null && rightType != null) {
-      leftType = leftType.getRestrictedTypeGivenToBooleanOutcome(!condition);
-      if (leftLiterals.toBooleanOutcomes ==
-          BooleanLiteralSet.get(!condition)) {
-        // Use the restricted left type, since the right side never gets
-        // evaluated.
+      leftType = leftType.getRestrictedTypeGivenToBooleanOutcome(!nIsAnd);
+      if (leftOutcome.toBooleanOutcomes == BooleanLiteralSet.get(!nIsAnd)) {
+        // Either n is && and lhs is false, or n is || and lhs is true.
+        // Use the restricted left type; the right side never gets evaluated.
         type = leftType;
-        literals = leftLiterals;
+        outcome = leftOutcome;
       } else {
         // Use the join of the restricted left type knowing the outcome of the
         // ToBoolean predicate and of the right type.
         type = leftType.getLeastSupertype(rightType);
-        literals =
-            getBooleanOutcomePair(leftLiterals, rightLiterals, condition);
+        outcome = new BooleanOutcomePair(
+            joinBooleanOutcomes(nIsAnd,
+                leftOutcome.toBooleanOutcomes, rightOutcome.toBooleanOutcomes),
+            joinBooleanOutcomes(nIsAnd,
+                leftOutcome.booleanValues, rightOutcome.booleanValues),
+            leftOutcome.getJoinedFlowScope(),
+            rightOutcome.getJoinedFlowScope());
       }
-
       // Exclude the boolean type if the literal set is empty because a boolean
       // can never actually be returned.
-      if (literals.booleanValues == BooleanLiteralSet.EMPTY &&
+      if (outcome.booleanValues == BooleanLiteralSet.EMPTY &&
           getNativeType(BOOLEAN_TYPE).isSubtype(type)) {
-        // Exclusion only make sense for a union type.
+        // Exclusion only makes sense for a union type.
         if (type.isUnionType()) {
           type = type.toMaybeUnionType().getRestrictedUnion(
               getNativeType(BOOLEAN_TYPE));
@@ -1545,18 +1548,17 @@ class TypeInference
       }
     } else {
       type = null;
-      literals = new BooleanOutcomePair(
+      outcome = new BooleanOutcomePair(
           BooleanLiteralSet.BOTH, BooleanLiteralSet.BOTH,
-          leftLiterals.getJoinedFlowScope(),
-          rightLiterals.getJoinedFlowScope());
+          leftOutcome.getJoinedFlowScope(),
+          rightOutcome.getJoinedFlowScope());
     }
     n.setJSType(type);
-
-    return literals;
+    return outcome;
   }
 
-  private BooleanOutcomePair traverseWithinShortCircuitingBinOp(Node n,
-      FlowScope scope) {
+  private BooleanOutcomePair traverseWithinShortCircuitingBinOp(
+      Node n, FlowScope scope) {
     switch (n.getType()) {
       case Token.AND:
         return traverseAnd(n, scope);
@@ -1570,35 +1572,12 @@ class TypeInference
     }
   }
 
-  /**
-   * Infers the boolean outcome pair that can be taken by a
-   * short-circuiting binary operation ({@code &&} or {@code ||}).
-   * @see #getBooleanOutcomes(BooleanLiteralSet, BooleanLiteralSet, boolean)
-   */
-  BooleanOutcomePair getBooleanOutcomePair(BooleanOutcomePair left,
-      BooleanOutcomePair right, boolean condition) {
-    return new BooleanOutcomePair(
-        getBooleanOutcomes(left.toBooleanOutcomes, right.toBooleanOutcomes,
-                           condition),
-        getBooleanOutcomes(left.booleanValues, right.booleanValues, condition),
-        left.getJoinedFlowScope(), right.getJoinedFlowScope());
-  }
-
-  /**
-   * Infers the boolean literal set that can be taken by a
-   * short-circuiting binary operation ({@code &&} or {@code ||}).
-   * @param left the set of possible {@code ToBoolean} predicate results for
-   *    the expression on the left side of the operator
-   * @param right the set of possible {@code ToBoolean} predicate results for
-   *    the expression on the right side of the operator
-   * @param condition the left side {@code ToBoolean} predicate result that
-   *    causes the right side to get evaluated (i.e. not short-circuited)
-   * @return a set of possible {@code ToBoolean} predicate results for the
-   *    entire expression
-   */
-  static BooleanLiteralSet getBooleanOutcomes(BooleanLiteralSet left,
-      BooleanLiteralSet right, boolean condition) {
-    return right.union(left.intersection(BooleanLiteralSet.get(!condition)));
+  private static BooleanLiteralSet joinBooleanOutcomes(
+      boolean isAnd, BooleanLiteralSet left, BooleanLiteralSet right) {
+    // A truthy value on the lhs of an {@code &&} can never make it to the
+    // result. Same for a falsy value on the lhs of an {@code ||}.
+    // Hence the intersection.
+    return right.union(left.intersection(BooleanLiteralSet.get(!isAnd)));
   }
 
   /**

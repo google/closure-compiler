@@ -4877,6 +4877,35 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/** @type null */var x; if (x && x) {}");
   }
 
+  public void testAnd8() throws Exception {
+    testTypes(
+        "function f(/** (null | number | string) */ x) {\n" +
+        "  (x && (typeof x === 'number')) && takesNum(x);\n" +
+        "}\n" +
+        "function takesNum(/** number */ n) {}");
+  }
+
+  public void testAnd9() throws Exception {
+    testTypes(
+        "function f(/** (number|string|null) */ x) {\n" +
+        "  if (x && typeof x === 'number') {\n" +
+        "    takesNum(x);\n" +
+        "  }\n" +
+        "}\n" +
+        "function takesNum(/** number */ x) {}");
+  }
+
+  public void testAnd10() throws Exception {
+    testTypes(
+        "function f(/** (null | number | string) */ x) {\n" +
+        "  (x && (typeof x === 'string')) && takesNum(x);\n" +
+        "}\n" +
+        "function takesNum(/** number */ n) {}",
+        "actual parameter 1 of takesNum does not match formal parameter\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
   public void testHook() throws Exception {
     testTypes("/**@return {void}*/function foo(){ var x=foo()?a:b; }");
   }
