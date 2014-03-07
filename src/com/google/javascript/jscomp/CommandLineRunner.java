@@ -243,7 +243,7 @@ public class CommandLineRunner extends
 
     @Option(name = "--source_map_format",
         usage = "The source map format to produce. " +
-        "Options: V1, V2, V3, DEFAULT. DEFAULT produces V2.")
+        "Options are V3 and DEFAULT, which are equivalent.")
     private SourceMap.Format sourceMapFormat = SourceMap.Format.DEFAULT;
 
     // Used to define the flag, values are stored by the handler.

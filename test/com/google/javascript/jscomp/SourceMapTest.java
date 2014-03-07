@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.debugging.sourcemap.SourceMapConsumer;
-import com.google.debugging.sourcemap.SourceMapConsumerV2;
+import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapTestCase;
 import com.google.javascript.jscomp.SourceMap.Format;
 
@@ -39,62 +39,58 @@ public class SourceMapTest extends SourceMapTestCase {
   public void testPrefixReplacement1() throws IOException {
     mappings = new ArrayList<SourceMap.LocationMapping>();
     // mapping can be used to remove a prefix
-    mappings.add( new SourceMap.LocationMapping("pre/","") );
-    checkSourceMap2("", "pre/file1", "", "pre/file2" , "{\n" +
-        "\"version\":2,\n" +
+    mappings.add(new SourceMap.LocationMapping("pre/", ""));
+    checkSourceMap2("alert(1);", "pre/file1", "alert(2);", "pre/file2" , "{\n" +
+        "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":1,\n" +
-        "\"lineMaps\":[\"\"],\n" +
-        "\"mappings\":[],\n" +
+        "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",\n" +
         "\"sources\":[\"file1\",\"file2\"],\n" +
-        "\"names\":[]\n" +
+        "\"names\":[\"alert\"]\n" +
         "}\n");
   }
 
-    public void testPrefixReplacement2() throws IOException {
+  public void testPrefixReplacement2() throws IOException {
     mappings = new ArrayList<SourceMap.LocationMapping>();
     // mapping can be used to replace a prefix
-    mappings.add( new SourceMap.LocationMapping("pre/file","src") );
-    checkSourceMap2("", "pre/file1", "", "pre/file2" , "{\n" +
-        "\"version\":2,\n" +
+    mappings.add(new SourceMap.LocationMapping("pre/file", "src"));
+    checkSourceMap2("alert(1);", "pre/file1", "alert(2);", "pre/file2" , "{\n" +
+        "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":1,\n" +
-        "\"lineMaps\":[\"\"],\n" +
-        "\"mappings\":[],\n" +
+        "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",\n" +
         "\"sources\":[\"src1\",\"src2\"],\n" +
-        "\"names\":[]\n" +
+        "\"names\":[\"alert\"]\n" +
         "}\n");
   }
 
   public void testPrefixReplacement3() throws IOException {
     mappings = new ArrayList<SourceMap.LocationMapping>();
     // multiple mappings can be applied
-    mappings.add( new SourceMap.LocationMapping("file1","x") );
-    mappings.add( new SourceMap.LocationMapping("file2","y") );
-    checkSourceMap2("", "file1", "", "file2" , "{\n" +
-        "\"version\":2,\n" +
+    mappings.add(new SourceMap.LocationMapping("file1", "x"));
+    mappings.add(new SourceMap.LocationMapping("file2", "y"));
+    checkSourceMap2("alert(1);", "file1", "alert(2);", "file2" , "{\n" +
+        "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":1,\n" +
-        "\"lineMaps\":[\"\"],\n" +
-        "\"mappings\":[],\n" +
+        "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",\n" +
         "\"sources\":[\"x\",\"y\"],\n" +
-        "\"names\":[]\n" +
+        "\"names\":[\"alert\"]\n" +
         "}\n");
   }
 
   public void testPrefixReplacement4() throws IOException {
     mappings = new ArrayList<SourceMap.LocationMapping>();
     // first match wins
-    mappings.add( new SourceMap.LocationMapping("file1","x") );
-    mappings.add( new SourceMap.LocationMapping("file","y") );
-    checkSourceMap2("", "file1", "", "file2" , "{\n" +
-        "\"version\":2,\n" +
+    mappings.add(new SourceMap.LocationMapping("file1", "x"));
+    mappings.add(new SourceMap.LocationMapping("file", "y"));
+    checkSourceMap2("alert(1);", "file1", "alert(2);", "file2" , "{\n" +
+        "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":1,\n" +
-        "\"lineMaps\":[\"\"],\n" +
-        "\"mappings\":[],\n" +
+        "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",\n" +
         "\"sources\":[\"x\",\"y2\"],\n" +
-        "\"names\":[]\n" +
+        "\"names\":[\"alert\"]\n" +
         "}\n");
   }
 
@@ -122,11 +118,11 @@ public class SourceMapTest extends SourceMapTestCase {
 
   @Override
   protected Format getSourceMapFormat() {
-    return Format.V2;
+    return Format.V3;
   }
 
   @Override
   protected SourceMapConsumer getSourceMapConsumer() {
-    return new SourceMapConsumerV2();
+    return new SourceMapConsumerV3();
   }
 }

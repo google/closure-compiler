@@ -48,9 +48,8 @@ public class SourceMapConsumerFactory {
       throws SourceMapParseException {
     // Version 1, starts with a magic string
     if (contents.startsWith("/** Begin line maps. **/")) {
-      SourceMapConsumerV1 consumer =  new SourceMapConsumerV1();
-      consumer.parse(contents);
-      return consumer;
+      throw new SourceMapParseException(
+          "This appears to be a V1 SourceMap, which is not supported.");
     } else if (contents.startsWith("{")){
       try {
         // Revision 2 and 3, are JSON Objects
@@ -58,11 +57,6 @@ public class SourceMapConsumerFactory {
         // Check basic assertions about the format.
         int version = sourceMapRoot.getInt("version");
         switch (version) {
-          case 2: {
-            SourceMapConsumerV2 consumer =  new SourceMapConsumerV2();
-            consumer.parse(sourceMapRoot);
-            return consumer;
-          }
           case 3: {
             SourceMapConsumerV3 consumer =  new SourceMapConsumerV3();
             consumer.parse(sourceMapRoot, supplier);

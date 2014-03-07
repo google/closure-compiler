@@ -23,12 +23,6 @@ public enum SourceMapFormat {
    /** The latest "stable" format */
    DEFAULT,
 
-   /** V1: The original Closure Inspector format */
-   V1,
-
-   /** V2: A more compact format */
-   V2,
-
-   /** V3: An even more compact format */
+   /** V3: A nice compact format */
    V3;
 }
