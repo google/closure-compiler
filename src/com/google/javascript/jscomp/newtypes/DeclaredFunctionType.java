@@ -20,6 +20,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -172,6 +173,68 @@ public class DeclaredFunctionType {
     builder.addNominalType(nominalType);
     builder.addReceiverType(receiverType);
     return builder.buildDeclaration();
+  }
+
+  public static DeclaredFunctionType meet(
+      Collection<DeclaredFunctionType> toMeet) {
+    DeclaredFunctionType result = null;
+    for (DeclaredFunctionType declType : toMeet) {
+      if (result == null) {
+        result = declType;
+      } else {
+        result = DeclaredFunctionType.meet(result, declType);
+      }
+    }
+    return result;
+  }
+
+  private static DeclaredFunctionType meet(
+      DeclaredFunctionType f1, DeclaredFunctionType f2) {
+    if (f1.equals(f2)) {
+      return f1;
+    }
+
+    FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    int minRequiredArity = Math.min(
+        f1.requiredFormals.size(), f2.requiredFormals.size());
+    for (int i = 0; i < minRequiredArity; i++) {
+      builder.addReqFormal(nullAcceptingJoin(
+          f1.getFormalType(i), f2.getFormalType(i)));
+    }
+    int maxTotalArity = Math.max(
+        f1.requiredFormals.size() + f1.optionalFormals.size(),
+        f2.requiredFormals.size() + f2.optionalFormals.size());
+    for (int i = minRequiredArity; i < maxTotalArity; i++) {
+      builder.addOptFormal(nullAcceptingJoin(
+          f1.getFormalType(i), f2.getFormalType(i)));
+    }
+    if (f1.restFormals != null || f2.restFormals != null) {
+      builder.addRestFormals(
+          nullAcceptingJoin(f1.restFormals, f2.restFormals));
+    }
+    builder.addRetType(
+        nullAcceptingMeet(f1.returnType, f2.returnType));
+    return builder.buildDeclaration();
+  }
+
+  // Returns possibly-null JSType
+  private static JSType nullAcceptingJoin(JSType t1, JSType t2) {
+    if (t1 == null) {
+      return t2;
+    } else if (t2 == null) {
+      return t1;
+    }
+    return JSType.join(t1, t2);
+  }
+
+  // Returns possibly-null JSType
+  private static JSType nullAcceptingMeet(JSType t1, JSType t2) {
+    if (t1 == null) {
+      return t2;
+    } else if (t2 == null) {
+      return t1;
+    }
+    return JSType.meet(t1, t2);
   }
 
   @Override
