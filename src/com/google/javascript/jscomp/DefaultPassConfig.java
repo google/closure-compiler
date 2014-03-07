@@ -134,8 +134,20 @@ public class DefaultPassConfig extends PassConfig {
   /** Id generator map */
   private String idGeneratorMap = null;
 
+  /**
+   * Whether to protect "hidden" side-effects.
+   * @see CheckSideEffects
+   */
+  private final boolean protectHiddenSideEffects;
+
   public DefaultPassConfig(CompilerOptions options) {
     super(options);
+
+    // The current approach to protecting "hidden" side-effects is to
+    // wrap them in a function call that is stripped later, this shouldn't
+    // be done in IDE mode where AST changes may be unexpected.
+    protectHiddenSideEffects = options != null &&
+        options.protectHiddenSideEffects && !options.ideMode;
   }
 
   @Override
@@ -721,7 +733,9 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(nameUnmappedAnonymousFunctions);
     }
 
-    passes.add(stripSideEffectProtection);
+    if (protectHiddenSideEffects) {
+      passes.add(stripSideEffectProtection);
+    }
 
     if (options.renamePrefixNamespace != null) {
       if (!GLOBAL_SYMBOL_NAMESPACE_PATTERN.matcher(
@@ -818,11 +832,6 @@ public class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("checkSideEffects", true) {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      // The current approach to protecting "hidden" side-effects is to
-      // wrap them in a function call that is stripped later, this shouldn't
-      // be done in IDE mode where AST changes may be unexpected.
-      boolean protectHiddenSideEffects =
-          options.protectHiddenSideEffects && !options.ideMode;
       return new CheckSideEffects(compiler,
           options.checkSuspiciousCode ? CheckLevel.WARNING : CheckLevel.OFF,
               protectHiddenSideEffects);
