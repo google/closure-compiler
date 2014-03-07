@@ -21,20 +21,71 @@
  */
 
 /**
- * @typedef {{id: string,
- *            index: number,
- *            timestamp: number,
- *            axes: Array.<number>,
- *            buttons: Array.<number>}}
- */
-var Gamepad;
-
-/**
- * @return {Array.<Gamepad>}
+ * @return {!Array.<!Gamepad>}
  */
 navigator.getGamepads = function() {};
 
 /**
- * @return {Array.<Gamepad>}
+ * @return {!Array.<!Gamepad>}
  */
 navigator.webkitGetGamepads = function() {};
+
+
+/**
+ * @interface
+ */
+var Gamepad = function() {};
+
+/**
+ * @type {string}
+ */
+Gamepad.prototype.id;  // read-only
+
+/**
+ * @type {number}
+ */
+Gamepad.prototype.index;  // read-only
+
+/**
+ * @type {boolean}
+ */
+Gamepad.prototype.connected;  // read-only
+
+/**
+ * @type {number}
+ */
+Gamepad.prototype.timestamp;  // read-only
+
+/**
+ * @type {string}
+ */
+Gamepad.prototype.mapping;  // read-only
+
+/**
+ * @type {!Array.<number>}
+ */
+Gamepad.prototype.axes;  // read-only
+
+/**
+ * Note: The W3C spec changed, this property now returns an array of
+ * GamepadButton objects.
+ *
+ * @type {(!Array.<!GamepadButton>|!Array.<number>)}
+ */
+Gamepad.prototype.buttons;
+
+
+/**
+ * @interface
+ */
+var GamepadButton = function() {};
+
+/**
+ * @type {boolean}
+ */
+GamepadButton.prototype.pressed;  // read-only
+
+/**
+ * @type {number}
+ */
+GamepadButton.prototype.value;  // read-only
