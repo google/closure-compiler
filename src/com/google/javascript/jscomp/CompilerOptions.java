@@ -239,13 +239,6 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public String checkMissingGetCssNameBlacklist;
 
-  /** Checks that the syntactic restrictions of Caja are met. */
-  boolean checkCaja;
-
-  public void setCheckCaja(boolean check) {
-    checkCaja = check;
-  }
-
   /**
    * A set of extra annotation names which are accepted and silently ignored
    * when encountered in a source file. Defaults to null which has the same
@@ -942,7 +935,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     checkMissingReturn = CheckLevel.OFF;
     checkMissingGetCssNameLevel = CheckLevel.OFF;
     checkMissingGetCssNameBlacklist = null;
-    checkCaja = false;
     computeFunctionSideEffects = false;
     chainCalls = false;
     extraAnnotationNames = null;

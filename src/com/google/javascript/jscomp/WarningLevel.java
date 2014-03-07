@@ -71,7 +71,6 @@ public enum WarningLevel {
     options.checkGlobalThisLevel = CheckLevel.OFF;
     options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
-    options.checkCaja = false;
 
     // Allows annotations that are not standard.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,

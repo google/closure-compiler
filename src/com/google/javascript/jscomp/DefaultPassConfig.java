@@ -326,7 +326,7 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(checkGlobalNames);
     }
 
-    if (options.enables(DiagnosticGroups.ES5_STRICT) || options.checkCaja) {
+    if (options.enables(DiagnosticGroups.ES5_STRICT)) {
       checks.add(checkStrictMode);
     }
 
@@ -1343,8 +1343,7 @@ public class DefaultPassConfig extends PassConfig {
   private static HotSwapCompilerPass combineChecks(AbstractCompiler compiler,
       List<Callback> callbacks) {
     Preconditions.checkArgument(callbacks.size() > 0);
-    Callback[] array = callbacks.toArray(new Callback[callbacks.size()]);
-    return new CombinedCompilerPass(compiler, array);
+    return new CombinedCompilerPass(compiler, callbacks);
   }
 
   /** A compiler pass that resolves types in the global scope. */
@@ -1396,14 +1395,13 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /** Checks that the code is ES5 or Caja compliant. */
+  /** Checks that the code is ES5 strict compliant. */
   final PassFactory checkStrictMode =
       new PassFactory("checkStrictMode", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new StrictModeCheck(compiler,
-          !options.checkSymbols,  // don't check variables twice
-          !options.checkCaja);    // disable eval check if not Caja
+          !options.checkSymbols);  // don't check variables twice
     }
   };
 

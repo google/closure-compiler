@@ -30,7 +30,6 @@ import java.util.Set;
  * <li> No use of "with".
  * <li> No deleting variables, functions, or arguments.
  * <li> No re-declarations or assignments of "eval" or arguments.
- * <li> No use of "eval" (optional check for Caja).
  * </ol>
  *
  */
@@ -39,9 +38,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
   static final DiagnosticType UNKNOWN_VARIABLE = DiagnosticType.warning(
       "JSC_UNKNOWN_VARIABLE", "unknown variable {0}");
-
-  static final DiagnosticType EVAL_USE = DiagnosticType.error(
-      "JSC_EVAL_USE", "\"eval\" cannot be used in Caja");
 
   static final DiagnosticType EVAL_DECLARATION = DiagnosticType.warning(
       "JSC_EVAL_DECLARATION",
@@ -64,10 +60,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
       "variables, functions, and arguments cannot be deleted in "
       + "ES5 strict mode");
 
-  static final DiagnosticType ILLEGAL_NAME = DiagnosticType.error(
-      "JSC_ILLEGAL_NAME",
-      "identifiers ending in '__' cannot be used in Caja");
-
   static final DiagnosticType DUPLICATE_OBJECT_KEY = DiagnosticType.warning(
       "JSC_DUPLICATE_OBJECT_KEY",
       "object literals cannot contain duplicate keys in ES5 strict mode");
@@ -79,17 +71,15 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
   private final AbstractCompiler compiler;
   private final boolean noVarCheck;
-  private final boolean noCajaChecks;
 
   StrictModeCheck(AbstractCompiler compiler) {
-    this(compiler, false, false);
+    this(compiler, false);
   }
 
   StrictModeCheck(
-      AbstractCompiler compiler, boolean noVarCheck, boolean noCajaChecks) {
+      AbstractCompiler compiler, boolean noVarCheck) {
     this.compiler = compiler;
     this.noVarCheck = noVarCheck;
-    this.noCajaChecks = noCajaChecks;
   }
 
   @Override public void process(Node externs, Node root) {
@@ -111,8 +101,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
       checkDelete(t, n);
     } else if (n.isObjectLit()) {
       checkObjectLiteral(t, n);
-    } else if (n.isLabel()) {
-      checkLabel(t, n);
     }
   }
 
@@ -152,14 +140,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
         t.report(n, UNKNOWN_VARIABLE, n.getString());
       }
     }
-
-    if (!noCajaChecks) {
-      if ("eval".equals(n.getString())) {
-        t.report(n, EVAL_USE);
-      } else if (n.getString().endsWith("__")) {
-        t.report(n, ILLEGAL_NAME);
-      }
-    }
   }
 
   /** Checks that an assignment is not to the "arguments" object. */
@@ -170,9 +150,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
       } else if ("eval".equals(n.getFirstChild().getString())) {
         // Note that assignment to eval is already illegal because any use of
         // that name is illegal.
-        if (noCajaChecks) {
-          t.report(n, EVAL_ASSIGNMENT);
-        }
+        t.report(n, EVAL_ASSIGNMENT);
       }
     }
   }
@@ -194,9 +172,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
     for (Node key = n.getFirstChild();
          key != null;
          key = key.getNext()) {
-      if (!noCajaChecks && key.getString().endsWith("__")) {
-        t.report(key, ILLEGAL_NAME);
-      }
       if (!key.isSetterDef()) {
         // normal property and getter cases
         if (getters.contains(key.getString())) {
@@ -216,22 +191,11 @@ class StrictModeCheck extends AbstractPostOrderCallback
     }
   }
 
-  /** Checks that label names are valid. */
-  private void checkLabel(NodeTraversal t, Node n) {
-    if (n.getFirstChild().getString().endsWith("__")) {
-      if (!noCajaChecks) {
-        t.report(n.getFirstChild(), ILLEGAL_NAME);
-      }
-    }
-  }
-
   /** Checks that are performed on non-extern code only. */
   private class NonExternChecks extends AbstractPostOrderCallback {
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
       if ((n.isName()) && isDeclaration(n)) {
         checkDeclaration(t, n);
-      } else if (n.isGetProp()) {
-        checkProperty(t, n);
       }
     }
 
@@ -241,19 +205,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
         t.report(n, EVAL_DECLARATION);
       } else if ("arguments".equals(n.getString())) {
         t.report(n, ARGUMENTS_DECLARATION);
-      } else if (n.getString().endsWith("__")) {
-        if (!noCajaChecks) {
-          t.report(n, ILLEGAL_NAME);
-        }
-      }
-    }
-
-    /** Checks for illegal property accesses. */
-    private void checkProperty(NodeTraversal t, Node n) {
-      if (n.getLastChild().getString().endsWith("__")) {
-        if (!noCajaChecks) {
-          t.report(n.getLastChild(), ILLEGAL_NAME);
-        }
       }
     }
   }
