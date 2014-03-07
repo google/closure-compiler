@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.Parser.Config.Mode;
@@ -29,11 +31,15 @@ import com.google.javascript.rhino.head.Context;
 import com.google.javascript.rhino.head.ErrorReporter;
 import com.google.javascript.rhino.head.EvaluatorException;
 import com.google.javascript.rhino.head.Parser;
+import com.google.javascript.rhino.head.Token;
+import com.google.javascript.rhino.head.ast.AstNode;
 import com.google.javascript.rhino.head.ast.AstRoot;
+import com.google.javascript.rhino.head.ast.NodeVisitor;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -116,7 +122,8 @@ public class ParserRunner {
    * @param sourceString Source code from the file.
    * @param errorReporter An error.
    * @param logger A logger.
-   * @return The AST of the given text.
+   * @return A ParseResult of the given text. The comments field of the
+   *     ParseResult will be an empty list if IDE mode is not enabled.
    * @throws IOException
    */
   public static ParseResult parse(StaticSourceFile sourceFile,
@@ -180,12 +187,26 @@ public class ParserRunner {
       Context.exit();
     }
     Node root = null;
+    final List<Comment> comments = Lists.newArrayList();
     if (astRoot != null) {
       root = IRFactory.transformTree(
           astRoot, sourceFile, sourceString, config, errorReporter);
       root.setIsSyntheticBlock(true);
+
+      if (config.isIdeMode) {
+        astRoot.visitAll(new NodeVisitor() {
+            @Override
+            public boolean visit(AstNode node) {
+              if (node.getType() == Token.COMMENT) {
+                comments.add(new CommentWrapper(
+                    (com.google.javascript.rhino.head.ast.Comment) node));
+              }
+              return true;
+            }
+        });
+      }
     }
-    return new ParseResult(root, astRoot);
+    return new ParseResult(root, comments);
   }
 
   private static class Es6ErrorReporter
@@ -269,12 +290,22 @@ public class ParserRunner {
           "Error parsing " + sourceFile.getName() + ": " + e.getMessage());
     }
     Node root = null;
+    List<Comment> comments = ImmutableList.of();
     if (tree != null && (!es6ErrorReporter.hadError() || config.isIdeMode)) {
       root = NewIRFactory.transformTree(
           tree, sourceFile, sourceString, config, errorReporter);
       root.setIsSyntheticBlock(true);
+
+      if (config.isIdeMode) {
+        List<com.google.javascript.jscomp.parsing.parser.trees.Comment> parserComments =
+            p.getComments();
+        comments = Lists.newArrayListWithCapacity(parserComments.size());
+        for (com.google.javascript.jscomp.parsing.parser.trees.Comment c : parserComments) {
+          comments.add(new CommentWrapper(c));
+        }
+      }
     }
-    return new ParseResult(root, null);
+    return new ParseResult(root, comments);
   }
 
   private static Mode mode(
@@ -296,15 +327,15 @@ public class ParserRunner {
   }
 
   /**
-   * Holds results of parsing. Includes both ast formats.
+   * Holds results of parsing.
    */
   public static class ParseResult {
     public final Node ast;
-    public final AstRoot oldAst;
+    public final List<Comment> comments;
 
-    public ParseResult(Node ast, AstRoot oldAst) {
+    public ParseResult(Node ast, List<Comment> comments) {
       this.ast = ast;
-      this.oldAst = oldAst;
+      this.comments = comments;
     }
   }
 }

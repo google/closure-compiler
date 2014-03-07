@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
+import com.google.javascript.jscomp.parsing.Comment;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.type.ChainableReverseAbstractInterpreter;
@@ -45,7 +46,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.head.ErrorReporter;
-import com.google.javascript.rhino.head.ast.AstRoot;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.io.IOException;
@@ -140,6 +140,9 @@ public class Compiler extends AbstractCompiler {
   Node externAndJsRoot;
 
   private Map<InputId, CompilerInput> inputsById;
+
+  // Map from filenames to lists of all the comments in each file.
+  private Map<String, List<Comment>> commentsPerFile = Maps.newHashMap();
 
   /** The source code map */
   private SourceMap sourceMap;
@@ -2596,19 +2599,14 @@ public class Compiler extends AbstractCompiler {
     return config.getString("compiler.date");
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public void setOldParseTree(String sourceName, AstRoot oldAst) {
+  void addComments(String filename, List<Comment> comments) {
+    commentsPerFile.put(filename, comments);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public AstRoot getOldParseTreeByName(String sourceName) {
-    return null;
+  public List<Comment> getComments(String filename) {
+    return commentsPerFile.get(filename);
   }
 
   @Override

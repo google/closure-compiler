@@ -20,12 +20,12 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.jscomp.parsing.Comment;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.head.ErrorReporter;
-import com.google.javascript.rhino.head.ast.AstRoot;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.util.List;
@@ -441,19 +441,12 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract Set<String> getExternProperties();
 
-   /**
-    * Stores the "new" Rhino parse tree for a given source file.
-    * @param sourceName The source file name.
-    * @param astRoot The "new" Rhino parse tree.
-    */
-   abstract void setOldParseTree(String sourceName, AstRoot astRoot);
+  abstract void addComments(String filename, List<Comment> comments);
 
-   /**
-    * Gets an old format parse tree for a given source file.
-    * @param sourceName The source file name to get the tree for.
-    * @return The "new" Rhino parse tree for the given source file.
-    */
-   abstract AstRoot getOldParseTreeByName(String sourceName);
+  /**
+   * Returns all the comments from the given file.
+   */
+  abstract List<Comment> getComments(String filename);
 
    /**
     * Stores a map of default @define values.  These values

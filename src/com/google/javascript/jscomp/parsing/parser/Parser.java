@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.parsing.parser.util.Timer;
 
 import java.util.ArrayDeque;
 import java.util.EnumSet;
+import java.util.List;
 
 /**
  * Parses a javascript file.
@@ -129,6 +130,10 @@ public class Parser {
     private ImmutableList<Comment> getComments() {
       return comments.build();
     }
+  }
+
+  public List<Comment> getComments() {
+    return commentRecorder.getComments();
   }
 
   // 14 Program

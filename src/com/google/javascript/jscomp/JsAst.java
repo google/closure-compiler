@@ -88,7 +88,7 @@ public class JsAst implements SourceAst {
           compiler.getDefaultErrorReporter(),
           logger_);
       root = result.ast;
-      compiler.setOldParseTree(sourceFile.getName(), result.oldAst);
+      compiler.addComments(sourceFile.getName(), result.comments);
     } catch (IOException e) {
       compiler.report(
           JSError.make(AbstractCompiler.READ_ERROR, sourceFile.getName()));
