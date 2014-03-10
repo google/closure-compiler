@@ -244,6 +244,7 @@ class GlobalTypeInfo implements CompilerPass {
       Node funNode = workset.removeFirst();
       RawNominalType rawNominalType = nominaltypesByNode.get(funNode);
       NominalType superClass = rawNominalType.getSuperClass();
+      Set<String> nonInheritedPropNames = rawNominalType.getAllOwnProps();
       if (superClass != null && !superClass.isFinalized()) {
         workset.addLast(funNode);
         iterations++;
@@ -265,6 +266,7 @@ class GlobalTypeInfo implements CompilerPass {
         Preconditions.checkState(superClass.isFinalized());
         // TODO(blickly): Can we optimize this to skip unnecessary iterations?
         for (String pname : superClass.getAllPropsOfClass()) {
+          nonInheritedPropNames.remove(pname);
           checkSuperProperty(rawNominalType, superClass, pname,
               propMethodTypesToProcess, propTypesToProcess);
         }
@@ -273,6 +275,7 @@ class GlobalTypeInfo implements CompilerPass {
       for (NominalType superInterf: rawNominalType.getInterfaces()) {
         Preconditions.checkState(superInterf.isFinalized());
         for (String pname : superInterf.getAllPropsOfInterface()) {
+          nonInheritedPropNames.remove(pname);
           checkSuperProperty(rawNominalType, superInterf, pname,
               propMethodTypesToProcess, propTypesToProcess);
         }
@@ -318,6 +321,16 @@ class GlobalTypeInfo implements CompilerPass {
         rawNominalType.addProtoProperty(pname, resultType);
       }
 
+      // Warn for a prop declared with @override that isn't overriding anything.
+      for (String pname: nonInheritedPropNames) {
+        Node defSite = propertyDefs.get(rawNominalType.getId(), pname).defSite;
+        JSDocInfo jsdoc = defSite == null ? null : defSite.getJSDocInfo();
+        if (jsdoc != null && jsdoc.isOverride()) {
+          warnings.add(JSError.make(defSite, TypeCheck.UNKNOWN_OVERRIDE,
+                  pname, rawNominalType.getName()));
+        }
+      }
+
       // Finalize nominal type once all properties are added.
       rawNominalType.finalizeNominalType();
     }
@@ -351,10 +364,10 @@ class GlobalTypeInfo implements CompilerPass {
         propertyDefs.get(current.getId(), pname);
     JSType localPropType = localPropDef == null ? null :
         current.getPropDeclaredType(pname);
-    System.out.println("nominalType: " + current + "'s " + pname +
-        " localPropType: " + localPropType +
-        " with super: " + superType +
-        " inheritedPropType: " + inheritedPropType);
+    // System.out.println("nominalType: " + current + "'s " + pname +
+    //     " localPropType: " + localPropType +
+    //     " with super: " + superType +
+    //     " inheritedPropType: " + inheritedPropType);
     if (localPropType != null &&
         !localPropType.isSubtypeOf(inheritedPropType)) {
       warnings.add(JSError.make(
@@ -596,7 +609,7 @@ class GlobalTypeInfo implements CompilerPass {
               expr.getJSDocInfo(), rawNominalType, currentScope);
         }
         propertyDefs.put(rawNominalType.getId(), pname,
-            new PropertyDef(exprResult, methodScope));
+            new PropertyDef(expr, methodScope));
         // Add the property to the class with the appropriate type.
         if (propDeclType != null) {
           if (mayWarnAboutExistingProp(rawNominalType, pname, expr)) {
@@ -620,7 +633,7 @@ class GlobalTypeInfo implements CompilerPass {
       JSType propDeclType =
           getTypeDeclarationFromJsdoc(assignNode, currentScope);
       if (propDeclType != null) {
-       if (classType.mayHaveCtorProp(pname) &&
+       if (classType.hasCtorProp(pname) &&
            classType.getCtorPropDeclaredType(pname) != null) {
          warnings.add(JSError.make(assignNode, DUPLICATE_PROPERTY_JSDOC,
                pname, classType.toString()));
@@ -662,7 +675,7 @@ class GlobalTypeInfo implements CompilerPass {
         rawNominalType.addUndeclaredClassProperty(pname);
       }
       propertyDefs.put(rawNominalType.getId(), pname,
-          new PropertyDef(getPropNode.getParent().getParent(), null));
+          new PropertyDef(getPropNode.getParent(), null));
     }
 
     private boolean mayWarnAboutExistingProp(

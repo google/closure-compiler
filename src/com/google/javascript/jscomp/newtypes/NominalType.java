@@ -23,10 +23,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  *
@@ -34,7 +36,7 @@ import java.util.Objects;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public class NominalType {
-  // In the case of a genericized type (rawType.typeParameters non-empty) either:
+  // In the case of a generic type (rawType.typeParameters non-empty) either:
   // a) typeMap is empty, this is an uninstantiated generic type (Foo.<T>), or
   // b) typeMap's keys exactly correspond to the type paramters of rawType,
   //    this represents a completely instantiated generic type (Foo.<number>).
@@ -155,7 +157,8 @@ public class NominalType {
     if (rawType.equals(other.rawType)) {
       for (String typeVar :rawType.getTypeParameters()) {
         Preconditions.checkState(typeMap.containsKey(typeVar),
-            "Type variable %s not in the domain: %s", typeVar, typeMap.keySet());
+            "Type variable %s not in the domain: %s",
+            typeVar, typeMap.keySet());
         Preconditions.checkState(other.typeMap.containsKey(typeVar));
         if (!typeMap.get(typeVar).isSubtypeOf(other.typeMap.get(typeVar))) {
           return false;
@@ -238,8 +241,8 @@ public class NominalType {
     // Empty iff this type is not generic
     private final ImmutableList<String> typeParameters;
 
-    private RawNominalType(
-        String name, ImmutableList<String> typeParameters, boolean isInterface) {
+    private RawNominalType(String name, ImmutableList<String> typeParameters,
+        boolean isInterface) {
       if (typeParameters == null) {
         typeParameters = ImmutableList.of();
       }
@@ -260,6 +263,10 @@ public class NominalType {
 
     public int getId() {
       return hashCode();
+    }
+
+    public String getName() {
+      return name;
     }
 
     public boolean isClass() {
@@ -401,6 +408,13 @@ public class NominalType {
 
     }
 
+    public Set<String> getAllOwnProps() {
+      Set<String> ownProps = Sets.newHashSet();
+      ownProps.addAll(classProps.keySet());
+      ownProps.addAll(protoProps.keySet());
+      return ownProps;
+    }
+
     private ImmutableSet<String> getAllPropsOfInterface() {
       Preconditions.checkState(isInterface);
       Preconditions.checkState(isFinalized);
@@ -470,8 +484,8 @@ public class NominalType {
       }
     }
 
-    // Returns the object referred to by the prototype property of the constructor
-    // of this class.
+    // Returns the object referred to by the prototype property of the
+    // constructor of this class.
     private JSType createProtoObject() {
       return JSType.fromObjectType(ObjectType.makeObjectType(
           superClass, protoProps, null, false));
@@ -479,8 +493,13 @@ public class NominalType {
 
     //////////// Constructor Properties
 
-    public boolean mayHaveCtorProp(String pname) {
-      return ctorProps.containsKey(pname);
+    public boolean hasCtorProp(String pname) {
+      Property prop = ctorProps.get(pname);
+      if (prop == null) {
+        return false;
+      }
+      Preconditions.checkState(!prop.isOptional());
+      return true;
     }
 
     /** Add a new non-optional declared property to this class's constructor */
@@ -502,7 +521,8 @@ public class NominalType {
       return p.getDeclaredType();
     }
 
-    // Returns the (function) object referred to by the constructor of this class.
+    // Returns the (function) object referred to by the constructor of this
+    // class.
     private JSType createConstructorObject(FunctionType ctorFn) {
       return JSType.fromObjectType(
           ObjectType.makeObjectType(null, ctorProps, ctorFn, ctorFn.isLoose()));
@@ -535,7 +555,6 @@ public class NominalType {
       addCtorProperty("prototype", createProtoObject());
       this.ctorProps = ImmutableMap.copyOf(ctorProps);
       this.isFinalized = true;
-      this.allProps = null;
       return this;
     }
 

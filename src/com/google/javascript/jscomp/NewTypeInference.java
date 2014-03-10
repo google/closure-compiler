@@ -55,7 +55,6 @@ import java.util.Set;
  *
  * Features left to implement:
  * - struct/dict
- * - @override/@inheritDoc
  * - @const/@final
  * - @enum
  * - @typedef
