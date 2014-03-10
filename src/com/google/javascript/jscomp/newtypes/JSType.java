@@ -590,6 +590,14 @@ public class JSType {
     return Iterables.getOnlyElement(objs).getNominalType();
   }
 
+  public boolean isInterfaceDefinition() {
+    if (objs == null || objs.size() > 1) {
+      return false;
+    }
+    FunctionType ft = Iterables.getOnlyElement(objs).getFunType();
+    return ft != null && ft.isInterfaceDefinition();
+  }
+
   /** Turns the class-less object of this type (if any) into a loose object */
   public JSType withLoose() {
     Preconditions.checkNotNull(this.objs);

@@ -150,14 +150,16 @@ public class JSTypeCreatorFromJSDoc {
     for (Node fieldTypeNode = n.getFirstChild().getFirstChild();
          fieldTypeNode != null;
          fieldTypeNode = fieldTypeNode.getNext()) {
-      Preconditions.checkState(fieldTypeNode.getType() == Token.COLON);
-      Node fieldNameNode = fieldTypeNode.getFirstChild();
+      boolean isFieldTypeDeclared = fieldTypeNode.getType() == Token.COLON;
+      Node fieldNameNode = isFieldTypeDeclared ?
+          fieldTypeNode.getFirstChild() : fieldTypeNode;
       String fieldName = fieldNameNode.getString();
       if (fieldName.startsWith("'") || fieldName.startsWith("\"")) {
         fieldName = fieldName.substring(1, fieldName.length() - 1);
       }
-      JSType fieldType = getTypeFromNodeHelper(
-          fieldTypeNode.getLastChild(), ownerType, registry, typeParameters);
+      JSType fieldType = !isFieldTypeDeclared ? JSType.UNKNOWN :
+          getTypeFromNodeHelper(fieldTypeNode.getLastChild(), ownerType,
+              registry, typeParameters);
       // TODO(blickly): Allow optional properties
       fields.put(fieldName, fieldType);
     }

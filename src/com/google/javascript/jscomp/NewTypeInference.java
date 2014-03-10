@@ -676,7 +676,8 @@ public class NewTypeInference implements CompilerPass {
       builder.addRetType(actualRetType.withLocation(null));
     } else {
       builder.addRetType(declRetType);
-      if (!JSType.UNDEFINED.isSubtypeOf(declRetType) &&
+      if (!isInterfaceMethodDef(fn) &&
+          !JSType.UNDEFINED.isSubtypeOf(declRetType) &&
           hasPathWithNoReturn(cfg)) {
         warnings.add(JSError.make(fn.getRoot(),
                 CheckMissingReturn.MISSING_RETURN_STATEMENT,
@@ -687,6 +688,17 @@ public class NewTypeInference implements CompilerPass {
     println("Function summary for ", fn.getReadableName());
     println("\t", summary);
     summaries.put(fn, summary);
+  }
+
+  private static boolean isInterfaceMethodDef(Scope methodScope) {
+    Node fn = methodScope.getRoot();
+    if (!NodeUtil.isPrototypeMethod(fn)) {
+      return false;
+    }
+    String typeName = TypeUtils.getQnameRoot(
+        fn.getParent().getFirstChild().getQualifiedName());
+    JSType t = methodScope.getDeclaredTypeOf(typeName);
+    return t != null && t.isInterfaceDefinition();
   }
 
   private static boolean hasPathWithNoReturn(ControlFlowGraph<Node> cfg) {

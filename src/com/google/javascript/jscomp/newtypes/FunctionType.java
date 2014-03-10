@@ -178,7 +178,11 @@ public class FunctionType {
   }
 
   public boolean isConstructor() {
-    return nominalType != null;
+    return nominalType != null && !nominalType.isInterface();
+  }
+
+  boolean isInterfaceDefinition() {
+    return nominalType != null && nominalType.isInterface();
   }
 
   // 0-indexed
@@ -472,8 +476,8 @@ public class FunctionType {
         restFormals != null && other.restFormals == null) {
       return false;
     }
-    if (restFormals != null &&
-        !restFormals.unifyWith(other.restFormals, typeParameters, typeMultimap)) {
+    if (restFormals != null && !restFormals.unifyWith(
+        other.restFormals, typeParameters, typeMultimap)) {
       return false;
     }
     return returnType.unifyWith(other.returnType, typeParameters, typeMultimap);
