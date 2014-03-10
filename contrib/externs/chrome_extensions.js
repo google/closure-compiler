@@ -2106,6 +2106,14 @@ chrome.input.ime.commitText = function(parameters, opt_callback) {};
 
 
 /**
+ * @param {!Object.<string,(string|number)>} parameters An object with
+ *     'contextID' (number) and 'text' (string) keys.
+ * @param {function(boolean): void=} opt_callback Callback function.
+ */
+chrome.input.ime.deleteSurroundingText = function(parameters, opt_callback) {};
+
+
+/**
  * @param {!Object.<string,(number|Object.<string,(string|number|boolean)>)>}
  *     parameters An object with 'engineID' (string) and 'properties'
  *     (Object) keys.
@@ -2198,6 +2206,14 @@ chrome.input.ime.onKeyEvent;
 
 /** @type {!ChromeEvent} */
 chrome.input.ime.onMenuItemActivated;
+
+
+/** @type {!ChromeEvent} */
+chrome.input.ime.onReset;
+
+
+/** @type {!ChromeEvent} */
+chrome.input.ime.onSurroundingTextChanged;
 
 
 /**
