@@ -1405,6 +1405,9 @@ public final class JsDocInfoParser {
       case COLON:
         return ":";
 
+      case COLONCOLON:
+        return "::";
+
       case GT:
         return ">";
 
@@ -1995,44 +1998,80 @@ public final class JsDocInfoParser {
   }
 
   /**
-   * TypeName := NameExpression | NameExpression TypeApplication
-   * TypeApplication := '.<' TypeExpressionList '>'
+   * TypeName := ModuleName | LocalTypeName
+   * ModuleName := NameExpression '::'
+   * LocalTypeName := NameExpression TypeApplication?
    */
   private Node parseTypeName(JsDocToken token) {
     if (token != JsDocToken.STRING) {
       return reportGenericTypeSyntaxWarning();
     }
 
-    String typeName = stream.getString();
-    int lineno = stream.getLineno();
-    int charno = stream.getCharno();
-    while (match(JsDocToken.EOL) &&
-        typeName.charAt(typeName.length() - 1) == '.') {
+    Node firstName = readTypeExpr();
+    Node localTypeName = null;
+    Node typeName = null;
+    if (match(JsDocToken.COLONCOLON)) {
+      next();
       skipEOLs();
-      if (match(JsDocToken.STRING)) {
-        next();
-        typeName += stream.getString();
-      }
-    }
 
-    Node typeNameNode = newStringNode(typeName, lineno, charno);
+      typeName = newNode(Token.COLONCOLON);
+      typeName.addChildToBack(firstName);
+
+      if (match(JsDocToken.STRING)) {
+        localTypeName = readTypeExpr();
+        typeName.addChildToBack(localTypeName);
+      } else {
+        return typeName;
+      }
+    } else {
+      typeName = localTypeName = firstName;
+    }
 
     if (match(JsDocToken.LT)) {
       next();
       skipEOLs();
-      Node memberType = parseTypeExpressionList(next());
-      if (memberType != null) {
-        typeNameNode.addChildToFront(memberType);
+      Node memberType = parseTypeApplication(next());
+      if (memberType == null) {
+        return null;
+      }
+      localTypeName.addChildToFront(memberType);
+    }
+    return typeName;
+  }
 
+  /**
+   * TypeApplication := '.<' TypeExpressionList '>'
+   */
+  private Node parseTypeApplication(JsDocToken token) {
+    Node memberType = parseTypeExpressionList(token);
+    if (memberType != null) {
+      skipEOLs();
+      if (!match(JsDocToken.GT)) {
+        return reportTypeSyntaxWarning("msg.jsdoc.missing.gt");
+      }
+
+      next();
+    }
+    return memberType;
+  }
+
+  private Node readTypeExpr() {
+    String typeName = stream.getString();
+    int lineno = stream.getLineno();
+    int charno = stream.getCharno();
+    while (true) {
+      char lastChar = typeName.charAt(typeName.length() - 1);
+      if (match(JsDocToken.EOL) && lastChar == '.') {
         skipEOLs();
-        if (!match(JsDocToken.GT)) {
-          return reportTypeSyntaxWarning("msg.jsdoc.missing.gt");
+        if (match(JsDocToken.STRING)) {
+          next();
+          typeName += stream.getString();
         }
-
-        next();
+      } else {
+        break;
       }
     }
-    return typeNameNode;
+    return newStringNode(typeName, lineno, charno);
   }
 
   /**
