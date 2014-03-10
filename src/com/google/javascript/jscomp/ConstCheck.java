@@ -37,7 +37,8 @@ class ConstCheck extends AbstractPostOrderCallback
   static final DiagnosticType CONST_REASSIGNED_VALUE_ERROR =
       DiagnosticType.error(
           "JSC_CONSTANT_REASSIGNED_VALUE_ERROR",
-          "constant {0} assigned a value more than once");
+          "constant {0} assigned a value more than once.\n" +
+          "Original definition at {1}");
 
   private final AbstractCompiler compiler;
   private final Set<Scope.Var> initializedConstants;
@@ -71,7 +72,7 @@ class ConstCheck extends AbstractPostOrderCallback
               initializedConstants.add(var);
             } else if (n.hasChildren()) {
               if (initializedConstants.contains(var)) {
-                reportError(t, n, name);
+                reportError(t, n, var, name);
               } else {
                 initializedConstants.add(var);
               }
@@ -98,7 +99,7 @@ class ConstCheck extends AbstractPostOrderCallback
           Scope.Var var = t.getScope().getVar(name);
           if (isConstant(var)) {
             if (initializedConstants.contains(var)) {
-              reportError(t, n, name);
+              reportError(t, n, var, name);
             } else {
               initializedConstants.add(var);
             }
@@ -114,7 +115,7 @@ class ConstCheck extends AbstractPostOrderCallback
           String name = lhs.getString();
           Scope.Var var = t.getScope().getVar(name);
           if (isConstant(var)) {
-            reportError(t, n, name);
+            reportError(t, n, var, name);
           }
         }
         break;
@@ -133,10 +134,12 @@ class ConstCheck extends AbstractPostOrderCallback
   /**
    * Reports a reassigned constant error.
    */
-  void reportError(NodeTraversal t, Node n, String name) {
+  void reportError(NodeTraversal t, Node n, Scope.Var var, String name) {
     JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
     if (info == null || !info.getSuppressions().contains("const")) {
-      compiler.report(t.makeError(n, CONST_REASSIGNED_VALUE_ERROR, name));
+      Node declNode = var.getNode();
+      String declaredPosition = declNode.getSourceFileName() + ":" + declNode.getLineno();
+      compiler.report(t.makeError(n, CONST_REASSIGNED_VALUE_ERROR, name, declaredPosition));
     }
   }
 }
