@@ -586,6 +586,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Whether to gather property names from types in externs. */
   boolean gatherExternsFromTypes;
 
+  /** Whether to declare globals declared in externs as properties on window */
+  boolean declaredGlobalExternsOnWindow;
+
   //--------------------------------
   // Special-purpose alterations
   //--------------------------------
@@ -1001,6 +1004,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     anonymousFunctionNaming = AnonymousFunctionNamingPolicy.OFF;
     exportTestFunctions = false;
     gatherExternsFromTypes = false;
+    declaredGlobalExternsOnWindow = false;
 
     // Alterations
     runtimeTypeCheck = false;

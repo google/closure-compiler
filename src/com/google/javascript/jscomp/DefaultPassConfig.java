@@ -206,6 +206,10 @@ public class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass("beforeStandardChecks"));
 
+    if (options.declaredGlobalExternsOnWindow) {
+      checks.add(declaredGlobalExternsOnWindow);
+    }
+
     if (options.closurePass) {
       checks.add(closureGoogScopeAliases);
       checks.add(closureRewriteGoogClass);
@@ -1053,6 +1057,16 @@ public class DefaultPassConfig extends PassConfig {
           compiler,
           preprocessorSymbolTable,
           options.getAliasTransformationHandler());
+    }
+  };
+
+
+  /** Applies aliases and inlines goog.scope. */
+  final PassFactory declaredGlobalExternsOnWindow =
+      new PassFactory("declaredGlobalExternsOnWindow", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new DeclaredGlobalExternsOnWindow(compiler);
     }
   };
 
