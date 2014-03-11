@@ -341,6 +341,10 @@ class RuntimeTypeCheck implements CompilerPass {
 
         String refName = objType.getReferenceName();
 
+        if (refName.equals("Object")) {
+          return jsCode("objectChecker");
+        }
+
         StaticSourceFile sourceFile =
             NodeUtil.getSourceFile(objType.getConstructor().getSource());
         if (sourceFile == null || sourceFile.isExtern()) {
