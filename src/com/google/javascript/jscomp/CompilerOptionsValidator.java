@@ -22,6 +22,7 @@ package com.google.javascript.jscomp;
 final class CompilerOptionsValidator {
   /**
    * Checks for incompatible options.
+   * @author tbreisacher@google.com (Tyler Breisacher)
    */
   static void validate(CompilerOptions options) {
     if (options.checkMissingGetCssNameLevel.isOn() &&
