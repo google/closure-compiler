@@ -84,7 +84,6 @@ public enum WarningLevel {
   private static void addDefaultWarnings(CompilerOptions options) {
     options.checkSuspiciousCode = true;
     options.checkUnreachableCode = CheckLevel.WARNING;
-    options.checkControlStructures = true;
 
     // Allows annotations that are not standard.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,

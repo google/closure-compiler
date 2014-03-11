@@ -246,7 +246,7 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup ES5_STRICT =
       DiagnosticGroups.registerGroup("es5Strict",
-          ControlStructureCheck.USE_OF_WITH,
+          StrictModeCheck.USE_OF_WITH,
           StrictModeCheck.UNKNOWN_VARIABLE,
           StrictModeCheck.EVAL_DECLARATION,
           StrictModeCheck.EVAL_ASSIGNMENT,

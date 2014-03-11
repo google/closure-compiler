@@ -41,6 +41,29 @@ public class StrictModeCheckTest extends CompilerTestCase {
     return 1;
   }
 
+  public void testUseOfWith1() {
+    testSame("var a; with(a){}", StrictModeCheck.USE_OF_WITH);
+  }
+
+  public void testUseOfWith2() {
+    testSame("var a;\n" +
+             "/** @suppress {with} */" +
+             "with(a){}");
+  }
+
+  public void testUseOfWith3() {
+    testSame(
+        "function f(expr, context) {\n" +
+        "  try {\n" +
+        "    /** @suppress{with} */ with (context) {\n" +
+        "      return eval('[' + expr + '][0]');\n" +
+        "    }\n" +
+        "  } catch (e) {\n" +
+        "    return null;\n" +
+        "  }\n" +
+        "};\n");
+  }
+
   public void testEval2() {
     testSame("function foo(eval) {}",
          StrictModeCheck.EVAL_DECLARATION);

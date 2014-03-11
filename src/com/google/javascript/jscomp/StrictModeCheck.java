@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -35,6 +36,10 @@ import java.util.Set;
  */
 class StrictModeCheck extends AbstractPostOrderCallback
     implements CompilerPass {
+
+  static final DiagnosticType USE_OF_WITH = DiagnosticType.warning(
+      "JSC_USE_OF_WITH",
+      "The 'with' statement cannot be used in ES5 strict mode.");
 
   static final DiagnosticType UNKNOWN_VARIABLE = DiagnosticType.warning(
       "JSC_UNKNOWN_VARIABLE", "unknown variable {0}");
@@ -101,6 +106,18 @@ class StrictModeCheck extends AbstractPostOrderCallback
       checkDelete(t, n);
     } else if (n.isObjectLit()) {
       checkObjectLiteral(t, n);
+    } else if (n.isWith()) {
+      checkWith(t, n);
+    }
+  }
+
+  /** Reports a warning for with statements. */
+  private void checkWith(NodeTraversal t, Node n) {
+    JSDocInfo info = n.getJSDocInfo();
+    boolean allowWith =
+        info != null && info.getSuppressions().contains("with");
+    if (!allowWith) {
+      t.report(n, USE_OF_WITH);
     }
   }
 

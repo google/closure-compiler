@@ -43,6 +43,17 @@ public class NewParserTest extends BaseJSTypeTestCase {
       com.google.javascript.rhino.SimpleErrorReporter.getMessage0(
           "msg.jsdoc.missing.gt");
 
+  private static final String UNLABELED_BREAK =
+      "unlabelled break must be inside loop or switch";
+
+  private static final String UNEXPECTED_CONTINUE =
+      "continue must be inside loop";
+
+  private static final String UNEXPECTED_LABELED_CONTINUE =
+      "continue can only use labeles of iteration statements";
+
+  private static final String UNDEFINED_LABEL = "undefined label";
+
   private static final String MISPLACED_TYPE_ANNOTATION =
       IRFactory.MISPLACED_TYPE_ANNOTATION;
 
@@ -54,6 +65,66 @@ public class NewParserTest extends BaseJSTypeTestCase {
     super.setUp();
     mode = LanguageMode.ECMASCRIPT3;
     isIdeMode = false;
+  }
+
+  public void testWhile() {
+    parse("while(1) { break; }");
+  }
+
+  public void testNestedWhile() {
+    parse("while(1) { while(1) { break; } }");
+  }
+
+  public void testBreak() {
+    parseError("break;", UNLABELED_BREAK);
+  }
+
+  public void testContinue() {
+    parseError("continue;", UNEXPECTED_CONTINUE);
+  }
+
+  public void testBreakCrossFunction() {
+    parseError("while(1) { function f() { break; } }", UNLABELED_BREAK);
+  }
+
+  public void testBreakCrossFunctionInFor() {
+    parseError("while(1) {for(var f = function () { break; };;) {}}", UNLABELED_BREAK);
+  }
+
+  public void testContinueToSwitch() {
+    parseError("switch(1) {case(1): continue; }", UNEXPECTED_CONTINUE);
+  }
+
+  public void testContinueToSwitchWithNoCases() {
+    parse("switch(1){}");
+  }
+
+  public void testContinueToSwitchWithTwoCases() {
+    parseError("switch(1){case(1):break;case(2):continue;}", UNEXPECTED_CONTINUE);
+  }
+
+  public void testContinueToSwitchWithDefault() {
+    parseError("switch(1){case(1):break;case(2):default:continue;}", UNEXPECTED_CONTINUE);
+  }
+
+  public void testContinueToLabelSwitch() {
+    parseError(
+        "while(1) {a: switch(1) {case(1): continue a; }}",
+        UNEXPECTED_LABELED_CONTINUE);
+  }
+
+  public void testContinueOutsideSwitch() {
+    parse("b: while(1) { a: switch(1) { case(1): continue b; } }");
+  }
+
+  public void testContinueNotCrossFunction1() {
+    parse("a:switch(1){case(1):function f(){a:while(1){continue a;}}}");
+  }
+
+  public void testContinueNotCrossFunction2() {
+    parseError(
+        "a:switch(1){case(1):function f(){while(1){continue a;}}}",
+        UNDEFINED_LABEL + " \"a\"");
   }
 
   public void testLinenoCharnoAssign1() throws Exception {

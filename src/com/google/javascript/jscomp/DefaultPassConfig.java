@@ -238,11 +238,6 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(suspiciousCode);
     }
 
-    if (options.checkControlStructures
-        || options.enables(DiagnosticGroups.ES5_STRICT))  {
-      checks.add(checkControlStructures);
-    }
-
     if (options.checkRequires.isOn()) {
       checks.add(checkRequires);
     }
@@ -887,15 +882,6 @@ public class DefaultPassConfig extends PassConfig {
       Preconditions.checkState(!pass.isOneTimePass());
     }
   }
-
-  /** Checks for validity of the control structures. */
-  final HotSwapPassFactory checkControlStructures =
-      new HotSwapPassFactory("checkControlStructures", true) {
-    @Override
-    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      return new ControlStructureCheck(compiler);
-    }
-  };
 
   /** Checks that all constructed classes are goog.require()d. */
   final HotSwapPassFactory checkRequires =
