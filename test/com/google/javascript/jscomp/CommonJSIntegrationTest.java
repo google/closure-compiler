@@ -197,6 +197,56 @@ public class CommonJSIntegrationTest extends IntegrationTestCase {
          });
   }
 
+  public void testCrossModuleSubclass5() {
+    test(createCompilerOptions(),
+         new String[] {
+           "/** @constructor */ function Hello() {} " +
+           "module.exports = Hello;",
+           "var Hello = require('./i0');" +
+           "var util = {inherits: function (x, y){}};" +
+           "/**\n" +
+           " * @constructor\n" +
+           " * @extends {./i0}\n" +
+           " */\n" +
+           "function SubHello() { Hello.call(this); }" +
+           "util.inherits(SubHello, Hello);"
+         },
+         new String[] {
+           "function Hello$$module$i0(){}" +
+           "var module$i0=Hello$$module$i0;",
+           "var module$i1={};" +
+           "var Hello$$module$i1=module$i0;" +
+           "var util$$module$i1={inherits:function(x,y){}};" +
+           "function SubHello$$module$i1(){ Hello$$module$i1.call(this); }" +
+           "util$$module$i1.inherits(SubHello$$module$i1,Hello$$module$i1);"
+         });
+  }
+
+  public void testCrossModuleSubclass6() {
+    test(createCompilerOptions(),
+         new String[] {
+           "/** @constructor */ function Hello() {} " +
+           "module.exports = {Hello: Hello};",
+           "var i0 = require('./i0');" +
+           "var util = {inherits: function (x, y){}};" +
+           "/**\n" +
+           " * @constructor\n" +
+           " * @extends {./i0.Hello}\n" +
+           " */\n" +
+           "function SubHello() { i0.Hello.call(this); }" +
+           "util.inherits(SubHello, i0.Hello);"
+         },
+         new String[] {
+           "function Hello$$module$i0(){}" +
+           "var module$i0={Hello: Hello$$module$i0};",
+           "var module$i1={};" +
+           "var i0$$module$i1=module$i0;" +
+           "var util$$module$i1={inherits:function(x,y){}};" +
+           "function SubHello$$module$i1(){ i0$$module$i1.Hello.call(this); }" +
+           "util$$module$i1.inherits(SubHello$$module$i1,i0$$module$i1.Hello);"
+         });
+  }
+
   @Override
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();

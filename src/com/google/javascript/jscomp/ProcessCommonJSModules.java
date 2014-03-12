@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -362,7 +363,7 @@ public class ProcessCommonJSModules implements CompilerPass {
   /**
    * Traverses a node tree and appends a suffix to all global variable names.
    */
-  private static class SuffixVarsCallback extends AbstractPostOrderCallback {
+  private class SuffixVarsCallback extends AbstractPostOrderCallback {
     private final String suffix;
 
     SuffixVarsCallback(String suffix) {
@@ -403,15 +404,39 @@ public class ProcessCommonJSModules implements CompilerPass {
     private void fixTypeNode(NodeTraversal t, Node typeNode) {
       if (typeNode.isString()) {
         String name = typeNode.getString();
-        int endIndex = name.indexOf('.');
-        if (endIndex == -1) {
-          endIndex = name.length();
-        }
-        String baseName = name.substring(0, endIndex);
-        Scope.Var var = t.getScope().getVar(baseName);
-        if (var != null && var.isGlobal()) {
-          typeNode.setString(baseName + "$$" + suffix + name.substring(endIndex));
-          typeNode.putProp(Node.ORIGINALNAME_PROP, name);
+        if (ES6ModuleLoader.isRelativeIdentifier(name)) {
+          int lastSlash = name.lastIndexOf("/");
+          int endIndex = name.indexOf('.', lastSlash);
+          String localTypeName = null;
+          if (endIndex == -1) {
+            endIndex = name.length();
+          } else {
+            localTypeName = name.substring(endIndex);
+          }
+
+          String moduleName = name.substring(0, endIndex);
+          String loadAddress = loader.locate(moduleName, t.getInput());
+          if (loadAddress == null) {
+            t.makeError(typeNode, LOAD_ERROR, moduleName);
+            return;
+          }
+
+          String globalModuleName = toModuleName(loadAddress);
+          typeNode.setString(
+              localTypeName == null ?
+              globalModuleName :
+              globalModuleName + localTypeName);
+        } else {
+          int endIndex = name.indexOf('.');
+          if (endIndex == -1) {
+            endIndex = name.length();
+          }
+          String baseName = name.substring(0, endIndex);
+          Scope.Var var = t.getScope().getVar(baseName);
+          if (var != null && var.isGlobal()) {
+            typeNode.setString(baseName + "$$" + suffix + name.substring(endIndex));
+            typeNode.putProp(Node.ORIGINALNAME_PROP, name);
+          }
         }
       }
 

@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.parsing;
 import static com.google.javascript.jscomp.parsing.JsDocToken.ANNOTATION;
 import static com.google.javascript.jscomp.parsing.JsDocToken.BANG;
 import static com.google.javascript.jscomp.parsing.JsDocToken.COLON;
-import static com.google.javascript.jscomp.parsing.JsDocToken.COLONCOLON;
 import static com.google.javascript.jscomp.parsing.JsDocToken.COMMA;
 import static com.google.javascript.jscomp.parsing.JsDocToken.ELLIPSIS;
 import static com.google.javascript.jscomp.parsing.JsDocToken.EOC;
@@ -231,7 +230,7 @@ public class JsDocTokenStreamTest extends TestCase {
 
   public void testJsDocTokenization16() throws Exception {
     List<JsDocToken> tokens = ImmutableList.of(
-        STRING, COLONCOLON, COLON, ELLIPSIS, STRING, COLON, STRING, EOC);
+        STRING, COLON, COLON, COLON, ELLIPSIS, STRING, COLON, STRING, EOC);
     List<String> strings = ImmutableList.of("foo", "bar", "bar2");
 
     testJSDocTokenStream("foo:::...bar:bar2*/", tokens, strings);

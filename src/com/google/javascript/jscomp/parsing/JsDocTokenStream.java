@@ -125,11 +125,7 @@ class JsDocTokenStream {
           return JsDocToken.BANG;
 
         case ':':
-          if (matchChar(':')) {
-            return JsDocToken.COLONCOLON;
-          } else {
-            return JsDocToken.COLON;
-          }
+          return JsDocToken.COLON;
 
         case '=':
           return JsDocToken.EQUALS;
