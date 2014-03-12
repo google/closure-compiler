@@ -98,7 +98,7 @@ google.maps.Circle.prototype.getRadius = function() {};
 google.maps.Circle.prototype.getVisible = function() {};
 
 /**
- * @param {google.maps.LatLng} center
+ * @param {google.maps.LatLng|google.maps.LatLngLiteral} center
  * @return {undefined}
  */
 google.maps.Circle.prototype.setCenter = function(center) {};
@@ -1191,7 +1191,7 @@ google.maps.GeocoderRequest.prototype.address;
 google.maps.GeocoderRequest.prototype.bounds;
 
 /**
- * @type {google.maps.LatLng}
+ * @type {google.maps.LatLng|google.maps.LatLngLiteral}
  */
 google.maps.GeocoderRequest.prototype.location;
 
@@ -1566,7 +1566,7 @@ google.maps.InfoWindowOptions.prototype.maxWidth;
 google.maps.InfoWindowOptions.prototype.pixelOffset;
 
 /**
- * @type {google.maps.LatLng}
+ * @type {google.maps.LatLng|google.maps.LatLngLiteral}
  */
 google.maps.InfoWindowOptions.prototype.position;
 
@@ -1910,6 +1910,21 @@ google.maps.LatLngBounds.prototype.union = function(other) {};
 /**
  * @interface
  */
+google.maps.LatLngLiteral = function() {};
+
+/**
+ * @type {number}
+ */
+google.maps.LatLngLiteral.prototype.lat;
+
+/**
+ * @type {number}
+ */
+google.maps.LatLngLiteral.prototype.lng;
+
+/**
+ * @interface
+ */
 google.maps.LocationElevationRequest = function() {};
 
 /**
@@ -2138,7 +2153,7 @@ google.maps.Map.prototype.getZoom = function() {};
 google.maps.Map.prototype.panBy = function(x, y) {};
 
 /**
- * @param {google.maps.LatLng} latLng
+ * @param {google.maps.LatLng|google.maps.LatLngLiteral} latLng
  * @return {undefined}
  */
 google.maps.Map.prototype.panTo = function(latLng) {};
@@ -2150,7 +2165,7 @@ google.maps.Map.prototype.panTo = function(latLng) {};
 google.maps.Map.prototype.panToBounds = function(latLngBounds) {};
 
 /**
- * @param {google.maps.LatLng} latlng
+ * @param {google.maps.LatLng|google.maps.LatLngLiteral} latlng
  * @return {undefined}
  */
 google.maps.Map.prototype.setCenter = function(latlng) {};
@@ -2750,7 +2765,7 @@ google.maps.Marker.prototype.setMap = function(map) {};
 google.maps.Marker.prototype.setOptions = function(options) {};
 
 /**
- * @param {google.maps.LatLng} latlng
+ * @param {google.maps.LatLng|google.maps.LatLngLiteral} latlng
  * @return {undefined}
  */
 google.maps.Marker.prototype.setPosition = function(latlng) {};
@@ -3143,13 +3158,13 @@ google.maps.Polygon.prototype.setMap = function(map) {};
 google.maps.Polygon.prototype.setOptions = function(options) {};
 
 /**
- * @param {google.maps.MVCArray.<google.maps.LatLng>|Array.<google.maps.LatLng>} path
+ * @param {google.maps.MVCArray.<google.maps.LatLng>|Array.<google.maps.LatLng|google.maps.LatLngLiteral>} path
  * @return {undefined}
  */
 google.maps.Polygon.prototype.setPath = function(path) {};
 
 /**
- * @param {google.maps.MVCArray.<google.maps.MVCArray.<google.maps.LatLng>>|google.maps.MVCArray.<google.maps.LatLng>|Array.<Array.<google.maps.LatLng>>|Array.<google.maps.LatLng>} paths
+ * @param {google.maps.MVCArray.<google.maps.MVCArray.<google.maps.LatLng>>|google.maps.MVCArray.<google.maps.LatLng>|Array.<Array.<google.maps.LatLng|google.maps.LatLngLiteral>>|Array.<google.maps.LatLng|google.maps.LatLngLiteral>} paths
  * @return {undefined}
  */
 google.maps.Polygon.prototype.setPaths = function(paths) {};
@@ -3201,7 +3216,7 @@ google.maps.PolygonOptions.prototype.geodesic;
 google.maps.PolygonOptions.prototype.map;
 
 /**
- * @type {google.maps.MVCArray.<google.maps.MVCArray.<google.maps.LatLng>>|google.maps.MVCArray.<google.maps.LatLng>|Array.<Array.<google.maps.LatLng>>|Array.<google.maps.LatLng>}
+ * @type {google.maps.MVCArray.<google.maps.MVCArray.<google.maps.LatLng>>|google.maps.MVCArray.<google.maps.LatLng>|Array.<Array.<google.maps.LatLng|google.maps.LatLngLiteral>>|Array.<google.maps.LatLng|google.maps.LatLngLiteral>}
  */
 google.maps.PolygonOptions.prototype.paths;
 
@@ -3297,7 +3312,7 @@ google.maps.Polyline.prototype.setMap = function(map) {};
 google.maps.Polyline.prototype.setOptions = function(options) {};
 
 /**
- * @param {google.maps.MVCArray.<google.maps.LatLng>|Array.<google.maps.LatLng>} path
+ * @param {google.maps.MVCArray.<google.maps.LatLng>|Array.<google.maps.LatLng|google.maps.LatLngLiteral>} path
  * @return {undefined}
  */
 google.maps.Polyline.prototype.setPath = function(path) {};
@@ -3344,7 +3359,7 @@ google.maps.PolylineOptions.prototype.icons;
 google.maps.PolylineOptions.prototype.map;
 
 /**
- * @type {google.maps.MVCArray.<google.maps.LatLng>|Array.<google.maps.LatLng>}
+ * @type {google.maps.MVCArray.<google.maps.LatLng>|Array.<google.maps.LatLng|google.maps.LatLngLiteral>}
  */
 google.maps.PolylineOptions.prototype.path;
 
@@ -3749,7 +3764,7 @@ google.maps.StreetViewPanorama.prototype.setOptions = function(options) {};
 google.maps.StreetViewPanorama.prototype.setPano = function(pano) {};
 
 /**
- * @param {google.maps.LatLng} latLng
+ * @param {google.maps.LatLng|google.maps.LatLngLiteral} latLng
  * @return {undefined}
  */
 google.maps.StreetViewPanorama.prototype.setPosition = function(latLng) {};
@@ -3863,7 +3878,7 @@ google.maps.StreetViewPanoramaOptions.prototype.panControlOptions;
 google.maps.StreetViewPanoramaOptions.prototype.pano;
 
 /**
- * @type {google.maps.LatLng}
+ * @type {google.maps.LatLng|google.maps.LatLngLiteral}
  */
 google.maps.StreetViewPanoramaOptions.prototype.position;
 
@@ -5442,7 +5457,7 @@ google.maps.places.PlaceSearchRequest.prototype.bounds;
 google.maps.places.PlaceSearchRequest.prototype.keyword;
 
 /**
- * @type {google.maps.LatLng}
+ * @type {google.maps.LatLng|google.maps.LatLngLiteral}
  */
 google.maps.places.PlaceSearchRequest.prototype.location;
 
