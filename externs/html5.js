@@ -1143,16 +1143,14 @@ HTMLElement.prototype.hidden;
 HTMLElement.prototype.spellcheck;
 
 /**
- * TODO(nnaze): This must return ShadowRoot.
  * @see http://www.w3.org/TR/components-intro/
- * @return {!Element}
+ * @return {!ShadowRoot}
  */
 HTMLElement.prototype.createShadowRoot;
 
 /**
- * TODO(nnaze): This must return ShadowRoot.
  * @see http://www.w3.org/TR/components-intro/
- * @return {!Element}
+ * @return {!ShadowRoot}
  */
 HTMLElement.prototype.webkitCreateShadowRoot;
 
