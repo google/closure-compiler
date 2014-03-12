@@ -393,6 +393,12 @@ XMLHttpRequest.prototype.statusText;
 XMLHttpRequest.prototype.onreadystatechange;
 
 /**
+ * @type {Function}
+ * @see http://www.w3.org/TR/XMLHttpRequest/#handler-xhr-onerror
+ */
+XMLHttpRequest.prototype.onerror;
+
+/**
  * The FormData object represents an ordered collection of entries. Each entry
  * has a name and value.
  *
