@@ -1155,10 +1155,28 @@ HTMLElement.prototype.createShadowRoot;
 HTMLElement.prototype.webkitCreateShadowRoot;
 
 /**
+ * @see http://www.w3.org/TR/shadow-dom/
+ * @type {ShadowRoot}
+ */
+HTMLElement.prototype.shadowRoot;
+
+/**
  * @see http://www.w3.org/TR/components-intro/
  * @type {function()}
  */
 HTMLElement.prototype.createdCallback;
+
+/**
+ * @see http://w3c.github.io/webcomponents/explainer/#lifecycle-callbacks
+ * @type {function()}
+ */
+HTMLElement.prototype.attachedCallback;
+
+/**
+ * @see http://w3c.github.io/webcomponents/explainer/#lifecycle-callbacks
+ * @type {function()}
+ */
+HTMLElement.prototype.detachedCallback;
 
 /** @type {string} */
 HTMLAnchorElement.prototype.hash;
