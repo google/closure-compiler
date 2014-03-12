@@ -775,8 +775,8 @@ class NewIRFactory {
    */
   private JsDocInfoParser createJsDocInfoParser(Comment node) {
     String comment = node.value;
-    int lineno = node.location.start.line;
-    int charno = node.location.start.column;
+    int lineno = lineno(node.location.start);
+    int charno = charno(node.location.start);
     int position = node.location.start.offset;
 
     // The JsDocInfoParser expects the comment without the initial '/**'.
@@ -803,8 +803,8 @@ class NewIRFactory {
    */
   private JSDocInfo parseInlineTypeDoc(Comment node) {
     String comment = node.value;
-    int lineno = node.location.start.line + 1;
-    int charno = node.location.start.column;
+    int lineno = lineno(node.location.start);
+    int charno = charno(node.location.start);
 
     // The JsDocInfoParser expects the comment without the initial '/**'.
     int numOpeningChars = 3;
