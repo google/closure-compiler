@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import java.util.List;
@@ -38,7 +39,7 @@ import java.util.Set;
 public class NominalType {
   // In the case of a generic type (rawType.typeParameters non-empty) either:
   // a) typeMap is empty, this is an uninstantiated generic type (Foo.<T>), or
-  // b) typeMap's keys exactly correspond to the type paramters of rawType,
+  // b) typeMap's keys exactly correspond to the type parameters of rawType;
   //    this represents a completely instantiated generic type (Foo.<number>).
   private final ImmutableMap<String, JSType> typeMap;
   private final RawNominalType rawType;
@@ -79,8 +80,7 @@ public class NominalType {
       }
     } else {
       for (String newKey : newTypeMap.keySet()) {
-        if (!typeMap.containsKey(newKey) &&
-            rawType.typeParameters.contains(newKey)) {
+        if (rawType.typeParameters.contains(newKey)) {
           builder.put(newKey, newTypeMap.get(newKey));
         }
       }
@@ -195,6 +195,26 @@ public class NominalType {
     }
     Preconditions.checkState(c2.isSubclassOf(c1));
     return c2;
+  }
+
+  boolean unifyWith(NominalType other, List<String> typeParameters,
+      Multimap<String, JSType> typeMultimap) {
+    if (this.rawType != other.rawType) {
+      return false;
+    }
+    if (this.rawType.typeParameters.isEmpty()) {
+      // Non-generic nominal types don't contribute to the unification.
+      return true;
+    }
+    // Both nominal types must already be instantiated when unifyWith is called.
+    Preconditions.checkState(!typeMap.isEmpty());
+    Preconditions.checkState(!other.typeMap.isEmpty());
+    boolean hasUnified = true;
+    for (String typeParam: rawType.typeParameters) {
+      hasUnified = hasUnified && typeMap.get(typeParam).unifyWith(
+          other.typeMap.get(typeParam), typeParameters, typeMultimap);
+    }
+    return hasUnified;
   }
 
   @Override

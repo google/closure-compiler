@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
@@ -694,6 +695,19 @@ public class JSType {
         this :
         new JSType(this.mask, this.location,
             ObjectType.withPropertyRequired(this.objs, qname), typeVar);
+  }
+
+  static List<JSType> fixLengthOfTypeList(
+      int desiredLength, List<JSType> typeList) {
+    int length = typeList.size();
+    if (length == desiredLength) {
+      return typeList;
+    }
+    ImmutableList.Builder builder = ImmutableList.builder();
+    for (int i = 0; i < desiredLength; i++) {
+      builder.add(i < length ? typeList.get(i) : UNKNOWN);
+    }
+    return builder.build();
   }
 
   @Override

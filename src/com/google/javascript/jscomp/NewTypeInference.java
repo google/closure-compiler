@@ -33,7 +33,6 @@ import com.google.javascript.jscomp.newtypes.FunctionType;
 import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.TypeUtils;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -555,16 +554,8 @@ public class NewTypeInference implements CompilerPass {
           break;
         case Token.CASE: {
           conditional = true;
-          // For a statement of the form: switch (exp1) { ... case exp2: ... }
-          // create an expression (exp1 === exp2) and analyze the body of the
-          // exp2 case when the condition is true.
-          // Requires cloning to avoid nodes with multiple parents.
-          // Cloning works because the cloned nodes aren't in the CFG; if they
-          // were, it would be wrong because of missing CFG edges.
-          Node switchedExp = n.getParent().getFirstChild().cloneTree();
-          Node syntheticSheq = IR.sheq(
-              switchedExp, n.getFirstChild().cloneTree());
-          analyzeConditionalStmFwd(n, syntheticSheq, inEnv);
+          // See analyzeExprFwd#Token.CASE for how to handle this precisely
+          analyzeConditionalStmFwd(n, n, inEnv);
           break;
         }
         case Token.VAR:
@@ -1047,46 +1038,9 @@ public class NewTypeInference implements CompilerPass {
             JSType.NUMBER);
       }
       case Token.SHEQ:
-      case Token.SHNE: {
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-
-        if ((specializedType.isTruthy() || specializedType.isFalsy()) &&
-            (lhs.isTypeOf() || rhs.isTypeOf())) {
-          if (lhs.isTypeOf()) {
-            return analyzeSpecializedTypeof(
-                lhs, rhs, exprKind, inEnv, specializedType);
-          } else {
-            return analyzeSpecializedTypeof(
-                rhs, lhs, exprKind, inEnv, specializedType);
-          }
-        }
-
-        EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
-        EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
-
-        if ((exprKind == Token.SHEQ && specializedType.isTruthy()) ||
-            (exprKind == Token.SHNE && specializedType.isFalsy())) {
-          JSType meetType = JSType.meet(lhsPair.type, rhsPair.type);
-          lhsPair = analyzeExprFwd(lhs, rhsPair.env, JSType.UNKNOWN, meetType);
-          rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, meetType);
-        } else if ((exprKind == Token.SHEQ && specializedType.isFalsy()) ||
-            (exprKind == Token.SHNE && specializedType.isTruthy())) {
-          JSType lhsType = lhsPair.type;
-          JSType rhsType = rhsPair.type;
-          if (lhsType.equals(JSType.NULL) ||
-              lhsType.equals(JSType.UNDEFINED)) {
-            rhsType = rhsType.removeType(lhsType);
-          } else if (rhsType.equals(JSType.NULL) ||
-                     rhsType.equals(JSType.UNDEFINED)) {
-            lhsType = lhsType.removeType(rhsType);
-          }
-          lhsPair = analyzeExprFwd(lhs, rhsPair.env, JSType.UNKNOWN, lhsType);
-          rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, rhsType);
-        }
-        rhsPair.type = JSType.BOOLEAN;
-        return rhsPair;
-      }
+      case Token.SHNE:
+        return analyzeStrictComparisonFwd(exprKind,
+            expr.getFirstChild(), expr.getLastChild(), inEnv, specializedType);
       case Token.EQ:
       case Token.NE:
         return analyzeNonStrictComparisonFwd(expr, inEnv, specializedType);
@@ -1338,10 +1292,57 @@ public class NewTypeInference implements CompilerPass {
         }
         pair.type = toType;
         return pair;
+      case Token.CASE:
+        // For a statement of the form: switch (exp1) { ... case exp2: ... }
+        // we analyze the case as if it were (exp1 === exp2).
+        // We analyze the body of the case when the test is true and the stm
+        // following the body when the test is false.
+        return analyzeStrictComparisonFwd(Token.SHEQ,
+            expr.getParent().getFirstChild(), expr.getFirstChild(),
+            inEnv, specializedType);
       default:
         throw new RuntimeException("Unhandled expression type: " +
               Token.name(expr.getType()));
     }
+  }
+
+  private EnvTypePair analyzeStrictComparisonFwd(int comparisonOp,
+      Node lhs, Node rhs, TypeEnv inEnv, JSType specializedType) {
+    if ((specializedType.isTruthy() || specializedType.isFalsy()) &&
+        (lhs.isTypeOf() || rhs.isTypeOf())) {
+      if (lhs.isTypeOf()) {
+        return analyzeSpecializedTypeof(
+            lhs, rhs, comparisonOp, inEnv, specializedType);
+      } else {
+        return analyzeSpecializedTypeof(
+            rhs, lhs, comparisonOp, inEnv, specializedType);
+      }
+    }
+
+    EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
+    EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
+
+    if ((comparisonOp == Token.SHEQ && specializedType.isTruthy()) ||
+        (comparisonOp == Token.SHNE && specializedType.isFalsy())) {
+      JSType meetType = JSType.meet(lhsPair.type, rhsPair.type);
+      lhsPair = analyzeExprFwd(lhs, rhsPair.env, JSType.UNKNOWN, meetType);
+      rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, meetType);
+    } else if ((comparisonOp == Token.SHEQ && specializedType.isFalsy()) ||
+        (comparisonOp == Token.SHNE && specializedType.isTruthy())) {
+      JSType lhsType = lhsPair.type;
+      JSType rhsType = rhsPair.type;
+      if (lhsType.equals(JSType.NULL) ||
+          lhsType.equals(JSType.UNDEFINED)) {
+        rhsType = rhsType.removeType(lhsType);
+      } else if (rhsType.equals(JSType.NULL) ||
+          rhsType.equals(JSType.UNDEFINED)) {
+        lhsType = lhsType.removeType(rhsType);
+      }
+      lhsPair = analyzeExprFwd(lhs, rhsPair.env, JSType.UNKNOWN, lhsType);
+      rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, rhsType);
+    }
+    rhsPair.type = JSType.BOOLEAN;
+    return rhsPair;
   }
 
   private EnvTypePair analyzeSpecializedTypeof(Node typeof, Node typeString,

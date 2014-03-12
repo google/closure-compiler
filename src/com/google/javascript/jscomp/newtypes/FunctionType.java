@@ -286,7 +286,6 @@ public class FunctionType {
   }
 
   public boolean isSubtypeOf(FunctionType other) {
-    Preconditions.checkState(!other.isGeneric()); // TODO(user): implement it
     // t1 <= t2 iff t2 = t1 \/ t2 doesn't hold always,
     // so we first create a new type by replacing ? in the right places.
     if (other.isTopFunction()) {
@@ -295,7 +294,20 @@ public class FunctionType {
     if (isTopFunction()) {
       return false;
     }
-    Preconditions.checkState(!this.isGeneric()); // This should never happen.
+    if (this.isGeneric()) {
+      // This can only happen when typechecking an assignment that "defines" a
+      // polymorphic function, eg,
+      // /**
+      //  * @template {T}
+      //  * @param {T} x
+      //  */
+      // Foo.prototype.method = function(x) {};
+
+      // TODO(user): This also comes up in inheritance of classes with
+      // polymorphic methods; fix for that.
+      return true;
+    }
+    Preconditions.checkState(!other.isGeneric()); // TODO(user): implement it
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     int i = 0;
     for (; i < other.requiredFormals.size(); i++) {
@@ -483,7 +495,12 @@ public class FunctionType {
     return returnType.unifyWith(other.returnType, typeParameters, typeMultimap);
   }
 
-  private FunctionType applyInstantiation(Map<String, JSType> typeMap) {
+  /**
+   * @param keepTypeParams See the two cases in substituteGenerics and
+   * instantiateGenerics.
+   */
+  private FunctionType applyInstantiation(
+      boolean keepTypeParams, Map<String, JSType> typeMap) {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     for (JSType reqFormal : requiredFormals) {
       builder.addReqFormal(reqFormal.substituteGenerics(typeMap));
@@ -505,21 +522,36 @@ public class FunctionType {
     for (String var : outerVarPreconditions.keySet()) {
       builder.addOuterVarPrecondition(var, outerVarPreconditions.get(var));
     }
-    // The returned FunctionType will have no typeParameters
+    if (keepTypeParams) {
+      builder.addTypeParameters(this.typeParameters);
+    }
     return builder.buildFunction();
   }
 
+  /**
+   * FunctionType#substituteGenerics is called while instantiating prototype
+   * methods of generic nominal types.
+   */
   FunctionType substituteGenerics(Map<String, JSType> concreteTypes) {
-    Preconditions.checkState(typeParameters == null);
     Preconditions.checkState(outerVarPreconditions.isEmpty());
-    return applyInstantiation(concreteTypes);
+    Map<String, JSType> typeMap = concreteTypes;
+    if (typeParameters != null) {
+      ImmutableMap.Builder builder = ImmutableMap.builder();
+      for (String typeParam: concreteTypes.keySet()) {
+        if (!typeParameters.contains(typeParam)) {
+          builder.put(typeParam, concreteTypes.get(typeParam));
+        }
+      }
+      typeMap = builder.build();
+    }
+    return applyInstantiation(true, typeMap);
   }
 
   public FunctionType instantiateGenerics(Map<String, JSType> typeMap) {
     for (String typeParam: typeMap.keySet()) {
       Preconditions.checkState(typeParameters.contains(typeParam));
     }
-    return applyInstantiation(typeMap);
+    return applyInstantiation(false, typeMap);
   }
 
   @Override

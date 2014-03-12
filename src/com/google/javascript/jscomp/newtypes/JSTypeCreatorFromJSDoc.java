@@ -242,7 +242,8 @@ public class JSTypeCreatorFromJSDoc {
           "Expected " + typeParameters.size() + " type arguments, but " +
           typeArguments.size() + " were passed.", n);
       return JSType.fromObjectType(ObjectType.fromNominalType(
-          uninstantiated));
+          uninstantiated.instantiateGenerics(JSType.fixLengthOfTypeList(
+              typeParameters.size(), typeArguments))));
     }
     return JSType.fromObjectType(ObjectType.fromNominalType(
         uninstantiated.instantiateGenerics(typeArguments)));

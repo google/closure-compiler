@@ -542,8 +542,11 @@ public class ObjectType {
    */
   boolean unifyWith(ObjectType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
-    // TODO(blickly): With generic classes, we will need to have nominalType.unifyWith
-    if (nominalType != other.nominalType) {
+    if (nominalType != null && other.nominalType != null) {
+      return nominalType.unifyWith(
+          other.nominalType, typeParameters, typeMultimap);
+    }
+    if (nominalType != null || other.nominalType != null) {
       return false;
     }
     if (fn != null) {
