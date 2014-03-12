@@ -1894,7 +1894,8 @@ public class Parser {
           break;
         case PERIOD:
           eat(TokenType.PERIOD);
-          operand = new MemberExpressionTree(getTreeLocation(start), operand, eatId());
+          IdentifierToken id = eatId();
+          operand = new MemberExpressionTree(getTreeLocation(start), operand, id);
           break;
         }
       }
@@ -1926,8 +1927,8 @@ public class Parser {
             getTreeLocation(start), operand, member);
       } else {
         eat(TokenType.PERIOD);
-        operand = new MemberExpressionTree(
-            getTreeLocation(start), operand, eatIdOrKeywordAsId());
+        IdentifierToken id = eatIdOrKeywordAsId();
+        operand = new MemberExpressionTree(getTreeLocation(start), operand, id);
       }
     }
     return operand;
