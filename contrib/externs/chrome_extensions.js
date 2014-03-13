@@ -4560,6 +4560,26 @@ chrome.notifications.ClosedEvent = function() {};
 chrome.notifications.ClosedEvent.prototype.addListener = function(callback) {};
 
 
+/**
+ * @param {!chrome.notifications.ClosedCallback} callback
+ */
+chrome.notifications.ClosedEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {!chrome.notifications.ClosedCallback} callback
+ * @return {boolean}
+ */
+chrome.notifications.ClosedEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.notifications.ClosedEvent.prototype.hasListeners = function() {};
+
+
 
 /**
  * @interface
@@ -4572,6 +4592,26 @@ chrome.notifications.ClickedEvent = function() {};
  * @param {!chrome.notifications.StringCallback} callback
  */
 chrome.notifications.ClickedEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {!chrome.notifications.StringCallback} callback
+ */
+chrome.notifications.ClickedEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {!chrome.notifications.StringCallback} callback
+ * @return {boolean}
+ */
+chrome.notifications.ClickedEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.notifications.ClickedEvent.prototype.hasListeners = function() {};
 
 
 
@@ -4587,6 +4627,28 @@ chrome.notifications.ButtonClickedEvent = function() {};
  */
 chrome.notifications.ButtonClickedEvent.prototype.addListener =
     function(callback) {};
+
+
+/**
+ * @param {!chrome.notifications.ButtonCallback} callback
+ */
+chrome.notifications.ButtonClickedEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {!chrome.notifications.ButtonCallback} callback
+ * @return {boolean}
+ */
+chrome.notifications.ButtonClickedEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.notifications.ButtonClickedEvent.prototype.hasListeners = function() {};
+
 
 
 /**
@@ -4668,6 +4730,30 @@ chrome.mediaGalleriesPrivate.DeviceEvent.prototype.addListener =
     function(callback) {};
 
 
+/**
+ * @param {!chrome.mediaGalleriesPrivate.DeviceCallback} callback
+ * @deprecated Use {chrome.system.storage.DeviceEvent.removeListener}.
+ */
+chrome.mediaGalleriesPrivate.DeviceEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {!chrome.mediaGalleriesPrivate.DeviceCallback} callback
+ * @deprecated Use {chrome.system.storage.DeviceEvent.hasListener}.
+ */
+chrome.mediaGalleriesPrivate.DeviceEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/**
+ * @return {boolean}
+ * @deprecated Use {chrome.system.storage.DeviceEvent.hasListener}
+ */
+chrome.mediaGalleriesPrivate.DeviceEvent.prototype.hasListeners =
+    function(callback) {};
+
+
 
 /**
  * @interface
@@ -4680,6 +4766,27 @@ chrome.mediaGalleriesPrivate.GalleryChangeEvent = function() {};
  */
 chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.addListener =
     function(callback) {};
+
+
+/**
+ * @param {!chrome.mediaGalleriesPrivate.GalleryChangeCallback} callback
+ */
+chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {!chrome.mediaGalleriesPrivate.GalleryChangeCallback} callback
+ */
+chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.hasListeners =
+    function() {};
 
 
 
