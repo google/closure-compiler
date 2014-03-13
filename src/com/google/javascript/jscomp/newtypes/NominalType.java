@@ -341,9 +341,11 @@ public class NominalType {
     public boolean addInterfaces(ImmutableSet<NominalType> interfaces) {
       Preconditions.checkState(!isFinalized);
       Preconditions.checkState(this.interfaces == null);
+      Preconditions.checkNotNull(interfaces);
       if (this.isInterface) {
         for (NominalType interf : interfaces) {
           if (interf.rawType.hasAncestorInterface(this)) {
+            this.interfaces = ImmutableSet.of();
             return false;
           }
         }

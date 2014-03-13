@@ -218,7 +218,9 @@ public class ObjectType {
   private static void mayPutProp(String pname, Property prop,
       Map<String, Property> props, NominalType nom) {
     Property nomProp = nom == null ? null : nom.getProp(pname);
-    if (nomProp == null || prop.getType().isSubtypeOf(nomProp.getType())) {
+    JSType propType = prop.getType();
+    if (nomProp == null ||
+        (!propType.isUnknown() && propType.isSubtypeOf(nomProp.getType()))) {
       props.put(pname, prop);
     }
   }

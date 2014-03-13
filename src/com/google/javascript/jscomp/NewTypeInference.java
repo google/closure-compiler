@@ -721,12 +721,18 @@ public class NewTypeInference implements CompilerPass {
       rhsType = pair.type;
     }
     if (!NodeUtil.isNamespaceDecl(nameNode) &&
-        declType != null && rhs != null && !rhsType.isSubtypeOf(declType)) {
-      warnings.add(JSError.make(
-          rhs, MISTYPED_ASSIGN_RHS,
-          declType.toString(), rhsType.toString()));
-      // Don't flow the wrong initialization
-      rhsType = declType;
+        declType != null && rhs != null) {
+      if (!rhsType.isSubtypeOf(declType)) {
+        warnings.add(JSError.make(
+            rhs, MISTYPED_ASSIGN_RHS,
+            declType.toString(), rhsType.toString()));
+        // Don't flow the wrong initialization
+        rhsType = declType;
+      } else {
+        // We do this to preserve type attributes like declaredness of
+        // a property
+        rhsType = declType.specialize(rhsType);
+      }
     }
     return envPutType(outEnv, varName, rhsType);
   }
@@ -978,7 +984,7 @@ public class NewTypeInference implements CompilerPass {
       case Token.ASSIGN: { // Fwd
         Node lhs = expr.getFirstChild();
         Node rhs = expr.getLastChild();
-        LValueResult lvalue = analyzeLValueFwd(lhs, inEnv, requiredType);
+        LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, requiredType);
         JSType declType = lvalue.declType;
         EnvTypePair rhsPair =
             analyzeExprFwd(rhs, lvalue.env, requiredType, specializedType);
@@ -998,7 +1004,7 @@ public class NewTypeInference implements CompilerPass {
         Node rhs = expr.getLastChild();
         JSType lhsReqType = specializeWithCorrection(
             requiredType, JSType.NUM_OR_STR);
-        LValueResult lvalue = analyzeLValueFwd(lhs, inEnv, lhsReqType);
+        LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, lhsReqType);
         JSType lhsType = lvalue.type;
         if (!lhsType.isSubtypeOf(JSType.NUM_OR_STR)) {
           warnInvalidOperand(lhs, Token.ASSIGN_ADD, JSType.NUM_OR_STR, lhsType);
@@ -1024,7 +1030,7 @@ public class NewTypeInference implements CompilerPass {
       case Token.ASSIGN_MOD: {
         Node lhs = expr.getFirstChild();
         Node rhs = expr.getLastChild();
-        LValueResult lvalue = analyzeLValueFwd(lhs, inEnv, JSType.NUMBER);
+        LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, JSType.NUMBER);
         JSType lhsType = lvalue.type;
         if (!lhsType.isSubtypeOf(JSType.NUMBER)) {
           warnInvalidOperand(lhs, expr.getType(), JSType.NUMBER, lhsType);
@@ -1557,7 +1563,7 @@ public class NewTypeInference implements CompilerPass {
         // Tighten the inferred type and don't warn.
         // See Token.NAME fwd for explanation about types as lower/upper bounds.
         Node propAccess = receiver.getParent();
-        LValueResult lvr = analyzeLValueFwd(propAccess, inEnv, requiredType);
+        LValueResultFwd lvr = analyzeLValueFwd(propAccess, inEnv, requiredType);
         TypeEnv updatedEnv =
             updateLvalueTypeInEnv(lvr.env, propAccess, lvr.ptr, requiredType);
         return new EnvTypePair(updatedEnv, requiredType);
@@ -1823,7 +1829,8 @@ public class NewTypeInference implements CompilerPass {
         // Here we analyze the LHS twice:
         // Once to find out what should be removed for the slicedEnv,
         // and again to take into account the side effects of the LHS itself.
-        LValueResult lvalue = analyzeLValueBwd(lhs, outEnv, requiredType, true);
+        LValueResultBwd lvalue = analyzeLValueBwd(
+            lhs, outEnv, requiredType, true);
         TypeEnv slicedEnv = lvalue.env;
         JSType rhsReqType = specializeWithCorrection(lvalue.type, requiredType);
         EnvTypePair pair = analyzeExprBwd(rhs, slicedEnv, rhsReqType);
@@ -1835,7 +1842,8 @@ public class NewTypeInference implements CompilerPass {
         Node rhs = expr.getLastChild();
         JSType lhsReqType = specializeWithCorrection(
             requiredType, JSType.NUM_OR_STR);
-        LValueResult lvalue = analyzeLValueBwd(lhs, outEnv, lhsReqType, false);
+        LValueResultBwd lvalue = analyzeLValueBwd(
+            lhs, outEnv, lhsReqType, false);
         // if lhs is a string, rhs can still be a number
         JSType rhsReqType = lvalue.type.equals(JSType.NUMBER) ?
             JSType.NUMBER : JSType.NUM_OR_STR;
@@ -1856,7 +1864,7 @@ public class NewTypeInference implements CompilerPass {
         Node lhs = expr.getFirstChild();
         Node rhs = expr.getLastChild();
         EnvTypePair pair = analyzeExprBwd(rhs, outEnv, JSType.NUMBER);
-        LValueResult lvalue =
+        LValueResultBwd lvalue =
             analyzeLValueBwd(lhs, pair.env, JSType.NUMBER, false);
         return new EnvTypePair(lvalue.env, JSType.NUMBER);
       }
@@ -2086,13 +2094,14 @@ public class NewTypeInference implements CompilerPass {
     return env.putType(varName, type);
   }
 
-  private class LValueResult {
+  private class LValueResultFwd {
     TypeEnv env;
     JSType type;
     JSType declType;
     String ptr;
 
-    LValueResult(TypeEnv env, JSType type, JSType declType, String ptr) {
+    LValueResultFwd(TypeEnv env, JSType type, JSType declType, String ptr) {
+      Preconditions.checkNotNull(type);
       this.env = env;
       this.type = type;
       this.declType = declType;
@@ -2100,81 +2109,101 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
-  private LValueResult analyzeLValueFwd(
+  private LValueResultFwd analyzeLValueFwd(
       Node expr, TypeEnv inEnv, JSType type) {
     return analyzeLValueFwd(expr, inEnv, type, false);
   }
 
-  private LValueResult analyzeLValueFwd(
-      Node expr, TypeEnv inEnv, JSType type, boolean isRecursiveCall) {
+  private LValueResultFwd analyzeLValueFwd(
+      Node expr, TypeEnv inEnv, JSType type, boolean insideQualifiedName) {
     switch (expr.getType()) {
       case Token.THIS: {
         if (currentScope.hasThis()) {
-          return new LValueResult(inEnv, envGetType(inEnv, "this"),
+          return new LValueResultFwd(inEnv, envGetType(inEnv, "this"),
               currentScope.getDeclaredTypeOf("this"), "this");
         } else {
           warnings.add(JSError.make(expr, CheckGlobalThis.GLOBAL_THIS));
-          return new LValueResult(inEnv, JSType.UNKNOWN, null, null);
+          return new LValueResultFwd(inEnv, JSType.UNKNOWN, null, null);
         }
       }
       case Token.NAME: {
         String varName = expr.getQualifiedName();
         JSType varType = envGetType(inEnv, varName);
-        return new LValueResult(inEnv, varType,
+        return new LValueResultFwd(inEnv, varType,
             currentScope.getDeclaredTypeOf(varName),
             varType.hasNonScalar() ? varName : null);
-      }
-      case Token.NEW:
-      case Token.CALL: {
-        EnvTypePair pair = analyzeExprFwd(expr, inEnv, type);
-        return new LValueResult(pair.env, pair.type, null, null);
       }
       case Token.GETPROP: {
         Node obj = expr.getFirstChild();
         String pname = expr.getLastChild().getString();
-        return analyzePropLValFwd(obj, pname, inEnv, type, isRecursiveCall);
+        return analyzePropLValFwd(obj, pname, inEnv, type, insideQualifiedName);
       }
       case Token.GETELEM: {
         if (expr.getLastChild().isString()) {
           Node obj = expr.getFirstChild();
           String pname = expr.getLastChild().getString();
-          return analyzePropLValFwd(obj, pname, inEnv, type, isRecursiveCall);
+          return analyzePropLValFwd(obj, pname, inEnv, type, insideQualifiedName);
         }
-        return new LValueResult(inEnv, type, null, null);
+        return new LValueResultFwd(inEnv, type, null, null);
       }
-      case Token.OBJECTLIT: {
-        EnvTypePair etPair = analyzeExprFwd(expr, inEnv, type);
-        return new LValueResult(etPair.env, etPair.type, null, null);
+      default: {
+        // Expressions that aren't lvalues should be handled because they may
+        // be, e.g., the left child of a getprop.
+        // We must check that they are not the direct lvalues.
+        Preconditions.checkState(insideQualifiedName);
+        EnvTypePair pair = analyzeExprFwd(expr, inEnv, type);
+        return new LValueResultFwd(pair.env, pair.type, null, null);
       }
     }
-    throw new RuntimeException(
-        "analyzeLValueFwd: unknown lhs expression @ node " + expr);
   }
 
-  private LValueResult analyzePropLValFwd(Node obj, String pname,
-      TypeEnv inEnv, JSType type, boolean isRecursiveCall) {
-    LValueResult lvalue = analyzeLValueFwd(obj, inEnv,
+  private LValueResultFwd analyzePropLValFwd(Node obj, String pname,
+      TypeEnv inEnv, JSType type, boolean insideQualifiedName) {
+    LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv,
         JSType.TOP_OBJECT.withProperty(pname, type), true);
     if (!lvalue.type.isSubtypeOf(JSType.TOP_OBJECT)) {
       warnings.add(JSError.make(obj, PROPERTY_ACCESS_ON_NONOBJECT,
             pname, lvalue.type.toString()));
-      return new LValueResult(lvalue.env, type, null, null);
+      return new LValueResultFwd(lvalue.env, type, null, null);
     }
-    if (isRecursiveCall && !lvalue.type.isUnknown() &&
-        lvalue.type.isSubtypeOf(JSType.TOP_OBJECT) &&
+    // Warn for inexistent property either on the non-top-level of a qualified
+    // name, or for assignment ops that won't create a new property.
+    boolean warnForInexistentProp = insideQualifiedName ||
+        obj.getParent().getParent().getType() != Token.ASSIGN;
+    if (warnForInexistentProp && !lvalue.type.isUnknown() &&
         !lvalue.type.mayHaveProp(pname)) {
       warnings.add(JSError.make(obj, TypeCheck.INEXISTENT_PROPERTY,
             pname, lvalue.type.toString()));
-      return new LValueResult(lvalue.env, type, null, null);
+      return new LValueResultFwd(lvalue.env, type, null, null);
     }
-    return new LValueResult(lvalue.env, lvalue.type.getProp(pname),
+    JSType lvalueType = lvalue.type.mayHaveProp(pname) ?
+        lvalue.type.getProp(pname) : JSType.UNKNOWN;
+    return new LValueResultFwd(lvalue.env, lvalueType,
         lvalue.type.getDeclaredProp(pname),
         lvalue.ptr == null ? null : lvalue.ptr + "." + pname);
   }
 
-  /** When {@code doSlicing} is set, remove the lvalue from the returned env */
-  private LValueResult analyzeLValueBwd(
+  private class LValueResultBwd {
+    TypeEnv env;
+    JSType type;
+    String ptr;
+
+    LValueResultBwd(TypeEnv env, JSType type, String ptr) {
+      Preconditions.checkNotNull(type);
+      this.env = env;
+      this.type = type;
+      this.ptr = ptr;
+    }
+  }
+
+  private LValueResultBwd analyzeLValueBwd(
       Node expr, TypeEnv outEnv, JSType type, boolean doSlicing) {
+    return analyzeLValueBwd(expr, outEnv, type, doSlicing, false);
+  }
+
+  /** When {@code doSlicing} is set, remove the lvalue from the returned env */
+  private LValueResultBwd analyzeLValueBwd(Node expr, TypeEnv outEnv,
+      JSType type, boolean doSlicing, boolean insideQualifiedName) {
     switch (expr.getType()) {
       case Token.THIS:
       case Token.NAME: {
@@ -2185,13 +2214,8 @@ public class NewTypeInference implements CompilerPass {
           pair.env = envPutType(pair.env, name,
               declType != null ? declType : JSType.UNKNOWN);
         }
-        return new LValueResult(pair.env, pair.type, declType,
+        return new LValueResultBwd(pair.env, pair.type,
             pair.type.hasNonScalar() ? name : null);
-      }
-      case Token.NEW:
-      case Token.CALL: {
-        EnvTypePair pair = analyzeExprBwd(expr, outEnv, type);
-        return new LValueResult(pair.env, pair.type, null, null);
       }
       case Token.GETPROP: {
         Node obj = expr.getFirstChild();
@@ -2204,21 +2228,23 @@ public class NewTypeInference implements CompilerPass {
           String pname = expr.getLastChild().getString();
           return analyzePropLValBwd(obj, pname, outEnv, type, doSlicing);
         }
-        return new LValueResult(outEnv, type, null, null);
+        return new LValueResultBwd(outEnv, type, null);
       }
-      case Token.OBJECTLIT: {
-        EnvTypePair etPair = analyzeExprBwd(expr, outEnv, type);
-        return new LValueResult(etPair.env, etPair.type, null, null);
+      default: {
+        // Expressions that aren't lvalues should be handled because they may
+        // be, e.g., the left child of a getprop.
+        // We must check that they are not the direct lvalues.
+        Preconditions.checkState(insideQualifiedName);
+        EnvTypePair pair = analyzeExprBwd(expr, outEnv, type);
+        return new LValueResultBwd(pair.env, pair.type, null);
       }
     }
-    throw new RuntimeException(
-        "analyzeLValueBwd: unknown lhs expression @ node " + expr);
   }
 
-  private LValueResult analyzePropLValBwd(Node obj, String pname,
+  private LValueResultBwd analyzePropLValBwd(Node obj, String pname,
       TypeEnv outEnv, JSType type, boolean doSlicing) {
-    LValueResult lvalue = analyzeLValueBwd(
-        obj, outEnv, JSType.TOP_OBJECT.withProperty(pname, type), false);
+    LValueResultBwd lvalue = analyzeLValueBwd(
+        obj, outEnv, JSType.TOP_OBJECT.withProperty(pname, type), false, true);
     if (lvalue.ptr != null) {
       lvalue.ptr += "." + pname;
       if (doSlicing) {
@@ -2232,9 +2258,8 @@ public class NewTypeInference implements CompilerPass {
         lvalue.env = envPutType(lvalue.env, objName, slicedObjType);
       }
     }
-    if (lvalue.type.mayHaveProp(pname)) {
-      lvalue.type = lvalue.type.getProp(pname);
-    }
+    lvalue.type = lvalue.type.mayHaveProp(pname) ?
+        lvalue.type.getProp(pname) : JSType.UNKNOWN;
     return lvalue;
   }
 
