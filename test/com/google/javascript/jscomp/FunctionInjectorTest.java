@@ -21,6 +21,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
+import com.google.javascript.jscomp.FunctionInjector.Reference;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import junit.framework.TestCase;
@@ -1395,8 +1396,9 @@ public class FunctionInjectorTest extends TestCase {
     Method tester = new Method() {
       @Override
       public boolean call(NodeTraversal t, Node n, Node parent) {
+        Reference ref = new Reference(n, t.getScope(), t.getModule(), mode);
         CanInlineResult result = injector.canInlineReferenceToFunction(
-            t, n, fnNode, unsafe, mode,
+            ref, fnNode, unsafe,
             NodeUtil.referencesThis(fnNode),
             NodeUtil.containsFunction(NodeUtil.getFunctionBody(fnNode)));
         assertEquals(expectedResult, result);
@@ -1471,9 +1473,9 @@ public class FunctionInjectorTest extends TestCase {
     Method tester = new Method() {
       @Override
       public boolean call(NodeTraversal t, Node n, Node parent) {
-
+        Reference ref = new Reference(n, t.getScope(), t.getModule(), mode);
         CanInlineResult canInline = injector.canInlineReferenceToFunction(
-            t, n, fnNode, unsafe, mode,
+            ref, fnNode, unsafe,
             NodeUtil.referencesThis(fnNode),
             NodeUtil.containsFunction(NodeUtil.getFunctionBody(fnNode)));
         assertTrue("canInlineReferenceToFunction should not be CAN_NOT_INLINE",
@@ -1485,14 +1487,14 @@ public class FunctionInjectorTest extends TestCase {
 
           Set<String> knownConstants = Sets.newHashSet();
           injector.setKnownConstants(knownConstants);
-          injector.maybePrepareCall(n);
+          injector.maybePrepareCall(ref);
 
           assertTrue("canInlineReferenceToFunction " +
               "should be CAN_INLINE",
               CanInlineResult.YES != canInline);
         }
 
-        Node result = injector.inline(n, fnName, fnNode, mode);
+        Node result = injector.inline(ref, fnName, fnNode);
         validateSourceInfo(compiler, result);
         String explanation = expectedRoot.checkTreeEquals(tree.getFirstChild());
         assertNull("\nExpected: " + toSource(expectedRoot) +

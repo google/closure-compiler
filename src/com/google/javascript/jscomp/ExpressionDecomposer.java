@@ -54,17 +54,20 @@ class ExpressionDecomposer {
   private final AbstractCompiler compiler;
   private final Supplier<String> safeNameIdSupplier;
   private final Set<String> knownConstants;
+  private final Scope scope;
 
-  public ExpressionDecomposer(
+  ExpressionDecomposer(
       AbstractCompiler compiler,
       Supplier<String> safeNameIdSupplier,
-      Set<String> constNames) {
+      Set<String> constNames,
+      Scope scope) {
     Preconditions.checkNotNull(compiler);
     Preconditions.checkNotNull(safeNameIdSupplier);
     Preconditions.checkNotNull(constNames);
     this.compiler = compiler;
     this.safeNameIdSupplier = safeNameIdSupplier;
     this.knownConstants = constNames;
+    this.scope = scope;
   }
 
   // An arbitrary limit to prevent catch infinite recursion.
@@ -425,9 +428,9 @@ class ExpressionDecomposer {
     }
   }
 
-  private boolean isConstantName(Node n, Set<String> knownConstants) {
+  private boolean isConstantNameNode(Node n, Set<String> knownConstants) {
     // Non-constant names values may have been changed.
-    return n.isName() && (NodeUtil.isConstantName(n)
+    return n.isName() && (NodeUtil.isConstantVar(n, scope)
         || knownConstants.contains(n.getString()));
   }
 
@@ -454,7 +457,7 @@ class ExpressionDecomposer {
     //    t1.foo = t1.foo + 2;
     if (isLhsOfAssignOp && NodeUtil.isGet(expr)) {
       for (Node n : expr.children()) {
-        if (!n.isString() && !isConstantName(n, knownConstants)) {
+        if (!n.isString() && !isConstantNameNode(n, knownConstants)) {
           Node extractedNode = extractExpression(n, injectionPoint);
           if (firstExtractedNode == null) {
             firstExtractedNode = extractedNode;
@@ -883,7 +886,7 @@ class ExpressionDecomposer {
       // expression tree can be affected by any side-effects.
 
       // This is a superset of "NodeUtil.mayHaveSideEffects".
-      return NodeUtil.canBeSideEffected(n, this.knownConstants);
+      return NodeUtil.canBeSideEffected(n, this.knownConstants, scope);
     } else {
       // The function called doesn't have side-effects but check to see if there
       // are side-effects that that may affect it.

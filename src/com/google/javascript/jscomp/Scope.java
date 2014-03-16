@@ -211,7 +211,12 @@ public class Scope
      * based on the value reported by {@code NodeUtil}.
      */
     public boolean isConst() {
-      return nameNode != null && NodeUtil.isConstantName(nameNode);
+      if (nameNode == null) {
+        return false;
+      }
+
+      return nameNode.getBooleanProp(Node.IS_CONSTANT_VAR) ||
+          nameNode.getBooleanProp(Node.IS_CONSTANT_NAME);
     }
 
     /**

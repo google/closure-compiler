@@ -15,7 +15,7 @@
  */
 
 package com.google.javascript.jscomp;
-
+import com.google.javascript.rhino.Node;
 
 /**
  * Inline function tests.
@@ -44,6 +44,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     super.enableLineNumberCheck(true);
+    enableInferConsts(true);
     allowGlobalFunctionInlining = true;
     allowBlockInlining = true;
     assumeStrictThis = false;
@@ -53,6 +54,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     compiler.resetUniqueNameId();
+
     return new InlineFunctions(
         compiler,
         compiler.getUniqueNameIdSupplier(),
@@ -2362,6 +2364,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void test6671158() {
+    enableInferConsts(false);
     test(
         "function f() {return g()}" +
         "function Y(a){a.loader_()}" +
@@ -2382,6 +2385,29 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "    JSCompiler_temp_const$$1," +
         "    JSCompiler_temp_const$$0," +
         "    JSCompiler_inline_result$$3," +
+        "    g())}");
+  }
+
+  public void test6671158b() {
+    test(
+        "function f() {return g()}" +
+        "function Y(a){a.loader_()}" +
+        "function _Z(){}" +
+        "function _X() { new _Z(a,b, Y(singleton), f()) }",
+
+        "function _Z(){}" +
+        "function _X(){" +
+        "  var JSCompiler_temp_const$$1=a;" +
+        "  var JSCompiler_temp_const$$0=b;" +
+        "  var JSCompiler_inline_result$$2;" +
+        "  {" +
+        "    singleton.loader_();" +
+        "    JSCompiler_inline_result$$2=void 0;" +
+        "  }" +
+        "  new _Z(" +
+        "    JSCompiler_temp_const$$1," +
+        "    JSCompiler_temp_const$$0," +
+        "    JSCompiler_inline_result$$2," +
         "    g())}");
   }
 

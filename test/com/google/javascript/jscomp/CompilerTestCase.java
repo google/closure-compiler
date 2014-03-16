@@ -81,6 +81,9 @@ public abstract class CompilerTestCase extends TestCase  {
   /** Whether the expected JS strings should be normalized. */
   private boolean normalizeExpected = false;
 
+  /** Whether we run InferConsts before checking. */
+  private boolean enableInferConsts = false;
+
   /** Whether to check that all line number information is preserved. */
   private boolean checkLineNumbers = true;
 
@@ -238,6 +241,13 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   protected void enableEcmaScript5(boolean acceptES5) {
     this.acceptES5 = acceptES5;
+  }
+
+  /**
+   * Whether to run InferConsts before passes
+   */
+  protected void enableInferConsts(boolean enable) {
+    this.enableInferConsts = enable;
   }
 
   /**
@@ -853,6 +863,10 @@ public abstract class CompilerTestCase extends TestCase  {
         // Only run the normalize pass once, if asked.
         if (normalizeEnabled && i == 0) {
           normalizeActualCode(compiler, externsRoot, mainRoot);
+        }
+
+        if (enableInferConsts && i == 0) {
+          new InferConsts(compiler).process(externsRoot, mainRoot);
         }
 
         if (computeSideEffects && i == 0) {

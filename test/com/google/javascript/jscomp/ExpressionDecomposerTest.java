@@ -20,11 +20,12 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+
+import javax.annotation.Nullable;
 import junit.framework.TestCase;
 
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 /**
  * Unit tests for ExpressionDecomposer
@@ -467,7 +468,8 @@ public class ExpressionDecomposerTest extends TestCase {
     Compiler compiler = getCompiler();
     Set<String> knownConstants = Sets.newHashSet();
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
-        compiler, compiler.getUniqueNameIdSupplier(), knownConstants);
+        compiler, compiler.getUniqueNameIdSupplier(),
+        knownConstants, newScope());
     Node tree = parse(compiler, code);
     assertNotNull(tree);
 
@@ -496,7 +498,8 @@ public class ExpressionDecomposerTest extends TestCase {
       knownConstants = Sets.newHashSet();
     }
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
-        compiler, compiler.getUniqueNameIdSupplier(), knownConstants);
+        compiler, compiler.getUniqueNameIdSupplier(),
+        knownConstants, newScope());
     Node tree = parse(compiler, code);
     assertNotNull(tree);
 
@@ -546,7 +549,8 @@ public class ExpressionDecomposerTest extends TestCase {
       knownConstants = Sets.newHashSet();
     }
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
-        compiler, compiler.getUniqueNameIdSupplier(), knownConstants);
+        compiler, compiler.getUniqueNameIdSupplier(),
+        knownConstants, newScope());
     decomposer.setTempNamePrefix("temp");
     decomposer.setResultNamePrefix("result");
     Node expectedRoot = parse(compiler, expectedResult);
@@ -589,7 +593,8 @@ public class ExpressionDecomposerTest extends TestCase {
     }
 
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
-        compiler, compiler.getUniqueNameIdSupplier(), knownConstants);
+        compiler, compiler.getUniqueNameIdSupplier(),
+        knownConstants, newScope());
     decomposer.setTempNamePrefix("temp");
     decomposer.setResultNamePrefix("result");
     Node expectedRoot = parse(compiler, expectedResult);
@@ -661,5 +666,9 @@ public class ExpressionDecomposerTest extends TestCase {
     Node n = Normalize.parseAndNormalizeTestCode(compiler, js);
     assertEquals(0, compiler.getErrorCount());
     return n;
+  }
+
+  private Scope newScope() {
+    return Scope.createGlobalScope(new Node(Token.SCRIPT));
   }
 }

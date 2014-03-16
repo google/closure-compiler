@@ -1177,7 +1177,12 @@ public final class NodeUtil {
    */
   static boolean canBeSideEffected(Node n) {
     Set<String> emptySet = Collections.emptySet();
-    return canBeSideEffected(n, emptySet);
+    return canBeSideEffected(n, emptySet, null);
+  }
+
+  static boolean canBeSideEffected(
+      Node n, Set<String> knownConstants) {
+    return canBeSideEffected(n, knownConstants, null);
   }
 
   /**
@@ -1186,7 +1191,10 @@ public final class NodeUtil {
    * @return Whether the tree can be affected by side-effects or
    * has side-effects.
    */
-  static boolean canBeSideEffected(Node n, Set<String> knownConstants) {
+  // TODO(nick): Get rid of the knownConstants argument in favor of using
+  // scope with InferConsts.
+  static boolean canBeSideEffected(
+      Node n, Set<String> knownConstants, Scope scope) {
     switch (n.getType()) {
       case Token.CALL:
       case Token.NEW:
@@ -1196,7 +1204,7 @@ public final class NodeUtil {
         return true;
       case Token.NAME:
         // Non-constant names values may have been changed.
-        return !isConstantName(n)
+        return !isConstantVar(n, scope)
             && !knownConstants.contains(n.getString());
 
       // Properties on constant NAMEs can still be side-effected.
@@ -1212,7 +1220,7 @@ public final class NodeUtil {
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      if (canBeSideEffected(c, knownConstants)) {
+      if (canBeSideEffected(c, knownConstants, scope)) {
         return true;
       }
     }
@@ -2906,6 +2914,19 @@ public final class NodeUtil {
     // Function NODE: [ FUNCTION -> NAME, LP -> ARG1, ARG2, ... ]
     Preconditions.checkArgument(fnNode.isFunction());
     return fnNode.getFirstChild().getNext();
+  }
+
+  static boolean isConstantVar(Node node, Scope scope) {
+    if (isConstantName(node)) {
+      return true;
+    }
+
+    if (!node.isName() || scope == null) {
+      return false;
+    }
+
+    Scope.Var var = scope.getVar(node.getString());
+    return var != null && var.isConst();
   }
 
   /**
