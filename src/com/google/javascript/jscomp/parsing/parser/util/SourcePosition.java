@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.parsing.parser.util;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.parsing.parser.SourceFile;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
@@ -38,10 +40,14 @@ public class SourcePosition {
 
   @Override
   public String toString() {
-    if (source != null) {
-      return SimpleFormat.format("%s(%d, %d)", source.name, line + 1, column + 1);
-    } else {
-      return SimpleFormat.format("(%d, %d)", line + 1, column + 1);
+    return SimpleFormat.format("%s(%d, %d)", shortSourceName(), line + 1, column + 1);
+  }
+
+  private String shortSourceName() {
+    if (source == null) {
+      return "";
     }
+
+    return Iterables.getLast(Splitter.on('/').split(source.name));
   }
 }

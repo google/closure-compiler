@@ -284,4 +284,7 @@ public class ParseTree {
     return isStatementStandard() || this.type == ParseTreeType.FUNCTION_DECLARATION;
   }
 
+  @Override public String toString() {
+    return type + "@" + location;
+  }
 }
