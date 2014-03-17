@@ -1615,7 +1615,7 @@ public class Node implements Cloneable, Serializable {
   public boolean isQualifiedName() {
     switch (getType()) {
       case Token.NAME:
-        return getString().isEmpty() ? false : true;
+        return !getString().isEmpty();
       case Token.THIS:
         return true;
       case Token.GETPROP:
@@ -1633,7 +1633,7 @@ public class Node implements Cloneable, Serializable {
   public boolean isUnscopedQualifiedName() {
     switch (getType()) {
       case Token.NAME:
-        return getString().isEmpty() ? false : true;
+        return !getString().isEmpty();
       case Token.GETPROP:
         return getFirstChild().isUnscopedQualifiedName();
       default:
