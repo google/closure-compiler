@@ -1863,7 +1863,7 @@ angular.$routeProvider.when = function(path, route) {};
 /**
  * @typedef {{
  *   controller: (Function|Array.<string|Function>|string|undefined),
- *   template: (string|undefined),
+ *   template: (string|function(!Array.<Object>=):string|undefined),
  *   templateUrl: (string|function(!Object.<string,string>=)|undefined),
  *   resolve: (Object.<string, (
  *       string|Function|Array.<string|Function>|!angular.$q.Promise
@@ -1878,7 +1878,7 @@ angular.$routeProvider.Params;
 /** @type {Function|Array.<string|Function>|string} */
 angular.$routeProvider.Params.controller;
 
-/** @type {string} */
+/** @type {string|function(!Array.<Object>=):string} */
 angular.$routeProvider.Params.template;
 
 /** @type {string|function(!Object.<string,string>=)} */
