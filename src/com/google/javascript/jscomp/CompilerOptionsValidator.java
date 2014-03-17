@@ -15,26 +15,16 @@
  */
 package com.google.javascript.jscomp;
 
-import java.util.List;
-
 /**
  * Checks for combinations of options that are incompatible, i.e. will produce
  * incorrect code.
- *
- * @author tbreisacher@google.com (Tyler Breisacher)
  */
 final class CompilerOptionsValidator {
-
-  // This method runs before parsing. Therefore, we can't pass externsRoot from
-  // Compiler.java because it may still not have its correct value.
-  static void validate(CompilerOptions options, List<CompilerInput> externs) {
-    if (options.crossModuleMethodMotion &&
-        (externs == null || externs.size() == 0)) {
-      throw new InvalidOptionsException(
-          "Cross-module method motion requires use of externs for the " +
-          "arguments array.");
-    }
-
+  /**
+   * Checks for incompatible options.
+   * @author tbreisacher@google.com (Tyler Breisacher)
+   */
+  static void validate(CompilerOptions options) {
     if (options.checkMissingGetCssNameLevel.isOn() &&
         (options.checkMissingGetCssNameBlacklist == null ||
             options.checkMissingGetCssNameBlacklist.isEmpty())) {
@@ -56,3 +46,4 @@ final class CompilerOptionsValidator {
   private CompilerOptionsValidator() {
   }
 }
+
