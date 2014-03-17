@@ -70,22 +70,22 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       "Class {0} has been deprecated: {1}");
 
   static final DiagnosticType BAD_PRIVATE_GLOBAL_ACCESS =
-      DiagnosticType.disabled(
+      DiagnosticType.warning(
           "JSC_BAD_PRIVATE_GLOBAL_ACCESS",
           "Access to private variable {0} not allowed outside file {1}.");
 
   static final DiagnosticType BAD_PRIVATE_PROPERTY_ACCESS =
-      DiagnosticType.disabled(
+      DiagnosticType.warning(
           "JSC_BAD_PRIVATE_PROPERTY_ACCESS",
           "Access to private property {0} of {1} not allowed here.");
 
   static final DiagnosticType BAD_PROTECTED_PROPERTY_ACCESS =
-      DiagnosticType.disabled(
+      DiagnosticType.warning(
           "JSC_BAD_PROTECTED_PROPERTY_ACCESS",
           "Access to protected property {0} of {1} not allowed here.");
 
   static final DiagnosticType PRIVATE_OVERRIDE =
-      DiagnosticType.disabled(
+      DiagnosticType.warning(
           "JSC_PRIVATE_OVERRIDE",
           "Overriding private property of {0}.");
 
@@ -95,7 +95,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
           "{0} is not allowed to extend final class {1}.");
 
   static final DiagnosticType VISIBILITY_MISMATCH =
-      DiagnosticType.disabled(
+      DiagnosticType.warning(
           "JSC_VISIBILITY_MISMATCH",
           "Overriding {0} property of {1} with {2} property.");
 

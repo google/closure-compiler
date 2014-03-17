@@ -105,6 +105,7 @@ public class DiagnosticGroups {
           CheckAccessControls.BAD_PRIVATE_GLOBAL_ACCESS,
           CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS,
           CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS,
+          CheckAccessControls.EXTEND_FINAL_CLASS,
           CheckAccessControls.PRIVATE_OVERRIDE,
           CheckAccessControls.VISIBILITY_MISMATCH);
 
