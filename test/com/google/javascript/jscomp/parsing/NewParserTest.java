@@ -54,6 +54,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   private static final String UNDEFINED_LABEL = "undefined label";
 
+  private static final String HTML_COMMENT_WARNING = "In some cases, '<!--' " +
+      "and '-->' are treated as a '//' " +
+      "for legacy reasons. Removing this from your code is " +
+      "safe for all browsers currently in use.";
+
   private static final String MISPLACED_TYPE_ANNOTATION =
       IRFactory.MISPLACED_TYPE_ANNOTATION;
 
@@ -1144,6 +1149,25 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("/** this is a comment ", "unterminated comment");
   }
 
+  public void testHtmlStartCommentAtStartOfLine() {
+    parseWarning("<!-- This text is ignored.\nalert(1)", HTML_COMMENT_WARNING);
+  }
+
+  public void testHtmlStartComment() {
+    parseWarning("alert(1) <!-- This text is ignored.\nalert(2)",
+        HTML_COMMENT_WARNING);
+  }
+
+  public void testHtmlEndCommentAtStartOfLine() {
+    parseWarning("alert(1)\n --> This text is ignored.", HTML_COMMENT_WARNING);
+  }
+
+  // "-->" is not the start of a comment, when it is not at the beginning
+  // of a line.
+  public void testHtmlEndComment() {
+    parse("while (x --> 0) {\n  alert(1)\n}");
+  }
+
   public void testParseBlockDescription() {
     Node n = parse("/** This is a variable. */ var x;");
     Node var = n.getFirstChild();
@@ -1499,6 +1523,31 @@ public class NewParserTest extends BaseJSTypeTestCase {
    */
   private Node parseError(String string, String... errors) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(errors, null);
+    Node script = null;
+    try {
+      StaticSourceFile file = new SimpleSourceFile("input", false);
+      script = ParserRunner.parseEs6(
+          file, string,
+          ParserRunner.createConfig(isIdeMode, mode, false),
+          testErrorReporter, Logger.getAnonymousLogger()).ast;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    // verifying that all errors were seen
+    assertTrue(testErrorReporter.hasEncounteredAllErrors());
+    assertTrue(testErrorReporter.hasEncounteredAllWarnings());
+
+    return script;
+  }
+
+
+  /**
+   * Verify that the given code has the given parse warnings.
+   * @return The parse tree.
+   */
+  private Node parseWarning(String string, String... warnings) {
+    TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
     Node script = null;
     try {
       StaticSourceFile file = new SimpleSourceFile("input", false);

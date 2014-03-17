@@ -231,10 +231,18 @@ public class Scanner {
   }
 
   // 7.2 White Space
-  private void skipWhitespace() {
+  /**
+   * Returns true if the whitespace that was skipped included any
+   * line terminators.
+   */
+  private boolean skipWhitespace() {
+    boolean foundLineTerminator = false;
     while (!isAtEnd() && peekWhitespace()) {
-      nextChar();
+      if (isLineTerminator(nextChar())) {
+        foundLineTerminator = true;
+      }
     }
+    return foundLineTerminator;
   }
 
   private boolean peekWhitespace() {
@@ -280,18 +288,47 @@ public class Scanner {
   }
 
   private boolean skipComment() {
-    skipWhitespace();
-    if (!isAtEnd() && peek('/')) {
-      switch (peekChar(1)) {
+    boolean isStartOfLine = skipWhitespace();
+    if (!isAtEnd()) {
+      switch (peekChar(0)) {
       case '/':
-        skipSingleLineComment();
-        return true;
-      case '*':
-        skipMultiLineComment();
-        return true;
+        switch (peekChar(1)) {
+        case '/':
+          skipSingleLineComment();
+          return true;
+        case '*':
+          skipMultiLineComment();
+          return true;
+        }
+        break;
+      case '<':
+        // Check if this is the start of an HTML comment ("<!--").
+        // http://www.w3.org/TR/REC-html40/interact/scripts.html#h-18.3.2
+        if (peekChar(1) == '!' && peekChar(2) == '-' && peekChar(3) == '-') {
+          reportHtmlCommentWarning();
+          skipSingleLineComment();
+          return true;
+        }
+        break;
+      case '-':
+        // Check if this is the start of an HTML comment ("-->").
+        // Note that the spec does not require us to check for this case,
+        // but there is some legacy code that depends on this behavior.
+        if (isStartOfLine && peekChar(1) == '-' && peekChar(2) == '>') {
+          reportHtmlCommentWarning();
+          skipSingleLineComment();
+          return true;
+        }
+        break;
       }
     }
     return false;
+  }
+
+  private void reportHtmlCommentWarning() {
+    reportWarning("In some cases, '<!--' and '-->' are treated as a '//' " +
+                  "for legacy reasons. Removing this from your code is " +
+                  "safe for all browsers currently in use.");
   }
 
   private void skipSingleLineComment() {
@@ -834,11 +871,15 @@ public class Scanner {
     return !isValidIndex(index + offset) ? '\0' : source.contents.charAt(index + offset);
   }
 
-  private void reportError(String message, Object... arguments) {
-    reportError(getPosition(), message, arguments);
+  private void reportError(String format, Object... arguments) {
+    reportError(getPosition(), format, arguments);
   }
 
   private void reportError(SourcePosition position, String format, Object... arguments) {
     errorReporter.reportError(position, format, arguments);
+  }
+
+  private void reportWarning(String format, Object... arguments) {
+    errorReporter.reportWarning(getPosition(), format, arguments);
   }
 }
