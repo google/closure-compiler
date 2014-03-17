@@ -228,8 +228,8 @@ abstract class CodeConsumer {
                isWordChar(prev)) {
       // Make sure there is a space after e.g. instanceof , typeof
       append(" ");
-    } else if (prev == '-' && first == '>') {
-      // Make sure that we don't emit -->
+    } else if (prev == '-' && first == '>' || prev == '<' && first == '!') {
+      // Make sure that we don't emit "<!--" or "-->"
       append(" ");
     }
 

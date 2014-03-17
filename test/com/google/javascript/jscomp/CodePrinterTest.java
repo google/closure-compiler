@@ -400,6 +400,11 @@ public class CodePrinterTest extends TestCase {
     assertPrint("/(?=x)/", "/(?=x)/");
   }
 
+  public void testHtmlComments() {
+    assertPrint("3< !(--x)", "3< !--x");
+    assertPrint("while (x-- > 0) {}", "while(x-- >0);");
+  }
+
   public void testPrintArray() {
     assertPrint("[void 0, void 0]", "[void 0,void 0]");
     assertPrint("[undefined, undefined]", "[undefined,undefined]");
