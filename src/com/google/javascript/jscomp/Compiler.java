@@ -134,7 +134,9 @@ public class Compiler extends AbstractCompiler {
   // the library, so code can be inserted after.
   private final Map<String, Node> injectedLibraries = Maps.newLinkedHashMap();
 
-  // Parse tree root nodes
+  // Parse tree root nodes.
+  // Set during parseInputs; before then, they're not guaranteed to be
+  // in a consistent state.
   Node externsRoot;
   Node jsRoot;
   Node externAndJsRoot;
@@ -683,7 +685,7 @@ public class Compiler extends AbstractCompiler {
 
   private void compileInternal() {
     setProgress(0.0, null);
-    CompilerOptionsValidator.validate(options);
+    CompilerOptionsValidator.validate(options, externs);
     parse();
     // 15 percent of the work is assumed to be for parsing (based on some
     // minimal analysis on big JS projects, of course this depends on options)
