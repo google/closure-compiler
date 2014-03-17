@@ -1229,7 +1229,7 @@ public class ParserTest extends BaseJSTypeTestCase {
     Node script = null;
     try {
       StaticSourceFile file = new SimpleSourceFile("input", false);
-      script = ParserRunner.parse(
+      script = ParserRunner.parseEs5(
           file, string, ParserRunner.createConfig(isIdeMode, mode, false),
           testErrorReporter, Logger.getAnonymousLogger()).ast;
     } catch (IOException e) {
@@ -1248,7 +1248,7 @@ public class ParserTest extends BaseJSTypeTestCase {
     Node script = null;
     try {
       StaticSourceFile file = new SimpleSourceFile("input", false);
-      script = ParserRunner.parse(
+      script = ParserRunner.parseEs5(
           file, string, ParserRunner.createConfig(true, mode, false),
           testErrorReporter, Logger.getAnonymousLogger()).ast;
     } catch (IOException e) {
