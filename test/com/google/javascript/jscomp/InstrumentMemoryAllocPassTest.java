@@ -69,11 +69,11 @@ public class InstrumentMemoryAllocPassTest extends CompilerTestCase {
     test(
         "var a = []",
         InstrumentMemoryAllocPass.JS_INSTRUMENT_ALLOCATION_CODE
-            + "var a=__alloc([],\"testcode:1\",2,\"Array\")");
+            + "var a=__alloc([],\"testcode:1\",1,\"Array\")");
 
     test(
         "var f = function() {}",
         InstrumentMemoryAllocPass.JS_INSTRUMENT_ALLOCATION_CODE
-            + "var f=__alloc(function(){},\"testcode:1\",3,\"Function\")");
+            + "var f=__alloc(function(){},\"testcode:1\",1,\"Function\")");
   }
 }

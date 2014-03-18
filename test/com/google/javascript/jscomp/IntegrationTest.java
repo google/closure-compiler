@@ -333,10 +333,10 @@ public class IntegrationTest extends IntegrationTestCase {
         "var s = 'a' + 'b'",
 
         InstrumentMemoryAllocPass.JS_INSTRUMENT_ALLOCATION_CODE +
-        "var obj=__alloc(new Object(),\"i0:1\",4,\"new Unknown\");" +
-        "var o=__alloc({},\"i0:1\",5,\"Object\");" +
-        "var a=__alloc([],\"i0:1\",6,\"Array\");" +
-        "var f=__alloc(function() {},\"i0:1\",7,\"Function\");" +
+        "var obj=__alloc(new Object(),\"i0:1\",1,\"new Unknown\");" +
+        "var o=__alloc({},\"i0:1\",2,\"Object\");" +
+        "var a=__alloc([],\"i0:1\",3,\"Array\");" +
+        "var f=__alloc(function() {},\"i0:1\",4,\"Function\");" +
         "var s=\"a\"+\"b\";");
   }
 

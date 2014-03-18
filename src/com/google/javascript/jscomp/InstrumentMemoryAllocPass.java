@@ -25,7 +25,7 @@ import com.google.javascript.rhino.jstype.JSType;
 
 /**
  * This code implements the instrumentation pass over the AST
- * to instrument all object allocations. This methodology should help 
+ * to instrument all object allocations. This methodology should help
  * identify allocation hotspots and potential for object reuse, with
  * the goal to reduce memory footprint and GC pressure.
  *
@@ -38,7 +38,7 @@ class InstrumentMemoryAllocPass implements CompilerPass {
 
   final AbstractCompiler compiler;
 
-  private static int newSiteId = 1; // 0 is reserved for 'total'
+  private int newSiteId = 1; // 0 is reserved for 'total'
 
   static final String JS_INSTRUMENT_ALLOCATION_CODE =
       "var __allocStats; \n" +
