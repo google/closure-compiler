@@ -67,6 +67,10 @@ class RhinoErrorReporter {
       DiagnosticType.error("PARSE_TREE_TOO_DEEP",
           "Parse tree too deep.");
 
+  static final DiagnosticType INVALID_OCTAL_LITERAL =
+      DiagnosticType.warning("INVALID_OCTAL_LITERAL",
+          "This style of octal literal is not supported in strict mode.");
+
   // A map of Rhino messages to their DiagnosticType.
   private final Map<Pattern, DiagnosticType> typeMap;
 
@@ -120,6 +124,11 @@ class RhinoErrorReporter {
             com.google.javascript.rhino.head.ScriptRuntime.getMessage0(
                 "msg.too.deep.parser.recursion")),
             PARSE_TREE_TOO_DEEP)
+
+        // Octal literals
+        .put(Pattern.compile("^Octal .*literal.*"),
+            INVALID_OCTAL_LITERAL)
+
         .build();
   }
 

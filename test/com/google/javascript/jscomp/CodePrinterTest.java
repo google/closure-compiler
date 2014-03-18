@@ -1448,6 +1448,24 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x ='\\u00003';", "var x=\"\\x003\"");
   }
 
+  public void testOctalInString() {
+    assertPrint("var x ='\\0';", "var x=\"\\x00\"");
+    assertPrint("var x ='\\07';", "var x=\"\\u0007\"");
+
+    // Octal 12 = Hex 0A = \n
+    assertPrint("var x ='\\012';", "var x=\"\\n\"");
+
+    // Octal 34 = Hex 1C
+    assertPrint("var x ='\\034';", "var x=\"\\u001c\"");
+
+    // 8 and 9 are not octal digits
+    assertPrint("var x ='\\08';", "var x=\"\\x008\"");
+    assertPrint("var x ='\\09';", "var x=\"\\x009\"");
+
+    // Only the first two digits are part of the octal literal.
+    assertPrint("var x ='\\01234';", "var x=\"\\n34\"");
+  }
+
   public void testUnicode() {
     assertPrint("var x ='\\x0f';", "var x=\"\\u000f\"");
     assertPrint("var x ='\\x68';", "var x=\"h\"");

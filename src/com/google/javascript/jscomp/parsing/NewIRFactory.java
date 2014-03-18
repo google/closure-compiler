@@ -139,6 +139,9 @@ class NewIRFactory {
   static final String OCTAL_NUMBER_LITERAL_WARNING =
       "Octal integer literals are not supported in this language mode.";
 
+  static final String OCTAL_STRING_LITERAL_WARNING =
+      "Octal literals in strings are not supported in this language mode.";
+
   static final String DUPLICATE_PARAMETER =
       "Duplicate parameter name \"%s\".";
 
@@ -1991,8 +1994,25 @@ class NewIRFactory {
           // line continuation, skip the line break
           break;
         case '0':
-          // TODO(johnlenz): support octal?
-          result.append('\0');
+          char next1 = value.charAt(cur + 1);
+          if (!isOctalDigit(next1)) {
+            result.append('\0');
+          } else {
+            if (inStrictContext()) {
+              errorReporter.warning(OCTAL_STRING_LITERAL_WARNING,
+                  sourceName,
+                  lineno(token.location.start), "", charno(token.location.start));
+            }
+            char next2 = value.charAt(cur + 2);
+            if (isOctalDigit(next2)) {
+              result.append((char) (8 * octaldigit(next1) + octaldigit(next2)));
+              cur += 2;
+            } else {
+              result.append((char) octaldigit(next1));
+              cur += 1;
+            }
+          }
+
           break;
         case 'x':
           result.append((char) (
@@ -2116,8 +2136,12 @@ class NewIRFactory {
     throw new IllegalStateException("unexpected: " + c);
   }
 
+  private boolean isOctalDigit(char c) {
+    return c >= '0' && c <= '7';
+  }
+
   int octaldigit(char c) {
-    if (c >= '0' && c <= '7') {
+    if (isOctalDigit(c)) {
       return (c - '0');
     }
     throw new IllegalStateException("unexpected: " + c);
