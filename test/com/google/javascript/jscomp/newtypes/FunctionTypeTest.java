@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import static com.google.javascript.jscomp.newtypes.FunctionType.BOTTOM_FUNCTION;
 import static com.google.javascript.jscomp.newtypes.FunctionType.TOP_FUNCTION;
 import static com.google.javascript.jscomp.newtypes.JSType.BOTTOM;
 import static com.google.javascript.jscomp.newtypes.JSType.NUMBER;
@@ -63,9 +62,6 @@ public class FunctionTypeTest extends TestCase {
         FunctionType.makeJSType(null, null, NUMBER, NUMBER).getFunType();
 
     assertEquals(TOP_FUNCTION, FunctionType.join(TOP_FUNCTION, numToNum));
-    assertEquals(BOTTOM_FUNCTION,
-        FunctionType.meet(BOTTOM_FUNCTION, numToNum));
-    assertEquals(numToNum, FunctionType.join(BOTTOM_FUNCTION, numToNum));
     assertEquals(numToNum, FunctionType.meet(TOP_FUNCTION, numToNum));
     assertEquals(numToNum, FunctionType.join(null, numToNum));
     assertEquals(null, FunctionType.meet(null, numToNum));

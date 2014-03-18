@@ -139,10 +139,6 @@ public class FunctionType {
         null, null, null, false));
   }
 
-  // This function is a subtype of every function (callable in all contexts)
-  static final FunctionType BOTTOM_FUNCTION = FunctionType.normalized(
-      null, null, JSType.TOP, JSType.BOTTOM, null, null, null, false);
-
   // We want to warn about argument mismatch, so we don't consider a function
   // with N required arguments to have restFormals of type TOP.
   // But we allow joins (eg after an IF) to change arity, eg,
@@ -164,6 +160,9 @@ public class FunctionType {
   public static final FunctionType LOOSE_TOP_FUNCTION = new FunctionType(
       // Call the constructor directly to set fields to null
       null, null, null, null, null, null, null, true);
+  // Corresponds to Function, which is a subtype and supertype of all functions.
+  static final FunctionType QMARK_FUNCTION = FunctionType.normalized(
+      null, null, JSType.UNKNOWN, JSType.UNKNOWN, null, null, null, true);
 
   public boolean isTopFunction() {
     if (requiredFormals == null) {
@@ -171,10 +170,6 @@ public class FunctionType {
           this == TOP_FUNCTION || this == LOOSE_TOP_FUNCTION);
     }
     return this == TOP_FUNCTION || this == LOOSE_TOP_FUNCTION;
-  }
-
-  public boolean isBottomFunction() {
-    return this.equals(BOTTOM_FUNCTION);
   }
 
   public boolean isConstructor() {
@@ -338,11 +333,8 @@ public class FunctionType {
   static FunctionType join(FunctionType f1, FunctionType f2) {
     if (f1 == null) {
       return f2;
-    } else if (f2 == null || f2.isBottomFunction() || f1.equals(f2)) {
+    } else if (f2 == null || f1.equals(f2)) {
       return f1;
-    } else if (f1.isBottomFunction()) {
-      // Can't merge w/ 1st branch, we only want this if they're both non-null.
-      return f2;
     } else if (f1.isTopFunction() || f2.isTopFunction()) {
       return TOP_FUNCTION;
     }

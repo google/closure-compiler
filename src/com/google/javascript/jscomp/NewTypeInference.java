@@ -20,6 +20,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -133,8 +134,7 @@ public class NewTypeInference implements CompilerPass {
           "JSC_FAILED_TO_UNIFY",
           "Could not instantiate type {0} with {1}.");
 
-  Set<JSError> warnings = Sets.newHashSet();
-
+  private Set<JSError> warnings;
   private final AbstractCompiler compiler;
   Map<DiGraphEdge<Node, ControlFlowGraph.Branch>, TypeEnv> envs;
   Map<Scope, JSType> summaries;
@@ -148,6 +148,7 @@ public class NewTypeInference implements CompilerPass {
   private static boolean debugging = true;
 
   NewTypeInference(AbstractCompiler compiler) {
+    this.warnings = Sets.newHashSet();
     this.compiler = compiler;
     this.envs = Maps.newHashMap();
     this.summaries = Maps.newHashMap();
@@ -667,7 +668,7 @@ public class NewTypeInference implements CompilerPass {
       builder.addRetType(actualRetType.withLocation(null));
     } else {
       builder.addRetType(declRetType);
-      if (!isInterfaceMethodDef(fn) &&
+      if (!isAllowedToNotReturn(fn) &&
           !JSType.UNDEFINED.isSubtypeOf(declRetType) &&
           hasPathWithNoReturn(cfg)) {
         warnings.add(JSError.make(fn.getRoot(),
@@ -681,8 +682,11 @@ public class NewTypeInference implements CompilerPass {
     summaries.put(fn, summary);
   }
 
-  private static boolean isInterfaceMethodDef(Scope methodScope) {
+  private static boolean isAllowedToNotReturn(Scope methodScope) {
     Node fn = methodScope.getRoot();
+    if (fn.isFromExterns()) {
+      return true;
+    }
     if (!NodeUtil.isPrototypeMethod(fn)) {
       return false;
     }
@@ -1415,7 +1419,7 @@ public class NewTypeInference implements CompilerPass {
    *
    * We don't take the arg evaluation order into account during instantiation.
    */
-  private Map<String, JSType> calcTypeInstantiation(
+  private ImmutableMap<String, JSType> calcTypeInstantiation(
       Node callNode, FunctionType funType, TypeEnv typeEnv, boolean isFwd) {
     List<String> typeParameters = funType.getTypeParameters();
     Multimap<String, JSType> typeMultimap = HashMultimap.create();
@@ -1443,7 +1447,7 @@ public class NewTypeInference implements CompilerPass {
       typeEnv = pair.env;
       i++;
     }
-    HashMap<String, JSType> typeMap = Maps.newHashMap();
+    ImmutableMap.Builder builder = ImmutableMap.builder();
     for (String typeParam: typeParameters) {
       Collection<JSType> types = typeMultimap.get(typeParam);
       if (types.size() > 1) {
@@ -1451,15 +1455,15 @@ public class NewTypeInference implements CompilerPass {
           warnings.add(JSError.make(callNode, NOT_UNIQUE_INSTANTIATION,
                 typeParam, types.toString()));
         }
-        typeMap.put(typeParam, JSType.UNKNOWN);
+        builder.put(typeParam, JSType.UNKNOWN);
       } else if (types.size() == 1) {
-        typeMap.put(typeParam, Iterables.getOnlyElement(types));
+        builder.put(typeParam, Iterables.getOnlyElement(types));
       } else {
         // Put ? for any uninstantiated type variables
-        typeMap.put(typeParam, JSType.UNKNOWN);
+        builder.put(typeParam, JSType.UNKNOWN);
       }
     }
-    return typeMap;
+    return builder.build();
   }
 
   private EnvTypePair analyzeNonStrictComparisonFwd(

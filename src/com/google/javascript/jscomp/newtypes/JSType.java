@@ -152,6 +152,11 @@ public class JSType {
     return TOP_FUNCTION;
   }
 
+  // Corresponds to Function, which is a subtype and supertype of all functions.
+  static JSType qmarkFunction() {
+    return fromFunctionType(FunctionType.QMARK_FUNCTION);
+  }
+
   public boolean isTop() {
     return TOP_MASK == mask;
   }
@@ -270,12 +275,17 @@ public class JSType {
   private static void updateTypemap(
       Multimap<String, JSType> typeMultimap,
       String typeParam, JSType type) {
+    Set<JSType> typesToRemove = Sets.newHashSet();
     for (JSType other : typeMultimap.get(typeParam)) {
       JSType unified = unifyUnknowns(type, other);
       if (unified != null) {
-        typeMultimap.remove(typeParam, other);
+        // Can't remove elms while iterating over the collection, so do it later
+        typesToRemove.add(other);
         type = unified;
       }
+    }
+    for (JSType typeToRemove: typesToRemove) {
+      typeMultimap.remove(typeParam, typeToRemove);
     }
     typeMultimap.put(typeParam, type);
   }

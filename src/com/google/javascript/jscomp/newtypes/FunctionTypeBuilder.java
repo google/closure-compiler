@@ -53,6 +53,13 @@ public class FunctionTypeBuilder {
   // Non-null iff this function has an @template annotation
   private ImmutableList<String> typeParameters;
 
+  static FunctionTypeBuilder qmarkFunctionBuilder() {
+    FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    builder.addRestFormals(JSType.UNKNOWN);
+    builder.addRetType(JSType.UNKNOWN);
+    return builder;
+  }
+
   public FunctionTypeBuilder addReqFormal(JSType t)
       throws WrongParameterOrderException {
     if (!optionalFormals.isEmpty() || restFormals != null) {
@@ -110,7 +117,7 @@ public class FunctionTypeBuilder {
   }
 
   public DeclaredFunctionType buildDeclaration() {
-    Preconditions.checkState(loose == false);
+    Preconditions.checkState(!loose);
     Preconditions.checkState(outerVars.isEmpty());
     return DeclaredFunctionType.make(
         requiredFormals, optionalFormals, restFormals, returnType,

@@ -184,29 +184,35 @@ public class JSTypeCreatorFromJSDoc {
       ImmutableList<String> outerTypeParameters)
       throws UnknownTypeException {
     String typeName = n.getString();
-    if (typeName.equals("boolean")) {
-      return JSType.BOOLEAN;
-    } else if (typeName.equals("null")) {
-      return JSType.NULL;
-    } else if (typeName.equals("number")) {
-      return JSType.NUMBER;
-    } else if (typeName.equals("string")) {
-      return JSType.STRING;
-    } else if (typeName.equals("undefined")) {
-      return JSType.UNDEFINED;
-    } else if (hasTypeVariable(outerTypeParameters, ownerType, typeName)) {
-      return JSType.fromTypeVar(typeName);
-    } else { // It's either a type variable or a nominal-type name
-      JSType namedType = registry.lookupTypeByName(typeName);
-      if (namedType == null) {
-        unknownTypeNames.put(n, typeName);
-        throw new UnknownTypeException("Unhandled type: " + typeName);
+    switch (typeName) {
+      case "boolean":
+        return JSType.BOOLEAN;
+      case "null":
+        return JSType.NULL;
+      case "number":
+        return JSType.NUMBER;
+      case "string":
+        return JSType.STRING;
+      case "undefined":
+        return JSType.UNDEFINED;
+      case "Function":
+        return JSType.qmarkFunction();
+      default: {
+        if (hasTypeVariable(outerTypeParameters, ownerType, typeName)) {
+          return JSType.fromTypeVar(typeName);
+        } else { // It's either a type variable or a nominal-type name
+          JSType namedType = registry.lookupTypeByName(typeName);
+          if (namedType == null) {
+            unknownTypeNames.put(n, typeName);
+            throw new UnknownTypeException("Unhandled type: " + typeName);
+          }
+          if (namedType.isTypeVariable()) {
+            return namedType;
+          }
+          return JSType.join(JSType.NULL, getNominalTypeHelper(
+              namedType, n, ownerType, registry, outerTypeParameters));
+        }
       }
-      if (namedType.isTypeVariable()) {
-        return namedType;
-      }
-      return JSType.join(JSType.NULL, getNominalTypeHelper(
-          namedType, n, ownerType, registry, outerTypeParameters));
     }
   }
 
@@ -371,8 +377,12 @@ public class JSTypeCreatorFromJSDoc {
     try {
       if (jsdoc != null && jsdoc.getType() != null) {
         Node jsdocNode = jsdoc.getType().getRootNode();
-        if (jsdocNode.getType() == Token.FUNCTION) {
+        int tokenType = jsdocNode.getType();
+        if (tokenType == Token.FUNCTION) {
           return getFunTypeFromAtTypeJsdoc(jsdoc, funNode, ownerType, registry);
+        } else if (tokenType == Token.STRING &&
+            jsdocNode.getString().equals("Function")) {
+          return FunctionTypeBuilder.qmarkFunctionBuilder();
         } else {
           warn("The function is annotated with a non-function jsdoc. " +
               "Ignoring jsdoc.", funNode);
