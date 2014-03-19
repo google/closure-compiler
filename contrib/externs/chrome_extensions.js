@@ -233,6 +233,20 @@ chrome.app.runtime.onRestarted;
 chrome.app.window = {};
 
 
+/**
+ * @see https://developer.chrome.com/apps/app_window#method-getAll
+ * @return {!Array.<!chrome.app.window.AppWindow>}
+ */
+chrome.app.window.getAll = function() {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/app_window#method-get
+ * @param {string} id
+ * @return {chrome.app.window.AppWindow}
+ */
+chrome.app.window.get = function(id) {};
+
 
 /**
  * @constructor
