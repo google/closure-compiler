@@ -316,7 +316,7 @@ public class DefaultPassConfig extends PassConfig {
       }
     }
 
-    if (options.checkUnreachableCode.isOn() ||
+    if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE) ||
         (options.checkTypes && options.checkMissingReturn.isOn())) {
       checks.add(checkControlFlow);
     }
@@ -1325,9 +1325,8 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       List<Callback> callbacks = Lists.newArrayList();
-      if (options.checkUnreachableCode.isOn()) {
-        callbacks.add(
-            new CheckUnreachableCode(compiler, options.checkUnreachableCode));
+      if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)) {
+        callbacks.add(new CheckUnreachableCode(compiler));
       }
       if (options.checkMissingReturn.isOn() && options.checkTypes) {
         callbacks.add(

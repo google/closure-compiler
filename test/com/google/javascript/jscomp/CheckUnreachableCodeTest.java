@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CheckLevel;
-
 /**
  * Tests for {@link CheckUnreachableCode}.
  *
@@ -26,7 +24,7 @@ public class CheckUnreachableCodeTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CombinedCompilerPass(compiler,
-        new CheckUnreachableCode(compiler, CheckLevel.ERROR));
+        new CheckUnreachableCode(compiler));
   }
 
   public void testCorrectSimple() {
@@ -210,6 +208,6 @@ public class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   private void assertUnreachable(String js) {
-    test(js, js, CheckUnreachableCode.UNREACHABLE_CODE);
+    test(js, js, null, CheckUnreachableCode.UNREACHABLE_CODE);
   }
 }

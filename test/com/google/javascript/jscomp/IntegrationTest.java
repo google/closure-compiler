@@ -325,6 +325,8 @@ public class IntegrationTest extends IntegrationTestCase {
   public void testInstrumentMemoryAllocationPassOn() {
     CompilerOptions options = createCompilerOptions();
     options.setInstrumentMemoryAllocations(true);
+    options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
+
     test(options,
         "var obj = new Object(); " +
         "var o = {}; " +
@@ -574,12 +576,13 @@ public class IntegrationTest extends IntegrationTestCase {
   }
 
   public void testUnreachableCode() {
-    String code = "function f() { return \n 3; }";
+    String code = "function f() { return \n x(); }";
 
     CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
     testSame(options, code);
 
-    options.checkUnreachableCode = CheckLevel.ERROR;
+    options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.ERROR);
     test(options, code, CheckUnreachableCode.UNREACHABLE_CODE);
   }
 
@@ -1090,6 +1093,8 @@ public class IntegrationTest extends IntegrationTestCase {
 
   public void testRemoveUnreachableCode() {
     CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
+
     String code = "function f() { return; f(); }";
     testSame(options, code);
 
@@ -1564,6 +1569,8 @@ public class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.ideMode = true;
     options.checkTypes = true;
+    options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
+
     test(options,
          "function f() { try { } catch(e) { break; } }",
          RhinoErrorReporter.PARSE_ERROR);
@@ -2020,7 +2027,7 @@ public class IntegrationTest extends IntegrationTestCase {
 
   public void testCoaleseVariables() {
     CompilerOptions options = createCompilerOptions();
-
+    options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
     options.foldConstants = false;
     options.coalesceVariableNames = true;
 
@@ -2166,6 +2173,7 @@ public class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS
         .setOptionsForCompilationLevel(options);
+    options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
     test(options,
         "while (function () {\n" +
         " function f(){};\n" +
@@ -2178,6 +2186,8 @@ public class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS
         .setOptionsForCompilationLevel(options);
+    options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
+
     test(options,
          "function f(x) { return 1; do { x(); } while (true); }",
          "function f(a) { return 1; }");

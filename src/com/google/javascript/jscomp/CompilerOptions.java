@@ -338,13 +338,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Removes code that will never execute */
   public boolean removeDeadCode;
 
-  public CheckLevel checkUnreachableCode;
-
-  /** Checks for unreachable code */
-  public void setCheckUnreachableCode(CheckLevel level) {
-    this.checkUnreachableCode = level;
-  }
-
   public CheckLevel checkMissingReturn;
 
   /** Checks for missing return statements */
@@ -937,7 +930,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     checkGlobalNamesLevel = CheckLevel.OFF;
     brokenClosureRequiresLevel = CheckLevel.ERROR;
     checkGlobalThisLevel = CheckLevel.OFF;
-    checkUnreachableCode = CheckLevel.OFF;
     checkMissingReturn = CheckLevel.OFF;
     checkMissingGetCssNameLevel = CheckLevel.OFF;
     checkMissingGetCssNameBlacklist = null;
