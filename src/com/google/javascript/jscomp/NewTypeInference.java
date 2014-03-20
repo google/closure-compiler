@@ -64,6 +64,7 @@ import java.util.Set;
  * - @protected (maybe)
  * - separate scope for catch variables
  * - closure-specific constructs
+ * - getters/setters
  */
 public class NewTypeInference implements CompilerPass {
 
@@ -145,7 +146,7 @@ public class NewTypeInference implements CompilerPass {
   GlobalTypeInfo symbolTable;
   static final String RETVAL_ID = "%return";
   private JSType arrayType, regexpType; // used for array and regexp literals
-  private static boolean debugging = true;
+  private static boolean debugging = false;
 
   NewTypeInference(AbstractCompiler compiler) {
     this.warnings = Sets.newHashSet();
@@ -690,6 +691,8 @@ public class NewTypeInference implements CompilerPass {
     if (!NodeUtil.isPrototypeMethod(fn)) {
       return false;
     }
+    // TODO(user): We need all the qname here before .prototype, not just
+    // the qname root; see testAnnotatedPropertyOnInterface1
     String typeName = TypeUtils.getQnameRoot(
         fn.getParent().getFirstChild().getQualifiedName());
     JSType t = methodScope.getDeclaredTypeOf(typeName);
@@ -1553,6 +1556,8 @@ public class NewTypeInference implements CompilerPass {
     JSType resultType = recvType.getProp(pname);
     if (!specializedType.isTruthy() && !specializedType.isFalsy()) {
       if (!recvType.mayHaveProp(pname)) {
+        // TODO(user): maybe don't warn if the getprop is inside a typeof,
+        // see testMissingProperty8 (who relies on that for prop checking?)
         warnings.add(JSError.make(propAccessNode, TypeCheck.INEXISTENT_PROPERTY,
                 pname, recvType.toString()));
         // Since we warn here, return unknown to prevent further warnings.
@@ -2146,7 +2151,8 @@ public class NewTypeInference implements CompilerPass {
         if (expr.getLastChild().isString()) {
           Node obj = expr.getFirstChild();
           String pname = expr.getLastChild().getString();
-          return analyzePropLValFwd(obj, pname, inEnv, type, insideQualifiedName);
+          return analyzePropLValFwd(
+              obj, pname, inEnv, type, insideQualifiedName);
         }
         return new LValueResultFwd(inEnv, type, null, null);
       }
