@@ -599,9 +599,12 @@ public class NewTypeInference implements CompilerPass {
         case ON_FALSE:
           specializedType = JSType.FALSY;
           break;
+        case ON_EX:
+          specializedType = JSType.UNKNOWN;
+          break;
         default:
           throw new RuntimeException(
-              "A condition with an edge that is neither true nor false?");
+              "Condition with an unexpected edge type: " + outEdge.getValue());
       }
       envs.put(outEdge,
           analyzeExprFwd(cond, inEnv, JSType.UNKNOWN, specializedType).env);
