@@ -25,13 +25,12 @@ import com.google.common.base.Preconditions;
  */
 public class TypeUtils {
 
-  public static String getQnameRoot(String qName) {
-    // Preconditions.checkArgument(!isIdentifier(qName));
+  public static String getLeftmostName(String qName) {
     int firstDot = qName.indexOf('.');
     return (firstDot == -1) ? qName : qName.substring(0, firstDot);
   }
 
-  public static String getPropPath(String qName) {
+  public static String getAllButLeftmost(String qName) {
     Preconditions.checkArgument(!isIdentifier(qName));
     return qName.substring(qName.indexOf('.') + 1);
   }

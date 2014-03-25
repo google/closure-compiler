@@ -463,7 +463,7 @@ public class ObjectType {
       return p == null ? JSType.UNDEFINED : p.getType();
     } else {
       Preconditions.checkState(p != null);
-      return p.getType().getProp(TypeUtils.getPropPath(qname));
+      return p.getType().getProp(TypeUtils.getAllButLeftmost(qname));
     }
   }
 
@@ -475,7 +475,7 @@ public class ObjectType {
     Property p = getLeftmostProp(qname);
     return p != null &&
         (TypeUtils.isIdentifier(qname) ||
-        p.getType().mayHaveProp(TypeUtils.getPropPath(qname)));
+        p.getType().mayHaveProp(TypeUtils.getAllButLeftmost(qname)));
   }
 
   boolean hasProp(String pname) {
@@ -498,7 +498,7 @@ public class ObjectType {
   }
 
   private Property getLeftmostProp(String qname) {
-    String objName = TypeUtils.getQnameRoot(qname);
+    String objName = TypeUtils.getLeftmostName(qname);
     Property p = props.get(objName);
     if (p == null && nominalType != null) {
       p = nominalType.getProp(objName);

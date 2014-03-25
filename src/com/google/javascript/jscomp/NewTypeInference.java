@@ -696,7 +696,7 @@ public class NewTypeInference implements CompilerPass {
     }
     // TODO(user): We need all the qname here before .prototype, not just
     // the qname root; see testAnnotatedPropertyOnInterface1
-    String typeName = TypeUtils.getQnameRoot(
+    String typeName = TypeUtils.getLeftmostName(
         fn.getParent().getFirstChild().getQualifiedName());
     JSType t = methodScope.getDeclaredTypeOf(typeName);
     return t != null && t.isInterfaceDefinition();
@@ -715,13 +715,18 @@ public class NewTypeInference implements CompilerPass {
   /** Processes a single variable declaration in a VAR statement. */
   private TypeEnv processVarDeclaration(Node nameNode, TypeEnv inEnv) {
     String varName = nameNode.getQualifiedName();
+    JSType declType = currentScope.getDeclaredTypeOf(varName);
+
     if (currentScope.isLocalFunDef(varName)) {
       return inEnv;
     }
+    if (NodeUtil.isNamespaceDecl(nameNode)) {
+      return envPutType(inEnv, varName, declType);
+    }
+
     Node rhs = nameNode.getFirstChild();
     TypeEnv outEnv = inEnv;
     JSType rhsType;
-    JSType declType = currentScope.getDeclaredTypeOf(varName);
     if (rhs == null) {
       rhsType = JSType.UNDEFINED;
     } else {
@@ -730,8 +735,7 @@ public class NewTypeInference implements CompilerPass {
       outEnv = pair.env;
       rhsType = pair.type;
     }
-    if (!NodeUtil.isNamespaceDecl(nameNode) &&
-        declType != null && rhs != null) {
+    if (declType != null && rhs != null) {
       if (!rhsType.isSubtypeOf(declType)) {
         warnings.add(JSError.make(
             rhs, MISTYPED_ASSIGN_RHS,
@@ -1557,7 +1561,8 @@ public class NewTypeInference implements CompilerPass {
 
     // Then, analyze the property access.
     JSType resultType = recvType.getProp(pname);
-    if (!specializedType.isTruthy() && !specializedType.isFalsy()) {
+    if (!propAccessNode.getParent().isExprResult() &&
+        !specializedType.isTruthy() && !specializedType.isFalsy()) {
       if (!recvType.mayHaveProp(pname)) {
         // TODO(user): maybe don't warn if the getprop is inside a typeof,
         // see testMissingProperty8 (who relies on that for prop checking?)
@@ -1574,10 +1579,10 @@ public class NewTypeInference implements CompilerPass {
           requiredType.isSubtypeOf(resultType)) {
         // Tighten the inferred type and don't warn.
         // See Token.NAME fwd for explanation about types as lower/upper bounds.
-        Node propAccess = receiver.getParent();
-        LValueResultFwd lvr = analyzeLValueFwd(propAccess, inEnv, requiredType);
-        TypeEnv updatedEnv =
-            updateLvalueTypeInEnv(lvr.env, propAccess, lvr.ptr, requiredType);
+        LValueResultFwd lvr = analyzeLValueFwd(
+            propAccessNode, inEnv, requiredType);
+        TypeEnv updatedEnv = updateLvalueTypeInEnv(
+            lvr.env, propAccessNode, lvr.ptr, requiredType);
         return new EnvTypePair(updatedEnv, requiredType);
       }
     }
@@ -1593,8 +1598,8 @@ public class NewTypeInference implements CompilerPass {
     }
     Preconditions.checkState(lvalue.isGetProp() || lvalue.isGetElem());
     if (qname != null) {
-      String objName = TypeUtils.getQnameRoot(qname);
-      String props = TypeUtils.getPropPath(qname);
+      String objName = TypeUtils.getLeftmostName(qname);
+      String props = TypeUtils.getAllButLeftmost(qname);
       JSType objType = envGetType(env, objName);
       env = envPutType(env, objName, objType.withProperty(props, type));
     }
@@ -2091,8 +2096,8 @@ public class NewTypeInference implements CompilerPass {
     if (TypeUtils.isIdentifier(qName)) {
       return env.getType(qName);
     }
-    String objName = TypeUtils.getQnameRoot(qName);
-    String props = TypeUtils.getPropPath(qName);
+    String objName = TypeUtils.getLeftmostName(qName);
+    String props = TypeUtils.getAllButLeftmost(qName);
     return env.getType(objName).getProp(props);
   }
 
@@ -2261,8 +2266,8 @@ public class NewTypeInference implements CompilerPass {
     if (lvalue.ptr != null) {
       lvalue.ptr += "." + pname;
       if (doSlicing) {
-        String objName = TypeUtils.getQnameRoot(lvalue.ptr);
-        String props = TypeUtils.getPropPath(lvalue.ptr);
+        String objName = TypeUtils.getLeftmostName(lvalue.ptr);
+        String props = TypeUtils.getAllButLeftmost(lvalue.ptr);
         JSType objType = envGetType(lvalue.env, objName);
         JSType propDeclType = lvalue.type.getDeclaredProp(pname);
         JSType slicedObjType = propDeclType == null ?
