@@ -1668,7 +1668,16 @@ class NewIRFactory {
           if (!config.acceptConstKeyword) {
             maybeWarnEs6Feature(decl, "const declarations");
           }
-          declType = Token.CONST;
+
+          if (isEs6Mode()) {
+            declType = Token.CONST;
+          } else {
+            // Code uses the 'const' keyword which is non-standard in ES5 and
+            // below. Just treat it as though it was a 'var'.
+            // TODO(tbreisacher): Treat this node as though it had an @const
+            // annotation.
+            declType = Token.VAR;
+          }
           break;
         case LET:
           maybeWarnEs6Feature(decl, "let declarations");
