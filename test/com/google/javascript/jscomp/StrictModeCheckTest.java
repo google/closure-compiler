@@ -28,6 +28,7 @@ public class StrictModeCheckTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck(CheckLevel.OFF);
     noVarCheck = false;
   }
 
@@ -79,7 +80,7 @@ public class StrictModeCheckTest extends CompilerTestCase {
   }
 
   public void testEval5() {
-    testSame("function eval() {}", StrictModeCheck.EVAL_DECLARATION);
+    testSame("/** @suppress {duplicate} */ function eval() {}", StrictModeCheck.EVAL_DECLARATION);
   }
 
   public void testEval6() {
@@ -117,7 +118,7 @@ public class StrictModeCheckTest extends CompilerTestCase {
   }
 
   public void testArguments3() {
-    testSame("function arguments() {}",
+    testSame("/** @suppress {duplicate,checkTypes} */ function arguments() {}",
          StrictModeCheck.ARGUMENTS_DECLARATION);
   }
 
@@ -130,8 +131,29 @@ public class StrictModeCheckTest extends CompilerTestCase {
     testSame("var o = {arguments: 3};");
   }
 
+  public void testArgumentsCallee() {
+    testSame("function foo() {arguments.callee}",
+         StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
+  }
+
+  public void testArgumentsCaller() {
+    testSame("function foo() {arguments.caller}",
+         StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN);
+  }
+
+  public void testFunctionCallerProp() {
+    testSame("function foo() {foo.caller}",
+         StrictModeCheck.FUNCTION_CALLER_FORBIDDEN);
+  }
+
+  public void testFunctionArgumentsProp() {
+    testSame("function foo() {foo.arguments}",
+         StrictModeCheck.FUNCTION_ARGUMENTS_PROP_FORBIDDEN);
+  }
+
+
   public void testEvalAssignment() {
-    testSame("function foo() { eval = []; }",
+    testSame("/** @suppress {checkTypes} */ function foo() { eval = []; }",
          StrictModeCheck.EVAL_ASSIGNMENT);
   }
 
@@ -154,7 +176,7 @@ public class StrictModeCheckTest extends CompilerTestCase {
   }
 
   public void testDeleteProperty() {
-    testSame("function f(obj) { delete obj.a; }");
+    testSame("/** @suppress {checkTypes} */ function f(obj) { delete obj.a; }");
   }
 
   public void testAllowNumbersAsObjlitKeys() {

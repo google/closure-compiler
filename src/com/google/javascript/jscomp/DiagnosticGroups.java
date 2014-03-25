@@ -254,6 +254,10 @@ public class DiagnosticGroups {
           StrictModeCheck.EVAL_ASSIGNMENT,
           StrictModeCheck.ARGUMENTS_DECLARATION,
           StrictModeCheck.ARGUMENTS_ASSIGNMENT,
+          StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN,
+          StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN,
+          StrictModeCheck.FUNCTION_CALLER_FORBIDDEN,
+          StrictModeCheck.FUNCTION_ARGUMENTS_PROP_FORBIDDEN,
           StrictModeCheck.DELETE_VARIABLE,
           StrictModeCheck.DUPLICATE_OBJECT_KEY,
           StrictModeCheck.BAD_FUNCTION_DECLARATION);

@@ -1878,6 +1878,25 @@ public class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
   }
 
+  public void testCheckStrictMode() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS
+        .setOptionsForCompilationLevel(options);
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+
+    externs = ImmutableList.of(
+        SourceFile.fromCode(
+            "externs", "var use; var arguments; arguments.callee;"));
+
+    String code =
+        "function App() {}\n" +
+        "App.prototype.method = function(){\n" +
+        "  use(arguments.callee)\n" +
+        "};";
+
+    test(options, code, "", StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
+  }
+
   public void testIssue701() {
     // Check ASCII art in license comments.
     String ascii = "/**\n" +
