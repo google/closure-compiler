@@ -1582,8 +1582,6 @@ public class NewTypeInference implements CompilerPass {
         // see testMissingProperty8 (who relies on that for prop checking?)
         warnings.add(JSError.make(propAccessNode, TypeCheck.INEXISTENT_PROPERTY,
                 pname, recvType.toString()));
-        // Since we warn here, return unknown to prevent further warnings.
-        resultType = JSType.UNKNOWN;
       } else if (!recvType.hasProp(pname)) {
         warnings.add(JSError.make(
             propAccessNode, NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY,
@@ -1599,6 +1597,10 @@ public class NewTypeInference implements CompilerPass {
             lvr.env, propAccessNode, lvr.ptr, requiredType);
         return new EnvTypePair(updatedEnv, requiredType);
       }
+    }
+    // We've already warned about missing props, and never want to return null.
+    if (resultType == null) {
+      resultType = JSType.UNKNOWN;
     }
 
     // Any potential type mismatch will be caught by the context
