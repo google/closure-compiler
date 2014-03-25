@@ -1472,20 +1472,6 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x ='\\x7f';", "var x=\"\\u007f\"");
   }
 
-  public void testUnicodeKeyword() {
-    // TODO(johnlenz): verify this is valid in the latest specs.
-
-    // keyword "if"
-    assertPrint("var \\u0069\\u0066 = 1;", "var i\\u0066=1");
-    // keyword "var"
-    assertPrint("var v\\u0061\\u0072 = 1;", "var va\\u0072=1");
-    // all are keyword "while"
-    assertPrint("var w\\u0068\\u0069\\u006C\\u0065 = 1;"
-        + "\\u0077\\u0068il\\u0065 = 2;"
-        + "\\u0077h\\u0069le = 3;",
-        "var whil\\u0065=1;whil\\u0065=2;whil\\u0065=3");
-  }
-
   public void testNumericKeys() {
     assertPrint("var x = {010: 1};", "var x={8:1}");
     assertPrint("var x = {'010': 1};", "var x={\"010\":1}");

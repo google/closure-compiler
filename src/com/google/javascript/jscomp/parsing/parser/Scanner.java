@@ -20,7 +20,6 @@ import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
 import java.util.LinkedList;
 
@@ -30,8 +29,6 @@ import java.util.LinkedList;
  * nextRegularExpressionLiteralToken.
  *
  * 7 Lexical Conventions
- *
- * TODO: 7.1 Unicode Format-Control Characters
  */
 public class Scanner {
   private final ErrorReporter errorReporter;
@@ -546,7 +543,8 @@ public class Scanner {
       case '\'':
         return scanStringLiteral(beginToken, ch);
       default:
-        return scanIdentifierOrKeyword(beginToken, ch);
+        ungetChar();
+        return scanIdentifierOrKeyword(beginToken);
       }
   }
 
@@ -607,30 +605,52 @@ public class Scanner {
     return new Token(type, getTokenRange(beginToken));
   }
 
-  private Token scanIdentifierOrKeyword(int beginToken, char ch) {
+  /**
+   * Consumes either a single character, or a \\uXXXX escape
+   * sequence. If an escape sequence is found, returns the
+   * character that the sequence represents.
+   */
+  private char nextCharOrUnicodeEscape() {
+    char ch = nextChar();
     if (ch == '\\') {
-      // TODO: Unicode escape sequence
-      throw new RuntimeException(
-          SimpleFormat.format("Unicode escape sequence at line %d", getPosition().line));
+      ch = nextChar();
+      if (ch == 'u') {
+        if (skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit()) {
+          String hexDigits = source.contents.substring(index - 4, index);
+          ch = (char) Integer.parseInt(hexDigits, 0x10);
+        }
+      } else {
+        reportError(
+            getPosition(index),
+            "Invalid escape sequence '\\%s'", ch);
+      }
     }
+    return ch;
+  }
+
+  private char peekCharOrUnicodeEscape() {
+    int oldIndex = index;
+    char ch = nextCharOrUnicodeEscape();
+    index = oldIndex;
+    return ch;
+  }
+
+  private Token scanIdentifierOrKeyword(int beginToken) {
+    char ch = nextCharOrUnicodeEscape();
     if (!isIdentifierStart(ch)) {
       reportError(
           getPosition(beginToken),
-          "Character code '%d' is not a valid identifier start char",
-          (int) ch);
+          "Character '%c' (U+%04X) is not a valid identifier start char",
+          ch, (int) ch);
       return createToken(TokenType.ERROR, beginToken);
     }
 
-    while (isIdentifierPart(peekChar())) {
-      nextChar();
-    }
-    if (ch == '\\') {
-      // TODO: Unicode escape sequence
-      throw new RuntimeException(
-          SimpleFormat.format("Unicode escape sequence at line %d", getPosition().line));
+    String value = ch + "";
+
+    while (isIdentifierPart(peekCharOrUnicodeEscape())) {
+      value += nextCharOrUnicodeEscape();
     }
 
-    String value = this.source.contents.substring(beginToken, index);
     if (Keywords.isKeyword(value)) {
       return new Token(Keywords.getTokenType(value), getTokenRange(beginToken));
     }
@@ -857,6 +877,10 @@ public class Scanner {
       return '\0';
     }
     return source.contents.charAt(index++);
+  }
+
+  private void ungetChar() {
+    index--;
   }
 
   private boolean peek(char ch) {
