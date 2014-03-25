@@ -195,8 +195,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     fold("if(x || 3) z()", "z()");
     fold("if(x || false) z()", "x&&z()");
     test("if(x==y && false) z()", "");
-    // TODO(user): This can be further optimized.
-    fold("if(y() || x || 3) z()", "(y()||1)&&z()");
+    fold("if(y() || x || 3) z()", "y();z()");
   }
 
   public void testFoldBitwiseOpStringCompareIntegration() {
@@ -329,6 +328,15 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     fold("(x && false) && y()", "");
     fold("a = x || false ? b : c", "a=x?b:c");
     fold("do {x()} while((x && false) && y())", "x()");
+  }
+
+  // A few miscellaneous cases where one of the peephole passes increases the
+  // size, but it does it in such a way that a later pass can decrease it.
+  // Test to make sure the overall change is a decrease, not an increase.
+  public void testMisc() {
+    fold("x = [foo()] && x", "x = (foo(),x)");
+    fold("x = foo() && false || bar()", "x = (foo(), bar())");
+    fold("if(foo() && false) z()", "foo()");
   }
 
   public void testTrueFalseFolding() {

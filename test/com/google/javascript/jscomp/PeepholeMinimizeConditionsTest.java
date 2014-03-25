@@ -276,7 +276,7 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   public void testFoldLogicalOpStringCompare() {
     // side-effects
     // There is two way to parse two &&'s and both are correct.
-    assertResultString("if(foo() && false) z()", "foo()&&0&&z()");
+    assertResultString("if(foo() && false) z()", "(foo(),0)&&z()");
   }
 
   public void testFoldNot() {

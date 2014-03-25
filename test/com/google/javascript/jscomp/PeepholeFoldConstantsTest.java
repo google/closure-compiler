@@ -350,7 +350,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   public void testFoldLogicalOp() {
     fold("x = true && x", "x = x");
-    foldSame("x = [foo()] && x");
+    fold("x = [foo()] && x", "x = ([foo()],x)");
 
     fold("x = false && x", "x = false");
     fold("x = true || x", "x = true");
@@ -379,7 +379,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = foo() || false && bar()", "x = foo()||false");
     fold("x = foo() && false && bar()", "x = foo()&&false");
     fold("x = foo() && true && bar()", "x = foo()&&bar()");
-    fold("x = foo() && false || bar()", "x = foo()&&false||bar()");
+    fold("x = foo() && false || bar()", "x = (foo()&&false,bar())");
 
     fold("1 && b()", "b()");
     fold("a() && (1 && b())", "a() && b()");
