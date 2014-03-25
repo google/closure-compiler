@@ -1131,17 +1131,17 @@ public class NewTypeInference implements CompilerPass {
         }
         FunctionType funType = calleeType.getFunType();
         if (funType == null || funType.isTopFunction()) {
-          return new EnvTypePair(inEnv, requiredType);
+          return analyzeCallNodeArgumentsFwd(expr, inEnv);
         } else if (funType.isLoose()) {
           return analyzeLooseCallNodeFwd(expr, inEnv, requiredType);
         } else if (expr.isCall() && funType.isConstructor()) {
           warnings.add(JSError.make(
               expr, TypeCheck.CONSTRUCTOR_NOT_CALLABLE, funType.toString()));
-          return new EnvTypePair(inEnv, requiredType);
+          return analyzeCallNodeArgumentsFwd(expr, inEnv);
         } else if (expr.isNew() && !funType.isConstructor()) {
           warnings.add(JSError.make(
               expr, TypeCheck.NOT_A_CONSTRUCTOR, funType.toString()));
-          return new EnvTypePair(inEnv, requiredType);
+          return analyzeCallNodeArgumentsFwd(expr, inEnv);
         }
         int maxArity = funType.getMaxArity();
         int minArity = funType.getMinArity();
@@ -1151,7 +1151,7 @@ public class NewTypeInference implements CompilerPass {
               expr, TypeCheck.WRONG_ARGUMENT_COUNT, "",
               Integer.toString(numArgs), Integer.toString(minArity),
               " and at most " + maxArity));
-          return new EnvTypePair(inEnv, requiredType);
+          return analyzeCallNodeArgumentsFwd(expr, inEnv);
         }
         FunctionType origFunType = funType; // save for later
         if (funType.isGeneric()) {
@@ -1198,6 +1198,9 @@ public class NewTypeInference implements CompilerPass {
               DeferredCheck dc;
               if (expr.isCall()) {
                 dc = deferredChecks.get(expr);
+                Preconditions.checkState(dc != null,
+                    "No deferred check created in backward direction for " +
+                    expr);
                 dc.updateReturn(expectedRetType);
               } else {
                 dc = new DeferredCheck(
@@ -1324,6 +1327,17 @@ public class NewTypeInference implements CompilerPass {
         throw new RuntimeException("Unhandled expression type: " +
               Token.name(expr.getType()));
     }
+  }
+
+  private EnvTypePair analyzeCallNodeArgumentsFwd(
+      Node callNode, TypeEnv inEnv) {
+    TypeEnv env = inEnv;
+    for (Node arg = callNode.getFirstChild(); arg != null;
+        arg = arg.getNext()) {
+      env = analyzeExprFwd(arg, env).env;
+    }
+    return new EnvTypePair(env, JSType.UNKNOWN);
+
   }
 
   private EnvTypePair analyzeStrictComparisonFwd(int comparisonOp,
@@ -1909,21 +1923,23 @@ public class NewTypeInference implements CompilerPass {
             analyzeExprBwd(callee, outEnv, JSType.topFunction()).type;
         FunctionType funType = calleeTypeGeneral.getFunType();
         if (funType == null) {
-          return new EnvTypePair(outEnv, requiredType);
+          return analyzeCallNodeArgumentsBwd(expr, outEnv);
         } else if (funType.isLoose()) {
           return analyzeLooseCallNodeBwd(expr, outEnv, requiredType);
         } else if (expr.isCall() && funType.isConstructor() ||
             expr.isNew() && !funType.isConstructor()) {
-          return new EnvTypePair(outEnv, requiredType);
+          return analyzeCallNodeArgumentsBwd(expr, outEnv);
         } else if (funType.isTopFunction()) {
-          return new EnvTypePair(outEnv, requiredType);
+          return analyzeCallNodeArgumentsBwd(expr, outEnv);
+        }
+        if (callee.isName() && !funType.isGeneric() && expr.isCall()) {
+          createDeferredCheckBwd(expr, requiredType);
         }
         int numArgs = expr.getChildCount() - 1;
         if (numArgs < funType.getMinArity() ||
             numArgs > funType.getMaxArity()) {
-          return new EnvTypePair(outEnv, requiredType);
+          return analyzeCallNodeArgumentsBwd(expr, outEnv);
         }
-        FunctionType origFunType = funType; // save for later
         if (funType.isGeneric()) {
           Map<String, JSType> typeMap =
               calcTypeInstantiationBwd(expr, funType, outEnv);
@@ -1942,26 +1958,9 @@ public class NewTypeInference implements CompilerPass {
           tmpEnv = analyzeExprBwd(arg, tmpEnv, formalType).env;
           // We don't need deferred checks for args in BWD
         }
-        if (callee.isName()) {
-          String calleeName = callee.getQualifiedName();
-          if (currentScope.isKnownFunction(calleeName)) {
-            // Local function definitions will be type-checked more
-            // exactly using their summaries, and don't need deferred checks
-            if (currentScope.isLocalFunDef(calleeName)) {
-              tmpEnv = collectTypesForFreeVarsBwd(callee, tmpEnv);
-            } else if (!origFunType.isGeneric() && expr.isCall()) {
-              Scope s = currentScope.getScope(calleeName);
-              JSType expectedRetType = JSType.UNKNOWN;
-              if (s.getDeclaredType().getReturnType() == null) {
-                expectedRetType = requiredType;
-              }
-              println("Putting deferred check of function: ", calleeName,
-                  " with ret: ", expectedRetType);
-              DeferredCheck dc = new DeferredCheck(expr, currentScope, s);
-              dc.updateReturn(expectedRetType);
-              deferredChecks.put(expr, dc);
-            }
-          }
+        if (callee.isName() &&
+            currentScope.isLocalFunDef(callee.getString())) {
+          tmpEnv = collectTypesForFreeVarsBwd(callee, tmpEnv);
         }
         return new EnvTypePair(tmpEnv, funType.getReturnType());
       }
@@ -2030,6 +2029,36 @@ public class NewTypeInference implements CompilerPass {
       default:
         throw new RuntimeException("BWD: Unhandled expression type: "
             + Token.name(expr.getType()) + " with parent: " + expr.getParent());
+    }
+  }
+
+  private EnvTypePair analyzeCallNodeArgumentsBwd(
+      Node callNode, TypeEnv outEnv) {
+    TypeEnv env = outEnv;
+    for (int i = callNode.getChildCount() - 1; i >= 0; i--) {
+      Node arg = callNode.getChildAtIndex(i);
+      env = analyzeExprBwd(arg, env).env;
+    }
+    return new EnvTypePair(env, JSType.UNKNOWN);
+  }
+
+  private void createDeferredCheckBwd(Node expr, JSType requiredType) {
+    Preconditions.checkArgument(expr.isCall());
+    String calleeName = expr.getFirstChild().getQualifiedName();
+    // Local function definitions will be type-checked more
+    // exactly using their summaries, and don't need deferred checks
+    if (currentScope.isKnownFunction(calleeName) &&
+        !currentScope.isLocalFunDef(calleeName)) {
+      Scope s = currentScope.getScope(calleeName);
+      JSType expectedRetType = JSType.UNKNOWN;
+      if (s.getDeclaredType().getReturnType() == null) {
+        expectedRetType = requiredType;
+      }
+      println("Putting deferred check of function: ", calleeName,
+          " with ret: ", expectedRetType);
+      DeferredCheck dc = new DeferredCheck(expr, currentScope, s);
+      dc.updateReturn(expectedRetType);
+      deferredChecks.put(expr, dc);
     }
   }
 
