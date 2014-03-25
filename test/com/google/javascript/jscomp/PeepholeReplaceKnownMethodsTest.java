@@ -280,7 +280,6 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = parseInt('015', 10)", "x = 15");
     fold("x = parseInt('1111', 2)", "x = 15");
     fold("x = parseInt('12', 13)", "x = 15");
-    fold("x = parseInt(021, 8)", "x = 15");
     fold("x = parseInt(15.99, 10)", "x = 15");
     fold("x = parseFloat('3.14')", "x = 3.14");
     fold("x = parseFloat(3.14)", "x = 3.14");
@@ -303,6 +302,13 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
     enableEcmaScript5(false);
     foldSame("x = parseInt('08')");
+  }
+
+  public void testFoldParseOctalNumbers() {
+    enableNormalize();
+    setExpectParseWarningsThisTest();
+
+    fold("x = parseInt(021, 8)", "x = 15");
   }
 
   @Override

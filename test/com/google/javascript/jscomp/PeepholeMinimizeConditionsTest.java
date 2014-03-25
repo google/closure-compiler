@@ -125,7 +125,7 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
     // Play with nested IFs
     fold("function f(){if(x){if(y)foo()}}",
-         "function f(){x&&y&&foo()}");
+         "function f(){x && (y && foo())}");
     fold("function f(){if(x){if(y)foo();else bar()}}",
          "function f(){x&&(y?foo():bar())}");
     fold("function f(){if(x){if(y)foo()}else bar()}",
@@ -464,11 +464,11 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   public void testFoldIfWithLowerOperatorsInside() {
     fold("if (x + (y=5)) z && (w,z);",
-         "x + (y=5) && z && (w,z)");
+         "x + (y=5) && (z && (w,z))");
     fold("if (!(x+(y=5))) z && (w,z);",
          "x + (y=5) || z && (w,z)");
     fold("if (x + (y=5)) if (z && (w,z)) for(;;) foo();",
-         "if (x + (y=5) && z && (w,z)) for(;;) foo();");
+         "if (x + (y=5) && (z && (w,z))) for(;;) foo();");
   }
 
   public void testSubsituteReturn() {
@@ -682,7 +682,7 @@ public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold("if(x||z)if(y){while(1){}}", "if((x||z)&&y){while(1){}}");
     fold("if(x)if(y||z){while(1){}}", "if((x)&&(y||z)){while(1){}}");
     foldSame("if(x||z)if(y||z){while(1){}}");
-    fold("if(x)if(y){if(z){while(1){}}}", "if(x&&y&&z){while(1){}}");
+    fold("if(x)if(y){if(z){while(1){}}}", "if(x&&(y&&z)){while(1){}}");
   }
 
   public void testIssue291() {

@@ -651,7 +651,7 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   public void testComplex2() {
-    test("1 && (a() ? b() : 1)", "1 && a() && b()");
+    test("1 && (a() ? b() : 1)", "1 && (a() && b())");
   }
 
   public void testComplex3() {

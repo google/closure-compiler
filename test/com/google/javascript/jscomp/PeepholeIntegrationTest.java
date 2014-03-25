@@ -119,11 +119,11 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
      fold("if(a()){A()} else if (b()) {} else {C()}", "a()?A():b()||C()");
 
      fold("if(a()){} else if (b()) {} else {C()}",
-          "a()||b()||C()");
+          "a() || (b() || C())");
      fold("if(a()){A()} else if (b()) {} else if (c()) {} else{D()}",
-          "a()?A():b()||c()||D()");
+          "a() ? A() : b() || (c() || D())");
      fold("if(a()){} else if (b()) {} else if (c()) {} else{D()}",
-          "a()||b()||c()||D()");
+          "a() || (b() || (c() || D()))");
      fold("if(a()){A()} else if (b()) {} else if (c()) {} else{}",
           "a()?A():b()||c()");
 
