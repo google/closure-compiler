@@ -978,7 +978,7 @@ public abstract class CompilerTestCase extends TestCase  {
         String explanation = externsRootClone.checkTreeEquals(externsRoot);
         fail("Unexpected changes to externs" +
             "\nExpected: " + compiler.toSource(externsRootClone) +
-            "\nResult: " + compiler.toSource(externsRoot) +
+            "\nResult:   " + compiler.toSource(externsRoot) +
             "\n" + explanation);
       }
 
@@ -999,8 +999,9 @@ public abstract class CompilerTestCase extends TestCase  {
       if (expected != null) {
         if (compareAsTree) {
           String explanation = expectedRoot.checkTreeEquals(mainRoot);
-          assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
-              "\nResult: " + compiler.toSource(mainRoot) +
+          assertNull(
+              "\nExpected: " + compiler.toSource(expectedRoot) +
+              "\nResult:   " + compiler.toSource(mainRoot) +
               "\n" + explanation, explanation);
         } else if (expected != null) {
           assertEquals(
@@ -1017,9 +1018,10 @@ public abstract class CompilerTestCase extends TestCase  {
           normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
       String explanation =
           normalizeCheckMainRootClone.checkTreeEquals(mainRoot);
-      assertNull("Node structure normalization invalidated.\nExpected: " +
+      assertNull("Node structure normalization invalidated." +
+          "\nExpected: " +
           compiler.toSource(normalizeCheckMainRootClone) +
-          "\nResult: " + compiler.toSource(mainRoot) +
+          "\nResult:   " + compiler.toSource(mainRoot) +
           "\n" + explanation, explanation);
 
       // TODO(johnlenz): enable this for most test cases.
@@ -1031,9 +1033,10 @@ public abstract class CompilerTestCase extends TestCase  {
         new Normalize(compiler, true).process(
             normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
         explanation =  normalizeCheckMainRootClone.checkTreeEquals(mainRoot);
-        assertNull("Normalization invalidated.\nExpected: " +
+        assertNull("Normalization invalidated." +
+            "\nExpected: " +
             compiler.toSource(normalizeCheckMainRootClone) +
-            "\nResult: " + compiler.toSource(mainRoot) +
+            "\nResult:   " + compiler.toSource(mainRoot) +
             "\n" + explanation, explanation);
       }
     } else {
