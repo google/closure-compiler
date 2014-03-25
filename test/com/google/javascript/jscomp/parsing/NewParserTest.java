@@ -770,6 +770,61 @@ public class NewParserTest extends BaseJSTypeTestCase {
     }
   }
 
+  public void testAutomaticSemicolonInsertion() {
+    // var statements
+    assertNodeEquality(
+        parse("var x = 1\nvar y = 2"),
+        parse("var x = 1; var y = 2;"));
+    assertNodeEquality(
+        parse("var x = 1\n, y = 2"),
+        parse("var x = 1, y = 2;"));
+
+    // assign statements
+    assertNodeEquality(
+        parse("x = 1\ny = 2"),
+        parse("x = 1; y = 2;"));
+
+    // This fails because an EMPTY statement
+    // is inserted after the 'x=1'.
+    // TODO(tbreisacher): Fix and re-enable.
+    //assertNodeEquality(
+    //    parse("x = 1\n;y = 2"),
+    //    parse("x = 1; y = 2;"));
+
+    // if/else statements
+    assertNodeEquality(
+        parse("if (x)\n;else{}"),
+        parse("if (x) {} else {}"));
+  }
+
+  /**
+   * Test all the ASI examples from
+   * http://www.ecma-international.org/ecma-262/5.1/#sec-7.9.2
+   */
+  public void testAutomaticSemicolonInsertionExamplesFromSpec() {
+    parseError("{ 1 2 } 3", "Semi-colon expected");
+
+    assertNodeEquality(
+        parse("{ 1\n2 } 3"),
+        parse("{ 1; 2; } 3;"));
+
+    parseError("for (a; b\n)", "';' expected");
+
+    assertNodeEquality(
+        parse("return\na + b"),
+        parse("return; a + b;"));
+
+    assertNodeEquality(
+        parse("a = b\n++c"),
+        parse("a = b; ++c;"));
+
+    parseError("if (a > b)\nelse c = d", "primary expression expected");
+
+    assertNodeEquality(
+        parse("a = b + c\n(d + e).print()"),
+        parse("a = b + c(d + e).print()"));
+  }
+
   private Node createScript(Node n) {
     Node script = new Node(Token.SCRIPT);
     script.addChildToBack(n);
