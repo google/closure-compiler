@@ -1172,7 +1172,10 @@ public class NewTypeInference implements CompilerPass {
             formalType = JSType.UNKNOWN;
           }
           EnvTypePair pair = analyzeExprFwd(arg, tmpEnv, formalType);
-          if (!pair.type.isSubtypeOf(formalType)) {
+          // Allow passing undefined for an optional argument.
+          if (i >= minArity && pair.type.equals(JSType.UNDEFINED)) {
+            pair.type = JSType.UNKNOWN; // No deferred check needed.
+          } else if (!pair.type.isSubtypeOf(formalType)) {
             warnings.add(JSError.make(arg, INVALID_ARGUMENT_TYPE,
                     Integer.toString(i + 1), "",
                     formalType.toString(), pair.type.toString()));
