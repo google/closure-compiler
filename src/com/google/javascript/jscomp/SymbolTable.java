@@ -1532,24 +1532,45 @@ public final class SymbolTable
 
         for (Node typeAst : info.getTypeNodes()) {
           SymbolScope scope = scopes.get(t.getScopeRoot());
-          visitTypeNode(scope == null ? globalScope : scope, typeAst);
+          visitTypeNode(
+              n,
+              info.getTemplateTypeNames(),
+              scope == null ? globalScope : scope,
+              typeAst);
         }
       }
     }
 
-    public void visitTypeNode(SymbolScope scope, Node n) {
-      if (n.isString()) {
+    private boolean isNativeSourcelessType(String name) {
+      switch (name) {
+        case "null":
+        case "undefined":
+        case "void":
+          return true;
+
+        default:
+          return false;
+      }
+    }
+
+    public void visitTypeNode(Node refNode, ImmutableList<String> templateTypeNames,
+        SymbolScope scope, Node n) {
+      if (n.isString()
+          && !isNativeSourcelessType(n.getString())
+          && !templateTypeNames.contains(n.getString())) {
         Symbol symbol = lookupPossiblyDottedName(scope, n.getString());
         if (symbol != null) {
           symbol.defineReferenceAt(n);
         } else {
-          logger.warning("Could not find symbol for type: " + n.getString());
+         // TODO(johnlenz): filter out "class" template vars or remove this logging.
+          logger.warning(NodeUtil.getSourceName(refNode) + ":" + refNode.getLineno() +
+             "  Could not find symbol for type: " + n.getString());
         }
       }
 
       for (Node child = n.getFirstChild();
            child != null; child = child.getNext()) {
-        visitTypeNode(scope, child);
+        visitTypeNode(refNode, templateTypeNames, scope, child);
       }
     }
 

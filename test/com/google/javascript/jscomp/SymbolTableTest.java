@@ -37,6 +37,7 @@ import java.util.Set;
 public class SymbolTableTest extends TestCase {
 
   private static final String EXTERNS = CompilerTypeTestCase.DEFAULT_EXTERNS +
+      "var Number;" +
       "\nfunction customExternFn(customExternArg) {}";
 
   private CompilerOptions options;
