@@ -245,8 +245,8 @@ public class DiagnosticGroups {
           RhinoErrorReporter.INVALID_ES3_PROP_NAME,
           RhinoErrorReporter.TRAILING_COMMA);
 
-  public static final DiagnosticGroup ES5_STRICT =
-      DiagnosticGroups.registerGroup("es5Strict",
+  static final DiagnosticGroup ES5_STRICT_UNCOMMON =
+      DiagnosticGroups.registerGroup("es5StrictUncommon",
           RhinoErrorReporter.INVALID_OCTAL_LITERAL,
           StrictModeCheck.USE_OF_WITH,
           StrictModeCheck.UNKNOWN_VARIABLE,
@@ -254,13 +254,21 @@ public class DiagnosticGroups {
           StrictModeCheck.EVAL_ASSIGNMENT,
           StrictModeCheck.ARGUMENTS_DECLARATION,
           StrictModeCheck.ARGUMENTS_ASSIGNMENT,
-          StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN,
-          StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN,
-          StrictModeCheck.FUNCTION_CALLER_FORBIDDEN,
-          StrictModeCheck.FUNCTION_ARGUMENTS_PROP_FORBIDDEN,
           StrictModeCheck.DELETE_VARIABLE,
           StrictModeCheck.DUPLICATE_OBJECT_KEY,
           StrictModeCheck.BAD_FUNCTION_DECLARATION);
+
+  static final DiagnosticGroup ES5_STRICT_REFLECTION =
+      DiagnosticGroups.registerGroup("es5StrictReflection",
+          StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN,
+          StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN,
+          StrictModeCheck.FUNCTION_CALLER_FORBIDDEN,
+          StrictModeCheck.FUNCTION_ARGUMENTS_PROP_FORBIDDEN);
+
+  public static final DiagnosticGroup ES5_STRICT =
+      DiagnosticGroups.registerGroup("es5Strict",
+          ES5_STRICT_UNCOMMON,
+          ES5_STRICT_REFLECTION);
 
   // TODO(johnlenz): Remove this in favor or "missingProvide" which matches
   // the existing and more popular linter suppression
