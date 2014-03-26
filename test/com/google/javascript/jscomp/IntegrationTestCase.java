@@ -153,6 +153,39 @@ abstract class IntegrationTestCase extends TestCase {
   }
 
   /**
+   * Asserts that there is at least one parse error.
+   */
+  protected void testParseError(CompilerOptions options, String original) {
+    testParseError(options, original, null);
+  }
+
+  /**
+   * Asserts that there is at least one parse error.
+   */
+  protected void testParseError(CompilerOptions options,
+      String original, String compiled) {
+    Compiler compiler = compile(options, original);
+    for (JSError error : compiler.getErrors()) {
+      if (!error.getType().equals(RhinoErrorReporter.PARSE_ERROR)) {
+        fail("Found unexpected error type " + error.getType() + ":\n" + error);
+      }
+    }
+    assertEquals("Unexpected warnings: " +
+        Joiner.on("\n").join(compiler.getWarnings()),
+        0, compiler.getWarnings().length);
+
+    if (compiled != null) {
+      Node root = compiler.getRoot().getLastChild();
+      Node expectedRoot = parseExpectedCode(
+          new String[] {compiled}, options, normalizeResults);
+      String explanation = expectedRoot.checkTreeEquals(root);
+      assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
+          "\nResult: " + compiler.toSource(root) +
+          "\n" + explanation, explanation);
+    }
+  }
+
+  /**
    * Asserts that when compiling with the given compiler options,
    * there is an error or warning.
    */

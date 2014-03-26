@@ -2159,7 +2159,7 @@ public class IntegrationTest extends IntegrationTestCase {
   public void testBug5786871() {
     CompilerOptions options = createCompilerOptions();
     options.ideMode = true;
-    test(options, "function () {}", RhinoErrorReporter.PARSE_ERROR);
+    testParseError(options, "function () {}");
   }
 
   public void testIssue378() {
@@ -2545,18 +2545,7 @@ public class IntegrationTest extends IntegrationTestCase {
   public void testIncompleteFunction2() {
     CompilerOptions options = createCompilerOptions();
     options.ideMode = true;
-    DiagnosticType[] warnings = new DiagnosticType[]{
-        RhinoErrorReporter.PARSE_ERROR,
-        RhinoErrorReporter.PARSE_ERROR,
-        RhinoErrorReporter.PARSE_ERROR,
-        RhinoErrorReporter.PARSE_ERROR,
-        RhinoErrorReporter.PARSE_ERROR,
-        RhinoErrorReporter.PARSE_ERROR};
-    test(options,
-        new String[] { "function hi" },
-        new String[] { "function hi() {}" },
-        warnings
-    );
+    testParseError(options, "function hi", "function hi() {}");
   }
 
   public void testSortingOff() {
@@ -2574,10 +2563,9 @@ public class IntegrationTest extends IntegrationTestCase {
   public void testUnboundedArrayLiteralInfiniteLoop() {
     CompilerOptions options = createCompilerOptions();
     options.ideMode = true;
-    test(options,
+    testParseError(options,
          "var x = [1, 2",
-         "var x = [1, 2]",
-         RhinoErrorReporter.PARSE_ERROR);
+         "var x = [1, 2]");
   }
 
   public void testProvideRequireSameFile() throws Exception {
