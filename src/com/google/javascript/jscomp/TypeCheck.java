@@ -74,8 +74,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   protected static final String OVERRIDING_PROTOTYPE_WITH_NON_OBJECT =
       "overriding prototype with non-object";
 
-  // TODO(user): make all the non private messages private once the
-  // TypedScopeCreator has been merged with the type checker.
   static final DiagnosticType DETERMINISTIC_TEST =
       DiagnosticType.warning(
           "JSC_DETERMINISTIC_TEST",
@@ -88,11 +86,18 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "JSC_INEXISTENT_ENUM_ELEMENT",
           "element {0} does not exist on this enum");
 
-  // disabled by default. This one only makes sense if you're using
-  // well-typed externs.
+  // TODO(johnlenz): enable this by default, now that we have created
+  // "POSSIBLE_INEXISTENT_PROPERTY"
   static final DiagnosticType INEXISTENT_PROPERTY =
       DiagnosticType.disabled(
           "JSC_INEXISTENT_PROPERTY",
+          "Property {0} never defined on {1}");
+
+  // disabled by default. This one only makes sense if you're using
+  // well-typed externs.
+  static final DiagnosticType POSSIBLE_INEXISTENT_PROPERTY =
+      DiagnosticType.disabled(
+          "JSC_POSSIBLE_INEXISTENT_PROPERTY",
           "Property {0} never defined on {1}");
 
   static final DiagnosticType INEXISTENT_PROPERTY_WITH_SUGGESTION =
@@ -249,6 +254,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DETERMINISTIC_TEST,
       INEXISTENT_ENUM_ELEMENT,
       INEXISTENT_PROPERTY,
+      POSSIBLE_INEXISTENT_PROPERTY,
+      INEXISTENT_PROPERTY_WITH_SUGGESTION,
       NOT_A_CONSTRUCTOR,
       BIT_OPERATION,
       NOT_CALLABLE,
@@ -1470,14 +1477,21 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         reportMissingProperties &&
         (!isPropertyTest(n) || objectType.isStruct())) {
       if (!typeRegistry.canPropertyBeDefined(objectType, propName)) {
-        SuggestionPair pair =
-            getClosestPropertySuggestion(objectType, propName);
+        boolean lowConfidence = objectType.isUnknownType()
+            || objectType.isEquivalentTo(getNativeType(OBJECT_TYPE));
+        SuggestionPair pair = null;
+        if (!lowConfidence) {
+          pair = getClosestPropertySuggestion(objectType, propName);
+        }
         if (pair != null && pair.distance * 4 < propName.length()) {
           report(t, n, INEXISTENT_PROPERTY_WITH_SUGGESTION, propName,
               validator.getReadableJSTypeName(n.getFirstChild(), true),
               pair.suggestion);
         } else {
-          report(t, n, INEXISTENT_PROPERTY, propName,
+          DiagnosticType reportType = lowConfidence ?
+              POSSIBLE_INEXISTENT_PROPERTY :
+              INEXISTENT_PROPERTY;
+          report(t, n, reportType, propName,
               validator.getReadableJSTypeName(n.getFirstChild(), true));
         }
       }

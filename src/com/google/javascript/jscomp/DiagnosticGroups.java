@@ -159,7 +159,9 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup MISSING_PROPERTIES =
       DiagnosticGroups.registerGroup("missingProperties",
-          TypeCheck.INEXISTENT_PROPERTY_WITH_SUGGESTION);
+          TypeCheck.INEXISTENT_PROPERTY,
+          TypeCheck.INEXISTENT_PROPERTY_WITH_SUGGESTION,
+          TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
 
   public static final DiagnosticGroup MISSING_RETURN =
       DiagnosticGroups.registerGroup("missingReturn",
