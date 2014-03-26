@@ -415,6 +415,26 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(x.isPropertyTypeInferred("bar"));
   }
 
+  public void testSubBeforeSuper1() throws Exception {
+    testSame(
+        "/** @interface\n * @extends {MidI} */" +
+        "function LowI() {}" +
+        "/** @interface\n * @extends {HighI} */" +
+        "function MidI() {}" +
+        "/** @interface */" +
+        "function HighI() {}");
+  }
+
+  public void testSubBeforeSuper2() throws Exception {
+    testSame(
+        "/** @constructor\n * @extends {MidI} */" +
+        "function LowI() {}" +
+        "/** @constructor\n * @extends {HighI} */" +
+        "function MidI() {}" +
+        "/** @constructor */" +
+        "function HighI() {}");
+  }
+
   public void testMethodBeforeFunction1() throws Exception {
     testSame(
         "var y = Window.prototype;" +

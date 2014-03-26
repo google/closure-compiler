@@ -9988,14 +9988,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testInterfaceExtendsLoop() throws Exception {
-    // TODO(user): This should give a cycle in inheritance graph error,
-    // not a cannot resolve error.
+    // TODO(nicksantos): This should emit a warning. This test is still
+    // useful to ensure the compiler doesn't crash.
     testClosureTypesMultipleWarnings(
         suppressMissingProperty("foo") +
             "/** @interface \n * @extends {F} */var G = function() {};" +
-            "/** @interface \n * @extends {G} */var F = function() {};",
-        Lists.newArrayList(
-            "Could not resolve type in @extends tag of G"));
+            "/** @interface \n * @extends {G} */var F = function() {};" +
+            "/** @constructor \n * @implements {F} */var H = function() {};" +
+        "alert((new H).foo);",
+        Lists.<String>newArrayList());
   }
 
   public void testConversionFromInterfaceToRecursiveConstructor()
