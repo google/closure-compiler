@@ -65,6 +65,7 @@ import java.util.Set;
  * - separate scope for catch variables
  * - closure-specific constructs
  * - getters/setters
+ * - suppress warnings
  */
 public class NewTypeInference implements CompilerPass {
 
@@ -621,25 +622,38 @@ public class NewTypeInference implements CompilerPass {
     // fun. Get the names of vars where this value may have flowed to.
     Multimap<String, String> taints = exitEnv.getTaints();
 
-    JSType formalType;
-    int formalIndex = 0;
     DeclaredFunctionType declType = fn.getDeclaredType();
     int reqArity = declType.getRequiredArity();
     int optArity = declType.getOptionalArity();
     if (declType.isGeneric()) {
       builder.addTypeParameters(declType.getTypeParameters());
     }
-    for (String formal : fn.getFormals()) {
-      formalType = fn.getDeclaredTypeOf(formal);
+
+    // Every trailing undeclared formal whose inferred type is ?
+    // or contains undefined can be marked as optional.
+    List<String> formals = fn.getFormals();
+    for (int i = reqArity - 1; i >= 0; i--) {
+      JSType formalType = fn.getDeclaredType().getFormalType(i);
+      if (formalType != null) {
+        break;
+      }
+      String formalName = formals.get(i);
+      formalType = getFormalTypeAfterFwd(
+          formalName, envGetType(entryEnv, formalName), exitEnv, taints);
+      if (formalType.isUnknown() || JSType.UNDEFINED.isSubtypeOf(formalType)) {
+        reqArity--;
+      } else {
+        break;
+      }
+    }
+
+    // Collect types of formals in the builder
+    int formalIndex = 0;
+    for (String formal : formals) {
+      JSType formalType = fn.getDeclaredTypeOf(formal);
       if (formalType == null) {
-        formalType = envGetType(entryEnv, formal);
-        // TODO(user): fix so we get the adjusted end-of-fwd type for objs too
-        if (!formalType.hasNonScalar() || formalType.getFunType() != null) {
-          for (String taintedVarName : taints.get(formal)) {
-            JSType taintType = envGetType(exitEnv, taintedVarName);
-            formalType = JSType.meet(taintType, formalType);
-          }
-        }
+        formalType = getFormalTypeAfterFwd(
+            formal, envGetType(entryEnv, formal), exitEnv, taints);
         // TODO(blickly): Use location to infer polymorphism
         formalType = formalType.withLocation(null);
       }
@@ -686,6 +700,19 @@ public class NewTypeInference implements CompilerPass {
     println("Function summary for ", fn.getReadableName());
     println("\t", summary);
     summaries.put(fn, summary);
+  }
+
+  // TODO(user): fix so we get the adjusted end-of-fwd type for objs too
+  private JSType getFormalTypeAfterFwd(String formalName, JSType typeAfterBwd,
+      TypeEnv exitEnv, Multimap<String, String> taints) {
+    JSType typeAfterFwd = typeAfterBwd;
+    if (!typeAfterBwd.hasNonScalar() || typeAfterBwd.getFunType() != null) {
+      for (String taintedVarName : taints.get(formalName)) {
+        JSType taintType = envGetType(exitEnv, taintedVarName);
+        typeAfterFwd = JSType.meet(taintType, typeAfterFwd);
+      }
+    }
+    return typeAfterFwd;
   }
 
   private static boolean isAllowedToNotReturn(Scope methodScope) {
@@ -840,7 +867,8 @@ public class NewTypeInference implements CompilerPass {
             // but we also miss some true warnings.
             if (currentScope.getDeclaredTypeOf(varName) == null &&
                 requiredType.isSubtypeOf(inferredType)) {
-              inferredType = requiredType;
+              // Keeps requiredType, but using the location of inferredType
+              inferredType = inferredType.specialize(requiredType);
             } else {
               // Propagate incorrect type so that the context catches
               // the mismatch
