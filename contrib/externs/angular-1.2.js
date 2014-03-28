@@ -1226,6 +1226,10 @@ angular.HttpCallback;
  *       ?function(!angular.$http.Response),
  *       ?function(!angular.$http.Response)=,
  *       ?function(!angular.$http.Response)=): !angular.$http.HttpPromise,
+ *   catch: function(
+ *       ?function(!angular.$http.Response)): !angular.$http.HttpPromise,
+ *   finally: function(
+ *       ?function(!angular.$http.Response)): !angular.$http.HttpPromise,
  *   success: function(!angular.HttpCallback): !angular.$http.HttpPromise,
  *   error: function(!angular.HttpCallback): !angular.$http.HttpPromise
  * }}
@@ -1239,6 +1243,18 @@ angular.$http.HttpPromise;
  */
 angular.$http.HttpPromise.then = function(
     successCallback, opt_errorCallback) {};
+
+/**
+ * @param {?function(!angular.$http.Response)} callback
+ * @return {!angular.$http.HttpPromise}
+ */
+angular.$http.HttpPromise.catch = function(callback) {};
+
+/**
+ * @param {?function(!angular.$http.Response)} callback
+ * @return {!angular.$http.HttpPromise}
+ */
+angular.$http.HttpPromise.finally = function(callback) {};
 
 /**
  * @param {angular.HttpCallback} callback
@@ -1764,8 +1780,12 @@ angular.$q.Deferred.notify = function(opt_value) {};
 angular.$q.Deferred.promise;
 
 /**
- * @typedef {{then: function(?function(?), ?function(?)=, ?function(?)=):
- *     angular.$q.Promise}}
+ * @typedef {{
+ *   then: function(?function(?), ?function(?)=, ?function(?)=):
+ *       angular.$q.Promise,
+ *   catch: function(?function(?)):angular.$q.Promise,
+ *   finally: function(?function(?)):angular.$q.Promise
+ * }}
  */
 angular.$q.Promise;
 
@@ -1775,6 +1795,18 @@ angular.$q.Promise;
  * @return {!angular.$q.Promise}
  */
 angular.$q.Promise.then = function(successCallback, opt_errorCallback) {};
+
+/**
+ * @param {?function(?)} callback
+ * @return {!angular.$q.Promise}
+ */
+angular.$q.Promise.catch = function(callback) {};
+
+/**
+ * @param {?function(?)} callback
+ * @return {!angular.$q.Promise}
+ */
+angular.$q.Promise.finally = function(callback) {};
 
 /******************************************************************************
  * $route Service
