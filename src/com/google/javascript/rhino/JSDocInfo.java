@@ -84,6 +84,18 @@ public class JSDocInfo implements Serializable {
     INHERITED
   }
 
+  // Bitfield property indicies.
+  class Property {
+    static final int
+      NG_INJECT = 0,
+      WIZ_ACTION = 1,
+
+       // Flags for Jagger dependency injection prototype
+      JAGGER_INJECT = 2,
+      JAGGER_PROVIDE = 3,
+      JAGGER_MODULE = 4;
+  }
+
   private static final class LazilyInitializedInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -105,15 +117,30 @@ public class JSDocInfo implements Serializable {
     Set<String> modifies = null;
     String lendsName = null;
 
-    // TODO(nnaze): Consider converting the boolean flags to bit fields.
+    // Bit flags for properties.
+    private int propertyBitField = 0;
 
-    boolean ngInject = false;
-    boolean wizaction = false;
+    // TODO(nnaze): Consider putting bit-fiddling logic in a reusable
+    // location.
+    void setBit(int bitIndex, boolean value) {
+      int mask = getMaskForBitIndex(bitIndex);
+      if (value) {
+        propertyBitField |= mask;
+      } else {
+        propertyBitField ^= mask;
+      }
+    }
 
-    // Tags for Jagger dependency injection prototype
-    boolean jaggerInject = false;
-    boolean jaggerProvide = false;
-    boolean jaggerModule = false;
+    boolean isBitSet(int bitIndex) {
+      int mask = getMaskForBitIndex(bitIndex);
+      return (mask & propertyBitField) != 0;
+    }
+
+    private int getMaskForBitIndex(int bitIndex) {
+        Preconditions.checkArgument(bitIndex >= 0,
+            "Bit index should be non-negative integer");
+      return 1 << bitIndex;
+    }
   }
 
   private static final class LazilyInitializedDocumentation {
@@ -1270,60 +1297,60 @@ public class JSDocInfo implements Serializable {
    * Returns whether JSDoc is annotated with {@code @ngInject} annotation.
    */
   public boolean isNgInject() {
-    return (info == null) ? false : info.ngInject;
+    return (info != null) && info.isBitSet(Property.NG_INJECT);
   }
 
   void setNgInject(boolean ngInject) {
     lazyInitInfo();
-    info.ngInject = ngInject;
+    info.setBit(Property.NG_INJECT, ngInject);
   }
 
   /**
    * Returns whether JSDoc is annotated with {@code @jaggerInject} annotation.
    */
   public boolean isJaggerInject() {
-    return (info != null) && info.jaggerInject;
+    return (info != null) && info.isBitSet(Property.JAGGER_INJECT);
   }
 
   void setJaggerInject(boolean jaggerInject) {
     lazyInitInfo();
-    info.jaggerInject = jaggerInject;
+    info.setBit(Property.JAGGER_INJECT, jaggerInject);
   }
 
   /**
    * Returns whether JSDoc is annotated with {@code @jaggerProvide} annotation.
    */
   public boolean isJaggerProvide() {
-    return (info != null) && info.jaggerProvide;
+    return (info != null) && info.isBitSet(Property.JAGGER_PROVIDE);
   }
 
   void setJaggerProvide(boolean jaggerProvide) {
     lazyInitInfo();
-    info.jaggerProvide = jaggerProvide;
+    info.setBit(Property.JAGGER_PROVIDE, jaggerProvide);
   }
 
   /**
    * Returns whether JSDoc is annotated with {@code @jaggerModule} annotation.
    */
   public boolean isJaggerModule() {
-      return (info != null) && info.jaggerModule;
+    return (info != null) && info.isBitSet(Property.JAGGER_MODULE);
   }
 
   void setJaggerModule(boolean jaggerModule) {
     lazyInitInfo();
-    info.jaggerModule = jaggerModule;
+    info.setBit(Property.JAGGER_MODULE, jaggerModule);
   }
 
   /**
    * Returns whether JSDoc is annotated with {@code @wizaction} annotation.
    */
   public boolean isWizaction() {
-    return (info == null) ? false : info.wizaction;
+    return (info != null) && info.isBitSet(Property.WIZ_ACTION);
   }
 
   void setWizaction(boolean wizaction) {
     lazyInitInfo();
-    info.wizaction = wizaction;
+    info.setBit(Property.WIZ_ACTION, wizaction);
   }
 
   /**
