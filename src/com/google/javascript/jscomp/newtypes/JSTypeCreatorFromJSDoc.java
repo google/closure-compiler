@@ -194,9 +194,12 @@ public class JSTypeCreatorFromJSDoc {
       case "string":
         return JSType.STRING;
       case "undefined":
+      case "void":
         return JSType.UNDEFINED;
       case "Function":
         return JSType.qmarkFunction();
+      case "Object":
+        return JSType.TOP_OBJECT;
       default: {
         if (hasTypeVariable(outerTypeParameters, ownerType, typeName)) {
           return JSType.fromTypeVar(typeName);

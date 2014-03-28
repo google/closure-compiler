@@ -66,6 +66,7 @@ import java.util.Set;
  * - closure-specific constructs
  * - getters/setters
  * - suppress warnings
+ * - bounded quantification for generics
  */
 public class NewTypeInference implements CompilerPass {
 
@@ -136,6 +137,11 @@ public class NewTypeInference implements CompilerPass {
           "JSC_FAILED_TO_UNIFY",
           "Could not instantiate type {0} with {1}.");
 
+  static final DiagnosticType NON_NUMERIC_ARRAY_INDEX =
+      DiagnosticType.warning(
+          "JSC_NON_NUMERIC_ARRAY_INDEX",
+          "Expected numeric array index but found {0}.");
+
   private Set<JSError> warnings;
   private final AbstractCompiler compiler;
   Map<DiGraphEdge<Node, ControlFlowGraph.Branch>, TypeEnv> envs;
@@ -170,7 +176,7 @@ public class NewTypeInference implements CompilerPass {
 
     // The type inference needs to know about the Array and RegExp types, in
     // order to handle array and regexp literals. This info comes from externs.
-    // If it's not there, don't bother be more precise than JSType.UNKNOWN.
+    // If it's not there, don't bother being more precise than JSType.UNKNOWN.
     Scope gs = symbolTable.getGlobalScope();
     JSType arrayCtor = gs.getDeclaredTypeOf("Array");
     arrayType = arrayCtor == null ?
@@ -188,6 +194,13 @@ public class NewTypeInference implements CompilerPass {
     for (JSError warning : warnings) {
       compiler.report(warning);
     }
+  }
+
+  private boolean isArrayType(JSType t) {
+    if (arrayType.isUnknown()) { // no externs
+      return false;
+    }
+    return !t.isUnknown() && t.isSubtypeOf(arrayType);
   }
 
   private static void println(Object ... objs) {
@@ -1203,17 +1216,18 @@ public class NewTypeInference implements CompilerPass {
             formalType = JSType.UNKNOWN;
           }
           EnvTypePair pair = analyzeExprFwd(arg, tmpEnv, formalType);
+          JSType argTypeForDeferredCheck = pair.type;
           // Allow passing undefined for an optional argument.
           if (i >= minArity && pair.type.equals(JSType.UNDEFINED)) {
-            pair.type = JSType.UNKNOWN; // No deferred check needed.
+            argTypeForDeferredCheck = null; // No deferred check needed.
           } else if (!pair.type.isSubtypeOf(formalType)) {
             warnings.add(JSError.make(arg, INVALID_ARGUMENT_TYPE,
                     Integer.toString(i + 1), "",
                     formalType.toString(), pair.type.toString()));
-            pair.type = JSType.UNKNOWN; // No deferred check needed.
+            argTypeForDeferredCheck = null; // No deferred check needed.
           }
           Preconditions.checkState(!pair.type.equals(JSType.topFunction()));
-          argTypes.add(pair.type);
+          argTypes.add(argTypeForDeferredCheck);
           tmpEnv = pair.env;
           arg = arg.getNext();
         }
@@ -1237,9 +1251,8 @@ public class NewTypeInference implements CompilerPass {
                     expr);
                 dc.updateReturn(expectedRetType);
               } else {
-                dc = new DeferredCheck(
-                    expr, currentScope, currentScope.getScope(calleeName));
-                dc.updateReturn(JSType.UNKNOWN);
+                dc = new DeferredCheck(expr, null,
+                    currentScope, currentScope.getScope(calleeName));
                 deferredChecks.put(expr, dc);
               }
               dc.updateArgTypes(argTypes);
@@ -1263,12 +1276,26 @@ public class NewTypeInference implements CompilerPass {
       case Token.GETELEM: {
         Node receiver = expr.getFirstChild();
         Node index = expr.getLastChild();
+        EnvTypePair pair = analyzeExprFwd(receiver, inEnv, JSType.TOP_OBJECT);
+        if (isArrayType(pair.type)) {
+          pair = analyzeExprFwd(index, pair.env, JSType.NUMBER);
+          if (!pair.type.isSubtypeOf(JSType.NUMBER)) {
+            warnings.add(
+                JSError.make(index, NewTypeInference.NON_NUMERIC_ARRAY_INDEX,
+                    pair.type.toString()));
+          }
+          pair.type = requiredType; // No precision for array elms yet.
+          return pair;
+        }
         if (index.isString()) {
           return analyzePropAccessFwd(receiver, index.getString(),
               inEnv, requiredType, specializedType);
         }
-        EnvTypePair pair = analyzeExprFwd(index, inEnv);
+        pair = analyzeExprFwd(index, inEnv);
         pair = analyzeExprFwd(receiver, pair.env, JSType.TOP_OBJECT);
+        // TODO(user): we don't know the prop name here so we're passing the
+        // empty string. Consider improving the error msg.
+        mayWarnAboutNonObject(receiver, "", pair.type, specializedType);
         pair.type = requiredType;
         return pair;
       }
@@ -1578,12 +1605,31 @@ public class NewTypeInference implements CompilerPass {
     return rhsPair;
   }
 
+  // Returns true iff it produces a warning
+  private boolean mayWarnAboutNonObject(
+      Node receiver, String pname, JSType recvType, JSType specializedType) {
+    // The warning depends on whether we are testing for the existence of a
+    // property.
+    boolean isNotAnObject =
+        JSType.BOTTOM.equals(JSType.meet(recvType, JSType.TOP_OBJECT));
+    boolean mayNotBeAnObject = !recvType.isSubtypeOf(JSType.TOP_OBJECT);
+    if (isNotAnObject ||
+        (!specializedType.isTruthy() && !specializedType.isFalsy() &&
+            mayNotBeAnObject)) {
+      warnings.add(JSError.make(
+          receiver, PROPERTY_ACCESS_ON_NONOBJECT, pname, recvType.toString()));
+      return true;
+    }
+    return false;
+  }
+
   private EnvTypePair analyzePropAccessFwd(Node receiver, String pname,
       TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     QualifiedName propQname = new QualifiedName(pname);
     Node propAccessNode = receiver.getParent();
     EnvTypePair pair;
-    JSType objWithProp = JSType.TOP_OBJECT.withProperty(propQname, requiredType);
+    JSType objWithProp =
+        JSType.TOP_OBJECT.withProperty(propQname, requiredType);
     JSType recvReqType, recvSpecType, recvType;
 
     // First, analyze the receiver object.
@@ -1595,19 +1641,9 @@ public class NewTypeInference implements CompilerPass {
     }
     pair = analyzeExprFwd(receiver, inEnv, recvReqType, recvSpecType);
     recvType = pair.type;
-    // The warning depends on whether we are testing for the existence of a
-    // property.
-    boolean isNotAnObject =
-        JSType.BOTTOM.equals(JSType.meet(recvType, JSType.TOP_OBJECT));
-    boolean mayNotBeAnObject = !recvType.isSubtypeOf(JSType.TOP_OBJECT);
-    if (isNotAnObject ||
-        (!specializedType.isTruthy() && !specializedType.isFalsy() &&
-            mayNotBeAnObject)) {
-      warnings.add(JSError.make(
-          receiver, PROPERTY_ACCESS_ON_NONOBJECT, pname, recvType.toString()));
+    if (mayWarnAboutNonObject(receiver, pname, recvType, specializedType)) {
       return new EnvTypePair(pair.env, requiredType);
     }
-
     // Then, analyze the property access.
     JSType resultType = recvType.getProp(propQname);
     if (!propAccessNode.getParent().isExprResult() &&
@@ -2016,11 +2052,17 @@ public class NewTypeInference implements CompilerPass {
       case Token.GETELEM: {
         Node receiver = expr.getFirstChild();
         Node index = expr.getLastChild();
+        EnvTypePair pair = analyzeExprBwd(receiver, outEnv, JSType.TOP_OBJECT);
+        if (isArrayType(pair.type)) {
+          pair = analyzeExprBwd(index, pair.env, JSType.NUMBER);
+          pair.type = requiredType;
+          return pair;
+        }
         if (index.isString()) {
           return analyzePropAccessBwd(
               receiver, index.getString(), outEnv, requiredType);
         }
-        EnvTypePair pair = analyzeExprBwd(index, outEnv);
+        pair = analyzeExprBwd(index, outEnv);
         pair = analyzeExprBwd(receiver, pair.env, JSType.TOP_OBJECT);
         pair.type = requiredType;
         return pair;
@@ -2088,14 +2130,17 @@ public class NewTypeInference implements CompilerPass {
     if (currentScope.isKnownFunction(calleeName) &&
         !currentScope.isLocalFunDef(calleeName)) {
       Scope s = currentScope.getScope(calleeName);
-      JSType expectedRetType = JSType.UNKNOWN;
+      JSType expectedRetType;
       if (s.getDeclaredType().getReturnType() == null) {
         expectedRetType = requiredType;
+      } else {
+        // No deferred check if the return type is declared
+        expectedRetType = null;
       }
       println("Putting deferred check of function: ", calleeName,
           " with ret: ", expectedRetType);
-      DeferredCheck dc = new DeferredCheck(expr, currentScope, s);
-      dc.updateReturn(expectedRetType);
+      DeferredCheck dc = new DeferredCheck(
+          expr, expectedRetType, currentScope, s);
       deferredChecks.put(expr, dc);
     }
   }
@@ -2414,16 +2459,20 @@ public class NewTypeInference implements CompilerPass {
 
     DeferredCheck(
         Node callSite,
+        JSType expectedRetType,
         Scope callerScope,
         Scope calleeScope) {
       this.callSite = callSite;
+      this.expectedRetType = expectedRetType;
       this.callerScope = callerScope;
       this.calleeScope = calleeScope;
     }
 
     void updateReturn(JSType expectedRetType) {
-      this.expectedRetType = this.expectedRetType != null ?
-          JSType.meet(this.expectedRetType, expectedRetType) : expectedRetType;
+      if (this.expectedRetType != null) {
+        this.expectedRetType =
+            JSType.meet(this.expectedRetType, expectedRetType);
+      }
     }
 
     void updateArgTypes(List<JSType> argTypes) {
@@ -2437,7 +2486,8 @@ public class NewTypeInference implements CompilerPass {
           "Running deferred check of function: ", calleeScope.getReadableName(),
           " with FunctionSummary of: ", fnSummary, " and callsite ret: ",
           expectedRetType, " args: ", argTypes);
-      if (!fnSummary.getReturnType().isSubtypeOf(this.expectedRetType)) {
+      if (this.expectedRetType != null &&
+          !fnSummary.getReturnType().isSubtypeOf(this.expectedRetType)) {
         warnings.add(JSError.make(
             this.callSite, INVALID_INFERRED_RETURN_TYPE,
             this.expectedRetType.toString(),
@@ -2453,7 +2503,7 @@ public class NewTypeInference implements CompilerPass {
           String argName = argNode.getQualifiedName();
           argType = summaries.get(callerScope.getScope(argName));
         }
-        if (!argType.isSubtypeOf(formalType)) {
+        if (argType != null && !argType.isSubtypeOf(formalType)) {
           warnings.add(JSError.make(
               argNode, INVALID_ARGUMENT_TYPE,
               Integer.toString(i + 1), calleeScope.getReadableName(),
