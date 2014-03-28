@@ -17,6 +17,10 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.primitives.UnsignedBytes;
+
+import java.util.BitSet;
 
 /**
  * Holds instrumentation details related to a file, namely, the filename,
@@ -24,15 +28,14 @@ import com.google.common.base.Preconditions;
  * instrumented (in encoded form).
  */
 class FileInstrumentationData {
-  private final BitField instrumentedBits;
+  private final BitSet instrumentedBits;
   private final String arrayName;
   private final String fileName;
-
 
   FileInstrumentationData(String fileName, String arrayName) {
     this.fileName = fileName;
     this.arrayName = arrayName;
-    instrumentedBits = new BitField();
+    instrumentedBits = new BitSet();
   }
 
   String getArrayName() {
@@ -44,15 +47,6 @@ class FileInstrumentationData {
   }
 
   /**
-   * Returns instrumented bits represented as a BitField.
-   *
-   * @return BitField representation of bits set
-   */
-  BitField getInstrumentedLinesAsBitField() {
-    return instrumentedBits;
-  }
-
-  /**
    * Returns a byte-wise hex string representation of the BitField from
    * MSB (Most Significant Byte) to LSB (Least Significant Byte).
    * Eg. Single byte: a setting of "0001 1111", returns "1f"
@@ -61,8 +55,23 @@ class FileInstrumentationData {
    * @return string representation of bits set
    */
   String getInstrumentedLinesAsHexString() {
-    return instrumentedBits.toString();
+    StringBuilder builder = new StringBuilder();
+
+    // Build the hex string.
+    for (byte byteEntry : instrumentedBits.toByteArray()) {
+      // Java bytes are signed, but we want the value as if it were unsigned.
+      int value = UnsignedBytes.toInt(byteEntry);
+      String hexString = Integer.toHexString(value);
+
+      // Pad string to be two characters (if it isn't already).
+      hexString = Strings.padStart(hexString, 2, '0');
+
+      builder.append(hexString);
+    }
+
+    return builder.toString();
   }
+
 
   /**
    * Mark given 1-based line number as instrumented. Zero, Negative numbers
@@ -75,6 +84,6 @@ class FileInstrumentationData {
                                 "number.");
 
     // Map the 1-based line number to 0-based bit position
-    instrumentedBits.setBit(lineNumber - 1);
+    instrumentedBits.set(lineNumber - 1);
   }
 }
