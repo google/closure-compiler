@@ -29,7 +29,7 @@ import java.util.Comparator;
  *
  * @param <N> The instruction type of the control flow graph.
  */
-class ControlFlowGraph<N> extends
+public class ControlFlowGraph<N> extends
     LinkedDirectedGraph<N, ControlFlowGraph.Branch> {
 
   /**
