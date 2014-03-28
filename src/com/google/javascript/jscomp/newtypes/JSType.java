@@ -79,8 +79,9 @@ public class JSType {
       this.objs = objs;
     }
     Preconditions.checkState(this.isValidType(),
-        "Cannot create type with bits <<<" + Integer.toHexString(mask) +
-        ">>>, objs <<<" + objs + ">>>, and typeVar <<<" + typeVar + ">>>");
+        "Cannot create type with bits <<<%s>>>, " +
+        "objs <<<%s>>>, and typeVar <<<%s>>>",
+        Integer.toHexString(mask), objs, typeVar);
   }
 
   private JSType(int mask) {
