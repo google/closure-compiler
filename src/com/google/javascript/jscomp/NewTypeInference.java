@@ -33,7 +33,7 @@ import com.google.javascript.jscomp.newtypes.DeclaredFunctionType;
 import com.google.javascript.jscomp.newtypes.FunctionType;
 import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
-import com.google.javascript.jscomp.newtypes.TypeUtils;
+import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -285,7 +285,8 @@ public class NewTypeInference implements CompilerPass {
       if (fnType.isConstructor()) {
         summaryType = fnType.createConstructorObject();
       } else {
-        summaryType = summaryType.withProperty("prototype", JSType.TOP_OBJECT);
+        summaryType = summaryType.withProperty(
+            new QualifiedName("prototype"), JSType.TOP_OBJECT);
       }
       entryEnv = envPutType(entryEnv, fnName, summaryType);
     }
@@ -317,7 +318,8 @@ public class NewTypeInference implements CompilerPass {
       if (fnType.isConstructor()) {
         summaryType = fnType.createConstructorObject();
       } else {
-        summaryType = summaryType.withProperty("prototype", JSType.TOP_OBJECT);
+        summaryType = summaryType.withProperty(
+            new QualifiedName("prototype"), JSType.TOP_OBJECT);
       }
       env = envPutType(env, fnName, summaryType);
     }
@@ -696,8 +698,9 @@ public class NewTypeInference implements CompilerPass {
     }
     // TODO(user): We need all the qname here before .prototype, not just
     // the qname root; see testAnnotatedPropertyOnInterface1
-    String typeName = TypeUtils.getLeftmostName(
-        fn.getParent().getFirstChild().getQualifiedName());
+    String typeName =
+        NodeUtil.getRootOfQualifiedName(fn.getParent().getFirstChild())
+        .getString();
     JSType t = methodScope.getDeclaredTypeOf(typeName);
     return t != null && t.isInterfaceDefinition();
   }
@@ -789,7 +792,7 @@ public class NewTypeInference implements CompilerPass {
         JSType result = JSType.TOP_OBJECT;
         TypeEnv env = inEnv;
         for (Node key: expr.children()) {
-          String pname = NodeUtil.getObjectLitKeyName(key);
+          QualifiedName pname = new QualifiedName(NodeUtil.getObjectLitKeyName(key));
           JSType reqPtype = requiredType.mayHaveProp(pname) ?
               requiredType.getProp(pname) : JSType.UNKNOWN;
           JSType specPtype = specializedType.mayHaveProp(pname) ?
@@ -1264,10 +1267,10 @@ public class NewTypeInference implements CompilerPass {
 
         JSType resultType = JSType.BOOLEAN;
         if (lhs.isString()) {
-          String pname = lhs.getString();
+          QualifiedName pname = new QualifiedName(lhs.getString());
           if (specializedType.isTruthy()) {
             pair = analyzeExprFwd(rhs, inEnv, JSType.TOP_OBJECT,
-                JSType.TOP_OBJECT.withPropertyRequired(pname));
+                JSType.TOP_OBJECT.withPropertyRequired(pname.getLeftmostName()));
             resultType = JSType.TRUE_TYPE;
           } else if (specializedType.isFalsy()) {
             pair = analyzeExprFwd(rhs, inEnv, JSType.TOP_OBJECT);
@@ -1549,9 +1552,10 @@ public class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzePropAccessFwd(Node receiver, String pname,
       TypeEnv inEnv, JSType requiredType, JSType specializedType) {
+    QualifiedName propQname = new QualifiedName(pname);
     Node propAccessNode = receiver.getParent();
     EnvTypePair pair;
-    JSType objWithProp = JSType.TOP_OBJECT.withProperty(pname, requiredType);
+    JSType objWithProp = JSType.TOP_OBJECT.withProperty(propQname, requiredType);
     JSType recvReqType, recvSpecType, recvType;
 
     // First, analyze the receiver object.
@@ -1577,19 +1581,19 @@ public class NewTypeInference implements CompilerPass {
     }
 
     // Then, analyze the property access.
-    JSType resultType = recvType.getProp(pname);
+    JSType resultType = recvType.getProp(propQname);
     if (!propAccessNode.getParent().isExprResult() &&
         !specializedType.isTruthy() && !specializedType.isFalsy()) {
-      if (!recvType.mayHaveProp(pname)) {
+      if (!recvType.mayHaveProp(propQname)) {
         // TODO(user): maybe don't warn if the getprop is inside a typeof,
         // see testMissingProperty8 (who relies on that for prop checking?)
         warnings.add(JSError.make(propAccessNode, TypeCheck.INEXISTENT_PROPERTY,
                 pname, recvType.toString()));
-      } else if (!recvType.hasProp(pname)) {
+      } else if (!recvType.hasProp(propQname)) {
         warnings.add(JSError.make(
             propAccessNode, NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY,
             pname, recvType.toString()));
-      } else if (recvType.hasInferredProp(pname) &&
+      } else if (recvType.hasInferredProp(propQname) &&
           !resultType.isSubtypeOf(requiredType) &&
           requiredType.isSubtypeOf(resultType)) {
         // Tighten the inferred type and don't warn.
@@ -1611,14 +1615,14 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private static TypeEnv updateLvalueTypeInEnv(
-      TypeEnv env, Node lvalue, String qname, JSType type) {
+      TypeEnv env, Node lvalue, QualifiedName qname, JSType type) {
     if (lvalue.isName()) {
       return envPutType(env, lvalue.getQualifiedName(), type);
     }
     Preconditions.checkState(lvalue.isGetProp() || lvalue.isGetElem());
     if (qname != null) {
-      String objName = TypeUtils.getLeftmostName(qname);
-      String props = TypeUtils.getAllButLeftmost(qname);
+      String objName = qname.getLeftmostName();
+      QualifiedName props = qname.getAllButLeftmost();
       JSType objType = envGetType(env, objName);
       env = envPutType(env, objName, objType.withProperty(props, type));
     }
@@ -1725,7 +1729,8 @@ public class NewTypeInference implements CompilerPass {
         for (Node key = expr.getLastChild();
              key != null;
              key = expr.getChildBefore(key)) {
-          String pname = NodeUtil.getObjectLitKeyName(key);
+          QualifiedName pname =
+              new QualifiedName(NodeUtil.getObjectLitKeyName(key));
           JSType reqPtype = requiredType.mayHaveProp(pname) ?
               requiredType.getProp(pname) : JSType.UNKNOWN;
           EnvTypePair pair = analyzeExprBwd(key.getLastChild(), env, reqPtype);
@@ -2069,11 +2074,12 @@ public class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzePropAccessBwd(
       Node receiver, String pname, TypeEnv outEnv, JSType requiredType) {
+    QualifiedName qname = new QualifiedName(pname);
     EnvTypePair pair = analyzeExprBwd(receiver, outEnv,
-        JSType.TOP_OBJECT.withProperty(pname, requiredType));
+        JSType.TOP_OBJECT.withProperty(qname, requiredType));
     JSType receiverType = pair.type;
-    JSType propAccessType = receiverType.mayHaveProp(pname) ?
-        receiverType.getProp(pname) : requiredType;
+    JSType propAccessType = receiverType.mayHaveProp(qname) ?
+        receiverType.getProp(qname) : requiredType;
     pair.type = propAccessType;
     return pair;
   }
@@ -2126,17 +2132,13 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
-  private static JSType envGetType(TypeEnv env, String qName) {
-    if (TypeUtils.isIdentifier(qName)) {
-      return env.getType(qName);
-    }
-    String objName = TypeUtils.getLeftmostName(qName);
-    String props = TypeUtils.getAllButLeftmost(qName);
-    return env.getType(objName).getProp(props);
+  private static JSType envGetType(TypeEnv env, String pname) {
+    Preconditions.checkArgument(!pname.contains("."));
+    return env.getType(pname);
   }
 
   private static TypeEnv envPutType(TypeEnv env, String varName, JSType type) {
-    Preconditions.checkArgument(TypeUtils.isIdentifier(varName));
+    Preconditions.checkArgument(!varName.contains("."));
     JSType oldType = env.getType(varName);
     if (oldType != null && oldType.equals(type) &&
         Objects.equal(oldType.getLocation(), type.getLocation())) {
@@ -2149,9 +2151,9 @@ public class NewTypeInference implements CompilerPass {
     TypeEnv env;
     JSType type;
     JSType declType;
-    String ptr;
+    QualifiedName ptr;
 
-    LValueResultFwd(TypeEnv env, JSType type, JSType declType, String ptr) {
+    LValueResultFwd(TypeEnv env, JSType type, JSType declType, QualifiedName ptr) {
       Preconditions.checkNotNull(type);
       this.env = env;
       this.type = type;
@@ -2171,28 +2173,29 @@ public class NewTypeInference implements CompilerPass {
       case Token.THIS: {
         if (currentScope.hasThis()) {
           return new LValueResultFwd(inEnv, envGetType(inEnv, "this"),
-              currentScope.getDeclaredTypeOf("this"), "this");
+              currentScope.getDeclaredTypeOf("this"),
+              new QualifiedName("this"));
         } else {
           warnings.add(JSError.make(expr, CheckGlobalThis.GLOBAL_THIS));
           return new LValueResultFwd(inEnv, JSType.UNKNOWN, null, null);
         }
       }
       case Token.NAME: {
-        String varName = expr.getQualifiedName();
+        String varName = expr.getString();
         JSType varType = envGetType(inEnv, varName);
         return new LValueResultFwd(inEnv, varType,
             currentScope.getDeclaredTypeOf(varName),
-            varType.hasNonScalar() ? varName : null);
+            varType.hasNonScalar() ? new QualifiedName(varName) : null);
       }
       case Token.GETPROP: {
         Node obj = expr.getFirstChild();
-        String pname = expr.getLastChild().getString();
+        QualifiedName pname = new QualifiedName(expr.getLastChild().getString());
         return analyzePropLValFwd(obj, pname, inEnv, type, insideQualifiedName);
       }
       case Token.GETELEM: {
         if (expr.getLastChild().isString()) {
           Node obj = expr.getFirstChild();
-          String pname = expr.getLastChild().getString();
+          QualifiedName pname = new QualifiedName(expr.getLastChild().getString());
           return analyzePropLValFwd(
               obj, pname, inEnv, type, insideQualifiedName);
         }
@@ -2209,13 +2212,14 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
-  private LValueResultFwd analyzePropLValFwd(Node obj, String pname,
+  private LValueResultFwd analyzePropLValFwd(Node obj, QualifiedName pname,
       TypeEnv inEnv, JSType type, boolean insideQualifiedName) {
+    Preconditions.checkArgument(pname.isIdentifier());
     LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv,
         JSType.TOP_OBJECT.withProperty(pname, type), true);
     if (!lvalue.type.isSubtypeOf(JSType.TOP_OBJECT)) {
       warnings.add(JSError.make(obj, PROPERTY_ACCESS_ON_NONOBJECT,
-            pname, lvalue.type.toString()));
+            pname.getLeftmostName(), lvalue.type.toString()));
       return new LValueResultFwd(lvalue.env, type, null, null);
     }
     // Warn for inexistent property either on the non-top-level of a qualified
@@ -2225,22 +2229,22 @@ public class NewTypeInference implements CompilerPass {
     if (warnForInexistentProp && !lvalue.type.isUnknown() &&
         !lvalue.type.mayHaveProp(pname)) {
       warnings.add(JSError.make(obj, TypeCheck.INEXISTENT_PROPERTY,
-            pname, lvalue.type.toString()));
+            pname.getLeftmostName(), lvalue.type.toString()));
       return new LValueResultFwd(lvalue.env, type, null, null);
     }
     JSType lvalueType = lvalue.type.mayHaveProp(pname) ?
         lvalue.type.getProp(pname) : JSType.UNKNOWN;
     return new LValueResultFwd(lvalue.env, lvalueType,
         lvalue.type.getDeclaredProp(pname),
-        lvalue.ptr == null ? null : lvalue.ptr + "." + pname);
+        lvalue.ptr == null ? null : QualifiedName.join(lvalue.ptr, pname));
   }
 
   private class LValueResultBwd {
     TypeEnv env;
     JSType type;
-    String ptr;
+    QualifiedName ptr;
 
-    LValueResultBwd(TypeEnv env, JSType type, String ptr) {
+    LValueResultBwd(TypeEnv env, JSType type, QualifiedName ptr) {
       Preconditions.checkNotNull(type);
       this.env = env;
       this.type = type;
@@ -2267,17 +2271,19 @@ public class NewTypeInference implements CompilerPass {
               declType != null ? declType : JSType.UNKNOWN);
         }
         return new LValueResultBwd(pair.env, pair.type,
-            pair.type.hasNonScalar() ? name : null);
+            pair.type.hasNonScalar() ? new QualifiedName(name) : null);
       }
       case Token.GETPROP: {
         Node obj = expr.getFirstChild();
-        String pname = expr.getLastChild().getString();
+        QualifiedName pname =
+            new QualifiedName(expr.getLastChild().getString());
         return analyzePropLValBwd(obj, pname, outEnv, type, doSlicing);
       }
       case Token.GETELEM: {
         if (expr.getLastChild().isString()) {
           Node obj = expr.getFirstChild();
-          String pname = expr.getLastChild().getString();
+          QualifiedName pname =
+              new QualifiedName(expr.getLastChild().getString());
           return analyzePropLValBwd(obj, pname, outEnv, type, doSlicing);
         }
         return new LValueResultBwd(outEnv, type, null);
@@ -2293,15 +2299,16 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
-  private LValueResultBwd analyzePropLValBwd(Node obj, String pname,
+  private LValueResultBwd analyzePropLValBwd(Node obj, QualifiedName pname,
       TypeEnv outEnv, JSType type, boolean doSlicing) {
+    Preconditions.checkArgument(pname.isIdentifier());
     LValueResultBwd lvalue = analyzeLValueBwd(
         obj, outEnv, JSType.TOP_OBJECT.withProperty(pname, type), false, true);
     if (lvalue.ptr != null) {
-      lvalue.ptr += "." + pname;
+      lvalue.ptr = QualifiedName.join(lvalue.ptr, pname);
       if (doSlicing) {
-        String objName = TypeUtils.getLeftmostName(lvalue.ptr);
-        String props = TypeUtils.getAllButLeftmost(lvalue.ptr);
+        String objName = lvalue.ptr.getLeftmostName();
+        QualifiedName props = lvalue.ptr.getAllButLeftmost();
         JSType objType = envGetType(lvalue.env, objName);
         JSType propDeclType = lvalue.type.getDeclaredProp(pname);
         JSType slicedObjType = propDeclType == null ?
@@ -2459,12 +2466,12 @@ public class NewTypeInference implements CompilerPass {
     }
 
     JSType getType(String n) {
-      Preconditions.checkArgument(TypeUtils.isIdentifier(n));
+      Preconditions.checkArgument(!n.contains("."));
       return typeMap.get(n);
     }
 
     TypeEnv putType(String n, JSType t) {
-      Preconditions.checkArgument(TypeUtils.isIdentifier(n));
+      Preconditions.checkArgument(!n.contains("."));
       TypeEnv newEnv = new TypeEnv();
       newEnv.typeMap.putAll(typeMap);
       newEnv.typeMap.put(n, t);

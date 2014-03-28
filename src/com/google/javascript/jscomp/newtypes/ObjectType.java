@@ -114,7 +114,7 @@ public class ObjectType {
   }
 
   static ImmutableSet<ObjectType> withoutProperty(
-      Set<ObjectType> objs, String qname) {
+      Set<ObjectType> objs, QualifiedName qname) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj: objs) {
       newObjs.add(obj.withProperty(qname, null));
@@ -123,22 +123,23 @@ public class ObjectType {
   }
 
   private ObjectType withPropertyHelper(
-      String qname, JSType type, boolean isDeclared) {
+      QualifiedName qname, JSType type, boolean isDeclared) {
     // TODO(blickly): If the prop exists with right type, short circuit here.
     Map<String, Property> newProps = Maps.newHashMap(this.props);
-    if (TypeUtils.isIdentifier(qname)) {
+    String objName = qname.getLeftmostName();
+    if (qname.isIdentifier()) {
       if (type == null) {
-        newProps.remove(qname);
+        newProps.remove(objName);
       } else {
-        newProps.put(qname,
+        newProps.put(objName,
             new Property(type, isDeclared ? type : null, false));
       }
     } else { // This has a nested object
-      String objName = qname.substring(0, qname.indexOf('.'));
-      String innerProps = qname.substring(qname.indexOf('.') + 1);
+      QualifiedName objQname = new QualifiedName(objName);
+      QualifiedName innerProps = qname.getAllButLeftmost();
       if (!this.props.containsKey(objName)) {
-        Preconditions.checkState(mayHaveProp(objName));
-        newProps.put(objName, getLeftmostProp(objName));
+        Preconditions.checkState(mayHaveProp(objQname));
+        newProps.put(objName, getLeftmostProp(objQname));
       }
       Property objProp = newProps.get(objName);
       newProps.put(objName,
@@ -148,12 +149,12 @@ public class ObjectType {
     return ObjectType.makeObjectType(nominalType, newProps, fn, isLoose);
   }
 
-  ObjectType withProperty(String qname, JSType type) {
+  ObjectType withProperty(QualifiedName qname, JSType type) {
     return withPropertyHelper(qname, type, false);
   }
 
   static ImmutableSet<ObjectType> withProperty(
-      Set<ObjectType> objs, String qname, JSType type) {
+      Set<ObjectType> objs, QualifiedName qname, JSType type) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj: objs) {
       newObjs.add(obj.withProperty(qname, type));
@@ -162,7 +163,7 @@ public class ObjectType {
   }
 
   static ImmutableSet<ObjectType> withDeclaredProperty(
-      Set<ObjectType> objs, String qname, JSType type) {
+      Set<ObjectType> objs, QualifiedName qname, JSType type) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj: objs) {
       newObjs.add(obj.withPropertyHelper(qname, type, true));
@@ -170,22 +171,21 @@ public class ObjectType {
     return newObjs.build();
   }
 
-  private ObjectType withPropertyRequired(String qname) {
-    Preconditions.checkArgument(TypeUtils.isIdentifier(qname));
+  private ObjectType withPropertyRequired(String pname) {
     Map<String, Property> newProps = Maps.newHashMap(this.props);
-    Property oldProp = this.props.get(qname);
+    Property oldProp = this.props.get(pname);
     Property newProp = oldProp == null ?
         new Property(JSType.UNKNOWN, null, false) :
         new Property(oldProp.getType(), oldProp.getDeclaredType(), false);
-    newProps.put(qname, newProp);
+    newProps.put(pname, newProp);
     return ObjectType.makeObjectType(nominalType, newProps, fn, isLoose);
   }
 
   static ImmutableSet<ObjectType> withPropertyRequired(
-      Set<ObjectType> objs, String qname) {
+      Set<ObjectType> objs, String pname) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj: objs) {
-      newObjs.add(obj.withPropertyRequired(qname));
+      newObjs.add(obj.withPropertyRequired(pname));
     }
     return newObjs.build();
   }
@@ -294,7 +294,7 @@ public class ObjectType {
     // properties of obj2 are in (obj1 or nominalType1)
     for (String pname : obj2.props.keySet()) {
       Property prop2 = obj2.props.get(pname);
-      Property prop1 = this.getLeftmostProp(pname);
+      Property prop1 = this.getLeftmostProp(new QualifiedName(pname));
 
       if (prop2.isOptional()) {
         if (prop1 != null && !prop1.getType().isSubtypeOf(prop2.getType())) {
@@ -457,13 +457,13 @@ public class ObjectType {
     return fn;
   }
 
-  JSType getProp(String qname) {
+  JSType getProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);
-    if (TypeUtils.isIdentifier(qname)) {
+    if (qname.isIdentifier()) {
       return p == null ? JSType.UNDEFINED : p.getType();
     } else {
       Preconditions.checkState(p != null);
-      return p.getType().getProp(TypeUtils.getAllButLeftmost(qname));
+      return p.getType().getProp(qname.getAllButLeftmost());
     }
   }
 
@@ -471,25 +471,23 @@ public class ObjectType {
     return nominalType;
   }
 
-  boolean mayHaveProp(String qname) {
+  boolean mayHaveProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);
     return p != null &&
-        (TypeUtils.isIdentifier(qname) ||
-        p.getType().mayHaveProp(TypeUtils.getAllButLeftmost(qname)));
+        (qname.isIdentifier() ||
+        p.getType().mayHaveProp(qname.getAllButLeftmost()));
   }
 
-  boolean hasProp(String pname) {
-    Preconditions.checkArgument(TypeUtils.isIdentifier(pname));
-    Property p = getLeftmostProp(pname);
+  boolean hasProp(QualifiedName qname) {
+    Property p = getLeftmostProp(qname);
     if (p == null || p.isOptional()) {
       return false;
     }
     return true;
   }
 
-  JSType getDeclaredProp(String pname) {
-    Preconditions.checkArgument((TypeUtils.isIdentifier(pname)));
-    Property p = getLeftmostProp(pname);
+  JSType getDeclaredProp(QualifiedName qname) {
+    Property p = getLeftmostProp(qname);
     if (p == null) {
       return null;
     } else {
@@ -497,8 +495,8 @@ public class ObjectType {
     }
   }
 
-  private Property getLeftmostProp(String qname) {
-    String objName = TypeUtils.getLeftmostName(qname);
+  private Property getLeftmostProp(QualifiedName qname) {
+    String objName = qname.getLeftmostName();
     Property p = props.get(objName);
     if (p == null && nominalType != null) {
       p = nominalType.getProp(objName);

@@ -34,7 +34,7 @@ import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 import com.google.javascript.jscomp.newtypes.NominalType;
 import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 import com.google.javascript.jscomp.newtypes.ObjectType;
-import com.google.javascript.jscomp.newtypes.TypeUtils;
+import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -145,7 +145,7 @@ class GlobalTypeInfo implements CompilerPass {
     Preconditions.checkArgument(n.isFunction());
     String nonAnonFnName = NodeUtil.getFunctionName(n);
     // We don't want to use qualified names here
-    if (nonAnonFnName != null && TypeUtils.isIdentifier(nonAnonFnName)) {
+    if (nonAnonFnName != null && !nonAnonFnName.contains(".")) {
       return nonAnonFnName;
     }
     return anonFunNames.get(n);
@@ -409,7 +409,7 @@ class GlobalTypeInfo implements CompilerPass {
     private void initFnScope(Node fn, Scope parentScope) {
       String qname = NodeUtil.getFunctionName(fn);
       // Qualified names also need a gensymed name.
-      if (qname == null || !TypeUtils.isIdentifier(qname)) {
+      if (qname == null || qname.contains(".")) {
         anonFunNames.put(fn, "%anon_fun" + freshId);
         freshId++;
       }
@@ -575,12 +575,12 @@ class GlobalTypeInfo implements CompilerPass {
             fn, VariableReferenceCheck.REDECLARED_VARIABLE, fnName));
       } else {
         currentScope.addLocalFunDef(internalName, fnScope);
-        if (fnName != null && !TypeUtils.isIdentifier(fnName)) {
+        if (fnName != null && fnName.contains(".")) {
           // Qualified names will be removed in finalizeScope
           currentScope.addLocalFunDef(fnName, fnScope);
         }
       }
-      if (fnName != null && TypeUtils.isIdentifier(fnName)) {
+      if (fnName != null && !fnName.contains(".")) {
         undeclaredVars.removeAll(fnName);
       }
       scopeWorkset.add(fnScope);
@@ -656,9 +656,9 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void visitNamespacePropertyDeclaration(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
-      String qname = getProp.getQualifiedName();
-      String leftmost = TypeUtils.getLeftmostName(qname);
-      String allButLeftmost = TypeUtils.getAllButLeftmost(qname);
+      QualifiedName qname = QualifiedName.fromGetprop(getProp);
+      String leftmost = qname.getLeftmostName();
+      QualifiedName allButLeftmost = qname.getAllButLeftmost();
       JSType typeInJsdoc = getTypeDeclarationFromJsdoc(
           NodeUtil.getBestJSDocInfo(getProp), currentScope);
       JSType currentType = currentScope.getDeclaredTypeOf(leftmost);
@@ -670,7 +670,7 @@ class GlobalTypeInfo implements CompilerPass {
       if (currentType.mayHaveProp(allButLeftmost) &&
           currentType.getDeclaredProp(allButLeftmost) != null) {
         warnings.add(JSError.make(getProp, DUPLICATE_PROPERTY_JSDOC,
-                allButLeftmost, currentType.toString()));
+                getProp.getQualifiedName(), currentType.toString()));
         return;
       }
       currentScope.updateTypeOfLocal(leftmost,
@@ -1064,7 +1064,7 @@ class GlobalTypeInfo implements CompilerPass {
       Iterator<String> it = localFunDefs.keySet().iterator();
       while (it.hasNext()) {
         String name = it.next();
-        if (!TypeUtils.isIdentifier(name)) {
+        if (name.contains(".")) {
           it.remove();
         }
       }

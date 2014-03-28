@@ -617,7 +617,7 @@ public class JSType {
         ObjectType.withLooseObjects(this.objs), typeVar);
   }
 
-  public JSType getProp(String qname) {
+  public JSType getProp(QualifiedName qname) {
     if (isBottom() || isUnknown()) {
       return UNKNOWN;
     }
@@ -634,7 +634,7 @@ public class JSType {
     return ptype;
   }
 
-  public boolean mayHaveProp(String qname) {
+  public boolean mayHaveProp(QualifiedName qname) {
     if (objs == null) {
       return false;
     }
@@ -646,7 +646,7 @@ public class JSType {
     return false;
   }
 
-  public boolean hasProp(String qname) {
+  public boolean hasProp(QualifiedName qname) {
     if (objs == null) {
       return false;
     }
@@ -658,12 +658,12 @@ public class JSType {
     return true;
   }
 
-  public boolean hasInferredProp(String pname) {
-    Preconditions.checkState(TypeUtils.isIdentifier(pname));
+  public boolean hasInferredProp(QualifiedName pname) {
+    Preconditions.checkState(pname.isIdentifier());
     return hasProp(pname) && getDeclaredProp(pname) == null;
   }
 
-  public JSType getDeclaredProp(String qname) {
+  public JSType getDeclaredProp(QualifiedName qname) {
     if (isUnknown()) {
       return UNKNOWN;
     }
@@ -678,14 +678,14 @@ public class JSType {
     return ptype.isBottom() ? null : ptype;
   }
 
-  public JSType withoutProperty(String qname) {
+  public JSType withoutProperty(QualifiedName qname) {
     return this.objs == null ?
         this :
         new JSType(this.mask, this.location,
             ObjectType.withoutProperty(this.objs, qname), typeVar);
   }
 
-  public JSType withProperty(String qname, JSType type) {
+  public JSType withProperty(QualifiedName qname, JSType type) {
     if (isUnknown()) {
       return this;
     }
@@ -694,17 +694,17 @@ public class JSType {
         ObjectType.withProperty(this.objs, qname, type), typeVar);
   }
 
-  public JSType withDeclaredProperty(String qname, JSType type) {
+  public JSType withDeclaredProperty(QualifiedName qname, JSType type) {
     Preconditions.checkState(this.objs != null && this.location == null);
     return new JSType(this.mask, null,
         ObjectType.withDeclaredProperty(this.objs, qname, type), typeVar);
   }
 
-  public JSType withPropertyRequired(String qname) {
+  public JSType withPropertyRequired(String pname) {
     return (isUnknown() || this.objs == null) ?
         this :
         new JSType(this.mask, this.location,
-            ObjectType.withPropertyRequired(this.objs, qname), typeVar);
+            ObjectType.withPropertyRequired(this.objs, pname), typeVar);
   }
 
   static List<JSType> fixLengthOfTypeList(
