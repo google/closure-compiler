@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -326,6 +327,11 @@ public class DefaultPassConfig extends PassConfig {
         (!options.disables(DiagnosticGroups.ACCESS_CONTROLS)
          || options.enables(DiagnosticGroups.CONSTANT_PROPERTY))) {
       checks.add(checkAccessControls);
+    }
+
+    // Lint checks must be run after typechecking.
+    if (options.enables(DiagnosticGroups.LINT_CHECKS)) {
+      checks.add(lintChecks);
     }
 
     if (options.checkEventfulObjectDisposalPolicy !=
@@ -1342,6 +1348,14 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return new CheckAccessControls(compiler);
+    }
+  };
+
+  final PassFactory lintChecks =
+      new PassFactory("checkAccessControls", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new CheckNullableReturn(compiler);
     }
   };
 

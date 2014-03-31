@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.lint.CheckNullableReturn;
 
 import java.util.Map;
 
@@ -299,6 +300,11 @@ public class DiagnosticGroups {
           CheckSuspiciousCode.SUSPICIOUS_SEMICOLON,
           CheckSuspiciousCode.SUSPICIOUS_COMPARISON_WITH_NAN,
           CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
+
+  public static final DiagnosticGroup LINT_CHECKS =
+      DiagnosticGroups.registerGroup("lintChecks",
+          CheckNullableReturn.NULLABLE_RETURN,
+          CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
 
   /**
    * Adds warning levels by name.
