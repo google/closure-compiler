@@ -4963,6 +4963,34 @@ chrome.usb.ConnectionHandle.prototype.productId;
 
 /**
  * @typedef {{
+ *   address: number,
+ *   type: string,
+ *   direction: string,
+ *   maximumPacketSize: number,
+ *   synchronization: (string|undefined),
+ *   usage: (string|undefined),
+ *   pollingInterval: (number|undefined)
+ * }}
+ */
+chrome.usb.InterfaceEndpoint;
+
+
+/**
+ * @typedef {{
+ *   interfaceNumber: number,
+ *   alternateSetting: number,
+ *   interfaceClass: number,
+ *   interfaceSubclass: number,
+ *   interfaceProtocol: number,
+ *   description: (string|undefined),
+ *   endpoints: !Array.<!chrome.usb.InterfaceEndpoint>
+ * }}
+ */
+chrome.usb.InterfaceDescriptor;
+
+
+/**
+ * @typedef {{
  *   direction: string,
  *   endpoint: number,
  *   length: (number|undefined),
@@ -5047,8 +5075,8 @@ chrome.usb.closeDevice = function(handle, callback) {};
  * @see http://developer.chrome.com/apps/usb.html#method-listInterfaces
  * @param {!chrome.usb.ConnectionHandle} handle The device from which the
  *     interfaces should be listed.
- * @param {function(!Array.<!Object>)} callback The callback to invoke when the
- *     interfaces are enumerated.
+ * @param {function(!Array.<!chrome.usb.InterfaceDescriptor>)} callback
+ *     The callback to invoke when the interfaces are enumerated.
  */
 chrome.usb.listInterfaces = function(handle, callback) {};
 
