@@ -3272,12 +3272,6 @@ google.maps.Marker.prototype.getDraggable = function() {};
 
 /**
  * @nosideeffects
- * @return {boolean}
- */
-google.maps.Marker.prototype.getFlat = function() {};
-
-/**
- * @nosideeffects
  * @return {string|google.maps.Icon|google.maps.Symbol}
  */
 google.maps.Marker.prototype.getIcon = function() {};
@@ -3293,12 +3287,6 @@ google.maps.Marker.prototype.getMap = function() {};
  * @return {google.maps.LatLng}
  */
 google.maps.Marker.prototype.getPosition = function() {};
-
-/**
- * @nosideeffects
- * @return {string|google.maps.Icon|google.maps.Symbol}
- */
-google.maps.Marker.prototype.getShadow = function() {};
 
 /**
  * @nosideeffects
@@ -3349,12 +3337,6 @@ google.maps.Marker.prototype.setCursor = function(cursor) {};
 google.maps.Marker.prototype.setDraggable = function(flag) {};
 
 /**
- * @param {boolean} flag
- * @return {undefined}
- */
-google.maps.Marker.prototype.setFlat = function(flag) {};
-
-/**
  * @param {string|google.maps.Icon|google.maps.Symbol} icon
  * @return {undefined}
  */
@@ -3377,12 +3359,6 @@ google.maps.Marker.prototype.setOptions = function(options) {};
  * @return {undefined}
  */
 google.maps.Marker.prototype.setPosition = function(latlng) {};
-
-/**
- * @param {string|google.maps.Icon|google.maps.Symbol} shadow
- * @return {undefined}
- */
-google.maps.Marker.prototype.setShadow = function(shadow) {};
 
 /**
  * @param {google.maps.MarkerShape} shape
@@ -3450,11 +3426,6 @@ google.maps.MarkerOptions.prototype.cursor;
 google.maps.MarkerOptions.prototype.draggable;
 
 /**
- * @type {boolean}
- */
-google.maps.MarkerOptions.prototype.flat;
-
-/**
  * @type {string|google.maps.Icon|google.maps.Symbol}
  */
 google.maps.MarkerOptions.prototype.icon;
@@ -3478,11 +3449,6 @@ google.maps.MarkerOptions.prototype.position;
  * @type {boolean}
  */
 google.maps.MarkerOptions.prototype.raiseOnDrag;
-
-/**
- * @type {string|google.maps.Icon|google.maps.Symbol}
- */
-google.maps.MarkerOptions.prototype.shadow;
 
 /**
  * @type {google.maps.MarkerShape}
@@ -4172,11 +4138,6 @@ google.maps.RotateControlOptions.prototype.position;
  * @interface
  */
 google.maps.ScaleControlOptions = function() {};
-
-/**
- * @type {google.maps.ControlPosition}
- */
-google.maps.ScaleControlOptions.prototype.position;
 
 /**
  * @type {google.maps.ScaleControlStyle}
