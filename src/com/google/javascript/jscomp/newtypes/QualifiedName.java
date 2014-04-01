@@ -60,4 +60,8 @@ public class QualifiedName {
   public String getLeftmostName() {
     return parts.get(0);
   }
+
+  public String toString() {
+    return parts.toString();
+  }
 }

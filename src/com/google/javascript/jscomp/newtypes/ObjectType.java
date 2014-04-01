@@ -83,7 +83,7 @@ public class ObjectType {
   }
 
   boolean isInhabitable() {
-    for (String pname: props.keySet()) {
+    for (String pname : props.keySet()) {
       if (!props.get(pname).getType().isInhabitable()) {
         return false;
       }
@@ -94,7 +94,7 @@ public class ObjectType {
 
   static ImmutableSet<ObjectType> withLooseObjects(Set<ObjectType> objs) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
-    for (ObjectType obj: objs) {
+    for (ObjectType obj : objs) {
       newObjs.add(obj.withLoose());
     }
     return newObjs.build();
@@ -106,7 +106,7 @@ public class ObjectType {
     }
     FunctionType fn = this.fn == null ? null : this.fn.withLoose();
     Map<String, Property> newProps = Maps.newHashMap();
-    for (String pname: this.props.keySet()) {
+    for (String pname : this.props.keySet()) {
       // It's wrong to warn about a possibly absent property on loose objects.
       newProps.put(pname, this.props.get(pname).withRequired());
     }
@@ -116,12 +116,14 @@ public class ObjectType {
   static ImmutableSet<ObjectType> withoutProperty(
       Set<ObjectType> objs, QualifiedName qname) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
-    for (ObjectType obj: objs) {
+    for (ObjectType obj : objs) {
       newObjs.add(obj.withProperty(qname, null));
     }
     return newObjs.build();
   }
 
+  // If the property is already declared, but isDeclared is false, be careful
+  // to not un-declare it.
   private ObjectType withPropertyHelper(
       QualifiedName qname, JSType type, boolean isDeclared) {
     // TODO(blickly): If the prop exists with right type, short circuit here.
@@ -131,8 +133,16 @@ public class ObjectType {
       if (type == null) {
         newProps.remove(objName);
       } else {
+        JSType declType = getDeclaredProp(qname);
+        Preconditions.checkState(declType == null ||
+            type.isSubtypeOf(declType));
+        if (isDeclared) {
+          declType = type;
+        } else if (declType != null) {
+          isDeclared = true;
+        }
         newProps.put(objName,
-            new Property(type, isDeclared ? type : null, false));
+            new Property(type, isDeclared ? declType : null, false));
       }
     } else { // This has a nested object
       QualifiedName objQname = new QualifiedName(objName);
@@ -156,7 +166,7 @@ public class ObjectType {
   static ImmutableSet<ObjectType> withProperty(
       Set<ObjectType> objs, QualifiedName qname, JSType type) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
-    for (ObjectType obj: objs) {
+    for (ObjectType obj : objs) {
       newObjs.add(obj.withProperty(qname, type));
     }
     return newObjs.build();
@@ -165,7 +175,7 @@ public class ObjectType {
   static ImmutableSet<ObjectType> withDeclaredProperty(
       Set<ObjectType> objs, QualifiedName qname, JSType type) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
-    for (ObjectType obj: objs) {
+    for (ObjectType obj : objs) {
       newObjs.add(obj.withPropertyHelper(qname, type, true));
     }
     return newObjs.build();
@@ -184,7 +194,7 @@ public class ObjectType {
   static ImmutableSet<ObjectType> withPropertyRequired(
       Set<ObjectType> objs, String pname) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
-    for (ObjectType obj: objs) {
+    for (ObjectType obj : objs) {
       newObjs.add(obj.withPropertyRequired(pname));
     }
     return newObjs.build();
@@ -265,9 +275,9 @@ public class ObjectType {
   }
 
   static boolean isUnionSubtype(Set<ObjectType> objs1, Set<ObjectType> objs2) {
-    for (ObjectType obj1: objs1) {
+    for (ObjectType obj1 : objs1) {
       boolean foundSupertype = false;
-      for (ObjectType obj2: objs2) {
+      for (ObjectType obj2 : objs2) {
         if (obj1.isSubtypeOf(obj2)) {
           foundSupertype = true;
           break;
@@ -327,7 +337,7 @@ public class ObjectType {
     if (obj2 == TOP_OBJECT) {
       return true;
     }
-    for (String pname: obj2.props.keySet()) {
+    for (String pname : obj2.props.keySet()) {
       if (props.containsKey(pname)) {
         if (!props.get(pname).getType()
             .isSubtypeOf(obj2.props.get(pname).getType())) {
@@ -388,9 +398,9 @@ public class ObjectType {
       return objs1;
     }
     Set<ObjectType> newObjs = Sets.newHashSet(objs1);
-    for (ObjectType obj2: objs2) {
+    for (ObjectType obj2 : objs2) {
       boolean addedObj2 = false;
-      for (ObjectType obj1: objs1) {
+      for (ObjectType obj1 : objs1) {
         NominalType nominalType1 = obj1.nominalType;
         NominalType nominalType2 = obj2.nominalType;
         if (areRelatedClasses(nominalType1, nominalType2)) {
@@ -429,8 +439,8 @@ public class ObjectType {
       return null;
     }
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
-    for (ObjectType obj2: objs2) {
-      for (ObjectType obj1: objs1) {
+    for (ObjectType obj2 : objs2) {
+      for (ObjectType obj1 : objs1) {
         if (areRelatedClasses(obj1.nominalType, obj2.nominalType)) {
           newObjs.add(specializeObjs1 ?
               obj1.specialize(obj2) : meet(obj1, obj2));
@@ -570,7 +580,7 @@ public class ObjectType {
     ImmutableMap<String, Property> newProps = null;
     if (props != null) {
       ImmutableMap.Builder<String, Property> builder = ImmutableMap.builder();
-      for (String p: props.keySet()) {
+      for (String p : props.keySet()) {
         builder.put(p, props.get(p).substituteGenerics(concreteTypes));
       }
       newProps = builder.build();
