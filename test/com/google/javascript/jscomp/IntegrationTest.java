@@ -1178,6 +1178,77 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, code, expected);
   }
 
+  public void testDeadCodeHasNoDisambiguationSideEffects() {
+    // This test case asserts that unreachable code does not
+    // confuse the disambigation process and type inferencing.
+    CompilerOptions options = createCompilerOptions();
+
+    options.checkTypes = true;
+    options.disambiguateProperties = true;
+    options.removeDeadCode = true;
+    options.removeUnusedPrototypeProperties = true;
+    options.smartNameRemoval = true;
+    options.extraSmartNameRemoval = true;
+    options.foldConstants = true;
+    options.inlineVariables = true;
+
+    String code = "/** @constructor */ function A() {} " +
+        "A.prototype.always = function() { " +
+        "  window.console.log('AA'); " +
+        "}; " +
+        "A.prototype.sometimes = function() { " +
+        "  window.console.log('SA'); " +
+        "}; " +
+        "/** @constructor */ function B() {} " +
+        "B.prototype.always = function() { " +
+        "  window.console.log('AB'); " +
+        "};" +
+        "B.prototype.sometimes = function() { " +
+        "  window.console.log('SB'); " +
+        "};" +
+        "/** @constructor @struct @template T */ function C() {} " +
+        "/** @param {!T} x */ C.prototype.touch = function(x) { " +
+        "  return x.sometimes(); " +
+        "}; " +
+        "window['main'] = function() { " +
+        "  var a = window['a'] = new A; " +
+        "  a.always(); " +
+        "  a.sometimes(); " +
+        "  var b = window['b'] = new B; " +
+        "  b.always(); " +
+        "};" +
+        "function notCalled() { " +
+        "  var something = {}; " +
+        "  something.always(); " +
+        "  var c = new C; " +
+        "  c.touch(something);" +
+        "}";
+
+    // B.prototype.sometimes should be stripped out, as it is not used, and the
+    // type ambiguity in function notCalled is unreachable.
+    String expected = "function A() {} " +
+        "A.prototype.A_prototype$always = function() { " +
+        "  window.console.log('AA'); " +
+        "}; " +
+        "A.prototype.A_prototype$sometimes = function(){ " +
+        "  window.console.log('SA'); " +
+        "}; " +
+        "function B() {} " +
+        "B.prototype.B_prototype$always=function(){ " +
+        "  window.console.log('AB'); " +
+        "};" +
+        "window['main'] = function() { " +
+        "  var a = window['a'] = new A; " +
+        "  a.A_prototype$always(); " +
+        "  a.A_prototype$sometimes(); " +
+        "  (window['b'] = new B).B_prototype$always(); " +
+        "}";
+
+
+    test(options, code, expected);
+
+  }
+
   public void testDeadAssignmentsElimination() {
     CompilerOptions options = createCompilerOptions();
     String code = "function f() { var x = 3; 4; x = 5; return x; } f(); ";
@@ -2942,7 +3013,7 @@ public class IntegrationTest extends IntegrationTestCase {
     WarningLevel warnings = WarningLevel.VERBOSE;
     warnings.setOptionsForWarningLevel(options);
 
-    int numAdds = 4500;
+    int numAdds = 4400;
     StringBuilder original = new StringBuilder("var x = 0");
     for (int i = 0; i < numAdds; i++) {
       original.append(" + 1");

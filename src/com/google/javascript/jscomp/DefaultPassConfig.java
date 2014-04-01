@@ -452,6 +452,17 @@ public class DefaultPassConfig extends PassConfig {
     // unused methods that share the same name as methods called from unused
     // code.
     if (options.extraSmartNameRemoval && options.smartNameRemoval) {
+
+      // These passes remove code that is dead because of define flags.
+      // If the dead code is weakly typed, running these passes before property
+      // disambiguation results in more code removal.
+      // The passes are one-time on purpose. (The later runs are loopable.)
+      if (options.foldConstants &&
+          (options.inlineVariables || options.inlineLocalVariables)) {
+        passes.add(earlyInlineVariables);
+        passes.add(earlyPeepholeOptimizations);
+      }
+
       passes.add(smartNamePass);
     }
 
@@ -1134,6 +1145,31 @@ public class DefaultPassConfig extends PassConfig {
       return new CreateSyntheticBlocks(compiler,
           options.syntheticBlockStartMarker,
           options.syntheticBlockEndMarker);
+    }
+  };
+
+  final PassFactory earlyPeepholeOptimizations =
+      new PassFactory("earlyPeepholeOptimizations", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new PeepholeOptimizationsPass(compiler,
+          new PeepholeRemoveDeadCode());
+    }
+  };
+
+  final PassFactory earlyInlineVariables =
+      new PassFactory("earlyInlineVariables", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      InlineVariables.Mode mode;
+      if (options.inlineVariables) {
+        mode = InlineVariables.Mode.ALL;
+      } else if (options.inlineLocalVariables) {
+        mode = InlineVariables.Mode.LOCALS_ONLY;
+      } else {
+        throw new IllegalStateException("No variable inlining option set.");
+      }
+      return new InlineVariables(compiler, mode, true);
     }
   };
 
