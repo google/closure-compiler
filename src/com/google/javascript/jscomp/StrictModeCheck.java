@@ -73,11 +73,11 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
   static final DiagnosticType FUNCTION_CALLER_FORBIDDEN = DiagnosticType.warning(
       "JSC_FUNCTION_CALLER_FORBIDDEN",
-      "A function's \"caller\" property cannot be used in ES5 strict mode");
+      "A function''s \"caller\" property cannot be used in ES5 strict mode");
 
   static final DiagnosticType FUNCTION_ARGUMENTS_PROP_FORBIDDEN = DiagnosticType.warning(
       "JSC_FUNCTION_ARGUMENTS_PROP_FORBIDDEN",
-      "A function's \"arguments\" property cannot be used in ES5 strict mode");
+      "A function''s \"arguments\" property cannot be used in ES5 strict mode");
 
 
 
