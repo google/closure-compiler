@@ -109,6 +109,10 @@ public enum Keywords {
     return get(token) != null;
   }
 
+  /**
+   * Returns true if {@code token} is a "future reserved word" which can
+   * be used as a variable identifer, but only in non-strict mode.
+   */
   public static boolean isStrictKeyword(TokenType token) {
     switch(token) {
       case IMPLEMENTS:

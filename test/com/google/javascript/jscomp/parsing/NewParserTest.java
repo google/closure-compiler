@@ -1311,6 +1311,9 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("x.let;");
     parse("var x = {yield: 1};"); // 'yield' is not reserved in ES3
     parse("x.yield;");
+    parseWarning("x.prototype.catch = function() {};",
+        IRFactory.INVALID_ES3_PROP_NAME);
+    parseWarning("x().catch();", IRFactory.INVALID_ES3_PROP_NAME);
 
     mode = LanguageMode.ECMASCRIPT5;
 
@@ -1328,6 +1331,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("x.let;");
     parse("var x = {yield: 1};");
     parse("x.yield;");
+    parse("x.prototype.catch = function() {};");
+    parse("x().catch();");
 
     mode = LanguageMode.ECMASCRIPT5_STRICT;
 
@@ -1345,6 +1350,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("x.let;");
     parse("var x = {yield: 1};");
     parse("x.yield;");
+    parse("x.prototype.catch = function() {};");
+    parse("x().catch();");
   }
 
   public void testUnicodeInIdentifiers() {

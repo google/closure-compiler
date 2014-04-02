@@ -453,7 +453,7 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     boolean isStatic = allowStatic && eatOpt(TokenType.STATIC) != null;
     boolean isGenerator = eatOpt(TokenType.STAR) != null;
-    IdentifierToken name = eatId();
+    IdentifierToken name = eatIdOrKeywordAsId();
     return parseFunctionTail(
         start, name, isStatic, isGenerator,
         FunctionDeclarationTree.Kind.MEMBER);
@@ -1894,7 +1894,7 @@ public class Parser {
           break;
         case PERIOD:
           eat(TokenType.PERIOD);
-          IdentifierToken id = eatId();
+          IdentifierToken id = eatIdOrKeywordAsId();
           operand = new MemberExpressionTree(getTreeLocation(start), operand, id);
           break;
         }
@@ -2187,7 +2187,7 @@ public class Parser {
 
   private ParseTree parseObjectPatternField(PatternKind kind) {
     SourcePosition start = getTreeStartLocation();
-    IdentifierToken identifier = eatId();
+    IdentifierToken identifier = eatIdOrKeywordAsId();
     ParseTree element = null;
     if (peek(TokenType.COLON)) {
       eat(TokenType.COLON);
@@ -2290,7 +2290,8 @@ public class Parser {
   }
 
   /**
-   * Shorthand for eat(TokenType.IDENTIFIER)
+   * Consumes an identifier token that is not a reserved word.
+   * @see http://www.ecma-international.org/ecma-262/5.1/#sec-7.6
    */
   private IdentifierToken eatId() {
     if (peekId()) {
@@ -2315,7 +2316,9 @@ public class Parser {
   }
 
   /**
-   * Shorthand for eat(TokenType.IDENTIFIER)
+   * Consumes an identifier token that may be a reserved word, i.e.
+   * an IdentifierName, not necessarily an Identifier.
+   * @see http://www.ecma-international.org/ecma-262/5.1/#sec-7.6
    */
   private IdentifierToken eatIdOrKeywordAsId() {
     Token token = nextToken();
