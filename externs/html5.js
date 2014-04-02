@@ -3201,21 +3201,6 @@ IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 var Promise = function(resolver) {};
 
 
-/**
- * @param {TYPE=} opt_value
- * @return {!Promise.<TYPE>}
- * @template TYPE
- */
-Promise.resolve = function(opt_value) {};
-
-
-/**
- * @param {*=} opt_error
- * @return {!Promise}
- */
-Promise.reject = function(opt_error) {};
-
-
 /** @override */
 Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
