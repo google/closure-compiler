@@ -3162,6 +3162,12 @@ Document.prototype.registerElement;
 Document.prototype.register;
 
 /**
+ * @type {!FontFaceSet}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontfacesource-fonts
+ */
+Document.prototype.fonts;
+
+/**
  * @see https://github.com/promises-aplus/promises-spec
  * @typedef {{then: !Function}}
  */

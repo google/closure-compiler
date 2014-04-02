@@ -2324,3 +2324,159 @@ var CSS;
 
 /** @type {CSSInterface} */
 Window.prototype.CSS;
+
+// http://dev.w3.org/csswg/css-font-loading/
+
+/**
+ * @enum {string}
+ * @see http://dev.w3.org/csswg/css-font-loading/#enumdef-fontfaceloadstatus
+ */
+var FontFaceLoadStatus = {
+  ERROR: 'error',
+  LOADED: 'loaded',
+  LOADING: 'loading',
+  UNLOADED: 'unloaded'
+};
+
+/**
+ * @typedef {{
+ *   style: (string|undefined),
+ *   weight: (string|undefined),
+ *   stretch: (string|undefined),
+ *   unicodeRange: (string|undefined),
+ *   variant: (string|undefined),
+ *   featureSettings: (string|undefined)
+ * }}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dictdef-fontfacedescriptors
+ */
+var FontFaceDescriptors;
+
+/**
+ * @constructor
+ * @param {string} fontFamily
+ * @param {string} source
+ * @param {!FontFaceDescriptors} descriptors
+ * @see http://dev.w3.org/csswg/css-font-loading/#font-face-constructor
+ */
+function FontFace(fontFamily, source, descriptors) {}
+
+/**
+ * @type {string}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-family
+ */
+FontFace.prototype.family;
+
+/**
+ * @type {string}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-style
+ */
+FontFace.prototype.style;
+
+/**
+ * @type {string}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-weight
+ */
+FontFace.prototype.weight;
+
+/**
+ * @type {string}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-stretch
+ */
+FontFace.prototype.stretch;
+
+/**
+ * @type {string}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-unicoderange
+ */
+FontFace.prototype.unicodeRange;
+
+/**
+ * @type {string}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-variant
+ */
+FontFace.prototype.variant;
+
+/**
+ * @type {string}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-featuresettings
+ */
+FontFace.prototype.featureSettings;
+
+/**
+ * @type {FontFaceLoadStatus}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-status
+ */
+FontFace.prototype.status;
+
+/**
+ * @return {!Promise}
+ * @see http://dev.w3.org/csswg/css-font-loading/#font-face-load
+ */
+FontFace.prototype.load = function() {};
+
+/**
+ * @enum
+ * @see http://dev.w3.org/csswg/css-font-loading/#enumdef-fontfacesetloadstatus
+ */
+var FontFaceSetLoadStatus = {
+  LOADED: 'loaded',
+  LOADING: 'loading'
+};
+
+/**
+ * @interface
+ * @see http://dev.w3.org/csswg/css-font-loading/#FontFaceSet-interface
+ */
+function FontFaceSet() {}
+
+// Event handlers
+// http://dev.w3.org/csswg/css-font-loading/#FontFaceSet-events
+
+/** @type {?function (Event)} */ FontFaceSet.prototype.onloading;
+/** @type {?function (Event)} */ FontFaceSet.prototype.onloadingdone;
+/** @type {?function (Event)} */ FontFaceSet.prototype.onloadingerror;
+
+/**
+ * @param {!FontFace} value
+ * @see http://dev.w3.org/csswg/css-font-loading/#set-modifications
+ */
+FontFaceSet.prototype.add = function(value) {};
+
+/**
+ * @see http://dev.w3.org/csswg/css-font-loading/#set-modifications
+ */
+FontFaceSet.prototype.clear = function() {};
+
+/**
+ * @param {!FontFace} value
+ * @see http://dev.w3.org/csswg/css-font-loading/#set-modifications
+ */
+FontFaceSet.prototype.delete = function(value) {};
+
+/**
+ * @param {string} font
+ * @param {string=} opt_text
+ * @return {!Promise}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-load
+ */
+FontFaceSet.prototype.load = function(font, opt_text) {};
+
+/**
+ * @param {string} font
+ * @param {string=} opt_text
+ * @return {!Promise}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-check
+ */
+FontFaceSet.prototype.check = function(font, opt_text) {};
+
+/**
+ * @return {!Promise}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-ready
+ */
+FontFaceSet.prototype.ready = function() {};
+
+/**
+ * @type {FontFaceSetLoadStatus}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-status
+ */
+FontFaceSet.prototype.status;
