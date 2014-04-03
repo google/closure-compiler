@@ -46,6 +46,7 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
   private String additionalEndCode;
   private boolean addAdditionalNamespace;
   private boolean preserveGoogRequires;
+  private boolean banGoogBase;
 
   public ProcessClosurePrimitivesTest() {
     enableLineNumberCheck(true);
@@ -56,6 +57,19 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
     additionalEndCode = null;
     addAdditionalNamespace = false;
     preserveGoogRequires = false;
+    banGoogBase = false;
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+
+    if (banGoogBase) {
+      options.setWarningLevel(
+          DiagnosticGroups.USE_OF_GOOG_BASE, CheckLevel.ERROR);
+    }
+
+    return options;
   }
 
   @Override public CompilerPass getProcessor(final Compiler compiler) {
@@ -711,6 +725,12 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
          "goog.inherits(goog.Foo, goog.BaseFoo);",
          "var goog = {}; goog.Foo = function() { goog.BaseFoo.call(this); }; " +
          "goog.inherits(goog.Foo, goog.BaseFoo);");
+  }
+
+  public void testBanGoogBase() {
+    banGoogBase = true;
+    testSame("function Foo() { goog.base(this, 1, 2); }" + FOO_INHERITS,
+        ProcessClosurePrimitives.USE_OF_GOOG_BASE, true);
   }
 
   public void testInvalidBase1() {

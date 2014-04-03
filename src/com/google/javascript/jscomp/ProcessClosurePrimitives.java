@@ -127,6 +127,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       "JSC_INVALID_FORWARD_DECLARE",
       "Malformed goog.forwardDeclaration");
 
+  static final DiagnosticType USE_OF_GOOG_BASE = DiagnosticType.disabled(
+      "JSC_USE_OF_GOOG_BASE",
+      "goog.base is not compatible with ES5 strict mode.");
+
   /** The root Closure namespace */
   static final String GOOG = "goog";
 
@@ -507,6 +511,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     // Most of the logic here is just to make sure the AST's
     // structure is what we expect it to be.
 
+    // If requested report uses of goog.base.
+    t.report(n, USE_OF_GOOG_BASE);
+
     Node callee = n.getFirstChild();
     Node thisArg = callee.getNext();
     if (thisArg == null || !thisArg.isThis()) {
@@ -659,9 +666,14 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           maybeInheritsExpr.getFirstChild().isCall()) {
         Node callNode = maybeInheritsExpr.getFirstChild();
         if ("goog.inherits".equals(
-                callNode.getFirstChild().getQualifiedName()) &&
-            callNode.getLastChild().isQualifiedName()) {
-          baseClassNode = callNode.getLastChild();
+                callNode.getFirstChild().getQualifiedName())) {
+           Node base = callNode.getLastChild();
+           while (base.isCast()) {
+             base = base.getFirstChild();
+           }
+           if (callNode.getLastChild().isQualifiedName()) {
+             baseClassNode = callNode.getLastChild();
+           }
         }
       }
 
@@ -702,6 +714,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       if (!knownClosureSubclasses.contains(baseContainer)) {
         // Can't determine if this is a known "class" that has a known "base"
         // method.
+        reportBadBaseMethodUse(t, n, baseContainer, "Unknown class " + enclosingQname);
         return;
       }
 
@@ -759,7 +772,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    * Processes the goog.inherits call.
    */
   private void processInheritsCall(NodeTraversal t, Node n) {
-    if (n.getChildCount() == 3 && t.inGlobalScope()) {
+    if (n.getChildCount() == 3) {
       Node subClass = n.getChildAtIndex(1);
       Node superClass = subClass.getNext();
       if (subClass.isUnscopedQualifiedName() &&

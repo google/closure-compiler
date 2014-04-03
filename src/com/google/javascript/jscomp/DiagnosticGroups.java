@@ -85,7 +85,7 @@ public class DiagnosticGroups {
       "missingProperties, missingProvide, missingRequire, missingReturn," +
       "nonStandardJsDocs, reportUnknownTypes, suspiciousCode, " +
       "strictModuleDepCheck, typeInvalidation, " +
-      "undefinedNames, undefinedVars, unknownDefines, uselessCode, " +
+      "undefinedNames, undefinedVars, unknownDefines, uselessCode, googBase, " +
       "visibility";
 
   public static final DiagnosticGroup GLOBAL_THIS =
@@ -305,6 +305,10 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("lintChecks",
           CheckNullableReturn.NULLABLE_RETURN,
           CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
+
+  public static final DiagnosticGroup USE_OF_GOOG_BASE =
+      DiagnosticGroups.registerGroup("useOfGoogBase",
+          ProcessClosurePrimitives.USE_OF_GOOG_BASE);
 
   /**
    * Adds warning levels by name.
