@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.newtypes.FunctionType;
 import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
+import com.google.javascript.jscomp.newtypes.TypeEnv;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -158,7 +159,7 @@ public class NewTypeInference implements CompilerPass {
   GlobalTypeInfo symbolTable;
   static final String RETVAL_ID = "%return";
   private JSType arrayType, regexpType; // used for array and regexp literals
-  private static boolean debugging = true;
+  private static boolean debugging = false;
 
   NewTypeInference(AbstractCompiler compiler) {
     this.warnings = Sets.newHashSet();
@@ -1280,8 +1281,7 @@ public class NewTypeInference implements CompilerPass {
               if (expr.isCall()) {
                 dc = deferredChecks.get(expr);
                 Preconditions.checkState(dc != null,
-                    "No deferred check created in backward direction for " +
-                    expr);
+                    "No deferred check created in backward direction for %s", expr);
                 dc.updateReturn(expectedRetType);
               } else {
                 dc = new DeferredCheck(expr, null,
@@ -2578,79 +2578,6 @@ public class NewTypeInference implements CompilerPass {
     public int hashCode() {
       return Objects.hashCode(
           callSite, callerScope, calleeScope, expectedRetType, argTypes);
-    }
-  }
-
-  /**
-   * A persistent map from variables to abstract values (types)
-   */
-  static class TypeEnv { // TODO(blickly): Use structural sharing in this class.
-    private final Map<String, JSType> typeMap;
-
-    TypeEnv() {
-      this.typeMap = Maps.newHashMap();
-    }
-
-    JSType getType(String n) {
-      Preconditions.checkArgument(!n.contains("."));
-      return typeMap.get(n);
-    }
-
-    TypeEnv putType(String n, JSType t) {
-      Preconditions.checkArgument(!n.contains("."));
-      TypeEnv newEnv = new TypeEnv();
-      newEnv.typeMap.putAll(typeMap);
-      newEnv.typeMap.put(n, t);
-      return newEnv;
-    }
-
-    static TypeEnv join(TypeEnv e1, TypeEnv e2) {
-      TypeEnv newEnv = new TypeEnv();
-      for (String n : e1.typeMap.keySet()) {
-        JSType otherType = e2.getType(n);
-        newEnv.typeMap.put(n, otherType == null ?
-            e1.getType(n) : JSType.join(otherType, e1.getType(n)));
-      }
-      for (String n : e2.typeMap.keySet()) {
-        JSType otherType = e1.getType(n);
-        newEnv.typeMap.put(n, otherType == null ?
-            e2.getType(n) : JSType.join(otherType, e2.getType(n)));
-      }
-      return newEnv;
-    }
-
-    Multimap<String, String> getTaints() {
-      Multimap<String, String> taints = HashMultimap.create();
-      for (Map.Entry<String, JSType> entry : typeMap.entrySet()) {
-        String formal = entry.getValue().getLocation();
-        if (formal != null) {
-          taints.put(formal, entry.getKey());
-        }
-      }
-      return taints;
-    }
-
-    @Override
-    public String toString() {
-      Objects.ToStringHelper helper = Objects.toStringHelper(this.getClass());
-      for (String key : typeMap.keySet()) {
-        helper.add(key, getType(key));
-      }
-      return helper.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (o == null || !(o instanceof TypeEnv)) {
-        return false;
-      }
-      TypeEnv other = (TypeEnv) o;
-      return this.typeMap.equals(other.typeMap);
-    }
-
-    @Override
-    public int hashCode() {
-      return typeMap.hashCode();
     }
   }
 }
