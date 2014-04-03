@@ -25,4 +25,9 @@ public abstract class PersistentMap<K, V> extends AbstractMap<K, V> {
 
   public abstract PersistentMap<K, V> without(K key);
 
+  public static <K, V> PersistentMap<K, V> create() {
+    return (PersistentMap<K, V>) EMPTY;
+  }
+
+  private static final PersistentMap EMPTY = NaivePersistentMap.create();
 }

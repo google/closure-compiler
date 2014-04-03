@@ -20,9 +20,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
@@ -43,7 +41,7 @@ public class ObjectType {
   private final NominalType nominalType;
   private final FunctionType fn;
   private final boolean isLoose;
-  private final ImmutableMap<String, Property> props;
+  private final PersistentMap<String, Property> props;
   private final ObjectKind objectKind;
 
   static final ObjectType TOP_OBJECT = ObjectType.makeObjectType(
@@ -54,7 +52,7 @@ public class ObjectType {
       null, null, null, false, ObjectKind.DICT);
 
   private ObjectType(NominalType nominalType,
-      ImmutableMap<String, Property> props, FunctionType fn, boolean isLoose,
+      PersistentMap<String, Property> props, FunctionType fn, boolean isLoose,
       ObjectKind objectKind) {
     this.nominalType = nominalType;
     this.props = props;
@@ -64,13 +62,12 @@ public class ObjectType {
   }
 
   static ObjectType makeObjectType(NominalType nominalType,
-      Map<String, Property> props, FunctionType fn,
+      PersistentMap<String, Property> props, FunctionType fn,
       boolean isLoose, ObjectKind ok) {
     if (props == null) {
-      props = ImmutableMap.of();
+      props = PersistentMap.create();
     }
-    return new ObjectType(
-        nominalType, ImmutableMap.copyOf(props), fn, isLoose, ok);
+    return new ObjectType(nominalType, props, fn, isLoose, ok);
   }
 
   static ObjectType fromFunction(FunctionType fn) {
@@ -83,14 +80,14 @@ public class ObjectType {
   }
 
   /** Construct an object with the given declared non-optional properties. */
-  static ObjectType fromProperties(Map<String, JSType> props) {
-    ImmutableMap.Builder<String, Property> builder = ImmutableMap.builder();
-    for (String propName : props.keySet()) {
-      JSType propType = props.get(propName);
-      builder.put(propName, new Property(propType, propType, false));
+  static ObjectType fromProperties(Map<String, JSType> propTypes) {
+    PersistentMap<String, Property> props = PersistentMap.create();
+    for (String propName : propTypes.keySet()) {
+      JSType propType = propTypes.get(propName);
+      props = props.with(propName, new Property(propType, propType, false));
     }
     return ObjectType.makeObjectType(
-        null, builder.build(), null, false, ObjectKind.UNRESTRICTED);
+        null, props, null, false, ObjectKind.UNRESTRICTED);
   }
 
   boolean isInhabitable() {
@@ -125,10 +122,10 @@ public class ObjectType {
       return this;
     }
     FunctionType fn = this.fn == null ? null : this.fn.withLoose();
-    Map<String, Property> newProps = Maps.newHashMap();
+    PersistentMap<String, Property> newProps = PersistentMap.create();
     for (String pname : this.props.keySet()) {
       // It's wrong to warn about a possibly absent property on loose objects.
-      newProps.put(pname, this.props.get(pname).withRequired());
+      newProps = newProps.with(pname, this.props.get(pname).withRequired());
     }
     return ObjectType.makeObjectType(
         nominalType, newProps, fn, true, this.objectKind);
@@ -148,11 +145,11 @@ public class ObjectType {
   private ObjectType withPropertyHelper(
       QualifiedName qname, JSType type, boolean isDeclared) {
     // TODO(blickly): If the prop exists with right type, short circuit here.
-    Map<String, Property> newProps = Maps.newHashMap(this.props);
+    PersistentMap<String, Property> newProps = this.props;
     String objName = qname.getLeftmostName();
     if (qname.isIdentifier()) {
       if (type == null) {
-        newProps.remove(objName);
+        newProps = newProps.without(objName);
       } else {
         JSType declType = getDeclaredProp(qname);
         Preconditions.checkState(declType == null ||
@@ -162,7 +159,7 @@ public class ObjectType {
         } else if (declType != null) {
           isDeclared = true;
         }
-        newProps.put(objName,
+        newProps = newProps.with(objName,
             new Property(type, isDeclared ? declType : null, false));
       }
     } else { // This has a nested object
@@ -170,10 +167,10 @@ public class ObjectType {
       QualifiedName innerProps = qname.getAllButLeftmost();
       if (!this.props.containsKey(objName)) {
         Preconditions.checkState(mayHaveProp(objQname));
-        newProps.put(objName, getLeftmostProp(objQname));
+        newProps = newProps.with(objName, getLeftmostProp(objQname));
       }
       Property objProp = newProps.get(objName);
-      newProps.put(objName,
+      newProps = newProps.with(objName,
           new Property(objProp.getType().withProperty(innerProps, type),
             objProp.getDeclaredType(), objProp.isOptional()));
     }
@@ -204,14 +201,13 @@ public class ObjectType {
   }
 
   private ObjectType withPropertyRequired(String pname) {
-    Map<String, Property> newProps = Maps.newHashMap(this.props);
     Property oldProp = this.props.get(pname);
     Property newProp = oldProp == null ?
         new Property(JSType.UNKNOWN, null, false) :
         new Property(oldProp.getType(), oldProp.getDeclaredType(), false);
-    newProps.put(pname, newProp);
     return ObjectType.makeObjectType(
-        this.nominalType, newProps, this.fn, this.isLoose, this.objectKind);
+        nominalType, this.props.with(pname, newProp), fn,
+        isLoose, this.objectKind);
   }
 
   static ImmutableSet<ObjectType> withPropertyRequired(
@@ -223,14 +219,14 @@ public class ObjectType {
     return newObjs.build();
   }
 
-  private static Map<String, Property> meetPropsHelper(
+  private static PersistentMap<String, Property> meetPropsHelper(
       boolean specializeProps1,
       NominalType resultNominalType,
       Map<String, Property> props1, Map<String, Property> props2) {
-    Map<String, Property> newProps = Maps.newHashMap();
+    PersistentMap<String, Property> newProps = PersistentMap.create();
     for (String pname : props1.keySet()) {
       if (!props2.containsKey(pname)) {
-        mayPutProp(pname, props1.get(pname), newProps, resultNominalType);
+        newProps = mayPutProp(pname, props1.get(pname), newProps, resultNominalType);
       }
     }
     for (String pname : props2.keySet()) {
@@ -243,55 +239,58 @@ public class ObjectType {
       } else {
         newProp = prop2;
       }
-      mayPutProp(pname, newProp, newProps, resultNominalType);
+      newProps = mayPutProp(pname, newProp, newProps, resultNominalType);
     }
     return newProps;
   }
 
-  private static void mayPutProp(String pname, Property prop,
-      Map<String, Property> props, NominalType nom) {
+  private static PersistentMap<String, Property> mayPutProp(
+      String pname, Property prop,
+      PersistentMap<String, Property> props,
+      NominalType nom) {
     Property nomProp = nom == null ? null : nom.getProp(pname);
     JSType propType = prop.getType();
     if (nomProp == null ||
         (!propType.isUnknown() && propType.isSubtypeOf(nomProp.getType()))) {
-      props.put(pname, prop);
+      props = props.with(pname, prop);
     }
+    return props;
   }
 
-  private static Map<String, Property> joinProps(
+  private static PersistentMap<String, Property> joinProps(
       Map<String, Property> props1, Map<String, Property> props2) {
-    Map<String, Property> newProps = Maps.newHashMap();
+    PersistentMap<String, Property> newProps = PersistentMap.create();
     for (String pname : props1.keySet()) {
       if (!props2.containsKey(pname)) {
-        newProps.put(pname, props1.get(pname).withOptional());
+        newProps = newProps.with(pname, props1.get(pname).withOptional());
       }
     }
     for (String pname : props2.keySet()) {
       Property prop2 = props2.get(pname);
       if (props1.containsKey(pname)) {
-        newProps.put(pname, Property.join(props1.get(pname), prop2));
+        newProps = newProps.with(pname, Property.join(props1.get(pname), prop2));
       } else {
-        newProps.put(pname, prop2.withOptional());
+        newProps = newProps.with(pname, prop2.withOptional());
       }
     }
     return newProps;
   }
 
-  private static Map<String, Property> joinPropsLoosely(
+  private static PersistentMap<String, Property> joinPropsLoosely(
       Map<String, Property> props1, Map<String, Property> props2) {
-    Map<String, Property> newProps = Maps.newHashMap();
+    PersistentMap<String, Property> newProps = PersistentMap.create();
     for (String pname : props1.keySet()) {
       if (!props2.containsKey(pname)) {
-        newProps.put(pname, props1.get(pname).withRequired());
+        newProps = newProps.with(pname, props1.get(pname).withRequired());
       }
     }
     for (String pname : props2.keySet()) {
       Property prop2 = props2.get(pname);
       if (props1.containsKey(pname)) {
-        newProps.put(pname,
+        newProps = newProps.with(pname,
             Property.join(props1.get(pname), prop2).withRequired());
       } else {
-        newProps.put(pname, prop2.withRequired());
+        newProps = newProps.with(pname, prop2.withRequired());
       }
     }
     return newProps;
@@ -563,7 +562,7 @@ public class ObjectType {
     if (t1.fn != t2.fn) {
       throw new RuntimeException("Unification of functions not yet supported");
     }
-    Map<String, Property> newprops = Maps.newHashMap();
+    PersistentMap<String, Property> newProps = PersistentMap.create();
     for (String propName : t1.props.keySet()) {
       Property prop1 = t1.props.get(propName);
       Property prop2 = t2.props.get(propName);
@@ -574,9 +573,9 @@ public class ObjectType {
       if (p == null) {
         return null;
       }
-      newprops.put(propName, p);
+      newProps = newProps.with(propName, p);
     }
-    return makeObjectType(t1.nominalType, newprops, t1.fn,
+    return makeObjectType(t1.nominalType, newProps, t1.fn,
         t1.isLoose || t2.isLoose,
         ObjectKind.join(t1.objectKind, t2.objectKind));
   }
@@ -614,13 +613,10 @@ public class ObjectType {
   }
 
   ObjectType substituteGenerics(Map<String, JSType> concreteTypes) {
-    ImmutableMap<String, Property> newProps = null;
-    if (props != null) {
-      ImmutableMap.Builder<String, Property> builder = ImmutableMap.builder();
-      for (String p : props.keySet()) {
-        builder.put(p, props.get(p).substituteGenerics(concreteTypes));
-      }
-      newProps = builder.build();
+    PersistentMap<String, Property> newProps = PersistentMap.create();
+    for (String p : props.keySet()) {
+      newProps =
+          newProps.with(p, props.get(p).substituteGenerics(concreteTypes));
     }
     return new ObjectType(
         nominalType == null ? null :

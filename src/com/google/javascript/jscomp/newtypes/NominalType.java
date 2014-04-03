@@ -249,12 +249,12 @@ public class NominalType {
   public static class RawNominalType {
     private final String name;
     // Each instance of the class has these properties by default
-    private Map<String, Property> classProps = Maps.newHashMap();
+    private PersistentMap<String, Property> classProps = PersistentMap.create();
     // The object pointed to by the prototype property of the constructor of
     // this class has these properties
-    private Map<String, Property> protoProps = Maps.newHashMap();
+    private PersistentMap<String, Property> protoProps = PersistentMap.create();
     // The constructor of this class has these "static" properties
-    private Map<String, Property> ctorProps = Maps.newHashMap();
+    private PersistentMap<String, Property> ctorProps = PersistentMap.create();
     boolean isFinalized = false;
     private NominalType superClass = null;
     private ImmutableSet<NominalType> interfaces = null;
@@ -488,7 +488,8 @@ public class NominalType {
 
     /** Add a new non-optional declared property to instances of this class */
     public void addClassProperty(String pname, JSType type) {
-      classProps.put(pname, new Property(type, type, false));
+      Preconditions.checkState(!isFinalized);
+      classProps = classProps.with(pname, new Property(type, type, false));
       // Upgrade any proto props to declared, if present
       if (protoProps.containsKey(pname)) {
         addProtoProperty(pname, type);
@@ -497,29 +498,34 @@ public class NominalType {
 
     /** Add a new undeclared property to instances of this class */
     public void addUndeclaredClassProperty(String pname) {
+      Preconditions.checkState(!isFinalized);
       // Only do so if there isn't a declared prop already.
       if (mayHaveProp(pname)) {
         return;
       }
-      classProps.put(pname, new Property(JSType.UNKNOWN, null, false));
+      classProps =
+          classProps.with(pname, new Property(JSType.UNKNOWN, null, false));
     }
 
     //////////// Prototype Properties
 
     /** Add a new non-optional declared prototype property to this class */
     public void addProtoProperty(String pname, JSType type) {
+      Preconditions.checkState(!isFinalized);
       if (classProps.containsKey(pname) &&
           classProps.get(pname).getDeclaredType() == null) {
-        classProps.remove(pname);
+        classProps = classProps.without(pname);
       }
-      protoProps.put(pname, new Property(type, type, false));
+      protoProps = protoProps.with(pname, new Property(type, type, false));
     }
 
     /** Add a new undeclared prototype property to this class */
     public void addUndeclaredProtoProperty(String pname) {
+      Preconditions.checkState(!isFinalized);
       if (!protoProps.containsKey(pname) ||
           protoProps.get(pname).getDeclaredType() == null) {
-        protoProps.put(pname, new Property(JSType.UNKNOWN, null, false));
+        protoProps =
+            protoProps.with(pname, new Property(JSType.UNKNOWN, null, false));
       }
     }
 
@@ -543,15 +549,18 @@ public class NominalType {
 
     /** Add a new non-optional declared property to this class's constructor */
     public void addCtorProperty(String pname, JSType type) {
-      ctorProps.put(pname, new Property(type, type, false));
+      Preconditions.checkState(!isFinalized);
+      ctorProps = ctorProps.with(pname, new Property(type, type, false));
     }
 
     /** Add a new undeclared property to this class's constructor */
     public void addUndeclaredCtorProperty(String pname) {
+      Preconditions.checkState(!isFinalized);
       if (ctorProps.containsKey(pname)) {
         return;
       }
-      ctorProps.put(pname, new Property(JSType.UNKNOWN, null, false));
+      ctorProps =
+          ctorProps.with(pname, new Property(JSType.UNKNOWN, null, false));
     }
 
     public JSType getCtorPropDeclaredType(String pname) {
@@ -587,13 +596,10 @@ public class NominalType {
       // System.out.println("Class " + name +
       //     " created with class properties: " + classProps +
       //     " and prototype properties: " + protoProps);
-      this.classProps = ImmutableMap.copyOf(classProps);
-      this.protoProps = ImmutableMap.copyOf(protoProps);
       if (this.interfaces == null) {
         this.interfaces = ImmutableSet.of();
       }
       addCtorProperty("prototype", createProtoObject());
-      this.ctorProps = ImmutableMap.copyOf(ctorProps);
       this.isFinalized = true;
       return this;
     }

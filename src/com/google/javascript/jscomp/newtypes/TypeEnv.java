@@ -33,7 +33,7 @@ public class TypeEnv {
   private final PersistentMap<String, JSType> typeMap;
 
   public TypeEnv() {
-    this.typeMap = NaivePersistentMap.create();
+    this.typeMap = PersistentMap.create();
   }
 
   private TypeEnv(PersistentMap<String, JSType> typeMap) {
