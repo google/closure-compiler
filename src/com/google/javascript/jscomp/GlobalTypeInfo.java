@@ -421,10 +421,18 @@ class GlobalTypeInfo implements CompilerPass {
       JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
       if (fnDoc != null && (fnDoc.isConstructor() || fnDoc.isInterface())) {
         ImmutableList<String> typeParameters = fnDoc.getTemplateTypeNames();
-        RawNominalType rawNominalType = fnDoc.isInterface() ?
-            RawNominalType.makeInterface(qname, typeParameters) :
-            RawNominalType.makeClass(qname, typeParameters);
-        freshId++;
+        RawNominalType rawNominalType;
+        if (fnDoc.isInterface()) {
+          rawNominalType = RawNominalType.makeInterface(qname, typeParameters);
+        } else if (fnDoc.makesStructs()) {
+          rawNominalType =
+              RawNominalType.makeStructClass(qname, typeParameters);
+        } else if (fnDoc.makesDicts()) {
+          rawNominalType = RawNominalType.makeDictClass(qname, typeParameters);
+        } else {
+          rawNominalType =
+              RawNominalType.makeUnrestrictedClass(qname, typeParameters);
+        }
         nominaltypesByNode.put(fn, rawNominalType);
         parentScope.addNominalType(qname, rawNominalType);
       }

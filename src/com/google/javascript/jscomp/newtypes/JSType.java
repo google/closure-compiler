@@ -130,6 +130,8 @@ public class JSType {
   public static final JSType UNKNOWN = new JSType(UNKNOWN_MASK);
 
   public static final JSType TOP_OBJECT = fromObjectType(ObjectType.TOP_OBJECT);
+  public static final JSType TOP_STRUCT = fromObjectType(ObjectType.TOP_STRUCT);
+  public static final JSType TOP_DICT = fromObjectType(ObjectType.TOP_DICT);
   private static JSType TOP_FUNCTION = null;
 
   // Some commonly used types
@@ -222,6 +224,30 @@ public class JSType {
     return (mask & ~TYPEVAR_MASK) == 0;
   }
 
+  public boolean isStruct() {
+    if (objs == null) {
+      return false;
+    }
+    for (ObjectType objType: objs) {
+      if (objType.isStruct()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean isDict() {
+    if (objs == null) {
+      return false;
+    }
+    for (ObjectType objType: objs) {
+      if (objType.isDict()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public static boolean areCompatibleScalarTypes(JSType lhs, JSType rhs) {
     Preconditions.checkArgument(
         lhs.isSubtypeOf(TOP_SCALAR) || rhs.isSubtypeOf(TOP_SCALAR));
@@ -303,7 +329,7 @@ public class JSType {
    * the type variables of interest in {@code t1} and {@code t2}, treating
    * JSType.UNKNOWN as a "hole" to be filled.
    * @return The unified type, or null if unification fails */
-  public static JSType unifyUnknowns(JSType t1, JSType t2) {
+  static JSType unifyUnknowns(JSType t1, JSType t2) {
     if (t1.isUnknown()) {
       return t2;
     } else if (t2.isUnknown()) {
@@ -558,7 +584,7 @@ public class JSType {
     NominalType otherKlass =
         Iterables.getOnlyElement(other.objs).getNominalType();
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
-    for (ObjectType obj: objs) {
+    for (ObjectType obj : objs) {
       if (!Objects.equal(obj.getNominalType(), otherKlass)) {
         newObjs.add(obj);
       }
@@ -589,7 +615,7 @@ public class JSType {
       return Iterables.getOnlyElement(objs).getFunType();
     }
     FunctionType result = FunctionType.TOP_FUNCTION;
-    for (ObjectType obj: objs) {
+    for (ObjectType obj : objs) {
       result = FunctionType.meet(result, obj.getFunType());
     }
     return result;

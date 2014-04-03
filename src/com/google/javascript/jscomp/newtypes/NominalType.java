@@ -63,6 +63,10 @@ public class NominalType {
     return rawType;
   }
 
+  ObjectKind getObjectKind() {
+    return rawType.objectKind;
+  }
+
   NominalType instantiateGenerics(List<JSType> types) {
     Preconditions.checkState(types.size() == rawType.typeParameters.size());
     Map<String, JSType> typeMap = Maps.newHashMap();
@@ -258,25 +262,40 @@ public class NominalType {
     private ImmutableSet<String> allProps = null;
     // Empty iff this type is not generic
     private final ImmutableList<String> typeParameters;
+    private final ObjectKind objectKind;
 
     private RawNominalType(String name, ImmutableList<String> typeParameters,
-        boolean isInterface) {
+        boolean isInterface, ObjectKind objectKind) {
+      Preconditions.checkNotNull(objectKind);
       if (typeParameters == null) {
         typeParameters = ImmutableList.of();
       }
       this.name = name;
       this.typeParameters = typeParameters;
       this.isInterface = isInterface;
+      this.objectKind = objectKind;
     }
 
-    public static RawNominalType makeClass(
+    public static RawNominalType makeUnrestrictedClass(
         String name, ImmutableList<String> typeParameters) {
-      return new RawNominalType(name, typeParameters, false);
+      return new RawNominalType(
+          name, typeParameters, false, ObjectKind.UNRESTRICTED);
+    }
+
+    public static RawNominalType makeStructClass(
+        String name, ImmutableList<String> typeParameters) {
+      return new RawNominalType(name, typeParameters, false, ObjectKind.STRUCT);
+    }
+
+    public static RawNominalType makeDictClass(
+        String name, ImmutableList<String> typeParameters) {
+      return new RawNominalType(name, typeParameters, false, ObjectKind.DICT);
     }
 
     public static RawNominalType makeInterface(
         String name, ImmutableList<String> typeParameters) {
-      return new RawNominalType(name, typeParameters, true);
+      // interfaces are struct by default
+      return new RawNominalType(name, typeParameters, true, ObjectKind.STRUCT);
     }
 
     public int getId() {
@@ -508,7 +527,7 @@ public class NominalType {
     // constructor of this class.
     private JSType createProtoObject() {
       return JSType.fromObjectType(ObjectType.makeObjectType(
-          superClass, protoProps, null, false));
+          superClass, protoProps, null, false, ObjectKind.UNRESTRICTED));
     }
 
     //////////// Constructor Properties
@@ -545,7 +564,8 @@ public class NominalType {
     // class.
     private JSType createConstructorObject(FunctionType ctorFn) {
       return JSType.fromObjectType(
-          ObjectType.makeObjectType(null, ctorProps, ctorFn, ctorFn.isLoose()));
+          ObjectType.makeObjectType(null, ctorProps, ctorFn,
+              ctorFn.isLoose(), ObjectKind.UNRESTRICTED));
     }
 
     private String genericSuffix(Map<String, JSType> typeMap) {

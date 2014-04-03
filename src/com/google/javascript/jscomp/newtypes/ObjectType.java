@@ -44,32 +44,42 @@ public class ObjectType {
   private final FunctionType fn;
   private final boolean isLoose;
   private final ImmutableMap<String, Property> props;
+  private final ObjectKind objectKind;
 
-  static final ObjectType TOP_OBJECT =
-      ObjectType.makeObjectType(null, null, null, false);
+  static final ObjectType TOP_OBJECT = ObjectType.makeObjectType(
+      null, null, null, false, ObjectKind.UNRESTRICTED);
+  static final ObjectType TOP_STRUCT = ObjectType.makeObjectType(
+      null, null, null, false, ObjectKind.STRUCT);
+  static final ObjectType TOP_DICT = ObjectType.makeObjectType(
+      null, null, null, false, ObjectKind.DICT);
 
   private ObjectType(NominalType nominalType,
-      ImmutableMap<String, Property> props, FunctionType fn, boolean isLoose) {
+      ImmutableMap<String, Property> props, FunctionType fn, boolean isLoose,
+      ObjectKind objectKind) {
     this.nominalType = nominalType;
     this.props = props;
     this.fn = fn;
     this.isLoose = isLoose;
+    this.objectKind = objectKind;
   }
 
   static ObjectType makeObjectType(NominalType nominalType,
-      Map<String, Property> props, FunctionType fn, boolean isLoose) {
+      Map<String, Property> props, FunctionType fn,
+      boolean isLoose, ObjectKind ok) {
     if (props == null) {
       props = ImmutableMap.of();
     }
-    return new ObjectType(nominalType, ImmutableMap.copyOf(props), fn, isLoose);
+    return new ObjectType(
+        nominalType, ImmutableMap.copyOf(props), fn, isLoose, ok);
   }
 
   static ObjectType fromFunction(FunctionType fn) {
-    return ObjectType.makeObjectType(null, null, fn, fn.isLoose());
+    return ObjectType.makeObjectType(
+        null, null, fn, fn.isLoose(), ObjectKind.UNRESTRICTED);
   }
 
   public static ObjectType fromNominalType(NominalType cl) {
-    return ObjectType.makeObjectType(cl, null, null, false);
+    return ObjectType.makeObjectType(cl, null, null, false, cl.getObjectKind());
   }
 
   /** Construct an object with the given declared non-optional properties. */
@@ -79,7 +89,8 @@ public class ObjectType {
       JSType propType = props.get(propName);
       builder.put(propName, new Property(propType, propType, false));
     }
-    return ObjectType.makeObjectType(null, builder.build(), null, false);
+    return ObjectType.makeObjectType(
+        null, builder.build(), null, false, ObjectKind.UNRESTRICTED);
   }
 
   boolean isInhabitable() {
@@ -92,6 +103,14 @@ public class ObjectType {
     return true;
   }
 
+  boolean isStruct() {
+    return objectKind.isStruct();
+  }
+
+  boolean isDict() {
+    return objectKind.isDict();
+  }
+
   static ImmutableSet<ObjectType> withLooseObjects(Set<ObjectType> objs) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj : objs) {
@@ -101,7 +120,8 @@ public class ObjectType {
   }
 
   private ObjectType withLoose() {
-    if (this.nominalType != null) { // Don't loosen nominal types
+    // Don't loosen nominal types
+    if (this.nominalType != null) {
       return this;
     }
     FunctionType fn = this.fn == null ? null : this.fn.withLoose();
@@ -110,7 +130,8 @@ public class ObjectType {
       // It's wrong to warn about a possibly absent property on loose objects.
       newProps.put(pname, this.props.get(pname).withRequired());
     }
-    return ObjectType.makeObjectType(nominalType, newProps, fn, true);
+    return ObjectType.makeObjectType(
+        nominalType, newProps, fn, true, this.objectKind);
   }
 
   static ImmutableSet<ObjectType> withoutProperty(
@@ -156,7 +177,8 @@ public class ObjectType {
           new Property(objProp.getType().withProperty(innerProps, type),
             objProp.getDeclaredType(), objProp.isOptional()));
     }
-    return ObjectType.makeObjectType(nominalType, newProps, fn, isLoose);
+    return ObjectType.makeObjectType(
+        nominalType, newProps, fn, isLoose, objectKind);
   }
 
   ObjectType withProperty(QualifiedName qname, JSType type) {
@@ -188,7 +210,8 @@ public class ObjectType {
         new Property(JSType.UNKNOWN, null, false) :
         new Property(oldProp.getType(), oldProp.getDeclaredType(), false);
     newProps.put(pname, newProp);
-    return ObjectType.makeObjectType(nominalType, newProps, fn, isLoose);
+    return ObjectType.makeObjectType(
+        this.nominalType, newProps, this.fn, this.isLoose, this.objectKind);
   }
 
   static ImmutableSet<ObjectType> withPropertyRequired(
@@ -291,15 +314,24 @@ public class ObjectType {
   }
 
   /**
-   * Required properties are acceptable where a optional is required,
+   * Required properties are acceptable where an optional is required,
    * but not vice versa.
    * Optional properties create cycles in the type lattice, eg,
    * { } \le { p: num= }  and also   { p: num= } \le { }.
    */
   boolean isSubtypeOf(ObjectType obj2) {
+    if (obj2 == TOP_OBJECT) {
+      return true;
+    }
+
+    if (!objectKind.isSubtypeOf(obj2.objectKind)) {
+      return false;
+    }
+
     if (this.isLoose || obj2.isLoose) {
       return this.isLooseSubtypeOf(obj2);
     }
+
     // If nominalType1 < nominalType2, we only need to check that the
     // properties of obj2 are in (obj1 or nominalType1)
     for (String pname : obj2.props.keySet()) {
@@ -354,16 +386,17 @@ public class ObjectType {
     return fn.isLooseSubtypeOf(obj2.fn);
   }
 
-  ObjectType specialize(ObjectType obj2) {
+  ObjectType specialize(ObjectType other) {
     Preconditions.checkState(
-        areRelatedClasses(this.nominalType, obj2.nominalType));
+        areRelatedClasses(this.nominalType, other.nominalType));
     NominalType resultNominalType =
-        NominalType.pickSubclass(this.nominalType, obj2.nominalType);
+        NominalType.pickSubclass(this.nominalType, other.nominalType);
     return ObjectType.makeObjectType(
         resultNominalType,
-        meetPropsHelper(true, resultNominalType, this.props, obj2.props),
-        (fn == null) ? null : fn.specialize(obj2.fn),
-        this.isLoose || obj2.isLoose);
+        meetPropsHelper(true, resultNominalType, this.props, other.props),
+        (fn == null) ? null : fn.specialize(other.fn),
+        this.isLoose || other.isLoose,
+        ObjectKind.meet(this.objectKind, other.objectKind));
   }
 
   static ObjectType meet(ObjectType obj1, ObjectType obj2) {
@@ -375,7 +408,8 @@ public class ObjectType {
         resultNominalType,
         meetPropsHelper(false, resultNominalType, obj1.props, obj2.props),
         FunctionType.meet(obj1.fn, obj2.fn),
-        obj1.isLoose || obj2.isLoose);
+        obj1.isLoose || obj2.isLoose,
+        ObjectKind.meet(obj1.objectKind, obj2.objectKind));
   }
 
   static ObjectType join(ObjectType obj1, ObjectType obj2) {
@@ -387,7 +421,8 @@ public class ObjectType {
           joinPropsLoosely(obj1.props, obj2.props) :
           joinProps(obj1.props, obj2.props),
         FunctionType.join(obj1.fn, obj2.fn),
-        obj1.isLoose || obj2.isLoose);
+        obj1.isLoose || obj2.isLoose,
+        ObjectKind.join(obj1.objectKind, obj2.objectKind));
   }
 
   static ImmutableSet<ObjectType> joinSets(
@@ -541,7 +576,9 @@ public class ObjectType {
       }
       newprops.put(propName, p);
     }
-    return makeObjectType(t1.nominalType, newprops, t1.fn, t1.isLoose || t2.isLoose);
+    return makeObjectType(t1.nominalType, newprops, t1.fn,
+        t1.isLoose || t2.isLoose,
+        ObjectKind.join(t1.objectKind, t2.objectKind));
   }
 
   /**
@@ -590,7 +627,8 @@ public class ObjectType {
         nominalType.instantiateGenerics(concreteTypes),
         newProps,
         fn == null ? null : fn.substituteGenerics(concreteTypes),
-        isLoose);
+        isLoose,
+        objectKind);
   }
 
   @Override
@@ -604,7 +642,16 @@ public class ObjectType {
     for (String pname : props.keySet()) {
       propStrings.add(pname + " : " + props.get(pname).toString());
     }
-    String result = nominalType == null ? "" : nominalType.toString();
+    String result;
+    if (nominalType != null) {
+      result = nominalType.toString();;
+    } else if (isStruct()) {
+      result = "struct";
+    } else if (isDict()) {
+      result = "dict";
+    } else {
+      result = "";
+    }
     result += (nominalType != null && propStrings.isEmpty()) ?
         "" : "{" + Joiner.on(", ").join(propStrings) + "}";
     result += (isLoose ? " (loose)" : "");
