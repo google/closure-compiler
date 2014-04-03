@@ -225,11 +225,6 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
-  private static Node getConditionExpression(Node n) {
-    return NodeUtil.isForIn(n) ?
-        n.getFirstChild() : NodeUtil.getConditionExpression(n);
-  }
-
   private TypeEnv getInEnv(Node n) {
     Preconditions.checkArgument(cfg.getInEdges(n).size() > 0);
     TypeEnv inEnv = null;
@@ -516,7 +511,9 @@ public class NewTypeInference implements CompilerPass {
         case Token.FOR:
         case Token.IF:
         case Token.WHILE:
-          inEnv = analyzeExprBwd(getConditionExpression(n), outEnv).env;
+          Node expr = NodeUtil.isForIn(n) ?
+              n.getFirstChild() : NodeUtil.getConditionExpression(n);
+          inEnv = analyzeExprBwd(expr, outEnv).env;
           break;
         case Token.CASE:
         case Token.SWITCH:
@@ -597,9 +594,15 @@ public class NewTypeInference implements CompilerPass {
             } else if (objType.isStruct()) {
               warnings.add(JSError.make(obj, TypeCheck.IN_USED_WITH_STRUCT));
             }
+            Node lhs = n.getFirstChild();
+            LValueResultFwd lval = analyzeLValueFwd(lhs, inEnv, JSType.STRING);
+            outEnv = updateLvalueTypeInEnv(
+                lval.env, lhs, lval.ptr, JSType.STRING);
+            break;
           }
           conditional = true;
-          analyzeConditionalStmFwd(n, getConditionExpression(n), inEnv);
+          analyzeConditionalStmFwd(
+              n, NodeUtil.getConditionExpression(n), inEnv);
           break;
         case Token.CASE: {
           conditional = true;
@@ -1309,8 +1312,8 @@ public class NewTypeInference implements CompilerPass {
               DeferredCheck dc;
               if (expr.isCall()) {
                 dc = deferredChecks.get(expr);
-                Preconditions.checkState(dc != null,
-                    "No deferred check created in backward direction for %s", expr);
+                Preconditions.checkState(dc != null, "No deferred check" +
+                    " created in backward direction for %s", expr);
                 dc.updateReturn(expectedRetType);
               } else {
                 dc = new DeferredCheck(expr, null,
@@ -1418,25 +1421,17 @@ public class NewTypeInference implements CompilerPass {
         pair.type = JSType.BOOLEAN;
         return pair;
       }
-      case Token.VAR: { // Can happen iff its parent is a for/in.
-        Preconditions.checkState(NodeUtil.isForIn(expr.getParent()));
-        Node vdecl = expr.getFirstChild();
-        String name = vdecl.getString();
-        // For/in can never have rhs of its VAR
-        Preconditions.checkState(!vdecl.hasChildren());
-        return new EnvTypePair(
-            envPutType(inEnv, name, JSType.STRING), JSType.STRING);
-      }
       case Token.REGEXP:
         return new EnvTypePair(inEnv, regexpType);
-      case Token.ARRAYLIT:
+      case Token.ARRAYLIT: {
         TypeEnv env = inEnv;
         for (Node arrayElm = expr.getFirstChild(); arrayElm != null;
              arrayElm = arrayElm.getNext()) {
           env = analyzeExprFwd(arrayElm, env).env;
         }
         return new EnvTypePair(env, arrayType);
-      case Token.CAST:
+      }
+      case Token.CAST: {
         EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
         JSType fromType = pair.type;
         JSType toType = symbolTable.getCastType(expr);
@@ -1446,6 +1441,7 @@ public class NewTypeInference implements CompilerPass {
         }
         pair.type = toType;
         return pair;
+      }
       case Token.CASE:
         // For a statement of the form: switch (exp1) { ... case exp2: ... }
         // we analyze the case as if it were (exp1 === exp2).
@@ -1782,7 +1778,10 @@ public class NewTypeInference implements CompilerPass {
   private static TypeEnv updateLvalueTypeInEnv(
       TypeEnv env, Node lvalue, QualifiedName qname, JSType type) {
     if (lvalue.isName()) {
-      return envPutType(env, lvalue.getQualifiedName(), type);
+      return envPutType(env, lvalue.getString(), type);
+    } else if (lvalue.isVar()) { // Can happen iff its parent is a for/in.
+      Preconditions.checkState(NodeUtil.isForIn(lvalue.getParent()));
+      return envPutType(env, lvalue.getFirstChild().getString(), type);
     }
     Preconditions.checkState(lvalue.isGetProp() || lvalue.isGetElem());
     if (qname != null) {
@@ -2337,7 +2336,8 @@ public class NewTypeInference implements CompilerPass {
     JSType declType;
     QualifiedName ptr;
 
-    LValueResultFwd(TypeEnv env, JSType type, JSType declType, QualifiedName ptr) {
+    LValueResultFwd(
+        TypeEnv env, JSType type, JSType declType, QualifiedName ptr) {
       Preconditions.checkNotNull(type);
       this.env = env;
       this.type = type;
@@ -2387,6 +2387,15 @@ public class NewTypeInference implements CompilerPass {
         }
         EnvTypePair pair = analyzeExprFwd(expr, inEnv, type);
         return new LValueResultFwd(pair.env, pair.type, null, null);
+      }
+      case Token.VAR: { // Can happen iff its parent is a for/in.
+        Preconditions.checkState(NodeUtil.isForIn(expr.getParent()));
+        Node vdecl = expr.getFirstChild();
+        String name = vdecl.getString();
+        // For/in can never have rhs of its VAR
+        Preconditions.checkState(!vdecl.hasChildren());
+        return new LValueResultFwd(
+            inEnv, JSType.STRING, null, new QualifiedName(name));
       }
       default: {
         // Expressions that aren't lvalues should be handled because they may
