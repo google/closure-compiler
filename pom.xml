@@ -1,0 +1,180 @@
+<!--
+ Copyright 2009 Google Inc.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+  >
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.google.javascript</groupId>
+  <artifactId>closure-compiler-parent</artifactId>
+  <packaging>pom</packaging>
+
+  <name>Closure Compiler Parent</name>
+  <version>1.0-SNAPSHOT</version>
+
+  <url>http://code.google.com/p/closure-compiler/</url>
+  <description>
+    Closure Compiler is a JavaScript optimizing compiler. It parses your
+    JavaScript, analyzes it, removes dead code and rewrites and minimizes
+    what's left. It also checks syntax, variable references, and types, and
+    warns about common JavaScript pitfalls. It is used in many of Google's
+    JavaScript apps, including Gmail, Google Web Search, Google Maps, and
+    Google Docs.
+  </description>
+  <inceptionYear>2009</inceptionYear>
+
+  <scm>
+    <connection>
+      scm:git:https://code.google.com/p/closure-compiler/
+    </connection>
+    <developerConnection>
+      scm:git:https://code.google.com/p/closure-compiler/
+    </developerConnection>
+    <url>
+      https://code.google.com/p/closure-compiler/source/browse/
+    </url>
+  </scm>
+
+  <issueManagement>
+    <system>code.google.com</system>
+    <url>http://code.google.com/p/closure-compiler/issues</url>
+  </issueManagement>
+
+  <organization>
+    <name>Google</name>
+    <url>http://www.google.com</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>9</version>
+  </parent>
+
+  <modules>
+    <module>lib/rhino/pom.xml</module>
+    <module>externs/pom.xml</module>
+    <module>pom-main.xml</module>
+  </modules>
+
+  <developers>
+    <developer>
+      <id>johnlenz</id>
+      <name>John Lenz</name>
+      <email>concavelenz@gmail.com</email>
+    </developer>
+    <developer>
+      <id>nicksantos</id>
+      <name>Nick Santos</name>
+      <email>nicholas.j.santos@gmail.com</email>
+    </developer>
+
+    <developer>
+      <id>acleung</id>
+      <name>Alan Leung</name>
+    </developer>
+
+    <developer>
+      <id>mbolin</id>
+      <name>Michael Bolin</name>
+      <email>mbolin@alum.mit.edu</email>
+    </developer>
+
+    <developer>
+      <id>plindner</id>
+      <name>Paul Lindner</name>
+      <email>lindner@inuus.com</email>
+    </developer>
+  </developers>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
+    <jdk.version>1.7</jdk.version>
+    <junit.version>4.11</junit.version>
+  </properties>
+
+  <build>
+    <defaultGoal>install</defaultGoal>
+    <pluginManagement>
+      <!-- set versions/conf of common plugins for reproducibility, ordered alphabetically by owner -->
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>1.7</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.1</version>
+          <configuration>
+            <source>${jdk.version}</source>
+            <target>${jdk.version}</target>
+            <showDeprecation>true</showDeprecation>
+            <compilerArgument>-Xlint:unchecked,deprecation,fallthrough,finally</compilerArgument>
+            <fork>true</fork>
+            <encoding>${project.build.sourceEncoding}</encoding>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>1.8</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>2.6</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.16</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>2.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>2.9.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>2.2.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-report-plugin</artifactId>
+          <version>2.16</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+</project>

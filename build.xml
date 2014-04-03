@@ -130,92 +130,6 @@
     </exec>
   </target>
 
-  <!-- Generate pom.xml with the proper rel build number -->
-  <target name="pom" depends="relversion">
-    <copy file="closure-compiler.pom" tofile="${build.dir}/pom.xml">
-      <filterset>
-        <filter token="build.relVersion"
-             value="${build.relVersion}"/>
-      </filterset>
-    </copy>
-
-    <property name="compiler-jarfile-nodeps" value="${build.dir}/closure-${ant.project.name}-${build.relVersion}.jar" />
-    <property name="compiler-jarfile-javadoc" value="${build.dir}/closure-${ant.project.name}-${build.relVersion}-javadoc.jar" />
-    <property name="compiler-jarfile-sources" value="${build.dir}/closure-${ant.project.name}-${build.relVersion}-sources.jar" />
-
-    <artifact:pom id="project" file="${build.dir}/pom.xml" />
-  </target>
-
-  <target name="mvn-install"
-          depends="jar-nodeps,jar-javadoc,jar-sources,pom"
-          description="Install closure-compiler artifacts into the local maven repo">
-    <artifact:install file="${compiler-jarfile-nodeps}">
-      <pom refid="project"/>
-      <attach file="${compiler-jarfile-javadoc}" classifier="javadoc"/>
-      <attach file="${compiler-jarfile-sources}" classifier="sources"/>
-    </artifact:install>
-  </target>
-
-  <!-- The mvn-deploy target takes the generated maven artifacts and pushes
-       them to the Sonatype repository.  You will need to have a
-       gpg key defined and account set up. More docs on how to do this here:
-
-       https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide
-  -->
-
-  <target name="mvn-deploy"
-    depends="mvn-install"
-    description="Signs and Deploys closure-compiler artifacts to the central maven repo">
-
-    <!-- sign and deploy the main artifact -->
-    <artifact:mvn>
-      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.1:sign-and-deploy-file" />
-      <arg value="-Durl=${maven-repository-url}" />
-      <arg value="-DrepositoryId=${maven-repository-id}" />
-      <arg value="-DpomFile=${build.dir}/pom.xml" />
-      <arg value="-Dfile=${compiler-jarfile-nodeps}" />
-      <arg value="-Pgpg" />
-    </artifact:mvn>
-
-    <!-- sign and deploy the sources artifact -->
-    <artifact:mvn>
-      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.1:sign-and-deploy-file" />
-      <arg value="-Durl=${maven-repository-url}" />
-      <arg value="-DrepositoryId=${maven-repository-id}" />
-      <arg value="-DpomFile=${build.dir}/pom.xml" />
-      <arg value="-Dfile=${compiler-jarfile-sources}" />
-      <arg value="-Dclassifier=sources" />
-      <arg value="-Pgpg" />
-    </artifact:mvn>
-
-    <!-- sign and deploy the javadoc artifact -->
-    <artifact:mvn>
-      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.1:sign-and-deploy-file" />
-      <arg value="-Durl=${maven-repository-url}" />
-      <arg value="-DrepositoryId=${maven-repository-id}" />
-      <arg value="-DpomFile=${build.dir}/pom.xml" />
-      <arg value="-Dfile=${compiler-jarfile-javadoc}" />
-      <arg value="-Dclassifier=javadoc" />
-      <arg value="-Pgpg" />
-    </artifact:mvn>
-  </target>
-
-  <!-- Sync maven dependencies listed in pom.xml -->
-  <target name="mvn-deps-sync" description="sync dependencies/jars in closure-compiler.pom to lib" depends="pom">
-    <artifact:dependencies filesetid="dependency.fileset"
-                           pathid="dependency.classpath"
-                           pomrefid="project"
-                           versionsId="dependency.versions"/>
-    <mkdir dir="${lib.dir}"/>
-    <copy todir="${lib.dir}">
-      <fileset refid="dependency.fileset" />
-      <!-- This mapper strips off all leading directory information -->
-      <mapper classpathref="maven-ant-tasks.classpath"
-          classname="org.apache.maven.artifact.ant.VersionMapper"
-          from="${dependency.versions}" to="flatten" />
-    </copy>
-  </target>
-
   <!-- set the classpath for the project              -->
   <!-- this includes the generated source class files -->
   <!-- and every jar in the /lib directory            -->
@@ -287,18 +201,6 @@
       <fileset dir="${src.dir}/com/google/javascript/jscomp/js" />
     </copy>
   </target>
-
-  <target name="jar-nodeps"
-          depends="compile,pom"
-          description="package compiler as an executable jar">
-    <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" />
-    <jar destfile="${compiler-jarfile-nodeps}" update="true">
-      <fileset dir="${classes.dir}" />
-      <fileset dir="${build.dir}" includes="externs.zip" />
-      <zipfileset src="${build.dir}/lib/rhino.jar"/>
-    </jar>
-  </target>
-
 
   <target name="jar"
           depends="compile"
@@ -379,7 +281,7 @@
 
   <target name="one-test"
           depends="compile-tests"
-          description="Compile and execute one JUnit test 
+          description="Compile and execute one JUnit test
                        specified with -Dtest.class and -Dtest.method.">
     <mkdir dir="build/testoutput"/>
     <junit printsummary="on" fork="${test.fork}"
