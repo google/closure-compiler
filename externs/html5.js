@@ -3208,7 +3208,7 @@ var Promise = function(resolver) {};
 
 
 /**
- * @param {TYPE=} opt_value
+ * @param {(TYPE|IThenable.<TYPE>)=} opt_value
  * @return {!Promise.<TYPE>}
  * @template TYPE
  */
