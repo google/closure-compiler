@@ -11636,6 +11636,49 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: undefined");
   }
 
+  public void testTemplateType21() throws Exception {
+    // "this" types is inferred when the parameters are declared.
+    testTypes(
+        "/** @interface @template T */ function A() {}\n" +
+        "/** @constructor @implements {A.<Foo>} */\n" +
+        "function Foo() {}\n" +
+        "/** @constructor @implements {A.<Bar>} */\n" +
+        "function Bar() {}\n" +
+        "/** @type {!Foo} */\n" +
+        "var x = new Bar();\n",
+        "initializing variable\n" +
+        "found   : Bar\n" +
+        "required: Foo");
+  }
+
+  public void testTemplateType22() throws Exception {
+    // "this" types is inferred when the parameters are declared.
+    testTypes(
+        "/** @interface @template T */ function A() {}\n" +
+        "/** @interface @template T */ function B() {}\n" +
+        "/** @constructor @implements {A.<Foo>} */\n" +
+        "function Foo() {}\n" +
+        "/** @constructor @implements {B.<Foo>} */\n" +
+        "function Bar() {}\n" +
+        "/** @constructor @implements {B.<Foo>} */\n" +
+        "function Qux() {}\n" +
+        "/** @type {!Qux} */\n" +
+        "var x = new Bar();\n",
+        "initializing variable\n" +
+        "found   : Bar\n" +
+        "required: Qux");
+  }
+
+  public void testTemplateType23() throws Exception {
+    // "this" types is inferred when the parameters are declared.
+    testTypes(
+        "/** @interface @template T */ function A() {}\n" +
+        "/** @constructor @implements {A.<Foo>} */\n" +
+        "function Foo() {}\n" +
+        "/** @type {!Foo} */\n" +
+        "var x = new Foo();\n");
+  }
+
   public void testTemplateTypeWithUnresolvedType() throws Exception {
     testClosureTypes(
         "var goog = {};\n" +

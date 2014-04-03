@@ -63,6 +63,7 @@ public class TemplateTypeMap implements Serializable {
   // instance. These fully-resolved values are necessary for determining the
   // equivalence of two TemplateTypeMap instances.
   private final ImmutableList<JSType> resolvedTemplateValues;
+  private boolean inRecursiveEquivalenceCheck = false;
   final JSTypeRegistry registry;
 
   TemplateTypeMap(JSTypeRegistry registry,
@@ -194,8 +195,19 @@ public class TemplateTypeMap implements Serializable {
    */
   public boolean checkEquivalenceHelper(
       TemplateTypeMap that, EquivalenceMethod eqMethod) {
-    return checkEquivalenceHelper(eqMethod, this, that)
-        && checkEquivalenceHelper(eqMethod, that, this);
+    boolean result = false;
+    if (!this.inRecursiveEquivalenceCheck &&
+        !that.inRecursiveEquivalenceCheck) {
+      this.inRecursiveEquivalenceCheck = true;
+      that.inRecursiveEquivalenceCheck = true;
+
+      result = checkEquivalenceHelper(eqMethod, this, that)
+          && checkEquivalenceHelper(eqMethod, that, this);
+
+      this.inRecursiveEquivalenceCheck = false;
+      that.inRecursiveEquivalenceCheck = false;
+    }
+    return result;
   }
 
   private static boolean checkEquivalenceHelper(EquivalenceMethod eqMethod,
