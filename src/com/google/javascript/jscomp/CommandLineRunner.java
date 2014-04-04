@@ -170,35 +170,6 @@ public class CommandLineRunner extends
         + "modules.")
     private List<String> module = Lists.newArrayList();
 
-    @Option(name = "--variable_map_input_file",
-        usage = "File containing the serialized version of the variable "
-        + "renaming map produced by a previous compilation")
-    private String variableMapInputFile = "";
-
-    @Option(name = "--property_map_input_file",
-        usage = "File containing the serialized version of the property "
-        + "renaming map produced by a previous compilation")
-    private String propertyMapInputFile = "";
-
-    @Option(name = "--variable_map_output_file",
-        usage = "File where the serialized version of the variable "
-        + "renaming map produced should be saved")
-    private String variableMapOutputFile = "";
-
-    @Option(name = "--create_name_map_files",
-        handler = BooleanOptionHandler.class,
-        usage = "If true, variable renaming and property renaming map "
-        + "files will be produced as {binary name}_vars_map.out and "
-        + "{binary name}_props_map.out. Note that this flag cannot be used "
-        + "in conjunction with either variableMapOutputFile or "
-        + "property_map_output_file")
-    private boolean createNameMapFiles = false;
-
-    @Option(name = "--property_map_output_file",
-        usage = "File where the serialized version of the property "
-        + "renaming map produced should be saved")
-    private String propertyMapOutputFile = "";
-
     @Option(name = "--third_party",
         handler = BooleanOptionHandler.class,
         usage = "Check source validity but do not enforce Closure style "
@@ -779,11 +750,6 @@ public class CommandLineRunner extends
           .setJs(flags.getJsFiles())
           .setJsOutputFile(flags.jsOutputFile)
           .setModule(flags.module)
-          .setVariableMapInputFile(flags.variableMapInputFile)
-          .setPropertyMapInputFile(flags.propertyMapInputFile)
-          .setVariableMapOutputFile(flags.variableMapOutputFile)
-          .setCreateNameMapFiles(flags.createNameMapFiles)
-          .setPropertyMapOutputFile(flags.propertyMapOutputFile)
           .setCodingConvention(conv)
           .setSummaryDetailLevel(flags.summaryDetailLevel)
           .setOutputWrapper(flags.outputWrapper)
