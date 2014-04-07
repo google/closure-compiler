@@ -54,6 +54,7 @@ public class ObjectType {
   private ObjectType(NominalType nominalType,
       PersistentMap<String, Property> props, FunctionType fn, boolean isLoose,
       ObjectKind objectKind) {
+    Preconditions.checkState(nominalType == null || !isLoose);
     this.nominalType = nominalType;
     this.props = props;
     this.fn = fn;
@@ -323,12 +324,12 @@ public class ObjectType {
       return true;
     }
 
-    if (!objectKind.isSubtypeOf(obj2.objectKind)) {
-      return false;
-    }
-
     if (this.isLoose || obj2.isLoose) {
       return this.isLooseSubtypeOf(obj2);
+    }
+
+    if (!objectKind.isSubtypeOf(obj2.objectKind)) {
+      return false;
     }
 
     // If nominalType1 < nominalType2, we only need to check that the
@@ -365,17 +366,32 @@ public class ObjectType {
   }
 
   boolean isLooseSubtypeOf(ObjectType obj2) {
+    Preconditions.checkState(isLoose || obj2.isLoose);
     if (obj2 == TOP_OBJECT) {
       return true;
     }
-    for (String pname : obj2.props.keySet()) {
-      if (props.containsKey(pname)) {
-        if (!props.get(pname).getType()
-            .isSubtypeOf(obj2.props.get(pname).getType())) {
+
+    if (!isLoose) {
+      if (!objectKind.isSubtypeOf(obj2.objectKind)) {
+        return false;
+      }
+      for (String pname : obj2.props.keySet()) {
+        QualifiedName qname = new QualifiedName(pname);
+        if (!mayHaveProp(qname) ||
+            !getProp(qname).isSubtypeOf(obj2.getProp(qname))) {
+          return false;
+        }
+      }
+    } else { // this is loose, obj2 may be loose
+      for (String pname : props.keySet()) {
+        QualifiedName qname = new QualifiedName(pname);
+        if (obj2.mayHaveProp(qname) &&
+            !getProp(qname).isSubtypeOf(obj2.getProp(qname))) {
           return false;
         }
       }
     }
+
     if (obj2.fn == null) {
       return true;
     } else if (this.fn == null) {
@@ -394,7 +410,7 @@ public class ObjectType {
         resultNominalType,
         meetPropsHelper(true, resultNominalType, this.props, other.props),
         (fn == null) ? null : fn.specialize(other.fn),
-        this.isLoose || other.isLoose,
+        resultNominalType == null && this.isLoose,
         ObjectKind.meet(this.objectKind, other.objectKind));
   }
 
