@@ -300,15 +300,3 @@ Description:
 Depended by lib/mockito-core.jar, not used directly.
 
 Local Modifications: None
-
----
-Code in:
-tools/maven-ant-tasks-2.1.3.jar
-URL: http://maven.apache.org
-Version 2.1.3
-License: Apache License 2.0
-Description:
-  Maven Ant tasks are used to manage dependencies and to install/deploy to
-  maven repositories.
-
-Local Modifications: None
