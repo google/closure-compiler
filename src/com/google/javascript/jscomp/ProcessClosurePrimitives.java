@@ -666,14 +666,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           maybeInheritsExpr.getFirstChild().isCall()) {
         Node callNode = maybeInheritsExpr.getFirstChild();
         if ("goog.inherits".equals(
-                callNode.getFirstChild().getQualifiedName())) {
-           Node base = callNode.getLastChild();
-           while (base.isCast()) {
-             base = base.getFirstChild();
-           }
-           if (callNode.getLastChild().isQualifiedName()) {
-             baseClassNode = callNode.getLastChild();
-           }
+                callNode.getFirstChild().getQualifiedName()) &&
+            callNode.getLastChild().isQualifiedName()) {
+          baseClassNode = callNode.getLastChild();
         }
       }
 
@@ -714,7 +709,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       if (!knownClosureSubclasses.contains(baseContainer)) {
         // Can't determine if this is a known "class" that has a known "base"
         // method.
-        reportBadBaseMethodUse(t, n, baseContainer, "Unknown class " + enclosingQname);
         return;
       }
 
