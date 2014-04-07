@@ -12,26 +12,84 @@ public final class Mapping {
       extends com.google.protobuf.MessageOrBuilder {
 
     // optional int32 line_number = 1;
+    /**
+     * <code>optional int32 line_number = 1;</code>
+     *
+     * <pre>
+     * The line number of the generated code.
+     * </pre>
+     */
     boolean hasLineNumber();
+    /**
+     * <code>optional int32 line_number = 1;</code>
+     *
+     * <pre>
+     * The line number of the generated code.
+     * </pre>
+     */
     int getLineNumber();
 
     // optional int32 column_position = 2;
+    /**
+     * <code>optional int32 column_position = 2;</code>
+     *
+     * <pre>
+     * The column position on the line.
+     * </pre>
+     */
     boolean hasColumnPosition();
+    /**
+     * <code>optional int32 column_position = 2;</code>
+     *
+     * <pre>
+     * The column position on the line.
+     * </pre>
+     */
     int getColumnPosition();
 
     // optional .sourcemap.OriginalMapping original_mapping = 3;
+    /**
+     * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+     *
+     * <pre>
+     * The original mapping for this line mapping.
+     * </pre>
+     */
     boolean hasOriginalMapping();
+    /**
+     * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+     *
+     * <pre>
+     * The original mapping for this line mapping.
+     * </pre>
+     */
     com.google.debugging.sourcemap.proto.Mapping.OriginalMapping getOriginalMapping();
+    /**
+     * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+     *
+     * <pre>
+     * The original mapping for this line mapping.
+     * </pre>
+     */
     com.google.debugging.sourcemap.proto.Mapping.OriginalMappingOrBuilder getOriginalMappingOrBuilder();
   }
+  /**
+   * Protobuf type {@code sourcemap.LineMapping}
+   *
+   * <pre>
+   * Maps a position on a given line to the mapping describing
+   * the original code.
+   * </pre>
+   */
   public static final class LineMapping extends
       com.google.protobuf.GeneratedMessage
       implements LineMappingOrBuilder {
     // Use LineMapping.newBuilder() to construct.
-    private LineMapping(Builder builder) {
+    private LineMapping(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private LineMapping(boolean noInit) {}
+    private LineMapping(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
 
     private static final LineMapping defaultInstance;
     public static LineMapping getDefaultInstance() {
@@ -42,6 +100,70 @@ public final class Mapping {
       return defaultInstance;
     }
 
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private LineMapping(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              lineNumber_ = input.readInt32();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              columnPosition_ = input.readInt32();
+              break;
+            }
+            case 26: {
+              com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = originalMapping_.toBuilder();
+              }
+              originalMapping_ = input.readMessage(com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(originalMapping_);
+                originalMapping_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.google.debugging.sourcemap.proto.Mapping.internal_static_sourcemap_LineMapping_descriptor;
@@ -49,16 +171,47 @@ public final class Mapping {
 
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.google.debugging.sourcemap.proto.Mapping.internal_static_sourcemap_LineMapping_fieldAccessorTable;
+      return com.google.debugging.sourcemap.proto.Mapping.internal_static_sourcemap_LineMapping_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.google.debugging.sourcemap.proto.Mapping.LineMapping.class, com.google.debugging.sourcemap.proto.Mapping.LineMapping.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<LineMapping> PARSER =
+        new com.google.protobuf.AbstractParser<LineMapping>() {
+      public LineMapping parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new LineMapping(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<LineMapping> getParserForType() {
+      return PARSER;
     }
 
     private int bitField0_;
     // optional int32 line_number = 1;
     public static final int LINE_NUMBER_FIELD_NUMBER = 1;
     private int lineNumber_;
+    /**
+     * <code>optional int32 line_number = 1;</code>
+     *
+     * <pre>
+     * The line number of the generated code.
+     * </pre>
+     */
     public boolean hasLineNumber() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
+    /**
+     * <code>optional int32 line_number = 1;</code>
+     *
+     * <pre>
+     * The line number of the generated code.
+     * </pre>
+     */
     public int getLineNumber() {
       return lineNumber_;
     }
@@ -66,9 +219,23 @@ public final class Mapping {
     // optional int32 column_position = 2;
     public static final int COLUMN_POSITION_FIELD_NUMBER = 2;
     private int columnPosition_;
+    /**
+     * <code>optional int32 column_position = 2;</code>
+     *
+     * <pre>
+     * The column position on the line.
+     * </pre>
+     */
     public boolean hasColumnPosition() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
+    /**
+     * <code>optional int32 column_position = 2;</code>
+     *
+     * <pre>
+     * The column position on the line.
+     * </pre>
+     */
     public int getColumnPosition() {
       return columnPosition_;
     }
@@ -76,12 +243,33 @@ public final class Mapping {
     // optional .sourcemap.OriginalMapping original_mapping = 3;
     public static final int ORIGINAL_MAPPING_FIELD_NUMBER = 3;
     private com.google.debugging.sourcemap.proto.Mapping.OriginalMapping originalMapping_;
+    /**
+     * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+     *
+     * <pre>
+     * The original mapping for this line mapping.
+     * </pre>
+     */
     public boolean hasOriginalMapping() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
+    /**
+     * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+     *
+     * <pre>
+     * The original mapping for this line mapping.
+     * </pre>
+     */
     public com.google.debugging.sourcemap.proto.Mapping.OriginalMapping getOriginalMapping() {
       return originalMapping_;
     }
+    /**
+     * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+     *
+     * <pre>
+     * The original mapping for this line mapping.
+     * </pre>
+     */
     public com.google.debugging.sourcemap.proto.Mapping.OriginalMappingOrBuilder getOriginalMappingOrBuilder() {
       return originalMapping_;
     }
@@ -148,68 +336,54 @@ public final class Mapping {
     public static com.google.debugging.sourcemap.proto.Mapping.LineMapping parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data).buildParsed();
+      return PARSER.parseFrom(data);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.LineMapping parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data, extensionRegistry)
-               .buildParsed();
+      return PARSER.parseFrom(data, extensionRegistry);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.LineMapping parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data).buildParsed();
+      return PARSER.parseFrom(data);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.LineMapping parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data, extensionRegistry)
-               .buildParsed();
+      return PARSER.parseFrom(data, extensionRegistry);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.LineMapping parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return newBuilder().mergeFrom(input).buildParsed();
+      return PARSER.parseFrom(input);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.LineMapping parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return newBuilder().mergeFrom(input, extensionRegistry)
-               .buildParsed();
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.LineMapping parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      Builder builder = newBuilder();
-      if (builder.mergeDelimitedFrom(input)) {
-        return builder.buildParsed();
-      } else {
-        return null;
-      }
+      return PARSER.parseDelimitedFrom(input);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.LineMapping parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      Builder builder = newBuilder();
-      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
-        return builder.buildParsed();
-      } else {
-        return null;
-      }
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.LineMapping parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return newBuilder().mergeFrom(input).buildParsed();
+      return PARSER.parseFrom(input);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.LineMapping parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return newBuilder().mergeFrom(input, extensionRegistry)
-               .buildParsed();
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
     public static Builder newBuilder() { return Builder.create(); }
@@ -225,6 +399,14 @@ public final class Mapping {
       Builder builder = new Builder(parent);
       return builder;
     }
+    /**
+     * Protobuf type {@code sourcemap.LineMapping}
+     *
+     * <pre>
+     * Maps a position on a given line to the mapping describing
+     * the original code.
+     * </pre>
+     */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
        implements com.google.debugging.sourcemap.proto.Mapping.LineMappingOrBuilder {
@@ -235,7 +417,9 @@ public final class Mapping {
 
       protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.google.debugging.sourcemap.proto.Mapping.internal_static_sourcemap_LineMapping_fieldAccessorTable;
+        return com.google.debugging.sourcemap.proto.Mapping.internal_static_sourcemap_LineMapping_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.google.debugging.sourcemap.proto.Mapping.LineMapping.class, com.google.debugging.sourcemap.proto.Mapping.LineMapping.Builder.class);
       }
 
       // Construct using com.google.debugging.sourcemap.proto.Mapping.LineMapping.newBuilder()
@@ -243,7 +427,8 @@ public final class Mapping {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(BuilderParent parent) {
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -277,7 +462,7 @@ public final class Mapping {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.google.debugging.sourcemap.proto.Mapping.LineMapping.getDescriptor();
+        return com.google.debugging.sourcemap.proto.Mapping.internal_static_sourcemap_LineMapping_descriptor;
       }
 
       public com.google.debugging.sourcemap.proto.Mapping.LineMapping getDefaultInstanceForType() {
@@ -288,16 +473,6 @@ public final class Mapping {
         com.google.debugging.sourcemap.proto.Mapping.LineMapping result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      private com.google.debugging.sourcemap.proto.Mapping.LineMapping buildParsed()
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        com.google.debugging.sourcemap.proto.Mapping.LineMapping result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(
-            result).asInvalidProtocolBufferException();
         }
         return result;
       }
@@ -359,64 +534,63 @@ public final class Mapping {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder(
-            this.getUnknownFields());
-        while (true) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              this.setUnknownFields(unknownFields.build());
-              onChanged();
-              return this;
-            default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
-                this.setUnknownFields(unknownFields.build());
-                onChanged();
-                return this;
-              }
-              break;
-            }
-            case 8: {
-              bitField0_ |= 0x00000001;
-              lineNumber_ = input.readInt32();
-              break;
-            }
-            case 16: {
-              bitField0_ |= 0x00000002;
-              columnPosition_ = input.readInt32();
-              break;
-            }
-            case 26: {
-              com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder subBuilder = com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.newBuilder();
-              if (hasOriginalMapping()) {
-                subBuilder.mergeFrom(getOriginalMapping());
-              }
-              input.readMessage(subBuilder, extensionRegistry);
-              setOriginalMapping(subBuilder.buildPartial());
-              break;
-            }
+        com.google.debugging.sourcemap.proto.Mapping.LineMapping parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.google.debugging.sourcemap.proto.Mapping.LineMapping) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
           }
         }
+        return this;
       }
-
       private int bitField0_;
 
       // optional int32 line_number = 1;
       private int lineNumber_ ;
+      /**
+       * <code>optional int32 line_number = 1;</code>
+       *
+       * <pre>
+       * The line number of the generated code.
+       * </pre>
+       */
       public boolean hasLineNumber() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
+      /**
+       * <code>optional int32 line_number = 1;</code>
+       *
+       * <pre>
+       * The line number of the generated code.
+       * </pre>
+       */
       public int getLineNumber() {
         return lineNumber_;
       }
+      /**
+       * <code>optional int32 line_number = 1;</code>
+       *
+       * <pre>
+       * The line number of the generated code.
+       * </pre>
+       */
       public Builder setLineNumber(int value) {
         bitField0_ |= 0x00000001;
         lineNumber_ = value;
         onChanged();
         return this;
       }
+      /**
+       * <code>optional int32 line_number = 1;</code>
+       *
+       * <pre>
+       * The line number of the generated code.
+       * </pre>
+       */
       public Builder clearLineNumber() {
         bitField0_ = (bitField0_ & ~0x00000001);
         lineNumber_ = 0;
@@ -426,18 +600,46 @@ public final class Mapping {
 
       // optional int32 column_position = 2;
       private int columnPosition_ ;
+      /**
+       * <code>optional int32 column_position = 2;</code>
+       *
+       * <pre>
+       * The column position on the line.
+       * </pre>
+       */
       public boolean hasColumnPosition() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
+      /**
+       * <code>optional int32 column_position = 2;</code>
+       *
+       * <pre>
+       * The column position on the line.
+       * </pre>
+       */
       public int getColumnPosition() {
         return columnPosition_;
       }
+      /**
+       * <code>optional int32 column_position = 2;</code>
+       *
+       * <pre>
+       * The column position on the line.
+       * </pre>
+       */
       public Builder setColumnPosition(int value) {
         bitField0_ |= 0x00000002;
         columnPosition_ = value;
         onChanged();
         return this;
       }
+      /**
+       * <code>optional int32 column_position = 2;</code>
+       *
+       * <pre>
+       * The column position on the line.
+       * </pre>
+       */
       public Builder clearColumnPosition() {
         bitField0_ = (bitField0_ & ~0x00000002);
         columnPosition_ = 0;
@@ -449,9 +651,23 @@ public final class Mapping {
       private com.google.debugging.sourcemap.proto.Mapping.OriginalMapping originalMapping_ = com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.google.debugging.sourcemap.proto.Mapping.OriginalMapping, com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder, com.google.debugging.sourcemap.proto.Mapping.OriginalMappingOrBuilder> originalMappingBuilder_;
+      /**
+       * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+       *
+       * <pre>
+       * The original mapping for this line mapping.
+       * </pre>
+       */
       public boolean hasOriginalMapping() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
+      /**
+       * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+       *
+       * <pre>
+       * The original mapping for this line mapping.
+       * </pre>
+       */
       public com.google.debugging.sourcemap.proto.Mapping.OriginalMapping getOriginalMapping() {
         if (originalMappingBuilder_ == null) {
           return originalMapping_;
@@ -459,6 +675,13 @@ public final class Mapping {
           return originalMappingBuilder_.getMessage();
         }
       }
+      /**
+       * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+       *
+       * <pre>
+       * The original mapping for this line mapping.
+       * </pre>
+       */
       public Builder setOriginalMapping(com.google.debugging.sourcemap.proto.Mapping.OriginalMapping value) {
         if (originalMappingBuilder_ == null) {
           if (value == null) {
@@ -472,6 +695,13 @@ public final class Mapping {
         bitField0_ |= 0x00000004;
         return this;
       }
+      /**
+       * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+       *
+       * <pre>
+       * The original mapping for this line mapping.
+       * </pre>
+       */
       public Builder setOriginalMapping(
           com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder builderForValue) {
         if (originalMappingBuilder_ == null) {
@@ -483,6 +713,13 @@ public final class Mapping {
         bitField0_ |= 0x00000004;
         return this;
       }
+      /**
+       * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+       *
+       * <pre>
+       * The original mapping for this line mapping.
+       * </pre>
+       */
       public Builder mergeOriginalMapping(com.google.debugging.sourcemap.proto.Mapping.OriginalMapping value) {
         if (originalMappingBuilder_ == null) {
           if (((bitField0_ & 0x00000004) == 0x00000004) &&
@@ -499,6 +736,13 @@ public final class Mapping {
         bitField0_ |= 0x00000004;
         return this;
       }
+      /**
+       * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+       *
+       * <pre>
+       * The original mapping for this line mapping.
+       * </pre>
+       */
       public Builder clearOriginalMapping() {
         if (originalMappingBuilder_ == null) {
           originalMapping_ = com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.getDefaultInstance();
@@ -509,11 +753,25 @@ public final class Mapping {
         bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
+      /**
+       * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+       *
+       * <pre>
+       * The original mapping for this line mapping.
+       * </pre>
+       */
       public com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder getOriginalMappingBuilder() {
         bitField0_ |= 0x00000004;
         onChanged();
         return getOriginalMappingFieldBuilder().getBuilder();
       }
+      /**
+       * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+       *
+       * <pre>
+       * The original mapping for this line mapping.
+       * </pre>
+       */
       public com.google.debugging.sourcemap.proto.Mapping.OriginalMappingOrBuilder getOriginalMappingOrBuilder() {
         if (originalMappingBuilder_ != null) {
           return originalMappingBuilder_.getMessageOrBuilder();
@@ -521,8 +779,15 @@ public final class Mapping {
           return originalMapping_;
         }
       }
+      /**
+       * <code>optional .sourcemap.OriginalMapping original_mapping = 3;</code>
+       *
+       * <pre>
+       * The original mapping for this line mapping.
+       * </pre>
+       */
       private com.google.protobuf.SingleFieldBuilder<
-          com.google.debugging.sourcemap.proto.Mapping.OriginalMapping, com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder, com.google.debugging.sourcemap.proto.Mapping.OriginalMappingOrBuilder>
+          com.google.debugging.sourcemap.proto.Mapping.OriginalMapping, com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder, com.google.debugging.sourcemap.proto.Mapping.OriginalMappingOrBuilder> 
           getOriginalMappingFieldBuilder() {
         if (originalMappingBuilder_ == null) {
           originalMappingBuilder_ = new com.google.protobuf.SingleFieldBuilder<
@@ -550,29 +815,107 @@ public final class Mapping {
       extends com.google.protobuf.MessageOrBuilder {
 
     // optional string original_file = 1;
+    /**
+     * <code>optional string original_file = 1;</code>
+     *
+     * <pre>
+     * The original source file.
+     * </pre>
+     */
     boolean hasOriginalFile();
-    String getOriginalFile();
+    /**
+     * <code>optional string original_file = 1;</code>
+     *
+     * <pre>
+     * The original source file.
+     * </pre>
+     */
+    java.lang.String getOriginalFile();
+    /**
+     * <code>optional string original_file = 1;</code>
+     *
+     * <pre>
+     * The original source file.
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getOriginalFileBytes();
 
     // optional int32 line_number = 2;
+    /**
+     * <code>optional int32 line_number = 2;</code>
+     *
+     * <pre>
+     * The line in the original file.
+     * </pre>
+     */
     boolean hasLineNumber();
+    /**
+     * <code>optional int32 line_number = 2;</code>
+     *
+     * <pre>
+     * The line in the original file.
+     * </pre>
+     */
     int getLineNumber();
 
     // optional int32 column_position = 3;
+    /**
+     * <code>optional int32 column_position = 3;</code>
+     *
+     * <pre>
+     * The column number on the line.
+     * </pre>
+     */
     boolean hasColumnPosition();
+    /**
+     * <code>optional int32 column_position = 3;</code>
+     *
+     * <pre>
+     * The column number on the line.
+     * </pre>
+     */
     int getColumnPosition();
 
     // optional string identifier = 4;
+    /**
+     * <code>optional string identifier = 4;</code>
+     *
+     * <pre>
+     * The original name of the identifier.
+     * </pre>
+     */
     boolean hasIdentifier();
-    String getIdentifier();
+    /**
+     * <code>optional string identifier = 4;</code>
+     *
+     * <pre>
+     * The original name of the identifier.
+     * </pre>
+     */
+    java.lang.String getIdentifier();
+    /**
+     * <code>optional string identifier = 4;</code>
+     *
+     * <pre>
+     * The original name of the identifier.
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getIdentifierBytes();
   }
+  /**
+   * Protobuf type {@code sourcemap.OriginalMapping}
+   */
   public static final class OriginalMapping extends
       com.google.protobuf.GeneratedMessage
       implements OriginalMappingOrBuilder {
     // Use OriginalMapping.newBuilder() to construct.
-    private OriginalMapping(Builder builder) {
+    private OriginalMapping(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private OriginalMapping(boolean noInit) {}
+    private OriginalMapping(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
 
     private static final OriginalMapping defaultInstance;
     public static OriginalMapping getDefaultInstance() {
@@ -583,6 +926,67 @@ public final class Mapping {
       return defaultInstance;
     }
 
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private OriginalMapping(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              originalFile_ = input.readBytes();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              lineNumber_ = input.readInt32();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              columnPosition_ = input.readInt32();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              identifier_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.google.debugging.sourcemap.proto.Mapping.internal_static_sourcemap_OriginalMapping_descriptor;
@@ -590,35 +994,75 @@ public final class Mapping {
 
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.google.debugging.sourcemap.proto.Mapping.internal_static_sourcemap_OriginalMapping_fieldAccessorTable;
+      return com.google.debugging.sourcemap.proto.Mapping.internal_static_sourcemap_OriginalMapping_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.class, com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<OriginalMapping> PARSER =
+        new com.google.protobuf.AbstractParser<OriginalMapping>() {
+      public OriginalMapping parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new OriginalMapping(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<OriginalMapping> getParserForType() {
+      return PARSER;
     }
 
     private int bitField0_;
     // optional string original_file = 1;
     public static final int ORIGINAL_FILE_FIELD_NUMBER = 1;
     private java.lang.Object originalFile_;
+    /**
+     * <code>optional string original_file = 1;</code>
+     *
+     * <pre>
+     * The original source file.
+     * </pre>
+     */
     public boolean hasOriginalFile() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
-    public String getOriginalFile() {
+    /**
+     * <code>optional string original_file = 1;</code>
+     *
+     * <pre>
+     * The original source file.
+     * </pre>
+     */
+    public java.lang.String getOriginalFile() {
       java.lang.Object ref = originalFile_;
-      if (ref instanceof String) {
-        return (String) ref;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
-        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
           originalFile_ = s;
         }
         return s;
       }
     }
-    private com.google.protobuf.ByteString getOriginalFileBytes() {
+    /**
+     * <code>optional string original_file = 1;</code>
+     *
+     * <pre>
+     * The original source file.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getOriginalFileBytes() {
       java.lang.Object ref = originalFile_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b =
-            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
         originalFile_ = b;
         return b;
       } else {
@@ -629,9 +1073,23 @@ public final class Mapping {
     // optional int32 line_number = 2;
     public static final int LINE_NUMBER_FIELD_NUMBER = 2;
     private int lineNumber_;
+    /**
+     * <code>optional int32 line_number = 2;</code>
+     *
+     * <pre>
+     * The line in the original file.
+     * </pre>
+     */
     public boolean hasLineNumber() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
+    /**
+     * <code>optional int32 line_number = 2;</code>
+     *
+     * <pre>
+     * The line in the original file.
+     * </pre>
+     */
     public int getLineNumber() {
       return lineNumber_;
     }
@@ -639,9 +1097,23 @@ public final class Mapping {
     // optional int32 column_position = 3;
     public static final int COLUMN_POSITION_FIELD_NUMBER = 3;
     private int columnPosition_;
+    /**
+     * <code>optional int32 column_position = 3;</code>
+     *
+     * <pre>
+     * The column number on the line.
+     * </pre>
+     */
     public boolean hasColumnPosition() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
+    /**
+     * <code>optional int32 column_position = 3;</code>
+     *
+     * <pre>
+     * The column number on the line.
+     * </pre>
+     */
     public int getColumnPosition() {
       return columnPosition_;
     }
@@ -649,28 +1121,51 @@ public final class Mapping {
     // optional string identifier = 4;
     public static final int IDENTIFIER_FIELD_NUMBER = 4;
     private java.lang.Object identifier_;
+    /**
+     * <code>optional string identifier = 4;</code>
+     *
+     * <pre>
+     * The original name of the identifier.
+     * </pre>
+     */
     public boolean hasIdentifier() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
-    public String getIdentifier() {
+    /**
+     * <code>optional string identifier = 4;</code>
+     *
+     * <pre>
+     * The original name of the identifier.
+     * </pre>
+     */
+    public java.lang.String getIdentifier() {
       java.lang.Object ref = identifier_;
-      if (ref instanceof String) {
-        return (String) ref;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
-        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
           identifier_ = s;
         }
         return s;
       }
     }
-    private com.google.protobuf.ByteString getIdentifierBytes() {
+    /**
+     * <code>optional string identifier = 4;</code>
+     *
+     * <pre>
+     * The original name of the identifier.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getIdentifierBytes() {
       java.lang.Object ref = identifier_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b =
-            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
         identifier_ = b;
         return b;
       } else {
@@ -748,68 +1243,54 @@ public final class Mapping {
     public static com.google.debugging.sourcemap.proto.Mapping.OriginalMapping parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data).buildParsed();
+      return PARSER.parseFrom(data);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.OriginalMapping parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data, extensionRegistry)
-               .buildParsed();
+      return PARSER.parseFrom(data, extensionRegistry);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.OriginalMapping parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data).buildParsed();
+      return PARSER.parseFrom(data);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.OriginalMapping parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data, extensionRegistry)
-               .buildParsed();
+      return PARSER.parseFrom(data, extensionRegistry);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.OriginalMapping parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return newBuilder().mergeFrom(input).buildParsed();
+      return PARSER.parseFrom(input);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.OriginalMapping parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return newBuilder().mergeFrom(input, extensionRegistry)
-               .buildParsed();
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.OriginalMapping parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      Builder builder = newBuilder();
-      if (builder.mergeDelimitedFrom(input)) {
-        return builder.buildParsed();
-      } else {
-        return null;
-      }
+      return PARSER.parseDelimitedFrom(input);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.OriginalMapping parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      Builder builder = newBuilder();
-      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
-        return builder.buildParsed();
-      } else {
-        return null;
-      }
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.OriginalMapping parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return newBuilder().mergeFrom(input).buildParsed();
+      return PARSER.parseFrom(input);
     }
     public static com.google.debugging.sourcemap.proto.Mapping.OriginalMapping parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return newBuilder().mergeFrom(input, extensionRegistry)
-               .buildParsed();
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
     public static Builder newBuilder() { return Builder.create(); }
@@ -825,6 +1306,9 @@ public final class Mapping {
       Builder builder = new Builder(parent);
       return builder;
     }
+    /**
+     * Protobuf type {@code sourcemap.OriginalMapping}
+     */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
        implements com.google.debugging.sourcemap.proto.Mapping.OriginalMappingOrBuilder {
@@ -835,7 +1319,9 @@ public final class Mapping {
 
       protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.google.debugging.sourcemap.proto.Mapping.internal_static_sourcemap_OriginalMapping_fieldAccessorTable;
+        return com.google.debugging.sourcemap.proto.Mapping.internal_static_sourcemap_OriginalMapping_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.class, com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder.class);
       }
 
       // Construct using com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.newBuilder()
@@ -843,7 +1329,8 @@ public final class Mapping {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(BuilderParent parent) {
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -874,7 +1361,7 @@ public final class Mapping {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.getDescriptor();
+        return com.google.debugging.sourcemap.proto.Mapping.internal_static_sourcemap_OriginalMapping_descriptor;
       }
 
       public com.google.debugging.sourcemap.proto.Mapping.OriginalMapping getDefaultInstanceForType() {
@@ -885,16 +1372,6 @@ public final class Mapping {
         com.google.debugging.sourcemap.proto.Mapping.OriginalMapping result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      private com.google.debugging.sourcemap.proto.Mapping.OriginalMapping buildParsed()
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        com.google.debugging.sourcemap.proto.Mapping.OriginalMapping result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(
-            result).asInvalidProtocolBufferException();
         }
         return result;
       }
@@ -936,7 +1413,9 @@ public final class Mapping {
       public Builder mergeFrom(com.google.debugging.sourcemap.proto.Mapping.OriginalMapping other) {
         if (other == com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.getDefaultInstance()) return this;
         if (other.hasOriginalFile()) {
-          setOriginalFile(other.getOriginalFile());
+          bitField0_ |= 0x00000001;
+          originalFile_ = other.originalFile_;
+          onChanged();
         }
         if (other.hasLineNumber()) {
           setLineNumber(other.getLineNumber());
@@ -945,7 +1424,9 @@ public final class Mapping {
           setColumnPosition(other.getColumnPosition());
         }
         if (other.hasIdentifier()) {
-          setIdentifier(other.getIdentifier());
+          bitField0_ |= 0x00000008;
+          identifier_ = other.identifier_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -959,67 +1440,80 @@ public final class Mapping {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder(
-            this.getUnknownFields());
-        while (true) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              this.setUnknownFields(unknownFields.build());
-              onChanged();
-              return this;
-            default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
-                this.setUnknownFields(unknownFields.build());
-                onChanged();
-                return this;
-              }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              originalFile_ = input.readBytes();
-              break;
-            }
-            case 16: {
-              bitField0_ |= 0x00000002;
-              lineNumber_ = input.readInt32();
-              break;
-            }
-            case 24: {
-              bitField0_ |= 0x00000004;
-              columnPosition_ = input.readInt32();
-              break;
-            }
-            case 34: {
-              bitField0_ |= 0x00000008;
-              identifier_ = input.readBytes();
-              break;
-            }
+        com.google.debugging.sourcemap.proto.Mapping.OriginalMapping parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.google.debugging.sourcemap.proto.Mapping.OriginalMapping) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
           }
         }
+        return this;
       }
-
       private int bitField0_;
 
       // optional string original_file = 1;
       private java.lang.Object originalFile_ = "";
+      /**
+       * <code>optional string original_file = 1;</code>
+       *
+       * <pre>
+       * The original source file.
+       * </pre>
+       */
       public boolean hasOriginalFile() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
-      public String getOriginalFile() {
+      /**
+       * <code>optional string original_file = 1;</code>
+       *
+       * <pre>
+       * The original source file.
+       * </pre>
+       */
+      public java.lang.String getOriginalFile() {
         java.lang.Object ref = originalFile_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
           originalFile_ = s;
           return s;
         } else {
-          return (String) ref;
+          return (java.lang.String) ref;
         }
       }
-      public Builder setOriginalFile(String value) {
+      /**
+       * <code>optional string original_file = 1;</code>
+       *
+       * <pre>
+       * The original source file.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getOriginalFileBytes() {
+        java.lang.Object ref = originalFile_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          originalFile_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string original_file = 1;</code>
+       *
+       * <pre>
+       * The original source file.
+       * </pre>
+       */
+      public Builder setOriginalFile(
+          java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -1028,32 +1522,79 @@ public final class Mapping {
         onChanged();
         return this;
       }
+      /**
+       * <code>optional string original_file = 1;</code>
+       *
+       * <pre>
+       * The original source file.
+       * </pre>
+       */
       public Builder clearOriginalFile() {
         bitField0_ = (bitField0_ & ~0x00000001);
         originalFile_ = getDefaultInstance().getOriginalFile();
         onChanged();
         return this;
       }
-      void setOriginalFile(com.google.protobuf.ByteString value) {
-        bitField0_ |= 0x00000001;
+      /**
+       * <code>optional string original_file = 1;</code>
+       *
+       * <pre>
+       * The original source file.
+       * </pre>
+       */
+      public Builder setOriginalFileBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
         originalFile_ = value;
         onChanged();
+        return this;
       }
 
       // optional int32 line_number = 2;
       private int lineNumber_ ;
+      /**
+       * <code>optional int32 line_number = 2;</code>
+       *
+       * <pre>
+       * The line in the original file.
+       * </pre>
+       */
       public boolean hasLineNumber() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
+      /**
+       * <code>optional int32 line_number = 2;</code>
+       *
+       * <pre>
+       * The line in the original file.
+       * </pre>
+       */
       public int getLineNumber() {
         return lineNumber_;
       }
+      /**
+       * <code>optional int32 line_number = 2;</code>
+       *
+       * <pre>
+       * The line in the original file.
+       * </pre>
+       */
       public Builder setLineNumber(int value) {
         bitField0_ |= 0x00000002;
         lineNumber_ = value;
         onChanged();
         return this;
       }
+      /**
+       * <code>optional int32 line_number = 2;</code>
+       *
+       * <pre>
+       * The line in the original file.
+       * </pre>
+       */
       public Builder clearLineNumber() {
         bitField0_ = (bitField0_ & ~0x00000002);
         lineNumber_ = 0;
@@ -1063,18 +1604,46 @@ public final class Mapping {
 
       // optional int32 column_position = 3;
       private int columnPosition_ ;
+      /**
+       * <code>optional int32 column_position = 3;</code>
+       *
+       * <pre>
+       * The column number on the line.
+       * </pre>
+       */
       public boolean hasColumnPosition() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
+      /**
+       * <code>optional int32 column_position = 3;</code>
+       *
+       * <pre>
+       * The column number on the line.
+       * </pre>
+       */
       public int getColumnPosition() {
         return columnPosition_;
       }
+      /**
+       * <code>optional int32 column_position = 3;</code>
+       *
+       * <pre>
+       * The column number on the line.
+       * </pre>
+       */
       public Builder setColumnPosition(int value) {
         bitField0_ |= 0x00000004;
         columnPosition_ = value;
         onChanged();
         return this;
       }
+      /**
+       * <code>optional int32 column_position = 3;</code>
+       *
+       * <pre>
+       * The column number on the line.
+       * </pre>
+       */
       public Builder clearColumnPosition() {
         bitField0_ = (bitField0_ & ~0x00000004);
         columnPosition_ = 0;
@@ -1084,20 +1653,63 @@ public final class Mapping {
 
       // optional string identifier = 4;
       private java.lang.Object identifier_ = "";
+      /**
+       * <code>optional string identifier = 4;</code>
+       *
+       * <pre>
+       * The original name of the identifier.
+       * </pre>
+       */
       public boolean hasIdentifier() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
-      public String getIdentifier() {
+      /**
+       * <code>optional string identifier = 4;</code>
+       *
+       * <pre>
+       * The original name of the identifier.
+       * </pre>
+       */
+      public java.lang.String getIdentifier() {
         java.lang.Object ref = identifier_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
           identifier_ = s;
           return s;
         } else {
-          return (String) ref;
+          return (java.lang.String) ref;
         }
       }
-      public Builder setIdentifier(String value) {
+      /**
+       * <code>optional string identifier = 4;</code>
+       *
+       * <pre>
+       * The original name of the identifier.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getIdentifierBytes() {
+        java.lang.Object ref = identifier_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          identifier_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string identifier = 4;</code>
+       *
+       * <pre>
+       * The original name of the identifier.
+       * </pre>
+       */
+      public Builder setIdentifier(
+          java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -1106,16 +1718,35 @@ public final class Mapping {
         onChanged();
         return this;
       }
+      /**
+       * <code>optional string identifier = 4;</code>
+       *
+       * <pre>
+       * The original name of the identifier.
+       * </pre>
+       */
       public Builder clearIdentifier() {
         bitField0_ = (bitField0_ & ~0x00000008);
         identifier_ = getDefaultInstance().getIdentifier();
         onChanged();
         return this;
       }
-      void setIdentifier(com.google.protobuf.ByteString value) {
-        bitField0_ |= 0x00000008;
+      /**
+       * <code>optional string identifier = 4;</code>
+       *
+       * <pre>
+       * The original name of the identifier.
+       * </pre>
+       */
+      public Builder setIdentifierBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
         identifier_ = value;
         onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:sourcemap.OriginalMapping)
@@ -1168,17 +1799,13 @@ public final class Mapping {
           internal_static_sourcemap_LineMapping_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_sourcemap_LineMapping_descriptor,
-              new java.lang.String[] { "LineNumber", "ColumnPosition", "OriginalMapping", },
-              com.google.debugging.sourcemap.proto.Mapping.LineMapping.class,
-              com.google.debugging.sourcemap.proto.Mapping.LineMapping.Builder.class);
+              new java.lang.String[] { "LineNumber", "ColumnPosition", "OriginalMapping", });
           internal_static_sourcemap_OriginalMapping_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_sourcemap_OriginalMapping_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_sourcemap_OriginalMapping_descriptor,
-              new java.lang.String[] { "OriginalFile", "LineNumber", "ColumnPosition", "Identifier", },
-              com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.class,
-              com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder.class);
+              new java.lang.String[] { "OriginalFile", "LineNumber", "ColumnPosition", "Identifier", });
           return null;
         }
       };

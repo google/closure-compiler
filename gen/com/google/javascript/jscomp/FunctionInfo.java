@@ -54,25 +54,19 @@ public final class FunctionInfo {
           internal_static_jscomp_FunctionInformationMap_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_jscomp_FunctionInformationMap_descriptor,
-              new java.lang.String[] { "Entry", "Module", },
-              com.google.javascript.jscomp.FunctionInformationMap.class,
-              com.google.javascript.jscomp.FunctionInformationMap.Builder.class);
+              new java.lang.String[] { "Entry", "Module", });
           internal_static_jscomp_FunctionInformationMap_Entry_descriptor =
             internal_static_jscomp_FunctionInformationMap_descriptor.getNestedTypes().get(0);
           internal_static_jscomp_FunctionInformationMap_Entry_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_jscomp_FunctionInformationMap_Entry_descriptor,
-              new java.lang.String[] { "Id", "SourceName", "LineNumber", "ModuleName", "Size", "Name", "CompiledSource", },
-              com.google.javascript.jscomp.FunctionInformationMap.Entry.class,
-              com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder.class);
+              new java.lang.String[] { "Id", "SourceName", "LineNumber", "ModuleName", "Size", "Name", "CompiledSource", });
           internal_static_jscomp_FunctionInformationMap_Module_descriptor =
             internal_static_jscomp_FunctionInformationMap_descriptor.getNestedTypes().get(1);
           internal_static_jscomp_FunctionInformationMap_Module_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_jscomp_FunctionInformationMap_Module_descriptor,
-              new java.lang.String[] { "Name", "CompiledSource", },
-              com.google.javascript.jscomp.FunctionInformationMap.Module.class,
-              com.google.javascript.jscomp.FunctionInformationMap.Module.Builder.class);
+              new java.lang.String[] { "Name", "CompiledSource", });
           return null;
         }
       };

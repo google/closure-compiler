@@ -40,9 +40,7 @@ public final class InstrumentationTemplate {
           internal_static_jscomp_Instrumentation_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_jscomp_Instrumentation_descriptor,
-              new java.lang.String[] { "ReportDefined", "ReportCall", "ReportExit", "DeclarationToRemove", "Init", "AppNameSetter", },
-              com.google.javascript.jscomp.Instrumentation.class,
-              com.google.javascript.jscomp.Instrumentation.Builder.class);
+              new java.lang.String[] { "ReportDefined", "ReportCall", "ReportExit", "DeclarationToRemove", "Init", "AppNameSetter", });
           return null;
         }
       };
