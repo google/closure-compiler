@@ -1023,6 +1023,11 @@ angular.$cacheFactory;
 angular.$cacheFactory.Options;
 
 /**
+ * @return {!angular.$cacheFactory.Cache|undefined}
+ */
+angular.$cacheFactory.prototype.get = function() {};
+
+/**
  * @template T
  * @constructor
  */
