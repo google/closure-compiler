@@ -194,7 +194,7 @@ class GenerateExports implements CompilerPass {
    * @param node node
    * @return property name.
    */
-  private String getPropertyName(Node node) {
+  private static String getPropertyName(Node node) {
     Preconditions.checkArgument(node.isGetProp());
     return node.getLastChild().getString();
   }

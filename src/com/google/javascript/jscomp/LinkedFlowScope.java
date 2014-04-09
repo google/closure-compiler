@@ -322,8 +322,8 @@ class LinkedFlowScope implements FlowScope {
    * Determines whether two slots are meaningfully different for the
    * purposes of data flow analysis.
    */
-  private boolean diffSlots(StaticSlot<JSType> slotA,
-                            StaticSlot<JSType> slotB) {
+  private static boolean diffSlots(StaticSlot<JSType> slotA,
+                                   StaticSlot<JSType> slotB) {
     boolean aIsNull = slotA == null || slotA.getType() == null;
     boolean bIsNull = slotB == null || slotB.getType() == null;
     if (aIsNull && bIsNull) {

@@ -375,7 +375,7 @@ final class NameAnalyzer implements CompilerPass {
   /**
    * Base class for special reference nodes.
    */
-  private abstract class SpecialReferenceNode implements RefNode {
+  private abstract static class SpecialReferenceNode implements RefNode {
     /** JsName node for the function */
     JsName name;
 
@@ -1298,15 +1298,15 @@ final class NameAnalyzer implements CompilerPass {
     return sb.toString();
   }
 
-  private void appendListItem(StringBuilder sb, String text) {
+  private static void appendListItem(StringBuilder sb, String text) {
     sb.append("<li>" + text + "</li>\n");
   }
 
-  private String nameLink(String name) {
+  private static String nameLink(String name) {
     return "<a href=\"#" + name + "\">" + name + "</a>";
   }
 
-  private String nameAnchor(String name) {
+  private static String nameAnchor(String name) {
     return "<a name=\"" + name + "\">" + name + "</a>";
   }
 
@@ -1811,7 +1811,7 @@ final class NameAnalyzer implements CompilerPass {
    * syntactic sugar for IF statements; therefore this method returns
    * true for the predicate and false otherwise.
    */
-  private boolean valueConsumedByParent(Node n, Node parent) {
+  private static boolean valueConsumedByParent(Node n, Node parent) {
     if (NodeUtil.isAssignmentOp(parent)) {
       return parent.getLastChild() == n;
     }
@@ -1840,7 +1840,7 @@ final class NameAnalyzer implements CompilerPass {
    * Merge a list of nodes into a single expression.  The value of the
    * new expression is determined by the last expression in the list.
    */
-  private Node collapseReplacements(List<Node> replacements) {
+  private static Node collapseReplacements(List<Node> replacements) {
     Node expr = null;
     for (Node rep : replacements) {
       if (rep.isExprResult()) {
@@ -1861,7 +1861,7 @@ final class NameAnalyzer implements CompilerPass {
   /**
    * Extract a list of subexpressions that act as right hand sides.
    */
-  private List<Node> getRhsSubexpressions(Node n) {
+  private static List<Node> getRhsSubexpressions(Node n) {
     switch (n.getType()) {
       case Token.EXPR_RESULT:
         // process body

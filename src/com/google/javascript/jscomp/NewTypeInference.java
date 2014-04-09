@@ -2360,7 +2360,7 @@ public class NewTypeInference implements CompilerPass {
     return env.putType(varName, type);
   }
 
-  private class LValueResultFwd {
+  private static class LValueResultFwd {
     TypeEnv env;
     JSType type;
     JSType declType;
@@ -2476,12 +2476,13 @@ public class NewTypeInference implements CompilerPass {
     return new LValueResultFwd(
         lvalue.env,
         lvalueType.mayHaveProp(pname) ?
-          lvalueType.getProp(pname) : JSType.UNKNOWN,
+            lvalueType.getProp(pname) : JSType.UNKNOWN,
         lvalueType.getDeclaredProp(pname),
-        lvalue.ptr == null ? null : QualifiedName.join(lvalue.ptr, pname));
+        lvalue.ptr == null ? null : QualifiedName.join(lvalue.ptr, pname)
+    );
   }
 
-  private class LValueResultBwd {
+  private static class LValueResultBwd {
     TypeEnv env;
     JSType type;
     QualifiedName ptr;

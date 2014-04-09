@@ -203,7 +203,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * Normalize the type of a constructor, its instance, and its prototype
    * all down to the same type (the instance type).
    */
-  private JSType normalizeClassType(JSType type) {
+  private static JSType normalizeClassType(JSType type) {
     if (type == null || type.isUnknownType()) {
       return type;
     } else if (type.isNominalConstructor()) {
@@ -712,7 +712,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   /**
    * Returns the super class of the given type that has a constructor.
    */
-  private JSType getFinalParentClass(JSType type) {
+  private static JSType getFinalParentClass(JSType type) {
     if (type != null) {
       ObjectType iproto = ObjectType.cast(type).getImplicitPrototype();
       while (iproto != null && iproto.getConstructor() == null) {

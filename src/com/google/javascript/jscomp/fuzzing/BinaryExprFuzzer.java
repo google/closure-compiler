@@ -43,7 +43,7 @@ public class BinaryExprFuzzer extends Dispatcher {
     }
   }
 
-  private class BinaryExprGenerator extends AbstractFuzzer {
+  private static class BinaryExprGenerator extends AbstractFuzzer {
     private Operator operator;
     private AbstractFuzzer left, right;
     private String configName;

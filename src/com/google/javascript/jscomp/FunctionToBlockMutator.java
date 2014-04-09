@@ -118,7 +118,7 @@ class FunctionToBlockMutator {
   /**
    * @param n The node to inspect
    */
-  private void rewriteFunctionDeclarations(Node n) {
+  private static void rewriteFunctionDeclarations(Node n) {
     if (n.isFunction()) {
       if (NodeUtil.isFunctionDeclaration(n)) {
         // Rewrite: function f() {} ==> var f = function() {}
@@ -146,7 +146,7 @@ class FunctionToBlockMutator {
    *  For all VAR node with uninitialized declarations, set
    *  the values to be "undefined".
    */
-  private void fixUnitializedVarDeclarations(Node n) {
+  private static void fixUnitializedVarDeclarations(Node n) {
     // Inner loop structure must already have logic to initialize its
     // variables.  In particular FOR-IN structures must not be modified.
     if (NodeUtil.isLoopStructure(n)) {

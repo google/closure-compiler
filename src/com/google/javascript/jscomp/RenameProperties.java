@@ -539,7 +539,7 @@ class RenameProperties implements CompilerPass {
   /**
    * Encapsulates the information needed for renaming a property.
    */
-  private class Property {
+  private static class Property {
     final String oldName;
     String newName;
     int numOccurrences;
@@ -550,7 +550,7 @@ class RenameProperties implements CompilerPass {
     }
   }
 
-  private class PropertyAffinity {
+  private static class PropertyAffinity {
     // This will forever be zero if no affinity information was gathered.
     private int affinity = 0;
 

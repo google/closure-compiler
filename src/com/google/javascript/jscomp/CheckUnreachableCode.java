@@ -85,7 +85,7 @@ class CheckUnreachableCode implements ScopedCallback {
   public void visit(NodeTraversal t, Node n, Node parent) {
   }
 
-  private final class ReachablePredicate implements
+  private static final class ReachablePredicate implements
       Predicate<EdgeTuple<Node, ControlFlowGraph.Branch>> {
 
     @Override

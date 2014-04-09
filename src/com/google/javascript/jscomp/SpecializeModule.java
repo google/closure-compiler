@@ -738,7 +738,7 @@ class SpecializeModule implements CompilerPass {
     /**
      * Returns the function containing the node, or null if none exists.
      */
-    private Node containingFunction(Node node) {
+    private static Node containingFunction(Node node) {
       for (Node ancestor : node.getAncestors()) {
         if (ancestor.isFunction()) {
           return ancestor;

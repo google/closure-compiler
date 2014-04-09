@@ -43,7 +43,7 @@ class UnaryExprFuzzer extends Dispatcher {
     }
   }
 
-  private class UnaryExprGenerator extends AbstractFuzzer {
+  private static class UnaryExprGenerator extends AbstractFuzzer {
     Operator operator;
     private AbstractFuzzer target;
 

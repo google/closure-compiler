@@ -61,7 +61,7 @@ class TransformAMDToCJSModule implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new TransformAMDModulesCallback());
   }
 
-  private void unsupportedDefineError(NodeTraversal t, Node n) {
+  private static void unsupportedDefineError(NodeTraversal t, Node n) {
     t.report(n, UNSUPPORTED_DEFINE_SIGNATURE_ERROR);
   }
 
@@ -69,7 +69,7 @@ class TransformAMDToCJSModule implements CompilerPass {
    * The modules "exports", "require" and "module" are virtual in terms of
    * existing implicitly in CommonJS.
    */
-  private boolean isVirtualModuleName(String moduleName) {
+  private static boolean isVirtualModuleName(String moduleName) {
     return "exports".equals(moduleName) || "require".equals(moduleName) ||
         "module".equals(moduleName);
   }
@@ -269,7 +269,7 @@ class TransformAMDToCJSModule implements CompilerPass {
    * Rewrites the return statement of the callback to be an assignment to
    * module.exports.
    */
-  private class DefineCallbackReturnCallback extends
+  private static class DefineCallbackReturnCallback extends
       NodeTraversal.AbstractShallowStatementCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -287,7 +287,7 @@ class TransformAMDToCJSModule implements CompilerPass {
   /**
    * Renames names;
    */
-  private class RenameCallback extends AbstractPostOrderCallback {
+  private static class RenameCallback extends AbstractPostOrderCallback {
 
     private final String from;
     private final String to;

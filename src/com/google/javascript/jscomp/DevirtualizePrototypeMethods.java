@@ -161,7 +161,7 @@ class DevirtualizePrototypeMethods
     }
   }
 
-  private String getMethodName(Node node) {
+  private static String getMethodName(Node node) {
     if (node.isGetProp()) {
       return node.getLastChild().getString();
     } else if (node.isStringKey()) {
@@ -174,7 +174,7 @@ class DevirtualizePrototypeMethods
   /**
    * @returns The new name for a rewritten method.
    */
-  private String getRewrittenMethodName(String originalMethodName) {
+  private static String getRewrittenMethodName(String originalMethodName) {
     return "JSCompiler_StaticMethods_" + originalMethodName;
   }
 
@@ -440,7 +440,7 @@ class DevirtualizePrototypeMethods
    * Replaces references to "this" with references to name.  Do not
    * traverse function boundaries.
    */
-  private void replaceReferencesToThis(Node node, String name) {
+  private static void replaceReferencesToThis(Node node, String name) {
     if (node.isFunction()) {
       return;
     }

@@ -364,7 +364,7 @@ public class ProcessCommonJSModules implements CompilerPass {
   /**
    * Traverses a node tree and appends a suffix to all global variable names.
    */
-  private class SuffixVarsCallback extends AbstractPostOrderCallback {
+  private static class SuffixVarsCallback extends AbstractPostOrderCallback {
     private final String suffix;
 
     SuffixVarsCallback(String suffix) {

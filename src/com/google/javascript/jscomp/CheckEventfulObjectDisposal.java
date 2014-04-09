@@ -149,7 +149,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
   }
 
   // Combine the state and allocation site of eventful objects
-  private class EventfulObjectState {
+  private static class EventfulObjectState {
     public SeenType seen;
     public Node allocationSite;
   }
@@ -267,7 +267,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
   /*
    * Get the type of the this in the current scope of traversal
    */
-  private JSType getTypeOfThisForScope(NodeTraversal t) {
+  private static JSType getTypeOfThisForScope(NodeTraversal t) {
     JSType typeOfThis = t.getScopeRoot().getJSType();
     if (typeOfThis == null) {
       return null;

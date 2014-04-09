@@ -39,7 +39,7 @@ final class NameGenerator {
    * Represents a char that can be used in renaming as well as how often
    * that char appears in the generated code.
    */
-  private final class CharPriority implements Comparable<CharPriority>{
+  private static final class CharPriority implements Comparable<CharPriority>{
     final char name;
     int occurance;
 

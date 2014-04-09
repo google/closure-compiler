@@ -309,7 +309,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
    * @param fnNode The function to inspect.
    * @return Whether the function has parameters, var, or function declarations.
    */
-  private boolean hasLocalNames(Node fnNode) {
+  private static boolean hasLocalNames(Node fnNode) {
     Node block = NodeUtil.getFunctionBody(fnNode);
     return NodeUtil.getFunctionParameters(fnNode).hasChildren()
         || NodeUtil.has(
@@ -784,7 +784,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
   /**
    * @see #findCalledFunctions(Node)
    */
-  private void findCalledFunctions(
+  private static void findCalledFunctions(
       Node node, Set<String> changed) {
     Preconditions.checkArgument(changed != null);
     // For each referenced function, add a new reference
@@ -1076,7 +1076,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
   }
 
   /** FunctionExpression implementation of the Function interface */
-  private class FunctionExpression implements Function {
+  private static class FunctionExpression implements Function {
     private final Node fn;
     private final String fakeName;
 
@@ -1109,7 +1109,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
 
   }
 
-  class Reference extends FunctionInjector.Reference {
+  static class Reference extends FunctionInjector.Reference {
     boolean requiresDecomposition = false;
     boolean inlined = false;
     Reference(

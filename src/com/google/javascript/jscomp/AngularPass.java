@@ -265,7 +265,7 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
     return n;
   }
 
-  class NodeContext {
+  static class NodeContext {
     /** Name of the function/object. */
     private final String name;
     /** Node jsDoc is attached to. */

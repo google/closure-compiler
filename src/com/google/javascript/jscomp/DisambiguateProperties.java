@@ -798,7 +798,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       return ImmutableSet.copyOf(getTypesToSkipForTypeNonUnion(type));
     }
 
-    private Set<JSType> getTypesToSkipForTypeNonUnion(JSType type) {
+    private static Set<JSType> getTypesToSkipForTypeNonUnion(JSType type) {
       Set<JSType> types = Sets.newHashSet();
       JSType skipType = type;
       while (skipType != null) {

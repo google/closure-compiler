@@ -94,7 +94,7 @@ class CoverageInstrumentationPass implements CompilerPass {
     externsNode.addChildToBack(getInstrumentationExternsNode());
   }
 
-  private Node createConditionalVarDecl(String name) {
+  private static Node createConditionalVarDecl(String name) {
     Node var = IR.var(
         IR.name(name),
         IR.or(

@@ -78,7 +78,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
     }
   }
 
-  private void reportIfWasEmpty(NodeTraversal t, Node block) {
+  private static void reportIfWasEmpty(NodeTraversal t, Node block) {
     Preconditions.checkState(block.isBlock());
 
     // A semicolon is distinguished from a block without children by
@@ -105,7 +105,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
     }
   }
 
-  private void reportIfNaN(NodeTraversal t, Node n) {
+  private static void reportIfNaN(NodeTraversal t, Node n) {
     if (NodeUtil.isNaN(n)) {
       t.getCompiler().report(
           t.makeError(n.getParent(), SUSPICIOUS_COMPARISON_WITH_NAN));
@@ -118,7 +118,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
     }
   }
 
-  private void reportIfNonObject(NodeTraversal t, Node n) {
+  private static void reportIfNonObject(NodeTraversal t, Node n) {
     if (NodeUtil.isImmutableResult(n)) {
       t.getCompiler().report(
           t.makeError(n.getParent(), SUSPICIOUS_IN_OPERATOR));

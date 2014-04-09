@@ -780,7 +780,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    * Returns the qualified name node of the function whose scope we're in,
    * or null if it cannot be found.
    */
-  private Node getEnclosingDeclNameNode(NodeTraversal t) {
+  private static Node getEnclosingDeclNameNode(NodeTraversal t) {
     Node scopeRoot = t.getScopeRoot();
     if (NodeUtil.isFunctionDeclaration(scopeRoot)) {
       // function x() {...}
@@ -1519,7 +1519,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   /**
    * Information required to create a {@code MISSING_PROVIDE_ERROR} warning.
    */
-  private class UnrecognizedRequire {
+  private static class UnrecognizedRequire {
     final Node requireNode;
     final String namespace;
     final String inputName;

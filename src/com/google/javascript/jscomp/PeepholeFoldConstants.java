@@ -1285,7 +1285,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /** Returns whether this node must be coerced to a string. */
-  private boolean inForcedStringContext(Node n) {
+  private static boolean inForcedStringContext(Node n) {
     if (n.getParent().isGetElem() &&
         n.getParent().getLastChild() == n) {
       return true;

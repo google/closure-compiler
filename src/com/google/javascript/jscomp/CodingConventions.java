@@ -467,7 +467,7 @@ public class CodingConventions {
       return ImmutableList.of();
     }
 
-    private Node safeNext(Node n) {
+    private static Node safeNext(Node n) {
       if (n != null) {
         return n.getNext();
       }

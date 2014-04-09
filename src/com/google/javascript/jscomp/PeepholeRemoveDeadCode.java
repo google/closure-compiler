@@ -494,7 +494,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   /**
    * @return Whether the node is an obvious control flow exit.
    */
-  private boolean isExit(Node n) {
+  private static boolean isExit(Node n) {
     switch (n.getType()) {
       case Token.BREAK:
       case Token.CONTINUE:
@@ -558,7 +558,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   /**
    * Some nodes unremovable node don't have side-effects.
    */
-  private boolean isUnremovableNode(Node n) {
+  private static boolean isUnremovableNode(Node n) {
     return (n.isBlock() && n.isSyntheticBlock()) || n.isScript();
   }
 
@@ -614,7 +614,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * @return whether the node is a assignment to a simple name, or simple var
    * declaration with initialization.
    */
-  private boolean isSimpleAssignment(Node n) {
+  private static boolean isSimpleAssignment(Node n) {
     // For our purposes we define a simple assignment to be a assignment
     // to a NAME node, or a VAR declaration with one child and a initializer.
     if (NodeUtil.isExprAssign(n)
@@ -661,7 +661,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   /**
    * @return Whether the node is a rooted with a HOOK, AND, or OR node.
    */
-  private boolean isExprConditional(Node n) {
+  private static boolean isExprConditional(Node n) {
     if (n.isExprResult()) {
       switch (n.getFirstChild().getType()) {
         case Token.HOOK:
@@ -957,7 +957,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   /**
    *
    */
-  boolean hasBreakOrContinue(Node n) {
+  static boolean hasBreakOrContinue(Node n) {
     // TODO(johnlenz): This is overkill as named breaks may refer to outer
     // loops or labels, and any break my refer to an inner loop.
     // More generally, this check may be more expensive than we like.

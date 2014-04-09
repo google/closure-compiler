@@ -619,7 +619,7 @@ public class CommandLineRunner extends
    * @param lines strings to tokenize
    * @return a list of tokens
    */
-  private List<String> tokenizeKeepingQuotedStrings(List<String> lines) {
+  private static List<String> tokenizeKeepingQuotedStrings(List<String> lines) {
     List<String> tokens = Lists.newArrayList();
     Pattern tokenPattern =
         Pattern.compile("(?:[^ \t\f\\x0B'\"]|(?:'[^']*'|\"[^\"]*\"))+");
@@ -633,7 +633,7 @@ public class CommandLineRunner extends
     return tokens;
   }
 
-  private List<String> processArgs(String[] args) {
+  private static List<String> processArgs(String[] args) {
     // Args4j has a different format that the old command-line parser.
     // So we use some voodoo to get the args into the format that args4j
     // expects.

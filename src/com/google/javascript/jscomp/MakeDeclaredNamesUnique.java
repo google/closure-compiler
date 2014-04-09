@@ -209,7 +209,7 @@ class MakeDeclaredNamesUnique
    * Traverses the current scope and collects declared names.  Does not
    * decent into functions or add CATCH exceptions.
    */
-  private void findDeclaredNames(Node n, Node parent, Renamer renamer) {
+  private static void findDeclaredNames(Node n, Node parent, Renamer renamer) {
     // Do a shallow traversal, so don't traverse into function declarations,
     // except for the name of the function itself.
     if (parent == null
@@ -289,7 +289,7 @@ class MakeDeclaredNamesUnique
       return name.lastIndexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR);
     }
 
-    private boolean containsSeparator(String name) {
+    private static boolean containsSeparator(String name) {
       return name.contains(ContextualRenamer.UNIQUE_ID_SEPARATOR);
     }
 
@@ -485,7 +485,7 @@ class MakeDeclaredNamesUnique
     /**
      * Given a name and the associated id, create a new unique name.
      */
-    private String getUniqueName(String name, int id) {
+    private static String getUniqueName(String name, int id) {
       return name + UNIQUE_ID_SEPARATOR + id;
     }
 

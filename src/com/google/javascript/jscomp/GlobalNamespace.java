@@ -245,7 +245,7 @@ class GlobalNamespace
    * @param name A variable or qualified property name (e.g. "a" or "a.b.c.d")
    * @return The top variable name (e.g. "a")
    */
-  private String getTopVarName(String name) {
+  private static String getTopVarName(String name) {
     int firstDotIndex = name.indexOf('.');
     return firstDotIndex == -1 ? name : name.substring(0, firstDotIndex);
   }
@@ -272,7 +272,7 @@ class GlobalNamespace
    * @param s A scope
    * @return Whether the scope is the global scope
    */
-  private boolean isGlobalScope(Scope s) {
+  private static boolean isGlobalScope(Scope s) {
     return s.getParent() == null;
   }
 

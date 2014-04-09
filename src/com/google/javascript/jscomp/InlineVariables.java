@@ -107,7 +107,7 @@ class InlineVariables implements CompilerPass {
    * or named in all caps, and initialized to an immutable value.
    * CheckConsts has already verified that these are truly constants.
    */
-  private class IdentifyConstants implements Predicate<Var> {
+  private static class IdentifyConstants implements Predicate<Var> {
     @Override
     public boolean apply(Var var) {
       return var.isConst();
@@ -117,7 +117,7 @@ class InlineVariables implements CompilerPass {
   /**
    * Filters non-global variables.
    */
-  private class IdentifyLocals implements Predicate<Var> {
+  private static class IdentifyLocals implements Predicate<Var> {
     @Override
     public boolean apply(Var var) {
       return var.scope.isLocal();

@@ -127,7 +127,7 @@ class TypeInferencePass implements CompilerPass {
     }
   }
 
-  private class FirstScopeBuildingCallback extends AbstractScopedCallback {
+  private static class FirstScopeBuildingCallback extends AbstractScopedCallback {
     @Override
     public void enterScope(NodeTraversal t) {
       t.getScope();

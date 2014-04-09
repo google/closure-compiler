@@ -62,7 +62,7 @@ class SwitchFuzzer extends AbstractFuzzer {
     return new Node(Token.SWITCH, components);
   }
 
-  private class CaseFuzzer extends AbstractFuzzer {
+  private static class CaseFuzzer extends AbstractFuzzer {
     private int nodeType;
     CaseFuzzer(FuzzingContext context, int nodeType) {
       super(context);

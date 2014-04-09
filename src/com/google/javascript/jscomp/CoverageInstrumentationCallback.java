@@ -49,7 +49,7 @@ class CoverageInstrumentationCallback extends
    * @param traversal the traversal
    * @return the name of the file it originates from
    */
-  private String getFileName(NodeTraversal traversal) {
+  private static String getFileName(NodeTraversal traversal) {
     return traversal.getSourceName();
   }
 

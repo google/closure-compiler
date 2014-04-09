@@ -35,7 +35,7 @@ import java.util.Map;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public class FunctionTypeBuilder {
-  class WrongParameterOrderException extends RuntimeException {
+  static class WrongParameterOrderException extends RuntimeException {
     WrongParameterOrderException(String message) {
       super(message);
     }

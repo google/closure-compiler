@@ -54,7 +54,7 @@ class DeclaredGlobalExternsOnWindow
     }
   }
 
-  private void addExtern(Node declRoot, String export) {
+  private static void addExtern(Node declRoot, String export) {
     // TODO(johnlenz): add type declarations.
     Node propstmt = IR.exprResult(
         IR.getprop(IR.name("window"), IR.string(export)));

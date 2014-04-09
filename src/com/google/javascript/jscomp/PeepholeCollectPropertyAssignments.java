@@ -81,7 +81,7 @@ public class PeepholeCollectPropertyAssignments
     return subtree;
   }
 
-  private Node getName(Node n) {
+  private static Node getName(Node n) {
     if (n.isVar()) {
       return n.getFirstChild();
     } else if (NodeUtil.isExprAssign(n)) {
@@ -90,7 +90,7 @@ public class PeepholeCollectPropertyAssignments
     throw new IllegalStateException();
   }
 
-  private Node getValue(Node n) {
+  private static Node getValue(Node n) {
     if (n.isVar()) {
       return n.getFirstChild().getFirstChild();
     } else if (NodeUtil.isExprAssign(n)) {
@@ -99,11 +99,11 @@ public class PeepholeCollectPropertyAssignments
     throw new IllegalStateException();
   }
 
-  boolean isInterestingValue(Node n) {
+  static boolean isInterestingValue(Node n) {
     return n.isObjectLit() || n.isArrayLit();
   }
 
-  private boolean isPropertyAssignmentToName(Node propertyCandidate) {
+  private static boolean isPropertyAssignmentToName(Node propertyCandidate) {
     if (propertyCandidate == null) { return false; }
     // Must be an assignment...
     if (!NodeUtil.isExprAssign(propertyCandidate)) {
@@ -169,7 +169,7 @@ public class PeepholeCollectPropertyAssignments
   }
 
 
-  private boolean collectArrayProperty(
+  private static boolean collectArrayProperty(
       Node arrayLiteral, Node propertyCandidate) {
     Node assignment = propertyCandidate.getFirstChild();
     final int sizeOfArrayAtStart = arrayLiteral.getChildCount();
@@ -225,7 +225,7 @@ public class PeepholeCollectPropertyAssignments
     return true;
   }
 
-  private boolean collectObjectProperty(
+  private static boolean collectObjectProperty(
       Node objectLiteral, Node propertyCandidate) {
     Node assignment = propertyCandidate.getFirstChild();
     Node lhs = assignment.getFirstChild(), rhs = lhs.getNext();

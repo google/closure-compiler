@@ -136,7 +136,7 @@ final class NameReferenceGraphReport {
    * @return String containing name of source file, or empty string if name
    *     cannot be identified.
    */
-  private String getSourceFile(Node node) {
+  private static String getSourceFile(Node node) {
     String filename = node.getSourceFileName();
     if (filename == null) {
       return "";
@@ -194,7 +194,7 @@ final class NameReferenceGraphReport {
    *
    * @param builder contents of the report to be generated
    */
-  private void generateHtmlReportHeader(StringBuilder builder) {
+  private static void generateHtmlReportHeader(StringBuilder builder) {
     builder.append("<!DOCTYPE html>\n" +
         "<html>" +
         "<head>" +
@@ -212,7 +212,7 @@ final class NameReferenceGraphReport {
   /**
    * Generate the HTML footer for the report style.
    */
-  private void generateHtmlReportFooter(StringBuilder builder) {
+  private static void generateHtmlReportFooter(StringBuilder builder) {
     builder.append("</body></html>");
   }
 
@@ -253,8 +253,8 @@ final class NameReferenceGraphReport {
    * @param lineNumber  line where the object to view is located
    * @param columnNumber  column where the object to highlight is located.
    */
-  private void generateSourceReferenceLink(StringBuilder builder,
-    String sourceFile, int lineNumber, int columnNumber) {
+  private static void generateSourceReferenceLink(StringBuilder builder,
+      String sourceFile, int lineNumber, int columnNumber) {
     assert(sourceFile != null);
 
     builder.append("(");
@@ -274,7 +274,7 @@ final class NameReferenceGraphReport {
    * @param builder contents of the report to be generated.
    * @param defType type to describe
    */
-  private void generateType(StringBuilder builder, JSType defType) {
+  private static void generateType(StringBuilder builder, JSType defType) {
     if (defType == null) {
       builder.append(" (type: null) ");
     } else if (defType.isUnknownType()) {

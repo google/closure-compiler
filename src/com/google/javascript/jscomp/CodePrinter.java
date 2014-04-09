@@ -170,8 +170,8 @@ public final class CodePrinter {
      * @throws IllegalStateException if an attempt to reverse a line cut is
      *     made on a previous line rather than the current line.
      */
-    private FilePosition convertPosition(FilePosition position, int lineIndex,
-                                     int characterPosition, boolean insertion) {
+    private static FilePosition convertPosition(FilePosition position, int lineIndex,
+                                                int characterPosition, boolean insertion) {
       int originalLine = position.getLine();
       int originalChar = position.getColumn();
       if (insertion) {
@@ -364,7 +364,7 @@ public final class CodePrinter {
     /**
      * @return The TRY node for the specified CATCH node.
      */
-    private Node getTryForCatch(Node n) {
+    private static Node getTryForCatch(Node n) {
       return n.getParent().getParent();
     }
 

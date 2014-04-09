@@ -39,7 +39,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
   /**
    * Identifies all calls to goog.object.create.
    */
-  private class FindObjectCreateCalls extends AbstractPostOrderCallback {
+  private static class FindObjectCreateCalls extends AbstractPostOrderCallback {
     List<Node> callNodes = Lists.newArrayList();
 
     @Override
@@ -103,7 +103,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
    * Returns whether the given call to goog.object.create can be converted to an
    * object literal.
    */
-  private boolean canOptimizeObjectCreate(Node firstParam) {
+  private static boolean canOptimizeObjectCreate(Node firstParam) {
     Node curParam = firstParam;
     while (curParam != null) {
       // All keys must be strings or numbers.

@@ -180,7 +180,7 @@ class Normalize implements CompilerPass {
       }
     }
 
-    private boolean isMarkedExpose(Node n) {
+    private static boolean isMarkedExpose(Node n) {
       JSDocInfo info = n.getJSDocInfo();
       return info != null && info.isExpose();
     }
@@ -683,7 +683,7 @@ class Normalize implements CompilerPass {
      *     newChild should be added to the front of parent's child list.
      * @return The inserted child node.
      */
-    private Node addToFront(Node parent, Node newChild, Node after) {
+    private static Node addToFront(Node parent, Node newChild, Node after) {
       if (after == null) {
         parent.addChildToFront(newChild);
       } else {
@@ -823,7 +823,7 @@ class Normalize implements CompilerPass {
   /**
    * A simple class that causes scope to be created.
    */
-  private final class ScopeTicklingCallback
+  private static final class ScopeTicklingCallback
       implements NodeTraversal.ScopedCallback {
     @Override
     public void enterScope(NodeTraversal t) {

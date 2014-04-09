@@ -119,7 +119,7 @@ public class FieldCleanupPass implements HotSwapCompilerPass {
       }
     }
 
-    private String getFieldName(Node n) {
+    private static String getFieldName(Node n) {
       return n.getLastChild().getString();
     }
   }

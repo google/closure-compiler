@@ -127,7 +127,7 @@ class ConstCheck extends AbstractPostOrderCallback
    * Gets whether a variable is a constant initialized to a literal value at
    * the point where it is declared.
    */
-  private boolean isConstant(Scope.Var var) {
+  private static boolean isConstant(Scope.Var var) {
     return var != null && var.isConst();
   }
 

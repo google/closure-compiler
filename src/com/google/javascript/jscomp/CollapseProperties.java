@@ -270,7 +270,7 @@ class CollapseProperties implements CompilerPass {
    * @param depth The chain depth.
    * @param newNodes Expression nodes that have been updated.
    */
-  private void rewriteAliasProps(
+  private static void rewriteAliasProps(
       Name name, Node value, int depth, List<AstChange> newNodes) {
     if (name.props != null) {
       Preconditions.checkState(!
@@ -310,7 +310,7 @@ class CollapseProperties implements CompilerPass {
     }
   }
 
-  private boolean isInlinableGlobalAlias(Name name) {
+  private static boolean isInlinableGlobalAlias(Name name) {
     // Only simple aliases with direct usage are inlinable.
     if (name.inExterns || name.globalSets != 1 || name.localSets != 0
         || !name.canCollapse()) {

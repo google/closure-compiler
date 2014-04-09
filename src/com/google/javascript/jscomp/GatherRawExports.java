@@ -62,7 +62,7 @@ class GatherRawExports extends AbstractPostOrderCallback
     }
   }
 
-  private boolean isGlobalThisObject(NodeTraversal t, Node n) {
+  private static boolean isGlobalThisObject(NodeTraversal t, Node n) {
     if (n.isThis()) {
       return t.inGlobalScope();
     } else if (n.isName()) {

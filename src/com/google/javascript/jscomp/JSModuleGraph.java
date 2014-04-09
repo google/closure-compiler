@@ -279,7 +279,7 @@ public class JSModuleGraph {
   /**
    * Adds a module's transitive dependencies to a set.
    */
-  private void addDeps(Set<JSModule> deps, JSModule m) {
+  private static void addDeps(Set<JSModule> deps, JSModule m) {
     for (JSModule dep : m.getDependencies()) {
       deps.add(dep);
       addDeps(deps, dep);
@@ -503,7 +503,7 @@ public class JSModuleGraph {
     }
   }
 
-  private int depthCompare(JSModule m1, JSModule m2) {
+  private static int depthCompare(JSModule m1, JSModule m2) {
     if (m1 == m2) {
       return 0;
     }

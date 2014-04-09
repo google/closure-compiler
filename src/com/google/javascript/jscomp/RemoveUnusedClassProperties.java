@@ -122,7 +122,7 @@ class RemoveUnusedClassProperties
      }
   }
 
-  private boolean isKnownClassProperty(Node n) {
+  private static boolean isKnownClassProperty(Node n) {
     Preconditions.checkState(n.isGetProp());
     Node target = n.getFirstChild();
     return target.isThis()
@@ -133,7 +133,7 @@ class RemoveUnusedClassProperties
   /**
    * @return Whether the property is used in a way that prevents its removal.
    */
-  private boolean isPinningPropertyUse(Node n) {
+  private static boolean isPinningPropertyUse(Node n) {
     // Rather than looking for cases that are uses, we assume all references are
     // pinning uses unless they are:
     //  - a simple assignment (x.a = 1)

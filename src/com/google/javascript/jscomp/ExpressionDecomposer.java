@@ -244,7 +244,7 @@ class ExpressionDecomposer {
   /**
    * @return Whether the node may represent an external method.
    */
-  private boolean maybeExternMethod(Node node) {
+  private static boolean maybeExternMethod(Node node) {
     // TODO(johnlenz): Provide some mechanism for determining this.
     return true;
   }

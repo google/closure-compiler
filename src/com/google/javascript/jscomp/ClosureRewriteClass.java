@@ -157,7 +157,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     }
   }
 
-  private final class ClassDefinition {
+  private static final class ClassDefinition {
     final Node name;
     final Node superClass;
     final MemberDefinition constructor;
@@ -258,7 +258,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     return def;
   }
 
-  private Node maybeDetach(Node node) {
+  private static Node maybeDetach(Node node) {
     if (node != null && node.getParent() != null) {
       node.detachFromParent();
     }
@@ -266,7 +266,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
   }
 
   // Only unquoted plain properties are currently supported.
-  private boolean validateObjLit(Node objlit) {
+  private static boolean validateObjLit(Node objlit) {
     for (Node key : objlit.children()) {
       if (!key.isStringKey() || key.isQuotedString()) {
         return false;
@@ -278,7 +278,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
   /**
    * @return The first property in the objlit that matches the key.
    */
-  private Node extractProperty(Node objlit, String keyName) {
+  private static Node extractProperty(Node objlit, String keyName) {
     for (Node keyNode : objlit.children()) {
       if (keyNode.getString().equals(keyName)) {
         return keyNode.isStringKey() ? keyNode.getFirstChild() : null;
@@ -287,7 +287,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     return null;
   }
 
-  private List<MemberDefinition> objectLitToList(
+  private static List<MemberDefinition> objectLitToList(
       Node objlit) {
     List<MemberDefinition> result = Lists.newArrayList();
     for (Node keyNode : objlit.children()) {
@@ -378,12 +378,12 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     compiler.reportCodeChange();
   }
 
-  private Node fixupSrcref(Node node) {
+  private static Node fixupSrcref(Node node) {
     node.srcref(node.getFirstChild());
     return node;
   }
 
-  private Node fixupFreeCall(Node call) {
+  private static Node fixupFreeCall(Node call) {
     Preconditions.checkState(call.isCall());
     call.putBooleanProp(Node.FREE_CALL, true);
     return call;
@@ -392,7 +392,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
   /**
    * @return Whether the call represents a class definition.
    */
-  private boolean isGoogDefineClass(Node value) {
+  private static boolean isGoogDefineClass(Node value) {
     if (value != null && value.isCall()) {
       String targetName = value.getFirstChild().getQualifiedName();
       return ("goog.defineClass".equals(targetName) ||

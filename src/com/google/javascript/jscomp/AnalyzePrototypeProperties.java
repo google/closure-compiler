@@ -565,7 +565,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
   /**
    * A function initialized as a VAR statement or a function declaration.
    */
-  class GlobalFunction implements Symbol {
+  static class GlobalFunction implements Symbol {
     private final Node nameNode;
     private final Var var;
     private final JSModule module;

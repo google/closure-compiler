@@ -220,7 +220,7 @@ import java.util.Set;
    * not depend on its environment?
    * @param node node to check.
    */
-  private boolean isPure(Node node) {
+  private static boolean isPure(Node node) {
     // For now, we conservatively assume all code is not pure.
     // TODO(dcc): Implement isPure().
     return false;
@@ -397,7 +397,7 @@ import java.util.Set;
   /**
    * Returns true if a node has a CALL or a NEW descendant.
    */
-  private boolean nodeHasCall(Node node) {
+  private static boolean nodeHasCall(Node node) {
     return NodeUtil.has(node, new Predicate<Node>() {
       @Override
       public boolean apply(Node input) {
@@ -642,7 +642,7 @@ import java.util.Set;
       return new LocationSummary(calculateModSet(node), calculateRefSet(node));
     }
 
-    EffectLocation calculateRefSet(Node node) {
+    static EffectLocation calculateRefSet(Node node) {
       if (NodeUtil.canBeSideEffected(node)) {
         return EVERY_LOCATION;
       } else {
@@ -650,7 +650,7 @@ import java.util.Set;
       }
     }
 
-    EffectLocation calculateModSet(Node node) {
+    static EffectLocation calculateModSet(Node node) {
       if (NodeUtil.mayHaveSideEffects(node)) {
         return EVERY_LOCATION;
       } else {

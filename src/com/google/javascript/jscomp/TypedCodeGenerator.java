@@ -202,7 +202,7 @@ class TypedCodeGenerator extends CodeGenerator {
     return sb.toString();
   }
 
-  private void appendAnnotation(StringBuilder sb, String name, String type) {
+  private static void appendAnnotation(StringBuilder sb, String name, String type) {
     sb.append("@").append(name).append(" {").append(type).append("}");
   }
 

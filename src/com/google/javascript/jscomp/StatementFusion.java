@@ -182,7 +182,7 @@ class StatementFusion extends AbstractPeepholeOptimization {
     return first;
   }
 
-  private void fuseExpressionIntoControlFlowStatement(
+  private static void fuseExpressionIntoControlFlowStatement(
       Node before, Node control) {
     Preconditions.checkArgument(before.isExprResult(),
         "before must be expression result");

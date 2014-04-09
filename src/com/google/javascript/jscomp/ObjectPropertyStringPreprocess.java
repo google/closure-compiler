@@ -71,7 +71,7 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new Callback());
   }
 
-  private void addExternDeclaration(Node externs, Node declarationStmt) {
+  private static void addExternDeclaration(Node externs, Node declarationStmt) {
     Node script = externs.getLastChild();
     if (script == null || !script.isScript()) {
       script = IR.script();

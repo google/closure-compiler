@@ -558,7 +558,7 @@ class FunctionInjector {
     return newBlock;
   }
 
-  private void removeConstantVarAnnotation(Scope scope, String name) {
+  private static void removeConstantVarAnnotation(Scope scope, String name) {
     Scope.Var var = scope.getVar(name);
     Node nameNode = var == null ? null : var.getNameNode();
     if (nameNode == null) return;
@@ -572,7 +572,7 @@ class FunctionInjector {
    * Checks if the given function matches the criteria for an inlinable
    * function, and if so, adds it to our set of inlinable functions.
    */
-  boolean isDirectCallNodeReplacementPossible(Node fnNode) {
+  static boolean isDirectCallNodeReplacementPossible(Node fnNode) {
     // Only inline single-statement functions
     Node block = NodeUtil.getFunctionBody(fnNode);
 
@@ -827,7 +827,7 @@ class FunctionInjector {
   /**
    * @return Whether inlining will lower cost.
    */
-  private boolean doesLowerCost(
+  private static boolean doesLowerCost(
       Node fnNode, int callCost,
       int directInlines, int costDeltaDirect,
       int blockInlines, int costDeltaBlock,

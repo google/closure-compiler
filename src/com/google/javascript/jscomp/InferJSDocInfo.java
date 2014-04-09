@@ -191,14 +191,14 @@ class InferJSDocInfo extends AbstractPostOrderCallback
   /**
    * Dereferences the given type to an object, or returns null.
    */
-  private ObjectType dereferenceToObject(JSType type) {
+  private static ObjectType dereferenceToObject(JSType type) {
     return ObjectType.cast(type == null ? null : type.dereference());
   }
 
   /**
    * Handle cases #1 and #3 in the class doc.
    */
-  private void attachJSDocInfoToNominalTypeOrShape(
+  private static void attachJSDocInfoToNominalTypeOrShape(
       ObjectType objType, JSDocInfo docInfo, @Nullable String qName) {
     if (objType.isConstructor() ||
         objType.isEnumType() ||

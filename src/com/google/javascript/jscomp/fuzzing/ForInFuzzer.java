@@ -44,7 +44,7 @@ class ForInFuzzer extends AbstractFuzzer {
     Scope localScope = context.scopeManager.localScope();
     localScope.loopNesting++;
     AbstractFuzzer[] fuzzers = {
-      new ForInItemFuzzer(context),
+        new ForInItemFuzzer(context),
       new ExpressionFuzzer(context),
       new BlockFuzzer(context)
     };
@@ -53,7 +53,7 @@ class ForInFuzzer extends AbstractFuzzer {
     return new Node(Token.FOR, components);
   }
 
-  private class ForInItemFuzzer extends Dispatcher {
+  private static class ForInItemFuzzer extends Dispatcher {
 
     ForInItemFuzzer(FuzzingContext context) {
       super(context);

@@ -80,7 +80,7 @@ public class XtbMessageBundle implements MessageBundle {
   }
 
   // Inlined from guava-internal.
-  private SAXParser createSAXParser()
+  private static SAXParser createSAXParser()
       throws ParserConfigurationException, SAXException {
     SAXParserFactory factory = SAXParserFactory.newInstance();
     factory.setValidating(false);

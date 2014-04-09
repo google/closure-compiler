@@ -82,7 +82,7 @@ class OptimizeParameters
    * @return Whether the definitionSite represents a function whose call
    *      signature can be modified.
    */
-  private boolean canChangeSignature(
+  private static boolean canChangeSignature(
       DefinitionSite definitionSite, SimpleDefinitionFinder defFinder) {
     Definition definition = definitionSite.definition;
 
@@ -234,7 +234,7 @@ class OptimizeParameters
    * Adjust the parameters to move based on the side-effects seen.
    * @return Whether there are any movable parameters.
    */
-  private boolean adjustForSideEffects(List<Parameter> parameters) {
+  private static boolean adjustForSideEffects(List<Parameter> parameters) {
     // If a parameter is moved, that has side-effect no parameters that
     // can be effected by side-effects can be left.
 
@@ -342,7 +342,7 @@ class OptimizeParameters
    * @return Whether the expression can be safely moved to another function
    *   in another scope.
    */
-  private boolean isMovableValue(Node n, Scope s) {
+  private static boolean isMovableValue(Node n, Scope s) {
     // Things that can change value or are inaccessible can't be moved, these
     // are "this", "arguments", local names, and functions that capture local
     // values.
@@ -516,7 +516,7 @@ class OptimizeParameters
    * @param argIndex The index of the the argument to remove.
    * @return The Node of the argument removed.
    */
-  private Node eliminateFunctionParamAt(Node function, int argIndex) {
+  private static Node eliminateFunctionParamAt(Node function, int argIndex) {
     Preconditions.checkArgument(function.isFunction(),
         "Node must be a function.");
 

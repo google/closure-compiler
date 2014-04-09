@@ -190,7 +190,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
    * @param input string representation of a number
    * @return string with leading and trailing zeros removed
    */
-  private String normalizeNumericString(String input) {
+  private static String normalizeNumericString(String input) {
     if (input == null || input.length() == 0) {
       return input;
     }
@@ -679,8 +679,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
    * Support function for jsSplit, find the first occurrence of
    * separator within stringValue starting at startIndex.
    */
-  private int jsSplitMatch(String stringValue, int startIndex,
-      String separator) {
+  private static int jsSplitMatch(String stringValue, int startIndex,
+                                  String separator) {
 
     if (startIndex + separator.length() > stringValue.length()) {
       return -1;

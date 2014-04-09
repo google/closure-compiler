@@ -105,7 +105,7 @@ class InstrumentMemoryAllocPass implements CompilerPass {
     }
   }
 
-  private Node getTypeString(Node currentNode){
+  private static Node getTypeString(Node currentNode){
     if (currentNode.getType() == Token.NEW) {
       JSType type = currentNode.getFirstChild().getJSType();
       String typeName = (type != null) ? type.getDisplayName() : "Unknown";

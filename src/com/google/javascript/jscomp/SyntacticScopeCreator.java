@@ -176,7 +176,7 @@ class SyntacticScopeCreator implements ScopeCreator {
   /**
    * The default handler for duplicate declarations.
    */
-  private class DefaultRedeclarationHandler implements RedeclarationHandler {
+  private static class DefaultRedeclarationHandler implements RedeclarationHandler {
     @Override
     public void onRedeclaration(
         Scope s, String name, Node n, CompilerInput input) {}

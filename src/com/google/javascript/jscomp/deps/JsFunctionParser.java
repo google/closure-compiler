@@ -80,7 +80,7 @@ public class JsFunctionParser extends JsFileLineParser {
    * @param functions Functions to parse.
    * @return A pattern to extract {@code functions}' arguments.
    */
-  private Pattern getPattern(Collection<String> functions) {
+  private static Pattern getPattern(Collection<String> functions) {
     StringBuilder sb = new StringBuilder("(?:^|;)\\s*(");
 
     for (String function : functions) {

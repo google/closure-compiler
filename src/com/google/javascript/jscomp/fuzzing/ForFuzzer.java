@@ -70,7 +70,7 @@ class ForFuzzer extends AbstractFuzzer {
     }
   }
 
-  private class ForInitializerFuzzer extends Dispatcher {
+  private static class ForInitializerFuzzer extends Dispatcher {
 
     ForInitializerFuzzer(FuzzingContext context) {
       super(context);

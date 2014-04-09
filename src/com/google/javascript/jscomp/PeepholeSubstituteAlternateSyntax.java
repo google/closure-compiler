@@ -208,7 +208,7 @@ class PeepholeSubstituteAlternateSyntax
     return n;
   }
 
-  private void addParameterAfter(Node parameterList, Node after) {
+  private static void addParameterAfter(Node parameterList, Node after) {
     if (parameterList != null) {
       // push the last parameter to the head of the list first.
       addParameterAfter(parameterList.getNext(), after);

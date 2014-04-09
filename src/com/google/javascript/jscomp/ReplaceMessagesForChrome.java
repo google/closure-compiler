@@ -94,7 +94,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
     return newValueNode;
   }
 
-  private Node getPlaceholderValue(
+  private static Node getPlaceholderValue(
       Node placeholderValues, String placeholderName) {
     for (Node key : placeholderValues.children()) {
       if (key.getString().equals(placeholderName)) {

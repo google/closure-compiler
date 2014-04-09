@@ -193,7 +193,7 @@ class CheckGlobalNames implements CompilerPass {
     }
   }
 
-  private boolean isTypedef(Ref ref) {
+  private static boolean isTypedef(Ref ref) {
     // If this is an annotated EXPR-GET, don't do anything.
     Node parent = ref.node.getParent();
     if (parent.isExprResult()) {

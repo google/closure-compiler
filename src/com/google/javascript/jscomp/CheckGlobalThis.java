@@ -181,7 +181,7 @@ final class CheckGlobalThis implements Callback {
    * ... var x = function() {};
    * </pre>
    */
-  private JSDocInfo getFunctionJsDocInfo(Node n) {
+  private static JSDocInfo getFunctionJsDocInfo(Node n) {
     JSDocInfo jsDoc = n.getJSDocInfo();
     Node parent = n.getParent();
     if (jsDoc == null) {

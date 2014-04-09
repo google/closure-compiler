@@ -203,8 +203,8 @@ class ReplaceMessages extends JsMessageVisitor {
    *   placeholder reference that does not correspond to a valid argument in
    *   the arg list
    */
-  private Node constructAddOrStringNode(Iterator<CharSequence> partsIterator,
-                                        Node argListNode)
+  private static Node constructAddOrStringNode(Iterator<CharSequence> partsIterator,
+                                               Node argListNode)
       throws MalformedException {
     CharSequence part = partsIterator.next();
     Node partNode = null;
@@ -309,8 +309,8 @@ class ReplaceMessages extends JsMessageVisitor {
    * @throws MalformedException if {@code parts} contains a placeholder
    *   reference that does not correspond to a valid placeholder name
    */
-  private Node constructStringExprNode(Iterator<CharSequence> parts,
-      Node objLitNode) throws MalformedException {
+  private static Node constructStringExprNode(Iterator<CharSequence> parts,
+                                              Node objLitNode) throws MalformedException {
 
     CharSequence part = parts.next();
     Node partNode = null;
@@ -356,7 +356,7 @@ class ReplaceMessages extends JsMessageVisitor {
    *
    * @throws IllegalArgumentException if the node is null or the wrong type
    */
-  private void checkStringExprNode(@Nullable Node node) {
+  private static void checkStringExprNode(@Nullable Node node) {
     if (node == null) {
       throw new IllegalArgumentException("Expected a string; found: null");
     }

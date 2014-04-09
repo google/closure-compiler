@@ -314,7 +314,7 @@ class TypeValidator {
     return true;
   }
 
-  private boolean containsForwardDeclaredUnresolvedName(JSType type) {
+  private static boolean containsForwardDeclaredUnresolvedName(JSType type) {
     if (type.isUnionType()) {
       for (JSType alt : type.toMaybeUnionType().getAlternates()) {
         if (containsForwardDeclaredUnresolvedName(alt)) {
@@ -764,8 +764,8 @@ class TypeValidator {
   /**
    * Formats a found/required error message.
    */
-  private String formatFoundRequired(String description, JSType found,
-      JSType required) {
+  private static String formatFoundRequired(String description, JSType found,
+                                            JSType required) {
     String foundStr = found.toString();
     String requiredStr = required.toString();
     if (foundStr.equals(requiredStr)) {

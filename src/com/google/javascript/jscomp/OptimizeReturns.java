@@ -74,7 +74,7 @@ class OptimizeReturns
    * - Function must is exported.
    * - The definition is never accessed outside a function call context.
    */
-  private boolean callResultsMaybeUsed(
+  private static boolean callResultsMaybeUsed(
       SimpleDefinitionFinder defFinder, DefinitionSite definitionSite) {
 
     Definition definition = definitionSite.definition;

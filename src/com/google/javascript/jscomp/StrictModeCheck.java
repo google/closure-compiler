@@ -133,7 +133,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   /** Reports a warning for with statements. */
-  private void checkWith(NodeTraversal t, Node n) {
+  private static void checkWith(NodeTraversal t, Node n) {
     JSDocInfo info = n.getJSDocInfo();
     boolean allowWith =
         info != null && info.getSuppressions().contains("with");
@@ -143,7 +143,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   /** Checks that the function is used legally. */
-  private void checkFunctionUse(NodeTraversal t, Node n) {
+  private static void checkFunctionUse(NodeTraversal t, Node n) {
     if (NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isHoistedFunctionDeclaration(n)) {
       t.report(n, BAD_FUNCTION_DECLARATION);
     }
@@ -181,7 +181,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   /** Checks that an assignment is not to the "arguments" object. */
-  private void checkAssignment(NodeTraversal t, Node n) {
+  private static void checkAssignment(NodeTraversal t, Node n) {
     if (n.getFirstChild().isName()) {
       if ("arguments".equals(n.getFirstChild().getString())) {
         t.report(n, ARGUMENTS_ASSIGNMENT);
@@ -194,7 +194,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   /** Checks that variables, functions, and arguments are not deleted. */
-  private void checkDelete(NodeTraversal t, Node n) {
+  private static void checkDelete(NodeTraversal t, Node n) {
     if (n.getFirstChild().isName()) {
       Var v = t.getScope().getVar(n.getFirstChild().getString());
       if (v != null) {
@@ -204,7 +204,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   /** Checks that object literal keys are valid. */
-  private void checkObjectLiteral(NodeTraversal t, Node n) {
+  private static void checkObjectLiteral(NodeTraversal t, Node n) {
     Set<String> getters = Sets.newHashSet();
     Set<String> setters = Sets.newHashSet();
     for (Node key = n.getFirstChild();
@@ -269,7 +269,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
     }
   }
 
-  private boolean isFunctionType(Node n) {
+  private static boolean isFunctionType(Node n) {
     JSType type = n.getJSType();
     return (type != null && type.isFunctionType());
   }

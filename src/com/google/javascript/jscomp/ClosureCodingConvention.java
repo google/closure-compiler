@@ -159,7 +159,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
    * "inherits" or "mixin."
    * @return The type of class-defining name, or null.
    */
-  private SubclassType typeofClassDefiningName(Node callName) {
+  private static SubclassType typeofClassDefiningName(Node callName) {
     // Check if the method name matches one of the class-defining methods.
     String methodName = null;
     if (callName.isGetProp()) {
@@ -194,7 +194,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
    * a.b.c => false
    * a.b.c.prototype => true
    */
-  private boolean endsWithPrototype(Node qualifiedName) {
+  private static boolean endsWithPrototype(Node qualifiedName) {
     return qualifiedName.isGetProp() &&
         qualifiedName.getLastChild().getString().equals("prototype");
   }
@@ -442,7 +442,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
     return indirectlyDeclaredProperties;
   }
 
-  private Node safeNext(Node n) {
+  private static Node safeNext(Node n) {
     if (n != null) {
       return n.getNext();
     }

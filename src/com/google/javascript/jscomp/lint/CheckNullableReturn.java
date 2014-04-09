@@ -72,7 +72,7 @@ public class CheckNullableReturn implements CompilerPass, NodeTraversal.Callback
    * @return True if n is a function node and we know its return type is
    * a nullable type, other than {?}.
    */
-  private boolean isReturnTypeNullable(Node n) {
+  private static boolean isReturnTypeNullable(Node n) {
     if (n == null) {
       return false;
     }
@@ -89,7 +89,7 @@ public class CheckNullableReturn implements CompilerPass, NodeTraversal.Callback
   /**
    * @return True if the given ControlFlowGraph could return null.
    */
-  private boolean canReturnNull(ControlFlowGraph graph) {
+  private static boolean canReturnNull(ControlFlowGraph graph) {
     DiGraph.DiGraphNode<Node, ControlFlowGraph.Branch> ir = graph.getImplicitReturn();
     for (DiGraph.DiGraphEdge<Node, ControlFlowGraph.Branch> inEdge : ir.getInEdges()) {
       DiGraph.DiGraphNode<Node, ControlFlowGraph.Branch> graphNode = inEdge.getSource();

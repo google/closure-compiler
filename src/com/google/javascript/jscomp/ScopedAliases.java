@@ -188,7 +188,7 @@ class ScopedAliases implements HotSwapCompilerPass {
     }
   }
 
-  private abstract class AliasUsage {
+  private abstract static class AliasUsage {
     final Var aliasVar;
     final Node aliasReference;
 

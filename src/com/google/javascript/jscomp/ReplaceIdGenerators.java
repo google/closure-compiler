@@ -224,7 +224,7 @@ class ReplaceIdGenerators implements CompilerPass {
     }
   }
 
-  private NameSupplier createNameSupplier(
+  private static NameSupplier createNameSupplier(
       RenameStrategy renameStrategy, RenamingMap mappings) {
     Preconditions.checkState(renameStrategy == RenameStrategy.MAPPED);
     return new MappedNameSupplier(mappings);
@@ -455,12 +455,12 @@ class ReplaceIdGenerators implements CompilerPass {
     return resultMap;
   }
 
-  private void reportInvalidLine(String line, int lineIndex) {
+  private static void reportInvalidLine(String line, int lineIndex) {
     JSError.make(INVALID_GENERATOR_ID_MAPPING,
         "line(" + line + "): " + lineIndex);
   }
 
-  String getIdForGeneratorNode(boolean consistent, Node n) {
+  static String getIdForGeneratorNode(boolean consistent, Node n) {
     Preconditions.checkState(n.isString() || n.isStringKey());
     if (consistent) {
       return n.getString();

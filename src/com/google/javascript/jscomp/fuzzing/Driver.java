@@ -291,7 +291,7 @@ public class Driver {
     }
   }
 
-  private String getSetupCode(ScopeManager scopeManager) {
+  private static String getSetupCode(ScopeManager scopeManager) {
     Collection<String> vars = Collections2.transform(
         Lists.newArrayList(scopeManager.localScope().symbols),
         new Function<Symbol, String>() {

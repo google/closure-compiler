@@ -36,7 +36,7 @@ public class Timer {
     logTime(this.name, getCurrentTime() - this.start);
   }
 
-  private long getCurrentTime() {
+  private static long getCurrentTime() {
     return System.currentTimeMillis();
   }
 

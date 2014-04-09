@@ -465,7 +465,7 @@ class ProcessDefines implements CompilerPass {
      * @param info Represents the define variable.
      * @param t The current traversal.
      */
-    private void setDefineInfoNotAssignable(DefineInfo info, NodeTraversal t) {
+    private static void setDefineInfoNotAssignable(DefineInfo info, NodeTraversal t) {
       info.setNotAssignable(format(REASON_DEFINE_NOT_ASSIGNABLE,
                                 t.getLineNumber(), t.getSourceName()));
     }

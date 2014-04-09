@@ -504,7 +504,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
    * Given a jQuery.expandedEach callback function, traverse it and collect any
    * references to its parameter names.
    */
-  class FindCallbackArgumentReferences extends AbstractPostOrderCallback
+  static class FindCallbackArgumentReferences extends AbstractPostOrderCallback
       implements ScopedCallback {
 
     private final String keyName;

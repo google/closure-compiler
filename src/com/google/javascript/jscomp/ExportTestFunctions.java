@@ -169,7 +169,7 @@ class ExportTestFunctions implements CompilerPass {
    * @param functionName The name of the function
    * @return {@code true} if the function is recognized as a test function.
    */
-  private boolean isTestFunction(Node n, String functionName) {
+  private static boolean isTestFunction(Node n, String functionName) {
     return !(functionName == null
         || !TEST_FUNCTIONS_NAME_PATTERN.matcher(functionName).matches());
   }

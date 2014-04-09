@@ -60,7 +60,7 @@ class TryFuzzer extends AbstractFuzzer {
     return new Node(Token.TRY, components);
   }
 
-  private class CatchFuzzer extends AbstractFuzzer {
+  private static class CatchFuzzer extends AbstractFuzzer {
 
     CatchFuzzer(FuzzingContext context) {
       super(context);
@@ -106,7 +106,7 @@ class TryFuzzer extends AbstractFuzzer {
     }
   }
 
-  private class FinallyFuzzer extends BlockFuzzer {
+  private static class FinallyFuzzer extends BlockFuzzer {
 
     FinallyFuzzer(FuzzingContext context) {
       super(context);

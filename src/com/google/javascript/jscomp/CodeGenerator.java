@@ -1009,7 +1009,7 @@ class CodeGenerator {
   /**
    * @return Whether the name is an indirect eval.
    */
-  private boolean isIndirectEval(Node n) {
+  private static boolean isIndirectEval(Node n) {
     return n.isName() && "eval".equals(n.getString()) &&
         !n.getBooleanProp(Node.DIRECT_EVAL);
   }
@@ -1083,7 +1083,7 @@ class CodeGenerator {
    * @return Whether the Node is a DO or a declaration that is only allowed
    * in restricted contexts.
    */
-  private boolean isBlockDeclOrDo(Node n) {
+  private static boolean isBlockDeclOrDo(Node n) {
     if (n.isLabel()) {
       Node labeledStatement = n.getLastChild();
       if (!labeledStatement.isBlock()) {
@@ -1442,7 +1442,7 @@ class CodeGenerator {
     OTHER
   }
 
-  private Context getContextForNonEmptyExpression(Context currentContext) {
+  private static Context getContextForNonEmptyExpression(Context currentContext) {
     return currentContext == Context.BEFORE_DANGLING_ELSE ?
         Context.BEFORE_DANGLING_ELSE : Context.OTHER;
   }
@@ -1451,7 +1451,7 @@ class CodeGenerator {
    * If we're in a IN_FOR_INIT_CLAUSE, we can't permit in operators in the
    * expression.  Pass on the IN_FOR_INIT_CLAUSE flag through subexpressions.
    */
-  private  Context getContextForNoInOperator(Context context) {
+  private static Context getContextForNoInOperator(Context context) {
     return (context == Context.IN_FOR_INIT_CLAUSE
         ? Context.IN_FOR_INIT_CLAUSE : Context.OTHER);
   }

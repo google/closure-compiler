@@ -223,7 +223,7 @@ class PeepholeMinimizeConditions
     return n;
   }
 
-  private boolean statementMustExitParent(Node n) {
+  private static boolean statementMustExitParent(Node n) {
     switch (n.getType()) {
       case Token.THROW:
       case Token.RETURN:
@@ -361,7 +361,7 @@ class PeepholeMinimizeConditions
   /**
    * @return n or the node following any following finally nodes.
    */
-  Node skipFinallyNodes(Node n) {
+  static Node skipFinallyNodes(Node n) {
     while (n != null && NodeUtil.isTryFinallyNode(n.getParent(), n)) {
       n = ControlFlowAnalysis.computeFollowNode(n);
     }
@@ -380,7 +380,7 @@ class PeepholeMinimizeConditions
             || getExceptionHandler(nodeThis) == getExceptionHandler(nodeThat));
   }
 
-  boolean isExceptionPossible(Node n) {
+  static boolean isExceptionPossible(Node n) {
     // TODO(johnlenz): maybe use ControlFlowAnalysis.mayThrowException?
     Preconditions.checkState(n.isReturn()
         || n.isThrow());
@@ -389,7 +389,7 @@ class PeepholeMinimizeConditions
             && !NodeUtil.isLiteralValue(n.getLastChild(), true));
   }
 
-  Node getExceptionHandler(Node n) {
+  static Node getExceptionHandler(Node n) {
     return ControlFlowAnalysis.getExceptionHandler(n);
   }
 
