@@ -49,7 +49,7 @@ jasmine.TimeProvider = function() {};
 /**
  * @param {Function} cb
  * @param {number} time
- * @return {string}
+ * @return {number}
  */
 jasmine.TimeProvider.prototype.setTimeout = function(cb, time) {};
 
@@ -57,19 +57,19 @@ jasmine.TimeProvider.prototype.setTimeout = function(cb, time) {};
 /**
  * @param {Function} cb
  * @param {number} time
- * @return {string}
+ * @return {number}
  */
 jasmine.TimeProvider.prototype.setInterval = function(cb, time) {};
 
 
 /**
- * @param {string} id
+ * @param {number} id
  */
 jasmine.TimeProvider.prototype.clearTimeout = function(id) {};
 
 
 /**
- * @param {string} id
+ * @param {number} id
  */
 jasmine.TimeProvider.prototype.clearInterval = function(id) {};
 
@@ -195,8 +195,15 @@ jasmine.Spec = function() {};
 jasmine.Spec.prototype.message;
 
 
+/**
+ * @param {function(this:jasmine.Spec)} after
+ */
+jasmine.Spec.prototype.after = function(after) {};
+
+
 /** @param {Error|string} e */
 jasmine.Spec.prototype.fail = function(e) {};
+
 
 /**
  * @param {function()=} opt_onComplete
@@ -336,6 +343,10 @@ jasmine.JsApiReporter.prototype.resultsForSpec = function(id) {};
 
 /** @constructor */
 jasmine.Env = function() {};
+
+
+/** @type {jasmine.Spec} */
+jasmine.Env.prototype.currentSpec;
 
 
 /** @return {void} */
