@@ -1675,7 +1675,12 @@ public class NewTypeInference implements CompilerPass {
       JSType declared, JSType inferred, JSType required) {
     boolean fuzzyDeclaration = declared == null || declared.isUnknown() ||
         (declared.isTop() && !inferred.isTop());
-    return fuzzyDeclaration && required.isSubtypeOf(inferred);
+    // If required is loose, It's easier for it to be a subtype of inferred.
+    // We only tighten the type if the non-loose required is also be a subtype.
+    // Otherwise, we would be skipping warnings too often.
+    // This is important b/c analyzePropAccess and analyzePropLvalue introduce
+    // loose objects, even if there are no undeclared formals.
+    return fuzzyDeclaration && required.isNonLooseSubtypeOf(inferred);
   }
 
   // Returns true iff it produces a warning
@@ -1720,7 +1725,7 @@ public class NewTypeInference implements CompilerPass {
     Node propAccessNode = receiver.getParent();
     EnvTypePair pair;
     JSType objWithProp = pickReqObjType(receiver)
-        .withProperty(propQname, requiredType);
+        .withLoose().withProperty(propQname, requiredType);
     JSType recvReqType, recvSpecType, recvType;
 
     // First, analyze the receiver object.
@@ -1888,7 +1893,6 @@ public class NewTypeInference implements CompilerPass {
       case Token.TRUE:
         return new EnvTypePair(outEnv, scalarValueToType(exprKind));
       case Token.OBJECTLIT: {
-        JSDocInfo jsdoc = expr.getJSDocInfo();
         TypeEnv env = outEnv;
         JSType result = pickReqObjType(expr);
         for (Node prop = expr.getLastChild();
@@ -2259,7 +2263,7 @@ public class NewTypeInference implements CompilerPass {
       Node receiver, String pname, TypeEnv outEnv, JSType requiredType) {
     QualifiedName qname = new QualifiedName(pname);
     EnvTypePair pair = analyzeExprBwd(receiver, outEnv,
-        pickReqObjType(receiver).withProperty(qname, requiredType));
+        pickReqObjType(receiver).withLoose().withProperty(qname, requiredType));
     JSType receiverType = pair.type;
     JSType propAccessType = receiverType.mayHaveProp(qname) ?
         receiverType.getProp(qname) : requiredType;
@@ -2411,7 +2415,8 @@ public class NewTypeInference implements CompilerPass {
   private LValueResultFwd analyzePropLValFwd(Node obj, QualifiedName pname,
       TypeEnv inEnv, JSType type, boolean insideQualifiedName) {
     Preconditions.checkArgument(pname.isIdentifier());
-    JSType reqObjType = pickReqObjType(obj).withProperty(pname, type);
+    JSType reqObjType =
+        pickReqObjType(obj).withLoose().withProperty(pname, type);
     LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv, reqObjType, true);
     JSType lvalueType = lvalue.type;
     if (!lvalueType.isSubtypeOf(JSType.TOP_OBJECT)) {
@@ -2509,7 +2514,8 @@ public class NewTypeInference implements CompilerPass {
   private LValueResultBwd analyzePropLValBwd(Node obj, QualifiedName pname,
       TypeEnv outEnv, JSType type, boolean doSlicing) {
     Preconditions.checkArgument(pname.isIdentifier());
-    JSType reqObjType = pickReqObjType(obj).withProperty(pname, type);
+    JSType reqObjType =
+        pickReqObjType(obj).withLoose().withProperty(pname, type);
     LValueResultBwd lvalue =
         analyzeLValueBwd(obj, outEnv, reqObjType, false, true);
     if (lvalue.ptr != null) {

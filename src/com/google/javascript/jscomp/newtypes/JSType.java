@@ -551,7 +551,16 @@ public class JSType {
     return BOOLEAN;
   }
 
+  public boolean isNonLooseSubtypeOf(JSType other) {
+    return isSubtypeOfHelper(false, other);
+  }
+
   public boolean isSubtypeOf(JSType other) {
+    return isSubtypeOfHelper(true, other);
+  }
+
+  private boolean isSubtypeOfHelper(
+      boolean keepLoosenessOfThis, JSType other) {
     if (isUnknown() || other.isUnknown() || other.isTop()) {
       return true;
     } else if ((mask | other.mask) != other.mask) {
@@ -563,7 +572,7 @@ public class JSType {
     }
     // Because of optional properties,
     //   x \le y \iff x \join y = y does not hold.
-    return ObjectType.isUnionSubtype(this.objs, other.objs);
+    return ObjectType.isUnionSubtype(keepLoosenessOfThis, this.objs, other.objs);
   }
 
   public JSType removeType(JSType other) {

@@ -297,11 +297,12 @@ public class ObjectType {
     return newProps;
   }
 
-  static boolean isUnionSubtype(Set<ObjectType> objs1, Set<ObjectType> objs2) {
+  static boolean isUnionSubtype(boolean keepLoosenessOfThis,
+      Set<ObjectType> objs1, Set<ObjectType> objs2) {
     for (ObjectType obj1 : objs1) {
       boolean foundSupertype = false;
       for (ObjectType obj2 : objs2) {
-        if (obj1.isSubtypeOf(obj2)) {
+        if (obj1.isSubtypeOf(keepLoosenessOfThis, obj2)) {
           foundSupertype = true;
           break;
         }
@@ -313,18 +314,22 @@ public class ObjectType {
     return true;
   }
 
+  boolean isSubtypeOf(ObjectType obj2) {
+    return isSubtypeOf(true, obj2);
+  }
+
   /**
    * Required properties are acceptable where an optional is required,
    * but not vice versa.
    * Optional properties create cycles in the type lattice, eg,
    * { } \le { p: num= }  and also   { p: num= } \le { }.
    */
-  boolean isSubtypeOf(ObjectType obj2) {
+  boolean isSubtypeOf(boolean keepLoosenessOfThis, ObjectType obj2) {
     if (obj2 == TOP_OBJECT) {
       return true;
     }
 
-    if (this.isLoose || obj2.isLoose) {
+    if ((keepLoosenessOfThis && this.isLoose) || obj2.isLoose) {
       return this.isLooseSubtypeOf(obj2);
     }
 
@@ -365,6 +370,8 @@ public class ObjectType {
     return this.fn.isSubtypeOf(obj2.fn);
   }
 
+  // We never infer properties as optional on loose objects,
+  // and we don't warn about possibly inexistent properties.
   boolean isLooseSubtypeOf(ObjectType obj2) {
     Preconditions.checkState(isLoose || obj2.isLoose);
     if (obj2 == TOP_OBJECT) {

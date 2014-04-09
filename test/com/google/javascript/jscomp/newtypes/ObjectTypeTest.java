@@ -126,13 +126,13 @@ public class ObjectTypeTest extends TestCase {
               ImmutableSet.of(parentWithP), ImmutableSet.of(child1)));
 
     assertTrue(ObjectType.isUnionSubtype(
-        ImmutableSet.of(foo, child1), ImmutableSet.of(foo, parent)));
+        true, ImmutableSet.of(foo, child1), ImmutableSet.of(foo, parent)));
     assertFalse(ObjectType.isUnionSubtype(
-        ImmutableSet.of(foo, parent), ImmutableSet.of(foo, child1)));
+        true, ImmutableSet.of(foo, parent), ImmutableSet.of(foo, child1)));
 
     assertTrue(ObjectType.isUnionSubtype(
-        ImmutableSet.of(child1, child2), ImmutableSet.of(parent)));
+        true, ImmutableSet.of(child1, child2), ImmutableSet.of(parent)));
     assertFalse(ObjectType.isUnionSubtype(
-        ImmutableSet.of(parent), ImmutableSet.of(child1, child2)));
+        true, ImmutableSet.of(parent), ImmutableSet.of(child1, child2)));
   }
 }
