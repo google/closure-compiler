@@ -56,7 +56,7 @@ public abstract class AbstractMessageFormatter implements MessageFormatter {
   private static enum Color {
     ERROR("\033[1;31m"),
     WARNING("\033[1;35m"),
-    RESET("\033[39m");
+    RESET("\033[0;39m");
 
     private final String controlCharacter;
 
