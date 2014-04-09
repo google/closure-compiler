@@ -67,6 +67,14 @@ public class NominalType {
     return rawType.objectKind;
   }
 
+  public boolean isStruct() {
+    return rawType.isStruct();
+  }
+
+  public boolean isDict() {
+    return rawType.isDict();
+  }
+
   NominalType instantiateGenerics(List<JSType> types) {
     Preconditions.checkState(types.size() == rawType.typeParameters.size());
     Map<String, JSType> typeMap = Maps.newHashMap();
@@ -312,6 +320,14 @@ public class NominalType {
 
     boolean isGeneric() {
       return !typeParameters.isEmpty();
+    }
+
+    public boolean isStruct() {
+      return objectKind.isStruct();
+    }
+
+    public boolean isDict() {
+      return objectKind.isDict();
     }
 
     ImmutableList<String> getTypeParameters() {

@@ -283,16 +283,8 @@ public class NewTypeInference implements CompilerPass {
       }
       for (String name : formalsAndOuters) {
         JSType declType = currentScope.getDeclaredTypeOf(name);
-        JSType initType;
-        if (declType == null) {
-          initType = envGetType(entryEnv, name);
-        } else if (declType.getFunTypeIfSingletonObj() != null &&
-            declType.getFunTypeIfSingletonObj().isConstructor()) {
-          initType =
-              declType.getFunTypeIfSingletonObj().createConstructorObject();
-        } else {
-          initType = declType;
-        }
+        JSType initType = declType == null ?
+            envGetType(entryEnv, name) : pickInitialType(declType);
         entryEnv = envPutType(entryEnv, name, initType.withLocation(name));
       }
       entryEnv = envPutType(entryEnv, RETVAL_ID, JSType.UNDEFINED);
@@ -334,12 +326,8 @@ public class NewTypeInference implements CompilerPass {
     }
     for (String varName : varNames) {
       JSType declType = currentScope.getDeclaredTypeOf(varName);
-      if (declType == null) {
-        env = envPutType(env, varName, JSType.UNKNOWN);
-      // TODO(blickly): Fix discrepancy in constructor initialization.
-      } else {
-        env = envPutType(env, varName, declType);
-      }
+      env = envPutType(env, varName,
+          declType == null ? JSType.UNKNOWN : pickInitialType(declType));
     }
     for (String fnName : currentScope.getLocalFunDefs()) {
       JSType summaryType = summaries.get(currentScope.getScope(fnName));
@@ -358,6 +346,21 @@ public class NewTypeInference implements CompilerPass {
   private void initEdgeEnvs(TypeEnv env) {
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> e : cfg.getEdges()) {
       envs.put(e, env);
+    }
+  }
+
+  private static JSType pickInitialType(JSType declType) {
+    Preconditions.checkNotNull(declType);
+    FunctionType funType = declType.getFunTypeIfSingletonObj();
+    if (funType == null) {
+      return declType;
+    } else if (funType.isConstructor()) {
+      // TODO(user): when declType is a union, consider also creating
+      // appropriate ctor objs. (This is going to be rare.)
+      return funType.createConstructorObject();
+    } else {
+      return declType.withProperty(
+          new QualifiedName("prototype"), JSType.TOP_OBJECT);
     }
   }
 
@@ -1012,6 +1015,10 @@ public class NewTypeInference implements CompilerPass {
       case Token.BITNOT:
       case Token.POS:
       case Token.NEG: { // Unary operations on numbers
+        // For inc and dec on a getprop, we don't want to create a property on
+        // a struct by accident.
+        // But we will get an inexistent-property warning, so we don't check
+        // for structness separately here.
         Node child = expr.getFirstChild();
         EnvTypePair pair = analyzeExprFwd(child, inEnv, JSType.NUMBER);
         if (!pair.type.isSubtypeOf(JSType.NUMBER)) {
@@ -1683,7 +1690,9 @@ public class NewTypeInference implements CompilerPass {
     return fuzzyDeclaration && required.isNonLooseSubtypeOf(inferred);
   }
 
-  // Returns true iff it produces a warning
+  //////////////////////////////////////////////////////////////////////////////
+  // These functions return true iff they produce a warning
+
   private boolean mayWarnAboutNonObject(
       Node receiver, String pname, JSType recvType, JSType specializedType) {
     // The warning depends on whether we are testing for the existence of a
@@ -1719,6 +1728,24 @@ public class NewTypeInference implements CompilerPass {
     return false;
   }
 
+  private boolean mayWarnAboutPropCreation(
+      QualifiedName pname, Node getProp, JSType recvType) {
+    Preconditions.checkArgument(getProp.isGetProp());
+    // Inferred formals used as objects have a loose type.
+    // For these, we don't warn about property creation.
+    // Consider: function f(obj) { obj.prop = 123; }
+    // We want f to be able to take objects without prop, so we don't want to
+    // require that obj be a struct that already has prop.
+    if (recvType.isStruct() && !recvType.isLooseStruct() &&
+        !recvType.hasProp(pname)) {
+      warnings.add(JSError.make(getProp, TypeCheck.ILLEGAL_PROPERTY_CREATION));
+      return true;
+    }
+    return false;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   private EnvTypePair analyzePropAccessFwd(Node receiver, String pname,
       TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     QualifiedName propQname = new QualifiedName(pname);
@@ -1741,10 +1768,9 @@ public class NewTypeInference implements CompilerPass {
         mayWarnAboutNonObject(receiver, pname, recvType, specializedType)) {
       return new EnvTypePair(pair.env, requiredType);
     }
-    if (propAccessNode.isGetProp()) {
-      if (mayWarnAboutDictPropAccess(receiver, recvType)) {
-        return new EnvTypePair(pair.env, requiredType);
-      }
+    if (propAccessNode.isGetProp() &&
+        mayWarnAboutDictPropAccess(receiver, recvType)) {
+      return new EnvTypePair(pair.env, requiredType);
     }
     // Then, analyze the property access.
     JSType resultType = recvType.getProp(propQname);
@@ -2424,9 +2450,14 @@ public class NewTypeInference implements CompilerPass {
             pname.getLeftmostName(), lvalueType.toString()));
       return new LValueResultFwd(lvalue.env, type, null, null);
     }
+    Node parent = obj.getParent();
+    if (parent.isGetProp() &&
+        parent.getParent().isAssign() &&
+        mayWarnAboutPropCreation(pname, parent, lvalueType)) {
+      return new LValueResultFwd(lvalue.env, type, null, null);
+    }
     // Warn for inexistent property either on the non-top-level of a qualified
     // name, or for assignment ops that won't create a new property.
-    Node parent = obj.getParent();
     boolean warnForInexistentProp = insideQualifiedName ||
         parent.getParent().getType() != Token.ASSIGN;
     if (warnForInexistentProp &&

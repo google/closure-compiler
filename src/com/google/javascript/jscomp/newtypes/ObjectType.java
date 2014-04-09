@@ -105,6 +105,10 @@ public class ObjectType {
     return objectKind.isStruct();
   }
 
+  boolean isLooseStruct() {
+    return isLoose && objectKind.isStruct();
+  }
+
   boolean isDict() {
     return objectKind.isDict();
   }

@@ -99,6 +99,14 @@ class GlobalTypeInfo implements CompilerPass {
       "JSC_INHERITANCE_CYCLE",
       "Cycle detected in inheritance chain of type {0}");
 
+  static final DiagnosticType DICT_IMPLEMENTS_INTERF = DiagnosticType.warning(
+      "JSC_DICT_IMPLEMENTS_INTERF",
+      "Class {0} is a dict. Dicts can't implement interfaces.");
+
+  static final DiagnosticType CONSTRUCTOR_REQUIRED = DiagnosticType.warning(
+      "JSC_CONSTRUCTOR_REQUIRED",
+      "{0} used without @constructor.");
+
   // Invariant: if a scope s1 contains a scope s2, then s2 is before s1 in
   // scopes. The type inference relies on this fact to process deeper scopes
   // before shallower scopes.
@@ -435,6 +443,12 @@ class GlobalTypeInfo implements CompilerPass {
         }
         nominaltypesByNode.put(fn, rawNominalType);
         parentScope.addNominalType(qname, rawNominalType);
+      } else if (fnDoc != null) {
+        if (fnDoc.makesStructs()) {
+          warnings.add(JSError.make(fn, CONSTRUCTOR_REQUIRED, "@struct"));
+        } else if (fnDoc.makesDicts()) {
+          warnings.add(JSError.make(fn, CONSTRUCTOR_REQUIRED, "@dict"));
+        }
       }
     }
   }
@@ -625,16 +639,16 @@ class GlobalTypeInfo implements CompilerPass {
       Node initializer = parent.isAssign() ? parent.getLastChild() : null;
       Node ctorNameNode = NodeUtil.getPrototypeClassName(getProp);
       String ctorName = ctorNameNode.getQualifiedName();
+      RawNominalType rawType = currentScope.getNominalType(ctorName);
 
+      if (rawType == null) {
+        // We don't look at assignments to prototypes of non-constructors.
+        return;
+      }
       // We only add properties to the prototype of a class if the
       // property creations are in the same scope as the constructor
       if (!currentScope.isDefinedLocally(ctorName)) {
         warnings.add(JSError.make(getProp, CTOR_IN_DIFFERENT_SCOPE));
-        return;
-      }
-      RawNominalType rawType = currentScope.getLocalNominalType(ctorName);
-      if (rawType == null) {
-        // We don't look at assignments to prototypes of non-constructors.
         return;
       }
       String pname = NodeUtil.getPrototypePropertyName(getProp);
@@ -669,7 +683,7 @@ class GlobalTypeInfo implements CompilerPass {
       Preconditions.checkArgument(getProp.isGetProp());
       String ctorName = getProp.getFirstChild().getQualifiedName();
       Preconditions.checkState(currentScope.isLocalFunDef(ctorName));
-      RawNominalType classType = currentScope.getLocalNominalType(ctorName);
+      RawNominalType classType = currentScope.getNominalType(ctorName);
       String pname = getProp.getLastChild().getString();
       JSType propDeclType = getTypeDeclarationFromJsdoc(
           NodeUtil.getBestJSDocInfo(getProp), currentScope);
@@ -719,12 +733,25 @@ class GlobalTypeInfo implements CompilerPass {
           NodeUtil.getBestJSDocInfo(getProp), currentScope);
       if (declaredType != null) {
         mayWarnAboutExistingProp(rawNominalType, pname, getProp);
-        rawNominalType.addClassProperty(pname, declaredType);
-      } else {
-        rawNominalType.addUndeclaredClassProperty(pname);
+      }
+      if (mayAddPropToType(getProp, rawNominalType)) {
+        if (declaredType != null) {
+          rawNominalType.addClassProperty(pname, declaredType);
+        } else {
+          rawNominalType.addUndeclaredClassProperty(pname);
+        }
       }
       propertyDefs.put(rawNominalType.getId(), pname,
           new PropertyDef(getProp, null));
+    }
+
+    private boolean mayAddPropToType(Node getProp, RawNominalType rawType) {
+      if (!rawType.isStruct()) {
+        return true;
+      }
+      Node parent = getProp.getParent();
+      return parent.isAssign() && getProp == parent.getFirstChild() &&
+          currentScope.isConstructor();
     }
 
     private boolean mayWarnAboutExistingProp(
@@ -758,6 +785,8 @@ class GlobalTypeInfo implements CompilerPass {
       String functionName = getFunInternalName(fn);
       if (fnDoc != null) {
         NominalType parentClass = null;
+        // TODO(user): ignore @extends {Object} on constructors,
+        // it should be a no-op.
         if (fnDoc.hasBaseType()) {
           if (!fnDoc.isConstructor()) {
             warnings.add(JSError.make(
@@ -782,15 +811,25 @@ class GlobalTypeInfo implements CompilerPass {
         }
         RawNominalType rawNominalType = nominaltypesByNode.get(fn);
         if (fnDoc.isConstructor()) {
+          String className = rawNominalType.toString();
           if (parentClass != null) {
             if (!rawNominalType.addSuperClass(parentClass)) {
-              warnings.add(JSError.make(
-                  fn, INHERITANCE_CYCLE, rawNominalType.toString()));
+              warnings.add(JSError.make(fn, INHERITANCE_CYCLE, className));
+            } else if (rawNominalType.isStruct() && !parentClass.isStruct()) {
+              warnings.add(JSError.make(fn, TypeCheck.CONFLICTING_SHAPE_TYPE,
+                      className, "struct", "struct"));
+            } else if (rawNominalType.isDict() && !parentClass.isDict()) {
+              warnings.add(JSError.make(fn, TypeCheck.CONFLICTING_SHAPE_TYPE,
+                      className, "dict", "dict"));
             }
           }
-          boolean noCycles = rawNominalType.addInterfaces(
+          ImmutableSet<NominalType> implementedIntfs =
               typeParser.getImplementedInterfaces(
-                  fnDoc, ownerType, parentScope, typeParameters));
+                  fnDoc, ownerType, parentScope, typeParameters);
+          if (rawNominalType.isDict() && !implementedIntfs.isEmpty()) {
+            warnings.add(JSError.make(fn, DICT_IMPLEMENTS_INTERF, className));
+          }
+          boolean noCycles = rawNominalType.addInterfaces(implementedIntfs);
           Preconditions.checkState(noCycles);
           builder.addNominalType(NominalType.fromRaw(rawNominalType));
         } else if (fnDoc.isInterface()) {
@@ -1027,8 +1066,12 @@ class GlobalTypeInfo implements CompilerPass {
       return false;
     }
 
-    private RawNominalType getLocalNominalType(String name) {
-      return localClassDefs.get(name);
+    private RawNominalType getNominalType(String name) {
+      RawNominalType rnt = localClassDefs.get(name);
+      if (rnt != null) {
+        return rnt;
+      }
+      return parent == null ? null : parent.getNominalType(name);
     }
 
     // Only used during symbol-table construction, not during type inference.

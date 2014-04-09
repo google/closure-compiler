@@ -236,6 +236,22 @@ public class JSType {
     return false;
   }
 
+  public boolean isLooseStruct() {
+    if (objs == null) {
+      return false;
+    }
+    boolean foundLooseStruct = false;
+    boolean foundNonLooseStruct = false;
+    for (ObjectType objType: objs) {
+      if (objType.isLooseStruct()) {
+        foundLooseStruct = true;
+      } else if (objType.isStruct()) {
+        foundNonLooseStruct = true;
+      }
+    }
+    return foundLooseStruct && !foundNonLooseStruct;
+  }
+
   public boolean isDict() {
     if (objs == null) {
       return false;
