@@ -329,6 +329,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       }
     }
 
+    options.setUseNewParser(config.useNewParser);
+
     if (!config.outputManifests.isEmpty()) {
       Set<String> uniqueNames = Sets.newHashSet();
       for (String filename : config.outputManifests) {
@@ -1933,6 +1935,16 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setLanguageIn(String languageIn) {
       this.languageIn = languageIn;
+      return this;
+    }
+
+    private boolean useNewParser = true;
+
+    /**
+     * Sets whether to use the new parser instead of the Rhino parser.
+     */
+    CommandLineConfig setUseNewParser(boolean useNewParser) {
+      this.useNewParser = useNewParser;
       return this;
     }
 

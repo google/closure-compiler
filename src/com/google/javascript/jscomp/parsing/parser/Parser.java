@@ -139,12 +139,17 @@ public class Parser {
   // 14 Program
   public ProgramTree parseProgram() {
     Timer t = new Timer("Parse Program");
-    SourcePosition start = getTreeStartLocation();
-    ImmutableList<ParseTree> sourceElements = parseGlobalSourceElements();
-    eat(TokenType.END_OF_FILE);
-    t.end();
-    return new ProgramTree(
-        getTreeLocation(start), sourceElements, commentRecorder.getComments());
+    try {
+      SourcePosition start = getTreeStartLocation();
+      ImmutableList<ParseTree> sourceElements = parseGlobalSourceElements();
+      eat(TokenType.END_OF_FILE);
+      t.end();
+      return new ProgramTree(
+          getTreeLocation(start), sourceElements, commentRecorder.getComments());
+    } catch (StackOverflowError e) {
+      reportError("Too deep recursion while parsing");
+      return null;
+    }
   }
 
   private ImmutableList<ParseTree> parseGlobalSourceElements() {

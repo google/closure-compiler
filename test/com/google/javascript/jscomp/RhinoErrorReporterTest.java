@@ -57,10 +57,7 @@ public class RhinoErrorReporterTest extends TestCase {
         message);
 
     assertEquals(2, error.getLineNumber());
-
-    // Rhino uses the "beginning" of the line where the comma appears,
-    // for some odd reason.
-    assertEquals(4, error.getCharno());
+    assertEquals(8, error.getCharno());
   }
 
   public void testMisplacedTypeAnnotation() throws Exception {
@@ -79,7 +76,7 @@ public class RhinoErrorReporterTest extends TestCase {
         message);
 
     assertEquals(1, error.getLineNumber());
-    assertEquals(0, error.getCharno());
+    assertEquals(30, error.getCharno());
   }
 
   public void testInvalidEs3Prop() throws Exception {

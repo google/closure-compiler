@@ -97,7 +97,9 @@ public class MinimizedConditionTest extends TestCase {
   public void testMinimizeBug8494751() {
     minCond(
         "x && (y===2 || !f()) && (y===3 || !h())",
-        "x && !((y!==2 && f()) || (y!==3 && h()))",
+        // TODO(tbreisacher): The 'positive' option could be better:
+        // "x && !((y!==2 && f()) || (y!==3 && h()))",
+        "!(!x || (y!==2 && f()) || (y!==3 && h()))",
         "!(!x || (y!==2 && f()) || (y!==3 && h()))");
   }
 
