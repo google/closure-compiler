@@ -1429,7 +1429,6 @@ chrome.bookmarks = {};
  *     optionally 'index', 'title', and 'url'.
  * @param {function(BookmarkTreeNode): void=} opt_callback The
  *     callback function which accepts a BookmarkTreeNode object.
- * @return {BookmarkTreeNode}
  */
 chrome.bookmarks.create = function(bookmark, opt_callback) {};
 
@@ -1480,12 +1479,10 @@ chrome.bookmarks.getTree = function(callback) {};
 
 /**
  * @param {string} id
- * @param {Object} destination An object which has 'parentId' and
- *     optionally 'index'.
- * @param {function(Array.<BookmarkTreeNode>): void=} opt_callback
- *     The callback function which accepts an array of
- *     BookmarkTreeNode.
- * @return {BookmarkTreeNode}
+ * @param {Object} destination An object which has optional 'parentId' and
+ *     optional 'index'.
+ * @param {function(BookmarkTreeNode): void=} opt_callback
+ *     The callback function which accepts a BookmarkTreeNode object.
  */
 chrome.bookmarks.move = function(id, destination, opt_callback) {};
 
@@ -1517,7 +1514,6 @@ chrome.bookmarks.search = function(query, callback) {};
  * @param {Object} changes An object which may have 'title' as a key.
  * @param {function(BookmarkTreeNode): void=} opt_callback The
  *     callback function which accepts a BookmarkTreeNode object.
- * @return {BookmarkTreeNode}
  */
 chrome.bookmarks.update = function(id, changes, opt_callback) {};
 
