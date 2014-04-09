@@ -100,7 +100,7 @@ public final class ParseTreeFactory {
   public static ImmutableList<ParseTree> createStatementList(
       List<ParseTree> head,
       ParseTree tail) {
-    ImmutableList.Builder<ParseTree> result = new ImmutableList.Builder<ParseTree>();
+    ImmutableList.Builder<ParseTree> result = new ImmutableList.Builder<>();
     result.addAll(head);
     result.add(tail);
     return result.build();
@@ -162,7 +162,7 @@ public final class ParseTreeFactory {
 
   public static FormalParameterListTree createParameterList(String... parameters) {
     ImmutableList.Builder<ParseTree> parameterList =
-        new ImmutableList.Builder<ParseTree>();
+        new ImmutableList.Builder<>();
     for (String parameter : parameters) {
       parameterList.add(createIdentifierExpression(parameter));
     }
@@ -195,7 +195,7 @@ public final class ParseTreeFactory {
       FormalParameterListTree formalParameterList) {
 
     ImmutableList.Builder<ParseTree> builder =
-        new ImmutableList.Builder<ParseTree>();
+        new ImmutableList.Builder<>();
 
     for (ParseTree parameter : formalParameterList.parameters) {
       if (parameter.isRestParameter()) {

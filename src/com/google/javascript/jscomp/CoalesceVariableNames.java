@@ -130,7 +130,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
             t, cfg, liveness.getEscapedLocals());
 
     GraphColoring<Var, Void> coloring =
-        new GreedyGraphColoring<Var, Void>(interferenceGraph,
+        new GreedyGraphColoring<>(interferenceGraph,
             coloringTieBreaker);
 
     coloring.color();

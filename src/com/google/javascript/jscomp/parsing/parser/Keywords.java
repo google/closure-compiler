@@ -77,9 +77,9 @@ public enum Keywords {
     FALSE("false", TokenType.FALSE);
 
   private static final HashMap<String, Keywords> keywordsByName =
-      new HashMap<String, Keywords>();
+      new HashMap<>();
   private static final HashMap<TokenType, Keywords> keywordsByType =
-      new HashMap<TokenType, Keywords>();
+      new HashMap<>();
 
   static {
     for (Keywords kw : Keywords.values()) {

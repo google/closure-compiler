@@ -28,7 +28,7 @@ import java.util.Random;
  * @author zplin@google.com (Zhongpeng Lin)
  */
 class ScopeManager {
-  private ArrayDeque<Scope> scopeStack = new ArrayDeque<Scope>();
+  private ArrayDeque<Scope> scopeStack = new ArrayDeque<>();
   // Random generator for getting random scope/symbol for fuzzer
   private Random random;
   // Total number of symbols currently available
@@ -135,7 +135,7 @@ class ScopeManager {
     Preconditions.checkArgument(scopeStack.size() >= minScopes);
 
     List<Symbol> symbols = new ArrayList<>();
-    ArrayList<Scope> scopes = new ArrayList<Scope>(scopeStack);
+    ArrayList<Scope> scopes = new ArrayList<>(scopeStack);
     int start = excludeLocals ? 1 : 0;
     int end = excludeExterns ? scopes.size() - 1 : scopes.size();
     for (int i = start; i < end; i++) {

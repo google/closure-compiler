@@ -391,7 +391,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     // paths (which may depend on the shorter ones)
     // come later.
     Set<Export> sorted =
-        new TreeSet<Export>(new Comparator<Export>() {
+        new TreeSet<>(new Comparator<Export>() {
           @Override
           public int compare(Export e1, Export e2) {
             return e1.getExportedPath().compareTo(e2.getExportedPath());

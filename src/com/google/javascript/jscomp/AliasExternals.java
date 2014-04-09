@@ -109,7 +109,7 @@ class AliasExternals implements CompilerPass {
    * Identity map because Node implements equals() but not hashCode()
    */
   private final Map<Node, Node> replacementMap =
-    new IdentityHashMap<Node, Node>();
+    new IdentityHashMap<>();
 
   /** Map of all globals that we may alias */
   private final Map<String, Symbol> globals = Maps.newHashMap();

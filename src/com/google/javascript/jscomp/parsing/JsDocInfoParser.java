@@ -1165,7 +1165,7 @@ public final class JsDocInfoParser {
    */
   private JsDocToken parseSuppressTag(JsDocToken token) {
     if (token == JsDocToken.LC) {
-      Set<String> suppressions = new HashSet<String>();
+      Set<String> suppressions = new HashSet<>();
       while (true) {
         if (match(JsDocToken.STRING)) {
           String name = stream.getString();
@@ -1211,7 +1211,7 @@ public final class JsDocInfoParser {
    */
   private JsDocToken parseModifiesTag(JsDocToken token) {
     if (token == JsDocToken.LC) {
-      Set<String> modifies = new HashSet<String>();
+      Set<String> modifies = new HashSet<>();
       while (true) {
         if (match(JsDocToken.STRING)) {
           String name = stream.getString();
@@ -1284,26 +1284,31 @@ public final class JsDocInfoParser {
       }
     }
 
-    if (idgenKind.equals("unique")) {
-      if (!jsdocBuilder.recordIdGenerator()) {
-        parser.addParserWarning("msg.jsdoc.idgen.duplicate",
-            stream.getLineno(), stream.getCharno());
-      }
-    } else if (idgenKind.equals("consistent")) {
-      if (!jsdocBuilder.recordConsistentIdGenerator()) {
-        parser.addParserWarning("msg.jsdoc.idgen.duplicate",
-            stream.getLineno(), stream.getCharno());
-      }
-    } else if (idgenKind.equals("stable")) {
-      if (!jsdocBuilder.recordStableIdGenerator()) {
-        parser.addParserWarning("msg.jsdoc.idgen.duplicate",
-            stream.getLineno(), stream.getCharno());
-      }
-    } else if (idgenKind.equals("mapped")) {
-      if (!jsdocBuilder.recordMappedIdGenerator()) {
-        parser.addParserWarning("msg.jsdoc.idgen.duplicate",
-            stream.getLineno(), stream.getCharno());
-      }
+    switch (idgenKind) {
+      case "unique":
+        if (!jsdocBuilder.recordIdGenerator()) {
+          parser.addParserWarning("msg.jsdoc.idgen.duplicate",
+              stream.getLineno(), stream.getCharno());
+        }
+        break;
+      case "consistent":
+        if (!jsdocBuilder.recordConsistentIdGenerator()) {
+          parser.addParserWarning("msg.jsdoc.idgen.duplicate",
+              stream.getLineno(), stream.getCharno());
+        }
+        break;
+      case "stable":
+        if (!jsdocBuilder.recordStableIdGenerator()) {
+          parser.addParserWarning("msg.jsdoc.idgen.duplicate",
+              stream.getLineno(), stream.getCharno());
+        }
+        break;
+      case "mapped":
+        if (!jsdocBuilder.recordMappedIdGenerator()) {
+          parser.addParserWarning("msg.jsdoc.idgen.duplicate",
+              stream.getLineno(), stream.getCharno());
+        }
+        break;
     }
 
     return token;
@@ -1983,13 +1988,15 @@ public final class JsDocInfoParser {
       return parseUnionType(next());
     } else if (token == JsDocToken.STRING) {
       String string = stream.getString();
-      if ("function".equals(string)) {
-        skipEOLs();
-        return parseFunctionType(next());
-      } else if ("null".equals(string) || "undefined".equals(string)) {
-        return newStringNode(string);
-      } else {
-        return parseTypeName(token);
+      switch (string) {
+        case "function":
+          skipEOLs();
+          return parseFunctionType(next());
+        case "null":
+        case "undefined":
+          return newStringNode(string);
+        default:
+          return parseTypeName(token);
       }
     }
 

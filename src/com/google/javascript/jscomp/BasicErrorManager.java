@@ -101,7 +101,7 @@ public abstract class BasicErrorManager implements ErrorManager {
   }
 
   private JSError[] toArray(CheckLevel level) {
-    List<JSError> errors = new ArrayList<JSError>(messages.size());
+    List<JSError> errors = new ArrayList<>(messages.size());
     for (ErrorWithLevel p : messages) {
       if (p.level == level) {
         errors.add(p.error);

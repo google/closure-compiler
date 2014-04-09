@@ -74,11 +74,7 @@ public class XtbMessageBundle implements MessageBundle {
       Handler contentHandler = new Handler();
       reader.setContentHandler(contentHandler);
       reader.parse(new InputSource(xtb));
-    } catch (ParserConfigurationException e) {
-      throw new RuntimeException(e);
-    } catch (SAXException e) {
-      throw new RuntimeException(e);
-    } catch (IOException e) {
+    } catch (ParserConfigurationException | IOException | SAXException e) {
       throw new RuntimeException(e);
     }
   }

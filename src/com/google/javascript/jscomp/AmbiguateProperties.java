@@ -195,13 +195,13 @@ class AmbiguateProperties implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new ProcessProperties());
 
     Set<String> reservedNames =
-        new HashSet<String>(externedNames.size() + quotedNames.size());
+        new HashSet<>(externedNames.size() + quotedNames.size());
     reservedNames.addAll(externedNames);
     reservedNames.addAll(quotedNames);
 
     int numRenamedPropertyNames = 0;
     int numSkippedPropertyNames = 0;
-    Set<Property> propsByFreq = new TreeSet<Property>(FREQUENCY_COMPARATOR);
+    Set<Property> propsByFreq = new TreeSet<>(FREQUENCY_COMPARATOR);
     for (Property p : propertyMap.values()) {
       if (!p.skipAmbiguating) {
         ++numRenamedPropertyNames;
@@ -214,7 +214,7 @@ class AmbiguateProperties implements CompilerPass {
 
     PropertyGraph graph = new PropertyGraph(Lists.newLinkedList(propsByFreq));
     GraphColoring<Property, Void> coloring =
-        new GreedyGraphColoring<Property, Void>(graph, FREQUENCY_COMPARATOR);
+        new GreedyGraphColoring<>(graph, FREQUENCY_COMPARATOR);
     int numNewPropertyNames = coloring.color();
 
     NameGenerator nameGen = new NameGenerator(

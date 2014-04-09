@@ -144,7 +144,7 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
     if (node != null) {
       return findRoot(node);
     }
-    node = new Node<E>(e);
+    node = new Node<>(e);
     elmap.put(e, node);
     return node;
   }

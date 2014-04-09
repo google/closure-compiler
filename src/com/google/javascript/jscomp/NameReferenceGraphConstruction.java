@@ -61,7 +61,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
   // The symbol for the current function so we can quickly create a reference
   // edge when we see a call: Example when this symbol is foo() and we see
   // bar(), we connect foo -> bar.
-  private final ArrayList<Name> currentFunctionStack = new ArrayList<Name>();
+  private final ArrayList<Name> currentFunctionStack = new ArrayList<>();
 
   NameReferenceGraphConstruction(AbstractCompiler compiler) {
     this.compiler = compiler;

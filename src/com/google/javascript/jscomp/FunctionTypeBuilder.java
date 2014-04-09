@@ -377,7 +377,7 @@ final class FunctionTypeBuilder {
       if (info.getImplementedInterfaceCount() > 0) {
         if (isConstructor) {
           implementedInterfaces = Lists.newArrayList();
-          Set<JSType> baseInterfaces = new HashSet<JSType>();
+          Set<JSType> baseInterfaces = new HashSet<>();
           for (JSTypeExpression t : info.getImplementedInterfaces()) {
             JSType maybeInterType = t.evaluate(scope, typeRegistry);
 

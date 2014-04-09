@@ -58,7 +58,7 @@ public final class FixedPointGraphTraversal<N, E> {
    */
   public static <NODE, EDGE> FixedPointGraphTraversal<NODE, EDGE> newTraversal(
       EdgeCallback<NODE, EDGE> callback) {
-    return new FixedPointGraphTraversal<NODE, EDGE>(callback);
+    return new FixedPointGraphTraversal<>(callback);
   }
 
   /**

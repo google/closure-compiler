@@ -609,7 +609,7 @@ public class CallGraph implements CompilerPass {
 
     private void addCallsiteInFunction(Callsite callsite) {
       if (callsitesInFunction == null) {
-        callsitesInFunction = new LinkedList<Callsite>();
+        callsitesInFunction = new LinkedList<>();
       }
       callsitesInFunction.add(callsite);
     }
@@ -643,7 +643,7 @@ public class CallGraph implements CompilerPass {
       Preconditions.checkState(computeBackwardGraph);
       if (callsitesPossiblyTargetingFunction == null) {
         callsitesPossiblyTargetingFunction =
-            new LinkedList<Callsite>();
+            new LinkedList<>();
       }
       callsitesPossiblyTargetingFunction.add(callsite);
     }
@@ -722,7 +722,7 @@ public class CallGraph implements CompilerPass {
       Preconditions.checkState(computeForwardGraph);
 
       if (possibleTargets == null) {
-        possibleTargets = new LinkedList<Function>();
+        possibleTargets = new LinkedList<>();
       }
       possibleTargets.add(target);
     }

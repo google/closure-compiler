@@ -210,7 +210,7 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
   public List<INPUT> getDependenciesOf(List<INPUT> roots, boolean sorted) {
     Preconditions.checkArgument(inputs.containsAll(roots));
     Set<INPUT> included = Sets.newHashSet();
-    Deque<INPUT> worklist = new ArrayDeque<INPUT>(roots);
+    Deque<INPUT> worklist = new ArrayDeque<>(roots);
     while (!worklist.isEmpty()) {
       INPUT current = worklist.pop();
       if (included.add(current)) {
@@ -249,7 +249,7 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
       originalIndex.put(items.get(i), i);
     }
 
-    PriorityQueue<T> inDegreeZero = new PriorityQueue<T>(items.size(),
+    PriorityQueue<T> inDegreeZero = new PriorityQueue<>(items.size(),
         new Comparator<T>() {
       @Override
       public int compare(T a, T b) {

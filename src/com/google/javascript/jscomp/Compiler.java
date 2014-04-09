@@ -524,7 +524,7 @@ public class Compiler extends AbstractCompiler {
    * duplicate inputs.
    */
   void initInputsByIdMap() {
-    inputsById = new HashMap<InputId, CompilerInput>();
+    inputsById = new HashMap<>();
     for (CompilerInput input : externs) {
       InputId id = input.getInputId();
       CompilerInput previous = putCompilerInput(id, input);
@@ -656,11 +656,7 @@ public class Compiler extends AbstractCompiler {
         } else {
           result = future.get();
         }
-      } catch (InterruptedException e) {
-        throw Throwables.propagate(e);
-      } catch (ExecutionException e) {
-        throw Throwables.propagate(e);
-      } catch (TimeoutException e) {
+      } catch (InterruptedException | TimeoutException | ExecutionException e) {
         throw Throwables.propagate(e);
       }
     } else {
@@ -1526,7 +1522,7 @@ public class Compiler extends AbstractCompiler {
         }
         modules.add(0, root);
         SortedDependencies<JSModule> sorter =
-          new SortedDependencies<JSModule>(modules);
+          new SortedDependencies<>(modules);
         modules = sorter.getDependenciesOf(modules, true);
         this.modules = modules;
 

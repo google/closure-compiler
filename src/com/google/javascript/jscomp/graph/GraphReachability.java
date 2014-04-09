@@ -73,7 +73,7 @@ public class GraphReachability<N, E> implements EdgeCallback<N, E> {
   public boolean traverseEdge(N source, E e, N destination) {
     if (graph.getNode(source).getAnnotation() == REACHABLE &&
         (edgePredicate == null ||
-            edgePredicate.apply(new EdgeTuple<N, E>(source, e, destination)))) {
+            edgePredicate.apply(new EdgeTuple<>(source, e, destination)))) {
       GraphNode<N, E> destNode = graph.getNode(destination);
       if (destNode.getAnnotation() != REACHABLE) {
         destNode.setAnnotation(REACHABLE);

@@ -395,7 +395,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         // else where along the path.
         // x = readProp(b); while(modifyProp(b)) {}; print(x);
         CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch>
-          pathCheck = new CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch>(
+          pathCheck = new CheckPathsBetweenNodes<>(
                  cfg,
                  cfg.getDirectedGraphNode(getDefCfgNode()),
                  cfg.getDirectedGraphNode(useCfgNode),

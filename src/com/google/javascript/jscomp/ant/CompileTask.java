@@ -112,15 +112,22 @@ public final class CompileTask
    *     (ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT).
    */
   public void setLanguageIn(String value) {
-    if (value.equals("ECMASCRIPT5_STRICT") || value.equals("ES5_STRICT")) {
-      this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT;
-    } else if (value.equals("ECMASCRIPT5") || value.equals("ES5")) {
-      this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT5;
-    } else if (value.equals("ECMASCRIPT3") || value.equals("ES3")) {
-      this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT3;
-    } else {
-      throw new BuildException(
-          "Unrecognized 'languageIn' option value (" + value + ")");
+    switch (value) {
+      case "ECMASCRIPT5_STRICT":
+      case "ES5_STRICT":
+        this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT;
+        break;
+      case "ECMASCRIPT5":
+      case "ES5":
+        this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT5;
+        break;
+      case "ECMASCRIPT3":
+      case "ES3":
+        this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT3;
+        break;
+      default:
+        throw new BuildException(
+            "Unrecognized 'languageIn' option value (" + value + ")");
     }
   }
 

@@ -252,7 +252,7 @@ public class Driver {
         }
       }
       String code1 = ScriptFuzzer.getPrettyCode(script);
-      StringBuffer debugInfo = new StringBuffer("Seed: ").append(currentSeed);
+      StringBuilder debugInfo = new StringBuilder("Seed: ").append(currentSeed);
       debugInfo.append("\nJavaScript: ").append(code1);
       try {
         Result result = compile(script);

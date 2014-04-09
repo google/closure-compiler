@@ -27,8 +27,8 @@ class Scope {
   ArrayList<Symbol> symbols = new ArrayList<>();
   int loopNesting = 0;
   int switchNesting = 0;
-  ArrayList<String> loopLabels = new ArrayList<String>();
-  ArrayList<String> otherLabels = new ArrayList<String>();
+  ArrayList<String> loopLabels = new ArrayList<>();
+  ArrayList<String> otherLabels = new ArrayList<>();
 
   String randomLabelForContinue(Random random) {
     Preconditions.checkState(loopLabels.size() > 0);

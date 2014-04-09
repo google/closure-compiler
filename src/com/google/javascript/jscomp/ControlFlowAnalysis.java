@@ -29,7 +29,6 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.Deque;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -92,7 +91,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    * stack is the inner most TRY block. A FUNCTION node in this stack implies
    * that the handler is determined by the caller of the function at runtime.
    */
-  private final Deque<Node> exceptionHandler = new ArrayDeque<Node>();
+  private final Deque<Node> exceptionHandler = new ArrayDeque<>();
 
   /*
    * This map is used to handle the follow of FINALLY. For example:
@@ -195,7 +194,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    */
   private void prioritizeFromEntryNode(DiGraphNode<Node, Branch> entry) {
     PriorityQueue<DiGraphNode<Node, Branch>> worklist =
-        new PriorityQueue<DiGraphNode<Node, Branch>>(10, priorityComparator);
+        new PriorityQueue<>(10, priorityComparator);
     worklist.add(entry);
 
     while (!worklist.isEmpty()) {
@@ -638,8 +637,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
 
   private void handleReturn(Node node) {
     Node lastJump = null;
-    for (Iterator<Node> iter = exceptionHandler.iterator(); iter.hasNext();) {
-      Node curHandler = iter.next();
+    for (Node curHandler : exceptionHandler) {
       if (curHandler.isFunction()) {
         break;
       }

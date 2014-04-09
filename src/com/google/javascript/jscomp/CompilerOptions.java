@@ -2229,21 +2229,22 @@ public class CompilerOptions implements Serializable, Cloneable {
     ECMASCRIPT6_STRICT;
 
     public static LanguageMode fromString(String value) {
-      if (value.equals("ECMASCRIPT6_STRICT") ||
-          value.equals("ES6_STRICT")) {
-        return CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT;
-      } else if (value.equals("ECMASCRIPT6") ||
-          value.equals("ES6")) {
-        return CompilerOptions.LanguageMode.ECMASCRIPT5;
-      } else if (value.equals("ECMASCRIPT5_STRICT") ||
-          value.equals("ES5_STRICT")) {
-        return CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT;
-      } else if (value.equals("ECMASCRIPT5") ||
-          value.equals("ES5")) {
-        return CompilerOptions.LanguageMode.ECMASCRIPT5;
-      } else if (value.equals("ECMASCRIPT3") ||
-                 value.equals("ES3")) {
-        return CompilerOptions.LanguageMode.ECMASCRIPT3;
+      switch (value) {
+        case "ECMASCRIPT6_STRICT":
+        case "ES6_STRICT":
+          return LanguageMode.ECMASCRIPT5_STRICT;
+        case "ECMASCRIPT6":
+        case "ES6":
+          return LanguageMode.ECMASCRIPT5;
+        case "ECMASCRIPT5_STRICT":
+        case "ES5_STRICT":
+          return LanguageMode.ECMASCRIPT5_STRICT;
+        case "ECMASCRIPT5":
+        case "ES5":
+          return LanguageMode.ECMASCRIPT5;
+        case "ECMASCRIPT3":
+        case "ES3":
+          return LanguageMode.ECMASCRIPT3;
       }
       return null;
     }

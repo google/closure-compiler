@@ -801,9 +801,7 @@ class RemoveUnusedVars
    * assignments to those variables as well.
    */
   private void removeUnreferencedVars() {
-    for (Iterator<Var> it = maybeUnreferenced.iterator(); it.hasNext(); ) {
-      Var var = it.next();
-
+    for (Var var : maybeUnreferenced) {
       // Remove calls to inheritance-defining functions where the unreferenced
       // class is the subclass.
       for (Node exprCallNode : classDefiningCalls.get(var)) {

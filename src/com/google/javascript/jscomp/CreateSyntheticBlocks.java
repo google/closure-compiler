@@ -54,7 +54,7 @@ class CreateSyntheticBlocks implements CompilerPass {
   /**
    * Markers can be nested.
    */
-  private final Deque<Node> markerStack = new ArrayDeque<Node>();
+  private final Deque<Node> markerStack = new ArrayDeque<>();
 
   private final List<Marker> validMarkers = Lists.newArrayList();
 

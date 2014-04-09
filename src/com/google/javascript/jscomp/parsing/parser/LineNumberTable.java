@@ -39,7 +39,7 @@ public class LineNumberTable {
 
   private static int[] computeLineStartOffsets(String source) {
     // TODO(johnlenz): do this more efficiently.
-    ArrayList<Integer> lineStartOffsets = new ArrayList<Integer>();
+    ArrayList<Integer> lineStartOffsets = new ArrayList<>();
     lineStartOffsets.add(0);
     for (int index = 0; index < source.length(); index++) {
       char ch = source.charAt(index);

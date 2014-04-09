@@ -57,7 +57,7 @@ public final class NodeUtil {
 
   /** the set of builtin constructors that don't have side effects. */
   private static final Set<String> CONSTRUCTORS_WITHOUT_SIDE_EFFECTS =
-      new HashSet<String>(Arrays.asList(
+      new HashSet<>(Arrays.asList(
         "Array",
         "Date",
         "Error",
@@ -3403,7 +3403,7 @@ public final class NodeUtil {
    */
   public static Map<Node, Node> mapMainToClone(Node main, Node clone) {
     Preconditions.checkState(main.isEquivalentTo(clone));
-    Map<Node, Node> mtoc = new HashMap<Node, Node>();
+    Map<Node, Node> mtoc = new HashMap<>();
     mtoc.put(main, clone);
     mtocHelper(mtoc, main, clone);
     return mtoc;

@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.rhino.IR;
@@ -157,7 +157,9 @@ class IRFactory {
     // Pre-generate all the newlines in the file.
     for (int charNo = 0; true; charNo++) {
       charNo = sourceString.indexOf('\n', charNo);
-      if (charNo == -1) break;
+      if (charNo == -1) {
+        break;
+      }
       newlines.add(Integer.valueOf(charNo));
     }
 
@@ -1115,8 +1117,7 @@ class IRFactory {
         int end = start + literalNode.getLength();
         if (start < sourceString.length() &&
             (sourceString.substring(
-                 start, Math.min(sourceString.length(), end))
-             .indexOf("\\v") != -1)) {
+                start, Math.min(sourceString.length(), end)).contains("\\v"))) {
           n.putBooleanProp(Node.SLASH_V, true);
         }
       }

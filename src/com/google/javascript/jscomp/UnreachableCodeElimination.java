@@ -71,7 +71,7 @@ class UnreachableCodeElimination implements CompilerPass {
               new ControlFlowAnalysis(compiler, false, false);
           cfa.process(null, root);
           ControlFlowGraph<Node> cfg = cfa.getCfg();
-          new GraphReachability<Node, ControlFlowGraph.Branch>(cfg)
+          new GraphReachability<>(cfg)
               .compute(cfg.getEntry().getValue());
           if (root.isFunction()) {
             root = root.getLastChild();

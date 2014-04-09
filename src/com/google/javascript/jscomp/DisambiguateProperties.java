@@ -148,7 +148,7 @@ class DisambiguateProperties<T> implements CompilerPass {
     /** Returns the types on which this field is referenced. */
     UnionFind<T> getTypes() {
       if (types == null) {
-        types = new StandardUnionFind<T>();
+        types = new StandardUnionFind<>();
       }
       return types;
     }
@@ -279,7 +279,7 @@ class DisambiguateProperties<T> implements CompilerPass {
   static DisambiguateProperties<JSType> forJSTypeSystem(
       AbstractCompiler compiler,
       Map<String, CheckLevel> propertiesToErrorFor) {
-    return new DisambiguateProperties<JSType>(
+    return new DisambiguateProperties<>(
         compiler, new JSTypeSystem(compiler), propertiesToErrorFor);
   }
 
@@ -362,7 +362,7 @@ class DisambiguateProperties<T> implements CompilerPass {
   /** Tracks the current type system scope while traversing. */
   private abstract class AbstractScopingCallback implements ScopedCallback {
     protected final Stack<StaticScope<T>> scopes =
-        new Stack<StaticScope<T>>();
+        new Stack<>();
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {

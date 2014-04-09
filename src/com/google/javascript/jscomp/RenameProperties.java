@@ -73,14 +73,14 @@ class RenameProperties implements CompilerPass {
   /** Property renaming map from a previous compilation. */
   private final VariableMap prevUsedPropertyMap;
 
-  private final List<Node> stringNodesToRename = new ArrayList<Node>();
+  private final List<Node> stringNodesToRename = new ArrayList<>();
   private final Map<Node, Node> callNodeToParentMap =
-      new HashMap<Node, Node>();
+      new HashMap<>();
   private final char[] reservedCharacters;
 
   // Map from property name to Property object
   private final Map<String, Property> propertyMap =
-      new HashMap<String, Property>();
+      new HashMap<>();
 
   /**
    * A graph of property affinity information.
@@ -92,11 +92,11 @@ class RenameProperties implements CompilerPass {
   private final UndiGraph<Property, PropertyAffinity> affinityGraph;
 
   // Property names that don't get renamed
-  private final Set<String> externedNames = new HashSet<String>(
+  private final Set<String> externedNames = new HashSet<>(
       Arrays.asList("prototype"));
 
   // Names to which properties shouldn't be renamed, to avoid name conflicts
-  private final Set<String> quotedNames = new HashSet<String>();
+  private final Set<String> quotedNames = new HashSet<>();
 
   private static final Comparator<Property> FREQUENCY_COMPARATOR =
     new Comparator<Property>() {
@@ -211,7 +211,7 @@ class RenameProperties implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new ProcessProperties());
 
     Set<String> reservedNames =
-        new HashSet<String>(externedNames.size() + quotedNames.size());
+        new HashSet<>(externedNames.size() + quotedNames.size());
     reservedNames.addAll(externedNames);
     reservedNames.addAll(quotedNames);
 
@@ -227,7 +227,7 @@ class RenameProperties implements CompilerPass {
     }
 
     // Assign names, sorted by descending frequency to minimize code size.
-    Set<Property> propsByFreq = new TreeSet<Property>(FREQUENCY_COMPARATOR);
+    Set<Property> propsByFreq = new TreeSet<>(FREQUENCY_COMPARATOR);
     propsByFreq.addAll(propertyMap.values());
     generateNames(propsByFreq, reservedNames);
 

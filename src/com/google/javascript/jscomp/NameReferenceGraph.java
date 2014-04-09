@@ -120,7 +120,7 @@ class NameReferenceGraph extends
   public List<Name> getReferencesAt(Node site) {
     Preconditions.checkArgument(
         site.isGetProp() || site.isName());
-    List<Name> result = new ArrayList<Name>();
+    List<Name> result = new ArrayList<>();
     for (Name target : referenceMap.get(site)) {
       result.add(target);
     }

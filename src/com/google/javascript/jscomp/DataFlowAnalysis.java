@@ -251,7 +251,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     // call analyze.
     orderedWorkSet.clear();
     for (DiGraphNode<N, Branch> node : cfg.getDirectedGraphNodes()) {
-      node.setAnnotation(new FlowState<L>(createInitialEstimateLattice(),
+      node.setAnnotation(new FlowState<>(createInitialEstimateLattice(),
           createInitialEstimateLattice()));
       if (node != cfg.getImplicitReturn()) {
         orderedWorkSet.add(node);
@@ -294,7 +294,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
           FlowState<L> inNodeState = inNodes.get(0).getAnnotation();
           state.setIn(inNodeState.getOut());
         } else if (inNodes.size() > 1) {
-          List<L> values = new ArrayList<L>(inNodes.size());
+          List<L> values = new ArrayList<>(inNodes.size());
           for (DiGraphNode<N, Branch> currentNode : inNodes) {
             FlowState<L> currentNodeState = currentNode.getAnnotation();
             values.add(currentNodeState.getOut());
@@ -313,7 +313,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
           state.setOut(inNodeState.getIn());
         }
       } else if (inNodes.size() > 1) {
-        List<L> values = new ArrayList<L>(inNodes.size());
+        List<L> values = new ArrayList<>(inNodes.size());
         for (DiGraphNode<N, Branch> currentNode : inNodes) {
           FlowState<L> currentNodeState = currentNode.getAnnotation();
           values.add(currentNodeState.getIn());
@@ -398,7 +398,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
         for (int i = 0; i < outEdgeCount; i++) {
           outLattices.add(createInitialEstimateLattice());
         }
-        node.setAnnotation(new BranchedFlowState<L>(
+        node.setAnnotation(new BranchedFlowState<>(
             createInitialEstimateLattice(), outLattices));
         if (node != getCfg().getImplicitReturn()) {
           orderedWorkSet.add(node);
@@ -459,7 +459,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       BranchedFlowState<L> state = node.getAnnotation();
       List<DiGraphNode<N, Branch>> predNodes =
           getCfg().getDirectedPredNodes(node);
-      List<L> values = new ArrayList<L>(predNodes.size());
+      List<L> values = new ArrayList<>(predNodes.size());
 
       for (DiGraphNode<N, Branch> predNode : predNodes) {
         BranchedFlowState<L> predNodeState = predNode.getAnnotation();

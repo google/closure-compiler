@@ -53,7 +53,7 @@ import java.util.Map;
  */
 public class Scope
     implements StaticScope<JSType>, StaticSymbolTable<Scope.Var, Scope.Var> {
-  private final Map<String, Var> vars = new LinkedHashMap<String, Var>();
+  private final Map<String, Var> vars = new LinkedHashMap<>();
   private final Scope parent;
   private final int depth;
   private final Node rootNode;

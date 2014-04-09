@@ -57,7 +57,7 @@ class MakeDeclaredNamesUnique
   //   catch expressions
   //   function expressions names
   // Both belong to a scope by themselves.
-  private Deque<Renamer> nameStack = new ArrayDeque<Renamer>();
+  private Deque<Renamer> nameStack = new ArrayDeque<>();
   private final Renamer rootRenamer;
 
   MakeDeclaredNamesUnique() {
@@ -266,7 +266,7 @@ class MakeDeclaredNamesUnique
     private Set<String> referencedNames = ImmutableSet.of();
 
     // Stack reference sets.
-    private Deque<Set<String>> referenceStack = new ArrayDeque<Set<String>>();
+    private Deque<Set<String>> referenceStack = new ArrayDeque<>();
 
     // Name are globally unique initially, so we don't need a per-scope map.
     private Map<String, List<Node>> nameMap = Maps.newHashMap();
@@ -290,7 +290,7 @@ class MakeDeclaredNamesUnique
     }
 
     private boolean containsSeparator(String name) {
-      return name.indexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR) != -1;
+      return name.contains(ContextualRenamer.UNIQUE_ID_SEPARATOR);
     }
 
     /**
@@ -546,7 +546,7 @@ class MakeDeclaredNamesUnique
         return name;
       }
 
-      if (name.indexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR) != -1) {
+      if (name.contains(ContextualRenamer.UNIQUE_ID_SEPARATOR)) {
           name = name.substring(
               0, name.lastIndexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR));
       }

@@ -41,7 +41,7 @@ class NodeIterators {
    * Traverses the local scope, skipping all function nodes.
    */
   static class FunctionlessLocalScope implements Iterator<Node> {
-    private final Stack<Node> ancestors = new Stack<Node>();
+    private final Stack<Node> ancestors = new Stack<>();
 
     /**
      * @param ancestors The ancestors of the point where iteration will start,

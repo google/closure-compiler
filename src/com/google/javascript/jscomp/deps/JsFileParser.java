@@ -140,9 +140,9 @@ public class JsFileParser extends JsFileLineParser {
 
     // Quick sanity check that will catch most cases. This is a performance
     // win for people with a lot of JS.
-    if (line.indexOf("provide") != -1 ||
-        line.indexOf("require") != -1 ||
-        line.indexOf("addDependency") != -1) {
+    if (line.contains("provide") ||
+        line.contains("require") ||
+        line.contains("addDependency")) {
       // Iterate over the provides/requires.
       googMatcher.reset(line);
       while (googMatcher.find()) {

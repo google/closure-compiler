@@ -73,7 +73,7 @@ public class ComposeWarningsGuard extends WarningsGuard {
 
   // The order that the guards are applied in.
   private final TreeSet<WarningsGuard> guards =
-      new TreeSet<WarningsGuard>(guardComparator);
+      new TreeSet<>(guardComparator);
 
   public ComposeWarningsGuard(List<WarningsGuard> guards) {
     addGuards(guards);

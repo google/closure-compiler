@@ -160,7 +160,7 @@ class CollapseProperties implements CompilerPass {
    */
   private void inlineAliases(GlobalNamespace namespace) {
     // Invariant: All the names in the worklist meet condition (a).
-    Deque<Name> workList = new ArrayDeque<Name>(namespace.getNameForest());
+    Deque<Name> workList = new ArrayDeque<>(namespace.getNameForest());
 
     while (!workList.isEmpty()) {
       Name name = workList.pop();

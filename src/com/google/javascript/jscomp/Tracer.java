@@ -174,7 +174,7 @@ final class Tracer {
    * of.
    */
   private static List<TracingStatistic> extraTracingStatistics =
-      new CopyOnWriteArrayList<TracingStatistic>();
+      new CopyOnWriteArrayList<>();
 
   /** Values returned by extraTracingStatistics */
   private long[] extraTracingValues;
@@ -705,13 +705,13 @@ final class Tracer {
     int defaultSilenceThreshold; // non-final
 
     /** The Events corresponding to each startEvent/stopEvent */
-    final ArrayList<Event> events = new ArrayList<Event>();
+    final ArrayList<Event> events = new ArrayList<>();
 
     /** Tracers that have not had their .stop() called */
-    final HashSet<Tracer> outstandingEvents = new HashSet<Tracer>();
+    final HashSet<Tracer> outstandingEvents = new HashSet<>();
 
     /** Map from type to Stat object */
-    final Map<String, Stat> stats = new HashMap<String, Stat>();
+    final Map<String, Stat> stats = new HashMap<>();
 
     /**
      * True if {@code outstandingEvents} has been cleared because we exceeded
@@ -950,7 +950,7 @@ final class Tracer {
 
   /** Holds the ThreadTrace for each thread.  */
   private static ThreadLocal<ThreadTrace> traces =
-      new ThreadLocal<ThreadTrace>();
+      new ThreadLocal<>();
 
   /**
    * Get the ThreadTrace for the current thread, creating one if necessary.
@@ -1031,7 +1031,7 @@ final class Tracer {
    */
   static final class AtomicTracerStatMap {
     private final ConcurrentMap<String, Long> map =
-        new ConcurrentHashMap<String, Long>();
+        new ConcurrentHashMap<>();
 
     /**
      * Atomically increment the specified field by the specified amount.

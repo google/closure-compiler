@@ -139,7 +139,7 @@ public class DepsFileParser extends JsFileLineParser {
 
     // Quick sanity check that will catch most cases. This is a performance
     // win for people with a lot of JS.
-    if (line.indexOf("addDependency") != -1) {
+    if (line.contains("addDependency")) {
       depMatcher.reset(line);
       // See if the line looks like: goog.addDependency(...)
       if (depMatcher.matches()) {

@@ -270,7 +270,7 @@ public class JSModuleGraph {
     if (deps != null) {
       return deps;
     }
-    deps = new TreeSet<JSModule>(new InverseDepthComparator());
+    deps = new TreeSet<>(new InverseDepthComparator());
     addDeps(deps, m);
     dependencyMap.put(m, deps);
     return deps;
@@ -371,7 +371,7 @@ public class JSModuleGraph {
           MissingModuleException {
 
     SortedDependencies<CompilerInput> sorter =
-        new SortedDependencies<CompilerInput>(inputs);
+        new SortedDependencies<>(inputs);
     Iterable<CompilerInput> entryPointInputs = createEntryPointInputs(
         depOptions, inputs, sorter);
 

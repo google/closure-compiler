@@ -124,7 +124,7 @@ final class RenameLabels implements CompilerPass {
 
     // The list of generated names. Typically, the first name will be "a",
     // the second "b", etc.
-    final ArrayList<String> names = new ArrayList<String>();
+    final ArrayList<String> names = new ArrayList<>();
 
 
     @Override
@@ -283,7 +283,7 @@ final class RenameLabels implements CompilerPass {
 
 
   private static class LabelNamespace {
-    final Map<String, LabelInfo> renameMap = new HashMap<String, LabelInfo>();
+    final Map<String, LabelInfo> renameMap = new HashMap<>();
   }
 
 }

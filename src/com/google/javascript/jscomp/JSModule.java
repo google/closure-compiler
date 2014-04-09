@@ -48,10 +48,10 @@ public class JSModule implements DependencyInfo, Serializable {
   private final String name;
 
   /** Source code inputs */
-  private final List<CompilerInput> inputs = new ArrayList<CompilerInput>();
+  private final List<CompilerInput> inputs = new ArrayList<>();
 
   /** Modules that this module depends on */
-  private final List<JSModule> deps = new ArrayList<JSModule>();
+  private final List<JSModule> deps = new ArrayList<>();
 
   private int depth;
   /**
@@ -261,7 +261,7 @@ public class JSModule implements DependencyInfo, Serializable {
     // Sort the JSModule in this order.
     try {
       List<CompilerInput> sortedList =
-          (new SortedDependencies<CompilerInput>(
+          (new SortedDependencies<>(
               Collections.<CompilerInput>unmodifiableList(inputs)))
           .getSortedList();
       inputs.clear();
@@ -283,7 +283,7 @@ public class JSModule implements DependencyInfo, Serializable {
   public static JSModule[] sortJsModules(Collection<JSModule> modules)
       throws CircularDependencyException {
     // Sort the JSModule in this order.
-    List<JSModule> sortedList = (new SortedDependencies<JSModule>(
+    List<JSModule> sortedList = (new SortedDependencies<>(
             Lists.newArrayList(modules))).getSortedList();
     return sortedList.toArray(new JSModule[sortedList.size()]);
   }

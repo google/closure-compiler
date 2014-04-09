@@ -352,8 +352,8 @@ final class RescopeGlobalSymbols implements CompilerPass {
         return;
       }
 
-      List<Node> commas = new ArrayList<Node>();
-      List<Node> interestingChildren = new ArrayList<Node>();
+      List<Node> commas = new ArrayList<>();
+      List<Node> interestingChildren = new ArrayList<>();
       // Filter out declarations without assignments.
       // As opposed to regular var nodes, there are always assignments
       // because the previous traversal in RewriteScopeCallback creates

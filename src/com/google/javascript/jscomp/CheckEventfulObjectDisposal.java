@@ -238,19 +238,19 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
      *    - Y.add(X...) or Y.push(X)
      */
     this.addDisposeCall("goog.dispose",
-        new ArrayList<Integer>(Arrays.asList(0)));
+        new ArrayList<>(Arrays.asList(0)));
     this.addDisposeCall("goog.Disposable.registerDisposable",
-        new ArrayList<Integer>(Arrays.asList(0)));
+        new ArrayList<>(Arrays.asList(0)));
     this.addDisposeCall("goog.disposeAll",
-        new ArrayList<Integer>(Arrays.asList(DISPOSE_ALL)));
+        new ArrayList<>(Arrays.asList(DISPOSE_ALL)));
     this.addDisposeCall("goog.events.EventHandler.removeAll",
-        new ArrayList<Integer>(Arrays.asList(DISPOSE_SELF)));
+        new ArrayList<>(Arrays.asList(DISPOSE_SELF)));
     this.addDisposeCall(".dispose",
-        new ArrayList<Integer>(Arrays.asList(DISPOSE_SELF)));
+        new ArrayList<>(Arrays.asList(DISPOSE_SELF)));
     this.addDisposeCall(".push",
-        new ArrayList<Integer>(Arrays.asList(0)));
+        new ArrayList<>(Arrays.asList(0)));
     this.addDisposeCall(".add",
-        new ArrayList<Integer>(Arrays.asList(DISPOSE_ALL)));
+        new ArrayList<>(Arrays.asList(DISPOSE_ALL)));
   }
 
 
@@ -455,7 +455,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
     }
 
     // Seed list of disposable stype
-    eventfulTypes = new HashSet<JSType>();
+    eventfulTypes = new HashSet<>();
     eventfulTypes.add(googEventsEventHandlerType);
 
     // Construct eventizer graph
@@ -469,7 +469,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
      * EventfulObjectState which tracks the state (allocated, disposed of)
      * as well as allocation site.
      */
-    eventfulObjectMap = new HashMap<String, EventfulObjectState>();
+    eventfulObjectMap = new HashMap<>();
 
     // Traverse tree
     NodeTraversal.traverse(compiler, root, new Traversal());
@@ -502,8 +502,8 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
      */
     int white = 0, gray = 1, black = 2;
     int last = eventizes.size() - 1;
-    Map<String, Integer> color = new HashMap<String, Integer>();
-    Stack<String> dfsStack = new Stack<String>();
+    Map<String, Integer> color = new HashMap<>();
+    Stack<String> dfsStack = new Stack<>();
 
     /*
      * Initialize color.
@@ -619,9 +619,9 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
 
 
     public ComputeEventizeTraversal() {
-      isConstructorStack = new Stack<Boolean>();
-      isDisposalStack = new Stack<Boolean>();
-      eventizes = new HashMap<String, Set<String>>();
+      isConstructorStack = new Stack<>();
+      isDisposalStack = new Stack<>();
+      eventizes = new HashMap<>();
     }
 
     private Boolean inConstructorScope() {
@@ -685,7 +685,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
 
       Set<String> eventize = eventizes.get(propertyJsTypeName);
       if (eventize == null) {
-        eventize = new HashSet<String>();
+        eventize = new HashSet<>();
         eventizes.put(propertyJsTypeName, eventize);
       }
       eventize.add(className);

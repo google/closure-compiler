@@ -100,7 +100,7 @@ class CheckMissingReturn implements ScopedCallback {
     }
 
     CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch> test =
-        new CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch>(
+        new CheckPathsBetweenNodes<>(
             t.getControlFlowGraph(),
             t.getControlFlowGraph().getEntry(),
             t.getControlFlowGraph().getImplicitReturn(),

@@ -240,7 +240,7 @@ class ProcessDefines implements CompilerPass {
       this.allDefines = Maps.newHashMap();
 
       assignableDefines = Maps.newHashMap();
-      assignAllowed = new ArrayDeque<Integer>();
+      assignAllowed = new ArrayDeque<>();
       assignAllowed.push(1);
 
       // Create a map of references to defines keyed by node for easy lookup

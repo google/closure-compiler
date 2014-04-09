@@ -528,7 +528,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
 
     String enclosingQname = enclosingFnNameNode.getQualifiedName();
-    if (enclosingQname.indexOf(".prototype.") == -1) {
+    if (!enclosingQname.contains(".prototype.")) {
       // Handle constructors.
       Node enclosingParent = enclosingFnNameNode.getParent();
       Node maybeInheritsExpr = (enclosingParent.isAssign() ?
@@ -639,7 +639,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
 
     String enclosingQname = enclosingFnNameNode.getQualifiedName();
-    if (enclosingQname.indexOf(".prototype.") == -1) {
+    if (!enclosingQname.contains(".prototype.")) {
       // Handle constructors.
 
       // Check if this is some other "base" method.

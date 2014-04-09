@@ -1484,8 +1484,7 @@ class NewIRFactory {
         int end = token.location.end.offset;
         if (start < sourceString.length() &&
             (sourceString.substring(
-                 start, Math.min(sourceString.length(), end))
-             .indexOf("\\v") != -1)) {
+                start, Math.min(sourceString.length(), end)).contains("\\v"))) {
           n.putBooleanProp(Node.SLASH_V, true);
         }
       }

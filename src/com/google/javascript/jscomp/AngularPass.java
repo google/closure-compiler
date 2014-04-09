@@ -74,7 +74,7 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
   final AbstractCompiler compiler;
 
   /** Nodes annotated with @ngInject */
-  private final List<NodeContext> injectables = new ArrayList<NodeContext>();
+  private final List<NodeContext> injectables = new ArrayList<>();
 
   public AngularPass(AbstractCompiler compiler) {
     this.compiler = compiler;

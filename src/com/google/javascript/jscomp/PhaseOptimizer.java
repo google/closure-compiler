@@ -404,7 +404,7 @@ class PhaseOptimizer implements CompilerPass {
       setScope(root);
       // lastRuns is initialized before each loop. This way, when a pass is run
       // in the 2nd loop for the 1st time, it looks at all scopes.
-      lastRuns = new HashMap<NamedPass, Integer>();
+      lastRuns = new HashMap<>();
       for (NamedPass pass : myPasses) {
         lastRuns.put(pass, START_TIME);
       }

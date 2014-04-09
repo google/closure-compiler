@@ -164,19 +164,19 @@ class RenamePrototypes implements CompilerPass {
 
 
   // Set of String nodes to rename
-  private final Set<Node> stringNodes = new HashSet<Node>();
+  private final Set<Node> stringNodes = new HashSet<>();
 
   // Mapping of property names to Property objects
   private final Map<String, Property> properties =
-      new HashMap<String, Property>();
+      new HashMap<>();
 
   // Set of names not to rename. Externed properties/methods are added later.
   private final Set<String> reservedNames =
-      new HashSet<String>(Arrays.asList(
+      new HashSet<>(Arrays.asList(
           "indexOf", "lastIndexOf", "toString", "valueOf"));
 
   // Set of OBJLIT nodes that are assigned to prototypes
-  private final Set<Node> prototypeObjLits = new HashSet<Node>();
+  private final Set<Node> prototypeObjLits = new HashSet<>();
 
   /**
    * Creates an instance.
@@ -212,7 +212,7 @@ class RenamePrototypes implements CompilerPass {
 
     // Gather the properties to rename, sorted by count.
     SortedSet<Property> propsByFrequency =
-        new TreeSet<Property>(FREQUENCY_COMPARATOR);
+        new TreeSet<>(FREQUENCY_COMPARATOR);
 
     for (Iterator<Map.Entry<String, Property>> it =
            properties.entrySet().iterator(); it.hasNext(); ) {

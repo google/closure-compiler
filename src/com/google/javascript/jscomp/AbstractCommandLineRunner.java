@@ -422,7 +422,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   protected List<SourceFile> createInputs(List<String> files,
       boolean allowStdIn) throws FlagUsageException, IOException {
-    List<SourceFile> inputs = new ArrayList<SourceFile>(files.size());
+    List<SourceFile> inputs = new ArrayList<>(files.size());
     boolean usingStdin = false;
     for (String filename : files) {
       if (!"-".equals(filename)) {

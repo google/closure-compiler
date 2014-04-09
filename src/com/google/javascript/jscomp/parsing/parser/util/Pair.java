@@ -26,6 +26,6 @@ public final class Pair<FirstType, SecondType> {
   }
 
   public static<F, S> Pair<F, S> create(F first, S second) {
-    return new Pair<F, S>(first, second);
+    return new Pair<>(first, second);
   }
 }

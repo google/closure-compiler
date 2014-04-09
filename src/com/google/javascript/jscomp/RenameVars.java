@@ -55,10 +55,10 @@ final class RenameVars implements CompilerPass {
   private final AbstractCompiler compiler;
 
   /** List of global NAME nodes */
-  private final ArrayList<Node> globalNameNodes = new ArrayList<Node>();
+  private final ArrayList<Node> globalNameNodes = new ArrayList<>();
 
   /** List of local NAME nodes */
-  private final ArrayList<Node> localNameNodes = new ArrayList<Node>();
+  private final ArrayList<Node> localNameNodes = new ArrayList<>();
 
   /**
    * Maps a name node to its pseudo name, null if we are not generating so
@@ -67,13 +67,13 @@ final class RenameVars implements CompilerPass {
   private final Map<Node, String> pseudoNameMap;
 
   /** Set of extern variable names */
-  private final Set<String> externNames = new HashSet<String>();
+  private final Set<String> externNames = new HashSet<>();
 
   /** Set of reserved variable names */
   private final Set<String> reservedNames;
 
   /** The renaming map */
-  private final Map<String, String> renameMap = new HashMap<String, String>();
+  private final Map<String, String> renameMap = new HashMap<>();
 
   /** The previously used rename map. */
   private final VariableMap prevUsedRenameMap;
@@ -119,7 +119,7 @@ final class RenameVars implements CompilerPass {
 
   /** Maps an old name to a new name assignment */
   private final Map<String, Assignment> assignments =
-      new HashMap<String, Assignment>();
+      new HashMap<>();
 
   /** Whether renaming should apply to local variables only. */
   private final boolean localRenamingOnly;
@@ -364,7 +364,7 @@ final class RenameVars implements CompilerPass {
 
     // Rename vars, sorted by frequency of occurrence to minimize code size.
     SortedSet<Assignment> varsByFrequency =
-        new TreeSet<Assignment>(FREQUENCY_COMPARATOR);
+        new TreeSet<>(FREQUENCY_COMPARATOR);
     varsByFrequency.addAll(assignments.values());
 
     if (shouldShadow) {
@@ -488,8 +488,8 @@ final class RenameVars implements CompilerPass {
     }
 
     // Generated names and the assignments for non-local vars.
-    List<Assignment> pendingAssignments = new ArrayList<Assignment>();
-    List<String> generatedNamesForAssignments = new ArrayList<String>();
+    List<Assignment> pendingAssignments = new ArrayList<>();
+    List<String> generatedNamesForAssignments = new ArrayList<>();
 
     for (Assignment a : varsToRename) {
       if (a.newName != null) {
@@ -532,7 +532,7 @@ final class RenameVars implements CompilerPass {
     int numPendingAssignments = generatedNamesForAssignments.size();
     for (int i = 0; i < numPendingAssignments;) {
       SortedSet<Assignment> varsByOrderOfOccurrence =
-          new TreeSet<Assignment>(ORDER_OF_OCCURRENCE_COMPARATOR);
+          new TreeSet<>(ORDER_OF_OCCURRENCE_COMPARATOR);
 
       // Add k number of Assignment to the set, where k is the number of
       // generated names of the same length.

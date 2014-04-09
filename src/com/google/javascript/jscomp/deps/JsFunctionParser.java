@@ -129,7 +129,7 @@ public class JsFunctionParser extends JsFileLineParser {
     // Quick sanity check that will catch most cases. This is a performance
     // win for people with a lot of JS.
     for (String function : functionsToParse) {
-      if (line.indexOf(function) != -1) {
+      if (line.contains(function)) {
         parseLine = true;
         break;
       }

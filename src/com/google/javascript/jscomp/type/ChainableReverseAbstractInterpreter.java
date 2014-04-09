@@ -733,18 +733,19 @@ public abstract class ChainableReverseAbstractInterpreter
    * the general case.
    */
   private JSType getNativeTypeForTypeOf(String value) {
-    if (value.equals("number")) {
-      return getNativeType(NUMBER_TYPE);
-    } else if (value.equals("boolean")) {
-      return getNativeType(BOOLEAN_TYPE);
-    } else if (value.equals("string")) {
-      return getNativeType(STRING_TYPE);
-    } else if (value.equals("undefined")) {
-      return getNativeType(VOID_TYPE);
-    } else if (value.equals("function")) {
-      return getNativeType(U2U_CONSTRUCTOR_TYPE);
-    } else {
-      return null;
+    switch (value) {
+      case "number":
+        return getNativeType(NUMBER_TYPE);
+      case "boolean":
+        return getNativeType(BOOLEAN_TYPE);
+      case "string":
+        return getNativeType(STRING_TYPE);
+      case "undefined":
+        return getNativeType(VOID_TYPE);
+      case "function":
+        return getNativeType(U2U_CONSTRUCTOR_TYPE);
+      default:
+        return null;
     }
   }
 }
