@@ -645,12 +645,17 @@ public class Scanner {
       return createToken(TokenType.ERROR, beginToken);
     }
 
-    String value = ch + "";
+    StringBuilder valueBuilder = new StringBuilder();
+    valueBuilder.append(ch);
 
+    // TODO(tbreisacher): Most identifiers will not use unicode escapes,
+    // so to optimize this, try to parse assuming there aren't any unicode
+    // escapes, and then go back and parse the escapes if that fails.
     while (isIdentifierPart(peekCharOrUnicodeEscape())) {
-      value += nextCharOrUnicodeEscape();
+      valueBuilder.append(nextCharOrUnicodeEscape());
     }
 
+    String value = valueBuilder.toString();
     if (Keywords.isKeyword(value)) {
       return new Token(Keywords.getTokenType(value), getTokenRange(beginToken));
     }
