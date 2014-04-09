@@ -2022,6 +2022,21 @@ class NewIRFactory {
           }
 
           break;
+        case '1': case '2': case '3': case '4': case '5': case '6': case '7':
+          if (inStrictContext()) {
+            errorReporter.warning(OCTAL_STRING_LITERAL_WARNING,
+                sourceName,
+                lineno(token.location.start), "", charno(token.location.start));
+          }
+          char next = value.charAt(cur + 1);
+          if (isOctalDigit(next)) {
+            result.append((char) (8 * octaldigit(c) + octaldigit(next)));
+            cur += 1;
+          } else {
+            result.append((char) octaldigit(c));
+          }
+
+          break;
         case 'x':
           result.append((char) (
               hexdigit(value.charAt(cur + 1)) * 16
@@ -2037,6 +2052,8 @@ class NewIRFactory {
           cur += 4;
           break;
         default:
+          // TODO(tbreisacher): Add a warning because the user probably
+          // intended to type an escape sequence.
           result.append(c);
           break;
       }
