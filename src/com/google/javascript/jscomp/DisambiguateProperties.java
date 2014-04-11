@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * DisambiguateProperties renames properties to disambiguate between unrelated
@@ -78,6 +79,7 @@ class DisambiguateProperties<T> implements CompilerPass {
 
   private static final Logger logger = Logger.getLogger(
       DisambiguateProperties.class.getName());
+  private static final Pattern NONWORD_PATTERN = Pattern.compile("[^\\w$]");
 
   static class Warnings {
     // TODO(user): {1} and {2} are not exactly useful for most people.
@@ -631,7 +633,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       if ("{...}".equals(typeName)) {
         newName = name;
       } else {
-        newName = typeName.replaceAll("[^\\w$]", "_") + "$" + name;
+        newName = NONWORD_PATTERN.matcher(typeName).replaceAll("_") + '$' + name;
       }
 
       for (T type : set) {

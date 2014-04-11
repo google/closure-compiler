@@ -97,11 +97,11 @@ class FunctionNames implements CompilerPass, Serializable {
     }
 
     // this.foo -> foo
-    str = str.replaceAll("::this\\.", ".");
+    str = str.replace("::this.", ".");
     // foo.prototype.bar -> foo.bar
     // AnonymousFunctionNamingCallback already replaces ".prototype."
     // with "..", just remove the extra dot.
-    str = str.replaceAll("\\.\\.", ".");
+    str = str.replace("..", ".");
     // remove toplevel anonymous blocks, if they exists.
     str = str.replaceFirst("^(<anonymous>::)*", "");
     return str;
