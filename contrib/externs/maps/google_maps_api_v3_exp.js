@@ -4510,7 +4510,7 @@ google.maps.StreetViewService = function() {};
 google.maps.StreetViewService.prototype.getPanoramaById = function(pano, callback) {};
 
 /**
- * @param {google.maps.LatLng} latlng
+ * @param {google.maps.LatLng|google.maps.LatLngLiteral} latlng
  * @param {number} radius
  * @param {function(google.maps.StreetViewPanoramaData, google.maps.StreetViewStatus)} callback
  * @return {undefined}
