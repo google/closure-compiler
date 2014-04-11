@@ -1388,7 +1388,7 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   final PassFactory lintChecks =
-      new PassFactory("checkAccessControls", true) {
+      new PassFactory("lintChecks", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new CheckNullableReturn(compiler);
