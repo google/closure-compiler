@@ -89,6 +89,14 @@ class StripCode implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    // Always strip types that defined on a type that is being stripped, otherwise the
+    // resulting code will be invalid, so add "prefix" stripping that isn't a partial name.
+    // TODO(johnlenz): I'm not sure what the original intent of "type prefix" stripping was.
+    // Verify that we can always assume a complete namespace and simplify this logic.
+    for (String type : stripTypes) {
+      stripTypePrefixes.add(type + ".");
+    }
+
     NodeTraversal.traverse(compiler, root, new Strip());
   }
 
@@ -429,7 +437,7 @@ class StripCode implements CompilerPass {
     boolean qualifiedNameBeginsWithStripType(String name) {
       if (name != null) {
         for (String type : stripTypes) {
-          if (name.equals(type) || name.startsWith(type + ".")) {
+          if (name.equals(type)) {
             return true;
           }
         }
