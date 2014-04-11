@@ -134,7 +134,7 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
    */
   private List<INPUT> findCycle(
       List<INPUT> subGraph, Multimap<INPUT, INPUT> deps) {
-    return findCycle(subGraph.get(0), Sets.<INPUT>newHashSet(subGraph),
+    return findCycle(subGraph.get(0), Sets.newHashSet(subGraph),
         deps, Sets.<INPUT>newHashSet());
   }
 
@@ -156,7 +156,7 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
       // Explicitly use the add() method, to prevent a generics constructor
       // warning that is dumb. The condition it's protecting is
       // obscure, and I think people have proposed that it be removed.
-      List<INPUT> cycle = Lists.<INPUT>newArrayList();
+      List<INPUT> cycle = Lists.newArrayList();
       cycle.add(current);
       return cycle;
     }
@@ -185,7 +185,7 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
   }
 
   public List<INPUT> getSortedList() {
-    return Collections.<INPUT>unmodifiableList(sortedList);
+    return Collections.unmodifiableList(sortedList);
   }
 
   /**
@@ -233,7 +233,7 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
   }
 
   public List<INPUT> getInputsWithoutProvides() {
-    return Collections.<INPUT>unmodifiableList(noProvides);
+    return Collections.unmodifiableList(noProvides);
   }
 
   private static <T> List<T> topologicalStableSort(

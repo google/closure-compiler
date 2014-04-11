@@ -28,8 +28,10 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.xml.XMLConstants;

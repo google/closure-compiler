@@ -46,7 +46,7 @@ class MinimizedCondition {
     PREFER_UNNEGATED,
     /** Compute the length of the minimized condition without penalizing
      *  a leading NOT node, if present. */
-    ALLOW_LEADING_NOT;
+    ALLOW_LEADING_NOT
   }
 
   /** A representation equivalent to the original condition. */

@@ -738,7 +738,7 @@ class PureFunctionIdentifier implements CompilerPass {
     }
 
     /**
-     * @returns Whether the @modifies annotation includes "arguments"
+     * @return Whether the @modifies annotation includes "arguments"
      * or any named parameters.
      */
     private boolean hasSideEffectsArgumentsAnnotation(JSDocInfo docInfo) {
@@ -921,7 +921,7 @@ class PureFunctionIdentifier implements CompilerPass {
     }
 
     /**
-     * @returns false if function known to have side effects.
+     * @return false if function known to have side effects.
      */
     boolean mayBePure() {
       return !(functionThrows ||
@@ -932,7 +932,7 @@ class PureFunctionIdentifier implements CompilerPass {
     }
 
     /**
-     * @returns false if function known to be pure.
+     * @return false if function known to be pure.
      */
     boolean mayHaveSideEffects() {
       return !pureFunction;

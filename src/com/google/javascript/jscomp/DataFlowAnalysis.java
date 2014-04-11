@@ -150,7 +150,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
   @SuppressWarnings("unchecked")
   protected L join(L latticeA, L latticeB) {
-    return joinOp.apply(Lists.<L>newArrayList(latticeA, latticeB));
+    return joinOp.apply(Lists.newArrayList(latticeA, latticeB));
   }
 
   /**

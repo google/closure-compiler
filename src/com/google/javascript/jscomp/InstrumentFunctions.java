@@ -264,7 +264,7 @@ class InstrumentFunctions implements CompilerPass {
     }
 
     /**
-     * @returns true if all paths from block must exit with an explicit return.
+     * @return true if all paths from block must exit with an explicit return.
      */
     private boolean allPathsReturn(Node block) {
       // Computes the control flow graph.

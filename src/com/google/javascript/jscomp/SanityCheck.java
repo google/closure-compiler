@@ -150,5 +150,5 @@ class SanityCheck implements CompilerPass {
       // which pass violated the sanity check.
       throw new IllegalStateException("Sanity Check failed");
     }
-  };
+  }
 }

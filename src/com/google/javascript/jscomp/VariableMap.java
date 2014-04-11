@@ -23,9 +23,14 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
-import java.io.*;
-import java.text.*;
-import java.util.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.text.ParseException;
+import java.util.Map;
+
 
 /**
  * Stores the mapping from original variable name to new variable names.

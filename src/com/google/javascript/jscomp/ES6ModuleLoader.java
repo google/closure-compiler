@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Maps;
-import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.net.URI;
 import java.net.URISyntaxException;

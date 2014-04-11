@@ -190,7 +190,7 @@ public class LinkedUndirectedGraph<N, E>
 
   @Override
   public boolean isConnected(N n1, E e, N n2) {
-    return isConnected(n1, Predicates.<E>equalTo(e), n2);
+    return isConnected(n1, Predicates.equalTo(e), n2);
   }
 
   private boolean isConnected(N n1, Predicate<E> edgePredicate, N n2) {

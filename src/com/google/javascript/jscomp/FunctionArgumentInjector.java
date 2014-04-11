@@ -51,7 +51,7 @@ class FunctionArgumentInjector {
    * @param parent The parent root node.
    * @param replacements The map of names to template node trees with which
    *     to replace the name Nodes.
-   * @returns The root node or its replacement.
+   * @return The root node or its replacement.
    */
   static Node inject(AbstractCompiler compiler, Node node, Node parent,
       Map<String, Node> replacements) {

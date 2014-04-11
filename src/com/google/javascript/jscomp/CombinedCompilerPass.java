@@ -58,7 +58,7 @@ final class CombinedCompilerPass implements HotSwapCompilerPass,
    */
   CombinedCompilerPass(
       AbstractCompiler compiler, Callback... callbacks) {
-    this(compiler, Lists.<Callback>newArrayList(callbacks));
+    this(compiler, Lists.newArrayList(callbacks));
   }
 
   CombinedCompilerPass(

@@ -72,15 +72,15 @@ public final class ParseTreeFactory {
 
   // Token lists
   public static ImmutableList<String> createEmptyParameters() {
-    return ImmutableList.<String>of();
+    return ImmutableList.of();
   }
 
   public static ImmutableList<String> createParameters(IdentifierToken parameter) {
-    return ImmutableList.<String>of(parameter.value);
+    return ImmutableList.of(parameter.value);
   }
 
   public static ImmutableList<String> createParameters(FormalParameterListTree parameters) {
-    ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     for (ParseTree parameter : parameters.parameters) {
       if (!parameter.isRestParameter()) {
@@ -94,7 +94,7 @@ public final class ParseTreeFactory {
 
   public static ImmutableList<ParseTree> createStatementList(
       ParseTree... statements) {
-    return ImmutableList.<ParseTree>copyOf(statements);
+    return ImmutableList.copyOf(statements);
   }
 
   public static ImmutableList<ParseTree> createStatementList(
@@ -110,7 +110,7 @@ public final class ParseTreeFactory {
       ImmutableList<String> formalParameters) {
 
     ImmutableList.Builder<ParseTree> builder =
-        ImmutableList.<ParseTree>builder();
+        ImmutableList.builder();
 
     for (String parameter : formalParameters) {
       builder.add(createIdentifierExpression(parameter));
@@ -136,7 +136,7 @@ public final class ParseTreeFactory {
   private static FormalParameterListTree createParameterList(
       int numberOfParameters, boolean hasRestParams) {
     ImmutableList.Builder<ParseTree> builder =
-        ImmutableList.<ParseTree>builder();
+        ImmutableList.builder();
 
     for (int index = 0; index < numberOfParameters; index++) {
       String parameterName = PredefinedName.getParameterName(index);
@@ -184,7 +184,7 @@ public final class ParseTreeFactory {
   }
 
   public static ArgumentListTree createArgumentList(ParseTree... list) {
-    return new ArgumentListTree(null, ImmutableList.<ParseTree>copyOf(list));
+    return new ArgumentListTree(null, ImmutableList.copyOf(list));
   }
 
   public static ArgumentListTree createArgumentList(int numberOfArguments) {
@@ -251,7 +251,7 @@ public final class ParseTreeFactory {
   }
 
   public static BlockTree createBlock(ParseTree... statements) {
-    return new BlockTree(null, ImmutableList.<ParseTree>copyOf(statements));
+    return new BlockTree(null, ImmutableList.copyOf(statements));
   }
 
   public static ParseTree createScopedStatements(ImmutableList<ParseTree> statements) {
@@ -316,7 +316,7 @@ public final class ParseTreeFactory {
   public static CallExpressionTree createCallCall(ParseTree function,
       ParseTree thisExpression, List<ParseTree> arguments) {
     ImmutableList.Builder<ParseTree> builder =
-        ImmutableList.<ParseTree>builder();
+        ImmutableList.builder();
 
     builder.add(thisExpression);
     builder.addAll(arguments);
@@ -571,7 +571,7 @@ public final class ParseTreeFactory {
   public static ObjectLiteralExpressionTree createObjectLiteralExpression(
       ParseTree... propertyNameAndValues) {
     return createObjectLiteralExpression(
-        ImmutableList.<ParseTree>copyOf(propertyNameAndValues));
+        ImmutableList.copyOf(propertyNameAndValues));
   }
 
   public static ObjectLiteralExpressionTree createObjectLiteralExpression(
@@ -682,7 +682,7 @@ public final class ParseTreeFactory {
       TokenType binding, IdentifierToken identifier, ParseTree initializer) {
 
     return createVariableDeclarationList(
-        binding, ImmutableList.<VariableDeclarationTree>of(
+        binding, ImmutableList.of(
             createVariableDeclaration(identifier, initializer)));
   }
 

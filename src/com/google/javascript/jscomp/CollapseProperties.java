@@ -352,7 +352,7 @@ class CollapseProperties implements CompilerPass {
       ReferenceCollectingCallback collector =
           new ReferenceCollectingCallback(compiler,
               ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
-              Predicates.<Var>equalTo(aliasVar));
+              Predicates.equalTo(aliasVar));
       collector.processScope(scope);
 
       ReferenceCollection aliasRefs = collector.getReferences(aliasVar);

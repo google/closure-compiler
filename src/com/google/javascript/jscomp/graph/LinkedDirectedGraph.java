@@ -121,13 +121,13 @@ public class LinkedDirectedGraph<N, E>
   @Override
   public List<DiGraphEdge<N, E>> getInEdges(N nodeValue) {
     LinkedDirectedGraphNode<N, E> node = getNodeOrFail(nodeValue);
-    return Collections.<DiGraphEdge<N, E>>unmodifiableList(node.getInEdges());
+    return Collections.unmodifiableList(node.getInEdges());
   }
 
   @Override
   public List<DiGraphEdge<N, E>> getOutEdges(N nodeValue) {
     LinkedDirectedGraphNode<N, E> node = getNodeOrFail(nodeValue);
-    return Collections.<DiGraphEdge<N, E>>unmodifiableList(node.getOutEdges());
+    return Collections.unmodifiableList(node.getOutEdges());
   }
 
   @Override

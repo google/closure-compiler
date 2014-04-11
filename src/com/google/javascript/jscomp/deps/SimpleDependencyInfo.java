@@ -73,12 +73,12 @@ public class SimpleDependencyInfo implements DependencyInfo {
 
   @Override
   public Collection<String> getProvides() {
-    return Collections.<String>unmodifiableList(provides);
+    return Collections.unmodifiableList(provides);
   }
 
   @Override
   public Collection<String> getRequires() {
-    return Collections.<String>unmodifiableList(requires);
+    return Collections.unmodifiableList(requires);
   }
 
   @Override
@@ -86,7 +86,7 @@ public class SimpleDependencyInfo implements DependencyInfo {
     if (!(obj instanceof SimpleDependencyInfo)) {
       return false;
     }
-    SimpleDependencyInfo other = (SimpleDependencyInfo)obj;
+    SimpleDependencyInfo other = (SimpleDependencyInfo) obj;
     return Objects.equal(other.srcPathRelativeToClosure,
             srcPathRelativeToClosure) &&
         Objects.equal(other.pathOfDefiningFile, pathOfDefiningFile) &&

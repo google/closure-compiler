@@ -161,11 +161,11 @@ public class CompilerInput
     checkErrorManager();
     try {
       regenerateDependencyInfoIfNecessary();
-      return Collections.<String>unmodifiableSet(requires);
+      return Collections.unmodifiableSet(requires);
     } catch (IOException e) {
       compiler.getErrorManager().report(CheckLevel.ERROR,
           JSError.make(AbstractCompiler.READ_ERROR, getName()));
-      return ImmutableList.<String>of();
+      return ImmutableList.of();
     }
   }
 
@@ -175,11 +175,11 @@ public class CompilerInput
     checkErrorManager();
     try {
       regenerateDependencyInfoIfNecessary();
-      return Collections.<String>unmodifiableSet(provides);
+      return Collections.unmodifiableSet(provides);
     } catch (IOException e) {
       compiler.getErrorManager().report(CheckLevel.ERROR,
           JSError.make(AbstractCompiler.READ_ERROR, getName()));
-      return ImmutableList.<String>of();
+      return ImmutableList.of();
     }
   }
 

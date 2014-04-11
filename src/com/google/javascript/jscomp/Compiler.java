@@ -1952,7 +1952,7 @@ public class Compiler extends AbstractCompiler {
 
   protected final RecentChange recentChange = new RecentChange();
   private final List<CodeChangeHandler> codeChangeHandlers =
-      Lists.<CodeChangeHandler>newArrayList();
+      Lists.newArrayList();
 
   /** Name of the synthetic input that holds synthesized externs. */
   static final String SYNTHETIC_EXTERNS = "{SyntheticVarsDeclar}";
@@ -2303,7 +2303,7 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   List<CompilerInput> getInputsInOrder() {
-    return Collections.<CompilerInput>unmodifiableList(inputs);
+    return Collections.unmodifiableList(inputs);
   }
 
   /**
@@ -2317,7 +2317,7 @@ public class Compiler extends AbstractCompiler {
    * Gets the externs in the order in which they are being processed.
    */
   List<CompilerInput> getExternsInOrder() {
-    return Collections.<CompilerInput>unmodifiableList(externs);
+    return Collections.unmodifiableList(externs);
   }
 
   /**

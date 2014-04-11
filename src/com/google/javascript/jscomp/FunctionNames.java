@@ -21,7 +21,8 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Map;
+
 
 /**
  * Extract a list of all function nodes defined in a JavaScript

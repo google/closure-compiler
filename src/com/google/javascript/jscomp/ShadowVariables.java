@@ -231,7 +231,7 @@ class ShadowVariables implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {}
 
     /**
-     * @returns An assignment that can be used as a shadow for a local variable
+     * @return An assignment that can be used as a shadow for a local variable
      *     in the scope defined by curScopeRoot.
      */
     private Assignment findBestShadow(Scope curScope) {

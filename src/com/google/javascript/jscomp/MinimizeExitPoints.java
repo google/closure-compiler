@@ -23,6 +23,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
+import javax.annotation.Nullable;
+
 /**
  * Transform the structure of the AST so that the number of explicit exits
  * are minimized.
@@ -103,10 +105,9 @@ class MinimizeExitPoints
    * @param n The execution node of a parent to inspect.
    * @param exitType The type of exit to look for.
    * @param labelName If parent is a label the name of the label to look for,
-   *   null otherwise.
-   * @nullable labelName non-null only for breaks within labels.
+   *   null otherwise. Non-null only for breaks within labels.
    */
-  void tryMinimizeExits(Node n, int exitType, String labelName) {
+  void tryMinimizeExits(Node n, int exitType, @Nullable String labelName) {
 
     // Just an 'exit'.
     if (matchingExitNode(n, exitType, labelName)) {
@@ -208,12 +209,11 @@ class MinimizeExitPoints
    * @param destBlock The block to move sibling nodes into.
    * @param ifNode The if node to work with.
    * @param exitType The type of exit to look for.
-   * @param labelName The name associated with the exit, if any.
-   * @nullable labelName null for anything excepted for named-break associated
-   *           with a label.
+   * @param labelName The name associated with the exit, if any. null for anything excepted for
+   *     named-break associated with a label.
    */
   private void tryMinimizeIfBlockExits(Node srcBlock, Node destBlock,
-      Node ifNode, int exitType, String labelName) {
+      Node ifNode, int exitType, @Nullable String labelName) {
     Node exitNodeParent = null;
     Node exitNode = null;
 
@@ -269,10 +269,10 @@ class MinimizeExitPoints
    * @param n The node to inspect.
    * @param type The Token type to look for.
    * @param labelName The name that must be associated with the exit type.
-   * @nullable labelName non-null only for breaks associated with labels.
+   *     non-null only for breaks associated with labels.
    * @return Whether the node matches the specified block-exit type.
    */
-  private static boolean matchingExitNode(Node n, int type, String labelName) {
+  private static boolean matchingExitNode(Node n, int type, @Nullable String labelName) {
     if (n.getType() == type) {
       if (type == Token.RETURN) {
         // only returns without expressions.

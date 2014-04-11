@@ -1506,7 +1506,7 @@ public final class NodeUtil {
       new MayBeStringResultPredicate();
 
   /**
-   * @returns Whether the results is possibly a string.
+   * @return Whether the results is possibly a string.
    */
   static boolean mayBeString(Node n) {
     return mayBeString(n, true);
@@ -3264,7 +3264,7 @@ public final class NodeUtil {
   }
 
   /**
-   * @returns false iff the result of the expression is not consumed.
+   * @return false iff the result of the expression is not consumed.
    */
   static boolean isExpressionResultUsed(Node expr) {
     // TODO(johnlenz): consider sharing some code with trySimpleUnusedResult.

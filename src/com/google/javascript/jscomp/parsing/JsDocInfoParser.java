@@ -95,9 +95,9 @@ public final class JsDocInfoParser {
   private final Map<String, Annotation> annotationNames;
   private final Set<String> suppressionNames;
   private static final Set<String> modifiesAnnotationKeywords =
-      ImmutableSet.<String>of("this", "arguments");
+      ImmutableSet.of("this", "arguments");
   private static final Set<String> idGeneratorAnnotationKeywords =
-      ImmutableSet.<String>of("unique", "consistent", "stable", "mapped");
+      ImmutableSet.of("unique", "consistent", "stable", "mapped");
 
   private Node.FileLevelJsDocBuilder fileLevelJsDocBuilder;
 

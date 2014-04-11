@@ -112,7 +112,7 @@ class CoverageInstrumentationCallback extends
   }
 
   /**
-   * @returns a Node containing file specific setup logic.
+   * @return a Node containing file specific setup logic.
    */
   private Node newHeaderNode(NodeTraversal traversal) {
     String fileName = getFileName(traversal);

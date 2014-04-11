@@ -667,7 +667,7 @@ public class ObjectType {
     }
     String result;
     if (nominalType != null) {
-      result = nominalType.toString();;
+      result = nominalType.toString();
     } else if (isStruct()) {
       result = "struct";
     } else if (isDict()) {

@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 
-import java.util.logging.*;
+import java.util.logging.Logger;
 
 /**
  * Gives anonymous function names. This makes it way easier to debug because

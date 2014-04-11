@@ -36,7 +36,7 @@ public class ShowByPathWarningsGuard extends WarningsGuard {
    */
   public enum ShowType {
     INCLUDE,  // Suppress warnings outside the path.
-    EXCLUDE;  // Suppress warnings within the path.
+    EXCLUDE   // Suppress warnings within the path.
   }
 
   private final ByPathWarningsGuard warningsGuard;

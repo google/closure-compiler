@@ -172,7 +172,7 @@ class DevirtualizePrototypeMethods
   }
 
   /**
-   * @returns The new name for a rewritten method.
+   * @return The new name for a rewritten method.
    */
   private static String getRewrittenMethodName(String originalMethodName) {
     return "JSCompiler_StaticMethods_" + originalMethodName;

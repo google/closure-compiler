@@ -89,7 +89,7 @@ class InlineVariables implements CompilerPass {
   private Predicate<Var> getFilterForMode() {
     switch (mode) {
       case ALL:
-        return Predicates.<Var>alwaysTrue();
+        return Predicates.alwaysTrue();
       case LOCALS_ONLY:
         return new IdentifyLocals();
       case CONSTANTS_ONLY:

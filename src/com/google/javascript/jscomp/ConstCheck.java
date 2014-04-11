@@ -22,7 +22,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Verifies that constants are only assigned a value once.

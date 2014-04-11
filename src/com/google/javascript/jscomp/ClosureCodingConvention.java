@@ -379,7 +379,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
 
   @Override
   public Collection<AssertionFunctionSpec> getAssertionFunctions() {
-    return ImmutableList.<AssertionFunctionSpec>of(
+    return ImmutableList.of(
         new AssertionFunctionSpec("goog.asserts.assert"),
         new AssertionFunctionSpec("goog.asserts.assertNumber",
             JSTypeNative.NUMBER_TYPE),

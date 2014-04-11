@@ -79,7 +79,7 @@ public class SourceMap {
             || NodeUtil.isObjectLitKey(node)
             || (node.isString() && NodeUtil.isGet(node.getParent()));
       }
-    };
+    }
   }
 
   public static class LocationMapping {

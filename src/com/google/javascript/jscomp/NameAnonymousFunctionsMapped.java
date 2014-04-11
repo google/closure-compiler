@@ -21,8 +21,11 @@ import com.google.common.collect.Maps;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.*;
-import java.util.logging.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
+
 
 /**
  * Gives anonymous function names that are optimized to be small and provides a

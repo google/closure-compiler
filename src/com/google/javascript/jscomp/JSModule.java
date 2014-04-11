@@ -72,7 +72,7 @@ public class JSModule implements DependencyInfo, Serializable {
 
   @Override
   public List<String> getProvides() {
-    return ImmutableList.<String>of(name);
+    return ImmutableList.of(name);
   }
 
   @Override
@@ -262,7 +262,7 @@ public class JSModule implements DependencyInfo, Serializable {
     try {
       List<CompilerInput> sortedList =
           (new SortedDependencies<>(
-              Collections.<CompilerInput>unmodifiableList(inputs)))
+              Collections.unmodifiableList(inputs)))
           .getSortedList();
       inputs.clear();
       inputs.addAll(sortedList);

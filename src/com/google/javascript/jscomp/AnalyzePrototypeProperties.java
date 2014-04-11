@@ -559,7 +559,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
   private static enum SymbolType {
     PROPERTY,
-    VAR;
+    VAR
   }
 
   /**
