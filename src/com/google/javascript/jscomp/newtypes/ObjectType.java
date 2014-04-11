@@ -434,7 +434,7 @@ public class ObjectType {
         resultNominalType,
         meetPropsHelper(false, resultNominalType, obj1.props, obj2.props),
         FunctionType.meet(obj1.fn, obj2.fn),
-        obj1.isLoose || obj2.isLoose,
+        obj1.isLoose && obj2.isLoose,
         ObjectKind.meet(obj1.objectKind, obj2.objectKind));
   }
 
