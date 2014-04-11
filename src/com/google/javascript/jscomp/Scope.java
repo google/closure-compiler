@@ -497,7 +497,7 @@ public class Scope
    */
   Var declare(String name, Node nameNode,
       JSType type, CompilerInput input, boolean inferred) {
-    Preconditions.checkState(name != null && name.length() > 0);
+    Preconditions.checkState(name != null && !name.isEmpty());
 
     // Make sure that it's declared only once
     Preconditions.checkState(vars.get(name) == null);

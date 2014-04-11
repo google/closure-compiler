@@ -245,7 +245,7 @@ final class RenameVars implements CompilerPass {
       String name = n.getString();
 
       // Ignore anonymous functions
-      if (name.length() == 0) {
+      if (name.isEmpty()) {
         return;
       }
 

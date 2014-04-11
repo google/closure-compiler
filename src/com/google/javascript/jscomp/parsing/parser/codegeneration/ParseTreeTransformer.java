@@ -107,7 +107,7 @@ public class ParseTreeTransformer {
   @SuppressWarnings("unchecked")
   protected <E extends ParseTree> ImmutableList<E> transformList(
       ImmutableList<E> list) {
-    if (list == null || list.size() == 0) {
+    if (list == null || list.isEmpty()) {
       return list;
     }
 
@@ -129,13 +129,13 @@ public class ParseTreeTransformer {
     return builder != null ? builder.build() : list;
   }
 
-  final protected ParseTree toSourceElement(ParseTree tree) {
+  protected final ParseTree toSourceElement(ParseTree tree) {
     return tree.isSourceElement() ? tree : createExpressionStatement(tree);
   }
 
-  final protected ImmutableList<ParseTree> transformSourceElements(
+  protected final ImmutableList<ParseTree> transformSourceElements(
       ImmutableList<ParseTree> list) {
-    if (list == null || list.size() == 0) {
+    if (list == null || list.isEmpty()) {
       return list;
     }
 

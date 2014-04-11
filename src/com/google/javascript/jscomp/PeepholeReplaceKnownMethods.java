@@ -191,7 +191,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
    * @return string with leading and trailing zeros removed
    */
   private static String normalizeNumericString(String input) {
-    if (input == null || input.length() == 0) {
+    if (input == null || input.isEmpty()) {
       return input;
     }
 
@@ -290,7 +290,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
       }
 
       stringVal = NodeUtil.trimJsWhiteSpace(stringVal);
-      if (stringVal.length() == 0) {
+      if (stringVal.isEmpty()) {
         return n;
       }
     }
@@ -717,7 +717,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
 
     // If an empty string is specified for the separator, split apart each
     // character of the string.
-    if (separator.length() == 0) {
+    if (separator.isEmpty()) {
       for (int i = 0; i < stringValue.length() && i < limit; i++) {
         splitStrings.add(stringValue.substring(i, i + 1));
       }

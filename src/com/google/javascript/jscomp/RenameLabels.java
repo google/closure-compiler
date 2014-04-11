@@ -199,7 +199,7 @@ final class RenameLabels implements CompilerPass {
       if (nameNode != null) {
         // This is a named break or continue;
         String name = nameNode.getString();
-        Preconditions.checkState(name.length() != 0);
+        Preconditions.checkState(!name.isEmpty());
         LabelInfo li = getLabelInfo(name);
         if (li != null) {
           String newName = getNameForId(li.id);

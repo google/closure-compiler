@@ -846,7 +846,7 @@ final class Tracer {
     }
 
     boolean isEmpty() {
-      return events.size() == 0 && outstandingEvents.size() == 0;
+      return events.isEmpty() && outstandingEvents.isEmpty();
     }
 
     void truncateOutstandingEvents() {
@@ -885,7 +885,7 @@ final class Tracer {
         }
       }
 
-      if (outstandingEvents.size() != 0) {
+      if (!outstandingEvents.isEmpty()) {
         long now = clock.currentTimeMillis();
 
         sb.append(" Unstopped timers:\n");

@@ -679,7 +679,7 @@ public class CommandLineRunner extends
     Flags.guardLevels.addAll(previous);
 
     // Currently we are not supporting this (prevent direct/indirect loops)
-    if (!flags.flagFile.equals("")) {
+    if (!flags.flagFile.isEmpty()) {
       err.println("ERROR - Arguments in the file cannot contain "
           + "--flagfile option.");
       isConfigValid = false;
@@ -696,7 +696,7 @@ public class CommandLineRunner extends
     try {
       parser.parseArgument(processedArgs.toArray(new String[] {}));
       // For contains --flagfile flag
-      if (!flags.flagFile.equals("")) {
+      if (!flags.flagFile.isEmpty()) {
         processFlagFile(err);
       }
     } catch (CmdLineException e) {

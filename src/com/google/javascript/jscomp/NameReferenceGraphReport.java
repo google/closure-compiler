@@ -170,7 +170,7 @@ final class NameReferenceGraphReport {
     List<DefinitionsRemover.Definition> defs =
         declarationNode.getValue().getDeclarations();
 
-    if (defs.size() == 0) {
+    if (defs.isEmpty()) {
        builder.append("<br>No definitions found<br>");
     } else {
       // Otherwise, provide a list of definitions in a dotted list.

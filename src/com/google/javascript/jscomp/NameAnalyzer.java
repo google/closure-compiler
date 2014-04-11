@@ -244,7 +244,7 @@ final class NameAnalyzer implements CompilerPass {
       StringBuilder out = new StringBuilder();
       out.append(name);
 
-      if (prototypeNames.size() > 0) {
+      if (!prototypeNames.isEmpty()) {
         out.append(" (CLASS)\n");
         out.append(" - FUNCTIONS: ");
         Iterator<String> pIter = prototypeNames.iterator();

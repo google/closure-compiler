@@ -108,7 +108,7 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
       Node fn = entry.getFunctionNode();
       List<Node> dependencies = createDependenciesList(fn);
       // skips entry if it does have any dependencies.
-      if (dependencies.size() == 0) {
+      if (dependencies.isEmpty()) {
         continue;
       }
       Node dependenciesArray = IR.arraylit(dependencies.toArray(

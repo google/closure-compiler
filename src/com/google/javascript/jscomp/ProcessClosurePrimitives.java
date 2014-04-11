@@ -903,7 +903,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             errors.add(key);
           }
         }
-        if (errors.size() != 0) {
+        if (!errors.isEmpty()) {
           compiler.report(
             t.makeError(n, INVALID_CSS_RENAMING_MAP, errors.toString()));
         }
@@ -926,7 +926,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             }
           }
         }
-        if (errors.size() != 0) {
+        if (!errors.isEmpty()) {
           compiler.report(
             t.makeError(n, INVALID_CSS_RENAMING_MAP, errors.toString()));
         }

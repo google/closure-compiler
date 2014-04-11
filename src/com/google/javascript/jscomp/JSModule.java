@@ -178,7 +178,7 @@ public class JSModule implements DependencyInfo, Serializable {
   public Set<JSModule> getAllDependencies() {
     Set<JSModule> allDeps = Sets.newHashSet(deps);
     List<JSModule> workList = Lists.newArrayList(deps);
-    while (workList.size() > 0) {
+    while (!workList.isEmpty()) {
       JSModule module = workList.remove(workList.size() - 1);
       for (JSModule dep : module.getDependencies()) {
         if (allDeps.add(dep)) {

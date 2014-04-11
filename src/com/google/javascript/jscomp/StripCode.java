@@ -571,7 +571,7 @@ class StripCode implements CompilerPass {
         return true;
       }
 
-      if ((name.length() == 0) || Character.isUpperCase(name.charAt(0))) {
+      if (name.isEmpty() || Character.isUpperCase(name.charAt(0))) {
         return false;
       }
 

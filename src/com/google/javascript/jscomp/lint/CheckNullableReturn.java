@@ -60,7 +60,7 @@ public class CheckNullableReturn implements CompilerPass, NodeTraversal.Callback
     if (n.isBlock() && n.hasChildren() && isReturnTypeNullable(parent)
         && !canReturnNull(t.getControlFlowGraph())) {
       String fnName = NodeUtil.getNearestFunctionName(parent);
-      if (fnName != null && !fnName.equals("")) {
+      if (fnName != null && !fnName.isEmpty()) {
         compiler.report(t.makeError(parent, NULLABLE_RETURN_WITH_NAME, fnName));
       } else {
         compiler.report(t.makeError(parent, NULLABLE_RETURN));

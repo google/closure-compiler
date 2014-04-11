@@ -2661,7 +2661,7 @@ public class NewTypeInference implements CompilerPass {
 
   TypeEnv getFinalTypeEnv() {
     Node n = cfg.getImplicitReturn().getValue();
-    if (cfg.getInEdges(n).size() == 0) {
+    if (cfg.getInEdges(n).isEmpty()) {
       // This function only exits with THROWs
       TypeEnv e = new TypeEnv();
       return envPutType(e, RETVAL_ID, JSType.BOTTOM);

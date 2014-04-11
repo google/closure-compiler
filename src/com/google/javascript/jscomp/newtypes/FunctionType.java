@@ -528,8 +528,8 @@ public class FunctionType {
     Preconditions.checkState(outerVarPreconditions.isEmpty());
     Map<String, JSType> typeMap = concreteTypes;
     if (typeParameters != null) {
-      ImmutableMap.Builder builder = ImmutableMap.builder();
-      for (String typeParam: concreteTypes.keySet()) {
+      ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
+      for (String typeParam : concreteTypes.keySet()) {
         if (!typeParameters.contains(typeParam)) {
           builder.put(typeParam, concreteTypes.get(typeParam));
         }
@@ -540,7 +540,7 @@ public class FunctionType {
   }
 
   public FunctionType instantiateGenerics(Map<String, JSType> typeMap) {
-    for (String typeParam: typeMap.keySet()) {
+    for (String typeParam : typeMap.keySet()) {
       Preconditions.checkState(typeParameters.contains(typeParam));
     }
     return applyInstantiation(false, typeMap);

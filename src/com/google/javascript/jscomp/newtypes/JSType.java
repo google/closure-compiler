@@ -71,7 +71,7 @@ public class JSType {
     if (objs == null) {
       this.mask = mask;
       this.objs = null;
-    } else if (objs.size() == 0) {
+    } else if (objs.isEmpty()) {
       this.mask = mask & ~NON_SCALAR_MASK;
       this.objs = null;
     } else {
@@ -204,7 +204,7 @@ public class JSType {
     } else if (objs == null) {
       return true;
     }
-    for (ObjectType obj: objs) {
+    for (ObjectType obj : objs) {
       if (!obj.isInhabitable()) {
         return false;
       }
@@ -228,7 +228,7 @@ public class JSType {
     if (objs == null) {
       return false;
     }
-    for (ObjectType objType: objs) {
+    for (ObjectType objType : objs) {
       if (objType.isStruct()) {
         return true;
       }
@@ -242,7 +242,7 @@ public class JSType {
     }
     boolean foundLooseStruct = false;
     boolean foundNonLooseStruct = false;
-    for (ObjectType objType: objs) {
+    for (ObjectType objType : objs) {
       if (objType.isLooseStruct()) {
         foundLooseStruct = true;
       } else if (objType.isStruct()) {
@@ -256,7 +256,7 @@ public class JSType {
     if (objs == null) {
       return false;
     }
-    for (ObjectType objType: objs) {
+    for (ObjectType objType : objs) {
       if (objType.isDict()) {
         return true;
       }
@@ -327,7 +327,7 @@ public class JSType {
         type = unified;
       }
     }
-    for (JSType typeToRemove: typesToRemove) {
+    for (JSType typeToRemove : typesToRemove) {
       typeMultimap.remove(typeParam, typeToRemove);
     }
     typeMultimap.put(typeParam, type);

@@ -357,7 +357,7 @@ public final class JsDocInfoParser {
             ExtractionInfo authorInfo = extractSingleLineBlock();
             String author = authorInfo.string;
 
-            if (author.length() == 0) {
+            if (author.isEmpty()) {
               parser.addParserWarning("msg.jsdoc.authormissing",
                   stream.getLineno(), stream.getCharno());
             } else {
@@ -854,7 +854,7 @@ public final class JsDocInfoParser {
             ExtractionInfo referenceInfo = extractSingleLineBlock();
             String reference = referenceInfo.string;
 
-            if (reference.length() == 0) {
+            if (reference.isEmpty()) {
               parser.addParserWarning("msg.jsdoc.seemissing",
                   stream.getLineno(), stream.getCharno());
             } else {
@@ -885,7 +885,7 @@ public final class JsDocInfoParser {
                   .trimResults()
                   .split(templateInfo.string));
 
-          if (names.size() == 1 && names.get(0).length() == 0) {
+          if (names.size() == 1 && names.get(0).isEmpty()) {
             parser.addTypeWarning("msg.jsdoc.templatemissing",
                   stream.getLineno(), stream.getCharno());
           } else if (!jsdocBuilder.recordTemplateTypeNames(names)) {
@@ -922,7 +922,7 @@ public final class JsDocInfoParser {
                   .trimResults()
                   .split(templateInfo.string));
 
-          if (names.size() == 0 || names.get(0).length() == 0) {
+          if (names.isEmpty() || names.get(0).isEmpty()) {
             parser.addTypeWarning("msg.jsdoc.disposeparameter.missing",
                   stream.getLineno(), stream.getCharno());
           } else if (!jsdocBuilder.recordDisposesParameter(names)) {
@@ -938,7 +938,7 @@ public final class JsDocInfoParser {
           ExtractionInfo versionInfo = extractSingleLineBlock();
           String version = versionInfo.string;
 
-          if (version.length() == 0) {
+          if (version.isEmpty()) {
             parser.addParserWarning("msg.jsdoc.versionmissing",
                   stream.getLineno(), stream.getCharno());
           } else {
@@ -1121,7 +1121,7 @@ public final class JsDocInfoParser {
    * only letters, digits, and underscores.
    */
   private static boolean validTemplateTypeName(String name) {
-    return name.length() != 0 && CharMatcher.JAVA_UPPER_CASE.matches(name.charAt(0)) &&
+    return !name.isEmpty() && CharMatcher.JAVA_UPPER_CASE.matches(name.charAt(0)) &&
         CharMatcher.JAVA_LETTER_OR_DIGIT.or(CharMatcher.is('_')).matchesAllOf(name);
   }
 

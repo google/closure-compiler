@@ -308,12 +308,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.sourceMapDetailLevel = config.sourceMapDetailLevel;
     options.sourceMapFormat = config.sourceMapFormat;
 
-    if (!config.variableMapInputFile.equals("")) {
+    if (!config.variableMapInputFile.isEmpty()) {
       options.inputVariableMap =
           VariableMap.load(config.variableMapInputFile);
     }
 
-    if (!config.propertyMapInputFile.equals("")) {
+    if (!config.propertyMapInputFile.isEmpty()) {
       options.inputPropertyMap =
           VariableMap.load(config.propertyMapInputFile);
     }
@@ -1183,10 +1183,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   private String getMapPath(String outputFile) {
     String basePath = "";
 
-    if (outputFile.equals("")) {
+    if (outputFile.isEmpty()) {
       // If we have a js_module_binary rule, output the maps
       // at modulename_props_map.out, etc.
-      if (!config.moduleOutputPathPrefix.equals("")) {
+      if (!config.moduleOutputPathPrefix.isEmpty()) {
         basePath = config.moduleOutputPathPrefix;
       } else {
         basePath = "jscompiler";
@@ -1230,7 +1230,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     // Check the individual FLAGS.
-    if (!config.variableMapOutputFile.equals("")) {
+    if (!config.variableMapOutputFile.isEmpty()) {
       if (variableMapOutputPath != null) {
         throw new FlagUsageException("The flags variable_map_output_file and "
             + "create_name_map_files cannot both be used simultaniously.");
@@ -1239,7 +1239,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       variableMapOutputPath = config.variableMapOutputFile;
     }
 
-    if (!config.propertyMapOutputFile.equals("")) {
+    if (!config.propertyMapOutputFile.isEmpty()) {
       if (propertyMapOutputPath != null) {
         throw new FlagUsageException("The flags property_map_output_file and "
             + "create_name_map_files cannot both be used simultaniously.");

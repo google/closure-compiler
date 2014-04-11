@@ -75,7 +75,7 @@ class AnonymousFunctionNamingCallback
         // get the function name and see if it's empty
         Node functionNameNode = n.getFirstChild();
         String functionName = functionNameNode.getString();
-        if (functionName.length() == 0) {
+        if (functionName.isEmpty()) {
           if (parent.isAssign()) {
             // this is an assignment to a property, generally either a
             // static function or a prototype function

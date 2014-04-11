@@ -334,7 +334,7 @@ public final class NodeUtil {
 
     String s = trimJsWhiteSpace(rawJsString);
     // return ScriptRuntime.toNumber(s);
-    if (s.length() == 0) {
+    if (s.isEmpty()) {
       return 0.0;
     }
 

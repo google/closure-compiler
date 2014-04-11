@@ -103,7 +103,7 @@ abstract class Dispatcher extends AbstractFuzzer {
           }
         }
       }
-    } while (validFuzzers.size() == 0);
+    } while (validFuzzers.isEmpty());
     DiscreteDistribution<AbstractFuzzer> dd =
         new DiscreteDistribution<>(context.random, validFuzzers, weights);
     return dd.nextItem();

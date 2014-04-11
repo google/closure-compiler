@@ -131,7 +131,7 @@ public class LightweightMessageFormatter extends AbstractMessageFormatter {
         return null;
       }
       String code = region.getSourceExcerpt();
-      if (code.length() == 0) {
+      if (code.isEmpty()) {
         return null;
       }
 
@@ -149,7 +149,7 @@ public class LightweightMessageFormatter extends AbstractMessageFormatter {
         String line;
         if (end < 0) {
           line = code.substring(start);
-          if (line.length() == 0) {
+          if (line.isEmpty()) {
             return builder.substring(0, builder.length() - 1);
           }
         } else {

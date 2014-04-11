@@ -1524,7 +1524,7 @@ public abstract class RegExpTree {
         if (!inverted && namedGroups.length() == 2) {
           sb.append(namedGroups);
           return;
-        } else if (ranges.isEmpty() && namedGroups.length() == 0) {
+        } else if (ranges.isEmpty() && namedGroups.isEmpty()) {
           sb.append(inverted ? "[\\S\\s]" : "(?!)");
           return;
         }
@@ -1532,7 +1532,7 @@ public abstract class RegExpTree {
       sb.append('[');
       if (inverted) { sb.append('^'); }
       sb.append(namedGroups);
-      boolean rangesStartCharset = !inverted && namedGroups.length() == 0;
+      boolean rangesStartCharset = !inverted && namedGroups.isEmpty();
       boolean emitDashAtEnd = false;
       for (int i = 0, n = ranges.getNumRanges(); i < n; ++i) {
         char start = (char) ranges.start(i);

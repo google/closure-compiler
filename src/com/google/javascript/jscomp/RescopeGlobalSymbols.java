@@ -239,7 +239,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       }
       String name = n.getString();
       // Ignore anonymous functions
-      if (parent.isFunction() && name.length() == 0) {
+      if (parent.isFunction() && name.isEmpty()) {
         return;
       }
       Scope.Var var = t.getScope().getVar(name);

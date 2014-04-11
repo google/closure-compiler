@@ -49,7 +49,7 @@ class DefinitionsRemover {
     } else if (parent.isFunction() && parent.getFirstChild() == n) {
       if (!NodeUtil.isFunctionExpression(parent)) {
         return new NamedFunctionDefinition(parent, isExtern);
-      } else if (!n.getString().equals("")) {
+      } else if (!n.getString().isEmpty()) {
         return new FunctionExpressionDefinition(parent, isExtern);
       }
     } else if (parent.isAssign() && parent.getFirstChild() == n) {
@@ -79,7 +79,7 @@ class DefinitionsRemover {
     } else if (parent.isFunction() && parent.getFirstChild() == n) {
       if (!NodeUtil.isFunctionExpression(parent)) {
         return true;
-      } else if (!n.getString().equals("")) {
+      } else if (!n.getString().isEmpty()) {
         return true;
       }
     } else if (parent.isAssign() && parent.getFirstChild() == n) {

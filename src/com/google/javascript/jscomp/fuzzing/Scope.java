@@ -31,7 +31,7 @@ class Scope {
   ArrayList<String> otherLabels = new ArrayList<>();
 
   String randomLabelForContinue(Random random) {
-    Preconditions.checkState(loopLabels.size() > 0);
+    Preconditions.checkState(!loopLabels.isEmpty());
     return loopLabels.get(random.nextInt(loopLabels.size()));
   }
 

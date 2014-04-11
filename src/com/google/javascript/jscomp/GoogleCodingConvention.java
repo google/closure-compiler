@@ -78,7 +78,7 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
     int pos = name.lastIndexOf('$');
     if (pos >= 0) {
       name = name.substring(pos + 1);
-      if (name.length() == 0) {
+      if (name.isEmpty()) {
         return false;
       }
     }

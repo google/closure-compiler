@@ -65,7 +65,7 @@ class PeepholeSimplifyRegExp extends AbstractPeepholeOptimization {
       // Update the original if something was done.
       if (!(newPattern.equals(pattern) && newFlags.equals(flags))) {
         subtree.getFirstChild().setString(newPattern);
-        if (!"".equals(newFlags)) {
+        if (!newFlags.isEmpty()) {
           subtree.getLastChild().setString(newFlags);
         } else if (subtree.getChildCount() == 2) {
           subtree.getLastChild().detachFromParent();

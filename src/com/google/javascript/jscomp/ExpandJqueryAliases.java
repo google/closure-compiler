@@ -315,7 +315,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
             keyNodeReferences, valueNodeReferences,
             objectToLoopOver.isArrayLit()));
 
-    if (keyNodeReferences.size() == 0) {
+    if (keyNodeReferences.isEmpty()) {
      // We didn't do anything useful ...
       t.report(n, JQUERY_USELESS_EACH_EXPANSION, (String) null);
       return;

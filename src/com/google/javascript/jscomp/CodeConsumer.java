@@ -186,7 +186,7 @@ abstract class CodeConsumer {
   void add(String newcode) {
     maybeEndStatement();
 
-    if (newcode.length() == 0) {
+    if (newcode.isEmpty()) {
       return;
     }
 

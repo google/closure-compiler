@@ -73,7 +73,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
       }
 
       Collection<Node> definitions = methodDefinitions.get(callName);
-      if (definitions == null || definitions.size() == 0) {
+      if (definitions == null || definitions.isEmpty()) {
         return;
       }
 

@@ -970,7 +970,7 @@ class GlobalTypeInfo implements CompilerPass {
         this.readableName = null;
       } else {
         String nameOnAst = root.getFirstChild().getString();
-        this.name = nameOnAst.equals("") ? null : nameOnAst;
+        this.name = nameOnAst.isEmpty() ? null : nameOnAst;
         this.readableName = NodeUtil.getFunctionName(root);
       }
       this.root = root;
