@@ -1626,6 +1626,59 @@ public class Node implements Cloneable, Serializable {
   }
 
   /**
+   * Returns whether a node matches a simple or a qualified name, such as
+   * <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
+   */
+  public boolean matchesQualifiedName(String name) {
+    return name != null && matchesQualifiedName(name, name.length());
+  }
+
+  /**
+   * Returns whether a node matches a simple or a qualified name, such as
+   * <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
+   */
+  private boolean matchesQualifiedName(String qname, int endIndex) {
+    int start = qname.lastIndexOf('.', endIndex - 1) + 1;
+
+    switch (getType()) {
+      case Token.NAME:
+        String name = getString();
+        return start == 0 && !name.isEmpty() &&
+           name.length() == endIndex && qname.startsWith(name);
+      case Token.THIS:
+        return start == 0 && 4 == endIndex && qname.startsWith("this");
+      case Token.GETPROP:
+        String prop = getLastChild().getString();
+        return start > 1
+            && prop.regionMatches(0, qname, start, endIndex - start)
+            && getFirstChild().matchesQualifiedName(qname, start - 1);
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Returns whether a node matches a simple or a qualified name, such as
+   * <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
+   */
+  public boolean matchesQualifiedName(Node n) {
+    if (n == null || n.type != type) {
+      return false;
+    }
+    switch (type) {
+      case Token.NAME:
+        return !getString().isEmpty() && getString().equals(n.getString());
+      case Token.THIS:
+        return true;
+      case Token.GETPROP:
+        return getLastChild().getString().equals(n.getLastChild().getString())
+            && getFirstChild().matchesQualifiedName(n.getFirstChild());
+      default:
+        return false;
+    }
+  }
+
+  /**
    * Returns whether a node corresponds to a simple or a qualified name without
    * a "this" reference, such as <code>a.b.c</code>, but not <code>this.a</code>
    * .

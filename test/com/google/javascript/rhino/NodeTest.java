@@ -231,6 +231,139 @@ public class NodeTest extends TestCase {
     assertFalse(new Node(Token.INC, IR.name("x")).isQualifiedName());
   }
 
+  public void testMatchesQualifiedNameX() {
+    assertTrue(qname("this.b").matchesQualifiedName("this.b"));
+  }
+
+  public void testMatchesQualifiedName1() {
+    assertTrue(IR.name("a").matchesQualifiedName("a"));
+    assertFalse(IR.name("a").matchesQualifiedName("a.b"));
+    assertFalse(IR.name("a").matchesQualifiedName((String) null));
+    assertFalse(IR.name("a").matchesQualifiedName(".b"));
+    assertFalse(IR.name("a").matchesQualifiedName("a."));
+
+    assertFalse(qname("a.b").matchesQualifiedName("a"));
+    assertTrue(qname("a.b").matchesQualifiedName("a.b"));
+    assertFalse(qname("a.b").matchesQualifiedName(".b"));
+    assertFalse(qname("a.b").matchesQualifiedName("this.b"));
+
+    assertFalse(qname("this.b").matchesQualifiedName("a"));
+    assertFalse(qname("this.b").matchesQualifiedName("a.b"));
+    assertFalse(qname("this.b").matchesQualifiedName(".b"));
+    assertFalse(qname("this.b").matchesQualifiedName("a."));
+    assertTrue(qname("this.b").matchesQualifiedName("this.b"));
+
+    assertTrue(qname("a.b.c").matchesQualifiedName("a.b.c"));
+    assertTrue(qname("a.b.c").matchesQualifiedName("a.b.c"));
+
+
+    assertFalse(IR.number(0).matchesQualifiedName("a.b"));
+    assertFalse(IR.arraylit().matchesQualifiedName("a.b"));
+    assertFalse(IR.objectlit().matchesQualifiedName("a.b"));
+    assertFalse(IR.string("").matchesQualifiedName("a.b"));
+    assertFalse(IR.getelem(IR.name("a"),
+        IR.string("b")).matchesQualifiedName("a.b"));
+    assertFalse( // a[b].c
+        IR.getprop(
+            IR.getelem(IR.name("a"),IR.string("b")),
+            IR.string("c"))
+            .matchesQualifiedName("a.b.c"));
+    assertFalse( // a.b[c]
+        IR.getelem(
+            IR.getprop(IR.name("a"),IR.string("b")),
+            IR.string("c"))
+            .matchesQualifiedName("a.b.c"));
+    assertFalse(IR.call(IR.name("a")).matchesQualifiedName("a"));
+    assertFalse( // a().b
+        IR.getprop(
+            IR.call(IR.name("a")),
+            IR.string("b"))
+        .matchesQualifiedName("a.b"));
+    assertFalse( // (a.b)()
+        IR.call(
+            IR.getprop(IR.name("a"),IR.string("b")))
+        .matchesQualifiedName("a.b"));
+    assertFalse(IR.string("a").matchesQualifiedName("a"));
+    assertFalse(IR.regexp(IR.string("x")).matchesQualifiedName("x"));
+    assertFalse(new Node(Token.INC, IR.name("x")).matchesQualifiedName("x"));
+  }
+
+  public void testMatchesQualifiedName2() {
+    assertTrue(IR.name("a").matchesQualifiedName(qname("a")));
+    assertFalse(IR.name("a").matchesQualifiedName(qname("a.b")));
+    assertFalse(IR.name("a").matchesQualifiedName((Node) null));
+
+    assertFalse(qname("a.b").matchesQualifiedName(qname("a")));
+    assertTrue(qname("a.b").matchesQualifiedName(qname("a.b")));
+    assertFalse(qname("a.b").matchesQualifiedName(qname(".b")));
+    assertFalse(qname("a.b").matchesQualifiedName(qname("this.b")));
+
+    assertFalse(qname("this.b").matchesQualifiedName(qname("a")));
+    assertFalse(qname("this.b").matchesQualifiedName(qname("a.b")));
+    assertTrue(qname("this.b").matchesQualifiedName(qname("this.b")));
+
+    assertTrue(qname("a.b.c").matchesQualifiedName(qname("a.b.c")));
+    assertTrue(qname("a.b.c").matchesQualifiedName(qname("a.b.c")));
+
+
+    assertFalse(IR.number(0).matchesQualifiedName(qname("a.b")));
+    assertFalse(IR.arraylit().matchesQualifiedName(qname("a.b")));
+    assertFalse(IR.objectlit().matchesQualifiedName(qname("a.b")));
+    assertFalse(IR.string("").matchesQualifiedName(qname("a.b")));
+    assertFalse(IR.getelem(IR.name("a"),
+        IR.string("b")).matchesQualifiedName(qname("a.b")));
+    assertFalse( // a[b].c
+        IR.getprop(
+            IR.getelem(IR.name("a"),IR.string("b")),
+            IR.string("c"))
+            .matchesQualifiedName(qname("a.b.c")));
+    assertFalse( // a.b[c]
+        IR.getelem(
+            IR.getprop(IR.name("a"),IR.string("b")),
+            IR.string("c"))
+            .matchesQualifiedName("a.b.c"));
+    assertFalse(IR.call(IR.name("a")).matchesQualifiedName(qname("a")));
+    assertFalse( // a().b
+        IR.getprop(
+            IR.call(IR.name("a")),
+            IR.string("b"))
+        .matchesQualifiedName(qname("a.b")));
+    assertFalse( // (a.b)()
+        IR.call(
+            IR.getprop(IR.name("a"),IR.string("b")))
+        .matchesQualifiedName(qname("a.b")));
+    assertFalse(IR.string("a").matchesQualifiedName(qname("a")));
+    assertFalse(IR.regexp(IR.string("x")).matchesQualifiedName(qname("x")));
+    assertFalse(new Node(Token.INC, IR.name("x"))
+        .matchesQualifiedName(qname("x")));
+  }
+
+  public static Node qname(String name) {
+    int endPos = name.indexOf('.');
+    if (endPos == -1) {
+      return IR.name(name);
+    }
+    Node node;
+    String nodeName = name.substring(0, endPos);
+    if ("this".equals(nodeName)) {
+      node = IR.thisNode();
+    } else {
+      node = IR.name(nodeName);
+    }
+    int startPos;
+    do {
+      startPos = endPos + 1;
+      endPos = name.indexOf('.', startPos);
+      String part = (endPos == -1
+                     ? name.substring(startPos)
+                     : name.substring(startPos, endPos));
+      Node propNode = IR.string(part);
+      node = IR.getprop(node, propNode);
+    } while (endPos != -1);
+
+    return node;
+  }
+
   public void testCloneAnnontations() {
     Node n = getVarRef("a");
     assertFalse(n.getBooleanProp(Node.IS_CONSTANT_NAME));
