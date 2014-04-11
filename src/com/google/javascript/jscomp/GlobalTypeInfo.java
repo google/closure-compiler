@@ -785,7 +785,7 @@ class GlobalTypeInfo implements CompilerPass {
       String functionName = getFunInternalName(fn);
       if (fnDoc != null) {
         NominalType parentClass = null;
-        // TODO(user): ignore @extends {Object} on constructors,
+        // TODO(dimvar): ignore @extends {Object} on constructors,
         // it should be a no-op.
         if (fnDoc.hasBaseType()) {
           if (!fnDoc.isConstructor()) {

@@ -355,7 +355,7 @@ public class NewTypeInference implements CompilerPass {
     if (funType == null) {
       return declType;
     } else if (funType.isConstructor()) {
-      // TODO(user): when declType is a union, consider also creating
+      // TODO(dimvar): when declType is a union, consider also creating
       // appropriate ctor objs. (This is going to be rare.)
       return funType.createConstructorObject();
     } else {
