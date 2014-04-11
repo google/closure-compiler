@@ -230,7 +230,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   /** Checks that are performed on non-extern code only. */
-  private class NonExternChecks extends AbstractPostOrderCallback {
+  private static class NonExternChecks extends AbstractPostOrderCallback {
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
       if ((n.isName()) && isDeclaration(n)) {
         checkDeclaration(t, n);

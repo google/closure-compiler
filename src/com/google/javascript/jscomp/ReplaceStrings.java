@@ -88,7 +88,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
   /**
    * Describes a replacement that occurred.
    */
-  class Result {
+  static class Result {
     // The original message with non-static content replaced with
     // {@code placeholderToken}.
     public final String original;

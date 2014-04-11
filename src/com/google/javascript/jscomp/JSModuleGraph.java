@@ -496,7 +496,7 @@ public class JSModuleGraph {
    * A module depth comparator that considers a deeper module to be "less than"
    * a shallower module. Uses module names to consistently break ties.
    */
-  private class InverseDepthComparator implements Comparator<JSModule> {
+  private static class InverseDepthComparator implements Comparator<JSModule> {
     @Override
     public int compare(JSModule m1, JSModule m2) {
       return depthCompare(m2, m1);
