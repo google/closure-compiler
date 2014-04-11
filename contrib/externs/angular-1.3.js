@@ -1364,7 +1364,7 @@ angular.$interpolateProvider.endSymbol;
  *   protocol: function():string,
  *   replace: function(),
  *   search: function((string|Object.<string, string>)=,
- *       ?(string|Array.<string>)=): (!Object|angular.$location)),
+ *       ?(string|Array.<string>)=): (!Object|angular.$location),
  *   url: function(string=):string
  *   }}
  */
