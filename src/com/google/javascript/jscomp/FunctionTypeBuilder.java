@@ -812,7 +812,7 @@ final class FunctionTypeBuilder {
    * care of most scope-declaring.
    */
   private Scope getScopeDeclaredIn() {
-    int dotIndex = fnName.indexOf(".");
+    int dotIndex = fnName.indexOf('.');
     if (dotIndex != -1) {
       String rootVarName = fnName.substring(0, dotIndex);
       Var rootVar = scope.getVar(rootVarName);

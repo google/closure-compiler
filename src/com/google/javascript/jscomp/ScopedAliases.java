@@ -208,7 +208,7 @@ class ScopedAliases implements HotSwapCompilerPass {
     public abstract void applyAlias();
   }
 
-  private class AliasedNode extends AliasUsage {
+  private static class AliasedNode extends AliasUsage {
     AliasedNode(Var aliasVar, Node aliasReference) {
       super(aliasVar, aliasReference);
     }
@@ -222,7 +222,7 @@ class ScopedAliases implements HotSwapCompilerPass {
     }
   }
 
-  private class AliasedTypeNode extends AliasUsage {
+  private static class AliasedTypeNode extends AliasUsage {
     AliasedTypeNode(Var aliasVar, Node aliasReference) {
       super(aliasVar, aliasReference);
     }
@@ -459,7 +459,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         aliasVar.getInitialValue().getQualifiedName();
       transformation.addAlias(name, qualifiedName);
 
-      int rootIndex = qualifiedName.indexOf(".");
+      int rootIndex = qualifiedName.indexOf('.');
       if (rootIndex != -1) {
         String qNameRoot = qualifiedName.substring(0, rootIndex);
         if (!aliases.containsKey(qNameRoot)) {

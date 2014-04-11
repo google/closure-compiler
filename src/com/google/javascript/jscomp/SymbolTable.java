@@ -1220,7 +1220,7 @@ public final class SymbolTable
         return fullyNamedSym;
       }
 
-      int dot = name.lastIndexOf(".");
+      int dot = name.lastIndexOf('.');
       if (dot != -1) {
         Symbol owner = getQualifiedSlot(name.substring(0, dot));
         if (owner != null && owner.getPropertyScope() != null) {
