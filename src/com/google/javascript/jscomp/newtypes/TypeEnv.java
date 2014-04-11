@@ -19,8 +19,10 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -51,13 +53,36 @@ public class TypeEnv {
     return new TypeEnv(typeMap.with(n, t));
   }
 
+  public TypeEnv split() {
+    return this;
+  }
+
   public static TypeEnv join(TypeEnv e1, TypeEnv e2) {
-    PersistentMap<String, JSType> newMap = e1.typeMap;
-    for (String n : e2.typeMap.keySet()) {
-      JSType type1 = e1.getType(n);
-      JSType type2 = e2.getType(n);
-      newMap =
-          newMap.with(n, type1 == null ? type2 : JSType.join(type1, type2));
+    return join(ImmutableSet.of(e1, e2));
+  }
+
+  public static TypeEnv join(Collection<TypeEnv> envs) {
+    Preconditions.checkArgument(!envs.isEmpty());
+    TypeEnv firstEnv = envs.iterator().next();
+    if (envs.size() == 1) {
+      return firstEnv;
+    }
+    PersistentMap<String, JSType> newMap = firstEnv.typeMap;
+    ImmutableSet.Builder<String> keys = ImmutableSet.builder();
+    for (TypeEnv env : envs) {
+      keys.addAll(env.typeMap.keySet());
+    }
+    for (String n : keys.build()) {
+      JSType joinedType = null;
+      for (TypeEnv env : envs) {
+        JSType otherType = env.getType(n);
+        if (joinedType == null) {
+          joinedType = otherType;
+        } else {
+          joinedType = JSType.join(joinedType, otherType);
+        }
+      }
+      newMap = newMap.with(n, joinedType);
     }
     return new TypeEnv(newMap);
   }

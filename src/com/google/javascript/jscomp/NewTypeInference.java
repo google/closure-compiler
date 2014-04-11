@@ -64,6 +64,7 @@ import java.util.Set;
  * - @lends
  * - @private (maybe)
  * - @protected (maybe)
+ * - arguments array
  * - separate scope for catch variables
  * - closure-specific constructs
  * - getters/setters
@@ -165,7 +166,7 @@ public class NewTypeInference implements CompilerPass {
   GlobalTypeInfo symbolTable;
   static final String RETVAL_ID = "%return";
   private JSType arrayType, regexpType; // used for array and regexp literals
-  private static boolean debugging = true;
+  private static boolean debugging = false;
 
   NewTypeInference(AbstractCompiler compiler) {
     this.warnings = Sets.newHashSet();
@@ -226,26 +227,33 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private TypeEnv getInEnv(Node n) {
-    Preconditions.checkArgument(cfg.getInEdges(n).size() > 0);
-    TypeEnv inEnv = null;
+    Preconditions.checkArgument(!cfg.getInEdges(n).isEmpty());
+    Set<TypeEnv> envSet = Sets.newHashSet();
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : cfg.getInEdges(n)) {
       TypeEnv env = envs.get(de);
-      inEnv = (inEnv == null) ? env : TypeEnv.join(inEnv, env);
+      if (env != null) {
+        envSet.add(env);
+      }
     }
-    return inEnv == null ? new TypeEnv() : inEnv;
+    return TypeEnv.join(envSet);
   }
 
   private TypeEnv getOutEnv(Node n) {
-    Preconditions.checkState(cfg.getOutEdges(n).size() > 0);
-    TypeEnv outEnv = null;
+    Preconditions.checkArgument(!cfg.getOutEdges(n).isEmpty());
+    Set<TypeEnv> envSet = Sets.newHashSet();
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : cfg.getOutEdges(n)) {
       TypeEnv env = envs.get(de);
-      outEnv = (outEnv == null) ? env : TypeEnv.join(outEnv, env);
+      if (env != null) {
+        envSet.add(env);
+      }
     }
-    return outEnv == null ? new TypeEnv() : outEnv;
+    return TypeEnv.join(envSet);
   }
 
   private TypeEnv setOutEnv(Node n, TypeEnv e) {
+    if (cfg.getOutEdges(n).size() > 1) {
+      e = e.split();
+    }
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> de :
         cfg.getOutEdges(n)) {
       envs.put(de, e);
@@ -254,6 +262,9 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private TypeEnv setInEnv(Node n, TypeEnv e) {
+    if (cfg.getOutEdges(n).size() > 1) {
+      e = e.split();
+    }
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> de :
         cfg.getInEdges(n)) {
       envs.put(de, e);
@@ -264,11 +275,8 @@ public class NewTypeInference implements CompilerPass {
   // Initialize the type environments on the CFG edges before the FWD analysis.
   private void initEdgeEnvsFwd() {
     // TODO(dimvar): Revisit what we throw away after the bwd analysis
-    DiGraphNode<Node, ControlFlowGraph.Branch> entry = cfg.getEntry();
-    DiGraphEdge<Node, ControlFlowGraph.Branch> entryOutEdge =
-        cfg.getOutEdges(entry.getValue()).get(0);
-    TypeEnv entryEnv = envs.get(entryOutEdge);
-    initEdgeEnvs(new TypeEnv());
+    TypeEnv entryEnv = getInitTypeEnv();
+    initEdgeEnvs(null);
 
     // For function scopes, add the formal parameters and the free variables
     // from outer scopes to the environment.
@@ -307,12 +315,13 @@ public class NewTypeInference implements CompilerPass {
       entryEnv = envPutType(entryEnv, fnName, summaryType);
     }
     println("Keeping env: ", entryEnv);
-    envs.put(entryOutEdge, entryEnv);
+    setOutEnv(cfg.getEntry().getValue(), entryEnv);
   }
 
   // Initialize the type environments on the CFG edges before the BWD analysis.
   private void initEdgeEnvsBwd() {
     TypeEnv env = new TypeEnv();
+    env = env.split();
     Set<String> varNames = currentScope.getOuterVars();
     varNames.addAll(currentScope.getLocals());
     if (currentScope.isFunction()) {
@@ -340,6 +349,9 @@ public class NewTypeInference implements CompilerPass {
       }
       env = envPutType(env, fnName, summaryType);
     }
+    // Ideally, we would like to only set the in edges of the implicit return
+    // rather than all edges. However, throws can have out edges not connected
+    // to the implicit return, so we simply initialize all edges.
     initEdgeEnvs(env);
   }
 
@@ -989,6 +1001,7 @@ public class NewTypeInference implements CompilerPass {
           return rhsPair;
         } else if ((specializedType.isFalsy() && exprKind == Token.AND) ||
                    (specializedType.isTruthy() && exprKind == Token.OR)) {
+          inEnv = inEnv.split();
           EnvTypePair shortCircuitPair =
               analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, specializedType);
           EnvTypePair lhsPair = analyzeExprFwd(
@@ -997,6 +1010,7 @@ public class NewTypeInference implements CompilerPass {
               analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, specializedType);
           return EnvTypePair.join(rhsPair, shortCircuitPair);
         } else {
+          inEnv = inEnv.split();
           // Independently of the specializedType, && rhs is only analyzed when
           // lhs is truthy, and || rhs is only analyzed when lhs is falsy.
           JSType stopAfterLhsType = exprKind == Token.AND ?
@@ -1226,6 +1240,7 @@ public class NewTypeInference implements CompilerPass {
         Node cond = expr.getFirstChild();
         Node thenBranch = cond.getNext();
         Node elseBranch = thenBranch.getNext();
+        inEnv = inEnv.split();
         TypeEnv trueEnv =
             analyzeExprFwd(cond, inEnv, JSType.UNKNOWN, JSType.TRUE_TYPE).env;
         TypeEnv falseEnv =
@@ -2146,6 +2161,7 @@ public class NewTypeInference implements CompilerPass {
         Node cond = expr.getFirstChild();
         Node thenBranch = cond.getNext();
         Node elseBranch = thenBranch.getNext();
+        outEnv = outEnv.split();
         EnvTypePair thenPair =
             analyzeExprBwd(thenBranch, outEnv, requiredType);
         EnvTypePair elsePair =

@@ -901,8 +901,12 @@ class GlobalTypeInfo implements CompilerPass {
           }
         }
       }
-
-      return new Scope(fn, parentScope, formals, declFunType);
+      Scope s = new Scope(fn, parentScope, formals, declFunType);
+      for (String restFormal : tmpRestFormals) {
+        // Consider var_args as outer vars
+        s.addOuterVar(restFormal);
+      }
+      return s;
     }
 
     private JSType getVarTypeFromAnnotation(Node nameNode) {
