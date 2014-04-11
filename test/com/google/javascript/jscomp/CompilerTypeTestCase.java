@@ -55,7 +55,8 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
       " * @return {!Array.<T>}\n" +
       " * @template T,S\n" +
       " */" +
-      "goog.array.filter = function(arr, f, opt_obj){};" +
+      // return empty array to satisfy return type
+      "goog.array.filter = function(arr, f, opt_obj){ return []; };" +
       "goog.asserts = {};" +
       "/** @return {*} */ goog.asserts.assert = function(x) { return x; };";
 
