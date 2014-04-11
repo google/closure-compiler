@@ -213,7 +213,7 @@ class InlineObjectLiterals implements CompilerPass {
         // Make sure that the value is not self-referential. IOW,
         // disallow things like x = {b: x.a}.
         //
-        // TODO(user): Only exclude unorderable self-referential
+        // TODO(dimvar): Only exclude unorderable self-referential
         // assignments. i.e. x = {a: x.b, b: x.a} is not orderable,
         // but x = {a: 1, b: x.a} is.
         //

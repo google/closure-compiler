@@ -25,6 +25,7 @@ import java.util.List;
  * CompilerTestCase to run multiple passes and do sanity checks. The other files
  * that use CompilerTestCase unit test a single pass.
  *
+ * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public class MultiPassTest extends CompilerTestCase {
   private List<PassFactory> passes;

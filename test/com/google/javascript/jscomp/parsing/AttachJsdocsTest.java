@@ -106,7 +106,7 @@ public class AttachJsdocsTest extends BaseJSTypeTestCase {
 
   public void testOldJsdocCall3() {
     // Incorrect attachment b/c the parser doesn't preserve comma positions.
-    // TODO(user): if this case comes up often, modify the parser to
+    // TODO(dimvar): if this case comes up often, modify the parser to
     // remember comma positions for function decls and calls and fix the bug.
     Node root = parse("foo(1 /** attach to 2nd parameter */, 2);");
     Node call = root.getFirstChild().getFirstChild();

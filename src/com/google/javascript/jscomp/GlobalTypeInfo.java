@@ -124,7 +124,7 @@ class GlobalTypeInfo implements CompilerPass {
   // Keyed on RawNominalType ids and property names
   private HashBasedTable<Integer, String, PropertyDef> propertyDefs =
       HashBasedTable.create();
-  // TODO(user): Eventually attach these to nodes, like the current types.
+  // TODO(dimvar): Eventually attach these to nodes, like the current types.
   private Map<Node, JSType> castTypes = Maps.newHashMap();
   private Map<Node, JSType> declaredObjLitProps = Maps.newHashMap();
 
@@ -495,7 +495,7 @@ class GlobalTypeInfo implements CompilerPass {
           if (name == null || "undefined".equals(name) || parent.isFunction()) {
             return;
           }
-          // TODO(user): Handle local scopes introduced by catch properly,
+          // TODO(dimvar): Handle local scopes introduced by catch properly,
           // after we decide what to do with variables in general, eg, will we
           // use unique numeric ids?
           if (parent.isVar() || parent.isCatch()) {
@@ -656,7 +656,7 @@ class GlobalTypeInfo implements CompilerPass {
       JSType propDeclType;
       Scope methodScope = null;
       if (initializer != null && initializer.isFunction()) {
-        // TODO(user): we must do this for any function "defined" as the rhs
+        // TODO(dimvar): we must do this for any function "defined" as the rhs
         // of an assignment to a property, not just when the property is a
         // prototype property.
         methodScope = visitFunctionDef(initializer, rawType);
@@ -775,7 +775,7 @@ class GlobalTypeInfo implements CompilerPass {
       ImmutableList<String> typeParameters =
           fnDoc == null ? null : fnDoc.getTemplateTypeNames();
 
-      // TODO(user): warn if multiple jsdocs for a fun
+      // TODO(dimvar): warn if multiple jsdocs for a fun
 
       // Compute the types of formals and the return type
       FunctionTypeBuilder builder =
@@ -967,7 +967,7 @@ class GlobalTypeInfo implements CompilerPass {
       return NodeUtil.getFunctionBody(root);
     }
 
-    // TODO(user): don't return null for anonymous functions
+    // TODO(dimvar): don't return null for anonymous functions
     String getReadableName() {
       return readableName;
     }

@@ -248,7 +248,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "Illegal key, the object literal is a {0}");
 
   // If a diagnostic is disabled by default, do not add it in this list
-  // TODO(user): Either INEXISTENT_PROPERTY shouldn't be here, or we should
+  // TODO(dimvar): Either INEXISTENT_PROPERTY shouldn't be here, or we should
   // change DiagnosticGroups.setWarningLevel to not accidentally enable it.
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       DETERMINISTIC_TEST,

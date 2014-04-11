@@ -1265,7 +1265,7 @@ class IRFactory {
     Node processVariableInitializer(VariableInitializer initializerNode) {
       Node node;
       Comment comment = initializerNode.getTarget().getJsDocNode();
-      // TODO(user): At some point, consider allowing only inline jsdocs for
+      // TODO(dimvar): At some point, consider allowing only inline jsdocs for
       // variable initializers
       if (comment != null && !comment.getValue().contains("@")) {
         node = transformNodeWithInlineJsDoc(initializerNode.getTarget());

@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 /**
  * Unit tests for PerformanceTracker.
  *
+ * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public class PerformanceTrackerTest extends TestCase {
   private Node emptyScript = new Node(Token.SCRIPT);

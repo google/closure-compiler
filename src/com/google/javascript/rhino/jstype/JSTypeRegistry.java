@@ -1662,7 +1662,7 @@ public class JSTypeRegistry implements Serializable {
               // SomeType is not actually a valid type. To prevent these clients
               // from seeing unknown type errors, we explicitly don't parse
               // these types.
-              // TODO(user): Address this issue by removing bad template
+              // TODO(dimvar): Address this issue by removing bad template
               // annotations on non-templatized classes.
               if (++templateNodeIndex > nAllowedTypes) {
                 break;

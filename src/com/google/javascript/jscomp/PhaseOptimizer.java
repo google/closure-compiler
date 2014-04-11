@@ -86,7 +86,7 @@ class PhaseOptimizer implements CompilerPass {
     RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER
   }
 
-  // NOTE(user): There used to be some code that tried various orderings of
+  // NOTE(dimvar): There used to be some code that tried various orderings of
   // loopable passes and picked the fastest one. This code became stale
   // gradually and I decided to remove it. It was also never tried after the
   // new pass scheduler was written. If we need to revisit this order in the

@@ -498,7 +498,7 @@ public class JSTypeCreatorFromJSDoc {
     Node params = funNode.getFirstChild().getNext();
     ImmutableList<String> typeParameters = null;
 
-    // TODO(user): need more @template warnings
+    // TODO(dimvar): need more @template warnings
     // - warn for multiple @template annotations
     // - warn for @template annotation w/out usage
 
@@ -532,7 +532,7 @@ public class JSTypeCreatorFromJSDoc {
             getTypeFromNode(jsdocNode, ownerType, registry, typeParameters);
       }
       if (inlineParamType != null) {
-        // TODO(user): The support for inline optional parameters is currently
+        // TODO(dimvar): The support for inline optional parameters is currently
         // broken, so this is always a required parameter. See b/11481388. Fix.
         builder.addReqFormal(inlineParamType);
         if (fnParamType != null) {

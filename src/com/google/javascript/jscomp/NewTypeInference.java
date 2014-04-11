@@ -263,7 +263,7 @@ public class NewTypeInference implements CompilerPass {
 
   // Initialize the type environments on the CFG edges before the FWD analysis.
   private void initEdgeEnvsFwd() {
-    // TODO(user): Revisit what we throw away after the bwd analysis
+    // TODO(dimvar): Revisit what we throw away after the bwd analysis
     DiGraphNode<Node, ControlFlowGraph.Branch> entry = cfg.getEntry();
     DiGraphEdge<Node, ControlFlowGraph.Branch> entryOutEdge =
         cfg.getOutEdges(entry.getValue()).get(0);
@@ -490,7 +490,7 @@ public class NewTypeInference implements CompilerPass {
             if (declType == null) {
               requiredType = inferredType;
             } else {
-              // TODO(user): look if the meet is needed
+              // TODO(dimvar): look if the meet is needed
               requiredType = JSType.meet(declType, inferredType);
               if (requiredType.isBottom()) {
                 requiredType = JSType.UNKNOWN;
@@ -641,7 +641,7 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
-  // TODO(user): differentiate for/in to not treat its cond as boolean, but
+  // TODO(dimvar): differentiate for/in to not treat its cond as boolean, but
   // as an assignment to a string.
   private void analyzeConditionalStmFwd(Node stm, Node cond, TypeEnv inEnv) {
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge :
@@ -754,7 +754,7 @@ public class NewTypeInference implements CompilerPass {
     summaries.put(fn, summary);
   }
 
-  // TODO(user): fix so we get the adjusted end-of-fwd type for objs too
+  // TODO(dimvar): fix so we get the adjusted end-of-fwd type for objs too
   private JSType getFormalTypeAfterFwd(String formalName, JSType typeAfterBwd,
       TypeEnv exitEnv, Multimap<String, String> taints) {
     JSType typeAfterFwd = typeAfterBwd;
@@ -775,7 +775,7 @@ public class NewTypeInference implements CompilerPass {
     if (!NodeUtil.isPrototypeMethod(fn)) {
       return false;
     }
-    // TODO(user): We need all the qname here before .prototype, not just
+    // TODO(dimvar): We need all the qname here before .prototype, not just
     // the qname root; see testAnnotatedPropertyOnInterface1
     String typeName =
         NodeUtil.getRootOfQualifiedName(fn.getParent().getFirstChild())
@@ -1351,7 +1351,7 @@ public class NewTypeInference implements CompilerPass {
         JSType reqObjType = pickReqObjType(expr);
         EnvTypePair pair = analyzeExprFwd(receiver, inEnv, reqObjType);
         JSType recvType = pair.type;
-        // TODO(user): we don't know the prop name here so we're passing the
+        // TODO(dimvar): we don't know the prop name here so we're passing the
         // empty string. Consider improving the error msg.
         if (!mayWarnAboutNonObject(receiver, "", recvType, specializedType) &&
             !mayWarnAboutStructPropAccess(receiver, recvType)) {
@@ -1777,7 +1777,7 @@ public class NewTypeInference implements CompilerPass {
     if (!propAccessNode.getParent().isExprResult() &&
         !specializedType.isTruthy() && !specializedType.isFalsy()) {
       if (!recvType.mayHaveProp(propQname)) {
-        // TODO(user): maybe don't warn if the getprop is inside a typeof,
+        // TODO(dimvar): maybe don't warn if the getprop is inside a typeof,
         // see testMissingProperty8 (who relies on that for prop checking?)
         warnings.add(JSError.make(propAccessNode, TypeCheck.INEXISTENT_PROPERTY,
                 pname, recvType.toString()));

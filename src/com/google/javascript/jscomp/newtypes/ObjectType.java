@@ -35,7 +35,7 @@ import java.util.SortedSet;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public class ObjectType {
-  // TODO(user): currently, we can't distinguish between an obj at the top of
+  // TODO(dimvar): currently, we can't distinguish between an obj at the top of
   // the proto chain (nominalType = null) and an obj for which we can't figure
   // out its class
   private final NominalType nominalType;
@@ -97,7 +97,7 @@ public class ObjectType {
         return false;
       }
     }
-    // TODO(user): do we need a stricter check for functions?
+    // TODO(dimvar): do we need a stricter check for functions?
     return true;
   }
 
@@ -495,7 +495,7 @@ public class ObjectType {
   static ImmutableSet<ObjectType> meetSetsHelper(
       boolean specializeObjs1,
       Set<ObjectType> objs1, Set<ObjectType> objs2) {
-    // TODO(user): handle greatest lower bound of interface types
+    // TODO(dimvar): handle greatest lower bound of interface types
     if (objs1 == null || objs2 == null) {
       return null;
     }

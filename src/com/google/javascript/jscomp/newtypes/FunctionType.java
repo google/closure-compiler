@@ -298,11 +298,11 @@ public class FunctionType {
       //  */
       // Foo.prototype.method = function(x) {};
 
-      // TODO(user): This also comes up in inheritance of classes with
+      // TODO(dimvar): This also comes up in inheritance of classes with
       // polymorphic methods; fix for that.
       return true;
     }
-    Preconditions.checkState(!other.isGeneric()); // TODO(user): implement it
+    Preconditions.checkState(!other.isGeneric()); // TODO(dimvar): implement it
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     int i = 0;
     for (; i < other.requiredFormals.size(); i++) {

@@ -187,7 +187,7 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
    * @return True iff a cycle was detected.
    */
   final boolean detectInheritanceCycle() {
-    // TODO(user): This should get moved to preventing cycles in FunctionTypeBuilder
+    // TODO(dimvar): This should get moved to preventing cycles in FunctionTypeBuilder
     // rather than removing them here after they have been created.
     // Also, this doesn't do the right thing for extended interfaces, though that is
     // masked by another bug.

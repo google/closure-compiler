@@ -43,7 +43,7 @@ import java.util.logging.Logger;
  *
  */
 
-// TODO(user): Besides dead code after returns, this pass removes useless live
+// TODO(dimvar): Besides dead code after returns, this pass removes useless live
 // code such as breaks/continues/returns and stms w/out side effects.
 // These things don't require reachability info, consider making them their own
 // pass or putting them in some other, more related pass.
