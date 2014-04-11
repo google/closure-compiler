@@ -199,7 +199,7 @@ public class JSTypeCreatorFromJSDoc {
       case "Function":
         return JSType.qmarkFunction();
       case "Object":
-        return JSType.TOP_OBJECT;
+        return JSType.join(JSType.TOP_OBJECT, JSType.NULL);
       default: {
         if (hasTypeVariable(outerTypeParameters, ownerType, typeName)) {
           return JSType.fromTypeVar(typeName);

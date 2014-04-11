@@ -107,6 +107,10 @@ class GlobalTypeInfo implements CompilerPass {
       "JSC_CONSTRUCTOR_REQUIRED",
       "{0} used without @constructor.");
 
+  static final DiagnosticType INEXISTENT_PARAM = DiagnosticType.warning(
+      "JSC_INEXISTENT_PARAM",
+      "parameter {0} does not appear in {1}''s parameter list");
+
   // Invariant: if a scope s1 contains a scope s2, then s2 is before s1 in
   // scopes. The type inference relies on this fact to process deeper scopes
   // before shallower scopes.
@@ -872,6 +876,8 @@ class GlobalTypeInfo implements CompilerPass {
       // may ignore the jsdoc; the only reliable way is to collect the names of
       // formals after building the declared function type.
       ArrayList<String> formals = Lists.newArrayList();
+      // tmpRestFormals is used only for error checking
+      ArrayList<String> tmpRestFormals = Lists.newArrayList();
       Node param = NodeUtil.getFunctionParameters(fn).getFirstChild();
       int optionalArity = declFunType.getOptionalArity();
       int formalIndex = 0;
@@ -880,9 +886,20 @@ class GlobalTypeInfo implements CompilerPass {
             // The jsdoc says restarg, but the jsdoc was ignored
             formalIndex < optionalArity) {
           formals.add(param.getString());
+        } else {
+          tmpRestFormals.add(param.getString());
         }
         param = param.getNext();
         formalIndex++;
+      }
+      if (fnDoc != null) {
+        for (String formalInJsdoc : fnDoc.getParameterNames()) {
+          if (!formals.contains(formalInJsdoc) &&
+              !tmpRestFormals.contains(formalInJsdoc)) {
+            warnings.add(JSError.make(
+                fn, INEXISTENT_PARAM, formalInJsdoc, functionName));
+          }
+        }
       }
 
       return new Scope(fn, parentScope, formals, declFunType);

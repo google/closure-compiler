@@ -137,7 +137,7 @@ public class JSTypeTest extends TestCase {
     assertEquals("bottom", BOTTOM.toString());
     assertEquals("boolean|number", JSType.join(BOOLEAN, NUMBER).toString());
     assertEquals("top", TOP.toString());
-    assertEquals("unknown", UNKNOWN.toString());
+    assertEquals("?", UNKNOWN.toString());
     assertEquals("function (): number", fromNothingToNumber.toString());
     assertEquals("function (): number|number",
         JSType.join(NUMBER, fromNothingToNumber).toString());

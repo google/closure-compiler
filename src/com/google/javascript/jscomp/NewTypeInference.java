@@ -165,7 +165,7 @@ public class NewTypeInference implements CompilerPass {
   GlobalTypeInfo symbolTable;
   static final String RETVAL_ID = "%return";
   private JSType arrayType, regexpType; // used for array and regexp literals
-  private static boolean debugging = false;
+  private static boolean debugging = true;
 
   NewTypeInference(AbstractCompiler compiler) {
     this.warnings = Sets.newHashSet();
@@ -1252,6 +1252,8 @@ public class NewTypeInference implements CompilerPass {
         } else if (funType.isLoose()) {
           return analyzeLooseCallNodeFwd(expr, inEnv, requiredType);
         } else if (expr.isCall() && funType.isConstructor()) {
+          // TODO(dimvar): handle constructors with @return; they can be called
+          // without new, eg, Number in es3.js
           warnings.add(JSError.make(
               expr, TypeCheck.CONSTRUCTOR_NOT_CALLABLE, funType.toString()));
           return analyzeCallNodeArgumentsFwd(expr, inEnv);
@@ -1518,6 +1520,7 @@ public class NewTypeInference implements CompilerPass {
     EnvTypePair pair;
     Node typeofRand = typeof.getFirstChild();
     JSType comparedType = getTypeFromString(typeString);
+    checkInvalidTypename(typeString);
     if (comparedType.isUnknown()) {
       pair = analyzeExprFwd(typeofRand, inEnv);
       pair = analyzeExprFwd(typeString, pair.env);
@@ -1553,6 +1556,26 @@ public class NewTypeInference implements CompilerPass {
         return JSType.join(JSType.NULL, JSType.TOP_OBJECT);
       default:
         return JSType.UNKNOWN;
+    }
+  }
+
+  private void checkInvalidTypename(Node typeString) {
+    if (!typeString.isString()) {
+      return;
+    }
+    String typeName = typeString.getString();
+    switch (typeName) {
+      case "number":
+      case "string":
+      case "boolean":
+      case "undefined":
+      case "function":
+      case "object":
+      case "unknown": // IE-specific type name
+        break;
+      default:
+        warnings.add(JSError.make(
+            typeString, TypeValidator.UNKNOWN_TYPEOF_VALUE, typeName));
     }
   }
 

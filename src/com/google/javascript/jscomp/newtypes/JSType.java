@@ -840,7 +840,7 @@ public class JSType {
       case UNDEFINED_MASK:
         return "undefined";
       case UNKNOWN_MASK:
-        return "unknown";
+        return "?";
       case TYPEVAR_MASK:
         return T;
       default: // Must be a union type.
