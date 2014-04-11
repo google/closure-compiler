@@ -237,6 +237,7 @@ public class NodeTest extends TestCase {
 
   public void testMatchesQualifiedName1() {
     assertTrue(IR.name("a").matchesQualifiedName("a"));
+    assertFalse(IR.name("a").matchesQualifiedName("ab"));
     assertFalse(IR.name("a").matchesQualifiedName("a.b"));
     assertFalse(IR.name("a").matchesQualifiedName((String) null));
     assertFalse(IR.name("a").matchesQualifiedName(".b"));
@@ -244,8 +245,12 @@ public class NodeTest extends TestCase {
 
     assertFalse(qname("a.b").matchesQualifiedName("a"));
     assertTrue(qname("a.b").matchesQualifiedName("a.b"));
+    assertFalse(qname("a.b").matchesQualifiedName("a.bc"));
     assertFalse(qname("a.b").matchesQualifiedName(".b"));
     assertFalse(qname("a.b").matchesQualifiedName("this.b"));
+
+    assertTrue(qname("this").matchesQualifiedName("this"));
+    assertFalse(qname("this").matchesQualifiedName("thisx"));
 
     assertFalse(qname("this.b").matchesQualifiedName("a"));
     assertFalse(qname("this.b").matchesQualifiedName("a.b"));

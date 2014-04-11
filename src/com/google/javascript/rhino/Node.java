@@ -1650,6 +1650,7 @@ public class Node implements Cloneable, Serializable {
       case Token.GETPROP:
         String prop = getLastChild().getString();
         return start > 1
+            && prop.length() == endIndex - start
             && prop.regionMatches(0, qname, start, endIndex - start)
             && getFirstChild().matchesQualifiedName(qname, start - 1);
       default:
