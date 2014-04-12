@@ -46,6 +46,16 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   static final DiagnosticType READ_ERROR = DiagnosticType.error(
       "JSC_READ_ERROR", "Cannot read: {0}");
 
+  /**
+   * Will be called before each pass runs.
+   */
+  void beforePass(String passName) {}
+
+  /**
+   * Will be called after each pass finishes.
+   */
+  void afterPass(String passName) {}
+
   private LifeCycleStage stage = LifeCycleStage.RAW;
 
   // For passes that traverse a list of functions rather than the AST.

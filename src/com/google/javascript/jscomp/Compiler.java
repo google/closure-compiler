@@ -1288,6 +1288,7 @@ public class Compiler extends AbstractCompiler {
     }
 
     Tracer tracer = newTracer(PARSING_PASS_NAME);
+    beforePass(PARSING_PASS_NAME);
 
     try {
       // Parse externs sources.
@@ -1383,6 +1384,7 @@ public class Compiler extends AbstractCompiler {
       }
       return externAndJsRoot;
     } finally {
+      afterPass(PARSING_PASS_NAME);
       stopTracer(tracer, PARSING_PASS_NAME);
     }
   }

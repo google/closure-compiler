@@ -265,10 +265,16 @@ class PhaseOptimizer implements CompilerPass {
         tracker.recordPassStart(name, factory.isOneTimePass());
       }
       tracer = new Tracer("JSCompiler");
+
+      compiler.beforePass(name);
+
       // Delay the creation of the actual pass until *after* all previous passes
       // have been processed.
       // Some precondition checks rely on this, eg, in CoalesceVariableNames.
       factory.create(compiler).process(externs, root);
+
+      compiler.afterPass(name);
+
       try {
         if (progressRange == null) {
           compiler.setProgress(-1, name);
