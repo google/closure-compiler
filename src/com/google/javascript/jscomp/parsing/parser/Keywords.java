@@ -16,7 +16,11 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
-import java.util.HashMap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * The javascript keywords.
@@ -76,16 +80,18 @@ public enum Keywords {
     TRUE("true", TokenType.TRUE),
     FALSE("false", TokenType.FALSE);
 
-  private static final HashMap<String, Keywords> keywordsByName =
-      new HashMap<>();
-  private static final HashMap<TokenType, Keywords> keywordsByType =
-      new HashMap<>();
+  private static final Map<String, Keywords> KEYWORDS_BY_NAME;
+  private static final Map<TokenType, Keywords> KEYWORDS_BY_TYPE;
 
   static {
+    ImmutableMap.Builder<String, Keywords> keywordsByName = ImmutableMap.builder();
+    EnumMap<TokenType, Keywords> keywordsByType = new EnumMap<>(TokenType.class);
     for (Keywords kw : Keywords.values()) {
       keywordsByName.put(kw.value, kw);
       keywordsByType.put(kw.type, kw);
     }
+    KEYWORDS_BY_NAME = keywordsByName.build();
+    KEYWORDS_BY_TYPE = Maps.immutableEnumMap(keywordsByType);
   }
 
   public final String value;
@@ -131,14 +137,14 @@ public enum Keywords {
   }
 
   public static TokenType getTokenType(String value) {
-    return keywordsByName.get(value).type;
+    return KEYWORDS_BY_NAME.get(value).type;
   }
 
   public static Keywords get(String value) {
-    return keywordsByName.get(value);
+    return KEYWORDS_BY_NAME.get(value);
   }
 
   public static Keywords get(TokenType token) {
-    return keywordsByType.get(token);
+    return KEYWORDS_BY_TYPE.get(token);
   }
 }

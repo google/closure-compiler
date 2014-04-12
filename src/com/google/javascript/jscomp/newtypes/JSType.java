@@ -765,7 +765,7 @@ public class JSType {
     if (length == desiredLength) {
       return typeList;
     }
-    ImmutableList.Builder builder = ImmutableList.builder();
+    ImmutableList.Builder<JSType> builder = ImmutableList.builder();
     for (int i = 0; i < desiredLength; i++) {
       builder.add(i < length ? typeList.get(i) : UNKNOWN);
     }

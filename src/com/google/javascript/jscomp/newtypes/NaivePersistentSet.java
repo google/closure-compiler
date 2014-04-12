@@ -30,19 +30,19 @@ public class NaivePersistentSet<K> extends PersistentSet<K> {
   }
 
   public static <K> PersistentSet<K> create()  {
-    return new NaivePersistentSet(Sets.newHashSet());
+    return new NaivePersistentSet<K>(Sets.<K>newHashSet());
   }
 
   public PersistentSet<K> with(K key) {
     Set<K> newSet = Sets.newHashSet(this.set);
     newSet.add(key);
-    return new NaivePersistentSet(newSet);
+    return new NaivePersistentSet<>(newSet);
   }
 
   public PersistentSet<K> without(K key) {
     Set<K> newSet = Sets.newHashSet(this.set);
     newSet.remove(key);
-    return new NaivePersistentSet(newSet);
+    return new NaivePersistentSet<>(newSet);
   }
 
   @Override

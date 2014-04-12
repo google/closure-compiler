@@ -1643,7 +1643,7 @@ public class NewTypeInference implements CompilerPass {
       typeEnv = pair.env;
       i++;
     }
-    ImmutableMap.Builder builder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
     for (String typeParam : typeParameters) {
       Collection<JSType> types = typeMultimap.get(typeParam);
       if (types.size() > 1) {
