@@ -149,13 +149,12 @@ public class ParserRunner {
    * @param errorReporter An error.
    * @param logger A logger.
    * @return The AST of the given text.
-   * @throws IOException
    */
   public static ParseResult parseEs5(StaticSourceFile sourceFile,
                                   String sourceString,
                                   Config config,
                                   ErrorReporter errorReporter,
-                                  Logger logger) throws IOException {
+                                  Logger logger) {
     Context cx = Context.enter();
     cx.setErrorReporter(errorReporter);
     cx.setLanguageVersion(Context.VERSION_1_5);
@@ -262,13 +261,12 @@ public class ParserRunner {
    * @param errorReporter An error.
    * @param logger A logger.
    * @return The AST of the given text.
-   * @throws IOException
    */
   public static ParseResult parseEs6(StaticSourceFile sourceFile,
                                   String sourceString,
                                   Config config,
                                   ErrorReporter errorReporter,
-                                  Logger logger) throws IOException {
+                                  Logger logger) {
     com.google.javascript.jscomp.parsing.parser.SourceFile file =
         new com.google.javascript.jscomp.parsing.parser.SourceFile(
             sourceFile.getName(), sourceString);

@@ -25,7 +25,6 @@ import com.google.javascript.rhino.jstype.SimpleSourceFile;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
-import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
@@ -785,14 +784,10 @@ public class AttachJsdocsTest extends BaseJSTypeTestCase {
   private Node parse(String string, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
     Node script = null;
-    try {
-      StaticSourceFile file = new SimpleSourceFile("input", false);
-      script = ParserRunner.parseEs6(
-          file, string, ParserRunner.createConfig(true, mode, false),
-          testErrorReporter, Logger.getAnonymousLogger()).ast;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    StaticSourceFile file = new SimpleSourceFile("input", false);
+    script = ParserRunner.parseEs6(
+        file, string, ParserRunner.createConfig(true, mode, false),
+        testErrorReporter, Logger.getAnonymousLogger()).ast;
 
     // verifying that all warnings were seen
     assertTrue(testErrorReporter.hasEncounteredAllErrors());

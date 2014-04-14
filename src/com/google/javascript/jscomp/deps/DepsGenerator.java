@@ -383,11 +383,8 @@ public class DepsGenerator {
 
   /**
    * Writes goog.addDependency() lines for each DependencyInfo in depInfos.
-   * @throws IOException Occurs upon an IO error.
    */
-  private void writeDepInfos(PrintStream out,
-      Collection<DependencyInfo> depInfos
-  ) throws IOException {
+  private void writeDepInfos(PrintStream out, Collection<DependencyInfo> depInfos) {
     // Print dependencies.
     // Lines look like this:
     // goog.addDependency('../../path/to/file.js', ['goog.Delay'],

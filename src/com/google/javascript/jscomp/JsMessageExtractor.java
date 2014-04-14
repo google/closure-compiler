@@ -113,12 +113,10 @@ public class JsMessageExtractor {
    *
    * @param inputs  the JavaScript source code inputs
    * @return the extracted messages collection
-   * @throws IOException if there is a problem reading the JS code
    * @throws RuntimeException if there are problems parsing the JS code or the
    *     JS messages, or if two messages have the same key
    */
-  public <T extends SourceFile> Collection<JsMessage> extractMessages(
-      Iterable<T> inputs) throws IOException {
+  public <T extends SourceFile> Collection<JsMessage> extractMessages(Iterable<T> inputs) {
 
     Compiler compiler = new Compiler();
     compiler.init(
