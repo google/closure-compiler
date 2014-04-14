@@ -264,8 +264,9 @@ class SpecializeModule implements CompilerPass {
    * root pointers).
    */
   private void replaceOriginalModuleInputsWithSpecialized() {
-    for (Node original : specializedInputRootsByOriginal.keySet()) {
-      Node specialized = specializedInputRootsByOriginal.get(original);
+    for (Map.Entry<Node, Node> nodeEntry : specializedInputRootsByOriginal.entrySet()) {
+      Node original = nodeEntry.getKey();
+      Node specialized = nodeEntry.getValue();
 
       original.removeChildren();
 
@@ -286,11 +287,11 @@ class SpecializeModule implements CompilerPass {
    * TODO(dcc): Be smarter about whether we need a VAR here or not.
    */
   private void addDummyVarDeclarationsToInitialModule(JSModule module) {
-    for (Node modifiedFunction :
-      functionInfoBySpecializedFunctionNode.keySet()) {
-     if (specializationState.getRemovedFunctions().contains(modifiedFunction)) {
-       OriginalFunctionInformation originalInfo =
-         functionInfoBySpecializedFunctionNode.get(modifiedFunction);
+    for (Map.Entry<Node, OriginalFunctionInformation> nodeEntry :
+        functionInfoBySpecializedFunctionNode.entrySet()) {
+      Node modifiedFunction = nodeEntry.getKey();
+      if (specializationState.getRemovedFunctions().contains(modifiedFunction)) {
+       OriginalFunctionInformation originalInfo = nodeEntry.getValue();
 
        if (originalInfo.name != null && originalInfo.originalWasDeclaration()) {
          Node block = specializationState.removedFunctionToBlock.get(

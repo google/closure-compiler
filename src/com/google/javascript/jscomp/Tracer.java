@@ -900,11 +900,11 @@ final class Tracer {
         }
       }
 
-      for (String key : stats.keySet()) {
-        Stat stat = stats.get(key);
+      for (Map.Entry<String, Stat> statEntry : stats.entrySet()) {
+        Stat stat = statEntry.getValue();
         if (stat.count > 1) {
           sb.append(" TOTAL ").
-             append(key).
+             append(statEntry.getKey()).
              append(" ").
              append(stat.count).
              append(" (").

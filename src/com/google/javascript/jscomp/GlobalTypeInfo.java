@@ -207,9 +207,9 @@ class GlobalTypeInfo implements CompilerPass {
       s.finalizeScope();
     }
     Map<Node, String> unknownTypes = typeParser.getUnknownTypesMap();
-    for (Node unknownTypeNode : unknownTypes.keySet()) {
-      warnings.add(JSError.make(unknownTypeNode, UNRECOGNIZED_TYPE_NAME,
-            unknownTypes.get(unknownTypeNode)));
+    for (Map.Entry<Node, String> unknownTypeEntry : unknownTypes.entrySet()) {
+      warnings.add(JSError.make(unknownTypeEntry.getKey(), UNRECOGNIZED_TYPE_NAME,
+          unknownTypeEntry.getValue()));
     }
     // The jsdoc parser doesn't have access to the error functions in the jscomp
     // package, so we collect its warnings here.

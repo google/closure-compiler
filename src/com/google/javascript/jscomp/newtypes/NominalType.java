@@ -91,9 +91,10 @@ public class NominalType {
         builder.put(oldKey, typeMap.get(oldKey).substituteGenerics(newTypeMap));
       }
     } else {
-      for (String newKey : newTypeMap.keySet()) {
+      for (Map.Entry<String, JSType> newTypeEntry : newTypeMap.entrySet()) {
+        String newKey = newTypeEntry.getKey();
         if (rawType.typeParameters.contains(newKey)) {
-          builder.put(newKey, newTypeMap.get(newKey));
+          builder.put(newKey, newTypeEntry.getValue());
         }
       }
     }
@@ -165,7 +166,7 @@ public class NominalType {
 
   boolean isSubclassOf(NominalType other) {
     if (rawType.equals(other.rawType)) {
-      for (String typeVar :rawType.getTypeParameters()) {
+      for (String typeVar : rawType.getTypeParameters()) {
         Preconditions.checkState(typeMap.containsKey(typeVar),
             "Type variable %s not in the domain: %s",
             typeVar, typeMap.keySet());
@@ -222,7 +223,7 @@ public class NominalType {
     Preconditions.checkState(!typeMap.isEmpty());
     Preconditions.checkState(!other.typeMap.isEmpty());
     boolean hasUnified = true;
-    for (String typeParam: rawType.typeParameters) {
+    for (String typeParam : rawType.typeParameters) {
       hasUnified = hasUnified && typeMap.get(typeParam).unifyWith(
           other.typeMap.get(typeParam), typeParameters, typeMultimap);
     }
@@ -427,7 +428,7 @@ public class NominalType {
         return p;
       }
       if (interfaces != null) {
-        for (NominalType interf: interfaces) {
+        for (NominalType interf : interfaces) {
           p = interf.getProp(pname);
           if (p != null) {
             return p;
@@ -476,7 +477,7 @@ public class NominalType {
       if (allProps == null) {
         ImmutableSet.Builder<String> builder = ImmutableSet.builder();
         if (interfaces != null) {
-          for (NominalType interf: interfaces) {
+          for (NominalType interf : interfaces) {
             builder.addAll(interf.rawType.getAllPropsOfInterface());
           }
         }

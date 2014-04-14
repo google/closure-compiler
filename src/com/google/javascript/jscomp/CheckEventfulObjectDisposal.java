@@ -510,9 +510,9 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
      * Some types are only on one or the other side of the
      * inference.
      */
-    for (String r : eventizes.keySet()) {
-      color.put(r, white);
-      for (String s : eventizes.get(r)) {
+    for (Map.Entry<String, Set<String>> eventizesEntry : eventizes.entrySet()) {
+      color.put(eventizesEntry.getKey(), white);
+      for (String s : eventizesEntry.getValue()) {
         color.put(s, white);
       }
     }
@@ -1019,9 +1019,9 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
 
     private void addDisposeArgumentsMatched(Map<String, List<Integer>> map,
         Node n, String property, List<Node> foundDisposeCalls) {
-      for (String disposeMethod : map.keySet()) {
-        if (property.endsWith(disposeMethod)) {
-          List<Integer> disposeArguments = map.get(disposeMethod);
+      for (Map.Entry<String, List<Integer>> disposeCallsEntry : map.entrySet()) {
+        if (property.endsWith(disposeCallsEntry.getKey())) {
+          List<Integer> disposeArguments = disposeCallsEntry.getValue();
 
           // Dispose specific arguments only
           Node t = n.getNext();
@@ -1076,11 +1076,12 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
         baseType = base.getJSType();
       }
 
-      for (JSType key : disposeCalls.keySet()) {
+      for (Map.Entry<JSType, Map<String, List<Integer>>> disposeCallEntry :
+          disposeCalls.entrySet()) {
+        JSType key = disposeCallEntry.getKey();
         if (key == null ||
             (baseType != null && isPossiblySubtype(baseType, key))) {
-          addDisposeArgumentsMatched(disposeCalls.get(key), first, property,
-              ret);
+          addDisposeArgumentsMatched(disposeCallEntry.getValue(), first, property, ret);
         }
       }
 

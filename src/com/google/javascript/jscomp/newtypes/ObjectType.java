@@ -83,8 +83,9 @@ public class ObjectType {
   /** Construct an object with the given declared non-optional properties. */
   static ObjectType fromProperties(Map<String, JSType> propTypes) {
     PersistentMap<String, Property> props = PersistentMap.create();
-    for (String propName : propTypes.keySet()) {
-      JSType propType = propTypes.get(propName);
+    for (Map.Entry<String, JSType> propTypeEntry : propTypes.entrySet()) {
+      String propName = propTypeEntry.getKey();
+      JSType propType = propTypeEntry.getValue();
       props = props.with(propName, new Property(propType, propType, false));
     }
     return ObjectType.makeObjectType(
@@ -229,18 +230,20 @@ public class ObjectType {
       NominalType resultNominalType,
       Map<String, Property> props1, Map<String, Property> props2) {
     PersistentMap<String, Property> newProps = PersistentMap.create();
-    for (String pname : props1.keySet()) {
+    for (Map.Entry<String, Property> propsEntry : props1.entrySet()) {
+      String pname = propsEntry.getKey();
       if (!props2.containsKey(pname)) {
-        newProps = mayPutProp(pname, props1.get(pname), newProps, resultNominalType);
+        newProps = mayPutProp(pname, propsEntry.getValue(), newProps, resultNominalType);
       }
     }
-    for (String pname : props2.keySet()) {
-      Property prop2 = props2.get(pname);
+    for (Map.Entry<String, Property> propsEntry : props2.entrySet()) {
+      String pname = propsEntry.getKey();
+      Property prop2 = propsEntry.getValue();
       Property newProp;
       if (props1.containsKey(pname)) {
         newProp = specializeProps1 ?
             props1.get(pname).specialize(prop2) :
-            Property.meet(props1.get(pname), prop2);
+            Property.meet(props1.get(propsEntry.getKey()), prop2);
       } else {
         newProp = prop2;
       }
@@ -265,13 +268,15 @@ public class ObjectType {
   private static PersistentMap<String, Property> joinProps(
       Map<String, Property> props1, Map<String, Property> props2) {
     PersistentMap<String, Property> newProps = PersistentMap.create();
-    for (String pname : props1.keySet()) {
+    for (Map.Entry<String, Property> propsEntry : props1.entrySet()) {
+      String pname = propsEntry.getKey();
       if (!props2.containsKey(pname)) {
-        newProps = newProps.with(pname, props1.get(pname).withOptional());
+        newProps = newProps.with(pname, propsEntry.getValue().withOptional());
       }
     }
-    for (String pname : props2.keySet()) {
-      Property prop2 = props2.get(pname);
+    for (Map.Entry<String, Property> propsEntry : props2.entrySet()) {
+      String pname = propsEntry.getKey();
+      Property prop2 = propsEntry.getValue();
       if (props1.containsKey(pname)) {
         newProps = newProps.with(pname, Property.join(props1.get(pname), prop2));
       } else {
@@ -284,13 +289,15 @@ public class ObjectType {
   private static PersistentMap<String, Property> joinPropsLoosely(
       Map<String, Property> props1, Map<String, Property> props2) {
     PersistentMap<String, Property> newProps = PersistentMap.create();
-    for (String pname : props1.keySet()) {
+    for (Map.Entry<String, Property> propsEntry : props1.entrySet()) {
+      String pname = propsEntry.getKey();
       if (!props2.containsKey(pname)) {
-        newProps = newProps.with(pname, props1.get(pname).withRequired());
+        newProps = newProps.with(pname, propsEntry.getValue().withRequired());
       }
     }
-    for (String pname : props2.keySet()) {
-      Property prop2 = props2.get(pname);
+    for (Map.Entry<String, Property> propsEntry : props2.entrySet()) {
+      String pname = propsEntry.getKey();
+      Property prop2 = propsEntry.getValue();
       if (props1.containsKey(pname)) {
         newProps = newProps.with(pname,
             Property.join(props1.get(pname), prop2).withRequired());
