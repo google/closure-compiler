@@ -53,8 +53,11 @@ class CheckGlobalNames implements CompilerPass {
   static final DiagnosticType STRICT_MODULE_DEP_QNAME =
       DiagnosticType.disabled(
           "JSC_STRICT_MODULE_DEP_QNAME",
-          "module {0} cannot reference {2}, defined in " +
-          "module {1}");
+          // The newline below causes the JS compiler not to complain when the
+          // referenced module's name changes because, for example, it's a
+          // synthetic module.
+          "cannot reference {2} because of a missing module dependency\n"
+          + "defined in module {1} from module {0}");
 
   /**
    * Creates a pass to check global name references at the given warning level.
