@@ -933,11 +933,11 @@ public class NewTypeInference implements CompilerPass {
         return new EnvTypePair(inEnv, thisType);
       }
       case Token.NAME: { // Fwd
-        String varName = expr.getQualifiedName();
-        if (varName.equals("undefined")) {
+        if (expr.matchesQualifiedName("undefined")) {
           return new EnvTypePair(inEnv, JSType.UNDEFINED);
         }
 
+        String varName = expr.getQualifiedName();
         if (currentScope.isLocalVar(varName) ||
             currentScope.isFormalParam(varName) ||
             currentScope.isLocalFunDef(varName) ||
@@ -1989,11 +1989,11 @@ public class NewTypeInference implements CompilerPass {
         return new EnvTypePair(outEnv, thisType);
       }
       case Token.NAME: { // Bwd
-        String varName = expr.getQualifiedName();
-        if (varName.equals("undefined")) {
+        if (expr.matchesQualifiedName("undefined")) {
           return new EnvTypePair(outEnv, JSType.UNDEFINED);
         }
 
+        String varName = expr.getQualifiedName();
         JSType inferredType = envGetType(outEnv, varName);
         if (inferredType == null) { // Needed for the free vars in the tests
           inferredType = JSType.UNKNOWN;

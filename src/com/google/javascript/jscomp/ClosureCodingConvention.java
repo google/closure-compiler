@@ -225,8 +225,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
     if (NodeUtil.isExprCall(parent)) {
       Node callee = node.getFirstChild();
       if (callee != null && callee.isGetProp()) {
-        String qualifiedName = callee.getQualifiedName();
-        if (functionName.equals(qualifiedName)) {
+        if (callee.matchesQualifiedName(functionName)) {
           Node target = callee.getNext();
           if (target != null && target.isString()) {
             className = target.getString();
@@ -258,8 +257,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   @Override
   public List<String> identifyTypeDeclarationCall(Node n) {
     Node callName = n.getFirstChild();
-    String callNameQualifiedString = callName.getQualifiedName();
-    if ("goog.addDependency".equals(callNameQualifiedString) &&
+    if (callName.matchesQualifiedName("goog.addDependency") &&
         n.getChildCount() >= 3) {
       Node typeArray = callName.getNext().getNext();
       if (typeArray.isArrayLit()) {
@@ -275,7 +273,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
     }
 
     // Identify forward declaration of form goog.forwardDeclare('foo.bar')
-    if ("goog.forwardDeclare".equals(callNameQualifiedString) &&
+    if (callName.matchesQualifiedName("goog.forwardDeclare") &&
         n.getChildCount() == 2) {
       Node typeDeclaration = n.getChildAtIndex(1);
       if (typeDeclaration.isString()) {
@@ -294,11 +292,10 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   @Override
   public String getSingletonGetterClassName(Node callNode) {
     Node callArg = callNode.getFirstChild();
-    String callName = callArg.getQualifiedName();
 
     // Use both the original name and the post-CollapseProperties name.
-    if (!("goog.addSingletonGetter".equals(callName) ||
-          "goog$addSingletonGetter".equals(callName)) ||
+    if (!(callArg.matchesQualifiedName("goog.addSingletonGetter") ||
+          callArg.matchesQualifiedName("goog$addSingletonGetter")) ||
         callNode.getChildCount() != 2) {
       return super.getSingletonGetterClassName(callNode);
     }
@@ -343,7 +340,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
     }
 
     Node callName = callNode.getFirstChild();
-    if (!"goog.reflect.object".equals(callName.getQualifiedName()) ||
+    if (!callName.matchesQualifiedName("goog.reflect.object") ||
         callNode.getChildCount() != 3) {
       return null;
     }
@@ -408,10 +405,9 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
     }
 
     Node callTarget = n.getFirstChild();
-    String name = callTarget.getQualifiedName();
-    if (name != null) {
-      if (name.equals("goog.bind")
-          || name.equals("goog$bind")) {
+    if (callTarget.isQualifiedName()) {
+      if (callTarget.matchesQualifiedName("goog.bind")
+          || callTarget.matchesQualifiedName("goog$bind")) {
         // goog.bind(fn, self, args...);
         Node fn = callTarget.getNext();
         if (fn == null) {
@@ -422,7 +418,8 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
         return new Bind(fn, thisValue, parameters);
       }
 
-      if (name.equals("goog.partial") || name.equals("goog$partial")) {
+      if (callTarget.matchesQualifiedName("goog.partial") ||
+          callTarget.matchesQualifiedName("goog$partial")) {
         // goog.partial(fn, args...);
         Node fn = callTarget.getNext();
         if (fn == null) {

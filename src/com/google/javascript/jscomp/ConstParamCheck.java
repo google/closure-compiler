@@ -96,7 +96,7 @@ class ConstParamCheck extends AbstractPostOrderCallback
       }
 
       // goog.string.Const.from('constant')
-      if (CONST_FUNCTION_NAME.equals(name.getQualifiedName())) {
+      if (name.matchesQualifiedName(CONST_FUNCTION_NAME)) {
         checkArgumentConstant(traversal, argument);
       }
     }

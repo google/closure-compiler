@@ -81,8 +81,7 @@ class CheckMissingGetCssName
   private static boolean insideGetCssNameCall(Node n) {
     Node parent = n.getParent();
     return parent.isCall() &&
-        GET_CSS_NAME_FUNCTION.equals(
-            parent.getFirstChild().getQualifiedName());
+        parent.getFirstChild().matchesQualifiedName(GET_CSS_NAME_FUNCTION);
   }
 
   /**

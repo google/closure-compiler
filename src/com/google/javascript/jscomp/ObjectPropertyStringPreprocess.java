@@ -83,7 +83,7 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
   private class Callback extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (OBJECT_PROPERTY_STRING.equals(n.getQualifiedName())) {
+      if (n.matchesQualifiedName(OBJECT_PROPERTY_STRING)) {
         Node newName = IR.name(EXTERN_OBJECT_PROPERTY_STRING);
         newName.copyInformationFrom(n);
         parent.replaceChild(n, newName);
@@ -100,8 +100,7 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
 
       Node objectName = n.getFirstChild();
 
-      if (!EXTERN_OBJECT_PROPERTY_STRING.equals(
-              objectName.getQualifiedName())) {
+      if (!objectName.matchesQualifiedName(EXTERN_OBJECT_PROPERTY_STRING)) {
         return;
       }
 

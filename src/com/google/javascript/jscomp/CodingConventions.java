@@ -427,9 +427,8 @@ public class CodingConventions {
       }
 
       Node callTarget = n.getFirstChild();
-      String name = callTarget.getQualifiedName();
-      if (name != null) {
-        if (name.equals("Function.prototype.bind.call")) {
+      if (callTarget.isQualifiedName()) {
+        if (callTarget.matchesQualifiedName("Function.prototype.bind.call")) {
           // goog.bind(fn, self, args...);
           Node fn = callTarget.getNext();
           if (fn == null) {

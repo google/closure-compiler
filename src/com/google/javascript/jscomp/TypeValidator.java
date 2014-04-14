@@ -830,9 +830,8 @@ class TypeValidator {
       }
     }
 
-    String qualifiedName = n.getQualifiedName();
-    if (qualifiedName != null) {
-      return qualifiedName;
+    if (n.isQualifiedName()) {
+      return n.getQualifiedName();
     } else if (type.isFunctionType()) {
       // Don't show complex function names.
       return "function";

@@ -294,7 +294,7 @@ class ScopedAliases implements HotSwapCompilerPass {
 
     private boolean isCallToScopeMethod(Node n) {
       return n.isCall() &&
-          SCOPING_METHOD_NAME.equals(n.getFirstChild().getQualifiedName());
+          n.getFirstChild().matchesQualifiedName(SCOPING_METHOD_NAME);
     }
 
     @Override

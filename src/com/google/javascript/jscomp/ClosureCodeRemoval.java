@@ -145,7 +145,7 @@ final class ClosureCodeRemoval implements CompilerPass {
 
         if (nameNode.isQualifiedName() &&
             valueNode.isQualifiedName() &&
-            ABSTRACT_METHOD_NAME.equals(valueNode.getQualifiedName())) {
+            valueNode.matchesQualifiedName(ABSTRACT_METHOD_NAME)) {
           abstractMethodAssignmentNodes.add(new RemovableAssignment(
               n.getFirstChild(), n, t));
         }

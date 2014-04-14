@@ -305,7 +305,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         if (n.getFirstChild().isName() &&
             !parent.isCall() &&
             !parent.isAssign() &&
-            "goog.base".equals(n.getQualifiedName())) {
+            n.matchesQualifiedName("goog.base")) {
           reportBadGoogBaseUse(t, n, "May only be called directly.");
         }
         break;
@@ -538,8 +538,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           maybeInheritsExpr.isExprResult() &&
           maybeInheritsExpr.getFirstChild().isCall()) {
         Node callNode = maybeInheritsExpr.getFirstChild();
-        if ("goog.inherits".equals(
-                callNode.getFirstChild().getQualifiedName()) &&
+        if (callNode.getFirstChild().matchesQualifiedName("goog.inherits") &&
             callNode.getLastChild().isQualifiedName()) {
           baseClassNode = callNode.getLastChild();
         }
@@ -665,8 +664,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           maybeInheritsExpr.isExprResult() &&
           maybeInheritsExpr.getFirstChild().isCall()) {
         Node callNode = maybeInheritsExpr.getFirstChild();
-        if ("goog.inherits".equals(
-                callNode.getFirstChild().getQualifiedName()) &&
+        if (callNode.getFirstChild().matchesQualifiedName("goog.inherits") &&
             callNode.getLastChild().isQualifiedName()) {
           baseClassNode = callNode.getLastChild();
         }
@@ -712,9 +710,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         return;
       }
 
-      String enclosingClass = enclosingFnNameNode.
-          getFirstChild().getFirstChild().getQualifiedName();
-      if (!enclosingClass.equals(baseContainer)) {
+      boolean misuseOfBase = !enclosingFnNameNode.
+          getFirstChild().getFirstChild().matchesQualifiedName(baseContainer);
+      if (misuseOfBase) {
         // Report misuse of "base" methods from other known classes.
         reportBadBaseMethodUse(t, n, baseContainer, "Must be used within "
             + baseContainer + " methods");

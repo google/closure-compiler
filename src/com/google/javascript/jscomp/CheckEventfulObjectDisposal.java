@@ -800,8 +800,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
            */
           compiler.report(JSError.make(n.getSourceFileName(), n,
               UNLISTEN_WITH_ANONBOUND));
-        } else if (listener.getFirstChild().getQualifiedName()
-            .equals("goog.bind")) {
+        } else if (listener.getFirstChild().matchesQualifiedName("goog.bind")) {
           /*
            * Using goog.bind to unlisten
            */
@@ -818,7 +817,6 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
           !functionCalled.isQualifiedName()) {
           return;
       }
-      String functionCalledName = functionCalled.getQualifiedName();
       JSType typeOfThis = getTypeOfThisForScope(t);
       if (typeOfThis == null) {
         return;
@@ -828,7 +826,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
        * Class considered eventful if there is an unlisten call in the
        * disposal.
        */
-      if (functionCalledName.equals("goog.events.unlisten")) {
+      if (functionCalled.matchesQualifiedName("goog.events.unlisten")) {
 
         if (inDisposalScope()) {
           eventfulTypes.add(typeOfThis);
@@ -836,7 +834,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
         isGoogEventsUnlisten(n);
       }
       if (inDisposalScope() &&
-          functionCalledName.equals("goog.events.removeAll")) {
+          functionCalled.matchesQualifiedName("goog.events.removeAll")) {
         eventfulTypes.add(typeOfThis);
       }
 
@@ -919,8 +917,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
           Node assign = sibling.getFirstChild();
           if (assign.isAssign()) {
             // assign.getLastChild().isEquivalentTo(propertyNode) did not work
-            if (propertyNode.getQualifiedName().equals(assign.getLastChild()
-                .getQualifiedName())) {
+            if (propertyNode.matchesQualifiedName(assign.getLastChild())) {
               if (!assign.getFirstChild().isName()) {
                 return assign.getFirstChild();
               }

@@ -117,7 +117,7 @@ public class ProcessCommonJSModules implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isCall() && n.getChildCount() == 2 &&
-          "require".equals(n.getFirstChild().getQualifiedName()) &&
+          n.getFirstChild().matchesQualifiedName("require") &&
           n.getChildAtIndex(1).isString()) {
         visitRequireCall(t, n, parent);
       }

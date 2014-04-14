@@ -222,9 +222,8 @@ class CollapseProperties implements CompilerPass {
 
     Node aliasParent = alias.node.getParent();
     if (aliasParent.isAssign() && NodeUtil.isExecutedExactlyOnce(aliasParent)) {
-      String target = aliasParent.getFirstChild().getQualifiedName();
-      if (target != null) {
-        Name name = namespace.getSlot(target);
+      if (aliasParent.getFirstChild().isQualifiedName()) {
+        Name name = namespace.getSlot(aliasParent.getFirstChild().getQualifiedName());
         if (name != null && isInlinableGlobalAlias(name)) {
           List<AstChange> newNodes = Lists.newArrayList();
 
@@ -274,7 +273,7 @@ class CollapseProperties implements CompilerPass {
       Name name, Node value, int depth, List<AstChange> newNodes) {
     if (name.props != null) {
       Preconditions.checkState(!
-          value.getQualifiedName().equals(name.getFullName()));
+          value.matchesQualifiedName(name.getFullName()));
 
       for (Name prop : name.props) {
         rewriteAliasProps(prop, value, depth + 1, newNodes);

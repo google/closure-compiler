@@ -447,7 +447,7 @@ class NewIRFactory {
             && (n.getFirstChild().isGetProp() || n.getFirstChild().isGetElem());
           break;
         case Token.GETPROP:
-          valid = n.getParent().isExprResult() && n.getQualifiedName() != null;
+          valid = n.getParent().isExprResult() && n.isQualifiedName();
           break;
         case Token.CALL:
           valid = info.isDefine();

@@ -229,10 +229,10 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
         break;
       case Token.CALL:
         // goog.getMsg()
-        String fnName = node.getFirstChild().getQualifiedName();
-        if (MSG_FUNCTION_NAME.equals(fnName)) {
+        if (node.getFirstChild().matchesQualifiedName(MSG_FUNCTION_NAME)) {
           googMsgNodes.put(node, traversal.getSourceName());
-        } else if (MSG_FALLBACK_FUNCTION_NAME.equals(fnName)) {
+        } else if (node.getFirstChild().matchesQualifiedName(
+            MSG_FALLBACK_FUNCTION_NAME)) {
           visitFallbackFunctionCall(traversal, node);
         }
         return;
@@ -678,7 +678,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
     }
 
     Node fnNameNode = node.getFirstChild();
-    if (!MSG_FUNCTION_NAME.equals(fnNameNode.getQualifiedName())) {
+    if (!fnNameNode.matchesQualifiedName(MSG_FUNCTION_NAME)) {
       throw new MalformedException(
           "Message initialized using unrecognized function. " +
           "Please use " + MSG_FUNCTION_NAME + "() instead.", fnNameNode);
