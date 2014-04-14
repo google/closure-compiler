@@ -178,6 +178,14 @@ public class PerformanceTracker {
     }
   }
 
+  public boolean tracksSize() {
+    return trackSize;
+  }
+
+  public boolean tracksGzSize() {
+    return trackGzSize;
+  }
+
   public int getRuntime() {
     calcTotalStats();
     return runtime;
