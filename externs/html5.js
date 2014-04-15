@@ -1334,10 +1334,10 @@ HTMLMediaElement.prototype.seeking;
 HTMLMediaElement.prototype.currentTime;
 
 /**
- * The start time, in seconds.
- * @type {number}
+ * The absolute timeline offset.
+ * @return {!Date}
  */
-HTMLMediaElement.prototype.startTime;
+HTMLMediaElement.prototype.getStartDate = function() {};
 
 /**
  * The length of the media in seconds.
