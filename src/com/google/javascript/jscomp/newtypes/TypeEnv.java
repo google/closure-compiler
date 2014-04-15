@@ -76,6 +76,7 @@ public class TypeEnv {
       JSType joinedType = null;
       for (TypeEnv env : envs) {
         JSType otherType = env.getType(n);
+        Preconditions.checkNotNull(otherType);
         if (joinedType == null) {
           joinedType = otherType;
         } else {

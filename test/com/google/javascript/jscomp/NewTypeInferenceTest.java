@@ -5521,4 +5521,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @dict */ function Dict() {}",
         GlobalTypeInfo.CONSTRUCTOR_REQUIRED);
   }
+
+  public void testGlobalVariableInJoin() {
+    typeCheck(
+        "function f() { true ? globalVariable : 123; }",
+        VarCheck.UNDEFINED_VAR_ERROR);
+  }
 }

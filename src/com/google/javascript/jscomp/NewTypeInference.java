@@ -1996,7 +1996,7 @@ public class NewTypeInference implements CompilerPass {
         String varName = expr.getQualifiedName();
         JSType inferredType = envGetType(outEnv, varName);
         if (inferredType == null) { // Needed for the free vars in the tests
-          inferredType = JSType.UNKNOWN;
+          return new EnvTypePair(outEnv, JSType.UNKNOWN);
         }
 
         JSType preciseType = inferredType.specialize(requiredType);
