@@ -2004,39 +2004,32 @@ class NewIRFactory {
           }
           // line continuation, skip the line break
           break;
-        case '0':
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
           char next1 = value.charAt(cur + 1);
-          if (!isOctalDigit(next1)) {
-            result.append('\0');
-          } else {
-            if (inStrictContext()) {
+
+          if (inStrictContext()) {
+            if (c == '0' && !isOctalDigit(next1)) {
+              // No warning: "\0" followed by a character which is not an octal digit
+              // is allowed in strict mode.
+            } else {
               errorReporter.warning(OCTAL_STRING_LITERAL_WARNING,
                   sourceName,
                   lineno(token.location.start), "", charno(token.location.start));
             }
-            char next2 = value.charAt(cur + 2);
-            if (isOctalDigit(next2)) {
-              result.append((char) (8 * octaldigit(next1) + octaldigit(next2)));
-              cur += 2;
-            } else {
-              result.append((char) octaldigit(next1));
-              cur += 1;
-            }
           }
 
-          break;
-        case '1': case '2': case '3': case '4': case '5': case '6': case '7':
-          if (inStrictContext()) {
-            errorReporter.warning(OCTAL_STRING_LITERAL_WARNING,
-                sourceName,
-                lineno(token.location.start), "", charno(token.location.start));
-          }
-          char next = value.charAt(cur + 1);
-          if (isOctalDigit(next)) {
-            result.append((char) (8 * octaldigit(c) + octaldigit(next)));
-            cur += 1;
-          } else {
+          if (!isOctalDigit(next1)) {
             result.append((char) octaldigit(c));
+          } else {
+            char next2 = value.charAt(cur + 2);
+            if (!isOctalDigit(next2)) {
+              result.append((char) (8 * octaldigit(c) + octaldigit(next1)));
+              cur += 1;
+            } else {
+              result.append((char)
+                  (8 * 8 * octaldigit(c) + 8 * octaldigit(next1) + octaldigit(next2)));
+              cur += 2;
+            }
           }
 
           break;
