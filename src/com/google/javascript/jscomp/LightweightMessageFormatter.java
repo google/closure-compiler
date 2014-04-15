@@ -73,20 +73,22 @@ public class LightweightMessageFormatter extends AbstractMessageFormatter {
             source, error.sourceName, error.lineNumber, excerptFormatter);
 
     // formatting the message
-    StringBuilder b = new StringBuilder();
+    StringBuilder firstLine = new StringBuilder();
     if (error.sourceName != null) {
-      b.append(error.sourceName);
+      firstLine.append(error.sourceName);
       if (error.lineNumber > 0) {
-        b.append(':');
-        b.append(error.lineNumber);
+        firstLine.append(':');
+        firstLine.append(error.lineNumber);
       }
-      b.append(": ");
+      firstLine.append(": ");
     }
 
-    b.append(getLevelName(warning ? CheckLevel.WARNING : CheckLevel.ERROR));
-    b.append(" - ");
+    firstLine.append(getLevelName(warning ? CheckLevel.WARNING : CheckLevel.ERROR));
+    firstLine.append(" - ");
 
-    b.append(error.description);
+    firstLine.append(error.description);
+
+    StringBuilder b = new StringBuilder(maybeEmbolden(firstLine.toString()));
     b.append('\n');
     if (sourceExcerpt != null) {
       b.append(sourceExcerpt);

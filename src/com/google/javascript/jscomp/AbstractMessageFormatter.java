@@ -54,9 +54,11 @@ public abstract class AbstractMessageFormatter implements MessageFormatter {
   }
 
   private static enum Color {
-    ERROR("\033[1;31m"),
-    WARNING("\033[1;35m"),
-    RESET("\033[0;39m");
+    ERROR("\033[31m"),
+    WARNING("\033[35m"),
+    NO_COLOR("\033[39m"),
+    BOLD("\033[1m"),
+    UNBOLD("\033[0m");
 
     private final String controlCharacter;
 
@@ -77,11 +79,19 @@ public abstract class AbstractMessageFormatter implements MessageFormatter {
     }
   }
 
+  protected String maybeEmbolden(String text) {
+    if (!colorize) {
+      return text;
+    }
+    return Color.BOLD.getControlCharacter() +
+        text + Color.UNBOLD.getControlCharacter();
+  }
+
   private String maybeColorize(String text, Color color) {
     if (!colorize) {
       return text;
     }
     return color.getControlCharacter() +
-        text + Color.RESET.getControlCharacter();
+        text + Color.NO_COLOR.getControlCharacter();
   }
 }
