@@ -197,7 +197,7 @@ public class JSTypeCreatorFromJSDoc {
       case "void":
         return JSType.UNDEFINED;
       case "Function":
-        return JSType.qmarkFunction();
+        return JSType.join(JSType.qmarkFunction(), JSType.NULL);
       case "Object":
         return JSType.join(JSType.TOP_OBJECT, JSType.NULL);
       default: {
@@ -264,6 +264,14 @@ public class JSTypeCreatorFromJSDoc {
       DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters)
       throws UnknownTypeException {
+    return getFunTypeBuilder(n, ownerType, registry, typeParameters)
+        .buildType();
+  }
+
+  private FunctionTypeBuilder getFunTypeBuilder(Node n, RawNominalType ownerType,
+      DeclaredTypeRegistry registry,
+      ImmutableList<String> typeParameters)
+      throws UnknownTypeException {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     Node child = n.getFirstChild();
     if (child.getType() == Token.THIS) {
@@ -306,7 +314,7 @@ public class JSTypeCreatorFromJSDoc {
     }
     builder.addRetType(
         getTypeFromNodeHelper(child, ownerType, registry, typeParameters));
-    return builder.buildType();
+    return builder;
   }
 
   public boolean hasKnownType(
@@ -368,6 +376,13 @@ public class JSTypeCreatorFromJSDoc {
     return builder.build();
   }
 
+  private static boolean isQmarkFunction(Node jsdocNode) {
+    if (jsdocNode.getType() == Token.BANG) {
+      jsdocNode = jsdocNode.getFirstChild();
+    }
+    return jsdocNode.isString() && jsdocNode.getString().equals("Function");
+  }
+
   /**
    * Consumes either a "classic" function jsdoc with @param, @return, etc,
    * or a jsdoc with @type{function ...} and finds the types of the formal
@@ -375,35 +390,44 @@ public class JSTypeCreatorFromJSDoc {
    * of this function must separately handle @constructor, @interface, etc.
    */
   public FunctionTypeBuilder getFunctionType(
-      JSDocInfo jsdoc, Node funNode, RawNominalType ownerType,
+      JSDocInfo jsdoc, Node declNode, RawNominalType ownerType,
       DeclaredTypeRegistry registry) {
     try {
       if (jsdoc != null && jsdoc.getType() != null) {
         Node jsdocNode = jsdoc.getType().getRootNode();
         int tokenType = jsdocNode.getType();
         if (tokenType == Token.FUNCTION) {
-          return getFunTypeFromAtTypeJsdoc(jsdoc, funNode, ownerType, registry);
-        } else if (tokenType == Token.STRING &&
-            jsdocNode.getString().equals("Function")) {
+          if (declNode.isFunction()) {
+            return getFunTypeFromAtTypeJsdoc(jsdoc, declNode, ownerType, registry);
+          } else {
+            try {
+              // TODO(blickly): Use typeParameters here
+              return getFunTypeBuilder(jsdocNode, ownerType, registry, null);
+            } catch (UnknownTypeException e) {
+              return null;
+            }
+          }
+        } else if (isQmarkFunction(jsdocNode)) {
           return FunctionTypeBuilder.qmarkFunctionBuilder();
         } else {
           warn("The function is annotated with a non-function jsdoc. " +
-              "Ignoring jsdoc.", funNode);
+              "Ignoring jsdoc.", declNode);
         }
       }
       return getFunTypeFromTypicalFunctionJsdoc(
-          jsdoc, funNode, ownerType, registry, false);
+          jsdoc, declNode, ownerType, registry, false);
     } catch (FunctionTypeBuilder.WrongParameterOrderException e) {
       warn("Wrong parameter order: required parameters are first, " +
-          "then optional, then varargs. Ignoring jsdoc.", funNode);
+          "then optional, then varargs. Ignoring jsdoc.", declNode);
       return getFunTypeFromTypicalFunctionJsdoc(
-          null, funNode, ownerType, registry, true);
+          null, declNode, ownerType, registry, true);
     }
   }
 
   private FunctionTypeBuilder getFunTypeFromAtTypeJsdoc(
       JSDocInfo jsdoc, Node funNode, RawNominalType ownerType,
       DeclaredTypeRegistry registry) {
+    Preconditions.checkArgument(funNode.isFunction());
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     Node childJsdoc = jsdoc.getType().getRootNode().getFirstChild();
     Node param = funNode.getFirstChild().getNext().getFirstChild();
@@ -494,6 +518,8 @@ public class JSTypeCreatorFromJSDoc {
       DeclaredTypeRegistry registry,
       boolean ignoreJsdoc /* for when the jsdoc is malformed */) {
     Preconditions.checkArgument(!ignoreJsdoc || jsdoc == null);
+    Preconditions.checkArgument(funNode.isFunction(),
+        "TODO(blickly): Support typical function jsdoc without initializer");
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     Node params = funNode.getFirstChild().getNext();
     ImmutableList<String> typeParameters = null;

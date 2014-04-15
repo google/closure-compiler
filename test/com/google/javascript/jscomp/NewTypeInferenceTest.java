@@ -5093,7 +5093,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "f(function g(x) { return x - 5; });");
 
     checkNoWarnings(
-        "function f(/** Function */ fun) { return new fun(1, 2); }");
+        "function f(/** !Function */ fun) { return new fun(1, 2); }");
   }
 
   public void testConditionalExBranch() {
@@ -5135,6 +5135,52 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         ImmutableList.of(
             VarCheck.UNDEFINED_VAR_ERROR,
             VarCheck.UNDEFINED_VAR_ERROR));
+  }
+
+  public void testDeclaredMethodWithoutScope() {
+    checkNoWarnings(
+        "/** @interface */ function Foo(){}\n" +
+        "/** @type {function(number)} */ Foo.prototype.bar;\n" +
+        "/** @constructor @implements {Foo} */ function Bar(){}\n" +
+        "Bar.prototype.bar = function(x){}");
+
+    checkNoWarnings(
+        "/** @type {!Function} */\n" +
+        "var g = function() { throw 0; };\n" +
+        "/** @constructor */ function Foo(){}\n" +
+        "/** @type {function(number)} */ Foo.prototype.bar = g;\n" +
+        "/** @constructor @extends {Foo} */ function Bar(){}\n" +
+        "Bar.prototype.bar = function(x){}");
+
+    checkNoWarnings(
+        "/** @param {string} s */\n" +
+        "var reqString = function(s) {};\n" +
+        "/** @constructor */ function Foo(){}\n" +
+        "/** @type {function(string)} */ Foo.prototype.bar = reqString;\n" +
+        "/** @constructor @extends {Foo} */ function Bar(){}\n" +
+        "Bar.prototype.bar = function(x){}");
+
+    typeCheck(
+        "/** @param {string} s */\n" +
+        "var reqString = function(s) {};\n" +
+        "/** @constructor */ function Foo(){}\n" +
+        "/** @type {function(number)} */ Foo.prototype.bar = reqString;\n" +
+        "/** @constructor @extends {Foo} */ function Bar(){}\n" +
+        "Bar.prototype.bar = function(x){}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    checkNoWarnings(
+        "/** @constructor */ function Foo(){}\n" +
+        "/** @type {Function} */ Foo.prototype.bar = null;\n" +
+        "/** @constructor @extends {Foo} */ function Bar(){}\n" +
+        "Bar.prototype.bar = function(){}");
+
+    typeCheck(
+        "/** @constructor */ function Foo(){}\n" +
+        "/** @type {!Function} */ Foo.prototype.bar = null;\n" +
+        "/** @constructor @extends {Foo} */ function Bar(){}\n" +
+        "Bar.prototype.bar = function(){}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testPropNamesWithDot() {
