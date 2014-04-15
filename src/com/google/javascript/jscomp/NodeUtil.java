@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.javascript.rhino.IR;
@@ -2566,8 +2567,7 @@ public final class NodeUtil {
     if (name.endsWith(".") || name.startsWith(".")) {
       return false;
     }
-    String[] parts = name.split("\\.");
-    for (String part : parts) {
+    for (String part : Splitter.on('.').split(name)) {
       if (!isValidSimpleName(part)) {
         return false;
       }

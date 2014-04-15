@@ -17,7 +17,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -27,7 +29,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -184,12 +185,11 @@ class AliasExternals implements CompilerPass {
     }
 
     if (!Strings.isNullOrEmpty(unaliasableGlobals)) {
-      this.unaliasableGlobals.addAll(
-          Arrays.asList(unaliasableGlobals.split(",")));
+      Iterables.addAll(this.unaliasableGlobals, Splitter.on(',').split(unaliasableGlobals));
     }
 
     if (!Strings.isNullOrEmpty(aliasableGlobals)) {
-      this.aliasableGlobals.addAll(Arrays.asList(aliasableGlobals.split(",")));
+      Iterables.addAll(this.aliasableGlobals, Splitter.on(',').split(aliasableGlobals));
     }
 
     if (moduleGraph != null) {

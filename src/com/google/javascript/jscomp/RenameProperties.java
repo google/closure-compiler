@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -248,7 +249,7 @@ class RenameProperties implements CompilerPass {
       Node parent = nodeEntry.getValue();
       Node firstArg = nodeEntry.getKey().getFirstChild().getNext();
       StringBuilder sb = new StringBuilder();
-      for (String oldName : firstArg.getString().split("[.]")) {
+      for (String oldName : Splitter.on('.').split(firstArg.getString())) {
         Property p = propertyMap.get(oldName);
         String replacement;
         if (p != null && p.newName != null) {

@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 import com.google.javascript.rhino.Node;
@@ -44,8 +45,8 @@ public class QualifiedName {
   }
 
   public static QualifiedName fromGetprop(Node getprop) {
-    return new QualifiedName(
-        ImmutableList.copyOf(getprop.getQualifiedName().split("\\.")));
+    return new QualifiedName(ImmutableList.copyOf(
+        Splitter.on('.').split(getprop.getQualifiedName())));
   }
 
   public boolean isIdentifier() {

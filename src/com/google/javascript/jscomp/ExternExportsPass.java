@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -155,8 +156,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      * </pre>
      */
     private List<String> computePathPrefixes(String path) {
-      List<String> pieces = Lists.newArrayList(path.split("\\."));
-
+      List<String> pieces = Splitter.on('.').splitToList(path);
       List<String> pathPrefixes = Lists.newArrayList();
 
       for (int i = 0; i < pieces.size(); i++) {
@@ -329,7 +329,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     String getExportedPath() {
 
       // Find the longest path that has been mapped (if any).
-      List<String> pieces = Lists.newArrayList(exportPath.split("\\."));
+      List<String> pieces = Splitter.on('.').splitToList(exportPath);
 
       for (int i = pieces.size(); i > 0; i--) {
         // Find the path of the current length.

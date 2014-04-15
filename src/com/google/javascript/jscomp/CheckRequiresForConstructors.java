@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -79,7 +80,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
   // Return the shortest prefix of the className that refers to a class,
   // or null if no part refers to a class.
   private static String getOutermostClassName(String className) {
-    for (String part : className.split("\\.")) {
+    for (String part : Splitter.on('.').split(className)) {
       if (isClassName(part)) {
         return className.substring(0, className.indexOf(part) +
                                    part.length());

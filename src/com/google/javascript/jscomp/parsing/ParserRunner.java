@@ -16,10 +16,10 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.Parser.Config.Mode;
 import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
@@ -106,12 +106,7 @@ public class ParserRunner {
   }
 
   private static Set<String> extractList(String configProp) {
-    String[] names = configProp.split(",");
-    Set<String> trimmedNames = Sets.newHashSet();
-    for (String name : names) {
-      trimmedNames.add(name.trim());
-    }
-    return ImmutableSet.copyOf(trimmedNames);
+    return ImmutableSet.copyOf(Splitter.on(',').trimResults().split(configProp));
   }
 
   /**

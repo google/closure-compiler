@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -963,7 +964,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       return false;
     }
 
-    for (String part : arg.getString().split("\\.")) {
+    for (String part : Splitter.on('.').split(arg.getString())) {
       if (!NodeUtil.isValidPropertyName(part)) {
         compiler.report(t.makeError(arg, INVALID_PROVIDE_ERROR, part));
         return false;
