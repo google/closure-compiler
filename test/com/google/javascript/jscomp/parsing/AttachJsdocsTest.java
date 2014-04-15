@@ -540,11 +540,11 @@ public class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertNotNull(objlit.getFirstChild().getLastChild().getJSDocInfo());
   }
 
-  // public void testOldJsdocPostfix1() {
-  //   Node root = parse("/** attach */ (x)++;");
-  //   Node unary = root.getFirstChild().getFirstChild();
-  //   assertNotNull(unary.getFirstChild().getJSDocInfo());
-  // }
+  public void testOldJsdocPostfix1() {
+    Node root = parse("/** attach */ (x)++;");
+    Node unary = root.getFirstChild().getFirstChild();
+    assertNotNull(unary.getFirstChild().getJSDocInfo());
+  }
 
   public void testOldJsdocPostfix2() {
     Node root = parse("/** attach */ x++;");

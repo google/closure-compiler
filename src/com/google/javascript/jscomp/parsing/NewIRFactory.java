@@ -587,6 +587,7 @@ class NewIRFactory {
       case BINARY_OPERATOR:
       case MEMBER_EXPRESSION:
       case MEMBER_LOOKUP_EXPRESSION:
+      case POSTFIX_EXPRESSION:
         ParseTree nearest = findNearestNode(tree);
         if (nearest.type == ParseTreeType.PAREN_EXPRESSION) {
           return false;
@@ -611,6 +612,8 @@ class NewIRFactory {
         return findNearestNode(tree.asMemberExpression().operand);
       case MEMBER_LOOKUP_EXPRESSION:
         return findNearestNode(tree.asMemberLookupExpression().operand);
+      case POSTFIX_EXPRESSION:
+        return findNearestNode(tree.asPostfixExpression().operand);
       default:
         return tree;
     }
