@@ -1742,6 +1742,17 @@ DataTransfer.prototype.items;
 
 
 /**
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#the-dragevent-interface
+ * @constructor
+ * @extends {MouseEvent}
+ */
+function DragEvent() {}
+
+/** @type {DataTransfer} */
+DragEvent.prototype.dataTransfer;
+
+
+/**
  * @constructor
  * @extends {Event}
  */
