@@ -518,8 +518,10 @@ public class JSTypeCreatorFromJSDoc {
       DeclaredTypeRegistry registry,
       boolean ignoreJsdoc /* for when the jsdoc is malformed */) {
     Preconditions.checkArgument(!ignoreJsdoc || jsdoc == null);
-    Preconditions.checkArgument(funNode.isFunction(),
-        "TODO(blickly): Support typical function jsdoc without initializer");
+    if (!funNode.isFunction()) {
+      // TODO(blickly): Support typical function jsdoc without initializer
+      return FunctionTypeBuilder.qmarkFunctionBuilder();
+    }
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     Node params = funNode.getFirstChild().getNext();
     ImmutableList<String> typeParameters = null;

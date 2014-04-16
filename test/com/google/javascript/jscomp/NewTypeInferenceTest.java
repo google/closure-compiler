@@ -5181,6 +5181,11 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @constructor @extends {Foo} */ function Bar(){}\n" +
         "Bar.prototype.bar = function(){}",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    checkNoWarnings(
+        "/** @interface */ function I(){}\n" +
+        "/** @return {void} */\n" +
+        "I.prototype.method;");
   }
 
   public void testPropNamesWithDot() {
