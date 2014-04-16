@@ -172,6 +172,21 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
   }
 
+  // TODO(dimvar): we must warn when a THIS fun isn't called as a method
+  public void testDontCallMethodAsFunction() {
+    checkNoWarnings(
+        "/** @type{function(this: Object)} */\n" +
+        "function f() {}\n" +
+        "f();");
+
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "Foo.prototype.method = function() {};\n" +
+        "var f = (new Foo).method;\n" +
+        "f();");
+  }
+
   public void testNewInFunctionJsdoc() {
     typeCheck(
         "/** @constructor */ function Foo() {}\n" +
@@ -1405,6 +1420,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     checkNoWarnings("(/** @type {?} */ (null)).prop - 123;");
 
     checkNoWarnings("(/** @type {?} */ (null)).prop += 123;");
+
+    // TODO(dimvar): fix
+    // typeCheck(
+    //     "function f(/** !Object */ x) {\n" +
+    //     "  if (x.foo) {} else { x.foo(); }\n" +
+    //     "}",
+    //     TypeCheck.INEXISTENT_PROPERTY);
   }
 
   public void testDontInferBottom() {
@@ -2003,6 +2025,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     typeCheck(
         "function f(){ if (typeof 123 == 'numbr') return 321; }",
+        TypeValidator.UNKNOWN_TYPEOF_VALUE);
+
+    typeCheck(
+        "switch (typeof 123) { case 'foo': }",
         TypeValidator.UNKNOWN_TYPEOF_VALUE);
   }
 
@@ -2758,6 +2784,11 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         " */\n" +
         "function Foo() {}",
         RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "/** @interface */ function Foo() {}\n" +
+        "/** @implements {Foo} */ function bar() {}",
+        GlobalTypeInfo.IMPLEMENTS_WITHOUT_CONSTRUCTOR);
   }
 
   public void testInheritanceSubtyping() {
@@ -2779,6 +2810,15 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function Foo() { /** @type {Parent} */ this.x = new Child(); }\n" +
         "/** @type {Child} */ Foo.prototype.y = new Parent();",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // TODO(dimvar): fix
+    // checkNoWarnings(
+    //     "/** @interface */\n" +
+    //     "function Foo() {}\n" +
+    //     "/** @constructor @implements {Foo} */\n" +
+    //     "function Bar() {}\n" +
+    //     "/** @return {Foo} */\n" +
+    //     "function f() { return new Bar; }");
   }
 
   public void testRecordtypeSubtyping() {
@@ -3806,6 +3846,12 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  switch (3) { case g('asdf'): return 123; }\n" +
         "}",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // TODO(dimvar): warn for type mismatch between label and condition
+    checkNoWarnings(
+        "function f(/** number */ x, /** string */ y) {\n" +
+        "  switch (y) { case x: ; }\n" +
+        "}");
   }
 
   public void testForIn() {
@@ -4918,6 +4964,17 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         " * @implements {I.<number>}\n" +
         " */\n" +
         "function Bar(x) {}");
+
+    // TODO(dimvar): fix
+    // checkNoWarnings(
+    //     "/**\n" +
+    //     " * @interface\n" +
+    //     " * @template T\n" +
+    //     " */\n" +
+    //     "function Foo() {}\n" +
+    //     "/** @constructor @implements {Foo.<number>} */\n" +
+    //     "function A() {}\n" +
+    //     "var /** Foo.<number> */ x = new A();");
   }
 
   public void testDifficultClassGenericsInstantiation() {
@@ -4978,6 +5035,31 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "Foo.prototype.method = function(x) { return x; };\n" +
         "(new Foo(123)).method('asdf') - 5;",
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    // typeCheck(
+    //     "/**\n" +
+    //     " * @template T\n" +
+    //     " * @constructor\n" +
+    //     " */\n" +
+    //     "function Foo() {}\n" +
+    //     "/** @param {T} x */\n" +
+    //     "Foo.prototype.method = function(x) {};\n" +
+    //     "\n" +
+    //     "/**\n" +
+    //     " * @template T\n" +
+    //     " * @constructor\n" +
+    //     " * @extends {Foo.<T>}\n" +
+    //     " * @param {T} x\n" +
+    //     " */\n" +
+    //     "function Bar(x) {}\n" +
+    //     // Invalid instantiation here, must be T, o/w bugs like the call to f
+    //     "/** @param {number} x */\n" +
+    //     "Bar.prototype.method = function(x) {};\n" +
+    //     "\n" +
+    //     "/** @param {!Foo.<string>} x */\n" +
+    //     "function f(x) { x.method('sadf'); };\n" +
+    //     "f(new Bar('asdf'));",
+    //     NewTypeInference.FAILED_TO_UNIFY);
   }
 
   public void testNominalTypeUnification() {

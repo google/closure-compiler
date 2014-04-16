@@ -111,6 +111,11 @@ class GlobalTypeInfo implements CompilerPass {
       "JSC_INEXISTENT_PARAM",
       "parameter {0} does not appear in {1}''s parameter list");
 
+  static final DiagnosticType IMPLEMENTS_WITHOUT_CONSTRUCTOR =
+      DiagnosticType.warning(
+          "JSC_IMPLEMENTS_WITHOUT_CONSTRUCTOR",
+          "@implements used without @constructor or @interface for {0}");
+
   // Invariant: if a scope s1 contains a scope s2, then s2 is before s1 in
   // scopes. The type inference relies on this fact to process deeper scopes
   // before shallower scopes.
@@ -208,8 +213,8 @@ class GlobalTypeInfo implements CompilerPass {
     }
     Map<Node, String> unknownTypes = typeParser.getUnknownTypesMap();
     for (Map.Entry<Node, String> unknownTypeEntry : unknownTypes.entrySet()) {
-      warnings.add(JSError.make(unknownTypeEntry.getKey(), UNRECOGNIZED_TYPE_NAME,
-          unknownTypeEntry.getValue()));
+      warnings.add(JSError.make(unknownTypeEntry.getKey(),
+              UNRECOGNIZED_TYPE_NAME, unknownTypeEntry.getValue()));
     }
     // The jsdoc parser doesn't have access to the error functions in the jscomp
     // package, so we collect its warnings here.
@@ -675,7 +680,8 @@ class GlobalTypeInfo implements CompilerPass {
               typeParser.getNodeTypeDeclaration(jsdoc, rawType, currentScope);
         } else {
           // We are parsing a function declaration with no initializer
-          methodType = computeFnDeclaredType(jsdoc, pname, getProp, rawType, currentScope);
+          methodType = computeFnDeclaredType(
+              jsdoc, pname, getProp, rawType, currentScope);
           propDeclType = JSType.fromFunctionType(methodType.toFunctionType());
         }
       }
@@ -823,24 +829,28 @@ class GlobalTypeInfo implements CompilerPass {
         }
         RawNominalType ctorType =
             declNode.isFunction() ? nominaltypesByNode.get(declNode) : null;
+        ImmutableSet<NominalType> implementedIntfs =
+            typeParser.getImplementedInterfaces(
+                fnDoc, ownerType, parentScope, typeParameters);
         if (fnDoc.isConstructor()) {
           String className = ctorType.toString();
           if (parentClass != null) {
             if (!ctorType.addSuperClass(parentClass)) {
-              warnings.add(JSError.make(declNode, INHERITANCE_CYCLE, className));
+              warnings.add(JSError.make(
+                  declNode, INHERITANCE_CYCLE, className));
             } else if (ctorType.isStruct() && !parentClass.isStruct()) {
-              warnings.add(JSError.make(declNode, TypeCheck.CONFLICTING_SHAPE_TYPE,
+              warnings.add(JSError.make(
+                  declNode, TypeCheck.CONFLICTING_SHAPE_TYPE,
                       className, "struct", "struct"));
             } else if (ctorType.isDict() && !parentClass.isDict()) {
-              warnings.add(JSError.make(declNode, TypeCheck.CONFLICTING_SHAPE_TYPE,
-                      className, "dict", "dict"));
+              warnings.add(JSError.make(
+                  declNode, TypeCheck.CONFLICTING_SHAPE_TYPE, className,
+                  "dict", "dict"));
             }
           }
-          ImmutableSet<NominalType> implementedIntfs =
-              typeParser.getImplementedInterfaces(
-                  fnDoc, ownerType, parentScope, typeParameters);
           if (ctorType.isDict() && !implementedIntfs.isEmpty()) {
-            warnings.add(JSError.make(declNode, DICT_IMPLEMENTS_INTERF, className));
+            warnings.add(JSError.make(
+                declNode, DICT_IMPLEMENTS_INTERF, className));
           }
           boolean noCycles = ctorType.addInterfaces(implementedIntfs);
           Preconditions.checkState(noCycles);
@@ -850,10 +860,7 @@ class GlobalTypeInfo implements CompilerPass {
               !NodeUtil.isEmptyBlock(NodeUtil.getFunctionBody(declNode))) {
             warnings.add(JSError.make(declNode, INTERFACE_WITH_A_BODY));
           }
-          ImmutableSet<NominalType> implemented =
-              typeParser.getImplementedInterfaces(
-                  fnDoc, ownerType, parentScope, typeParameters);
-          if (!implemented.isEmpty()) {
+          if (!implementedIntfs.isEmpty()) {
             warnings.add(JSError.make(declNode,
                 TypeCheck.CONFLICTING_IMPLEMENTED_TYPE, functionName));
           }
@@ -865,6 +872,9 @@ class GlobalTypeInfo implements CompilerPass {
                 declNode, INHERITANCE_CYCLE, ctorType.toString()));
           }
           builder.addNominalType(NominalType.fromRaw(ctorType));
+        } else if (!implementedIntfs.isEmpty()) {
+          warnings.add(JSError.make(
+              declNode, IMPLEMENTS_WITHOUT_CONSTRUCTOR, functionName));
         }
       }
 
