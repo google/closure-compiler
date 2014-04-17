@@ -35,7 +35,7 @@ There are three ways to get a Closure Compiler executable.
 1) Use one we built for you.
 
 Pre-built Closure binaries can be found at
-http://code.google.com/p/closure-compiler/downloads/list
+https://code.google.com/p/closure-compiler/wiki/BinaryDownloads?tm=2
 
 
 2) Check out the source and build it with Apache Ant.
