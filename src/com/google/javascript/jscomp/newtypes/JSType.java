@@ -710,11 +710,6 @@ public class JSType {
     return true;
   }
 
-  public boolean hasInferredProp(QualifiedName pname) {
-    Preconditions.checkState(pname.isIdentifier());
-    return hasProp(pname) && getDeclaredProp(pname) == null;
-  }
-
   public JSType getDeclaredProp(QualifiedName qname) {
     if (isUnknown()) {
       return UNKNOWN;

@@ -661,7 +661,7 @@ class GlobalTypeInfo implements CompilerPass {
       // Find the declared type of the property.
       JSType propDeclType;
       DeclaredFunctionType methodType;
-      Scope methodScope = null;
+      Scope methodScope;
       if (initializer != null && initializer.isFunction()) {
         // TODO(dimvar): we must do this for any function "defined" as the rhs
         // of an assignment to a property, not just when the property is a
@@ -670,19 +670,21 @@ class GlobalTypeInfo implements CompilerPass {
         methodType = methodScope.getDeclaredType();
         propDeclType = JSType.fromFunctionType(methodType.toFunctionType());
       } else {
+        methodScope = null;
         JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
-        if (jsdoc == null) {
-          methodType = null;
-          propDeclType = null;
-        } else if (jsdoc.hasType() && !jsdoc.getType().getRoot().isFunction()) {
+        if (jsdoc != null && jsdoc.containsFunctionDeclaration()) {
+          // We're parsing a function declaration without a function initializer
+          methodType = computeFnDeclaredType(
+              jsdoc, pname, getProp, rawType, currentScope);
+          propDeclType = JSType.fromFunctionType(methodType.toFunctionType());
+        } else if (jsdoc != null && jsdoc.hasType()) {
+          // We are parsing a non-function prototype property
           methodType = null;
           propDeclType =
               typeParser.getNodeTypeDeclaration(jsdoc, rawType, currentScope);
         } else {
-          // We are parsing a function declaration with no initializer
-          methodType = computeFnDeclaredType(
-              jsdoc, pname, getProp, rawType, currentScope);
-          propDeclType = JSType.fromFunctionType(methodType.toFunctionType());
+          methodType = null;
+          propDeclType = null;
         }
       }
       propertyDefs.put(rawType.getId(), pname,

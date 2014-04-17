@@ -1446,9 +1446,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         // Ensure we don't infer bottom for x here
         "function f(x) { var /** string */ s; (s = x) - 5; } f(9);",
-        ImmutableList.of(
-            NewTypeInference.INVALID_OPERAND_TYPE,
-            NewTypeInference.MISTYPED_ASSIGN_RHS));
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testAssignToInvalidObject() {
@@ -1461,9 +1459,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   public void testAssignmentDoesntFlowWrongInit() {
     typeCheck(
-        "var /** number */ n;\n" +
-        "n = 'typo';\n" +
-        "n - 5;", NewTypeInference.MISTYPED_ASSIGN_RHS);
+        "function f(/** number */ n) {\n" +
+        "  n = 'typo';\n" +
+        "  n - 5;\n" +
+        "}", NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
         "/** @param {{ n: number }} x */ function f(x) {\n" +
@@ -5281,6 +5280,35 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @interface */ function I(){}\n" +
         "/** @return {void} */\n" +
         "I.prototype.method;");
+  }
+
+  public void testDontOverrideNestedPropWithWorseType() {
+    typeCheck(
+        "/** @interface */\n" +
+        "var Bar = function() {};\n" +
+        "/** @type {Function} */\n" +
+        "Bar.prototype.method;\n" +
+        "/** @interface */\n" +
+        "var Baz = function() {};\n" +
+        "Baz.prototype.method = function() {};\n" +
+        "/** @constructor */\n" +
+        "var Foo = function() {};\n" +
+        "/** @type {!Bar|!Baz} */\n" +
+        "Foo.prototype.obj;\n" +
+        "Foo.prototype.set = function() {\n" +
+        "    this.obj.method = 5;\n" +
+        "};",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "function f(/** { prop: number } */ obj, x) {\n" +
+        " x < obj.prop;\n" +
+        " obj.prop < 'str';\n" +
+        " obj.prop = 123;\n" +
+        " x = 123;\n" +
+        "}\n" +
+        "f({ prop: 123}, 123)",
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testPropNamesWithDot() {

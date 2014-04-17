@@ -1155,16 +1155,14 @@ public class NewTypeInference implements CompilerPass {
         JSType declType = lvalue.declType;
         EnvTypePair rhsPair =
             analyzeExprFwd(rhs, lvalue.env, requiredType, specializedType);
-        JSType rhsType = rhsPair.type;
-        if (declType != null && !rhsType.isSubtypeOf(declType)) {
+        if (declType != null && !rhsPair.type.isSubtypeOf(declType)) {
           warnings.add(JSError.make(expr, MISTYPED_ASSIGN_RHS,
-              declType.toString(), rhsType.toString()));
-          // Don't flow the wrong initialization
-          rhsType = declType;
+              declType.toString(), rhsPair.type.toString()));
+        } else {
+          rhsPair.env = updateLvalueTypeInEnv(
+              rhsPair.env, lhs, lvalue.ptr, rhsPair.type);
         }
-        return new EnvTypePair(
-            updateLvalueTypeInEnv(rhsPair.env, lhs, lvalue.ptr, rhsType),
-            rhsType);
+        return rhsPair;
       }
       case Token.ASSIGN_ADD: {
         Node lhs = expr.getFirstChild();
@@ -1199,16 +1197,21 @@ public class NewTypeInference implements CompilerPass {
         Node rhs = expr.getLastChild();
         LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, JSType.NUMBER);
         JSType lhsType = lvalue.type;
+        boolean lhsWarned = false;
         if (!lhsType.isSubtypeOf(JSType.NUMBER)) {
           warnInvalidOperand(lhs, expr.getType(), JSType.NUMBER, lhsType);
+          lhsWarned = true;
         }
         EnvTypePair pair = analyzeExprFwd(rhs, lvalue.env, JSType.NUMBER);
         if (!pair.type.isSubtypeOf(JSType.NUMBER)) {
           warnInvalidOperand(rhs, expr.getType(), JSType.NUMBER, pair.type);
         }
-        return new EnvTypePair(
-            updateLvalueTypeInEnv(pair.env, lhs, lvalue.ptr, JSType.NUMBER),
-            JSType.NUMBER);
+        if (!lhsWarned) {
+          pair.env =
+            updateLvalueTypeInEnv(pair.env, lhs, lvalue.ptr, JSType.NUMBER);
+        }
+        pair.type = JSType.NUMBER;
+        return pair;
       }
       case Token.SHEQ:
       case Token.SHNE:
@@ -2637,10 +2640,8 @@ public class NewTypeInference implements CompilerPass {
         String objName = lvalue.ptr.getLeftmostName();
         QualifiedName props = lvalue.ptr.getAllButLeftmost();
         JSType objType = envGetType(lvalue.env, objName);
-        JSType propDeclType = lvalue.type.getDeclaredProp(pname);
-        JSType slicedObjType = propDeclType == null ?
-            objType.withoutProperty(props) :
-            objType.withDeclaredProperty(props, propDeclType);
+        // withoutProperty only removes inferred properties
+        JSType slicedObjType = objType.withoutProperty(props);
         lvalue.env = envPutType(lvalue.env, objName, slicedObjType);
       }
     }

@@ -692,7 +692,7 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * @return Whether there is declaration present on this {@link JSDocInfo}.
+   * @return Whether there is a declaration present on this {@link JSDocInfo}.
    */
   public boolean containsDeclaration() {
     return (hasType()
@@ -710,6 +710,19 @@ public class JSDocInfo implements Serializable {
             | MASK_INTERFACE
             | MASK_NOSHADOW
             | MASK_IMPLICITCAST
+            | MASK_NOSIDEEFFECTS));
+  }
+
+  /**
+   * @return Whether there is a declaration of a callable type.
+   */
+  public boolean containsFunctionDeclaration() {
+    return (hasType() && getType().getRoot().isFunction()
+        || hasReturnType()
+        || hasThisType()
+        || getParameterCount() > 0
+        || getFlag(MASK_CONSTRUCTOR
+            | MASK_OVERRIDE
             | MASK_NOSIDEEFFECTS));
   }
 

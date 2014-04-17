@@ -154,17 +154,22 @@ public class ObjectType {
     PersistentMap<String, Property> newProps = this.props;
     String objName = qname.getLeftmostName();
     if (qname.isIdentifier()) {
+      JSType declType = getDeclaredProp(qname);
+      Preconditions.checkState(declType == null || type == null ||
+          type.isSubtypeOf(declType),
+          "Cannot add property of type %s to a property declared of type %s",
+          type, declType);
       if (type == null) {
+        type = declType;
+      }
+      if (isDeclared) {
+        declType = type;
+      } else if (declType != null) {
+        isDeclared = true;
+      }
+      if (type == null && declType == null) {
         newProps = newProps.without(objName);
       } else {
-        JSType declType = getDeclaredProp(qname);
-        Preconditions.checkState(declType == null ||
-            type.isSubtypeOf(declType));
-        if (isDeclared) {
-          declType = type;
-        } else if (declType != null) {
-          isDeclared = true;
-        }
         newProps = newProps.with(objName,
             new Property(type, isDeclared ? declType : null, false));
       }
@@ -557,20 +562,23 @@ public class ObjectType {
   }
 
   boolean hasProp(QualifiedName qname) {
+    Preconditions.checkState(qname.isIdentifier());
     Property p = getLeftmostProp(qname);
     if (p == null || p.isOptional()) {
       return false;
+    } else {
+      return true;
     }
-    return true;
   }
 
   JSType getDeclaredProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);
     if (p == null) {
       return null;
-    } else {
+    } else if (qname.isIdentifier()) {
       return p.isDeclared() ? p.getDeclaredType() : null;
     }
+    return p.getType().getDeclaredProp(qname.getAllButLeftmost());
   }
 
   private Property getLeftmostProp(QualifiedName qname) {
