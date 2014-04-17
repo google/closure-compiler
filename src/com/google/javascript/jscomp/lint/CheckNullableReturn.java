@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.graph.DiGraph;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 
@@ -69,8 +70,8 @@ public class CheckNullableReturn implements CompilerPass, NodeTraversal.Callback
   }
 
   /**
-   * @return True if n is a function node and we know its return type is
-   * a nullable type, other than {?}.
+   * @return True if n is a function node which is explicitly annotated
+   * as returning a nullable type, other than {?}.
    */
   private static boolean isReturnTypeNullable(Node n) {
     if (n == null) {
@@ -80,10 +81,12 @@ public class CheckNullableReturn implements CompilerPass, NodeTraversal.Callback
       return false;
     }
     JSType returnType = n.getJSType().toMaybeFunctionType().getReturnType();
-    if (returnType == null) {
+    if (returnType == null ||
+        returnType.isUnknownType() || !returnType.isNullable()) {
       return false;
     }
-    return !returnType.isUnknownType() && returnType.isNullable();
+    JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
+    return info != null && info.hasReturnType();
   }
 
   /**
