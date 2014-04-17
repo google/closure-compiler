@@ -268,8 +268,8 @@ public class JSTypeCreatorFromJSDoc {
         .buildType();
   }
 
-  private FunctionTypeBuilder getFunTypeBuilder(Node n, RawNominalType ownerType,
-      DeclaredTypeRegistry registry,
+  private FunctionTypeBuilder getFunTypeBuilder(
+      Node n, RawNominalType ownerType, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters)
       throws UnknownTypeException {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
@@ -398,7 +398,8 @@ public class JSTypeCreatorFromJSDoc {
         int tokenType = jsdocNode.getType();
         if (tokenType == Token.FUNCTION) {
           if (declNode.isFunction()) {
-            return getFunTypeFromAtTypeJsdoc(jsdoc, declNode, ownerType, registry);
+            return getFunTypeFromAtTypeJsdoc(
+                jsdoc, declNode, ownerType, registry);
           } else {
             try {
               // TODO(blickly): Use typeParameters here
@@ -508,7 +509,15 @@ public class JSTypeCreatorFromJSDoc {
       warn("The function cannot have both an @type jsdoc and @return " +
           "jsdoc. Ignoring @return jsdoc.", funNode);
     }
-    builder.addRetType(getTypeFromNode(childJsdoc, ownerType, registry, null));
+    if (funNode.getParent().isSetterDef()) {
+      if (childJsdoc != null) {
+        warn("Cannot declare a return type on a setter", funNode);
+      }
+      builder.addRetType(JSType.UNDEFINED);
+    } else {
+      builder.addRetType(
+          getTypeFromNode(childJsdoc, ownerType, registry, null));
+    }
 
     return builder;
   }
@@ -525,6 +534,7 @@ public class JSTypeCreatorFromJSDoc {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     Node params = funNode.getFirstChild().getNext();
     ImmutableList<String> typeParameters = null;
+    Node parent = funNode.getParent();
 
     // TODO(dimvar): need more @template warnings
     // - warn for multiple @template annotations
@@ -532,8 +542,14 @@ public class JSTypeCreatorFromJSDoc {
 
     if (jsdoc != null) {
       typeParameters = jsdoc.getTemplateTypeNames();
-      if (typeParameters.size() > 0) {
-        builder.addTypeParameters(typeParameters);
+      if (!typeParameters.isEmpty()) {
+        if (parent.isSetterDef() || parent.isGetterDef()) {
+          ignoreJsdoc = true;
+          jsdoc = null;
+          warn("@template can't be used with getters/setters", funNode);
+        } else {
+          builder.addTypeParameters(typeParameters);
+        }
       }
     }
     for (Node param = params.getFirstChild();
@@ -578,7 +594,16 @@ public class JSTypeCreatorFromJSDoc {
     JSDocInfo inlineRetJsdoc = ignoreJsdoc ? null :
         funNode.getFirstChild().getJSDocInfo();
     JSTypeExpression retTypeExp = jsdoc == null ? null : jsdoc.getReturnType();
-    if (inlineRetJsdoc != null) {
+    if (parent.isSetterDef()) {
+      // inline returns for setters are attached to the function body.
+      // Consider fixing this.
+      inlineRetJsdoc = ignoreJsdoc ? null :
+          funNode.getLastChild().getJSDocInfo();
+      if (retTypeExp != null || inlineRetJsdoc != null) {
+        warn("Cannot declare a return type on a setter", funNode);
+      }
+      builder.addRetType(JSType.UNDEFINED);
+    } else if (inlineRetJsdoc != null) {
       builder.addRetType(getNodeTypeDeclaration(
           inlineRetJsdoc, ownerType, registry));
       if (retTypeExp != null) {

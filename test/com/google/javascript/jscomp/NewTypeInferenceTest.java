@@ -1014,6 +1014,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "f()",
         NewTypeInference.CROSS_SCOPE_GOTCHA);
 
+    typeCheck(// CROSS_SCOPE_GOTCHA is only for undeclared variables
+        "/** @type {string} */ var s;\n" +
+        "function f() {\n" +
+        "  s = 123;\n" +
+        "}\n" +
+        "f();",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
     checkNoWarnings(
         "function g(x) {\n" +
         "  function f() { x < 'str'; z < 'str'; x = 5; }\n" +
@@ -1420,6 +1428,11 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     checkNoWarnings("(/** @type {?} */ (null)).prop - 123;");
 
     checkNoWarnings("(/** @type {?} */ (null)).prop += 123;");
+
+    // TODO(dimvar): fix. Need to disting between top obj and empty obj lit.
+    // typeCheck(
+    //     "var x = {}; var y = x.a;",
+    //     TypeCheck.INEXISTENT_PROPERTY);
 
     // TODO(dimvar): fix
     // typeCheck(
@@ -5659,5 +5672,128 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "function f() { true ? globalVariable : 123; }",
         VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
+  public void testGetters() {
+    typeCheck(
+        "var x = { /** @return {string} */ get a() { return 1; } };",
+        NewTypeInference.RETURN_NONDECLARED_TYPE);
+
+    typeCheck(
+        "var x = { /** @param {number} n */ get a() {} };",
+        GlobalTypeInfo.INEXISTENT_PARAM);
+
+    typeCheck(
+        "var x = { /** @type {string} */ get a() {} };",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "var x = {\n" +
+        "  /**\n" +
+        "   * @return {T|number} b\n" +
+        "   * @template T\n" +
+        "   */\n" +
+        "  get a() {}\n" +
+        "};",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "var x = /** @dict */ { get a() {} };",
+        TypeCheck.ILLEGAL_OBJLIT_KEY);
+
+    typeCheck(
+        "var x = /** @struct */ { get 'a'() {} };",
+        TypeCheck.ILLEGAL_OBJLIT_KEY);
+
+    typeCheck(
+        "var x = { get a() { 1 - 'asdf'; } };",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "var x = { get a() { return 1; } };\n" +
+        "x.a < 'str';",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "var x = { get a() { return 1; } };\n" +
+        "x.a();",
+        TypeCheck.NOT_CALLABLE);
+
+    typeCheck(
+        "var x = { get 'a'() { return 1; } };\n" +
+        "x['a']();",
+        TypeCheck.NOT_CALLABLE);
+
+    checkNoWarnings(// assigning to a getter doesn't remove it
+        "var x = { get a() { return 1; } };\n" +
+        "x.a = 'str';\n" +
+        "x.a - 1;");
+
+    typeCheck(
+        "var x = /** @struct */ { get a() {} }; x.a = 123;",
+        TypeCheck.ILLEGAL_PROPERTY_CREATION);
+  }
+
+  public void testSetters() {
+    typeCheck(
+        "var x = { /** @return {string} */ set a(b) {} };",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "var x = { /** @type{function(number):number} */ set a(b) {} };",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "var x = { set /** string */ a(b) {} };",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "var x = {\n" +
+        "  /**\n" +
+        "   * @param {T|number} b\n" +
+        "   * @template T\n" +
+        "   */\n" +
+        "  set a(b) {}\n" +
+        "};",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "var x = { set a(b) { return 1; } };",
+        NewTypeInference.RETURN_NONDECLARED_TYPE);
+
+    typeCheck(
+        "var x = { /** @type {string} */ set a(b) {} };",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "var x = /** @dict */ { set a(b) {} };",
+        TypeCheck.ILLEGAL_OBJLIT_KEY);
+
+    typeCheck(
+        "var x = /** @struct */ { set 'a'(b) {} };",
+        TypeCheck.ILLEGAL_OBJLIT_KEY);
+
+    typeCheck(
+        "var x = { set a(b) { 1 - 'asdf'; } };",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "var x = { set a(b) {}, prop: 123 }; var y = x.a;",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    typeCheck(
+        "var x = { /** @param {string} b */ set a(b) {} };\n" +
+        "x.a = 123;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "var x = { set a(b) { b - 5; } };\n" +
+        "x.a = 'str';",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "var x = { set 'a'(b) { b - 5; } };\n" +
+        "x['a'] = 'str';",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 }
