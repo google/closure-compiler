@@ -2131,6 +2131,7 @@ angular.$sceDelegate.prototype.trustAs = function(type, value) {};
  * parameter needs to be annotated as optional to keep the compiler happy (as
  * otherwise the signature won't match Object.prototype.valueOf).
  *
+ * @override
  * @param {*=} value
  * @return {*}
  */
