@@ -2109,6 +2109,66 @@ angular.$sce.trustAsJs = function(trustedValue) {};
 angular.$sce.trustAsResourceUrl = function(trustedValue) {};
 
 /******************************************************************************
+ * $sceDelegate Service
+ *****************************************************************************/
+
+/**
+ * Ref: http://docs.angularjs.org/api/ng/service/$sceDelegate
+ *
+ * @constructor
+ */
+angular.$sceDelegate = function() {};
+
+/**
+ * @param {string} type
+ * @param {*} value
+ * @return {*}
+ */
+angular.$sceDelegate.prototype.trustAs = function(type, value) {};
+
+/**
+ * Note: because this method overrides Object.prototype.valueOf, the value
+ * parameter needs to be annotated as optional to keep the compiler happy (as
+ * otherwise the signature won't match Object.prototype.valueOf).
+ *
+ * @param {*=} value
+ * @return {*}
+ */
+angular.$sceDelegate.prototype.valueOf = function(value) {};
+
+/**
+ * @param {string} type
+ * @param {*} maybeTrusted
+ * @return {*}
+ */
+angular.$sceDelegate.prototype.getTrusted = function(type, maybeTrusted) {};
+
+/******************************************************************************
+ * $sceDelegateProvider Service
+ *****************************************************************************/
+
+/**
+ * Ref: http://docs.angularjs.org/api/ng/provider/$sceDelegateProvider
+ *
+ * @constructor
+ */
+angular.$sceDelegateProvider = function() {};
+
+/**
+ * @param {Array.<string>=} opt_whitelist
+ * @return {!Array.<string>}
+ */
+angular.$sceDelegateProvider.prototype.resourceUrlWhitelist = function(
+    opt_whitelist) {};
+
+/**
+ * @param {Array.<string>=} opt_blacklist
+ * @return {!Array.<string>}
+ */
+angular.$sceDelegateProvider.prototype.resourceUrlBlacklist = function(
+    opt_blacklist) {};
+
+/******************************************************************************
  * $templateCache Service
  *****************************************************************************/
 
