@@ -5253,6 +5253,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
             VarCheck.UNDEFINED_VAR_ERROR));
   }
 
+  public void testDebuggerStatementDoesntCrash() {
+    checkNoWarnings("debugger;");
+  }
+
   public void testDeclaredMethodWithoutScope() {
     checkNoWarnings(
         "/** @interface */ function Foo(){}\n" +

@@ -521,6 +521,7 @@ public class NewTypeInference implements CompilerPass {
         case Token.CATCH:
         case Token.CONTINUE:
         case Token.DEFAULT_CASE:
+        case Token.DEBUGGER:
         case Token.EMPTY:
         case Token.SCRIPT:
         case Token.TRY:
@@ -570,6 +571,7 @@ public class NewTypeInference implements CompilerPass {
         case Token.CATCH:
         case Token.CONTINUE:
         case Token.DEFAULT_CASE:
+        case Token.DEBUGGER:
         case Token.EMPTY:
         case Token.FUNCTION:
         case Token.SCRIPT:
