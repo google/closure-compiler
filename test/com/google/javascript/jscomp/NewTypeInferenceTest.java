@@ -3909,6 +3909,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.FORIN_EXPECTS_OBJECT);
 
     typeCheck(
+        "var /** number */ x = 5; for (x in {a : 1});",
+        NewTypeInference.FORIN_EXPECTS_STRING_KEY);
+
+    typeCheck(
         "function f(/** undefined */ y) {\n" +
         "  var x;\n" +
         "  for (x in { a: 1, b: 2 }) { y = x; }\n" +

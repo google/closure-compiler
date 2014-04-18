@@ -152,6 +152,11 @@ public class NewTypeInference implements CompilerPass {
           "JSC_FORIN_EXPECTS_OBJECT",
           "For/in expects an object, found type {0}.");
 
+  static final DiagnosticType FORIN_EXPECTS_STRING_KEY =
+      DiagnosticType.warning(
+          "JSC_FORIN_EXPECTS_STRING_KEY",
+          "For/in creates string keys, but variable has declared type {1}.");
+
   private Set<JSError> warnings;
   private final AbstractCompiler compiler;
   Map<DiGraphEdge<Node, ControlFlowGraph.Branch>, TypeEnv> envs;
@@ -610,8 +615,15 @@ public class NewTypeInference implements CompilerPass {
             }
             Node lhs = n.getFirstChild();
             LValueResultFwd lval = analyzeLValueFwd(lhs, inEnv, JSType.STRING);
-            outEnv = updateLvalueTypeInEnv(
-                lval.env, lhs, lval.ptr, JSType.STRING);
+            if (lval.declType != null &&
+                !lval.declType.isSubtypeOf(JSType.STRING)) {
+              warnings.add(JSError.make(lhs, FORIN_EXPECTS_STRING_KEY,
+                  lval.declType.toString()));
+              outEnv = lval.env;
+            } else {
+              outEnv = updateLvalueTypeInEnv(
+                 lval.env, lhs, lval.ptr, JSType.STRING);
+            }
             break;
           }
           conditional = true;
