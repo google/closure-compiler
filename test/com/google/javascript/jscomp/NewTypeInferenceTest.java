@@ -5850,4 +5850,35 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "x['a'] = 'str';",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testConstVars() {
+    typeCheck("/** @const */ var x;", GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
+
+    typeCheck("/** @final */ var x;", GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
+
+    typeCheck(
+        "/** @const */ var x = 1; x = 2;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @const */ var x = 1; x += 2;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @const */ var x = 1; x -= 2;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @const */ var x = 1; x++;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @const */ var x = 1;\n" +
+        "function f() { x = 2; }",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @const */ var x;", "x = 2;",
+        NewTypeInference.CONST_REASSIGNED);
+  }
 }

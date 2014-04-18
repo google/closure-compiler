@@ -157,6 +157,11 @@ public class NewTypeInference implements CompilerPass {
           "JSC_FORIN_EXPECTS_STRING_KEY",
           "For/in creates string keys, but variable has declared type {1}.");
 
+  static final DiagnosticType CONST_REASSIGNED =
+      DiagnosticType.warning(
+          "JSC_CONST_REASSIGNED",
+          "Cannot change the value of a constant.");
+
   private Set<JSError> warnings;
   private final AbstractCompiler compiler;
   Map<DiGraphEdge<Node, ControlFlowGraph.Branch>, TypeEnv> envs;
@@ -1062,6 +1067,8 @@ public class NewTypeInference implements CompilerPass {
       }
       case Token.INC:
       case Token.DEC:
+        mayWarnAboutConst(expr);
+        // fall through
       case Token.BITNOT:
       case Token.POS:
       case Token.NEG: { // Unary operations on numbers
@@ -1163,6 +1170,7 @@ public class NewTypeInference implements CompilerPass {
         return rhsPair;
       }
       case Token.ASSIGN: { // Fwd
+        mayWarnAboutConst(expr);
         Node lhs = expr.getFirstChild();
         Node rhs = expr.getLastChild();
         LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, requiredType);
@@ -1179,6 +1187,7 @@ public class NewTypeInference implements CompilerPass {
         return rhsPair;
       }
       case Token.ASSIGN_ADD: {
+        mayWarnAboutConst(expr);
         Node lhs = expr.getFirstChild();
         Node rhs = expr.getLastChild();
         JSType lhsReqType = specializeWithCorrection(
@@ -1207,6 +1216,7 @@ public class NewTypeInference implements CompilerPass {
       case Token.ASSIGN_MUL:
       case Token.ASSIGN_DIV:
       case Token.ASSIGN_MOD: {
+        mayWarnAboutConst(expr);
         Node lhs = expr.getFirstChild();
         Node rhs = expr.getLastChild();
         LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, JSType.NUMBER);
@@ -1820,6 +1830,15 @@ public class NewTypeInference implements CompilerPass {
     if (recvType.isStruct() && !recvType.isLooseStruct() &&
         !recvType.hasProp(pname)) {
       warnings.add(JSError.make(getProp, TypeCheck.ILLEGAL_PROPERTY_CREATION));
+      return true;
+    }
+    return false;
+  }
+
+  private boolean mayWarnAboutConst(Node n) {
+    Node lhs = n.getFirstChild();
+    if (lhs.isName() && currentScope.isConstVar(lhs.getString())) {
+      warnings.add(JSError.make(n, CONST_REASSIGNED));
       return true;
     }
     return false;

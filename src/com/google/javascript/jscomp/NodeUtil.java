@@ -785,6 +785,9 @@ public final class NodeUtil {
     } else {
       return false;
     }
+    if (initializer == null) {
+      return false;
+    }
     if (isEmptyObjectLit(initializer)) {
       return true;
     }

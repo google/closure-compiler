@@ -116,6 +116,11 @@ class GlobalTypeInfo implements CompilerPass {
           "JSC_IMPLEMENTS_WITHOUT_CONSTRUCTOR",
           "@implements used without @constructor or @interface for {0}");
 
+  static final DiagnosticType CONST_WITHOUT_INITIALIZER =
+      DiagnosticType.warning(
+          "JSC_CONST_WITHOUT_INITIALIZER",
+          "Constants must be initialized when they are defined.");
+
   // Invariant: if a scope s1 contains a scope s2, then s2 is before s1 in
   // scopes. The type inference relies on this fact to process deeper scopes
   // before shallower scopes.
@@ -519,9 +524,16 @@ class GlobalTypeInfo implements CompilerPass {
                 visitFunctionDef(initializer, null);
               } else if (initializer != null && NodeUtil.isNamespaceDecl(n)) {
                 currentScope.addNamespace(name);
+              } else if (parent.isCatch()) {
+                currentScope.addLocal(name, JSType.UNKNOWN, false);
               } else {
-                currentScope.addLocal(name, parent.isVar() ?
-                    getVarTypeFromAnnotation(n) : JSType.UNKNOWN);
+                JSDocInfo jsdoc = parent.getJSDocInfo();
+                boolean isConstant = jsdoc != null && jsdoc.isConstant();
+                if (isConstant && !n.isFromExterns() && initializer == null) {
+                  warnings.add(JSError.make(n, CONST_WITHOUT_INITIALIZER));
+                }
+                currentScope.addLocal(
+                    name, getVarTypeFromAnnotation(n), isConstant);
               }
             }
           } else if (currentScope.isOuterVarEarly(name)) {
@@ -987,6 +999,7 @@ class GlobalTypeInfo implements CompilerPass {
     private final String readableName;
 
     private final Map<String, JSType> locals = Maps.newHashMap();
+    private final Set<String> constVars = Sets.newHashSet();
     private final ArrayList<String> formals;
     private final Set<String> outerVars = Sets.newHashSet();
     private final Map<String, Scope> localFunDefs = Maps.newHashMap();
@@ -1088,6 +1101,11 @@ class GlobalTypeInfo implements CompilerPass {
       return isDefinedLocally(name) ||
           name.equals(this.name) ||
           (parent != null && parent.isVisibleInScope(name));
+    }
+
+    boolean isConstVar(String name) {
+      return constVars.contains(name) ||
+          parent != null && parent.isConstVar(name);
     }
 
     private boolean isOuterVarEarly(String name) {
@@ -1206,8 +1224,11 @@ class GlobalTypeInfo implements CompilerPass {
       return ImmutableSet.copyOf(locals.keySet());
     }
 
-    private void addLocal(String name, JSType declType) {
-      Preconditions.checkArgument(!isDefinedLocally(name));
+    private void addLocal(String name, JSType declType, boolean isConstant) {
+      Preconditions.checkState(!isDefinedLocally(name));
+      if (isConstant) {
+        constVars.add(name);
+      }
       locals.put(name, declType);
     }
 
