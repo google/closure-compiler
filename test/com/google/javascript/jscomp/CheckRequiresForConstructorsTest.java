@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
  * Tests for {@link CheckRequiresForConstructors}.
  *
  */
+
 public class CheckRequiresForConstructorsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {

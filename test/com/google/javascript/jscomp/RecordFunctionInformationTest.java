@@ -26,6 +26,7 @@ import junit.framework.TestCase;
  * Tests for {@link RecordFunctionInformation}
  *
  */
+
 public class RecordFunctionInformationTest extends TestCase {
 
   public void testFunction() {

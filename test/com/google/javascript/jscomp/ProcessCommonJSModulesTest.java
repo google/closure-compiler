@@ -16,14 +16,15 @@
 
 package com.google.javascript.jscomp;
 
-import java.util.List;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+
+import java.util.List;
 
 /**
  * Unit tests for {@link ProcessCommonJSModules}
  */
+
 public class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   public ProcessCommonJSModulesTest() {

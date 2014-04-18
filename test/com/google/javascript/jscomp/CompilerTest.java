@@ -27,6 +27,7 @@ import java.util.List;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
+
 public class CompilerTest extends TestCase {
 
   // Verify the line and column information is maintained after a reset

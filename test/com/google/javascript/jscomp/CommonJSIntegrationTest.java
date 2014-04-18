@@ -16,11 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+
 /**
  * Tests for type-checking across commonjs modules.
  *
  * @author nicholas.j.santos@gmail.com (Nick Santos)
  */
+
 public class CommonJSIntegrationTest extends IntegrationTestCase {
   public void testCrossModuleCtorCall() {
     test(createCompilerOptions(),

@@ -34,6 +34,7 @@ import java.util.Set;
 /**
  * @author nicksantos@google.com (Nick Santos)
  */
+
 public class SymbolTableTest extends TestCase {
 
   private static final String EXTERNS = CompilerTypeTestCase.DEFAULT_EXTERNS +

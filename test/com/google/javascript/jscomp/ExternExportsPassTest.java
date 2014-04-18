@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+
 import junit.framework.TestCase;
 
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.List;
  * Tests for {@link ExternExportsPass}.
  *
  */
+
 public class ExternExportsPassTest extends TestCase {
 
   private boolean runCheckTypes = true;
