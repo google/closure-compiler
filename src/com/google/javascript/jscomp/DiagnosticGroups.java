@@ -301,6 +301,8 @@ public class DiagnosticGroups {
           CheckSuspiciousCode.SUSPICIOUS_COMPARISON_WITH_NAN,
           CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
 
+  // NOTE(tbreisacher): The checks in this DiagnosticGroup are still
+  // experimental. Use them at your own risk!
   public static final DiagnosticGroup LINT_CHECKS =
       DiagnosticGroups.registerGroup("lintChecks",
           CheckNullableReturn.NULLABLE_RETURN,

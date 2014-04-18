@@ -97,13 +97,27 @@ public class CheckNullableReturn implements CompilerPass, NodeTraversal.Callback
     for (DiGraph.DiGraphEdge<Node, ControlFlowGraph.Branch> inEdge : ir.getInEdges()) {
       DiGraph.DiGraphNode<Node, ControlFlowGraph.Branch> graphNode = inEdge.getSource();
       Node possibleReturnNode = graphNode.getValue();
-      if (possibleReturnNode.isReturn() &&
-          possibleReturnNode.getFirstChild() != null &&
-          possibleReturnNode.getFirstChild().getJSType().isNullable()) {
-        return true;
+      if (possibleReturnNode.isReturn()) {
+        Node returnValue = possibleReturnNode.getFirstChild();
+        if (returnValue != null && isNullable(returnValue)) {
+          return true;
+        }
       }
     }
     return false;
+  }
+
+  /**
+   * @return True if the node represents a nullable value. Essentially, this
+   *     is just n.getJSType().isNullable(), but for purposes of this pass,
+   *     the expression {@code x || null} is considered nullable even if
+   *     x is always truthy. This often happens with expressions like
+   *     {@code arr[i] || null}: The compiler doesn't know that arr[i] can
+   *     be undefined.
+   */
+  private static boolean isNullable(Node n) {
+    return n.getJSType().isNullable() ||
+        (n.isOr() && n.getLastChild().isNull());
   }
 
   @Override
