@@ -602,7 +602,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   public void testSpecialization() {
     checkInference("var x; x === 5;", "x", JSType.UNDEFINED);
 
-    checkInference(
+    checkInferenceWithWarning(
         "var x = 5, y;" +
         "if (true) {\n" +
         "  y = 5;\n" +
@@ -610,12 +610,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  y = 'str';\n" +
         "}\n" +
         "x < y;",
-        "y", JSType.NUMBER);
+        NewTypeInference.INVALID_OPERAND_TYPE,
+        "y", JSType.join(JSType.NUMBER, JSType.STRING));
   }
 
   public void testTypeAfterIF() {
-    // We don't warn here; see comment in analyzeExprFwd, Token.NAME.
-    checkNoWarnings("var x = true ? 1 : 'str'; x - 1;");
+    typeCheck(
+        "var x = true ? 1 : 'str'; x - 1;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testSimpleBwdPropagation() {
@@ -660,7 +662,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     checkNoWarnings("function f(x, y) { x < y; }");
 
-    checkNoWarnings("var x = 1; var y = true ? 1 : 'str'; x < y;");
+    typeCheck(
+        "var x = 1; var y = true ? 1 : 'str'; x < y;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck("var x = 'str'; var y = 1; x < y;",
         NewTypeInference.INVALID_OPERAND_TYPE);
@@ -1429,10 +1433,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     checkNoWarnings("(/** @type {?} */ (null)).prop += 123;");
 
-    // TODO(dimvar): fix. Need to disting between top obj and empty obj lit.
-    // typeCheck(
-    //     "var x = {}; var y = x.a;",
-    //     TypeCheck.INEXISTENT_PROPERTY);
+    typeCheck(
+        "var x = {}; var y = x.a;",
+        TypeCheck.INEXISTENT_PROPERTY);
 
     // TODO(dimvar): fix
     // typeCheck(
@@ -2492,6 +2495,17 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f(/** { prop: ? } */ x) {\n" +
         "  var /** (number|string) */ y = x.prop;\n" +
         "  x.prop < 5;\n" +
+        "}");
+
+    checkNoWarnings(
+        "function f(/** (number|string) */ x, /** (number|string) */ y) {\n" +
+        "  var z;\n" +
+        "  if (1 < 2) {\n" +
+        "    z = x;\n" +
+        "  } else {\n" +
+        "    z = y;\n" +
+        "  }\n" +
+        "  z - 5;\n" +
         "}");
   }
 
@@ -4753,13 +4767,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testLooserCheckingForInferredProperties() {
-    checkNoWarnings(
+    typeCheck(
         "/** @constructor */\n" +
         "function Foo(x) { this.prop = x; }\n" +
         "function f(/** !Foo */ obj) {\n" +
         "  obj.prop = true ? 1 : 'asdf';\n" +
         "  obj.prop - 5;\n" +
-        "}");
+        "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
 
     checkNoWarnings(
         "/** @constructor */\n" +
@@ -4778,16 +4793,19 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  obj.prop - 5;\n" +
         "  obj.prop < 'asdf';\n" +
         "}",
-        NewTypeInference.INVALID_OPERAND_TYPE);
+        ImmutableList.of(
+            NewTypeInference.INVALID_OPERAND_TYPE,
+            NewTypeInference.INVALID_OPERAND_TYPE));
 
-    checkNoWarnings(
+    typeCheck(
         "function /** string */ f(/** ?number */ x) {\n" +
         "  var o = { prop: 'str' };\n" +
         "  if (x) {\n" +
         "    o.prop = x;\n" +
         "  }\n" +
         "  return o.prop;\n" +
-        "}");
+        "}",
+        NewTypeInference.RETURN_NONDECLARED_TYPE);
   }
 
   public void testInheritanceWithGenerics() {

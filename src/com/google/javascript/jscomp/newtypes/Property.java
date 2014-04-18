@@ -56,6 +56,14 @@ class Property {
     return declaredType;
   }
 
+  Property withLocation() {
+    return new Property(
+        inferredType.withLocation(JSType.GENERIC_LOCATION),
+        declaredType == null ? null :
+        declaredType.withLocation(JSType.GENERIC_LOCATION),
+        isOptional);
+  }
+
   Property withOptional() {
     return new Property(inferredType, declaredType, true);
   }

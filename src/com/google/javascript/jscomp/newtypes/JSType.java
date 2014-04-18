@@ -62,7 +62,12 @@ public class JSType {
   private final ImmutableSet<ObjectType> objs;
   // typeVar is null for non-generic types
   private final String typeVar;
+  // Non-null for types which represent values flowed to a function from
+  // outside. Local vals are null, which gives stricter type checking.
   private final String location;
+  // A type tainted with this is non local, but it's not the type of a formal,
+  // eg, it can be a prop of a formal whose decl type is a record type.
+  static final String GENERIC_LOCATION = "%";
 
   private JSType(int mask, String location, ImmutableSet<ObjectType> objs,
       String typeVar) {
@@ -189,6 +194,10 @@ public class JSType {
     return mask != 0 && (mask | nullUndefMask) == nullUndefMask;
   }
 
+  public boolean isFromNonLocalValue() {
+    return location != null;
+  }
+
   public boolean isScalar() {
     return mask == NUMBER_MASK ||
         mask == STRING_MASK ||
@@ -282,6 +291,10 @@ public class JSType {
       return TOP;
     } else if (lhs.isUnknown() || rhs.isUnknown()) {
       return UNKNOWN;
+    } else if (lhs.isBottom()) {
+      return rhs;
+    } else if (rhs.isBottom()) {
+      return lhs;
     }
     if (lhs.typeVar != null && rhs.typeVar != null &&
         !lhs.typeVar.equals(rhs.typeVar)) {
@@ -290,9 +303,16 @@ public class JSType {
     }
     return new JSType(
         lhs.mask | rhs.mask,
-        Objects.equal(lhs.location, rhs.location) ? lhs.location : null,
+        joinLocs(lhs.location, rhs.location),
         ObjectType.joinSets(lhs.objs, rhs.objs),
         lhs.typeVar != null ? lhs.typeVar : rhs.typeVar);
+  }
+
+  private static String joinLocs(String loc1, String loc2) {
+    if (loc1 == null || loc2 == null) {
+      return null;
+    }
+    return loc1.equals(loc2) ? loc1 : GENERIC_LOCATION;
   }
 
   public JSType substituteGenerics(Map<String, JSType> concreteTypes) {
@@ -588,7 +608,8 @@ public class JSType {
     }
     // Because of optional properties,
     //   x \le y \iff x \join y = y does not hold.
-    return ObjectType.isUnionSubtype(keepLoosenessOfThis, this.objs, other.objs);
+    return ObjectType.isUnionSubtype(
+        keepLoosenessOfThis, this.objs, other.objs);
   }
 
   public JSType removeType(JSType other) {
@@ -618,7 +639,9 @@ public class JSType {
   }
 
   public JSType withLocation(String location) {
-    return new JSType(mask, location, objs, typeVar);
+    return new JSType(mask, location,
+        objs == null ? null : ObjectType.withLocation(objs),
+        typeVar);
   }
 
   public String getLocation() {

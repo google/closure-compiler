@@ -114,6 +114,25 @@ public class ObjectType {
     return objectKind.isDict();
   }
 
+  static ImmutableSet<ObjectType> withLocation(Set<ObjectType> objs) {
+    ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
+    for (ObjectType obj : objs) {
+      newObjs.add(obj.withLocation());
+    }
+    return newObjs.build();
+  }
+
+  private ObjectType withLocation() {
+    if (props.isEmpty()) {
+      return this;
+    }
+    PersistentMap<String, Property> pm = props;
+    for (Map.Entry<String, Property> entry : props.entrySet()) {
+      pm = pm.with(entry.getKey(), entry.getValue().withLocation());
+    }
+    return ObjectType.makeObjectType(nominalType, pm, fn, isLoose, objectKind);
+  }
+
   static ImmutableSet<ObjectType> withLooseObjects(Set<ObjectType> objs) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj : objs) {
@@ -238,7 +257,8 @@ public class ObjectType {
     for (Map.Entry<String, Property> propsEntry : props1.entrySet()) {
       String pname = propsEntry.getKey();
       if (!props2.containsKey(pname)) {
-        newProps = mayPutProp(pname, propsEntry.getValue(), newProps, resultNominalType);
+        newProps = mayPutProp(
+            pname, propsEntry.getValue(), newProps, resultNominalType);
       }
     }
     for (Map.Entry<String, Property> propsEntry : props2.entrySet()) {

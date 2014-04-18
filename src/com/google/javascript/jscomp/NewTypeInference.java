@@ -1745,12 +1745,16 @@ public class NewTypeInference implements CompilerPass {
       JSType declared, JSType inferred, JSType required) {
     boolean fuzzyDeclaration = declared == null || declared.isUnknown() ||
         (declared.isTop() && !inferred.isTop());
-    // If required is loose, It's easier for it to be a subtype of inferred.
-    // We only tighten the type if the non-loose required is also be a subtype.
-    // Otherwise, we would be skipping warnings too often.
-    // This is important b/c analyzePropAccess and analyzePropLvalue introduce
-    // loose objects, even if there are no undeclared formals.
-    return fuzzyDeclaration && required.isNonLooseSubtypeOf(inferred);
+    return fuzzyDeclaration
+        // For values created locally, we have a fairly good understanding of
+        // where they flow, so don't be permissive here; give the warning.
+        && inferred.isFromNonLocalValue()
+        // If required is loose, it's easier for it to be a subtype of inferred.
+        // We only tighten the type if the non-loose required is also a subtype.
+        // Otherwise, we would be skipping warnings too often.
+        // This is important b/c analyzePropAccess & analyzePropLvalue introduce
+        // loose objects, even if there are no undeclared formals.
+        && required.isNonLooseSubtypeOf(inferred);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -1858,11 +1862,12 @@ public class NewTypeInference implements CompilerPass {
               recvType.getDeclaredProp(propQname), resultType, requiredType)) {
         // Tighten the inferred type and don't warn.
         // See Token.NAME fwd for explanation about types as lower/upper bounds.
-        LValueResultFwd lvr = analyzeLValueFwd(
-            propAccessNode, inEnv, requiredType);
-        TypeEnv updatedEnv = updateLvalueTypeInEnv(
-            lvr.env, propAccessNode, lvr.ptr, requiredType);
-        return new EnvTypePair(updatedEnv, requiredType);
+        resultType = resultType.specialize(requiredType);
+        LValueResultFwd lvr =
+            analyzeLValueFwd(propAccessNode, inEnv, resultType);
+        TypeEnv updatedEnv =
+            updateLvalueTypeInEnv(lvr.env, propAccessNode, lvr.ptr, resultType);
+        return new EnvTypePair(updatedEnv, resultType);
       }
     }
     // We've already warned about missing props, and never want to return null.

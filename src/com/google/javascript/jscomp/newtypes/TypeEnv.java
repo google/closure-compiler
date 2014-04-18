@@ -107,18 +107,4 @@ public class TypeEnv {
     }
     return helper.toString();
   }
-
-  @Override
-  public boolean equals(Object o) {
-    if (o == null || !(o instanceof TypeEnv)) {
-      return false;
-    }
-    TypeEnv other = (TypeEnv) o;
-    return this.typeMap.equals(other.typeMap);
-  }
-
-  @Override
-  public int hashCode() {
-    return typeMap.hashCode();
-  }
 }
