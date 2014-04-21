@@ -54,7 +54,9 @@ public class ObjectType {
   private ObjectType(NominalType nominalType,
       PersistentMap<String, Property> props, FunctionType fn, boolean isLoose,
       ObjectKind objectKind) {
-    Preconditions.checkState(nominalType == null || !isLoose);
+    Preconditions.checkArgument(fn == null || fn.isLoose() == isLoose,
+        "isLoose: %s, fn: %s", isLoose, fn);
+    Preconditions.checkArgument(nominalType == null || !isLoose);
     this.nominalType = nominalType;
     this.props = props;
     this.fn = fn;
@@ -462,24 +464,40 @@ public class ObjectType {
         areRelatedClasses(obj1.nominalType, obj2.nominalType));
     NominalType resultNominalType =
         NominalType.pickSubclass(obj1.nominalType, obj2.nominalType);
+    FunctionType fn = FunctionType.meet(obj1.fn, obj2.fn);
+    boolean isLoose = obj1.isLoose && obj2.isLoose ||
+        fn != null && fn.isLoose();
+    PersistentMap<String, Property> props;
+    if (isLoose) {
+      props = joinPropsLoosely(obj1.props, obj2.props);
+    } else {
+      props = meetPropsHelper(false, resultNominalType, obj1.props, obj2.props);
+    }
     return ObjectType.makeObjectType(
         resultNominalType,
-        meetPropsHelper(false, resultNominalType, obj1.props, obj2.props),
-        FunctionType.meet(obj1.fn, obj2.fn),
-        obj1.isLoose && obj2.isLoose,
+        props,
+        fn,
+        isLoose,
         ObjectKind.meet(obj1.objectKind, obj2.objectKind));
   }
 
   static ObjectType join(ObjectType obj1, ObjectType obj2) {
     Preconditions.checkState(
         areRelatedClasses(obj1.nominalType, obj2.nominalType));
+    boolean isLoose = obj1.isLoose || obj2.isLoose;
+    FunctionType fn = FunctionType.join(obj1.fn, obj2.fn);
+    PersistentMap<String, Property> props;
+    if (isLoose) {
+      fn = fn == null ? null : fn.withLoose();
+      props = joinPropsLoosely(obj1.props, obj2.props);
+    } else {
+      props = joinProps(obj1.props, obj2.props);
+    }
     return ObjectType.makeObjectType(
         NominalType.pickSuperclass(obj1.nominalType, obj2.nominalType),
-        (obj1.isLoose || obj2.isLoose) ?
-          joinPropsLoosely(obj1.props, obj2.props) :
-          joinProps(obj1.props, obj2.props),
-        FunctionType.join(obj1.fn, obj2.fn),
-        obj1.isLoose || obj2.isLoose,
+        props,
+        fn,
+        isLoose,
         ObjectKind.join(obj1.objectKind, obj2.objectKind));
   }
 

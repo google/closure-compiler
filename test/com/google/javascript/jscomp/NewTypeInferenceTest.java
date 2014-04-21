@@ -5251,6 +5251,21 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testLooseFunctionSubtypeDoesntCrash() {
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "var Foo = function() {};\n" +
+        "/** @param {function(!Foo)} fooFun */\n" +
+        "var reqFooFun = function(fooFun) {};\n" +
+        "/** @type {function(!Foo)} */\n" +
+        "var declaredFooFun;\n" +
+        "function f(opt_fooFun) {\n" +
+        "  reqFooFun(opt_fooFun);\n" +
+        "  var fooFun = opt_fooFun || declaredFooFun;\n" +
+        "  reqFooFun(fooFun);\n" +
+        "};");
+  }
+
   public void testMeetOfLooseObjAndNamedDoesntCrash() {
     checkNoWarnings(
         "/** @constructor */ function Foo(){ this.prop = 5; }\n" +
