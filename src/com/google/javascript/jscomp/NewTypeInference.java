@@ -1017,7 +1017,7 @@ public class NewTypeInference implements CompilerPass {
           println(varName, "'s preciseType: ", preciseType);
           if (!preciseType.isBottom() &&
               currentScope.isUndeclaredFormal(varName) &&
-              requiredType.hasNonScalar()) {
+              preciseType.hasNonScalar()) {
             // In the bwd direction, we may infer a loose type and then join w/
             // top and forget it. That's why we also loosen types going fwd.
             preciseType = preciseType.withLoose();
@@ -2074,7 +2074,7 @@ public class NewTypeInference implements CompilerPass {
 
         JSType preciseType = inferredType.specialize(requiredType);
         if (currentScope.isUndeclaredFormal(varName) &&
-            requiredType.hasNonScalar()) {
+            preciseType.hasNonScalar()) {
           preciseType = preciseType.withLoose();
         }
 

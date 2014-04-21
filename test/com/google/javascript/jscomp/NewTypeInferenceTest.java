@@ -5230,6 +5230,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
   }
 
+  public void testSpecializeLooseNullDoesntCrash() {
+    checkNoWarnings(
+        "/** @constructor */ function Foo(){}\n" +
+        "function reqFoo(/** Foo */ x) {}\n" +
+        "function f(x) {\n" +
+        "   x = null;\n" +
+        "   reqFoo(x);\n" +
+        "}");
+  }
+
   public void testGetpropDoesntCrash() {
     checkNoWarnings(
         "/** @constructor */ function Obj(){}\n" +
