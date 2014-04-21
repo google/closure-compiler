@@ -106,6 +106,10 @@ public class JSTypeCreatorFromJSDoc {
         return JSType.UNKNOWN;
       case Token.VOID:
         return JSType.UNDEFINED;
+      case Token.LB:
+        warn("The [] type syntax is no longer supported." +
+             " Please use Array.<T> instead.", n);
+        return JSType.UNKNOWN;
       case Token.STRING:
         return getNamedTypeHelper(n, ownerType, registry, typeParameters);
       case Token.PIPE: {

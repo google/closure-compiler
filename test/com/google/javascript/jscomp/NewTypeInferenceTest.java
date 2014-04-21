@@ -5222,6 +5222,12 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testBracketArrayJsdocDoesntCrash() {
+    typeCheck(
+        "/** @type {[Object]} */ var arr = [];",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+  }
+
   public void testUnknownTypeReferenceDoesntCrash() {
     typeCheck(
         "/** @interface */ function I(){}\n" +
