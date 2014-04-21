@@ -24,6 +24,7 @@ import com.google.javascript.rhino.Node;
  * Tests for {@link CollapseProperties}.
  *
  */
+
 public class CollapsePropertiesTest extends CompilerTestCase {
 
   private static String EXTERNS =

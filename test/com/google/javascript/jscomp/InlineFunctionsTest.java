@@ -15,12 +15,12 @@
  */
 
 package com.google.javascript.jscomp;
-import com.google.javascript.rhino.Node;
 
 /**
  * Inline function tests.
  * @author johnlenz@google.com (john lenz)
  */
+
 public class InlineFunctionsTest extends CompilerTestCase {
   boolean allowGlobalFunctionInlining = true;
   boolean allowBlockInlining = true;

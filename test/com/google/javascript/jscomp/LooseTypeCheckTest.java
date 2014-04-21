@@ -43,6 +43,7 @@ import java.util.Set;
  * or removed along with the looseTypes option.
  *
  */
+
 public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   @Override
