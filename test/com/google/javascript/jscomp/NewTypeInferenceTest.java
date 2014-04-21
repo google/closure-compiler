@@ -5222,6 +5222,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testUnknownTypeReferenceDoesntCrash() {
+    typeCheck(
+        "/** @interface */ function I(){}\n" +
+        "/** @type {function(NonExistentClass)} */\n" +
+        "I.prototype.method;",
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+  }
+
   public void testGetpropDoesntCrash() {
     checkNoWarnings(
         "/** @constructor */ function Obj(){}\n" +

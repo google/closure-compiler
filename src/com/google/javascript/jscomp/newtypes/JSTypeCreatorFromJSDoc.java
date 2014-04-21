@@ -405,7 +405,7 @@ public class JSTypeCreatorFromJSDoc {
               // TODO(blickly): Use typeParameters here
               return getFunTypeBuilder(jsdocNode, ownerType, registry, null);
             } catch (UnknownTypeException e) {
-              return null;
+              return FunctionTypeBuilder.qmarkFunctionBuilder();
             }
           }
         } else if (isQmarkFunction(jsdocNode)) {
