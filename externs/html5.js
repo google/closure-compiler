@@ -1400,6 +1400,8 @@ function HTMLAudioElement() {}
 /**
  * @constructor
  * @extends {HTMLMediaElement}
+ * The webkit-prefixed attributes are defined in
+ * https://code.google.com/p/chromium/codesearch#chromium/src/third_party/WebKit/Source/core/html/HTMLVideoElement.idl
  */
 function HTMLVideoElement() {}
 
@@ -1443,6 +1445,12 @@ HTMLVideoElement.prototype.webkitSupportsFullscreen;
 
 /** @type {boolean} */
 HTMLVideoElement.prototype.webkitDisplayingFullscreen;
+
+/** @type {number} */
+HTMLVideoElement.prototype.webkitDecodedFrameCount;
+
+/** @type {number} */
+HTMLVideoElement.prototype.webkitDroppedFrameCount;
 
 /**
  * @constructor
