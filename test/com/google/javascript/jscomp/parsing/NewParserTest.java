@@ -1358,35 +1358,36 @@ public class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testInvalidEscape() {
-    parseError("var \\x39abc", "Invalid escape sequence '\\x'");
-    parseError("var abc\\t", "Invalid escape sequence '\\t'");
+    parseError("var \\x39abc", "Invalid escape sequence: '\\x'");
+    parseError("var abc\\t", "Invalid escape sequence: '\\t'");
   }
 
   public void testEOFInUnicodeEscape() {
-    parseError("var \\u1", "Hex digit expected");
-    parseError("var \\u12", "Hex digit expected");
-    parseError("var \\u123", "Hex digit expected");
+    parseError("var \\u1", "Invalid escape sequence");
+    parseError("var \\u12", "Invalid escape sequence");
+    parseError("var \\u123", "Invalid escape sequence");
   }
 
   public void testEndOfIdentifierInUnicodeEscape() {
-    parseError("var \\u1 = 1;", "Hex digit expected");
-    parseError("var \\u12 = 2;", "Hex digit expected");
-    parseError("var \\u123 = 3;", "Hex digit expected");
+    parseError("var \\u1 = 1;", "Invalid escape sequence");
+    parseError("var \\u12 = 2;", "Invalid escape sequence");
+    parseError("var \\u123 = 3;", "Invalid escape sequence");
   }
 
   public void testInvalidUnicodeEscape() {
-    parseError("var \\uDEFG", "Hex digit expected");
+    parseError("var \\uDEFG", "Invalid escape sequence");
   }
 
   public void testUnicodeEscapeInvalidIdentifierStart() {
+    parseError("var \\u0037yler",
+        "Character '7' (U+0037) is not a valid identifier start char");
     parseError("var \\u0020space",
-        "Character ' ' (U+0020) is not a valid identifier start char");
+        "Character ' ' (U+0020) is not a valid identifier char");
   }
 
   public void testUnicodeEscapeInvalidIdentifierChar() {
-    // TODO(tbreisacher): This error could be clearer.
     parseError("var sp\\u0020ce",
-        "Character ' ' (U+0020) is not a valid identifier start char");
+        "Character ' ' (U+0020) is not a valid identifier char");
   }
 
   /**

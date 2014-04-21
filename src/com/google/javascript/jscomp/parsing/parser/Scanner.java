@@ -28,7 +28,7 @@ import java.util.LinkedList;
  * caller is not expecting a regular expression literal except for
  * nextRegularExpressionLiteralToken.
  *
- * 7 Lexical Conventions
+ * <p>7 Lexical Conventions
  */
 public class Scanner {
   private final ErrorReporter errorReporter;
@@ -543,8 +543,7 @@ public class Scanner {
       case '\'':
         return scanStringLiteral(beginToken, ch);
       default:
-        ungetChar();
-        return scanIdentifierOrKeyword(beginToken);
+        return scanIdentifierOrKeyword(beginToken, ch);
       }
   }
 
@@ -605,57 +604,64 @@ public class Scanner {
     return new Token(type, getTokenRange(beginToken));
   }
 
-  /**
-   * Consumes either a single character, or a \\uXXXX escape
-   * sequence. If an escape sequence is found, returns the
-   * character that the sequence represents.
-   */
-  private char nextCharOrUnicodeEscape() {
-    char ch = nextChar();
-    if (ch == '\\') {
-      ch = nextChar();
-      if (ch == 'u') {
-        if (skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit()) {
-          String hexDigits = source.contents.substring(index - 4, index);
-          ch = (char) Integer.parseInt(hexDigits, 0x10);
-        }
-      } else {
-        reportError(
-            getPosition(index),
-            "Invalid escape sequence '\\%s'", ch);
-      }
-    }
-    return ch;
-  }
-
-  private char peekCharOrUnicodeEscape() {
-    int oldIndex = index;
-    char ch = nextCharOrUnicodeEscape();
-    index = oldIndex;
-    return ch;
-  }
-
-  private Token scanIdentifierOrKeyword(int beginToken) {
-    char ch = nextCharOrUnicodeEscape();
-    if (!isIdentifierStart(ch)) {
-      reportError(
-          getPosition(beginToken),
-          "Character '%c' (U+%04X) is not a valid identifier start char",
-          ch, (int) ch);
-      return createToken(TokenType.ERROR, beginToken);
-    }
-
+  private Token scanIdentifierOrKeyword(int beginToken, char ch) {
     StringBuilder valueBuilder = new StringBuilder();
     valueBuilder.append(ch);
 
-    // TODO(tbreisacher): Most identifiers will not use unicode escapes,
-    // so to optimize this, try to parse assuming there aren't any unicode
-    // escapes, and then go back and parse the escapes if that fails.
-    while (isIdentifierPart(peekCharOrUnicodeEscape())) {
-      valueBuilder.append(nextCharOrUnicodeEscape());
+    boolean containsUnicodeEscape = ch == '\\';
+
+    ch = peekChar();
+    while (isIdentifierPart(ch) || ch == '\\') {
+      if (ch == '\\') {
+        containsUnicodeEscape = true;
+      }
+      valueBuilder.append(nextChar());
+      ch = peekChar();
     }
 
     String value = valueBuilder.toString();
+
+    // Process unicode escapes.
+    while (containsUnicodeEscape && value.contains("\\")) {
+      int escapeStart = value.indexOf('\\');
+      if (value.charAt(escapeStart + 1) != 'u') {
+        reportError(
+            getPosition(index),
+            "Invalid escape sequence: '\\%c'", value.charAt(escapeStart + 1));
+        return createToken(TokenType.ERROR, beginToken);
+      }
+
+      try {
+        String hexDigits = value.substring(escapeStart + 2, escapeStart + 6);
+        ch = (char) Integer.parseInt(hexDigits, 0x10);
+        if (!isIdentifierPart(ch)) {
+          reportError(
+              getPosition(index),
+              "Character '%c' (U+%04X) is not a valid identifier char",
+              ch, (int) ch);
+          return createToken(TokenType.ERROR, beginToken);
+        }
+        value = value.substring(0, escapeStart) + ch +
+            value.substring(escapeStart + 6);
+      } catch (NumberFormatException|StringIndexOutOfBoundsException e) {
+        reportError(
+            getPosition(index),
+            "Invalid escape sequence");
+        return createToken(TokenType.ERROR, beginToken);
+      }
+    }
+
+    // Check to make sure the first character (or the unicode escape at the
+    // beginning of the identifier) is a valid identifier start character.
+    char start = value.charAt(0);
+    if (!isIdentifierStart(start)) {
+      reportError(
+          getPosition(beginToken),
+          "Character '%c' (U+%04X) is not a valid identifier start char",
+          start, (int) start);
+      return createToken(TokenType.ERROR, beginToken);
+    }
+
     if (Keywords.isKeyword(value)) {
       return new Token(Keywords.getTokenType(value), getTokenRange(beginToken));
     }
@@ -882,10 +888,6 @@ public class Scanner {
       return '\0';
     }
     return source.contents.charAt(index++);
-  }
-
-  private void ungetChar() {
-    index--;
   }
 
   private boolean peek(char ch) {
