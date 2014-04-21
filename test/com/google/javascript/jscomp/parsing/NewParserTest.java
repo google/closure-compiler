@@ -1260,9 +1260,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "identifier is a reserved word");
     parseError("boolean = 1;", "identifier is a reserved word");
 
-    // TODO(johnlenz): reenable
-    // parseError("class = 1;", "identifier is a reserved word");
-    // parseError("public = 2;", "identifier is a reserved word");
+    parseError("class = 1;", "'identifier' expected");
+    parseError("public = 2;", "primary expression expected");
 
     mode = LanguageMode.ECMASCRIPT5;
 
@@ -1270,9 +1269,9 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("function boolean() {};");
     parse("boolean = 1;");
 
+    parseError("class = 1;", "'identifier' expected");
     // TODO(johnlenz): reenable
-    // parseError("class = 1;", "identifier is a reserved word");
-    // parse("public = 2;");
+    //parse("public = 2;");
 
     mode = LanguageMode.ECMASCRIPT5_STRICT;
 
@@ -1281,14 +1280,13 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("boolean = 1;");
     parseError("public = 2;", "primary expression expected");
 
-    // TODO(johnlenz): reenable
-    // parseError("class = 1;", "'identifier' expected");
+    parseError("class = 1;", "'identifier' expected");
   }
 
   public void testKeywordsAsProperties() {
     mode = LanguageMode.ECMASCRIPT3;
 
-    // parseWarning("var x = {function: 1};", IRFactory.INVALID_ES3_PROP_NAME);
+    parseWarning("var x = {function: 1};", IRFactory.INVALID_ES3_PROP_NAME);
     parseWarning("x.function;", IRFactory.INVALID_ES3_PROP_NAME);
     parseError("var x = {get x(){} };",
         IRFactory.GETTER_ERROR_MESSAGE);

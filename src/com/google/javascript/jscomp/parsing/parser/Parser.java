@@ -194,9 +194,9 @@ public class Parser {
 
   private ParseTree parseModuleDefinition() {
     SourcePosition start = getTreeStartLocation();
-    eatId(); // module
+    eatPredefinedString(PredefinedName.MODULE);
     IdentifierToken name = eatId();
-    eatId(); // from
+    eatPredefinedString(PredefinedName.FROM);
     LiteralToken moduleSpecifier = eat(TokenType.STRING).asLiteral();
     eatPossibleImplicitSemiColon();
     return new ModuleImportTree(getTreeLocation(start), name, moduleSpecifier);
@@ -354,7 +354,7 @@ public class Parser {
         export, exportSpecifierList, moduleSpecifier);
   }
 
-  //  ImportSpecifierSet ::= '{' (ImportSpecifier (',' ImportSpecifier)* (,)? )?  '}'
+  //  ExportSpecifierSet ::= '{' (ExportSpecifier (',' ExportSpecifier)* (,)? )?  '}'
   private ImmutableList<ParseTree> parseExportSpecifierSet() {
     ImmutableList.Builder<ParseTree> elements;
     elements = ImmutableList.builder();
@@ -369,7 +369,7 @@ public class Parser {
     return elements.build();
   }
 
-  //  ImportSpecifier ::= Identifier ('as' Identifier)?
+  //  ExportSpecifier ::= Identifier ('as' Identifier)?
   private ParseTree parseExportSpecifier() {
     SourcePosition start = getTreeStartLocation();
     IdentifierToken importedName = eatId();
@@ -572,7 +572,7 @@ public class Parser {
   // 13 Function Definition
   private ParseTree parseFunctionDeclaration() {
     SourcePosition start = getTreeStartLocation();
-    nextToken(); // function
+    eat(Keywords.FUNCTION.type);
     boolean isGenerator = eatOpt(TokenType.STAR) != null;
     IdentifierToken name = eatId();
 
@@ -584,7 +584,7 @@ public class Parser {
   private ParseTree parseFunctionExpression() {
     SourcePosition start = getTreeStartLocation();
     boolean isGenerator = eatOpt(TokenType.STAR) != null;
-    nextToken(); // function
+    eat(Keywords.FUNCTION.type);
     IdentifierToken name = eatIdOpt();
 
     return parseFunctionTail(
@@ -1433,7 +1433,7 @@ public class Parser {
   private ParseTree parseGetAccessor() {
     SourcePosition start = getTreeStartLocation();
     boolean isStatic = eatOpt(TokenType.STATIC) != null;
-    eatId(); // get
+    eatPredefinedString(PredefinedName.GET);
     Token propertyName = eatObjectLiteralPropertyName();
     eat(TokenType.OPEN_PAREN);
     eat(TokenType.CLOSE_PAREN);
@@ -1449,7 +1449,7 @@ public class Parser {
   private ParseTree parseSetAccessor() {
     SourcePosition start = getTreeStartLocation();
     boolean isStatic = eatOpt(TokenType.STATIC) != null;
-    eatId(); // set
+    eatPredefinedString(PredefinedName.SET);
     Token propertyName = eatObjectLiteralPropertyName();
     eat(TokenType.OPEN_PAREN);
     IdentifierToken parameter = eatId();
