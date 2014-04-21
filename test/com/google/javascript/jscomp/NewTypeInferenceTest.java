@@ -5240,6 +5240,26 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
   }
 
+  public void testOuterVarDefinitionJoinDoesntCrash() {
+    checkNoWarnings(
+        "/** @constructor */ function Foo(){}\n" +
+        "function f() {\n" +
+        "  if (true) {\n" +
+        "    function g() { new Foo; }\n" +
+        "    g();\n" +
+        "  }\n" +
+        "}");
+
+    typeCheck(
+        "function f() {\n" +
+        "  if (true) {\n" +
+        "    function g() { new Foo; }\n" +
+        "    g();\n" +
+        "  }\n" +
+        "}",
+        VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
   public void testGetpropDoesntCrash() {
     checkNoWarnings(
         "/** @constructor */ function Obj(){}\n" +

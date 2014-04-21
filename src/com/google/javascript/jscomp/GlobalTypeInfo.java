@@ -1001,6 +1001,8 @@ class GlobalTypeInfo implements CompilerPass {
     private final Map<String, JSType> locals = Maps.newHashMap();
     private final Set<String> constVars = Sets.newHashSet();
     private final ArrayList<String> formals;
+    // outerVars are the variables that appear free in this scope
+    // and are defined in an enclosing scope.
     private final Set<String> outerVars = Sets.newHashSet();
     private final Map<String, Scope> localFunDefs = Maps.newHashMap();
     private Map<String, RawNominalType> localClassDefs = Maps.newHashMap();

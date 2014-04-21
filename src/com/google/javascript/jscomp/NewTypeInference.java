@@ -1947,6 +1947,10 @@ public class NewTypeInference implements CompilerPass {
   private TypeEnv collectTypesForFreeVarsBwd(Node callee, TypeEnv env) {
     Scope calleeScope = currentScope.getScope(callee.getQualifiedName());
     for (String freeVar : calleeScope.getOuterVars()) {
+      if (!currentScope.isDefinedLocally(freeVar) &&
+          !currentScope.isOuterVar(freeVar)) {
+        continue;
+      }
       // Practice will inform what the right decision here is.
       //   * We could ignore the call, giving poor inference around closures.
       //   * We could use info from the call, giving possibly strange errors.

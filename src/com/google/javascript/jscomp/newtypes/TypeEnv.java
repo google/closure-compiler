@@ -76,7 +76,7 @@ public class TypeEnv {
       JSType joinedType = null;
       for (TypeEnv env : envs) {
         JSType otherType = env.getType(n);
-        Preconditions.checkNotNull(otherType);
+        Preconditions.checkNotNull(otherType, "%s is missing from an env", n);
         if (joinedType == null) {
           joinedType = otherType;
         } else {
