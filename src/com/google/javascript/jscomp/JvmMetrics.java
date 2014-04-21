@@ -121,9 +121,9 @@ class JvmMetrics {
     } else {
       prefix = normalizeName(prefix);
       out.println(normalizeTabularColonPos(
-          String.format(prefix + "-available-bytes : %d", usage.getMax())));
+          String.format("%s-available-bytes : %d", prefix, usage.getMax())));
       out.println(normalizeTabularColonPos(
-          String.format(prefix + "-current-bytes : %d", usage.getUsed())));
+          String.format("%s-current-bytes : %d", prefix, usage.getUsed())));
     }
   }
 
@@ -138,11 +138,11 @@ class JvmMetrics {
           formatBytes(usage.getUsed()));
     } else {
       out.println(normalizeTabularColonPos(
-          String.format(prefix + "-available-bytes : %d", usage.getMax())));
+          String.format("%s-available-bytes : %d", prefix, usage.getMax())));
       out.println(normalizeTabularColonPos(
-          String.format(prefix + "-peak-bytes : %d", peakUsage.getUsed())));
+          String.format("%s-peak-bytes : %d", prefix, peakUsage.getUsed())));
       out.println(normalizeTabularColonPos(
-          String.format(prefix + "-current-bytes : %d",     usage.getUsed())));
+          String.format("%s-current-bytes : %d", prefix, usage.getUsed())));
     }
   }
 
@@ -239,10 +239,10 @@ class JvmMetrics {
       } else {
         String name = normalizeName("aggregate");
         out.println(normalizeTabularColonPos(
-            String.format("gc-" + name + "-collection-count : %d",
+            String.format("gc-%s-collection-count : %d", name,
             collectionCount)));
         out.println(normalizeTabularColonPos(
-            String.format("gc-" + name + "-collection-time-ms : %d",
+            String.format("gc-%s-collection-time-ms : %d", name,
             collectionTime)));
       }
     }
