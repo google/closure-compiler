@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -32,8 +33,6 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -237,20 +236,13 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
      *    - X.removeAll() (X is of type goog.events.EventHandler)
      *    - Y.add(X...) or Y.push(X)
      */
-    this.addDisposeCall("goog.dispose",
-        new ArrayList<>(Arrays.asList(0)));
-    this.addDisposeCall("goog.Disposable.registerDisposable",
-        new ArrayList<>(Arrays.asList(0)));
-    this.addDisposeCall("goog.disposeAll",
-        new ArrayList<>(Arrays.asList(DISPOSE_ALL)));
-    this.addDisposeCall("goog.events.EventHandler.removeAll",
-        new ArrayList<>(Arrays.asList(DISPOSE_SELF)));
-    this.addDisposeCall(".dispose",
-        new ArrayList<>(Arrays.asList(DISPOSE_SELF)));
-    this.addDisposeCall(".push",
-        new ArrayList<>(Arrays.asList(0)));
-    this.addDisposeCall(".add",
-        new ArrayList<>(Arrays.asList(DISPOSE_ALL)));
+    this.addDisposeCall("goog.dispose", ImmutableList.of(0));
+    this.addDisposeCall("goog.Disposable.registerDisposable", ImmutableList.of(0));
+    this.addDisposeCall("goog.disposeAll", ImmutableList.of(DISPOSE_ALL));
+    this.addDisposeCall("goog.events.EventHandler.removeAll", ImmutableList.of(DISPOSE_SELF));
+    this.addDisposeCall(".dispose", ImmutableList.of(DISPOSE_SELF));
+    this.addDisposeCall(".push", ImmutableList.of(0));
+    this.addDisposeCall(".add", ImmutableList.of(DISPOSE_SELF));
   }
 
 

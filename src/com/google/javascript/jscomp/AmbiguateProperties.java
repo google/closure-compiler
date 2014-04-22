@@ -20,6 +20,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -42,7 +43,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -194,10 +194,9 @@ class AmbiguateProperties implements CompilerPass {
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new ProcessProperties());
 
-    Set<String> reservedNames =
-        new HashSet<>(externedNames.size() + quotedNames.size());
-    reservedNames.addAll(externedNames);
-    reservedNames.addAll(quotedNames);
+    ImmutableSet.Builder<String> reservedNames = ImmutableSet.<String>builder()
+        .addAll(externedNames)
+        .addAll(quotedNames);
 
     int numRenamedPropertyNames = 0;
     int numSkippedPropertyNames = 0;
@@ -218,7 +217,7 @@ class AmbiguateProperties implements CompilerPass {
     int numNewPropertyNames = coloring.color();
 
     NameGenerator nameGen = new NameGenerator(
-        reservedNames, "", reservedCharacters);
+        reservedNames.build(), "", reservedCharacters);
     Map<Integer, String> colorMap = Maps.newHashMap();
     for (int i = 0; i < numNewPropertyNames; ++i) {
       colorMap.put(i, nameGen.generateNextName());

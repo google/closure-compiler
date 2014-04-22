@@ -34,11 +34,9 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -58,13 +56,13 @@ public final class NodeUtil {
 
   /** the set of builtin constructors that don't have side effects. */
   private static final Set<String> CONSTRUCTORS_WITHOUT_SIDE_EFFECTS =
-      new HashSet<>(Arrays.asList(
+      ImmutableSet.of(
         "Array",
         "Date",
         "Error",
         "Object",
         "RegExp",
-        "XMLHttpRequest"));
+        "XMLHttpRequest");
 
   // Utility class; do not instantiate.
   private NodeUtil() {}
