@@ -5266,6 +5266,28 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         VarCheck.UNDEFINED_VAR_ERROR);
   }
 
+  public void testRemoveNonexistentPropDoesntCrash() {
+    // TODO(blickly): Would be nice not to warn here,
+    // even if it means missing the warning below
+    typeCheck(
+        "/** @constructor */ function Foo() {\n" +
+        " /** @type {!Object} */ this.obj = {arr : []}\n" +
+        "}\n" +
+        "Foo.prototype.bar = function() {\n" +
+        " this.obj.arr.length = 0;\n" +
+        "}",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {\n" +
+        " /** @type {!Object} */ this.obj = {}\n" +
+        "}\n" +
+        "Foo.prototype.bar = function() {\n" +
+        " this.obj.prop1.prop2 = 0;\n" +
+        "}",
+        TypeCheck.INEXISTENT_PROPERTY);
+  }
+
   public void testGetpropDoesntCrash() {
     checkNoWarnings(
         "/** @constructor */ function Obj(){}\n" +

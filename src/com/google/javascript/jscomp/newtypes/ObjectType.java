@@ -196,12 +196,12 @@ public class ObjectType {
       }
     } else { // This has a nested object
       QualifiedName objQname = new QualifiedName(objName);
-      QualifiedName innerProps = qname.getAllButLeftmost();
-      if (!this.props.containsKey(objName)) {
-        Preconditions.checkState(mayHaveProp(objQname));
-        newProps = newProps.with(objName, getLeftmostProp(objQname));
+      if (!mayHaveProp(objQname)) {
+        Preconditions.checkState(type == null);
+        return this;
       }
-      Property objProp = newProps.get(objName);
+      QualifiedName innerProps = qname.getAllButLeftmost();
+      Property objProp = getLeftmostProp(objQname);
       newProps = newProps.with(objName,
           new Property(objProp.getType().withProperty(innerProps, type),
             objProp.getDeclaredType(), objProp.isOptional()));
