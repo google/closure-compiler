@@ -667,6 +667,9 @@ class GlobalTypeInfo implements CompilerPass {
       // property creations are in the same scope as the constructor
       if (!currentScope.isDefinedLocally(ctorName)) {
         warnings.add(JSError.make(getProp, CTOR_IN_DIFFERENT_SCOPE));
+        if (initializer != null && initializer.isFunction()) {
+          visitFunctionDef(initializer, rawType);
+        }
         return;
       }
       String pname = NodeUtil.getPrototypePropertyName(getProp);

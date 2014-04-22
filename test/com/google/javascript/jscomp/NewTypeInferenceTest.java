@@ -5288,6 +5288,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         TypeCheck.INEXISTENT_PROPERTY);
   }
 
+  public void testDoublyAssignedPrototypeMethodDoesntCrash() {
+    typeCheck(
+        "/** @constructor */ function Foo(){}\n" +
+        "Foo.prototype.method = function(){};\n" +
+        "var f = function() {\n" +
+        "   Foo.prototype.method = function(){};\n" +
+        "}",
+        GlobalTypeInfo.CTOR_IN_DIFFERENT_SCOPE);
+  }
+
   public void testGetpropDoesntCrash() {
     checkNoWarnings(
         "/** @constructor */ function Obj(){}\n" +

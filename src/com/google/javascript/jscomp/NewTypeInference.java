@@ -889,7 +889,10 @@ public class NewTypeInference implements CompilerPass {
         return new EnvTypePair(inEnv, JSType.UNKNOWN);
       case Token.FUNCTION: {
         String fnName = symbolTable.getFunInternalName(expr);
-        return new EnvTypePair(inEnv, envGetType(inEnv, fnName));
+        JSType fnType = envGetType(inEnv, fnName);
+        Preconditions.checkState(fnType != null,
+            "Could not find type for %s", fnName);
+        return new EnvTypePair(inEnv, fnType);
       }
       case Token.FALSE:
       case Token.NULL:
