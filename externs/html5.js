@@ -1761,10 +1761,22 @@ DragEvent.prototype.dataTransfer;
 
 
 /**
- * @constructor
- * @extends {Event}
+ * @typedef {{
+ *   lengthComputable: (boolean|undefined),
+ *   loaded: (number|undefined),
+ *   total: (number|undefined)
+ * }}
  */
-function ProgressEvent() {}
+var ProgressEventInit;
+
+/**
+ * @constructor
+ * @param {string} type
+ * @param {ProgressEventInit=} opt_progressEventInitDict
+ * @extends {Event}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ProgressEvent
+ */
+function ProgressEvent(type, opt_progressEventInitDict) {}
 
 /** @type {number} */
 ProgressEvent.prototype.total;
