@@ -88,7 +88,7 @@ public class ObjectType {
     for (Map.Entry<String, JSType> propTypeEntry : propTypes.entrySet()) {
       String propName = propTypeEntry.getKey();
       JSType propType = propTypeEntry.getValue();
-      props = props.with(propName, new Property(propType, propType, false));
+      props = props.with(propName, Property.make(propType, propType));
     }
     return ObjectType.makeObjectType(
         null, props, null, false, ObjectKind.UNRESTRICTED);
@@ -169,12 +169,14 @@ public class ObjectType {
 
   // If the property is already declared, but isDeclared is false, be careful
   // to not un-declare it.
-  private ObjectType withPropertyHelper(
-      QualifiedName qname, JSType type, boolean isDeclared) {
+  // If the property is already constant, but isConstant is false, be careful
+  // to not un-const it.
+  private ObjectType withPropertyHelper(QualifiedName qname, JSType type,
+      boolean isDeclared, boolean isConstant) {
     // TODO(blickly): If the prop exists with right type, short circuit here.
     PersistentMap<String, Property> newProps = this.props;
-    String objName = qname.getLeftmostName();
     if (qname.isIdentifier()) {
+      String pname = qname.getLeftmostName();
       JSType declType = getDeclaredProp(qname);
       Preconditions.checkState(declType == null || type == null ||
           type.isSubtypeOf(declType),
@@ -183,18 +185,24 @@ public class ObjectType {
       if (type == null) {
         type = declType;
       }
-      if (isDeclared) {
-        declType = type;
-      } else if (declType != null) {
+      if (declType != null) {
         isDeclared = true;
+        if (hasConstantProp(qname)) {
+          isConstant = true;
+        }
+      } else if (isDeclared) {
+        declType = type;
       }
       if (type == null && declType == null) {
-        newProps = newProps.without(objName);
+        newProps = newProps.without(pname);
       } else {
-        newProps = newProps.with(objName,
-            new Property(type, isDeclared ? declType : null, false));
+        newProps = newProps.with(pname,
+            isConstant ?
+            Property.makeConstant(type, declType) :
+            Property.make(type, isDeclared ? declType : null));
       }
     } else { // This has a nested object
+      String objName = qname.getLeftmostName();
       QualifiedName objQname = new QualifiedName(objName);
       if (!mayHaveProp(objQname)) {
         Preconditions.checkState(type == null);
@@ -202,16 +210,18 @@ public class ObjectType {
       }
       QualifiedName innerProps = qname.getAllButLeftmost();
       Property objProp = getLeftmostProp(objQname);
-      newProps = newProps.with(objName,
-          new Property(objProp.getType().withProperty(innerProps, type),
-            objProp.getDeclaredType(), objProp.isOptional()));
+      JSType inferred = objProp.getType().withProperty(innerProps, type);
+      JSType declared = objProp.getDeclaredType();
+      newProps = newProps.with(objName, objProp.isOptional() ?
+          Property.makeOptional(inferred, declared) :
+          Property.make(inferred, declared));
     }
     return ObjectType.makeObjectType(
         nominalType, newProps, fn, isLoose, objectKind);
   }
 
   ObjectType withProperty(QualifiedName qname, JSType type) {
-    return withPropertyHelper(qname, type, false);
+    return withPropertyHelper(qname, type, false, false);
   }
 
   static ImmutableSet<ObjectType> withProperty(
@@ -223,11 +233,11 @@ public class ObjectType {
     return newObjs.build();
   }
 
-  static ImmutableSet<ObjectType> withDeclaredProperty(
-      Set<ObjectType> objs, QualifiedName qname, JSType type) {
+  static ImmutableSet<ObjectType> withDeclaredProperty(Set<ObjectType> objs,
+      QualifiedName qname, JSType type, boolean isConstant) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj : objs) {
-      newObjs.add(obj.withPropertyHelper(qname, type, true));
+      newObjs.add(obj.withPropertyHelper(qname, type, true, isConstant));
     }
     return newObjs.build();
   }
@@ -235,8 +245,8 @@ public class ObjectType {
   private ObjectType withPropertyRequired(String pname) {
     Property oldProp = this.props.get(pname);
     Property newProp = oldProp == null ?
-        new Property(JSType.UNKNOWN, null, false) :
-        new Property(oldProp.getType(), oldProp.getDeclaredType(), false);
+        Property.make(JSType.UNKNOWN, null) :
+        Property.make(oldProp.getType(), oldProp.getDeclaredType());
     return ObjectType.makeObjectType(
         nominalType, this.props.with(pname, newProp), fn,
         isLoose, this.objectKind);
@@ -252,8 +262,7 @@ public class ObjectType {
   }
 
   private static PersistentMap<String, Property> meetPropsHelper(
-      boolean specializeProps1,
-      NominalType resultNominalType,
+      boolean specializeProps1, NominalType resultNominalType,
       Map<String, Property> props1, Map<String, Property> props2) {
     PersistentMap<String, Property> newProps = PersistentMap.create();
     for (Map.Entry<String, Property> propsEntry : props1.entrySet()) {
@@ -280,14 +289,21 @@ public class ObjectType {
   }
 
   private static PersistentMap<String, Property> mayPutProp(
-      String pname, Property prop,
-      PersistentMap<String, Property> props,
+      String pname, Property prop, PersistentMap<String, Property> props,
       NominalType nom) {
-    Property nomProp = nom == null ? null : nom.getProp(pname);
+    if (nom == null) {
+      return props.with(pname, prop);
+    }
+    Property nomProp = nom.getProp(pname);
+    if (nomProp == null) {
+      return props.with(pname, prop);
+    }
     JSType propType = prop.getType();
-    if (nomProp == null ||
-        (!propType.isUnknown() && propType.isSubtypeOf(nomProp.getType()))) {
-      props = props.with(pname, prop);
+    JSType nomPropType = nomProp.getType();
+    if (!propType.isUnknown() &&
+        propType.isSubtypeOf(nomPropType) && !propType.equals(nomPropType)) {
+      // We use specialize so that if nomProp is @const, we don't forget it.
+      return props.with(pname, nomProp.specialize(prop));
     }
     return props;
   }
@@ -305,7 +321,8 @@ public class ObjectType {
       String pname = propsEntry.getKey();
       Property prop2 = propsEntry.getValue();
       if (props1.containsKey(pname)) {
-        newProps = newProps.with(pname, Property.join(props1.get(pname), prop2));
+        newProps = newProps.with(
+            pname, Property.join(props1.get(pname), prop2));
       } else {
         newProps = newProps.with(pname, prop2.withOptional());
       }
@@ -600,13 +617,19 @@ public class ObjectType {
   }
 
   boolean hasProp(QualifiedName qname) {
-    Preconditions.checkState(qname.isIdentifier());
+    Preconditions.checkArgument(qname.isIdentifier());
     Property p = getLeftmostProp(qname);
     if (p == null || p.isOptional()) {
       return false;
     } else {
       return true;
     }
+  }
+
+  boolean hasConstantProp(QualifiedName qname) {
+    Preconditions.checkArgument(qname.isIdentifier());
+    Property p = getLeftmostProp(qname);
+    return p != null && p.isConstant();
   }
 
   JSType getDeclaredProp(QualifiedName qname) {

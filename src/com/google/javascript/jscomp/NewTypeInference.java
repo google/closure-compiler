@@ -954,7 +954,7 @@ public class NewTypeInference implements CompilerPass {
                 analyzeExprFwd(prop.getFirstChild(), env, reqPtype, specPtype);
             if (jsdocType != null) {
               // First declare it; then set the maybe more precise inferred type
-              result = result.withDeclaredProperty(qname, jsdocType);
+              result = result.withDeclaredProperty(qname, jsdocType, false);
               if (!pair.type.isSubtypeOf(jsdocType)) {
                 warnings.add(JSError.make(
                     prop, NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE,
@@ -1069,9 +1069,23 @@ public class NewTypeInference implements CompilerPass {
         }
       }
       case Token.INC:
-      case Token.DEC:
+      case Token.DEC: {
         mayWarnAboutConst(expr);
+        Node ch = expr.getFirstChild();
+        if (ch.isGetProp() || ch.isGetElem() && ch.getLastChild().isString()) {
+          // We prefer to analyze the child of INC/DEC one extra time here,
+          // to putting the @const prop check in analyzePropAccessFwd.
+          Node recv = ch.getFirstChild();
+          String pname = ch.getLastChild().getString();
+          EnvTypePair pair = analyzeExprFwd(recv, inEnv);
+          JSType recvType = pair.type;
+          if (mayWarnAboutConstProp(ch, recvType, new QualifiedName(pname))) {
+            pair.type = requiredType;
+            return pair;
+          }
+        }
         // fall through
+      }
       case Token.BITNOT:
       case Token.POS:
       case Token.NEG: { // Unary operations on numbers
@@ -1847,6 +1861,17 @@ public class NewTypeInference implements CompilerPass {
     return false;
   }
 
+  private boolean mayWarnAboutConstProp(
+      Node propAccess, JSType recvType, QualifiedName pname) {
+    if (recvType.hasConstantProp(pname) &&
+        // Don't warn about the prop declaration itself.
+        !NodeUtil.hasConstAnnotation(propAccess.getParent())) {
+      warnings.add(JSError.make(propAccess, CONST_REASSIGNED));
+      return true;
+    }
+    return false;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   private EnvTypePair analyzePropAccessFwd(Node receiver, String pname,
@@ -2515,7 +2540,7 @@ public class NewTypeInference implements CompilerPass {
       }
       case Token.NAME: {
         String varName = expr.getString();
-        JSType varType = envGetType(inEnv, varName);
+        JSType varType = analyzeExprFwd(expr, inEnv).type;
         return new LValueResultFwd(inEnv, varType,
             currentScope.getDeclaredTypeOf(varName),
             varType.hasNonScalar() ? new QualifiedName(varName) : null);
@@ -2574,6 +2599,10 @@ public class NewTypeInference implements CompilerPass {
     if (parent.isGetProp() &&
         parent.getParent().isAssign() &&
         mayWarnAboutPropCreation(pname, parent, lvalueType)) {
+      return new LValueResultFwd(lvalue.env, type, null, null);
+    }
+    if (!insideQualifiedName &&
+        mayWarnAboutConstProp(parent, lvalueType, pname)) {
       return new LValueResultFwd(lvalue.env, type, null, null);
     }
     // Warn for inexistent property either on the non-top-level of a qualified

@@ -148,7 +148,6 @@ public class NominalType {
     return result.build();
   }
 
-
   Property getProp(String pname) {
     Property p = rawType.getProp(pname);
     return p == null ? null : p.substituteGenerics(typeMap);
@@ -157,6 +156,11 @@ public class NominalType {
   public JSType getPropDeclaredType(String pname) {
     JSType type = rawType.getPropDeclaredType(pname);
     return type == null ? null : type.substituteGenerics(typeMap);
+  }
+
+  public boolean hasConstantProp(String pname) {
+    Property p = rawType.getProp(pname);
+    return p != null && p.isConstant();
   }
 
   JSType createConstructorObject(FunctionType ctorFn) {
@@ -504,12 +508,17 @@ public class NominalType {
     //////////// Class Properties
 
     /** Add a new non-optional declared property to instances of this class */
-    public void addClassProperty(String pname, JSType type) {
+    public void addClassProperty(
+        String pname, JSType type, boolean isConstant) {
       Preconditions.checkState(!isFinalized);
-      classProps = classProps.with(pname, new Property(type, type, false));
+      if (type == null && isConstant) {
+        type = JSType.UNKNOWN;
+      }
+      classProps = classProps.with(pname, isConstant ?
+          Property.makeConstant(type, type) : Property.make(type, type));
       // Upgrade any proto props to declared, if present
       if (protoProps.containsKey(pname)) {
-        addProtoProperty(pname, type);
+        addProtoProperty(pname, type, isConstant);
       }
     }
 
@@ -520,20 +529,24 @@ public class NominalType {
       if (mayHaveProp(pname)) {
         return;
       }
-      classProps =
-          classProps.with(pname, new Property(JSType.UNKNOWN, null, false));
+      classProps = classProps.with(pname, Property.make(JSType.UNKNOWN, null));
     }
 
     //////////// Prototype Properties
 
     /** Add a new non-optional declared prototype property to this class */
-    public void addProtoProperty(String pname, JSType type) {
+    public void addProtoProperty(
+        String pname, JSType type, boolean isConstant) {
       Preconditions.checkState(!isFinalized);
+      if (type == null && isConstant) {
+        type = JSType.UNKNOWN;
+      }
       if (classProps.containsKey(pname) &&
           classProps.get(pname).getDeclaredType() == null) {
         classProps = classProps.without(pname);
       }
-      protoProps = protoProps.with(pname, new Property(type, type, false));
+      protoProps = protoProps.with(pname, isConstant ?
+          Property.makeConstant(type, type) : Property.make(type, type));
     }
 
     /** Add a new undeclared prototype property to this class */
@@ -542,7 +555,7 @@ public class NominalType {
       if (!protoProps.containsKey(pname) ||
           protoProps.get(pname).getDeclaredType() == null) {
         protoProps =
-            protoProps.with(pname, new Property(JSType.UNKNOWN, null, false));
+            protoProps.with(pname, Property.make(JSType.UNKNOWN, null));
       }
     }
 
@@ -565,9 +578,13 @@ public class NominalType {
     }
 
     /** Add a new non-optional declared property to this class's constructor */
-    public void addCtorProperty(String pname, JSType type) {
+    public void addCtorProperty(String pname, JSType type, boolean isConstant) {
       Preconditions.checkState(!isFinalized);
-      ctorProps = ctorProps.with(pname, new Property(type, type, false));
+      if (type == null && isConstant) {
+        type = JSType.UNKNOWN;
+      }
+      ctorProps = ctorProps.with(pname, isConstant ?
+          Property.makeConstant(type, type) : Property.make(type, type));
     }
 
     /** Add a new undeclared property to this class's constructor */
@@ -577,7 +594,7 @@ public class NominalType {
         return;
       }
       ctorProps =
-          ctorProps.with(pname, new Property(JSType.UNKNOWN, null, false));
+          ctorProps.with(pname, Property.make(JSType.UNKNOWN, null));
     }
 
     public JSType getCtorPropDeclaredType(String pname) {
@@ -616,7 +633,7 @@ public class NominalType {
       if (this.interfaces == null) {
         this.interfaces = ImmutableSet.of();
       }
-      addCtorProperty("prototype", createProtoObject());
+      addCtorProperty("prototype", createProtoObject(), false);
       this.isFinalized = true;
       return this;
     }

@@ -279,7 +279,8 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     typeCheck("var /** null */ obj = 5;", NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    typeCheck("var /** ?number */ n = true;", NewTypeInference.MISTYPED_ASSIGN_RHS);
+    typeCheck("var /** ?number */ n = true;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testEmptyBlockPropagation() {
@@ -906,7 +907,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/** @constructor */ function Foo() {}\n" +
         "/** @constructor */ function Bar() {}\n" +
-        "function fun(cond, /** Foo */ f, /** Bar */ g) {\n" +
+        "function fun(cond, /** !Foo */ f, /** !Bar */ g) {\n" +
         "  (cond ? f : g)();\n" +
         "}",
         TypeCheck.NOT_CALLABLE);
@@ -2269,6 +2270,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     checkNoWarnings(
         "function f() {}\n" +
         "function g() { f.prototype.prop = 123; }");
+
+    checkNoWarnings(
+        "/** @param {!Function} f */" +
+        "function foo(f) { f.prototype.bar = function(x) {}; }");
   }
 
   public void testAssignmentsToPrototype() {
@@ -3222,6 +3227,25 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "C.prototype.method = function(x) {};\n" +
         "(new C).method(true);",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
+  public void testInterfaceMultipleInheritanceNoCrash() {
+    checkNoWarnings(
+        "/** @interface */\n" +
+        "function I1() {}\n" +
+        "I1.prototype.method = function(x) {};\n" +
+        "/** @interface */\n" +
+        "function I2() {}\n" +
+        "I2.prototype.method = function(x) {};\n" +
+        "/**\n" +
+        " * @interface\n" +
+        " * @extends {I1}\n" +
+        " * @extends {I2}\n" +
+        " */\n" +
+        "function I3() {}\n" +
+        "/** @constructor @implements {I3} */\n" +
+        "function Foo() {}\n" +
+        "Foo.prototype.method = function(x) {};");
   }
 
   public void testInterfaceArgument() {
@@ -5819,6 +5843,12 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         VarCheck.UNDEFINED_VAR_ERROR);
   }
 
+  public void testGlobalVariableInAssign() {
+    typeCheck(
+        "u.prop = 123;",
+        VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
   public void testGetters() {
     typeCheck(
         "var x = { /** @return {string} */ get a() { return 1; } };",
@@ -5971,5 +6001,168 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/** @const */ var x;", "x = 2;",
         NewTypeInference.CONST_REASSIGNED);
+  }
+
+  public void testMisplacedConstPropertyAnnotation() {
+    typeCheck(
+        "function f(obj) { /** @const */ obj.prop = 123; }",
+        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
+
+    typeCheck(
+        "function f(obj) { /** @const */ obj.prop; }",
+        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
+
+    typeCheck(
+        "var obj = { /** @const */ prop: 1 };",
+        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "Foo.prototype.method = function() {\n" +
+        "  /** @const */ this.prop = 1;\n" +
+        "}",
+        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
+  }
+
+  public void testConstPropertiesDontAssign() {
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {\n" +
+        "  /** @const */ this.prop = 1;\n" +
+        "}\n" +
+        "var obj = new Foo;\n" +
+        "obj.prop = 2;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {\n" +
+        "  /** @const {number} */\n" +
+        "  this.prop = 1;\n" +
+        "}\n" +
+        "var obj = new Foo;\n" +
+        "obj.prop = 2;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {\n" +
+        "  /** @const */ this.prop = 1;\n" +
+        "}\n" +
+        "var obj = new Foo;\n" +
+        "obj.prop += 2;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {\n" +
+        "  /** @const */ this.prop = 1;\n" +
+        "}\n" +
+        "var obj = new Foo;\n" +
+        "obj.prop++;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @const */\n" +
+        "ns.prop = 1;\n" +
+        "ns.prop = 2;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @const */\n" +
+        "ns.prop = 1;\n" +
+        "function f() { ns.prop = 2; }",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @const {number} */\n" +
+        "ns.prop = 1;\n" +
+        "ns.prop = 2;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @const */\n" +
+        "ns.prop = 1;\n" +
+        "ns.prop++;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @const */ Foo.prop = 1;\n" +
+        "Foo.prop = 2;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @const {number} */ Foo.prop = 1;\n" +
+        "Foo.prop++;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @const */ Foo.prototype.prop = 1;\n" +
+        "Foo.prototype.prop = 2;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @const */ Foo.prototype.prop = 1;\n" +
+        "var protoAlias = Foo.prototype;\n" +
+        "protoAlias.prop = 2;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() { /** @const */ this.X = 4; }\n" +
+        "/** @constructor */\n" +
+        "function Bar() { /** @const */ this.X = 5; }\n" +
+        "var fb = true ? new Foo : new Bar;\n" +
+        "fb.X++;",
+        NewTypeInference.CONST_REASSIGNED);
+  }
+
+  public void testDontOverrideFinalMethods() {
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @final */\n" +
+        "Foo.prototype.method = function(x) {};\n" +
+        "/** @constructor @extends {Foo} */\n" +
+        "function Bar() {}\n" +
+        "Bar.prototype.method = function(x) {};",
+        GlobalTypeInfo.CANNOT_OVERRIDE_FINAL_METHOD);
+
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @final */\n" +
+        "Foo.prototype.num = 123;\n" +
+        "/** @constructor @extends {Foo} */\n" +
+        "function Bar() {}\n" +
+        "Bar.prototype.num = 2;");
+
+    // // TODO(dimvar): fix
+    // typeCheck(
+    //     "/** @constructor */\n" +
+    //     "function High() {}\n" +
+    //     "/**\n" +
+    //     " * @param {number} x\n" +
+    //     " * @final\n" +
+    //     " */\n" +
+    //     "High.prototype.method = function(x) {};\n" +
+    //     "/** @constructor @extends {High} */\n" +
+    //     "function Mid() {}\n" +
+    //     "/** @constructor @extends {Mid} */\n" +
+    //     "function Low() {}\n" +
+    //     "Low.prototype.method = function(x) {};",
+    //     GlobalTypeInfo.CANNOT_OVERRIDE_FINAL_METHOD);
   }
 }

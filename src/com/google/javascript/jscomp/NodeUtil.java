@@ -2917,6 +2917,11 @@ public final class NodeUtil {
     return fnNode.getFirstChild().getNext();
   }
 
+  static boolean hasConstAnnotation(Node node) {
+    JSDocInfo jsdoc = getBestJSDocInfo(node);
+    return jsdoc != null && jsdoc.isConstant();
+  }
+
   static boolean isConstantVar(Node node, Scope scope) {
     if (isConstantName(node)) {
       return true;

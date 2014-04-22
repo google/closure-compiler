@@ -31,17 +31,40 @@ import java.util.Map;
 class Property {
   private final JSType inferredType;
   private final JSType declaredType;
-  private boolean isOptional;
+  // Attributes are ordered: constant <= required <= optional
+  private enum Attribute {
+    CONSTANT, // For required props only
+    OPTIONAL,
+    REQUIRED;
+  }
+  private Attribute attribute;
 
-  Property(JSType inferredType, JSType declaredType, boolean isOptional) {
+  private Property(
+      JSType inferredType, JSType declaredType, Attribute attribute) {
     Preconditions.checkArgument(inferredType != null);
     this.inferredType = inferredType;
     this.declaredType = declaredType;
-    this.isOptional = isOptional;
+    this.attribute = attribute;
+  }
+
+  static Property make(JSType inferredType, JSType declaredType) {
+    return new Property(inferredType, declaredType, Attribute.REQUIRED);
+  }
+
+  static Property makeConstant(JSType inferredType, JSType declaredType) {
+    return new Property(inferredType, declaredType, Attribute.CONSTANT);
+  }
+
+  static Property makeOptional(JSType inferredType, JSType declaredType) {
+    return new Property(inferredType, declaredType, Attribute.OPTIONAL);
   }
 
   boolean isOptional() {
-    return isOptional;
+    return attribute == Attribute.OPTIONAL;
+  }
+
+  boolean isConstant() {
+    return attribute == Attribute.CONSTANT;
   }
 
   boolean isDeclared() {
@@ -61,29 +84,49 @@ class Property {
         inferredType.withLocation(JSType.GENERIC_LOCATION),
         declaredType == null ? null :
         declaredType.withLocation(JSType.GENERIC_LOCATION),
-        isOptional);
+        attribute);
   }
 
   Property withOptional() {
-    return new Property(inferredType, declaredType, true);
+    return new Property(inferredType, declaredType, Attribute.OPTIONAL);
   }
 
   Property withRequired() {
-    return new Property(inferredType, declaredType, false);
+    return new Property(inferredType, declaredType, Attribute.REQUIRED);
+  }
+
+  private static Attribute meetAttributes(Attribute a1, Attribute a2) {
+    if (a1 == Attribute.CONSTANT || a2 == Attribute.CONSTANT) {
+      return Attribute.CONSTANT;
+    }
+    if (a1 == Attribute.REQUIRED || a2 == Attribute.REQUIRED) {
+      return Attribute.REQUIRED;
+    }
+    return Attribute.OPTIONAL;
+  }
+
+  private static Attribute joinAttributes(Attribute a1, Attribute a2) {
+    if (a1 == Attribute.OPTIONAL || a2 == Attribute.OPTIONAL) {
+      return Attribute.OPTIONAL;
+    }
+    if (a1 == Attribute.REQUIRED || a2 == Attribute.REQUIRED) {
+      return Attribute.REQUIRED;
+    }
+    return Attribute.CONSTANT;
   }
 
   Property specialize(Property other) {
     return new Property(
         this.inferredType.specialize(other.inferredType),
         this.declaredType,
-        this.isOptional && other.isOptional);
+        meetAttributes(this.attribute, other.attribute));
   }
 
   static Property meet(Property p1, Property p2) {
     return new Property(
         JSType.meet(p1.inferredType, p2.inferredType),
         null,
-        p1.isOptional && p2.isOptional);
+        meetAttributes(p1.attribute, p2.attribute));
   }
 
   static Property join(Property p1, Property p2) {
@@ -98,7 +141,7 @@ class Property {
     return new Property(
         JSType.join(p1.inferredType, p2.inferredType),
         declType,
-        p1.isOptional || p2.isOptional);
+        joinAttributes(p1.attribute, p2.attribute));
   }
 
   /**
@@ -122,7 +165,7 @@ class Property {
     }
     return new Property(
         unifiedInferredType, unifiedDeclaredType,
-        p1.isOptional && p2.isOptional);
+        meetAttributes(p1.attribute, p2.attribute));
   }
 
   /** Returns whether unification succeeded */
@@ -146,23 +189,38 @@ class Property {
         inferredType.substituteGenerics(concreteTypes),
         declaredType == null ?
         null : declaredType.substituteGenerics(concreteTypes),
-        isOptional);
+        attribute);
   }
 
   @Override
   public String toString() {
-    return inferredType.toString() + (isOptional ? "=" : "");
+    String attr;
+    switch (attribute) {
+      case CONSTANT:
+        attr = "^";
+        break;
+      case REQUIRED:
+        attr = "";
+        break;
+      case OPTIONAL:
+        attr = "=";
+        break;
+      default:
+        throw new RuntimeException("Uknown Attribute value " + attribute);
+    }
+    return inferredType + attr;
   }
 
   @Override
   public boolean equals(Object o) {
     Preconditions.checkArgument(o instanceof Property);
     Property p2 = (Property) o;
-    return inferredType.equals(p2.inferredType) && isOptional == p2.isOptional;
+    return inferredType.equals(p2.inferredType) &&
+        attribute == p2.attribute;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(inferredType, isOptional);
+    return Objects.hashCode(inferredType, attribute);
   }
 }

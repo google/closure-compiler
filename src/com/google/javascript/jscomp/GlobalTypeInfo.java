@@ -121,6 +121,20 @@ class GlobalTypeInfo implements CompilerPass {
           "JSC_CONST_WITHOUT_INITIALIZER",
           "Constants must be initialized when they are defined.");
 
+  static final DiagnosticType MISPLACED_CONST_ANNOTATION =
+      DiagnosticType.warning(
+          "JSC_MISPLACED_CONST_ANNOTATION",
+          "This property cannot be @const." +
+          "The @const annotation is only allowed for " +
+          "properties of namespaces, prototype properties, " +
+          "static properties of constructors, " +
+          "and properties of the form this.prop declared inside constructors.");
+
+  static final DiagnosticType CANNOT_OVERRIDE_FINAL_METHOD =
+      DiagnosticType.warning(
+      "JSC_CANNOT_OVERRIDE_FINAL_METHOD",
+      "Final method {0} cannot be overriden.");
+
   // Invariant: if a scope s1 contains a scope s2, then s2 is before s1 in
   // scopes. The type inference relies on this fact to process deeper scopes
   // before shallower scopes.
@@ -342,7 +356,8 @@ class GlobalTypeInfo implements CompilerPass {
             continue add_interface_props;
           }
         }
-        rawNominalType.addProtoProperty(pname, resultType);
+        // TODO(dimvar): check if we can have @const props here
+        rawNominalType.addProtoProperty(pname, resultType, false);
       }
 
       // Warn for a prop declared with @override that isn't overriding anything.
@@ -387,6 +402,15 @@ class GlobalTypeInfo implements CompilerPass {
     PropertyDef localPropDef = propertyDefs.get(current.getId(), pname);
     JSType localPropType = localPropDef == null ? null :
         current.getPropDeclaredType(pname);
+    if (localPropDef != null && superType.isClass() &&
+        localPropType.getFunType() != null &&
+        superType.hasConstantProp(pname)) {
+      // TODO(dimvar): This doesn't work for multiple levels in the hierarchy.
+      // Clean up how we process inherited properties and then fix this.
+      warnings.add(JSError.make(
+          localPropDef.defSite, CANNOT_OVERRIDE_FINAL_METHOD, pname));
+      return;
+    }
     // System.out.println("nominalType: " + current + "'s " + pname +
     //     " localPropType: " + localPropType +
     //     " with super: " + superType +
@@ -527,8 +551,7 @@ class GlobalTypeInfo implements CompilerPass {
               } else if (parent.isCatch()) {
                 currentScope.addLocal(name, JSType.UNKNOWN, false);
               } else {
-                JSDocInfo jsdoc = parent.getJSDocInfo();
-                boolean isConstant = jsdoc != null && jsdoc.isConstant();
+                boolean isConstant = NodeUtil.hasConstAnnotation(parent);
                 if (isConstant && !n.isFromExterns() && initializer == null) {
                   warnings.add(JSError.make(n, CONST_WITHOUT_INITIALIZER));
                 }
@@ -571,7 +594,11 @@ class GlobalTypeInfo implements CompilerPass {
                   getTypeDeclarationFromJsdoc(
                       prop.getJSDocInfo(), currentScope));
             }
+            if (NodeUtil.hasConstAnnotation(prop)) {
+              warnings.add(JSError.make(prop, MISPLACED_CONST_ANNOTATION));
+            }
           }
+          break;
         }
       }
     }
@@ -579,6 +606,10 @@ class GlobalTypeInfo implements CompilerPass {
     private void visitPropertyDeclaration(Node getProp) {
       // Class property
       if (isClassPropAccess(getProp, currentScope)) {
+        if (NodeUtil.hasConstAnnotation(getProp) &&
+            currentScope.isPrototypeMethod()) {
+          warnings.add(JSError.make(getProp, MISPLACED_CONST_ANNOTATION));
+        }
         visitClassPropertyDeclaration(getProp);
         return;
       }
@@ -597,6 +628,11 @@ class GlobalTypeInfo implements CompilerPass {
       if (isPropDecl(getProp) && currentScope.isNamespace(
           getProp.getFirstChild().getQualifiedName())) {
         visitNamespacePropertyDeclaration(getProp);
+        return;
+      }
+      // Other property
+      if (NodeUtil.hasConstAnnotation(getProp)) {
+        warnings.add(JSError.make(getProp, MISPLACED_CONST_ANNOTATION));
       }
     }
 
@@ -660,6 +696,9 @@ class GlobalTypeInfo implements CompilerPass {
       RawNominalType rawType = currentScope.getNominalType(ctorName);
 
       if (rawType == null) {
+        if (initializer != null && initializer.isFunction()) {
+          visitFunctionDef(initializer, null);
+        }
         // We don't look at assignments to prototypes of non-constructors.
         return;
       }
@@ -705,11 +744,12 @@ class GlobalTypeInfo implements CompilerPass {
       propertyDefs.put(rawType.getId(), pname,
           new PropertyDef(getProp, methodType, methodScope));
       // Add the property to the class with the appropriate type.
-      if (propDeclType != null) {
+      boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
+      if (propDeclType != null || isConstant) {
         if (mayWarnAboutExistingProp(rawType, pname, getProp)) {
           return;
         }
-        rawType.addProtoProperty(pname, propDeclType);
+        rawType.addProtoProperty(pname, propDeclType, isConstant);
       } else {
         rawType.addUndeclaredProtoProperty(pname);
       }
@@ -723,14 +763,15 @@ class GlobalTypeInfo implements CompilerPass {
       String pname = getProp.getLastChild().getString();
       JSType propDeclType = getTypeDeclarationFromJsdoc(
           NodeUtil.getBestJSDocInfo(getProp), currentScope);
-      if (propDeclType != null) {
+      boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
+      if (propDeclType != null || isConstant) {
         if (classType.hasCtorProp(pname) &&
             classType.getCtorPropDeclaredType(pname) != null) {
           warnings.add(JSError.make(getProp, REDECLARED_PROPERTY,
                   pname, classType.toString()));
           return;
         }
-        classType.addCtorProperty(pname, propDeclType);
+        classType.addCtorProperty(pname, propDeclType, isConstant);
       } else {
         classType.addUndeclaredCtorProperty(pname);
       }
@@ -741,22 +782,24 @@ class GlobalTypeInfo implements CompilerPass {
       QualifiedName qname = QualifiedName.fromGetprop(getProp);
       String leftmost = qname.getLeftmostName();
       QualifiedName allButLeftmost = qname.getAllButLeftmost();
+      JSType currentType = currentScope.getDeclaredTypeOf(leftmost);
       JSType typeInJsdoc = getTypeDeclarationFromJsdoc(
           NodeUtil.getBestJSDocInfo(getProp), currentScope);
-      JSType currentType = currentScope.getDeclaredTypeOf(leftmost);
-      if (typeInJsdoc == null) {
+      boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
+      if (typeInJsdoc != null || isConstant) {
+        if (currentType.mayHaveProp(allButLeftmost) &&
+            currentType.getDeclaredProp(allButLeftmost) != null) {
+          warnings.add(JSError.make(getProp, REDECLARED_PROPERTY,
+                  allButLeftmost.toString(), currentType.toString()));
+          return;
+        }
+        currentScope.updateTypeOfLocal(leftmost,
+            currentType.withDeclaredProperty(
+                allButLeftmost, typeInJsdoc, isConstant));
+      } else {
         currentScope.updateTypeOfLocal(leftmost,
             currentType.withProperty(allButLeftmost, JSType.UNKNOWN));
-        return;
       }
-      if (currentType.mayHaveProp(allButLeftmost) &&
-          currentType.getDeclaredProp(allButLeftmost) != null) {
-        warnings.add(JSError.make(getProp, REDECLARED_PROPERTY,
-                getProp.getQualifiedName(), currentType.toString()));
-        return;
-      }
-      currentScope.updateTypeOfLocal(leftmost,
-          currentType.withDeclaredProperty(allButLeftmost, typeInJsdoc));
     }
 
     private void visitClassPropertyDeclaration(Node getProp) {
@@ -767,15 +810,17 @@ class GlobalTypeInfo implements CompilerPass {
       // TODO(blickly): Support @param, @return style fun declarations here.
       JSType declaredType = getTypeDeclarationFromJsdoc(
           NodeUtil.getBestJSDocInfo(getProp), currentScope);
-      if (declaredType != null) {
+      boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
+      if (declaredType != null || isConstant) {
         mayWarnAboutExistingProp(rawNominalType, pname, getProp);
-      }
-      if (mayAddPropToType(getProp, rawNominalType)) {
-        if (declaredType != null) {
-          rawNominalType.addClassProperty(pname, declaredType);
-        } else {
-          rawNominalType.addUndeclaredClassProperty(pname);
+        // Intentionally, we keep going even if we warned for redeclared prop.
+        // The reason is that if a prop is defined on a class and on its proto
+        // with conflicting types, we prefer the type of the class.
+        if (mayAddPropToType(getProp, rawNominalType)) {
+          rawNominalType.addClassProperty(pname, declaredType, isConstant);
         }
+      } else if (mayAddPropToType(getProp, rawNominalType)) {
+        rawNominalType.addUndeclaredClassProperty(pname);
       }
       propertyDefs.put(rawNominalType.getId(), pname,
           new PropertyDef(getProp, null, null));

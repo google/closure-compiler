@@ -733,6 +733,19 @@ public class JSType {
     return true;
   }
 
+  public boolean hasConstantProp(QualifiedName pname) {
+    Preconditions.checkArgument(pname.isIdentifier());
+    if (objs == null) {
+      return false;
+    }
+    for (ObjectType obj : objs) {
+      if (obj.hasConstantProp(pname)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public JSType getDeclaredProp(QualifiedName qname) {
     if (isUnknown()) {
       return UNKNOWN;
@@ -764,10 +777,15 @@ public class JSType {
         ObjectType.withProperty(this.objs, qname, type), typeVar);
   }
 
-  public JSType withDeclaredProperty(QualifiedName qname, JSType type) {
+  public JSType withDeclaredProperty(
+      QualifiedName qname, JSType type, boolean isConstant) {
     Preconditions.checkState(this.objs != null && this.location == null);
+    if (type == null && isConstant) {
+      type = JSType.UNKNOWN;
+    }
     return new JSType(this.mask, null,
-        ObjectType.withDeclaredProperty(this.objs, qname, type), typeVar);
+        ObjectType.withDeclaredProperty(this.objs, qname, type, isConstant),
+        typeVar);
   }
 
   public JSType withPropertyRequired(String pname) {
