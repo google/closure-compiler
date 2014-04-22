@@ -1520,6 +1520,18 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("/**/");
   }
 
+  /**
+   * @bug 14231379
+   */
+  public void testUnterminatedRegExp() {
+    parseError("var unterm = /forgot trailing slash",
+        "Expected '/' in regular expression literal");
+
+    parseError("var unterm = /forgot trailing slash\n" +
+        "alert(unterm);",
+        "Expected '/' in regular expression literal");
+  }
+
   public void testRegExp() {
     assertNodeEquality(parse("/a/"), script(expr(regex("a"))));
     assertNodeEquality(parse("/\\\\/"), script(expr(regex("\\\\"))));

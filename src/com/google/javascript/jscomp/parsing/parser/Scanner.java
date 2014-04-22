@@ -135,7 +135,7 @@ public class Scanner {
     if (!skipRegularExpressionChar()) {
       return false;
     }
-    while (isRegularExpressionChar(peekChar())) {
+    while (!isAtEnd() && isRegularExpressionChar(peekChar())) {
       if (!skipRegularExpressionChar()) {
         return false;
       }
