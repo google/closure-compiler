@@ -330,7 +330,7 @@ class NewIRFactory {
             if (parent.isFunction() || parent.isScript()) {
               // report invalid continue
               errorReporter.error(
-                  String.format(UNEXPECTED_CONTINUE),
+                  UNEXPECTED_CONTINUE,
                   sourceName,
                   n.getLineno(), "", n.getCharno());
               break;
@@ -343,7 +343,7 @@ class NewIRFactory {
             if (parent.isFunction() || parent.isScript()) {
               // report invalid break
               errorReporter.error(
-                  String.format(UNLABELED_BREAK),
+                  UNLABELED_BREAK,
                   sourceName,
                   n.getLineno(), "", n.getCharno());
               break;
@@ -599,23 +599,32 @@ class NewIRFactory {
   }
 
   private static ParseTree findNearestNode(ParseTree tree) {
-    switch (tree.type) {
-      case EXPRESSION_STATEMENT:
-        return findNearestNode(tree.asExpressionStatement().expression);
-      case CALL_EXPRESSION:
-        return findNearestNode(tree.asCallExpression().operand);
-      case BINARY_OPERATOR:
-        return findNearestNode(tree.asBinaryOperator().left);
-      case CONDITIONAL_EXPRESSION:
-        return findNearestNode(tree.asConditionalExpression().condition);
-      case MEMBER_EXPRESSION:
-        return findNearestNode(tree.asMemberExpression().operand);
-      case MEMBER_LOOKUP_EXPRESSION:
-        return findNearestNode(tree.asMemberLookupExpression().operand);
-      case POSTFIX_EXPRESSION:
-        return findNearestNode(tree.asPostfixExpression().operand);
-      default:
-        return tree;
+    while (true) {
+      switch (tree.type) {
+        case EXPRESSION_STATEMENT:
+          tree = tree.asExpressionStatement().expression;
+          continue;
+        case CALL_EXPRESSION:
+          tree = tree.asCallExpression().operand;
+          continue;
+        case BINARY_OPERATOR:
+          tree = tree.asBinaryOperator().left;
+          continue;
+        case CONDITIONAL_EXPRESSION:
+          tree = tree.asConditionalExpression().condition;
+          continue;
+        case MEMBER_EXPRESSION:
+          tree = tree.asMemberExpression().operand;
+          continue;
+        case MEMBER_LOOKUP_EXPRESSION:
+          tree = tree.asMemberLookupExpression().operand;
+          continue;
+        case POSTFIX_EXPRESSION:
+          tree = tree.asPostfixExpression().operand;
+          continue;
+        default:
+          return tree;
+      }
     }
   }
 
@@ -720,12 +729,12 @@ class NewIRFactory {
     }
   }
 
-  private int lineno(ParseTree node) {
+  private static int lineno(ParseTree node) {
     // location lines start at zero, our AST starts at 1.
     return lineno(node.location.start);
   }
 
-  private int charno(ParseTree node) {
+  private static int charno(ParseTree node) {
     return charno(node.location.start);
   }
 
@@ -817,8 +826,8 @@ class NewIRFactory {
     JsDocInfoParser parser =
       new JsDocInfoParser(
           new JsDocTokenStream(comment.substring(numOpeningChars),
-                               lineno,
-                               charno + numOpeningChars),
+              lineno,
+              charno + numOpeningChars),
           comment,
           node.location.start.offset,
           null,
@@ -1017,8 +1026,7 @@ class NewIRFactory {
 
     @Override
     Node processEmptyStatement(EmptyStatementTree exprNode) {
-      Node node = newNode(Token.EMPTY);
-      return node;
+      return newNode(Token.EMPTY);
     }
 
     @Override
@@ -1235,10 +1243,9 @@ class NewIRFactory {
 
     @Override
     Node processLabeledStatement(LabelledStatementTree labelTree) {
-      Node node = newNode(Token.LABEL,
+      return newNode(Token.LABEL,
           transformLabelName(labelTree.name),
           transform(labelTree.statement));
-      return node;
     }
 
     @Override
@@ -1262,10 +1269,12 @@ class NewIRFactory {
         JSDocInfo info = handleJsDoc(identifierToken);
         if (identifierToken == null ||
             isReservedKeyword(identifierToken.toString())) {
+          int linenum = identifierToken != null ?
+              identifierToken.location.start.line : 0;
           errorReporter.error(
             "identifier is a reserved word",
             sourceName,
-            identifierToken.location.start.line, "", 0);
+            linenum, "", 0);
         }
         node = newStringNode(Token.NAME, identifierToken.value);
         if (info != null) {
@@ -1278,7 +1287,7 @@ class NewIRFactory {
     }
 
     Node processString(LiteralToken token) {
-      Preconditions.checkState(token.type == TokenType.STRING);
+      Preconditions.checkArgument(token.type == TokenType.STRING);
       Node node = newStringNode(Token.STRING, normalizeString(token));
       setSourceInfo(node, token);
       return node;
@@ -1412,8 +1421,7 @@ class NewIRFactory {
 
     @Override
     Node processParenthesizedExpression(ParenExpressionTree exprNode) {
-      Node node = transform(exprNode.expression);
-      return node;
+      return transform(exprNode.expression);
     }
 
     @Override
@@ -1426,9 +1434,7 @@ class NewIRFactory {
         errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
             rightChild.getLineno(), "", rightChild.getCharno());
       }
-      Node newNode = newNode(
-          Token.GETPROP, leftChild, rightChild);
-      return newNode;
+      return newNode(Token.GETPROP, leftChild, rightChild);
     }
 
     @Override
@@ -1553,10 +1559,8 @@ class NewIRFactory {
       if (cc != null) {
         // Mark the enclosing block at the same line as the first catch
         // clause.
-        if (lineSet == false) {
-          setSourceInfo(block, cc);
-          lineSet = true;
-        }
+        setSourceInfo(block, cc);
+        lineSet = true;
         block.addChildToBack(transform(cc));
       }
 
@@ -1570,7 +1574,7 @@ class NewIRFactory {
       // If we didn't set the line on the catch clause, then
       // we've got an empty catch clause.  Set its line to be the same
       // as the finally block (to match Old Rhino's behavior.)
-      if ((lineSet == false) && (finallyBlock != null)) {
+      if (!lineSet && (finallyBlock != null)) {
         setSourceInfo(block, finallyBlock);
       }
 
@@ -1620,8 +1624,7 @@ class NewIRFactory {
           }
         }
 
-        Node node = newNode(type, operand);
-        return node;
+        return newNode(type, operand);
       }
     }
 
@@ -2086,7 +2089,7 @@ class NewIRFactory {
     Preconditions.checkState(value.charAt(0) != '-'
         && value.charAt(0) != '+');
     if (value.charAt(0) == '.') {
-      return Double.valueOf("0" + value);
+      return Double.valueOf('0' + value);
     } else if (value.charAt(0) == '0' && length > 1) {
       // TODO(johnlenz): accept octal numbers in es3 etc.
       switch (value.charAt(1)) {
@@ -2150,32 +2153,25 @@ class NewIRFactory {
     throw new IllegalStateException("unexpected");
   }
 
-  int binarydigit(char c) {
+  private static int binarydigit(char c) {
     if (c >= '0' && c <= '1') {
       return (c - '0');
     }
     throw new IllegalStateException("unexpected: " + c);
   }
 
-  private boolean isOctalDigit(char c) {
+  private static boolean isOctalDigit(char c) {
     return c >= '0' && c <= '7';
   }
 
-  int octaldigit(char c) {
+  private static int octaldigit(char c) {
     if (isOctalDigit(c)) {
       return (c - '0');
     }
     throw new IllegalStateException("unexpected: " + c);
   }
 
-  int digit(char c) {
-    if (c >= '0' && c <= '9') {
-      return (c - '0');
-    }
-    throw new IllegalStateException("unexpected: " + c);
-  }
-
-  int hexdigit(char c) {
+  private static int hexdigit(char c) {
     switch (c) {
       case '0': return 0;
       case '1': return 1;
