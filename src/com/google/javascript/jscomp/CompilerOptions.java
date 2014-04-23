@@ -870,6 +870,12 @@ public class CompilerOptions implements Serializable, Cloneable {
       Collections.emptyList();
 
   /**
+   * Whether to return strings logged with AbstractCompiler#addToDebugLog
+   * in the compiler's Result.
+   */
+  boolean useDebugLog;
+
+  /**
    * Charset to use when generating code.  If null, then output ASCII.
    * This needs to be a string because CompilerOptions is serializable.
    */
@@ -1062,6 +1068,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     // Debugging
     aliasHandler = NULL_ALIAS_TRANSFORMATION_HANDLER;
     errorHandler = null;
+    useDebugLog = false;
   }
 
   /**

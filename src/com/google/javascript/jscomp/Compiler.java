@@ -2191,12 +2191,15 @@ public class Compiler extends AbstractCompiler {
     return hasHaltingErrors();
   }
 
+  // TODO(tbreisacher): Remove this and have each pass call its own Logger.
   /** Called from the compiler passes, adds debug info */
   @Override
   void addToDebugLog(String str) {
-    debugLog.append(str);
-    debugLog.append('\n');
-    logger.fine(str);
+    if (options.useDebugLog) {
+      debugLog.append(str);
+      debugLog.append('\n');
+      logger.fine(str);
+    }
   }
 
   @Override
