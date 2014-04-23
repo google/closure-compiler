@@ -1716,6 +1716,9 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setCheckDeterminism(boolean checkDeterminism) {
     this.checkDeterminism = checkDeterminism;
+    if (checkDeterminism) {
+      this.useDebugLog = true;
+    }
   }
 
   public boolean getCheckDeterminism() {
