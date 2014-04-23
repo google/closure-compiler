@@ -750,7 +750,8 @@ public class JSType {
     if (isUnknown()) {
       return UNKNOWN;
     }
-    Preconditions.checkState(objs != null);
+    Preconditions.checkState(objs != null,
+      "Cannot get declared prop %s of type %s", qname, this);
     JSType ptype = BOTTOM;
     for (ObjectType o : objs) {
       JSType declType = o.getDeclaredProp(qname);

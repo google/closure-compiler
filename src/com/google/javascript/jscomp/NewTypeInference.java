@@ -2635,7 +2635,8 @@ public class NewTypeInference implements CompilerPass {
         lvalue.env,
         lvalueType.mayHaveProp(pname) ?
             lvalueType.getProp(pname) : JSType.UNKNOWN,
-        lvalueType.getDeclaredProp(pname),
+        lvalueType.mayHaveProp(pname) ?
+            lvalueType.getDeclaredProp(pname) : null,
         lvalue.ptr == null ? null : QualifiedName.join(lvalue.ptr, pname)
     );
   }

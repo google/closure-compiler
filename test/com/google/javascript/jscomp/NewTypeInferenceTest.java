@@ -1402,6 +1402,8 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  }\n" +
         "}");
 
+    // TODO(blickly): Currently, this warning is not good, referring to
+    // props of BOTTOM. Ideally, we could warn about accessing a prop on number.
     typeCheck(
         "/** @param {number} x */\n" +
         "function f(x) {\n" +
@@ -2417,6 +2419,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f(x) { if (x instanceof UndefinedClass) {} }",
         VarCheck.UNDEFINED_VAR_ERROR);
 
+    // TODO(blickly): The second warning here is wrong. Remove it.
     typeCheck(
         "/** @constructor */ function Foo() { this.prop = 123; }\n" +
         "function f(x) { x = 123; if (x instanceof Foo) { x.prop; } }",
@@ -5258,6 +5261,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @type {function(NonExistentClass)} */\n" +
         "I.prototype.method;",
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+  }
+
+  // TODO(blickly): This warning is not very good.
+  public void testBottomPropAccessDoesntCrash() {
+    typeCheck(
+        "var obj = null;\n" +
+        "if (obj) obj.prop += 7;",
+        TypeCheck.INEXISTENT_PROPERTY);
   }
 
   public void testSpecializeLooseNullDoesntCrash() {

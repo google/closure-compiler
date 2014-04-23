@@ -1228,13 +1228,14 @@ class GlobalTypeInfo implements CompilerPass {
       int formalIndex = formals.indexOf(name);
       if (formalIndex != -1) {
         JSType formalType = declaredType.getFormalType(formalIndex);
-        if (formalType != null && formalType.isBottom()) {
+        if (formalType == null || formalType.isBottom()) {
           return null;
         }
         return formalType;
       }
       JSType localType = locals.get(name);
       if (localType != null) {
+        Preconditions.checkState(!localType.isBottom());
         return localType;
       }
       Scope s = localFunDefs.get(name);
