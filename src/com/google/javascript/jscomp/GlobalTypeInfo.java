@@ -838,6 +838,10 @@ class GlobalTypeInfo implements CompilerPass {
     private void visitClassPropertyDeclaration(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
       NominalType thisType = currentScope.getDeclaredType().getThisType();
+      if (thisType == null) {
+        // This will get caught in NewTypeInference
+        return;
+      }
       RawNominalType rawNominalType = thisType.getRawNominalType();
       String pname = getProp.getLastChild().getString();
       // TODO(blickly): Support @param, @return style fun declarations here.

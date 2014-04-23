@@ -66,7 +66,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   private void checkNoWarnings(String js) {
-    NewTypeInference typeInf = parseAndTypeCheck("", js);
+    parseAndTypeCheck("", js);
     JSError[] warnings = compiler.getWarnings();
     assertEquals("Expected no warning, but found: " +
         Arrays.toString(warnings) + "\n",
@@ -5257,6 +5257,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/** @type {[Object]} */ var arr = [];",
         RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+  }
+
+  public void testPrototypeMethodOnUndeclaredDoesntCrash() {
+    typeCheck(
+        "Foo.prototype.method = function(){ this.x = 5; };",
+        ImmutableList.of(
+            VarCheck.UNDEFINED_VAR_ERROR,
+            CheckGlobalThis.GLOBAL_THIS));
   }
 
   public void testFunctionGetpropDoesntCrash() {
