@@ -55,7 +55,7 @@ class NumericFuzzer extends AbstractFuzzer {
 
   @Override
   protected Set<Type> supportedTypes() {
-    return Sets.newHashSet(Type.NUMBER);
+    return Sets.immutableEnumSet(Type.NUMBER);
   }
 
 }

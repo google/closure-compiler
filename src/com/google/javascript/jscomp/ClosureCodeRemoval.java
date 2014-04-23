@@ -16,8 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -158,13 +158,15 @@ final class ClosureCodeRemoval implements CompilerPass {
    * Identifies all assertion calls.
    */
   private class FindAssertionCalls extends AbstractPostOrderCallback {
-    Set<String> assertionNames = Sets.newHashSet();
+    final Set<String> assertionNames;
 
     FindAssertionCalls() {
+      ImmutableSet.Builder<String> assertionNamesBuilder = ImmutableSet.builder();
       for (AssertionFunctionSpec spec :
                compiler.getCodingConvention().getAssertionFunctions()) {
-        assertionNames.add(spec.getFunctionName());
+        assertionNamesBuilder.add(spec.getFunctionName());
       }
+      assertionNames = assertionNamesBuilder.build();
     }
 
 

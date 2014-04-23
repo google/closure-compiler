@@ -85,6 +85,6 @@ class ObjectFuzzer extends AbstractFuzzer {
 
   @Override
   protected Set<Type> supportedTypes() {
-    return Sets.newHashSet(Type.OBJECT);
+    return Sets.immutableEnumSet(Type.OBJECT);
   }
 }

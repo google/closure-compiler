@@ -23,6 +23,7 @@ import com.google.javascript.rhino.Node;
 import org.json.JSONObject;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Set;
 
 /**
@@ -107,6 +108,6 @@ abstract class AbstractFuzzer {
    * supported types
    */
   protected Set<Type> supportedTypes() {
-    return Sets.newHashSet(Type.values());
+    return Sets.immutableEnumSet(EnumSet.allOf(Type.class));
   }
 }

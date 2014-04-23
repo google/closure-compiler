@@ -15,9 +15,11 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.EnumSet;
 import java.util.Set;
 
 /**
@@ -64,13 +66,13 @@ class WhileFuzzer extends AbstractFuzzer {
   @Override
   protected Node fuzz(AbstractFuzzer fuzzer, int budget) {
     if (fuzzer instanceof ExpressionFuzzer) {
-      Set<Type> types = fuzzer.supportedTypes();
       /*
        * someLabel: while(void(xxx)) {} often causes compiler to crash when
        * compiling from AST. Because while(undefined) {} only produce dead code,
        * we could safely remove it.
        */
-      types.remove(Type.UNDEFINED);
+      Set<Type> types = Sets.immutableEnumSet(
+          Sets.difference(fuzzer.supportedTypes(), EnumSet.of(Type.UNDEFINED)));
       return fuzzer.generate(budget, types);
     } else {
       return fuzzer.generate(budget);

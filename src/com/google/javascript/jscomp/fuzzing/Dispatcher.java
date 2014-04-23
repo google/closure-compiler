@@ -24,6 +24,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Set;
 
 /**
@@ -65,12 +66,12 @@ abstract class Dispatcher extends AbstractFuzzer {
   @Override
   protected Set<Type> supportedTypes() {
     if (supportedTypes == null) {
-      supportedTypes = Sets.newHashSet();
+      supportedTypes = EnumSet.noneOf(Type.class);
       for (AbstractFuzzer fuzzer : getCandidates()) {
         supportedTypes.addAll(fuzzer.supportedTypes());
       }
     }
-    return supportedTypes;
+    return Sets.immutableEnumSet(supportedTypes);
   }
 
   protected AbstractFuzzer selectFuzzer(int budget, Set<Type> types) {

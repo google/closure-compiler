@@ -62,6 +62,6 @@ class SimpleFuzzer extends AbstractFuzzer {
 
   @Override
   protected Set<Type> supportedTypes() {
-    return Sets.newHashSet(dataType);
+    return Sets.immutableEnumSet(dataType);
   }
 }

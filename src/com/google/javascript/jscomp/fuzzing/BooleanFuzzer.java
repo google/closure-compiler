@@ -57,6 +57,6 @@ class BooleanFuzzer extends AbstractFuzzer {
 
   @Override
   protected Set<Type> supportedTypes() {
-    return Sets.newHashSet(Type.BOOLEAN);
+    return Sets.immutableEnumSet(Type.BOOLEAN);
   }
 }

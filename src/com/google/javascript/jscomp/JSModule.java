@@ -19,12 +19,14 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 
 import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -177,12 +179,13 @@ public class JSModule implements DependencyInfo, Serializable {
    */
   public Set<JSModule> getAllDependencies() {
     Set<JSModule> allDeps = Sets.newHashSet(deps);
-    List<JSModule> workList = Lists.newArrayList(deps);
-    while (!workList.isEmpty()) {
-      JSModule module = workList.remove(workList.size() - 1);
+    ArrayDeque<JSModule> stack = Queues.newArrayDeque(deps);
+
+    while (!stack.isEmpty()) {
+      JSModule module = stack.pop();
       for (JSModule dep : module.getDependencies()) {
         if (allDeps.add(dep)) {
-          workList.add(dep);
+          stack.push(dep);
         }
       }
     }

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -451,9 +452,9 @@ public class CommandLineRunner extends
     // It needs to be public because of the crazy reflection that args4j does.
     public static class BooleanOptionHandler extends OptionHandler<Boolean> {
       private static final Set<String> TRUES =
-          Sets.newHashSet("true", "on", "yes", "1");
+          ImmutableSet.of("true", "on", "yes", "1");
       private static final Set<String> FALSES =
-          Sets.newHashSet("false", "off", "no", "0");
+          ImmutableSet.of("false", "off", "no", "0");
 
       public BooleanOptionHandler(
           CmdLineParser parser, OptionDef option,

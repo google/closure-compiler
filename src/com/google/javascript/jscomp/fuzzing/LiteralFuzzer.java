@@ -93,7 +93,7 @@ class LiteralFuzzer extends Dispatcher {
 
     @Override
     protected Set<Type> supportedTypes() {
-      return Sets.newHashSet(type);
+      return Sets.immutableEnumSet(type);
     }
   }
 }

@@ -55,7 +55,7 @@ class StringFuzzer extends AbstractFuzzer {
 
   @Override
   protected Set<Type> supportedTypes() {
-    return Sets.newHashSet(Type.STRING);
+    return Sets.immutableEnumSet(Type.STRING);
   }
 
 }

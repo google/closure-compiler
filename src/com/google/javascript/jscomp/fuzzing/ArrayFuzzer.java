@@ -70,7 +70,7 @@ class ArrayFuzzer extends AbstractFuzzer {
 
   @Override
   protected Set<Type> supportedTypes() {
-    return Sets.newHashSet(Type.ARRAY);
+    return Sets.immutableEnumSet(Type.ARRAY);
   }
 
 }
