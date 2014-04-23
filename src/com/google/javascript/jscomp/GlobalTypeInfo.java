@@ -135,6 +135,35 @@ class GlobalTypeInfo implements CompilerPass {
       "JSC_CANNOT_OVERRIDE_FINAL_METHOD",
       "Final method {0} cannot be overriden.");
 
+  static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
+      CANNOT_OVERRIDE_FINAL_METHOD,
+      CONSTRUCTOR_REQUIRED,
+      CONST_WITHOUT_INITIALIZER,
+      CTOR_IN_DIFFERENT_SCOPE,
+      DICT_IMPLEMENTS_INTERF,
+      DUPLICATE_JSDOC,
+      EXTENDS_NON_OBJECT,
+      EXTENDS_NOT_ON_CTOR_OR_INTERF,
+      REDECLARED_PROPERTY,
+      IMPLEMENTS_WITHOUT_CONSTRUCTOR,
+      INEXISTENT_PARAM,
+      INHERITANCE_CYCLE,
+      INTERFACE_WITH_A_BODY,
+      INVALID_PROP_OVERRIDE,
+      MISPLACED_CONST_ANNOTATION,
+      UNRECOGNIZED_TYPE_NAME,
+      RhinoErrorReporter.BAD_JSDOC_ANNOTATION,
+      TypeCheck.CONFLICTING_EXTENDED_TYPE,
+      TypeCheck.CONFLICTING_IMPLEMENTED_TYPE,
+      TypeCheck.CONFLICTING_SHAPE_TYPE,
+      TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
+      TypeCheck.MULTIPLE_VAR_DEF,
+      TypeCheck.UNKNOWN_OVERRIDE,
+      TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED,
+      VarCheck.UNDEFINED_VAR_ERROR,
+      VariableReferenceCheck.REDECLARED_VARIABLE,
+      VariableReferenceCheck.UNDECLARED_REFERENCE);
+
   // Invariant: if a scope s1 contains a scope s2, then s2 is before s1 in
   // scopes. The type inference relies on this fact to process deeper scopes
   // before shallower scopes.
@@ -166,10 +195,6 @@ class GlobalTypeInfo implements CompilerPass {
 
   Scope getGlobalScope() {
     return globalScope;
-  }
-
-  Collection<JSError> getWarnings() {
-    return warnings;
   }
 
   JSType getCastType(Node n) {
@@ -244,6 +269,10 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     compiler.setSymbolTable(this);
+
+    for (JSError warning : warnings) {
+      compiler.report(warning);
+    }
   }
 
   private Collection<PropertyDef> getPropDefsFromInterface(
@@ -746,7 +775,7 @@ class GlobalTypeInfo implements CompilerPass {
       // Add the property to the class with the appropriate type.
       boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
       if (propDeclType != null || isConstant) {
-        if (mayWarnAboutExistingProp(rawType, pname, getProp)) {
+        if (mayWarnAboutExistingProp(rawType, pname, getProp, propDeclType)) {
           return;
         }
         rawType.addProtoProperty(pname, propDeclType, isConstant);
@@ -761,12 +790,14 @@ class GlobalTypeInfo implements CompilerPass {
       Preconditions.checkState(currentScope.isLocalFunDef(ctorName));
       RawNominalType classType = currentScope.getNominalType(ctorName);
       String pname = getProp.getLastChild().getString();
-      JSType propDeclType = getTypeDeclarationFromJsdoc(
-          NodeUtil.getBestJSDocInfo(getProp), currentScope);
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
+      JSType propDeclType = getTypeDeclarationFromJsdoc(jsdoc, currentScope);
       boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
       if (propDeclType != null || isConstant) {
+        JSType previousPropType = classType.getCtorPropDeclaredType(pname);
         if (classType.hasCtorProp(pname) &&
-            classType.getCtorPropDeclaredType(pname) != null) {
+            previousPropType != null &&
+            !suppressDupPropWarning(jsdoc, propDeclType, previousPropType)) {
           warnings.add(JSError.make(getProp, REDECLARED_PROPERTY,
                   pname, classType.toString()));
           return;
@@ -783,12 +814,14 @@ class GlobalTypeInfo implements CompilerPass {
       String leftmost = qname.getLeftmostName();
       QualifiedName allButLeftmost = qname.getAllButLeftmost();
       JSType currentType = currentScope.getDeclaredTypeOf(leftmost);
-      JSType typeInJsdoc = getTypeDeclarationFromJsdoc(
-          NodeUtil.getBestJSDocInfo(getProp), currentScope);
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
+      JSType typeInJsdoc = getTypeDeclarationFromJsdoc(jsdoc, currentScope);
       boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
       if (typeInJsdoc != null || isConstant) {
+        JSType previousPropType = currentType.getDeclaredProp(allButLeftmost);
         if (currentType.mayHaveProp(allButLeftmost) &&
-            currentType.getDeclaredProp(allButLeftmost) != null) {
+            previousPropType != null &&
+            !suppressDupPropWarning(jsdoc, typeInJsdoc, previousPropType)) {
           warnings.add(JSError.make(getProp, REDECLARED_PROPERTY,
                   allButLeftmost.toString(), currentType.toString()));
           return;
@@ -812,7 +845,7 @@ class GlobalTypeInfo implements CompilerPass {
           NodeUtil.getBestJSDocInfo(getProp), currentScope);
       boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
       if (declaredType != null || isConstant) {
-        mayWarnAboutExistingProp(rawNominalType, pname, getProp);
+        mayWarnAboutExistingProp(rawNominalType, pname, getProp, declaredType);
         // Intentionally, we keep going even if we warned for redeclared prop.
         // The reason is that if a prop is defined on a class and on its proto
         // with conflicting types, we prefer the type of the class.
@@ -835,15 +868,40 @@ class GlobalTypeInfo implements CompilerPass {
           currentScope.isConstructor();
     }
 
-    private boolean mayWarnAboutExistingProp(
-        RawNominalType classType, String pname, Node propCreationNode) {
+    private boolean mayWarnAboutExistingProp(RawNominalType classType,
+        String pname, Node propCreationNode, JSType typeInJsdoc) {
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(propCreationNode);
+      JSType previousPropType = classType.getPropDeclaredType(pname);
       if (classType.mayHaveOwnProp(pname) &&
-          classType.getPropDeclaredType(pname) != null) {
+          previousPropType != null &&
+          !suppressDupPropWarning(jsdoc, typeInJsdoc, previousPropType)) {
         warnings.add(JSError.make(propCreationNode, REDECLARED_PROPERTY,
                 pname, classType.toString()));
         return true;
       }
       return false;
+    }
+
+    // All suppressions happen in SuppressDocWarningsGuard.java, except one.
+    // At a duplicate property definition annotated with @suppress {duplicate},
+    // if the type in the jsdoc is the same as the already declared type,
+    // then don't warn.
+    // Type info is required to enforce this, so the current type inference
+    // does it in TypeValidator.java, and we do it here.
+    // This is a hacky suppression.
+    // 1) Why is it just specific to "duplicate" and to properties?
+    // 2) The docs say that it's only allowed in the top level, but the code
+    //    allows it in all scopes.
+    // For now, we implement it b/c it exists in the current type inference.
+    // But I wouldn't mind if we stopped supporting it.
+    private boolean suppressDupPropWarning(
+        JSDocInfo propCreationJsdoc, JSType typeInJsdoc, JSType previousType) {
+      if (propCreationJsdoc == null ||
+          !propCreationJsdoc.getSuppressions().contains("duplicate")) {
+        return false;
+      }
+      return typeInJsdoc != null && previousType != null &&
+          typeInJsdoc.equals(previousType);
     }
 
     private DeclaredFunctionType computeFnDeclaredType(

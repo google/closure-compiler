@@ -162,6 +162,37 @@ public class NewTypeInference implements CompilerPass {
           "JSC_CONST_REASSIGNED",
           "Cannot change the value of a constant.");
 
+  static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
+      CALL_FUNCTION_WITH_BOTTOM_FORMAL,
+      CONST_REASSIGNED,
+      CROSS_SCOPE_GOTCHA,
+      FAILED_TO_UNIFY,
+      FORIN_EXPECTS_OBJECT,
+      FORIN_EXPECTS_STRING_KEY,
+      INVALID_ARGUMENT_TYPE,
+      INVALID_INFERRED_RETURN_TYPE,
+      INVALID_OBJLIT_PROPERTY_TYPE,
+      INVALID_OPERAND_TYPE,
+      MISTYPED_ASSIGN_RHS,
+      NON_NUMERIC_ARRAY_INDEX,
+      NOT_UNIQUE_INSTANTIATION,
+      POSSIBLY_INEXISTENT_PROPERTY,
+      PROPERTY_ACCESS_ON_NONOBJECT,
+      RETURN_NONDECLARED_TYPE,
+      CheckGlobalThis.GLOBAL_THIS,
+      CheckMissingReturn.MISSING_RETURN_STATEMENT,
+      TypeCheck.CONSTRUCTOR_NOT_CALLABLE,
+      TypeCheck.ILLEGAL_OBJLIT_KEY,
+      TypeCheck.ILLEGAL_PROPERTY_CREATION,
+      TypeCheck.IN_USED_WITH_STRUCT,
+      TypeCheck.INEXISTENT_PROPERTY,
+      TypeCheck.NOT_A_CONSTRUCTOR,
+      TypeCheck.NOT_CALLABLE,
+      TypeCheck.WRONG_ARGUMENT_COUNT,
+      TypeValidator.ILLEGAL_PROPERTY_ACCESS,
+      TypeValidator.INVALID_CAST,
+      TypeValidator.UNKNOWN_TYPEOF_VALUE);
+
   private Set<JSError> warnings;
   private final AbstractCompiler compiler;
   Map<DiGraphEdge<Node, ControlFlowGraph.Branch>, TypeEnv> envs;
@@ -957,7 +988,7 @@ public class NewTypeInference implements CompilerPass {
               result = result.withDeclaredProperty(qname, jsdocType, false);
               if (!pair.type.isSubtypeOf(jsdocType)) {
                 warnings.add(JSError.make(
-                    prop, NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE,
+                    prop, INVALID_OBJLIT_PROPERTY_TYPE,
                     jsdocType.toString(), pair.type.toString()));
                 pair.type = jsdocType;
               }
@@ -1915,7 +1946,7 @@ public class NewTypeInference implements CompilerPass {
                 pname, recvType.toString()));
       } else if (!recvType.hasProp(propQname)) {
         warnings.add(JSError.make(
-            propAccessNode, NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY,
+            propAccessNode, POSSIBLY_INEXISTENT_PROPERTY,
             pname, recvType.toString()));
       } else if (recvType.hasProp(propQname) &&
           !resultType.isSubtypeOf(requiredType) &&
@@ -2765,12 +2796,6 @@ public class NewTypeInference implements CompilerPass {
       return required;
     }
     return specializedType;
-  }
-
-  Collection<JSError> getWarnings() {
-    Collection<JSError> allWarnings = Sets.newHashSet(warnings);
-    allWarnings.addAll(symbolTable.getWarnings());
-    return allWarnings;
   }
 
   TypeEnv getInitTypeEnv() {

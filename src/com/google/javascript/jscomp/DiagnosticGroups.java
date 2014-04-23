@@ -83,7 +83,7 @@ public class DiagnosticGroups {
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
       "internetExplorerChecks, invalidCasts, misplacedTypeAnnotation, " +
       "missingProperties, missingProvide, missingRequire, missingReturn," +
-      "nonStandardJsDocs, reportUnknownTypes, suspiciousCode, " +
+      "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, suspiciousCode, " +
       "strictModuleDepCheck, typeInvalidation, " +
       "undefinedNames, undefinedVars, unknownDefines, uselessCode, googBase, " +
       "visibility";
@@ -193,6 +193,12 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("checkTypes",
           TypeValidator.ALL_DIAGNOSTICS,
           TypeCheck.ALL_DIAGNOSTICS);
+
+  // Part of the new type inference (under development)
+  public static final DiagnosticGroup NEW_CHECK_TYPES =
+      DiagnosticGroups.registerGroup("newCheckTypes",
+          GlobalTypeInfo.ALL_DIAGNOSTICS,
+          NewTypeInference.ALL_DIAGNOSTICS);
 
   public static final DiagnosticGroup CHECK_EVENTFUL_OBJECT_DISPOSAL =
       DiagnosticGroups.registerGroup("checkEventfulObjectDisposal",

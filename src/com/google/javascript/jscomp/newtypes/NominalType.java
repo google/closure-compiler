@@ -599,8 +599,7 @@ public class NominalType {
 
     public JSType getCtorPropDeclaredType(String pname) {
       Property p = ctorProps.get(pname);
-      Preconditions.checkState(p != null);
-      return p.getDeclaredType();
+      return p == null ? null : p.getDeclaredType();
     }
 
     // Returns the (function) object referred to by the constructor of this

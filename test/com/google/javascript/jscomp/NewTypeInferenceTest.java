@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -37,10 +37,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   private NewTypeInference parseAndTypeCheck(String externs, String js) {
     setUp();
+    CompilerOptions options = compiler.getOptions();
+    options.setWarningLevel(
+        DiagnosticGroups.CHECK_VARIABLES, CheckLevel.WARNING);
     compiler.init(
         Lists.newArrayList(SourceFile.fromCode("[externs]", externs)),
         Lists.newArrayList(SourceFile.fromCode("[testcode]", js)),
-        compiler.getOptions());
+        options);
 
     Node externsRoot =
         compiler.getInput(new InputId("[externs]")).getAstRoot(compiler);
@@ -64,9 +67,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   private void checkNoWarnings(String js) {
     NewTypeInference typeInf = parseAndTypeCheck("", js);
-    Collection<JSError> warnings = typeInf.getWarnings();
-    assertEquals("Expected no warning, but found: " + warnings + "\n",
-        0, warnings.size());
+    JSError[] warnings = compiler.getWarnings();
+    assertEquals("Expected no warning, but found: " +
+        Arrays.toString(warnings) + "\n",
+        0, warnings.length);
   }
 
   private NewTypeInference typeCheck(String js, DiagnosticType warningKind) {
@@ -88,7 +92,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
       String externs, String js, List<DiagnosticType> warningKinds) {
     Preconditions.checkNotNull(warningKinds);
     NewTypeInference typeInf = parseAndTypeCheck(externs, js);
-    Collection<JSError> warnings = typeInf.getWarnings();
+    JSError[] warnings = compiler.getWarnings();
     String errorMessage =
         "Expected warning of type:\n" +
         "================================================================\n" +
@@ -96,10 +100,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "================================================================\n" +
         "but found:\n" +
         "----------------------------------------------------------------\n" +
-        warnings + "\n" +
+        Arrays.toString(warnings) + "\n" +
         "----------------------------------------------------------------\n";
     assertEquals(errorMessage + "For warnings",
-        warningKinds.size(), warnings.size());
+        warningKinds.size(), warnings.length);
     for (JSError warning : warnings) {
       assertTrue("Wrong warning type\n" + errorMessage,
           warningKinds.contains(warning.getType()));
@@ -110,9 +114,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   // Only for tests where there is a single top-level function in the program
   private void inferFirstFormalType(String js, JSType expected) {
     NewTypeInference typeInf = parseAndTypeCheck("", js);
-    Collection<JSError> warnings = typeInf.getWarnings();
-    if (warnings.size() > 0) {
-      fail("Expected no warnings, but found: " + warnings);
+    JSError[] warnings = compiler.getWarnings();
+    if (warnings.length > 0) {
+      fail("Expected no warnings, but found: " + Arrays.toString(warnings));
     }
     assertEquals(expected, typeInf.getFormalType(0));
   }
@@ -120,18 +124,18 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   // Only for tests where there is a single top-level function in the program
   private void inferReturnType(String js, JSType expected) {
     NewTypeInference typeInf = parseAndTypeCheck("", js);
-    Collection<JSError> warnings = typeInf.getWarnings();
-    if (warnings.size() > 0) {
-      fail("Expected no warnings, but found: " + warnings);
+    JSError[] warnings = compiler.getWarnings();
+    if (warnings.length > 0) {
+      fail("Expected no warnings, but found: " + Arrays.toString(warnings));
     }
     assertEquals(expected, typeInf.getReturnType());
   }
 
   private void checkInference(String js, String varName, JSType expected) {
     NewTypeInference typeInf = parseAndTypeCheck("", js);
-    Collection<JSError> warnings = typeInf.getWarnings();
-    if (warnings.size() > 0) {
-      fail("Expected no warnings, but found: " + warnings);
+    JSError[] warnings = compiler.getWarnings();
+    if (warnings.length > 0) {
+      fail("Expected no warnings, but found: " + Arrays.toString(warnings));
     }
     assertEquals(expected, typeInf.getFinalType(varName));
   }
@@ -6185,5 +6189,49 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     //     "function Low() {}\n" +
     //     "Low.prototype.method = function(x) {};",
     //     GlobalTypeInfo.CANNOT_OVERRIDE_FINAL_METHOD);
+  }
+
+  public void testSuppressions() {
+    checkNoWarnings(
+        "/**\n" +
+        " * @fileoverview\n" +
+        " * @suppress {newCheckTypes}\n" +
+        " */\n" +
+        "123();");
+
+    typeCheck(
+        "123();\n" +
+        "/** @suppress {newCheckTypes} */\n" +
+        "function f() { 123(); }",
+        TypeCheck.NOT_CALLABLE);
+
+    typeCheck(
+        "123();\n" +
+        "/** @suppress {newCheckTypes} */\n" +
+        "function f() { 1 - 'str'; }",
+        TypeCheck.NOT_CALLABLE);
+
+    checkNoWarnings(
+        "/** @const */ var ns = {};\n" +
+        "/** @type {Object} */\n" +
+        "ns.obj = { prop: 123 };\n" +
+        "/**\n" +
+        " * @suppress {duplicate}\n" +
+        " * @type {Object}\n" +
+        " */\n" +
+        "ns.obj = null;");
+
+    checkNoWarnings(
+        "function f() {\n" +
+        "  /** @const */\n" +
+        "  var ns = {};\n" +
+        "  /** @type {number} */\n" +
+        "  ns.prop = 1;\n" +
+        "  /**\n" +
+        "   * @type {number}\n" +
+        "   * @suppress {duplicate}\n" +
+        "   */\n" +
+        "  ns.prop = 2;\n" +
+        "}");
   }
 }
