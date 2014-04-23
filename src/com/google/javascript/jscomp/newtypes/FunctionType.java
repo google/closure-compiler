@@ -368,9 +368,8 @@ public class FunctionType {
   }
 
   FunctionType specialize(FunctionType other) {
-    if (other == null) {
-      return null;
-    } else if (!this.isLoose() && other.isLoose()) {
+    if (other == null ||
+        !this.isLoose() && other.isLoose()) {
       return this;
     } else {
       return FunctionType.meet(this, other);

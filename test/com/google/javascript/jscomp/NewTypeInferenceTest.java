@@ -5255,6 +5255,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
   }
 
+  public void testFunctionGetpropDoesntCrash() {
+    typeCheck(
+        "function g() {}\n" +
+        "function f() {\n" +
+        "  g();\n" +
+        "  return g.prop;\n" +
+        "}",
+        TypeCheck.INEXISTENT_PROPERTY);
+  }
+
   public void testUnknownTypeReferenceDoesntCrash() {
     typeCheck(
         "/** @interface */ function I(){}\n" +
