@@ -22,6 +22,7 @@ import com.google.javascript.rhino.Node;
  * Tests for {@link NameAnalyzer}
  *
  */
+
 public class NameAnalyzerTest extends CompilerTestCase {
 
   private static String kExterns =

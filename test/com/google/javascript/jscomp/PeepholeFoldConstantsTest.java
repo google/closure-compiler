@@ -31,6 +31,7 @@ import java.util.Set;
  * the interaction of multiple peephole passes are in
  * {@link PeepholeIntegrationTest}.
  */
+
 public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   private boolean late;

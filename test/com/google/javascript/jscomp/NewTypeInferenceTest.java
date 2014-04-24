@@ -33,6 +33,7 @@ import java.util.List;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
+
 public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   private NewTypeInference parseAndTypeCheck(String externs, String js) {

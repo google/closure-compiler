@@ -36,6 +36,7 @@ import static com.google.javascript.jscomp.CheckAccessControls.VISIBILITY_MISMAT
  *
  * @author nicksantos@google.com (Nick Santos)
  */
+
 public class CheckAccessControlsTest extends CompilerTestCase {
 
   public CheckAccessControlsTest() {
