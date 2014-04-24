@@ -2242,10 +2242,10 @@ public class CompilerOptions implements Serializable, Cloneable {
       switch (value) {
         case "ECMASCRIPT6_STRICT":
         case "ES6_STRICT":
-          return LanguageMode.ECMASCRIPT5_STRICT;
+          return LanguageMode.ECMASCRIPT6_STRICT;
         case "ECMASCRIPT6":
         case "ES6":
-          return LanguageMode.ECMASCRIPT5;
+          return LanguageMode.ECMASCRIPT6;
         case "ECMASCRIPT5_STRICT":
         case "ES5_STRICT":
           return LanguageMode.ECMASCRIPT5_STRICT;
