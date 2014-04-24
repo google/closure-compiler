@@ -128,35 +128,41 @@ public class ParseTree {
   }
 
   public boolean isPattern() {
-    switch (type) {
+    ParseTree parseTree = this;
+    while (parseTree.type == ParseTreeType.PAREN_EXPRESSION) {
+      parseTree = parseTree.asParenExpression().expression;
+    }
+
+    switch (parseTree.type) {
       case ARRAY_PATTERN:
       case OBJECT_PATTERN:
         return true;
-      case PAREN_EXPRESSION:
-        return this.asParenExpression().expression.isPattern();
       default:
         return false;
     }
   }
 
   public boolean isLeftHandSideExpression() {
-    switch (this.type) {
-    case THIS_EXPRESSION:
-    case SUPER_EXPRESSION:
-    case IDENTIFIER_EXPRESSION:
-    case LITERAL_EXPRESSION:
-    case ARRAY_LITERAL_EXPRESSION:
-    case OBJECT_LITERAL_EXPRESSION:
-    case NEW_EXPRESSION:
-    case MEMBER_EXPRESSION:
-    case MEMBER_LOOKUP_EXPRESSION:
-    case CALL_EXPRESSION:
-    case FUNCTION_DECLARATION:
-      return true;
-    case PAREN_EXPRESSION:
-      return this.asParenExpression().expression.isLeftHandSideExpression();
-    default:
-      return false;
+    ParseTree parseTree = this;
+    while (parseTree.type == ParseTreeType.PAREN_EXPRESSION) {
+      parseTree = parseTree.asParenExpression().expression;
+    }
+
+    switch (parseTree.type) {
+      case THIS_EXPRESSION:
+      case SUPER_EXPRESSION:
+      case IDENTIFIER_EXPRESSION:
+      case LITERAL_EXPRESSION:
+      case ARRAY_LITERAL_EXPRESSION:
+      case OBJECT_LITERAL_EXPRESSION:
+      case NEW_EXPRESSION:
+      case MEMBER_EXPRESSION:
+      case MEMBER_LOOKUP_EXPRESSION:
+      case CALL_EXPRESSION:
+      case FUNCTION_DECLARATION:
+        return true;
+      default:
+        return false;
     }
   }
 

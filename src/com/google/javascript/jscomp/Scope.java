@@ -531,14 +531,16 @@ public class Scope
    * Returns the variable, may be null
    */
   public Var getVar(String name) {
-    Var var = vars.get(name);
-    if (var != null) {
-      return var;
-    } else if (parent != null) { // Recurse up the parent Scope
-      return parent.getVar(name);
-    } else {
-      return null;
+    Scope scope = this;
+    while (scope != null) {
+      Var var = scope.vars.get(name);
+      if (var != null) {
+        return var;
+      }
+      // Recurse up the parent Scope
+      scope = scope.parent;
     }
+    return null;
   }
 
   /**
@@ -556,13 +558,16 @@ public class Scope
    */
   public boolean isDeclared(String name, boolean recurse) {
     Scope scope = this;
-    if (scope.vars.containsKey(name)) {
-      return true;
+    while (true) {
+      if (scope.vars.containsKey(name)) {
+        return true;
+      }
+      if (scope.parent != null && recurse) {
+        scope = scope.parent;
+        continue;
+      }
+      return false;
     }
-    if (scope.parent != null && recurse) {
-      return scope.parent.isDeclared(name, recurse);
-    }
-    return false;
   }
 
   /**

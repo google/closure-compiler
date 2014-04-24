@@ -291,16 +291,17 @@ class GlobalTypeInfo implements CompilerPass {
     return result.build();
   }
 
-  private PropertyDef getPropDefFromClass(
-      NominalType nominalType, String pname) {
-    Preconditions.checkArgument(nominalType.isFinalized());
-    Preconditions.checkArgument(nominalType.isClass());
-    if (nominalType.getPropDeclaredType(pname) == null) {
-      return null;
-    } else if (propertyDefs.get(nominalType.getId(), pname) != null) {
-      return propertyDefs.get(nominalType.getId(), pname);
+  private PropertyDef getPropDefFromClass(NominalType nominalType, String pname) {
+    while (nominalType.getPropDeclaredType(pname) != null) {
+      Preconditions.checkArgument(nominalType.isFinalized());
+      Preconditions.checkArgument(nominalType.isClass());
+
+      if (propertyDefs.get(nominalType.getId(), pname) != null) {
+        return propertyDefs.get(nominalType.getId(), pname);
+      }
+      nominalType = nominalType.getInstantiatedSuperclass();
     }
-    return getPropDefFromClass(nominalType.getInstantiatedSuperclass(), pname);
+    return null;
   }
 
   /** Report all errors that must be checked at the end of GlobalTypeInfo */
