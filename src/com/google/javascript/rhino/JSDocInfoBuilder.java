@@ -1133,6 +1133,26 @@ final public class JSDocInfoBuilder {
   }
 
   /**
+   * Returns whether current JSDoc is annotated with {@code @jaggerProvide}.
+   */
+  public boolean isJaggerProvidePromiseRecorded() {
+    return currentInfo.isJaggerProvidePromise();
+  }
+
+  /**
+   * Records annotation with {@code @jaggerProvide}.
+   */
+  public boolean recordJaggerProvidePromise(boolean jaggerPromise) {
+    if (!isJaggerProvidePromiseRecorded()) {
+      currentInfo.setJaggerProvidePromise(jaggerPromise);
+      populated = true;
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Returns whether current JSDoc is annotated with {@code @wizaction}.
    */
   public boolean isWizactionRecorded() {

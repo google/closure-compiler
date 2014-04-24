@@ -92,8 +92,9 @@ public class JSDocInfo implements Serializable {
 
        // Flags for Jagger dependency injection prototype
       JAGGER_INJECT = 2,
-      JAGGER_PROVIDE = 3,
-      JAGGER_MODULE = 4;
+      JAGGER_MODULE = 3,
+      JAGGER_PROVIDE_PROMISE = 4,
+      JAGGER_PROVIDE = 5;
   }
 
   private static final class LazilyInitializedInfo implements Serializable {
@@ -1331,7 +1332,7 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Returns whether JSDoc is annotated with {@code @jaggerProvide} annotation.
+   * Returns whether JSDoc is annotated with {@code @jaggerProvidePromise} annotation.
    */
   public boolean isJaggerProvide() {
     return (info != null) && info.isBitSet(Property.JAGGER_PROVIDE);
@@ -1340,6 +1341,18 @@ public class JSDocInfo implements Serializable {
   void setJaggerProvide(boolean jaggerProvide) {
     lazyInitInfo();
     info.setBit(Property.JAGGER_PROVIDE, jaggerProvide);
+  }
+
+  /**
+   * Returns whether JSDoc is annotated with {@code @jaggerProvidePromise} annotation.
+   */
+  public boolean isJaggerProvidePromise() {
+    return (info != null) && info.isBitSet(Property.JAGGER_PROVIDE_PROMISE);
+  }
+
+  void setJaggerProvidePromise(boolean jaggerProvidePromise) {
+    lazyInitInfo();
+    info.setBit(Property.JAGGER_PROVIDE_PROMISE, jaggerProvidePromise);
   }
 
   /**

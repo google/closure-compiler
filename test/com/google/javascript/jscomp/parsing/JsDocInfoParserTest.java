@@ -2962,6 +2962,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       "* @jaggerInject \n" +
       "* @jaggerModule \n" +
       "* @jaggerProvide \n" +
+      "* @jaggerProvidePromise \n" +
       "* @lends {string} \n" +
       "* @link \n" +
       "* @member \n" +
@@ -3037,6 +3038,15 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseJaggerProvideExtra() throws Exception {
     parse("@jaggerProvide \n@jaggerProvide*/", "extra @jaggerProvide tag");
   }
+  
+  public void testParseJaggerProvidePromise() throws Exception {
+    assertTrue(parse("@jaggerProvidePromise*/").isJaggerProvidePromise());
+  }
+
+  public void testParseJaggerProvidePromiseExtra() throws Exception {
+    parse("@jaggerProvidePromise \n@jaggerProvidePromise*/", "extra @jaggerProvidePromise tag");
+  }
+
 
   public void testParseWizaction1() throws Exception {
     assertTrue(parse("@wizaction*/").isWizaction());

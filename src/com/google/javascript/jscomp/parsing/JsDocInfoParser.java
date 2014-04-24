@@ -352,6 +352,15 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case JAGGER_PROVIDE_PROMISE:
+          if (jsdocBuilder.isJaggerProvidePromiseRecorded()) {
+            parser.addParserWarning("msg.jsdoc.jaggerProvidePromise.extra",
+              stream.getLineno(), stream.getCharno());
+          } else {
+            jsdocBuilder.recordJaggerProvidePromise(true);
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case AUTHOR:
           if (jsdocBuilder.shouldParseDocumentation()) {
             ExtractionInfo authorInfo = extractSingleLineBlock();
