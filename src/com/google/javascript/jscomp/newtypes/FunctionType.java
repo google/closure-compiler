@@ -528,9 +528,9 @@ public class FunctionType {
     Map<String, JSType> typeMap = concreteTypes;
     if (typeParameters != null) {
       ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-      for (String typeParam : concreteTypes.keySet()) {
-        if (!typeParameters.contains(typeParam)) {
-          builder.put(typeParam, concreteTypes.get(typeParam));
+      for (Map.Entry<String, JSType> concreteTypeEntry : concreteTypes.entrySet()) {
+        if (!typeParameters.contains(concreteTypeEntry.getKey())) {
+          builder.put(concreteTypeEntry.getKey(), concreteTypeEntry.getValue());
         }
       }
       typeMap = builder.build();
