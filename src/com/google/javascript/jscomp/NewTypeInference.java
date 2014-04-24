@@ -56,7 +56,6 @@ import java.util.Set;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  *
  * Features left to implement:
- * - @const/@final
  * - @enum
  * - @typedef
  * - @define
@@ -66,7 +65,6 @@ import java.util.Set;
  * - arguments array
  * - separate scope for catch variables
  * - closure-specific constructs
- * - suppress warnings
  * - bounded quantification for generics
  */
 public class NewTypeInference implements CompilerPass {

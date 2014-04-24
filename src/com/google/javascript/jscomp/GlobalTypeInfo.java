@@ -582,11 +582,11 @@ class GlobalTypeInfo implements CompilerPass {
                 currentScope.addLocal(name, JSType.UNKNOWN, false);
               } else {
                 boolean isConstant = NodeUtil.hasConstAnnotation(parent);
-                if (isConstant && !n.isFromExterns() && initializer == null) {
-                  warnings.add(JSError.make(n, CONST_WITHOUT_INITIALIZER));
+                JSType declType = getVarTypeFromAnnotation(n);
+                if (isConstant && !mayWarnAboutNoInit(n) && declType == null) {
+                  declType = inferConstTypeFromRhs(n);
                 }
-                currentScope.addLocal(
-                    name, getVarTypeFromAnnotation(n), isConstant);
+                currentScope.addLocal(name, declType, isConstant);
               }
             }
           } else if (currentScope.isOuterVarEarly(name)) {
@@ -779,6 +779,10 @@ class GlobalTypeInfo implements CompilerPass {
         if (mayWarnAboutExistingProp(rawType, pname, getProp, propDeclType)) {
           return;
         }
+        if (isConstant &&
+            !mayWarnAboutNoInit(getProp) && propDeclType == null) {
+          propDeclType = inferConstTypeFromRhs(getProp);
+        }
         rawType.addProtoProperty(pname, propDeclType, isConstant);
       } else {
         rawType.addUndeclaredProtoProperty(pname);
@@ -802,6 +806,10 @@ class GlobalTypeInfo implements CompilerPass {
           warnings.add(JSError.make(getProp, REDECLARED_PROPERTY,
                   pname, classType.toString()));
           return;
+        }
+        if (isConstant &&
+            !mayWarnAboutNoInit(getProp) && propDeclType == null) {
+          propDeclType = inferConstTypeFromRhs(getProp);
         }
         classType.addCtorProperty(pname, propDeclType, isConstant);
       } else {
@@ -827,9 +835,13 @@ class GlobalTypeInfo implements CompilerPass {
                   allButLeftmost.toString(), currentType.toString()));
           return;
         }
+        JSType declType = typeInJsdoc;
+        if (isConstant && !mayWarnAboutNoInit(getProp) && declType == null) {
+          declType = inferConstTypeFromRhs(getProp);
+        }
         currentScope.updateTypeOfLocal(leftmost,
             currentType.withDeclaredProperty(
-                allButLeftmost, typeInJsdoc, isConstant));
+                allButLeftmost, declType, isConstant));
       } else {
         currentScope.updateTypeOfLocal(leftmost,
             currentType.withProperty(allButLeftmost, JSType.UNKNOWN));
@@ -846,22 +858,118 @@ class GlobalTypeInfo implements CompilerPass {
       RawNominalType rawNominalType = thisType.getRawNominalType();
       String pname = getProp.getLastChild().getString();
       // TODO(blickly): Support @param, @return style fun declarations here.
-      JSType declaredType = getTypeDeclarationFromJsdoc(
+      JSType declType = getTypeDeclarationFromJsdoc(
           NodeUtil.getBestJSDocInfo(getProp), currentScope);
       boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
-      if (declaredType != null || isConstant) {
-        mayWarnAboutExistingProp(rawNominalType, pname, getProp, declaredType);
+      if (declType != null || isConstant) {
+        mayWarnAboutExistingProp(rawNominalType, pname, getProp, declType);
         // Intentionally, we keep going even if we warned for redeclared prop.
         // The reason is that if a prop is defined on a class and on its proto
         // with conflicting types, we prefer the type of the class.
+        if (isConstant && !mayWarnAboutNoInit(getProp) && declType == null) {
+          declType = inferConstTypeFromRhs(getProp);
+        }
         if (mayAddPropToType(getProp, rawNominalType)) {
-          rawNominalType.addClassProperty(pname, declaredType, isConstant);
+          rawNominalType.addClassProperty(pname, declType, isConstant);
         }
       } else if (mayAddPropToType(getProp, rawNominalType)) {
         rawNominalType.addUndeclaredClassProperty(pname);
       }
       propertyDefs.put(rawNominalType.getId(), pname,
           new PropertyDef(getProp, null, null));
+    }
+
+    boolean mayWarnAboutNoInit(Node constExpr) {
+      if (constExpr.isFromExterns()) {
+        return false;
+      }
+      boolean noInit = true;
+      if (constExpr.isName()) {
+        Preconditions.checkState(constExpr.getParent().isVar());
+        noInit = constExpr.getFirstChild() == null;
+      } else {
+        Preconditions.checkState(constExpr.isGetProp());
+        noInit = !constExpr.getParent().isAssign();
+      }
+      if (noInit) {
+        warnings.add(JSError.make(constExpr, CONST_WITHOUT_INITIALIZER));
+        return true;
+      }
+      return false;
+    }
+
+    // If a @const doesn't have a declared type, we use the initializer to
+    // infer a type, only in very specific cases.
+    // (1) If the initializer is a literal, we use its type.
+    // (2) If the initializer is a declared formal, we use its type.
+    // In all other cases, do not infer because it is not reliable to do so.
+    // When inference is unpredictable, people should not rely on it.
+    // Examples:
+    // (1) If the initializer is a local, getting its type depends on the order
+    // of processing the AST. The previous type checker would not warn for the
+    // following code, but it would warn if we declare n before this.prop.
+    //   /** @constructor */
+    //   function Foo() {
+    //     /** @const */
+    //     this.prop = n;
+    //     var /** number */ n;
+    //   }
+    //   var /** string */ s = (new Foo).prop;
+    // (2) If the initializer is a GETPROP, eg,
+    //   /**
+    //    * @constructor
+    //    * @param {TypeA} x
+    //    */
+    //   function Foo(x) {
+    //     /** @const */
+    //     this.prop = x.prop;
+    //   }
+    // If TypeA is a record type, like { prop: number }, then we could infer
+    // that this.prop is number.
+    // But if TypeA is a nominal type, like a class Bar, we won't know the type
+    // of Bar's prop until the whole GlobalTypeInfo is done.
+    // If TypeA is a union type, again we would not want to access prop on all
+    // types in the union and pick the join as the type of Foo's prop.
+    // It is a bad idea to infer for GETPROP only in some cases, b/c nobody will
+    // remember which cases are these.
+    // Similar arguments apply to any initializer that's not a literal or a
+    // declared formal parameter.
+    private JSType inferConstTypeFromRhs(Node constExpr) {
+      if (constExpr.isFromExterns()) {
+        return null;
+      }
+      Node rhs;
+      if (constExpr.isName()) {
+        Preconditions.checkState(constExpr.getParent().isVar());
+        rhs = constExpr.getFirstChild();
+      } else {
+        Preconditions.checkState(constExpr.isGetProp() &&
+            constExpr.getParent().isAssign());
+        rhs = constExpr.getParent().getLastChild();
+      }
+      switch (rhs.getType()) {
+        case Token.NUMBER:
+          return JSType.NUMBER;
+        case Token.STRING:
+          return JSType.STRING;
+        case Token.TRUE:
+          return JSType.TRUE_TYPE;
+        case Token.FALSE:
+          return JSType.FALSE_TYPE;
+        case Token.NULL:
+          return JSType.NULL;
+        case Token.NAME:
+          String varName = rhs.getString();
+          if (varName.equals("undefined")) {
+            return JSType.UNDEFINED;
+          }
+          if (currentScope.isFormalParam(varName)) {
+            return currentScope.getDeclaredTypeOf(varName);
+          }
+          return null;
+        default:
+          return null;
+      }
     }
 
     private boolean mayAddPropToType(Node getProp, RawNominalType rawType) {
@@ -1109,6 +1217,7 @@ class GlobalTypeInfo implements CompilerPass {
     // Used only for error messages; null for top scope
     private final String readableName;
 
+    // A local w/out declared type is mapped to null, not to JSType.UNKNOWN.
     private final Map<String, JSType> locals = Maps.newHashMap();
     private final Set<String> constVars = Sets.newHashSet();
     private final ArrayList<String> formals;

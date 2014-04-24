@@ -66,7 +66,11 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   private void checkNoWarnings(String js) {
-    parseAndTypeCheck("", js);
+    checkNoWarnings("", js);
+  }
+
+  private void checkNoWarnings(String externs, String js) {
+    parseAndTypeCheck(externs, js);
     JSError[] warnings = compiler.getWarnings();
     assertEquals("Expected no warning, but found: " +
         Arrays.toString(warnings) + "\n",
@@ -6005,11 +6009,64 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
-  public void testConstVars() {
+  public void testConstMissingInitializer() {
     typeCheck("/** @const */ var x;", GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
 
     typeCheck("/** @final */ var x;", GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
 
+    checkNoWarnings("/** @const */ var x;", "");
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @const */\n" +
+        "Foo.prop;",
+        GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {\n" +
+        "  /** @const */ this.prop;\n" +
+        "}",
+        GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @const */\n" +
+        "Foo.prototype.prop;",
+        GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @const */\n" +
+        "ns.prop;",
+        GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
+  }
+
+  public void testMisplacedConstPropertyAnnotation() {
+    typeCheck(
+        "function f(obj) { /** @const */ obj.prop = 123; }",
+        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
+
+    typeCheck(
+        "function f(obj) { /** @const */ obj.prop; }",
+        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
+
+    typeCheck(
+        "var obj = { /** @const */ prop: 1 };",
+        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "Foo.prototype.method = function() {\n" +
+        "  /** @const */ this.prop = 1;\n" +
+        "}",
+        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
+  }
+
+  public void testConstVarsDontReassign() {
     typeCheck(
         "/** @const */ var x = 1; x = 2;",
         NewTypeInference.CONST_REASSIGNED);
@@ -6036,28 +6093,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.CONST_REASSIGNED);
   }
 
-  public void testMisplacedConstPropertyAnnotation() {
-    typeCheck(
-        "function f(obj) { /** @const */ obj.prop = 123; }",
-        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
-
-    typeCheck(
-        "function f(obj) { /** @const */ obj.prop; }",
-        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
-
-    typeCheck(
-        "var obj = { /** @const */ prop: 1 };",
-        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
-
-    typeCheck(
-        "/** @constructor */ function Foo() {}\n" +
-        "Foo.prototype.method = function() {\n" +
-        "  /** @const */ this.prop = 1;\n" +
-        "}",
-        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
-  }
-
-  public void testConstPropertiesDontAssign() {
+  public void testConstPropertiesDontReassign() {
     typeCheck(
         "/** @constructor */\n" +
         "function Foo() {\n" +
@@ -6197,6 +6233,67 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     //     "function Low() {}\n" +
     //     "Low.prototype.method = function(x) {};",
     //     GlobalTypeInfo.CANNOT_OVERRIDE_FINAL_METHOD);
+  }
+
+  public void testInferenceOfConstType() {
+    typeCheck(
+        "/** @const */\n" +
+        "var s = 'str';\n" +
+        "function f() { s - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "function f(/** string */ x) {\n" +
+        "  /** @const */\n" +
+        "  var s = x;\n" +
+        "  function g() { s - 5; }\n" +
+        "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    checkNoWarnings(
+        "var /** string */ x;\n" +
+        "/** @const */\n" +
+        "var s = x;\n" +
+        "function g() { s - 5; }");
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {\n" +
+        "  /** @const */\n" +
+        "  this.prop = 'str';\n" +
+        "}\n" +
+        "(new Foo).prop - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @const */\n" +
+        "Foo.prop = 'str';\n" +
+        "function g() { Foo.prop - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "function f(/** string */ s) {\n" +
+        "  /** @constructor */\n" +
+        "  function Foo() {}\n" +
+        "  /** @const */\n" +
+        "  Foo.prototype.prop = s;\n" +
+        "  function g() {\n" +
+        "    (new Foo).prop - 5;\n" +
+        "  }\n" +
+        "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @const */\n" +
+        "ns.prop = 'str';\n" +
+        "function f() {\n" +
+        "  ns.prop - 5;\n" +
+        "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testSuppressions() {
