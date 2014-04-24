@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTr
 import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DefaultClauseTree;
+import com.google.javascript.jscomp.parsing.parser.trees.DefaultParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DoWhileStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
@@ -129,6 +130,7 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processSetAccessor(SetAccessorTree tree);
   abstract T processPropertyNameAssignment(PropertyNameAssignmentTree tree);
   abstract T processFormalParameterList(FormalParameterListTree tree);
+  abstract T processDefaultParameter(DefaultParameterTree tree);
 
   abstract T processClassDeclaration(ClassDeclarationTree tree);
   abstract T processSuper(SuperExpressionTree tree);
@@ -295,7 +297,7 @@ abstract class NewTypeSafeDispatcher<T> {
         return unsupportedLanguageFeature(node, "destructuring");
 
       case DEFAULT_PARAMETER:
-        return unsupportedLanguageFeature(node, "default parameters");
+        return processDefaultParameter(node.asDefaultParameter());
       case REST_PARAMETER:
         return unsupportedLanguageFeature(node, "rest parameters");
       case SPREAD_EXPRESSION:

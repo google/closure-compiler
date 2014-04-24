@@ -1540,6 +1540,19 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(parse("/[\\]]/"), script(expr(regex("[\\]]"))));
   }
 
+  public void testDefaultParameters() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("function f(a, b=0) {}");
+    // TODO(tbreisacher): Improve this error message:
+    // "Cannot have parameter without a default value after a
+    // parameter with a default value."
+    parseError("function f(a, b=0, c) {}", "'=' expected");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning("function f(a, b=0) {}",
+        "this language feature is only supported in es6 mode: default parameters");
+  }
+
   public void testClass1() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("class C {}");

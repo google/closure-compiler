@@ -1687,6 +1687,12 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("3*(4%3*5)");
   }
 
+  public void testDefaultParameters() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("function f(a=0){}");
+    assertPrintSame("function f(a,b=0){}");
+  }
+
   public void testClass() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("class C{}");

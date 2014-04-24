@@ -366,8 +366,21 @@ public class AstValidator implements CompilerPass {
 
   private void validateParameters(Node n) {
     validateNodeType(Token.PARAM_LIST, n);
+
+    boolean defaultParams = false;
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      validateName(c);
+      // Don't call validateName, since it requires every NAME to have
+      // zero children, which is not the case here.
+      validateNodeType(Token.NAME, c);
+      validateNonEmptyString(c);
+
+      // If a previous parameter has a default value, this one must too
+      validateMinimumChildCount(c, defaultParams ? 1 : 0);
+      validateMaximumChildCount(c, 1);
+      if (c.hasOneChild()) {
+        validateExpression(c.getFirstChild());
+        defaultParams = true;
+      }
     }
   }
 

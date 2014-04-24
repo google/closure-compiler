@@ -40,6 +40,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTr
 import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DefaultClauseTree;
+import com.google.javascript.jscomp.parsing.parser.trees.DefaultParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DoWhileStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
@@ -1181,6 +1182,15 @@ class NewIRFactory {
     }
 
     @Override
+    Node processDefaultParameter(DefaultParameterTree tree) {
+      maybeWarnEs6Feature(tree, "default parameters");
+
+      Node name = IR.name(tree.identifier.identifierToken.value);
+      name.addChildToFront(transform(tree.expression));
+      return name;
+    }
+
+    @Override
     Node processIfStatement(IfStatementTree statementNode) {
       Node node = newNode(Token.IF);
       node.addChildToBack(transform(statementNode.condition));
@@ -1814,9 +1824,7 @@ class NewIRFactory {
 
     @Override
     Node processClassDeclaration(ClassDeclarationTree tree) {
-      if (!isEs6Mode()) {
-        maybeWarnEs6Feature(tree, "class");
-      }
+      maybeWarnEs6Feature(tree, "class");
 
       Node name = transformOrEmpty(tree.name);
       Node superClass = transformOrEmpty(tree.superClass);
@@ -1832,10 +1840,7 @@ class NewIRFactory {
 
     @Override
     Node processSuper(SuperExpressionTree tree) {
-      if (!isEs6Mode()) {
-        maybeWarnEs6Feature(tree, "super");
-      }
-
+      maybeWarnEs6Feature(tree, "super");
       return newNode(Token.SUPER);
     }
 
