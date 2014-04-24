@@ -671,7 +671,7 @@ public class Compiler extends AbstractCompiler {
 
     // Pass on any exception caught by the runnable object.
     if (exception[0] != null) {
-      throw new RuntimeException(exception[0]);
+      Throwables.propagate(exception[0]);
     }
 
     return result;
