@@ -1939,6 +1939,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}",
         NewTypeInference.INVALID_OPERAND_TYPE);
 
+    checkNoWarnings(
+        "function f(x) {\n" +
+        "  if (typeof x != 'function') {\n" +
+        "    x - 5;\n" +
+        "  }\n" +
+        "}");
+
     typeCheck(
         "function f(x) {\n" +
         "  if (typeof x == 'string') {\n" +

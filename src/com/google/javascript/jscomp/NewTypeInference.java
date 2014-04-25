@@ -1767,10 +1767,10 @@ public class NewTypeInference implements CompilerPass {
         (lhs.isTypeOf() || rhs.isTypeOf())) {
       if (lhs.isTypeOf()) {
         return analyzeSpecializedTypeof(
-            lhs, rhs, expr.getType(), inEnv, specializedType);
+            lhs, rhs, tokenType, inEnv, specializedType);
       } else {
         return analyzeSpecializedTypeof(
-            rhs, lhs, expr.getType(), inEnv, specializedType);
+            rhs, lhs, tokenType, inEnv, specializedType);
       }
     }
 
