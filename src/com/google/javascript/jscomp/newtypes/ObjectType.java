@@ -57,6 +57,8 @@ public class ObjectType {
     Preconditions.checkArgument(fn == null || fn.isLoose() == isLoose,
         "isLoose: %s, fn: %s", isLoose, fn);
     Preconditions.checkArgument(nominalType == null || !isLoose);
+    Preconditions.checkArgument(nominalType == null || fn == null,
+        "Cannot create object of %s that is callable", nominalType);
     this.nominalType = nominalType;
     this.props = props;
     this.fn = fn;
@@ -468,11 +470,22 @@ public class ObjectType {
         areRelatedClasses(this.nominalType, other.nominalType));
     NominalType resultNominalType =
         NominalType.pickSubclass(this.nominalType, other.nominalType);
+    if (resultNominalType != null) {
+      if (fn != null || other.fn != null) {
+        return null;
+      }
+      return ObjectType.makeObjectType(
+          resultNominalType,
+          meetPropsHelper(true, resultNominalType, this.props, other.props),
+          null,
+          false,
+          ObjectKind.meet(this.objectKind, other.objectKind));
+    }
     return ObjectType.makeObjectType(
-        resultNominalType,
+        null,
         meetPropsHelper(true, resultNominalType, this.props, other.props),
-        (fn == null) ? null : fn.specialize(other.fn),
-        resultNominalType == null && this.isLoose,
+        this.fn == null ? null : this.fn.specialize(other.fn),
+        this.isLoose,
         ObjectKind.meet(this.objectKind, other.objectKind));
   }
 
@@ -567,11 +580,25 @@ public class ObjectType {
       return null;
     }
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
+    // This algorithm is a bit suspect since the behavior is not deterministic.
+    // e.g. The results for both of the following depend on iteration order:
+    // MEET[ {noNom1, Foo} ,  {noNom2, Bar} ]
+    // MEET[ {Super} ,  {Sub1, Sub2} ]
     for (ObjectType obj2 : objs2) {
       for (ObjectType obj1 : objs1) {
+        // TODO(blickly): Add nominal type for functions (Function) and rethink
+        // the logic here.
         if (areRelatedClasses(obj1.nominalType, obj2.nominalType)) {
-          newObjs.add(specializeObjs1 ?
-              obj1.specialize(obj2) : meet(obj1, obj2));
+          ObjectType newObj;
+          if (specializeObjs1) {
+            newObj = obj1.specialize(obj2);
+            if (newObj == null) {
+              continue;
+            }
+          } else {
+            newObj = meet(obj1, obj2);
+          }
+          newObjs.add(newObj);
           break;
         }
       }

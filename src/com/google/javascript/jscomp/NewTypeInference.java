@@ -1357,7 +1357,8 @@ public class NewTypeInference implements CompilerPass {
               expr, TypeCheck.NOT_CALLABLE, calleeType.toString()));
         }
         FunctionType funType = calleeType.getFunType();
-        if (funType == null || funType.isTopFunction()) {
+        if (funType == null ||
+            funType.isTopFunction() || funType.isQmarkFunction()) {
           return analyzeCallNodeArgumentsFwd(expr, inEnv);
         } else if (funType.isLoose()) {
           return analyzeLooseCallNodeFwd(expr, inEnv, requiredType);

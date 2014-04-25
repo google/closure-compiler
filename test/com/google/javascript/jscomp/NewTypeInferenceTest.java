@@ -5264,6 +5264,25 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
   }
 
+  public void testSpecializeFunctionToNominalDoesntCrash() {
+     typeCheck(
+        "/** @interface */ function Foo() {}\n" +
+        "function reqFoo(/** Foo */ foo) {};\n" +
+        "/** @param {Function} fun */\n" +
+        "function f(fun) {\n" +
+        "    reqFoo(fun);\n" +
+        "}",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    checkNoWarnings(
+        "/** @constructor */ function Foo(){}\n" +
+        "function f(x) {\n" +
+        "  if (typeof x == 'function') {\n" +
+        "    var /** !Foo */ y = x;\n" +
+        "  }\n" +
+        "}");
+  }
+
   public void testPrototypeMethodOnUndeclaredDoesntCrash() {
     typeCheck(
         "Foo.prototype.method = function(){ this.x = 5; };",

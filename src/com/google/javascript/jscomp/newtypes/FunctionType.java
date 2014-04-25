@@ -162,7 +162,7 @@ public class FunctionType {
       null, null, null, null, null, null, null, true);
   // Corresponds to Function, which is a subtype and supertype of all functions.
   static final FunctionType QMARK_FUNCTION = FunctionType.normalized(
-      null, null, JSType.UNKNOWN, JSType.UNKNOWN, null, null, null, true);
+      null, null, JSType.UNKNOWN, JSType.UNKNOWN, null, null, null, false);
 
   public boolean isTopFunction() {
     if (requiredFormals == null) {
@@ -174,6 +174,10 @@ public class FunctionType {
 
   public boolean isConstructor() {
     return nominalType != null && !nominalType.isInterface();
+  }
+
+  public boolean isQmarkFunction() {
+    return this == QMARK_FUNCTION;
   }
 
   boolean isInterfaceDefinition() {
@@ -283,7 +287,8 @@ public class FunctionType {
   public boolean isSubtypeOf(FunctionType other) {
     // t1 <= t2 iff t2 = t1 \/ t2 doesn't hold always,
     // so we first create a new type by replacing ? in the right places.
-    if (other.isTopFunction()) {
+    if (other.isTopFunction() ||
+        other.isQmarkFunction() || this.isQmarkFunction()) {
       return true;
     }
     if (isTopFunction()) {
@@ -379,10 +384,10 @@ public class FunctionType {
   static FunctionType meet(FunctionType f1, FunctionType f2) {
     if (f1 == null || f2 == null) {
       return null;
-    } else if (f1.isTopFunction()) {
-      return f2;
     } else if (f2.isTopFunction() || f1.equals(f2)) {
       return f1;
+    } else if (f1.isTopFunction()) {
+      return f2;
     }
 
     // War is peace, freedom is slavery, meet is join
