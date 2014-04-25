@@ -1411,7 +1411,6 @@ public class NewTypeInference implements CompilerPass {
                     formalType.toString(), pair.type.toString()));
             argTypeForDeferredCheck = null; // No deferred check needed.
           }
-          Preconditions.checkState(!pair.type.equals(JSType.topFunction()));
           argTypes.add(argTypeForDeferredCheck);
           tmpEnv = pair.env;
           arg = arg.getNext();

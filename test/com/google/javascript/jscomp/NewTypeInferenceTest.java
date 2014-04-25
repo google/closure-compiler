@@ -5360,6 +5360,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         GlobalTypeInfo.CTOR_IN_DIFFERENT_SCOPE);
   }
 
+  public void testTopFunctionAsArgumentDoesntCrash() {
+    checkNoWarnings(
+        "function f(x) {}\n" +
+        "function g(value) {\n" +
+        "  if (typeof value == 'function') {\n" +
+        "    f(value);\n" +
+        "  }\n" +
+        "}");
+  }
+
   public void testGetpropDoesntCrash() {
     checkNoWarnings(
         "/** @constructor */ function Obj(){}\n" +
