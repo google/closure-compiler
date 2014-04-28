@@ -341,6 +341,7 @@ public class NewTypeInference implements CompilerPass {
     // For all scopes, add local variables and (local) function definitions
     // to the environment.
     for (String local : currentScope.getLocals()) {
+      // TODO(dimvar): Start vars declared in externs at their declared type.
       entryEnv = envPutType(entryEnv, local, JSType.UNDEFINED);
     }
     for (String fnName : currentScope.getLocalFunDefs()) {

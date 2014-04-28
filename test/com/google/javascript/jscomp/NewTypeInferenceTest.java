@@ -3594,7 +3594,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   public void testIncrementDecrements() {
     checkNoWarnings(
         "/** @const */ var ns = { x : 5 };\n" +
-        "ns.x++; ++ns.x; ns.x--; --ns.x");
+        "ns.x++; ++ns.x; ns.x--; --ns.x;");
 
     typeCheck(
         "function f(ns) { --ns.x; }; f({x : 'str'})",
@@ -6080,7 +6080,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     typeCheck("/** @final */ var x;", GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
 
-    checkNoWarnings("/** @const */ var x;", "");
+    checkNoWarnings("/** @const {number} */ var x;", "");
+
+    // TODO(dimvar): must fix externs initialization
+    // checkNoWarnings("/** @const {number} */ var x;", "x - 5;");
 
     typeCheck(
         "/** @constructor */\n" +
@@ -6155,7 +6158,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.CONST_REASSIGNED);
 
     typeCheck(
-        "/** @const */ var x;", "x = 2;",
+        "/** @const {number} */ var x;", "x = 2;",
         NewTypeInference.CONST_REASSIGNED);
   }
 
@@ -6316,11 +6319,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}",
         NewTypeInference.INVALID_OPERAND_TYPE);
 
-    checkNoWarnings(
-        "var /** string */ x;\n" +
-        "/** @const */\n" +
-        "var s = x;\n" +
-        "function g() { s - 5; }");
+    // TODO(dimvar): must fix externs initialization
+    // typeCheck(
+    //     "var /** string */ x;",
+    //     "/** @const */\n" +
+    //     "var s = x;\n" +
+    //     "function g() { s - 5; }",
+    //     NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(
         "/** @constructor */\n" +
@@ -6359,6 +6364,103 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f() {\n" +
         "  ns.prop - 5;\n" +
         "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "function f(x, y) {\n" +
+        "  /** @const */\n" +
+        "  var n = x - y;\n" +
+        "  function g() { n < 'str'; }\n" +
+        "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "function f(x) {\n" +
+        "  /** @const */\n" +
+        "  var notx = !x;\n" +
+        "  function g() { notx - 5; }\n" +
+        "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var lit = { a: 'a', b: 'b' };\n" +
+        "function g() { lit.a - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var n = ('str', 123);\n" +
+        "function f() { n < 'str'; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var s = x;\n" +
+        "var /** string */ x;\n",
+        ImmutableList.of(
+            VariableReferenceCheck.UNDECLARED_REFERENCE,
+            GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE));
+
+    typeCheck(
+        "function f(x) {\n" +
+        "  /** @const */\n" +
+        "  var c = x;\n" +
+        "}",
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(
+        "function f(x) {\n" +
+        "  /** @const */\n" +
+        "  var c = { a: 1, b: x };\n" +
+        "}",
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @param {{ a: string }} x\n" +
+        " */\n" +
+        "function Foo(x) {\n" +
+        "  /** @const */\n" +
+        "  this.prop = x.a;\n" +
+        "}\n" +
+        "(new Foo({ a: ''})).prop - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @return {string} */\n" +
+        "function f() { return ''; }\n" +
+        "/** @const */\n" +
+        "var s = f();\n" +
+        "function g() { s - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var s = f();\n" +
+        "/** @return {string} */\n" +
+        "function f() { return ''; }",
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @constructor */\n" +
+        "function Bar() {}\n" +
+        "/** @const */\n" +
+        "var foo = new Foo;\n" +
+        "function g() {\n" +
+        "  var /** Bar */ bar = foo;\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var n1 = 1;\n" +
+        "/** @const */\n" +
+        "var n2 = n1;\n" +
+        "function g() { n2 < 'str'; }",
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
 

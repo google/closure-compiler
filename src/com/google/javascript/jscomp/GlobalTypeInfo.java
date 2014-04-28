@@ -28,6 +28,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.newtypes.DeclaredFunctionType;
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
+import com.google.javascript.jscomp.newtypes.FunctionType;
 import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
@@ -121,6 +122,12 @@ class GlobalTypeInfo implements CompilerPass {
           "JSC_CONST_WITHOUT_INITIALIZER",
           "Constants must be initialized when they are defined.");
 
+  static final DiagnosticType COULD_NOT_INFER_CONST_TYPE =
+      DiagnosticType.warning(
+          "JSC_COULD_NOT_INFER_CONST_TYPE",
+          "All constants must be typed. The compiler could not infer the type" +
+          "of this constant. Please use an explicit type annotation.");
+
   static final DiagnosticType MISPLACED_CONST_ANNOTATION =
       DiagnosticType.warning(
           "JSC_MISPLACED_CONST_ANNOTATION",
@@ -139,6 +146,7 @@ class GlobalTypeInfo implements CompilerPass {
       CANNOT_OVERRIDE_FINAL_METHOD,
       CONSTRUCTOR_REQUIRED,
       CONST_WITHOUT_INITIALIZER,
+      COULD_NOT_INFER_CONST_TYPE,
       CTOR_IN_DIFFERENT_SCOPE,
       DICT_IMPLEMENTS_INTERF,
       DUPLICATE_JSDOC,
@@ -581,12 +589,12 @@ class GlobalTypeInfo implements CompilerPass {
               } else if (parent.isCatch()) {
                 currentScope.addLocal(name, JSType.UNKNOWN, false);
               } else {
-                boolean isConstant = NodeUtil.hasConstAnnotation(parent);
+                boolean isConst = NodeUtil.hasConstAnnotation(parent);
                 JSType declType = getVarTypeFromAnnotation(n);
-                if (isConstant && !mayWarnAboutNoInit(n) && declType == null) {
+                if (isConst && !mayWarnAboutNoInit(n) && declType == null) {
                   declType = inferConstTypeFromRhs(n);
                 }
-                currentScope.addLocal(name, declType, isConstant);
+                currentScope.addLocal(name, declType, isConst);
               }
             }
           } else if (currentScope.isOuterVarEarly(name)) {
@@ -774,16 +782,15 @@ class GlobalTypeInfo implements CompilerPass {
       propertyDefs.put(rawType.getId(), pname,
           new PropertyDef(getProp, methodType, methodScope));
       // Add the property to the class with the appropriate type.
-      boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
-      if (propDeclType != null || isConstant) {
+      boolean isConst = NodeUtil.hasConstAnnotation(getProp);
+      if (propDeclType != null || isConst) {
         if (mayWarnAboutExistingProp(rawType, pname, getProp, propDeclType)) {
           return;
         }
-        if (isConstant &&
-            !mayWarnAboutNoInit(getProp) && propDeclType == null) {
+        if (isConst && !mayWarnAboutNoInit(getProp) && propDeclType == null) {
           propDeclType = inferConstTypeFromRhs(getProp);
         }
-        rawType.addProtoProperty(pname, propDeclType, isConstant);
+        rawType.addProtoProperty(pname, propDeclType, isConst);
       } else {
         rawType.addUndeclaredProtoProperty(pname);
       }
@@ -797,8 +804,8 @@ class GlobalTypeInfo implements CompilerPass {
       String pname = getProp.getLastChild().getString();
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
       JSType propDeclType = getTypeDeclarationFromJsdoc(jsdoc, currentScope);
-      boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
-      if (propDeclType != null || isConstant) {
+      boolean isConst = NodeUtil.hasConstAnnotation(getProp);
+      if (propDeclType != null || isConst) {
         JSType previousPropType = classType.getCtorPropDeclaredType(pname);
         if (classType.hasCtorProp(pname) &&
             previousPropType != null &&
@@ -807,11 +814,10 @@ class GlobalTypeInfo implements CompilerPass {
                   pname, classType.toString()));
           return;
         }
-        if (isConstant &&
-            !mayWarnAboutNoInit(getProp) && propDeclType == null) {
+        if (isConst && !mayWarnAboutNoInit(getProp) && propDeclType == null) {
           propDeclType = inferConstTypeFromRhs(getProp);
         }
-        classType.addCtorProperty(pname, propDeclType, isConstant);
+        classType.addCtorProperty(pname, propDeclType, isConst);
       } else {
         classType.addUndeclaredCtorProperty(pname);
       }
@@ -825,11 +831,11 @@ class GlobalTypeInfo implements CompilerPass {
       JSType currentType = currentScope.getDeclaredTypeOf(leftmost);
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
       JSType typeInJsdoc = getTypeDeclarationFromJsdoc(jsdoc, currentScope);
-      boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
+      boolean isConst = NodeUtil.hasConstAnnotation(getProp);
       if (NodeUtil.isNamespaceDecl(getProp)) {
         currentScope.updateTypeOfLocal(leftmost,
             currentType.withProperty(allButLeftmost, JSType.TOP_OBJECT));
-      } else if (typeInJsdoc != null || isConstant) {
+      } else if (typeInJsdoc != null || isConst) {
         JSType previousPropType = currentType.getDeclaredProp(allButLeftmost);
         if (currentType.mayHaveProp(allButLeftmost) &&
             previousPropType != null &&
@@ -839,12 +845,12 @@ class GlobalTypeInfo implements CompilerPass {
           return;
         }
         JSType declType = typeInJsdoc;
-        if (isConstant && !mayWarnAboutNoInit(getProp) && declType == null) {
+        if (isConst && !mayWarnAboutNoInit(getProp) && declType == null) {
           declType = inferConstTypeFromRhs(getProp);
         }
         currentScope.updateTypeOfLocal(leftmost,
             currentType.withDeclaredProperty(
-                allButLeftmost, declType, isConstant));
+                allButLeftmost, declType, isConst));
       } else {
         currentScope.updateTypeOfLocal(leftmost,
             currentType.withProperty(allButLeftmost, JSType.UNKNOWN));
@@ -863,17 +869,17 @@ class GlobalTypeInfo implements CompilerPass {
       // TODO(blickly): Support @param, @return style fun declarations here.
       JSType declType = getTypeDeclarationFromJsdoc(
           NodeUtil.getBestJSDocInfo(getProp), currentScope);
-      boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
-      if (declType != null || isConstant) {
+      boolean isConst = NodeUtil.hasConstAnnotation(getProp);
+      if (declType != null || isConst) {
         mayWarnAboutExistingProp(rawNominalType, pname, getProp, declType);
         // Intentionally, we keep going even if we warned for redeclared prop.
         // The reason is that if a prop is defined on a class and on its proto
         // with conflicting types, we prefer the type of the class.
-        if (isConstant && !mayWarnAboutNoInit(getProp) && declType == null) {
+        if (isConst && !mayWarnAboutNoInit(getProp) && declType == null) {
           declType = inferConstTypeFromRhs(getProp);
         }
         if (mayAddPropToType(getProp, rawNominalType)) {
-          rawNominalType.addClassProperty(pname, declType, isConstant);
+          rawNominalType.addClassProperty(pname, declType, isConst);
         }
       } else if (mayAddPropToType(getProp, rawNominalType)) {
         rawNominalType.addUndeclaredClassProperty(pname);
@@ -902,43 +908,14 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     // If a @const doesn't have a declared type, we use the initializer to
-    // infer a type, only in very specific cases.
-    // (1) If the initializer is a literal, we use its type.
-    // (2) If the initializer is a declared formal, we use its type.
-    // In all other cases, do not infer because it is not reliable to do so.
-    // When inference is unpredictable, people should not rely on it.
-    // Examples:
-    // (1) If the initializer is a local, getting its type depends on the order
-    // of processing the AST. The previous type checker would not warn for the
-    // following code, but it would warn if we declare n before this.prop.
-    //   /** @constructor */
-    //   function Foo() {
-    //     /** @const */
-    //     this.prop = n;
-    //     var /** number */ n;
-    //   }
-    //   var /** string */ s = (new Foo).prop;
-    // (2) If the initializer is a GETPROP, eg,
-    //   /**
-    //    * @constructor
-    //    * @param {TypeA} x
-    //    */
-    //   function Foo(x) {
-    //     /** @const */
-    //     this.prop = x.prop;
-    //   }
-    // If TypeA is a record type, like { prop: number }, then we could infer
-    // that this.prop is number.
-    // But if TypeA is a nominal type, like a class Bar, we won't know the type
-    // of Bar's prop until the whole GlobalTypeInfo is done.
-    // If TypeA is a union type, again we would not want to access prop on all
-    // types in the union and pick the join as the type of Foo's prop.
-    // It is a bad idea to infer for GETPROP only in some cases, b/c nobody will
-    // remember which cases are these.
-    // Similar arguments apply to any initializer that's not a literal or a
-    // declared formal parameter.
+    // infer a type.
+    // When we cannot infer the type of the initializer, we warn.
+    // This way, people do not need to remember the cases where the compiler
+    // can infer the type of a constant; we tell them if we cannot infer it.
+    // This function is called only when the @const has no declared type.
     private JSType inferConstTypeFromRhs(Node constExpr) {
       if (constExpr.isFromExterns()) {
+        warnings.add(JSError.make(constExpr, COULD_NOT_INFER_CONST_TYPE));
         return null;
       }
       Node rhs;
@@ -950,26 +927,98 @@ class GlobalTypeInfo implements CompilerPass {
             constExpr.getParent().isAssign());
         rhs = constExpr.getParent().getLastChild();
       }
-      switch (rhs.getType()) {
+      JSType rhsType = simpleInferExprType(rhs);
+      if (rhsType == null) {
+        warnings.add(JSError.make(constExpr, COULD_NOT_INFER_CONST_TYPE));
+        return null;
+      }
+      return rhsType;
+    }
+
+    private JSType simpleInferExprType(Node n) {
+      switch (n.getType()) {
+        // To do this, we must know the type of RegExp w/out looking at externs.
+        // case Token.REGEXP:
+        // As above, we must know about Array.
+        // case Token.ARRAYLIT:
+        case Token.BITAND:
+        case Token.BITNOT:
+        case Token.BITOR:
+        case Token.BITXOR:
+        case Token.DEC:
+        case Token.DIV:
+        case Token.INC:
+        case Token.LSH:
+        case Token.MOD:
+        case Token.MUL:
+        case Token.NEG:
         case Token.NUMBER:
+        case Token.POS:
+        case Token.RSH:
+        case Token.SUB:
+        case Token.URSH:
           return JSType.NUMBER;
         case Token.STRING:
+        case Token.TYPEOF:
           return JSType.STRING;
         case Token.TRUE:
           return JSType.TRUE_TYPE;
         case Token.FALSE:
           return JSType.FALSE_TYPE;
+        case Token.EQ:
+        case Token.GE:
+        case Token.GT:
+        case Token.IN:
+        case Token.INSTANCEOF:
+        case Token.LE:
+        case Token.LT:
+        case Token.NE:
+        case Token.NOT:
+        case Token.SHEQ:
+        case Token.SHNE:
+          return JSType.BOOLEAN;
         case Token.NULL:
           return JSType.NULL;
-        case Token.NAME:
-          String varName = rhs.getString();
+        case Token.VOID:
+          return JSType.UNDEFINED;
+        case Token.NAME: {
+          String varName = n.getString();
           if (varName.equals("undefined")) {
             return JSType.UNDEFINED;
           }
-          if (currentScope.isFormalParam(varName)) {
-            return currentScope.getDeclaredTypeOf(varName);
+          return currentScope.getDeclaredTypeOf(varName);
+        }
+        case Token.OBJECTLIT: {
+          JSType objLitType = JSType.TOP_OBJECT;
+          for (Node prop : n.children()) {
+            JSType propType = simpleInferExprType(prop.getFirstChild());
+            if (propType == null) {
+              return null;
+            }
+            objLitType = objLitType.withProperty(
+                new QualifiedName(NodeUtil.getObjectLitKeyName(prop)),
+                propType);
           }
-          return null;
+          return objLitType;
+        }
+        case Token.GETPROP:
+          JSType recvType = simpleInferExprType(n.getFirstChild());
+          if (recvType == null) {
+            return null;
+          }
+          QualifiedName qname = new QualifiedName(n.getLastChild().getString());
+          JSType propType = recvType.getProp(qname);
+          return propType == null ? null : propType;
+        case Token.COMMA:
+          return simpleInferExprType(n.getLastChild());
+        case Token.CALL:
+        case Token.NEW:
+          JSType ratorType = simpleInferExprType(n.getFirstChild());
+          if (ratorType == null) {
+            return null;
+          }
+          FunctionType funType = ratorType.getFunType();
+          return funType == null ? null : funType.getReturnType();
         default:
           return null;
       }
