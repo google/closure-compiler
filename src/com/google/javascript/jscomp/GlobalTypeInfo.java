@@ -1332,8 +1332,12 @@ class GlobalTypeInfo implements CompilerPass {
       if (!localNamespaces.contains(leftmost)) {
         return false;
       }
-      return getDeclaredTypeOf(leftmost).getProp(qname.getAllButLeftmost())
-          .isRecordType();
+      JSType propType = getDeclaredTypeOf(leftmost)
+          .getProp(qname.getAllButLeftmost());
+      if (propType == null) {
+        return false;
+      }
+      return propType.isRecordType();
     }
 
     private boolean isVisibleInScope(String name) {
