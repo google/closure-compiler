@@ -45,8 +45,12 @@ public class QualifiedName {
   }
 
   public static QualifiedName fromGetprop(Node getprop) {
-    return new QualifiedName(ImmutableList.copyOf(
-        Splitter.on('.').split(getprop.getQualifiedName())));
+    String qname = getprop.getQualifiedName();
+    if (qname == null) {
+      return null;
+    }
+    return new QualifiedName(
+        ImmutableList.copyOf(Splitter.on('.').split(qname)));
   }
 
   public boolean isIdentifier() {

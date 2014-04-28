@@ -655,8 +655,8 @@ class GlobalTypeInfo implements CompilerPass {
         return;
       }
       // Namespace property
-      if (isPropDecl(getProp) && currentScope.isNamespace(
-          getProp.getFirstChild().getQualifiedName())) {
+      if (isPropDecl(getProp) &&
+          currentScope.isNamespace(getProp.getFirstChild())) {
         visitNamespacePropertyDeclaration(getProp);
         return;
       }
@@ -826,7 +826,10 @@ class GlobalTypeInfo implements CompilerPass {
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
       JSType typeInJsdoc = getTypeDeclarationFromJsdoc(jsdoc, currentScope);
       boolean isConstant = NodeUtil.hasConstAnnotation(getProp);
-      if (typeInJsdoc != null || isConstant) {
+      if (NodeUtil.isNamespaceDecl(getProp)) {
+        currentScope.updateTypeOfLocal(leftmost,
+            currentType.withProperty(allButLeftmost, JSType.TOP_OBJECT));
+      } else if (typeInJsdoc != null || isConstant) {
         JSType previousPropType = currentType.getDeclaredProp(allButLeftmost);
         if (currentType.mayHaveProp(allButLeftmost) &&
             previousPropType != null &&
@@ -1314,8 +1317,23 @@ class GlobalTypeInfo implements CompilerPass {
           localFunDefs.containsKey(name) || "this".equals(name);
     }
 
-    private boolean isNamespace(String name) {
-      return localNamespaces.contains(name);
+    private boolean isNamespace(Node expr) {
+      if (expr.isName()) {
+        return localNamespaces.contains(expr.getString());
+      }
+      if (!expr.isGetProp()) {
+        return false;
+      }
+      QualifiedName qname = QualifiedName.fromGetprop(expr);
+      if (qname == null) {
+        return false;
+      }
+      String leftmost = qname.getLeftmostName();
+      if (!localNamespaces.contains(leftmost)) {
+        return false;
+      }
+      return getDeclaredTypeOf(leftmost).getProp(qname.getAllButLeftmost())
+          .isRecordType();
     }
 
     private boolean isVisibleInScope(String name) {

@@ -233,6 +233,11 @@ public class JSType {
     return (mask & ~TYPEVAR_MASK) == 0;
   }
 
+  public boolean isRecordType() {
+    return mask == NON_SCALAR_MASK && objs.size() == 1 &&
+        Iterables.getOnlyElement(objs).isRecordType();
+  }
+
   public boolean isStruct() {
     if (objs == null) {
       return false;

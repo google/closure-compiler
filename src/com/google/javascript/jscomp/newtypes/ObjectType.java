@@ -106,6 +106,10 @@ public class ObjectType {
     return true;
   }
 
+  boolean isRecordType() {
+    return nominalType == null && fn == null && !isLoose;
+  }
+
   boolean isStruct() {
     return objectKind.isStruct();
   }

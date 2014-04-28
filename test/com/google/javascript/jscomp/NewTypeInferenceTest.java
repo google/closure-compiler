@@ -3541,6 +3541,19 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
+  public void testNestedNamespaces() {
+    // ns.subns is not @const annotated, but we still get good checking for its
+    // properties. This is the same behavior as the previous type inference.
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "ns.subns = {};\n" +
+        "/** @type {string} */\n" +
+        "ns.subns.n = 'str';\n" +
+        "function f() { ns.subns.n - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
+
   public void testThrow() {
     checkNoWarnings("throw 123;");
 

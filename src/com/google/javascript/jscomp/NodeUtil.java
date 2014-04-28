@@ -780,10 +780,17 @@ public final class NodeUtil {
       }
       qname = expr.getFirstChild().getQualifiedName();
       initializer = expr.getLastChild();
+    } else if (n.isGetProp()) {
+      Node parent = n.getParent();
+      if (!parent.isAssign() || !parent.getParent().isExprResult()) {
+        return false;
+      }
+      qname = n.getQualifiedName();
+      initializer = parent.getLastChild();
     } else {
       return false;
     }
-    if (initializer == null) {
+    if (initializer == null || qname == null) {
       return false;
     }
     if (isEmptyObjectLit(initializer)) {
