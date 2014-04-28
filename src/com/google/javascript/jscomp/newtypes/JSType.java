@@ -776,6 +776,7 @@ public class JSType {
   }
 
   public JSType withProperty(QualifiedName qname, JSType type) {
+    Preconditions.checkArgument(type != null);
     if (isUnknown()) {
       return this;
     }

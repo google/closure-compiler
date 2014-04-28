@@ -1428,6 +1428,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "function f(/** number */ x) { if (x[123]) { return 1; } }",
         NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+
+    typeCheck(
+        "/** @constructor */ function Foo(){}\n" +
+        "/** @type {string} */ Foo.prototype.prop1;\n" +
+        "function g(/** Foo */ f) {\n" +
+        "  f.prop1.prop2 = 'str';\n" +
+        "};",
+        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
   }
 
   public void testNonexistentProperty() {

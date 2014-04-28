@@ -216,7 +216,9 @@ public class ObjectType {
       }
       QualifiedName innerProps = qname.getAllButLeftmost();
       Property objProp = getLeftmostProp(objQname);
-      JSType inferred = objProp.getType().withProperty(innerProps, type);
+      JSType inferred = type == null ?
+          objProp.getType().withoutProperty(innerProps) :
+          objProp.getType().withProperty(innerProps, type);
       JSType declared = objProp.getDeclaredType();
       newProps = newProps.with(objName, objProp.isOptional() ?
           Property.makeOptional(inferred, declared) :
