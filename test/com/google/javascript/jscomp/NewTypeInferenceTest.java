@@ -5284,6 +5284,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
   }
 
+  public void testDeadCodeDoesntCrash() {
+    checkNoWarnings(
+        "function f() {\n" +
+        "   throw 'Error';\n" +
+        "   return 5;\n" +
+        "}");
+  }
+
   public void testSpecializeFunctionToNominalDoesntCrash() {
      typeCheck(
         "/** @interface */ function Foo() {}\n" +

@@ -265,13 +265,15 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private TypeEnv getInEnv(Node n) {
-    Preconditions.checkArgument(!cfg.getInEdges(n).isEmpty());
     Set<TypeEnv> envSet = Sets.newHashSet();
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : cfg.getInEdges(n)) {
       TypeEnv env = envs.get(de);
       if (env != null) {
         envSet.add(env);
       }
+    }
+    if (envSet.isEmpty()) {
+      return null;
     }
     return TypeEnv.join(envSet);
   }
@@ -2802,13 +2804,13 @@ public class NewTypeInference implements CompilerPass {
 
   TypeEnv getFinalTypeEnv() {
     Node n = cfg.getImplicitReturn().getValue();
-    if (cfg.getInEdges(n).isEmpty()) {
+    TypeEnv env = getInEnv(n);
+    if (env == null) {
       // This function only exits with THROWs
-      TypeEnv e = new TypeEnv();
-      return envPutType(e, RETVAL_ID, JSType.BOTTOM);
-    } else {
-      return getInEnv(n);
+      env = new TypeEnv();
+      return envPutType(env, RETVAL_ID, JSType.BOTTOM);
     }
+    return env;
   }
 
   @VisibleForTesting // Only used from tests
