@@ -79,7 +79,7 @@ public class TypeEnv {
         Preconditions.checkNotNull(otherType, "%s is missing from an env", n);
         if (joinedType == null) {
           joinedType = otherType;
-        } else {
+        } else if (!joinedType.equals(otherType)) {
           joinedType = JSType.join(joinedType, otherType);
         }
       }
