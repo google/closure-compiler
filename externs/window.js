@@ -48,7 +48,6 @@ var document;
 /**
  * @type {Location}
  * @see https://developer.mozilla.org/en/DOM/window.location
- * @const
  * @suppress {duplicate}
  */
 var location;
