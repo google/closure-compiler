@@ -53,8 +53,11 @@ class VarCheck extends AbstractPostOrderCallback implements
 
   static final DiagnosticType STRICT_MODULE_DEP_ERROR = DiagnosticType.disabled(
       "JSC_STRICT_MODULE_DEPENDENCY",
-      "module {0} cannot reference {2}, defined in " +
-      "module {1}");
+      // The newline below causes the JS compiler not to complain when the
+      // referenced module's name changes because, for example, it's a
+      // synthetic module.
+      "cannot reference {2} because of a missing module dependency\n"
+      + "defined in module {1}, referenced from module {0}");
 
   static final DiagnosticType NAME_REFERENCE_IN_EXTERNS_ERROR =
     DiagnosticType.warning(
