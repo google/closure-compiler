@@ -218,10 +218,10 @@ class GlobalTypeInfo implements CompilerPass {
   // Differs from the similar method in Scope class on how it treats qnames.
   String getFunInternalName(Node n) {
     Preconditions.checkArgument(n.isFunction());
-    String nonAnonFnName = NodeUtil.getFunctionName(n);
+    Node fnNameNode = NodeUtil.getFunctionNameNode(n);
     // We don't want to use qualified names here
-    if (nonAnonFnName != null && !nonAnonFnName.contains(".")) {
-      return nonAnonFnName;
+    if (fnNameNode.isName() && !fnNameNode.isEmpty()) {
+      return fnNameNode.getString();
     }
     return anonFunNames.get(n);
   }
@@ -1266,8 +1266,6 @@ class GlobalTypeInfo implements CompilerPass {
     private final Node root;
     // Name on the function AST node; null for top scope & anonymous functions
     private final String name;
-    // Used only for error messages; null for top scope
-    private final String readableName;
 
     // A local w/out declared type is mapped to null, not to JSType.UNKNOWN.
     private final Map<String, JSType> locals = Maps.newHashMap();
@@ -1289,11 +1287,9 @@ class GlobalTypeInfo implements CompilerPass {
         DeclaredFunctionType declaredType) {
       if (parent == null) {
         this.name = null;
-        this.readableName = null;
       } else {
         String nameOnAst = root.getFirstChild().getString();
         this.name = nameOnAst.isEmpty() ? null : nameOnAst;
-        this.readableName = NodeUtil.getFunctionName(root);
       }
       this.root = root;
       this.parent = parent;
@@ -1310,9 +1306,10 @@ class GlobalTypeInfo implements CompilerPass {
       return NodeUtil.getFunctionBody(root);
     }
 
-    // TODO(dimvar): don't return null for anonymous functions
+    /** Used only for error messages; null for top scope */
     String getReadableName() {
-      return readableName;
+      // TODO(dimvar): don't return null for anonymous functions
+      return parent == null ? null : NodeUtil.getFunctionName(root);
     }
 
     String getName() {
