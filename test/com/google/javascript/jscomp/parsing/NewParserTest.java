@@ -830,6 +830,21 @@ public class NewParserTest extends BaseJSTypeTestCase {
     return script;
   }
 
+  public void testExtendedObjectLiteral() {
+    testExtendedObjectLiteral("var a = {b};");
+    testExtendedObjectLiteral("var a = {b, c};");
+    testExtendedObjectLiteral("var a = {b, c: d, e};");
+  }
+
+  private void testExtendedObjectLiteral(String js) {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse(js);
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(js, "this language feature is only supported in es6 mode: " +
+        "extended object literals");
+  }
+
   public void testTrailingCommaWarning1() {
     parse("var a = ['foo', 'bar'];");
   }
@@ -997,12 +1012,12 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testGettersForbidden3() {
     parseError("var x = {a getter:function b() { return 3; }};",
-        "':' expected");
+        "'}' expected");
   }
 
   public void testGettersForbidden4() {
     parseError("var x = {\"a\" getter:function b() { return 3; }};",
-        "':' expected");
+        "'}' expected");
   }
 
   public void testGettersForbidden5() {
@@ -1023,7 +1038,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testSettersForbidden2() {
     // TODO(johnlenz): maybe just report the first error, when not in IDE mode?
     parseError("var x = {a setter:function b() { return 3; }};",
-        "':' expected");
+        "'}' expected");
   }
 
   public void testFileOverviewJSDoc1() {

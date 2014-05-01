@@ -20,8 +20,9 @@ import com.google.javascript.jscomp.parsing.parser.Token;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 public class PropertyNameAssignmentTree extends ParseTree {
-
   public final Token name;
+
+  // May be null in ES6 and above.
   public final ParseTree value;
 
   public PropertyNameAssignmentTree(SourceRange location, Token name, ParseTree value) {

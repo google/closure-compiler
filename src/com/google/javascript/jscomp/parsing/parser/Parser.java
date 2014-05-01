@@ -482,12 +482,6 @@ public class Parser {
     return declaration;
   }
 
-  private boolean peekMethodDeclaration() {
-    int index = peek(TokenType.STATIC) ? 1 : 0;
-    index += peek(TokenType.STAR) ? 1 : 0;
-    return (peekId(index)
-            && peek(index + 1, TokenType.OPEN_PAREN));
-  }
 
   private ParseTree parseSourceElement() {
     if (peekFunction()) {
@@ -1462,8 +1456,8 @@ public class Parser {
   private ParseTree parsePropertyNameAssignment() {
     SourcePosition start = getTreeStartLocation();
     Token name = eatObjectLiteralPropertyName();
-    eat(TokenType.COLON);
-    ParseTree value = parseAssignmentExpression();
+    Token colon = eatOpt(TokenType.COLON);
+    ParseTree value = colon == null ? null : parseAssignmentExpression();
     return new PropertyNameAssignmentTree(getTreeLocation(start), name, value);
   }
 

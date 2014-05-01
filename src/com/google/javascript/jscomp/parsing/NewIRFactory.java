@@ -1358,6 +1358,7 @@ class NewIRFactory {
     @Override
     Node processObjectLiteral(ObjectLiteralExpressionTree objTree) {
       Node node = newNode(Token.OBJECTLIT);
+      boolean maybeWarn = false;
       for (ParseTree el : objTree.propertyNameAndValues) {
         if (config.languageMode == LanguageMode.ECMASCRIPT3) {
           if (el.type == ParseTreeType.GET_ACCESSOR) {
@@ -1374,8 +1375,14 @@ class NewIRFactory {
           errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
               key.getLineno(), "", key.getCharno());
         }
+        if (key.getFirstChild() == null) {
+          maybeWarn = true;
+        }
 
         node.addChildToBack(key);
+      }
+      if (maybeWarn) {
+        maybeWarnEs6Feature(objTree, "extended object literals");
       }
       return node;
     }
@@ -1417,7 +1424,9 @@ class NewIRFactory {
     Node processPropertyNameAssignment(PropertyNameAssignmentTree tree) {
       Node key = processObjecLitKeyAsString(tree.name);
       key.setType(Token.STRING_KEY);
-      key.addChildToFront(transform(tree.value));
+      if (tree.value != null) {
+        key.addChildToFront(transform(tree.value));
+      }
       return key;
     }
 

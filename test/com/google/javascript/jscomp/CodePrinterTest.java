@@ -1363,6 +1363,13 @@ public class CodePrinterTest extends TestCase {
         "var x={\"123456789012345671234567890123456712345678901234567\":1}");
   }
 
+  public void testExtendedObjectLit() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("var a={b}");
+    assertPrintSame("var a={b,c}");
+    assertPrintSame("var a={b,c:d,e}");
+  }
+
   public void testGetter() {
     assertPrint("var x = {}", "var x={}");
     assertPrint("var x = {get a() {return 1}}", "var x={get a(){return 1}}");
