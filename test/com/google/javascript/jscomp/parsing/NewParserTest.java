@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.testing.TestErrorReporter;
@@ -731,12 +732,35 @@ public class NewParserTest extends BaseJSTypeTestCase {
               + " ignoring it"));
   }
 
-  public void testUnescapedSlashInRegexpCharClass() throws Exception {
-    // The tokenizer without the fix for this bug throws an error.
+  public void testUnescapedSlashInRegexpCharClass() {
     parse("var foo = /[/]/;");
     parse("var foo = /[hi there/]/;");
     parse("var foo = /[/yo dude]/;");
     parse("var foo = /\\/[@#$/watashi/wa/suteevu/desu]/;");
+  }
+
+  /**
+   * Test for https://github.com/google/closure-compiler/issues/389.
+   */
+  public void testMalformedRegexp() {
+    // Simple repro case
+    String js = "var x = com\\";
+    parseError(js, "Invalid escape sequence");
+
+    // The original repro case as reported.
+    js = Joiner.on('\n').join(
+        "(function() {",
+        "  var url=\"\";",
+        "  switch(true)",
+        "  {",
+        "    case /a.com\\/g|l.i/N/.test(url):",
+        "      return \"\";",
+        "    case /b.com\\/T/.test(url):",
+        "      return \"\";",
+        "  }",
+        "}",
+        ")();");
+    parseError(js, "primary expression expected");
   }
 
   private void assertNodeEquality(Node expected, Node found) {

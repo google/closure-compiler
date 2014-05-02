@@ -624,14 +624,14 @@ public class Scanner {
     // Process unicode escapes.
     while (containsUnicodeEscape && value.contains("\\")) {
       int escapeStart = value.indexOf('\\');
-      if (value.charAt(escapeStart + 1) != 'u') {
-        reportError(
-            getPosition(index),
-            "Invalid escape sequence: '\\%c'", value.charAt(escapeStart + 1));
-        return createToken(TokenType.ERROR, beginToken);
-      }
-
       try {
+        if (value.charAt(escapeStart + 1) != 'u') {
+          reportError(
+              getPosition(index),
+              "Invalid escape sequence: '\\%c'", value.charAt(escapeStart + 1));
+          return createToken(TokenType.ERROR, beginToken);
+        }
+
         String hexDigits = value.substring(escapeStart + 2, escapeStart + 6);
         ch = (char) Integer.parseInt(hexDigits, 0x10);
         if (!isIdentifierPart(ch)) {
