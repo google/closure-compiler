@@ -1473,6 +1473,7 @@ class NewIRFactory {
       if (lastSlash < rawRegex.length()) {
         flags = rawRegex.substring(lastSlash + 1);
       }
+      validateRegExpFlags(literalTree, flags);
 
       if (!flags.isEmpty()) {
         Node flagsNode = newStringNode(flags);
@@ -1481,6 +1482,23 @@ class NewIRFactory {
         node.addChildToBack(flagsNode);
       }
       return node;
+    }
+
+    private void validateRegExpFlags(LiteralExpressionTree tree, String flags) {
+      for (char flag : Lists.charactersOf(flags)) {
+        switch (flag) {
+          case 'g': case 'i': case 'm':
+            break;
+          case 'u': case 'y':
+            maybeWarnEs6Feature(tree, "new RegExp flag '" + flag + "'");
+            break;
+          default:
+            errorReporter.error(
+                "Invalid RegExp flag '" + flag + "'",
+                sourceName,
+                lineno(tree), "", charno(tree));
+        }
+      }
     }
 
     @Override

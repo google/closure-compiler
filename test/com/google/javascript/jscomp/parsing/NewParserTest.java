@@ -1159,7 +1159,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testYield2() {
     mode = LanguageMode.ECMASCRIPT6_STRICT;
     parse("function * f() { yield; }");
-    parse("function * f() { yield /a/b; }");
+    parse("function * f() { yield /a/i; }");
 
     parseError("function * f() { 1 + yield; }", "primary expression expected");
     parseError("function * f() { 1 + yield 2; }", "primary expression expected");
@@ -1619,6 +1619,43 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(parse("/\\s/"), script(expr(regex("\\s"))));
     assertNodeEquality(parse("/\\u000A/"), script(expr(regex("\\u000A"))));
     assertNodeEquality(parse("/[\\]]/"), script(expr(regex("[\\]]"))));
+  }
+
+  public void testRegExpFlags() {
+    // Various valid combinations.
+    parse("/a/");
+    parse("/a/i");
+    parse("/a/g");
+    parse("/a/m");
+    parse("/a/ig");
+    parse("/a/gm");
+    parse("/a/mgi");
+
+    // Invalid combinations
+    parseError("/a/a", "Invalid RegExp flag 'a'");
+    parseError("/a/b", "Invalid RegExp flag 'b'");
+    parseError("/a/abc",
+        "Invalid RegExp flag 'a'",
+        "Invalid RegExp flag 'b'",
+        "Invalid RegExp flag 'c'");
+  }
+
+  /**
+   * New RegExp flags added in ES6.
+   */
+  public void testES6RegExpFlags() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("/a/y");
+    parse("/a/u");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning("/a/y",
+        "this language feature is only supported in es6 mode: new RegExp flag 'y'");
+    parseWarning("/a/u",
+        "this language feature is only supported in es6 mode: new RegExp flag 'u'");
+    parseWarning("/a/yu",
+        "this language feature is only supported in es6 mode: new RegExp flag 'y'",
+        "this language feature is only supported in es6 mode: new RegExp flag 'u'");
   }
 
   public void testDefaultParameters() {
