@@ -1271,9 +1271,11 @@ public class CodePrinterTest extends TestCase {
   }
 
   public void testFractions() {
+    assertPrintNumber("10.5", 10.5);
     assertPrintNumber("6.28", 6.28);
-    assertPrintNumber("-6.28", -6.28);
     assertPrintNumber(".6", 0.6);
+    assertPrintNumber("-10.5", -10.5);
+    assertPrintNumber("-6.28", -6.28);
     assertPrintNumber("-.6", -0.6);
   }
 
