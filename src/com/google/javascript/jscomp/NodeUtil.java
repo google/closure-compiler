@@ -764,6 +764,14 @@ public final class NodeUtil {
     }
   }
 
+  static boolean isTypedefDecl(Node n) {
+    if (!n.isVar()) {
+      return false;
+    }
+    JSDocInfo jsdoc = n.getJSDocInfo();
+    return jsdoc != null && jsdoc.hasTypedefType();
+  }
+
   /**
    * Returns true iff this node defines a namespace, such as goog or goog.math.
    */
@@ -2939,7 +2947,7 @@ public final class NodeUtil {
 
   static boolean hasConstAnnotation(Node node) {
     JSDocInfo jsdoc = getBestJSDocInfo(node);
-    return jsdoc != null && jsdoc.isConstant();
+    return jsdoc != null && jsdoc.isConstant() && !jsdoc.isDefine();
   }
 
   static boolean isConstantVar(Node node, Scope scope) {

@@ -207,7 +207,11 @@ public class JSTypeCreatorFromJSDoc {
       default: {
         if (hasTypeVariable(outerTypeParameters, ownerType, typeName)) {
           return JSType.fromTypeVar(typeName);
-        } else { // It's either a type variable or a nominal-type name
+        } else {
+          // It's either a typedef, a type variable or a nominal-type name
+          if (registry.getTypedef(typeName) != null) {
+            return getTypedefType(typeName, registry);
+          }
           JSType namedType = registry.lookupTypeByName(typeName);
           if (namedType == null) {
             unknownTypeNames.put(n, typeName);
@@ -221,6 +225,26 @@ public class JSTypeCreatorFromJSDoc {
         }
       }
     }
+  }
+
+  public JSType getTypedefType(String name, DeclaredTypeRegistry registry) {
+    Typedef td = registry.getTypedef(name);
+    Preconditions.checkState(td != null, "getTypedef should only be " +
+        "called when we know that the typedef is defined");
+    if (td.isResolved()) {
+      return td.getType();
+    }
+    JSTypeExpression texp = td.getTypeExpr();
+    JSType tdType;
+    if (texp == null) {
+      warn("Circular typedefs are not allowed.",
+          td.getTypeExprForErrorReporting().getRootNode());
+      tdType = JSType.UNKNOWN;
+    } else {
+      tdType = getTypeFromJSTypeExpression(texp, null, registry, null);
+    }
+    td.resolveTypedef(tdType);
+    return tdType;
   }
 
   private JSType getNominalTypeHelper(JSType namedType, Node n,

@@ -528,6 +528,10 @@ public class NewTypeInference implements CompilerPass {
           break;
         }
         case Token.VAR: {
+          if (NodeUtil.isTypedefDecl(n)) {
+            inEnv = outEnv;
+            break;
+          }
           inEnv = null;
           for (Node nameNode = n.getFirstChild(); nameNode != null;
                nameNode = nameNode.getNext()) {
@@ -677,6 +681,9 @@ public class NewTypeInference implements CompilerPass {
         }
         case Token.VAR:
           outEnv = inEnv;
+          if (NodeUtil.isTypedefDecl(n)) {
+            break;
+          }
           for (Node nameNode = n.getFirstChild(); nameNode != null;
                nameNode = nameNode.getNext()) {
             outEnv = processVarDeclaration(nameNode, outEnv);

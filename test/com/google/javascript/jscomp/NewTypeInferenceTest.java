@@ -257,16 +257,52 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testVarRedeclaration() {
-    typeCheck("function f(x) { var x; }",
+    typeCheck(
+        "function f(x) { var x; }",
         VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck("var f; function f() {}",
+    typeCheck(
+        "function f(x) { function x() {} }",
         VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck("function f() {}; var f;",
+    typeCheck(
+        "function f(x) { /** @typedef {number} */ var x; }",
         VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck("function f() {}; function f() {};",
+    typeCheck(
+        "var x; var x;",
+        VariableReferenceCheck.REDECLARED_VARIABLE);
+
+    typeCheck(
+        "var x; function x() {}",
+        VariableReferenceCheck.REDECLARED_VARIABLE);
+
+    typeCheck(
+        "var x; /** @typedef {number} */ var x;",
+        VariableReferenceCheck.REDECLARED_VARIABLE);
+
+    typeCheck(
+        "function x() {} function x() {}",
+        VariableReferenceCheck.REDECLARED_VARIABLE);
+
+    typeCheck(
+        "function x() {} var x;",
+        VariableReferenceCheck.REDECLARED_VARIABLE);
+
+    typeCheck(
+        "function x() {} /** @typedef {number} */ var x;",
+        VariableReferenceCheck.REDECLARED_VARIABLE);
+
+    typeCheck(
+        "/** @typedef {number} */ var x; /** @typedef {number} */ var x;",
+        VariableReferenceCheck.REDECLARED_VARIABLE);
+
+    typeCheck(
+        "/** @typedef {number} */ var x; var x;",
+        VariableReferenceCheck.REDECLARED_VARIABLE);
+
+    typeCheck(
+        "/** @typedef {number} */ var x; function x() {}",
         VariableReferenceCheck.REDECLARED_VARIABLE);
 
     typeCheck("var f = function g() {}; function f() {};",
@@ -6506,5 +6542,120 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "   */\n" +
         "  ns.prop = 2;\n" +
         "}");
+  }
+
+  public void testTypedefs() {
+    typeCheck(
+        "/** @typedef {number} */\n" +
+        "var num = 1;",
+        GlobalTypeInfo.CANNOT_INIT_TYPEDEF);
+
+    typeCheck(
+        "/** @typedef {number} */\n" +
+        "var num;\n" +
+        "num - 5;",
+        VarCheck.UNDEFINED_VAR_ERROR);
+
+    typeCheck(
+        "/** @typedef {NonExistentType} */\n" +
+        "var t;\n" +
+        "function f(/** t */ x) { x - 1; }",
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+
+    typeCheck(
+        "/** @typedef {number} */\n" +
+        "var dup;\n" +
+        "/** @typedef {number} */\n" +
+        "var dup;",
+        VariableReferenceCheck.REDECLARED_VARIABLE);
+
+    typeCheck(
+        "/** @typedef {number} */\n" +
+        "var dup;\n" +
+        "/** @typedef {string} */\n" +
+        "var dup;\n" +
+        "var /** dup */ n = 'str';",
+        ImmutableList.of(
+            VariableReferenceCheck.REDECLARED_VARIABLE,
+            NewTypeInference.MISTYPED_ASSIGN_RHS));
+
+    checkNoWarnings(
+        "/** @typedef {number} */\n" +
+        "var num;\n" +
+        "/** @type {num} */\n" +
+        "var n = 1;");
+
+    typeCheck(
+        "/** @typedef {number} */\n" +
+        "var num;\n" +
+        "/** @type {num} */\n" +
+        "var n = 'str';",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @type {num} */\n" +
+        "var n = 'str';\n" +
+        "/** @typedef {number} */\n" +
+        "var num;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @typedef {number} */\n" +
+        "var num;\n" +
+        "function f() {\n" +
+        "  /** @type {num} */\n" +
+        "  var n = 'str';\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @type {num2} */\n" +
+        "var n = 'str';\n" +
+        "/** @typedef {num} */\n" +
+        "var num2;\n" +
+        "/** @typedef {number} */\n" +
+        "var num;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @typedef {rec2} */\n" +
+        "var rec1;\n" +
+        "/** @typedef {rec1} */\n" +
+        "var rec2;",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "/** @typedef {{ prop: rec2 }} */\n" +
+        "var rec1;\n" +
+        "/** @typedef {{ prop: rec1 }} */\n" +
+        "var rec2;",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @typedef {Foo} */\n" +
+        "var Bar;\n" +
+        "var /** Bar */ x = null;");
+
+    // NOTE(dimvar): I don't know if long term we want to support ! on anything
+    // other than a nominal-type name, but for now it's good to have this test.
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @typedef {Foo} */\n" +
+        "var Bar;\n" +
+        "var /** !Bar */ x = null;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @typedef {number} */\n" +
+        "var N;\n" +
+        "function f() {\n" +
+        "  /** @constructor */\n" +
+        "  function N() {}\n" +
+        "  function g(/** N */ obj) { obj - 5; }\n" +
+        "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 }
