@@ -131,6 +131,9 @@ class NewIRFactory {
   static final String INVALID_ES5_STRICT_OCTAL =
       "Octal integer literals are not supported in Ecmascript 5 strict mode.";
 
+  static final String INVALID_NUMBER_LITERAL =
+      "Invalid number literal.";
+
   static final String STRING_CONTINUATION_WARNING =
       "String continuations are not supported in this language mode.";
 
@@ -2160,11 +2163,14 @@ class NewIRFactory {
           } else {
             return Double.valueOf(value);
           }
+        default:
+          errorReporter.error(INVALID_NUMBER_LITERAL, sourceName,
+              lineno(location.start), "", charno(location.start));
+          return 0;
       }
     } else {
       return Double.valueOf(value);
     }
-    throw new IllegalStateException("unexpected");
   }
 
   private static int binarydigit(char c) {
