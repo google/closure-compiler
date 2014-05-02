@@ -142,6 +142,10 @@ class SanityCheck implements CompilerPass {
 
   private void sanityCheckExternProperties(Node externs) {
     Set<String> externProperties = compiler.getExternProperties();
+    if (externProperties == null) {
+      // GatherExternProperties hasn't run yet. Don't report a violation.
+      return;
+    }
     (new GatherExternProperties(compiler, gatherExternsFromTypes))
         .process(externs, null);
     if (!compiler.getExternProperties().equals(externProperties)) {

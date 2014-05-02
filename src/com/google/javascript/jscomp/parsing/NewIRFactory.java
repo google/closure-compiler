@@ -131,6 +131,9 @@ class NewIRFactory {
   static final String INVALID_ES5_STRICT_OCTAL =
       "Octal integer literals are not supported in Ecmascript 5 strict mode.";
 
+  static final String INVALID_NUMBER_LITERAL =
+      "Invalid number literal.";
+
   static final String STRING_CONTINUATION_WARNING =
       "String continuations are not supported in this language mode.";
 
@@ -1358,6 +1361,7 @@ class NewIRFactory {
     @Override
     Node processObjectLiteral(ObjectLiteralExpressionTree objTree) {
       Node node = newNode(Token.OBJECTLIT);
+      boolean maybeWarn = false;
       for (ParseTree el : objTree.propertyNameAndValues) {
         if (config.languageMode == LanguageMode.ECMASCRIPT3) {
           if (el.type == ParseTreeType.GET_ACCESSOR) {
@@ -1374,8 +1378,14 @@ class NewIRFactory {
           errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
               key.getLineno(), "", key.getCharno());
         }
+        if (key.getFirstChild() == null) {
+          maybeWarn = true;
+        }
 
         node.addChildToBack(key);
+      }
+      if (maybeWarn) {
+        maybeWarnEs6Feature(objTree, "extended object literals");
       }
       return node;
     }
@@ -1417,7 +1427,9 @@ class NewIRFactory {
     Node processPropertyNameAssignment(PropertyNameAssignmentTree tree) {
       Node key = processObjecLitKeyAsString(tree.name);
       key.setType(Token.STRING_KEY);
-      key.addChildToFront(transform(tree.value));
+      if (tree.value != null) {
+        key.addChildToFront(transform(tree.value));
+      }
       return key;
     }
 
@@ -1461,6 +1473,7 @@ class NewIRFactory {
       if (lastSlash < rawRegex.length()) {
         flags = rawRegex.substring(lastSlash + 1);
       }
+      validateRegExpFlags(literalTree, flags);
 
       if (!flags.isEmpty()) {
         Node flagsNode = newStringNode(flags);
@@ -1469,6 +1482,23 @@ class NewIRFactory {
         node.addChildToBack(flagsNode);
       }
       return node;
+    }
+
+    private void validateRegExpFlags(LiteralExpressionTree tree, String flags) {
+      for (char flag : Lists.charactersOf(flags)) {
+        switch (flag) {
+          case 'g': case 'i': case 'm':
+            break;
+          case 'u': case 'y':
+            maybeWarnEs6Feature(tree, "new RegExp flag '" + flag + "'");
+            break;
+          default:
+            errorReporter.error(
+                "Invalid RegExp flag '" + flag + "'",
+                sourceName,
+                lineno(tree), "", charno(tree));
+        }
+      }
     }
 
     @Override
@@ -2151,11 +2181,14 @@ class NewIRFactory {
           } else {
             return Double.valueOf(value);
           }
+        default:
+          errorReporter.error(INVALID_NUMBER_LITERAL, sourceName,
+              lineno(location.start), "", charno(location.start));
+          return 0;
       }
     } else {
       return Double.valueOf(value);
     }
-    throw new IllegalStateException("unexpected");
   }
 
   private static int binarydigit(char c) {

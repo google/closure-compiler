@@ -409,7 +409,7 @@ public final class NodeUtil {
   }
 
   /**
-   * Gets the function's name. This method recognizes five forms:
+   * Gets the node of a function's name. This method recognizes five forms:
    * <ul>
    * <li>{@code function name() ...}</li>
    * <li>{@code var name = function() ...}</li>
@@ -418,30 +418,34 @@ public final class NodeUtil {
    * <li>{@code qualified.name2 = function name1() ...}</li>
    * </ul>
    * In two last cases with named function expressions, the second name is
-   * returned (the variable of qualified name).
+   * returned (the variable or qualified name).
    *
    * @param n a node whose type is {@link Token#FUNCTION}
-   * @return the function's name, or {@code null} if it has no name
+   * @return the node best representing the function's name
    */
-  static String getFunctionName(Node n) {
+  static Node getFunctionNameNode(Node n) {
     Preconditions.checkState(n.isFunction());
     Node parent = n.getParent();
     switch (parent.getType()) {
       case Token.NAME:
         // var name = function() ...
         // var name2 = function name1() ...
-        return parent.getQualifiedName();
+        return parent;
 
       case Token.ASSIGN:
         // qualified.name = function() ...
         // qualified.name2 = function name1() ...
-        return parent.getFirstChild().getQualifiedName();
+        return parent.getFirstChild();
 
       default:
         // function name() ...
-        String name = n.getFirstChild().getQualifiedName();
-        return name;
+        return n.getFirstChild();
     }
+  }
+
+  static String getFunctionName(Node n) {
+    Node nameNode = getFunctionNameNode(n);
+    return nameNode == null ? null : nameNode.getQualifiedName();
   }
 
   /**
@@ -758,6 +762,14 @@ public final class NodeUtil {
       default:
         return false;
     }
+  }
+
+  static boolean isTypedefDecl(Node n) {
+    if (!n.isVar()) {
+      return false;
+    }
+    JSDocInfo jsdoc = n.getJSDocInfo();
+    return jsdoc != null && jsdoc.hasTypedefType();
   }
 
   /**
@@ -2633,8 +2645,17 @@ public final class NodeUtil {
    * @return Whether the node represents a qualified prototype property.
    */
   static boolean isPrototypeProperty(Node n) {
-    String lhsString = n.getQualifiedName();
-    return lhsString != null && lhsString.contains(".prototype.");
+    if (!n.isGetProp()) {
+      return false;
+    }
+    n = n.getFirstChild();
+    while (n.isGetProp()) {
+      if (n.getLastChild().getString().equals("prototype")) {
+        return n.isQualifiedName();
+      }
+      n = n.getFirstChild();
+    }
+    return false;
   }
 
   /**
@@ -2926,7 +2947,7 @@ public final class NodeUtil {
 
   static boolean hasConstAnnotation(Node node) {
     JSDocInfo jsdoc = getBestJSDocInfo(node);
-    return jsdoc != null && jsdoc.isConstant();
+    return jsdoc != null && jsdoc.isConstant() && !jsdoc.isDefine();
   }
 
   static boolean isConstantVar(Node node, Scope scope) {

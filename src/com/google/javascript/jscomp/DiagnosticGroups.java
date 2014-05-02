@@ -85,7 +85,7 @@ public class DiagnosticGroups {
       "missingProperties, missingProvide, missingRequire, missingReturn," +
       "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, suspiciousCode, " +
       "strictModuleDepCheck, typeInvalidation, " +
-      "undefinedNames, undefinedVars, unknownDefines, uselessCode, googBase, " +
+      "undefinedNames, undefinedVars, unknownDefines, uselessCode, useOfGoogBase, " +
       "visibility";
 
   public static final DiagnosticGroup GLOBAL_THIS =

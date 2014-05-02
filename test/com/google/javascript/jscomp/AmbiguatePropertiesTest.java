@@ -598,4 +598,31 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
         "function f(x) { x.y = 4; }";
     test(js, result);
   }
+
+  public void testBug14291280() {
+    String js =
+        "/** @constructor \n @template T */\n" +
+        "function C() {\n" +
+        "  this.aa = 1;\n" +
+        "}\n" +
+        "/** @return {C.<T>} */\n" +
+        "C.prototype.method = function() {\n" +
+        "  return this;\n" +
+        "}\n" +
+        "/** @type {C.<string>} */\n" +
+        "var x = new C().method();\n" +
+        "x.bb = 2;\n" +
+        "x.cc = 3;";
+    String result =
+        "function C() {" +
+        "  this.b = 1;" +
+        "}" +
+        "C.prototype.a = function() {" +
+        "  return this;" +
+        "};" +
+        "var x = (new C).a();" +
+        "x.c = 2;" +
+        "x.d = 3;";
+    test(js, result);
+  }
 }

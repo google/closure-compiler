@@ -57,7 +57,7 @@ class CheckGlobalNames implements CompilerPass {
           // referenced module's name changes because, for example, it's a
           // synthetic module.
           "cannot reference {2} because of a missing module dependency\n"
-          + "defined in module {1} from module {0}");
+          + "defined in module {1}, referenced from module {0}");
 
   /**
    * Creates a pass to check global name references at the given warning level.

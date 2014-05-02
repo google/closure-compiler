@@ -893,8 +893,10 @@ class CodeGenerator {
                 addExpr(c, 1, Context.OTHER);
               }
             }
-            add(":");
-            addExpr(c.getFirstChild(), 1, Context.OTHER);
+            if (c.hasChildren()) {
+              add(":");
+              addExpr(c.getFirstChild(), 1, Context.OTHER);
+            }
           }
         }
         add("}");

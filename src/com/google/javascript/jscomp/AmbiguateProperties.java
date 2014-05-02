@@ -182,6 +182,10 @@ class AmbiguateProperties implements CompilerPass {
 
   /** Returns an integer that uniquely identifies a JSType. */
   private int getIntForType(JSType type) {
+    // Templatized types don't exist at runtime, so collapse to raw type
+    if (type != null && type.isTemplatizedType()) {
+      type = type.toMaybeTemplatizedType().getReferencedType();
+    }
     if (intForType.containsKey(type)) {
       return intForType.get(type).intValue();
     }
@@ -436,7 +440,7 @@ class AmbiguateProperties implements CompilerPass {
         case Token.GETPROP: {
           Node propNode = n.getFirstChild().getNext();
           JSType jstype = getJSType(n.getFirstChild());
-          maybeMarkCandidate(propNode, jstype, t);
+          maybeMarkCandidate(propNode, jstype);
           break;
         }
         case Token.OBJECTLIT:
@@ -448,7 +452,7 @@ class AmbiguateProperties implements CompilerPass {
             // Keys are STRING, GET, SET
             if (!key.isQuotedString()) {
               JSType jstype = getJSType(n.getFirstChild());
-              maybeMarkCandidate(key, jstype, t);
+              maybeMarkCandidate(key, jstype);
             } else {
               // Ensure that we never rename some other property in a way
               // that could conflict with this quoted key.
@@ -473,9 +477,8 @@ class AmbiguateProperties implements CompilerPass {
      * and increments the property name's access count.
      *
      * @param n The STRING node for a property
-     * @param t The traversal
      */
-    private void maybeMarkCandidate(Node n, JSType type, NodeTraversal t) {
+    private void maybeMarkCandidate(Node n, JSType type) {
       String name = n.getString();
       if (!externedNames.contains(name)) {
         stringNodesToRename.add(n);

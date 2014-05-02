@@ -36,6 +36,7 @@ import com.google.javascript.jscomp.newtypes.NominalType;
 import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 import com.google.javascript.jscomp.newtypes.ObjectType;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
+import com.google.javascript.jscomp.newtypes.Typedef;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -142,7 +143,14 @@ class GlobalTypeInfo implements CompilerPass {
       "JSC_CANNOT_OVERRIDE_FINAL_METHOD",
       "Final method {0} cannot be overriden.");
 
+  static final DiagnosticType CANNOT_INIT_TYPEDEF =
+      DiagnosticType.warning(
+      "JSC_CANNOT_INIT_TYPEDEF",
+      "A typedef variable represents a type name; " +
+      "it cannot be assigned a value.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
+      CANNOT_INIT_TYPEDEF,
       CANNOT_OVERRIDE_FINAL_METHOD,
       CONSTRUCTOR_REQUIRED,
       CONST_WITHOUT_INITIALIZER,
@@ -218,10 +226,13 @@ class GlobalTypeInfo implements CompilerPass {
   // Differs from the similar method in Scope class on how it treats qnames.
   String getFunInternalName(Node n) {
     Preconditions.checkArgument(n.isFunction());
-    String nonAnonFnName = NodeUtil.getFunctionName(n);
+    Node fnNameNode = NodeUtil.getFunctionNameNode(n);
     // We don't want to use qualified names here
-    if (nonAnonFnName != null && !nonAnonFnName.contains(".")) {
-      return nonAnonFnName;
+    if (fnNameNode.isName()) {
+      String s = fnNameNode.getString();
+      if (s != null && !s.isEmpty()) {
+        return s;
+      }
     }
     return anonFunNames.get(n);
   }
@@ -238,6 +249,8 @@ class GlobalTypeInfo implements CompilerPass {
       new NodeTraversal(compiler, rootCnt).traverse(externs);
     }
     new NodeTraversal(compiler, rootCnt).traverse(root);
+    // Must happen after CollectNamedTypes and before ProcessScope
+    globalScope.resolveTypedefs(typeParser);
     ProcessScope rootPs = new ProcessScope(globalScope);
     if (externs != null) {
       new NodeTraversal(compiler, rootPs).traverse(externs);
@@ -250,6 +263,8 @@ class GlobalTypeInfo implements CompilerPass {
       Scope s = scopeWorkset.removeFirst();
       Node scopeBody = s.getBody();
       new NodeTraversal(compiler, new CollectNamedTypes(s)).traverse(scopeBody);
+      // Must happen after CollectNamedTypes and before ProcessScope
+      s.resolveTypedefs(typeParser);
       ProcessScope ps = new ProcessScope(s);
       new NodeTraversal(compiler, ps).traverse(scopeBody);
       ps.finishProcessingScope();
@@ -299,7 +314,8 @@ class GlobalTypeInfo implements CompilerPass {
     return result.build();
   }
 
-  private PropertyDef getPropDefFromClass(NominalType nominalType, String pname) {
+  private PropertyDef getPropDefFromClass(
+      NominalType nominalType, String pname) {
     while (nominalType.getPropDeclaredType(pname) != null) {
       Preconditions.checkArgument(nominalType.isFinalized());
       Preconditions.checkArgument(nominalType.isClass());
@@ -487,8 +503,30 @@ class GlobalTypeInfo implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isFunction()) {
-        initFnScope(n, currentScope);
+      switch (n.getType()) {
+        case Token.FUNCTION:
+          initFnScope(n, currentScope);
+          break;
+        case Token.VAR:
+          if (NodeUtil.isTypedefDecl(n)) {
+            if (n.getFirstChild().getFirstChild() != null) {
+              warnings.add(JSError.make(n, CANNOT_INIT_TYPEDEF));
+            }
+            String varName = n.getFirstChild().getString();
+            if (currentScope.isDefinedLocally(varName)) {
+              warnings.add(JSError.make(
+                  n, VariableReferenceCheck.REDECLARED_VARIABLE, varName));
+              break;
+            }
+            JSDocInfo jsdoc = n.getJSDocInfo();
+            Typedef td = Typedef.make(jsdoc.getTypedefType());
+            currentScope.addTypedef(varName, td);
+          }
+          break;
+        case Token.GETPROP:
+          // TODO(dimvar): Creating types on namespaces is broken now.
+          // Fix that and then handle typedefs on namespaces.
+          break;
       }
     }
 
@@ -572,6 +610,9 @@ class GlobalTypeInfo implements CompilerPass {
           // after we decide what to do with variables in general, eg, will we
           // use unique numeric ids?
           if (parent.isVar() || parent.isCatch()) {
+            if (NodeUtil.isTypedefDecl(parent)) {
+              break;
+            }
             if (currentScope.isDefinedLocally(name)) {
               warnings.add(JSError.make(
                   n, VariableReferenceCheck.REDECLARED_VARIABLE, name));
@@ -599,7 +640,9 @@ class GlobalTypeInfo implements CompilerPass {
             }
           } else if (currentScope.isOuterVarEarly(name)) {
             currentScope.addOuterVar(name);
-          } else if (!name.equals(currentScope.getName()) &&
+          } else if (// Typedef variables can't be referenced in the source.
+              currentScope.getTypedef(name) != null ||
+              !name.equals(currentScope.getName()) &&
               !currentScope.isDefinedLocally(name)) {
             undeclaredVars.put(name, n);
           }
@@ -1266,8 +1309,6 @@ class GlobalTypeInfo implements CompilerPass {
     private final Node root;
     // Name on the function AST node; null for top scope & anonymous functions
     private final String name;
-    // Used only for error messages; null for top scope
-    private final String readableName;
 
     // A local w/out declared type is mapped to null, not to JSType.UNKNOWN.
     private final Map<String, JSType> locals = Maps.newHashMap();
@@ -1278,6 +1319,7 @@ class GlobalTypeInfo implements CompilerPass {
     private final Set<String> outerVars = Sets.newHashSet();
     private final Map<String, Scope> localFunDefs = Maps.newHashMap();
     private Map<String, RawNominalType> localClassDefs = Maps.newHashMap();
+    private Map<String, Typedef> localTypedefs = Maps.newHashMap();
     private Set<String> localNamespaces = Sets.newHashSet();
 
     // declaredType is null for top level, but never null for functions,
@@ -1289,11 +1331,9 @@ class GlobalTypeInfo implements CompilerPass {
         DeclaredFunctionType declaredType) {
       if (parent == null) {
         this.name = null;
-        this.readableName = null;
       } else {
         String nameOnAst = root.getFirstChild().getString();
         this.name = nameOnAst.isEmpty() ? null : nameOnAst;
-        this.readableName = NodeUtil.getFunctionName(root);
       }
       this.root = root;
       this.parent = parent;
@@ -1310,9 +1350,10 @@ class GlobalTypeInfo implements CompilerPass {
       return NodeUtil.getFunctionBody(root);
     }
 
-    // TODO(dimvar): don't return null for anonymous functions
+    /** Used only for error messages; null for top scope */
     String getReadableName() {
-      return readableName;
+      // TODO(dimvar): don't return null for anonymous functions
+      return parent == null ? null : NodeUtil.getFunctionName(root);
     }
 
     String getName() {
@@ -1345,6 +1386,7 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void addLocalFunDef(String name, Scope scope) {
+      Preconditions.checkArgument(!name.isEmpty() && !isDefinedLocally(name));
       localFunDefs.put(name, scope);
     }
 
@@ -1360,10 +1402,15 @@ class GlobalTypeInfo implements CompilerPass {
       return localFunDefs.containsKey(name);
     }
 
+    // In other languages, type names and variable names are in distinct
+    // namespaces and don't clash.
+    // But because our typedefs are var declarations, they are in the same
+    // namespace as other variables.
     boolean isDefinedLocally(String name) {
       Preconditions.checkNotNull(name);
       return locals.containsKey(name) || formals.contains(name) ||
-          localFunDefs.containsKey(name) || "this".equals(name);
+          localFunDefs.containsKey(name) || "this".equals(name) ||
+          (localTypedefs != null && localTypedefs.containsKey(name));
     }
 
     private boolean isNamespace(Node expr) {
@@ -1444,18 +1491,18 @@ class GlobalTypeInfo implements CompilerPass {
     // Only used during symbol-table construction, not during type inference.
     @Override
     public JSType lookupTypeByName(String name) {
-      if (declaredType != null && declaredType.isGeneric()) {
-        if (declaredType.getTypeParameters().contains(name)) {
-          return JSType.fromTypeVar(name);
-        }
+      // First see if it's a type variable
+      if (declaredType != null && declaredType.isGeneric() &&
+          declaredType.getTypeParameters().contains(name)) {
+        return JSType.fromTypeVar(name);
       }
-      if (localClassDefs != null) {
-        RawNominalType rawNominalType = localClassDefs.get(name);
-        if (rawNominalType != null) {
-          return JSType.fromObjectType(ObjectType.fromNominalType(
-              NominalType.fromRaw(rawNominalType)));
-        }
+      // Then if it's a class/interface name
+      RawNominalType rawNominalType = localClassDefs.get(name);
+      if (rawNominalType != null) {
+        return JSType.fromObjectType(ObjectType.fromNominalType(
+            NominalType.fromRaw(rawNominalType)));
       }
+      // O/w keep looking in the parent scope
       return parent == null ? null : parent.lookupTypeByName(name);
     }
 
@@ -1519,7 +1566,7 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void addLocal(String name, JSType declType, boolean isConstant) {
-      Preconditions.checkState(!isDefinedLocally(name));
+      Preconditions.checkArgument(!isDefinedLocally(name));
       if (isConstant) {
         constVars.add(name);
       }
@@ -1541,10 +1588,75 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void addNominalType(String name, RawNominalType rawNominalType) {
+      Preconditions.checkArgument(!name.isEmpty());
       localClassDefs.put(name, rawNominalType);
     }
 
+    private void addTypedef(String name, Typedef td) {
+      Preconditions.checkArgument(!isDefinedLocally(name));
+      localTypedefs.put(name, td);
+    }
+
+    public Typedef getTypedef(String name) {
+      if (isDefinedLocally(name)) {
+        return localTypedefs.get(name);
+      }
+      if (parent != null) {
+        return parent.getTypedef(name);
+      }
+      return null;
+    }
+
+    private void resolveTypedefs(JSTypeCreatorFromJSDoc typeParser) {
+      for (Map.Entry<String, Typedef> entry : localTypedefs.entrySet()) {
+        String name = entry.getKey();
+        Typedef td = entry.getValue();
+        if (td.isResolved()) {
+          continue;
+        }
+        td.resolveTypedef(typeParser.getTypedefType(name, this));
+      }
+    }
+
+    // When debugging, this method can be called at the start of finalizeScope,
+    // to make sure everything is OK.
+    private void sanityCheck() {
+      Set<String> names;
+      // dom(localClassDefs) is a subset of dom(localFunDefs)
+      names = localFunDefs.keySet();
+      for (String s : localClassDefs.keySet()) {
+        Preconditions.checkState(names.contains(s));
+      }
+      // constVars is a subset of dom(locals)
+      names = locals.keySet();
+      for (String s : constVars) {
+        Preconditions.checkState(names.contains(s));
+      }
+      // localNamespaces is a subset of dom(locals)
+      for (String s : localNamespaces) {
+        Preconditions.checkState(names.contains(s));
+      }
+      // The domains of locals, formals, localFunDefs and localTypedefs are
+      // pairwise disjoint.
+      names = Sets.newHashSet(formals);
+      for (String s : locals.keySet()) {
+        Preconditions.checkState(!names.contains(s),
+            "Name %s is defined twice.", s);
+        names.add(s);
+      }
+      for (String s : localFunDefs.keySet()) {
+        Preconditions.checkState(!names.contains(s),
+            "Name %s is defined twice.", s);
+        names.add(s);
+      }
+      for (String s : localTypedefs.keySet()) {
+        Preconditions.checkState(!names.contains(s),
+            "Name %s is defined twice.", s);
+      }
+    }
+
     private void finalizeScope() {
+      // sanityCheck();
       Iterator<String> it = localFunDefs.keySet().iterator();
       while (it.hasNext()) {
         String name = it.next();
@@ -1554,6 +1666,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       localNamespaces = null;
       localClassDefs = null;
+      localTypedefs = null;
     }
   }
 }

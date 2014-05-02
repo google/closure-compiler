@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.testing.TestErrorReporter;
@@ -731,12 +732,35 @@ public class NewParserTest extends BaseJSTypeTestCase {
               + " ignoring it"));
   }
 
-  public void testUnescapedSlashInRegexpCharClass() throws Exception {
-    // The tokenizer without the fix for this bug throws an error.
+  public void testUnescapedSlashInRegexpCharClass() {
     parse("var foo = /[/]/;");
     parse("var foo = /[hi there/]/;");
     parse("var foo = /[/yo dude]/;");
     parse("var foo = /\\/[@#$/watashi/wa/suteevu/desu]/;");
+  }
+
+  /**
+   * Test for https://github.com/google/closure-compiler/issues/389.
+   */
+  public void testMalformedRegexp() {
+    // Simple repro case
+    String js = "var x = com\\";
+    parseError(js, "Invalid escape sequence");
+
+    // The original repro case as reported.
+    js = Joiner.on('\n').join(
+        "(function() {",
+        "  var url=\"\";",
+        "  switch(true)",
+        "  {",
+        "    case /a.com\\/g|l.i/N/.test(url):",
+        "      return \"\";",
+        "    case /b.com\\/T/.test(url):",
+        "      return \"\";",
+        "  }",
+        "}",
+        ")();");
+    parseError(js, "primary expression expected");
   }
 
   private void assertNodeEquality(Node expected, Node found) {
@@ -828,6 +852,21 @@ public class NewParserTest extends BaseJSTypeTestCase {
     Node script = new Node(Token.SCRIPT);
     script.addChildToBack(n);
     return script;
+  }
+
+  public void testExtendedObjectLiteral() {
+    testExtendedObjectLiteral("var a = {b};");
+    testExtendedObjectLiteral("var a = {b, c};");
+    testExtendedObjectLiteral("var a = {b, c: d, e};");
+  }
+
+  private void testExtendedObjectLiteral(String js) {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse(js);
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(js, "this language feature is only supported in es6 mode: " +
+        "extended object literals");
   }
 
   public void testTrailingCommaWarning1() {
@@ -997,12 +1036,12 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testGettersForbidden3() {
     parseError("var x = {a getter:function b() { return 3; }};",
-        "':' expected");
+        "'}' expected");
   }
 
   public void testGettersForbidden4() {
     parseError("var x = {\"a\" getter:function b() { return 3; }};",
-        "':' expected");
+        "'}' expected");
   }
 
   public void testGettersForbidden5() {
@@ -1023,7 +1062,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testSettersForbidden2() {
     // TODO(johnlenz): maybe just report the first error, when not in IDE mode?
     parseError("var x = {a setter:function b() { return 3; }};",
-        "':' expected");
+        "'}' expected");
   }
 
   public void testFileOverviewJSDoc1() {
@@ -1120,7 +1159,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testYield2() {
     mode = LanguageMode.ECMASCRIPT6_STRICT;
     parse("function * f() { yield; }");
-    parse("function * f() { yield /a/b; }");
+    parse("function * f() { yield /a/i; }");
 
     parseError("function * f() { 1 + yield; }", "primary expression expected");
     parseError("function * f() { 1 + yield 2; }", "primary expression expected");
@@ -1171,6 +1210,48 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("0o0001;");
   }
 
+  public void testOldStyleOctalLiterals() {
+    mode = LanguageMode.ECMASCRIPT3;
+    parseWarning("0001;",
+        "Octal integer literals are not supported in Ecmascript 5 strict mode.");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning("0001;",
+        "Octal integer literals are not supported in Ecmascript 5 strict mode.");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parseWarning("0001;",
+        "Octal integer literals are not supported in Ecmascript 5 strict mode.");
+  }
+
+  // TODO(tbreisacher): We need much clearer error messages for this case.
+  public void testInvalidOctalLiterals() {
+    mode = LanguageMode.ECMASCRIPT3;
+    parseError("0o08;",
+        "Semi-colon expected");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseError("0o08;",
+        "Semi-colon expected");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError("0o08;",
+        "Semi-colon expected");
+  }
+
+  public void testInvalidOldStyleOctalLiterals() {
+    mode = LanguageMode.ECMASCRIPT3;
+    parseError("08;",
+        "Invalid number literal.");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseError("08;",
+        "Invalid number literal.");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError("08;",
+        "Invalid number literal.");
+  }
 
   public void testGetter() {
     mode = LanguageMode.ECMASCRIPT3;
@@ -1538,6 +1619,43 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(parse("/\\s/"), script(expr(regex("\\s"))));
     assertNodeEquality(parse("/\\u000A/"), script(expr(regex("\\u000A"))));
     assertNodeEquality(parse("/[\\]]/"), script(expr(regex("[\\]]"))));
+  }
+
+  public void testRegExpFlags() {
+    // Various valid combinations.
+    parse("/a/");
+    parse("/a/i");
+    parse("/a/g");
+    parse("/a/m");
+    parse("/a/ig");
+    parse("/a/gm");
+    parse("/a/mgi");
+
+    // Invalid combinations
+    parseError("/a/a", "Invalid RegExp flag 'a'");
+    parseError("/a/b", "Invalid RegExp flag 'b'");
+    parseError("/a/abc",
+        "Invalid RegExp flag 'a'",
+        "Invalid RegExp flag 'b'",
+        "Invalid RegExp flag 'c'");
+  }
+
+  /**
+   * New RegExp flags added in ES6.
+   */
+  public void testES6RegExpFlags() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("/a/y");
+    parse("/a/u");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning("/a/y",
+        "this language feature is only supported in es6 mode: new RegExp flag 'y'");
+    parseWarning("/a/u",
+        "this language feature is only supported in es6 mode: new RegExp flag 'u'");
+    parseWarning("/a/yu",
+        "this language feature is only supported in es6 mode: new RegExp flag 'y'",
+        "this language feature is only supported in es6 mode: new RegExp flag 'u'");
   }
 
   public void testDefaultParameters() {
