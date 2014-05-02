@@ -1270,6 +1270,13 @@ public class CodePrinterTest extends TestCase {
     assertPrintNumber("0x38d7ea4c68001", 0x38d7ea4c68001L);
   }
 
+  public void testFractions() {
+    assertPrintNumber("6.28", 6.28);
+    assertPrintNumber("-6.28", -6.28);
+    assertPrintNumber(".6", 0.6);
+    assertPrintNumber("-.6", -0.6);
+  }
+
   // Make sure to test as both a String and a Node, because
   // negative numbers do not parse consistently from strings.
   private void assertPrintNumber(String expected, double number) {
