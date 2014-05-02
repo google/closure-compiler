@@ -291,15 +291,19 @@ abstract class CodeConsumer {
       // The implementation might also return a string that looks similar to
       // "0.6…". This can be written shorter and equally correct as ".6…" (see
       // ECMA-262 5.1 section 7.8.3).
-      final int zeroIntegerIndex = xAsString.lastIndexOf("0.", 1);
-      if (-1 != zeroIntegerIndex) {
-        if (0 == zeroIntegerIndex) {
-          // 0.6 → .6
-          xAsString = xAsString.substring(1);
-        } else /* if (1 == zeroIntegerIndex) */ {
-          // -0.6 → -.6
-          xAsString = xAsString.charAt(0) + xAsString.substring(2);
-        }
+      int zeroIntegerIndex = xAsString.lastIndexOf("0.", 1);
+      // (The zero integer ‒ the "0" before the dot ‒ can be at the start of
+      // the string as well as one character after that, but the latter is only
+      // correct if that first character is a sign.)
+      if (1 == zeroIntegerIndex && '-' != xAsString.charAt(0)) {
+        zeroIntegerIndex = -1;
+      }
+      if (0 == zeroIntegerIndex) {
+        // 0.6 → .6
+        xAsString = xAsString.substring(1);
+      } else if (1 == zeroIntegerIndex) {
+        // -0.6 → -.6
+        xAsString = xAsString.charAt(0) + xAsString.substring(2);
       }
       addConstant(xAsString);
     }
