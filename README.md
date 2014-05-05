@@ -1,24 +1,15 @@
 # [Google Closure Compiler](https://developers.google.com/closure/compiler/)
 
-The [Closure Compiler](https://developers.google.com/closure/compiler/) performs
-checking, instrumentation, and optimizations on JavaScript code.
+The [Closure Compiler](https://developers.google.com/closure/compiler/) is a tool for making JavaScript download and run faster. It is a true compiler for JavaScript. Instead of compiling from a source language to machine code, it compiles from JavaScript to better JavaScript. It parses your JavaScript, analyzes it, removes dead code and rewrites and minimizes what's left. It also checks syntax, variable references, and types, and warns about common JavaScript pitfalls.
 
-## Quick Start
+## Getting Started
+ * [Download the latest version](http://dl.google.com/closure-compiler/compiler-latest.zip)
+ * See the [Google Developers Site](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for documentation including instructions for running the compiler from the command line.
 
-1. Ensure that you have [Java 7](http://www.java.com/) installed.
-
-2. Download the [Closure Compiler]
-(https://code.google.com/p/closure-compiler/wiki/BinaryDownloads?tm=2).
-
-3. Run the following command from the command line to compile a JavaScript file:
-   
-   ```
-   java -jar compiler.jar --js hello.js --js_output_file hello-compiled.js
-   ```
-
-Read the [documentation]
-(http://code.google.com/closure/compiler/docs/gettingstarted_app.html) to learn
-more about how to use the Closure Compiler.
+## Options for Getting Help
+1. Post in the [Closure Compiler Discuss Group] (https://groups.google.com/forum/#!forum/closure-compiler-discuss)
+2. Ask a question on [Stack Overflow](http://stackoverflow.com/questions/tagged/google-closure-compiler)
+3. Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ)
 
 ## Building it Yourself
 
@@ -98,6 +89,28 @@ use the [Closure Library](https://developers.google.com/closure/library/). It
 contains functions for enforcing dependencies between scripts, and a tool
 called ````calcdeps.py```` that knows how to give scripts to the Closure Compiler
 in the right order.
+
+## How to Contribute
+### Reporting a bug
+1. First make sure that it is really a bug and not simply the way that Closure Compiler works (especially true for ADVANCED_OPTIMIZATIONS).
+ * Check the [official documentation](https://developers.google.com/closure/compiler/)
+ * Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ)
+ * Search on [Stack Overflow](http://stackoverflow.com/questions/tagged/google-closure-compiler) and in the [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
+2. If you still think you have found a bug, make sure someone hasn't already reported it. See the list of [known issues](https://github.com/google/closure-compiler/issues).
+3. If it hasn't been reported yet, post a new issue. Make sure to add enough detail so that the bug can be recreated. The smaller the reproduction code, the better.
+
+### Suggesting a Feature
+1. Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ) to make sure that the behaviour you would like isn't specifically excluded (such as string inlining).
+2. Make sure someone hasn't requested the same thing. See the list of [known issues](https://github.com/google/closure-compiler/issues).
+3. Read up on [what type of feature requests are accepted](https://github.com/google/closure-compiler/wiki/FAQ#how-do-i-submit-a-feature-request-for-a-new-type-of-optimization).
+4. Submit your reqest as an issue.
+
+### Submitting patches
+1. All contributors must sign a contributor license agreement. See the [CONTRIBUTORS](https://raw.githubusercontent.com/google/closure-compiler/master/CONTRIBUTORS) file for details.
+2. To make sure your changes are of the type that will be accepted, ask about your patch on the [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
+3. Fork the repository.
+4. Make your changes.
+5. Submit a pull request for your changes. A project developer will review your work and then merge your request into the project.
 
 ## Closure Compiler License
 
