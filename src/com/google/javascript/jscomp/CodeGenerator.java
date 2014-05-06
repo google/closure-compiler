@@ -350,6 +350,11 @@ class CodeGenerator {
         }
         break;
 
+      case Token.REST:
+        add("...");
+        add(n.getString());
+        break;
+
       case Token.EXPORT:
         add("export");
         if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {

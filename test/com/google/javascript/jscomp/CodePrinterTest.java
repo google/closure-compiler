@@ -1700,6 +1700,12 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("function f(a,b=0){}");
   }
 
+  public void testRestParameters() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("function f(...args){}");
+    assertPrintSame("function f(first,...rest){}");
+  }
+
   public void testClass() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("class C{}");

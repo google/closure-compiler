@@ -1331,6 +1331,7 @@ public final class NodeUtil {
       case Token.NUMBER:
       case Token.OBJECTLIT:
       case Token.REGEXP:
+      case Token.REST:
       case Token.STRING:
       case Token.STRING_KEY:
       case Token.THIS:

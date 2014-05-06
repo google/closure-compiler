@@ -60,6 +60,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ParseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.PostfixExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentTree;
+import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
@@ -131,6 +132,7 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processPropertyNameAssignment(PropertyNameAssignmentTree tree);
   abstract T processFormalParameterList(FormalParameterListTree tree);
   abstract T processDefaultParameter(DefaultParameterTree tree);
+  abstract T processRestParameter(RestParameterTree tree);
 
   abstract T processClassDeclaration(ClassDeclarationTree tree);
   abstract T processSuper(SuperExpressionTree tree);
@@ -299,7 +301,7 @@ abstract class NewTypeSafeDispatcher<T> {
       case DEFAULT_PARAMETER:
         return processDefaultParameter(node.asDefaultParameter());
       case REST_PARAMETER:
-        return unsupportedLanguageFeature(node, "rest parameters");
+        return processRestParameter(node.asRestParameter());
       case SPREAD_EXPRESSION:
         return unsupportedLanguageFeature(node, "spread parameters");
 

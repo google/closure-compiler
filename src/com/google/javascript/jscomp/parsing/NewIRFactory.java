@@ -72,6 +72,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ParseTreeType;
 import com.google.javascript.jscomp.parsing.parser.trees.PostfixExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentTree;
+import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
@@ -1177,8 +1178,9 @@ class NewIRFactory {
       Node params = newNode(Token.PARAM_LIST);
       for (ParseTree param : tree.parameters) {
         Node paramNode = transformNodeWithInlineJsDoc(param, false);
-        // We only support simple names for the moment.
-        Preconditions.checkState(paramNode.isName());
+        // We only support simple names, default parameters, and rest
+        // parameters, for the moment.
+        Preconditions.checkState(paramNode.isName() || paramNode.isRest());
         params.addChildToBack(paramNode);
       }
       return params;
@@ -1191,6 +1193,13 @@ class NewIRFactory {
       Node name = IR.name(tree.identifier.identifierToken.value);
       name.addChildToFront(transform(tree.expression));
       return name;
+    }
+
+    @Override
+    Node processRestParameter(RestParameterTree tree) {
+      maybeWarnEs6Feature(tree, "rest parameters");
+
+      return newStringNode(Token.REST, tree.identifier.value);
     }
 
     @Override

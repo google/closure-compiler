@@ -2551,6 +2551,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.REGEXP;
   }
 
+  public boolean isRest() {
+    return this.getType() == Token.REST;
+  }
+
   public boolean isReturn() {
     return this.getType() == Token.RETURN;
   }

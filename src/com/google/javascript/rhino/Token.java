@@ -179,6 +179,9 @@ public class Token {
         EXPORT_SPEC    = 170,
         MODULE         = 171,
 
+        REST           = 172, // "..." in a param list.
+        SPREAD         = 173, // "..." in other contexts.
+
         // JSDoc-only tokens
         ANNOTATION     = 300,
         PIPE           = 301,
@@ -314,6 +317,8 @@ public class Token {
           case EXPORT_SPECS:    return "EXPORT_SPECS";
           case EXPORT_SPEC:     return "EXPORT_SPEC";
           case MODULE:          return "MODULE";
+          case REST:            return "REST";
+          case SPREAD:          return "SPREAD";
         }
 
         // Token without name
