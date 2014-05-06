@@ -24,7 +24,7 @@
 
 /**
  * @param {!MIDIOptions=} opt_options
- * @return {!Promise}
+ * @return {!Promise.<!MIDIAccess>}
  */
 navigator.requestMIDIAccess = function(opt_options) {};
 
