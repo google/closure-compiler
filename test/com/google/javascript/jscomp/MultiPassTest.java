@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
+import com.google.javascript.rhino.Node;
 
 import java.util.List;
 
@@ -120,6 +121,14 @@ public class MultiPassTest extends CompilerTestCase {
     test("var x = 1, y = x, z = x + y;", "var z = 2;");
   }
 
+  public void testTwoOptimLoopsNoCrash() {
+    passes = Lists.newLinkedList();
+    addInlineVariables();
+    addSmartNamePass();
+    addInlineVariables();
+    test("var x = '';", "");
+  }
+
   private void addCollapseObjectLiterals() {
     passes.add(
         new PassFactory("collapseObjectLiterals", false) {
@@ -197,6 +206,23 @@ public class MultiPassTest extends CompilerTestCase {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
             return new RemoveUnusedVars(compiler, false, false, false);
+          }
+        });
+  }
+
+  private void addSmartNamePass() {
+    passes.add(
+        new PassFactory("smartNamePass", true) {
+          @Override
+          protected CompilerPass create(final AbstractCompiler compiler) {
+            return new CompilerPass() {
+              @Override
+              public void process(Node externs, Node root) {
+                NameAnalyzer na = new NameAnalyzer(compiler, false);
+                na.process(externs, root);
+                na.removeUnreferenced();
+              }
+            };
           }
         });
   }

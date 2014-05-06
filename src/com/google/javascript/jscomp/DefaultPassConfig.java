@@ -1962,7 +1962,7 @@ public class DefaultPassConfig extends PassConfig {
    * Move global symbols to a deeper common module
    */
   final PassFactory crossModuleCodeMotion =
-      new PassFactory("crossModuleCodeMotion", false) {
+      new PassFactory(Compiler.CROSS_MODULE_CODE_MOTION_NAME, false) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new CrossModuleCodeMotion(

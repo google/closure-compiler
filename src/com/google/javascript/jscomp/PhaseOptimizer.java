@@ -187,8 +187,10 @@ class PhaseOptimizer implements CompilerPass {
   }
 
   private void setSanityCheckState() {
-    lastAst = jsRoot.cloneTree();
-    mtoc = NodeUtil.mapMainToClone(jsRoot, lastAst);
+    if (inLoop) {
+      lastAst = jsRoot.cloneTree();
+      mtoc = NodeUtil.mapMainToClone(jsRoot, lastAst);
+    }
   }
 
   /**
@@ -236,7 +238,6 @@ class PhaseOptimizer implements CompilerPass {
       sanityCheck.create(compiler).process(externs, root);
       if (inLoop) {
         NodeUtil.verifyScopeChanges(mtoc, jsRoot, true, compiler);
-        setSanityCheckState();
       }
     }
   }
@@ -261,6 +262,18 @@ class PhaseOptimizer implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
       logger.fine(name);
+      // Cross-module code motion is a loopable pass on its own, but does not
+      // participate in the other optimization loops, and is not relevant to
+      // tracking changed scopes.
+      // Don't set inLoop, to avoid the special sanity check.
+      if (name.equals(Compiler.CROSS_MODULE_CODE_MOTION_NAME)) {
+        inLoop = false;
+      }
+      if (sanityCheck != null) {
+        // Before running the pass, clone the AST so you can sanity-check the
+        // changed AST against the clone after the pass finishes.
+        setSanityCheckState();
+      }
       if (tracker != null) {
         tracker.recordPassStart(name, factory.isOneTimePass());
       }
