@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -43,7 +45,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.AnnotatedElement;
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -666,7 +667,7 @@ public class CommandLineRunner extends
             throws CmdLineException, IOException {
     File flagFileInput = new File(flags.flagFile);
     List<String> argsInFile = tokenizeKeepingQuotedStrings(
-        Files.readLines(flagFileInput, Charset.defaultCharset()));
+        Files.readLines(flagFileInput, UTF_8));
 
     flags.flagFile = "";
     List<String> processedFileArgs

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -1001,7 +1003,7 @@ public class CommandLineRunnerTest extends TestCase {
     testSame("");
     assertEquals(
         0,
-        new String(errReader.toByteArray()).indexOf(
+        new String(errReader.toByteArray(), UTF_8).indexOf(
             "Closure Compiler (http://code.google.com/closure/compiler)\n" +
             "Version: "));
   }
@@ -1011,7 +1013,7 @@ public class CommandLineRunnerTest extends TestCase {
     testSame("");
     assertEquals(
         0,
-        new String(errReader.toByteArray()).indexOf(
+        new String(errReader.toByteArray(), UTF_8).indexOf(
             "Closure Compiler (http://code.google.com/closure/compiler)\n" +
             "Version: "));
   }

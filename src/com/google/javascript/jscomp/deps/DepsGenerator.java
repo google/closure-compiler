@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.deps;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -134,7 +136,7 @@ public class DepsGenerator {
 
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     writeDepsContent(depsFiles, jsFiles, new PrintStream(output));
-    return new String(output.toByteArray());
+    return new String(output.toByteArray(), UTF_8);
   }
 
   /**
