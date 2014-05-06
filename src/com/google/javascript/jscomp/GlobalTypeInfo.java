@@ -186,9 +186,8 @@ class GlobalTypeInfo implements CompilerPass {
   private final Deque<Scope> scopes = Lists.newLinkedList();
   private Scope globalScope;
   private final Deque<Scope> scopeWorkset = Lists.newLinkedList();
-  private final Set<JSError> warnings = Sets.newHashSet();
-  private final JSTypeCreatorFromJSDoc typeParser =
-      new JSTypeCreatorFromJSDoc();
+  private Set<JSError> warnings = Sets.newHashSet();
+  private JSTypeCreatorFromJSDoc typeParser = new JSTypeCreatorFromJSDoc();
   private final AbstractCompiler compiler;
   private final Map<Node, String> anonFunNames = Maps.newHashMap();
   private static final String ANON_FUN_PREFIX = "%anon_fun";
@@ -244,39 +243,48 @@ class GlobalTypeInfo implements CompilerPass {
     globalScope = new Scope(root, null, new ArrayList<String>(), null);
     scopes.addFirst(globalScope);
 
+    // Processing of a scope is split into many separate phases, and it's not
+    // straightforward to remember which phase does what.
+
+    // (1) Find names of classes, interfaces and typedefs defined
+    //     in the global scope
     CollectNamedTypes rootCnt = new CollectNamedTypes(globalScope);
     if (externs != null) {
       new NodeTraversal(compiler, rootCnt).traverse(externs);
     }
     new NodeTraversal(compiler, rootCnt).traverse(root);
-    // Must happen after CollectNamedTypes and before ProcessScope
+    // (2) Replace each typedef with the type it aliases
     globalScope.resolveTypedefs(typeParser);
+    // (3) The bulk of the global-scope processing happens here:
+    //     - Create scopes for functions
+    //     - Declare properties on types
     ProcessScope rootPs = new ProcessScope(globalScope);
     if (externs != null) {
       new NodeTraversal(compiler, rootPs).traverse(externs);
     }
     new NodeTraversal(compiler, rootPs).traverse(root);
+    // (4) Things that must happen after the traversal of the scope
     rootPs.finishProcessingScope();
 
-    // loop through the workset (outer-to-inner scopes)
+    // (5) Repeat steps 1-4 for all the other scopes (outer-to-inner)
     while (!scopeWorkset.isEmpty()) {
       Scope s = scopeWorkset.removeFirst();
       Node scopeBody = s.getBody();
       new NodeTraversal(compiler, new CollectNamedTypes(s)).traverse(scopeBody);
-      // Must happen after CollectNamedTypes and before ProcessScope
       s.resolveTypedefs(typeParser);
       ProcessScope ps = new ProcessScope(s);
       new NodeTraversal(compiler, ps).traverse(scopeBody);
       ps.finishProcessingScope();
     }
 
-    // Report errors in the inheritance chain, after we're done constructing it.
+    // (6) Adjust types of properties based on inheritance information.
+    //     Report errors in the inheritance chain.
     reportInheritanceErrors();
 
     nominaltypesByNode = null;
     propertyDefs = null;
     for (Scope s : scopes) {
-      s.finalizeScope();
+      s.removeTmpData();
     }
     Map<Node, String> unknownTypes = typeParser.getUnknownTypesMap();
     for (Map.Entry<Node, String> unknownTypeEntry : unknownTypes.entrySet()) {
@@ -290,12 +298,12 @@ class GlobalTypeInfo implements CompilerPass {
       warnings.add(JSError.make(
           root, RhinoErrorReporter.BAD_JSDOC_ANNOTATION, warningText));
     }
-
+    typeParser = null;
     compiler.setSymbolTable(this);
-
     for (JSError warning : warnings) {
       compiler.report(warning);
     }
+    warnings = null;
   }
 
   private Collection<PropertyDef> getPropDefsFromInterface(
@@ -490,9 +498,9 @@ class GlobalTypeInfo implements CompilerPass {
   }
 
   /**
-   * Create scopes for functions within the given function.
-   * This involves naming the function, finding the formals, creating
-   * a new scope, and if it is a constructur, creating a new NominalType.
+   * Collects names of classes, interfaces and typedefs.
+   * This way, if a type name appears before its declaration, we know what
+   * it refers to.
    */
   private class CollectNamedTypes extends AbstractShallowCallback {
     private final Scope currentScope;
@@ -576,6 +584,7 @@ class GlobalTypeInfo implements CompilerPass {
      * We use a multimap so we can give all warnings rather than just the first.
      */
     private final Multimap<String, Node> undeclaredVars;
+    private Set<Node> lendsObjlits = Sets.newHashSet();
 
     ProcessScope(Scope currentScope) {
       this.currentScope = currentScope;
@@ -583,9 +592,56 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     void finishProcessingScope() {
+      for (Node objlit : lendsObjlits) {
+        processLendsNode(objlit);
+      }
+      lendsObjlits = null;
+
       for (Node nameNode : undeclaredVars.values()) {
         warnings.add(JSError.make(nameNode,
               VarCheck.UNDEFINED_VAR_ERROR, nameNode.getString()));
+      }
+    }
+
+    // @lends can lend properties to an object X being defined in the same
+    // statement as the @lends. To make sure that we've seen the definition of
+    // X, we process @lends annotations after we've traversed the scope.
+    void processLendsNode(Node objlit) {
+      JSDocInfo jsdoc = objlit.getJSDocInfo();
+      String lendsName = jsdoc.getLendsName();
+      Preconditions.checkNotNull(lendsName);
+      // TODO(dimvar): handle @lends for objects with qualified names
+      Preconditions.checkState(!lendsName.contains("."));
+      JSType borrowerType = currentScope.getDeclaredTypeOf(lendsName);
+      if (borrowerType == null || borrowerType.isUnknown()) {
+        warnings.add(JSError.make(objlit, TypedScopeCreator.LENDS_ON_NON_OBJECT,
+                lendsName, "unknown"));
+        return;
+      }
+      if (!borrowerType.isSubtypeOf(JSType.TOP_OBJECT)) {
+        warnings.add(JSError.make(objlit, TypedScopeCreator.LENDS_ON_NON_OBJECT,
+                lendsName, borrowerType.toString()));
+        return;
+      }
+      if (!currentScope.isNamespace(lendsName)) {
+        // TODO(dimvar): Handle @lends for constructors and prototypes
+        return;
+      }
+      for (Node prop : objlit.children()) {
+        String pname = NodeUtil.getObjectLitKeyName(prop);
+        QualifiedName qname = new QualifiedName(pname);
+        JSType propDeclType = declaredObjLitProps.get(prop);
+        if (propDeclType != null) {
+          currentScope.updateTypeOfLocal(lendsName,
+              borrowerType.withDeclaredProperty(qname, propDeclType, false));
+        } else {
+          JSType t = simpleInferExprType(prop.getFirstChild());
+          if (t == null) {
+            t = JSType.UNKNOWN;
+          }
+          currentScope.updateTypeOfLocal(
+              lendsName, borrowerType.withProperty(qname, t));
+        }
       }
     }
 
@@ -669,6 +725,11 @@ class GlobalTypeInfo implements CompilerPass {
           break;
 
         case Token.OBJECTLIT: {
+          JSDocInfo jsdoc = n.getJSDocInfo();
+          if (jsdoc != null && jsdoc.getLendsName() != null) {
+            lendsObjlits.add(n);
+          }
+
           for (Node prop : n.children()) {
             if (prop.getJSDocInfo() != null) {
               declaredObjLitProps.put(prop,
@@ -724,6 +785,9 @@ class GlobalTypeInfo implements CompilerPass {
 
     private boolean isStaticCtorProp(Node getProp, Scope s) {
       Preconditions.checkArgument(getProp.isGetProp());
+      if (!getProp.isQualifiedName()) {
+        return false;
+      }
       String receiverObjName = getProp.getFirstChild().getQualifiedName();
       return s.isLocalFunDef(receiverObjName) && s.getScope(receiverObjName)
           .getDeclaredType().getNominalType() != null;
@@ -757,7 +821,7 @@ class GlobalTypeInfo implements CompilerPass {
       } else {
         currentScope.addLocalFunDef(internalName, fnScope);
         if (fnName != null && fnName.contains(".")) {
-          // Qualified names will be removed in finalizeScope
+          // Qualified names will be removed in removeTmpData
           currentScope.addLocalFunDef(fnName, fnScope);
         }
       }
@@ -894,6 +958,14 @@ class GlobalTypeInfo implements CompilerPass {
         currentScope.updateTypeOfLocal(leftmost,
             currentType.withDeclaredProperty(
                 allButLeftmost, declType, isConst));
+      } else if (getProp.getParent().isAssign()) {
+        // Try to infer the prop type, but don't say that the prop is declared.
+        JSType t = simpleInferExprType(getProp.getParent().getLastChild());
+        if (t == null) {
+          t = JSType.UNKNOWN;
+        }
+        currentScope.updateTypeOfLocal(leftmost,
+            currentType.withProperty(allButLeftmost, t));
       } else {
         currentScope.updateTypeOfLocal(leftmost,
             currentType.withProperty(allButLeftmost, JSType.UNKNOWN));
@@ -1436,6 +1508,11 @@ class GlobalTypeInfo implements CompilerPass {
       return propType.isRecordType();
     }
 
+    private boolean isNamespace(String name) {
+      Preconditions.checkState(!name.contains("."));
+      return localNamespaces.contains(name);
+    }
+
     private boolean isVisibleInScope(String name) {
       Preconditions.checkNotNull(name);
       return isDefinedLocally(name) ||
@@ -1618,7 +1695,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
     }
 
-    // When debugging, this method can be called at the start of finalizeScope,
+    // When debugging, this method can be called at the start of removeTmpData,
     // to make sure everything is OK.
     private void sanityCheck() {
       Set<String> names;
@@ -1655,7 +1732,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
     }
 
-    private void finalizeScope() {
+    private void removeTmpData() {
       // sanityCheck();
       Iterator<String> it = localFunDefs.keySet().iterator();
       while (it.hasNext()) {

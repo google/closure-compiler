@@ -3583,6 +3583,12 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @type {string} */\n" +
         "ns.x = 'str';",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @const */ var ns = {};\n" +
+        "ns.prop = 1;\n" +
+        "function f() { var /** string */ s = ns.prop; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testNestedNamespaces() {
@@ -6657,5 +6663,33 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  function g(/** N */ obj) { obj - 5; }\n" +
         "}",
         NewTypeInference.INVALID_OPERAND_TYPE);
+  }
+
+  public void testLends() {
+    typeCheck(
+        "(/** @lends {InexistentType} */ { a: 1 });",
+        TypedScopeCreator.LENDS_ON_NON_OBJECT);
+
+    typeCheck(
+        "(/** @lends {number} */ { a: 1 });",
+        TypedScopeCreator.LENDS_ON_NON_OBJECT);
+
+    typeCheck(
+        "/** @const */ var ns = {};\n" +
+        "(/** @lends {ns} */ { /** @type {number} */ prop : 1 });\n" +
+        "function f() { ns.prop = 'str'; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "(/** @lends {ns} */ { /** @type {number} */ prop : 1 });\n" +
+        "/** @const */ var ns = {};\n" +
+        "function f() { ns.prop = 'str'; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @const */ var ns = {};\n" +
+        "(/** @lends {ns} */ { prop : 1 });\n" +
+        "function f() { var /** string */ s = ns.prop; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 }
