@@ -134,7 +134,7 @@ public class ObjectType {
     if (props.isEmpty()) {
       return this;
     }
-    PersistentMap<String, Property> pm = props;
+    PersistentMap<String, Property> pm = PersistentMap.create();
     for (Map.Entry<String, Property> entry : props.entrySet()) {
       pm = pm.with(entry.getKey(), entry.getValue().withLocation());
     }
