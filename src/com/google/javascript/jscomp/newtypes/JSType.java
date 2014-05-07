@@ -645,8 +645,12 @@ public class JSType {
   }
 
   public JSType withLocation(String location) {
+    if (Objects.equal(location, this.location)) {
+      return this;
+    }
+    String newLocation = location == null ? null : JSType.GENERIC_LOCATION;
     return new JSType(mask, location,
-        objs == null ? null : ObjectType.withLocation(objs),
+        objs == null ? null : ObjectType.withLocation(objs, newLocation),
         typeVar);
   }
 

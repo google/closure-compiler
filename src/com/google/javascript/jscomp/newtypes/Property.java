@@ -79,11 +79,11 @@ class Property {
     return declaredType;
   }
 
-  Property withLocation() {
+  Property withLocation(String location) {
     return new Property(
-        inferredType.withLocation(JSType.GENERIC_LOCATION),
+        inferredType.withLocation(location),
         declaredType == null ? null :
-        declaredType.withLocation(JSType.GENERIC_LOCATION),
+        declaredType.withLocation(location),
         attribute);
   }
 

@@ -6680,6 +6680,34 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
+  public void testLocationsDontSpill() {
+    typeCheck(
+        "function f(x, y) {\n" +
+        "  x < 'str';\n" +
+        "  function g(x) {\n" +
+        "    x -= 5;\n" +
+        "  }\n" +
+        "  g(y);\n" +
+        "  x = 5;\n" +
+        "  return y;\n" +
+        "}\n" +
+        "f(5,5);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "function f(x) {\n" +
+        "  x < 'str';\n" +
+        "  function g(x) {\n" +
+        "    x--; return x;\n" +
+        "  }\n" +
+        "  var y = g(5);\n" +
+        "  x = 5;\n" +
+        "  return y;\n" +
+        "}\n" +
+        "f(5);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
   public void testLends() {
     typeCheck(
         "(/** @lends {InexistentType} */ { a: 1 });",
