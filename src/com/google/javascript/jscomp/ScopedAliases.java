@@ -234,11 +234,11 @@ class ScopedAliases implements HotSwapCompilerPass {
       String typeName = aliasReference.getString();
       String aliasExpanded =
           Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
-      Preconditions.checkState(typeName.startsWith(aliasName));
+      Preconditions.checkState(typeName.startsWith(aliasName),
+          "%s must start with %s", typeName, aliasName);
       String replacement =
           aliasExpanded + typeName.substring(aliasName.length());
       aliasReference.setString(replacement);
-
     }
   }
 
@@ -586,8 +586,13 @@ class ScopedAliases implements HotSwapCompilerPass {
         // we only process that jsdoc once.
         JSDocInfo info = n.getJSDocInfo();
         if (info != null && !injectedDecls.contains(n)) {
-          for (Node node : info.getTypeNodes()) {
-            fixTypeNode(node);
+          if (parent.isStringKey() && info == parent.getJSDocInfo()) {
+            // Also skip this one, to avoid processing the same JSDocInfo twice:
+            // https://github.com/google/closure-compiler/issues/400
+          } else {
+            for (Node node : info.getTypeNodes()) {
+              fixTypeNode(node);
+            }
           }
         }
 
