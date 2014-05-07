@@ -57,8 +57,6 @@ import java.util.Set;
  *
  * Features left to implement:
  * - @enum
- * - @typedef
- * - @define
  * - @lends
  * - @private (maybe)
  * - @protected (maybe)
@@ -160,6 +158,11 @@ public class NewTypeInference implements CompilerPass {
           "JSC_CONST_REASSIGNED",
           "Cannot change the value of a constant.");
 
+  static final DiagnosticType NOT_A_CONSTRUCTOR =
+      DiagnosticType.warning(
+          "JSC_NOT_A_CONSTRUCTOR",
+          "Expected a constructor but found type {0}.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       CALL_FUNCTION_WITH_BOTTOM_FORMAL,
       CONST_REASSIGNED,
@@ -173,6 +176,7 @@ public class NewTypeInference implements CompilerPass {
       INVALID_OPERAND_TYPE,
       MISTYPED_ASSIGN_RHS,
       NON_NUMERIC_ARRAY_INDEX,
+      NOT_A_CONSTRUCTOR,
       NOT_UNIQUE_INSTANTIATION,
       POSSIBLY_INEXISTENT_PROPERTY,
       PROPERTY_ACCESS_ON_NONOBJECT,
@@ -184,7 +188,6 @@ public class NewTypeInference implements CompilerPass {
       TypeCheck.ILLEGAL_PROPERTY_CREATION,
       TypeCheck.IN_USED_WITH_STRUCT,
       TypeCheck.INEXISTENT_PROPERTY,
-      TypeCheck.NOT_A_CONSTRUCTOR,
       TypeCheck.NOT_CALLABLE,
       TypeCheck.WRONG_ARGUMENT_COUNT,
       TypeValidator.ILLEGAL_PROPERTY_ACCESS,
@@ -1380,7 +1383,7 @@ public class NewTypeInference implements CompilerPass {
           return analyzeCallNodeArgumentsFwd(expr, inEnv);
         } else if (expr.isNew() && !funType.isConstructor()) {
           warnings.add(JSError.make(
-              expr, TypeCheck.NOT_A_CONSTRUCTOR, funType.toString()));
+              expr, NOT_A_CONSTRUCTOR, funType.toString()));
           return analyzeCallNodeArgumentsFwd(expr, inEnv);
         }
         int maxArity = funType.getMaxArity();

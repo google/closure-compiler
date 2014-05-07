@@ -439,7 +439,9 @@ public final class NodeUtil {
 
       default:
         // function name() ...
-        return n.getFirstChild();
+        Node funNameNode = n.getFirstChild();
+        // Don't return the name node for anonymous functions
+        return funNameNode.getString().isEmpty() ? null : funNameNode;
     }
   }
 

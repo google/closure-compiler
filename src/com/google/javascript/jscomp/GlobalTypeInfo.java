@@ -149,7 +149,13 @@ class GlobalTypeInfo implements CompilerPass {
       "A typedef variable represents a type name; " +
       "it cannot be assigned a value.");
 
+  static final DiagnosticType ANONYMOUS_NOMINAL_TYPE =
+      DiagnosticType.warning(
+          "JSC_ANONYMOUS_NOMINAL_TYPE",
+          "Must specify a name when defining a class or interface.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
+      ANONYMOUS_NOMINAL_TYPE,
       CANNOT_INIT_TYPEDEF,
       CANNOT_OVERRIDE_FINAL_METHOD,
       CONSTRUCTOR_REQUIRED,
@@ -227,11 +233,8 @@ class GlobalTypeInfo implements CompilerPass {
     Preconditions.checkArgument(n.isFunction());
     Node fnNameNode = NodeUtil.getFunctionNameNode(n);
     // We don't want to use qualified names here
-    if (fnNameNode.isName()) {
-      String s = fnNameNode.getString();
-      if (s != null && !s.isEmpty()) {
-        return s;
-      }
+    if (fnNameNode != null && fnNameNode.isName()) {
+      return fnNameNode.getString();
     }
     return anonFunNames.get(n);
   }
@@ -547,6 +550,10 @@ class GlobalTypeInfo implements CompilerPass {
       }
       JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
       if (fnDoc != null && (fnDoc.isConstructor() || fnDoc.isInterface())) {
+        if (qname == null) {
+          warnings.add(JSError.make(fn, ANONYMOUS_NOMINAL_TYPE));
+          return;
+        }
         ImmutableList<String> typeParameters = fnDoc.getTemplateTypeNames();
         RawNominalType rawNominalType;
         if (fnDoc.isInterface()) {
@@ -1232,7 +1239,12 @@ class GlobalTypeInfo implements CompilerPass {
         ImmutableSet<NominalType> implementedIntfs =
             typeParser.getImplementedInterfaces(
                 fnDoc, ownerType, parentScope, typeParameters);
-        if (fnDoc.isConstructor()) {
+
+        if (ctorType == null &&
+            (fnDoc.isConstructor() || fnDoc.isInterface())) {
+          // Anonymous type, don't register it.
+          return builder.buildDeclaration();
+        } else if (fnDoc.isConstructor()) {
           String className = ctorType.toString();
           if (parentClass != null) {
             if (!ctorType.addSuperClass(parentClass)) {

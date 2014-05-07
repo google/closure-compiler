@@ -1909,6 +1909,21 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
             TypeCheck.NOT_CALLABLE, NewTypeInference.INVALID_ARGUMENT_TYPE));
   }
 
+  public void testAnonymousNominalType() {
+    typeCheck(
+        "function f() { return {}; }\n" +
+        "/** @constructor */\n" +
+        "f().Foo = function() {};",
+        GlobalTypeInfo.ANONYMOUS_NOMINAL_TYPE);
+
+    typeCheck(
+        "var x = {};\n" +
+        "function f() { return x; }\n" +
+        "/** @constructor */\n" +
+        "f().Foo = function() {};\n" +
+        "new (f().Foo)();",
+        GlobalTypeInfo.ANONYMOUS_NOMINAL_TYPE);
+  }
 
   public void testFoo() {
     typeCheck(
@@ -1917,7 +1932,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     typeCheck(
         "function Foo() {}; new Foo();",
-        TypeCheck.NOT_A_CONSTRUCTOR);
+        NewTypeInference.NOT_A_CONSTRUCTOR);
 
     checkNoWarnings(
         "/** @constructor */ function Foo() {};\n" +
