@@ -181,6 +181,11 @@ public class CommandLineRunnerTest extends TestCase {
     test("function f() { this.a = 3; }", CheckGlobalThis.GLOBAL_THIS);
   }
 
+  public void testCheckGlobalThisOnWithAdvanced() {
+    args.add("-O=ADVANCED");
+    test("function f() { this.a = 3; }", CheckGlobalThis.GLOBAL_THIS);
+  }
+
   public void testCheckGlobalThisOnWithErrorFlag() {
     args.add("--jscomp_error=globalThis");
     test("function f() { this.a = 3; }", CheckGlobalThis.GLOBAL_THIS);
@@ -254,6 +259,11 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testTypeCheckingOnWithVerbose() {
     args.add("--warning_level=VERBOSE");
+    test("function f(x) { return x; } f();", TypeCheck.WRONG_ARGUMENT_COUNT);
+  }
+
+  public void testTypeCheckingOnWithWVerbose() {
+    args.add("-W=VERBOSE");
     test("function f(x) { return x; } f();", TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
