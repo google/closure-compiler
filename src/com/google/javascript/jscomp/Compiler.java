@@ -108,6 +108,8 @@ public class Compiler extends AbstractCompiler {
   // Used in PerformanceTracker
   static final String PARSING_PASS_NAME = "parseInputs";
   static final String CROSS_MODULE_CODE_MOTION_NAME = "crossModuleCodeMotion";
+  static final String CROSS_MODULE_METHOD_MOTION_NAME =
+      "crossModuleMethodMotion";
 
   private static final String CONFIG_RESOURCE =
       "com.google.javascript.jscomp.parsing.ParserConfig";

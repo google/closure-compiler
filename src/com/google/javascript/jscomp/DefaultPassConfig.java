@@ -1976,7 +1976,7 @@ public class DefaultPassConfig extends PassConfig {
    * Move methods to a deeper common module
    */
   final PassFactory crossModuleMethodMotion =
-      new PassFactory("crossModuleMethodMotion", false) {
+      new PassFactory(Compiler.CROSS_MODULE_METHOD_MOTION_NAME, false) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new CrossModuleMethodMotion(

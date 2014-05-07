@@ -236,7 +236,12 @@ class PhaseOptimizer implements CompilerPass {
   private void maybeSanityCheck(Node externs, Node root) {
     if (sanityCheck != null) {
       sanityCheck.create(compiler).process(externs, root);
-      if (inLoop) {
+      // The cross-module passes are loopable and ran together, but do not
+      // participate in the other optimization loops, and are not relevant to
+      // tracking changed scopes.
+      if (inLoop &&
+          !currentPass.name.equals(Compiler.CROSS_MODULE_CODE_MOTION_NAME) &&
+          !currentPass.name.equals(Compiler.CROSS_MODULE_METHOD_MOTION_NAME)) {
         NodeUtil.verifyScopeChanges(mtoc, jsRoot, true, compiler);
       }
     }
@@ -262,13 +267,6 @@ class PhaseOptimizer implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
       logger.fine(name);
-      // Cross-module code motion is a loopable pass on its own, but does not
-      // participate in the other optimization loops, and is not relevant to
-      // tracking changed scopes.
-      // Don't set inLoop, to avoid the special sanity check.
-      if (name.equals(Compiler.CROSS_MODULE_CODE_MOTION_NAME)) {
-        inLoop = false;
-      }
       if (sanityCheck != null) {
         // Before running the pass, clone the AST so you can sanity-check the
         // changed AST against the clone after the pass finishes.
