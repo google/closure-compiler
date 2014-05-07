@@ -341,6 +341,19 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       }
     }
 
+    if (config.languageOut.isEmpty()) {
+      options.setLanguageOut(options.getLanguageIn());
+    } else {
+      CompilerOptions.LanguageMode languageMode =
+          CompilerOptions.LanguageMode.fromString(config.languageOut);
+      if (languageMode != null) {
+        options.setLanguageOut(languageMode);
+      } else {
+        throw new FlagUsageException("Unknown language `" + config.languageOut +
+                                     "' specified.");
+      }
+    }
+
     options.setUseNewParser(config.useNewParser);
 
     if (!config.outputManifests.isEmpty()) {
@@ -1948,13 +1961,15 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     private String languageIn = "";
+    private String languageOut = "";
 
-    /**
-     * Sets whether to accept input files as ECMAScript5 compliant.
-     * Otherwise, input files are treated as ECMAScript3 compliant.
-     */
     CommandLineConfig setLanguageIn(String languageIn) {
       this.languageIn = languageIn;
+      return this;
+    }
+
+    CommandLineConfig setLanguageOut(String languageOut) {
+      this.languageOut = languageOut;
       return this;
     }
 

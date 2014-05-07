@@ -394,10 +394,18 @@ public class CommandLineRunner extends
         usage = "Allows usage of const keyword.")
     private boolean acceptConstKeyword = false;
 
+    // TODO(tbreisacher): Add ES6 and ES6_STRICT to this usage string, once ES6
+    // support is stable enough for people to start using it.
     @Option(name = "--language_in",
         usage = "Sets what language spec that input sources conform. "
         + "Options: ECMASCRIPT3 (default), ECMASCRIPT5, ECMASCRIPT5_STRICT")
     private String languageIn = "ECMASCRIPT3";
+
+    @Option(name = "--language_out",
+        usage = "Sets what language spec the output should conform to. "
+        + " If omitted, defaults to the value of language_in. "
+        + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT")
+    private String languageOut = "";
 
     @Option(name = "--version",
         handler = BooleanOptionHandler.class,
@@ -860,6 +868,7 @@ public class CommandLineRunner extends
           .setOutputModuleDependencies(flags.outputModuleDependencies)
           .setAcceptConstKeyword(flags.acceptConstKeyword)
           .setLanguageIn(flags.languageIn)
+          .setLanguageOut(flags.languageOut)
           .setProcessCommonJSModules(flags.processCommonJsModules)
           .setCommonJSModulePathPrefix(flags.commonJsPathPrefix)
           .setTransformAMDToCJSModules(flags.transformAmdModules)

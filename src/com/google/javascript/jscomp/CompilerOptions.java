@@ -1573,11 +1573,14 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setLanguageIn(LanguageMode languageIn) {
     this.languageIn = languageIn;
-    this.languageOut = languageIn;
   }
 
   public LanguageMode getLanguageIn() {
     return languageIn;
+  }
+
+  public void setLanguageOut(LanguageMode languageOut) {
+    this.languageOut = languageOut;
   }
 
   public LanguageMode getLanguageOut() {
@@ -1692,10 +1695,6 @@ public class CompilerOptions implements Serializable, Cloneable {
       Map<String, CheckLevel> propertyInvalidationErrors) {
     this.propertyInvalidationErrors =
         Maps.newHashMap(propertyInvalidationErrors);
-  }
-
-  public void setLanguageOut(LanguageMode languageOut) {
-    this.languageOut = languageOut;
   }
 
   public void setIdeMode(boolean ideMode) {
