@@ -275,13 +275,13 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         case Token.THROW:
           return false;
         case Token.TRY:
-          /* Just before we are about to visit the second child of the TRY node,
-           * we know that we will be visiting either the CATCH or the FINALLY.
-           * In other words, we know that the post order traversal of the TRY
-           * block has been finished, no more exceptions can be caught by the
-           * handler at this TRY block and should be taken out of the stack.
+          /* When we are done with the TRY block and there is no FINALLY block,
+           * or done with both the TRY and CATCH block, then no more exceptions
+           * can be handled at this TRY statement, so it can be taken out of the
+           * stack.
            */
-          if (n == parent.getFirstChild().getNext()) {
+          if ((!NodeUtil.hasFinally(parent) && n == NodeUtil.getCatchBlock(parent))
+              || NodeUtil.isTryFinallyNode(parent, n)) {
             Preconditions.checkState(exceptionHandler.peek() == parent);
             exceptionHandler.pop();
           }
@@ -835,7 +835,18 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         Preconditions.checkState(handler.isTry());
         Node catchBlock = NodeUtil.getCatchBlock(handler);
 
-        if (!NodeUtil.hasCatchHandler(catchBlock)) { // No catch but a FINALLY.
+        boolean lastJumpInCatchBlock = false;
+        for (Node ancestor : lastJump.getAncestors()) {
+          if (ancestor == handler) {
+            break;
+          } else if (ancestor == catchBlock) {
+            lastJumpInCatchBlock = true;
+            break;
+          }
+        }
+
+        // No catch but a FINALLY, or lastJump is inside the catch block.
+        if (!NodeUtil.hasCatchHandler(catchBlock) || lastJumpInCatchBlock) {
           if (lastJump == cfgNode) {
             createEdge(cfgNode, Branch.ON_EX, handler.getLastChild());
           } else {

@@ -293,6 +293,46 @@ public class ControlFlowAnalysisTest extends TestCase {
     assertUpEdge(cfg, Token.BREAK, Token.BLOCK, Branch.UNCOND);
   }
 
+  public void testThrowInCatchBlock() {
+    String src = "try { throw ''; } catch (e) { throw e;} finally {}";
+    String expected = "digraph AST {\n" +
+    "  node [color=lightblue2, style=filled];\n" +
+    "  node0 [label=\"SCRIPT\"];\n" +
+    "  node1 [label=\"TRY\"];\n" +
+    "  node0 -> node1 [weight=1];\n" +
+    "  node2 [label=\"BLOCK\"];\n" +
+    "  node1 -> node2 [weight=1];\n" +
+    "  node3 [label=\"THROW\"];\n" +
+    "  node2 -> node3 [weight=1];\n" +
+    "  node4 [label=\"STRING\"];\n" +
+    "  node3 -> node4 [weight=1];\n" +
+    "  node5 [label=\"BLOCK\"];\n" +
+    "  node3 -> node5 [label=\"ON_EX\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+    "  node2 -> node3 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+    "  node1 -> node5 [weight=1];\n" +
+    "  node6 [label=\"CATCH\"];\n" +
+    "  node5 -> node6 [weight=1];\n" +
+    "  node7 [label=\"NAME\"];\n" +
+    "  node6 -> node7 [weight=1];\n" +
+    "  node8 [label=\"BLOCK\"];\n" +
+    "  node6 -> node8 [weight=1];\n" +
+    "  node9 [label=\"THROW\"];\n" +
+    "  node8 -> node9 [weight=1];\n" +
+    "  node10 [label=\"NAME\"];\n" +
+    "  node9 -> node10 [weight=1];\n" +
+    "  node11 [label=\"BLOCK\"];\n" +
+    "  node9 -> node11 [label=\"ON_EX\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+    "  node8 -> node9 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+    "  node6 -> node8 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+    "  node5 -> node6 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+    "  node1 -> node11 [weight=1];\n" +
+    "  node11 -> RETURN [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+    "  node1 -> node2 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+    "  node0 -> node1 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+    "}\n";
+    testCfg(src, expected);
+  }
+
   public void testBreakingTryBlock() {
     String src = "a: try { break a; } finally {} if(x) {}";
     ControlFlowGraph<Node> cfg = createCfg(src);

@@ -123,10 +123,12 @@ public class CheckUnreachableCodeTest extends CompilerTestCase {
     testSame("try { foo() } finally { bar() }");
     testSame("try { foo(); } catch (e) {e()} finally { bar() }");
     testSame("try { foo() } catch (e) {e()} finally { bar() }");
+    testSame("try { foo() } catch (e) { throw e; } finally { bar() }");
   }
 
   public void testUnreachableCatch() {
     assertUnreachable("try { var x = 0 } catch (e) { }");
+    assertUnreachable("try { } catch (e) { throw e; }");
   }
 
   public void testSpuriousBreak() {
