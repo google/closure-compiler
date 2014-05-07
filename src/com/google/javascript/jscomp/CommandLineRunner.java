@@ -728,6 +728,14 @@ public class CommandLineRunner extends
       flags.closureEntryPoint = Lists.newArrayList(
           ProcessCommonJSModules.toModuleName(flags.commonJsEntryModule));
     }
+    
+    if (!(flags.outputWrapper == null ||
+        flags.outputWrapper.contains(CommandLineRunner.OUTPUT_MARKER)))
+    {
+      err.println("ERROR - invalid output_wrapper specified. Missing '" +
+          CommandLineRunner.OUTPUT_MARKER + "'.");
+      isConfigValid = false;
+    }
 
     if (!isConfigValid || flags.displayHelp) {
       isConfigValid = false;
