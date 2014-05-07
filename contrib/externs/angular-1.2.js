@@ -1336,6 +1336,12 @@ angular.$injector.annotate = function(fn) {};
 angular.$injector.get = function(name) {};
 
 /**
+ * @param {string} name
+ * @return {boolean}
+ */
+angular.$injector.has = function(name) {};
+
+/**
  * @param {!Function} type
  * @param {Object=} opt_locals
  * @return {Object}
