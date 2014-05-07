@@ -1217,6 +1217,16 @@ public class CommandLineRunnerTest extends TestCase {
     args.add("--js_output_file=" + getFilename(0));
     test("", AbstractCommandLineRunner.OUTPUT_SAME_AS_INPUT_ERROR);
   }
+  
+  public void testOutputWrapperFlag() {
+    // if the output wrapper flag is specified without a valid output marker,
+    // ensure that the compiler displays an error and exits.
+    // See github issue 123
+    args.add("--output_wrapper=output");
+    assertFalse(
+        createCommandLineRunner(
+            new String[] {"function f() {}"}).shouldRunCompiler());
+  }
 
   /* Helper functions */
 

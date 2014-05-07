@@ -330,6 +330,9 @@ public final class CompileTask
             int suffixStart = pos + CommandLineRunner.OUTPUT_MARKER.length();
             String suffix = this.outputWrapper.substring(suffixStart);
             source.append(suffix);
+          } else {
+            throw new BuildException("Invalid output_wrapper specified. " +
+                "Missing '" + CommandLineRunner.OUTPUT_MARKER + "'.");
           }
         }
 
