@@ -2536,7 +2536,7 @@ google.maps.LocationElevationRequest = function() {};
 google.maps.LocationElevationRequest.prototype.locations;
 
 /**
- * @param {Array.<?>=} opt_array
+ * @param {Array=} opt_array
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -2555,7 +2555,7 @@ google.maps.MVCArray.prototype.forEach = function(callback) {};
 
 /**
  * @nosideeffects
- * @return {Array.<?>}
+ * @return {Array}
  */
 google.maps.MVCArray.prototype.getArray = function() {};
 
