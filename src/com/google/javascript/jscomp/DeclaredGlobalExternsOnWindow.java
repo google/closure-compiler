@@ -16,7 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 
 import java.util.LinkedHashSet;
@@ -31,7 +34,7 @@ class DeclaredGlobalExternsOnWindow
     implements CompilerPass {
 
   private final AbstractCompiler compiler;
-  private final Set<String> names = new LinkedHashSet<>();
+  private final Set<Node> nodes = new LinkedHashSet<>();
 
   public DeclaredGlobalExternsOnWindow(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -40,47 +43,66 @@ class DeclaredGlobalExternsOnWindow
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, externs, this);
-
     addWindowProperties();
   }
 
   private void addWindowProperties() {
-    if (names.size() > 0) {
-      Node declRoot = getSynthesizedExternsRoot();
-      for (String prop : names) {
-        addExtern(declRoot, prop);
+    if (nodes.size() > 0) {
+      for (Node node : nodes) {
+        addExtern(node);
       }
       compiler.reportCodeChange();
     }
   }
 
-  private static void addExtern(Node declRoot, String export) {
-    // TODO(johnlenz): add type declarations.
+  private static void addExtern(Node node) {
+    String name = node.getString();
+    JSDocInfo oldJSDocInfo = NodeUtil.getBestJSDocInfo(node);
 
-    Node name = IR.name("window");
-    Node string = IR.string(export);
-    Node getprop = IR.getprop(name, string);
-    Node propstmt = IR.exprResult(getprop);
+    Node window = IR.name("window");
+    Node string = IR.string(name);
+    Node getprop = IR.getprop(window, string);
+    Node newNode = getprop;
 
-    for (Node n : new Node[] {name, string, getprop, propstmt}) {
-      n.setStaticSourceFile(declRoot.getStaticSourceFile());
-      n.setInputId(declRoot.getInputId());
+    if (oldJSDocInfo != null) {
+      JSDocInfo jsDocInfo;
+
+      if (oldJSDocInfo.isConstructor() || oldJSDocInfo.isInterface()
+          || oldJSDocInfo.hasEnumParameterType()) {
+        Node nameNode = IR.name(name);
+        newNode = IR.assign(getprop, nameNode);
+
+        JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+        builder.recordSuppressions(ImmutableSet.of("duplicate"));
+        if (oldJSDocInfo.isConstructor()) {
+          builder.recordConstructor();
+        }
+        if (oldJSDocInfo.isInterface()) {
+          builder.recordInterface();
+        }
+        if (oldJSDocInfo.hasEnumParameterType()) {
+          builder.recordEnumParameterType  (oldJSDocInfo.getEnumParameterType());
+        }
+        jsDocInfo = builder.build(newNode);
+      } else {
+        jsDocInfo = oldJSDocInfo.clone();
+      }
+
+      jsDocInfo.setAssociatedNode(newNode);
+      newNode.setJSDocInfo(jsDocInfo);
     }
-    declRoot.addChildToBack(propstmt);
-  }
 
-  /** Lazily create a "new" externs root for undeclared variables. */
-  private Node getSynthesizedExternsRoot() {
-    return  compiler.getSynthesizedExternsInput().getAstRoot(compiler);
+    NodeUtil.setDebugInformation(newNode, node, name);
+    node.getParent().getParent().addChildToBack(IR.exprResult(newNode));
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isFunction()) {
-      names.add(n.getFirstChild().getString());
+      nodes.add(n.getFirstChild());
     } else if (n.isVar()) {
       for (Node c : n.children()) {
-        names.add(c.getString());
+        nodes.add(c);
       }
     }
   }

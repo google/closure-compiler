@@ -23,28 +23,84 @@ public class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
     return new DeclaredGlobalExternsOnWindow(compiler);
   }
 
-  public void testWindowProperty1() {
+  @Override
+  protected void setUp() {
     allowExternsChanges(true);
-    testExternChanges("var a", "", "window.a;var a");
+  }
+
+  @Override
+  protected int getNumRepetitions() {
+    return 1;
+  }
+
+  public void testWindowProperty1() {
+    testExternChanges("var a", "", "var a;window.a;");
   }
 
   public void testWindowProperty2() {
-    allowExternsChanges(true);
     testExternChanges("", "var a", "");
   }
 
   public void testWindowProperty3() {
-    allowExternsChanges(true);
-    testExternChanges("function f() {}", "var b", "window.f;function f(){}");
+    testExternChanges("function f() {}", "var b", "function f(){};window.f;");
   }
 
   public void testWindowProperty4() {
-    allowExternsChanges(true);
     testExternChanges("", "function f() {}", "");
   }
 
   public void testWindowProperty5() {
-    allowExternsChanges(true);
-    testExternChanges("var x = function f() {}", "var b", "window.x;var x=function f(){}");
+    testExternChanges("var x = function f() {}", "var b", "var x=function f(){};window.x;");
+  }
+
+  /**
+   * Test to make sure the compiler knows the type of "window.x"
+   * is the same as that of "x".
+   */
+  public void testWindowPropertyWithJsDoc() {
+    enableTypeCheck(CheckLevel.ERROR);
+    runTypeCheckAfterProcessing = true;
+
+    testSame(
+        "/** @type {string} */ var x;",
+        "/** @param {number} n*/\n" +
+        "function f(n) {}\n" +
+        "f(window.x);\n",
+        TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
+  public void testEnum() {
+    enableTypeCheck(CheckLevel.ERROR);
+    runTypeCheckAfterProcessing = true;
+
+    testSame(
+        "/** @enum {string} */ var Enum = {FOO: 'foo', BAR: 'bar'};",
+        "/** @param {Enum} e*/\n" +
+        "function f(e) {}\n" +
+        "f(window.Enum.FOO);\n",
+        null);
+  }
+
+  /**
+   * Test to make sure that if Foo is a constructor, Foo is considered
+   * to be the same type as window.Foo.
+   */
+  public void testConstructorIsSameType() {
+    enableTypeCheck(CheckLevel.ERROR);
+    runTypeCheckAfterProcessing = true;
+
+    testSame(
+        "/** @constructor */ function Foo() {}\n",
+        "/** @param {!window.Foo} f*/\n" +
+        "function bar(f) {}\n" +
+        "bar(new Foo());",
+        null);
+
+    testSame(
+        "/** @constructor */ function Foo() {}\n",
+        "/** @param {!Foo} f*/\n" +
+        "function bar(f) {}\n" +
+        "bar(new window.Foo());",
+        null);
   }
 }

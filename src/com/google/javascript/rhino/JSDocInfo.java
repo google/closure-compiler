@@ -384,6 +384,19 @@ public class JSDocInfo implements Serializable {
   // Visible for testing.
   public JSDocInfo() {}
 
+  public JSDocInfo clone() {
+    JSDocInfo other = new JSDocInfo();
+    other.info = this.info;
+    other.documentation = this.documentation;
+    other.visibility = this.visibility;
+    other.bitset = this.bitset;
+    other.type = this.type;
+    other.thisType = this.thisType;
+    other.includeDocumentation = this.includeDocumentation;
+    other.originalCommentPosition = this.originalCommentPosition;
+    return other;
+  }
+
   void setConsistentIdGenerator(boolean value) {
     setFlag(value, MASK_CONSISTIDGEN);
   }
@@ -1273,12 +1286,12 @@ public class JSDocInfo implements Serializable {
   /**
    * Gets the meaning specified by the {@code @meaning} annotation.
    *
-   * In localization systems, two messages with the same content but
+   * <p>In localization systems, two messages with the same content but
    * different "meanings" may be translated differently. By default, we
    * use the name of the variable that the message is initialized to as
    * the "meaning" of the message.
    *
-   * But some code generators (like Closure Templates) inject their own
+   * <p>But some code generators (like Closure Templates) inject their own
    * meaning with the jsdoc {@code @meaning} annotation.
    */
   public String getMeaning() {
@@ -1293,7 +1306,7 @@ public class JSDocInfo implements Serializable {
   /**
    * Gets the name we're lending to in a {@code @lends} annotation.
    *
-   * In many reflection APIs, you pass an anonymous object to a function,
+   * <p>In many reflection APIs, you pass an anonymous object to a function,
    * and that function mixes the anonymous object into another object.
    * The {@code @lends} annotation allows the type system to track
    * those property assignments.

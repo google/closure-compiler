@@ -286,6 +286,14 @@ class VarCheck extends AbstractPostOrderCallback implements
               }
             }
             break;
+         case Token.ASSIGN:
+            // Don't warn for the "window.foo = foo;" nodes added by
+            // DeclaredGlobalExternsOnWindow.
+            if (n == parent.getLastChild() && parent.getFirstChild().isGetProp()
+                && parent.getFirstChild().getLastChild().getString().equals(n.getString())) {
+              break;
+            }
+            // fall through
           default:
             t.report(n, NAME_REFERENCE_IN_EXTERNS_ERROR, n.getString());
 
