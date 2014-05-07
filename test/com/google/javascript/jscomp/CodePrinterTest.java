@@ -1268,6 +1268,11 @@ public class CodePrinterTest extends TestCase {
     assertPrintNumber("1E-6", 0.000001);
     assertPrintNumber("-0x38d7ea4c68001", -0x38d7ea4c68001L);
     assertPrintNumber("0x38d7ea4c68001", 0x38d7ea4c68001L);
+
+    assertPrintNumber("-1.01", -1.01);
+    assertPrintNumber("-.01", -0.01);
+    assertPrintNumber(".01", 0.01);
+    assertPrintNumber("1.01", 1.01);
   }
 
   // Make sure to test as both a String and a Node, because

@@ -269,7 +269,8 @@ abstract class CodeConsumer {
         addConstant(Long.toString(mantissa) + "E" + Integer.toString(exp));
       } else {
         long valueAbs = Math.abs(value);
-        if (Long.toHexString(valueAbs).length() + 2 <
+        if (valueAbs > 1000000000000L && // Values <1E12 are shorter in decimal
+            Long.toHexString(valueAbs).length() + 2 <
             Long.toString(valueAbs).length()) {
           addConstant((value < 0 ? "-" : "") + "0x" +
               Long.toHexString(valueAbs));
@@ -278,7 +279,8 @@ abstract class CodeConsumer {
         }
       }
     } else {
-      addConstant(String.valueOf(x).replace(".0E", "E"));
+      addConstant(String.valueOf(x).replace(".0E", "E").replaceFirst(
+          "^(-?)0\\.", "$1."));
     }
   }
 
