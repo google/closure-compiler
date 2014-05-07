@@ -77,11 +77,11 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
     // TODO(johnlenz): Fix this.
     checkDefinitionsInJs(
       "({'a' : 1}); o['a']",
-      ImmutableSet.<String>of("DEF STRING_KEY null -> NUMBER"));
+      ImmutableSet.of("DEF STRING_KEY null -> NUMBER"));
 
     checkDefinitionsInJs(
       "({1 : 1}); o[1]",
-      ImmutableSet.<String>of("DEF STRING_KEY null -> NUMBER"));
+      ImmutableSet.of("DEF STRING_KEY null -> NUMBER"));
 
     checkDefinitionsInJs(
         "var a = {b : 1}; a.b",
@@ -154,9 +154,10 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
                         "DEF NAME f -> FUNCTION"));
   }
 
+  private static final String DEF = "var f = function(arg1, arg2){}";
+  private static final String USE = "f(1, 2)";
+
   public void testFunctionArgumentsInExterns() throws Exception {
-    final String DEF = "var f = function(arg1, arg2){}";
-    final String USE = "f(1, 2)";
 
     // function arguments are definitions when they appear in source.
     checkDefinitionsInJs(

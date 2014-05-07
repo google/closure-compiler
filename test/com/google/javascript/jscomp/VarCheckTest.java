@@ -289,7 +289,7 @@ public class VarCheckTest extends CompilerTestCase {
     try {
       checkSynthesizedExtern("x", "");
     } catch (RuntimeException e) {
-      assertTrue(e.getMessage().indexOf("Unexpected variable x") != -1);
+      assertTrue(e.getMessage().contains("Unexpected variable x"));
     }
   }
 
@@ -372,7 +372,7 @@ public class VarCheckTest extends CompilerTestCase {
         ProcessClosurePrimitives.MISSING_PROVIDE_ERROR);
   }
 
-  private final static class VariableTestCheck implements CompilerPass {
+  private static final class VariableTestCheck implements CompilerPass {
 
     final AbstractCompiler compiler;
     VariableTestCheck(AbstractCompiler compiler) {

@@ -35,7 +35,7 @@ public class GraphPrunerTest extends TestCase {
     graph.connect("B", "--", "C");
 
     DiGraph<String, String> pruned =
-        new GraphPruner<String, String>(graph).prune(
+        new GraphPruner<>(graph).prune(
             Predicates.in(Lists.newArrayList("A", "C")));
     assertEquals(2, pruned.getNodes().size());
     assertTrue(pruned.isConnectedInDirection("A", "C"));
@@ -50,7 +50,7 @@ public class GraphPrunerTest extends TestCase {
     graph.connect("C", "--", "B");
 
     DiGraph<String, String> pruned =
-        new GraphPruner<String, String>(graph).prune(
+        new GraphPruner<>(graph).prune(
             Predicates.in(Lists.newArrayList("A", "C")));
     assertEquals(2, pruned.getNodes().size());
     assertFalse(pruned.isConnectedInDirection("A", "C"));
@@ -68,7 +68,7 @@ public class GraphPrunerTest extends TestCase {
     graph.connect("A", "--", "D");
 
     DiGraph<String, String> pruned =
-        new GraphPruner<String, String>(graph).prune(
+        new GraphPruner<>(graph).prune(
             Predicates.not(Predicates.equalTo("C")));
     assertEquals(3, pruned.getNodes().size());
     assertTrue(pruned.isConnectedInDirection("A", "D"));
@@ -87,7 +87,7 @@ public class GraphPrunerTest extends TestCase {
     graph.connect("C", "--", "D");
 
     DiGraph<String, String> pruned =
-        new GraphPruner<String, String>(graph).prune(
+        new GraphPruner<>(graph).prune(
             Predicates.not(Predicates.in(Lists.newArrayList("B", "C"))));
     assertEquals(2, pruned.getNodes().size());
     assertTrue(pruned.isConnectedInDirection("A", "D"));
@@ -107,7 +107,7 @@ public class GraphPrunerTest extends TestCase {
     graph.connect("D", "--", "B");
 
     DiGraph<String, String> pruned =
-        new GraphPruner<String, String>(graph).prune(
+        new GraphPruner<>(graph).prune(
             Predicates.not(Predicates.in(Lists.newArrayList("B", "C", "D"))));
     assertEquals(2, pruned.getNodes().size());
     assertTrue(pruned.isConnectedInDirection("A", "E"));

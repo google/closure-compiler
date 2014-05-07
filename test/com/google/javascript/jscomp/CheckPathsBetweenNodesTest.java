@@ -18,9 +18,9 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
+import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import junit.framework.TestCase;
 
 /**
@@ -252,7 +252,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
     g.connect("4b", "-", "5");
 
     CountingPredicate<String> p =
-      new CountingPredicate<String>(Predicates.equalTo("4a"));
+      new CountingPredicate<>(Predicates.equalTo("4a"));
 
     assertTrue(createTest(g, "1", "5", p, ALL_EDGE)
         .somePathsSatisfyPredicate());
@@ -291,7 +291,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
       String exit,
       Predicate<String> nodePredicate,
       Predicate<DiGraphEdge<String, String>> edgePredicate) {
-    return new CheckPathsBetweenNodes<String, String>(graph,
+    return new CheckPathsBetweenNodes<>(graph,
         graph.getDirectedGraphNode(entry), graph.getDirectedGraphNode(exit),
         nodePredicate, edgePredicate);
   }
@@ -303,7 +303,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
         String exit,
         Predicate<String> nodePredicate,
         Predicate<DiGraphEdge<String, String>> edgePredicate) {
-    return new CheckPathsBetweenNodes<String, String>(graph,
+    return new CheckPathsBetweenNodes<>(graph,
         graph.getDirectedGraphNode(entry), graph.getDirectedGraphNode(exit),
         nodePredicate, edgePredicate, false);
   }
@@ -328,9 +328,8 @@ public class CheckPathsBetweenNodesTest extends TestCase {
     }
     @Override
     public boolean apply(T input) {
-      count ++;
+      count++;
       return delegate.apply(input);
     }
-
   }
 }

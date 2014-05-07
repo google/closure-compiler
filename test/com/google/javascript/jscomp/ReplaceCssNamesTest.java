@@ -284,7 +284,7 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
   }
 
   public void testWhitelistByPart() {
-    whitelist = ImmutableSet.<String>of("goog", "elephant");
+    whitelist = ImmutableSet.of("goog", "elephant");
     test("var x = goog.getCssName('goog')",
          "var x = 'goog'");
     test("var x = goog.getCssName('elephant')",
@@ -295,14 +295,14 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
   }
 
   public void testWhitelistByWhole() {
-    whitelist = ImmutableSet.<String>of("long-prefix");
+    whitelist = ImmutableSet.of("long-prefix");
     renamingMap = getFullMap();
     test("var x = goog.getCssName('long-prefix')",
          "var x = 'long-prefix'");
   }
 
   public void testWhitelistWithDashes() {
-    whitelist = ImmutableSet.<String>of("goog-elephant");
+    whitelist = ImmutableSet.of("goog-elephant");
     test("var x = goog.getCssName('goog')",
         "var x = 'g'");
     test("var x = goog.getCssName('elephant')",

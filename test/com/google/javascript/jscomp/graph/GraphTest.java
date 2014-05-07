@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.graph.UndiGraph;
 
 import junit.framework.TestCase;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -371,14 +372,12 @@ public class GraphTest extends TestCase {
 
   private <T extends GraphNode<String, String>> void assertSetEquals(
       List<T> list, String ... targets) {
-    Set<String> set = new HashSet<String>();
+    Set<String> set = new HashSet<>();
     for (GraphNode<String, String> node : list) {
       set.add(node.getValue());
     }
-    Set<String> otherSet = new HashSet<String>();
-    for (String target : targets) {
-      otherSet.add(target);
-    }
+    Set<String> otherSet = new HashSet<>();
+    Collections.addAll(otherSet, targets);
     assertTrue(otherSet.equals(set));
   }
 }

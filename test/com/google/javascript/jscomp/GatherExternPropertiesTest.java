@@ -183,7 +183,7 @@ public class GatherExternPropertiesTest extends CompilerTestCase {
         "/** @typedef {{bar: string, baz: string}} */ var NonExternType;",
         null);
     // Check that no properties were found.
-    assertEquals(Sets.newHashSet(), getLastCompiler().getExternProperties());
+    assertTrue(getLastCompiler().getExternProperties().isEmpty());
   }
 
   private void assertExternProperties(String externs, String... properties) {

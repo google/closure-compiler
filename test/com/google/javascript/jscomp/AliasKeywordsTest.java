@@ -69,10 +69,10 @@ public class AliasKeywordsTest extends CompilerTestCase {
     return generateCode(keyword, numReps, "");
   }
 
-  private static String generatePreProcessThrowCode(int repititions,
+  private static String generatePreProcessThrowCode(int repetitions,
                                                     String whatToThrow) {
     StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < repititions; i++) {
+    for (int i = 0; i < repetitions; i++) {
       sb.append("throw ");
       sb.append(whatToThrow);
       sb.append(";");
@@ -163,11 +163,11 @@ public class AliasKeywordsTest extends CompilerTestCase {
   }
 
   public void testAliasThrowKeywordLiteral() {
-    int repitions = Math.max(ENOUGH_TO_ALIAS_THROW, ENOUGH_TO_ALIAS_LITERAL);
+    int repetitions = Math.max(ENOUGH_TO_ALIAS_THROW, ENOUGH_TO_ALIAS_LITERAL);
     String afterCode = generatePostProcessThrowCode(
-          repitions, "var JSCompiler_alias_TRUE=true;",
+          repetitions, "var JSCompiler_alias_TRUE=true;",
           AliasKeywords.ALIAS_TRUE);
-    test(generatePreProcessThrowCode(repitions, "true"), afterCode);
+    test(generatePreProcessThrowCode(repetitions, "true"), afterCode);
   }
 
   public void testExistingAliasDefinitionFails() {
@@ -176,8 +176,7 @@ public class AliasKeywordsTest extends CompilerTestCase {
       fail();
     } catch (RuntimeException expected) {
       // expected exception
-      assertTrue(-1 != expected.getMessage().indexOf(
-              "Existing alias definition"));
+      assertTrue(expected.getMessage().contains("Existing alias definition"));
     }
   }
 

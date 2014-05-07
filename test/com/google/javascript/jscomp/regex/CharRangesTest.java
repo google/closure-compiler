@@ -16,12 +16,13 @@
 
 package com.google.javascript.jscomp.regex;
 
-import java.util.BitSet;
-import java.util.Random;
-
 import com.google.javascript.jscomp.regex.CharRanges;
 
 import junit.framework.TestCase;
+
+import java.util.BitSet;
+import java.util.Random;
+
 
 public class CharRangesTest extends TestCase {
 
@@ -63,11 +64,11 @@ public class CharRangesTest extends TestCase {
   }
 
   public final void testCharRangesFactories() {
-    CharRanges isbs = CharRanges.withMembers(new int[] { 0, 1, 4, 9 });
-    CharRanges isbs2 = CharRanges.withMembers(new int[] { 0, 1, 4, 9 });
+    CharRanges isbs = CharRanges.withMembers(0, 1, 4, 9);
+    CharRanges isbs2 = CharRanges.withMembers(0, 1, 4, 9);
     assertEquals("[0x0-0x1 0x4 0x9]", isbs.toString());
 
-    CharRanges esbs = CharRanges.withMembers(new int[0]);
+    CharRanges esbs = CharRanges.withMembers();
 
     assertEquals(isbs, isbs);
     assertEquals(isbs, isbs2);
@@ -81,28 +82,28 @@ public class CharRangesTest extends TestCase {
 
   public final void testRangeConstructor() {
     try {
-      CharRanges.withRanges(new int[] { 1 });
+      CharRanges.withRanges(1);
       fail("Mismatched ranges");
     } catch (IllegalArgumentException ex) {
       // pass
     }
 
     try {
-      CharRanges.withRanges(new int[] { 1, 4, 4, 5 });
+      CharRanges.withRanges(1, 4, 4, 5);
       fail("Discontiguous ranges");
     } catch (IllegalArgumentException ex) {
       // pass
     }
 
     try {
-      CharRanges.withRanges(new int[] { 4, 5, 1, 3 });
+      CharRanges.withRanges(4, 5, 1, 3);
       fail("Misordered ranges");
     } catch (IllegalArgumentException ex) {
       // pass
     }
 
     try {
-      CharRanges.withRanges(new int[] { 0, 0 });
+      CharRanges.withRanges(0, 0);
       fail("Empty range");
     } catch (IllegalArgumentException ex) {
       // pass
@@ -110,10 +111,10 @@ public class CharRangesTest extends TestCase {
   }
 
   public final void testDupeMembers() {
-    CharRanges sbs1 = CharRanges.withMembers(new int[] { 0, 1, 4, 9 });
+    CharRanges sbs1 = CharRanges.withMembers(0, 1, 4, 9);
     assertEquals(sbs1.toString(), "[0x0-0x1 0x4 0x9]", sbs1.toString());
 
-    CharRanges sbs2 = CharRanges.withMembers(new int[] { 9, 1, 4, 1, 0 });
+    CharRanges sbs2 = CharRanges.withMembers(9, 1, 4, 1, 0);
     assertEquals(sbs2.toString(), "[0x0-0x1 0x4 0x9]", sbs2.toString());
 
     assertEquals(sbs1, sbs2);
@@ -131,13 +132,11 @@ public class CharRangesTest extends TestCase {
     // a      AAAAAAAAA      A A A A   A AAA   AAA A A
     // b    BBB  BBB  BBB BBB        B B    BBB
     // a-b     DD   DD       D D D D     DDD   DDD D D
-    CharRanges a = CharRanges.withRanges(new int[] {
-        0x03, 0x0C, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
-        0x1C, 0x1D, 0x1E, 0x21, 0x24, 0x27, 0x28, 0x29, 0x2A, 0x2B });
-    CharRanges b = CharRanges.withRanges(new int[] {
-        0x01, 0x04, 0x06, 0x09, 0x0B, 0x0E, 0x0F, 0x12, 0x1A, 0x1B,
-        0x1C, 0x1D, 0x21, 0x24 });
-    CharRanges empty = CharRanges.withMembers(new int[0]);
+    CharRanges a = CharRanges.withRanges(0x03, 0x0C, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
+        0x1C, 0x1D, 0x1E, 0x21, 0x24, 0x27, 0x28, 0x29, 0x2A, 0x2B);
+    CharRanges b = CharRanges.withRanges(0x01, 0x04, 0x06, 0x09, 0x0B, 0x0E, 0x0F, 0x12, 0x1A, 0x1B,
+        0x1C, 0x1D, 0x21, 0x24);
+    CharRanges empty = CharRanges.withMembers();
 
     assertEquals(empty, empty.union(empty));
     assertEquals(a, a.union(empty));
@@ -188,13 +187,11 @@ public class CharRangesTest extends TestCase {
     //    AAAAAAAAA      A A A A   A AAA   AAA A A
     //  BBB  BBB  BBB BBB        B B    BBB
     //  UUUUUUUUUUUUU UUUU U U U U U UUUUUUUUU U U
-    CharRanges a = CharRanges.withRanges(new int[] {
-        0x03, 0x0C, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
-        0x1C, 0x1D, 0x1E, 0x21, 0x24, 0x27, 0x28, 0x29, 0x2A, 0x2B });
-    CharRanges b = CharRanges.withRanges(new int[] {
-        0x01, 0x04, 0x06, 0x09, 0x0B, 0x0E, 0x0F, 0x12, 0x1A, 0x1B,
-        0x1C, 0x1D, 0x21, 0x24 });
-    CharRanges empty = CharRanges.withMembers(new int[0]);
+    CharRanges a = CharRanges.withRanges(0x03, 0x0C, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
+        0x1C, 0x1D, 0x1E, 0x21, 0x24, 0x27, 0x28, 0x29, 0x2A, 0x2B);
+    CharRanges b = CharRanges.withRanges(0x01, 0x04, 0x06, 0x09, 0x0B, 0x0E, 0x0F, 0x12, 0x1A, 0x1B,
+        0x1C, 0x1D, 0x21, 0x24);
+    CharRanges empty = CharRanges.withMembers();
 
     assertEquals(empty, empty.union(empty));
     assertEquals(a, a.union(empty));

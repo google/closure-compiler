@@ -57,7 +57,7 @@ public class PeepholeOptimizationsPassTest extends CompilerTestCase {
    * optimizations are turned on.
    */
   public void testEmptyPass() {
-    currentPeepholePasses = ImmutableList.<AbstractPeepholeOptimization>of();
+    currentPeepholePasses = ImmutableList.of();
 
     testSame("var x; var y;");
   }
@@ -108,8 +108,7 @@ public class PeepholeOptimizationsPassTest extends CompilerTestCase {
     };
 
     currentPeepholePasses =
-      ImmutableList.<
-       AbstractPeepholeOptimization>of(note1Applied, note2Applied);
+      ImmutableList.of(note1Applied, note2Applied);
 
     test("var x; var y", "var x; var y");
 
@@ -241,17 +240,17 @@ public class PeepholeOptimizationsPassTest extends CompilerTestCase {
    * second wants to remove (the now nonexistent) parent of that node.
    */
   public void testOptimizationsRemoveParentAfterRemoveChild() {
-    currentPeepholePasses = ImmutableList.<AbstractPeepholeOptimization>of(
-          new RemoveNodesNamedXOptimization(),
-          new RemoveParentVarsForNodesNamedX());
+    currentPeepholePasses = ImmutableList.of(
+        new RemoveNodesNamedXOptimization(),
+        new RemoveParentVarsForNodesNamedX());
 
     test("var x,y; var z;", "var y; var z;");
   }
 
   public void testOptimizationReplacingNode() {
-    currentPeepholePasses = ImmutableList.<AbstractPeepholeOptimization>of(
-          new RenameYToX(),
-          new RemoveParentVarsForNodesNamedX());
+    currentPeepholePasses = ImmutableList.of(
+        new RenameYToX(),
+        new RemoveParentVarsForNodesNamedX());
 
     test("var y; var z;", "var z;");
   }

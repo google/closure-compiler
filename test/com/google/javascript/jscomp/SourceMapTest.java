@@ -16,13 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.SourceMapConsumer;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapTestCase;
 import com.google.javascript.jscomp.SourceMap.Format;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,9 +38,8 @@ public class SourceMapTest extends SourceMapTestCase {
   private List<SourceMap.LocationMapping> mappings;
 
   public void testPrefixReplacement1() throws IOException {
-    mappings = new ArrayList<SourceMap.LocationMapping>();
     // mapping can be used to remove a prefix
-    mappings.add(new SourceMap.LocationMapping("pre/", ""));
+    mappings = ImmutableList.of(new SourceMap.LocationMapping("pre/", ""));
     checkSourceMap2("alert(1);", "pre/file1", "alert(2);", "pre/file2" , "{\n" +
         "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
@@ -52,9 +51,8 @@ public class SourceMapTest extends SourceMapTestCase {
   }
 
   public void testPrefixReplacement2() throws IOException {
-    mappings = new ArrayList<SourceMap.LocationMapping>();
     // mapping can be used to replace a prefix
-    mappings.add(new SourceMap.LocationMapping("pre/file", "src"));
+    mappings = ImmutableList.of(new SourceMap.LocationMapping("pre/file", "src"));
     checkSourceMap2("alert(1);", "pre/file1", "alert(2);", "pre/file2" , "{\n" +
         "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
@@ -66,10 +64,9 @@ public class SourceMapTest extends SourceMapTestCase {
   }
 
   public void testPrefixReplacement3() throws IOException {
-    mappings = new ArrayList<SourceMap.LocationMapping>();
     // multiple mappings can be applied
-    mappings.add(new SourceMap.LocationMapping("file1", "x"));
-    mappings.add(new SourceMap.LocationMapping("file2", "y"));
+    mappings = ImmutableList.of(new SourceMap.LocationMapping("file1", "x"),
+        new SourceMap.LocationMapping("file2", "y"));
     checkSourceMap2("alert(1);", "file1", "alert(2);", "file2" , "{\n" +
         "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
@@ -81,10 +78,9 @@ public class SourceMapTest extends SourceMapTestCase {
   }
 
   public void testPrefixReplacement4() throws IOException {
-    mappings = new ArrayList<SourceMap.LocationMapping>();
     // first match wins
-    mappings.add(new SourceMap.LocationMapping("file1", "x"));
-    mappings.add(new SourceMap.LocationMapping("file", "y"));
+    mappings = ImmutableList.of(new SourceMap.LocationMapping("file1", "x"),
+        new SourceMap.LocationMapping("file", "y"));
     checkSourceMap2("alert(1);", "file1", "alert(2);", "file2" , "{\n" +
         "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +

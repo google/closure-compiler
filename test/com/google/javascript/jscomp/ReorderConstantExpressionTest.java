@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 /**
- * Unit test for {@ReorderConstantExpression}
+ * Unit test for {@link ReorderConstantExpression}
  *
  */
 public class ReorderConstantExpressionTest extends CompilerTestCase {

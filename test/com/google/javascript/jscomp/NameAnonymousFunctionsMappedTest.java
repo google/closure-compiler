@@ -66,7 +66,7 @@ public class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
   }
 
   public void testSimpleVarAssignment2() {
-    previous = VariableMap.fromMap(ImmutableMap.<String,String>of(
+    previous = VariableMap.fromMap(ImmutableMap.of(
         "a", "previous"));
 
     test("var a = function() { return 1; }",
@@ -76,7 +76,7 @@ public class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
   }
 
   public void testSimpleVarAssignment3() {
-    previous = VariableMap.fromMap(ImmutableMap.<String,String>of(
+    previous = VariableMap.fromMap(ImmutableMap.of(
         "unused", "$"));
 
     test("var fn = function() { return 1; }",

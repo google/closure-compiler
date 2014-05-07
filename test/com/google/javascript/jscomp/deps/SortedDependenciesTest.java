@@ -114,7 +114,7 @@ public class SortedDependenciesTest extends TestCase {
         "c", "c", provides("c"), requires("b"));
 
     try {
-      new SortedDependencies<SimpleDependencyInfo>(
+      new SortedDependencies<>(
           Lists.newArrayList(a, b, c));
       fail("expected exception");
     } catch (CircularDependencyException e) {
@@ -152,7 +152,7 @@ public class SortedDependenciesTest extends TestCase {
       List<SimpleDependencyInfo> expected,
       List<SimpleDependencyInfo> shuffled) throws Exception {
     SortedDependencies<SimpleDependencyInfo> sorted =
-        new SortedDependencies<SimpleDependencyInfo>(shuffled);
+        new SortedDependencies<>(shuffled);
     assertEquals(expected, sorted.getSortedList());
   }
 
@@ -161,7 +161,7 @@ public class SortedDependenciesTest extends TestCase {
       List<SimpleDependencyInfo> shuffled,
       List<SimpleDependencyInfo> roots) throws Exception {
     SortedDependencies<SimpleDependencyInfo> sorted =
-        new SortedDependencies<SimpleDependencyInfo>(shuffled);
+        new SortedDependencies<>(shuffled);
     assertEquals(expected, sorted.getSortedDependenciesOf(roots));
   }
 

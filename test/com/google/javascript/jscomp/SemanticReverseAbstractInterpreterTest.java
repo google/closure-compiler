@@ -480,7 +480,7 @@ public class SemanticReverseAbstractInterpreterTest
         Token.EQ,
         new Node(Token.TYPEOF, createVar(
             blind, "a", createUnionType(
-                U2U_CONSTRUCTOR_TYPE,NUMBER_STRING_BOOLEAN))),
+                U2U_CONSTRUCTOR_TYPE, NUMBER_STRING_BOOLEAN))),
         Node.newString("function"),
         Sets.newHashSet(
             new TypedName("a", U2U_CONSTRUCTOR_TYPE)),
@@ -592,7 +592,7 @@ public class SemanticReverseAbstractInterpreterTest
   private Node createVar(FlowScope scope, String name, JSType type) {
     Node n = Node.newString(Token.NAME, name);
     functionScope.declare(name, n, null, null);
-    ((LinkedFlowScope) scope).inferSlotType(name, type);
+    scope.inferSlotType(name, type);
     n.setJSType(type);
     return n;
   }

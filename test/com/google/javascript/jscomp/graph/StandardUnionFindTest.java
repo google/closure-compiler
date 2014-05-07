@@ -35,7 +35,7 @@ public class StandardUnionFindTest extends TestCase {
   private StandardUnionFind<String> union;
 
   @Override protected void setUp() {
-    union = new StandardUnionFind<String>();
+    union = new StandardUnionFind<>();
   }
 
   public void testEmpty() {
@@ -83,7 +83,7 @@ public class StandardUnionFindTest extends TestCase {
     try {
       union.find("Z");
       fail("find() on unknown element should not be allowed.");
-    } catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException expected) {
     }
   }
 
@@ -126,7 +126,7 @@ public class StandardUnionFindTest extends TestCase {
     try {
       union.findAll("Z");
       fail("findAll() on unknown element should not be allowed.");
-    } catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException expected) {
     }
   }
 
@@ -181,7 +181,7 @@ public class StandardUnionFindTest extends TestCase {
     union.union("A", "B");
     union.union("B", "Z");
     union.union("X", "Y");
-    UnionFind<String> copy = new StandardUnionFind<String>(union);
+    UnionFind<String> copy = new StandardUnionFind<>(union);
     assertContentsAnyOrder(copy.findAll("Z"), "A", "B", "Z");
     assertContentsAnyOrder(copy.findAll("X"), "X", "Y");
   }
@@ -190,7 +190,7 @@ public class StandardUnionFindTest extends TestCase {
     union.union("A", "B");
     union.union("X", "Y");
     union.union("A", "C");
-    UnionFind<String> copy = new StandardUnionFind<String>(union);
+    UnionFind<String> copy = new StandardUnionFind<>(union);
     copy.union("A", "D");
     assertContentsAnyOrder(copy.findAll("D"), "A", "B", "C", "D");
     assertContentsAnyOrder(union.findAll("A"), "A", "B", "C");
@@ -235,6 +235,6 @@ public class StandardUnionFindTest extends TestCase {
    */
   private static void assertContentsAnyOrder(
       Iterable<?> actual, Object... expected) {
-    assertContentsAnyOrder((String) null, actual, expected);
+    assertContentsAnyOrder(null, actual, expected);
   }
 }

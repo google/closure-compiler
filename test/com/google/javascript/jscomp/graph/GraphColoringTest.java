@@ -17,12 +17,11 @@
 package com.google.javascript.jscomp.graph;
 
 import com.google.javascript.jscomp.graph.Graph;
-import com.google.javascript.jscomp.graph.GraphColoring;
-import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
-import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.Graph.GraphEdge;
+import com.google.javascript.jscomp.graph.GraphColoring;
 import com.google.javascript.jscomp.graph.GraphColoring.Color;
 import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
+import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
 
 import junit.framework.TestCase;
 
@@ -40,7 +39,7 @@ public class GraphColoringTest extends TestCase {
       graph.createNode("Node " + i);
       // All node with same color.
       GraphColoring<String, String> coloring =
-          new GreedyGraphColoring<String, String>(graph);
+          new GreedyGraphColoring<>(graph);
       assertEquals(1, coloring.color());
       validateColoring(graph);
       for (int j = 0; j < i; j++) {
@@ -55,7 +54,7 @@ public class GraphColoringTest extends TestCase {
     graph.createNode("B");
     graph.connect("A", "--", "B");
     GraphColoring<String, String> coloring =
-        new GreedyGraphColoring<String, String>(graph);
+        new GreedyGraphColoring<>(graph);
     assertEquals(2, coloring.color());
     validateColoring(graph);
     assertEquals("A", coloring.getPartitionSuperNode("A"));
@@ -72,7 +71,7 @@ public class GraphColoringTest extends TestCase {
     graph.connect("B", "--", "C");
     graph.connect("B", "--", "D");
     GraphColoring<String, String> coloring =
-        new GreedyGraphColoring<String, String>(graph);
+        new GreedyGraphColoring<>(graph);
     assertEquals(2, coloring.color());
     validateColoring(graph);
     assertEquals("A", coloring.getPartitionSuperNode("A"));
@@ -93,7 +92,7 @@ public class GraphColoringTest extends TestCase {
       }
     }
     GraphColoring<String, String> coloring =
-        new GreedyGraphColoring<String, String>(graph);
+        new GreedyGraphColoring<>(graph);
     assertEquals(count, coloring.color());
     validateColoring(graph);
     for (int i = 0; i < count; i++) {
@@ -110,7 +109,7 @@ public class GraphColoringTest extends TestCase {
       graph.connect("Center", null, "Node " + i);
     }
     GraphColoring<String, String> coloring =
-        new GreedyGraphColoring<String, String>(graph);
+        new GreedyGraphColoring<>(graph);
     assertEquals(2, coloring.color());
     validateColoring(graph);
     assertEquals("Center", coloring.getPartitionSuperNode("Center"));
@@ -135,7 +134,7 @@ public class GraphColoringTest extends TestCase {
         }
       }
     }
-    assertEquals(count, new GreedyGraphColoring<String, String>(graph).color());
+    assertEquals(count, new GreedyGraphColoring<>(graph).color());
     validateColoring(graph);
 
     // Connect the two cliques.
@@ -146,7 +145,7 @@ public class GraphColoringTest extends TestCase {
     // If we circularly shift the colors of one of the graph by 1, we can
     // connect the isomorphic nodes and still have a valid coloring in the
     // resulting graph.
-    assertEquals(count, new GreedyGraphColoring<String, String>(graph).color());
+    assertEquals(count, new GreedyGraphColoring<>(graph).color());
     validateColoring(graph);
   }
 
@@ -171,7 +170,7 @@ public class GraphColoringTest extends TestCase {
       }
     };
     GraphColoring<String, String> coloring =
-        new GreedyGraphColoring<String, String>(graph, lexicographic);
+        new GreedyGraphColoring<>(graph, lexicographic);
     assertEquals(3, coloring.color());
     validateColoring(graph);
     assertEquals("A", coloring.getPartitionSuperNode("A"));
@@ -184,7 +183,7 @@ public class GraphColoringTest extends TestCase {
       }
     };
 
-    coloring = new GreedyGraphColoring<String, String>(graph, biasD);
+    coloring = new GreedyGraphColoring<>(graph, biasD);
     assertEquals(3, coloring.color());
     validateColoring(graph);
     assertEquals("A", coloring.getPartitionSuperNode("A"));

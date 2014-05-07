@@ -20,9 +20,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import junit.framework.TestCase;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Tests for {@link JSModule}
@@ -37,7 +37,7 @@ public class JSModuleTest extends TestCase {
 
   @Override
   protected void setUp() {
-    List<JSModule> modulesInDepOrder = new ArrayList<JSModule>();
+    List<JSModule> modulesInDepOrder = new ArrayList<>();
 
     mod1 = new JSModule("mod1");
     modulesInDepOrder.add(mod1);
@@ -61,7 +61,7 @@ public class JSModuleTest extends TestCase {
   }
 
   public void testDependencies() {
-    assertEquals(ImmutableSet.of(), mod1.getAllDependencies());
+    assertTrue(mod1.getAllDependencies().isEmpty());
     assertEquals(ImmutableSet.of(mod1), mod2.getAllDependencies());
     assertEquals(ImmutableSet.of(mod1), mod3.getAllDependencies());
     assertEquals(ImmutableSet.of(mod1, mod2, mod3), mod4.getAllDependencies());

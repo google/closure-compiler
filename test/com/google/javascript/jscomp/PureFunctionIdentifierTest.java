@@ -16,11 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.PureFunctionIdentifier.INVALID_NO_SIDE_EFFECT_ANNOTATION;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import static com.google.javascript.jscomp.PureFunctionIdentifier.INVALID_NO_SIDE_EFFECT_ANNOTATION;
 import com.google.javascript.rhino.Node;
 import java.util.List;
 
@@ -218,7 +219,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
 
   public void testAnnotationInExterns_new1() throws Exception {
     checkMarkedCalls("externSENone()",
-        ImmutableList.<String>of("externSENone"));
+        ImmutableList.of("externSENone"));
   }
 
   public void testAnnotationInExterns_new2() throws Exception {
@@ -228,7 +229,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
 
   public void testAnnotationInExterns_new3() throws Exception {
     checkMarkedCalls("new externObjSEThis()",
-        ImmutableList.<String>of("externObjSEThis"));
+        ImmutableList.of("externObjSEThis"));
   }
 
   public void testAnnotationInExterns_new4() throws Exception {
@@ -236,15 +237,15 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     // side-effect free in this context.
 
     checkMarkedCalls("new externObjSEThis().externObjSEThisMethod('')",
-        ImmutableList.<String>of(
-           "externObjSEThis", "NEW STRING externObjSEThisMethod"));
+        ImmutableList.of(
+            "externObjSEThis", "NEW STRING externObjSEThisMethod"));
   }
 
   public void testAnnotationInExterns_new5() throws Exception {
     checkMarkedCalls(
         "function f() { new externObjSEThis() };" +
         "f();",
-        ImmutableList.<String>of("externObjSEThis", "f"));
+        ImmutableList.of("externObjSEThis", "f"));
   }
 
   public void testAnnotationInExterns_new6() throws Exception {
@@ -259,7 +260,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "  new externObjSEThis().externObjSEThisMethod('') " +
         "};" +
         "f();",
-         ImmutableList.<String>of(
+         ImmutableList.of(
              "externObjSEThis", "NEW STRING externObjSEThisMethod"));
   }
 
@@ -273,7 +274,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "  x.externObjSEThisMethod('') " +
         "};" +
         "f();",
-        ImmutableList.<String>of("externObjSEThis"));
+        ImmutableList.of("externObjSEThis"));
   }
 
   public void testAnnotationInExterns_new8() throws Exception {
@@ -285,7 +286,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "  x.externObjSEThisMethod('') " +
         "};" +
         "f(new externObjSEThis());",
-        ImmutableList.<String>of("externObjSEThis"));
+        ImmutableList.of("externObjSEThis"));
   }
 
   public void testAnnotationInExterns_new9() throws Exception {
@@ -299,7 +300,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "  x.externObjSEThisMethod('') " +
         "};" +
         "f(g);",
-        ImmutableList.<String>of("externObjSEThis"));
+        ImmutableList.of("externObjSEThis"));
   }
 
   public void testAnnotationInExterns_new10() throws Exception {
@@ -308,7 +309,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "  new externObjSEThis().externObjSEThisMethod2('') " +
         "};" +
         "f();",
-        ImmutableList.<String>of(
+        ImmutableList.of(
             "externObjSEThis", "NEW STRING externObjSEThisMethod2", "f"));
   }
 
@@ -456,22 +457,22 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
 
   public void testAnnotationInExternStubs1() throws Exception {
     checkMarkedCalls("o.propWithStubBefore('a');",
-        ImmutableList.<String>of("o.propWithStubBefore"));
+        ImmutableList.of("o.propWithStubBefore"));
   }
 
   public void testAnnotationInExternStubs1b() throws Exception {
     checkMarkedCalls("o.propWithStubBeforeWithJSDoc('a');",
-        ImmutableList.<String>of("o.propWithStubBeforeWithJSDoc"));
+        ImmutableList.of("o.propWithStubBeforeWithJSDoc"));
   }
 
   public void testAnnotationInExternStubs2() throws Exception {
     checkMarkedCalls("o.propWithStubAfter('a');",
-        ImmutableList.<String>of("o.propWithStubAfter"));
+        ImmutableList.of("o.propWithStubAfter"));
   }
 
   public void testAnnotationInExternStubs2b() throws Exception {
     checkMarkedCalls("o.propWithStubAfter('a');",
-        ImmutableList.<String>of("o.propWithStubAfter"));
+        ImmutableList.of("o.propWithStubAfter"));
   }
 
   public void testAnnotationInExternStubs3() throws Exception {
@@ -494,11 +495,10 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
       " */\n" +
       "externObj5.prototype.propWithAnnotatedStubAfter;\n";
 
-    List<String> expected = ImmutableList.<String>of();
     testSame(externs,
         "o.prototype.propWithAnnotatedStubAfter",
         TypeValidator.DUP_VAR_DECLARATION, false);
-    assertEquals(expected, noSideEffectCalls);
+    assertTrue(noSideEffectCalls.isEmpty());
     noSideEffectCalls.clear();
   }
 
@@ -521,7 +521,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
       " */\n" +
       "externObj5.prototype.propWithAnnotatedStubAfter;\n";
 
-    List<String> expected = ImmutableList.<String>of();
+    List<String> expected = ImmutableList.of();
     testSame(externs,
         "o.prototype.propWithAnnotatedStubAfter",
         TypeValidator.DUP_VAR_DECLARATION, false);
@@ -640,7 +640,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   public void testCall() throws Exception {
     checkMarkedCalls("function f() {return 42}" +
                      "f.call()",
-                     ImmutableList.<String>of("f.call"));
+                     ImmutableList.of("f.call"));
   }
 
   public void testInference1() throws Exception {
@@ -697,7 +697,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                      "  var x = {foo : 0}; return function() {x.foo++};" +
                      "}" +
                      "f()",
-                     ImmutableList.<String>of("f"));
+                     ImmutableList.of("f"));
   }
 
   public void testLocalizedSideEffects2() throws Exception {
@@ -723,7 +723,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     // side-effect.
     checkMarkedCalls("function f() {var x = []; x[0] = 1;}" +
                      "f()",
-                     ImmutableList.<String>of("f"));
+                     ImmutableList.of("f"));
   }
 
   public void testLocalizedSideEffects5() throws Exception {
@@ -741,7 +741,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                      "  var x = {}; x.foo = 1; return x;" +
                      "}" +
                      "f()",
-                     ImmutableList.<String>of("f"));
+                     ImmutableList.of("f"));
   }
 
   public void testLocalizedSideEffects7() throws Exception {
@@ -752,7 +752,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                      "  var a = []; a[1] = 1; return a;" +
                      "}" +
                      "f()",
-                     ImmutableList.<String>of("f"));
+                     ImmutableList.of("f"));
   }
 
   public void testLocalizedSideEffects8() throws Exception {
@@ -764,7 +764,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                      "  var a = new A; a.foo = 1; return a;" +
                      "}" +
                      "f()",
-                     ImmutableList.<String>of("A"));
+                     ImmutableList.of("A"));
   }
 
   public void testLocalizedSideEffects9() throws Exception {
@@ -776,7 +776,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                      "  var a = new A; a.foo = 1; return a;" +
                      "}" +
                      "f()",
-                     ImmutableList.<String>of("A"));
+                     ImmutableList.of("A"));
   }
 
   public void testLocalizedSideEffects10() throws Exception {
@@ -788,7 +788,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                      "  var a = new A; a.g(); return a;" +
                      "}" +
                      "f()",
-                     ImmutableList.<String>of("A"));
+                     ImmutableList.of("A"));
   }
 
   public void testLocalizedSideEffects11() throws Exception {
@@ -824,7 +824,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   public void testUnaryOperators3() throws Exception {
     checkMarkedCalls("function f() {var x = {foo : 0}; x.foo++}" +
                      "f()",
-                     ImmutableList.<String>of("f"));
+                     ImmutableList.of("f"));
   }
 
   public void testUnaryOperators4() throws Exception {
@@ -837,7 +837,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   public void testUnaryOperators5() throws Exception {
     checkMarkedCalls("function f(x) {x.foo++}" +
                      "f({foo : 0})",
-                     ImmutableList.<String>of("f"));
+                     ImmutableList.of("f"));
   }
 
   public void testDeleteOperator1() throws Exception {
@@ -928,14 +928,14 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   public void testThrow1() throws Exception {
     checkMarkedCalls("function f(){throw Error()};\n" +
                      "f()",
-                     ImmutableList.<String>of("Error"));
+                     ImmutableList.of("Error"));
   }
 
   public void testThrow2() throws Exception {
     checkMarkedCalls("/**@constructor*/function A(){throw Error()};\n" +
                      "function f(){return new A()}\n" +
                      "f()",
-                     ImmutableList.<String>of("Error"));
+                     ImmutableList.of("Error"));
   }
 
   public void testAssignmentOverride() throws Exception {
@@ -943,7 +943,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                      "A.prototype.foo = function(){};\n" +
                      "var a = new A;\n" +
                      "a.foo();\n",
-                     ImmutableList.<String>of("A", "a.foo"));
+                     ImmutableList.of("A", "a.foo"));
 
     checkMarkedCalls("/**@constructor*/function A(){}\n" +
                      "A.prototype.foo = function(){};\n" +
@@ -952,7 +952,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                      "var a = new A;\n" +
                      "a.foo = f;\n" +
                      "a.foo();\n",
-                     ImmutableList.<String>of("A"));
+                     ImmutableList.of("A"));
   }
 
   public void testInheritance1() throws Exception {
@@ -1062,13 +1062,13 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "function g(){var a = new A; a.foo(); return a}\n" +
         "f(); g()";
 
-    checkMarkedCalls(source, ImmutableList.<String>of("A", "A", "f"));
+    checkMarkedCalls(source, ImmutableList.of("A", "A", "f"));
   }
 
   public void testMutatesArguments1() throws Exception {
     String source = "function f(x) { x.y = 1; }\n" +
         "f({});";
-    checkMarkedCalls(source, ImmutableList.<String>of("f"));
+    checkMarkedCalls(source, ImmutableList.of("f"));
   }
 
   public void testMutatesArguments2() throws Exception {
@@ -1089,7 +1089,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     String source = "function f(x) { x.y = 1; }\n" +
         "function g(x) { f({}); x.y = 1; }\n" +
         "g({});";
-    checkMarkedCalls(source, ImmutableList.<String>of("f", "g"));
+    checkMarkedCalls(source, ImmutableList.of("f", "g"));
   }
 
   public void testMutatesArgumentsArray1() throws Exception {
@@ -1118,7 +1118,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "function h(){ (f || g)() }\n" +
         "h()";
 
-    checkMarkedCalls(source, ImmutableList.<String>of("(f || g)", "h"));
+    checkMarkedCalls(source, ImmutableList.of("(f || g)", "h"));
   }
 
   public void testCallFunctionFOrGViaHook() throws Exception {
@@ -1127,7 +1127,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "function h(){ (false ? f : g)() }\n" +
         "h()";
 
-    checkMarkedCalls(source, ImmutableList.<String>of("(f : g)", "h"));
+    checkMarkedCalls(source, ImmutableList.of("(f : g)", "h"));
   }
 
   public void testCallFunctionForGorH() throws Exception {
@@ -1137,7 +1137,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "function i(){ (false ? f : (g || h))() }\n" +
         "i()";
 
-    checkMarkedCalls(source, ImmutableList.<String>of("(f : (g || h))", "i"));
+    checkMarkedCalls(source, ImmutableList.of("(f : (g || h))", "i"));
   }
 
   public void testCallFunctionFOrGWithSideEffects() throws Exception {
@@ -1150,7 +1150,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "function k(){ (g || g)() }\n" +
         "h(); i(); j(); k()";
 
-    checkMarkedCalls(source, ImmutableList.<String>of("(g || g)", "k"));
+    checkMarkedCalls(source, ImmutableList.of("(g || g)", "k"));
   }
 
   public void testCallFunctionFOrGViaHookWithSideEffects() throws Exception {
@@ -1163,7 +1163,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "function k(){ (false ? g : g)() }\n" +
         "h(); i(); j(); k()";
 
-    checkMarkedCalls(source, ImmutableList.<String>of("(g : g)", "k"));
+    checkMarkedCalls(source, ImmutableList.of("(g : g)", "k"));
   }
 
   public void testCallRegExpWithSideEffects() throws Exception {
@@ -1174,28 +1174,28 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     regExpHaveSideEffects = true;
     checkMarkedCalls(source, ImmutableList.<String>of());
     regExpHaveSideEffects = false;
-    checkMarkedCalls(source, ImmutableList.<String>of(
+    checkMarkedCalls(source, ImmutableList.of(
         "REGEXP STRING exec", "k"));
   }
 
   public void testAnonymousFunction1() throws Exception {
     String source = "(function (){})();";
 
-    checkMarkedCalls(source, ImmutableList.<String>of(
+    checkMarkedCalls(source, ImmutableList.of(
         "FUNCTION"));
   }
 
   public void testAnonymousFunction2() throws Exception {
     String source = "(Error || function (){})();";
 
-    checkMarkedCalls(source, ImmutableList.<String>of(
+    checkMarkedCalls(source, ImmutableList.of(
         "(Error || FUNCTION)"));
   }
 
   public void testAnonymousFunction3() throws Exception {
     String source = "var a = (Error || function (){})();";
 
-    checkMarkedCalls(source, ImmutableList.<String>of(
+    checkMarkedCalls(source, ImmutableList.of(
         "(Error || FUNCTION)"));
   }
 
@@ -1218,7 +1218,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "var x = new F();" +
         "g.call(x);" +
         "x.bar();";
-    checkMarkedCalls(source, ImmutableList.<String>of("F"));
+    checkMarkedCalls(source, ImmutableList.of("F"));
 
     Node lastRoot = getLastCompiler().getRoot();
     Node call = findQualifiedNameNode("g.call", lastRoot).getParent();

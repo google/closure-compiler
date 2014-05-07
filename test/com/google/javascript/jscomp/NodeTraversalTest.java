@@ -69,7 +69,7 @@ public class NodeTraversalTest extends TestCase {
   }
 
   public void testReport() {
-    final List<JSError> errors = new ArrayList<JSError>();
+    final List<JSError> errors = new ArrayList<>();
 
     Compiler compiler = new Compiler(new BasicErrorManager() {
 
@@ -93,8 +93,9 @@ public class NodeTraversalTest extends TestCase {
     assertEquals("Foo, Bar - Hello", errors.get(0).description);
   }
 
+  private static final String TEST_EXCEPTION = "test me";
+
   public void testUnexpectedException() {
-    final String TEST_EXCEPTION = "test me";
 
     NodeTraversal.Callback cb = new NodeTraversal.AbstractPostOrderCallback() {
       @Override

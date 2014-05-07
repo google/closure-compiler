@@ -615,7 +615,7 @@ public class RenameVarsTest extends CompilerTestCase {
   }
 
   private static String createManyVarFunction(int numVars) {
-    List<String> locals = new ArrayList<String>();
+    List<String> locals = new ArrayList<>();
     for (int i = 0; i < numVars; i++) {
       locals.add("a" + Integer.toString(i));
     }

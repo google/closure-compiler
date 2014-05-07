@@ -168,7 +168,7 @@ public class JSModuleGraphTest extends TestCase {
   public void testManageDependencies2() throws Exception {
     List<CompilerInput> inputs = setUpManageDependenciesTest();
     List<CompilerInput> results = graph.manageDependencies(
-        ImmutableList.<String>of("c2"), inputs);
+        ImmutableList.of("c2"), inputs);
 
     assertInputs(A, "a1", "a3");
     assertInputs(B, "a2", "b2");
@@ -186,7 +186,7 @@ public class JSModuleGraphTest extends TestCase {
     depOptions.setDependencySorting(true);
     depOptions.setDependencyPruning(true);
     depOptions.setMoocherDropping(true);
-    depOptions.setEntryPoints(ImmutableList.<String>of("c2"));
+    depOptions.setEntryPoints(ImmutableList.of("c2"));
     List<CompilerInput> results = graph.manageDependencies(
         depOptions, inputs);
 

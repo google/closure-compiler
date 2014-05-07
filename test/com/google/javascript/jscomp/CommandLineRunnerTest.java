@@ -50,7 +50,7 @@ public class CommandLineRunnerTest extends TestCase {
   private List<Integer> exitCodes = null;
   private ByteArrayOutputStream outReader = null;
   private ByteArrayOutputStream errReader = null;
-  private Map<Integer,String> filenames;
+  private Map<Integer, String> filenames;
 
   // If set, this will be appended to the end of the args list.
   // For testing args parsing.
@@ -70,7 +70,7 @@ public class CommandLineRunnerTest extends TestCase {
   private List<String> args = Lists.newArrayList();
 
   /** Externs for the test */
-  private final List<SourceFile> DEFAULT_EXTERNS = ImmutableList.of(
+  private static final List<SourceFile> DEFAULT_EXTERNS = ImmutableList.of(
     SourceFile.fromCode("externs",
         "var arguments;"
         + "/**\n"
@@ -1005,7 +1005,7 @@ public class CommandLineRunnerTest extends TestCase {
 
     StringBuilder builder = new StringBuilder();
     lastCommandLineRunner.printModuleGraphJsonTo(builder);
-    assertTrue(builder.toString().indexOf("transitive-dependencies") != -1);
+    assertTrue(builder.toString().contains("transitive-dependencies"));
   }
 
   public void testVersionFlag() {
@@ -1081,7 +1081,7 @@ public class CommandLineRunnerTest extends TestCase {
   public void testGenerateExports() {
     args.add("--generate_exports=true");
     test("/** @export */ foo.prototype.x = function() {};",
-        "foo.prototype.x=function(){};"+
+        "foo.prototype.x=function(){};" +
         "goog.exportSymbol(\"foo.prototype.x\",foo.prototype.x);");
   }
 
@@ -1365,18 +1365,18 @@ public class CommandLineRunnerTest extends TestCase {
       inputsSupplier = Suppliers.ofInstance(inputs);
     } else if (useModules == ModulePattern.STAR) {
       modulesSupplier = Suppliers.<List<JSModule>>ofInstance(
-          Lists.<JSModule>newArrayList(
+          Lists.newArrayList(
               CompilerTestCase.createModuleStar(original)));
     } else if (useModules == ModulePattern.CHAIN) {
       modulesSupplier = Suppliers.<List<JSModule>>ofInstance(
-          Lists.<JSModule>newArrayList(
+          Lists.newArrayList(
               CompilerTestCase.createModuleChain(original)));
     } else {
       throw new IllegalArgumentException("Unknown module type: " + useModules);
     }
 
     runner.enableTestMode(
-        Suppliers.<List<SourceFile>>ofInstance(externs),
+        Suppliers.ofInstance(externs),
         inputsSupplier,
         modulesSupplier,
         new Function<Integer, Boolean>() {

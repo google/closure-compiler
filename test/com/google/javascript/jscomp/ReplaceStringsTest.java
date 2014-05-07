@@ -19,11 +19,11 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.ReplaceStrings.Result;
 import com.google.javascript.rhino.Node;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,7 +47,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
       "goog.log.info(,?)"
       );
 
-  private final static String EXTERNS =
+  private static final String EXTERNS =
     "var goog = {};\n" +
     "goog.debug = {};\n" +
     "/** @constructor */\n" +
@@ -97,8 +97,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
     return new CompilerPass() {
         @Override
         public void process(Node externs, Node js) {
-          Map<String, CheckLevel> propertiesToErrorFor =
-              Maps.<String, CheckLevel>newHashMap();
+          Map<String, CheckLevel> propertiesToErrorFor = new HashMap<>();
           propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
 
           new CollapseProperties(compiler, true, true).process(externs, js);
@@ -124,7 +123,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
   }
 
   public void testStable1() {
-    previous = VariableMap.fromMap(ImmutableMap.of("previous","xyz"));
+    previous = VariableMap.fromMap(ImmutableMap.of("previous", "xyz"));
     testDebugStrings(
         "Error('xyz');",
         "Error('previous');",
@@ -142,7 +141,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
     // chosen instead.
     // 2) a previously used name "a" is dropped from the output map if
     // it isn't used.
-    previous = VariableMap.fromMap(ImmutableMap.of("a","unused"));
+    previous = VariableMap.fromMap(ImmutableMap.of("a", "unused"));
     testDebugStrings(
         "Error('xyz');",
         "Error('b');",
@@ -154,7 +153,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
         "throw Error('xyz');",
         "throw Error('a');",
         (new String[] { "a", "xyz" }));
-    previous = VariableMap.fromMap(ImmutableMap.of("previous","xyz"));
+    previous = VariableMap.fromMap(ImmutableMap.of("previous", "xyz"));
     testDebugStrings(
         "throw Error('xyz');",
         "throw Error('previous');",
@@ -388,7 +387,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
         "goog$debug$Logger$getLogger('b');" +
         "goog$debug$Logger$getLogger('b');",
         new String[] {
-            "a", "goog.net.XhrTransport","b", "my.app.Application" });
+            "a", "goog.net.XhrTransport", "b", "my.app.Application" });
   }
 
   public void testRepeatedStringsWithDifferentMethods() {
@@ -485,11 +484,11 @@ public class ReplaceStringsTest extends CompilerTestCase {
 
     List<Result> results = pass.getResult();
     assertTrue(substitutedStrings.length % 2 == 0);
-    assertEquals(substitutedStrings.length/2, results.size());
+    assertEquals(substitutedStrings.length / 2, results.size());
 
     // Verify that substituted strings are decoded correctly.
     for (int i = 0; i < substitutedStrings.length; i += 2) {
-      Result result = results.get(i/2);
+      Result result = results.get(i / 2);
       String original = substitutedStrings[i + 1];
       assertEquals(original, result.original);
 

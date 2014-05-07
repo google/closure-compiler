@@ -2395,7 +2395,7 @@ public class IntegrationTest extends IntegrationTestCase {
            "function f() { return x + z; }");
       fail("Expected run-time exception");
     } catch (RuntimeException e) {
-      assertTrue(e.getMessage().indexOf("Unexpected variable x") != -1);
+      assertTrue(e.getMessage().contains("Unexpected variable x"));
     }
   }
 

@@ -8893,9 +8893,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     JSType googScopeType = p.scope.getVar("goog").getType();
     assertTrue(googScopeType instanceof ObjectType);
     assertTrue("foo property not present on goog type",
-        ((ObjectType) googScopeType).hasProperty("foo"));
+        googScopeType.hasProperty("foo"));
     assertFalse("bar property present on goog type",
-        ((ObjectType) googScopeType).hasProperty("bar"));
+        googScopeType.hasProperty("bar"));
 
     // goog type on the VAR node
     Node varNode = p.root.getFirstChild();
@@ -13092,7 +13092,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   void testTypesWithExterns(String externs, String js) throws Exception {
-    testTypes(externs, js, (String)null, false);
+    testTypes(externs, js, (String) null, false);
   }
 
   void testTypes(

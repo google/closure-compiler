@@ -216,18 +216,18 @@ public class InlineSimpleMethodsTest extends CompilerTestCase {
 
   public void testNoInlineOfExternMethods1() {
     testSame("var external={};external.charAt;",
-        "external.charAt()", (DiagnosticType) null);
+        "external.charAt()", null);
   }
 
   public void testNoInlineOfExternMethods2() {
     testSame("var external={};external.charAt=function(){};",
-        "external.charAt()", (DiagnosticType) null);
+        "external.charAt()", null);
   }
 
   public void testNoInlineOfExternMethods3() {
     testSame("var external={};external.bar=function(){};",
         "function Foo(){}Foo.prototype.bar=function(){};(new Foo).bar()",
-             (DiagnosticType) null);
+        null);
   }
 
   public void testNoInlineOfDangerousProperty() {

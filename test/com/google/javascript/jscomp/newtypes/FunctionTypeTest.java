@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.newtypes.JSType.UNDEFINED;
 import static com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 
 import junit.framework.TestCase;
@@ -45,7 +44,7 @@ public class FunctionTypeTest extends TestCase {
     FunctionType result = parser.getTypeFromNode(
         JsDocInfoParser.parseTypeString(typestring), null, null, null)
         .getFunType();
-    assertEquals(ImmutableSet.of(), parser.getWarnings());
+    assertTrue(parser.getWarnings().isEmpty());
     return result;
   }
 

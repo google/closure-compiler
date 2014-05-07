@@ -392,7 +392,7 @@ public abstract class CompilerTestCase extends TestCase  {
    * @param expected Expected JS output
    */
   public void test(String js, String expected) {
-    test(js, expected, (DiagnosticType) null);
+    test(js, expected, null);
   }
 
   /**

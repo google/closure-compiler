@@ -39,15 +39,15 @@ public class FunctionArgumentInjectorTest extends TestCase {
   private static final Set<String> EMPTY_STRING_SET = Collections.emptySet();
 
   public void testFindModifiedParameters1() {
-    assertEquals(Sets.newHashSet(),
+    assertEquals(0,
         FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a){ return a==0; }")));
+            parseFunction("function f(a){ return a==0; }")).size());
   }
 
   public void testFindModifiedParameters2() {
-    assertEquals(Sets.newHashSet(),
+    assertEquals(0,
         FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a){ b=a }")));
+            parseFunction("function f(a){ b=a }")).size());
   }
 
   public void testFindModifiedParameters3() {
@@ -84,7 +84,7 @@ public class FunctionArgumentInjectorTest extends TestCase {
     assertEquals(Sets.newHashSet("b"),
         FunctionArgumentInjector.findModifiedParameters(
             parseFunction(
-                "function f(a,b){ "+
+                "function f(a,b){ " +
                 "a; function f(){ function g() { b; } } }")));
   }
 
@@ -104,7 +104,7 @@ public class FunctionArgumentInjectorTest extends TestCase {
     assertEquals(Sets.newHashSet("b"),
         FunctionArgumentInjector.findModifiedParameters(
             parseFunction(
-                "function f(a,b){ "+
+                "function f(a,b){ " +
                 "a; (function(){ (function () { b; }) }) }")));
   }
 
