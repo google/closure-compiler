@@ -76,19 +76,29 @@ More detailed information about running the Closure Compiler is available in the
 If you have multiple scripts, you should compile them all together with one
 compile command.
 
+```bash
+java -jar compiler.jar --js_output_file=out.js in1.js in2.js in3.js ...
 ```
-java -jar compiler.jar --js=in1.js --js=in2.js ... --js_output_file=out.js
+
+You can also use minimatch-style globs.
+
+```bash
+# Recursively include all js files in subdirs
+java -jar compiler.jar --js_output_file=out.js 'src/**.js'
+
+# Recursively include all js files in subdirs, exclusing test files.
+# Use single-quotes, so that bash doesn't try to expand the '!'
+java -jar compiler.jar --js_output_file=out.js 'src/**.js' '!**_test.js'
 ```
 
 The Closure Compiler will concatenate the files in the order they're passed at
 the command line.
 
-If you need to compile many, many scripts together, you may start to run into
+If you're using globs or many files, you may start to run into
 problems with managing dependencies between scripts. In this case, you should
 use the [Closure Library](https://developers.google.com/closure/library/). It
-contains functions for enforcing dependencies between scripts, and a tool
-called ````calcdeps.py```` that knows how to give scripts to the Closure Compiler
-in the right order.
+contains functions for enforcing dependencies between scripts, and Closure Compiler
+will re-order the inputs automatically.
 
 ## How to Contribute
 ### Reporting a bug
