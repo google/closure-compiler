@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+
 /**
  * A source excerpt provider is responsible for building source code excerpt
  * of specific locations, such as a specific line or a region around a
@@ -75,6 +77,12 @@ public interface SourceExcerptProvider {
    * if it does not exist
    */
   Region getSourceRegion(String sourceName, int lineNumber);
+
+  /**
+   * If the source file is associated with an inputSourceMap, does a lookup
+   * for the original file position based on this source map.
+   */
+  OriginalMapping getSourceMapping(String sourceName, int lineNumber, int columnNumber);
 
   /**
    * A excerpt formatter is responsible of formatting source excerpts.

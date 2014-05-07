@@ -16,8 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.debugging.sourcemap.FilePosition;
+import com.google.debugging.sourcemap.SourceMapGeneratorV3;
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -137,6 +142,60 @@ public class CompilerTest extends TestCase {
         "Unexpected error: " + error,
         error.contains(
             "required entry point \"module$missing\" never provided"));
+  }
+
+  public void testInputSourceMaps() throws Exception {
+    FilePosition originalSourcePosition = new FilePosition(17, 25);
+    ImmutableMap<String, SourceMapInput> inputSourceMaps = ImmutableMap.of(
+        "generated_js/example.js",
+        sourcemap("generated_js/example.srcmap", "../original/source.html",
+            originalSourcePosition));
+    List<SourceFile> originalSources = Lists.newArrayList(
+        SourceFile.fromCode("original/source.html", "<div ng-show='foo()'>"));
+
+    CompilerOptions options = new CompilerOptions();
+    options.inputSourceMaps = inputSourceMaps;
+    Compiler compiler = new Compiler();
+    compiler.setOriginalSourcesLoader(createFileLoader(originalSources));
+    compiler.init(Lists.<SourceFile>newArrayList(),
+        Lists.<SourceFile>newArrayList(), options);
+
+    assertEquals(
+        OriginalMapping.newBuilder()
+            .setOriginalFile("original/source.html")
+            .setLineNumber(18)
+            .setColumnPosition(25)
+            .build(),
+        compiler.getSourceMapping("generated_js/example.js", 3, 3));
+    assertEquals("<div ng-show='foo()'>",
+        compiler.getSourceLine("original/source.html", 1));
+  }
+
+  private SourceMapInput sourcemap(String sourceMapPath, String originalSource,
+      FilePosition originalSourcePosition) throws Exception {
+    SourceMapGeneratorV3 sourceMap = new SourceMapGeneratorV3();
+    sourceMap.addMapping(originalSource, null, originalSourcePosition,
+        new FilePosition(1, 1), new FilePosition(100, 1));
+    StringBuilder output = new StringBuilder();
+    sourceMap.appendTo(output, "unused.js");
+
+    return new SourceMapInput(
+        SourceFile.fromCode(sourceMapPath, output.toString()));
+  }
+
+  private Function<String, SourceFile> createFileLoader(
+      final List<SourceFile> sourceFiles) {
+    return new Function<String, SourceFile>() {
+      @Override
+      public SourceFile apply(String filename) {
+        for (SourceFile file : sourceFiles) {
+          if (file.getOriginalPath().equals(filename)) {
+            return file;
+          }
+        }
+        return null;
+      }
+    };
   }
 
   private Compiler initCompilerForCommonJS(

@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -49,6 +50,7 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -307,6 +309,16 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
     options.sourceMapDetailLevel = config.sourceMapDetailLevel;
     options.sourceMapFormat = config.sourceMapFormat;
+
+    ImmutableMap.Builder<String, SourceMapInput> inputSourceMaps
+        = new ImmutableMap.Builder<>();
+    for (Map.Entry<String, String> files :
+             config.sourceMapInputFiles.entrySet()) {
+      SourceFile sourceMap = SourceFile.fromFile(files.getValue());
+      inputSourceMaps.put(
+          files.getKey(), new SourceMapInput(sourceMap));
+    }
+    options.inputSourceMaps = inputSourceMaps.build();
 
     if (!config.variableMapInputFile.isEmpty()) {
       options.inputVariableMap =
@@ -1628,6 +1640,14 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     CommandLineConfig setModule(List<String> module) {
       this.module.clear();
       this.module.addAll(module);
+      return this;
+    }
+
+    private Map<String, String> sourceMapInputFiles = new HashMap<>();
+
+    CommandLineConfig setSourceMapInputFiles(
+        Map<String, String> sourceMapInputFiles) {
+      this.sourceMapInputFiles = sourceMapInputFiles;
       return this;
     }
 

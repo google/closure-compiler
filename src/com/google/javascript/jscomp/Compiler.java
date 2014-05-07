@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
@@ -26,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
@@ -52,6 +54,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.nio.file.FileSystems;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -59,6 +62,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -141,6 +145,19 @@ public class Compiler extends AbstractCompiler {
   Node externAndJsRoot;
 
   private Map<InputId, CompilerInput> inputsById;
+
+  // Function to load source files from disk or memory.
+  private Function<String, SourceFile> originalSourcesLoader =
+      new Function<String, SourceFile>() {
+        @Override
+        public SourceFile apply(String filename) {
+          return SourceFile.fromFile(filename);
+        }
+      };
+
+  // Original sources referenced by the source maps.
+  private ConcurrentHashMap<String, SourceFile> sourceMapOriginalSources
+      = new ConcurrentHashMap<>();
 
   // Map from filenames to lists of all the comments in each file.
   private Map<String, List<Comment>> commentsPerFile = Maps.newHashMap();
@@ -291,6 +308,12 @@ public class Compiler extends AbstractCompiler {
   private MessageFormatter createMessageFormatter() {
     boolean colorize = options.shouldColorizeErrorOutput();
     return options.errorFormat.toFormatter(this, colorize);
+  }
+
+  @VisibleForTesting
+  void setOriginalSourcesLoader(
+      Function<String, SourceFile> originalSourcesLoader) {
+    this.originalSourcesLoader = originalSourcesLoader;
   }
 
   /**
@@ -519,6 +542,18 @@ public class Compiler extends AbstractCompiler {
   static final DiagnosticType DUPLICATE_EXTERN_INPUT =
       DiagnosticType.error("JSC_DUPLICATE_EXTERN_INPUT",
           "Duplicate extern input: {0}");
+
+  /**
+   * Returns the relative path, resolved relative to the base path, where the
+   * base path is interpreted as a filename rather than a directory. E.g.:
+   *   getRelativeTo("../foo/bar.js", "baz/bam/qux.js") --> "baz/foo/bar.js"
+   */
+  private String getRelativeTo(String relative, String base) {
+    return FileSystems.getDefault().getPath(base)
+        .resolveSibling(relative)
+        .normalize()
+        .toString();
+  }
 
   /**
    * Creates a map to make looking up an input by name fast. Also checks for
@@ -2211,8 +2246,41 @@ public class Compiler extends AbstractCompiler {
       if (input != null) {
         return input.getSourceFile();
       }
+      // Alternatively, the sourceName might have been reverse-mapped by
+      // an input source-map, so let's look in our sourcemap original sources.
+      return sourceMapOriginalSources.get(sourceName);
     }
+
     return null;
+  }
+
+  @Override
+  public OriginalMapping getSourceMapping(String sourceName, int lineNumber,
+      int columnNumber) {
+    SourceMapInput sourceMap = options.inputSourceMaps.get(sourceName);
+    if (sourceMap == null) {
+      return null;
+    }
+
+    // JSCompiler uses 1-indexing for lineNumber and 0-indexing for
+    // columnNumber.
+    // SourceMap uses 1-indexing for both.
+    OriginalMapping result = sourceMap.getSourceMap()
+        .getMappingForLine(lineNumber, columnNumber + 1);
+    if (result == null) {
+      return null;
+    }
+
+    // The sourcemap will return a path relative to the sourcemap's file.
+    // Translate it to one relative to our base directory.
+    String path =
+        getRelativeTo(result.getOriginalFile(), sourceMap.getOriginalPath());
+    sourceMapOriginalSources.putIfAbsent(
+        path, originalSourcesLoader.apply(path));
+    return result.toBuilder()
+        .setOriginalFile(path)
+        .setColumnPosition(result.getColumnPosition() - 1)
+        .build();
   }
 
   @Override

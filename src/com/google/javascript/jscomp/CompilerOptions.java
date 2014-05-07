@@ -559,6 +559,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Rename unrelated properties to the same name to reduce code size. */
   public boolean ambiguateProperties;
 
+  /** Input sourcemap files, indexed by the JS files they refer to */
+  ImmutableMap<String, SourceMapInput> inputSourceMaps;
+
   /** Give anonymous functions names for easier debugging */
   public AnonymousFunctionNamingPolicy anonymousFunctionNaming;
 
@@ -1045,6 +1048,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     replaceStringsPlaceholderToken = "";
     replaceStringsReservedStrings = Collections.emptySet();
     propertyInvalidationErrors = Maps.newHashMap();
+    inputSourceMaps = ImmutableMap.of();
 
     // Instrumentation
     instrumentationTemplate = null;  // instrument functions

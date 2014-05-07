@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.LightweightMessageFormatter.LineNumberingFormatter;
 
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -24,6 +25,12 @@ import junit.framework.TestCase;
 public class LightweightMessageFormatterTest extends TestCase {
   private static final DiagnosticType FOO_TYPE =
       DiagnosticType.error("TEST_FOO", "error description here");
+  private static final String ORIGINAL_SOURCE_FILE = "original/source.html";
+  private static final OriginalMapping ORIGINAL_SOURCE = OriginalMapping.newBuilder()
+      .setOriginalFile(ORIGINAL_SOURCE_FILE)
+      .setLineNumber(3)
+      .setColumnPosition(15)
+      .build();
 
   public void testNull() throws Exception {
     assertNull(format(null));
@@ -102,19 +109,50 @@ public class LightweightMessageFormatterTest extends TestCase {
         "       ^\n", formatter.formatError(error));
   }
 
-  private LightweightMessageFormatter formatter(String string) {
-    return new LightweightMessageFormatter(source(string));
+  public void testFormatErrorOriginalSource() throws Exception {
+    JSError error = JSError.make("javascript/complex.js",
+        Node.newString("foobar", 5, 8), FOO_TYPE);
+    LightweightMessageFormatter formatter =
+        formatter("    if (foobar) {", "<div ng-show='(foo'>");
+    assertEquals(
+        "javascript/complex.js:5: \n" +
+        "Originally at:\n" +
+        "original/source.html:3: ERROR - error description here\n" +
+        "<div ng-show='(foo'>\n" +
+        "               ^\n",
+        formatter.formatError(error));
   }
 
-  private SourceExcerptProvider source(final String source) {
+  private LightweightMessageFormatter formatter(String string) {
+    return formatter(string, null);
+  }
+
+  private LightweightMessageFormatter formatter(String string,
+                                                String originalSource) {
+    return new LightweightMessageFormatter(source(string, originalSource));
+  }
+
+  private SourceExcerptProvider source(final String source,
+                                       final String originalSource) {
     return new SourceExcerptProvider() {
       @Override
       public String getSourceLine(String sourceName, int lineNumber) {
+        if (sourceName.equals(ORIGINAL_SOURCE_FILE)) {
+          return originalSource;
+        }
         return source;
       }
       @Override
       public Region getSourceRegion(String sourceName, int lineNumber) {
         throw new UnsupportedOperationException();
+      }
+      @Override
+      public OriginalMapping getSourceMapping(String sourceName,
+          int lineNumber, int columnNumber) {
+        if (originalSource != null) {
+          return ORIGINAL_SOURCE;
+        }
+        return null;
       }
     };
   }
