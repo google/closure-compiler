@@ -101,9 +101,9 @@ public class IntegrationTest extends IntegrationTestCase {
     options.generateExports = true;
     test(options,
          CLOSURE_BOILERPLATE + "/** @export */ goog.CONSTANT = 1;" +
-         "var x = goog.CONSTANT;",
+         "var x = goog.CONSTANT; alert(x);",
          "(function() {})('goog.CONSTANT', 1);" +
-         "var x = 1;");
+         "alert(1);");
   }
 
   public void testBug2410122() {
@@ -1060,11 +1060,11 @@ public class IntegrationTest extends IntegrationTestCase {
 
   public void testInlineConstants() {
     CompilerOptions options = createCompilerOptions();
-    String code = "function foo() {} var x = 3; foo(x); var YYY = 4; foo(YYY);";
+    String code = "function foo() {} var x = 3; x = 5; foo(x); var y = 4; foo(y);";
     testSame(options, code);
 
     options.inlineConstantVars = true;
-    test(options, code, "function foo() {} var x = 3; foo(x); foo(4);");
+    test(options, code, "function foo() {} var x = 3; x = 5; foo(x); foo(4);");
   }
 
   public void testMinimizeExits() {
