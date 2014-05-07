@@ -3022,6 +3022,9 @@ Document.prototype.webkitCancelFullScreen = function() {};
 /** @type {Element} */
 Document.prototype.webkitCurrentFullScreenElement;
 
+/** @type {Element} */
+Document.prototype.webkitFullscreenElement;
+
 /** @type {boolean} */
 Document.prototype.webkitFullScreenKeyboardInputAllowed;
 
