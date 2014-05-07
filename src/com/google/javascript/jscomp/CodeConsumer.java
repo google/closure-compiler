@@ -253,8 +253,11 @@ abstract class CodeConsumer {
       add(" ");
     }
 
+    // Add "-0" if the number is negative zero.
     if (negativeZero) {
       addConstant("-0");
+    // If the number is not negative zero, check whether it is a mathematical
+    // integer (has no fractional component).
     } else if ((long) x == x) {
       long value = (long) x;
       long mantissa = value;
@@ -277,8 +280,32 @@ abstract class CodeConsumer {
           addConstant(Long.toString(value));
         }
       }
+    // If the number has a fractional component, base the representation on the
+    // result of Double.toString.
     } else {
-      addConstant(String.valueOf(x).replace(".0E", "E"));
+      String xAsString = Double.toString(x);
+      // The Double.toString implementation might return a string that looks
+      // similar to "6.0E…". This is notation is correct in ECMAScript, but can
+      // be written as "6E…" which is shorter and equally correct.
+      xAsString = xAsString.replace(".0E", "E");
+      // The implementation might also return a string that looks similar to
+      // "0.6…". This can be written shorter and equally correct as ".6…" (see
+      // ECMA-262 5.1 section 7.8.3).
+      int zeroIntegerIndex = xAsString.lastIndexOf("0.", 1);
+      // (The zero integer ‒ the "0" before the dot ‒ can be at the start of
+      // the string as well as one character after that, but the latter is only
+      // correct if that first character is a sign.)
+      if (1 == zeroIntegerIndex && '-' != xAsString.charAt(0)) {
+        zeroIntegerIndex = -1;
+      }
+      if (0 == zeroIntegerIndex) {
+        // 0.6 → .6
+        xAsString = xAsString.substring(1);
+      } else if (1 == zeroIntegerIndex) {
+        // -0.6 → -.6
+        xAsString = xAsString.charAt(0) + xAsString.substring(2);
+      }
+      addConstant(xAsString);
     }
   }
 
