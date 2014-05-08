@@ -303,12 +303,6 @@ jQuery.prototype.bind = function(arg1, eventData, arg3) {};
  */
 jQuery.prototype.blur = function(arg1, handler) {};
 
-/** @type {boolean} */
-jQuery.boxModel;
-
-/** @type {boolean} */
-$.boxModel;
-
 /**
  * @constructor
  * @private
@@ -1944,10 +1938,16 @@ jQuery.support;
 /** @type {Object.<string, *>} */
 $.support;
 
-/** @type {boolean} */
+/**
+ * @deprecated Please try to use feature detection instead.
+ * @type {boolean}
+ */
 jQuery.support.boxModel;
 
-/** @type {boolean} */
+/**
+ * @deprecated Please try to use feature detection instead.
+ * @type {boolean}
+ */
 $.support.boxModel;
 
 /** @type {boolean} */
