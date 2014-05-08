@@ -763,9 +763,18 @@ public class AstValidator implements CompilerPass {
 
   private void validateObjectLitStringKey(Node n) {
     validateNodeType(Token.STRING_KEY, n);
-    validateChildCount(n, Token.arity(Token.STRING_KEY));
     validateObjectLiteralKeyName(n);
-    validateExpression(n.getFirstChild());
+
+    if (isES6OrHigher()) {
+      validateMinimumChildCount(n, 0);
+      validateMaximumChildCount(n, 1);
+    } else {
+      validateChildCount(n, 1);
+    }
+
+    if (n.hasOneChild()) {
+      validateExpression(n.getFirstChild());
+    }
   }
 
   private void validateObjectLiteralKeyName(Node n) {

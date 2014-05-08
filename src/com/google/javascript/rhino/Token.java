@@ -361,7 +361,7 @@ public class Token {
       case LABEL_NAME:      return 0;
       case NUMBER:          return 0;
       case STRING:          return 0;
-      case STRING_KEY:      return 1;
+      case STRING_KEY:      return -1;
       case NULL:            return 0;
       case THIS:            return 0;
       case FALSE:           return 0;
