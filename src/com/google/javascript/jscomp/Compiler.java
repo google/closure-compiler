@@ -375,7 +375,7 @@ public class Compiler extends AbstractCompiler {
           options.checkGlobalThisLevel);
     }
 
-    if (options.getLanguageIn() == LanguageMode.ECMASCRIPT5_STRICT) {
+    if (options.getLanguageIn().isStrict()) {
       options.setWarningLevel(
           DiagnosticGroups.ES5_STRICT,
           CheckLevel.ERROR);
@@ -994,6 +994,13 @@ public class Compiler extends AbstractCompiler {
   @Override
   public Node getRoot() {
     return externAndJsRoot;
+  }
+
+  @Override
+  CompilerOptions.LanguageMode getLanguageMode() {
+    // TODO(tbreisacher): After the transpile step has run, this should return
+    // this.getOptions().getLanguageOut().
+    return this.getOptions().getLanguageIn();
   }
 
   /**
@@ -1788,7 +1795,7 @@ public class Compiler extends AbstractCompiler {
               cb.getLineIndex(), cb.getColumnIndex());
         }
 
-        // if LanguageMode is ECMASCRIPT5_STRICT, only print 'use strict'
+        // if LanguageMode is strict, only print 'use strict'
         // for the first input file
         String code = toSource(root, sourceMap, inputSeqNum == 0);
         if (!code.isEmpty()) {
@@ -1829,8 +1836,7 @@ public class Compiler extends AbstractCompiler {
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
-    builder.setTagAsStrict(firstOutput &&
-        options.getLanguageOut() == LanguageMode.ECMASCRIPT5_STRICT);
+    builder.setTagAsStrict(firstOutput && options.getLanguageOut().isStrict());
     return builder.build();
   }
 

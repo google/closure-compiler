@@ -1540,13 +1540,6 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x = {010: 1};", "var x={8:1}");
   }
 
-  public void testOctalNumericKeyStrict() {
-    allowWarnings = true;
-    languageMode = LanguageMode.ECMASCRIPT6_STRICT;
-
-    assertPrint("var x = {010: 1};", "var x={10:1}");
-  }
-
   public void testNumericKeys() {
     assertPrint("var x = {'010': 1};", "var x={\"010\":1}");
 

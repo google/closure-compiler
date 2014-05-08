@@ -924,6 +924,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   public CompilerOptions() {
     // Accepted language
     languageIn = LanguageMode.ECMASCRIPT3;
+    languageOut = LanguageMode.ECMASCRIPT3;
     useNewParser = true;
 
     // Language variation
@@ -2239,6 +2240,28 @@ public class CompilerOptions implements Serializable, Cloneable {
      * Nitpicky, experimental JavaScript
      */
     ECMASCRIPT6_STRICT;
+
+    /** Whether this is a "strict mode" language. */
+    public boolean isStrict() {
+      switch (this) {
+        case ECMASCRIPT5_STRICT:
+        case ECMASCRIPT6_STRICT:
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    /** Whether this is ECMAScript 6 or higher. */
+    public boolean isES6OrHigher() {
+      switch (this) {
+        case ECMASCRIPT6:
+        case ECMASCRIPT6_STRICT:
+          return true;
+        default:
+          return false;
+      }
+    }
 
     public static LanguageMode fromString(String value) {
       switch (value) {

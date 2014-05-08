@@ -373,6 +373,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract Node getRoot();
 
+  /**
+   * The language mode of the current root node. This will match the languageIn
+   * field of the {@link CompilerOptions} before transpilation happens, and
+   * match the languageOut field after transpilation.
+   */
+  abstract CompilerOptions.LanguageMode getLanguageMode();
+
   // TODO(bashir) It would be good to extract a single dumb data object with
   // only getters and setters that keeps all global information we keep for a
   // compiler instance. Then move some of the functions of this class there.

@@ -2331,7 +2331,7 @@ public class DefaultPassConfig extends PassConfig {
   final PassFactory sanityCheckAst = new PassFactory("sanityCheckAst", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new AstValidator();
+      return new AstValidator(compiler);
     }
   };
 

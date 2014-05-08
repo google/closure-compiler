@@ -819,7 +819,7 @@ public abstract class CompilerTestCase extends TestCase  {
     }
 
     if (astValidationEnabled) {
-      (new AstValidator()).validateRoot(root);
+      (new AstValidator(compiler)).validateRoot(root);
     }
     Node externsRoot = root.getFirstChild();
     Node mainRoot = root.getLastChild();
@@ -889,7 +889,7 @@ public abstract class CompilerTestCase extends TestCase  {
 
         getProcessor(compiler).process(externsRoot, mainRoot);
         if (astValidationEnabled) {
-          (new AstValidator()).validateRoot(root);
+          (new AstValidator(compiler)).validateRoot(root);
         }
         if (checkLineNumbers) {
           (new LineNumberCheck(compiler)).process(externsRoot, mainRoot);

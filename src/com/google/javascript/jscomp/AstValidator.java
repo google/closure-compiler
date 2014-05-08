@@ -39,20 +39,22 @@ public class AstValidator implements CompilerPass {
     void handleViolation(String message, Node n);
   }
 
+  private final AbstractCompiler compiler;
   private final ViolationHandler violationHandler;
 
-  public AstValidator(ViolationHandler handler) {
+  public AstValidator(AbstractCompiler compiler, ViolationHandler handler) {
+    this.compiler = compiler;
     this.violationHandler = handler;
   }
 
-  public AstValidator() {
-    this.violationHandler = new ViolationHandler() {
+  public AstValidator(AbstractCompiler compiler) {
+    this(compiler, new ViolationHandler() {
       @Override
       public void handleViolation(String message, Node n) {
         throw new IllegalStateException(
             message + " Reference node " + n.toString());
       }
-    };
+    });
   }
 
   @Override
@@ -365,6 +367,21 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateParameters(Node n) {
+    if (isES6OrHigher()) {
+      validateParametersES6(n);
+    } else {
+      validateParametersES5(n);
+    }
+  }
+
+  private void validateParametersES5(Node n) {
+   validateNodeType(Token.PARAM_LIST, n);
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+      validateName(c);
+    }
+  }
+
+  private void validateParametersES6(Node n) {
     validateNodeType(Token.PARAM_LIST, n);
 
     boolean defaultParams = false;
@@ -840,5 +857,9 @@ public class AstValidator implements CompilerPass {
           "Expected no more than " + i + " children, but was "
               + n.getChildCount(), n);
     }
+  }
+
+  private boolean isES6OrHigher() {
+    return compiler.getLanguageMode().isES6OrHigher();
   }
 }

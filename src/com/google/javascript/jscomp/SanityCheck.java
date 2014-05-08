@@ -45,12 +45,12 @@ class SanityCheck implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final boolean gatherExternsFromTypes;
-
-  private final AstValidator astValidator = new AstValidator();
+  private final AstValidator astValidator;
 
   SanityCheck(AbstractCompiler compiler, boolean gatherExternsFromTypes) {
     this.compiler = compiler;
     this.gatherExternsFromTypes = gatherExternsFromTypes;
+    this.astValidator = new AstValidator(compiler);
   }
 
   @Override

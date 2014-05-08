@@ -32,12 +32,12 @@ public class AstValidatorTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return createValidator();
+    return createValidator(compiler);
   }
 
-  private AstValidator createValidator() {
+  private AstValidator createValidator(Compiler compiler) {
     lastCheckWasValid = true;
-    return new AstValidator(new ViolationHandler() {
+    return new AstValidator(compiler, new ViolationHandler() {
       @Override
       public void handleViolation(String message, Node n) {
         lastCheckWasValid = false;
@@ -120,7 +120,7 @@ public class AstValidatorTest extends CompilerTestCase {
   }
 
   private boolean doCheck(Node n, Check level) {
-    AstValidator validator = createValidator();
+    AstValidator validator = createValidator(createCompiler());
     switch (level) {
       case SCRIPT:
         validator.validateScript(n);
