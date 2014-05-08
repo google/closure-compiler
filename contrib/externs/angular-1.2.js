@@ -32,8 +32,6 @@
  *     $rootElement
  *     $rootScope
  *     $rootScopeProvider
- *     $routeParams
- *     $window
  * TODO: Resolve two issues with angular.$http
  *         1) angular.$http cannot be declared as a callable type.
  *            Its helper methods should be used instead.
@@ -1876,6 +1874,13 @@ angular.$route.Route.originalPath;
 angular.$route.Route.regexp;
 
 /******************************************************************************
+ * $routeParams Service
+ *****************************************************************************/
+
+/** @typedef {!Object.<string>} */
+angular.$routeParams;
+
+/******************************************************************************
  * $routeProvider Service
  *****************************************************************************/
 
@@ -2208,3 +2213,10 @@ angular.$timeout_;
  * @type {function(!angular.$q.Promise):boolean}
  */
 angular.$timeout_.cancel = function(promise) {};
+
+/******************************************************************************
+ * $window Service
+ *****************************************************************************/
+
+/** @typedef {!Window} */
+angular.$window;
