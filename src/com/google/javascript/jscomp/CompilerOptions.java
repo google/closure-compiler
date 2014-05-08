@@ -2253,7 +2253,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     }
 
     /** Whether this is ECMAScript 6 or higher. */
-    public boolean isES6OrHigher() {
+    public boolean isEs6OrHigher() {
       switch (this) {
         case ECMASCRIPT6:
         case ECMASCRIPT6_STRICT:

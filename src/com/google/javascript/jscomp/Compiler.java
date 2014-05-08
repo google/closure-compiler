@@ -107,6 +107,7 @@ public class Compiler extends AbstractCompiler {
 
   // Used in PerformanceTracker
   static final String PARSING_PASS_NAME = "parseInputs";
+  static final String CONVERT_ES6_PASS_NAME = "convertEs6";
   static final String CROSS_MODULE_CODE_MOTION_NAME = "crossModuleCodeMotion";
   static final String CROSS_MODULE_METHOD_MOTION_NAME =
       "crossModuleMethodMotion";
@@ -145,6 +146,10 @@ public class Compiler extends AbstractCompiler {
   Node externsRoot;
   Node jsRoot;
   Node externAndJsRoot;
+
+  /** @see {@link #getLanguageMode()} */
+  private CompilerOptions.LanguageMode languageMode =
+      CompilerOptions.LanguageMode.ECMASCRIPT3;
 
   private Map<InputId, CompilerInput> inputsById;
 
@@ -400,6 +405,7 @@ public class Compiler extends AbstractCompiler {
       List<T1> externs,
       List<T2> inputs,
       CompilerOptions options) {
+    languageMode = options.getLanguageIn();
     JSModule module = new JSModule(SINGLETON_MODULE_NAME);
     for (SourceFile input : inputs) {
       module.add(input);
@@ -730,6 +736,8 @@ public class Compiler extends AbstractCompiler {
       return;
     }
 
+    convertEs6ToEs3();
+
     if (options.nameAnonymousFunctionsOnly) {
       // TODO(nicksantos): Move this into an instrument() phase maybe?
       check();
@@ -760,6 +768,18 @@ public class Compiler extends AbstractCompiler {
     if (tracker != null) {
       tracker.outputTracerReport(outStream == null ? System.out : outStream);
     }
+  }
+
+  private void convertEs6ToEs3() {
+    CompilerPass converter = new Es6ToEs3Converter(this, options);
+
+    Tracer tracer = newTracer(CONVERT_ES6_PASS_NAME);
+    beforePass(CONVERT_ES6_PASS_NAME);
+
+    converter.process(externsRoot, jsRoot);
+
+    stopTracer(tracer, CONVERT_ES6_PASS_NAME);
+    afterPass(CONVERT_ES6_PASS_NAME);
   }
 
   public void parse() {
@@ -998,9 +1018,12 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   CompilerOptions.LanguageMode getLanguageMode() {
-    // TODO(tbreisacher): After the transpile step has run, this should return
-    // this.getOptions().getLanguageOut().
-    return this.getOptions().getLanguageIn();
+    return languageMode;
+  }
+
+  @Override
+  void setLanguageMode(CompilerOptions.LanguageMode mode) {
+    languageMode = mode;
   }
 
   /**

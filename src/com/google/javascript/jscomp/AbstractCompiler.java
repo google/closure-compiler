@@ -380,6 +380,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract CompilerOptions.LanguageMode getLanguageMode();
 
+  abstract void setLanguageMode(CompilerOptions.LanguageMode mode);
+
   // TODO(bashir) It would be good to extract a single dumb data object with
   // only getters and setters that keeps all global information we keep for a
   // compiler instance. Then move some of the functions of this class there.

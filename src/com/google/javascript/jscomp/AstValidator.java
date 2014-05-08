@@ -367,21 +367,21 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateParameters(Node n) {
-    if (isES6OrHigher()) {
-      validateParametersES6(n);
+    if (isEs6OrHigher()) {
+      validateParametersEs6(n);
     } else {
-      validateParametersES5(n);
+      validateParametersEs5(n);
     }
   }
 
-  private void validateParametersES5(Node n) {
+  private void validateParametersEs5(Node n) {
    validateNodeType(Token.PARAM_LIST, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       validateName(c);
     }
   }
 
-  private void validateParametersES6(Node n) {
+  private void validateParametersEs6(Node n) {
     validateNodeType(Token.PARAM_LIST, n);
 
     boolean defaultParams = false;
@@ -765,7 +765,7 @@ public class AstValidator implements CompilerPass {
     validateNodeType(Token.STRING_KEY, n);
     validateObjectLiteralKeyName(n);
 
-    if (isES6OrHigher()) {
+    if (isEs6OrHigher()) {
       validateMinimumChildCount(n, 0);
       validateMaximumChildCount(n, 1);
     } else {
@@ -868,7 +868,7 @@ public class AstValidator implements CompilerPass {
     }
   }
 
-  private boolean isES6OrHigher() {
-    return compiler.getLanguageMode().isES6OrHigher();
+  private boolean isEs6OrHigher() {
+    return compiler.getLanguageMode().isEs6OrHigher();
   }
 }
