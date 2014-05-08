@@ -1190,7 +1190,7 @@ class NewIRFactory {
     Node processDefaultParameter(DefaultParameterTree tree) {
       maybeWarnEs6Feature(tree, "default parameters");
 
-      Node name = IR.name(tree.identifier.identifierToken.value);
+      Node name = newStringNode(Token.NAME, tree.identifier.identifierToken.value);
       name.addChildToFront(transform(tree.expression));
       return name;
     }
