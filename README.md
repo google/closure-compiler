@@ -152,22 +152,22 @@ Two copies of Rhino exist in this repository:
     <td>URL</td>
     <td>http://www.mozilla.org/rhino</td>
   </tr>
-  
+
   <tr>
     <td>Version</td>
     <td>Trunk</td>
   </tr>
-  
+
   <tr>
     <td>License</td>
     <td>Netscape Public License and MPL / GPL dual license</td>
   </tr>
-  
+
   <tr>
     <td>Description</td>
     <td>Mozilla Rhino is an implementation of JavaScript for the JVM.</td>
   </tr>
-  
+
   <tr>
     <td>Local Modifications</td>
     <td>Minor changes to parsing JSDoc that usually get pushed
@@ -187,17 +187,17 @@ Two copies of Rhino exist in this repository:
     <td>URL</td>
     <td>http://www.mozilla.org/rhino</td>
   </tr>
-  
+
   <tr>
     <td>Version</td>
     <td>1.5R3, with heavy modifications</td>
   </tr>
-  
+
   <tr>
     <td>License</td>
     <td>Netscape Public License and MPL / GPL dual license</td>
   </tr>
-  
+
   <tr>
     <td>Description</td>
     <td>A partial copy of Mozilla Rhino. Mozilla Rhino is an
@@ -205,7 +205,7 @@ implementation of JavaScript for the JVM.  The JavaScript parser and
 the parse tree data structures were extracted and modified
 significantly for use by Google's JavaScript compiler.</td>
   </tr>
-  
+
   <tr>
     <td>Local Modifications</td>
     <td>The packages have been renamespaced. All code not
@@ -226,23 +226,23 @@ system have been added.</td>
     <td>URL</td>
     <td>https://args4j.dev.java.net/</td>
   </tr>
-  
+
   <tr>
     <td>Version</td>
     <td>2.0.26</td>
   </tr>
-  
+
   <tr>
     <td>License</td>
     <td>MIT</td>
   </tr>
-  
+
   <tr>
     <td>Description</td>
     <td>args4j is a small Java class library that makes it easy to parse command line
 options/arguments in your CUI application.</td>
   </tr>
-  
+
   <tr>
     <td>Local Modifications</td>
     <td>None</td>
@@ -261,22 +261,22 @@ options/arguments in your CUI application.</td>
     <td>URL</td>
     <td>http://code.google.com/p/guava-libraries/</td>
   </tr>
-  
+
   <tr>
     <td>Version</td>
     <td>17.0</td>
   </tr>
-  
+
   <tr>
     <td>License</td>
     <td>Apache License 2.0</td>
   </tr>
-  
+
   <tr>
     <td>Description</td>
     <td>Google's core Java libraries.</td>
   </tr>
-  
+
   <tr>
     <td>Local Modifications</td>
     <td>None</td>
@@ -295,22 +295,22 @@ options/arguments in your CUI application.</td>
     <td>URL</td>
     <td>http://code.google.com/p/jsr-305/</td>
   </tr>
-  
+
   <tr>
     <td>Version</td>
     <td>svn revision 47</td>
   </tr>
-  
+
   <tr>
     <td>License</td>
     <td>BSD License</td>
   </tr>
-  
+
   <tr>
     <td>Description</td>
     <td>Annotations for software defect detection.</td>
   </tr>
-  
+
   <tr>
     <td>Local Modifications</td>
     <td>None</td>
@@ -329,22 +329,22 @@ options/arguments in your CUI application.</td>
     <td>URL</td>
     <td>http://jarjar.googlecode.com/</td>
   </tr>
-  
+
   <tr>
     <td>Version</td>
     <td>1.1</td>
   </tr>
-  
+
   <tr>
     <td>License</td>
     <td>Apache License 2.0</td>
   </tr>
-  
+
   <tr>
     <td>Description</td>
     <td>A utility for repackaging Java libraries.</td>
   </tr>
-  
+
   <tr>
     <td>Local Modifications</td>
     <td>None</td>
@@ -363,22 +363,22 @@ options/arguments in your CUI application.</td>
     <td>URL</td>
     <td>http://sourceforge.net/projects/junit/</td>
   </tr>
-  
+
   <tr>
     <td>Version</td>
     <td>4.11</td>
   </tr>
-  
+
   <tr>
     <td>License</td>
     <td>Common Public License 1.0</td>
   </tr>
-  
+
   <tr>
     <td>Description</td>
     <td>A framework for writing and running automated tests in Java.</td>
   </tr>
-  
+
   <tr>
     <td>Local Modifications</td>
     <td>None</td>
@@ -397,23 +397,23 @@ options/arguments in your CUI application.</td>
     <td>URL</td>
     <td>http://code.google.com/p/protobuf/</td>
   </tr>
-  
+
   <tr>
     <td>Version</td>
     <td>2.5.0</td>
   </tr>
-  
+
   <tr>
     <td>License</td>
     <td>New BSD License</td>
   </tr>
-  
+
   <tr>
     <td>Description</td>
     <td>Supporting libraries for protocol buffers,
 an encoding of structured data.</td>
   </tr>
-  
+
   <tr>
     <td>Local Modifications</td>
     <td>None</td>
@@ -434,23 +434,23 @@ an encoding of structured data.</td>
     <td>URL</td>
     <td>http://ant.apache.org/bindownload.cgi</td>
   </tr>
-  
+
   <tr>
     <td>Version</td>
     <td>1.8.1</td>
   </tr>
-  
+
   <tr>
     <td>License</td>
     <td>Apache License 2.0</td>
   </tr>
-  
+
   <tr>
     <td>Description</td>
     <td>Ant is a Java based build tool. In theory it is kind of like "make"
 without make's wrinkles and with the full portability of pure java code.</td>
   </tr>
-  
+
   <tr>
     <td>Local Modifications</td>
     <td>None</td>
@@ -469,22 +469,22 @@ without make's wrinkles and with the full portability of pure java code.</td>
     <td>URL</td>
     <td>http://json.org/java/index.html</td>
   </tr>
-  
+
   <tr>
     <td>Version</td>
     <td>JSON version 20090211</td>
   </tr>
-  
+
   <tr>
     <td>License</td>
     <td>MIT license</td>
   </tr>
-  
+
   <tr>
     <td>Description</td>
     <td>JSON is a set of java files for use in transmitting data in JSON format.</td>
   </tr>
-  
+
   <tr>
     <td>Local Modifications</td>
     <td>None</td>
@@ -503,17 +503,17 @@ without make's wrinkles and with the full portability of pure java code.</td>
     <td>URL</td>
     <td>https://code.google.com/p/mockito</td>
   </tr>
-  
+
   <tr>
     <td>Version</td>
     <td>1.9.5</td>
   </tr>
-  
+
   <tr>
     <td>License</td>
     <td>MIT license</td>
   </tr>
-  
+
   <tr>
     <td>Description</td>
     <td>Mockito is an open source testing framework for Java. The framework allows the
@@ -521,7 +521,7 @@ creation of Test Double objects (called "Mock Objects") in automated unit tests
 for the purpose of Test-driven Development (TDD) or Behavior Driven Development
 (BDD).</td>
   </tr>
-  
+
   <tr>
     <td>Local Modifications</td>
     <td>None</td>
@@ -540,22 +540,22 @@ for the purpose of Test-driven Development (TDD) or Behavior Driven Development
     <td>URL</td>
     <td>http://objenesis.org</td>
   </tr>
-  
+
   <tr>
     <td>Version</td>
     <td>1.2</td>
   </tr>
-  
+
   <tr>
     <td>License</td>
     <td>Apache 2.0 license</td>
   </tr>
-  
+
   <tr>
     <td>Description</td>
     <td>Depended by lib/mockito-core.jar, not used directly.</td>
   </tr>
-  
+
   <tr>
     <td>Local Modifications</td>
     <td>None</td>
