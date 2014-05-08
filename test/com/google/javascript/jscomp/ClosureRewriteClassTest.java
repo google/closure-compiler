@@ -28,6 +28,14 @@ import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_UNEXPE
  * @author johnlenz@google.com (John Lenz)
  */
 public class ClosureRewriteClassTest extends CompilerTestCase {
+  private static final String EXTERNS =
+      "var goog = {};\n" +
+      "goog.inherits = function(a,b) {};\n" +
+      "goog.defineClass = function(a,b) {};\n" +
+      "var use\n";
+  public ClosureRewriteClassTest() {
+    super(EXTERNS);
+  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -38,6 +46,8 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     this.enableEcmaScript5(false);
+    disableTypeCheck();
+    runTypeCheckAfterProcessing = true;
   }
 
   @Override
@@ -72,6 +82,106 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "});",
 
         "{var x = function() {};}");
+  }
+
+  public void testBasic4() {
+    // verify we don't add a goog.inherits for Object
+    test(
+        "var x = goog.defineClass(Object, {\n" +
+        "  constructor: function(){}\n" +
+        "});",
+
+        "{var x = function() {};}");
+  }
+
+  public void testAnnotations1() {
+    // verify goog.defineClass values are constructible, by default
+    enableTypeCheck(CheckLevel.WARNING);
+    test(
+        "var x = goog.defineClass(Object, {\n" +
+        "  constructor: function(){}\n" +
+        "});" +
+        "new x();",
+
+        "{" +
+        "var x = function() {};" +
+        "}" +
+        "new x();");
+  }
+
+  public void testAnnotations2a() {
+    // @interface is preserved
+    enableTypeCheck(CheckLevel.WARNING);
+    test(
+        "var x = goog.defineClass(null, {\n" +
+        "  /** @interface */\n" +
+        "  constructor: function(){}\n" +
+        "});" +
+        "new x();",
+
+        "{" +
+        "var x = function() {};" +
+        "}" +
+        "new x();",
+        null,
+        TypeCheck.NOT_A_CONSTRUCTOR);
+  }
+
+  public void testAnnotations2b() {
+    // @interface is preserved, at the class level too
+    enableTypeCheck(CheckLevel.WARNING);
+    test(
+        "/** @interface */\n" +
+        "var x = goog.defineClass(null, {\n" +
+        "  constructor: function(){}\n" +
+        "});" +
+        "new x();",
+
+        "{" +
+        "var x = function() {};" +
+        "}" +
+        "new x();",
+        null,
+        TypeCheck.NOT_A_CONSTRUCTOR);
+  }
+
+  public void testAnnotations3a() {
+    // verify goog.defineClass is a @struct by default
+    enableTypeCheck(CheckLevel.WARNING);
+    test(
+        "/** @constructor */ var y = function () {};\n" +
+        "var x = goog.defineClass(y, {\n" +
+        "  constructor: function(){this.a = 1}\n" +
+        "});\n" +
+        "use(new y().a);\n",
+
+        "var y = function () {};\n" +
+        "{\n" +
+        "var x = function() {this.a = 1};\n" +
+        "goog.inherits(x,y);\n" +
+        "}\n" +
+        "use(new y().a);\n",
+        null,
+        TypeCheck.CONFLICTING_SHAPE_TYPE);
+  }
+
+  public void testAnnotations3b() {
+    // verify goog.defineClass is a @struct by default, but can be overridden
+    enableTypeCheck(CheckLevel.WARNING);
+    test(
+        "/** @constructor */ var y = function () {};\n" +
+        "/** @unrestricted */" +
+        "var x = goog.defineClass(y, {\n" +
+        "  constructor: function(){this.a = 1}\n" +
+        "});\n" +
+        "use(new y().a);\n",
+
+        "var y = function () {};\n" +
+        "{\n" +
+        "var x = function() {this.a = 1};\n" +
+        "goog.inherits(x,y);\n" +
+        "}\n" +
+        "use(new y().a);\n");
   }
 
   public void testInnerClass1() {

@@ -67,8 +67,19 @@ final public class JSDocInfoBuilder {
   private JSDocInfo.Marker currentMarker = null;
 
   public JSDocInfoBuilder(boolean parseDocumentation) {
-    this.currentInfo = new JSDocInfo(parseDocumentation);
+    this(new JSDocInfo(parseDocumentation), parseDocumentation, false);
+  }
+
+  private JSDocInfoBuilder(
+      JSDocInfo info, boolean parseDocumentation, boolean populated) {
+    this.currentInfo = info;
     this.parseDocumentation = parseDocumentation;
+    this.populated = populated;
+  }
+
+  public static JSDocInfoBuilder copyFrom(JSDocInfo info) {
+    populateDefaults(info);
+    return new JSDocInfoBuilder(info.clone(), info.isDocumentationIncluded(), true);
   }
 
   /**

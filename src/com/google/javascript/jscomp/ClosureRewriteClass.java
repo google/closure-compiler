@@ -15,15 +15,23 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
+import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Rewrites "goog.defineClass" into a form that is suitable for
@@ -159,6 +167,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
   private static final class ClassDefinition {
     final Node name;
+    final JSDocInfo classInfo;
     final Node superClass;
     final MemberDefinition constructor;
     final List<MemberDefinition> staticProps;
@@ -167,12 +176,14 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
     ClassDefinition(
         Node name,
+        JSDocInfo classInfo,
         Node superClass,
         MemberDefinition constructor,
         List<MemberDefinition> staticProps,
         List<MemberDefinition> props,
         Node classModifier) {
       this.name = name;
+      this.classInfo = classInfo;
       this.superClass = superClass;
       this.constructor = constructor;
       this.staticProps = staticProps;
@@ -188,6 +199,8 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
   private ClassDefinition extractClassDefinition(
       Node targetName, Node callNode) {
 
+    JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(targetName);
+
     // name = goog.defineClass(superClass, {...}, [modifier, ...])
     Node superClass = NodeUtil.getArgumentForCallOrNew(callNode, 0);
     if (superClass == null ||
@@ -195,7 +208,9 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       compiler.report(JSError.make(callNode, GOOG_CLASS_SUPER_CLASS_NOT_VALID));
       return null;
     }
-    if (NodeUtil.isNullOrUndefined(superClass)) {
+
+    if (NodeUtil.isNullOrUndefined(superClass)
+        || superClass.matchesQualifiedName("Object")) {
       superClass = null;
     }
 
@@ -250,6 +265,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     }
     ClassDefinition def = new ClassDefinition(
         targetName,
+        classInfo,
         maybeDetach(superClass),
         new MemberDefinition(info, null, maybeDetach(constructor)),
         objectLitToList(maybeDetach(statics)),
@@ -308,18 +324,22 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
     if (exprRoot.isVar()) {
       // example: var ctr = function(){}
-      block.addChildToBack(
-          IR.var(
-          cls.name.cloneTree(), cls.constructor.value)
-          .srcref(exprRoot).setJSDocInfo(cls.constructor.info));
+      Node var = IR.var(cls.name.cloneTree(), cls.constructor.value)
+          .srcref(exprRoot);
+      JSDocInfo mergedClassInfo = mergeJsDocFor(cls, var);
+      var.setJSDocInfo(mergedClassInfo);
+      block.addChildToBack(var);
     } else {
       // example: ns.ctr = function(){}
-      block.addChildToBack(
-          fixupSrcref(IR.exprResult(
-          IR.assign(
-          cls.name.cloneTree(), cls.constructor.value)
-          .srcref(exprRoot).setJSDocInfo(cls.constructor.info)
-          .srcref(exprRoot))).setJSDocInfo(cls.constructor.info));
+      Node assign = IR.assign(cls.name.cloneTree(), cls.constructor.value)
+          .srcref(exprRoot)
+          .setJSDocInfo(cls.constructor.info);
+
+      JSDocInfo mergedClassInfo = mergeJsDocFor(cls, assign);
+      assign.setJSDocInfo(mergedClassInfo);
+
+      Node expr = IR.exprResult(assign).srcref(exprRoot);
+      block.addChildToBack(expr);
     }
 
     if (cls.superClass != null) {
@@ -398,5 +418,124 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
           value.getFirstChild().matchesQualifiedName("goog.labs.classdef.defineClass");
     }
     return false;
+  }
+
+  static final String VIRTUAL_FILE = "<ClosureRewriteClass.java>";
+
+  private static JSDocInfo mergeJsDocFor(
+      ClassDefinition cls, Node associatedNode) {
+    // avoid null checks
+    JSDocInfo classInfo = (cls.classInfo != null)
+        ? cls.classInfo
+        : new JSDocInfo(true);
+
+    JSDocInfo ctorInfo = (cls.constructor.info != null)
+        ? cls.constructor.info
+        : new JSDocInfo(true);
+
+    Node superNode = cls.superClass;
+
+    // Start with a clone of the constructor info if there is one.
+    JSDocInfoBuilder mergedInfo = cls.constructor.info != null
+        ? JSDocInfoBuilder.copyFrom(ctorInfo)
+        : new JSDocInfoBuilder(true);
+
+    // merge block description
+    String blockDescription = Joiner.on("\n").skipNulls().join(
+        classInfo.getBlockDescription(),
+        ctorInfo.getBlockDescription());
+    if (!blockDescription.isEmpty()) {
+      mergedInfo.recordBlockDescription(blockDescription);
+    }
+
+    // merge suppressions
+    Set<String> suppressions = Sets.newHashSet();
+    suppressions.addAll(classInfo.getSuppressions());
+    suppressions.addAll(ctorInfo.getSuppressions());
+    if (!suppressions.isEmpty()) {
+      mergedInfo.recordSuppressions(suppressions);
+    }
+
+    // Use class deprecation if set.
+    if (classInfo.isDeprecated()) {
+      mergedInfo.recordDeprecated();
+    }
+
+    String deprecationReason = null;
+    if (classInfo.getDeprecationReason() != null) {
+      deprecationReason = classInfo.getDeprecationReason();
+      mergedInfo.recordDeprecationReason(deprecationReason);
+    }
+
+    // Use class visibility if specifically set
+    Visibility visibility = classInfo.getVisibility();
+    if (visibility != null && visibility != JSDocInfo.Visibility.INHERITED) {
+      mergedInfo.recordVisibility(classInfo.getVisibility());
+    }
+
+    if (classInfo.isConstant()) {
+      mergedInfo.recordConstancy();
+    }
+
+    if (classInfo.isExport()) {
+      mergedInfo.recordExport();
+    }
+
+    // @constructor is implied, @interface must be explicit
+    boolean isInterface = classInfo.isInterface() || ctorInfo.isInterface();
+    if (isInterface) {
+      mergedInfo.recordInterface();
+      List<JSTypeExpression> extendedInterfaces = null;
+      if (classInfo.getExtendedInterfacesCount() > 0) {
+        extendedInterfaces = classInfo.getExtendedInterfaces();
+      } else if (ctorInfo.getExtendedInterfacesCount() == 0
+          && superNode != null) {
+        extendedInterfaces = ImmutableList.of(new JSTypeExpression(
+            new Node(Token.BANG,
+                IR.string(superNode.getQualifiedName())),
+            VIRTUAL_FILE));
+      }
+      if (extendedInterfaces != null) {
+        for (JSTypeExpression extend : extendedInterfaces) {
+          mergedInfo.recordExtendedInterface(extend);
+        }
+      }
+    } else {
+      // @constructor by default
+      mergedInfo.recordConstructor();
+      if (classInfo.makesUnrestricted() || ctorInfo.makesUnrestricted()) {
+        mergedInfo.recordUnrestricted();
+      } else if (classInfo.makesDicts() || ctorInfo.makesDicts()) {
+        mergedInfo.recordDict();
+      } else {
+        // @struct by default
+        mergedInfo.recordStruct();
+      }
+
+      // a "super" implies @extends
+      if (superNode != null) {
+        JSTypeExpression baseType = new JSTypeExpression(
+            new Node(Token.BANG,
+              IR.string(superNode.getQualifiedName())),
+            VIRTUAL_FILE);
+        mergedInfo.recordBaseType(baseType);
+      }
+
+      // @implements from the class if they exist
+      List<JSTypeExpression> interfaces = classInfo.getImplementedInterfaces();
+      for (JSTypeExpression implemented : interfaces) {
+        mergedInfo.recordImplementedInterface(implemented);
+      }
+    }
+
+    // merge @template types if they exist
+    List<String> templateNames = new ArrayList<>();
+    templateNames.addAll(classInfo.getTemplateTypeNames());
+    templateNames.addAll(ctorInfo.getTemplateTypeNames());
+    if (templateNames.size() > 0) {
+      mergedInfo.recordTemplateTypeNames(templateNames);
+    }
+
+    return mergedInfo.build(associatedNode);
   }
 }

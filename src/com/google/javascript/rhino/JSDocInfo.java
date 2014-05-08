@@ -377,13 +377,14 @@ public class JSDocInfo implements Serializable {
    * Creates a {@link JSDocInfo} object. This object should be created using
    * a {@link JSDocInfoBuilder}.
    */
-  JSDocInfo(boolean includeDocumentation) {
+  public JSDocInfo(boolean includeDocumentation) {
     this.includeDocumentation = includeDocumentation;
   }
 
   // Visible for testing.
   public JSDocInfo() {}
 
+  @Override
   public JSDocInfo clone() {
     JSDocInfo other = new JSDocInfo();
     other.info = this.info;
@@ -395,6 +396,10 @@ public class JSDocInfo implements Serializable {
     other.includeDocumentation = this.includeDocumentation;
     other.originalCommentPosition = this.originalCommentPosition;
     return other;
+  }
+
+  boolean isDocumentationIncluded() {
+    return includeDocumentation;
   }
 
   void setConsistentIdGenerator(boolean value) {
