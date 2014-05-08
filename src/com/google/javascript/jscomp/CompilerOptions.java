@@ -64,7 +64,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /**
    * The JavaScript language version that should be produced.
-   * Currently, this is always the same as {@link #languageIn}.
    */
   private LanguageMode languageOut;
 
