@@ -3474,9 +3474,9 @@ public final class NodeUtil {
     final boolean checkUnchanged = verifyUnchangedNodes;
     Node clone = mtoc.get(main);
     if (main.getChangeTime() > clone.getChangeTime()) {
-      Preconditions.checkState(!main.isEquivalentToShallow(clone));
+      Preconditions.checkState(!isEquivalentToExcludingFunctions(main, clone));
     } else if (checkUnchanged) {
-      Preconditions.checkState(main.isEquivalentToShallow(clone));
+      Preconditions.checkState(isEquivalentToExcludingFunctions(main, clone));
     }
     visitPreOrder(main,
         new Visitor() {
@@ -3485,14 +3485,47 @@ public final class NodeUtil {
             if (n.isFunction() && mtoc.containsKey(n)) {
               Node clone = mtoc.get(n);
               if (n.getChangeTime() > clone.getChangeTime()) {
-                Preconditions.checkState(!n.isEquivalentToShallow(clone));
+                Preconditions.checkState(
+                    !isEquivalentToExcludingFunctions(n, clone));
               } else if (checkUnchanged) {
-                Preconditions.checkState(n.isEquivalentToShallow(clone));
+                Preconditions.checkState(
+                    isEquivalentToExcludingFunctions(n, clone));
               }
             }
           }
         },
         Predicates.<Node>alwaysTrue());
+  }
+
+  /**
+   * @return Whether the two node are equivalent while ignoring
+   * differences any descendant functions differences.
+   */
+  private static boolean isEquivalentToExcludingFunctions(
+      Node thisNode, Node thatNode) {
+    if (thisNode == null || thatNode == null) {
+      return thisNode == null && thatNode == null;
+    }
+    if (!thisNode.isEquivalentToShallow(thatNode)) {
+      return false;
+    }
+    if (thisNode.getChildCount() != thatNode.getChildCount()) {
+      return false;
+    }
+    Node thisChild = thisNode.getFirstChild();
+    Node thatChild = thatNode.getFirstChild();
+    while (thisChild != null && thatChild != null) {
+      if (thisChild.isFunction()) {
+        //  don't compare function name, parameters or bodies.
+        return thatChild.isFunction();
+      }
+      if (!isEquivalentToExcludingFunctions(thisChild, thatChild)) {
+        return false;
+      }
+      thisChild = thisChild.getNext();
+      thatChild = thatChild.getNext();
+    }
+    return true;
   }
 
   static JSDocInfo createConstantJsDoc() {

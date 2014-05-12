@@ -184,8 +184,8 @@ public class Node implements Cloneable, Serializable {
 
     @Override
     boolean isEquivalentTo(
-        Node node, boolean compareJsType, boolean recur, boolean shallow) {
-      boolean equiv = super.isEquivalentTo(node, compareJsType, recur, shallow);
+        Node node, boolean compareJsType, boolean recur) {
+      boolean equiv = super.isEquivalentTo(node, compareJsType, recur);
       if (equiv) {
         double thisValue = getDouble();
         double thatValue = ((NumberNode) node).getDouble();
@@ -243,8 +243,8 @@ public class Node implements Cloneable, Serializable {
 
     @Override
     boolean isEquivalentTo(
-        Node node, boolean compareJsType, boolean recur, boolean shallow) {
-      return (super.isEquivalentTo(node, compareJsType, recur, shallow)
+        Node node, boolean compareJsType, boolean recur) {
+      return (super.isEquivalentTo(node, compareJsType, recur)
           && this.str.equals(((StringNode) node).str));
     }
 
@@ -1461,7 +1461,7 @@ public class Node implements Cloneable, Serializable {
    * testing. Returns null if the nodes are equivalent.
    */
   NodeMismatch checkTreeEqualsImpl(Node node2) {
-    if (!isEquivalentTo(node2, false, false, false)) {
+    if (!isEquivalentTo(node2, false, false)) {
       return new NodeMismatch(this, node2);
     }
 
@@ -1488,7 +1488,7 @@ public class Node implements Cloneable, Serializable {
    */
   NodeMismatch checkTreeTypeAwareEqualsImpl(Node node2) {
     // Do a non-recursive equivalents check.
-    if (!isEquivalentTo(node2, true, false, false)) {
+    if (!isEquivalentTo(node2, true, false)) {
       return new NodeMismatch(this, node2);
     }
 
@@ -1507,12 +1507,12 @@ public class Node implements Cloneable, Serializable {
 
   /** Returns true if this node is equivalent semantically to another */
   public boolean isEquivalentTo(Node node) {
-    return isEquivalentTo(node, false, true, false);
+    return isEquivalentTo(node, false, true);
   }
 
-  /** Checks equivalence without going into inner functions */
+  /** Checks equivalence without going into child nodes */
   public boolean isEquivalentToShallow(Node node) {
-    return isEquivalentTo(node, false, true, true);
+    return isEquivalentTo(node, false, false);
   }
 
   /**
@@ -1520,18 +1520,17 @@ public class Node implements Cloneable, Serializable {
    * the types are equivalent.
    */
   public boolean isEquivalentToTyped(Node node) {
-    return isEquivalentTo(node, true, true, false);
+    return isEquivalentTo(node, true, true);
   }
 
   /**
    * @param compareJsType Whether to compare the JSTypes of the nodes.
-   * @param recur Whether to compare the children of the current node, if
+   * @param recurse Whether to compare the children of the current node, if
    *    not only the the count of the children are compared.
-   * @param shallow If true, the method doesn't recur into inner functions.
    * @return Whether this node is equivalent semantically to the provided node.
    */
   boolean isEquivalentTo(
-      Node node, boolean compareJsType, boolean recur, boolean shallow) {
+      Node node, boolean compareJsType, boolean recurse) {
     if (type != node.getType()
         || getChildCount() != node.getChildCount()
         || this.getClass() != node.getClass()) {
@@ -1568,13 +1567,12 @@ public class Node implements Cloneable, Serializable {
       }
     }
 
-    if (recur) {
+    if (recurse) {
       Node n, n2;
       for (n = first, n2 = node.first;
            n != null;
            n = n.next, n2 = n2.next) {
-        if (!n.isEquivalentTo(
-            n2, compareJsType, !(shallow && n.isFunction()), shallow)) {
+        if (!n.isEquivalentTo(n2, compareJsType, recurse)) {
           return false;
         }
       }
