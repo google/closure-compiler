@@ -341,9 +341,10 @@ chrome.app.window.AppWindow.prototype.close = function() {};
 
 
 /**
+ * @param {boolean=} opt_focus Should the window be focused? Defaults to true.
  * @see http://developer.chrome.com/apps/app.window.html#type-AppWindow
  */
-chrome.app.window.AppWindow.prototype.show = function() {};
+chrome.app.window.AppWindow.prototype.show = function(opt_focus) {};
 
 
 /**
