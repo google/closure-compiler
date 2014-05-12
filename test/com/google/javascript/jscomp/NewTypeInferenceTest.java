@@ -2920,14 +2920,117 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @type {Child} */ Foo.prototype.y = new Parent();",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    // TODO(dimvar): fix
-    // checkNoWarnings(
-    //     "/** @interface */\n" +
-    //     "function Foo() {}\n" +
-    //     "/** @constructor @implements {Foo} */\n" +
-    //     "function Bar() {}\n" +
-    //     "/** @return {Foo} */\n" +
-    //     "function f() { return new Bar; }");
+    checkNoWarnings(
+        "/** @interface */\n" +
+        "function High() {}\n" +
+        "/** @constructor @implements {High} */\n" +
+        "function Low() {}\n" +
+        "var /** !High */ x = new Low");
+
+    checkNoWarnings(
+        "/** @interface */\n" +
+        "function High() {}\n" +
+        "/** @interface @extends {High}*/\n" +
+        "function Low() {}\n" +
+        "function f(/** !High */ h, /** !Low */ l) { h = l; }");
+
+    checkNoWarnings(
+        "/** @interface */\n" +
+        "function High() {}\n" +
+        "/** @interface @extends {High}*/\n" +
+        "function Low() {}\n" +
+        "/** @constructor @implements {Low} */\n" +
+        "function Foo() {}\n" +
+        "var /** !High */ x = new Foo;");
+
+    checkNoWarnings(
+        "/** @interface */\n" +
+        "function Foo() {}\n" +
+        "/** @interface */\n" +
+        "function High() {}\n" +
+        "/** @interface @extends {High} */\n" +
+        "function Med() {}\n" +
+        "/**\n" +
+        " * @interface\n" +
+        " * @extends {Med}\n" +
+        " * @extends {Foo}\n" +
+        " */\n" +
+        "function Low() {}\n" +
+        "function f(/** !High */ x, /** !Low */ y) { x = y }");
+
+    typeCheck(
+        "/**\n" +
+        " * @interface\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "function f(/** !Foo.<number> */ x, /** !Foo.<string> */ y) { x = y; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/**\n" +
+        " * @interface\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @implements {Foo.<number>}\n" +
+        " */\n" +
+        "function Bar() {}\n" +
+        "function f(/** !Foo.<string> */ x, /** Bar */ y) { x = y; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/**\n" +
+        " * @interface\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " * @implements {Foo.<T>}\n" +
+        " */\n" +
+        "function Bar() {}\n" +
+        "function f(/** !Foo.<string> */ x, /** !Bar.<number> */ y) { x = y; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    checkNoWarnings(
+        "/**\n" +
+        " * @interface\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " * @implements {Foo.<T>}\n" +
+        " */\n" +
+        "function Bar() {}\n" +
+        "function f(/** !Foo.<string> */ x, /** !Bar.<string> */ y) {\n" +
+        "  x = y;\n" +
+        "}");
+
+    typeCheck(
+        "/**\n" +
+        " * @interface\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " * @implements {Foo.<T>}\n" +
+        " */\n" +
+        "function Bar() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {!Foo.<T>} x\n" +
+        " * @param {!Bar.<number>} y\n" +
+        " */\n" +
+        "function f(x, y) { x = y; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testRecordtypeSubtyping() {
@@ -4349,6 +4452,18 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var out;" +
         "var result = apply(function(x){ out = x; return x; }, 0);",
         NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+
+    typeCheck(
+        "/** @template T */\n" +
+        "function f(/** T */ x, /** T */ y) {}\n" +
+        "f(1, 'str');",
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+
+    typeCheck(
+        "/** @template T */\n" +
+        "function /** T */ f(/** T */ x) { return x; }\n" +
+        "f('str') - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testUnification() {

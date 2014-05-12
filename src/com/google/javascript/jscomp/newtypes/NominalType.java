@@ -169,7 +169,49 @@ public class NominalType {
   }
 
   boolean isSubclassOf(NominalType other) {
-    if (rawType.equals(other.rawType)) {
+    RawNominalType otherRawType = other.rawType;
+
+    // interface <: class
+    if (rawType.isInterface && !otherRawType.isInterface) {
+      return false;
+    }
+
+    // class <: interface
+    if (!rawType.isInterface && otherRawType.isInterface) {
+      if (rawType.interfaces == null) {
+        return false;
+      }
+      for (NominalType i : rawType.interfaces) {
+        if (i.instantiateGenerics(typeMap).isSubclassOf(other)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // interface <: interface
+    if (rawType.isInterface && otherRawType.isInterface) {
+      if (rawType.equals(otherRawType)) {
+        for (String typeVar : rawType.getTypeParameters()) {
+          if (!typeMap.get(typeVar).isSubtypeOf(other.typeMap.get(typeVar))) {
+            return false;
+          }
+        }
+        return true;
+      } else if (rawType.interfaces == null) {
+        return false;
+      } else {
+        for (NominalType i : rawType.interfaces) {
+          if (i.instantiateGenerics(typeMap).isSubclassOf(other)) {
+            return true;
+          }
+        }
+        return false;
+      }
+    }
+
+    // class <: class
+    if (rawType.equals(otherRawType)) {
       for (String typeVar : rawType.getTypeParameters()) {
         Preconditions.checkState(typeMap.containsKey(typeVar),
             "Type variable %s not in the domain: %s",

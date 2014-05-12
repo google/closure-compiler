@@ -52,11 +52,17 @@ public class JSTypeCreatorFromJSDoc {
 
   public JSType getNodeTypeDeclaration(JSDocInfo jsdoc,
       RawNominalType ownerType, DeclaredTypeRegistry registry) {
+    return getNodeTypeDeclaration(jsdoc, ownerType, registry, null);
+  }
+
+  private JSType getNodeTypeDeclaration(JSDocInfo jsdoc,
+      RawNominalType ownerType, DeclaredTypeRegistry registry,
+      ImmutableList<String> typeParameters) {
     if (jsdoc == null) {
       return null;
     }
     return getTypeFromJSTypeExpression(
-        jsdoc.getType(), ownerType, registry, null);
+        jsdoc.getType(), ownerType, registry, typeParameters);
   }
 
   public Set<String> getWarnings() {
@@ -584,8 +590,8 @@ public class JSTypeCreatorFromJSDoc {
          param != null;
          param = param.getNext()) {
       String pname = param.getString();
-      JSType inlineParamType = ignoreJsdoc ? null :
-          getNodeTypeDeclaration(param.getJSDocInfo(), ownerType, registry);
+      JSType inlineParamType = ignoreJsdoc ? null : getNodeTypeDeclaration(
+          param.getJSDocInfo(), ownerType, registry, typeParameters);
       boolean isRequired = true, isRestFormals = false;
       JSTypeExpression texp = jsdoc == null ?
           null : jsdoc.getParameterType(pname);
@@ -633,7 +639,7 @@ public class JSTypeCreatorFromJSDoc {
       builder.addRetType(JSType.UNDEFINED);
     } else if (inlineRetJsdoc != null) {
       builder.addRetType(getNodeTypeDeclaration(
-          inlineRetJsdoc, ownerType, registry));
+          inlineRetJsdoc, ownerType, registry, typeParameters));
       if (retTypeExp != null) {
         warn("Found two JsDoc comments for the return type", funNode);
       }
