@@ -75,6 +75,7 @@ HTMLCanvasElement.prototype.getContext = function(contextId, opt_args) {};
 
 /**
  * @constructor
+ * @see http://www.w3.org/TR/2dcontext/#canvasrenderingcontext2d
  */
 function CanvasRenderingContext2D() {}
 
@@ -269,11 +270,11 @@ CanvasRenderingContext2D.prototype.rect = function(x, y, w, h) {};
  * @param {number} radius
  * @param {number} startAngle
  * @param {number} endAngle
- * @param {boolean=} anticlockwise
+ * @param {boolean=} opt_anticlockwise
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.arc = function(
-    x, y, radius, startAngle, endAngle, anticlockwise) {};
+    x, y, radius, startAngle, endAngle, opt_anticlockwise) {};
 
 /**
  * @return {undefined}
@@ -330,7 +331,8 @@ CanvasRenderingContext2D.prototype.measureText = function(text) {};
  * @param {number} dx Destination x coordinate.
  * @param {number} dy Destination y coordinate.
  * @param {number=} opt_dw Destination box width.  Defaults to the image width.
- * @param {number=} opt_dh Destination box height.  Defaults to the image height.
+ * @param {number=} opt_dh Destination box height.
+ *     Defaults to the image height.
  * @param {number=} opt_sx Source box x coordinate.  Used to select a portion of
  *     the source image to draw.  Defaults to 0.
  * @param {number=} opt_sy Source box y coordinate.  Used to select a portion of
@@ -686,19 +688,25 @@ HTMLImageElement.prototype.complete;
 HTMLImageElement.prototype.crossOrigin;
 
 /**
- * The postMessage method (as defined by HTML5 spec and implemented in FF3).
+ * This is a superposition of the Window and Worker postMessage methods.
  * @param {*} message
- * @param {string|Array} targetOrigin The target origin in the 2-argument
- *     version of this function. WebKit seems to have implemented this
- *     function wrong in the 3-argument version so that ports is the
- *     second argument.
- * @param {string|Array=} ports An optional array of ports or the target
- *     origin. WebKit seems to have implemented this
- *     function wrong in the 3-argument version so that targetOrigin is the
- *     third argument.
+ * @param {(string|!Array.<!Transferable>)=} opt_targetOriginOrTransfer
+ * @param {Array.<!Transferable>=} opt_transfer
+ * @return {void}
+ */
+function postMessage(message, opt_targetOriginOrTransfer, opt_transfer) {}
+
+/**
+ * The postMessage method (as defined by HTML5 spec), with support for the
+ * obsolete 'ports' argument in either 2nd or 3rd position.
+ * @param {*} message
+ * @param {string|Array.<!MessagePort>} targetOriginOrPorts
+ * @param {(string|Array.<!MessagePort>|Array.<!Transferable>)=}
+ *     opt_targetOriginOrPortsOrTransfer
  * @see http://dev.w3.org/html5/postmsg/#dom-window-postmessage
  */
-Window.prototype.postMessage = function(message, targetOrigin, ports) {};
+Window.prototype.postMessage = function(message, targetOriginOrPorts,
+    opt_targetOriginOrPortsOrTransfer) {};
 
 /**
  * The postMessage method (as implemented in Opera).
@@ -942,14 +950,14 @@ Worker.prototype.terminate = function() {};
 /**
  * Posts a message to the worker thread.
  * @param {*} message
- * @param {Array.<Transferable>=} opt_transfer
+ * @param {Array.<!Transferable>=} opt_transfer
  */
 Worker.prototype.postMessage = function(message, opt_transfer) {};
 
 /**
  * Posts a message to the worker thread.
  * @param {*} message
- * @param {Array.<Transferable>=} opt_transfer
+ * @param {Array.<!Transferable>=} opt_transfer
  */
 Worker.prototype.webkitPostMessage = function(message, opt_transfer) {};
 
@@ -1076,7 +1084,7 @@ function DedicatedWorkerGlobalScope() {}
 /**
  * Posts a message to creator of this worker.
  * @param {*} message
- * @param {Array.<Transferable>=} opt_transfer
+ * @param {Array.<!Transferable>=} opt_transfer
  */
 DedicatedWorkerGlobalScope.prototype.postMessage =
     function(message, opt_transfer) {};
@@ -1084,7 +1092,7 @@ DedicatedWorkerGlobalScope.prototype.postMessage =
 /**
  * Posts a message to creator of this worker.
  * @param {*} message
- * @param {Array.<Transferable>=} opt_transfer
+ * @param {Array.<!Transferable>=} opt_transfer
  */
 DedicatedWorkerGlobalScope.prototype.webkitPostMessage =
     function(message, opt_transfer) {};
@@ -1510,7 +1518,7 @@ MessagePort.prototype.dispatchEvent = function(evt) {};
  * Posts a message through the channel, optionally with the given
  * Array of Transferables.
  * @param {*} message
- * @param {Array.<Transferable>=} opt_transfer
+ * @param {Array.<!Transferable>=} opt_transfer
  */
 MessagePort.prototype.postMessage = function(message, opt_transfer) {
 };
