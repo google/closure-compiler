@@ -332,6 +332,13 @@ public class AstValidator implements CompilerPass {
     }
   }
 
+  private void validateEmptyString(Node n) {
+    validateNonNullString(n);
+    if (!n.getString().isEmpty()) {
+      violation("Expected empty string.", n);
+    }
+  }
+
   private void validateNonNullString(Node n) {
     if (n.getString() == null) {
       violation("Expected non-null string.", n);
@@ -350,6 +357,12 @@ public class AstValidator implements CompilerPass {
     validateChildCount(n, Token.arity(Token.NAME));
   }
 
+  private void validateEmptyName(Node n) {
+    validateNodeType(Token.NAME, n);
+    validateEmptyString(n);
+    validateChildCount(n, Token.arity(Token.NAME));
+  }
+
   private void validateFunctionStatement(Node n) {
     validateNodeType(Token.FUNCTION, n);
     validateChildCount(n, Token.arity(Token.FUNCTION));
@@ -361,9 +374,23 @@ public class AstValidator implements CompilerPass {
   private void validateFunctionExpression(Node n) {
     validateNodeType(Token.FUNCTION, n);
     validateChildCount(n, Token.arity(Token.FUNCTION));
-    validateOptionalName(n.getFirstChild());
+
     validateParameters(n.getChildAtIndex(1));
-    validateBlock(n.getLastChild());
+
+    if (n.isArrowFunction()) {
+      if (!isEs6OrHigher()) {
+        violation("Arrow functions are not allowed in this language mode.", n);
+      }
+      validateEmptyName(n.getFirstChild());
+      if (n.getLastChild().getType() == Token.BLOCK) {
+        validateBlock(n.getLastChild());
+      } else {
+        validateExpression(n.getLastChild());
+      }
+    } else {
+      validateOptionalName(n.getFirstChild());
+      validateBlock(n.getLastChild());
+    }
   }
 
   private void validateParameters(Node n) {
