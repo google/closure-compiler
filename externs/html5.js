@@ -1543,12 +1543,13 @@ MessagePort.prototype.onmessage;
  * @see http://dev.w3.org/html5/spec/comms.html#messageevent
  * @constructor
  * @extends {Event}
+ * @template T
  */
 function MessageEvent() {}
 
 /**
  * The data payload of the message.
- * @type {*}
+ * @type {T}
  */
 MessageEvent.prototype.data;
 
@@ -1584,7 +1585,7 @@ MessageEvent.prototype.ports;
  * @param {string} typeArg
  * @param {boolean} canBubbleArg
  * @param {boolean} cancelableArg
- * @param {*} dataArg
+ * @param {T} dataArg
  * @param {string} originArg
  * @param {string} lastEventIdArg
  * @param {Window} sourceArg
@@ -1600,7 +1601,7 @@ MessageEvent.prototype.initMessageEvent = function(typeArg, canBubbleArg,
  * @param {string} typeArg
  * @param {boolean} canBubbleArg
  * @param {boolean} cancelableArg
- * @param {*} dataArg
+ * @param {T} dataArg
  * @param {string} originArg
  * @param {string} lastEventIdArg
  * @param {Window} sourceArg
