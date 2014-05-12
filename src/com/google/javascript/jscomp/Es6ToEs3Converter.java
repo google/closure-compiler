@@ -25,11 +25,15 @@ import com.google.javascript.rhino.Token;
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
-public class Es6ToEs3Converter implements CompilerPass, NodeTraversal.Callback {
+public class Es6ToEs3Converter extends NodeTraversal.AbstractPreOrderCallback
+    implements CompilerPass {
   private final AbstractCompiler compiler;
 
   private final LanguageMode languageIn;
   private final LanguageMode languageOut;
+
+  // The name of the var that captures 'this' for converting arrow functions.
+  private static final String THIS_VAR = "$jscomp$this";
 
   public Es6ToEs3Converter(AbstractCompiler compiler, CompilerOptions options) {
     this.compiler = compiler;
@@ -51,16 +55,22 @@ public class Es6ToEs3Converter implements CompilerPass, NodeTraversal.Callback {
   }
 
   @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
       case Token.STRING_KEY:
         visitStringKey(n);
         break;
+      case Token.FUNCTION:
+        if (n.isArrowFunction()) {
+          visitArrowFunction(t, n);
+        }
+        break;
     }
+    return true;
   }
 
   /**
-   * Convert extended object literal {a} to {a:a}.
+   * Converts extended object literal {a} to {a:a}.
    */
   private void visitStringKey(Node n) {
     if (!n.hasChildren()) {
@@ -71,9 +81,66 @@ public class Es6ToEs3Converter implements CompilerPass, NodeTraversal.Callback {
     }
   }
 
-  @Override
-  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    return true;
+  /**
+   * Converts arrow functions to standard anonymous functions.
+   */
+  private void visitArrowFunction(NodeTraversal t, Node n) {
+    n.setIsArrowFunction(false);
+    Node body = n.getLastChild();
+    if (!body.isBlock()) {
+      body.detachFromParent();
+      Node newBody = IR.block(IR.returnNode(body).srcref(body)).srcref(body);
+      n.addChildToBack(newBody);
+    }
+
+    UpdateThisNodes thisUpdater = new UpdateThisNodes();
+    NodeTraversal.traverse(compiler, body, thisUpdater);
+    if (thisUpdater.changed) {
+      addThisVar(t);
+    }
+
+    compiler.reportCodeChange();
+  }
+
+  private void addThisVar(NodeTraversal t) {
+    Scope scope = t.getScope();
+    if (scope.isDeclared(THIS_VAR, false)) {
+      return;
+    }
+
+    Node parent = t.getScopeRoot();
+    if (parent.isFunction()) {
+      // Add the new node at the beginning of the function body.
+      parent = parent.getLastChild();
+    }
+    if (parent.isSyntheticBlock()) {
+      // Add the new node inside the SCRIPT node instead of the
+      // synthetic block that contains it.
+      parent = parent.getFirstChild();
+    }
+
+    Node name = IR.name(THIS_VAR).srcref(parent);
+    Node thisVar = IR.var(name, IR.thisNode().srcref(parent));
+    thisVar.srcref(parent);
+    parent.addChildToFront(thisVar);
+    scope.declare(THIS_VAR, name, null, compiler.getInput(parent.getInputId()));
+  }
+
+  private static class UpdateThisNodes implements NodeTraversal.Callback {
+    private boolean changed = false;
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isThis()) {
+        Node name = IR.name(THIS_VAR).srcref(n);
+        parent.replaceChild(n, name);
+        changed = true;
+      }
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return !n.isFunction() || n.isArrowFunction();
+    }
   }
 }
-

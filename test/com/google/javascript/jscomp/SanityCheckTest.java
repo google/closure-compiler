@@ -61,8 +61,7 @@ public class SanityCheckTest extends CompilerTestCase {
     try {
       test("var x = 3;", "var x=3;0;0");
     } catch (IllegalStateException e) {
-      assertEquals("Expected BLOCK but was EMPTY Reference node EMPTY",
-          e.getMessage());
+      assertTrue(e.getMessage().contains("Expected BLOCK but was EMPTY"));
       exceptionCaught = true;
     }
     assertTrue(exceptionCaught);

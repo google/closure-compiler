@@ -52,7 +52,7 @@ public class AstValidator implements CompilerPass {
       @Override
       public void handleViolation(String message, Node n) {
         throw new IllegalStateException(
-            message + " Reference node " + n.toString());
+            message + ". Reference node:\n" + n.toStringTree());
       }
     });
   }

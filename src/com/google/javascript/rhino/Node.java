@@ -1565,6 +1565,10 @@ public class Node implements Cloneable, Serializable {
       if (this.getBooleanProp(FREE_CALL) != node.getBooleanProp(FREE_CALL)) {
         return false;
       }
+    } else if (type == Token.FUNCTION) {
+      if (this.isArrowFunction() != node.isArrowFunction()) {
+        return false;
+      }
     }
 
     if (recurse) {
