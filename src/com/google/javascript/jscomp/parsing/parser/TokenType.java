@@ -131,6 +131,7 @@ public enum TokenType {
   FALSE,
   NUMBER("number literal"),
   STRING("string literal"),
+  TEMPLATE_STRING("template string"),
   REGULAR_EXPRESSION("regular expression literal"),
 
   // Harmony extensions

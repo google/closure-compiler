@@ -542,6 +542,8 @@ public class Scanner {
       case '"':
       case '\'':
         return scanStringLiteral(beginToken, ch);
+      case '`':
+        return scanTemplateString(beginToken);
       default:
         return scanIdentifierOrKeyword(beginToken, ch);
       }
@@ -707,6 +709,22 @@ public class Scanner {
         TokenType.STRING, getTokenString(beginIndex), getTokenRange(beginIndex));
   }
 
+  private Token scanTemplateString(int beginIndex) {
+    while (peekTemplateStringChar()) {
+      if (!skipStringLiteralChar()) {
+        return new LiteralToken(
+            TokenType.TEMPLATE_STRING, getTokenString(beginIndex), getTokenRange(beginIndex));
+      }
+    }
+    if (peekChar() != '`') {
+      reportError(getPosition(beginIndex), "Unterminated template string");
+    } else {
+      nextChar();
+    }
+    return new LiteralToken(
+        TokenType.TEMPLATE_STRING, getTokenString(beginIndex), getTokenRange(beginIndex));
+  }
+
   private String getTokenString(int beginIndex) {
     return this.source.contents.substring(beginIndex, this.index);
   }
@@ -723,6 +741,10 @@ public class Scanner {
     return true;
   }
 
+  private boolean peekTemplateStringChar() {
+    return !isAtEnd() && peekChar() != '`';
+  }
+
   private boolean skipStringLiteralEscapeSequence() {
     nextChar();
     if (isAtEnd()) {
@@ -737,6 +759,7 @@ public class Scanner {
     switch (nextChar()) {
     case '\'':
     case '"':
+    case '`':
     case '\\':
     case 'b':
     case 'f':

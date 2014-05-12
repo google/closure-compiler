@@ -110,6 +110,7 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processSwitchCase(CaseClauseTree tree);
   abstract T processSwitchStatement(SwitchStatementTree tree);
   abstract T processThrowStatement(ThrowStatementTree tree);
+  abstract T processTemplateString(LiteralExpressionTree tree);
   abstract T processTryStatement(TryStatementTree tree);
   abstract T processUnaryExpression(UnaryExpressionTree tree);
   abstract T processVariableStatement(VariableStatementTree tree);
@@ -156,6 +157,8 @@ abstract class NewTypeSafeDispatcher<T> {
         return processNumberLiteral(expr);
       case STRING:
         return processStringLiteral(expr);
+      case TEMPLATE_STRING:
+        return processTemplateString(expr);
       case FALSE:
       case TRUE:
         return processBooleanLiteral(expr);

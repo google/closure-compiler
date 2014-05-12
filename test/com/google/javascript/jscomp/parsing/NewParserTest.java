@@ -1188,6 +1188,44 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("'\\\n';");
   }
 
+  private void testTemplateString(String s) {
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(s,
+        "this language feature is only supported in es6 mode: template strings");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parse(s);
+  }
+
+  public void testTemplateString() {
+    testTemplateString("`hello world`;");
+    testTemplateString("`hello\nworld`;");
+    testTemplateString("`string containing \\`escaped\\` backticks`;");
+  }
+
+  public void testTemplateStringPlaceholder() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parse("`hello \\${name}`;");
+    parseWarning("`hello ${name}`;",
+        "Placeholders in template strings are not supported yet.");
+  }
+
+  public void testUnterminatedTemplateString() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError("`hello",
+        "Unterminated template string");
+    parseError("`hello\\`",
+        "Unterminated template string");
+  }
+
+  public void testIncorrectEscapeSequenceInTemplateString() {
+    parseError("`hello\\x",
+        "Hex digit expected");
+    parseError("`hello\\x`",
+        "Hex digit expected");
+  }
+
   public void testBinaryLiterals() {
     mode = LanguageMode.ECMASCRIPT3;
     parseWarning("0b0001;",

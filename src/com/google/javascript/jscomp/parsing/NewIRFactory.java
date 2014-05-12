@@ -1549,6 +1549,21 @@ class NewIRFactory {
       return n;
     }
 
+    @Override
+    Node processTemplateString(LiteralExpressionTree tree) {
+      maybeWarnEs6Feature(tree, "template strings");
+      LiteralToken token = tree.literalToken.asLiteral();
+      Preconditions.checkState(token.type == TokenType.TEMPLATE_STRING);
+      if (Pattern.compile("[^\\\\]\\$\\{").matcher(token.value).find()) {
+        errorReporter.warning(
+            "Placeholders in template strings are not supported yet.",
+            sourceName, lineno(tree), "", charno(tree));
+      }
+
+      Node node = newStringNode(Token.STRING, normalizeString(token));
+      setSourceInfo(node, token);
+      return node;
+    }
 
     @Override
     Node processSwitchCase(CaseClauseTree caseNode) {

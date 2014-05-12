@@ -1244,6 +1244,7 @@ public class Parser {
     case TRUE:
     case FALSE:
     case NULL:
+    case TEMPLATE_STRING:
       return parseLiteralExpression();
     case OPEN_SQUARE:
       return parseArrayLiteral();
@@ -1515,6 +1516,7 @@ public class Parser {
     case SLASH: // regular expression literal
     case SLASH_EQUAL:
     case STRING:
+    case TEMPLATE_STRING:
     case SUPER:
     case THIS:
     case TILDE:
@@ -1981,7 +1983,7 @@ public class Parser {
    * Whether we have a spread expression or an assignment next.
    *
    * This does not peek the operand for the spread expression. This means that
-   * {@code parseAssignmentOrSpred} might still fail when this returns true.
+   * {@code parseAssignmentOrSpread} might still fail when this returns true.
    */
   private boolean peekAssignmentOrSpread() {
     return peek(TokenType.SPREAD) || peekAssignmentExpression();
