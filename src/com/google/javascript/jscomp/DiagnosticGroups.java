@@ -82,11 +82,12 @@ public class DiagnosticGroups {
       "const, constantProperty, deprecated, duplicateMessage, es3, " +
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
       "internetExplorerChecks, invalidCasts, misplacedTypeAnnotation, " +
-      "missingProperties, missingProvide, missingRequire, missingReturn," +
+      "missingGetCssName, missingProperties, " +
+      "missingProvide, missingRequire, missingReturn," +
       "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, suspiciousCode, " +
       "strictModuleDepCheck, typeInvalidation, " +
-      "undefinedNames, undefinedVars, unknownDefines, uselessCode, useOfGoogBase, " +
-      "visibility";
+      "undefinedNames, undefinedVars, unknownDefines, uselessCode, " +
+      "useOfGoogBase, visibility";
 
   public static final DiagnosticGroup GLOBAL_THIS =
       DiagnosticGroups.registerGroup("globalThis",
@@ -292,6 +293,10 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup MISSING_REQUIRE =
       DiagnosticGroups.registerGroup("missingRequire",
           CheckRequiresForConstructors.MISSING_REQUIRE_WARNING);
+
+  public static final DiagnosticGroup MISSING_GETCSSNAME =
+      DiagnosticGroups.registerGroup("missingGetCssName",
+          CheckMissingGetCssName.MISSING_GETCSSNAME);
 
   public static final DiagnosticGroup DUPLICATE_MESSAGE =
       DiagnosticGroups.registerGroup("duplicateMessage",
