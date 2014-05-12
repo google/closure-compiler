@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Tests {@link CheckGlobalThis}.
  */
@@ -238,7 +240,27 @@ public class CheckGlobalThisTest extends CompilerTestCase {
 
   public void testSuppressWarning() {
     testFailure("var x = function() { this.complex = 5; };");
-    testSame("/** @suppress {globalThis} */" +
-        "var x = function() { this.complex = 5; };");
+  }
+
+  public void testArrowFunction1() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testFailure("var a = () => this.foo;");
+  }
+
+  public void testArrowFunction2() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testFailure("(() => this.foo)();");
+  }
+
+  public void testArrowFunction3() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testFailure("function Foo() {} " +
+        "Foo.prototype.getFoo = () => this.foo;");
+  }
+
+  public void testArrowFunction4() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testFailure("function Foo() {} " +
+        "Foo.prototype.setFoo = (f) => { this.foo = f; };");
   }
 }

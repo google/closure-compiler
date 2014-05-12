@@ -110,9 +110,9 @@ public abstract class CompilerTestCase extends TestCase  {
   private Compiler lastCompiler;
 
   /**
-   * Whether to acceptES5 source.
+   * Whether to accept ES6, ES5 or ES3 source.
    */
-  private boolean acceptES5 = true;
+  private LanguageMode acceptedLanguage = LanguageMode.ECMASCRIPT5;
 
   /**
    * Whether externs changes should be allowed for this pass.
@@ -192,9 +192,7 @@ public abstract class CompilerTestCase extends TestCase  {
    * determine what passes should be run.
    */
   protected CompilerOptions getOptions(CompilerOptions options) {
-    if (this.acceptES5) {
-      options.setLanguageIn(LanguageMode.ECMASCRIPT5);
-    }
+    options.setLanguageIn(acceptedLanguage);
 
     // This doesn't affect whether checkSymbols is run--it just affects
     // whether variable warnings are filtered.
@@ -240,7 +238,15 @@ public abstract class CompilerTestCase extends TestCase  {
    * Whether to allow ECMASCRIPT5 source parsing.
    */
   protected void enableEcmaScript5(boolean acceptES5) {
-    this.acceptES5 = acceptES5;
+    this.acceptedLanguage =
+        acceptES5 ? LanguageMode.ECMASCRIPT5 : LanguageMode.ECMASCRIPT3;
+  }
+
+  /**
+   * Whether to allow ECMASCRIPT5 source parsing.
+   */
+  protected void setAcceptedLanguage(LanguageMode acceptedLanguage) {
+    this.acceptedLanguage = acceptedLanguage;
   }
 
   /**
@@ -499,9 +505,7 @@ public abstract class CompilerTestCase extends TestCase  {
 
     CompilerOptions options = getOptions();
 
-    if (this.acceptES5) {
-      options.setLanguageIn(LanguageMode.ECMASCRIPT5);
-    }
+    options.setLanguageIn(acceptedLanguage);
     // Note that in this context, turning on the checkTypes option won't
     // actually cause the type check to run.
     options.checkTypes = parseTypeInfo;

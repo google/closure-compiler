@@ -80,6 +80,11 @@ final class CheckGlobalThis implements Callback {
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
 
     if (n.isFunction()) {
+      // Arrow functions don't bind this
+      if (n.isArrowFunction()) {
+        return true;
+      }
+
       // Don't traverse functions that are constructors or have the @this
       // or @override annotation.
       JSDocInfo jsDoc = getFunctionJsDocInfo(n);

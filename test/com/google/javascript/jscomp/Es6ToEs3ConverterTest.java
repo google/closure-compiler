@@ -26,13 +26,12 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public class Es6ToEs3ConverterTest extends CompilerTestCase {
   @Override
   public void setUp() {
-    enableEcmaScript5(false);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
   }
 
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     return options;
   }
