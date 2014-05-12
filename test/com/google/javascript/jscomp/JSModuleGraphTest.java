@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -229,6 +230,36 @@ public class JSModuleGraphTest extends TestCase {
         sourceNames(results));
   }
 
+  private static final String BASEJS = Joiner.on("\n").join(
+      "/** @provideGoog */",
+      "var COMPILED = false;",
+      "var goog = goog || {}");
+
+
+  public void testManageDependencies5() throws Exception {
+    A.add(code("a2", provides("a2"), requires("a1")));
+    A.add(code("a1", provides("a1"), requires()));
+    A.add(code("base.js", BASEJS, provides(), requires()));
+
+    for (CompilerInput input : A.getInputs()) {
+      input.setCompiler(compiler);
+    }
+
+    DependencyOptions depOptions = new DependencyOptions();
+    depOptions.setDependencySorting(true);
+
+    List<CompilerInput> inputs = Lists.newArrayList();
+    inputs.addAll(A.getInputs());
+    List<CompilerInput> results = graph.manageDependencies(
+        depOptions, inputs);
+
+    assertInputs(A, "base.js", "a1", "a2");
+
+    assertEquals(
+        Lists.newArrayList("base.js", "a1", "a2"),
+        sourceNames(results));
+  }
+
   public void testNoFiles() throws Exception {
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
@@ -300,6 +331,12 @@ public class JSModuleGraphTest extends TestCase {
 
   private SourceFile code(
       String sourceName, List<String> provides, List<String> requires) {
+    return code(sourceName, "", provides, requires);
+  }
+
+  private SourceFile code(
+      String sourceName, String source,
+      List<String> provides, List<String> requires) {
     String text = "";
     for (String p : provides) {
       text += "goog.provide('" + p + "');\n";
@@ -307,7 +344,7 @@ public class JSModuleGraphTest extends TestCase {
     for (String r : requires) {
       text += "goog.require('" + r + "');\n";
     }
-    return SourceFile.fromCode(sourceName, text);
+    return SourceFile.fromCode(sourceName, text + source);
   }
 
   private List<String> provides(String ... strings) {
