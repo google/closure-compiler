@@ -71,6 +71,11 @@ class RhinoErrorReporter {
       DiagnosticType.warning("INVALID_OCTAL_LITERAL",
           "This style of octal literal is not supported in strict mode.");
 
+  static final DiagnosticType ES6_FEATURE =
+      DiagnosticType.error("ES6_FEATURE",
+          "{0}. Use --language_in=ECMASCRIPT6 or ECMASCRIPT6_STRICT " +
+          "to enable ES6 features.");
+
   // A map of Rhino messages to their DiagnosticType.
   private final Map<Pattern, DiagnosticType> typeMap;
 
@@ -128,6 +133,9 @@ class RhinoErrorReporter {
         // Octal literals
         .put(Pattern.compile("^Octal .*literal.*"),
             INVALID_OCTAL_LITERAL)
+
+        .put(Pattern.compile("^this language feature is only supported in es6 mode.*"),
+            ES6_FEATURE)
 
         .build();
   }
