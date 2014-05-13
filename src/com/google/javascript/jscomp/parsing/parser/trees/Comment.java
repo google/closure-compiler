@@ -21,9 +21,18 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 /** placeholder class */
 public class Comment {
   public static enum Type {
+    // /* comment */
     BLOCK,
+
+    // // comment
     LINE,
-    JSDOC
+
+    // /** comment */
+    JSDOC,
+
+    // #!/usr/bin/node
+    // Only valid at the start of a file.
+    SHEBANG
   }
 
   public final String value;

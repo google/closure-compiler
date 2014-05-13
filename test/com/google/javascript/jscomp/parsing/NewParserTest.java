@@ -1803,6 +1803,12 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "for-of statement may not have initializer");
   }
 
+  public void testShebang() {
+    parse("#!/usr/bin/node\n var x = 1;");
+    parseError("var x = 1; \n #!/usr/bin/node",
+        "primary expression expected");
+  }
+
   private Node script(Node stmt) {
     Node n = new Node(Token.SCRIPT, stmt);
     n.setIsSyntheticBlock(true);
