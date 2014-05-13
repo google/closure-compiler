@@ -817,7 +817,6 @@ public class IntegrationTest extends IntegrationTestCase {
   public void testAllChecksOn() {
     CompilerOptions options = createCompilerOptions();
     options.checkSuspiciousCode = true;
-    options.checkControlStructures = true;
     options.checkRequires = CheckLevel.ERROR;
     options.checkProvides = CheckLevel.ERROR;
     options.generateExports = true;

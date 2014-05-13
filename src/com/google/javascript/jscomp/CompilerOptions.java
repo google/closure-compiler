@@ -167,13 +167,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Checks for suspicious statements that have no effect */
   public boolean checkSuspiciousCode;
 
-  /**
-   * TODO(tbreisacher): Remove this after the next release.
-   * @deprecated
-   */
-  @Deprecated
-  public boolean checkControlStructures;
-
   /** Checks types on expressions */
   public boolean checkTypes;
 
@@ -1738,14 +1731,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setCheckSuspiciousCode(boolean checkSuspiciousCode) {
     this.checkSuspiciousCode = checkSuspiciousCode;
-  }
-
-  /**
-   * TODO(tbreisacher): Remove this after the next release.
-   * @deprecated
-   */
-  @Deprecated
-  public void setCheckControlStructures(boolean checkControlStructures) {
   }
 
   public void setCheckTypes(boolean checkTypes) {
