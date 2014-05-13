@@ -317,6 +317,12 @@ public class Scanner {
           return true;
         }
         break;
+      case '#':
+        if (index == 0 && peekChar(1) == '!') {
+          skipSingleLineComment(Comment.Type.SHEBANG);
+          return true;
+        }
+        break;
       }
     }
     return false;
@@ -329,13 +335,17 @@ public class Scanner {
   }
 
   private void skipSingleLineComment() {
+    skipSingleLineComment(Comment.Type.LINE);
+  }
+
+  private void skipSingleLineComment(Comment.Type type) {
     int startOffset = index;
     while (!isAtEnd() && !isLineTerminator(peekChar())) {
       nextChar();
     }
     SourceRange range = getLineNumberTable().getSourceRange(startOffset, index);
     String value = this.source.contents.substring(startOffset, index);
-    recordComment(Comment.Type.LINE, range, value);
+    recordComment(type, range, value);
   }
 
   private void recordComment(
