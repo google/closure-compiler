@@ -1400,6 +1400,123 @@ HTMLMediaElement.prototype.volume;
 HTMLMediaElement.prototype.muted;
 
 /**
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#dom-media-addtexttrack
+ * @param {string} kind Kind of the text track.
+ * @param {string=} opt_label Label of the text track.
+ * @param {string=} opt_language Language of the text track.
+ * @return {TextTrack} TextTrack object added to the media element.
+ */
+HTMLMediaElement.prototype.addTextTrack =
+    function(kind, opt_label, opt_language) {};
+
+/** @type {TextTrackList} */
+HTMLMediaElement.prototype.textTracks;
+
+
+
+/**
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttracklist
+ * @constructor
+ */
+function TextTrackList() {}
+
+/** @type {number} */
+TextTrackList.prototype.length;
+
+/**
+ * @param {string} id
+ * @return {TextTrack}
+ */
+TextTrackList.prototype.getTrackById = function(id) {};
+
+
+/**
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttrack
+ * @constructor
+ * @implements {EventTarget}
+ */
+function TextTrack() {}
+
+/**
+ * @param {TextTrackCue} cue
+ */
+TextTrack.prototype.addCue = function(cue) {};
+
+/**
+ * @param {TextTrackCue} cue
+ */
+TextTrack.prototype.removeCue = function(cue) {};
+
+/**
+ * @const {TextTrackCueList}
+ */
+TextTrack.prototype.activeCues;
+
+/**
+ * @const {TextTrackCueList}
+ */
+TextTrack.prototype.cues;
+
+/** @override */
+TextTrack.prototype.addEventListener = function(type, listener, useCapture) {};
+
+/** @override */
+TextTrack.prototype.dispatchEvent = function(evt) {};
+
+/** @override */
+TextTrack.prototype.removeEventListener = function(type, listener, useCapture)
+    {};
+
+
+
+/**
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttrackcuelist
+ * @constructor
+ */
+function TextTrackCueList() {}
+
+/** @const {number} */
+TextTrackCueList.prototype.length;
+
+/**
+ * @param {string} id
+ * @return {TextTrackCue}
+ */
+TextTrackCueList.prototype.getCueById = function(id) {};
+
+
+
+/**
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttrackcue
+ * @constructor
+ * @param {number} startTime
+ * @param {number} endTime
+ * @param {string} text
+ */
+function TextTrackCue(startTime, endTime, text) {}
+
+/** @type {string} */
+TextTrackCue.prototype.id;
+
+/** @type {number} */
+TextTrackCue.prototype.startTime;
+
+/** @type {number} */
+TextTrackCue.prototype.endTime;
+
+/** @type {string} */
+TextTrackCue.prototype.text;
+
+
+/**
+ * @see http://dev.w3.org/html5/webvtt/#the-vttcue-interface
+ * @constructor
+ * @extends {TextTrackCue}
+ */
+function VTTCue(startTime, endTime, text) {}
+
+
+/**
  * @constructor
  * @extends {HTMLMediaElement}
  */
