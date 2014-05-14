@@ -12986,6 +12986,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: null", false);
   }
 
+  public void testModuleReferenceNotAllowed() throws Exception {
+    testTypes(
+        "/** @param {./Foo} z */ function f(z) {}",
+        "Bad type annotation. Unknown type ./Foo");
+  }
 
   private void testTypes(String js) throws Exception {
     testTypes(js, (String) null);

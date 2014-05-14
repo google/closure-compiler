@@ -1419,9 +1419,6 @@ public final class JsDocInfoParser {
       case COLON:
         return ":";
 
-      case COLONCOLON:
-        return "::";
-
       case GT:
         return ">";
 
@@ -2014,80 +2011,44 @@ public final class JsDocInfoParser {
   }
 
   /**
-   * TypeName := ModuleName | LocalTypeName
-   * ModuleName := NameExpression '::'
-   * LocalTypeName := NameExpression TypeApplication?
+   * TypeName := NameExpression | NameExpression TypeApplication
+   * TypeApplication := '.<' TypeExpressionList '>'
    */
   private Node parseTypeName(JsDocToken token) {
     if (token != JsDocToken.STRING) {
       return reportGenericTypeSyntaxWarning();
     }
 
-    Node firstName = readTypeExpr();
-    Node localTypeName = null;
-    Node typeName = null;
-    if (match(JsDocToken.COLONCOLON)) {
-      next();
+    String typeName = stream.getString();
+    int lineno = stream.getLineno();
+    int charno = stream.getCharno();
+    while (match(JsDocToken.EOL) &&
+        typeName.charAt(typeName.length() - 1) == '.') {
       skipEOLs();
-
-      typeName = newNode(Token.COLONCOLON);
-      typeName.addChildToBack(firstName);
-
       if (match(JsDocToken.STRING)) {
-        localTypeName = readTypeExpr();
-        typeName.addChildToBack(localTypeName);
-      } else {
-        return typeName;
+        next();
+        typeName += stream.getString();
       }
-    } else {
-      typeName = localTypeName = firstName;
     }
+
+    Node typeNameNode = newStringNode(typeName, lineno, charno);
 
     if (match(JsDocToken.LT)) {
       next();
       skipEOLs();
-      Node memberType = parseTypeApplication(next());
-      if (memberType == null) {
-        return null;
-      }
-      localTypeName.addChildToFront(memberType);
-    }
-    return typeName;
-  }
+      Node memberType = parseTypeExpressionList(next());
+      if (memberType != null) {
+        typeNameNode.addChildToFront(memberType);
 
-  /**
-   * TypeApplication := '.<' TypeExpressionList '>'
-   */
-  private Node parseTypeApplication(JsDocToken token) {
-    Node memberType = parseTypeExpressionList(token);
-    if (memberType != null) {
-      skipEOLs();
-      if (!match(JsDocToken.GT)) {
-        return reportTypeSyntaxWarning("msg.jsdoc.missing.gt");
-      }
-
-      next();
-    }
-    return memberType;
-  }
-
-  private Node readTypeExpr() {
-    String typeName = stream.getString();
-    int lineno = stream.getLineno();
-    int charno = stream.getCharno();
-    while (true) {
-      char lastChar = typeName.charAt(typeName.length() - 1);
-      if (match(JsDocToken.EOL) && lastChar == '.') {
         skipEOLs();
-        if (match(JsDocToken.STRING)) {
-          next();
-          typeName += stream.getString();
+        if (!match(JsDocToken.GT)) {
+          return reportTypeSyntaxWarning("msg.jsdoc.missing.gt");
         }
-      } else {
-        break;
+
+        next();
       }
     }
-    return newStringNode(typeName, lineno, charno);
+    return typeNameNode;
   }
 
   /**

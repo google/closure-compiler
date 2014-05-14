@@ -99,50 +99,6 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertNull(typeNode);
   }
 
-  public void testParseModuleReference1() throws Exception {
-    Node typeNode = parseType("module::sometype");
-    assertEquals(Token.COLONCOLON, typeNode.getType());
-    assertEquals(Token.STRING, typeNode.getChildAtIndex(0).getType());
-    assertEquals(Token.STRING, typeNode.getChildAtIndex(1).getType());
-  }
-
-  public void testParseModuleReference2() throws Exception {
-    Node typeNode = parseType("./module/bar::sometype");
-    assertEquals(Token.COLONCOLON, typeNode.getType());
-
-    Node moduleName = typeNode.getChildAtIndex(0);
-    assertEquals(Token.STRING, moduleName.getType());
-    assertEquals("./module/bar", moduleName.getString());
-
-    Node typeName = typeNode.getChildAtIndex(1);
-    assertEquals(Token.STRING, typeName.getType());
-    assertEquals("sometype", typeName.getString());
-  }
-
-  public void testParseModuleReference3() throws Exception {
-    Node typeNode = parseType("?../module/bar::").getFirstChild();
-    assertEquals(Token.COLONCOLON, typeNode.getType());
-
-    Node moduleName = typeNode.getChildAtIndex(0);
-    assertEquals(Token.STRING, moduleName.getType());
-    assertEquals("../module/bar", moduleName.getString());
-
-    assertNull(moduleName.getNext());
-  }
-
-  public void testParseModuleReference4() throws Exception {
-    parse("@type {bar::::x} */",
-          "Bad type annotation. expected closing }");
-    parse("@type {::x} */",
-          "Bad type annotation. type not recognized due to syntax error");
-    parse("@type {x::.<a>} */",
-          "Bad type annotation. expected closing }");
-    parse("@type {'x:y'::z} */",
-          "Bad type annotation. expected closing }");
-    parse("@type {\"x.y\"::z} */",
-          "Bad type annotation. expected closing }");
-  }
-
   public void testParseNamedType1() throws Exception {
     assertNull(parse("@type null", "Unexpected end of file"));
   }

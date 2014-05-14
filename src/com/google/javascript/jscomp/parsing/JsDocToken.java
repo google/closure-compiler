@@ -45,6 +45,5 @@ enum JsDocToken {
   QMARK,
   ELLIPSIS,
   BANG,
-  EQUALS,
-  COLONCOLON // module refs
+  EQUALS;
 }
