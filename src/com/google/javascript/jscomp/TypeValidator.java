@@ -103,6 +103,10 @@ class TypeValidator {
 
   static final DiagnosticType DUP_VAR_DECLARATION =
       DiagnosticType.warning("JSC_DUP_VAR_DECLARATION",
+          "variable {0} redefined, original definition at {1}:{2}");
+
+  static final DiagnosticType DUP_VAR_DECLARATION_TYPE_MISMATCH =
+      DiagnosticType.warning("JSC_DUP_VAR_DECLARATION_TYPE_MISMATCH",
           "variable {0} redefined with type {1}, " +
           "original definition at {2}:{3} with type {4}");
 
@@ -138,6 +142,7 @@ class TypeValidator {
       TYPE_MISMATCH_WARNING,
       MISSING_EXTENDS_TAG_WARNING,
       DUP_VAR_DECLARATION,
+      DUP_VAR_DECLARATION_TYPE_MISMATCH,
       HIDDEN_PROPERTY_MISMATCH,
       INTERFACE_METHOD_NOT_IMPLEMENTED,
       HIDDEN_INTERFACE_PROPERTY_MISMATCH,
@@ -631,10 +636,17 @@ class TypeValidator {
         if (!(allowDupe ||
               var.getParentNode().isExprResult()) ||
             !newType.isEquivalentTo(varType)) {
-          report(JSError.make(sourceName, n, DUP_VAR_DECLARATION,
-              variableName, newType.toString(), var.getInputName(),
-              String.valueOf(var.nameNode.getLineno()),
-              varType.toString()));
+
+          if (newType.isEquivalentTo(varType)) {
+            report(JSError.make(sourceName, n, DUP_VAR_DECLARATION,
+                variableName, var.getInputName(),
+                String.valueOf(var.nameNode.getLineno())));
+          } else {
+            report(JSError.make(sourceName, n, DUP_VAR_DECLARATION_TYPE_MISMATCH,
+                variableName, newType.toString(), var.getInputName(),
+                String.valueOf(var.nameNode.getLineno()),
+                varType.toString()));
+          }
         }
       }
     }

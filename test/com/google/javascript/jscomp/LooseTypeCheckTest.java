@@ -1852,9 +1852,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "var goog = goog || {};" +
         "/** @param {number} x */ goog.foo = function(x) {};" +
         "/** @param {number} x */ goog.foo = function(x) {};",
-        "variable goog.foo redefined with type function (number): undefined, " +
-        "original definition at [testcode]:1 " +
-        "with type function (number): undefined");
+        "variable goog.foo redefined, " +
+        "original definition at [testcode]:1");
   }
 
   public void testDuplicateStaticMethodDecl2() throws Exception {
@@ -1884,9 +1883,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "var goog = goog || {};" +
         "goog.foo = function(x) {};" +
         "/** @return {undefined} */ goog.foo = function(x) {};",
-        "variable goog.foo redefined with type function (?): undefined, " +
-        "original definition at [testcode]:1 with type " +
-        "function (?): undefined");
+        "variable goog.foo redefined, " +
+        "original definition at [testcode]:1");
   }
 
   public void testDuplicateStaticPropertyDecl1() throws Exception {
@@ -2291,8 +2289,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   public void testEnum3() throws Exception {
     testTypes("/**@enum*/var a={BB:1,BB:2}",
-        "variable a.BB redefined with type a.<number>, " +
-        "original definition at [testcode]:1 with type a.<number>");
+        "variable a.BB redefined, " +
+        "original definition at [testcode]:1");
   }
 
   public void testEnum4() throws Exception {
@@ -2387,8 +2385,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testEnum16() throws Exception {
     testTypes("var goog = {};" +
         "/**@enum*/goog .a={BB:1,BB:2}",
-        "variable goog.a.BB redefined with type goog.a.<number>, " +
-        "original definition at [testcode]:1 with type goog.a.<number>");
+        "variable goog.a.BB redefined, " +
+        "original definition at [testcode]:1");
   }
 
   public void testEnum17() throws Exception {

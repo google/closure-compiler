@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.PureFunctionIdentifier.INVALID_NO_SID
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import java.util.List;
@@ -497,7 +496,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
 
     testSame(externs,
         "o.prototype.propWithAnnotatedStubAfter",
-        TypeValidator.DUP_VAR_DECLARATION, false);
+        TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH, false);
     assertTrue(noSideEffectCalls.isEmpty());
     noSideEffectCalls.clear();
   }

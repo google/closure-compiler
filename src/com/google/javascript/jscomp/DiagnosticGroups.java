@@ -248,6 +248,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("duplicate",
           VarCheck.VAR_MULTIPLY_DECLARED_ERROR,
           TypeValidator.DUP_VAR_DECLARATION,
+          TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH,
           VariableReferenceCheck.REDECLARED_VARIABLE);
 
   public static final DiagnosticGroup ES3 =
