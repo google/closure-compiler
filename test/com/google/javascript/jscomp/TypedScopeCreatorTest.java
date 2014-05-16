@@ -1834,6 +1834,22 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("?", zType.toString());
   }
 
+  public void testDeclaredConstType6() throws Exception {
+    testSame(
+        "/** " +
+        " * @param {{y:string}} a\n" +
+        " * @constructor\n" +
+        "*/\n" +
+        "var C = function(a) { /** @const */ this.x = a.y;};\n" +
+        "var instance = new C({y:'str'})");
+    ObjectType instance = (ObjectType) findNameType("instance", globalScope);
+    assertEquals("C", instance.toString());
+    assertTrue(instance.hasProperty("x"));
+    assertEquals("string",
+        instance.getPropertyType("x").toString());
+    assertFalse(instance.isPropertyTypeInferred("x"));
+  }
+
   public void testBadCtorInit1() throws Exception {
     testSame("/** @constructor */ var f;", CTOR_INITIALIZER);
   }

@@ -1372,16 +1372,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
       // If rValue is a name, try looking it up in the current scope.
       if (rValue.isQualifiedName()) {
-        String name = rValue.getQualifiedName();
-        Var slot = scope.getVar(name);
-        if (slot == null || slot.isTypeInferred()) {
-          return null;
-        }
-
-        type = slot.getType();
-        if (type != null && !type.isUnknownType()) {
-          return type;
-        }
+        return lookupQualifiedName(rValue);
       }
 
       // Check for a very specific JS idiom:
@@ -1402,6 +1393,25 @@ final class TypedScopeCreator implements ScopeCreator {
         }
       }
 
+      return null;
+    }
+
+    private JSType lookupQualifiedName(Node n) {
+      String name = n.getQualifiedName();
+      Var slot = scope.getVar(name);
+      if (slot != null && !slot.isTypeInferred()) {
+        JSType type = slot.getType();
+        if (type != null && !type.isUnknownType()) {
+          return type;
+        }
+      } else if (n.isGetProp()) {
+        JSType type = lookupQualifiedName(n.getFirstChild());
+        if (type != null && type.isRecordType()) {
+          JSType propType = type.findPropertyType(
+             n.getLastChild().getString());
+          return propType;
+        }
+      }
       return null;
     }
 
