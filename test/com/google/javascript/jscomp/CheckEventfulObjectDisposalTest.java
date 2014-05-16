@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+
 /**
  * Tests for {@code CheckEventfulObjectDisposal.java}.
  *

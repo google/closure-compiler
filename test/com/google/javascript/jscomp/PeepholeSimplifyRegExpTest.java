@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 
+
 public class PeepholeSimplifyRegExpTest extends CompilerTestCase {
 
   public final void testWaysOfMatchingEmptyString() {

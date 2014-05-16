@@ -23,6 +23,7 @@ package com.google.javascript.jscomp;
  *
  * @author kushal@google.com (Kushal Dave)
  */
+
 public class InlineVariablesTest extends CompilerTestCase {
 
   private boolean inlineAllStrings = false;
@@ -91,7 +92,7 @@ public class InlineVariablesTest extends CompilerTestCase {
 
   public void testInlineInFunction2() {
     test("function baz() { " +
-            "var a = new obj();"+
+            "var a = new obj();" +
             "result = a;" +
          "}",
          "function baz() { " +

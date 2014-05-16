@@ -22,6 +22,7 @@ import com.google.javascript.rhino.Node;
  * Tests for PeepholeRemoveDeadCodeTest in isolation. Tests for the interaction
  * of multiple peephole passes are in PeepholeIntegrationTest.
  */
+
 public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   private static final String MATH =

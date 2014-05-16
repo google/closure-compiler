@@ -27,6 +27,7 @@ import java.util.Map;
  * Unit test for AmbiguateProperties Compiler pass.
  *
  */
+
 public class AmbiguatePropertiesTest extends CompilerTestCase {
   private AmbiguateProperties lastPass;
 
