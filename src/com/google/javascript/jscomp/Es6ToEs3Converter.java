@@ -15,8 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -25,12 +28,15 @@ import com.google.javascript.rhino.Token;
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
-public class Es6ToEs3Converter extends NodeTraversal.AbstractPreOrderCallback
-    implements CompilerPass {
+public class Es6ToEs3Converter implements NodeTraversal.Callback, CompilerPass {
   private final AbstractCompiler compiler;
 
   private final LanguageMode languageIn;
   private final LanguageMode languageOut;
+
+  static final DiagnosticType CANNOT_CONVERT = DiagnosticType.error(
+      "JSC_CANNOT_CONVERT",
+      "Conversion of ''{0}'' to ES3 is not yet implemented.");
 
   // The name of the var that captures 'this' for converting arrow functions.
   private static final String THIS_VAR = "$jscomp$this";
@@ -54,12 +60,14 @@ public class Es6ToEs3Converter extends NodeTraversal.AbstractPreOrderCallback
     NodeTraversal.traverse(compiler, root, this);
   }
 
+  /**
+   * Arrow functions must be visited pre-order in order to rewrite the
+   * references to {@code this} correctly.
+   * Everything else is translated post-order in {@link #visit}.
+   */
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.STRING_KEY:
-        visitStringKey(n);
-        break;
       case Token.FUNCTION:
         if (n.isArrowFunction()) {
           visitArrowFunction(t, n);
@@ -67,6 +75,21 @@ public class Es6ToEs3Converter extends NodeTraversal.AbstractPreOrderCallback
         break;
     }
     return true;
+  }
+
+  @Override
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    switch (n.getType()) {
+      case Token.STRING_KEY:
+        visitStringKey(n);
+        break;
+      case Token.CLASS:
+        visitClass(n);
+        break;
+      case Token.SUPER:
+        cannotConvert(n, "super");
+        break;
+    }
   }
 
   /**
@@ -79,6 +102,91 @@ public class Es6ToEs3Converter extends NodeTraversal.AbstractPreOrderCallback
       n.addChildToBack(name);
       compiler.reportCodeChange();
     }
+  }
+
+  private void visitClass(Node classNode) {
+    Node className = classNode.getFirstChild();
+    Node superClassName = className.getNext();
+    Node classMembers = classNode.getLastChild();
+
+    if (!NodeUtil.isStatement(classNode)) {
+      cannotConvert(classNode, "class expression");
+      return;
+    }
+    if (!superClassName.isEmpty()) {
+      cannotConvert(classNode, "extends");
+      return;
+    }
+
+    className.detachFromParent();
+
+    Node constructor = null;
+    JSDocInfo ctorJSDocInfo = null;
+    Node insertionPoint = classNode;
+    for (Node member : classMembers.children()) {
+      if (member.isStaticMember()) {
+        cannotConvert(member, "static member");
+      }
+      if (member.getString().equals("constructor")) {
+        ctorJSDocInfo = member.getJSDocInfo();
+        constructor = member.getFirstChild().detachFromParent();
+        constructor.replaceChild(constructor.getFirstChild(), className);
+      } else {
+        String qualName = Joiner.on('.').join(
+            className.getString(),
+            "prototype",
+            member.getString());
+        Node assign = IR.assign(
+            NodeUtil.newQualifiedNameNode(
+                compiler.getCodingConvention(),
+                qualName,
+                /* basis node */ member,
+                /* original name */ member.getString()),
+            member.getFirstChild().detachFromParent());
+        assign.srcref(member);
+
+        JSDocInfo info = member.getJSDocInfo();
+        if (info != null) {
+          info.setAssociatedNode(assign);
+          assign.setJSDocInfo(info);
+        }
+
+        Node newNode = NodeUtil.newExpr(assign);
+        insertionPoint.getParent().addChildAfter(newNode, insertionPoint);
+        insertionPoint = newNode;
+      }
+    }
+
+    if (constructor == null) {
+      constructor = IR.function(
+          className,
+          IR.paramList().srcref(classNode),
+          IR.block().srcref(classNode));
+    }
+    JSDocInfo classJSDoc = classNode.getJSDocInfo();
+    JSDocInfoBuilder newInfo = (classJSDoc != null) ?
+        JSDocInfoBuilder.copyFrom(classJSDoc) :
+        new JSDocInfoBuilder(true);
+
+    newInfo.recordConstructor();
+    // TODO(tbreisacher): Add @extends if there is a superclass.
+
+    // Classes are @struct by default.
+    if (!newInfo.isUnrestrictedRecorded() && !newInfo.isDictRecorded() &&
+        !newInfo.isStructRecorded()) {
+      newInfo.recordStruct();
+    }
+
+    if (ctorJSDocInfo != null) {
+      newInfo.recordSuppressions(ctorJSDocInfo.getSuppressions());
+      for (String param : ctorJSDocInfo.getParameterNames()) {
+        newInfo.recordParameter(param, ctorJSDocInfo.getParameterType(param));
+      }
+    }
+    constructor.setJSDocInfo(newInfo.build(constructor));
+    classNode.getParent().replaceChild(classNode, constructor);
+
+    compiler.reportCodeChange();
   }
 
   /**
@@ -142,5 +250,12 @@ public class Es6ToEs3Converter extends NodeTraversal.AbstractPreOrderCallback
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       return !n.isFunction() || n.isArrowFunction();
     }
+  }
+
+  /**
+   * Warns the user that the given ES6 feature cannot be converted to ES3.
+   */
+  private void cannotConvert(Node n, String feature) {
+    compiler.report(JSError.make(n, CANNOT_CONVERT, feature));
   }
 }

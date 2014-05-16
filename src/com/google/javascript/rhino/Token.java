@@ -328,7 +328,7 @@ public class Token {
         }
 
         // Token without name
-        throw new IllegalStateException(String.valueOf(token));
+        throw new IllegalStateException("No name defined for " + token);
     }
 
   /** If the arity isn't always the same, this function returns -1 */
@@ -381,6 +381,8 @@ public class Token {
       case ARRAYLIT:        return -1;
       case OBJECTLIT:       return -1;
       case TRY:             return -1;
+      case CLASS:           return 3;
+      case MEMBER_DEF:      return 1;
       case PARAM_LIST:      return -1;
       case COMMA:           return 2;
       case ASSIGN:          return 2;
@@ -436,6 +438,7 @@ public class Token {
       case LC:              return -1;
       case COLON:           return -1;
     }
-    throw new IllegalStateException(String.valueOf(token));
+    throw new IllegalStateException(
+        "No arity defined for " + Token.name(token));
   }
 }

@@ -148,6 +148,9 @@ public class AstValidator implements CompilerPass {
       case Token.DEBUGGER:
         validateChildless(n);
         return;
+      case Token.CLASS:
+        validateClassDeclaration(n);
+        return;
       default:
         violation("Expected statement but was "
             + Token.name(n.getType()) + ".", n);
@@ -159,6 +162,7 @@ public class AstValidator implements CompilerPass {
       // Childless expressions
       case Token.FALSE:
       case Token.NULL:
+      case Token.SUPER:
       case Token.THIS:
       case Token.TRUE:
         validateChildless(n);
@@ -271,10 +275,58 @@ public class AstValidator implements CompilerPass {
         validateFunctionExpression(n);
         return;
 
+      case Token.CLASS:
+        validateClass(n);
+        return;
+
       default:
         violation("Expected expression but was "
             + Token.name(n.getType()), n);
     }
+  }
+
+  /**
+   * In a class declaration, unlike a class expression,
+   * the class name is required.
+   */
+  private void validateClassDeclaration(Node n) {
+    validateClass(n);
+    validateName(n.getFirstChild());
+  }
+
+  private void validateClass(Node n) {
+    validateEs6Feature("classes", n);
+    validateNodeType(Token.CLASS, n);
+    validateChildCount(n, Token.arity(Token.CLASS));
+
+    Node name = n.getFirstChild();
+    if (name.isEmpty()) {
+      validateChildless(name);
+    } else {
+      validateName(name);
+    }
+
+    Node superClass = name.getNext();
+    if (superClass.isEmpty()) {
+      validateChildless(superClass);
+    } else {
+      validateName(superClass);
+    }
+
+    validateClassMembers(n.getLastChild());
+  }
+
+  private void validateClassMembers(Node n) {
+    validateNodeType(Token.CLASS_MEMBERS, n);
+    for (Node c : n.children()) {
+      validateClassMember(c);
+    }
+  }
+
+  private void validateClassMember(Node n) {
+    validateNodeType(Token.MEMBER_DEF, n);
+    validateChildCount(n, Token.arity(Token.MEMBER_DEF));
+    validateFunctionExpression(n.getFirstChild());
   }
 
   private void validateBlock(Node n) {
@@ -378,9 +430,7 @@ public class AstValidator implements CompilerPass {
     validateParameters(n.getChildAtIndex(1));
 
     if (n.isArrowFunction()) {
-      if (!isEs6OrHigher()) {
-        violation("Arrow functions are not allowed in this language mode.", n);
-      }
+      validateEs6Feature("arrow functions", n);
       validateEmptyName(n.getFirstChild());
       if (n.getLastChild().getType() == Token.BLOCK) {
         validateBlock(n.getLastChild());
@@ -892,6 +942,12 @@ public class AstValidator implements CompilerPass {
       violation(
           "Expected no more than " + i + " children, but was "
               + n.getChildCount(), n);
+    }
+  }
+
+  private void validateEs6Feature(String feature, Node n) {
+    if (!isEs6OrHigher()) {
+      violation("Feature '" + feature + "' is only allowed in ES6 mode.", n);
     }
   }
 

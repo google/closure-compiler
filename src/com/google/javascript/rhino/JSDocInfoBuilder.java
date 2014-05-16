@@ -789,6 +789,10 @@ final public class JSDocInfoBuilder {
     return true;
   }
 
+  public boolean isUnrestrictedRecorded() {
+    return currentInfo.makesUnrestricted();
+  }
+
   /**
    * Records that the {@link JSDocInfo} being built should have its
    * {@link JSDocInfo#makesStructs()} flag set to {@code true}.
@@ -807,6 +811,10 @@ final public class JSDocInfoBuilder {
     return true;
   }
 
+  public boolean isStructRecorded() {
+    return currentInfo.makesStructs();
+  }
+
   /**
    * Records that the {@link JSDocInfo} being built should have its
    * {@link JSDocInfo#makesDicts()} flag set to {@code true}.
@@ -823,6 +831,10 @@ final public class JSDocInfoBuilder {
     currentInfo.setDict();
     populated = true;
     return true;
+  }
+
+  public boolean isDictRecorded() {
+    return currentInfo.makesDicts();
   }
 
   /**

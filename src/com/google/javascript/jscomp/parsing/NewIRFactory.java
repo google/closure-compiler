@@ -1063,19 +1063,29 @@ class NewIRFactory {
     Node processForLoop(ForStatementTree loopNode) {
       Node node = newNode(
           Token.FOR,
-          transformOrEmpty(loopNode.initializer),
-          transformOrEmpty(loopNode.condition),
-          transformOrEmpty(loopNode.increment));
+          transformOrEmpty(loopNode.initializer, loopNode),
+          transformOrEmpty(loopNode.condition, loopNode),
+          transformOrEmpty(loopNode.increment, loopNode));
       node.addChildToBack(transformBlock(loopNode.body));
       return node;
     }
 
-    Node transformOrEmpty(ParseTree tree) {
-      return (tree == null) ? newNode(Token.EMPTY) : transform(tree);
+    Node transformOrEmpty(ParseTree tree, ParseTree parent) {
+      if (tree == null) {
+        Node n = newNode(Token.EMPTY);
+        setSourceInfo(n, parent);
+        return n;
+      }
+      return transform(tree);
     }
 
-    Node transformOrEmpty(IdentifierToken token) {
-      return (token == null) ? newNode(Token.EMPTY) : processName(token);
+    Node transformOrEmpty(IdentifierToken token, ParseTree parent) {
+      if (token == null) {
+        Node n = newNode(Token.EMPTY);
+        setSourceInfo(n, parent);
+        return n;
+      }
+      return processName(token);
     }
 
     @Override
@@ -1880,8 +1890,8 @@ class NewIRFactory {
     Node processClassDeclaration(ClassDeclarationTree tree) {
       maybeWarnEs6Feature(tree, "class");
 
-      Node name = transformOrEmpty(tree.name);
-      Node superClass = transformOrEmpty(tree.superClass);
+      Node name = transformOrEmpty(tree.name, tree);
+      Node superClass = transformOrEmpty(tree.superClass, tree);
 
       Node body = newNode(Token.CLASS_MEMBERS);
       setSourceInfo(body, tree);
@@ -1950,7 +1960,7 @@ class NewIRFactory {
     Node processImportDecl(ImportDeclarationTree tree) {
       maybeWarnEs6Feature(tree, "modules");
       Node export = newNode(Token.IMPORT,
-          transformOrEmpty(tree.defaultBindingIndentifier),
+          transformOrEmpty(tree.defaultBindingIndentifier, tree),
           transformListOrEmpty(Token.IMPORT_SPECS, tree.importSpecifierList),
           processString(tree.moduleSpecifier));
       return export;

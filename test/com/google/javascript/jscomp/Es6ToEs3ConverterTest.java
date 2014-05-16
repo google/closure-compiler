@@ -41,8 +41,275 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     return new Es6ToEs3Converter(compiler, compiler.getOptions());
   }
 
+  @Override
+  protected int getNumRepetitions() {
+    return 1;
+  }
+
   public void testExtendedObjLit() {
     test("var x = {a, b};", "var x = {a: a, b: b};");
+  }
+
+  public void testClassStatement() {
+    test("class C { }", "/** @constructor @struct */ function C() {}");
+    test("class C { constructor() {} }", "/** @constructor @struct */ function C() {}");
+    test("class C { constructor(a) { this.a = a; } }",
+        "/** @constructor @struct */ function C(a) { this.a = a; }");
+
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  constructor() {}",
+        "",
+        "  foo() {}",
+        "}"
+    ), Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "function C() {}",
+        "",
+        "C.prototype.foo = function() {};"
+    ));
+
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  constructor() {}",
+        "",
+        "  foo() {}",
+        "",
+        "  bar() {}",
+        "}"
+    ), Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "function C() {}",
+        "",
+        "C.prototype.foo = function() {};",
+        "",
+        "C.prototype.bar = function() {};"
+    ));
+
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  foo() {}",
+        "",
+        "  bar() {}",
+        "}"
+    ), Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "function C() {}",
+        "",
+        "C.prototype.foo = function() {};",
+        "",
+        "C.prototype.bar = function() {};"
+    ));
+
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  constructor(a) { this.a = a; }",
+        "",
+        "  foo() { console.log(this.a); }",
+        "",
+        "  bar() { alert(this.a); }",
+        "}"
+    ), Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "function C(a) { this.a = a; }",
+        "",
+        "C.prototype.foo = function() { console.log(this.a); };",
+        "",
+        "C.prototype.bar = function() { alert(this.a); };"
+    ));
+  }
+
+  public void testClassWithJsDoc() {
+    test(
+        "class C { }",
+        Joiner.on('\n').join(
+            "/**",
+            " * @constructor",
+            " * @struct",
+            " */",
+            "function C() {}")
+    );
+
+    test(
+        "/** @deprecated */ class C { }",
+        Joiner.on('\n').join(
+            "/**",
+            " * @deprecated",
+            " * @constructor",
+            " * @struct",
+            " */",
+            "function C() {}")
+    );
+
+    test(
+        "/** @dict */ class C { }",
+        Joiner.on('\n').join(
+            "/**",
+            " * @constructor",
+            " * @dict",
+            " */",
+            "function C() {}")
+    );
+  }
+
+  public void testInterfaceWithJsDoc() {
+    test(Joiner.on('\n').join(
+        "/**",
+        " * Converts Xs to Ys.",
+        " * @interface",
+        " */",
+        "class Converter {",
+        "  /**",
+        "   * @param {X} x",
+        "   * @return {Y}",
+        "   */",
+        "  convert(x) {}",
+        "}"
+    ), Joiner.on('\n').join(
+        "/**",
+        " * Converts Xs to Ys.",
+        " * @interface",
+        " */",
+        "function Converter() {}",
+        "",
+        "/**",
+        " * @param {X} x",
+        " * @return {Y}",
+        " */",
+        "Converter.prototype.convert = function(x) {};"
+    ));
+  }
+
+  public void testCtorWithJsDoc() {
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  /** @param {boolean} b */",
+        "  constructor(b) {}",
+        "}"
+    ), Joiner.on('\n').join(
+        "/**",
+        " * @param {boolean} b",
+        " * @constructor",
+        " * @struct",
+        " */",
+        "function C(b) {}"
+    ));
+  }
+
+  public void testMemberWithJsDoc() {
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  /** @param {boolean} b */",
+        "  foo(b) {}",
+        "}"
+    ), Joiner.on('\n').join(
+        "/**",
+        " * @constructor",
+        " * @struct",
+        " */",
+        "function C() {}",
+        "",
+        "/** @param {boolean} b */",
+        "C.prototype.foo = function(b) {};"
+    ));
+  }
+
+  public void testClassStatementInsideIf() {
+    test(Joiner.on('\n').join(
+        "if (foo) {",
+        "  class C { }",
+        "}"
+    ), Joiner.on('\n').join(
+        "if (foo) {",
+        "  /** @constructor @struct */",
+        "  function C() { }",
+        "}"
+    ));
+
+    test(Joiner.on('\n').join(
+        "if (foo)",
+        "  class C { }"
+    ), Joiner.on('\n').join(
+        "if (foo)",
+        "  /** @constructor @struct */",
+        "  function C() { }"
+    ));
+
+  }
+
+  public void testClassExpression() {
+    enableAstValidation(false);
+
+    test("var C = class { }", "var C = function() {}",
+        Es6ToEs3Converter.CANNOT_CONVERT);
+
+    test("var c = new (class C {})", null,
+        Es6ToEs3Converter.CANNOT_CONVERT);
+  }
+
+  public void testExtends() {
+    enableAstValidation(false);
+
+    test("class C extends D { }",
+        null, Es6ToEs3Converter.CANNOT_CONVERT);
+  }
+
+  public void testSuper() {
+    enableAstValidation(false);
+
+    test("class C { constructor() { super(); } }",
+        null, Es6ToEs3Converter.CANNOT_CONVERT);
+
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  foo() { return super.foo(); }",
+        "}"
+    ), null, Es6ToEs3Converter.CANNOT_CONVERT);
+  }
+
+  public void testStaticMethods() {
+    enableAstValidation(false);
+
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  static foo() {}",
+        "}"
+    ), null, Es6ToEs3Converter.CANNOT_CONVERT);
+  }
+
+  public void testArrowInClass() {
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  constructor() {",
+        "    this.counter = 0;",
+        "  }",
+        "",
+        "  init() {",
+        "    document.onclick = () => this.logClick();",
+        "  }",
+        "",
+        "  logClick() {",
+        "     this.counter++;",
+        "  }",
+        "}"
+    ), Joiner.on('\n').join(
+        "/**",
+        " * @constructor",
+        " * @struct",
+        " */",
+        "function C() {",
+        "  this.counter = 0;",
+        "}",
+        "",
+        "C.prototype.init = function() {",
+        "  var $jscomp$this = this;",
+        "  document.onclick = function() { return $jscomp$this.logClick(); }",
+        "};",
+        "",
+        "C.prototype.logClick = function() {",
+        "  this.counter++;",
+        "}"
+    ));
   }
 
   public void testArrowFunction() {
