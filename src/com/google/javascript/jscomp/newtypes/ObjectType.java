@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -27,7 +26,6 @@ import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 
 /**
  *
@@ -765,29 +763,40 @@ public class ObjectType {
 
   @Override
   public String toString() {
-    if ((props.isEmpty() ||
-         (props.size() == 1 && props.containsKey("prototype"))) &&
-        fn != null) {
-      return fn.toString();
+    if (props.isEmpty() ||
+         (props.size() == 1 && props.containsKey("prototype"))) {
+      if (fn != null) {
+        return fn.toString();
+      } else if (nominalType != null) {
+        return nominalType.toString();
+      }
     }
-    SortedSet<String> propStrings = Sets.newTreeSet();
-    for (String pname : props.keySet()) {
-      propStrings.add(pname + " : " + props.get(pname).toString());
-    }
-    String result;
+    StringBuilder result = new StringBuilder();
     if (nominalType != null) {
-      result = nominalType.toString();
+      result.append(nominalType.toString());
     } else if (isStruct()) {
-      result = "struct";
+      result.append("struct");
     } else if (isDict()) {
-      result = "dict";
-    } else {
-      result = "";
+      result.append("dict");
     }
-    result += (nominalType != null && propStrings.isEmpty()) ?
-        "" : "{" + Joiner.on(", ").join(propStrings) + "}";
-    result += (isLoose ? " (loose)" : "");
-    return result;
+    if (nominalType == null || !props.isEmpty()) {
+      result.append('{');
+      boolean firstIteration = true;
+      for (String pname : Sets.newTreeSet(props.keySet())) {
+        if (!firstIteration) {
+          result.append(", ");
+          firstIteration = false;
+        }
+        result.append(pname);
+        result.append(':');
+        result.append(props.get(pname).toString());
+      }
+      result.append('}');
+    }
+    if (isLoose) {
+      result.append(" (loose)");
+    }
+    return result.toString();
   }
 
   @Override

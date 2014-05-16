@@ -822,7 +822,11 @@ public class JSType {
 
   @Override
   public String toString() {
-    return typeToString() + locationPostfix(location);
+    if (location == null) {
+      return typeToString();
+    } else {
+      return typeToString() + "@" + location;
+    }
   }
 
   private String typeToString() {
@@ -849,14 +853,6 @@ public class JSType {
         } else {
           return "Unrecognized type: " + tags;
         }
-    }
-  }
-
-  private static String locationPostfix(String location) {
-    if (location == null) {
-      return "";
-    } else {
-      return "@" + location;
     }
   }
 

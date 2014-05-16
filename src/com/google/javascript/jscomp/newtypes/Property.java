@@ -194,21 +194,16 @@ class Property {
 
   @Override
   public String toString() {
-    String attr;
     switch (attribute) {
       case CONSTANT:
-        attr = "^";
-        break;
+        return inferredType.toString() + '^';
       case REQUIRED:
-        attr = "";
-        break;
+        return inferredType.toString();
       case OPTIONAL:
-        attr = "=";
-        break;
+        return inferredType.toString() + '=';
       default:
-        throw new RuntimeException("Uknown Attribute value " + attribute);
+        throw new RuntimeException("Unknown Attribute value " + attribute);
     }
-    return inferredType + attr;
   }
 
   @Override
