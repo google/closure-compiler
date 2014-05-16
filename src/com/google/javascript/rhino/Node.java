@@ -1481,30 +1481,6 @@ public class Node implements Cloneable, Serializable {
     return res;
   }
 
-  /**
-   * Compare this node to node2 recursively and return the first pair of nodes
-   * that differs doing a preorder depth-first traversal. Package private for
-   * testing. Returns null if the nodes are equivalent.
-   */
-  NodeMismatch checkTreeTypeAwareEqualsImpl(Node node2) {
-    // Do a non-recursive equivalents check.
-    if (!isEquivalentTo(node2, true, false)) {
-      return new NodeMismatch(this, node2);
-    }
-
-    NodeMismatch res = null;
-    Node n, n2;
-    for (n = first, n2 = node2.first;
-         res == null && n != null;
-         n = n.next, n2 = n2.next) {
-      res = n.checkTreeTypeAwareEqualsImpl(n2);
-      if (res != null) {
-        return res;
-      }
-    }
-    return res;
-  }
-
   /** Returns true if this node is equivalent semantically to another */
   public boolean isEquivalentTo(Node node) {
     return isEquivalentTo(node, false, true);
