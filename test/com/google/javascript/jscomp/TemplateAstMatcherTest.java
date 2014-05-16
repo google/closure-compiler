@@ -490,6 +490,7 @@ public class TemplateAstMatcherTest extends TestCase {
    */
   private TestNodePair compile(String externs, String template, String code) {
     Compiler compiler = lastCompiler = new Compiler();
+    compiler.disableThreads();
     CompilerOptions options = new CompilerOptions();
     options.checkTypes = true;
 
