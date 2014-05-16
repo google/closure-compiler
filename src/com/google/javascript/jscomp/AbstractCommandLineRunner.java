@@ -309,6 +309,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
     options.sourceMapDetailLevel = config.sourceMapDetailLevel;
     options.sourceMapFormat = config.sourceMapFormat;
+    options.sourceMapLocationMappings = config.sourceMapLocationMappings;
 
     ImmutableMap.Builder<String, SourceMapInput> inputSourceMaps
         = new ImmutableMap.Builder<>();
@@ -1808,10 +1809,24 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       SourceMap.Format.DEFAULT;
 
     /**
-     * The detail supplied in the source map file, if generated.
+     * The source map format to use, if generated.
      */
     CommandLineConfig setSourceMapFormat(SourceMap.Format format) {
       this.sourceMapFormat = format;
+      return this;
+    }
+
+    private List<SourceMap.LocationMapping> sourceMapLocationMappings =
+      Lists.newArrayList();
+
+    /**
+     * The source map location mappings to use, if generated.
+     */
+    CommandLineConfig setSourceMapLocationMappings(
+        List<SourceMap.LocationMapping> locationMappings) {
+
+      this.sourceMapLocationMappings.clear();
+      this.sourceMapLocationMappings.addAll(locationMappings);
       return this;
     }
 

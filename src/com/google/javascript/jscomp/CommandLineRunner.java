@@ -234,6 +234,11 @@ public class CommandLineRunner extends
         "Options are V3 and DEFAULT, which are equivalent.")
     private SourceMap.Format sourceMapFormat = SourceMap.Format.DEFAULT;
 
+    @Option(name = "--source_map_location_mapping",
+        usage = "Source map location mapping separated by a '|' " +
+        "(i.e. filesystem-path|webserver-path)")
+    private List<String> sourceMapLocationMapping = Lists.newArrayList();
+
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
     @Option(name = "--jscomp_error",
@@ -535,6 +540,18 @@ public class CommandLineRunner extends
       }
 
       return new ArrayList<>(allJsInputs);
+    }
+
+    List<SourceMap.LocationMapping> getSourceMapLocationMappings() {
+      List<SourceMap.LocationMapping> locationMappings =
+          Lists.newArrayListWithCapacity(sourceMapLocationMapping.size());
+
+      for (String locationMapping : sourceMapLocationMapping) {
+        String[] pair = locationMapping.split("\\|", 2);
+        locationMappings.add(new SourceMap.LocationMapping(pair[0], pair[1]));
+      }
+
+      return locationMappings;
     }
 
     // Our own option parser to be backwards-compatible.
@@ -857,6 +874,7 @@ public class CommandLineRunner extends
           .setModuleOutputPathPrefix(flags.moduleOutputPathPrefix)
           .setCreateSourceMap(flags.createSourceMap)
           .setSourceMapFormat(flags.sourceMapFormat)
+          .setSourceMapLocationMappings(flags.getSourceMapLocationMappings())
           .setWarningGuardSpec(Flags.getWarningGuardSpec())
           .setDefine(flags.define)
           .setCharset(flags.charset)

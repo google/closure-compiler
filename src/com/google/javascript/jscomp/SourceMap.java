@@ -160,7 +160,7 @@ public class SourceMap {
   }
 
   public void appendTo(Appendable out, String name) throws IOException {
-    generator.appendTo(out, name);
+    generator.appendTo(out, fixupSourceLocation(name));
   }
 
   public void reset() {
