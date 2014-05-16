@@ -1314,6 +1314,7 @@ angular.$HttpProvider.defaults;
  * @typedef {{
  *   annotate: function((Function|Array.<string|Function>)):Array.<string>,
  *   get: function(string):(?),
+ *   has: function(string):boolean,
  *   instantiate: function(Function, Object=):Object,
  *   invoke: function(
  *       (!Function|Array.<string|!Function>), Object=, Object=):(?)
