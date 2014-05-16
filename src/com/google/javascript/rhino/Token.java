@@ -193,7 +193,12 @@ public class Token {
         EQUALS         = 307,
         LB             = 308,  // left brackets
         LC             = 309,  // left curly braces
-        COLON          = 310;
+        COLON          = 310,
+
+        // Token Types to use for internal bookkeeping,
+        // an AST is invalid while these are present.
+        PLACEHOLDER1   = 1001,
+        PLACEHOLDER2   = 1002;
 
   public static String name(int token) {
         switch (token) {
@@ -317,6 +322,9 @@ public class Token {
           case MODULE:          return "MODULE";
           case REST:            return "REST";
           case SPREAD:          return "SPREAD";
+
+          case PLACEHOLDER1:        return "PLACEHOLDER1";
+          case PLACEHOLDER2:        return "PLACEHOLDER2";
         }
 
         // Token without name
