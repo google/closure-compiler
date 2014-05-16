@@ -136,9 +136,9 @@ Notification.prototype.onshow;
 Notification.prototype.onclick;
 
 /**
- * @constructor
+ * @type {function(new:Notification, string, NotificationOptions)}
  */
-window.Notification = Notification;
+window.Notification;
 
 /**
  * @type {string}
