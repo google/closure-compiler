@@ -27,7 +27,7 @@ import com.google.javascript.rhino.Node;
 
 public class CollapsePropertiesTest extends CompilerTestCase {
 
-  private static String EXTERNS =
+  private static final String EXTERNS =
       "var window;\n" +
       "function alert(s) {}\n" +
       "function parseInt(s) {}\n" +
@@ -49,6 +49,7 @@ public class CollapsePropertiesTest extends CompilerTestCase {
   public void setUp() {
     enableLineNumberCheck(true);
     enableNormalize(true);
+    compareJsDoc = false;
   }
 
   @Override public int getNumRepetitions() {
@@ -1146,7 +1147,7 @@ public class CollapsePropertiesTest extends CompilerTestCase {
          "for (var key in Foo) {}");
   }
 
-  private final String COMMON_ENUM =
+  private static final String COMMON_ENUM =
         "/** @enum {Object} */ var Foo = {A: {c: 2}, B: {c: 3}};";
 
   public void testEnumOfObjects1() {

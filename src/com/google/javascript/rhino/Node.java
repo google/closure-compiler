@@ -184,8 +184,8 @@ public class Node implements Cloneable, Serializable {
 
     @Override
     boolean isEquivalentTo(
-        Node node, boolean compareJsType, boolean recur) {
-      boolean equiv = super.isEquivalentTo(node, compareJsType, recur);
+        Node node, boolean compareJsType, boolean recur, boolean jsDoc) {
+      boolean equiv = super.isEquivalentTo(node, compareJsType, recur, jsDoc);
       if (equiv) {
         double thisValue = getDouble();
         double thatValue = ((NumberNode) node).getDouble();
@@ -243,8 +243,8 @@ public class Node implements Cloneable, Serializable {
 
     @Override
     boolean isEquivalentTo(
-        Node node, boolean compareJsType, boolean recur) {
-      return (super.isEquivalentTo(node, compareJsType, recur)
+        Node node, boolean compareJsType, boolean recur, boolean jsDoc) {
+      return (super.isEquivalentTo(node, compareJsType, recur, jsDoc)
           && this.str.equals(((StringNode) node).str));
     }
 
@@ -1442,15 +1442,57 @@ public class Node implements Cloneable, Serializable {
   /**
    * Checks if the subtree under this node is the same as another subtree.
    * Returns null if it's equal, or a message describing the differences.
+   * Should be called with {@code this} as the "expected" node and
+   * {@code actual} as the "actual" node.
    */
-  public String checkTreeEquals(Node node2) {
-      NodeMismatch diff = checkTreeEqualsImpl(node2);
+  @VisibleForTesting
+  public String checkTreeEquals(Node actual) {
+      NodeMismatch diff = checkTreeEqualsImpl(actual);
       if (diff != null) {
         return "Node tree inequality:" +
             "\nTree1:\n" + toStringTree() +
-            "\n\nTree2:\n" + node2.toStringTree() +
+            "\n\nTree2:\n" + actual.toStringTree() +
             "\n\nSubtree1: " + diff.nodeA.toStringTree() +
             "\n\nSubtree2: " + diff.nodeB.toStringTree();
+      }
+      return null;
+  }
+
+  /**
+   * Checks if the subtree under this node is the same as another subtree.
+   * Returns null if it's equal, or a message describing the differences.
+   * Considers two nodes to be unequal if their JSDocInfo doesn't match.
+   * Should be called with {@code this} as the "expected" node and
+   * {@code actual} as the "actual" node.
+   *
+   * @see JSDocInfo#equals(Object)
+   */
+  @VisibleForTesting
+  public String checkTreeEqualsIncludingJsDoc(Node actual) {
+      NodeMismatch diff = checkTreeEqualsImpl(actual, true);
+      if (diff != null) {
+        if (diff.nodeA.isEquivalentTo(diff.nodeB, false, true, false)) {
+          // The only difference is that the JSDoc is different on
+          // the subtree.
+          String jsDoc1 = diff.nodeA.getJSDocInfo() == null ?
+              "(none)" :
+              diff.nodeA.getJSDocInfo().toStringVerbose();
+
+          String jsDoc2 = diff.nodeB.getJSDocInfo() == null ?
+              "(none)" :
+              diff.nodeB.getJSDocInfo().toStringVerbose();
+
+          return "Node tree inequality:" +
+              "\nTree:\n" + toStringTree() +
+              "\n\nJSDoc differs on subtree: " + diff.nodeA +
+              "\nExpected JSDoc: " + jsDoc1 +
+              "\nActual JSDoc  : " + jsDoc2;
+        }
+        return "Node tree inequality:" +
+            "\nExpected tree:\n" + toStringTree() +
+            "\n\nActual tree:\n" + actual.toStringTree() +
+            "\n\nExpected subtree: " + diff.nodeA.toStringTree() +
+            "\n\nActual subtree: " + diff.nodeB.toStringTree();
       }
       return null;
   }
@@ -1461,7 +1503,16 @@ public class Node implements Cloneable, Serializable {
    * testing. Returns null if the nodes are equivalent.
    */
   NodeMismatch checkTreeEqualsImpl(Node node2) {
-    if (!isEquivalentTo(node2, false, false)) {
+    return checkTreeEqualsImpl(node2, false);
+  }
+
+  /**
+   * Compare this node to node2 recursively and return the first pair of nodes
+   * that differs doing a preorder depth-first traversal.
+   * @param jsDoc Whether to check for differences in JSDoc.
+   */
+  private NodeMismatch checkTreeEqualsImpl(Node node2, boolean jsDoc) {
+    if (!isEquivalentTo(node2, false, false, jsDoc)) {
       return new NodeMismatch(this, node2);
     }
 
@@ -1473,7 +1524,7 @@ public class Node implements Cloneable, Serializable {
       if (node2 == null) {
         throw new IllegalStateException();
       }
-      res = n.checkTreeEqualsImpl(n2);
+      res = n.checkTreeEqualsImpl(n2, jsDoc);
       if (res != null) {
         return res;
       }
@@ -1483,12 +1534,12 @@ public class Node implements Cloneable, Serializable {
 
   /** Returns true if this node is equivalent semantically to another */
   public boolean isEquivalentTo(Node node) {
-    return isEquivalentTo(node, false, true);
+    return isEquivalentTo(node, false, true, false);
   }
 
   /** Checks equivalence without going into child nodes */
   public boolean isEquivalentToShallow(Node node) {
-    return isEquivalentTo(node, false, false);
+    return isEquivalentTo(node, false, false, false);
   }
 
   /**
@@ -1496,17 +1547,18 @@ public class Node implements Cloneable, Serializable {
    * the types are equivalent.
    */
   public boolean isEquivalentToTyped(Node node) {
-    return isEquivalentTo(node, true, true);
+    return isEquivalentTo(node, true, true, true);
   }
 
   /**
    * @param compareJsType Whether to compare the JSTypes of the nodes.
    * @param recurse Whether to compare the children of the current node, if
    *    not only the the count of the children are compared.
+   * @param jsDoc Whether to check that the JsDoc of the nodes are equivalent.
    * @return Whether this node is equivalent semantically to the provided node.
    */
   boolean isEquivalentTo(
-      Node node, boolean compareJsType, boolean recurse) {
+      Node node, boolean compareJsType, boolean recurse, boolean jsDoc) {
     if (type != node.getType()
         || getChildCount() != node.getChildCount()
         || this.getClass() != node.getClass()) {
@@ -1514,6 +1566,10 @@ public class Node implements Cloneable, Serializable {
     }
 
     if (compareJsType && !JSType.isEquivalent(jsType, node.getJSType())) {
+      return false;
+    }
+
+    if (jsDoc && !JSDocInfo.areEquivalent(getJSDocInfo(), node.getJSDocInfo())) {
       return false;
     }
 
@@ -1552,7 +1608,7 @@ public class Node implements Cloneable, Serializable {
       for (n = first, n2 = node.first;
            n != null;
            n = n.next, n2 = n2.next) {
-        if (!n.isEquivalentTo(n2, compareJsType, recurse)) {
+        if (!n.isEquivalentTo(n2, compareJsType, recurse, jsDoc)) {
           return false;
         }
       }

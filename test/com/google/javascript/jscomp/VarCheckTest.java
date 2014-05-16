@@ -46,6 +46,7 @@ public class VarCheckTest extends CompilerTestCase {
     externValidationErrorLevel = null;
     sanityCheck = false;
     declarationCheck = false;
+    compareJsDoc = false;
   }
 
   @Override

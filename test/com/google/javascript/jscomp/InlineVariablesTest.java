@@ -36,6 +36,7 @@ public class InlineVariablesTest extends CompilerTestCase {
   @Override
   public void setUp() {
     super.enableLineNumberCheck(true);
+    compareJsDoc = false;
   }
 
   @Override

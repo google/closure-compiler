@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.ReplaceIdGenerators.INVALID_GENERATOR
 
 import com.google.common.collect.ImmutableMap;
 
-
 /**
  * Tests for {@link ReplaceIdGenerators}.
  *
@@ -61,6 +60,7 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
     super.setUp();
     generatePseudoNames = false;
     previousMappings = null;
+    compareJsDoc = false;
   }
 
   @Override

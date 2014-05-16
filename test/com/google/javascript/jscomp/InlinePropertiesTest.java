@@ -34,6 +34,7 @@ public class InlinePropertiesTest extends CompilerTestCase {
     enableTypeCheck(CheckLevel.WARNING);
     enableClosurePass();
     enableGatherExternProperties();
+    compareJsDoc = false;
   }
 
   @Override

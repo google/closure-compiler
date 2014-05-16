@@ -38,6 +38,7 @@ public class RemoveUnusedNamesTest extends CompilerTestCase {
 
   public RemoveUnusedNamesTest() {
     super(EXTERNS);
+    compareJsDoc = false;
   }
 
   private boolean canRemoveExterns = false;

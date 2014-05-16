@@ -33,6 +33,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
     modifyCallSites = false;
+    compareJsDoc = false;
   }
 
   @Override

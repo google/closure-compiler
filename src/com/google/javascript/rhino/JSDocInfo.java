@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -51,6 +52,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -120,6 +122,12 @@ public class JSDocInfo implements Serializable {
 
     // Bit flags for properties.
     private int propertyBitField = 0;
+
+    public String toString() {
+      return com.google.common.base.Objects.toStringHelper(this)
+          .add("bitfield", propertyBitField)
+          .toString();
+    }
 
     // TODO(nnaze): Consider putting bit-fiddling logic in a reusable
     // location.
@@ -336,7 +344,7 @@ public class JSDocInfo implements Serializable {
   // for which the presence of the annotation alone is significant).
 
   // Mask all the boolean annotation types
-  private static final int MASK_FLAGS       = 0x3FFFFFFF;
+  private static final int MASK_FLAGS         = 0x3FFFFFFF;
 
   private static final int MASK_CONSTANT      = 0x00000001; // @const
   private static final int MASK_CONSTRUCTOR   = 0x00000002; // @constructor
@@ -396,6 +404,51 @@ public class JSDocInfo implements Serializable {
     other.includeDocumentation = this.includeDocumentation;
     other.originalCommentPosition = this.originalCommentPosition;
     return other;
+  }
+
+  @VisibleForTesting
+  public static boolean areEquivalent(JSDocInfo jsDoc1, JSDocInfo jsDoc2) {
+    if (jsDoc1 == null && jsDoc2 == null) {
+      return true;
+    }
+    if (jsDoc1 == null || jsDoc2 == null) {
+      return false;
+    }
+
+    if (!Objects.equals(jsDoc1.getParameterNames(), jsDoc2.getParameterNames())) {
+      return false;
+    }
+    for (String param : jsDoc1.getParameterNames()) {
+      if (!Objects.equals(jsDoc1.getParameterType(param), jsDoc2.getParameterType(param))) {
+        return false;
+      }
+    }
+
+    return Objects.equals(jsDoc1.getAuthors(), jsDoc2.getAuthors()) &&
+        Objects.equals(jsDoc1.getBaseType(), jsDoc2.getBaseType()) &&
+        Objects.equals(jsDoc1.getBlockDescription(), jsDoc2.getBlockDescription()) &&
+        Objects.equals(jsDoc1.getFileOverview(), jsDoc2.getFileOverview()) &&
+        Objects.equals(jsDoc1.getImplementedInterfaces(), jsDoc2.getImplementedInterfaces()) &&
+        Objects.equals(jsDoc1.getEnumParameterType(), jsDoc2.getEnumParameterType()) &&
+        Objects.equals(jsDoc1.getExtendedInterfaces(), jsDoc2.getExtendedInterfaces()) &&
+        Objects.equals(jsDoc1.getLendsName(), jsDoc2.getLendsName()) &&
+        Objects.equals(jsDoc1.getLicense(), jsDoc2.getLicense()) &&
+        Objects.equals(jsDoc1.getMarkers(), jsDoc2.getMarkers()) &&
+        Objects.equals(jsDoc1.getMeaning(), jsDoc2.getMeaning()) &&
+        Objects.equals(jsDoc1.getModifies(), jsDoc2.getModifies()) &&
+        Objects.equals(jsDoc1.getOriginalCommentString(), jsDoc2.getOriginalCommentString()) &&
+        Objects.equals(jsDoc1.getReferences(), jsDoc2.getReferences()) &&
+        Objects.equals(jsDoc1.getReturnDescription(), jsDoc2.getReturnDescription()) &&
+        Objects.equals(jsDoc1.getReturnType(), jsDoc2.getReturnType()) &&
+        Objects.equals(jsDoc1.getSuppressions(), jsDoc2.getSuppressions()) &&
+        Objects.equals(jsDoc1.getTemplateTypeNames(), jsDoc2.getTemplateTypeNames()) &&
+        Objects.equals(jsDoc1.getThisType(), jsDoc2.getThisType()) &&
+        Objects.equals(jsDoc1.getThrownTypes(), jsDoc2.getThrownTypes()) &&
+        Objects.equals(jsDoc1.getTypedefType(), jsDoc2.getTypedefType()) &&
+        Objects.equals(jsDoc1.getType(), jsDoc2.getType()) &&
+        Objects.equals(jsDoc1.getVersion(), jsDoc2.getVersion()) &&
+        Objects.equals(jsDoc1.getVisibility(), jsDoc2.getVisibility()) &&
+        jsDoc1.bitset == jsDoc2.bitset;
   }
 
   boolean isDocumentationIncluded() {
@@ -1448,6 +1501,15 @@ public class JSDocInfo implements Serializable {
   @Override
   public String toString() {
     return "JSDocInfo";
+  }
+
+  @VisibleForTesting
+  public String toStringVerbose() {
+    return com.google.common.base.Objects.toStringHelper(this)
+        .add("info", info)
+        .add("bitset", Integer.toHexString(bitset))
+        .add("originalComment", getOriginalCommentString())
+        .toString();
   }
 
   /**

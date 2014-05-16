@@ -34,6 +34,7 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
   protected void setUp() {
     super.enableLineNumberCheck(false);
     enableNormalize();
+    compareJsDoc = false;
   }
 
   public void testValue() {

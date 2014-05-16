@@ -31,6 +31,7 @@ public class OptimizeParametersTest extends CompilerTestCase {
   public void setUp() {
     super.enableNormalize();
     super.enableLineNumberCheck(false);
+    compareJsDoc = false;
   }
 
   public void testNoRemoval() {

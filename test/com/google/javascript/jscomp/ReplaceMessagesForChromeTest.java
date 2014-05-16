@@ -44,6 +44,7 @@ public class ReplaceMessagesForChromeTest extends CompilerTestCase {
   @Override
   protected void setUp()  {
     style = RELAX;
+    compareJsDoc = false;
   }
 
   public void testReplaceSimpleMessage() {

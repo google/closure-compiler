@@ -28,6 +28,7 @@ import java.util.List;
 public class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   public ProcessCommonJSModulesTest() {
+    compareJsDoc = false;
   }
 
   @Override

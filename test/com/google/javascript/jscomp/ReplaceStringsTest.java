@@ -70,6 +70,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
     super(EXTERNS, true);
     enableNormalize();
     parseTypeInfo = true;
+    compareJsDoc = false;
   }
 
   @Override

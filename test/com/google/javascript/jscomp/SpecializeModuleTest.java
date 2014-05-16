@@ -32,6 +32,7 @@ public class SpecializeModuleTest extends CompilerTestCase {
 
   public SpecializeModuleTest() {
     super(SHARED_EXTERNS);
+    compareJsDoc = false;
   }
 
   private PassFactory inlineFunctions =

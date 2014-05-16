@@ -40,6 +40,11 @@ public class InferJSDocInfoTest extends CompilerTestCase {
   private Scope globalScope;
 
   @Override
+  public void setUp() {
+    compareJsDoc = false;
+  }
+
+  @Override
   public int getNumRepetitions() {
     return 1;
   }

@@ -43,6 +43,7 @@ public class ProcessDefinesTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     overrides.clear();
+    compareJsDoc = false;
   }
 
   @Override

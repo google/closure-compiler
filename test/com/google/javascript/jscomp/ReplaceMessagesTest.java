@@ -51,6 +51,7 @@ public class ReplaceMessagesTest extends CompilerTestCase {
     messages = Maps.newHashMap();
     strictReplacement = false;
     style = RELAX;
+    compareJsDoc = false;
   }
 
   public void testReplaceSimpleMessage() {

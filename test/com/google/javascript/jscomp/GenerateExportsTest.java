@@ -30,6 +30,7 @@ public class GenerateExportsTest extends CompilerTestCase {
 
   public GenerateExportsTest() {
     super(EXTERNS);
+    compareJsDoc = false;
   }
 
   @Override

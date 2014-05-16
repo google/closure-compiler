@@ -96,6 +96,7 @@ public class RenameVarsTest extends CompilerTestCase {
     shouldShadow = false;
     preferStableNames = false;
     nameGenerator = null;
+    compareJsDoc = false;
 
     // TODO(johnlenz): Enable Normalize during these tests.
   }

@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_SUPER_
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_TARGET_INVALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_UNEXPECTED_PARAMS;
 
-
 /**
  * Unit tests for ClosureRewriteGoogClass
  * @author johnlenz@google.com (John Lenz)
@@ -48,6 +47,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
     this.enableEcmaScript5(false);
     disableTypeCheck();
     runTypeCheckAfterProcessing = true;
+    compareJsDoc = false;
   }
 
   @Override

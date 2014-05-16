@@ -58,6 +58,7 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
     addAdditionalNamespace = false;
     preserveGoogRequires = false;
     banGoogBase = false;
+    compareJsDoc = false;
   }
 
   @Override

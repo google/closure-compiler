@@ -54,6 +54,9 @@ public abstract class CompilerTestCase extends TestCase  {
   /** Whether to parse type info from JSDoc comments */
   protected boolean parseTypeInfo;
 
+  /** Whether to take JSDoc into account when comparing ASTs. */
+  protected boolean compareJsDoc;
+
   /** Whether we check warnings without source information. */
   private boolean allowSourcelessWarnings = false;
 
@@ -148,6 +151,7 @@ public abstract class CompilerTestCase extends TestCase  {
         SourceFile.fromCode("externs", externs));
     this.compareAsTree = compareAsTree;
     this.parseTypeInfo = false;
+    this.compareJsDoc = true;
   }
 
   /**
@@ -1002,7 +1006,12 @@ public abstract class CompilerTestCase extends TestCase  {
 
       if (expected != null) {
         if (compareAsTree) {
-          String explanation = expectedRoot.checkTreeEquals(mainRoot);
+          String explanation;
+          if (compareJsDoc) {
+            explanation = expectedRoot.checkTreeEqualsIncludingJsDoc(mainRoot);
+          } else {
+            explanation = expectedRoot.checkTreeEquals(mainRoot);
+          }
           assertNull(
               "\nExpected: " + compiler.toSource(expectedRoot) +
               "\nResult:   " + compiler.toSource(mainRoot) +

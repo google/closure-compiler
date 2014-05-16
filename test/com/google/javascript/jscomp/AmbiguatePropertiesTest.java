@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Maps;
-
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
@@ -43,6 +42,7 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
     enableTypeCheck(CheckLevel.WARNING);
     enableClosurePass();
     enableGatherExternProperties();
+    compareJsDoc = false;
   }
 
   @Override

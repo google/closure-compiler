@@ -43,13 +43,14 @@ public class ScopedAliasesTest extends CompilerTestCase {
   private static final String SCOPE_NAMESPACE =
       "var $jscomp = {}; $jscomp.scope = {};";
 
-  private static String EXTERNS = "var window;";
+  private static final String EXTERNS = "var window;";
 
   AliasTransformationHandler transformationHandler =
       CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER;
 
   public ScopedAliasesTest() {
     super(EXTERNS);
+    compareJsDoc = false;
   }
 
   @Override
@@ -501,7 +502,7 @@ public class ScopedAliasesTest extends CompilerTestCase {
           + "/** @type {function() : x} */ types.actual;"
           + "/** @type {function() : wrong.wrong} */ types.expected;");
       fail("Test types should fail here.");
-    } catch (AssertionError e) {
+    } catch (AssertionError expected) {
     }
   }
 
@@ -843,7 +844,7 @@ public class ScopedAliasesTest extends CompilerTestCase {
     @Override
     public AliasTransformation logAliasTransformation(
         String sourceFile, SourcePosition<AliasTransformation> position) {
-      if(!observedPositions.containsKey(sourceFile)) {
+      if (!observedPositions.containsKey(sourceFile)) {
         observedPositions.put(sourceFile,
             Lists.<SourcePosition<AliasTransformation>> newArrayList());
       }

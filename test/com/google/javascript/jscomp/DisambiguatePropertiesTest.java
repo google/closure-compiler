@@ -40,6 +40,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
 
   public DisambiguatePropertiesTest() {
     parseTypeInfo = true;
+    compareJsDoc = false;
   }
 
   @Override
