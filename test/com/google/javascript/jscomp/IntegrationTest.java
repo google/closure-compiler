@@ -3038,6 +3038,7 @@ public class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = new CompilerOptions();
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossModuleNames(true);
+    options.declaredGlobalExternsOnWindow = false;
     return options;
   }
 }
