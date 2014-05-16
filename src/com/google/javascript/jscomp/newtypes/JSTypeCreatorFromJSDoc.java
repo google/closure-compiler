@@ -39,6 +39,9 @@ import java.util.Set;
  */
 public class JSTypeCreatorFromJSDoc {
 
+  // Used to communicate state between methods when resolving enum types
+  private int howmanyTypeVars = 0;
+
   /** Exception for when unrecognized type names are encountered */
   public static class UnknownTypeException extends Exception {
     UnknownTypeException(String cause) {
@@ -119,6 +122,9 @@ public class JSTypeCreatorFromJSDoc {
       case Token.STRING:
         return getNamedTypeHelper(n, ownerType, registry, typeParameters);
       case Token.PIPE: {
+        // The way JSType.join works, Subtype|Supertype is equal to Supertype,
+        // so when programmers write un-normalized unions, we normalize them
+        // silently. We may also want to warn.
         JSType union = JSType.BOTTOM;
         for (Node child = n.getFirstChild(); child != null;
              child = child.getNext()) {
@@ -214,9 +220,12 @@ public class JSTypeCreatorFromJSDoc {
         if (hasTypeVariable(outerTypeParameters, ownerType, typeName)) {
           return JSType.fromTypeVar(typeName);
         } else {
-          // It's either a typedef, a type variable or a nominal-type name
+          // It's either a typedef, an enum, a type variable or a nominal type
           if (registry.getTypedef(typeName) != null) {
             return getTypedefType(typeName, registry);
+          }
+          if (registry.getEnum(typeName) != null) {
+            return getEnumPropType(typeName, registry);
           }
           JSType namedType = registry.lookupTypeByName(typeName);
           if (namedType == null) {
@@ -224,6 +233,7 @@ public class JSTypeCreatorFromJSDoc {
             throw new UnknownTypeException("Unhandled type: " + typeName);
           }
           if (namedType.isTypeVariable()) {
+            howmanyTypeVars++;
             return namedType;
           }
           return JSType.join(JSType.NULL, getNominalTypeHelper(
@@ -233,24 +243,66 @@ public class JSTypeCreatorFromJSDoc {
     }
   }
 
-  public JSType getTypedefType(String name, DeclaredTypeRegistry registry) {
+  private JSType getTypedefType(String name, DeclaredTypeRegistry registry) {
+    resolveTypedef(name, registry);
+    return registry.getTypedef(name).getType();
+  }
+
+  public void resolveTypedef(String name, DeclaredTypeRegistry registry) {
     Typedef td = registry.getTypedef(name);
     Preconditions.checkState(td != null, "getTypedef should only be " +
         "called when we know that the typedef is defined");
     if (td.isResolved()) {
-      return td.getType();
+      return;
     }
     JSTypeExpression texp = td.getTypeExpr();
     JSType tdType;
     if (texp == null) {
-      warn("Circular typedefs are not allowed.",
+      warn("Circular type definitions are not allowed.",
           td.getTypeExprForErrorReporting().getRootNode());
       tdType = JSType.UNKNOWN;
     } else {
       tdType = getTypeFromJSTypeExpression(texp, null, registry, null);
     }
     td.resolveTypedef(tdType);
-    return tdType;
+  }
+
+  private JSType getEnumPropType(String name, DeclaredTypeRegistry registry) {
+    resolveEnum(name, registry);
+    return registry.getEnum(name).getPropType();
+  }
+
+  public void resolveEnum(String name, DeclaredTypeRegistry registry) {
+    EnumType e = registry.getEnum(name);
+    Preconditions.checkState(e != null, "getEnum should only be " +
+        "called when we know that the enum is defined");
+    if (e.isResolved()) {
+      return;
+    }
+    JSTypeExpression texp = e.getTypeExpr();
+    JSType enumeratedType;
+    if (texp == null) {
+      warn("Circular type definitions are not allowed.",
+          e.getTypeExprForErrorReporting().getRootNode());
+      enumeratedType = JSType.UNKNOWN;
+    } else {
+      int numTypeVars = howmanyTypeVars;
+      enumeratedType = getTypeFromJSTypeExpression(texp, null, registry, null);
+      if (howmanyTypeVars > numTypeVars) {
+        warn("An enum type cannot include type variables.", texp.getRootNode());
+        enumeratedType = JSType.UNKNOWN;
+        howmanyTypeVars = numTypeVars;
+      } else if (enumeratedType.isTop()) {
+        warn("An enum type cannot be *. " +
+            "Use ? if you do not want the elements checked.",
+            texp.getRootNode());
+        enumeratedType = JSType.UNKNOWN;
+      } else if (enumeratedType.isUnion()) {
+        warn("An enum type cannot be a union type.", texp.getRootNode());
+        enumeratedType = JSType.UNKNOWN;
+      }
+    }
+    e.resolveEnum(enumeratedType);
   }
 
   private JSType getNominalTypeHelper(JSType namedType, Node n,

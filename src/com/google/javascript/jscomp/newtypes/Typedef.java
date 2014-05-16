@@ -73,7 +73,7 @@ public class Typedef {
     return typeExpr;
   }
 
-  public void resolveTypedef(JSType t) {
+  void resolveTypedef(JSType t) {
     Preconditions.checkNotNull(t);
     if (state == State.RESOLVED) {
       return;

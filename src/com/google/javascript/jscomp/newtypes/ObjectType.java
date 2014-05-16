@@ -120,7 +120,8 @@ public class ObjectType {
     return objectKind.isDict();
   }
 
-  static ImmutableSet<ObjectType> withLocation(Set<ObjectType> objs, String location) {
+  static ImmutableSet<ObjectType> withLocation(
+      Set<ObjectType> objs, String location) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj : objs) {
       newObjs.add(obj.withLocation(location));

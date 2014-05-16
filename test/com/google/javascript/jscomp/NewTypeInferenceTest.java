@@ -312,6 +312,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         VariableReferenceCheck.REDECLARED_VARIABLE);
 
     checkNoWarnings("var g = function f() {}; var h = function f() {};");
+
+    typeCheck(
+        "var x; /** @enum */ var x = { ONE: 1 };",
+        VariableReferenceCheck.REDECLARED_VARIABLE);
+
+    typeCheck(
+        "/** @enum */ var x = { ONE: 1 }; var x;",
+        VariableReferenceCheck.REDECLARED_VARIABLE);
   }
 
   public void testDeclaredVariables() {
@@ -6849,5 +6857,379 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "(/** @lends {ns} */ { prop : 1 });\n" +
         "function f() { var /** string */ s = ns.prop; }",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testEnumBasicTyping() {
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E = {\n" +
+        "  ONE: 1,\n" +
+        "  TWO: 2\n" +
+        "};\n" +
+        "function f(/** E */ x) { x < 'str'; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @enum */\n" + // No type annotation defaults to number
+        "var E = {\n" +
+        "  ONE: 1,\n" +
+        "  TWO: 2\n" +
+        "};\n" +
+        "function f(/** E */ x) { x < 'str'; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    checkNoWarnings(
+        "/** @enum {number} */\n" +
+        "var E = {\n" +
+        "  ONE: 1,\n" +
+        "  TWO: 2\n" +
+        "};\n" +
+        "function f(/** E */ x) {}\n" +
+        "function g(/** number */ x) {}\n" +
+        "f(E.TWO);\n" +
+        "g(E.TWO);");
+
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E = {\n" +
+        "  ONE: 1,\n" +
+        "  TWO: 2\n" +
+        "};\n" +
+        "function f(/** E */ x) {}\n" +
+        "f(1);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E = {\n" +
+        "  ONE: 1,\n" +
+        "  TWO: 2\n" +
+        "};\n" +
+        "function f() { E.THREE - 5; }",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    checkNoWarnings(
+        "/** @enum {!Foo} */\n" +
+        "var E = { ONE: new Foo };\n" +
+        "/** @constructor */\n" +
+        "function Foo() {}");
+
+    typeCheck(
+        "/** @typedef {number} */\n" +
+        "var num;\n" +
+        "/** @enum {num} */\n" +
+        "var E = { ONE: 1 };\n" +
+        "function f(/** E */ x) { x < 'str'; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
+
+  public void testEnumBadInitializer() {
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E;",
+        GlobalTypeInfo.MALFORMED_ENUM);
+
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E = {};",
+        GlobalTypeInfo.MALFORMED_ENUM);
+
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E = 1;",
+        GlobalTypeInfo.MALFORMED_ENUM);
+
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E = {\n" +
+        "  ONE: 1,\n" +
+        "  TWO: true\n" +
+        "};",
+        NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE);
+
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E = { a: 1 };",
+        TypeCheck.ENUM_NOT_CONSTANT);
+
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E = { A: 1, A: 2 };",
+        GlobalTypeInfo.DUPLICATE_PROP_IN_ENUM);
+  }
+
+  public void testEnumPropertiesConstant() {
+    checkNoWarnings(
+        "/** @enum {number} */\n" +
+        "var E = {\n" +
+        "  ONE: 1,\n" +
+        "  TWO: 2\n" +
+        "};\n" +
+        "E.THREE = 3;");
+
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E = {\n" +
+        "  ONE: 1,\n" +
+        "  TWO: 2\n" +
+        "};\n" +
+        "E.ONE = E.TWO;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E = {\n" +
+        "  ONE: 1,\n" +
+        "  TWO: 2\n" +
+        "};\n" +
+        "function f(/** E */) { E.ONE = E.TWO; }",
+        NewTypeInference.CONST_REASSIGNED);
+  }
+
+  public void testEnumIllegalRecursion() {
+    typeCheck(
+        "/** @enum {Type2} */\n" +
+        "var Type1 = {\n" +
+        "  ONE: null\n" +
+        "};\n" +
+        "/** @enum {Type1} */\n" +
+        "var Type2 = {\n" +
+        "  ONE: null\n" +
+        "};",
+        ImmutableList.of(
+            RhinoErrorReporter.BAD_JSDOC_ANNOTATION,
+            // This warning is a side-effect of the fact that, when there is a
+            // cycle, the resolution of one enum will fail but the others will
+            // complete successfully.
+            NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE));
+
+    typeCheck(
+        "/** @enum {Type2} */\n" +
+        "var Type1 = {\n" +
+        "  ONE: null\n" +
+        "};\n" +
+        "/** @typedef {Type1} */\n" +
+        "var Type2;",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+  }
+
+  public void testEnumBadDeclaredType() {
+    typeCheck(
+        "/** @enum {InexistentType} */\n" +
+        "var E = { ONE : null };",
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+
+    typeCheck(
+        "/** @enum {*} */\n" +
+        "var E = { ONE: 1, STR: '' };",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    // No free type variables in enums
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "function f(x) {\n" +
+        "  /** @enum {function(T):number} */\n" +
+        "  var E = { ONE: x };\n" +
+        "}",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "function f(x) {\n" +
+        "  /** @enum {T} */\n" +
+        "  var E1 = { ONE: 1 };\n" +
+        "  /** @enum {function(E1):E1} */\n" +
+        "  var E2 = { ONE: function(x) { return x; } };\n" +
+        "}",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "function f(x) {\n" +
+        "  /** @typedef {T} */ var AliasT;\n" +
+        "  /** @enum {T} */\n" +
+        "  var E1 = { ONE: 1 };\n" +
+        "  /** @enum {function(E1):T} */\n" +
+        "  var E2 = { ONE: function(x) { return x; } };\n" +
+        "}",
+        ImmutableList.of(
+            RhinoErrorReporter.BAD_JSDOC_ANNOTATION,
+            RhinoErrorReporter.BAD_JSDOC_ANNOTATION));
+
+    // No unions in enums
+    typeCheck(
+        "/** @enum {number|string} */\n" +
+        "var E = { ONE: 1, STR: '' };",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @enum {Foo} */\n" +
+        "var E = { ONE: new Foo, TWO: null };",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "/** @typedef {number|string} */\n" +
+        "var NOS;\n" +
+        "/** @enum {NOS} */\n" +
+        "var E = { ONE: 1, STR: '' };",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+  }
+
+  public void testEnumsWithGenerics() {
+    checkNoWarnings(
+        "/** @enum */ var E1 = { A: 1};\n" +
+        "/** @enum */ var E2 = { A: 2};\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {(T|E1)} x\n" +
+        " */\n" +
+        "function f(x) {}\n" +
+        "f(/** @type {(string|E1)} */ ('str'));");
+
+    typeCheck(
+        "/** @enum */ var E1 = { A: 1};\n" +
+        "/** @enum */ var E2 = { A: 2};\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {(T|E1)} x\n" +
+        " */\n" +
+        "function f(x) {}\n" +
+        "f(/** @type {(string|E2)} */ ('str'));",
+        NewTypeInference.FAILED_TO_UNIFY);
+  }
+
+  public void testEnumJoinSpecializeMeet() {
+    // join: enum {number} with number
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E = { ONE: 1 };\n" +
+        "function f(cond) {\n" +
+        "  var x = cond ? E.ONE : 5;\n" +
+        "  x - 2;\n" +
+        "  var /** E */ y = x;\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // join: enum {Low} with High, to High
+    typeCheck(
+        "/** @constructor */\n" +
+        "function High() {}\n" +
+        "/** @constructor @extends {High} */\n" +
+        "function Low() {}\n" +
+        "/** @enum {!Low} */\n" +
+        "var E = { A: new Low };\n" +
+        "function f(cond) {\n" +
+        "  var x = cond ? E.A : new High;\n" +
+        "  var /** High */ y = x;\n" +
+        "  var /** E */ z = x;\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // join: enum {High} with Low, to (enum{High}|Low)
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function High() {}\n" +
+        "/** @constructor @extends {High} */\n" +
+        "function Low() {}\n" +
+        "/** @enum {!High} */\n" +
+        "var E = { A: new High };\n" +
+        "function f(cond) {\n" +
+        "  var x = cond ? E.A : new Low;\n" +
+        "  if (!(x instanceof Low)) { var /** E */ y = x; }\n" +
+        "}");
+
+    // meet: enum {?} with string, to enum {?}
+    typeCheck(
+        "/** @enum {?} */\n" +
+        "var E = { A: 123 };\n" +
+        "function f(x) {\n" +
+        "  var /** string */ s = x;\n" +
+        "  var /** E */ y = x;\n" +
+        "  s = x;\n" +
+        "}\n" +
+        "f('str');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // meet: E1|E2 with E1|E3, to E1
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E1 = { ONE: 1 };\n" +
+        "/** @enum {number} */\n" +
+        "var E2 = { TWO: 1 };\n" +
+        "/** @enum {number} */\n" +
+        "var E3 = { THREE: 1 };\n" +
+        "function f(x) {\n" +
+        "  var /** (E1|E2) */ y = x;\n" +
+        "  var /** (E1|E3) */ z = x;\n" +
+        "  var /** E1 */ w = x;\n" +
+        "}\n" +
+        "f(E2.TWO);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // meet: enum {number} with number, to enum {number}
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E = { ONE: 1 };\n" +
+        "function f(x) {\n" +
+        "  var /** E */ y = x;\n" +
+        "  var /** number */ z = x;\n" +
+        "}\n" +
+        "f(123);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // meet: enum {Low} with High, to enum {Low}
+    typeCheck(
+        "/** @constructor */\n" +
+        "function High() {}\n" +
+        "/** @constructor @extends {High} */\n" +
+        "function Low() {}\n" +
+        "/** @enum {!Low} */\n" +
+        "var E = { A: new Low };\n" +
+        "function f(x) {\n" +
+        "  var /** !High */ y = x;\n" +
+        "  var /** E */ z = x;\n" +
+        "}\n" +
+        "f(new High);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // meet: enum {Low} with (High1|High2), to enum {Low}
+    typeCheck(
+        "/** @interface */\n" +
+        "function High1() {}\n" +
+        "/** @interface */\n" +
+        "function High2() {}\n" +
+        "/** @constructor @implements {High1} @implements {High2} */\n" +
+        "function Low() {}\n" +
+        "/** @enum {!Low} */\n" +
+        "var E = { A: new Low };\n" +
+        "function f(x) {\n" +
+        "  var /** (!High1 | !High2) */ y = x;\n" +
+        "  var /** E */ z = x;\n" +
+        "}\n" +
+        "f(/** @type {!High1} */ (new Low));",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // meet: enum {High} with Low
+    typeCheck(
+        "/** @constructor */\n" +
+        "function High() {}\n" +
+        "/** @constructor @extends {High} */\n" +
+        "function Low() {}\n" +
+        "/** @enum {!High} */\n" +
+        "var E = { A: new High };\n" +
+        "/** @param {function(E)|function(!Low)} x */\n" +
+        "function f(x) { x(123); }",
+        NewTypeInference.CALL_FUNCTION_WITH_BOTTOM_FORMAL);
   }
 }

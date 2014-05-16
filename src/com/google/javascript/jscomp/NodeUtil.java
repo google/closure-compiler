@@ -774,6 +774,14 @@ public final class NodeUtil {
     return jsdoc != null && jsdoc.hasTypedefType();
   }
 
+  static boolean isEnumDecl(Node n) {
+    if (!n.isVar()) {
+      return false;
+    }
+    JSDocInfo jsdoc = n.getJSDocInfo();
+    return jsdoc != null && jsdoc.hasEnumParameterType();
+  }
+
   /**
    * Returns true iff this node defines a namespace, such as goog or goog.math.
    */

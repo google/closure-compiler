@@ -27,4 +27,7 @@ public interface DeclaredTypeRegistry {
 
   /** Returns the instance of the typedef named {@code name} */
   public Typedef getTypedef(String name);
+
+  /** Returns the instance of the enum named {@code name} */
+  public EnumType getEnum(String name);
 }

@@ -538,7 +538,7 @@ public class NewTypeInference implements CompilerPass {
           inEnv = null;
           for (Node nameNode = n.getFirstChild(); nameNode != null;
                nameNode = nameNode.getNext()) {
-            String varName = nameNode.getQualifiedName();
+            String varName = nameNode.getString();
             Node rhs = nameNode.getFirstChild();
             JSType declType = currentScope.getDeclaredTypeOf(varName);
             inEnv = envPutType(outEnv, varName, JSType.UNKNOWN);
@@ -868,7 +868,7 @@ public class NewTypeInference implements CompilerPass {
 
   /** Processes a single variable declaration in a VAR statement. */
   private TypeEnv processVarDeclaration(Node nameNode, TypeEnv inEnv) {
-    String varName = nameNode.getQualifiedName();
+    String varName = nameNode.getString();
     JSType declType = currentScope.getDeclaredTypeOf(varName);
 
     if (currentScope.isLocalFunDef(varName)) {
@@ -942,74 +942,8 @@ public class NewTypeInference implements CompilerPass {
       case Token.STRING:
       case Token.TRUE:
         return new EnvTypePair(inEnv, scalarValueToType(exprKind));
-      case Token.OBJECTLIT: {
-        JSDocInfo jsdoc = expr.getJSDocInfo();
-        boolean isStruct = jsdoc != null && jsdoc.makesStructs();
-        boolean isDict = jsdoc != null && jsdoc.makesDicts();
-        TypeEnv env = inEnv;
-        JSType result = pickReqObjType(expr);
-        for (Node prop : expr.children()) {
-          if (isStruct && prop.isQuotedString()) {
-            warnings.add(JSError.make(
-                prop, TypeCheck.ILLEGAL_OBJLIT_KEY, "struct"));
-          } else if (isDict && !prop.isQuotedString()) {
-            warnings.add(JSError.make(
-                prop, TypeCheck.ILLEGAL_OBJLIT_KEY, "dict"));
-          }
-          String pname = NodeUtil.getObjectLitKeyName(prop);
-          // We can't assign to a getter to change its value.
-          // We can't do a prop access on a setter.
-          // So, we don't associate pname with a getter/setter.
-          // we add a property with a name that's weird enough to
-          // hopefully avoid an accidental clash.
-          if (prop.isGetterDef() || prop.isSetterDef()) {
-            EnvTypePair pair = analyzeExprFwd(prop.getFirstChild(), env);
-            FunctionType funType = pair.type.getFunType();
-            Preconditions.checkNotNull(funType);
-            String specialPropName;
-            JSType propType;
-            if (prop.isGetterDef()) {
-              specialPropName = GETTER_PREFIX + pname;
-              propType = funType.getReturnType();
-            } else {
-              specialPropName = SETTER_PREFIX + pname;
-              propType = pair.type;
-            }
-            result = result.withProperty(
-                new QualifiedName(specialPropName), propType);
-            env = pair.env;
-          } else {
-            QualifiedName qname = new QualifiedName(pname);
-            JSType jsdocType = symbolTable.getPropDeclaredType(prop);
-            JSType reqPtype, specPtype;
-            if (jsdocType != null) {
-              reqPtype = specPtype = jsdocType;
-            } else if (requiredType.mayHaveProp(qname)) {
-              reqPtype = specPtype = requiredType.getProp(qname);
-              if (specializedType.mayHaveProp(qname)) {
-                specPtype = specializedType.getProp(qname);
-              }
-            } else {
-              reqPtype = specPtype = JSType.UNKNOWN;
-            }
-            EnvTypePair pair =
-                analyzeExprFwd(prop.getFirstChild(), env, reqPtype, specPtype);
-            if (jsdocType != null) {
-              // First declare it; then set the maybe more precise inferred type
-              result = result.withDeclaredProperty(qname, jsdocType, false);
-              if (!pair.type.isSubtypeOf(jsdocType)) {
-                warnings.add(JSError.make(
-                    prop, INVALID_OBJLIT_PROPERTY_TYPE,
-                    jsdocType.toString(), pair.type.toString()));
-                pair.type = jsdocType;
-              }
-            }
-            result = result.withProperty(qname, pair.type);
-            env = pair.env;
-          }
-        }
-        return new EnvTypePair(env, result);
-      }
+      case Token.OBJECTLIT:
+        return analyzeObjLitFwd(expr, inEnv, requiredType, specializedType);
       case Token.THIS: {
         if (!currentScope.hasThis()) {
           warnings.add(JSError.make(expr, CheckGlobalThis.GLOBAL_THIS));
@@ -1023,7 +957,7 @@ public class NewTypeInference implements CompilerPass {
           return new EnvTypePair(inEnv, JSType.UNDEFINED);
         }
 
-        String varName = expr.getQualifiedName();
+        String varName = expr.getString();
         if (currentScope.isLocalVar(varName) ||
             currentScope.isFormalParam(varName) ||
             currentScope.isLocalFunDef(varName) ||
@@ -1320,9 +1254,9 @@ public class NewTypeInference implements CompilerPass {
         } else if (lhs.isName() && lhsPair.type.isUnknown() &&
             rhs.isName() && rhsPair.type.isUnknown()) {
           TypeEnv env = envPutType(
-              rhsPair.env, lhs.getQualifiedName(), JSType.TOP_SCALAR);
+              rhsPair.env, lhs.getString(), JSType.TOP_SCALAR);
           env = envPutType(
-              rhsPair.env, rhs.getQualifiedName(), JSType.TOP_SCALAR);
+              rhsPair.env, rhs.getString(), JSType.TOP_SCALAR);
           return new EnvTypePair(env, JSType.BOOLEAN);
         }
         JSType lhsType = lhsPair.type;
@@ -1824,6 +1758,101 @@ public class NewTypeInference implements CompilerPass {
     return rhsPair;
   }
 
+  private EnvTypePair analyzeObjLitFwd(
+      Node objLit, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
+    if (NodeUtil.isEnumDecl(objLit.getParent().getParent())) {
+      // We warn about malformed enum declarations in GlobalTypeInfo,
+      // so we ignore them here.
+      if (objLit.getFirstChild() == null) {
+        return new EnvTypePair(inEnv, requiredType);
+      }
+      String pname = NodeUtil.getObjectLitKeyName(objLit.getFirstChild());
+      JSType enumeratedType =
+          requiredType.getProp(new QualifiedName(pname)).getEnumeratedType();
+      if (enumeratedType == null) {
+        return new EnvTypePair(inEnv, requiredType);
+      }
+      TypeEnv env = inEnv;
+      for (Node prop : objLit.children()) {
+        EnvTypePair pair =
+            analyzeExprFwd(prop.getFirstChild(), env, enumeratedType);
+        if (!pair.type.isSubtypeOf(enumeratedType)) {
+          warnings.add(JSError.make(
+              prop, INVALID_OBJLIT_PROPERTY_TYPE,
+              enumeratedType.toString(), pair.type.toString()));
+        }
+        env = pair.env;
+      }
+      return new EnvTypePair(env, requiredType);
+    }
+    JSDocInfo jsdoc = objLit.getJSDocInfo();
+    boolean isStruct = jsdoc != null && jsdoc.makesStructs();
+    boolean isDict = jsdoc != null && jsdoc.makesDicts();
+    TypeEnv env = inEnv;
+    JSType result = pickReqObjType(objLit);
+    for (Node prop : objLit.children()) {
+      if (isStruct && prop.isQuotedString()) {
+        warnings.add(
+            JSError.make(prop, TypeCheck.ILLEGAL_OBJLIT_KEY, "struct"));
+      } else if (isDict && !prop.isQuotedString()) {
+        warnings.add(
+            JSError.make(prop, TypeCheck.ILLEGAL_OBJLIT_KEY, "dict"));
+      }
+      String pname = NodeUtil.getObjectLitKeyName(prop);
+      // We can't assign to a getter to change its value.
+      // We can't do a prop access on a setter.
+      // So, we don't associate pname with a getter/setter.
+      // We add a property with a name that's weird enough to hopefully avoid
+      // an accidental clash.
+      if (prop.isGetterDef() || prop.isSetterDef()) {
+        EnvTypePair pair = analyzeExprFwd(prop.getFirstChild(), env);
+        FunctionType funType = pair.type.getFunType();
+        Preconditions.checkNotNull(funType);
+        String specialPropName;
+        JSType propType;
+        if (prop.isGetterDef()) {
+          specialPropName = GETTER_PREFIX + pname;
+          propType = funType.getReturnType();
+        } else {
+          specialPropName = SETTER_PREFIX + pname;
+          propType = pair.type;
+        }
+        result = result.withProperty(
+            new QualifiedName(specialPropName), propType);
+        env = pair.env;
+      } else {
+        QualifiedName qname = new QualifiedName(pname);
+        JSType jsdocType = symbolTable.getPropDeclaredType(prop);
+        JSType reqPtype, specPtype;
+        if (jsdocType != null) {
+          reqPtype = specPtype = jsdocType;
+        } else if (requiredType.mayHaveProp(qname)) {
+          reqPtype = specPtype = requiredType.getProp(qname);
+          if (specializedType.mayHaveProp(qname)) {
+            specPtype = specializedType.getProp(qname);
+          }
+        } else {
+          reqPtype = specPtype = JSType.UNKNOWN;
+        }
+        EnvTypePair pair =
+            analyzeExprFwd(prop.getFirstChild(), env, reqPtype, specPtype);
+        if (jsdocType != null) {
+          // First declare it; then set the maybe more precise inferred type
+          result = result.withDeclaredProperty(qname, jsdocType, false);
+          if (!pair.type.isSubtypeOf(jsdocType)) {
+            warnings.add(JSError.make(
+                prop, INVALID_OBJLIT_PROPERTY_TYPE,
+                jsdocType.toString(), pair.type.toString()));
+            pair.type = jsdocType;
+          }
+        }
+        result = result.withProperty(qname, pair.type);
+        env = pair.env;
+      }
+    }
+    return new EnvTypePair(env, result);
+  }
+
   private static boolean tightenTypeAndDontWarn(
       JSType declared, JSType inferred, JSType required) {
     boolean fuzzyDeclaration = declared == null || declared.isUnknown() ||
@@ -2099,34 +2128,8 @@ public class NewTypeInference implements CompilerPass {
       case Token.STRING:
       case Token.TRUE:
         return new EnvTypePair(outEnv, scalarValueToType(exprKind));
-      case Token.OBJECTLIT: {
-        TypeEnv env = outEnv;
-        JSType result = pickReqObjType(expr);
-        for (Node prop = expr.getLastChild();
-             prop != null;
-             prop = expr.getChildBefore(prop)) {
-          QualifiedName pname =
-              new QualifiedName(NodeUtil.getObjectLitKeyName(prop));
-          if (prop.isGetterDef() || prop.isSetterDef()) {
-            env = analyzeExprBwd(prop.getFirstChild(), env).env;
-          } else {
-            JSType jsdocType = symbolTable.getPropDeclaredType(prop);
-            JSType reqPtype;
-            if (jsdocType != null) {
-              reqPtype = jsdocType;
-            } else if (requiredType.mayHaveProp(pname)) {
-              reqPtype = requiredType.getProp(pname);
-            } else {
-              reqPtype = JSType.UNKNOWN;
-            }
-            EnvTypePair pair =
-                analyzeExprBwd(prop.getFirstChild(), env, reqPtype);
-            result = result.withProperty(pname, pair.type);
-            env = pair.env;
-          }
-        }
-        return new EnvTypePair(env, result);
-      }
+      case Token.OBJECTLIT:
+        return analyzeObjLitBwd(expr, outEnv, requiredType);
       case Token.THIS: {
         // TODO(blickly): Infer a loose type for THIS if we're in a function.
         if (!currentScope.hasThis()) {
@@ -2140,7 +2143,7 @@ public class NewTypeInference implements CompilerPass {
           return new EnvTypePair(outEnv, JSType.UNDEFINED);
         }
 
-        String varName = expr.getQualifiedName();
+        String varName = expr.getString();
         JSType inferredType = envGetType(outEnv, varName);
         if (inferredType == null) { // Needed for the free vars in the tests
           return new EnvTypePair(outEnv, JSType.UNKNOWN);
@@ -2413,7 +2416,7 @@ public class NewTypeInference implements CompilerPass {
       }
       case Token.VAR: { // Can happen iff its parent is a for/in.
         Node vdecl = expr.getFirstChild();
-        String name = vdecl.getQualifiedName();
+        String name = vdecl.getString();
         // For/in can never have rhs of its VAR
         Preconditions.checkState(!vdecl.hasChildren());
         return new EnvTypePair(
@@ -2481,6 +2484,53 @@ public class NewTypeInference implements CompilerPass {
         receiverType.getProp(qname) : requiredType;
     pair.type = propAccessType;
     return pair;
+  }
+
+  private EnvTypePair analyzeObjLitBwd(
+      Node objLit, TypeEnv outEnv, JSType requiredType) {
+    if (NodeUtil.isEnumDecl(objLit.getParent().getParent())) {
+      if (objLit.getFirstChild() == null) {
+        return new EnvTypePair(outEnv, requiredType);
+      }
+      String pname = NodeUtil.getObjectLitKeyName(objLit.getFirstChild());
+      JSType enumeratedType =
+          requiredType.getProp(new QualifiedName(pname)).getEnumeratedType();
+      if (enumeratedType == null) {
+        return new EnvTypePair(outEnv, requiredType);
+      }
+      TypeEnv env = outEnv;
+      for (Node prop = objLit.getLastChild();
+           prop != null;
+           prop = objLit.getChildBefore(prop)) {
+        env = analyzeExprBwd(prop.getFirstChild(), env, enumeratedType).env;
+      }
+      return new EnvTypePair(env, requiredType);
+    }
+    TypeEnv env = outEnv;
+    JSType result = pickReqObjType(objLit);
+    for (Node prop = objLit.getLastChild();
+         prop != null;
+         prop = objLit.getChildBefore(prop)) {
+      QualifiedName pname =
+          new QualifiedName(NodeUtil.getObjectLitKeyName(prop));
+      if (prop.isGetterDef() || prop.isSetterDef()) {
+        env = analyzeExprBwd(prop.getFirstChild(), env).env;
+      } else {
+        JSType jsdocType = symbolTable.getPropDeclaredType(prop);
+        JSType reqPtype;
+        if (jsdocType != null) {
+          reqPtype = jsdocType;
+        } else if (requiredType.mayHaveProp(pname)) {
+          reqPtype = requiredType.getProp(pname);
+        } else {
+          reqPtype = JSType.UNKNOWN;
+        }
+        EnvTypePair pair = analyzeExprBwd(prop.getFirstChild(), env, reqPtype);
+        result = result.withProperty(pname, pair.type);
+        env = pair.env;
+      }
+    }
+    return new EnvTypePair(env, result);
   }
 
   private static JSType scalarValueToType(int token) {
@@ -2903,9 +2953,8 @@ public class NewTypeInference implements CompilerPass {
         JSType formalType = fnSummary.getFormalType(i);
         Preconditions.checkState(!formalType.equals(JSType.topFunction()));
         if (argNode.isName() &&
-            callerScope.isKnownFunction(argNode.getQualifiedName())) {
-          String argName = argNode.getQualifiedName();
-          argType = summaries.get(callerScope.getScope(argName));
+            callerScope.isKnownFunction(argNode.getString())) {
+          argType = summaries.get(callerScope.getScope(argNode.getString()));
         }
         if (argType != null && !argType.isSubtypeOf(formalType)) {
           warnings.add(JSError.make(

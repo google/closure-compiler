@@ -28,6 +28,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.newtypes.DeclaredFunctionType;
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
+import com.google.javascript.jscomp.newtypes.EnumType;
 import com.google.javascript.jscomp.newtypes.FunctionType;
 import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
@@ -154,6 +155,16 @@ class GlobalTypeInfo implements CompilerPass {
           "JSC_ANONYMOUS_NOMINAL_TYPE",
           "Must specify a name when defining a class or interface.");
 
+  static final DiagnosticType MALFORMED_ENUM =
+      DiagnosticType.warning(
+          "JSC_MALFORMED_ENUM",
+          "An enum must be initialized to a non-empty object literal.");
+
+  static final DiagnosticType DUPLICATE_PROP_IN_ENUM =
+      DiagnosticType.warning(
+          "JSC_DUPLICATE_PROP_IN_ENUM",
+          "Property {0} appears twice in the enum declaration.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ANONYMOUS_NOMINAL_TYPE,
       CANNOT_INIT_TYPEDEF,
@@ -164,6 +175,7 @@ class GlobalTypeInfo implements CompilerPass {
       CTOR_IN_DIFFERENT_SCOPE,
       DICT_IMPLEMENTS_INTERF,
       DUPLICATE_JSDOC,
+      DUPLICATE_PROP_IN_ENUM,
       EXTENDS_NON_OBJECT,
       EXTENDS_NOT_ON_CTOR_OR_INTERF,
       REDECLARED_PROPERTY,
@@ -172,12 +184,14 @@ class GlobalTypeInfo implements CompilerPass {
       INHERITANCE_CYCLE,
       INTERFACE_WITH_A_BODY,
       INVALID_PROP_OVERRIDE,
+      MALFORMED_ENUM,
       MISPLACED_CONST_ANNOTATION,
       UNRECOGNIZED_TYPE_NAME,
       RhinoErrorReporter.BAD_JSDOC_ANNOTATION,
       TypeCheck.CONFLICTING_EXTENDED_TYPE,
       TypeCheck.CONFLICTING_IMPLEMENTED_TYPE,
       TypeCheck.CONFLICTING_SHAPE_TYPE,
+      TypeCheck.ENUM_NOT_CONSTANT,
       TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
       TypeCheck.MULTIPLE_VAR_DEF,
       TypeCheck.UNKNOWN_OVERRIDE,
@@ -195,6 +209,7 @@ class GlobalTypeInfo implements CompilerPass {
   private Set<JSError> warnings = Sets.newHashSet();
   private JSTypeCreatorFromJSDoc typeParser = new JSTypeCreatorFromJSDoc();
   private final AbstractCompiler compiler;
+  private final CodingConvention convention;
   private final Map<Node, String> anonFunNames = Maps.newHashMap();
   private static final String ANON_FUN_PREFIX = "%anon_fun";
   private int freshId = 1;
@@ -208,6 +223,7 @@ class GlobalTypeInfo implements CompilerPass {
 
   GlobalTypeInfo(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.convention = compiler.getCodingConvention();
   }
 
   Collection<Scope> getScopes() {
@@ -256,8 +272,9 @@ class GlobalTypeInfo implements CompilerPass {
       new NodeTraversal(compiler, rootCnt).traverse(externs);
     }
     new NodeTraversal(compiler, rootCnt).traverse(root);
-    // (2) Replace each typedef with the type it aliases
+    // (2) Determine the type represented by each typedef and each enum
     globalScope.resolveTypedefs(typeParser);
+    globalScope.resolveEnums(typeParser);
     // (3) The bulk of the global-scope processing happens here:
     //     - Create scopes for functions
     //     - Declare properties on types
@@ -275,6 +292,7 @@ class GlobalTypeInfo implements CompilerPass {
       Node scopeBody = s.getBody();
       new NodeTraversal(compiler, new CollectNamedTypes(s)).traverse(scopeBody);
       s.resolveTypedefs(typeParser);
+      s.resolveEnums(typeParser);
       ProcessScope ps = new ProcessScope(s);
       new NodeTraversal(compiler, ps).traverse(scopeBody);
       ps.finishProcessingScope();
@@ -532,6 +550,40 @@ class GlobalTypeInfo implements CompilerPass {
             JSDocInfo jsdoc = n.getJSDocInfo();
             Typedef td = Typedef.make(jsdoc.getTypedefType());
             currentScope.addTypedef(varName, td);
+          } else if (NodeUtil.isEnumDecl(n)) {
+            // TODO(dimvar): Currently, we don't handle adding static properties
+            // to an enum after its definition.
+            // Treat enum literals as namespaces.
+            String varName = n.getFirstChild().getString();
+            if (currentScope.isDefinedLocally(varName)) {
+              warnings.add(JSError.make(
+                  n, VariableReferenceCheck.REDECLARED_VARIABLE, varName));
+              break;
+            }
+            Node init = n.getFirstChild().getFirstChild();
+            if (init == null || !init.isObjectLit() ||
+                init.getFirstChild() == null) {
+              warnings.add(JSError.make(n, MALFORMED_ENUM));
+              currentScope.addLocal(varName, JSType.UNKNOWN, false);
+              break;
+            }
+            JSDocInfo jsdoc = n.getJSDocInfo();
+
+            Set<String> propNames = Sets.newHashSet();
+            for (Node prop : init.children()) {
+              String pname = NodeUtil.getObjectLitKeyName(prop);
+              if (propNames.contains(pname)) {
+                warnings.add(JSError.make(n, DUPLICATE_PROP_IN_ENUM, pname));
+              }
+              if (!convention.isValidEnumKey(pname)) {
+                warnings.add(
+                    JSError.make(prop, TypeCheck.ENUM_NOT_CONSTANT, pname));
+              }
+              propNames.add(pname);
+            }
+            currentScope.addEnum(varName,
+                EnumType.make(varName, jsdoc.getEnumParameterType(),
+                    ImmutableSet.copyOf(propNames)));
           }
           break;
         case Token.GETPROP:
@@ -673,7 +725,7 @@ class GlobalTypeInfo implements CompilerPass {
           // after we decide what to do with variables in general, eg, will we
           // use unique numeric ids?
           if (parent.isVar() || parent.isCatch()) {
-            if (NodeUtil.isTypedefDecl(parent)) {
+            if (NodeUtil.isTypedefDecl(parent) || NodeUtil.isEnumDecl(parent)) {
               break;
             }
             if (currentScope.isDefinedLocally(name)) {
@@ -736,7 +788,6 @@ class GlobalTypeInfo implements CompilerPass {
           if (jsdoc != null && jsdoc.getLendsName() != null) {
             lendsObjlits.add(n);
           }
-
           for (Node prop : n.children()) {
             if (prop.getJSDocInfo() != null) {
               declaredObjLitProps.put(prop,
@@ -1404,6 +1455,7 @@ class GlobalTypeInfo implements CompilerPass {
     private final Map<String, Scope> localFunDefs = Maps.newHashMap();
     private Map<String, RawNominalType> localClassDefs = Maps.newHashMap();
     private Map<String, Typedef> localTypedefs = Maps.newHashMap();
+    private Map<String, EnumType> localEnums = Maps.newHashMap();
     private Set<String> localNamespaces = Sets.newHashSet();
 
     // declaredType is null for top level, but never null for functions,
@@ -1488,13 +1540,14 @@ class GlobalTypeInfo implements CompilerPass {
 
     // In other languages, type names and variable names are in distinct
     // namespaces and don't clash.
-    // But because our typedefs are var declarations, they are in the same
-    // namespace as other variables.
+    // But because our typedefs and enums are var declarations, they are in the
+    // same namespace as other variables.
     boolean isDefinedLocally(String name) {
       Preconditions.checkNotNull(name);
       return locals.containsKey(name) || formals.contains(name) ||
           localFunDefs.containsKey(name) || "this".equals(name) ||
-          (localTypedefs != null && localTypedefs.containsKey(name));
+          (localTypedefs != null && localTypedefs.containsKey(name)) ||
+          (localEnums != null && localEnums.containsKey(name));
     }
 
     private boolean isNamespace(Node expr) {
@@ -1696,14 +1749,39 @@ class GlobalTypeInfo implements CompilerPass {
       return null;
     }
 
+    private void addEnum(String name, EnumType e) {
+      Preconditions.checkArgument(!isDefinedLocally(name));
+      localEnums.put(name, e);
+    }
+
+    public EnumType getEnum(String name) {
+      if (isDefinedLocally(name)) {
+        return localEnums.get(name);
+      }
+      if (parent != null) {
+        return parent.getEnum(name);
+      }
+      return null;
+    }
+
     private void resolveTypedefs(JSTypeCreatorFromJSDoc typeParser) {
       for (Map.Entry<String, Typedef> entry : localTypedefs.entrySet()) {
         String name = entry.getKey();
         Typedef td = entry.getValue();
-        if (td.isResolved()) {
-          continue;
+        if (!td.isResolved()) {
+          typeParser.resolveTypedef(name, this);
         }
-        td.resolveTypedef(typeParser.getTypedefType(name, this));
+      }
+    }
+
+    private void resolveEnums(JSTypeCreatorFromJSDoc typeParser) {
+      for (Map.Entry<String, EnumType> entry : localEnums.entrySet()) {
+        String name = entry.getKey();
+        EnumType e = entry.getValue();
+        if (!e.isResolved()) {
+          typeParser.resolveEnum(name, this);
+        }
+        locals.put(name, e.getObjLitType());
       }
     }
 
