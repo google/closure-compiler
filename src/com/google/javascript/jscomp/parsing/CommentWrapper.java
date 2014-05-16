@@ -15,11 +15,15 @@
  */
 package com.google.javascript.jscomp.parsing;
 
-import com.google.javascript.rhino.head.Token;
-
 /**
- * Wrapper for the two comment types so that we can provide an implementation
- * of the Comment interface, regardless of which parser is used.
+ * This class was created as a wrapper for the two comment types
+ * (from the Rhino parser and the new parser) so that we could
+ * provide an implementation of the Comment interface, regardless
+ * of which parser is used. Now there is only one parser so:
+ * TODO(tbreisacher): Consider remove this class and letting
+ * com.google.javascript.jscomp.parsing.parser.trees.Comment
+ * implement the Comment interface directly, as long as doing so
+ * doesn't leak the intermediate AST.
  */
 public class CommentWrapper implements Comment {
   private boolean jsDoc;
@@ -31,12 +35,6 @@ public class CommentWrapper implements Comment {
         com.google.javascript.jscomp.parsing.parser.trees.Comment.Type.JSDOC;
     position = comment.location.start.offset;
     length = comment.location.end.offset - position;
-  }
-
-  public CommentWrapper(com.google.javascript.rhino.head.ast.Comment comment) {
-    jsDoc = comment.getCommentType() == Token.CommentType.JSDOC;
-    position = comment.getAbsolutePosition();
-    length = comment.getLength();
   }
 
   @Override

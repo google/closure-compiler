@@ -33,7 +33,7 @@ import java.util.logging.Logger;
 
 public class NewParserTest extends BaseJSTypeTestCase {
   private static final String SUSPICIOUS_COMMENT_WARNING =
-      IRFactory.SUSPICIOUS_COMMENT_WARNING;
+      NewIRFactory.SUSPICIOUS_COMMENT_WARNING;
 
   private static final String TRAILING_COMMA_MESSAGE =
       ScriptRuntime.getMessage0("msg.extra.trailing.comma");
@@ -60,7 +60,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
       "safe for all browsers currently in use.";
 
   private static final String MISPLACED_TYPE_ANNOTATION =
-      IRFactory.MISPLACED_TYPE_ANNOTATION;
+      NewIRFactory.MISPLACED_TYPE_ANNOTATION;
 
   private Config.LanguageMode mode;
   private boolean isIdeMode = false;
@@ -1026,7 +1026,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testGettersForbidden1() {
     parseError("var x = {get foo() { return 3; }};",
-        IRFactory.GETTER_ERROR_MESSAGE);
+        NewIRFactory.GETTER_ERROR_MESSAGE);
   }
 
   public void testGettersForbidden2() {
@@ -1046,17 +1046,17 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testGettersForbidden5() {
     parseError("var x = {a: 2, get foo() { return 3; }};",
-        IRFactory.GETTER_ERROR_MESSAGE);
+        NewIRFactory.GETTER_ERROR_MESSAGE);
   }
 
   public void testGettersForbidden6() {
     parseError("var x = {get 'foo'() { return 3; }};",
-        IRFactory.GETTER_ERROR_MESSAGE);
+        NewIRFactory.GETTER_ERROR_MESSAGE);
   }
 
   public void testSettersForbidden() {
     parseError("var x = {set foo(a) { y = 3; }};",
-        IRFactory.SETTER_ERROR_MESSAGE);
+        NewIRFactory.SETTER_ERROR_MESSAGE);
   }
 
   public void testSettersForbidden2() {
@@ -1294,11 +1294,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testGetter() {
     mode = LanguageMode.ECMASCRIPT3;
     parseError("var x = {get 1(){}};",
-        IRFactory.GETTER_ERROR_MESSAGE);
+        NewIRFactory.GETTER_ERROR_MESSAGE);
     parseError("var x = {get 'a'(){}};",
-        IRFactory.GETTER_ERROR_MESSAGE);
+        NewIRFactory.GETTER_ERROR_MESSAGE);
     parseError("var x = {get a(){}};",
-        IRFactory.GETTER_ERROR_MESSAGE);
+        NewIRFactory.GETTER_ERROR_MESSAGE);
     mode = LanguageMode.ECMASCRIPT5;
     parse("var x = {get 1(){}};");
     parse("var x = {get 'a'(){}};");
@@ -1309,11 +1309,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testSetter() {
     mode = LanguageMode.ECMASCRIPT3;
     parseError("var x = {set 1(x){}};",
-        IRFactory.SETTER_ERROR_MESSAGE);
+        NewIRFactory.SETTER_ERROR_MESSAGE);
     parseError("var x = {set 'a'(x){}};",
-        IRFactory.SETTER_ERROR_MESSAGE);
+        NewIRFactory.SETTER_ERROR_MESSAGE);
     parseError("var x = {set a(x){}};",
-        IRFactory.SETTER_ERROR_MESSAGE);
+        NewIRFactory.SETTER_ERROR_MESSAGE);
     mode = LanguageMode.ECMASCRIPT5;
     parse("var x = {set 1(x){}};");
     parse("var x = {set 'a'(x){}};");
@@ -1405,31 +1405,31 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testKeywordsAsProperties() {
     mode = LanguageMode.ECMASCRIPT3;
 
-    parseWarning("var x = {function: 1};", IRFactory.INVALID_ES3_PROP_NAME);
-    parseWarning("x.function;", IRFactory.INVALID_ES3_PROP_NAME);
+    parseWarning("var x = {function: 1};", NewIRFactory.INVALID_ES3_PROP_NAME);
+    parseWarning("x.function;", NewIRFactory.INVALID_ES3_PROP_NAME);
     parseError("var x = {get x(){} };",
-        IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {get function(){} };", IRFactory.GETTER_ERROR_MESSAGE);
+        NewIRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {get function(){} };", NewIRFactory.GETTER_ERROR_MESSAGE);
     parseError("var x = {get 'function'(){} };",
-        IRFactory.GETTER_ERROR_MESSAGE);
+        NewIRFactory.GETTER_ERROR_MESSAGE);
     parseError("var x = {get 1(){} };",
-        IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {set function(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
+        NewIRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {set function(a){} };", NewIRFactory.SETTER_ERROR_MESSAGE);
     parseError("var x = {set 'function'(a){} };",
-        IRFactory.SETTER_ERROR_MESSAGE);
+        NewIRFactory.SETTER_ERROR_MESSAGE);
     parseError("var x = {set 1(a){} };",
-        IRFactory.SETTER_ERROR_MESSAGE);
-    parseWarning("var x = {class: 1};", IRFactory.INVALID_ES3_PROP_NAME);
+        NewIRFactory.SETTER_ERROR_MESSAGE);
+    parseWarning("var x = {class: 1};", NewIRFactory.INVALID_ES3_PROP_NAME);
     parse("var x = {'class': 1};");
-    parseWarning("x.class;", IRFactory.INVALID_ES3_PROP_NAME);
+    parseWarning("x.class;", NewIRFactory.INVALID_ES3_PROP_NAME);
     parse("x['class'];");
     parse("var x = {let: 1};");  // 'let' is not reserved in ES3
     parse("x.let;");
     parse("var x = {yield: 1};"); // 'yield' is not reserved in ES3
     parse("x.yield;");
     parseWarning("x.prototype.catch = function() {};",
-        IRFactory.INVALID_ES3_PROP_NAME);
-    parseWarning("x().catch();", IRFactory.INVALID_ES3_PROP_NAME);
+        NewIRFactory.INVALID_ES3_PROP_NAME);
+    parseWarning("x().catch();", NewIRFactory.INVALID_ES3_PROP_NAME);
 
     mode = LanguageMode.ECMASCRIPT5;
 

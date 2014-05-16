@@ -26,15 +26,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.head.CompilerEnvirons;
-import com.google.javascript.rhino.head.Context;
 import com.google.javascript.rhino.head.ErrorReporter;
 import com.google.javascript.rhino.head.EvaluatorException;
-import com.google.javascript.rhino.head.Parser;
-import com.google.javascript.rhino.head.Token;
-import com.google.javascript.rhino.head.ast.AstNode;
-import com.google.javascript.rhino.head.ast.AstRoot;
-import com.google.javascript.rhino.head.ast.NodeVisitor;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.IOException;
@@ -65,18 +58,9 @@ public class ParserRunner {
   }
 
   public static Config createConfig(boolean isIdeMode,
-      LanguageMode languageMode,
-      boolean acceptConstKeyword,
-      Set<String> extraAnnotationNames) {
-    return createConfig(isIdeMode, languageMode, acceptConstKeyword,
-        extraAnnotationNames, false);
-  }
-
-  public static Config createConfig(boolean isIdeMode,
                                     LanguageMode languageMode,
                                     boolean acceptConstKeyword,
-                                    Set<String> extraAnnotationNames,
-                                    boolean useNewParser) {
+                                    Set<String> extraAnnotationNames) {
     initResourceConfig();
     Set<String> effectiveAnnotationNames;
     if (extraAnnotationNames == null) {
@@ -86,7 +70,7 @@ public class ParserRunner {
       effectiveAnnotationNames.addAll(extraAnnotationNames);
     }
     return new Config(effectiveAnnotationNames, suppressionNames,
-        isIdeMode, languageMode, acceptConstKeyword, useNewParser);
+        isIdeMode, languageMode, acceptConstKeyword);
   }
 
   public static Set<String> getReservedVars() {
@@ -124,81 +108,7 @@ public class ParserRunner {
                                   Config config,
                                   ErrorReporter errorReporter,
                                   Logger logger) throws IOException {
-    if (!useExperimentalParser(config)) {
-      return parseEs5(sourceFile, sourceString, config, errorReporter, logger);
-    } else {
-      return parseEs6(sourceFile, sourceString, config, errorReporter, logger);
-    }
-  }
-
-  private static boolean useExperimentalParser(Config config) {
-    return config.useExperimentalParser
-        || config.languageMode == LanguageMode.ECMASCRIPT6
-        || config.languageMode == LanguageMode.ECMASCRIPT6_STRICT;
-  }
-
-  /**
-   * Parses the JavaScript text given by a reader using Rhino.
-   *
-   * @param sourceString Source code from the file.
-   * @param errorReporter An error.
-   * @param logger A logger.
-   * @return The AST of the given text.
-   */
-  public static ParseResult parseEs5(StaticSourceFile sourceFile,
-                                  String sourceString,
-                                  Config config,
-                                  ErrorReporter errorReporter,
-                                  Logger logger) {
-    Context cx = Context.enter();
-    cx.setErrorReporter(errorReporter);
-    cx.setLanguageVersion(Context.VERSION_1_5);
-    CompilerEnvirons compilerEnv = new CompilerEnvirons();
-    compilerEnv.initFromContext(cx);
-    compilerEnv.setRecordingComments(true);
-    compilerEnv.setRecordingLocalJsDocComments(true);
-
-    // ES5 specifically allows trailing commas
-    compilerEnv.setWarnTrailingComma(
-        config.languageMode == LanguageMode.ECMASCRIPT3);
-
-    compilerEnv.setReservedKeywordAsIdentifier(true);
-
-    compilerEnv.setAllowMemberExprAsFunctionName(false);
-    compilerEnv.setIdeMode(config.isIdeMode);
-    compilerEnv.setRecoverFromErrors(config.isIdeMode);
-
-    Parser p = new Parser(compilerEnv, errorReporter);
-    AstRoot astRoot = null;
-    try {
-      astRoot = p.parse(sourceString, sourceFile.getName(), 1);
-    } catch (EvaluatorException e) {
-      logger.info(
-          "Error parsing " + sourceFile.getName() + ": " + e.getMessage());
-    } finally {
-      Context.exit();
-    }
-    Node root = null;
-    final List<Comment> comments = Lists.newArrayList();
-    if (astRoot != null) {
-      root = IRFactory.transformTree(
-          astRoot, sourceFile, sourceString, config, errorReporter);
-      root.setIsSyntheticBlock(true);
-
-      if (config.isIdeMode) {
-        astRoot.visitAll(new NodeVisitor() {
-            @Override
-            public boolean visit(AstNode node) {
-              if (node.getType() == Token.COMMENT) {
-                comments.add(new CommentWrapper(
-                    (com.google.javascript.rhino.head.ast.Comment) node));
-              }
-              return true;
-            }
-        });
-      }
-    }
-    return new ParseResult(root, comments);
+    return parseEs6(sourceFile, sourceString, config, errorReporter, logger);
   }
 
   private static class Es6ErrorReporter

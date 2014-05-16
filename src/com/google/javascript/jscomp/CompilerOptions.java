@@ -68,11 +68,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   private LanguageMode languageOut;
 
   /**
-   * Whether to use the new parser instead of the old Rhino one.
-   */
-  boolean useNewParser;
-
-  /**
    * Whether the compiler accepts the `const' keyword.
    */
   boolean acceptConstKeyword;
@@ -918,7 +913,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     // Accepted language
     languageIn = LanguageMode.ECMASCRIPT3;
     languageOut = LanguageMode.ECMASCRIPT3;
-    useNewParser = true;
 
     // Language variation
     acceptConstKeyword = false;
@@ -1578,10 +1572,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public LanguageMode getLanguageOut() {
     return languageOut;
-  }
-
-  public void setUseNewParser(boolean newParser) {
-    this.useNewParser = newParser;
   }
 
   /**

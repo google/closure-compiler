@@ -2163,8 +2163,7 @@ public class Compiler extends AbstractCompiler {
       isIdeMode(),
       mode,
       acceptConstKeyword(),
-      options.extraAnnotationNames,
-      options.useNewParser);
+      options.extraAnnotationNames);
   }
 
   @Override
