@@ -865,8 +865,8 @@ final class TypedScopeCreator implements ScopeCreator {
         if (var != null && var.getType() != null &&
             var.getType().isFunctionType()) {
           FunctionType aliasedType  = var.getType().toMaybeFunctionType();
-          if ((aliasedType.isConstructor() || aliasedType.isInterface()) &&
-              !aliasedType.isNativeObjectType()) {
+          if ((aliasedType.isConstructor() || aliasedType.isInterface())
+              && !isGoogAbstractMethod(rValue)) {
             functionType = aliasedType;
 
             // TODO(nick): Remove this. This should already be handled by
@@ -976,6 +976,17 @@ final class TypedScopeCreator implements ScopeCreator {
 
       // all done
       return functionType;
+    }
+
+    /**
+     * We have to special-case goog.abstractMethod in createFunctionTypeFromNodes,
+     * because some people use it (incorrectly) for interfaces:
+     *
+     * /* @interface * /
+     * var example.MyInterface = goog.abstractMethod;
+     */
+    private boolean isGoogAbstractMethod(Node n) {
+      return n.matchesQualifiedName("goog.abstractMethod");
     }
 
     private ObjectType getPrototypeOwnerType(ObjectType ownerType) {
