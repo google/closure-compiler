@@ -2080,35 +2080,44 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     checkNoWarnings(
         "function f(x) {\n" +
         "  if (!(typeof x == 'number')) {\n" +
-        "    x < 'asdf';\n" +
+        "    x.prop;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        "function f(x) {\n" +
+        "  if (!(typeof x == 'undefined')) {\n" +
+        "    x - 5;\n" +
         "  }\n" +
         "}");
 
     typeCheck(
         "function f(x) {\n" +
-        "  if (!(typeof x == 'number')) {\n" +
-        "    x - 5;\n" +
+        "  if (!(typeof x == 'undefined')) {\n" +
+        "    var /** undefined */ y = x;\n" +
         "  }\n" +
         "}",
-        NewTypeInference.INVALID_OPERAND_TYPE);
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
         "function f(x) {\n" +
-        "  if (typeof x !== 'number') {\n" +
-        "    x - 5;\n" +
+        "  if (typeof x !== 'undefined') {\n" +
+        "    var /** undefined */ y = x;\n" +
         "  }\n" +
         "}",
-        NewTypeInference.INVALID_OPERAND_TYPE);
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
         "function f(x) {\n" +
-        "  if (typeof x == 'number') {} else { x - 5; }\n" +
+        "  if (typeof x == 'undefined') {} else {\n" +
+        "    var /** undefined */ y = x;\n" +
+        "  }\n" +
         "}",
-        NewTypeInference.INVALID_OPERAND_TYPE);
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     checkNoWarnings(
-        "function f(/** (number|string) */ x) {\n" +
-        "  if (typeof x !== 'string') {\n" +
+        "function f(/** (number|undefined) */ x) {\n" +
+        "  if (typeof x !== 'undefined') {\n" +
         "    x - 5;\n" +
         "  }\n" +
         "}");

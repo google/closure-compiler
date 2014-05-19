@@ -741,10 +741,8 @@ public class JSType {
       return FALSY;
     } else if (isFalsy()) {
       return TRUTHY;
-    } else if (objs == null && typeVar == null) {
-      return new JSType(TOP_SCALAR_MASK & ~mask);
     }
-    return UNKNOWN;
+    return UNKNOWN.removeType(this);
   }
 
   public JSType toBoolean() {
