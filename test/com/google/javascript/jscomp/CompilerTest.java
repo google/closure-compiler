@@ -27,6 +27,7 @@ import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -144,14 +145,21 @@ public class CompilerTest extends TestCase {
             "required entry point \"module$missing\" never provided"));
   }
 
+  private String normalize(String path) {
+    return path.replace("/", File.separator);
+  }
+
   public void testInputSourceMaps() throws Exception {
     FilePosition originalSourcePosition = new FilePosition(17, 25);
     ImmutableMap<String, SourceMapInput> inputSourceMaps = ImmutableMap.of(
-        "generated_js/example.js",
-        sourcemap("generated_js/example.srcmap", "../original/source.html",
+        normalize("generated_js/example.js"),
+        sourcemap(
+            normalize("generated_js/example.srcmap"),
+            normalize("../original/source.html"),
             originalSourcePosition));
+    String origSourceName = normalize("original/source.html");
     List<SourceFile> originalSources = Lists.newArrayList(
-        SourceFile.fromCode("original/source.html", "<div ng-show='foo()'>"));
+        SourceFile.fromCode(origSourceName, "<div ng-show='foo()'>"));
 
     CompilerOptions options = new CompilerOptions();
     options.inputSourceMaps = inputSourceMaps;
@@ -162,13 +170,13 @@ public class CompilerTest extends TestCase {
 
     assertEquals(
         OriginalMapping.newBuilder()
-            .setOriginalFile("original/source.html")
+            .setOriginalFile(origSourceName)
             .setLineNumber(18)
             .setColumnPosition(25)
             .build(),
-        compiler.getSourceMapping("generated_js/example.js", 3, 3));
+        compiler.getSourceMapping(normalize("generated_js/example.js"), 3, 3));
     assertEquals("<div ng-show='foo()'>",
-        compiler.getSourceLine("original/source.html", 1));
+        compiler.getSourceLine(origSourceName, 1));
   }
 
   private SourceMapInput sourcemap(String sourceMapPath, String originalSource,
