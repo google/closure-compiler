@@ -65,15 +65,14 @@ class DeclaredGlobalExternsOnWindow
     Node newNode = getprop;
 
     if (oldJSDocInfo != null) {
-      JSDocInfo jsDocInfo;
+      JSDocInfoBuilder builder;
 
       if (oldJSDocInfo.isConstructor() || oldJSDocInfo.isInterface()
           || oldJSDocInfo.hasEnumParameterType()) {
         Node nameNode = IR.name(name);
         newNode = IR.assign(getprop, nameNode);
 
-        JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
-        builder.recordSuppressions(ImmutableSet.of("duplicate"));
+        builder = new JSDocInfoBuilder(false);
         if (oldJSDocInfo.isConstructor()) {
           builder.recordConstructor();
         }
@@ -81,13 +80,14 @@ class DeclaredGlobalExternsOnWindow
           builder.recordInterface();
         }
         if (oldJSDocInfo.hasEnumParameterType()) {
-          builder.recordEnumParameterType  (oldJSDocInfo.getEnumParameterType());
+          builder.recordEnumParameterType(oldJSDocInfo.getEnumParameterType());
         }
-        jsDocInfo = builder.build(newNode);
       } else {
-        jsDocInfo = oldJSDocInfo.clone();
+        builder = JSDocInfoBuilder.copyFrom(oldJSDocInfo);
       }
 
+      builder.recordSuppressions(ImmutableSet.of("duplicate"));
+      JSDocInfo jsDocInfo = builder.build(newNode);
       jsDocInfo.setAssociatedNode(newNode);
       newNode.setJSDocInfo(jsDocInfo);
     }
@@ -102,7 +102,11 @@ class DeclaredGlobalExternsOnWindow
       nodes.add(n.getFirstChild());
     } else if (n.isVar()) {
       for (Node c : n.children()) {
-        nodes.add(c);
+        // Skip 'location' since there is an existing definition
+        // for window.location which conflicts with the "var location" one.
+        if (!c.getString().equals("location")) {
+          nodes.add(c);
+        }
       }
     }
   }
