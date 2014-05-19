@@ -1360,6 +1360,19 @@ chrome.pageAction.show = function(tabId) {};
 /** @type {ChromeEvent} */
 chrome.pageAction.onClicked;
 
+/**
+ * @const
+ */
+chrome.browser = {};
+
+
+/**
+ * @param {{url: string}} details An object with a single 'url' key.
+ * @param {function(): void} callback The callback function. If an error occurs
+ * opening the URL, chrome.runtime.lastError will be set to the error message.
+ */
+chrome.browser.openTab = function(details, callback) {};
+
 
 /**
  * @const
