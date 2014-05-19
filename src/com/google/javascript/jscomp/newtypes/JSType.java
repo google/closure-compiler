@@ -36,16 +36,16 @@ import java.util.Set;
  */
 public class JSType {
   private static final int BOTTOM_MASK = 0x0;
-  private static final int STRING_MASK = 0x1;
-  private static final int NUMBER_MASK = 0x2;
-  private static final int UNDEFINED_MASK = 0x4;
-  private static final int TRUE_MASK = 0x8;
-  private static final int FALSE_MASK = 0x10;
+  private static final int TYPEVAR_MASK = 0x1;
+  private static final int NON_SCALAR_MASK = 0x2;
+  private static final int ENUM_MASK = 0x4;
+  private static final int TRUE_MASK = 0x8;  // These two print out
+  private static final int FALSE_MASK = 0x10; // as 'boolean'
   private static final int NULL_MASK = 0x20;
-  private static final int NON_SCALAR_MASK = 0x40;
-  private static final int TYPEVAR_MASK = 0x80;
-  private static final int ENUM_MASK = 0x100;
-  private static final int END_MASK = ENUM_MASK * 2;
+  private static final int NUMBER_MASK = 0x40;
+  private static final int STRING_MASK = 0x80;
+  private static final int UNDEFINED_MASK = 0x100;
+  private static final int END_MASK = UNDEFINED_MASK * 2;
   // When either of the next two bits is set, the rest of the type isn't
   // guaranteed to be in a consistent state.
   private static final int TRUTHY_MASK = 0x200;
@@ -999,23 +999,84 @@ public class JSType {
     }
   }
 
+  /** For use in {@link #typeToString} */
+  private static final Joiner PIPE_JOINER = Joiner.on("|");
+
   private String typeToString() {
     switch (mask) {
       case BOTTOM_MASK:
+        return "bottom";
       case TOP_MASK:
+        return "*";
       case UNKNOWN_MASK:
-        return tagToString(mask, null, null, null);
+        return "?";
       default:
         int tags = mask;
-        Set<String> types = Sets.newTreeSet();
-        for (int mask = 1; mask != END_MASK; mask <<= 1) {
-          if ((tags & mask) != 0) {
-            types.add(tagToString(mask, objs, typeVar, enums));
-            tags = tags & ~mask;  // Remove current mask from union
+        StringBuilder sb = new StringBuilder();
+        boolean firstIteration = true;
+        for (int tag = 1; tag != END_MASK; tag <<= 1) {
+          if ((tags & tag) != 0) {
+            if (!firstIteration) {
+              sb.append('|');
+            }
+            firstIteration = false;
+            switch (tag) {
+              case TRUE_MASK:
+              case FALSE_MASK:
+                sb.append("boolean");
+                tags &= ~BOOLEAN_MASK;
+                continue;
+              case NULL_MASK:
+                sb.append("null");
+                tags &= ~NULL_MASK;
+                continue;
+              case NUMBER_MASK:
+                sb.append("number");
+                tags &= ~NUMBER_MASK;
+                continue;
+              case STRING_MASK:
+                sb.append("string");
+                tags &= ~STRING_MASK;
+                continue;
+              case UNDEFINED_MASK:
+                sb.append("undefined");
+                tags &= ~UNDEFINED_MASK;
+                continue;
+              case TYPEVAR_MASK:
+                sb.append(typeVar);
+                tags &= ~TYPEVAR_MASK;
+                continue;
+              case NON_SCALAR_MASK: {
+                if (objs.size() == 1) {
+                  sb.append(Iterables.getOnlyElement(objs).toString());
+                } else {
+                  Set<String> strReps = Sets.newTreeSet();
+                  for (ObjectType obj : objs) {
+                    strReps.add(obj.toString());
+                  }
+                  PIPE_JOINER.appendTo(sb, strReps);
+                }
+                tags &= ~NON_SCALAR_MASK;
+                continue;
+              }
+              case ENUM_MASK: {
+                if (enums.size() == 1) {
+                  sb.append(Iterables.getOnlyElement(enums).toString());
+                } else {
+                  Set<String> strReps = Sets.newTreeSet();
+                  for (EnumType e : enums) {
+                    strReps.add(e.toString());
+                  }
+                  PIPE_JOINER.appendTo(sb, strReps);
+                }
+                tags &= ~ENUM_MASK;
+                continue;
+              }
+            }
           }
         }
         if (tags == 0) { // Found all types in the union
-          return Joiner.on("|").join(types);
+          return sb.toString();
         } else if (tags == TRUTHY_MASK) {
           return "truthy";
         } else if (tags == FALSY_MASK) {
@@ -1023,51 +1084,6 @@ public class JSType {
         } else {
           return "Unrecognized type: " + tags;
         }
-    }
-  }
-
-  /**
-   * Takes a type tag with a single bit set (including the non-scalar bit),
-   * and prints the string representation of that single type.
-   */
-  private static String tagToString(
-      int tag, Set<ObjectType> objs, String T, Set<EnumType> enums) {
-    switch (tag) {
-      case TRUE_MASK:
-      case FALSE_MASK:
-        return "boolean";
-      case BOTTOM_MASK:
-        return "bottom";
-      case STRING_MASK:
-        return "string";
-      case NON_SCALAR_MASK: {
-        Set<String> strReps = Sets.newTreeSet();
-        for (ObjectType obj : objs) {
-          strReps.add(obj.toString());
-        }
-        return Joiner.on("|").join(strReps);
-      }
-      case NULL_MASK:
-        return "null";
-      case NUMBER_MASK:
-        return "number";
-      case TOP_MASK:
-        return "top";
-      case UNDEFINED_MASK:
-        return "undefined";
-      case UNKNOWN_MASK:
-        return "?";
-      case TYPEVAR_MASK:
-        return T;
-      case ENUM_MASK: {
-        Set<String> strReps = Sets.newTreeSet();
-        for (EnumType e : enums) {
-          strReps.add(e.toString());
-        }
-        return Joiner.on("|").join(strReps);
-      }
-      default: // Must be a union type.
-        return null;
     }
   }
 
