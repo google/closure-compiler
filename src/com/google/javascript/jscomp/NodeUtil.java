@@ -3003,6 +3003,33 @@ public final class NodeUtil {
   }
 
   /**
+   * Temporary function to determine if a node is constant
+   * in the old or new world. This does not check its inputs
+   * carefully because it will go away once we switch to the new
+   * world.
+   */
+  static boolean isConstantDeclaration(
+      CodingConvention convention, JSDocInfo info, Node node) {
+    if (info != null && info.isConstant()) {
+      return true;
+    }
+
+    if (node.getBooleanProp(Node.IS_CONSTANT_VAR)) {
+      return true;
+    }
+
+    switch (node.getType()) {
+      case Token.NAME:
+        return NodeUtil.isConstantByConvention(
+            convention, node, node.getParent());
+      case Token.GETPROP:
+        return node.isQualifiedName() && NodeUtil.isConstantByConvention(
+            convention, node.getLastChild(), node);
+    }
+    return false;
+  }
+
+  /**
    * Get the JSDocInfo for a function.
    */
   public static JSDocInfo getFunctionJSDocInfo(Node n) {

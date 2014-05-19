@@ -532,6 +532,14 @@ class TypeInference
         boolean isVarDeclaration = left.hasChildren()
             && varType != null && !var.isTypeInferred();
 
+        boolean isTypelessConstDecl =
+            isVarDeclaration &&
+            NodeUtil.isConstantDeclaration(
+                compiler.getCodingConvention(),
+                var.getJSDocInfo(), var.getNameNode()) &&
+              !(var.getJSDocInfo() != null &&
+                var.getJSDocInfo().hasType());
+
         // When looking at VAR initializers for declared VARs, we tend
         // to use the declared type over the type it's being
         // initialized to in the global scope.
@@ -548,9 +556,13 @@ class TypeInference
         // sure we back-infer the <string> element constraint on
         // the left hand side, so we use the left hand side.
 
-        boolean isVarTypeBetter = isVarDeclaration &&
+        boolean isVarTypeBetter = isVarDeclaration
             // Makes it easier to check for NPEs.
-            !resultType.isNullType() && !resultType.isVoidType();
+            && !resultType.isNullType() && !resultType.isVoidType()
+            // Do not use the var type if the declaration looked like
+            // /** @const */ var x = 3;
+            // because this type was computed from the RHS
+            && !isTypelessConstDecl;
 
         // TODO(nicksantos): This might be a better check once we have
         // back-inference of object/array constraints.  It will probably
@@ -560,7 +572,6 @@ class TypeInference
         //boolean isVarTypeBetter = isVarDeclaration &&
         //    (varType.restrictByNotNullOrUndefined().isSubtype(resultType)
         //     || !resultType.isSubtype(varType));
-
 
         if (isVarTypeBetter) {
           redeclareSimpleVar(scope, left, varType);
@@ -572,7 +583,12 @@ class TypeInference
         if (var != null && var.isTypeInferred()) {
           JSType oldType = var.getType();
           var.setType(oldType == null ?
-              resultType : oldType.getLeastSupertype(resultType));
+             resultType : oldType.getLeastSupertype(resultType));
+        } else if (isTypelessConstDecl) {
+          // /** @const */ var x = y;
+          // should be redeclared, so that the type of y
+          // gets propagated to inner scopes.
+          var.setType(resultType);
         }
         break;
       case Token.GETPROP:

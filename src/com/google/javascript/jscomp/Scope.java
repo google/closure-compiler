@@ -258,10 +258,8 @@ public class Scope
 
     /**
      * Sets this variable's type.
-     * @throws IllegalStateException if the variable's type is not inferred
      */
     void setType(JSType type) {
-      Preconditions.checkState(isTypeInferred());
       this.type = type;
     }
 
