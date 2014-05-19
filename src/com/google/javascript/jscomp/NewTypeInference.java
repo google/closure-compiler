@@ -194,7 +194,13 @@ public class NewTypeInference implements CompilerPass {
       TypeValidator.INVALID_CAST,
       TypeValidator.UNKNOWN_TYPEOF_VALUE);
 
-  private Set<JSError> warnings;
+  public static class WarningReporter {
+    AbstractCompiler compiler;
+    WarningReporter(AbstractCompiler compiler) { this.compiler = compiler; }
+    void add(JSError warning) { compiler.report(warning); }
+  }
+
+  private WarningReporter warnings;
   private final AbstractCompiler compiler;
   Map<DiGraphEdge<Node, ControlFlowGraph.Branch>, TypeEnv> envs;
   Map<Scope, JSType> summaries;
@@ -210,7 +216,7 @@ public class NewTypeInference implements CompilerPass {
   private static boolean debugging = false;
 
   NewTypeInference(AbstractCompiler compiler) {
-    this.warnings = Sets.newHashSet();
+    this.warnings = new WarningReporter(compiler);
     this.compiler = compiler;
     this.envs = Maps.newHashMap();
     this.summaries = Maps.newHashMap();
@@ -244,9 +250,6 @@ public class NewTypeInference implements CompilerPass {
     }
     for (DeferredCheck check : deferredChecks.values()) {
       check.runCheck(summaries, warnings);
-    }
-    for (JSError warning : warnings) {
-      compiler.report(warning);
     }
   }
 
@@ -2929,7 +2932,7 @@ public class NewTypeInference implements CompilerPass {
     }
 
     private void runCheck(
-        Map<Scope, JSType> summaries, Collection<JSError> warnings) {
+        Map<Scope, JSType> summaries, WarningReporter warnings) {
       FunctionType fnSummary = summaries.get(this.calleeScope).getFunType();
       println(
           "Running deferred check of function: ", calleeScope.getReadableName(),

@@ -7232,4 +7232,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f(x) { x(123); }",
         NewTypeInference.CALL_FUNCTION_WITH_BOTTOM_FORMAL);
   }
+
+  public void testNoDoubleWarnings() {
+    typeCheck(
+        "if ((4 - 'str') && true) { 4 + 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "(4 - 'str') ? 5 : 6;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
 }

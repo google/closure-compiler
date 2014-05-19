@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.NewTypeInference.WarningReporter;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.newtypes.DeclaredFunctionType;
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
@@ -206,7 +207,7 @@ class GlobalTypeInfo implements CompilerPass {
   private final Deque<Scope> scopes = Lists.newLinkedList();
   private Scope globalScope;
   private final Deque<Scope> scopeWorkset = Lists.newLinkedList();
-  private Set<JSError> warnings = Sets.newHashSet();
+  private WarningReporter warnings;
   private JSTypeCreatorFromJSDoc typeParser = new JSTypeCreatorFromJSDoc();
   private final AbstractCompiler compiler;
   private final CodingConvention convention;
@@ -222,6 +223,7 @@ class GlobalTypeInfo implements CompilerPass {
   private Map<Node, JSType> declaredObjLitProps = Maps.newHashMap();
 
   GlobalTypeInfo(AbstractCompiler compiler) {
+    this.warnings = new WarningReporter(compiler);
     this.compiler = compiler;
     this.convention = compiler.getCodingConvention();
   }
@@ -321,9 +323,6 @@ class GlobalTypeInfo implements CompilerPass {
     }
     typeParser = null;
     compiler.setSymbolTable(this);
-    for (JSError warning : warnings) {
-      compiler.report(warning);
-    }
     warnings = null;
   }
 
