@@ -46,7 +46,6 @@ public class ExternExportsPassTest extends TestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-
     setRunCheckTypes(true);
   }
 
@@ -601,6 +600,7 @@ public class ExternExportsPassTest extends TestCase {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.externExportsPath = "externs.js";
+    options.declaredGlobalExternsOnWindow = false;
 
     // Turn off IDE mode.
     options.ideMode = false;
