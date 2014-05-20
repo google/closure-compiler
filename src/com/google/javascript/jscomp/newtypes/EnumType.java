@@ -33,7 +33,7 @@ import java.util.Collection;
  * - We represent the object literal that defined the enum as an ObjectType.
  * - We represent an element of the enum by using this class in JSType.
  */
-public class EnumType {
+public class EnumType extends TypeWithProperties {
 
   private enum State {
     NOT_RESOLVED,
@@ -132,6 +132,31 @@ public class EnumType {
     return JSType.fromObjectType(
         ObjectType.makeObjectType(
             null, propMap, null, false, ObjectKind.UNRESTRICTED));
+  }
+
+  @Override
+  protected JSType getProp(QualifiedName qname) {
+    return declaredType.getProp(qname);
+  }
+
+  @Override
+  protected JSType getDeclaredProp(QualifiedName qname) {
+    return declaredType.getDeclaredProp(qname);
+  }
+
+  @Override
+  protected boolean mayHaveProp(QualifiedName qname) {
+    return declaredType.mayHaveProp(qname);
+  }
+
+  @Override
+  protected boolean hasProp(QualifiedName qname) {
+    return declaredType.hasProp(qname);
+  }
+
+  @Override
+  protected boolean hasConstantProp(QualifiedName qname) {
+    return declaredType.hasConstantProp(qname);
   }
 
   static ImmutableSet<EnumType> union(

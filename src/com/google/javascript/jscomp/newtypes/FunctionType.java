@@ -241,17 +241,6 @@ public class FunctionType {
   }
 
   // Returns non-null JSType
-  private static JSType nullAcceptingJoin(JSType t1, JSType t2) {
-    Preconditions.checkArgument(t1 != null || t2 != null);
-    if (t1 == null) {
-      return t2;
-    } else if (t2 == null) {
-      return t1;
-    }
-    return JSType.join(t1, t2);
-  }
-
-  // Returns non-null JSType
   private static JSType nullAcceptingMeet(JSType t1, JSType t2) {
     Preconditions.checkArgument(t1 != null || t2 != null);
     if (t1 == null) {
@@ -268,19 +257,20 @@ public class FunctionType {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     int minRequiredArity = Math.min(f1.getMinArity(), f2.getMinArity());
     for (int i = 0; i < minRequiredArity; i++) {
-      builder.addReqFormal(nullAcceptingJoin(
+      builder.addReqFormal(JSType.nullAcceptingJoin(
           f1.getFormalType(i), f2.getFormalType(i)));
     }
     int maxTotalArity = Math.max(
         f1.requiredFormals.size() + f1.optionalFormals.size(),
         f2.requiredFormals.size() + f2.optionalFormals.size());
     for (int i = minRequiredArity; i < maxTotalArity; i++) {
-      builder.addOptFormal(nullAcceptingJoin(
+      builder.addOptFormal(JSType.nullAcceptingJoin(
           f1.getFormalType(i), f2.getFormalType(i)));
     }
     // Loose types never have varargs, because there is no way for that
     // information to make it to a function summary
-    return builder.addRetType(nullAcceptingJoin(f1.returnType, f2.returnType))
+    return builder.addRetType(
+        JSType.nullAcceptingJoin(f1.returnType, f2.returnType))
         .addLoose().buildFunction();
   }
 
@@ -400,18 +390,18 @@ public class FunctionType {
         f1.requiredFormals.size(), f2.requiredFormals.size());
     for (int i = 0; i < minRequiredArity; i++) {
       builder.addReqFormal(
-          nullAcceptingJoin(f1.getFormalType(i), f2.getFormalType(i)));
+          JSType.nullAcceptingJoin(f1.getFormalType(i), f2.getFormalType(i)));
     }
     int maxTotalArity = Math.max(
         f1.requiredFormals.size() + f1.optionalFormals.size(),
         f2.requiredFormals.size() + f2.optionalFormals.size());
     for (int i = minRequiredArity; i < maxTotalArity; i++) {
-      builder.addOptFormal(nullAcceptingJoin(
+      builder.addOptFormal(JSType.nullAcceptingJoin(
           f1.getFormalType(i), f2.getFormalType(i)));
     }
     if (f1.restFormals != null || f2.restFormals != null) {
       builder.addRestFormals(
-          nullAcceptingJoin(f1.restFormals, f2.restFormals));
+          JSType.nullAcceptingJoin(f1.restFormals, f2.restFormals));
     }
     builder.addRetType(JSType.meet(f1.returnType, f2.returnType));
     return builder.buildFunction();

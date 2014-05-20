@@ -6932,6 +6932,37 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
+  public void testEnumsWithNonScalarDeclaredType() {
+    typeCheck(
+        "/** @enum {!Object} */ var E = {FOO: { prop: 1 }};\n" +
+        "E.FOO.prop - 5;",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    checkNoWarnings(
+        "/** @enum {{prop: number}} */ var E = {FOO: { prop: 1 }};\n" +
+        "E.FOO.prop - 5;");
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {\n" +
+        "  /** @const */ this.prop = 1;\n" +
+        "}\n" +
+        "/** @enum {!Foo} */\n" +
+        "var E = { ONE: new Foo() };\n" +
+        "function f(/** E */ x) { x.prop < 'str'; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {\n" +
+        "  /** @const */ this.prop = 1;\n" +
+        "}\n" +
+        "/** @enum {!Foo} */\n" +
+        "var E = { ONE: new Foo() };\n" +
+        "function f(/** E */ x) { x.prop = 2; }",
+        NewTypeInference.CONST_REASSIGNED);
+  }
+
   public void testEnumBadInitializer() {
     typeCheck(
         "/** @enum {number} */\n" +

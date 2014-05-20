@@ -344,6 +344,15 @@ public class JSType {
         Iterables.getOnlyElement(enums).getEnumeratedType() : null;
   }
 
+  static JSType nullAcceptingJoin(JSType t1, JSType t2) {
+    if (t1 == null) {
+      return t2;
+    } else if (t2 == null) {
+      return t1;
+    }
+    return JSType.join(t1, t2);
+  }
+
   // When joining w/ TOP or UNKNOWN, avoid setting more fields on them, eg, obj.
   public static JSType join(JSType lhs, JSType rhs) {
     if (lhs.isTop() || rhs.isTop()) {
@@ -874,70 +883,41 @@ public class JSType {
     if (isBottom() || isUnknown()) {
       return UNKNOWN;
     }
-    Preconditions.checkState(objs != null);
-    JSType ptype = BOTTOM;
-    for (ObjectType o : objs) {
-      if (o.mayHaveProp(qname)) {
-        ptype = join(ptype, o.getProp(qname));
-      }
-    }
-    if (ptype.isBottom()) {
-      return null;
-    }
-    return ptype;
-  }
-
-  public boolean mayHaveProp(QualifiedName qname) {
-    if (objs == null) {
-      return false;
-    }
-    for (ObjectType o : objs) {
-      if (o.mayHaveProp(qname)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  public boolean hasProp(QualifiedName qname) {
-    if (objs == null) {
-      return false;
-    }
-    for (ObjectType o : objs) {
-      if (!o.hasProp(qname)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  public boolean hasConstantProp(QualifiedName pname) {
-    Preconditions.checkArgument(pname.isIdentifier());
-    if (objs == null) {
-      return false;
-    }
-    for (ObjectType obj : objs) {
-      if (obj.hasConstantProp(pname)) {
-        return true;
-      }
-    }
-    return false;
+    Preconditions.checkState(objs != null || enums != null);
+    return nullAcceptingJoin(
+        TypeWithProperties.getProp(objs, qname),
+        TypeWithProperties.getProp(enums, qname));
   }
 
   public JSType getDeclaredProp(QualifiedName qname) {
     if (isUnknown()) {
       return UNKNOWN;
     }
-    Preconditions.checkState(objs != null,
-      "Cannot get declared prop %s of type %s", qname, this);
-    JSType ptype = BOTTOM;
-    for (ObjectType o : objs) {
-      JSType declType = o.getDeclaredProp(qname);
-      if (declType != null) {
-        ptype = join(ptype, declType);
-      }
+    Preconditions.checkState(objs != null || enums != null);
+    return nullAcceptingJoin(
+        TypeWithProperties.getDeclaredProp(objs, qname),
+        TypeWithProperties.getDeclaredProp(enums, qname));
+  }
+
+  public boolean mayHaveProp(QualifiedName qname) {
+    return TypeWithProperties.mayHaveProp(objs, qname) ||
+        TypeWithProperties.mayHaveProp(enums, qname);
+  }
+
+  public boolean hasProp(QualifiedName qname) {
+    if (objs != null && !TypeWithProperties.hasProp(objs, qname)) {
+      return false;
     }
-    return ptype.isBottom() ? null : ptype;
+    if (enums != null && !TypeWithProperties.hasProp(enums, qname)) {
+      return false;
+    }
+    return enums != null || objs != null;
+  }
+
+  public boolean hasConstantProp(QualifiedName pname) {
+    Preconditions.checkArgument(pname.isIdentifier());
+    return TypeWithProperties.hasConstantProp(objs, pname) ||
+        TypeWithProperties.hasConstantProp(enums, pname);
   }
 
   public JSType withoutProperty(QualifiedName qname) {

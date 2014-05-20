@@ -32,7 +32,7 @@ import java.util.Set;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class ObjectType {
+public class ObjectType extends TypeWithProperties {
   // TODO(dimvar): currently, we can't distinguish between an obj at the top of
   // the proto chain (nominalType = null) and an obj for which we can't figure
   // out its class
@@ -627,7 +627,12 @@ public class ObjectType {
     return fn;
   }
 
-  JSType getProp(QualifiedName qname) {
+  NominalType getNominalType() {
+    return nominalType;
+  }
+
+  @Override
+  protected JSType getProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);
     if (qname.isIdentifier()) {
       return p == null ? JSType.UNDEFINED : p.getType();
@@ -637,34 +642,8 @@ public class ObjectType {
     }
   }
 
-  NominalType getNominalType() {
-    return nominalType;
-  }
-
-  boolean mayHaveProp(QualifiedName qname) {
-    Property p = getLeftmostProp(qname);
-    return p != null &&
-        (qname.isIdentifier() ||
-        p.getType().mayHaveProp(qname.getAllButLeftmost()));
-  }
-
-  boolean hasProp(QualifiedName qname) {
-    Preconditions.checkArgument(qname.isIdentifier());
-    Property p = getLeftmostProp(qname);
-    if (p == null || p.isOptional()) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-
-  boolean hasConstantProp(QualifiedName qname) {
-    Preconditions.checkArgument(qname.isIdentifier());
-    Property p = getLeftmostProp(qname);
-    return p != null && p.isConstant();
-  }
-
-  JSType getDeclaredProp(QualifiedName qname) {
+  @Override
+  protected JSType getDeclaredProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);
     if (p == null) {
       return null;
@@ -681,6 +660,32 @@ public class ObjectType {
       p = nominalType.getProp(objName);
     }
     return p;
+  }
+
+  @Override
+  protected boolean mayHaveProp(QualifiedName qname) {
+    Property p = getLeftmostProp(qname);
+    return p != null &&
+        (qname.isIdentifier() ||
+        p.getType().mayHaveProp(qname.getAllButLeftmost()));
+  }
+
+  @Override
+  protected boolean hasProp(QualifiedName qname) {
+    Preconditions.checkArgument(qname.isIdentifier());
+    Property p = getLeftmostProp(qname);
+    if (p == null || p.isOptional()) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  @Override
+  protected boolean hasConstantProp(QualifiedName qname) {
+    Preconditions.checkArgument(qname.isIdentifier());
+    Property p = getLeftmostProp(qname);
+    return p != null && p.isConstant();
   }
 
   /**
