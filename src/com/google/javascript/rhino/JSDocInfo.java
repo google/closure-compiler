@@ -78,6 +78,7 @@ public class JSDocInfo implements Serializable {
    */
   public enum Visibility {
     PRIVATE,
+    PACKAGE,
     PROTECTED,
     PUBLIC,
 

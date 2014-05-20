@@ -963,6 +963,7 @@ public final class JsDocInfoParser {
         case CONSTANT:
         case DEFINE:
         case RETURN:
+        case PACKAGE:
         case PRIVATE:
         case PROTECTED:
         case PUBLIC:
@@ -975,7 +976,8 @@ public final class JsDocInfoParser {
           Node typeNode = null;
           boolean hasType = lookAheadForType();
           boolean isAlternateTypeAnnotation =
-              (annotation == Annotation.PRIVATE ||
+              (annotation == Annotation.PACKAGE ||
+               annotation == Annotation.PRIVATE ||
                annotation == Annotation.PROTECTED ||
                annotation == Annotation.PUBLIC ||
                annotation == Annotation.CONSTANT);
@@ -999,7 +1001,7 @@ public final class JsDocInfoParser {
           boolean hasError = type == null && !canSkipTypeAnnotation;
           if (!hasError) {
             // Record types for @type.
-            // If the @private, @protected, or @public annotations
+            // If the @package, @private, @protected, or @public annotations
             // have a type attached, pretend that they actually wrote:
             // @type {type}\n@private
             // This will have some weird behavior in some cases
@@ -1037,6 +1039,17 @@ public final class JsDocInfoParser {
                 if (!jsdocBuilder.recordVisibility(Visibility.PRIVATE)) {
                   parser.addParserWarning(
                       "msg.jsdoc.visibility.private",
+                      lineno, charno);
+                }
+                if (!isAnnotationNext) {
+                  return recordDescription(token);
+                }
+                break;
+
+              case PACKAGE:
+                if (!jsdocBuilder.recordVisibility(Visibility.PACKAGE)) {
+                  parser.addParserWarning(
+                      "msg.jsdoc.visibility.package",
                       lineno, charno);
                 }
                 if (!isAnnotationNext) {

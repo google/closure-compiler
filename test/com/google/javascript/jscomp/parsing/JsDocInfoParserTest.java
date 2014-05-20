@@ -1539,6 +1539,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTrue(defineMarker.getDescription().getItem().contains("next line"));
   }
 
+  public void testParsePackagePrivateDescription() throws Exception {
+    JSDocInfo doc = parse("@package {string} description \n next line */", true);
+    Marker defineMarker = doc.getMarkers().iterator().next();
+    assertEquals("package", defineMarker.getAnnotation().getItem());
+    assertTrue(defineMarker.getDescription().getItem().contains("description "));
+    assertTrue(defineMarker.getDescription().getItem().contains("next line"));
+  }
+
   public void testParseProtectedDescription() throws Exception {
     JSDocInfo doc =
         parse("@protected {string} description \n next line*/", true);
@@ -2742,6 +2750,21 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
           "function DictDict() {}",
           "Bad type annotation. " +
           "type annotation incompatible with other annotations");
+  }
+
+  public void testTypeTagConflict25() throws Exception {
+    parse("/**\n" +
+        " * @package {string}\n" +
+        " * @return {string} x\n" +
+        " */\n" +
+        "function DictDict() {}",
+        "Bad type annotation. " +
+        "type annotation incompatible with other annotations");
+  }
+
+  public void testPackageType() throws Exception {
+    JSDocInfo jsdoc = parse("@package {string} */");
+    assertTypeEquals(STRING_TYPE, jsdoc.getType());
   }
 
   public void testPrivateType() throws Exception {

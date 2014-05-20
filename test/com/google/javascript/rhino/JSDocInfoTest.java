@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino;
 
+import static com.google.javascript.rhino.JSDocInfo.Visibility.PACKAGE;
 import static com.google.javascript.rhino.JSDocInfo.Visibility.PRIVATE;
 import static com.google.javascript.rhino.JSDocInfo.Visibility.PROTECTED;
 import static com.google.javascript.rhino.JSDocInfo.Visibility.PUBLIC;
@@ -69,8 +70,9 @@ public class JSDocInfoTest extends TestCase {
    */
   public void testVisibilityOrdinal() {
     assertEquals(0, PRIVATE.ordinal());
-    assertEquals(1, PROTECTED.ordinal());
-    assertEquals(2, PUBLIC.ordinal());
+    assertEquals(1, PACKAGE.ordinal());
+    assertEquals(2, PROTECTED.ordinal());
+    assertEquals(3, PUBLIC.ordinal());
   }
 
   public void testSetType() {

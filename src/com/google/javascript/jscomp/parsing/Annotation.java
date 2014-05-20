@@ -63,6 +63,7 @@ enum Annotation {
   NO_TYPE_CHECK,
   NOT_IMPLEMENTED,
   OVERRIDE,
+  PACKAGE,
   PARAM,
   PRESERVE, // same as license
   PRESERVE_TRY,
@@ -127,6 +128,7 @@ enum Annotation {
       put("notypecheck", Annotation.NO_TYPE_CHECK).
       put("override", Annotation.OVERRIDE).
       put("owner", Annotation.AUTHOR).
+      put("package", Annotation.PACKAGE).
       put("param", Annotation.PARAM).
       put("preserve", Annotation.PRESERVE).
       put("preserveTry", Annotation.PRESERVE_TRY).
