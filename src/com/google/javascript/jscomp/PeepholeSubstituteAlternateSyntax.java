@@ -447,10 +447,6 @@ class PeepholeSubstituteAlternateSyntax
         // make sure empty pattern doesn't fold to //
         && !"".equals(pattern.getString())
 
-        // NOTE(nicksantos): Make sure that the regexp isn't longer than
-        // 100 chars, or it blows up the regexp parser in Opera 9.2.
-        && pattern.getString().length() < 100
-
         && (null == flags || flags.isString())
         // don't escape patterns with Unicode escapes since Safari behaves badly
         // (read can't parse or crashes) on regex literals with Unicode escapes
