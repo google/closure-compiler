@@ -1558,6 +1558,15 @@ public class CompilerOptions implements Serializable, Cloneable {
   /**
    * Sets ECMAScript version to use.
    */
+  public void setLanguage(LanguageMode language) {
+    this.languageIn = language;
+    this.languageOut = language;
+  }
+
+  /**
+   * Sets ECMAScript version to use for the input. If you are not
+   * transpiling from one version to another, use #setLanguage instead.
+   */
   public void setLanguageIn(LanguageMode languageIn) {
     this.languageIn = languageIn;
   }
@@ -1566,6 +1575,10 @@ public class CompilerOptions implements Serializable, Cloneable {
     return languageIn;
   }
 
+  /**
+   * Sets ECMAScript version to use for the output. If you are not
+   * transpiling from one version to another, use #setLanguage instead.
+   */
   public void setLanguageOut(LanguageMode languageOut) {
     this.languageOut = languageOut;
   }
