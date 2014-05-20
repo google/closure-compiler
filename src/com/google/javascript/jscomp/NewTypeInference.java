@@ -247,6 +247,7 @@ public class NewTypeInference implements CompilerPass {
 
     for (Scope scope : symbolTable.getScopes()) {
       analyzeFunction(scope);
+      envs.clear();
     }
     for (DeferredCheck check : deferredChecks.values()) {
       check.runCheck(summaries, warnings);
@@ -2866,7 +2867,7 @@ public class NewTypeInference implements CompilerPass {
     return getOutEnv(cfg.getEntry().getValue());
   }
 
-  TypeEnv getFinalTypeEnv() {
+  private TypeEnv getFinalTypeEnv() {
     Node n = cfg.getImplicitReturn().getValue();
     TypeEnv env = getInEnv(n);
     if (env == null) {
@@ -2875,11 +2876,6 @@ public class NewTypeInference implements CompilerPass {
       return envPutType(env, RETVAL_ID, JSType.BOTTOM);
     }
     return env;
-  }
-
-  @VisibleForTesting // Only used from tests
-  JSType getFinalType(String varName) {
-    return getFinalTypeEnv().getType(varName);
   }
 
   @VisibleForTesting // Only used from tests

@@ -136,30 +136,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     assertEquals(expected, typeInf.getReturnType());
   }
 
-  private void checkInference(String js, String varName, JSType expected) {
-    NewTypeInference typeInf = parseAndTypeCheck("", js);
-    JSError[] warnings = compiler.getWarnings();
-    if (warnings.length > 0) {
-      fail("Expected no warnings, but found: " + Arrays.toString(warnings));
-    }
-    assertEquals(expected, typeInf.getFinalType(varName));
-  }
-
-  private void checkInferenceWithWarning(
-      String js, DiagnosticType warningKind, String varName, JSType expected) {
-    NewTypeInference typeInf = typeCheck(js, warningKind);
-    assertEquals(expected, typeInf.getFinalType(varName));
-  }
-
   private void checkDeclaredType(String js, String varName, JSType expected) {
     NewTypeInference typeInf = parseAndTypeCheck("", js);
     assertEquals(expected, typeInf.getDeclaredType(varName));
-  }
-
-  public void testUnusedVariable() {
-    checkInference("var x;", "x", JSType.UNDEFINED);
-    checkInference("var x = void 0;", "x", JSType.UNDEFINED);
-    checkInference("var x = 5;", "x", JSType.NUMBER);
   }
 
   public void testExterns() {
@@ -238,11 +217,6 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck("x; var x;", VariableReferenceCheck.UNDECLARED_REFERENCE);
 
     typeCheck("x = 7; var x;", VariableReferenceCheck.UNDECLARED_REFERENCE);
-
-    checkInferenceWithWarning(
-        "var /** undefined */ y = x; var x;",
-        VariableReferenceCheck.UNDECLARED_REFERENCE,
-        "x", JSType.UNDEFINED);
 
     checkNoWarnings(
         "function f() { return 9; }\n" +
@@ -323,13 +297,6 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testDeclaredVariables() {
-    checkInference("/** @type {string} */ var x;", "x", JSType.UNDEFINED);
-
-    checkInference("/** @type {string} */ var x = 'str';", "x", JSType.STRING);
-
-    checkInference("/** @type {string} */ var x; x = 'str';",
-        "x", JSType.STRING);
-
     typeCheck("var /** null */ obj = 5;", NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck("var /** ?number */ n = true;",
@@ -337,76 +304,47 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testEmptyBlockPropagation() {
-    checkInference("var x = 5; { }", "x", JSType.NUMBER);
-  }
-
-  public void testSimplePropagation() {
-    checkInference("var x; x = 1;", "x", JSType.NUMBER);
-    checkInference("var x; x = 1; x++;", "x", JSType.NUMBER);
-    checkInference("var x; x = 'string';", "x", JSType.STRING);
-    checkInference("var x; x = 'string'; 23;", "x", JSType.STRING);
-    checkInference("var x; x = null;", "x", JSType.NULL);
-    checkInference("var x; x = true;", "x", JSType.TRUE_TYPE);
-    checkInference("var x; x = false;", "x", JSType.FALSE_TYPE);
-    checkInference("var x; x = undefined;", "x", JSType.UNDEFINED);
-  }
-
-  public void testConditionalBranch() {
-    checkInference("var x; if (true) { x = 1; } else { x = 'str'; }",
-        "x", JSType.join(JSType.NUMBER, JSType.STRING));
-
-    checkInference("var x = 5; if (true) { x = 'str'; }",
-        "x", JSType.join(JSType.NUMBER, JSType.STRING));
-
-    checkInference("var x = 5; if (true) { } else { }", "x", JSType.NUMBER);
-
-    checkInference("var x = 5; if (true) { } else { x = 'str'; }",
-        "x", JSType.join(JSType.NUMBER, JSType.STRING));
-
-    checkInference(
-        "var x, y;\n" +
-        "if (true) {\n" +
-        "  x = 5;\n" +
-        "} else if (true) {\n" +
-        "  x = null;\n" +
-        "}",
-        "x", JSType.join(
-            JSType.NUMBER, JSType.join(JSType.NULL, JSType.UNDEFINED)));
-  }
-
-  public void testNameInferred() {
-    checkInference("var x = 5; var y = x", "y", JSType.NUMBER);
+    typeCheck(
+        "var x = 5; { }; var /** string */ s = x",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testForLoopInference() {
-    checkInference(
+    typeCheck(
         "var x = 5;\n" +
         "for (;true;) {\n" +
         "  x = 'str';\n" +
-        "}",
-        "x", JSType.join(JSType.NUMBER, JSType.STRING));
+        "}\n" +
+        "var /** (string|number) */ y = x;\n" +
+        "(function(/** string */ s){})(x);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    checkInference(
+    typeCheck(
         "var x = 5;" +
         "while (true) {" +
         "  x = 'str';" +
-        "}",
-        "x", JSType.join(JSType.NUMBER, JSType.STRING));
+        "}\n" +
+        "(function(/** string */ s){})(x);\n" +
+        "var /** (string|number) */ y = x;",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    checkInference(
+    typeCheck(
         "while (true) {" +
         "  var x = 'str';" +
-        "}",
-        "x", JSType.join(JSType.STRING, JSType.UNDEFINED));
+        "}\n" +
+        "var /** (string|undefined) */ y = x;\n" +
+        "(function(/** string */ s){})(x);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    checkInference(
-        "for (var x = 5; x < 10; x++) {\n" +
-        "}",
-        "x", JSType.NUMBER);
+    typeCheck(
+        "for (var x = 5; x < 10; x++) {}\n" +
+        "(function(/** string */ s){})(x);\n" +
+        "var /** number */ y = x;",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testConditionalSpecialization() {
-    checkInference(
+    checkNoWarnings(
         "var x, y = 5;\n" +
         "if (true) {\n" +
         "  x = 5;\n" +
@@ -415,10 +353,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}\n" +
         "if (x === 5) {\n" +
         "  y = x;\n" +
-        "}",
-        "y", JSType.NUMBER);
+        "}\n" +
+        "y - 5");
 
-    checkInference(
+    checkNoWarnings(
         "var x, y = 5;\n" +
         "if (true) {\n" +
         "  x = 5;\n" +
@@ -427,10 +365,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}\n" +
         "if (x !== null) {\n" +
         "  y = x;\n" +
-        "}",
-        "y", JSType.NUMBER);
+        "}\n" +
+        "y - 5");
 
-    checkInference(
+    checkNoWarnings(
         "var x, y;\n" +
         "if (true) {\n" +
         "  x = 5;\n" +
@@ -441,8 +379,8 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  y = 5;" +
         "} else {\n" +
         "  y = x;\n" +
-        "}",
-        "y", JSType.NUMBER);
+        "}\n" +
+        "y - 5");
 
     checkNoWarnings(
         "var numOrNull = true ? null : 1\n" +
@@ -456,7 +394,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testAndOrConditionalSpecialization() {
-    checkInference(
+    checkNoWarnings(
         "var x, y = 5;\n" +
         "if (true) {\n" +
         "  x = 5;\n" +
@@ -465,10 +403,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}\n" +
         "if (x !== null && x !== undefined) {\n" +
         "  y = x;\n" +
-        "}",
-        "y", JSType.NUMBER);
+        "}\n" +
+        "y - 5");
 
-    checkInference(
+    checkNoWarnings(
         "var x, y;\n" +
         "if (true) {\n" +
         "  x = 5;\n" +
@@ -479,10 +417,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  y = 5;\n" +
         "} else {\n" +
         "  y = x;\n" +
-        "}",
-        "y", JSType.NUMBER);
+        "}\n" +
+        "y - 5");
 
-    checkInference(
+    typeCheck(
         "var x, y = 5;\n" +
         "if (true) {\n" +
         "  x = 5;\n" +
@@ -491,11 +429,12 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}\n" +
         "if (x === null || x === undefined) {\n" +
         "  y = x;\n" +
-        "}",
-        "y", JSType.join(
-            JSType.NUMBER, JSType.join(JSType.NULL, JSType.UNDEFINED)));
+        "}\n" +
+        "var /** (number|null|undefined) **/ z = y;\n" +
+        "(function(/** (number|null) */ x){})(y);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    checkInference(
+    typeCheck(
         "var x, y;\n" +
         "if (true) {\n" +
         "  x = 5;\n" +
@@ -506,11 +445,12 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  y = 5;\n" +
         "} else {\n" +
         "  y = x;\n" +
-        "}",
-        "y", JSType.join(
-            JSType.NUMBER, JSType.join(JSType.NULL, JSType.UNDEFINED)));
+        "}\n" +
+        "var /** (number|null|undefined) **/ z = y;\n" +
+        "(function(/** (number|null) */ x){})(y);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    checkInference(
+    checkNoWarnings(
         "var x, y = 5;\n" +
         "if (true) {\n" +
         "  x = 5;\n" +
@@ -519,8 +459,8 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}\n" +
         "if (x === 7 || x === 8) {\n" +
         "  y = x;\n" +
-        "}",
-        "y", JSType.NUMBER);
+        "}\n" +
+        "y - 5");
 
     typeCheck(
         "/** @constructor */ function C(){}\n" +
@@ -553,44 +493,29 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testLoopConditionSpecialization() {
-    checkInference(
+    checkNoWarnings(
         "var x = true ? null : 'str';\n" +
-        "while (x !== null) {\n" +
-        "}",
-        "x", JSType.NULL);
+        "while (x !== null) {}\n" +
+        "var /** null */ y = x;");
 
-    checkInference(
+    checkNoWarnings(
         "var x = true ? null : 'str';\n" +
-        "for (;x !== null;) {\n" +
-        "}",
-        "x", JSType.NULL);
+        "for (;x !== null;) {}\n" +
+        "var /** null */ y = x;");
 
-    checkInference(
-        "for (var x = true ? null : 'str'; x === null;) {\n" +
-        "}",
-        "x", JSType.STRING);
+    checkNoWarnings(
+        "for (var x = true ? null : 'str'; x === null;) {}\n" +
+        "var /** string */ y = x;");
 
-    checkInference(
+    checkNoWarnings(
         "var x;\n" +
-        "for (x = true ? null : 'str'; x === null;) {\n" +
-        "}",
-        "x", JSType.STRING);
+        "for (x = true ? null : 'str'; x === null;) {}\n" +
+        "var /** string */ y = x;");
 
-    checkInference(
+    checkNoWarnings(
         "var x = true ? null : 'str';\n" +
-        "do {} while (x === null);",
-        "x", JSType.STRING);
-  }
-
-  public void testHook() {
-    checkInference("var x = true ? 5 : 'str'",
-        "x", JSType.join(JSType.NUMBER, JSType.STRING));
-
-    checkInference(
-        "var x = true ? 5 : 'str';\n" +
-        "var y = (x === 5) ? x : 6;",
-        "y", JSType.NUMBER);
-
+        "do {} while (x === null);\n" +
+        "var /** string */ y = x;");
   }
 
   public void testVarDecls() {
@@ -601,13 +526,6 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     checkDeclaredType(
         "var /** number */ x, /** string */ y;", "y", JSType.STRING);
-
-    checkInference(
-        "var x, y; " +
-        "if (true) {" +
-        "  y = 5;" +
-        "}",
-        "y", JSType.join(JSType.NUMBER, JSType.UNDEFINED));
 
     typeCheck("/** @type {number} */ var x, y;", TypeCheck.MULTIPLE_VAR_DEF);
 
@@ -651,21 +569,6 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck("true + 5;", NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck("5 + true;", NewTypeInference.INVALID_OPERAND_TYPE);
-  }
-
-  public void testSpecialization() {
-    checkInference("var x; x === 5;", "x", JSType.UNDEFINED);
-
-    checkInferenceWithWarning(
-        "var x = 5, y;" +
-        "if (true) {\n" +
-        "  y = 5;\n" +
-        "} else {\n" +
-        "  y = 'str';\n" +
-        "}\n" +
-        "x < y;",
-        NewTypeInference.INVALID_OPERAND_TYPE,
-        "y", JSType.join(JSType.NUMBER, JSType.STRING));
   }
 
   public void testTypeAfterIF() {
