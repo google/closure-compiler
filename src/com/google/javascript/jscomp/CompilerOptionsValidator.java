@@ -31,14 +31,23 @@ final class CompilerOptionsValidator {
       throw new InvalidOptionsException(
           "Cannot check use of goog.getCssName because of empty blacklist.");
     }
+
+    if (options.getLanguageIn() == options.getLanguageOut()) {
+      // No conversion.
+    } else if (!options.getLanguageIn().isEs6OrHigher() ||
+        options.getLanguageOut() != CompilerOptions.LanguageMode.ECMASCRIPT3) {
+      throw new InvalidOptionsException(
+          "Can only convert code from ES6 to ES3. Cannot convert from %s to %s.",
+          options.getLanguageIn(), options.getLanguageOut());
+    }
   }
 
   /**
    * Exception to indicate incompatible options in the CompilerOptions.
    */
   public static class InvalidOptionsException extends RuntimeException {
-    private InvalidOptionsException(String message) {
-      super(message);
+    private InvalidOptionsException(String message, Object... args) {
+      super(String.format(message, args));
     }
   }
 
