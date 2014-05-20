@@ -320,9 +320,7 @@ public class NewTypeInference implements CompilerPass {
   }
 
   // Initialize the type environments on the CFG edges before the FWD analysis.
-  private void initEdgeEnvsFwd() {
-    // TODO(dimvar): Revisit what we throw away after the bwd analysis
-    TypeEnv entryEnv = getInitTypeEnv();
+  private void initEdgeEnvsFwd(TypeEnv entryEnv) {
     initEdgeEnvs(null);
 
     // For function scopes, add the formal parameters and the free variables
@@ -367,8 +365,7 @@ public class NewTypeInference implements CompilerPass {
     setOutEnv(cfg.getEntry().getValue(), entryEnv);
   }
 
-  // Initialize the type environments on the CFG edges before the BWD analysis.
-  private void initEdgeEnvsBwd() {
+  private TypeEnv getTypeEnvFromDeclaredTypes() {
     TypeEnv env = new TypeEnv();
     env = env.split();
     Set<String> varNames = currentScope.getOuterVars();
@@ -398,6 +395,12 @@ public class NewTypeInference implements CompilerPass {
       }
       env = envPutType(env, fnName, summaryType);
     }
+    return env;
+  }
+
+  // Initialize the type environments on the CFG edges before the BWD analysis.
+  private void initEdgeEnvsBwd() {
+    TypeEnv env = getTypeEnvFromDeclaredTypes();
     // Ideally, we would like to only set the in edges of the implicit return
     // rather than all edges. However, throws can have out edges not connected
     // to the implicit return, so we simply initialize all edges.
@@ -497,11 +500,18 @@ public class NewTypeInference implements CompilerPass {
         Lists.newLinkedList();
     buildWorkset(cfg.getEntry(), workset);
     /* println("Workset: ", workset); */
-    Collections.reverse(workset);
-    initEdgeEnvsBwd();
-    analyzeFunctionBwd(workset);
-    Collections.reverse(workset);
-    initEdgeEnvsFwd();
+    if (scope.hasUndeclaredFormalsOrOuters()) {
+      Collections.reverse(workset);
+      initEdgeEnvsBwd();
+      analyzeFunctionBwd(workset);
+      Collections.reverse(workset);
+      // TODO(dimvar): Revisit what we throw away after the bwd analysis
+      TypeEnv entryEnv = getEntryTypeEnv();
+      initEdgeEnvsFwd(entryEnv);
+    } else {
+      TypeEnv entryEnv = getTypeEnvFromDeclaredTypes();
+      initEdgeEnvsFwd(entryEnv);
+    }
     analyzeFunctionFwd(workset);
     if (scope.isFunction()) {
       createSummary(scope);
@@ -744,7 +754,7 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private void createSummary(Scope fn) {
-    TypeEnv entryEnv = getInitTypeEnv();
+    TypeEnv entryEnv = getEntryTypeEnv();
     TypeEnv exitEnv = getFinalTypeEnv();
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     // Each formal and outer var is bound to some value at the start of the
@@ -1383,9 +1393,16 @@ public class NewTypeInference implements CompilerPass {
               DeferredCheck dc;
               if (expr.isCall()) {
                 dc = deferredChecks.get(expr);
-                Preconditions.checkState(dc != null, "No deferred check" +
-                    " created in backward direction for %s", expr);
-                dc.updateReturn(expectedRetType);
+                if (dc == null) {
+                  Preconditions.checkState(
+                      !currentScope.hasUndeclaredFormalsOrOuters(),
+                      "No deferred check created in backward direction for %s",
+                      expr);
+                  dc = new DeferredCheck(expr, expectedRetType,
+                      currentScope, currentScope.getScope(calleeName));
+                } else {
+                  dc.updateReturn(expectedRetType);
+                }
               } else {
                 dc = new DeferredCheck(expr, null,
                     currentScope, currentScope.getScope(calleeName));
@@ -2864,7 +2881,7 @@ public class NewTypeInference implements CompilerPass {
     return specializedType;
   }
 
-  TypeEnv getInitTypeEnv() {
+  TypeEnv getEntryTypeEnv() {
     return getOutEnv(cfg.getEntry().getValue());
   }
 

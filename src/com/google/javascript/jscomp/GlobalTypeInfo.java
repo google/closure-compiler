@@ -1682,6 +1682,25 @@ class GlobalTypeInfo implements CompilerPass {
       return null;
     }
 
+    boolean hasUndeclaredFormalsOrOuters() {
+      for (String formal : formals) {
+        if (getDeclaredTypeOf(formal) == null) {
+          return true;
+        }
+      }
+      for (String outer : outerVars) {
+        JSType declType = getDeclaredTypeOf(outer);
+        if (declType == null
+            // Undeclared functions have a non-null declared type,
+            //  but they always have a return type of unknown
+            || (declType.getFunType() != null
+                && declType.getFunType().getReturnType().isUnknown())) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     private Scope getScopeHelper(String fnName) {
       Scope s = localFunDefs.get(fnName);
       if (s != null) {
