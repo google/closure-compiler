@@ -223,7 +223,7 @@ public class JSType {
     return mask != 0 && (mask | nullUndefMask) == nullUndefMask;
   }
 
-  public boolean isFromNonLocalValue() {
+  public boolean isFromUndeclaredFormal() {
     return location != null;
   }
 

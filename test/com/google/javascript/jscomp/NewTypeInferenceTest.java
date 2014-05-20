@@ -2494,13 +2494,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  }\n" +
         "}");
 
-    checkNoWarnings(
+    // We may prefer to not warn here.
+    // This would probably require a separate type for undeclared.
+    typeCheck(
         "function f(/** { prop: ? } */ x) {\n" +
         "  var /** (number|string) */ y = x.prop;\n" +
         "  x.prop < 5;\n" +
-        "}");
+        "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
 
-    checkNoWarnings(
+    typeCheck(
         "function f(/** (number|string) */ x, /** (number|string) */ y) {\n" +
         "  var z;\n" +
         "  if (1 < 2) {\n" +
@@ -2509,7 +2512,8 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "    z = y;\n" +
         "  }\n" +
         "  z - 5;\n" +
-        "}");
+        "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testDeclaredPropertyIndirectly() {

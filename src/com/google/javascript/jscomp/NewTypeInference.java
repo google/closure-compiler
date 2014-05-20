@@ -339,8 +339,9 @@ public class NewTypeInference implements CompilerPass {
       for (String name : formalsAndOuters) {
         JSType declType = currentScope.getDeclaredTypeOf(name);
         JSType initType = declType == null ?
-            envGetType(entryEnv, name) : pickInitialType(declType);
-        entryEnv = envPutType(entryEnv, name, initType.withLocation(name));
+            envGetType(entryEnv, name).withLocation(name) :
+            pickInitialType(declType);
+        entryEnv = envPutType(entryEnv, name, initType);
       }
       entryEnv = envPutType(entryEnv, RETVAL_ID, JSType.UNDEFINED);
     }
@@ -1862,9 +1863,9 @@ public class NewTypeInference implements CompilerPass {
     boolean fuzzyDeclaration = declared == null || declared.isUnknown() ||
         (declared.isTop() && !inferred.isTop());
     return fuzzyDeclaration
-        // For values created locally, we have a fairly good understanding of
-        // where they flow, so don't be permissive here; give the warning.
-        && inferred.isFromNonLocalValue()
+        // We do not know much about the values that flow to undeclared formals,
+        // so be permissive here; don't give the warning.
+        && inferred.isFromUndeclaredFormal()
         // If required is loose, it's easier for it to be a subtype of inferred.
         // We only tighten the type if the non-loose required is also a subtype.
         // Otherwise, we would be skipping warnings too often.
