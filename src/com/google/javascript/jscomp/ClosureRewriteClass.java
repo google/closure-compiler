@@ -402,7 +402,11 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
               .srcref(cls.classModifier));
     }
 
-    exprRoot.getParent().replaceChild(exprRoot, block);
+    Node parent = exprRoot.getParent();
+    Node stmts = block.removeChildren();
+    parent.addChildrenAfter(stmts, exprRoot);
+    parent.removeChild(exprRoot);
+
     compiler.reportCodeChange();
   }
 

@@ -61,7 +61,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "  constructor: function(){}\n" +
         "});",
 
-        "{var x = function() {};}");
+        "var x = function() {};");
   }
 
   public void testBasic2() {
@@ -72,7 +72,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "});",
 
         "var x = {};" +
-        "{x.y = function() {};}");
+        "x.y = function() {};");
   }
 
   public void testBasic3() {
@@ -82,7 +82,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "  constructor: function(){}\n" +
         "});",
 
-        "{var x = function() {};}");
+        "var x = function() {};");
   }
 
   public void testAnnotations1() {
@@ -94,9 +94,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "});" +
         "new x();",
 
-        "{" +
         "var x = function() {};" +
-        "}" +
         "new x();");
   }
 
@@ -110,9 +108,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "});" +
         "new x();",
 
-        "{" +
         "var x = function() {};" +
-        "}" +
         "new x();",
         null,
         TypeCheck.NOT_A_CONSTRUCTOR);
@@ -128,9 +124,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "});" +
         "new x();",
 
-        "{" +
         "var x = function() {};" +
-        "}" +
         "new x();",
         null,
         TypeCheck.NOT_A_CONSTRUCTOR);
@@ -147,10 +141,8 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "use(new y().a);\n",
 
         "var y = function () {};\n" +
-        "{\n" +
         "var x = function() {this.a = 1};\n" +
         "goog.inherits(x,y);\n" +
-        "}\n" +
         "use(new y().a);\n",
         null,
         TypeCheck.CONFLICTING_SHAPE_TYPE);
@@ -168,10 +160,8 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "use(new y().a);\n",
 
         "var y = function () {};\n" +
-        "{\n" +
         "var x = function() {this.a = 1};\n" +
         "goog.inherits(x,y);\n" +
-        "}\n" +
         "use(new y().a);\n");
   }
 
@@ -190,14 +180,10 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "  }\n" +
         "});",
 
-        "{" +
         "var x=function(){this.foo=1};" +
         "goog.inherits(x,some.Super);" +
-        "{" +
         "x.inner=function(){this.bar=1};" +
-        "goog.inherits(x.inner,x);" +
-        "}" +
-        "}");
+        "goog.inherits(x.inner,x);");
   }
 
   public void testComplete1() {
@@ -215,14 +201,13 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "  aMethod: function() {}\n" +
         "});",
 
-        "{" +
         "var x=function(){this.foo=1};" +
         "goog.inherits(x,some.Super);" +
         "x.prop1=1;" +
         "x.PROP2=2;" +
         "x.prototype.anotherProp=1;" +
         "x.prototype.aMethod=function(){};" +
-        "}");
+        "");
   }
 
   public void testComplete2() {
@@ -240,7 +225,6 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "  aMethod: function() {}\n" +
         "});",
 
-        "{\n" +
         "/** @constructor */\n" +
         "x.y=function(){this.foo=1};\n" +
         "goog.inherits(x.y,some.Super);" +
@@ -249,7 +233,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "x.y.PROP2=2;\n" +
         "x.y.prototype.anotherProp=1;" +
         "x.y.prototype.aMethod=function(){};" +
-        "}");
+        "");
   }
 
   public void testClassWithStaticInitFn() {
@@ -267,7 +251,6 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "  aMethod: function() {}\n" +
         "});",
 
-        "{\n" +
         "/** @constructor */\n" +
         "x.y=function(){this.foo=1};\n" +
         "goog.inherits(x.y,some.Super);" +
@@ -278,7 +261,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "  /** @const */\n" +
         "  cls.PROP2=2;" +
         "})(x.y);\n" +
-        "}");
+        "");
   }
 
   public void testInvalid1() {
