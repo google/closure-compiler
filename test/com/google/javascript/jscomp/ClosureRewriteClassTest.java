@@ -76,15 +76,6 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testBasic3() {
-    test(
-        "var x = goog.labs.classdef.defineClass(null, {\n" +
-        "  constructor: function(){}\n" +
-        "});",
-
-        "{var x = function() {};}");
-  }
-
-  public void testBasic4() {
     // verify we don't add a goog.inherits for Object
     test(
         "var x = goog.defineClass(Object, {\n" +
