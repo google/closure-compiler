@@ -736,10 +736,7 @@ public class Compiler extends AbstractCompiler {
       return;
     }
 
-    if (options.getLanguageIn() != options.getLanguageOut()) {
-      convertEs6ToEs3();
-      setLanguageMode(options.getLanguageOut());
-    }
+    convertEs6ToEs3();
 
     if (options.nameAnonymousFunctionsOnly) {
       // TODO(nicksantos): Move this into an instrument() phase maybe?
@@ -774,7 +771,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   private void convertEs6ToEs3() {
-    CompilerPass converter = new Es6ToEs3Converter(this);
+    CompilerPass converter = new Es6ToEs3Converter(this, options);
 
     Tracer tracer = newTracer(CONVERT_ES6_PASS_NAME);
     beforePass(CONVERT_ES6_PASS_NAME);

@@ -1888,7 +1888,6 @@ public class IntegrationTest extends IntegrationTestCase {
   public void testLanguageMode() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
 
     String code = "var a = {get f(){}}";
 
@@ -1903,12 +1902,10 @@ public class IntegrationTest extends IntegrationTestCase {
         compiler.getErrors()[0].toString());
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     testSame(options, code);
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
 
     testSame(options, code);
   }
@@ -1916,7 +1913,6 @@ public class IntegrationTest extends IntegrationTestCase {
   public void testLanguageMode2() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
 
     String code = "var a  = 2; delete a;";
@@ -1924,12 +1920,10 @@ public class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     testSame(options, code);
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
 
     test(options,
         code,
@@ -1943,7 +1937,6 @@ public class IntegrationTest extends IntegrationTestCase {
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     String code =
         "'use strict';\n" +
