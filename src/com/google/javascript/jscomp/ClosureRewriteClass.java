@@ -322,6 +322,8 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     // For simplicity add everything into a block, before adding it to the AST.
     Node block = IR.block();
 
+    // remove the original jsdoc info if it was attached to the value.
+    cls.constructor.value.setJSDocInfo(null);
     if (exprRoot.isVar()) {
       // example: var ctr = function(){}
       Node var = IR.var(cls.name.cloneTree(), cls.constructor.value)
@@ -355,6 +357,9 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     }
 
     for (MemberDefinition def : cls.staticProps) {
+      // remove the original jsdoc info if it was attached to the value.
+      def.value.setJSDocInfo(null);
+
       // example: ctr.prop = value
       block.addChildToBack(
           fixupSrcref(IR.exprResult(
@@ -368,6 +373,9 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     }
 
     for (MemberDefinition def : cls.props) {
+      // remove the original jsdoc info if it was attached to the value.
+      def.value.setJSDocInfo(null);
+
       // example: ctr.prototype.prop = value
       block.addChildToBack(
           fixupSrcref(IR.exprResult(

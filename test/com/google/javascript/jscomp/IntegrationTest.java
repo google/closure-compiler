@@ -2774,6 +2774,23 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, code, TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  public void testGoogDefineClass4() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel level = CompilationLevel.ADVANCED_OPTIMIZATIONS;
+    level.setOptionsForCompilationLevel(options);
+    WarningLevel warnings = WarningLevel.VERBOSE;
+    warnings.setOptionsForWarningLevel(options);
+    options.setWarningLevel(
+        DiagnosticGroups.GLOBAL_THIS, CheckLevel.WARNING);
+
+    String code = "" +
+        "var C = goog.defineClass(null, {\n" +
+        "  /** @param {string} a */\n" +
+        "  constructor: function (a) {this.someProperty = 1}\n" +
+        "});\n";
+    test(options, code, "");
+  }
+
   public void testCheckConstants1() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
