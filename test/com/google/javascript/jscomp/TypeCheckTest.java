@@ -8590,6 +8590,31 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               "typeof 123 == 'unknown'); }");
   }
 
+  public void testConstDecl1() throws Exception {
+    testTypes(
+        "/** @param {?number} x \n @return {boolean} */" +
+        "function f(x) { " +
+        "  if (x) { /** @const */ var y = x; return y } return true; "  +
+        "}",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: boolean");
+  }
+
+  public void testConstDecl2() throws Exception {
+    testTypes(
+        "/** @param {?number} x */" +
+        "function f(x) { " +
+        "  if (x) {" +
+        "    /** @const */ var y = x; " +
+        "    /** @return {boolean} */ function g() { return y; } " +
+        "  }" +
+        "}",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: boolean");
+  }
+
   public void testConstructorType1() throws Exception {
     testTypes("/**@constructor*/function Foo(){}" +
         "/**@type{!Foo}*/var f = new Date();",

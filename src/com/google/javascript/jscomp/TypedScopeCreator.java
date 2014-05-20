@@ -1346,7 +1346,8 @@ final class TypedScopeCreator implements ScopeCreator {
       }
 
       // Check if this is constant, and if it has a known type.
-      if (isConstantSymbol(info, lValue)) {
+      if (NodeUtil.isConstantDeclaration(
+              compiler.getCodingConvention(), info, lValue)) {
         if (rValue != null) {
           JSType rValueType = getDeclaredRValueType(lValue, rValue);
           if (rValueType != null) {
@@ -1713,7 +1714,9 @@ final class TypedScopeCreator implements ScopeCreator {
       if (info != null) {
         inferred = !(info.hasType()
             || info.hasEnumParameterType()
-            || (isConstantSymbol(info, n) && valueType != null
+            || (NodeUtil.isConstantDeclaration(
+                    compiler.getCodingConvention(), info, n)
+                && valueType != null
                 && !valueType.isUnknownType())
             || FunctionTypeBuilder.isFunctionTypeDeclaration(info));
       }
@@ -1745,26 +1748,6 @@ final class TypedScopeCreator implements ScopeCreator {
         }
       }
       return inferred;
-    }
-
-    private boolean isConstantSymbol(JSDocInfo info, Node node) {
-      if (info != null && info.isConstant()) {
-        return true;
-      }
-
-      if (node.getBooleanProp(Node.IS_CONSTANT_VAR)) {
-        return true;
-      }
-
-      switch (node.getType()) {
-        case Token.NAME:
-          return NodeUtil.isConstantByConvention(
-              compiler.getCodingConvention(), node, node.getParent());
-        case Token.GETPROP:
-          return node.isQualifiedName() && NodeUtil.isConstantByConvention(
-              compiler.getCodingConvention(), node.getLastChild(), node);
-      }
-      return false;
     }
 
     /**
