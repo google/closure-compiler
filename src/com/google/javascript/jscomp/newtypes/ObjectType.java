@@ -95,8 +95,8 @@ public class ObjectType extends TypeWithProperties {
   }
 
   boolean isInhabitable() {
-    for (String pname : props.keySet()) {
-      if (!props.get(pname).getType().isInhabitable()) {
+    for (Property p : props.values()) {
+      if (!p.getType().isInhabitable()) {
         return false;
       }
     }
