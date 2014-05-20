@@ -454,10 +454,17 @@ class Normalize implements CompilerPass {
     /**
      * Rewrite named unhoisted functions declarations to a known
      * consistent behavior so we don't to different logic paths for the same
-     * code. From:
+     * code.
+     *
+     * From:
      *    function f() {}
      * to:
      *    var f = function () {};
+     * and move it to the top of the block. This actually breaks
+     * semantics, but the semantics are also not well-defined
+     * cross-browser.
+     *
+     * @see https://github.com/google/closure-compiler/pull/429
      */
     private void normalizeFunctionDeclaration(Node n) {
       Preconditions.checkState(n.isFunction());
@@ -494,7 +501,8 @@ class Normalize implements CompilerPass {
 
       // Move the function
       Node parent = n.getParent();
-      parent.replaceChild(n, var);
+      parent.removeChild(n);
+      parent.addChildToFront(var);
       fnNameNode.addChildToFront(n);
 
       reportCodeChange("Function declaration");

@@ -584,6 +584,18 @@ public class CommandLineRunnerTest extends TestCase {
             new String[] {"function f() {}"}).shouldRunCompiler());
   }
 
+  public void testHoistedFunction1() {
+    args.add("--jscomp_off=es5Strict");
+    args.add("-W=VERBOSE");
+    test("if (true) { f(); function f() {} }",
+         VariableReferenceCheck.UNDECLARED_REFERENCE);
+  }
+
+  public void testHoistedFunction2() {
+    test("if (window) { f(); function f() {} }",
+         "if (window) { var f = function() {}; f(); }");
+  }
+
   public void testExternsLifting1() throws Exception{
     String code = "/** @externs */ function f() {}";
     test(new String[] {code},
