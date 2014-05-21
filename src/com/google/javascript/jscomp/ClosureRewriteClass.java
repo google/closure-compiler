@@ -75,13 +75,12 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, this);
+    hotSwapScript(root, null);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    this.compiler.process(this);
-
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override
