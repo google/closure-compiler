@@ -270,49 +270,56 @@ public class ObjectType extends TypeWithProperties {
 
   private static PersistentMap<String, Property> meetPropsHelper(
       boolean specializeProps1, NominalType resultNominalType,
-      Map<String, Property> props1, Map<String, Property> props2) {
-    PersistentMap<String, Property> newProps = PersistentMap.create();
-    for (Map.Entry<String, Property> propsEntry : props1.entrySet()) {
-      String pname = propsEntry.getKey();
-      if (!props2.containsKey(pname)) {
-        newProps = mayPutProp(
-            pname, propsEntry.getValue(), newProps, resultNominalType);
+      PersistentMap<String, Property> props1,
+      PersistentMap<String, Property> props2) {
+    PersistentMap<String, Property> newProps = props1;
+    if (resultNominalType != null) {
+      for (Map.Entry<String, Property> propsEntry : props1.entrySet()) {
+        String pname = propsEntry.getKey();
+        Property nomProp = resultNominalType.getProp(pname);
+        if (nomProp != null) {
+          newProps =
+              addOrRemoveProp(newProps, pname, nomProp, propsEntry.getValue());
+        }
       }
     }
     for (Map.Entry<String, Property> propsEntry : props2.entrySet()) {
       String pname = propsEntry.getKey();
       Property prop2 = propsEntry.getValue();
       Property newProp;
-      if (props1.containsKey(pname)) {
-        newProp = specializeProps1 ?
-            props1.get(pname).specialize(prop2) :
-            Property.meet(props1.get(propsEntry.getKey()), prop2);
-      } else {
+      if (!props1.containsKey(pname)) {
         newProp = prop2;
+      } else {
+        Property prop1 = props1.get(pname);
+        if (prop1.equals(prop2)) {
+          continue;
+        }
+        newProp = specializeProps1 ?
+            prop1.specialize(prop2) :
+            Property.meet(prop1, prop2);
       }
-      newProps = mayPutProp(pname, newProp, newProps, resultNominalType);
+      if (resultNominalType != null &&
+          resultNominalType.getProp(pname) != null) {
+        Property nomProp = resultNominalType.getProp(pname);
+        newProps = addOrRemoveProp(newProps, pname, nomProp, newProp);
+      } else {
+        newProps = newProps.with(pname, newProp);
+      }
     }
     return newProps;
   }
 
-  private static PersistentMap<String, Property> mayPutProp(
-      String pname, Property prop, PersistentMap<String, Property> props,
-      NominalType nom) {
-    if (nom == null) {
-      return props.with(pname, prop);
-    }
-    Property nomProp = nom.getProp(pname);
-    if (nomProp == null) {
-      return props.with(pname, prop);
-    }
-    JSType propType = prop.getType();
+  private static PersistentMap<String, Property> addOrRemoveProp(
+      PersistentMap<String, Property> props,
+      String pname, Property nomProp, Property objProp) {
+    JSType propType = objProp.getType();
     JSType nomPropType = nomProp.getType();
     if (!propType.isUnknown() &&
         propType.isSubtypeOf(nomPropType) && !propType.equals(nomPropType)) {
       // We use specialize so that if nomProp is @const, we don't forget it.
-      return props.with(pname, nomProp.specialize(prop));
+      return props.with(pname, nomProp.specialize(objProp));
     }
-    return props;
+    return props.without(pname);
   }
 
   private static PersistentMap<String, Property> joinProps(

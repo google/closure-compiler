@@ -7206,4 +7206,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "(4 - 'str') ? 5 : 6;",
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
+
+  public void testRecordSpecializeNominalPreservesRequired() {
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() { /** @type {number|string} */ this.x = 5 };\n" +
+        "var o = true ? {x:5} : {};\n" +
+        "if (o instanceof Foo) {\n" +
+        "  var /** {x:number} */ o2 = o;\n" +
+        "}\n" +
+        "(function(/** {x:number} */ o3){})(o);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
 }
