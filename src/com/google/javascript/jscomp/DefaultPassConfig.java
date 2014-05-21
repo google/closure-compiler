@@ -1024,10 +1024,10 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Process AngularJS-specific annotations. */
-  final PassFactory angularPass =
-      new PassFactory("angularPass", true) {
+  final HotSwapPassFactory angularPass =
+      new HotSwapPassFactory("angularPass", true) {
     @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
+    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return new AngularPass(compiler);
     }
   };

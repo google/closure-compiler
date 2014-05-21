@@ -70,7 +70,8 @@ import java.util.List;
  *
  * }</pre>
  */
-class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
+class AngularPass extends AbstractPostOrderCallback
+    implements HotSwapCompilerPass {
   final AbstractCompiler compiler;
 
   /** Nodes annotated with @ngInject */
@@ -98,8 +99,13 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    hotSwapScript(root, null);
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     // Traverses AST looking for nodes annotated with @ngInject.
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverse(compiler, scriptRoot, this);
     CodingConvention convention = compiler.getCodingConvention();
     boolean codeChanged = false;
     // iterates through annotated nodes adding $inject property to elements.
