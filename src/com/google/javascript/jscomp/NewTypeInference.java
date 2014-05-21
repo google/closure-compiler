@@ -1547,12 +1547,11 @@ public class NewTypeInference implements CompilerPass {
   private EnvTypePair analyzeCallNodeArgumentsFwd(
       Node callNode, TypeEnv inEnv) {
     TypeEnv env = inEnv;
-    for (Node arg = callNode.getFirstChild(); arg != null;
+    for (Node arg = callNode.getFirstChild().getNext(); arg != null;
         arg = arg.getNext()) {
       env = analyzeExprFwd(arg, env).env;
     }
     return new EnvTypePair(env, JSType.UNKNOWN);
-
   }
 
   private EnvTypePair analyzeStrictComparisonFwd(int comparisonOp,
@@ -1609,8 +1608,9 @@ public class NewTypeInference implements CompilerPass {
          (comparisonOp == Token.SHNE || comparisonOp == Token.NE))) {
       pair = analyzeExprFwd(typeofRand, inEnv, JSType.UNKNOWN, comparedType);
     } else {
-      pair = analyzeExprFwd(
-          typeofRand, inEnv, JSType.UNKNOWN, comparedType.negate());
+      pair = analyzeExprFwd(typeofRand, inEnv);
+      pair = analyzeExprFwd(typeofRand, inEnv, JSType.UNKNOWN,
+          pair.type.removeType(comparedType));
     }
     pair.type = specializedType.toBoolean();
     return pair;
@@ -1758,20 +1758,20 @@ public class NewTypeInference implements CompilerPass {
             lhs, inEnv, JSType.UNKNOWN, JSType.NULL_OR_UNDEF);
         rhsPair = analyzeExprFwd(rhs, lhsPair.env);
       } else if (!JSType.NULL_OR_UNDEF.isSubtypeOf(lhsType)) {
-        rhsType = rhsType.removeType(JSType.NULL).removeType(JSType.UNDEFINED);
+        rhsType = rhsType.removeType(JSType.NULL_OR_UNDEF);
         rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, rhsType);
       } else if (!JSType.NULL_OR_UNDEF.isSubtypeOf(rhsType)) {
-        lhsType = lhsType.removeType(JSType.NULL).removeType(JSType.UNDEFINED);
+        lhsType = lhsType.removeType(JSType.NULL_OR_UNDEF);
         lhsPair = analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, lhsType);
         rhsPair = analyzeExprFwd(rhs, lhsPair.env);
       }
     } else if (tokenType == Token.EQ && specializedType.isFalsy() ||
         tokenType == Token.NE && specializedType.isTruthy()) {
       if (lhsType.isNullOrUndef()) {
-        rhsType = rhsType.removeType(JSType.NULL).removeType(JSType.UNDEFINED);
+        rhsType = rhsType.removeType(JSType.NULL_OR_UNDEF);
         rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, rhsType);
       } else if (rhsType.isNullOrUndef()) {
-        lhsType = lhsType.removeType(JSType.NULL).removeType(JSType.UNDEFINED);
+        lhsType = lhsType.removeType(JSType.NULL_OR_UNDEF);
         lhsPair = analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, lhsType);
         rhsPair = analyzeExprFwd(rhs, lhsPair.env);
       }

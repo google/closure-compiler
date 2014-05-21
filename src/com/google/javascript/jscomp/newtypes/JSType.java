@@ -103,7 +103,7 @@ public class JSType {
     this.mask = mask;
 
     Preconditions.checkState(isValidType(),
-        "Cannot create type with bits <<<%X>>>, " +
+        "Cannot create type with bits <<<%s>>>, " +
         "objs <<<%s>>>, typeVar <<<%s>>>, enums <<<%s>>>",
         mask, objs, typeVar, enums);
   }
@@ -173,13 +173,10 @@ public class JSType {
       new JSType(NULL_MASK | UNDEFINED_MASK);
   public static final JSType NUM_OR_STR = new JSType(NUMBER_MASK | STRING_MASK);
 
-  private static final JSType TOP_MINUS_NULL = new JSType(
-      TRUE_MASK | FALSE_MASK | NUMBER_MASK | STRING_MASK | UNDEFINED_MASK |
-      NON_SCALAR_MASK,
-      null, ImmutableSet.of(ObjectType.TOP_OBJECT), null, null);
-  private static final JSType TOP_MINUS_UNDEF = new JSType(
+  // Explicitly contains most types. Used only by removeType.
+  private static final JSType ALMOST_TOP = new JSType(
       TRUE_MASK | FALSE_MASK | NUMBER_MASK | STRING_MASK | NULL_MASK |
-      NON_SCALAR_MASK,
+      UNDEFINED_MASK | NON_SCALAR_MASK,
       null, ImmutableSet.of(ObjectType.TOP_OBJECT), null, null);
 
   public static JSType topFunction() {
@@ -751,7 +748,7 @@ public class JSType {
     } else if (isFalsy()) {
       return TRUTHY;
     }
-    return UNKNOWN.removeType(this);
+    return UNKNOWN;
   }
 
   public JSType toBoolean() {
@@ -796,20 +793,29 @@ public class JSType {
   }
 
   public JSType removeType(JSType other) {
-    if ((isTop() || isUnknown()) && other.equals(NULL)) {
-      return TOP_MINUS_NULL;
+    if (isUnknown()) {
+      return this;
     }
-    if ((isTop() || isUnknown()) && other.equals(UNDEFINED)) {
-      return TOP_MINUS_UNDEF;
+    int otherMask = other.mask;
+    if (isTop()) {
+      if ((otherMask & NON_SCALAR_MASK) == 0 &&
+          (otherMask & TYPEVAR_MASK) == 0 &&
+          (otherMask & ENUM_MASK) == 0) {
+        return ALMOST_TOP.removeType(other);
+      }
+      return this;
     }
-    if (other.equals(NULL) || other.equals(UNDEFINED)) {
-      return new JSType(mask & ~other.mask, location, objs, typeVar, enums);
+    if ((otherMask & NON_SCALAR_MASK) == 0 &&
+        (otherMask & TYPEVAR_MASK) == 0 &&
+        (otherMask & ENUM_MASK) == 0) {
+      return new JSType(mask & ~otherMask, location, objs, typeVar, enums);
     }
-    if (objs == null) {
+    if (objs == null || (otherMask & ~NON_SCALAR_MASK) != 0) {
       return this;
     }
     Preconditions.checkState(
-        (other.mask & ~NON_SCALAR_MASK) == 0 && other.objs.size() == 1);
+        otherMask == NON_SCALAR_MASK && other.objs.size() == 1,
+        "Invalid type to remove: " + other);
     NominalType otherKlass =
         Iterables.getOnlyElement(other.objs).getNominalType();
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();

@@ -1995,6 +1995,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     typeCheck(
+        "/** @param {*} x */\n" +
         "function f(x) {\n" +
         "  if (!(typeof x == 'undefined')) {\n" +
         "    var /** undefined */ y = x;\n" +
@@ -2003,6 +2004,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
+        "/** @param {*} x */\n" +
         "function f(x) {\n" +
         "  if (typeof x !== 'undefined') {\n" +
         "    var /** undefined */ y = x;\n" +
@@ -2011,6 +2013,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
+        "/** @param {*} x */\n" +
         "function f(x) {\n" +
         "  if (typeof x == 'undefined') {} else {\n" +
         "    var /** undefined */ y = x;\n" +
@@ -2385,6 +2388,12 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @constructor */ function Foo() {}\n" +
         "function f(/** (number|!Foo) */ x) {\n" +
         "  if (x instanceof Foo) {} else { x - 5; }\n" +
+        "}");
+
+    checkNoWarnings(
+        "/** @constructor */ function Foo() {}\n" +
+        "function f(/** (number|!Foo) */ x) {\n" +
+        "  if (!(x instanceof Foo)) { x - 5; }\n" +
         "}");
 
     checkNoWarnings(
@@ -3726,6 +3735,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}", NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
+        "/** @param {*} x */\n" +
         "function f(x) {\n" +
         "  if (5 == x) {\n" +
         "    var /** (null|undefined) */ y = x;\n" +
@@ -3733,6 +3743,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}", NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
+        "/** @param {*} x */\n" +
         "function f(x) {\n" +
         "  if (x == 5) {\n" +
         "    var /** (null|undefined) */ y = x;\n" +
@@ -3740,6 +3751,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}", NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
+        "/** @param {*} x */\n" +
         "function f(x) {\n" +
         "  if (null == x) {\n" +
         "  } else {\n" +
@@ -3748,6 +3760,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}", NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
+        "/** @param {*} x */\n" +
         "function f(x) {\n" +
         "  if (x == null) {\n" +
         "  } else {\n" +
@@ -3772,6 +3785,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     typeCheck(
+        "/** @param {*} x */\n" +
         "function f(x) {\n" +
         "  if (5 != x) {\n" +
         "  } else {\n" +
@@ -3780,6 +3794,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}", NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
+        "/** @param {*} x */\n" +
         "function f(x) {\n" +
         "  if (x != 5) {\n" +
         "  } else {\n" +
@@ -3788,6 +3803,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}", NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
+        "/** @param {*} x */\n" +
         "function f(x) {\n" +
         "  if (null != x) {\n" +
         "    var /** (null|undefined) */ y = x;\n" +
@@ -3795,6 +3811,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}", NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
+        "/** @param {*} x */\n" +
         "function f(x) {\n" +
         "  if (x != null) {\n" +
         "    var /** (null|undefined) */ y = x;\n" +
