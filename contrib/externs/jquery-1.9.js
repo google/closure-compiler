@@ -849,6 +849,12 @@ jQuery.prototype.find = function(arg1) {};
 /** @return {!jQuery} */
 jQuery.prototype.first = function() {};
 
+/** @see http://docs.jquery.com/Plugins/Authoring */
+jQuery.fn = jQuery.prototype;
+
+/** @see http://docs.jquery.com/Plugins/Authoring */
+$.fn = $.prototype;
+
 /**
  * @param {(function(!jQuery.event=)|Object.<string, *>)=} arg1
  * @param {function(!jQuery.event=)=} handler
@@ -2173,10 +2179,4 @@ jQuery.prototype.wrapAll = function(wrappingElement) {};
  * @return {!jQuery}
  */
 jQuery.prototype.wrapInner = function(arg1) {};
-
-/** @see http://docs.jquery.com/Plugins/Authoring */
-jQuery.fn = jQuery.prototype;
-
-/** @see http://docs.jquery.com/Plugins/Authoring */
-$.fn = $.prototype;
 
