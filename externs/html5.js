@@ -3397,6 +3397,16 @@ Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
  */
 function ShadowRoot() {}
 
+/**
+ * The host element that a ShadowRoot is attached to.
+ * Note: this is not yet W3C standard but is undergoing development.
+ * W3C feature tracking bug:
+ * https://www.w3.org/Bugs/Public/show_bug.cgi?id=22399
+ * Draft specification:
+ * https://dvcs.w3.org/hg/webcomponents/raw-file/6743f1ace623/spec/shadow/index.html#shadow-root-object
+ * @type {!Element}
+ */
+ShadowRoot.prototype.host;
 
 /**
  * @param {string} id id.
