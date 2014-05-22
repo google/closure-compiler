@@ -27,6 +27,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   @Override
   public void setUp() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    enableAstValidation(true);
   }
 
   @Override
@@ -237,13 +238,61 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   }
 
+  /**
+   * Class expressions that are the RHS of a 'var' statement.
+   */
+  public void testClassExpressionInVar() {
+    test("var C = class { }",
+        "/** @constructor @struct */ var C = function() {}");
+
+    test("var C = class { foo() {} }", Joiner.on('\n').join(
+        "/** @constructor @struct */ var C = function() {}",
+        "",
+        "C.prototype.foo = function() {}"
+    ));
+
+    test("var C = class C { }",
+        "/** @constructor @struct */ var C = function() {}");
+
+    test("var C = class C { foo() {} }", Joiner.on('\n').join(
+        "/** @constructor @struct */ var C = function() {}",
+        "",
+        "C.prototype.foo = function() {};"
+    ));
+  }
+
+  /**
+   * Class expressions that are the RHS of an assignment.
+   */
+  public void testClassExpressionInAssignment() {
+    test("goog.example.C = class { }",
+        "/** @constructor @struct */ goog.example.C = function() {}");
+
+    test("goog.example.C = class C { }",
+        "/** @constructor @struct */ goog.example.C = function() {}");
+
+    test("goog.example.C = class C { foo() {} }", Joiner.on('\n').join(
+        "/** @constructor @struct */ goog.example.C = function() {}",
+        "",
+        "goog.example.C.prototype.foo = function() {};"
+    ));
+  }
+
+  /**
+   * Class expressions that are not in a 'var' or simple 'assign' node.
+   * We don't bother transpiling these cases because the transpiled code
+   * will be very difficult to typecheck.
+   */
   public void testClassExpression() {
     enableAstValidation(false);
 
-    test("var C = class { }", "var C = function() {}",
+    test("var C = new (class {})();", null,
         Es6ToEs3Converter.CANNOT_CONVERT);
 
-    test("var c = new (class C {})", null,
+    test("var C = new (foo || (foo = class { }))();", null,
+        Es6ToEs3Converter.CANNOT_CONVERT);
+
+    test("(condition ? obj1 : obj2).prop = class C { };", null,
         Es6ToEs3Converter.CANNOT_CONVERT);
   }
 
@@ -251,30 +300,75 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     enableAstValidation(false);
 
     test("class C extends D { }",
-        null, Es6ToEs3Converter.CANNOT_CONVERT);
+        null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testSuper() {
     enableAstValidation(false);
 
     test("class C { constructor() { super(); } }",
-        null, Es6ToEs3Converter.CANNOT_CONVERT);
+        null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
     test(Joiner.on('\n').join(
         "class C {",
         "  foo() { return super.foo(); }",
         "}"
-    ), null, Es6ToEs3Converter.CANNOT_CONVERT);
+    ), null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testStaticMethods() {
-    enableAstValidation(false);
-
     test(Joiner.on('\n').join(
         "class C {",
         "  static foo() {}",
         "}"
-    ), null, Es6ToEs3Converter.CANNOT_CONVERT);
+    ), Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "function C() {}",
+        "",
+        "C.foo = function() {};"
+    ));
+
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  static foo() {}",
+        "",
+        "  foo() {}",
+        "}"
+    ), Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "function C() {}",
+        "",
+        "C.foo = function() {};",
+        "",
+        "C.prototype.foo = function() {};"
+    ));
+
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  static foo() {}",
+        "",
+        "  bar() { C.foo(); }",
+        "}"
+    ), Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "function C() {}",
+        "",
+        "C.foo = function() {};",
+        "",
+        "C.prototype.bar = function() { C.foo(); };"
+    ));
+  }
+
+  /**
+   * Check that we emit a warning if a static method references
+   * {@code this} because we might mis-transpile it.
+   */
+  public void testWarnOnStaticMethodsWithThis() {
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  static foo() { alert(this); }",
+        "}"
+    ), null, null, Es6ToEs3Converter.STATIC_METHOD_REFERENCES_THIS);
   }
 
   public void testArrowInClass() {

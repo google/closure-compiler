@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Verify;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -32,7 +33,17 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, CompilerPass {
 
   static final DiagnosticType CANNOT_CONVERT = DiagnosticType.error(
       "JSC_CANNOT_CONVERT",
-      "Conversion of ''{0}'' to ES3 is not yet implemented.");
+      "This code cannot be converted from ES6 to ES3.");
+
+  // TODO(tbreisacher): Remove this once all ES6 features are transpilable.
+  static final DiagnosticType CANNOT_CONVERT_YET = DiagnosticType.error(
+      "JSC_CANNOT_CONVERT_YET",
+      "ES6-to-ES3 conversion of ''{0}'' is not yet implemented.");
+
+  static final DiagnosticType STATIC_METHOD_REFERENCES_THIS = DiagnosticType.warning(
+      "JSC_STATIC_METHOD_REFERENCES_THIS",
+      "This static method uses the 'this' keyword."
+           + " The transpiled output may be incorrect.");
 
   // The name of the var that captures 'this' for converting arrow functions.
   private static final String THIS_VAR = "$jscomp$this";
@@ -69,11 +80,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, CompilerPass {
         visitStringKey(n);
         break;
       case Token.CLASS:
-        visitClass(n);
+        visitClass(n, parent);
         break;
       case Token.SUPER:
       case Token.SPREAD:
-        cannotConvert(n, Token.name(n.getType()));
+        cannotConvertYet(n, Token.name(n.getType()));
         break;
     }
   }
@@ -90,42 +101,86 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
-  private void visitClass(Node classNode) {
+  private void visitClass(Node classNode, Node parent) {
     Node className = classNode.getFirstChild();
     Node superClassName = className.getNext();
     Node classMembers = classNode.getLastChild();
 
-    if (!NodeUtil.isStatement(classNode)) {
-      cannotConvert(classNode, "class expression");
-      return;
-    }
+    // This is a statement node. We insert methods of the
+    // transpiled class after this node.
+    Node insertionPoint;
+
+    // The fully qualified name of the class, which will be used in the output.
+    // May come from the class itself or the LHS of an assignment.
+    String fullClassName = null;
+
+    // Whether the constructor function in the output should be anonymous.
+    boolean anonymous;
+
     if (!superClassName.isEmpty()) {
-      cannotConvert(classNode, "extends");
+      cannotConvertYet(superClassName, "extends");
       return;
     }
+
+    // If this is a class statement, or a class expression in a simple
+    // assignment or var statement, convert it. In any other case, the
+    // code is too dynamic, so just call cannotConvert.
+    if (NodeUtil.isStatement(classNode)) {
+      fullClassName = className.getString();
+      anonymous = false;
+      insertionPoint = classNode;
+    } else if (parent.isAssign() && parent.getParent().isExprResult()) {
+      // Add members after the EXPR_RESULT node:
+      // example.C = class {}; example.C.prototype.foo = function() {};
+      fullClassName = parent.getFirstChild().getQualifiedName();
+      if (fullClassName == null) {
+        cannotConvert(parent);
+        return;
+      }
+      anonymous = true;
+      insertionPoint = parent.getParent();
+    } else if (parent.isName()) {
+      // Add members after the 'var' statement.
+      // var C = class {}; C.prototype.foo = function() {};
+      fullClassName =  parent.getString();
+      anonymous = true;
+      insertionPoint = parent.getParent();
+    } else {
+      cannotConvert(parent);
+      return;
+    }
+
+    Verify.verify(NodeUtil.isStatement(insertionPoint));
 
     className.detachFromParent();
-
     Node constructor = null;
     JSDocInfo ctorJSDocInfo = null;
-    Node insertionPoint = classNode;
     for (Node member : classMembers.children()) {
-      if (member.isStaticMember()) {
-        cannotConvert(member, "static member");
-      }
       if (member.getString().equals("constructor")) {
         ctorJSDocInfo = member.getJSDocInfo();
         constructor = member.getFirstChild().detachFromParent();
-        constructor.replaceChild(constructor.getFirstChild(), className);
+        if (!anonymous) {
+          constructor.replaceChild(constructor.getFirstChild(), className);
+        }
       } else {
-        String qualName = Joiner.on('.').join(
-            className.getString(),
-            "prototype",
-            member.getString());
+        String qualifiedMemberName;
+        if (member.isStaticMember()) {
+          if (NodeUtil.referencesThis(member.getFirstChild())) {
+            compiler.report(JSError.make(member, STATIC_METHOD_REFERENCES_THIS));
+          }
+          qualifiedMemberName = Joiner.on(".").join(
+              fullClassName,
+              member.getString());
+        } else {
+          qualifiedMemberName = Joiner.on(".").join(
+              fullClassName,
+              "prototype",
+              member.getString());
+        }
         Node assign = IR.assign(
             NodeUtil.newQualifiedNameNode(
                 compiler.getCodingConvention(),
-                qualName,
+                qualifiedMemberName,
                 /* basis node */ member,
                 /* original name */ member.getString()),
             member.getFirstChild().detachFromParent());
@@ -144,8 +199,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, CompilerPass {
     }
 
     if (constructor == null) {
+      Node name = anonymous ? IR.name("").srcref(className) : className;
       constructor = IR.function(
-          className,
+          name,
           IR.paramList().srcref(classNode),
           IR.block().srcref(classNode));
     }
@@ -169,8 +225,22 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, CompilerPass {
         newInfo.recordParameter(param, ctorJSDocInfo.getParameterType(param));
       }
     }
-    constructor.setJSDocInfo(newInfo.build(constructor));
-    classNode.getParent().replaceChild(classNode, constructor);
+    parent.replaceChild(classNode, constructor);
+
+    if (NodeUtil.isStatement(constructor)) {
+      constructor.setJSDocInfo(newInfo.build(constructor));
+    } else if (parent.isName()) {
+      // The constructor function is the RHS of a var statement.
+      // Add the JSDoc to the VAR node.
+      Node var = parent.getParent();
+      var.setJSDocInfo(newInfo.build(var));
+    } else if (parent.isAssign()) {
+      // The constructor function is the RHS of an assignment.
+      // Add the JSDoc to the ASSIGN node.
+      parent.setJSDocInfo(newInfo.build(parent));
+    } else {
+      throw new IllegalStateException("Unexpected parent node " + parent);
+    }
 
     compiler.reportCodeChange();
   }
@@ -238,10 +308,16 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
+  private void cannotConvert(Node n) {
+    compiler.report(JSError.make(n, CANNOT_CONVERT));
+  }
+
   /**
-   * Warns the user that the given ES6 feature cannot be converted to ES3.
+   * Warns the user that the given ES6 feature cannot be converted to ES3
+   * because the transpilation is not yet implemented. A call to this method
+   * is essentially a "TODO(tbreisacher): Implement {@code feature}" comment.
    */
-  private void cannotConvert(Node n, String feature) {
-    compiler.report(JSError.make(n, CANNOT_CONVERT, feature));
+  private void cannotConvertYet(Node n, String feature) {
+    compiler.report(JSError.make(n, CANNOT_CONVERT_YET, feature));
   }
 }
