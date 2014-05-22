@@ -49,7 +49,6 @@ import java.nio.charset.Charset;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
@@ -776,7 +775,7 @@ public class CommandLineRunner extends
     Path flagFile = Paths.get(flags.flagFile);
 
     // Reads input as UTF-8 by default.
-    BufferedReader buffer = Files.newBufferedReader(flagFile);
+    BufferedReader buffer = java.nio.file.Files.newBufferedReader(flagFile);
     // Builds the tokens.
     StringBuilder builder = new StringBuilder();
     // Stores the built tokens.
