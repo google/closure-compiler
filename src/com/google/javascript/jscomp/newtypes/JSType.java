@@ -248,7 +248,7 @@ public class JSType {
   }
 
   public boolean hasNonScalar() {
-    return objs != null;
+    return objs != null || EnumType.hasNonScalar(enums);
   }
 
   public boolean isNullable() {
@@ -793,38 +793,45 @@ public class JSType {
   }
 
   public JSType removeType(JSType other) {
+    int otherMask = other.mask;
+    Preconditions.checkState(
+        !other.isTop() && !other.isUnknown() &&
+        (otherMask & TYPEVAR_MASK) == 0 && (otherMask & ENUM_MASK) == 0);
     if (isUnknown()) {
       return this;
     }
-    int otherMask = other.mask;
     if (isTop()) {
-      if ((otherMask & NON_SCALAR_MASK) == 0 &&
-          (otherMask & TYPEVAR_MASK) == 0 &&
-          (otherMask & ENUM_MASK) == 0) {
-        return ALMOST_TOP.removeType(other);
+      return ALMOST_TOP.removeType(other);
+    }
+    int newMask = mask & ~otherMask;
+    if ((otherMask & NON_SCALAR_MASK) == 0) {
+      return new JSType(newMask, location, objs, typeVar, enums);
+    }
+    // TODO(dimvar): If objs and enums stay unchanged, reuse, don't recreate.
+    Preconditions.checkState(other.objs.size() == 1,
+        "Invalid type to remove: %s", other);
+    ObjectType otherObj = Iterables.getOnlyElement(other.objs);
+    ImmutableSet<ObjectType> newObjs = null;
+    ImmutableSet<EnumType> newEnums = null;
+    if (objs != null) {
+      ImmutableSet.Builder<ObjectType> builder = ImmutableSet.builder();
+      for (ObjectType obj : objs) {
+        if (!obj.isSubtypeOf(otherObj)) {
+          builder.add(obj);
+        }
       }
-      return this;
+      newObjs = builder.build();
     }
-    if ((otherMask & NON_SCALAR_MASK) == 0 &&
-        (otherMask & TYPEVAR_MASK) == 0 &&
-        (otherMask & ENUM_MASK) == 0) {
-      return new JSType(mask & ~otherMask, location, objs, typeVar, enums);
-    }
-    if (objs == null || (otherMask & ~NON_SCALAR_MASK) != 0) {
-      return this;
-    }
-    Preconditions.checkState(
-        otherMask == NON_SCALAR_MASK && other.objs.size() == 1,
-        "Invalid type to remove: " + other);
-    NominalType otherKlass =
-        Iterables.getOnlyElement(other.objs).getNominalType();
-    ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
-    for (ObjectType obj : objs) {
-      if (!Objects.equal(obj.getNominalType(), otherKlass)) {
-        newObjs.add(obj);
+    if (enums != null) {
+      ImmutableSet.Builder<EnumType> builder = ImmutableSet.builder();
+      for (EnumType e : enums) {
+        if (!e.getEnumeratedType().isSubtypeOf(other)) {
+          builder.add(e);
+        }
       }
+      newEnums = builder.build();
     }
-    return new JSType(mask, location, newObjs.build(), typeVar, enums);
+    return new JSType(newMask, location, newObjs, typeVar, newEnums);
   }
 
   public JSType withLocation(String location) {
@@ -879,7 +886,10 @@ public class JSType {
 
   /** Turns the class-less object of this type (if any) into a loose object */
   public JSType withLoose() {
-    Preconditions.checkNotNull(this.objs);
+    if (objs == null) {
+      Preconditions.checkState(enums != null);
+      return this;
+    }
     return new JSType(
         this.mask, this.location,
         ObjectType.withLooseObjects(this.objs), typeVar, enums);

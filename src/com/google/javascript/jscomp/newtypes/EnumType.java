@@ -159,6 +159,18 @@ public class EnumType extends TypeWithProperties {
     return declaredType.hasConstantProp(qname);
   }
 
+  static boolean hasNonScalar(ImmutableSet<EnumType> enums) {
+    if (enums == null) {
+      return false;
+    }
+    for (EnumType e : enums) {
+      if (e.declaredType.hasNonScalar()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static ImmutableSet<EnumType> union(
       ImmutableSet<EnumType> s1, ImmutableSet<EnumType> s2) {
     if (s1 == null) {
@@ -175,7 +187,7 @@ public class EnumType extends TypeWithProperties {
       ImmutableSet<EnumType> newEnums, JSType joinWithoutEnums) {
     boolean recreateEnums = false;
     for (EnumType e : newEnums) {
-      if (e.getEnumeratedType().isSubtypeOf(joinWithoutEnums)) {
+      if (e.declaredType.isSubtypeOf(joinWithoutEnums)) {
         recreateEnums = true;
         break;
       }
@@ -185,7 +197,7 @@ public class EnumType extends TypeWithProperties {
     }
     ImmutableSet.Builder<EnumType> builder = ImmutableSet.builder();
     for (EnumType e : newEnums) {
-      if (!e.getEnumeratedType().isSubtypeOf(joinWithoutEnums)) {
+      if (!e.declaredType.isSubtypeOf(joinWithoutEnums)) {
         builder.add(e);
       }
     }
@@ -202,7 +214,7 @@ public class EnumType extends TypeWithProperties {
       if (s2 != null && s2.contains(e)) {
         continue;
       }
-      if (!e.getEnumeratedType().isSubtypeOf(t2)) {
+      if (!e.declaredType.isSubtypeOf(t2)) {
         return false;
       }
     }

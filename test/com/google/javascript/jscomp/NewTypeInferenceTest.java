@@ -2046,6 +2046,23 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "switch (typeof 123) { case 'foo': }",
         TypeValidator.UNKNOWN_TYPEOF_VALUE);
+
+    checkNoWarnings(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @param {(number|null|Foo)} x */\n" +
+        "function f(x) {\n" +
+        "  if (!(typeof x === 'object')) {\n" +
+        "    var /** number */ n = x;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        "/** @param {(number|function(number):number)} x */\n" +
+        "function f(x) {\n" +
+        "  if (!(typeof x === 'function')) {\n" +
+        "    var /** number */ n = x;\n" +
+        "  }\n" +
+        "}");
   }
 
   public void testAssignWithOp() {
@@ -2430,6 +2447,27 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         ImmutableList.of(
             NewTypeInference.INVALID_OPERAND_TYPE,
             NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT));
+
+    checkNoWarnings(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @constructor @extends {Foo} */ function Bar() {}\n" +
+        "/** @param {(number|!Bar)} x */\n" +
+        "function f(x) {\n" +
+        "  if (!(x instanceof Foo)) {\n" +
+        "    var /** number */ n = x;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @enum {!Foo} */\n" +
+        "var E = { ONE: new Foo };\n" +
+        "/** @param {(number|E)} x */\n" +
+        "function f(x) {\n" +
+        "  if (!(x instanceof Foo)) {\n" +
+        "    var /** number */ n = x;\n" +
+        "  }\n" +
+        "}");
   }
 
   public void testFunctionWithProps() {
@@ -6885,6 +6923,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var E = { ONE: new Foo() };\n" +
         "function f(/** E */ x) { x.prop = 2; }",
         NewTypeInference.CONST_REASSIGNED);
+
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @enum {!Foo} */\n" +
+        "var E = { A: new Foo };\n" +
+        "function f(/** E */ x) { x instanceof Foo; }");
   }
 
   public void testEnumBadInitializer() {
