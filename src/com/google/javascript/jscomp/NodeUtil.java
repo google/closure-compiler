@@ -1342,6 +1342,7 @@ public final class NodeUtil {
       case Token.OBJECTLIT:
       case Token.REGEXP:
       case Token.REST:
+      case Token.SPREAD:
       case Token.STRING:
       case Token.STRING_KEY:
       case Token.THIS:

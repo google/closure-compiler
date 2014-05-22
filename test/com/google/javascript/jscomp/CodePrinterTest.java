@@ -1704,6 +1704,13 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("function f(first,...rest){}");
   }
 
+  public void testSpreadExpression() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("f(...args)");
+    assertPrintSame("f(...arrayOfArrays[0])");
+    assertPrintSame("f(...[1,2,3])");
+  }
+
   public void testClass() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("class C{}");

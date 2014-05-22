@@ -87,7 +87,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, CompilerPass {
         visitClass(n);
         break;
       case Token.SUPER:
-        cannotConvert(n, "super");
+      case Token.SPREAD:
+        cannotConvert(n, Token.name(n.getType()));
         break;
     }
   }

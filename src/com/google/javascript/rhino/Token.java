@@ -431,6 +431,8 @@ public class Token {
       case EOC:             return -1;
       case QMARK:           return -1;
       case ELLIPSIS:        return -1;
+      case REST:            return 0;
+      case SPREAD:          return 1;
       case BANG:            return -1;
       case VOID:            return 1;
       case EQUALS:          return -1;

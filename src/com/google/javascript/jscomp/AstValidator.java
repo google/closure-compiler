@@ -267,6 +267,10 @@ public class AstValidator implements CompilerPass {
         validateCall(n);
         return;
 
+      case Token.SPREAD:
+        validateSpread(n);
+        return;
+
       case Token.NEW:
         validateNew(n);
         return;
@@ -444,6 +448,8 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateParameters(Node n) {
+    validateNodeType(Token.PARAM_LIST, n);
+
     if (isEs6OrHigher()) {
       validateParametersEs6(n);
     } else {
@@ -452,15 +458,12 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateParametersEs5(Node n) {
-   validateNodeType(Token.PARAM_LIST, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       validateName(c);
     }
   }
 
   private void validateParametersEs6(Node n) {
-    validateNodeType(Token.PARAM_LIST, n);
-
     boolean defaultParams = false;
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       if (c.isRest()) {
@@ -471,6 +474,7 @@ public class AstValidator implements CompilerPass {
         if (c.getNext() != null) {
           violation("Rest parameters must come after all other parameters.", c);
         }
+        validateRest(c);
       } else {
         // Don't call validateName, since it requires every NAME to have
         // zero children, which is not the case here.
@@ -493,6 +497,31 @@ public class AstValidator implements CompilerPass {
     validateMinimumChildCount(n, 1);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       validateExpression(c);
+    }
+  }
+
+  private void validateRest(Node n) {
+    validateNodeType(Token.REST, n);
+    validateNonEmptyString(n);
+    validateChildCount(n, Token.arity(Token.REST));
+  }
+
+  private void validateSpread(Node n) {
+    validateNodeType(Token.SPREAD, n);
+    validateChildCount(n, Token.arity(Token.SPREAD));
+    Node parent = n.getParent();
+    switch (parent.getType()) {
+      case Token.CALL:
+      case Token.NEW:
+        if (n == parent.getFirstChild()) {
+          violation("SPREAD node is not callable.", n);
+        }
+        break;
+      case Token.ARRAYLIT:
+        break;
+      default:
+        violation("SPREAD node should not be the child of a "
+            + parent.getType() + " node.", n);
     }
   }
 

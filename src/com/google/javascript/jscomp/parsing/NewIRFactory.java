@@ -75,6 +75,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentT
 import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
+import com.google.javascript.jscomp.parsing.parser.trees.SpreadExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
@@ -1210,6 +1211,13 @@ class NewIRFactory {
       maybeWarnEs6Feature(tree, "rest parameters");
 
       return newStringNode(Token.REST, tree.identifier.value);
+    }
+
+    @Override
+    Node processSpreadExpression(SpreadExpressionTree tree) {
+      maybeWarnEs6Feature(tree, "spread expression");
+
+      return newNode(Token.SPREAD, transform(tree.expression));
     }
 
     @Override

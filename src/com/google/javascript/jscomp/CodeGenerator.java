@@ -355,6 +355,11 @@ class CodeGenerator {
         add(n.getString());
         break;
 
+      case Token.SPREAD:
+        add("...");
+        add(n.getFirstChild());
+        break;
+
       case Token.EXPORT:
         add("export");
         if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
