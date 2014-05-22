@@ -262,7 +262,7 @@ jQuery.prototype.andSelf = function() {};
 jQuery.prototype.animate = function(properties, arg2, easing, complete) {};
 
 /**
- * @param {(string|Element|jQuery|function(number,string))} arg1
+ * @param {(string|Element|Array.<Element>|jQuery|function(number,string))} arg1
  * @param {...(string|Element|Array.<Element>|jQuery)} content
  * @return {!jQuery}
  */
@@ -412,7 +412,7 @@ $.contains = function(container, contained) {};
  */
 jQuery.prototype.contents = function() {};
 
-/** @type {Element} */
+/** @type {Element|Document} */
 jQuery.prototype.context;
 
 /**
@@ -536,8 +536,8 @@ jQuery.deferred.prototype.notifyWith = function(context, var_args) {};
  * @param {function()=} progressFilter
  * @return {jQuery.Promise}
  */
-jQuery.deferred.prototype.pipe
-    = function(doneFilter, failFilter, progressFilter) {};
+jQuery.deferred.prototype.pipe =
+    function(doneFilter, failFilter, progressFilter) {};
 
 /**
  * @param {jQueryCallback} progressCallbacks
@@ -850,10 +850,10 @@ jQuery.prototype.find = function(arg1) {};
 jQuery.prototype.first = function() {};
 
 /** @see http://docs.jquery.com/Plugins/Authoring */
-jQuery.fn;
+jQuery.fn = jQuery.prototype;
 
 /** @see http://docs.jquery.com/Plugins/Authoring */
-$.fn;
+$.fn = $.prototype;
 
 /**
  * @param {(function(!jQuery.event=)|Object.<string, *>)=} arg1
@@ -1972,12 +1972,6 @@ jQuery.support.cssFloat;
 $.support.cssFloat;
 
 /** @type {boolean} */
-jQuery.support.fixedPosition;
-
-/** @type {boolean} */
-$.support.fixedPosition;
-
-/** @type {boolean} */
 jQuery.support.hrefNormalized;
 
 /** @type {boolean} */
@@ -2006,12 +2000,6 @@ jQuery.support.opacity;
 
 /** @type {boolean} */
 $.support.opacity;
-
-/** @type {boolean} */
-jQuery.support.scriptEval;
-
-/** @type {boolean} */
-$.support.scriptEval;
 
 /** @type {boolean} */
 jQuery.support.style;
@@ -2148,7 +2136,7 @@ jQuery.prototype.val = function(arg1) {};
 
 /**
  * Note: The official documentation (https://api.jquery.com/jQuery.when/) says
- * jQuery.when accepts deferreds, but it, actually, accepts any type, e.g.:
+ * jQuery.when accepts deferreds, but it actually accepts any type, e.g.:
  *
  * jQuery.when(jQuery.ready, jQuery.ajax(''), jQuery('#my-element'), 1)
  *
@@ -2191,3 +2179,4 @@ jQuery.prototype.wrapAll = function(wrappingElement) {};
  * @return {!jQuery}
  */
 jQuery.prototype.wrapInner = function(arg1) {};
+
