@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -31,9 +30,6 @@ import com.google.javascript.rhino.Token;
 public class Es6ToEs3Converter implements NodeTraversal.Callback, CompilerPass {
   private final AbstractCompiler compiler;
 
-  private final LanguageMode languageIn;
-  private final LanguageMode languageOut;
-
   static final DiagnosticType CANNOT_CONVERT = DiagnosticType.error(
       "JSC_CANNOT_CONVERT",
       "Conversion of ''{0}'' to ES3 is not yet implemented.");
@@ -41,22 +37,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, CompilerPass {
   // The name of the var that captures 'this' for converting arrow functions.
   private static final String THIS_VAR = "$jscomp$this";
 
-  public Es6ToEs3Converter(AbstractCompiler compiler, CompilerOptions options) {
+  public Es6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.languageIn = options.getLanguageIn();
-    this.languageOut = options.getLanguageOut();
   }
 
   public void process(Node externs, Node root) {
-    if (languageOut != languageIn &&
-        languageIn.isEs6OrHigher() && !languageOut.isEs6OrHigher()) {
-      convert(root);
-    }
-
-    compiler.setLanguageMode(languageOut);
-  }
-
-  private void convert(Node root) {
     NodeTraversal.traverse(compiler, root, this);
   }
 

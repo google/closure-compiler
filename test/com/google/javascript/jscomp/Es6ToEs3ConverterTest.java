@@ -32,13 +32,13 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     return options;
   }
 
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
-    return new Es6ToEs3Converter(compiler, compiler.getOptions());
+    return new Es6ToEs3Converter(compiler);
   }
 
   @Override
