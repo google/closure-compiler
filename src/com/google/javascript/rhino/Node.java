@@ -2605,6 +2605,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.SETTER_DEF;
   }
 
+  public boolean isSpread() {
+    return this.getType() == Token.SPREAD;
+  }
+
   public boolean isString() {
     return this.getType() == Token.STRING;
   }

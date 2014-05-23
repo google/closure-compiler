@@ -23,6 +23,9 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Converts ES6 code to valid ES3 code.
  *
@@ -91,10 +94,24 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       case Token.PARAM_LIST:
         visitParamList(n, parent);
         break;
+      case Token.ARRAYLIT:
+        for (Node child : n.children()) {
+          if (child.isSpread()) {
+            visitArrayLitWithSpread(n, parent);
+            break;
+          }
+        }
+        break;
+      case Token.CALL:
+      case Token.NEW:
+        for (Node child : n.children()) {
+          if (child.isSpread()) {
+            cannotConvertYet(child, "spread operator in a function call");
+          }
+        }
+        break;
       case Token.COMPUTED_PROP:
-      case Token.REST:
       case Token.SUPER:
-      case Token.SPREAD:
         cannotConvertYet(n, Token.name(n.getType()));
         break;
     }
@@ -137,6 +154,44 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     // need to make sure changes don't invalidate the JSDoc annotations.
     // Therefore we keep the parameter list the same length and only initialize
     // the values if they are set to undefined.
+  }
+
+  /**
+   * Processes array literals containing spreads.
+   * Eg.: [1, 2, ...x, 4, 5] => [1, 2].concat(x, [4, 5]);
+   */
+  private void visitArrayLitWithSpread(Node array, Node parent) {
+    List<Node> groups = new ArrayList<>();
+    Node currGroup = null;
+    Node currElement = array.removeFirstChild();
+    while (currElement != null) {
+      if (currElement.isSpread()) {
+        if (currGroup != null) {
+          groups.add(currGroup);
+          currGroup = null;
+        }
+        groups.add(currElement.removeFirstChild());
+      } else {
+        if (currGroup == null) {
+          currGroup = IR.arraylit();
+        }
+        currGroup.addChildToBack(currElement);
+      }
+      currElement = array.removeFirstChild();
+    }
+    if (currGroup != null) {
+      groups.add(currGroup);
+    }
+    Node result = null;
+    if (groups.size() == 1) {
+      result = IR.call(IR.getprop(groups.get(0), IR.string("slice")), IR.number(0));
+    } else {
+      result = IR.call(IR.getprop(groups.get(0), IR.string("concat")),
+          groups.subList(1, groups.size()).toArray(new Node[groups.size() - 1]));
+    }
+    result.useSourceInfoIfMissingFromForTree(array);
+    parent.replaceChild(array, result);
+    compiler.reportCodeChange();
   }
 
   private void visitClass(Node classNode, Node parent) {

@@ -571,4 +571,23 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "}"
     ));
   }
+
+  public void testSpreadArray() {
+    test("var arr = [1, 2, ...mid, 4, 5];",
+        "var arr = [1, 2].concat(mid, [4, 5]);");
+    test("var arr = [1, 2, ...mid(), 4, 5];",
+        "var arr = [1, 2].concat(mid(), [4, 5]);");
+    test("var arr = [1, 2, ...mid, ...mid2(), 4, 5];",
+        "var arr = [1, 2].concat(mid, mid2(), [4, 5]);");
+    test("var arr = [...mid()];",
+        "var arr = mid().slice(0);");
+    test("f(1, [2, ...mid, 4], 5);",
+        "f(1, [2].concat(mid, [4]), 5);");
+  }
+
+  public void testSpreadCall() {
+    enableAstValidation(false);
+
+    test("f(...args)", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
 }
