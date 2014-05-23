@@ -825,7 +825,8 @@ public class Parser {
       eat(token);
       break;
     default:
-      throw new RuntimeException("unreachable");
+      reportError(peekToken(), "expected declaration");
+      return null;
     }
 
     SourcePosition start = getTreeStartLocation();
