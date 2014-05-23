@@ -80,7 +80,7 @@ class SourceInformationAnnotator extends
         for (Node key = n.getFirstChild(); key != null;
              key = key.getNext()) {
            // We only want keys were unquoted.
-           if (!key.isQuotedString()) {
+           if (!key.isComputedProp() && !key.isQuotedString()) {
              setOriginalName(key, key.getString());
            }
          }

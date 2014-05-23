@@ -182,6 +182,8 @@ public class Token {
         REST           = 172, // "..." in a param list.
         SPREAD         = 173, // "..." in other contexts.
 
+        COMPUTED_PROP  = 174,
+
         // JSDoc-only tokens
         ANNOTATION     = 300,
         PIPE           = 301,
@@ -322,6 +324,7 @@ public class Token {
           case MODULE:          return "MODULE";
           case REST:            return "REST";
           case SPREAD:          return "SPREAD";
+          case COMPUTED_PROP:   return "COMPUTED_PROP";
 
           case PLACEHOLDER1:        return "PLACEHOLDER1";
           case PLACEHOLDER2:        return "PLACEHOLDER2";

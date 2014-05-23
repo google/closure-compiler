@@ -91,9 +91,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       case Token.PARAM_LIST:
         visitParamList(n, parent);
         break;
+      case Token.COMPUTED_PROP:
+      case Token.REST:
       case Token.SUPER:
       case Token.SPREAD:
-      case Token.REST:
         cannotConvertYet(n, Token.name(n.getType()));
         break;
     }

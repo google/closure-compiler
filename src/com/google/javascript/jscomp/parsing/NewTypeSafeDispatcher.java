@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.CaseClauseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CatchTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyAssignmentTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
@@ -86,6 +87,7 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processBlock(BlockTree tree);
   abstract T processBreakStatement(BreakStatementTree breakStatementTree);
   abstract T processCatchClause(CatchTree tree);
+  abstract T processComputedProperty(ComputedPropertyAssignmentTree tree);
   abstract T processConditionalExpression(ConditionalExpressionTree tree);
   abstract T processContinueStatement(ContinueStatementTree tree);
   abstract T processDoLoop(DoWhileStatementTree tree);
@@ -233,6 +235,8 @@ abstract class NewTypeSafeDispatcher<T> {
         return processNewExpression(node.asNewExpression());
       case OBJECT_LITERAL_EXPRESSION:
         return processObjectLiteral(node.asObjectLiteralExpression());
+      case COMPUTED_PROPERTY_ASSIGNMENT:
+        return processComputedProperty(node.asComputedProperty());
       case RETURN_STATEMENT:
         return processReturnStatement(node.asReturnStatement());
       case POSTFIX_EXPRESSION:

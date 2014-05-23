@@ -60,6 +60,8 @@ public class ParseTree {
   public CatchTree asCatch() { return (CatchTree) this; }
   public ClassDeclarationTree asClassDeclaration() { return (ClassDeclarationTree) this; }
   public CommaExpressionTree asCommaExpression() { return (CommaExpressionTree) this; }
+  public ComputedPropertyAssignmentTree asComputedProperty() {
+    return (ComputedPropertyAssignmentTree) this; }
   public ConditionalExpressionTree asConditionalExpression() {
     return (ConditionalExpressionTree) this; }
   public ContinueStatementTree asContinueStatement() { return (ContinueStatementTree) this; }
