@@ -505,8 +505,9 @@ public class CommandLineRunner extends
      * order produced by {@code find} is unlikely to be sorted correctly with
      * respect to {@code goog.provide()} and {@code goog.requires()}.
      */
-    List<String> getJsFiles() throws CmdLineException, IOException {
+    List<String> getJsFiles(PrintStream err) throws CmdLineException, IOException {
       final Set<String> allJsInputs = new LinkedHashSet<>();
+      final List<String> matchedPaths = new ArrayList<>();
       List<String> patterns = new ArrayList<>();
       patterns.addAll(js);
       patterns.addAll(arguments);
@@ -529,6 +530,7 @@ public class CommandLineRunner extends
                     allJsInputs.add(p.toString());
                   }
                 }
+                matchedPaths.add(p.toString());
                 return FileVisitResult.CONTINUE;
               }
           });
@@ -536,6 +538,11 @@ public class CommandLineRunner extends
       }
 
       if (!patterns.isEmpty() && allJsInputs.isEmpty()) {
+        err.println("Paths attempted to match:");
+        for (String path : matchedPaths) {
+          err.println(path);
+        }
+
         throw new CmdLineException("No inputs matched");
       }
 
@@ -808,7 +815,7 @@ public class CommandLineRunner extends
         processFlagFile(err);
       }
 
-      jsFiles = flags.getJsFiles();
+      jsFiles = flags.getJsFiles(err);
     } catch (CmdLineException e) {
       err.println(e.getMessage());
       isConfigValid = false;
