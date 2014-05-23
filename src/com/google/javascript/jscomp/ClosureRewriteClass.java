@@ -71,6 +71,12 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       "JSC_GOOG_CLASS_UNEXPECTED_PARAMS",
       "The class definition has too many arguments.");
 
+  // Warnings
+  static final DiagnosticType GOOG_CLASS_NG_INJECT_ON_CLASS = DiagnosticType.warning(
+      "JSC_GOOG_CLASS_NG_INJECT_ON_CLASS",
+      "@ngInject should be declared on the constructor, not on the class.");
+
+
   private final AbstractCompiler compiler;
 
   public ClosureRewriteClass(AbstractCompiler compiler) {
@@ -449,8 +455,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
   static final String VIRTUAL_FILE = "<ClosureRewriteClass.java>";
 
-  private static JSDocInfo mergeJsDocFor(
-      ClassDefinition cls, Node associatedNode) {
+  private JSDocInfo mergeJsDocFor(ClassDefinition cls, Node associatedNode) {
     // avoid null checks
     JSDocInfo classInfo = (cls.classInfo != null)
         ? cls.classInfo
@@ -506,6 +511,12 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
     if (classInfo.isExport()) {
       mergedInfo.recordExport();
+    }
+
+    // If @ngInject is on the ctor, it's already been copied above.
+    if (classInfo.isNgInject()) {
+      compiler.report(JSError.make(associatedNode, GOOG_CLASS_NG_INJECT_ON_CLASS));
+      mergedInfo.recordNgInject(true);
     }
 
     // @constructor is implied, @interface must be explicit
