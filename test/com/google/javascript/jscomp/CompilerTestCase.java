@@ -504,6 +504,27 @@ public abstract class CompilerTestCase extends TestCase  {
   public void test(List<SourceFile> externs, String js, String expected,
                    DiagnosticType error,
                    DiagnosticType warning, String description) {
+    test(externs, ImmutableList.of(SourceFile.fromCode(filename, js)),
+        expected, error, warning, description);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionally) that an expected warning is issued. Or, if an error is
+   * expected, this method just verifies that the error is encountered.
+   *
+   * @param externs Externs inputs
+   * @param js Inputs
+   * @param expected Expected output, or null if an error is expected
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
+   * @param description The description of the expected warning,
+   *     or null if no warning is expected or if the warning's description
+   *     should not be examined
+   */
+  private void test(List<SourceFile> externs, List<SourceFile> js, String expected,
+                    DiagnosticType error,
+                    DiagnosticType warning, String description) {
     Compiler compiler = createCompiler();
     lastCompiler = compiler;
 
@@ -513,8 +534,7 @@ public abstract class CompilerTestCase extends TestCase  {
     // Note that in this context, turning on the checkTypes option won't
     // actually cause the type check to run.
     options.checkTypes = parseTypeInfo;
-    compiler.init(externs, ImmutableList.of(
-        SourceFile.fromCode(filename, js)), options);
+    compiler.init(externs, js, options);
 
     BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
 
@@ -538,6 +558,17 @@ public abstract class CompilerTestCase extends TestCase  {
     test(js, expected, null);
   }
 
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output.
+   *
+   * @param js Inputs
+   * @param expected Expected JS output
+   */
+  public void test(List<SourceFile> js, List<SourceFile> expected) {
+    test(js, expected, null);
+  }
+
   /**
    * Verifies that the compiler pass's JS output matches the expected output,
    * or that an expected error is encountered.
@@ -547,6 +578,18 @@ public abstract class CompilerTestCase extends TestCase  {
    * @param error Expected error, or null if no error is expected
    */
   public void test(String[] js, String[] expected, DiagnosticType error) {
+    test(js, expected, error, null);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output,
+   * or that an expected error is encountered.
+   *
+   * @param js Inputs
+   * @param expected Expected JS output
+   * @param error Expected error, or null if no error is expected
+   */
+  public void test(List<SourceFile> js, List<SourceFile> expected, DiagnosticType error) {
     test(js, expected, error, null);
   }
 
@@ -574,19 +617,72 @@ public abstract class CompilerTestCase extends TestCase  {
    * @param expected Expected JS output
    * @param error Expected error, or null if no error is expected
    * @param warning Expected warning, or null if no warning is expected
+   */
+  public void test(List<SourceFile> js, List<SourceFile> expected,
+                   DiagnosticType error, DiagnosticType warning) {
+    test(js, expected, error, warning, null);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionally) that an expected warning is issued. Or, if an error is
+   * expected, this method just verifies that the error is encountered.
+   *
+   * @param js Inputs
+   * @param expected Expected JS output
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
    * @param description The description of the expected warning,
    *      or null if no warning is expected or if the warning's description
    *      should not be examined
    */
   public void test(String[] js, String[] expected, DiagnosticType error,
                    DiagnosticType warning, String description) {
-    Compiler compiler = createCompiler();
-    lastCompiler = compiler;
-
     List<SourceFile> inputs = Lists.newArrayList();
     for (int i = 0; i < js.length; i++) {
       inputs.add(SourceFile.fromCode("input" + i, js[i]));
     }
+    test(inputs, expected, error, warning, description);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionally) that an expected warning is issued. Or, if an error is
+   * expected, this method just verifies that the error is encountered.
+   *
+   * @param js Inputs
+   * @param expected Expected JS output
+   * @param error Expected error, or null if no error is expected
+   * @param description The description of the expected warning,
+   *     or null if no warning is expected or if the warning's description
+   *     should not be examined
+   */
+  public void test(List<SourceFile> js, List<SourceFile> expected,
+                  DiagnosticType error, DiagnosticType warning, String description) {
+    Compiler compiler = createCompiler();
+    lastCompiler = compiler;
+
+    compiler.init(externsInputs, js, getOptions());
+    test(compiler, expected, error, warning, description);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionall) that an expected warning is issued. Or, if an error is
+   * expected, this method just verifies that the error is encountered.
+   *
+   * @param inputs Inputs
+   * @param expected Expected JS output
+   * @param error Expected error, or null if no error is expected
+   * @param description The description of the expected warning,
+   *     or null if no warning is expected or if the warning's description
+   *     should no be examined
+   */
+  public void test(List<SourceFile> inputs, String[] expected, DiagnosticType error,
+                   DiagnosticType warning, String description) {
+    Compiler compiler = createCompiler();
+    lastCompiler = compiler;
+
     compiler.init(externsInputs, inputs, getOptions());
     test(compiler, expected, error, warning, description);
   }
@@ -728,6 +824,15 @@ public abstract class CompilerTestCase extends TestCase  {
   }
 
   /**
+   * Verifies that the compiler pass's JS output is the same as its input.
+   *
+   * @param js Inputs and outputs
+   */
+  public void testSame(List<SourceFile> js) {
+    test(js, js);
+  }
+
+  /**
    * Verifies that the compiler pass's JS output is the same as its input,
    * and emits the given error.
    *
@@ -800,6 +905,31 @@ public abstract class CompilerTestCase extends TestCase  {
   /**
    * Verifies that the compiler pass's JS output matches the expected output
    * and (optionally) that an expected warning is issued. Or, if an error is
+   * expected, this method just verified that the error is encountered.
+   *
+   * @param compiler A compiler that has been initialized via
+   *     {@link Compiler#init}
+   * @param expected Expected output, or null if an error is expected
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
+   */
+  private void test(Compiler compiler, String[] expected,
+                    DiagnosticType error, DiagnosticType warning,
+                    String description) {
+    if (expected == null) {
+      test(compiler, (List<SourceFile>) null, error, warning, description);
+    } else {
+      List<SourceFile> inputs = Lists.newArrayList();
+      for (int i = 0; i < expected.length; i++) {
+        inputs.add(SourceFile.fromCode("expected" + i, expected[i]));
+      }
+      test(compiler, inputs, error, warning, description);
+    }
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionally) that an expected warning is issued. Or, if an error is
    * expected, this method just verifies that the error is encountered.
    *
    * @param compiler A compiler that has been initialized via
@@ -811,7 +941,7 @@ public abstract class CompilerTestCase extends TestCase  {
    *      or null if no warning is expected or if the warning's description
    *      should not be examined
    */
-  private void test(Compiler compiler, String[] expected,
+  private void test(Compiler compiler, List<SourceFile> expected,
                     DiagnosticType error, DiagnosticType warning,
                     String description) {
     RecentChange recentChange = new RecentChange();
@@ -1017,8 +1147,16 @@ public abstract class CompilerTestCase extends TestCase  {
               "\nResult:   " + compiler.toSource(mainRoot) +
               "\n" + explanation, explanation);
         } else if (expected != null) {
+          String[] expectedSources = new String[expected.size()];
+          for (int i = 0; i < expected.size(); ++i) {
+            try {
+              expectedSources[i] = expected.get(i).getCode();
+            } catch (IOException e) {
+              throw new RuntimeException("failed to get source code", e);
+            }
+          }
           assertEquals(
-              Joiner.on("").join(expected), compiler.toSource(mainRoot));
+              Joiner.on("").join(expectedSources), compiler.toSource(mainRoot));
         }
       }
 
@@ -1083,11 +1221,19 @@ public abstract class CompilerTestCase extends TestCase  {
    * Parses expected JS inputs and returns the root of the parse tree.
    */
   protected Node parseExpectedJs(String[] expected) {
-    Compiler compiler = createCompiler();
     List<SourceFile> inputs = Lists.newArrayList();
     for (int i = 0; i < expected.length; i++) {
       inputs.add(SourceFile.fromCode("expected" + i, expected[i]));
     }
+    return parseExpectedJs(inputs);
+  }
+
+  /**
+   * Parses expected JS inputs and returns the root of the parse tree.
+   */
+  protected Node parseExpectedJs(List<SourceFile> inputs) {
+    Compiler compiler = createCompiler();
+
     compiler.init(externsInputs, inputs, getOptions());
     Node root = compiler.parseInputs();
     assertTrue("Unexpected parse error(s): " +

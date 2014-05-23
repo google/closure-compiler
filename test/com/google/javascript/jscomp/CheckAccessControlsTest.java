@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CheckAccessControls.BAD_PACKAGE_PROPERTY_ACCESS;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PRIVATE_GLOBAL_ACCESS;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS;
@@ -30,6 +31,8 @@ import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_PROP_R
 import static com.google.javascript.jscomp.CheckAccessControls.EXTEND_FINAL_CLASS;
 import static com.google.javascript.jscomp.CheckAccessControls.PRIVATE_OVERRIDE;
 import static com.google.javascript.jscomp.CheckAccessControls.VISIBILITY_MISMATCH;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Tests for {@link CheckAccessControls}.
@@ -569,6 +572,187 @@ public class CheckAccessControlsTest extends CompilerTestCase {
       "/** @constructor */" +
       "goog.NotASubFoo = function() { (new goog.Foo).bar(); };"
     }, null, BAD_PROTECTED_PROPERTY_ACCESS);
+  }
+
+  public void testPackagePrivateAccessForNames() {
+    test(ImmutableList.of(
+      SourceFile.fromCode(
+        "foo/bar.js",
+        "/** @constructor */\n" +
+          "function Parent() {\n" +
+          "/** @package */\n" +
+          "this.prop = 'foo';\n" +
+          "}\n;"),
+      SourceFile.fromCode(
+        "baz/quux.js",
+          "/**" +
+          " * @constructor\n" +
+          " * @extends {Parent}\n" +
+          " */\n" +
+          "function Child() {\n" +
+          "  this.prop = 'asdf';\n" +
+          "}\n" +
+          "Child.prototype = new Parent();"
+      )), null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  public void testPackagePrivateAccessForProperties1() {
+    testSame("/** @constructor */ function Foo() {}" +
+        "/** @package */ Foo.prototype.bar = function() {};" +
+        "Foo.prototype.baz = function() { this.bar(); }; (new Foo).bar();");
+  }
+
+  public void testPackagePrivateAccessForProperties2() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/** @constructor */ function Foo() {}"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "/** @package */ Foo.prototype.bar = function() {};" +
+      "Foo.prototype.baz = function() { this.bar(); }; (new Foo).bar();")));
+  }
+
+  public void testPackagePrivateAccessForProperties3() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/** @constructor */ function Foo() {}" +
+            "/** @package */ Foo.prototype.bar = function() {}; (new Foo).bar();"),
+        SourceFile.fromCode(
+            "foo/baz.js",
+            "Foo.prototype.baz = function() { this.bar(); };")));
+  }
+
+  public void testPackagePrivateAccessForProperties4() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/** @constructor */ function Foo() {}" +
+            "/** @package */ Foo.prototype.bar = function() {};"),
+         SourceFile.fromCode(
+            "foo/baz.js",
+            "Foo.prototype['baz'] = function() { (new Foo()).bar(); };")));
+  }
+
+  public void testPackagePrivateAccessForProperties5() {
+    test(ImmutableList.of(
+          SourceFile.fromCode(
+              "foo/bar.js",
+              "/** @constructor */\n" +
+                  "function Parent () {\n" +
+                  "  /** @package */\n" +
+                  "  this.prop = 'foo';\n" +
+                  "};"),
+           SourceFile.fromCode(
+               "baz/quux.js",
+               "/**\n" +
+                   " * @constructor\n" +
+                   " * @extends {Parent}\n" +
+                   " */\n" +
+                   "function Child() {\n" +
+                   "  this.prop = 'asdf';\n" +
+                   "}\n" +
+                   "Child.prototype = new Parent();")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  public void testNoPackagePrivateAccessForProperties1() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/** @constructor */ function Foo() {} (new Foo).bar();"),
+            SourceFile.fromCode(
+                "baz/quux.js",
+                "/** @package */ Foo.prototype.bar = function() {};" +
+                    "Foo.prototype.baz = function() { this.bar(); };")),
+    null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  public void testNoPackagePrivateAccessForProperties2() {
+    test(ImmutableList.of(
+      SourceFile.fromCode(
+          "foo/bar.js",
+          "/** @constructor */ function Foo() {} " +
+              "/** @package */ Foo.prototype.bar = function() {};" +
+              "Foo.prototype.baz = function() { this.bar(); };"),
+      SourceFile.fromCode(
+          "baz/quux.js",
+          "(new Foo).bar();")),
+    null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  public void testNoPackagePrivateAccessForProperties3() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/** @constructor */ function Foo() {} " +
+                "/** @package */ Foo.prototype.bar = function() {};"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "/** @constructor */ function OtherFoo() { (new Foo).bar(); }")),
+    null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  public void testNoPackagePrivateAccessForProperties4() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/** @constructor */ function Foo() {} " +
+            "/** @package */ Foo.prototype.bar = function() {};"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "/** @constructor \n * @extends {Foo} */ " +
+                "function SubFoo() { this.bar(); }")),
+    null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  public void testNoPackagePrivateAccessForProperties5() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/** @constructor */ function Foo() {} " +
+            "/** @package */ Foo.prototype.bar = function() {};"),
+      SourceFile.fromCode(
+          "baz/quux.js",
+          "/** @constructor \n * @extends {Foo} */ " +
+              "function SubFoo() {};" +
+              "SubFoo.prototype.baz = function() { this.bar(); }")),
+    null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  public void testNoPackagePrivateAccessForProperties6() {
+    // Overriding a private property with a non-package-private property
+    // in a different file causes problems.
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/** @constructor */ function Foo() {} " +
+                "/** @package */ Foo.prototype.bar = function() {};"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "/** @constructor \n * @extends {Foo} */ " +
+                "function SubFoo() {};" +
+                "SubFoo.prototype.bar = function() {};")),
+    null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  public void testNoPackagePrivateAccessForProperties7() {
+    // It's OK to override a package-private property with a
+    // non-package-private property in the same file, but you'll get
+    // yelled at when you try to use it.
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/** @constructor */ function Foo() {} " +
+                "/** @package */ Foo.prototype.bar = function() {};" +
+                "/** @constructor \n * @extends {Foo} */ " +
+                "function SubFoo() {};" +
+                "SubFoo.prototype.bar = function() {};"),
+                SourceFile.fromCode(
+                    "baz/quux.js",
+                    "SubFoo.prototype.baz = function() { this.bar(); }")),
+    null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testNoExceptionsWithBadConstructors1() {
