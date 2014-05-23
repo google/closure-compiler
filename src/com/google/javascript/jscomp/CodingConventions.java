@@ -275,7 +275,7 @@ public class CodingConventions {
     @Override
     public boolean isVarArgsParameter(Node parameter) {
       // be as lax as possible
-      return false;
+      return parameter.isVarArgs();
     }
 
     @Override
