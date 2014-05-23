@@ -88,8 +88,12 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       case Token.CLASS:
         visitClass(n, parent);
         break;
+      case Token.PARAM_LIST:
+        visitParamList(n, parent);
+        break;
       case Token.SUPER:
       case Token.SPREAD:
+      case Token.REST:
         cannotConvertYet(n, Token.name(n.getType()));
         break;
     }
@@ -105,6 +109,33 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       n.addChildToBack(name);
       compiler.reportCodeChange();
     }
+  }
+
+  /**
+   * Processes trailing default parameters.
+   */
+  private void visitParamList(Node paramList, Node function) {
+    Node insertSpot = null;
+    for (int i = 0; i < paramList.getChildCount(); i++) {
+      Node param = paramList.getChildAtIndex(i);
+      if (param.hasChildren()) {
+        param.setOptionalArg(true);
+        Node defaultValue = param.getFirstChild().detachFromParent();
+        Node name = IR.name(param.getString()).srcref(param);
+        Node undefined = IR.name("undefined").srcref(param);
+        Node stm = IR.exprResult(
+            IR.and(IR.sheq(name, undefined).srcref(param),
+            IR.assign(name.cloneNode(), defaultValue)
+                .srcref(param)).srcref(param)).srcref(param);
+        function.getLastChild().addChildAfter(stm, insertSpot);
+        insertSpot = stm;
+        compiler.reportCodeChange();
+      }
+    }
+    // For now, we are running transpilation before type-checking, so we'll
+    // need to make sure changes don't invalidate the JSDoc annotations.
+    // Therefore we keep the parameter list the same length and only initialize
+    // the values if they are set to undefined.
   }
 
   private void visitClass(Node classNode, Node parent) {

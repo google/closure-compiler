@@ -269,7 +269,7 @@ public class CodingConventions {
     public boolean isOptionalParameter(Node parameter) {
       // be as lax as possible, but this must be mutually exclusive from
       // var_args parameters.
-      return false;
+      return parameter.isOptionalArg();
     }
 
     @Override

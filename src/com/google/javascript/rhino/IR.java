@@ -380,6 +380,13 @@ public class IR {
     return binaryOp(Token.SHEQ, expr1, expr2);
   }
 
+  /**
+   * "!=="
+   */
+  public static Node shne(Node expr1, Node expr2) {
+    return binaryOp(Token.SHNE, expr1, expr2);
+  }
+
   public static Node voidNode(Node expr1) {
     return unaryOp(Token.VOID, expr1);
   }

@@ -560,4 +560,15 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "}"
     ));
   }
+
+  public void testDefaultParameters() {
+    test("function f(zero, one = 1, two = 2) { return zero + one + two; }",
+        Joiner.on('\n').join(
+        "function f(zero, one, two) {",
+        "  one === undefined && (one = 1);",
+        "  two === undefined && (two = 2);",
+        "  return zero + one + two;",
+        "}"
+    ));
+  }
 }
