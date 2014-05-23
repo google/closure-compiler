@@ -35,10 +35,12 @@ import java.util.List;
  */
 
 public class NewTypeInferenceTest extends CompilerTypeTestCase {
+  private static final String CLOSURE_EXTERNS = "var goog;";
 
   private NewTypeInference parseAndTypeCheck(String externs, String js) {
     setUp();
     CompilerOptions options = compiler.getOptions();
+    options.setClosurePass(true);
     options.setWarningLevel(
         DiagnosticGroups.CHECK_VARIABLES, CheckLevel.WARNING);
     compiler.init(
@@ -61,7 +63,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     GlobalTypeInfo symbolTable = new GlobalTypeInfo(compiler);
     symbolTable.process(externsRoot, astRoot);
     compiler.setSymbolTable(symbolTable);
-    NewTypeInference typeInf = new NewTypeInference(compiler);
+    NewTypeInference typeInf = new NewTypeInference(compiler, true);
     typeInf.process(externsRoot, astRoot);
     return typeInf;
   }
@@ -7262,5 +7264,209 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}\n" +
         "(function(/** {x:number} */ o3){})(o);",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
+  public void testGoogIsPredicatesNoSpecializedContext() {
+    typeCheck(
+        CLOSURE_EXTERNS,
+        "goog.isNull();",
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+
+    typeCheck(
+        CLOSURE_EXTERNS,
+        "goog.isNull(1, 2, 5 - 'str');",
+        ImmutableList.of(
+            TypeCheck.WRONG_ARGUMENT_COUNT,
+            NewTypeInference.INVALID_OPERAND_TYPE));
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "function f(x) { var /** boolean */ b = goog.isNull(x); }");
+  }
+
+  public void testGoogIsPredicatesTrue() {
+    typeCheck(
+        CLOSURE_EXTERNS,
+        "function f(x) { if (goog.isNull(x)) { var /** undefined */ y = x; } }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        CLOSURE_EXTERNS,
+        "/** @param {number=} x */\n" +
+        "function f(x) {\n" +
+        "  if (goog.isDef(x)) {\n" +
+        "    x - 5;\n" +
+        "  }\n" +
+        "  x - 5;\n" +
+        "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        CLOSURE_EXTERNS,
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @param {Foo=} x */\n" +
+        "function f(x) {\n" +
+        "  var /** !Foo */ y;\n" +
+        "  if (goog.isDefAndNotNull(x)) {\n" +
+        "    y = x;\n" +
+        "  }\n" +
+        "  y = x;\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        CLOSURE_EXTERNS,
+        "/** @constructor */\n" +
+        "function Array() {}\n" +
+        "function f(/** (Array|number) */ x) {\n" +
+        "  var /** Array */ a;\n" +
+        "  if (goog.isArray(x)) {\n" +
+        "    a = x;\n" +
+        "  }\n" +
+        "  a = x;\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        CLOSURE_EXTERNS,
+        "/** @param {null|function(number)} x */ \n" +
+        "function f(x) {\n" +
+        "  if (goog.isFunction(x)) {\n" +
+        "    x('str');\n" +
+        "  }\n" +
+        "}",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        CLOSURE_EXTERNS,
+        "function f(x) {\n" +
+        "  if (goog.isObject(x)) {\n" +
+        "    var /** null */ y = x;\n" +
+        "  }\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "function f(/** (number|string) */ x) {\n" +
+        "  if (goog.isString(x)) {\n" +
+        "    x < 'str';\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "function f(/** (number|string) */ x) {\n" +
+        "  if (goog.isNumber(x)) {\n" +
+        "    x - 5;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "function f(/** (number|boolean) */ x) {\n" +
+        "  if (goog.isBoolean(x)) {\n" +
+        "    var /** boolean */ b = x;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "/**\n" +
+        " * @param {number|string} x\n" +
+        " * @return {string}\n" +
+        " */\n" +
+        "function f(x) {\n" +
+        "  return goog.isString(x) && (1 < 2) ? x : 'a';\n" +
+        "}");
+  }
+
+  public void testGoogIsPredicatesFalse() {
+    typeCheck(
+        CLOSURE_EXTERNS,
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "function f(/** Foo */ x) {\n" +
+        "  var /** !Foo */ y;\n" +
+        "  if (!goog.isNull(x)) {\n" +
+        "    y = x;\n" +
+        "  }\n" +
+        "  y = x;\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "/** @param {number=} x */\n" +
+        "function f(x) {\n" +
+        "  if (!goog.isDef(x)) {\n" +
+        "    var /** undefined */ u = x;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @param {Foo=} x */\n" +
+        "function f(x) {\n" +
+        "  if (!goog.isDefAndNotNull(x)) {\n" +
+        "    var /** (null|undefined) */ y = x;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "function f(/** (number|string) */ x) {\n" +
+        "  if (!goog.isString(x)) {\n" +
+        "    x - 5;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "function f(/** (number|string) */ x) {\n" +
+        "  if (!goog.isNumber(x)) {\n" +
+        "    x < 'str';\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "function f(/** (number|boolean) */ x) {\n" +
+        "  if (!goog.isBoolean(x)) {\n" +
+        "    x - 5;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "/** @constructor */\n" +
+        "function Array() {}\n" +
+        "function f(/** (number|!Array) */ x) {\n" +
+        "  if (!goog.isArray(x)) {\n" +
+        "    x - 5;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "function f(/** (number|function(number)) */ x) {\n" +
+        "  if (!goog.isFunction(x)) {\n" +
+        "    x - 5;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @param {?Foo} x */\n" +
+        "function f(x) {\n" +
+        "  if (!goog.isObject(x)) {\n" +
+        "    var /** null */ y = x;\n" +
+        "  }\n" +
+        "}");
   }
 }

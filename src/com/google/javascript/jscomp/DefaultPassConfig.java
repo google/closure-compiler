@@ -1337,7 +1337,7 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("NewTypeInference", true) {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
-          return new NewTypeInference(compiler);
+          return new NewTypeInference(compiler, options.closurePass);
         }
       };
 
