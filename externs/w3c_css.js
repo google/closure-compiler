@@ -901,11 +901,13 @@ function ViewCSS() {}
 
 /**
  * @param {Element} elt
- * @param {?string} pseudoElt
+ * @param {?string=} opt_pseudoElt This argument is required according to the
+ *     CSS2 specification, but optional in all major browsers. See the note at
+ *     https://developer.mozilla.org/en-US/docs/Web/API/Window.getComputedStyle
  * @return {CSSStyleDeclaration}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSview-getComputedStyle
  */
-ViewCSS.prototype.getComputedStyle = function(elt, pseudoElt) {};
+ViewCSS.prototype.getComputedStyle = function(elt, opt_pseudoElt) {};
 
 /**
  * @constructor
