@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Token;
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
-public class Es6ToEs3Converter implements NodeTraversal.Callback, CompilerPass {
+public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
   static final DiagnosticType CANNOT_CONVERT = DiagnosticType.error(
@@ -52,8 +52,14 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, CompilerPass {
     this.compiler = compiler;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   /**

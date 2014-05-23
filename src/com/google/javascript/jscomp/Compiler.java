@@ -107,7 +107,6 @@ public class Compiler extends AbstractCompiler {
 
   // Used in PerformanceTracker
   static final String PARSING_PASS_NAME = "parseInputs";
-  static final String CONVERT_ES6_PASS_NAME = "convertEs6";
   static final String CROSS_MODULE_CODE_MOTION_NAME = "crossModuleCodeMotion";
   static final String CROSS_MODULE_METHOD_MOTION_NAME =
       "crossModuleMethodMotion";
@@ -736,11 +735,6 @@ public class Compiler extends AbstractCompiler {
       return;
     }
 
-    if (options.getLanguageIn() != options.getLanguageOut()) {
-      convertEs6ToEs3();
-      setLanguageMode(options.getLanguageOut());
-    }
-
     if (options.nameAnonymousFunctionsOnly) {
       // TODO(nicksantos): Move this into an instrument() phase maybe?
       check();
@@ -771,18 +765,6 @@ public class Compiler extends AbstractCompiler {
     if (tracker != null) {
       tracker.outputTracerReport(outStream == null ? System.out : outStream);
     }
-  }
-
-  private void convertEs6ToEs3() {
-    CompilerPass converter = new Es6ToEs3Converter(this);
-
-    Tracer tracer = newTracer(CONVERT_ES6_PASS_NAME);
-    beforePass(CONVERT_ES6_PASS_NAME);
-
-    converter.process(externsRoot, jsRoot);
-
-    stopTracer(tracer, CONVERT_ES6_PASS_NAME);
-    afterPass(CONVERT_ES6_PASS_NAME);
   }
 
   public void parse() {
