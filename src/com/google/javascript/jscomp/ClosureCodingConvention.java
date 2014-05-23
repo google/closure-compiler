@@ -361,7 +361,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
 
   @Override
   public boolean isOptionalParameter(Node parameter) {
-    return false;
+    return parameter.isOptionalArg();
   }
 
   @Override

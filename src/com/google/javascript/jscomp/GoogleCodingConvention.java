@@ -122,7 +122,8 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
    */
   @Override
   public boolean isOptionalParameter(Node parameter) {
-    return parameter.getString().startsWith(OPTIONAL_ARG_PREFIX);
+    return parameter.getString().startsWith(OPTIONAL_ARG_PREFIX) ||
+        parameter.isOptionalArg();
   }
 
   @Override
