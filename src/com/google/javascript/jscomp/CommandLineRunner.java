@@ -774,8 +774,8 @@ public class CommandLineRunner extends
             throws CmdLineException, IOException {
     Path flagFile = Paths.get(flags.flagFile);
 
-    // Reads input as UTF-8 by default.
-    BufferedReader buffer = java.nio.file.Files.newBufferedReader(flagFile);
+    BufferedReader buffer =
+      java.nio.file.Files.newBufferedReader(flagFile, UTF_8);
     // Builds the tokens.
     StringBuilder builder = new StringBuilder();
     // Stores the built tokens.
