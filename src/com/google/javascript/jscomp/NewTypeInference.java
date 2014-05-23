@@ -21,6 +21,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -56,7 +57,6 @@ import java.util.Set;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  *
  * Features left to implement:
- * - @enum
  * - @lends
  * - @private (maybe)
  * - @protected (maybe)
@@ -214,13 +214,15 @@ public class NewTypeInference implements CompilerPass {
   static final String SETTER_PREFIX = "%setter_fun";
   private JSType arrayType, regexpType; // used for array and regexp literals
   private static boolean debugging = false;
+  private final boolean isClosurePassOn;
 
-  NewTypeInference(AbstractCompiler compiler) {
+  NewTypeInference(AbstractCompiler compiler, boolean isClosurePassOn) {
     this.warnings = new WarningReporter(compiler);
     this.compiler = compiler;
     this.envs = Maps.newHashMap();
     this.summaries = Maps.newHashMap();
     this.deferredChecks = Maps.newHashMap();
+    this.isClosurePassOn = isClosurePassOn;
   }
 
   @VisibleForTesting
@@ -1310,6 +1312,9 @@ public class NewTypeInference implements CompilerPass {
       }
       case Token.CALL: // Fwd
       case Token.NEW: {
+        if (isClosureSpecificCall(expr)) {
+          return analyzeClosureCallFwd(expr, inEnv, specializedType);
+        }
         Node callee = expr.getFirstChild();
         EnvTypePair calleePair =
             analyzeExprFwd(callee, inEnv, JSType.topFunction());
@@ -1873,6 +1878,63 @@ public class NewTypeInference implements CompilerPass {
       }
     }
     return new EnvTypePair(env, result);
+  }
+
+  private EnvTypePair analyzeClosureCallFwd(
+      Node call, TypeEnv inEnv, JSType specTypeOfCall) {
+    int numArgs = call.getChildCount() - 1;
+    if (numArgs != 1) {
+      warnings.add(JSError.make(call, TypeCheck.WRONG_ARGUMENT_COUNT,
+              call.getFirstChild().getQualifiedName(),
+              Integer.toString(numArgs), "1", "1"));
+      return analyzeCallNodeArgumentsFwd(call, inEnv);
+    }
+    EnvTypePair pair = analyzeExprFwd(call.getLastChild(), inEnv);
+    if (specTypeOfCall.isTruthy() || specTypeOfCall.isFalsy()) {
+      JSType specTypeOfArg = googPredicateTransformType(
+          call.getFirstChild().getLastChild().getString(),
+          specTypeOfCall, pair.type);
+      pair = analyzeExprFwd(
+          call.getLastChild(), inEnv, JSType.UNKNOWN, specTypeOfArg);
+    }
+    pair.type = JSType.BOOLEAN;
+    return pair;
+  }
+
+  private JSType googPredicateTransformType(
+      String predicateName, JSType booleanContext, JSType beforeType) {
+    switch (predicateName) {
+      case "isArray":
+        return booleanContext.isTruthy() ?
+            arrayType : beforeType.removeType(arrayType);
+      case "isBoolean":
+        return booleanContext.isTruthy() ?
+            JSType.BOOLEAN : beforeType.removeType(JSType.BOOLEAN);
+      case "isDef":
+        return booleanContext.isTruthy() ?
+            beforeType.removeType(JSType.UNDEFINED) : JSType.UNDEFINED;
+      case "isDefAndNotNull":
+        return booleanContext.isTruthy() ?
+            beforeType.removeType(JSType.NULL_OR_UNDEF) : JSType.NULL_OR_UNDEF;
+      case "isFunction":
+        return booleanContext.isTruthy() ?
+            JSType.topFunction() : beforeType.removeType(JSType.topFunction());
+      case "isNull":
+        return booleanContext.isTruthy() ?
+            JSType.NULL : beforeType.removeType(JSType.NULL);
+      case "isNumber":
+        return booleanContext.isTruthy() ?
+            JSType.NUMBER : beforeType.removeType(JSType.NUMBER);
+      case "isObject":
+        // typeof(null) === 'object', but goog.isObject(null) is false
+        return booleanContext.isTruthy() ?
+            JSType.TOP_OBJECT : beforeType.removeType(JSType.TOP_OBJECT);
+      case "isString":
+        return booleanContext.isTruthy() ?
+            JSType.STRING : beforeType.removeType(JSType.STRING);
+      default:
+        throw new RuntimeException("Unknown predicate" + predicateName);
+    }
   }
 
   private static boolean tightenTypeAndDontWarn(
@@ -2553,6 +2615,23 @@ public class NewTypeInference implements CompilerPass {
       }
     }
     return new EnvTypePair(env, result);
+  }
+
+  static final ImmutableSet<String> googPredicates =
+      ImmutableSet.of("isArray", "isBoolean", "isDef", "isDefAndNotNull",
+          "isFunction", "isNull", "isNumber", "isObject", "isString");
+
+  private boolean isClosureSpecificCall(Node expr) {
+    if (!isClosurePassOn || !expr.isCall()) {
+      return false;
+    }
+    Node callee = expr.getFirstChild();
+    if (!callee.isGetProp() ||
+        !callee.getFirstChild().isName() ||
+        !callee.getFirstChild().getString().equals("goog")) {
+      return false;
+    }
+    return googPredicates.contains(callee.getLastChild().getString());
   }
 
   private static JSType scalarValueToType(int token) {
