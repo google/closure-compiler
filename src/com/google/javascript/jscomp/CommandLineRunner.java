@@ -818,6 +818,8 @@ public class CommandLineRunner extends
       tokens.add(builder.toString());
     }
 
+    flags.flagFile = "";
+
     tokens = processArgs(tokens.toArray(new String[tokens.size()]));
 
     // Command-line warning levels should override flag file settings,
