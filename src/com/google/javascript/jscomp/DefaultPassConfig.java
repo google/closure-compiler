@@ -216,8 +216,9 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     if (options.closurePass) {
+      checks.add(closureRewriteModule);
       checks.add(closureGoogScopeAliases);
-      checks.add(closureRewriteGoogClass);
+      checks.add(closureRewriteClass);
     }
 
     if (options.nameAnonymousFunctionsOnly) {
@@ -1113,12 +1114,21 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /** Rewrites goog.class */
-  final HotSwapPassFactory closureRewriteGoogClass =
-      new HotSwapPassFactory("closureRewriteGoogClass", true) {
+  /** Rewrites goog.defineClass */
+  final HotSwapPassFactory closureRewriteClass =
+      new HotSwapPassFactory("closureRewriteClass", true) {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return new ClosureRewriteClass(compiler);
+    }
+  };
+
+  /** Rewrites goog.module */
+  final HotSwapPassFactory closureRewriteModule =
+      new HotSwapPassFactory("closureRewriteModule", true) {
+    @Override
+    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+      return new ClosureRewriteModule(compiler);
     }
   };
 
