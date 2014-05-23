@@ -7469,4 +7469,57 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  }\n" +
         "}");
   }
+
+  public void testGoogTypeof() {
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "function f(/** (number|string) */ x) {\n" +
+        "  if (goog.typeOf(x) === 'number') {\n" +
+        "    var /** number */ n = x;\n" +
+        "  } else {\n" +
+        "    var /** string */ s = x;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "function f(/** (number|string) */ x) {\n" +
+        "  if ('number' === goog.typeOf(x)) {\n" +
+        "    var /** number */ n = x;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "function f(/** (number|string) */ x) {\n" +
+        "  if (goog.typeOf(x) == 'number') {\n" +
+        "    var /** number */ n = x;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_EXTERNS,
+        "/** @param {number=} x */\n" +
+        "function f(x) {\n" +
+        "  if (goog.typeOf(x) === 'undefined') {\n" +
+        "    var /** undefined */ u = x;\n" +
+        "  } else {\n" +
+        "    var /** number */ n = x;\n" +
+        "  }\n" +
+        "}");
+
+    typeCheck(
+        CLOSURE_EXTERNS,
+        "/** @param {string} x */\n" +
+        "function f(x, other) {\n" +
+        "  if (goog.typeOf(x) === other) {\n" +
+        "    var /** null */ n = x;\n" +
+        "  } else {\n" +
+        "    x - 5;\n" +
+        "  }\n" +
+        "}",
+        ImmutableList.of(
+            NewTypeInference.MISTYPED_ASSIGN_RHS,
+            NewTypeInference.INVALID_OPERAND_TYPE));
+  }
 }
