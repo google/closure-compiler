@@ -20,6 +20,7 @@ package com.google.javascript.jscomp;
 
 
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.regex.Pattern;
 
@@ -142,6 +143,18 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
   public boolean isExported(String name, boolean local) {
     return super.isExported(name, local) ||
         (!local && name.startsWith("_"));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>In Google code, the package name of a source file is its file path.
+   */
+  @Override
+  public String getPackageName(StaticSourceFile source) {
+    String name = source.getName();
+    int lastSlash = name.lastIndexOf("/");
+    return lastSlash == -1 ? "" : name.substring(0, lastSlash);
   }
 
   /**

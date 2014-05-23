@@ -22,6 +22,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticScope;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -98,6 +99,12 @@ public interface CodingConvention extends Serializable {
    * Should be isExported(name, true) || isExported(name, false);
    */
   public boolean isExported(String name);
+
+  /**
+   * @return the package name for the given source file, or null if
+   *     no package name is known.
+   */
+  public String getPackageName(StaticSourceFile source);
 
   /**
    * Checks whether a name should be considered private. Private global
