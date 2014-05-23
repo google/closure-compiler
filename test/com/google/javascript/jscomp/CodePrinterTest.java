@@ -1375,6 +1375,12 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("var a={b,c:d,e}");
   }
 
+  public void testComputedProps() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("var a={[b]:c}");
+    assertPrintSame("var a={[b+3]:c}");
+  }
+
   public void testGetter() {
     assertPrint("var x = {}", "var x={}");
     assertPrint("var x = {get a() {return 1}}", "var x={get a(){return 1}}");

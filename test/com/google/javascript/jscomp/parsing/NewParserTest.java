@@ -869,6 +869,43 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "extended object literals");
   }
 
+  public void testComputedProperty() {
+    testComputedProperty(Joiner.on('\n').join(
+        "var prop = 'some complex expression';",
+        "",
+        "var x = {",
+        "  [prop]: 'foo'",
+        "}"));
+
+    testComputedProperty(Joiner.on('\n').join(
+        "var prop = 'some complex expression';",
+        "",
+        "var x = {",
+        "  [prop + '!']: 'foo'",
+        "}"));
+
+    testComputedProperty(Joiner.on('\n').join(
+        "var prop;",
+        "",
+        "var x = {",
+        "  [prop = 'some expr']: 'foo'",
+        "}"));
+
+    testComputedProperty(Joiner.on('\n').join(
+        "var x = {",
+        "  [1 << 8]: 'foo'",
+        "}"));
+  }
+
+  private void testComputedProperty(String js) {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse(js);
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(js, "this language feature is only supported in es6 mode: " +
+        "computed property");
+  }
+
   public void testTrailingCommaWarning1() {
     parse("var a = ['foo', 'bar'];");
   }

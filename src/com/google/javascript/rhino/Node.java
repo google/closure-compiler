@@ -2445,6 +2445,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.COMMA;
   }
 
+  public boolean isComputedProp() {
+    return this.getType() == Token.COMPUTED_PROP;
+  }
+
   public boolean isContinue() {
     return this.getType() == Token.CONTINUE;
   }
