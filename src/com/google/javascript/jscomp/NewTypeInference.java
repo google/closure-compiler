@@ -21,6 +21,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -56,7 +57,6 @@ import java.util.Set;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  *
  * Features left to implement:
- * - @enum
  * - @lends
  * - @private (maybe)
  * - @protected (maybe)
@@ -214,13 +214,15 @@ public class NewTypeInference implements CompilerPass {
   static final String SETTER_PREFIX = "%setter_fun";
   private JSType arrayType, regexpType; // used for array and regexp literals
   private static boolean debugging = false;
+  private final boolean isClosurePassOn;
 
-  NewTypeInference(AbstractCompiler compiler) {
+  NewTypeInference(AbstractCompiler compiler, boolean isClosurePassOn) {
     this.warnings = new WarningReporter(compiler);
     this.compiler = compiler;
     this.envs = Maps.newHashMap();
     this.summaries = Maps.newHashMap();
     this.deferredChecks = Maps.newHashMap();
+    this.isClosurePassOn = isClosurePassOn;
   }
 
   @VisibleForTesting
@@ -1310,6 +1312,9 @@ public class NewTypeInference implements CompilerPass {
       }
       case Token.CALL: // Fwd
       case Token.NEW: {
+        if (isClosureSpecificCall(expr)) {
+          return analyzeClosureCallFwd(expr, inEnv, specializedType);
+        }
         Node callee = expr.getFirstChild();
         EnvTypePair calleePair =
             analyzeExprFwd(callee, inEnv, JSType.topFunction());
@@ -1556,14 +1561,17 @@ public class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeStrictComparisonFwd(int comparisonOp,
       Node lhs, Node rhs, TypeEnv inEnv, JSType specializedType) {
-    if ((specializedType.isTruthy() || specializedType.isFalsy()) &&
-        (lhs.isTypeOf() || rhs.isTypeOf())) {
+    if (specializedType.isTruthy() || specializedType.isFalsy()) {
       if (lhs.isTypeOf()) {
         return analyzeSpecializedTypeof(
             lhs, rhs, comparisonOp, inEnv, specializedType);
-      } else {
+      } else if (rhs.isTypeOf()) {
         return analyzeSpecializedTypeof(
             rhs, lhs, comparisonOp, inEnv, specializedType);
+      } else if (isGoogTypeof(lhs)) {
+        return analyzeGoogTypeof(lhs, rhs, inEnv, specializedType);
+      } else if (isGoogTypeof(rhs)) {
+        return analyzeGoogTypeof(rhs, lhs, inEnv, specializedType);
       }
     }
 
@@ -1573,7 +1581,7 @@ public class NewTypeInference implements CompilerPass {
     if ((comparisonOp == Token.SHEQ && specializedType.isTruthy()) ||
         (comparisonOp == Token.SHNE && specializedType.isFalsy())) {
       JSType meetType = JSType.meet(lhsPair.type, rhsPair.type);
-      lhsPair = analyzeExprFwd(lhs, rhsPair.env, JSType.UNKNOWN, meetType);
+      lhsPair = analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, meetType);
       rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, meetType);
     } else if ((comparisonOp == Token.SHEQ && specializedType.isFalsy()) ||
         (comparisonOp == Token.SHNE && specializedType.isTruthy())) {
@@ -1586,7 +1594,7 @@ public class NewTypeInference implements CompilerPass {
           rhsType.equals(JSType.UNDEFINED)) {
         lhsType = lhsType.removeType(rhsType);
       }
-      lhsPair = analyzeExprFwd(lhs, rhsPair.env, JSType.UNKNOWN, lhsType);
+      lhsPair = analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, lhsType);
       rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, rhsType);
     }
     rhsPair.type = JSType.BOOLEAN;
@@ -1732,14 +1740,17 @@ public class NewTypeInference implements CompilerPass {
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
 
-    if ((specializedType.isTruthy() || specializedType.isFalsy()) &&
-        (lhs.isTypeOf() || rhs.isTypeOf())) {
+    if (specializedType.isTruthy() || specializedType.isFalsy()) {
       if (lhs.isTypeOf()) {
         return analyzeSpecializedTypeof(
             lhs, rhs, tokenType, inEnv, specializedType);
-      } else {
+      } else if (rhs.isTypeOf()) {
         return analyzeSpecializedTypeof(
             rhs, lhs, tokenType, inEnv, specializedType);
+      } else if (isGoogTypeof(lhs)) {
+        return analyzeGoogTypeof(lhs, rhs, inEnv, specializedType);
+      } else if (isGoogTypeof(rhs)) {
+        return analyzeGoogTypeof(rhs, lhs, inEnv, specializedType);
       }
     }
 
@@ -1873,6 +1884,89 @@ public class NewTypeInference implements CompilerPass {
       }
     }
     return new EnvTypePair(env, result);
+  }
+
+  private EnvTypePair analyzeGoogTypePredicate(
+      Node call, String typeHint, TypeEnv inEnv, JSType specializedType) {
+    int numArgs = call.getChildCount() - 1;
+    if (numArgs != 1) {
+      warnings.add(JSError.make(call, TypeCheck.WRONG_ARGUMENT_COUNT,
+              call.getFirstChild().getQualifiedName(),
+              Integer.toString(numArgs), "1", "1"));
+      return analyzeCallNodeArgumentsFwd(call, inEnv);
+    }
+    EnvTypePair pair = analyzeExprFwd(call.getLastChild(), inEnv);
+    if (specializedType.isTruthy() || specializedType.isFalsy()) {
+      pair = analyzeExprFwd(call.getLastChild(), inEnv, JSType.UNKNOWN,
+          googPredicateTransformType(typeHint, specializedType, pair.type));
+    }
+    pair.type = JSType.BOOLEAN;
+    return pair;
+  }
+
+  private EnvTypePair analyzeGoogTypeof(
+      Node typeof, Node typeString, TypeEnv inEnv, JSType specializedType) {
+    return analyzeGoogTypePredicate(typeof,
+        typeString.isString() ? typeString.getString() : "",
+        inEnv, specializedType);
+  }
+
+  private EnvTypePair analyzeClosureCallFwd(
+      Node call, TypeEnv inEnv, JSType specializedType) {
+    return analyzeGoogTypePredicate(call,
+        call.getFirstChild().getLastChild().getString(),
+        inEnv, specializedType);
+  }
+
+  // typeHint can come from goog.isXXX and from goog.typeOf.
+  private JSType googPredicateTransformType(
+      String typeHint, JSType booleanContext, JSType beforeType) {
+    switch (typeHint) {
+      case "array":
+      case "isArray":
+        return booleanContext.isTruthy() ?
+            arrayType : beforeType.removeType(arrayType);
+      case "boolean":
+      case "isBoolean":
+        return booleanContext.isTruthy() ?
+            JSType.BOOLEAN : beforeType.removeType(JSType.BOOLEAN);
+      case "function":
+      case "isFunction":
+        return booleanContext.isTruthy() ?
+            JSType.topFunction() : beforeType.removeType(JSType.topFunction());
+      case "null":
+      case "isNull":
+        return booleanContext.isTruthy() ?
+            JSType.NULL : beforeType.removeType(JSType.NULL);
+      case "number":
+      case "isNumber":
+        return booleanContext.isTruthy() ?
+            JSType.NUMBER : beforeType.removeType(JSType.NUMBER);
+      case "string":
+      case "isString":
+        return booleanContext.isTruthy() ?
+            JSType.STRING : beforeType.removeType(JSType.STRING);
+      case "isDef":
+        return booleanContext.isTruthy() ?
+            beforeType.removeType(JSType.UNDEFINED) : JSType.UNDEFINED;
+      case "isDefAndNotNull":
+        return booleanContext.isTruthy() ?
+            beforeType.removeType(JSType.NULL_OR_UNDEF) : JSType.NULL_OR_UNDEF;
+      case "isObject":
+        // typeof(null) === 'object', but goog.isObject(null) is false
+        return booleanContext.isTruthy() ?
+            JSType.TOP_OBJECT : beforeType.removeType(JSType.TOP_OBJECT);
+      case "object":
+        // goog.typeOf(expr) === 'object' is true only for non-function objects.
+        // Just do sth simple here.
+        return JSType.UNKNOWN;
+      case "undefined":
+        return booleanContext.isTruthy() ?
+            JSType.UNDEFINED : beforeType.removeType(JSType.UNDEFINED);
+      default:
+        // For when we can't figure out the type name used with goog.typeOf.
+        return JSType.UNKNOWN;
+    }
   }
 
   private static boolean tightenTypeAndDontWarn(
@@ -2553,6 +2647,33 @@ public class NewTypeInference implements CompilerPass {
       }
     }
     return new EnvTypePair(env, result);
+  }
+
+  static final ImmutableSet<String> googPredicates =
+      ImmutableSet.of("isArray", "isBoolean", "isDef", "isDefAndNotNull",
+          "isFunction", "isNull", "isNumber", "isObject", "isString");
+
+  private boolean isClosureSpecificCall(Node expr) {
+    if (!isClosurePassOn || !expr.isCall()) {
+      return false;
+    }
+    Node callee = expr.getFirstChild();
+    if (!callee.isGetProp() ||
+        !callee.getFirstChild().isName() ||
+        !callee.getFirstChild().getString().equals("goog")) {
+      return false;
+    }
+    return googPredicates.contains(callee.getLastChild().getString());
+  }
+
+  private boolean isGoogTypeof(Node expr) {
+    if (!expr.isCall()) {
+      return false;
+    }
+    expr = expr.getFirstChild();
+    return expr.isGetProp() && expr.getFirstChild().isName() &&
+        expr.getFirstChild().getString().equals("goog") &&
+        expr.getLastChild().getString().equals("typeOf");
   }
 
   private static JSType scalarValueToType(int token) {

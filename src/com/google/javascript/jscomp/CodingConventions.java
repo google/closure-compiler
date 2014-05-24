@@ -24,6 +24,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticScope;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -89,6 +90,10 @@ public class CodingConventions {
       return nextConvention.isExported(name, local);
     }
 
+    @Override
+    public String getPackageName(StaticSourceFile source) {
+      return nextConvention.getPackageName(source);
+    }
 
     @Override
     public final boolean isExported(String name) {
@@ -269,13 +274,19 @@ public class CodingConventions {
     public boolean isOptionalParameter(Node parameter) {
       // be as lax as possible, but this must be mutually exclusive from
       // var_args parameters.
-      return false;
+      return parameter.isOptionalArg();
     }
 
     @Override
     public boolean isVarArgsParameter(Node parameter) {
       // be as lax as possible
-      return false;
+      return parameter.isVarArgs();
+    }
+
+    @Override
+    public String getPackageName(StaticSourceFile source) {
+      // The default coding convention has no concept of a package.
+      return null;
     }
 
     @Override

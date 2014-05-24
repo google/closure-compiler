@@ -36,6 +36,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.CatchTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
+import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyAssignmentTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
@@ -1401,7 +1402,8 @@ class NewIRFactory {
         }
 
         Node key = transform(el);
-        if (!key.isQuotedString() && !isAllowedProp(key.getString())) {
+        if (!key.isComputedProp() &&
+            !key.isQuotedString() && !isAllowedProp(key.getString())) {
           errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
               key.getLineno(), "", key.getCharno());
         }
@@ -1415,6 +1417,14 @@ class NewIRFactory {
         maybeWarnEs6Feature(objTree, "extended object literals");
       }
       return node;
+    }
+
+    @Override
+    Node processComputedProperty(ComputedPropertyAssignmentTree tree) {
+      maybeWarnEs6Feature(tree, "computed property");
+
+      return newNode(Token.COMPUTED_PROP,
+          transform(tree.property), transform(tree.value));
     }
 
     @Override

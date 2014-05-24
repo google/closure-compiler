@@ -207,13 +207,18 @@ public class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass("beforeStandardChecks"));
 
+    if (options.getLanguageIn() != options.getLanguageOut()) {
+      checks.add(convertEs6ToEs3);
+    }
+
     if (options.declaredGlobalExternsOnWindow) {
       checks.add(declaredGlobalExternsOnWindow);
     }
 
     if (options.closurePass) {
+      checks.add(closureRewriteModule);
       checks.add(closureGoogScopeAliases);
-      checks.add(closureRewriteGoogClass);
+      checks.add(closureRewriteClass);
     }
 
     if (options.nameAnonymousFunctionsOnly) {
@@ -1078,6 +1083,28 @@ public class DefaultPassConfig extends PassConfig {
   };
 
 
+  /** Converts ES6 code to ES3 code. */
+  final HotSwapPassFactory convertEs6ToEs3 =
+      new HotSwapPassFactory("convertEs6", true) {
+    @Override
+    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+      final HotSwapCompilerPass converter = new Es6ToEs3Converter(compiler);
+
+      return new HotSwapCompilerPass() {
+        @Override
+        public void process(Node externs, Node root) {
+          converter.process(externs, root);
+          compiler.setLanguageMode(options.getLanguageOut());
+        }
+
+        @Override
+        public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+          converter.hotSwapScript(scriptRoot, originalRoot);
+        }
+      };
+    }
+  };
+
   /** Applies aliases and inlines goog.scope. */
   final PassFactory declaredGlobalExternsOnWindow =
       new PassFactory("declaredGlobalExternsOnWindow", true) {
@@ -1087,12 +1114,21 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /** Rewrites goog.class */
-  final HotSwapPassFactory closureRewriteGoogClass =
-      new HotSwapPassFactory("closureRewriteGoogClass", true) {
+  /** Rewrites goog.defineClass */
+  final HotSwapPassFactory closureRewriteClass =
+      new HotSwapPassFactory("closureRewriteClass", true) {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return new ClosureRewriteClass(compiler);
+    }
+  };
+
+  /** Rewrites goog.module */
+  final HotSwapPassFactory closureRewriteModule =
+      new HotSwapPassFactory("closureRewriteModule", true) {
+    @Override
+    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+      return new ClosureRewriteModule(compiler);
     }
   };
 
@@ -1311,7 +1347,7 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("NewTypeInference", true) {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
-          return new NewTypeInference(compiler);
+          return new NewTypeInference(compiler, options.closurePass);
         }
       };
 

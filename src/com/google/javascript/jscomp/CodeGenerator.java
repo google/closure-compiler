@@ -881,8 +881,7 @@ class CodeGenerator {
 
           if (c.isGetterDef() || c.isSetterDef()) {
             add(c);
-          } else {
-            Preconditions.checkState(c.isStringKey());
+          } else if (c.isStringKey()) {
             String key = c.getString();
             // Object literal property names don't have to be quoted if they
             // are not JavaScript keywords
@@ -907,6 +906,13 @@ class CodeGenerator {
               add(":");
               addExpr(c.getFirstChild(), 1, Context.OTHER);
             }
+          } else {
+            Preconditions.checkState(c.isComputedProp());
+            add("[");
+            add(c.getFirstChild());
+            add("]");
+            add(":");
+            add(c.getLastChild());
           }
         }
         add("}");

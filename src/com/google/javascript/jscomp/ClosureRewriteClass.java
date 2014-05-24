@@ -55,9 +55,13 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       "JSC_GOOG_CLASS_DESCRIPTOR_NOT_VALID",
       "The class descriptor must be an object literal");
 
-  static final DiagnosticType GOOG_CLASS_CONSTRUCTOR_MISING = DiagnosticType.error(
-      "JSC_GOOG_CLASS_CONSTRUCTOR_MISING",
+  static final DiagnosticType GOOG_CLASS_CONSTRUCTOR_MISSING = DiagnosticType.error(
+      "JSC_GOOG_CLASS_CONSTRUCTOR_MISSING",
       "The constructor expression is missing for the class descriptor");
+
+  static final DiagnosticType GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE = DiagnosticType.error(
+      "JSC_GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE",
+      "Should not have a constructor expression for an interface");
 
   static final DiagnosticType GOOG_CLASS_STATICS_NOT_VALID = DiagnosticType.error(
       "JSC_GOOG_CLASS_STATICS_NOT_VALID",
@@ -66,6 +70,12 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
   static final DiagnosticType GOOG_CLASS_UNEXPECTED_PARAMS = DiagnosticType.error(
       "JSC_GOOG_CLASS_UNEXPECTED_PARAMS",
       "The class definition has too many arguments.");
+
+  // Warnings
+  static final DiagnosticType GOOG_CLASS_NG_INJECT_ON_CLASS = DiagnosticType.warning(
+      "JSC_GOOG_CLASS_NG_INJECT_ON_CLASS",
+      "@ngInject should be declared on the constructor, not on the class.");
+
 
   private final AbstractCompiler compiler;
 
@@ -229,11 +239,24 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     }
 
     Node constructor = extractProperty(description, "constructor");
-    if (constructor == null) {
+    if (classInfo != null && classInfo.isInterface()) {
+      if (constructor != null) {
+        compiler.report(JSError.make(description, GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE));
+        return null;
+      }
+    } else if (constructor == null) {
       // report missing constructor
-      compiler.report(JSError.make(description, GOOG_CLASS_CONSTRUCTOR_MISING));
+      compiler.report(JSError.make(description, GOOG_CLASS_CONSTRUCTOR_MISSING));
       return null;
     }
+    if (constructor == null) {
+      constructor = IR.function(
+          IR.name("").srcref(callNode),
+          IR.paramList().srcref(callNode),
+          IR.block().srcref(callNode));
+      constructor.srcref(callNode);
+    }
+
     JSDocInfo info = NodeUtil.getBestJSDocInfo(constructor);
 
     Node classModifier = null;
@@ -432,8 +455,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
   static final String VIRTUAL_FILE = "<ClosureRewriteClass.java>";
 
-  private static JSDocInfo mergeJsDocFor(
-      ClassDefinition cls, Node associatedNode) {
+  private JSDocInfo mergeJsDocFor(ClassDefinition cls, Node associatedNode) {
     // avoid null checks
     JSDocInfo classInfo = (cls.classInfo != null)
         ? cls.classInfo
@@ -489,6 +511,12 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
     if (classInfo.isExport()) {
       mergedInfo.recordExport();
+    }
+
+    // If @ngInject is on the ctor, it's already been copied above.
+    if (classInfo.isNgInject()) {
+      compiler.report(JSError.make(associatedNode, GOOG_CLASS_NG_INJECT_ON_CLASS));
+      mergedInfo.recordNgInject(true);
     }
 
     // @constructor is implied, @interface must be explicit

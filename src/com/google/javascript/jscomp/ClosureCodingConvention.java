@@ -360,16 +360,6 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public boolean isOptionalParameter(Node parameter) {
-    return false;
-  }
-
-  @Override
-  public boolean isVarArgsParameter(Node parameter) {
-    return false;
-  }
-
-  @Override
   public boolean isPrivate(String name) {
     return false;
   }

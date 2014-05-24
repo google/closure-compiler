@@ -15,8 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_MISING;
+import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_MISSING;
+import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_DESCRIPTOR_NOT_VALID;
+import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_NG_INJECT_ON_CLASS;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_STATICS_NOT_VALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_SUPER_CLASS_NOT_VALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_TARGET_INVALID;
@@ -119,9 +121,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
     enableTypeCheck(CheckLevel.WARNING);
     test(
         "/** @interface */\n" +
-        "var x = goog.defineClass(null, {\n" +
-        "  constructor: function(){}\n" +
-        "});" +
+        "var x = goog.defineClass(null, {});" +
         "new x();",
 
         "var x = function() {};" +
@@ -306,7 +306,12 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
   public void testInvalid3() {
     testSame(
         "var x = goog.defineClass(null, {});",
-        GOOG_CLASS_CONSTRUCTOR_MISING, true);
+        GOOG_CLASS_CONSTRUCTOR_MISSING, true);
+
+    testSame(
+        "/** @interface */\n" +
+        "var x = goog.defineClass(null, { constructor: function() {} });",
+        GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE, true);
   }
 
   public void testInvalid4() {
@@ -355,5 +360,24 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
     testSame(
         "({foo: goog.defineClass()});",
         GOOG_CLASS_TARGET_INVALID, true);
+  }
+
+  public void testNgInject() {
+    test("var x = goog.defineClass(Object, {\n" +
+        "  /** @ngInject */ constructor: function(x, y) {}\n" +
+        "});",
+        "/** @ngInject */\n" +
+        "var x = function(x, y) {};");
+  }
+
+  public void testNgInject_onClass() {
+    test("/** @ngInject */\n" +
+        "var x = goog.defineClass(Object, {\n" +
+        "  constructor: function(x, y) {}\n" +
+        "});",
+        "/** @ngInject */\n" +
+        "var x = function(x, y) {};",
+        null,
+        GOOG_CLASS_NG_INJECT_ON_CLASS);
   }
 }

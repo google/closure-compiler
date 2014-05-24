@@ -825,7 +825,8 @@ public class Parser {
       eat(token);
       break;
     default:
-      throw new RuntimeException("unreachable");
+      reportError(peekToken(), "expected declaration");
+      return null;
     }
 
     SourcePosition start = getTreeStartLocation();
@@ -1369,7 +1370,7 @@ public class Parser {
   }
 
   private boolean peekPropertyAssignment() {
-    return peekPropertyName(0);
+    return peekPropertyName(0) || peekType() == TokenType.OPEN_SQUARE;
   }
 
   private boolean peekPropertyName(int tokenIndex) {
@@ -1397,9 +1398,24 @@ public class Parser {
       } else {
         return parsePropertyNameAssignment();
       }
+    } else if (type == TokenType.OPEN_SQUARE) {
+      return parseComputedProperty();
     } else {
       throw new RuntimeException("unreachable");
     }
+  }
+
+  private ParseTree parseComputedProperty() {
+    SourcePosition start = getTreeStartLocation();
+
+    eat(TokenType.OPEN_SQUARE);
+    ParseTree assign = parseAssignmentExpression();
+    eat(TokenType.CLOSE_SQUARE);
+
+    eat(TokenType.COLON);
+    ParseTree value = parseExpression();
+
+    return new ComputedPropertyAssignmentTree(getTreeLocation(start), assign, value);
   }
 
   private boolean peekGetAccessor(boolean allowStatic) {

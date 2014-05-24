@@ -69,6 +69,11 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       "JSC_DEPRECATED_CLASS_REASON",
       "Class {0} has been deprecated: {1}");
 
+  static final DiagnosticType BAD_PACKAGE_PROPERTY_ACCESS =
+      DiagnosticType.error(
+          "JSC_BAD_PACKAGE_PROPERTY_ACCESS",
+          "Access to package-private property {0} of {1} not allowed here.");
+
   static final DiagnosticType BAD_PRIVATE_GLOBAL_ACCESS =
       DiagnosticType.warning(
           "JSC_BAD_PRIVATE_GLOBAL_ACCESS",
@@ -338,27 +343,57 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   private void checkNameVisibility(NodeTraversal t, Node name, Node parent) {
     Var var = t.getScope().getVar(name.getString());
     if (var != null) {
+      StaticSourceFile varSrc = var.getSourceFile();
       JSDocInfo docInfo = var.getJSDocInfo();
       if (docInfo != null) {
         // If a name is private, make sure that we're in the same file.
         Visibility visibility = docInfo.getVisibility();
-        if (visibility == Visibility.PRIVATE) {
-          StaticSourceFile varSrc = var.getSourceFile();
-          StaticSourceFile refSrc = name.getStaticSourceFile();
-          if (varSrc != null &&
-              refSrc != null &&
-              !varSrc.getName().equals(refSrc.getName())) {
-            if (docInfo.isConstructor() &&
-                isValidPrivateConstructorAccess(parent)) {
-              return;
-            }
-
+        if (visibility == Visibility.PRIVATE
+            && !isPrivateAccessAllowed(var, name, parent)) {
             compiler.report(
                 t.makeError(name, BAD_PRIVATE_GLOBAL_ACCESS,
                     name.getString(), varSrc.getName()));
-          }
+        } else if (visibility == Visibility.PACKAGE
+            && !isPackageAccessAllowed(var, name)) {
+            compiler.report(
+                t.makeError(name, BAD_PACKAGE_PROPERTY_ACCESS,
+                    name.getString(), varSrc.getName()));
         }
       }
+    }
+  }
+
+  private boolean isPrivateAccessAllowed(Var var, Node name, Node parent) {
+    StaticSourceFile varSrc = var.getSourceFile();
+    StaticSourceFile refSrc = name.getStaticSourceFile();
+    JSDocInfo docInfo = var.getJSDocInfo();
+    if (varSrc != null
+        && refSrc != null
+        && !varSrc.getName().equals(refSrc.getName())) {
+      return docInfo.isConstructor()
+          && isValidPrivateConstructorAccess(parent);
+    } else {
+      return true;
+    }
+  }
+
+  private boolean isPackageAccessAllowed(Var var, Node name) {
+    StaticSourceFile varSrc = var.getSourceFile();
+    StaticSourceFile refSrc = name.getStaticSourceFile();
+    CodingConvention codingConvention = compiler.getCodingConvention();
+    if (varSrc != null && refSrc != null) {
+      String srcPackage = codingConvention.getPackageName(varSrc);
+      String refPackage = codingConvention.getPackageName(refSrc);
+      return srcPackage != null
+          && refPackage != null
+          && srcPackage.equals(refPackage);
+    } else {
+      // If the source file of either var or name is unavailable, conservatively
+      // assume they belong to different packages.
+      // TODO(brndn): by contrast, isPrivateAccessAllowed does allow
+      // private access when a source file is unknown. I didn't change it
+      // in order not to break existing code.
+      return false;
     }
   }
 
@@ -477,8 +512,9 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         return;
       }
 
-      String referenceSource = getprop.getSourceFileName();
-      String definingSource = docInfo.getSourceName();
+      StaticSourceFile referenceSource = getprop.getStaticSourceFile();
+      StaticSourceFile definingSource =
+          docInfo.getAssociatedNode().getStaticSourceFile();
       boolean sameInput = referenceSource != null
           && referenceSource.equals(definingSource);
       Visibility visibility = docInfo.getVisibility();
@@ -538,6 +574,19 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
                     propertyName,
                     validator.getReadableJSTypeName(
                         getprop.getFirstChild(), true)));
+          }
+        } else if (visibility == Visibility.PACKAGE) {
+          CodingConvention codingConvention = compiler.getCodingConvention();
+          String refPackage = codingConvention.getPackageName(referenceSource);
+          String defPackage = codingConvention.getPackageName(definingSource);
+          if (refPackage == null
+              || defPackage == null
+              || !refPackage.equals(defPackage)) {
+            compiler.report(
+              t.makeError(getprop, BAD_PACKAGE_PROPERTY_ACCESS,
+                  propertyName,
+                  validator.getReadableJSTypeName(
+                      getprop.getFirstChild(), true)));
           }
         }
       }

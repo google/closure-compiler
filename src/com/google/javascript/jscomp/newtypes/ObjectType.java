@@ -402,14 +402,21 @@ public class ObjectType extends TypeWithProperties {
       return this.isLooseSubtypeOf(obj2);
     }
 
+    if ((this.nominalType == null && obj2.nominalType != null)
+        || this.nominalType != null && obj2.nominalType != null &&
+        !this.nominalType.isSubclassOf(obj2.nominalType)) {
+      return false;
+    }
+
     if (!objectKind.isSubtypeOf(obj2.objectKind)) {
       return false;
     }
 
     // If nominalType1 < nominalType2, we only need to check that the
     // properties of obj2 are in (obj1 or nominalType1)
-    for (String pname : obj2.props.keySet()) {
-      Property prop2 = obj2.props.get(pname);
+    for (Map.Entry<String, Property> entry : obj2.props.entrySet()) {
+      String pname = entry.getKey();
+      Property prop2 = entry.getValue();
       Property prop1 = this.getLeftmostProp(new QualifiedName(pname));
 
       if (prop2.isOptional()) {
@@ -422,12 +429,6 @@ public class ObjectType extends TypeWithProperties {
           return false;
         }
       }
-    }
-
-    if ((this.nominalType == null && obj2.nominalType != null)
-        || this.nominalType != null && obj2.nominalType != null &&
-        !this.nominalType.isSubclassOf(obj2.nominalType)) {
-      return false;
     }
 
     if (obj2.fn == null) {
