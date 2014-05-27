@@ -562,15 +562,48 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testDefaultParameters() {
-    test("function f(zero, one = 1, two = 2) { return zero + one + two; }",
+    test("function f(zero, one = 1, two = 2) {}",
         Joiner.on('\n').join(
         "function f(zero, one, two) {",
         "  one === undefined && (one = 1);",
         "  two === undefined && (two = 2);",
-        "  return zero + one + two;",
         "}"
     ));
   }
+
+  public void testRestParameter() {
+    test("function f(...zero) {}",
+        Joiner.on('\n').join(
+        "function f(zero) {",
+        "  zero = [].slice.apply(arguments, 0);",
+        "}"
+    ));
+    test("function f(zero, ...one) {}",
+        Joiner.on('\n').join(
+        "function f(zero, one) {",
+        "  one = [].slice.apply(arguments, 1);",
+        "}"
+    ));
+    test("function f(zero, one, ...two) {}",
+        Joiner.on('\n').join(
+        "function f(zero, one, two) {",
+        "  two = [].slice.apply(arguments, 2);",
+        "}"
+    ));
+  }
+
+  /**
+   * TODO(moz): Re-enable once parser accepts rest parameter after default ones.
+   */
+  /*public void testDefaultAndRestParameters() {
+    test("function f(zero, one = 1, ...two) {}",
+        Joiner.on('\n').join(
+        "function f(zero, one, two) {",
+        "  one === undefined && (one = 1);",
+        "  two = [].slice.apply(arguments, 2);",
+        "}"
+    ));
+  }*/
 
   public void testSpreadArray() {
     test("var arr = [1, 2, ...mid, 4, 5];",
