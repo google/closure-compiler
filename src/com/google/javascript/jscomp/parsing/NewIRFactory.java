@@ -900,7 +900,7 @@ class NewIRFactory {
      * the string 'a' is quoted, while the name b is turned into a string, but
      * unquoted.
      */
-    private Node processObjecLitKeyAsString(
+    private Node processObjectLitKeyAsString(
         com.google.javascript.jscomp.parsing.parser.Token token) {
       Node ret;
       if (token == null) {
@@ -952,7 +952,7 @@ class NewIRFactory {
 
     @Override
     Node processObjectPatternField(ObjectPatternFieldTree tree) {
-      Node node = processObjecLitKeyAsString(tree.identifier);
+      Node node = processObjectLitKeyAsString(tree.identifier);
       node.setType(Token.STRING_KEY);
       if (tree.element != null) {
         node.addChildToBack(transform(tree.element));
@@ -1464,7 +1464,7 @@ class NewIRFactory {
 
     @Override
     Node processGetAccessor(GetAccessorTree tree) {
-      Node key = processObjecLitKeyAsString(tree.propertyName);
+      Node key = processObjectLitKeyAsString(tree.propertyName);
       key.setType(Token.GETTER_DEF);
       Node body = transform(tree.body);
       Node dummyName = IR.name("");
@@ -1480,7 +1480,7 @@ class NewIRFactory {
 
     @Override
     Node processSetAccessor(SetAccessorTree tree) {
-      Node key = processObjecLitKeyAsString(tree.propertyName);
+      Node key = processObjectLitKeyAsString(tree.propertyName);
       key.setType(Token.SETTER_DEF);
       Node body = transform(tree.body);
       Node dummyName = IR.name("");
@@ -1497,7 +1497,7 @@ class NewIRFactory {
 
     @Override
     Node processPropertyNameAssignment(PropertyNameAssignmentTree tree) {
-      Node key = processObjecLitKeyAsString(tree.name);
+      Node key = processObjectLitKeyAsString(tree.name);
       key.setType(Token.STRING_KEY);
       if (tree.value != null) {
         key.addChildToFront(transform(tree.value));
@@ -1522,7 +1522,7 @@ class NewIRFactory {
     Node processPropertyGet(MemberExpressionTree getNode) {
       Node leftChild = transform(getNode.operand);
       IdentifierToken nodeProp = getNode.memberName;
-      Node rightChild = processObjecLitKeyAsString(nodeProp);
+      Node rightChild = processObjectLitKeyAsString(nodeProp);
       if (!rightChild.isQuotedString() && !isAllowedProp(
           rightChild.getString())) {
         errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
