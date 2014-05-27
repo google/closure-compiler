@@ -575,17 +575,17 @@ public class FunctionType {
       builder.append(nominalType.getName());
       builder.append(',');
     }
-    for (JSType formal : requiredFormals) {
-      builder.append(formal.toString());
+    for (int i = 0; i < requiredFormals.size(); ++i) {
+      requiredFormals.get(i).appendTo(builder);
       builder.append(',');
     }
-    for (JSType formal : optionalFormals) {
-      builder.append(formal.toString());
+    for (int i = 0; i < optionalFormals.size(); ++i) {
+      optionalFormals.get(i).appendTo(builder);
       builder.append("=,");
     }
     if (restFormals != null) {
       builder.append("...");
-      builder.append(restFormals.toString());
+      restFormals.appendTo(builder);
     }
     // Delete the trailing comma, if present
     if (builder.charAt(builder.length() - 1) == ',') {
@@ -594,14 +594,23 @@ public class FunctionType {
     builder.append(')');
     if (returnType != null) {
       builder.append(':');
-      builder.append(returnType.toString());
+      returnType.appendTo(builder);
     }
     if (isLoose) {
       builder.append(" (loose)");
     }
     if (!outerVarPreconditions.isEmpty()) {
-      builder.append("\tFV:");
-      builder.append(outerVarPreconditions);
+      builder.append("\tFV: {");
+      boolean firstIteration = true;
+      for (Map.Entry<String, JSType> entry : outerVarPreconditions.entrySet()) {
+        if (!firstIteration) {
+          builder.append(',');
+        }
+        builder.append(entry.getKey());
+        builder.append('=');
+        entry.getValue().appendTo(builder);
+      }
+      builder.append('}');
     }
     return builder;
   }
