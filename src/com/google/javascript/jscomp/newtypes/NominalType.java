@@ -16,12 +16,10 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -278,7 +276,13 @@ public class NominalType {
 
   @Override
   public String toString() {
-    return rawType.name + rawType.genericSuffix(typeMap);
+    return appendTo(new StringBuilder()).toString();
+  }
+
+  StringBuilder appendTo(StringBuilder builder) {
+    builder.append(rawType.name);
+    rawType.appendGenericSuffixTo(builder, typeMap);
+    return builder;
   }
 
   @Override
@@ -652,18 +656,29 @@ public class NominalType {
               ctorFn.isLoose(), ObjectKind.UNRESTRICTED));
     }
 
-    private String genericSuffix(Map<String, JSType> typeMap) {
+    private StringBuilder appendGenericSuffixTo(
+        StringBuilder builder,
+        Map<String, JSType> typeMap) {
       Preconditions.checkState(typeMap.isEmpty() ||
           typeMap.keySet().containsAll(typeParameters));
       if (typeParameters.isEmpty()) {
-        return "";
+        return builder;
       }
-      List<String> names = Lists.newArrayList();
+      boolean firstIteration = true;
+      builder.append(".<");
       for (String typeParam : typeParameters) {
+        if (!firstIteration) {
+          builder.append(',');
+        }
         JSType concrete = typeMap.get(typeParam);
-        names.add(concrete == null ? typeParam : concrete.toString());
+        if (concrete != null) {
+          concrete.appendTo(builder);
+        } else {
+          builder.append(typeParam);
+        }
       }
-      return ".<" + Joiner.on(",").join(names) + ">";
+      builder.append('>');
+      return builder;
     }
 
     // If we try to mutate the class after the AST-preparation phase, error.
@@ -681,7 +696,9 @@ public class NominalType {
 
     @Override
     public String toString() {
-      return name + genericSuffix(ImmutableMap.<String, JSType>of());
+      StringBuilder builder = new StringBuilder(name);
+      appendGenericSuffixTo(builder, ImmutableMap.<String, JSType>of());
+      return builder.toString();
     }
 
     // equals and hashCode default to reference equality, which is what we want

@@ -777,40 +777,45 @@ public class ObjectType extends TypeWithProperties {
 
   @Override
   public String toString() {
+    return appendTo(new StringBuilder()).toString();
+  }
+
+  public StringBuilder appendTo(StringBuilder builder) {
     if (props.isEmpty() ||
          (props.size() == 1 && props.containsKey("prototype"))) {
       if (fn != null) {
-        return fn.toString();
+        // TODO(blickly): Add FunctionType.appendTo
+        // return fn.appendTo(builder);
+        return builder.append(fn.toString());
       } else if (nominalType != null) {
-        return nominalType.toString();
+        return nominalType.appendTo(builder);
       }
     }
-    StringBuilder result = new StringBuilder();
     if (nominalType != null) {
-      result.append(nominalType.toString());
+      nominalType.appendTo(builder);
     } else if (isStruct()) {
-      result.append("struct");
+      builder.append("struct");
     } else if (isDict()) {
-      result.append("dict");
+      builder.append("dict");
     }
     if (nominalType == null || !props.isEmpty()) {
-      result.append('{');
+      builder.append('{');
       boolean firstIteration = true;
       for (String pname : Sets.newTreeSet(props.keySet())) {
         if (!firstIteration) {
-          result.append(", ");
+          builder.append(", ");
           firstIteration = false;
         }
-        result.append(pname);
-        result.append(':');
-        result.append(props.get(pname).toString());
+        builder.append(pname);
+        builder.append(':');
+        props.get(pname).appendTo(builder);
       }
-      result.append('}');
+      builder.append('}');
     }
     if (isLoose) {
-      result.append(" (loose)");
+      builder.append(" (loose)");
     }
-    return result.toString();
+    return builder;
   }
 
   @Override
