@@ -1756,6 +1756,13 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "this language feature is only supported in es6 mode: default parameters");
   }
 
+  public void testDefaultParametersWithRestParameters() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("function f(a=0, ...b) {}");
+    parse("function f(a, b=0, ...c) {}");
+    parse("function f(a, b=0, c=1, ...d) {}");
+  }
+
   public void testClass1() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("class C {}");

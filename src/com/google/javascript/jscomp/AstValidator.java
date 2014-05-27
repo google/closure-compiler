@@ -467,10 +467,6 @@ public class AstValidator implements CompilerPass {
     boolean defaultParams = false;
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       if (c.isRest()) {
-        if (defaultParams) {
-          violation("Cannot include rest parameters " +
-              "after parameters with a default value.", c);
-        }
         if (c.getNext() != null) {
           violation("Rest parameters must come after all other parameters.", c);
         }

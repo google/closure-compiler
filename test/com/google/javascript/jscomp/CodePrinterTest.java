@@ -1743,6 +1743,12 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("function f(first,...rest){}");
   }
 
+  public void testDefaultParametersWithRestParameters() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("function f(first=0,...args){}");
+    assertPrintSame("function f(first,second=0,...rest){}");
+  }
+
   public void testSpreadExpression() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("f(...args)");
