@@ -349,7 +349,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   }
 
   /**
-   * Converts arrow functions to standard anonymous functions.
+   * Converts ES6 arrow functions to standard anonymous ES3 functions.
    */
   private void visitArrowFunction(NodeTraversal t, Node n) {
     n.setIsArrowFunction(false);
