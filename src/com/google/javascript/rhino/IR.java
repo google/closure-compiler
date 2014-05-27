@@ -367,6 +367,13 @@ public class IR {
   }
 
   /**
+   * "<"
+   */
+  public static Node lt(Node expr1, Node expr2) {
+    return binaryOp(Token.LT, expr1, expr2);
+  }
+
+  /**
    * "=="
    */
   public static Node eq(Node expr1, Node expr2) {
@@ -401,6 +408,18 @@ public class IR {
 
   public static Node cast(Node expr1) {
     return unaryOp(Token.CAST, expr1);
+  }
+
+  public static Node inc(Node exp, boolean isPost) {
+    Node op = unaryOp(Token.INC, exp);
+    op.putBooleanProp(Node.INCRDECR_PROP, isPost);
+    return op;
+  }
+
+  public static Node dec(Node exp, boolean isPost) {
+    Node op = unaryOp(Token.DEC, exp);
+    op.putBooleanProp(Node.INCRDECR_PROP, isPost);
+    return op;
   }
 
   public static Node add(Node expr1, Node expr2) {

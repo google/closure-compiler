@@ -131,23 +131,32 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   }
 
   /**
-   * Processes trailing default parameters.
+   * Processes trailing default and rest parameters.
    */
   private void visitParamList(Node paramList, Node function) {
     Node insertSpot = null;
+    Node block = function.getLastChild();
     for (int i = 0; i < paramList.getChildCount(); i++) {
       Node param = paramList.getChildAtIndex(i);
-      if (param.hasChildren()) {
+      if (param.hasChildren()) { // default parameter
         param.setOptionalArg(true);
-        Node defaultValue = param.getFirstChild().detachFromParent();
-        Node name = IR.name(param.getString()).srcref(param);
-        Node undefined = IR.name("undefined").srcref(param);
-        Node stm = IR.exprResult(
-            IR.and(IR.sheq(name, undefined).srcref(param),
-            IR.assign(name.cloneNode(), defaultValue)
-                .srcref(param)).srcref(param)).srcref(param);
-        function.getLastChild().addChildAfter(stm, insertSpot);
+        Node defaultValue = param.removeFirstChild();
+        // Transpile to: param === undefined && (param = defaultValue);
+        Node name = IR.name(param.getString());
+        Node undefined = IR.name("undefined");
+        Node stm = IR.exprResult(IR.and(IR.sheq(name, undefined),
+            IR.assign(name.cloneNode(), defaultValue)));
+        block.addChildAfter(stm.useSourceInfoIfMissingFromForTree(param), insertSpot);
         insertSpot = stm;
+        compiler.reportCodeChange();
+      } else if (param.isRest()) { // rest parameter
+        param.setType(Token.NAME);
+        param.setVarArgs(true);
+        // Transpile to: param = [].slice.apply(arguments, i);
+        Node newArr = IR.exprResult(IR.assign(IR.name(param.getString()),
+            IR.call(IR.getprop(IR.getprop(IR.arraylit(), IR.string("slice")),
+                IR.string("apply")), IR.name("arguments"), IR.number(i))));
+        block.addChildAfter(newArr.useSourceInfoIfMissingFromForTree(param), insertSpot);
         compiler.reportCodeChange();
       }
     }
