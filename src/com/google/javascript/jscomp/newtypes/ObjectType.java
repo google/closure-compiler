@@ -784,9 +784,7 @@ public class ObjectType extends TypeWithProperties {
     if (props.isEmpty() ||
          (props.size() == 1 && props.containsKey("prototype"))) {
       if (fn != null) {
-        // TODO(blickly): Add FunctionType.appendTo
-        // return fn.appendTo(builder);
-        return builder.append(fn.toString());
+        return fn.appendTo(builder);
       } else if (nominalType != null) {
         return nominalType.appendTo(builder);
       }
