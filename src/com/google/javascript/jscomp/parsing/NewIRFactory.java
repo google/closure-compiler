@@ -68,6 +68,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.ModuleImportTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternFieldTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParseTreeType;
@@ -938,6 +940,27 @@ class NewIRFactory {
     }
 
     @Override
+    Node processObjectPattern(ObjectPatternTree tree) {
+      maybeWarnEs6Feature(tree, "destructuring");
+
+      Node node = newNode(Token.OBJECT_PATTERN);
+      for (ParseTree child : tree.fields) {
+        node.addChildToBack(transform(child));
+      }
+      return node;
+    }
+
+    @Override
+    Node processObjectPatternField(ObjectPatternFieldTree tree) {
+      Node node = processObjecLitKeyAsString(tree.identifier);
+      node.setType(Token.STRING_KEY);
+      if (tree.element != null) {
+        node.addChildToBack(transform(tree.element));
+      }
+      return node;
+    }
+
+    @Override
     Node processAstRoot(ProgramTree rootNode) {
       Node node = newNode(Token.SCRIPT);
       for (ParseTree child : rootNode.sourceElements) {
@@ -1759,6 +1782,7 @@ class NewIRFactory {
         case Token.GETPROP:
         case Token.GETELEM:
         case Token.ARRAY_PATTERN:
+        case Token.OBJECT_PATTERN:
           return true;
       }
       return false;

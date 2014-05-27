@@ -853,9 +853,7 @@ class CodeGenerator {
         break;
 
       case Token.STRING_KEY:
-        Preconditions.checkState(
-            childCount == 1, "Object lit key must have 1 child");
-        addJsString(n);
+        addStringKey(n);
         break;
 
       case Token.STRING:
@@ -881,33 +879,8 @@ class CodeGenerator {
             cc.listSeparator();
           }
 
-          if (c.isGetterDef() || c.isSetterDef()) {
+          if (c.isGetterDef() || c.isSetterDef() || c.isStringKey()) {
             add(c);
-          } else if (c.isStringKey()) {
-            String key = c.getString();
-            // Object literal property names don't have to be quoted if they
-            // are not JavaScript keywords
-            if (!c.isQuotedString()
-                && !(languageMode == LanguageMode.ECMASCRIPT3
-                    && TokenStream.isKeyword(key))
-                && TokenStream.isJSIdentifier(key)
-                // do not encode literally any non-literal characters that
-                // were Unicode escaped.
-                && NodeUtil.isLatin(key)) {
-              add(key);
-            } else {
-              // Determine if the string is a simple number.
-              double d = getSimpleNumber(key);
-              if (!Double.isNaN(d)) {
-                cc.addNumber(d);
-              } else {
-                addExpr(c, 1, Context.OTHER);
-              }
-            }
-            if (c.hasChildren()) {
-              add(":");
-              addExpr(c.getFirstChild(), 1, Context.OTHER);
-            }
           } else {
             Preconditions.checkState(c.isComputedProp());
             add("[");
@@ -923,6 +896,10 @@ class CodeGenerator {
         }
         break;
       }
+
+      case Token.OBJECT_PATTERN:
+        addObjectPattern(n, context);
+        break;
 
       case Token.SWITCH:
         add("switch(");
@@ -1167,6 +1144,33 @@ class CodeGenerator {
     }
   }
 
+  void addStringKey(Node n) {
+    String key = n.getString();
+    // Object literal property names don't have to be quoted if they
+    // are not JavaScript keywords
+    if (!n.isQuotedString()
+        && !(languageMode == LanguageMode.ECMASCRIPT3
+            && TokenStream.isKeyword(key))
+        && TokenStream.isJSIdentifier(key)
+        // do not encode literally any non-literal characters that
+        // were Unicode escaped.
+        && NodeUtil.isLatin(key)) {
+      add(key);
+    } else {
+      // Determine if the string is a simple number.
+      double d = getSimpleNumber(key);
+      if (!Double.isNaN(d)) {
+        cc.addNumber(d);
+      } else {
+        addJsString(n);
+      }
+    }
+    if (n.hasChildren()) {
+      add(":");
+      addExpr(n.getFirstChild(), 1, Context.OTHER);
+    }
+  }
+
   void addArrayPattern(Node n) {
     add("[");
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
@@ -1181,6 +1185,32 @@ class CodeGenerator {
     }
     if (!n.getParent().isVar()) {
       add("]");
+    }
+  }
+
+  void addObjectPattern(Node n, Context context) {
+    boolean needsParens = (context == Context.START_OF_EXPR);
+    if (needsParens) {
+      add("(");
+    }
+
+    add("{");
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+      if (child == n.getLastChild() && n.getParent().isVar()) {
+        add("}");
+        add("=");
+      } else if (child != n.getFirstChild()) {
+        add(",");
+      }
+
+      add(child);
+    }
+    if (!n.getParent().isVar()) {
+      add("}");
+    }
+
+    if (needsParens) {
+      add(")");
     }
   }
 

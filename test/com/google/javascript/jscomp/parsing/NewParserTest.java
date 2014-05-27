@@ -1019,14 +1019,33 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("var [x,] = ['x',];", "'identifier' expected");
   }
 
-  public void testDestructuringAssignForbidden2() {
-    parseError("var {x, y} = foo();",
-        "unsupported language feature: destructuring");
+  public void testObjectDestructuringVar() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var {x, y} = foo();");
+    parse("var {x: x, y: y} = foo();");
+    parse("var {x: {y, z}} = foo();");
+
+    // Useless, but legal.
+    parse("var {} = foo();");
   }
 
-  public void testDestructuringAssignForbidden3() {
-    parseError("var {x: x, y: y} = foo();",
-        "unsupported language feature: destructuring");
+  public void testObjectDestructuringAssign() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("({x, y}) = foo();");
+    parse("({x: x, y: y}) = foo();");
+    parse("({x: {y, z}}) = foo();");
+
+    // Useless, but legal.
+    parse("({}) = foo();");
+  }
+
+  public void testMixedDestructuring() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var {x: [y, z]} = foo();");
+    parse("var [x, {y, z}] = foo();");
+
+    parse("({x: [y, z]} = foo());");
+    parse("[x, {y, z}] = foo();");
   }
 
   public void testLetForbidden1() {
