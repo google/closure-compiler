@@ -104,8 +104,9 @@ public class NominalType {
     return rawType.name;
   }
 
-  public int getId() {
-    return rawType.getId();
+  // Only used for keys in GlobalTypeInfo
+  public RawNominalType getId() {
+    return rawType;
   }
 
   public boolean isClass() {
@@ -355,10 +356,6 @@ public class NominalType {
         String name, ImmutableList<String> typeParameters) {
       // interfaces are struct by default
       return new RawNominalType(name, typeParameters, true, ObjectKind.STRUCT);
-    }
-
-    public int getId() {
-      return hashCode();
     }
 
     public String getName() {

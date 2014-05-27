@@ -215,8 +215,8 @@ class GlobalTypeInfo implements CompilerPass {
   private static final String ANON_FUN_PREFIX = "%anon_fun";
   private int freshId = 1;
   private Map<Node, RawNominalType> nominaltypesByNode = Maps.newHashMap();
-  // Keyed on RawNominalType ids and property names
-  private HashBasedTable<Integer, String, PropertyDef> propertyDefs =
+  // Keyed on RawNominalTypes and property names
+  private HashBasedTable<RawNominalType, String, PropertyDef> propertyDefs =
       HashBasedTable.create();
   // TODO(dimvar): Eventually attach these to nodes, like the current types.
   private Map<Node, JSType> castTypes = Maps.newHashMap();
@@ -410,7 +410,7 @@ class GlobalTypeInfo implements CompilerPass {
             propMethodTypesToProcess.get(pname);
         Preconditions.checkState(!methodTypes.isEmpty());
         PropertyDef localPropDef =
-            propertyDefs.get(rawNominalType.getId(), pname);
+            propertyDefs.get(rawNominalType, pname);
         // To find the declared type of a method, we must meet declared types
         // from all inherited methods.
         DeclaredFunctionType superMethodType =
@@ -444,7 +444,7 @@ class GlobalTypeInfo implements CompilerPass {
 
       // Warn for a prop declared with @override that isn't overriding anything.
       for (String pname : nonInheritedPropNames) {
-        Node defSite = propertyDefs.get(rawNominalType.getId(), pname).defSite;
+        Node defSite = propertyDefs.get(rawNominalType, pname).defSite;
         JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(defSite);
         if (jsdoc != null && jsdoc.isOverride()) {
           warnings.add(JSError.make(defSite, TypeCheck.UNKNOWN_OVERRIDE,
@@ -481,7 +481,7 @@ class GlobalTypeInfo implements CompilerPass {
           pname, superType.toString(), current.toString()));
       return;
     }
-    PropertyDef localPropDef = propertyDefs.get(current.getId(), pname);
+    PropertyDef localPropDef = propertyDefs.get(current, pname);
     JSType localPropType = localPropDef == null ? null :
         current.getPropDeclaredType(pname);
     if (localPropDef != null && superType.isClass() &&
@@ -943,7 +943,7 @@ class GlobalTypeInfo implements CompilerPass {
           propDeclType = null;
         }
       }
-      propertyDefs.put(rawType.getId(), pname,
+      propertyDefs.put(rawType, pname,
           new PropertyDef(getProp, methodType, methodScope));
       // Add the property to the class with the appropriate type.
       boolean isConst = NodeUtil.hasConstAnnotation(getProp);
@@ -1056,7 +1056,7 @@ class GlobalTypeInfo implements CompilerPass {
       } else if (mayAddPropToType(getProp, rawNominalType)) {
         rawNominalType.addUndeclaredClassProperty(pname);
       }
-      propertyDefs.put(rawNominalType.getId(), pname,
+      propertyDefs.put(rawNominalType, pname,
           new PropertyDef(getProp, null, null));
     }
 
