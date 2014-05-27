@@ -80,6 +80,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SpreadExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.SpreadPatternElementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
@@ -958,6 +959,11 @@ class NewIRFactory {
         node.addChildToBack(transform(tree.element));
       }
       return node;
+    }
+
+    @Override
+    Node processSpreadPatternElement(SpreadPatternElementTree tree) {
+      return newNode(Token.SPREAD, transform(tree.lvalue));
     }
 
     @Override
