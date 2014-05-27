@@ -17,12 +17,10 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 import java.util.Iterator;
@@ -562,27 +560,44 @@ public class FunctionType {
   @Override
   public String toString() {
     if (isTopFunction()) {
-      return "TOP_FUNCTION" + (isLoose ? " (loose)" : "");
+      if (isLoose) {
+        return "LOOSE_TOP_FUNCTION";
+      }
+      return "TOP_FUNCTION";
     }
-    List<String> formals = Lists.newLinkedList();
+    StringBuilder builder = new StringBuilder("function(");
     if (nominalType != null) {
-      formals.add("new:" + nominalType.getName());
+      builder.append("new:");
+      builder.append(nominalType.getName());
+      builder.append(',');
     }
     for (JSType formal : requiredFormals) {
-      formals.add(formal.toString());
+      builder.append(formal.toString());
+      builder.append(',');
     }
     for (JSType formal : optionalFormals) {
-      formals.add(formal.toString() + "=");
+      builder.append(formal.toString());
+      builder.append("=,");
     }
     if (restFormals != null) {
-      formals.add("..." + restFormals.toString());
+      builder.append("...");
+      builder.append(restFormals.toString());
+      builder.append(',');
     }
-    String result = "function (" + Joiner.on(", ").join(formals) + ")";
+    // Delete the trailing comma
+    builder.deleteCharAt(builder.length() - 1);
+    builder.append(')');
     if (returnType != null) {
-      result += ": " + returnType.toString();
+      builder.append(':');
+      builder.append(returnType.toString());
     }
-    return result + (isLoose ? " (loose)" : "") +
-        (outerVarPreconditions.isEmpty() ?
-            "" : "\tFV:" + outerVarPreconditions);
+    if (isLoose) {
+      builder.append(" (loose)");
+    }
+    if (!outerVarPreconditions.isEmpty()) {
+      builder.append("\tFV:");
+      builder.append(outerVarPreconditions);
+    }
+    return builder.toString();
   }
 }
