@@ -575,19 +575,19 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function f(...zero) {}",
         Joiner.on('\n').join(
         "function f(zero) {",
-        "  zero = [].slice.apply(arguments, 0);",
+        "  zero = [].slice.call(arguments, 0);",
         "}"
     ));
     test("function f(zero, ...one) {}",
         Joiner.on('\n').join(
         "function f(zero, one) {",
-        "  one = [].slice.apply(arguments, 1);",
+        "  one = [].slice.call(arguments, 1);",
         "}"
     ));
     test("function f(zero, one, ...two) {}",
         Joiner.on('\n').join(
         "function f(zero, one, two) {",
-        "  two = [].slice.apply(arguments, 2);",
+        "  two = [].slice.call(arguments, 2);",
         "}"
     ));
   }

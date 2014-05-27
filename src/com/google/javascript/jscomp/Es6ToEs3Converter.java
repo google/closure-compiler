@@ -152,10 +152,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       } else if (param.isRest()) { // rest parameter
         param.setType(Token.NAME);
         param.setVarArgs(true);
-        // Transpile to: param = [].slice.apply(arguments, i);
+        // Transpile to: param = [].slice.call(arguments, i);
         Node newArr = IR.exprResult(IR.assign(IR.name(param.getString()),
             IR.call(IR.getprop(IR.getprop(IR.arraylit(), IR.string("slice")),
-                IR.string("apply")), IR.name("arguments"), IR.number(i))));
+                IR.string("call")), IR.name("arguments"), IR.number(i))));
         block.addChildAfter(newArr.useSourceInfoIfMissingFromForTree(param), insertSpot);
         compiler.reportCodeChange();
       }
