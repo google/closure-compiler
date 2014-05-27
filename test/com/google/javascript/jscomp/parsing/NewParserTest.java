@@ -1019,6 +1019,18 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("var [x,] = ['x',];", "'identifier' expected");
   }
 
+  public void testArrayDestructuringSpread() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var [first, ...rest] = foo();");
+
+    // TODO(tbreisacher): Make this error clearer.
+    parseError("var [first, ...more, last] = foo();", "'identifier' expected");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning("var [first, ...rest] = foo();",
+        "this language feature is only supported in es6 mode: destructuring");
+  }
+
   public void testObjectDestructuringVar() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("var {x, y} = foo();");

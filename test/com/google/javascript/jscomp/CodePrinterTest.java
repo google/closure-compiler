@@ -374,6 +374,7 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("var []=[]");
     assertPrintSame("var [a]=[1]");
     assertPrintSame("var [a,b]=[1,2]");
+    assertPrintSame("var [a,...b]=[1,2]");
     assertPrintSame("var [,b]=[1,2]");
     assertPrintSame("var [,,,,,,g]=[1,2,3,4,5,6,7]");
     assertPrintSame("var [a,,c]=[1,2,3]");
@@ -386,6 +387,7 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("[]=[]");
     assertPrintSame("[a]=[1]");
     assertPrintSame("[a,b]=[1,2]");
+    assertPrintSame("[a,...b]=[1,2]");
     assertPrintSame("[,b]=[1,2]");
     assertPrintSame("[,,,,,,g]=[1,2,3,4,5,6,7]");
     assertPrintSame("[a,,c]=[1,2,3]");

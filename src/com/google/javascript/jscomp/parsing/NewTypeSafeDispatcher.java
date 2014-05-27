@@ -68,6 +68,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SpreadExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.SpreadPatternElementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
@@ -144,6 +145,7 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processArrayPattern(ArrayPatternTree tree);
   abstract T processObjectPattern(ObjectPatternTree tree);
   abstract T processObjectPatternField(ObjectPatternFieldTree tree);
+  abstract T processSpreadPatternElement(SpreadPatternElementTree tree);
 
   abstract T processClassDeclaration(ClassDeclarationTree tree);
   abstract T processSuper(SuperExpressionTree tree);
@@ -314,7 +316,7 @@ abstract class NewTypeSafeDispatcher<T> {
       case OBJECT_PATTERN_FIELD:
         return processObjectPatternField(node.asObjectPatternField());
       case SPREAD_PATTERN_ELEMENT:
-        return unsupportedLanguageFeature(node, "destructuring");
+        return processSpreadPatternElement(node.asSpreadPatternElement());
 
       case DEFAULT_PARAMETER:
         return processDefaultParameter(node.asDefaultParameter());
