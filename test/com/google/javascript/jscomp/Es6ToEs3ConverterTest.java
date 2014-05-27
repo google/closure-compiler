@@ -592,18 +592,15 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
-  /**
-   * TODO(moz): Re-enable once parser accepts rest parameter after default ones.
-   */
-  /*public void testDefaultAndRestParameters() {
+  public void testDefaultAndRestParameters() {
     test("function f(zero, one = 1, ...two) {}",
         Joiner.on('\n').join(
         "function f(zero, one, two) {",
         "  one === undefined && (one = 1);",
-        "  two = [].slice.apply(arguments, 2);",
+        "  two = [].slice.call(arguments, 2);",
         "}"
     ));
-  }*/
+  }
 
   public void testSpreadArray() {
     test("var arr = [1, 2, ...mid, 4, 5];",
