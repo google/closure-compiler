@@ -57,6 +57,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.ModuleImportTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternFieldTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.PostfixExpressionTree;
@@ -140,6 +142,8 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processRestParameter(RestParameterTree tree);
   abstract T processSpreadExpression(SpreadExpressionTree tree);
   abstract T processArrayPattern(ArrayPatternTree tree);
+  abstract T processObjectPattern(ObjectPatternTree tree);
+  abstract T processObjectPatternField(ObjectPatternFieldTree tree);
 
   abstract T processClassDeclaration(ClassDeclarationTree tree);
   abstract T processSuper(SuperExpressionTree tree);
@@ -306,7 +310,9 @@ abstract class NewTypeSafeDispatcher<T> {
       case ARRAY_PATTERN:
         return processArrayPattern(node.asArrayPattern());
       case OBJECT_PATTERN:
+        return processObjectPattern(node.asObjectPattern());
       case OBJECT_PATTERN_FIELD:
+        return processObjectPatternField(node.asObjectPatternField());
       case SPREAD_PATTERN_ELEMENT:
         return unsupportedLanguageFeature(node, "destructuring");
 

@@ -369,7 +369,7 @@ public class CodePrinterTest extends TestCase {
     assertPrint("if(x){;;function y(){};;}", "if(x){function y(){}}");
   }
 
-  public void testPrintDestructuringVar() {
+  public void testPrintArrayPatternVar() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("var []=[]");
     assertPrintSame("var [a]=[1]");
@@ -381,7 +381,7 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("var [a,,c,,e]=[1,2,3,4,5]");
   }
 
-  public void testPrintDestructuringAssign() {
+  public void testPrintArrayPatternAssign() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("[]=[]");
     assertPrintSame("[a]=[1]");
@@ -393,13 +393,39 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("[a,,c,,e]=[1,2,3,4,5]");
   }
 
-  public void testPrintNestedDestructuring() {
+  public void testPrintNestedArrayPattern() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("var [a,[b,c],d]=[1,[2,3],4]");
     assertPrintSame("var [[[[a]]]]=[[[[1]]]]");
 
     assertPrintSame("[a,[b,c],d]=[1,[2,3],4]");
     assertPrintSame("[[[[a]]]]=[[[[1]]]]");
+  }
+
+  public void testPrintObjectPatternVar() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("var {a}=foo()");
+    assertPrintSame("var {a,b}=foo()");
+    assertPrintSame("var {a:a,b:b}=foo()");
+  }
+
+  public void testPrintObjectPatternAssign() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("({a})=foo()");
+    assertPrintSame("({a,b})=foo()");
+    assertPrintSame("({a:a,b:b})=foo()");
+  }
+
+  public void testPrintNestedObjectPattern() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("({a:{b,c}})=foo()");
+    assertPrintSame("({a:{b:{c:{d}}}})=foo()");
+  }
+
+  public void testPrintMixedDestructuring() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("({a:[b,c]})=foo()");
+    assertPrintSame("[a,{b,c}]=foo()");
   }
 
   public void testBreakTrustedStrings() {
