@@ -986,82 +986,85 @@ public class JSType {
 
   @Override
   public String toString() {
+    return appendTo(new StringBuilder()).toString();
+  }
+
+  public StringBuilder appendTo(StringBuilder builder) {
     if (location == null) {
-      return typeToString();
+      return typeToString(builder);
     } else {
-      return typeToString() + "@" + location;
+      return typeToString(builder).append('@').append(location);
     }
   }
 
   /** For use in {@link #typeToString} */
   private static final Joiner PIPE_JOINER = Joiner.on("|");
 
-  private String typeToString() {
+  private StringBuilder typeToString(StringBuilder builder) {
     switch (mask) {
       case BOTTOM_MASK:
-        return "bottom";
+        return builder.append("bottom");
       case TOP_MASK:
-        return "*";
+        return builder.append("*");
       case UNKNOWN_MASK:
-        return "?";
+        return builder.append("?");
       default:
         int tags = mask;
-        StringBuilder sb = new StringBuilder();
         boolean firstIteration = true;
         for (int tag = 1; tag != END_MASK; tag <<= 1) {
           if ((tags & tag) != 0) {
             if (!firstIteration) {
-              sb.append('|');
+              builder.append('|');
             }
             firstIteration = false;
             switch (tag) {
               case TRUE_MASK:
               case FALSE_MASK:
-                sb.append("boolean");
+                builder.append("boolean");
                 tags &= ~BOOLEAN_MASK;
                 continue;
               case NULL_MASK:
-                sb.append("null");
+                builder.append("null");
                 tags &= ~NULL_MASK;
                 continue;
               case NUMBER_MASK:
-                sb.append("number");
+                builder.append("number");
                 tags &= ~NUMBER_MASK;
                 continue;
               case STRING_MASK:
-                sb.append("string");
+                builder.append("string");
                 tags &= ~STRING_MASK;
                 continue;
               case UNDEFINED_MASK:
-                sb.append("undefined");
+                builder.append("undefined");
                 tags &= ~UNDEFINED_MASK;
                 continue;
               case TYPEVAR_MASK:
-                sb.append(typeVar);
+                builder.append(typeVar);
                 tags &= ~TYPEVAR_MASK;
                 continue;
               case NON_SCALAR_MASK: {
                 if (objs.size() == 1) {
-                  sb.append(Iterables.getOnlyElement(objs).toString());
+                  Iterables.getOnlyElement(objs).appendTo(builder);
                 } else {
                   Set<String> strReps = Sets.newTreeSet();
                   for (ObjectType obj : objs) {
                     strReps.add(obj.toString());
                   }
-                  PIPE_JOINER.appendTo(sb, strReps);
+                  PIPE_JOINER.appendTo(builder, strReps);
                 }
                 tags &= ~NON_SCALAR_MASK;
                 continue;
               }
               case ENUM_MASK: {
                 if (enums.size() == 1) {
-                  sb.append(Iterables.getOnlyElement(enums).toString());
+                  builder.append(Iterables.getOnlyElement(enums).toString());
                 } else {
                   Set<String> strReps = Sets.newTreeSet();
                   for (EnumType e : enums) {
                     strReps.add(e.toString());
                   }
-                  PIPE_JOINER.appendTo(sb, strReps);
+                  PIPE_JOINER.appendTo(builder, strReps);
                 }
                 tags &= ~ENUM_MASK;
                 continue;
@@ -1070,13 +1073,13 @@ public class JSType {
           }
         }
         if (tags == 0) { // Found all types in the union
-          return sb.toString();
+          return builder;
         } else if (tags == TRUTHY_MASK) {
-          return "truthy";
+          return builder.append("truthy");
         } else if (tags == FALSY_MASK) {
-          return "falsy";
+          return builder.append("falsy");
         } else {
-          return "Unrecognized type: " + tags;
+          return builder.append("Unrecognized type: " + tags);
         }
     }
   }

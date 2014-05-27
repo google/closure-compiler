@@ -559,13 +559,17 @@ public class FunctionType {
 
   @Override
   public String toString() {
+    return appendTo(new StringBuilder()).toString();
+  }
+
+  public StringBuilder appendTo(StringBuilder builder) {
     if (isTopFunction()) {
       if (isLoose) {
-        return "LOOSE_TOP_FUNCTION";
+        return builder.append("LOOSE_TOP_FUNCTION");
       }
-      return "TOP_FUNCTION";
+      return builder.append("TOP_FUNCTION");
     }
-    StringBuilder builder = new StringBuilder("function(");
+    builder.append("function(");
     if (nominalType != null) {
       builder.append("new:");
       builder.append(nominalType.getName());
@@ -582,10 +586,11 @@ public class FunctionType {
     if (restFormals != null) {
       builder.append("...");
       builder.append(restFormals.toString());
-      builder.append(',');
     }
-    // Delete the trailing comma
-    builder.deleteCharAt(builder.length() - 1);
+    // Delete the trailing comma, if present
+    if (builder.charAt(builder.length() - 1) == ',') {
+      builder.deleteCharAt(builder.length() - 1);
+    }
     builder.append(')');
     if (returnType != null) {
       builder.append(':');
@@ -598,6 +603,6 @@ public class FunctionType {
       builder.append("\tFV:");
       builder.append(outerVarPreconditions);
     }
-    return builder.toString();
+    return builder;
   }
 }
