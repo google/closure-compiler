@@ -241,6 +241,10 @@ class CodeGenerator {
         add("]");
         break;
 
+      case Token.ARRAY_PATTERN:
+        addArrayPattern(n);
+        break;
+
       case Token.PARAM_LIST:
         add("(");
         addList(first);
@@ -1162,6 +1166,23 @@ class CodeGenerator {
         addExpr(n, isArrayOrFunctionArgument ? 1 : 0,
             getContextForNoInOperator(lhsContext));
       }
+    }
+  }
+
+  void addArrayPattern(Node n) {
+    add("[");
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+      if (child == n.getLastChild() && n.getParent().isVar()) {
+        add("]");
+        add("=");
+      } else if (child != n.getFirstChild()) {
+        add(",");
+      }
+
+      add(child);
+    }
+    if (!n.getParent().isVar()) {
+      add("]");
     }
   }
 

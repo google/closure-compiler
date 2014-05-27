@@ -25,6 +25,4 @@ public final class NullTree extends ParseTree {
   public NullTree(SourceRange location) {
     super(ParseTreeType.NULL, location);
   }
-
-  public static final NullTree Instance = new NullTree(null);
 }

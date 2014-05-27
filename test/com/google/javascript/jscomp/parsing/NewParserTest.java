@@ -999,9 +999,24 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "const declarations");
   }
 
-  public void testDestructuringAssignForbidden() {
-    parseError("var [x, y] = foo();",
-        "unsupported language feature: destructuring");
+  public void testArrayDestructuringVar() {
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning("var [x,y] = foo();",
+        "this language feature is only supported in es6 mode: destructuring");
+    parseWarning("[x,y] = foo();",
+        "this language feature is only supported in es6 mode: destructuring");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var [x,y] = foo();");
+    parse("[x,y] = foo();");
+  }
+
+  public void testArrayDestructuringTrailingComma() {
+    mode = LanguageMode.ECMASCRIPT6;
+    // TODO(tbreisacher): Make this error clearer. The error we want
+    // ("Array pattern may not end with a comma") is reported in a
+    // lookahead parser so it doesn't get reported to the user.
+    parseError("var [x,] = ['x',];", "'identifier' expected");
   }
 
   public void testDestructuringAssignForbidden2() {
@@ -1011,11 +1026,6 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testDestructuringAssignForbidden3() {
     parseError("var {x: x, y: y} = foo();",
-        "unsupported language feature: destructuring");
-  }
-
-  public void testDestructuringAssignForbidden4() {
-    parseError("[x, y] = foo();",
         "unsupported language feature: destructuring");
   }
 

@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.LiteralToken;
 import com.google.javascript.jscomp.parsing.parser.TokenType;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BlockTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BreakStatementTree;
@@ -926,6 +927,17 @@ class NewIRFactory {
     }
 
     @Override
+    Node processArrayPattern(ArrayPatternTree tree) {
+      maybeWarnEs6Feature(tree, "destructuring");
+
+      Node node = newNode(Token.ARRAY_PATTERN);
+      for (ParseTree child : tree.elements) {
+        node.addChildToBack(transform(child));
+      }
+      return node;
+    }
+
+    @Override
     Node processAstRoot(ProgramTree rootNode) {
       Node node = newNode(Token.SCRIPT);
       for (ParseTree child : rootNode.sourceElements) {
@@ -1243,7 +1255,7 @@ class NewIRFactory {
         Node target = n.getFirstChild();
         if (!validAssignmentTarget(target)) {
           errorReporter.error(
-              "invalid assignment target",
+              "invalid assignment target: " + target,
               sourceName,
               target.getLineno(), "", 0);
         }
@@ -1746,6 +1758,7 @@ class NewIRFactory {
         case Token.NAME:
         case Token.GETPROP:
         case Token.GETELEM:
+        case Token.ARRAY_PATTERN:
           return true;
       }
       return false;

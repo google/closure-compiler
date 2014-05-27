@@ -2401,6 +2401,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.ARRAYLIT;
   }
 
+  public boolean isArrayPattern() {
+    return this.getType() == Token.ARRAY_PATTERN;
+  }
+
   public boolean isAssign() {
     return this.getType() == Token.ASSIGN;
   }

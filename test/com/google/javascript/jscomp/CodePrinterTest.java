@@ -369,6 +369,39 @@ public class CodePrinterTest extends TestCase {
     assertPrint("if(x){;;function y(){};;}", "if(x){function y(){}}");
   }
 
+  public void testPrintDestructuringVar() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("var []=[]");
+    assertPrintSame("var [a]=[1]");
+    assertPrintSame("var [a,b]=[1,2]");
+    assertPrintSame("var [,b]=[1,2]");
+    assertPrintSame("var [,,,,,,g]=[1,2,3,4,5,6,7]");
+    assertPrintSame("var [a,,c]=[1,2,3]");
+    assertPrintSame("var [a,,,d]=[1,2,3,4]");
+    assertPrintSame("var [a,,c,,e]=[1,2,3,4,5]");
+  }
+
+  public void testPrintDestructuringAssign() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("[]=[]");
+    assertPrintSame("[a]=[1]");
+    assertPrintSame("[a,b]=[1,2]");
+    assertPrintSame("[,b]=[1,2]");
+    assertPrintSame("[,,,,,,g]=[1,2,3,4,5,6,7]");
+    assertPrintSame("[a,,c]=[1,2,3]");
+    assertPrintSame("[a,,,d]=[1,2,3,4]");
+    assertPrintSame("[a,,c,,e]=[1,2,3,4,5]");
+  }
+
+  public void testPrintNestedDestructuring() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("var [a,[b,c],d]=[1,[2,3],4]");
+    assertPrintSame("var [[[[a]]]]=[[[[1]]]]");
+
+    assertPrintSame("[a,[b,c],d]=[1,[2,3],4]");
+    assertPrintSame("[[[[a]]]]=[[[[1]]]]");
+  }
+
   public void testBreakTrustedStrings() {
     // Break scripts
     assertPrint("'<script>'", "\"<script>\"");
