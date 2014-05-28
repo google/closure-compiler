@@ -3382,6 +3382,20 @@ Promise.resolve = function(opt_value) {};
 Promise.reject = function(opt_error) {};
 
 
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
+ * param {!Array}
+ */
+Promise.all = function(iterable) {};
+
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
+ * param {!Array}
+ */
+Promise.race = function(iterable) {};
+
+
 /** @override */
 Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
