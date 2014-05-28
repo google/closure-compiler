@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.LiteralToken;
 import com.google.javascript.jscomp.parsing.parser.TokenType;
+import com.google.javascript.jscomp.parsing.parser.trees.ArrayComprehensionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
@@ -37,6 +38,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.CatchTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
+import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyAssignmentTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
@@ -917,6 +920,30 @@ class NewIRFactory {
       }
       Preconditions.checkState(ret.isString());
       return ret;
+    }
+
+    @Override
+    Node processArrayComprehension(ArrayComprehensionTree tree) {
+      maybeWarnEs6Feature(tree, "array comprehensions");
+
+      Node node = newNode(Token.ARRAY_COMP);
+      for (ParseTree child : tree.children) {
+        node.addChildToBack(transform(child));
+      }
+      node.addChildToBack(transform(tree.tailExpression));
+      return node;
+    }
+
+    @Override
+    Node processComprehensionFor(ComprehensionForTree tree) {
+      return newNode(Token.FOR_OF,
+          transform(tree.initializer),
+          transform(tree.collection));
+    }
+
+    @Override
+    Node processComprehensionIf(ComprehensionIfTree tree) {
+      return newNode(Token.IF, transform(tree.expression));
     }
 
     @Override

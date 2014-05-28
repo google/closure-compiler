@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.javascript.jscomp.parsing.parser.trees.ArrayComprehensionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
@@ -26,6 +27,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.CaseClauseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CatchTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyAssignmentTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
@@ -146,6 +149,9 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processObjectPattern(ObjectPatternTree tree);
   abstract T processObjectPatternField(ObjectPatternFieldTree tree);
   abstract T processSpreadPatternElement(SpreadPatternElementTree tree);
+  abstract T processArrayComprehension(ArrayComprehensionTree tree);
+  abstract T processComprehensionFor(ComprehensionForTree tree);
+  abstract T processComprehensionIf(ComprehensionIfTree tree);
 
   abstract T processClassDeclaration(ClassDeclarationTree tree);
   abstract T processSuper(SuperExpressionTree tree);
@@ -317,6 +323,13 @@ abstract class NewTypeSafeDispatcher<T> {
         return processObjectPatternField(node.asObjectPatternField());
       case SPREAD_PATTERN_ELEMENT:
         return processSpreadPatternElement(node.asSpreadPatternElement());
+
+      case ARRAY_COMPREHENSION:
+        return processArrayComprehension(node.asArrayComprehension());
+      case COMPREHENSION_FOR:
+        return processComprehensionFor(node.asComprehensionFor());
+      case COMPREHENSION_IF:
+        return processComprehensionIf(node.asComprehensionIf());
 
       case DEFAULT_PARAMETER:
         return processDefaultParameter(node.asDefaultParameter());

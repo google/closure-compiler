@@ -1332,6 +1332,7 @@ public final class NodeUtil {
       case Token.GETPROP:
       // Data values
       case Token.ARRAYLIT:
+      case Token.ARRAY_COMP:
       case Token.ARRAY_PATTERN:
       case Token.EMPTY:  // TODO(johnlenz): remove this.
       case Token.FALSE:

@@ -1248,7 +1248,7 @@ public class Parser {
     case TEMPLATE_STRING:
       return parseLiteralExpression();
     case OPEN_SQUARE:
-      return parseArrayLiteral();
+      return parseArrayInitializer();
     case OPEN_CURLY:
       return parseObjectLiteral();
     case OPEN_PAREN:
@@ -1293,6 +1293,64 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     LiteralToken literal = nextRegularExpressionLiteralToken();
     return new LiteralExpressionTree(getTreeLocation(start), literal);
+  }
+
+  private ParseTree parseArrayInitializer() {
+    if (peekType(1) == TokenType.FOR) {
+      return parseArrayComprehension();
+    } else {
+      return parseArrayLiteral();
+    }
+  }
+
+  private ParseTree parseArrayComprehension() {
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.OPEN_SQUARE);
+
+    ImmutableList.Builder<ParseTree> children = ImmutableList.builder();
+    while (peek(TokenType.FOR) || peek(TokenType.IF)) {
+      if (peek(TokenType.FOR)) {
+        children.add(parseComprehensionFor());
+      } else {
+        children.add(parseComprehensionIf());
+      }
+    }
+    ParseTree tailExpression = parseAssignmentExpression();
+    eat(TokenType.CLOSE_SQUARE);
+
+    return new ArrayComprehensionTree(
+        getTreeLocation(start),
+        children.build(),
+        tailExpression);
+  }
+
+  private ParseTree parseComprehensionFor() {
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.FOR);
+    eat(TokenType.OPEN_PAREN);
+
+    ParseTree initializer;
+    if (peekId()) {
+      initializer = parseIdentifierExpression();
+    } else {
+      initializer = parsePattern(PatternKind.ANY);
+    }
+
+    eatPredefinedString(PredefinedName.OF);
+    ParseTree collection = parseAssignmentExpression();
+    eat(TokenType.CLOSE_PAREN);
+    return new ComprehensionForTree(
+        getTreeLocation(start), initializer, collection);
+  }
+
+  private ParseTree parseComprehensionIf() {
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.IF);
+    eat(TokenType.OPEN_PAREN);
+    ParseTree initializer = parseAssignmentExpression();
+    eat(TokenType.CLOSE_PAREN);
+    return new ComprehensionIfTree(
+        getTreeLocation(start), initializer);
   }
 
   // 11.1.4 Array Literal Expression
@@ -1429,7 +1487,7 @@ public class Parser {
 
   private Token eatPredefinedString(String string) {
     Token token = eatId();
-    if (!token.asIdentifier().value.equals(string)) {
+    if (token == null || !token.asIdentifier().value.equals(string)) {
       reportExpectedError(token, string);
       return null;
     }
@@ -1488,8 +1546,8 @@ public class Parser {
 
   private ParseTree parseMissingPrimaryExpression() {
     SourcePosition start = getTreeStartLocation();
-    reportError("primary expression expected");
     Token token = nextToken();
+    reportError("primary expression expected");
     return new MissingPrimaryExpressionTree(getTreeLocation(start), token);
   }
 

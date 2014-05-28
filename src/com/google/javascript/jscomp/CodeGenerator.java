@@ -245,6 +245,14 @@ class CodeGenerator {
         addArrayPattern(n);
         break;
 
+      case Token.ARRAY_COMP:
+        add("[");
+        for (Node child = first; child != null; child = child.getNext()) {
+          add(child);
+        }
+        add("]");
+        break;
+
       case Token.PARAM_LIST:
         add("(");
         addList(first);
@@ -602,7 +610,8 @@ class CodeGenerator {
         break;
 
       case Token.FOR_OF:
-        Preconditions.checkState(childCount == 3);
+        // A "for-of" inside an array comprehension only has two children.
+        Preconditions.checkState(childCount == 2 || childCount == 3);
         add("for");
         cc.maybeInsertSpace();
         add("(");
@@ -610,8 +619,10 @@ class CodeGenerator {
         add("of");
         add(first.getNext());
         add(")");
-        addNonEmptyStatement(
-            last, getContextForNonEmptyExpression(context), false);
+        if (childCount == 3) {
+          addNonEmptyStatement(
+              last, getContextForNonEmptyExpression(context), false);
+        }
         break;
 
       case Token.DO:
@@ -740,6 +751,11 @@ class CodeGenerator {
         add("(");
         add(first);
         add(")");
+
+        // An "if" node inside an array comprehension only has one child.
+        if (childCount == 1) {
+          break;
+        }
 
         if (hasElse) {
           addNonEmptyStatement(

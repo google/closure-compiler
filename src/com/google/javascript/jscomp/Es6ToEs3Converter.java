@@ -79,6 +79,16 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
           visitArrowFunction(t, n);
         }
         break;
+      case Token.ARRAY_COMP:
+      case Token.ARRAY_PATTERN:
+      case Token.COMPUTED_PROP:
+      case Token.FOR_OF:
+      case Token.OBJECT_PATTERN:
+      case Token.SUPER:
+        cannotConvertYet(n, Token.name(n.getType()));
+        // Don't bother visiting the children of a node if we
+        // already know we can't convert the node itself.
+        return false;
     }
     return true;
   }
@@ -104,11 +114,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             break;
           }
         }
-        break;
-      case Token.ARRAY_PATTERN:
-      case Token.COMPUTED_PROP:
-      case Token.SUPER:
-        cannotConvertYet(n, Token.name(n.getType()));
         break;
     }
   }

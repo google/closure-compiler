@@ -602,6 +602,18 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
+  public void testForOf() {
+    enableAstValidation(false);
+
+    test("for (x of y) { z(); }", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
+  public void testArrayComprehension() {
+    enableAstValidation(false);
+
+    test("[for (x of y) z() ]", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
   public void testSpreadArray() {
     test("var arr = [1, 2, ...mid, 4, 5];",
         "var arr = [].concat([1, 2], mid, [4, 5]);");

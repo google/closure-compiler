@@ -1057,16 +1057,29 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("[x, {y, z}] = foo();");
   }
 
+  public void testArrayComp() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("[for (x of y) z];");
+    parse("[for ({x,y} of z) x+y];");
+    parse("[for (x of y) if (x<10) z];");
+    parseError("[for (a = 5 of v) a];", "'identifier' expected");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning("[for (x of y) z];",
+        "this language feature is only supported in es6 mode:"
+        + " array comprehensions");
+  }
+
   public void testLetForbidden1() {
     parseWarning("let x = 3;",
-        "this language feature is only supported in es6 mode: " +
-        "let declarations");
+        "this language feature is only supported in es6 mode:"
+        + " let declarations");
   }
 
   public void testLetForbidden2() {
     parseWarning("function f() { let x = 3; };",
-        "this language feature is only supported in es6 mode: " +
-        "let declarations");
+        "this language feature is only supported in es6 mode:"
+        + " let declarations");
   }
 
   public void testLetForbidden3() {
@@ -1173,8 +1186,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testFileOverviewJSDoc2() {
     isIdeMode = true;
 
-    Node n = parse("/** @fileoverview Hi mom! */ " +
-        "/** @constructor */ function Foo() {}");
+    Node n = parse("/** @fileoverview Hi mom! */"
+        + " /** @constructor */ function Foo() {}");
     assertTrue(n.getJSDocInfo() != null);
     assertEquals("Hi mom!", n.getJSDocInfo().getFileOverview());
     assertTrue(n.getFirstChild().getJSDocInfo() != null);

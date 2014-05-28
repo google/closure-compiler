@@ -49,6 +49,8 @@ public class ParseTree {
   }
 
   public ArgumentListTree asArgumentList() { return (ArgumentListTree) this; }
+  public ArrayComprehensionTree asArrayComprehension() {
+    return (ArrayComprehensionTree) this; }
   public ArrayLiteralExpressionTree asArrayLiteralExpression() {
     return (ArrayLiteralExpressionTree) this; }
   public ArrayPatternTree asArrayPattern() { return (ArrayPatternTree) this; }
@@ -60,6 +62,8 @@ public class ParseTree {
   public CatchTree asCatch() { return (CatchTree) this; }
   public ClassDeclarationTree asClassDeclaration() { return (ClassDeclarationTree) this; }
   public CommaExpressionTree asCommaExpression() { return (CommaExpressionTree) this; }
+  public ComprehensionIfTree asComprehensionIf() { return (ComprehensionIfTree) this; }
+  public ComprehensionForTree asComprehensionFor() { return (ComprehensionForTree) this; }
   public ComputedPropertyAssignmentTree asComputedProperty() {
     return (ComputedPropertyAssignmentTree) this; }
   public ConditionalExpressionTree asConditionalExpression() {
