@@ -2154,7 +2154,7 @@ public class Parser {
     while (peek(TokenType.COMMA) || peekPatternElement()) {
       if (peek(TokenType.COMMA)) {
         eat(TokenType.COMMA);
-        elements.add(NullTree.Instance);
+        elements.add(new NullTree(getTreeLocation(getTreeStartLocation())));
       } else {
         ParseTree element = parsePatternElement(kind, arraySubPatternFollowSet);
         elements.add(element);
@@ -2165,6 +2165,10 @@ public class Parser {
         } else if (peek(TokenType.COMMA)) {
           // Consume the comma separator
           eat(TokenType.COMMA);
+          if (peek(TokenType.CLOSE_SQUARE)) {
+            reportError("Array pattern may not end with a comma");
+            break;
+          }
         } else {
           // Otherwise we must be done
           break;

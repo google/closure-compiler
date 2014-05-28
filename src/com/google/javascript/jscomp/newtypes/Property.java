@@ -194,13 +194,17 @@ class Property {
 
   @Override
   public String toString() {
+    return appendTo(new StringBuilder()).toString();
+  }
+
+  public StringBuilder appendTo(StringBuilder builder) {
     switch (attribute) {
       case CONSTANT:
-        return inferredType.toString() + '^';
+        return inferredType.appendTo(builder).append('^');
       case REQUIRED:
-        return inferredType.toString();
+        return inferredType.appendTo(builder);
       case OPTIONAL:
-        return inferredType.toString() + '=';
+        return inferredType.appendTo(builder).append('=');
       default:
         throw new RuntimeException("Unknown Attribute value " + attribute);
     }

@@ -165,6 +165,17 @@ public class ReplaceMessagesTest extends CompilerTestCase {
          "a.b.c.MSG_J=\"One \"+(x+\" ph\")");
   }
 
+  public void testPlaceholderInPlaceholderValue()  {
+    registerMessage(new JsMessage.Builder("MSG_L")
+        .appendPlaceholderReference("a")
+        .appendStringPart(" has ")
+        .appendPlaceholderReference("b")
+        .build());
+
+    test("/** @desc d */\n" +
+         "var MSG_L = goog.getMsg('{$a} has {$b}', {a: '{$b}', b: 1});",
+         "var MSG_L=\"{$b}\"+(\" has \"+1);");
+  }
   public void testSimpleMessageReplacementMissing()  {
     style = Style.LEGACY;
     test("/** @desc d */\n" +

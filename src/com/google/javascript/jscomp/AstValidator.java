@@ -467,10 +467,6 @@ public class AstValidator implements CompilerPass {
     boolean defaultParams = false;
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       if (c.isRest()) {
-        if (defaultParams) {
-          violation("Cannot include rest parameters " +
-              "after parameters with a default value.", c);
-        }
         if (c.getNext() != null) {
           violation("Rest parameters must come after all other parameters.", c);
         }
@@ -537,13 +533,37 @@ public class AstValidator implements CompilerPass {
     validateNodeType(Token.VAR, n);
     this.validateMinimumChildCount(n, 1);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      // Don't use the validateName here as the NAME is allowed to have
+      validateVarChild(c);
+    }
+  }
+
+  private void validateVarChild(Node n) {
+    if (n.isName()) {
+      // Don't use validateName here since this NAME node may have
       // a child.
-      validateNodeType(Token.NAME, c);
-      validateNonEmptyString(c);
-      validateMaximumChildCount(c, 1);
-      if (c.hasChildren()) {
-        validateExpression(c.getFirstChild());
+      validateNonEmptyString(n);
+      validateMaximumChildCount(n, 1);
+      if (n.hasChildren()) {
+        validateExpression(n.getFirstChild());
+      }
+    } else if (n.isArrayPattern()) {
+      validateArrayPattern(n);
+    } else {
+      violation("Invalid child for VAR node", n);
+    }
+  }
+
+  private void validateArrayPattern(Node n) {
+    validateNodeType(Token.ARRAY_PATTERN, n);
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+      // When the array pattern is a direct child of a VAR node,
+      // the last element is the RHS of the 'var' assignment.
+      if (c == n.getLastChild() && n.getParent().isVar()) {
+        validateExpression(c);
+      } else {
+        // The members of the array pattern can be simple names,
+        // or nested array/object patterns, e.g. "var [a,[b,c]]=[1,[2,3]];"
+        validateVarChild(c);
       }
     }
   }

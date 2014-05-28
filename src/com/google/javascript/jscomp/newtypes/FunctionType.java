@@ -17,12 +17,10 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 import java.util.Iterator;
@@ -561,28 +559,59 @@ public class FunctionType {
 
   @Override
   public String toString() {
+    return appendTo(new StringBuilder()).toString();
+  }
+
+  public StringBuilder appendTo(StringBuilder builder) {
     if (isTopFunction()) {
-      return "TOP_FUNCTION" + (isLoose ? " (loose)" : "");
+      if (isLoose) {
+        return builder.append("LOOSE_TOP_FUNCTION");
+      }
+      return builder.append("TOP_FUNCTION");
     }
-    List<String> formals = Lists.newLinkedList();
+    builder.append("function(");
     if (nominalType != null) {
-      formals.add("new:" + nominalType.getName());
+      builder.append("new:");
+      builder.append(nominalType.getName());
+      builder.append(',');
     }
-    for (JSType formal : requiredFormals) {
-      formals.add(formal.toString());
+    for (int i = 0; i < requiredFormals.size(); ++i) {
+      requiredFormals.get(i).appendTo(builder);
+      builder.append(',');
     }
-    for (JSType formal : optionalFormals) {
-      formals.add(formal.toString() + "=");
+    for (int i = 0; i < optionalFormals.size(); ++i) {
+      optionalFormals.get(i).appendTo(builder);
+      builder.append("=,");
     }
     if (restFormals != null) {
-      formals.add("..." + restFormals.toString());
+      builder.append("...");
+      restFormals.appendTo(builder);
     }
-    String result = "function (" + Joiner.on(", ").join(formals) + ")";
+    // Delete the trailing comma, if present
+    if (builder.charAt(builder.length() - 1) == ',') {
+      builder.deleteCharAt(builder.length() - 1);
+    }
+    builder.append(')');
     if (returnType != null) {
-      result += ": " + returnType.toString();
+      builder.append(':');
+      returnType.appendTo(builder);
     }
-    return result + (isLoose ? " (loose)" : "") +
-        (outerVarPreconditions.isEmpty() ?
-            "" : "\tFV:" + outerVarPreconditions);
+    if (isLoose) {
+      builder.append(" (loose)");
+    }
+    if (!outerVarPreconditions.isEmpty()) {
+      builder.append("\tFV: {");
+      boolean firstIteration = true;
+      for (Map.Entry<String, JSType> entry : outerVarPreconditions.entrySet()) {
+        if (!firstIteration) {
+          builder.append(',');
+        }
+        builder.append(entry.getKey());
+        builder.append('=');
+        entry.getValue().appendTo(builder);
+      }
+      builder.append('}');
+    }
+    return builder;
   }
 }

@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.LiteralToken;
 import com.google.javascript.jscomp.parsing.parser.TokenType;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BlockTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BreakStatementTree;
@@ -67,6 +68,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.ModuleImportTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternFieldTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParseTreeType;
@@ -77,6 +80,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SpreadExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.SpreadPatternElementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
@@ -897,7 +901,7 @@ class NewIRFactory {
      * the string 'a' is quoted, while the name b is turned into a string, but
      * unquoted.
      */
-    private Node processObjecLitKeyAsString(
+    private Node processObjectLitKeyAsString(
         com.google.javascript.jscomp.parsing.parser.Token token) {
       Node ret;
       if (token == null) {
@@ -923,6 +927,43 @@ class NewIRFactory {
         node.addChildToBack(c);
       }
       return node;
+    }
+
+    @Override
+    Node processArrayPattern(ArrayPatternTree tree) {
+      maybeWarnEs6Feature(tree, "destructuring");
+
+      Node node = newNode(Token.ARRAY_PATTERN);
+      for (ParseTree child : tree.elements) {
+        node.addChildToBack(transform(child));
+      }
+      return node;
+    }
+
+    @Override
+    Node processObjectPattern(ObjectPatternTree tree) {
+      maybeWarnEs6Feature(tree, "destructuring");
+
+      Node node = newNode(Token.OBJECT_PATTERN);
+      for (ParseTree child : tree.fields) {
+        node.addChildToBack(transform(child));
+      }
+      return node;
+    }
+
+    @Override
+    Node processObjectPatternField(ObjectPatternFieldTree tree) {
+      Node node = processObjectLitKeyAsString(tree.identifier);
+      node.setType(Token.STRING_KEY);
+      if (tree.element != null) {
+        node.addChildToBack(transform(tree.element));
+      }
+      return node;
+    }
+
+    @Override
+    Node processSpreadPatternElement(SpreadPatternElementTree tree) {
+      return newNode(Token.SPREAD, transform(tree.lvalue));
     }
 
     @Override
@@ -1243,7 +1284,7 @@ class NewIRFactory {
         Node target = n.getFirstChild();
         if (!validAssignmentTarget(target)) {
           errorReporter.error(
-              "invalid assignment target",
+              "invalid assignment target: " + target,
               sourceName,
               target.getLineno(), "", 0);
         }
@@ -1429,7 +1470,7 @@ class NewIRFactory {
 
     @Override
     Node processGetAccessor(GetAccessorTree tree) {
-      Node key = processObjecLitKeyAsString(tree.propertyName);
+      Node key = processObjectLitKeyAsString(tree.propertyName);
       key.setType(Token.GETTER_DEF);
       Node body = transform(tree.body);
       Node dummyName = IR.name("");
@@ -1445,7 +1486,7 @@ class NewIRFactory {
 
     @Override
     Node processSetAccessor(SetAccessorTree tree) {
-      Node key = processObjecLitKeyAsString(tree.propertyName);
+      Node key = processObjectLitKeyAsString(tree.propertyName);
       key.setType(Token.SETTER_DEF);
       Node body = transform(tree.body);
       Node dummyName = IR.name("");
@@ -1462,7 +1503,7 @@ class NewIRFactory {
 
     @Override
     Node processPropertyNameAssignment(PropertyNameAssignmentTree tree) {
-      Node key = processObjecLitKeyAsString(tree.name);
+      Node key = processObjectLitKeyAsString(tree.name);
       key.setType(Token.STRING_KEY);
       if (tree.value != null) {
         key.addChildToFront(transform(tree.value));
@@ -1487,7 +1528,7 @@ class NewIRFactory {
     Node processPropertyGet(MemberExpressionTree getNode) {
       Node leftChild = transform(getNode.operand);
       IdentifierToken nodeProp = getNode.memberName;
-      Node rightChild = processObjecLitKeyAsString(nodeProp);
+      Node rightChild = processObjectLitKeyAsString(nodeProp);
       if (!rightChild.isQuotedString() && !isAllowedProp(
           rightChild.getString())) {
         errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
@@ -1746,6 +1787,8 @@ class NewIRFactory {
         case Token.NAME:
         case Token.GETPROP:
         case Token.GETELEM:
+        case Token.ARRAY_PATTERN:
+        case Token.OBJECT_PATTERN:
           return true;
       }
       return false;

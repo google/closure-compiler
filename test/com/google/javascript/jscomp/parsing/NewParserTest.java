@@ -999,24 +999,65 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "const declarations");
   }
 
-  public void testDestructuringAssignForbidden() {
-    parseError("var [x, y] = foo();",
-        "unsupported language feature: destructuring");
+  public void testArrayDestructuringVar() {
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning("var [x,y] = foo();",
+        "this language feature is only supported in es6 mode: destructuring");
+    parseWarning("[x,y] = foo();",
+        "this language feature is only supported in es6 mode: destructuring");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var [x,y] = foo();");
+    parse("[x,y] = foo();");
   }
 
-  public void testDestructuringAssignForbidden2() {
-    parseError("var {x, y} = foo();",
-        "unsupported language feature: destructuring");
+  public void testArrayDestructuringTrailingComma() {
+    mode = LanguageMode.ECMASCRIPT6;
+    // TODO(tbreisacher): Make this error clearer. The error we want
+    // ("Array pattern may not end with a comma") is reported in a
+    // lookahead parser so it doesn't get reported to the user.
+    parseError("var [x,] = ['x',];", "'identifier' expected");
   }
 
-  public void testDestructuringAssignForbidden3() {
-    parseError("var {x: x, y: y} = foo();",
-        "unsupported language feature: destructuring");
+  public void testArrayDestructuringSpread() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var [first, ...rest] = foo();");
+
+    // TODO(tbreisacher): Make this error clearer.
+    parseError("var [first, ...more, last] = foo();", "'identifier' expected");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning("var [first, ...rest] = foo();",
+        "this language feature is only supported in es6 mode: destructuring");
   }
 
-  public void testDestructuringAssignForbidden4() {
-    parseError("[x, y] = foo();",
-        "unsupported language feature: destructuring");
+  public void testObjectDestructuringVar() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var {x, y} = foo();");
+    parse("var {x: x, y: y} = foo();");
+    parse("var {x: {y, z}} = foo();");
+
+    // Useless, but legal.
+    parse("var {} = foo();");
+  }
+
+  public void testObjectDestructuringAssign() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("({x, y}) = foo();");
+    parse("({x: x, y: y}) = foo();");
+    parse("({x: {y, z}}) = foo();");
+
+    // Useless, but legal.
+    parse("({}) = foo();");
+  }
+
+  public void testMixedDestructuring() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var {x: [y, z]} = foo();");
+    parse("var [x, {y, z}] = foo();");
+
+    parse("({x: [y, z]} = foo());");
+    parse("[x, {y, z}] = foo();");
   }
 
   public void testLetForbidden1() {
@@ -1744,6 +1785,13 @@ public class NewParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("function f(a, b=0) {}",
         "this language feature is only supported in es6 mode: default parameters");
+  }
+
+  public void testDefaultParametersWithRestParameters() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("function f(a=0, ...b) {}");
+    parse("function f(a, b=0, ...c) {}");
+    parse("function f(a, b=0, c=1, ...d) {}");
   }
 
   public void testClass1() {
