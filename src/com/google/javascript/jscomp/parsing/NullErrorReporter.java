@@ -38,34 +38,6 @@ public abstract class NullErrorReporter  {
     return new OldRhinoNullReporter();
   }
 
-  public static com.google.javascript.rhino.head.ErrorReporter
-      forNewRhino() {
-    return new NewRhinoNullReporter();
-  }
-
-  private static class NewRhinoNullReporter extends NullErrorReporter
-      implements com.google.javascript.rhino.head.ErrorReporter {
-    @Override
-    public com.google.javascript.rhino.head.EvaluatorException
-      runtimeError(String message, String sourceName, int line,
-                   String lineSource, int lineOffset) {
-      return new com.google.javascript.rhino.head.EvaluatorException(
-          message);
-    }
-
-    @Override
-    public void error(String message, String sourceName, int line,
-        String sourceLine, int lineOffset) {
-      super.error(message, sourceName, line, lineOffset);
-    }
-
-    @Override
-    public void warning(String message, String sourceName, int line,
-        String sourceLine, int lineOffset) {
-      super.warning(message, sourceName, line, lineOffset);
-    }
-  }
-
   private static class OldRhinoNullReporter extends NullErrorReporter
       implements ErrorReporter {
   }

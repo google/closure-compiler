@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -31,8 +32,6 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.head.ErrorReporter;
-import com.google.javascript.rhino.head.ast.Comment;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.HashSet;
@@ -64,12 +63,12 @@ public final class JsDocInfoParser {
         int charno) {
       errorReporter.warning(
           SimpleErrorReporter.getMessage1(messageId, messageArg),
-          getSourceName(), lineno, null, charno);
+          getSourceName(), lineno, charno);
     }
 
     void addParserWarning(String messageId, int lineno, int charno) {
       errorReporter.warning(SimpleErrorReporter.getMessage0(messageId),
-          getSourceName(), lineno, null, charno);
+          getSourceName(), lineno, charno);
     }
 
     void addTypeWarning(String messageId, String messageArg, int lineno,
@@ -77,14 +76,14 @@ public final class JsDocInfoParser {
       errorReporter.warning(
           "Bad type annotation. " +
           SimpleErrorReporter.getMessage1(messageId, messageArg),
-          getSourceName(), lineno, null, charno);
+          getSourceName(), lineno, charno);
     }
 
     void addTypeWarning(String messageId, int lineno, int charno) {
       errorReporter.warning(
           "Bad type annotation. " +
           SimpleErrorReporter.getMessage0(messageId),
-          getSourceName(), lineno, null, charno);
+          getSourceName(), lineno, charno);
     }
   }
 
@@ -127,18 +126,6 @@ public final class JsDocInfoParser {
     NEXT_IS_ANNOTATION
   }
 
-  JsDocInfoParser(JsDocTokenStream stream,
-      Comment commentNode,
-      Node associatedNode,
-      Config config,
-      ErrorReporter errorReporter) {
-    this(stream,
-        commentNode != null ? commentNode.getValue() : null,
-        commentNode != null ? commentNode.getPosition() : 0,
-        associatedNode,
-        associatedNode != null ? associatedNode.getStaticSourceFile() : null,
-        config, errorReporter);
-  }
 
   JsDocInfoParser(JsDocTokenStream stream,
                   String comment,
@@ -211,10 +198,12 @@ public final class JsDocInfoParser {
         false);
     JsDocInfoParser parser = new JsDocInfoParser(
         new JsDocTokenStream(typeString),
+        typeString,
+        0,
         null,
         null,
         config,
-        NullErrorReporter.forNewRhino());
+        NullErrorReporter.forOldRhino());
 
     return parser.parseTopLevelTypeExpression(parser.next());
   }

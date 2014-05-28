@@ -42,12 +42,12 @@ import com.google.javascript.jscomp.type.ChainableReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.head.ErrorReporter;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.io.IOException;
@@ -218,7 +218,7 @@ public class Compiler extends AbstractCompiler {
 
   // This error reporter gets the messages from the current Rhino parser.
   private final ErrorReporter defaultErrorReporter =
-      RhinoErrorReporter.forNewRhino(this);
+      RhinoErrorReporter.forOldRhino(this);
 
   /** Error strings used for reporting JSErrors */
   public static final DiagnosticType OPTIMIZE_LOOP_ERROR = DiagnosticType.error(

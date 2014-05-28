@@ -19,29 +19,26 @@ package com.google.javascript.jscomp.parsing;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.head.ScriptRuntime;
 import com.google.javascript.rhino.jstype.SimpleSourceFile;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 public class NewParserTest extends BaseJSTypeTestCase {
   private static final String SUSPICIOUS_COMMENT_WARNING =
       NewIRFactory.SUSPICIOUS_COMMENT_WARNING;
 
   private static final String TRAILING_COMMA_MESSAGE =
-      ScriptRuntime.getMessage0("msg.extra.trailing.comma");
+      "Trailing comma is not legal in an ECMA-262 object initializer";
 
   private static final String MISSING_GT_MESSAGE =
-      "Bad type annotation. " +
-      com.google.javascript.rhino.SimpleErrorReporter.getMessage0(
-          "msg.jsdoc.missing.gt");
+      "Bad type annotation. missing closing >";
 
   private static final String UNLABELED_BREAK =
       "unlabelled break must be inside loop or switch";
@@ -1197,7 +1194,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testDuplicatedParam() {
-    parseWarning("function foo(x, x) {}", "Duplicate parameter name \"x\".");
+    parseWarning("function foo(x, x) {}", "Duplicate parameter name \"x\"");
   }
 
   public void testLet() {
@@ -1912,14 +1909,14 @@ public class NewParserTest extends BaseJSTypeTestCase {
    * Verify that the given code has the given parse errors.
    * @return If in IDE mode, returns a partial tree.
    */
-  private Node parseError(String string, String... errors) {
+  private Node parseError(String source, String... errors) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(errors, null);
-    Node script = null;
-    StaticSourceFile file = new SimpleSourceFile("input", false);
-    script = ParserRunner.parseEs6(
-        file, string,
-       ParserRunner.createConfig(isIdeMode, mode, false),
-          testErrorReporter, Logger.getAnonymousLogger()).ast;
+    ParseResult result = ParserRunner.parse(
+        new SimpleSourceFile("input", false),
+        source,
+        ParserRunner.createConfig(isIdeMode, mode, false),
+        testErrorReporter);
+    Node script = result.ast;
 
     // verifying that all errors were seen
     assertTrue(testErrorReporter.hasEncounteredAllErrors());
@@ -1937,10 +1934,10 @@ public class NewParserTest extends BaseJSTypeTestCase {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
     Node script = null;
     StaticSourceFile file = new SimpleSourceFile("input", false);
-    script = ParserRunner.parseEs6(
-        file, string,
-        ParserRunner.createConfig(isIdeMode, mode, false),
-        testErrorReporter, Logger.getAnonymousLogger()).ast;
+    script = ParserRunner.parse(file,
+      string,
+      ParserRunner.createConfig(isIdeMode, mode, false),
+      testErrorReporter).ast;
 
     // verifying that all warnings were seen
     assertTrue(testErrorReporter.hasEncounteredAllErrors());

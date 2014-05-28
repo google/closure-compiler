@@ -21,21 +21,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.Parser;
 import com.google.javascript.jscomp.parsing.parser.Parser.Config.Mode;
 import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.head.ErrorReporter;
-import com.google.javascript.rhino.head.EvaluatorException;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.logging.Logger;
 
 /** parser runner */
 public class ParserRunner {
@@ -93,22 +91,39 @@ public class ParserRunner {
     return ImmutableSet.copyOf(Splitter.on(',').trimResults().split(configProp));
   }
 
-  /**
-   * Parses the JavaScript text given by a reader.
-   *
-   * @param sourceString Source code from the file.
-   * @param errorReporter An error.
-   * @param logger A logger.
-   * @return A ParseResult of the given text. The comments field of the
-   *     ParseResult will be an empty list if IDE mode is not enabled.
-   * @throws IOException
-   */
-  public static ParseResult parse(StaticSourceFile sourceFile,
-                                  String sourceString,
-                                  Config config,
-                                  ErrorReporter errorReporter,
-                                  Logger logger) throws IOException {
-    return parseEs6(sourceFile, sourceString, config, errorReporter, logger);
+  public static ParseResult parse(
+      StaticSourceFile sourceFile,
+      String sourceString,
+      Config config,
+      ErrorReporter errorReporter) {
+    // TODO(johnlenz): unify "SourceFile", "Es6ErrorReporter" and "Config"
+    com.google.javascript.jscomp.parsing.parser.SourceFile file =
+        new com.google.javascript.jscomp.parsing.parser.SourceFile(
+            sourceFile.getName(), sourceString);
+    Es6ErrorReporter es6ErrorReporter =
+        new Es6ErrorReporter(errorReporter, file, config);
+    com.google.javascript.jscomp.parsing.parser.Parser.Config es6config =
+        new com.google.javascript.jscomp.parsing.parser.Parser.Config(mode(
+            config.languageMode));
+    Parser p = new Parser(es6config, es6ErrorReporter, file);
+    ProgramTree tree = p.parseProgram();
+    Node root = null;
+    List<Comment> comments = ImmutableList.of();
+    if (tree != null && (!es6ErrorReporter.hadError() || config.isIdeMode)) {
+      root = NewIRFactory.transformTree(
+          tree, sourceFile, sourceString, config, errorReporter);
+      root.setIsSyntheticBlock(true);
+
+      if (config.isIdeMode) {
+        List<com.google.javascript.jscomp.parsing.parser.trees.Comment> parserComments =
+            p.getComments();
+        comments = Lists.newArrayListWithCapacity(parserComments.size());
+        for (com.google.javascript.jscomp.parsing.parser.trees.Comment c : parserComments) {
+          comments.add(new CommentWrapper(c));
+        }
+      }
+    }
+    return new ParseResult(root, comments);
   }
 
   private static class Es6ErrorReporter
@@ -133,20 +148,19 @@ public class ParserRunner {
         Object... arguments) {
       String message = SimpleFormat.format("%s",
           SimpleFormat.format(format, arguments));
-      String sourceLine = source.getSnippet(location);
       switch (kind) {
         case "Error":
           if (isIdeMode || !errorSeen) {
             errorSeen = true;
             this.reporter.error(
                 message, location.source.name,
-                location.line + 1, sourceLine, location.column);
+                location.line + 1, location.column);
           }
           break;
         case "Warning":
           this.reporter.warning(
               message, location.source.name,
-              location.line + 1, sourceLine, location.column);
+              location.line + 1, location.column);
           break;
         default:
           throw new IllegalStateException("Unexpected:" + kind);
@@ -157,56 +171,6 @@ public class ParserRunner {
     protected void reportMessage(SourcePosition location, String message) {
       throw new IllegalStateException("Not called directly");
     }
-  }
-
-  /**
-   * Parses the JavaScript text using the ES6 parser.
-   *
-   * @param sourceString Source code from the file.
-   * @param errorReporter An error.
-   * @param logger A logger.
-   * @return The AST of the given text.
-   */
-  public static ParseResult parseEs6(StaticSourceFile sourceFile,
-                                  String sourceString,
-                                  Config config,
-                                  ErrorReporter errorReporter,
-                                  Logger logger) {
-    com.google.javascript.jscomp.parsing.parser.SourceFile file =
-        new com.google.javascript.jscomp.parsing.parser.SourceFile(
-            sourceFile.getName(), sourceString);
-    Es6ErrorReporter es6ErrorReporter =
-        new Es6ErrorReporter(errorReporter, file, config);
-    com.google.javascript.jscomp.parsing.parser.Parser.Config es6config =
-        new com.google.javascript.jscomp.parsing.parser.Parser.Config(mode(
-            config.languageMode));
-    com.google.javascript.jscomp.parsing.parser.Parser p =
-        new com.google.javascript.jscomp.parsing.parser.Parser(
-            es6config, es6ErrorReporter, file);
-    ProgramTree tree = null;
-    try {
-      tree = p.parseProgram();
-    } catch (EvaluatorException e) {
-      logger.info(
-          "Error parsing " + sourceFile.getName() + ": " + e.getMessage());
-    }
-    Node root = null;
-    List<Comment> comments = ImmutableList.of();
-    if (tree != null && (!es6ErrorReporter.hadError() || config.isIdeMode)) {
-      root = NewIRFactory.transformTree(
-          tree, sourceFile, sourceString, config, errorReporter);
-      root.setIsSyntheticBlock(true);
-
-      if (config.isIdeMode) {
-        List<com.google.javascript.jscomp.parsing.parser.trees.Comment> parserComments =
-            p.getComments();
-        comments = Lists.newArrayListWithCapacity(parserComments.size());
-        for (com.google.javascript.jscomp.parsing.parser.trees.Comment c : parserComments) {
-          comments.add(new CommentWrapper(c));
-        }
-      }
-    }
-    return new ParseResult(root, comments);
   }
 
   private static Mode mode(

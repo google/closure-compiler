@@ -95,12 +95,12 @@ import com.google.javascript.jscomp.parsing.parser.trees.WithStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.YieldExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
-import com.google.javascript.rhino.head.ErrorReporter;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.List;
@@ -154,7 +154,7 @@ class NewIRFactory {
       "Octal literals in strings are not supported in this language mode.";
 
   static final String DUPLICATE_PARAMETER =
-      "Duplicate parameter name \"%s\".";
+      "Duplicate parameter name \"%s\"";
 
   static final String UNLABELED_BREAK =
       "unlabelled break must be inside loop or switch";
@@ -320,7 +320,7 @@ class NewIRFactory {
             errorReporter.error(
                 String.format(UNDEFINED_LABEL, labelName.getString()),
                 sourceName,
-                n.getLineno(), "", n.getCharno());
+                n.getLineno(), n.getCharno());
             break;
           }
           parent = parent.getParent();
@@ -331,7 +331,7 @@ class NewIRFactory {
             errorReporter.error(
                 UNEXPECTED_LABLED_CONTINUE,
                 sourceName,
-                n.getLineno(), "", n.getCharno());
+                n.getLineno(), n.getCharno());
           }
         }
       } else {
@@ -343,7 +343,7 @@ class NewIRFactory {
               errorReporter.error(
                   UNEXPECTED_CONTINUE,
                   sourceName,
-                  n.getLineno(), "", n.getCharno());
+                  n.getLineno(), n.getCharno());
               break;
             }
             parent = parent.getParent();
@@ -356,7 +356,7 @@ class NewIRFactory {
               errorReporter.error(
                   UNLABELED_BREAK,
                   sourceName,
-                  n.getLineno(), "", n.getCharno());
+                  n.getLineno(), n.getCharno());
               break;
             }
             parent = parent.getParent();
@@ -405,7 +405,7 @@ class NewIRFactory {
             errorReporter.warning(
                 String.format(DUPLICATE_PARAMETER, c.getString()),
                 sourceName,
-                n.getLineno(), "", n.getCharno());
+                n.getLineno(), n.getCharno());
           }
         }
       }
@@ -468,7 +468,7 @@ class NewIRFactory {
       if (!valid) {
         errorReporter.warning(MISPLACED_TYPE_ANNOTATION,
             sourceName,
-            n.getLineno(), "", n.getCharno());
+            n.getLineno(), n.getCharno());
       }
     }
   }
@@ -517,7 +517,7 @@ class NewIRFactory {
       errorReporter.warning(
           SUSPICIOUS_COMMENT_WARNING,
           sourceName,
-          comment.location.start.line, "", 0);
+          comment.location.start.line, 0);
     }
   }
 
@@ -1171,7 +1171,7 @@ class NewIRFactory {
           errorReporter.error(
             "unnamed function statement",
             sourceName,
-            lineno(functionTree), "", charno(functionTree));
+            lineno(functionTree), charno(functionTree));
 
           // Return the bare minimum to put the AST in a valid state.
           newName = createMissingNameNode();
@@ -1286,7 +1286,7 @@ class NewIRFactory {
           errorReporter.error(
               "invalid assignment target: " + target,
               sourceName,
-              target.getLineno(), "", 0);
+              target.getLineno(), 0);
         }
       }
 
@@ -1356,7 +1356,7 @@ class NewIRFactory {
           errorReporter.error(
             "identifier is a reserved word",
             sourceName,
-            linenum, "", 0);
+            linenum, 0);
         }
         node = newStringNode(Token.NAME, identifierToken.value);
         if (info != null) {
@@ -1383,7 +1383,7 @@ class NewIRFactory {
         errorReporter.error(
           "identifier is a reserved word",
           sourceName,
-          identifierToken.location.start.line, "", 0);
+          identifierToken.location.start.line, 0);
       }
       node = newStringNode(Token.NAME, identifierToken.toString());
       if (info != null) {
@@ -1446,7 +1446,7 @@ class NewIRFactory {
         if (!key.isComputedProp() &&
             !key.isQuotedString() && !isAllowedProp(key.getString())) {
           errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
-              key.getLineno(), "", key.getCharno());
+              key.getLineno(), key.getCharno());
         }
         if (key.getFirstChild() == null) {
           maybeWarn = true;
@@ -1532,7 +1532,7 @@ class NewIRFactory {
       if (!rightChild.isQuotedString() && !isAllowedProp(
           rightChild.getString())) {
         errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
-            rightChild.getLineno(), "", rightChild.getCharno());
+            rightChild.getLineno(), rightChild.getCharno());
       }
       return newNode(Token.GETPROP, leftChild, rightChild);
     }
@@ -1574,7 +1574,7 @@ class NewIRFactory {
             errorReporter.error(
                 "Invalid RegExp flag '" + flag + "'",
                 sourceName,
-                lineno(tree), "", charno(tree));
+                lineno(tree), charno(tree));
         }
       }
     }
@@ -1626,7 +1626,7 @@ class NewIRFactory {
       if (Pattern.compile("[^\\\\]\\$\\{").matcher(token.value).find()) {
         errorReporter.warning(
             "Placeholders in template strings are not supported yet.",
-            sourceName, lineno(tree), "", charno(tree));
+            sourceName, lineno(tree), charno(tree));
       }
 
       Node node = newStringNode(Token.STRING, normalizeString(token));
@@ -1744,7 +1744,7 @@ class NewIRFactory {
           errorReporter.error(
               msg,
               sourceName,
-              operand.getLineno(), "", 0);
+              operand.getLineno(), 0);
         } else  if (type == Token.INC || type == Token.DEC) {
           if (!validAssignmentTarget(operand)) {
             String msg = (type == Token.INC)
@@ -1753,7 +1753,7 @@ class NewIRFactory {
             errorReporter.error(
                 msg,
                 sourceName,
-                operand.getLineno(), "", 0);
+                operand.getLineno(), 0);
           }
         }
 
@@ -1773,7 +1773,7 @@ class NewIRFactory {
         errorReporter.error(
             msg,
             sourceName,
-            operand.getLineno(), "", 0);
+            operand.getLineno(), 0);
       }
 
       Node node = newNode(type, operand);
@@ -1885,7 +1885,7 @@ class NewIRFactory {
       errorReporter.error(
           "Unsupported syntax: " + node.type.toString(),
           sourceName,
-          lineno(node), "", 0);
+          lineno(node), 0);
       return newNode(Token.EMPTY);
     }
 
@@ -1893,21 +1893,21 @@ class NewIRFactory {
       errorReporter.error(
           "destructuring assignment forbidden",
           sourceName,
-          lineno(node), "", 0);
+          lineno(node), 0);
     }
 
     void reportGetter(ParseTree node) {
       errorReporter.error(
           GETTER_ERROR_MESSAGE,
           sourceName,
-          lineno(node), "", 0);
+          lineno(node), 0);
     }
 
     void reportSetter(ParseTree node) {
       errorReporter.error(
           SETTER_ERROR_MESSAGE,
           sourceName,
-          lineno(node), "", 0);
+          lineno(node), 0);
     }
 
     @Override
@@ -2069,7 +2069,7 @@ class NewIRFactory {
         errorReporter.warning(
             "this language feature is only supported in es6 mode: " + feature,
             sourceName,
-            lineno(node), "", charno(node));
+            lineno(node), charno(node));
       }
     }
 
@@ -2078,7 +2078,7 @@ class NewIRFactory {
       errorReporter.error(
           "unsupported language feature: " + feature,
           sourceName,
-          lineno(node), "", charno(node));
+          lineno(node), charno(node));
       return createMissingExpressionNode();
     }
   }
@@ -2133,7 +2133,7 @@ class NewIRFactory {
           if (!isEs5OrBetterMode()) {
             errorReporter.warning(STRING_CONTINUATION_WARNING,
                 sourceName,
-                lineno(token.location.start), "", charno(token.location.start));
+                lineno(token.location.start), charno(token.location.start));
           }
           // line continuation, skip the line break
           break;
@@ -2147,7 +2147,7 @@ class NewIRFactory {
             } else {
               errorReporter.warning(OCTAL_STRING_LITERAL_WARNING,
                   sourceName,
-                  lineno(token.location.start), "", charno(token.location.start));
+                  lineno(token.location.start), charno(token.location.start));
             }
           }
 
@@ -2230,7 +2230,7 @@ class NewIRFactory {
           if (!isEs6Mode()) {
             errorReporter.warning(BINARY_NUMBER_LITERAL_WARNING,
                 sourceName,
-                lineno(token.location.start), "", charno(token.location.start));
+                lineno(token.location.start), charno(token.location.start));
           }
           long v = 0;
           int c = 1;
@@ -2244,7 +2244,7 @@ class NewIRFactory {
           if (!isEs6Mode()) {
             errorReporter.warning(OCTAL_NUMBER_LITERAL_WARNING,
                 sourceName,
-                lineno(token.location.start), "", charno(token.location.start));
+                lineno(token.location.start), charno(token.location.start));
           }
           long v = 0;
           int c = 1;
@@ -2265,7 +2265,7 @@ class NewIRFactory {
         case '0': case '1': case '2': case '3':
         case '4': case '5': case '6': case '7':
           errorReporter.warning(INVALID_ES5_STRICT_OCTAL, sourceName,
-              lineno(location.start), "", charno(location.start));
+              lineno(location.start), charno(location.start));
           if (!inStrictContext()) {
             long v = 0;
             int c = 0;
@@ -2278,7 +2278,7 @@ class NewIRFactory {
           }
         default:
           errorReporter.error(INVALID_NUMBER_LITERAL, sourceName,
-              lineno(location.start), "", charno(location.start));
+              lineno(location.start), charno(location.start));
           return 0;
       }
     } else {

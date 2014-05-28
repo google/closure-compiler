@@ -23,9 +23,9 @@ import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.parsing.Comment;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.head.ErrorReporter;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.util.List;

@@ -16,11 +16,12 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
@@ -29,11 +30,6 @@ import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.head.CompilerEnvirons;
-import com.google.javascript.rhino.head.Parser;
-import com.google.javascript.rhino.head.Token.CommentType;
-import com.google.javascript.rhino.head.ast.AstRoot;
-import com.google.javascript.rhino.head.ast.Comment;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.SimpleSourceFile;
@@ -2970,12 +2966,16 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "  /**\n" +
         "   * A comment\n" +
         "   */\n" +
-        "  function double(x) {}");
-    List<JSDocInfo> jsdocs = parseFull(sourceFile.getCode());
-    assertEquals(1, jsdocs.size());
-    assertEquals(6, jsdocs.get(0).getOriginalCommentPosition());
-    assertEquals(2, sourceFile.getLineOfOffset(jsdocs.get(0).getOriginalCommentPosition()));
-    assertEquals(2, sourceFile.getColumnOfOffset(jsdocs.get(0).getOriginalCommentPosition()));
+        "  function f(x) {}");
+    Node script = parseFull(sourceFile.getCode());
+    Preconditions.checkState(script.isScript());
+    Node fn = script.getFirstChild();
+    Preconditions.checkState(fn.isFunction());
+    JSDocInfo jsdoc = fn.getJSDocInfo();
+
+    assertEquals(6, jsdoc.getOriginalCommentPosition());
+    assertEquals(2, sourceFile.getLineOfOffset(jsdoc.getOriginalCommentPosition()));
+    assertEquals(2, sourceFile.getColumnOfOffset(jsdoc.getOriginalCommentPosition()));
   }
 
   public void testGetOriginalCommentString() throws Exception {
@@ -3017,7 +3017,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseJaggerProvideExtra() throws Exception {
     parse("@jaggerProvide \n@jaggerProvide*/", "extra @jaggerProvide tag");
   }
-  
+
   public void testParseJaggerProvidePromise() throws Exception {
     assertTrue(parse("@jaggerProvidePromise*/").isJaggerProvidePromise());
   }
@@ -3232,39 +3232,18 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTrue(collection.contains(item));
   }
 
-  private List<JSDocInfo> parseFull(String code, String... warnings) {
-    CompilerEnvirons environment = new CompilerEnvirons();
-
+  private Node parseFull(String code, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
-    environment.setErrorReporter(testErrorReporter);
-
-    environment.setRecordingComments(true);
-    environment.setRecordingLocalJsDocComments(true);
-
-    Parser p = new Parser(environment, testErrorReporter);
-    AstRoot script = p.parse(code, null, 0);
-
     Config config =
         new Config(extraAnnotations, extraSuppressions,
             true, LanguageMode.ECMASCRIPT3, false);
 
-    List<JSDocInfo> jsdocs = Lists.newArrayList();
-    for (Comment comment : script.getComments()) {
-      JsDocInfoParser jsdocParser =
-        new JsDocInfoParser(
-            new JsDocTokenStream(comment.getValue().substring(3),
-                comment.getLineno()),
-            comment,
-            null,
-            config,
-            testErrorReporter);
-      jsdocParser.parse();
-      jsdocs.add(jsdocParser.retrieveAndResetParsedJSDocInfo());
-    }
+    ParseResult result = ParserRunner.parse(
+        new SimpleSourceFile("source", false), code, config, testErrorReporter);
 
     assertTrue("some expected warnings were not reported",
         testErrorReporter.hasEncounteredAllWarnings());
-    return jsdocs;
+    return result.ast;
   }
 
   @SuppressWarnings("unused")
@@ -3296,11 +3275,15 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Node associatedNode = new Node(Token.SCRIPT);
     associatedNode.setInputId(new InputId(file.getName()));
     associatedNode.setStaticSourceFile(file);
+
     JsDocInfoParser jsdocParser = new JsDocInfoParser(
         stream(comment),
-        new Comment(0, 0, CommentType.JSDOC, comment),
+        comment,
+        0,
         associatedNode,
-        config, errorReporter);
+        file,
+        config,
+        errorReporter);
 
     if (fileLevelJsDocBuilder != null) {
       jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);

@@ -81,12 +81,13 @@ public class JsAst implements SourceAst {
   private void parse(AbstractCompiler compiler) {
     int startErrorCount = compiler.getErrorManager().getErrorCount();
     try {
-      ParserRunner.ParseResult result = ParserRunner.parse(sourceFile, sourceFile.getCode(),
+      ParserRunner.ParseResult result = ParserRunner.parse(
+          sourceFile,
+          sourceFile.getCode(),
           compiler.getParserConfig(sourceFile.isExtern()
-              ? AbstractCompiler.ConfigContext.EXTERNS
-              : AbstractCompiler.ConfigContext.DEFAULT),
-          compiler.getDefaultErrorReporter(),
-          logger_);
+                        ? AbstractCompiler.ConfigContext.EXTERNS
+                        : AbstractCompiler.ConfigContext.DEFAULT),
+          compiler.getDefaultErrorReporter());
       root = result.ast;
       compiler.addComments(sourceFile.getName(), result.comments);
     } catch (IOException e) {

@@ -16,8 +16,7 @@
 
 package com.google.javascript.jscomp.testing;
 
-import com.google.javascript.rhino.head.ErrorReporter;
-import com.google.javascript.rhino.head.EvaluatorException;
+import com.google.javascript.rhino.ErrorReporter;
 
 import junit.framework.Assert;
 
@@ -46,8 +45,7 @@ public final class TestErrorReporter extends Assert implements ErrorReporter {
   }
 
   @Override
-  public void error(String message, String sourceName, int line,
-      String lineSource, int lineOffset) {
+  public void error(String message, String sourceName, int line, int lineOffset) {
     if (errors != null && errorsIndex < errors.length) {
       assertEquals(errors[errorsIndex++], message);
     } else {
@@ -56,19 +54,12 @@ public final class TestErrorReporter extends Assert implements ErrorReporter {
   }
 
   @Override
-  public void warning(String message, String sourceName, int line,
-      String lineSource, int lineOffset) {
+  public void warning(String message, String sourceName, int line, int lineOffset) {
     if (warnings != null && warningsIndex < warnings.length) {
       assertEquals(warnings[warningsIndex++], message);
     } else {
       fail("extra warning: " + message);
     }
-  }
-
-  @Override
-  public EvaluatorException runtimeError(String message, String sourceName,
-      int line, String lineSource, int lineOffset) {
-    return new EvaluatorException("JSCompiler test code: " + message);
   }
 
   /**

@@ -26,15 +26,19 @@ package com.google.javascript.jscomp.parsing;
  * doesn't leak the intermediate AST.
  */
 public class CommentWrapper implements Comment {
-  private boolean jsDoc;
-  private int position;
-  private int length;
+  private final boolean jsDoc;
+  private final int line;
+  private final int position;
+  private final int length;
+  private final String text;
 
   public CommentWrapper(com.google.javascript.jscomp.parsing.parser.trees.Comment comment) {
     jsDoc = comment.type ==
         com.google.javascript.jscomp.parsing.parser.trees.Comment.Type.JSDOC;
     position = comment.location.start.offset;
     length = comment.location.end.offset - position;
+    text = comment.value;
+    line = comment.location.start.line;
   }
 
   @Override
@@ -50,6 +54,16 @@ public class CommentWrapper implements Comment {
   @Override
   public int getLength() {
     return length;
+  }
+
+  @Override
+  public String getText() {
+    return text;
+  }
+
+  @Override
+  public int getLine() {
+    return line;
   }
 }
 

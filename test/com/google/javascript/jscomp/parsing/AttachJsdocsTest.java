@@ -22,10 +22,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.SimpleSourceFile;
-import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
-
-import java.util.logging.Logger;
 
 /**
  * Ported from rhino/testsrc/org/mozilla/javascript/tests/AttachJsDocsTest.java
@@ -781,13 +778,13 @@ public class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertEquals("/** bar */", info.getOriginalCommentString());
   }
 
-  private Node parse(String string, String... warnings) {
+  private Node parse(String source, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
-    Node script = null;
-    StaticSourceFile file = new SimpleSourceFile("input", false);
-    script = ParserRunner.parseEs6(
-        file, string, ParserRunner.createConfig(true, mode, false),
-        testErrorReporter, Logger.getAnonymousLogger()).ast;
+    Node script = ParserRunner.parse(
+        new SimpleSourceFile("input", false),
+        source,
+        ParserRunner.createConfig(true, mode, false),
+        testErrorReporter).ast;
 
     // verifying that all warnings were seen
     assertTrue(testErrorReporter.hasEncounteredAllErrors());

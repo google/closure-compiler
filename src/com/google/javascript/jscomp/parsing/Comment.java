@@ -23,5 +23,9 @@ public interface Comment {
 
   public int getAbsolutePosition();
 
+  public int getLine();
+
   public int getLength();
+
+  public String getText();
 }

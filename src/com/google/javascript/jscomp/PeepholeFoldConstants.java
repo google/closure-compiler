@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.head.ScriptRuntime;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
@@ -738,13 +737,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     switch (opType) {
       case Token.BITAND:
-        result = ScriptRuntime.toInt32(lval) & ScriptRuntime.toInt32(rval);
+        result = NodeUtil.toInt32(lval) & NodeUtil.toInt32(rval);
         break;
       case Token.BITOR:
-        result = ScriptRuntime.toInt32(lval) | ScriptRuntime.toInt32(rval);
+        result = NodeUtil.toInt32(lval) | NodeUtil.toInt32(rval);
         break;
       case Token.BITXOR:
-        result = ScriptRuntime.toInt32(lval) ^ ScriptRuntime.toInt32(rval);
+        result = NodeUtil.toInt32(lval) ^ NodeUtil.toInt32(rval);
         break;
       case Token.ADD:
         result = lval + rval;
