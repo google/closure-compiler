@@ -604,20 +604,38 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   public void testSpreadArray() {
     test("var arr = [1, 2, ...mid, 4, 5];",
-        "var arr = [1, 2].concat(mid, [4, 5]);");
+        "var arr = [].concat([1, 2], mid, [4, 5]);");
     test("var arr = [1, 2, ...mid(), 4, 5];",
-        "var arr = [1, 2].concat(mid(), [4, 5]);");
+        "var arr = [].concat([1, 2], mid(), [4, 5]);");
     test("var arr = [1, 2, ...mid, ...mid2(), 4, 5];",
-        "var arr = [1, 2].concat(mid, mid2(), [4, 5]);");
+        "var arr = [].concat([1, 2], mid, mid2(), [4, 5]);");
     test("var arr = [...mid()];",
-        "var arr = mid().slice(0);");
+        "var arr = [].concat(mid());");
     test("f(1, [2, ...mid, 4], 5);",
-        "f(1, [2].concat(mid, [4]), 5);");
+        "f(1, [].concat([2], mid, [4]), 5);");
+    test("function f() { return [...arguments]; };",
+        "function f() { return [].concat(arguments); };");
+    test("function f() { return [...arguments, 2]; };",
+        "function f() { return [].concat(arguments, [2]); };");
   }
 
   public void testSpreadCall() {
-    enableAstValidation(false);
+    test("f(...arr);", "f.apply(null, [].concat(arr));");
+    test("f(0, ...g());", "f.apply(null, [].concat([0], g()));");
+    test("f(...arr, 1);", "f.apply(null, [].concat(arr, [1]));");
+    test("f(0, ...g(), 2);", "f.apply(null, [].concat([0], g(), [2]));");
+    test("obj.m(...arr);", "obj.m.apply(obj, [].concat(arr));");
+    test("x.y.z.m(...arr);", "x.y.z.m.apply(x.y.z, [].concat(arr));");
+    test("f(a, ...b, c, ...d, e);", "f.apply(null, [].concat([a], b, [c], d, [e]));");
+    test("new F(...args);", "new Function.prototype.bind.apply(F, [].concat(args));");
+  }
 
-    test("f(...args)", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  public void testNonConvertibleSpreadCall() {
+    enableAstValidation(false);
+    test("Factory.create().m(...arr);",
+        Joiner.on('\n').join(
+        "var $jscomp$spread$args0 = Factory.create();",
+        "$jscomp$spread$args0.m.apply($jscomp$spread$args0, [].concat(arr));"
+    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 }

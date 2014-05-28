@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -95,18 +96,12 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         visitParamList(n, parent);
         break;
       case Token.ARRAYLIT:
-        for (Node child : n.children()) {
-          if (child.isSpread()) {
-            visitArrayLitWithSpread(n, parent);
-            break;
-          }
-        }
-        break;
-      case Token.CALL:
       case Token.NEW:
+      case Token.CALL:
         for (Node child : n.children()) {
           if (child.isSpread()) {
-            cannotConvertYet(child, "spread operator in a function call");
+            visitArrayLitOrCallWithSpread(n, parent);
+            break;
           }
         }
         break;
@@ -167,13 +162,17 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   }
 
   /**
-   * Processes array literals containing spreads.
+   * Processes array literals or calls containing spreads.
    * Eg.: [1, 2, ...x, 4, 5] => [1, 2].concat(x, [4, 5]);
+   * Eg.: f(...arr) => f.apply(null, arr)
+   * Eg.: new F(...args) => new Function.prototype.bind.apply(F, [].concat(args))
    */
-  private void visitArrayLitWithSpread(Node array, Node parent) {
+  private void visitArrayLitOrCallWithSpread(Node node, Node parent) {
+    Preconditions.checkArgument(node.isCall() || node.isArrayLit() || node.isNew());
     List<Node> groups = new ArrayList<>();
     Node currGroup = null;
-    Node currElement = array.removeFirstChild();
+    Node callee = node.isArrayLit() ? null : node.removeFirstChild();
+    Node currElement = node.removeFirstChild();
     while (currElement != null) {
       if (currElement.isSpread()) {
         if (currGroup != null) {
@@ -187,20 +186,31 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         }
         currGroup.addChildToBack(currElement);
       }
-      currElement = array.removeFirstChild();
+      currElement = node.removeFirstChild();
     }
     if (currGroup != null) {
       groups.add(currGroup);
     }
     Node result = null;
-    if (groups.size() == 1) {
-      result = IR.call(IR.getprop(groups.get(0), IR.string("slice")), IR.number(0));
+    Node joinedGroups = IR.call(IR.getprop(IR.arraylit(), IR.string("concat")),
+            groups.toArray(new Node[groups.size()]));
+    if (node.isArrayLit()) {
+      result = joinedGroups;
+    } else if (node.isCall()) {
+      if (!NodeUtil.mayHaveSideEffects(callee)) {
+        Node context = callee.isGetProp() ? callee.getFirstChild().cloneTree() : IR.nullNode();
+        result = IR.call(IR.getprop(callee, IR.string("apply")), context, joinedGroups);
+      } else {
+        cannotConvertYet(node, Token.name(node.getType()));
+        return;
+      }
     } else {
-      result = IR.call(IR.getprop(groups.get(0), IR.string("concat")),
-          groups.subList(1, groups.size()).toArray(new Node[groups.size() - 1]));
+      Node bindApply = NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(),
+          "Function.prototype.bind.apply");
+      result = IR.newNode(bindApply, callee, joinedGroups);
     }
-    result.useSourceInfoIfMissingFromForTree(array);
-    parent.replaceChild(array, result);
+    result.useSourceInfoIfMissingFromForTree(node);
+    parent.replaceChild(node, result);
     compiler.reportCodeChange();
   }
 
