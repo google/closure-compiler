@@ -52,6 +52,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   // The name of the var that captures 'this' for converting arrow functions.
   private static final String THIS_VAR = "$jscomp$this";
 
+  private static final String FRESH_SPREAD_VAR = "$jscomp$spread$args";
+
+  private int freshVarCounter = 0;
+
   public Es6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
@@ -202,12 +206,23 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     if (node.isArrayLit()) {
       result = joinedGroups;
     } else if (node.isCall()) {
-      if (!NodeUtil.mayHaveSideEffects(callee)) {
+      if (NodeUtil.mayHaveSideEffects(callee) && callee.isGetProp()) {
+        Node statement = node;
+        while (!NodeUtil.isStatement(statement)) {
+          statement = statement.getParent();
+        }
+        Node freshVar = IR.name(FRESH_SPREAD_VAR + freshVarCounter++);
+        Node n = IR.var(freshVar.cloneTree());
+        n.useSourceInfoIfMissingFromForTree(statement);
+        statement.getParent().addChildBefore(n, statement);
+        callee.addChildToFront(IR.assign(freshVar.cloneTree(), callee.removeFirstChild()));
+        result = IR.call(
+            IR.getprop(callee, IR.string("apply")),
+            freshVar,
+            joinedGroups);
+      } else {
         Node context = callee.isGetProp() ? callee.getFirstChild().cloneTree() : IR.nullNode();
         result = IR.call(IR.getprop(callee, IR.string("apply")), context, joinedGroups);
-      } else {
-        cannotConvertYet(node, Token.name(node.getType()));
-        return;
       }
     } else {
       Node bindApply = NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(),

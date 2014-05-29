@@ -640,14 +640,28 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("x.y.z.m(...arr);", "x.y.z.m.apply(x.y.z, [].concat(arr));");
     test("f(a, ...b, c, ...d, e);", "f.apply(null, [].concat([a], b, [c], d, [e]));");
     test("new F(...args);", "new Function.prototype.bind.apply(F, [].concat(args));");
-  }
 
-  public void testNonConvertibleSpreadCall() {
-    enableAstValidation(false);
+    // TODO(mattloring): Add integration test for this case to ensure it can be typechecked.
     test("Factory.create().m(...arr);",
         Joiner.on('\n').join(
-        "var $jscomp$spread$args0 = Factory.create();",
-        "$jscomp$spread$args0.m.apply($jscomp$spread$args0, [].concat(arr));"
-    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+        "var $jscomp$spread$args0;",
+        "($jscomp$spread$args0 = Factory.create()).m.apply($jscomp$spread$args0, [].concat(arr));"
+    ));
+    test("var x = b ? Factory.create().m(...arr) : null;",
+        Joiner.on('\n').join(
+        "var $jscomp$spread$args0;",
+        "var x = b ? ($jscomp$spread$args0 = Factory.create()).m.apply($jscomp$spread$args0, ",
+        "    [].concat(arr)) : null;"
+    ));
+    test("getF()(...args);", "getF().apply(null, [].concat(args));");
+    test("F.c().m(...a); G.d().n(...b);",
+        Joiner.on('\n').join(
+        "var $jscomp$spread$args0;",
+        "($jscomp$spread$args0 = F.c()).m.apply($jscomp$spread$args0,",
+        "    [].concat(a));",
+        "var $jscomp$spread$args1;",
+        "($jscomp$spread$args1 = G.d()).n.apply($jscomp$spread$args1,",
+        "    [].concat(b));"
+    ));
   }
 }
