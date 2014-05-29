@@ -876,6 +876,12 @@ public class AstValidator implements CompilerPass {
       case Token.STRING_KEY:
         validateObjectLitStringKey(n);
         return;
+      case Token.MEMBER_DEF:
+        validateClassMember(n);
+        if (n.isStaticMember()) {
+          violation("Keys in an object literal should not be static.", n);
+        }
+        return;
       default:
         violation("Expected object literal key expression but was "
               + Token.name(n.getType()), n);

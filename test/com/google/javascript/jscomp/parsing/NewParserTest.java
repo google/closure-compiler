@@ -851,6 +851,23 @@ public class NewParserTest extends BaseJSTypeTestCase {
     return script;
   }
 
+  public void testMethodInObjectLiteral() {
+    testMethodInObjectLiteral("var a = {b() {}};");
+    testMethodInObjectLiteral("var a = {b() { alert('b'); }};");
+
+    // Static methods not allowed in object literals.
+    parseError("var a = {static b() { alert('b'); }};", "'}' expected");
+  }
+
+  private void testMethodInObjectLiteral(String js) {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse(js);
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(js, "this language feature is only supported in es6 mode:"
+        + " member declarations");
+  }
+
   public void testExtendedObjectLiteral() {
     testExtendedObjectLiteral("var a = {b};");
     testExtendedObjectLiteral("var a = {b, c};");
@@ -862,8 +879,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse(js);
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning(js, "this language feature is only supported in es6 mode: " +
-        "extended object literals");
+    parseWarning(js, "this language feature is only supported in es6 mode:"
+        + " extended object literals");
   }
 
   public void testComputedProperty() {

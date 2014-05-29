@@ -1453,6 +1453,8 @@ public class Parser {
         return parseGetAccessor();
       } else if (peekSetAccessor(false)) {
         return parseSetAccessor();
+      } else if (peekType(1) == TokenType.OPEN_PAREN) {
+        return parseMethodDeclaration(false);
       } else {
         return parsePropertyNameAssignment();
       }

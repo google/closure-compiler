@@ -1442,6 +1442,7 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("var a={b}");
     assertPrintSame("var a={b,c}");
     assertPrintSame("var a={b,c:d,e}");
+    assertPrintSame("var a={b,c(){},d,e:f}");
   }
 
   public void testComputedProps() {

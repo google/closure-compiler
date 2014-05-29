@@ -895,7 +895,7 @@ class CodeGenerator {
             cc.listSeparator();
           }
 
-          if (c.isGetterDef() || c.isSetterDef() || c.isStringKey()) {
+          if (c.isGetterDef() || c.isSetterDef() || c.isStringKey() || c.isMemberDef()) {
             add(c);
           } else {
             Preconditions.checkState(c.isComputedProp());
