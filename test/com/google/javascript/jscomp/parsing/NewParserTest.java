@@ -909,6 +909,18 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "var x = {",
         "  [1 << 8]: 'foo'",
         "}"));
+
+    String js = Joiner.on('\n').join(
+        "var x = {",
+        "  [1 << 8]: 'foo',",
+        "  [1 << 7]: 'bar'",
+        "}");
+    mode = LanguageMode.ECMASCRIPT6;
+    parse(js);
+    mode = LanguageMode.ECMASCRIPT5;
+    String warning = "this language feature is only supported in es6 mode:"
+        + " computed property";
+    parseWarning(js, warning, warning);
   }
 
   private void testComputedProperty(String js) {
@@ -916,8 +928,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse(js);
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning(js, "this language feature is only supported in es6 mode: " +
-        "computed property");
+    parseWarning(js, "this language feature is only supported in es6 mode:"
+        + " computed property");
   }
 
   public void testTrailingCommaWarning1() {

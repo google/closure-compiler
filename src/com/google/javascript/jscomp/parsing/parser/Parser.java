@@ -1473,7 +1473,7 @@ public class Parser {
     eat(TokenType.CLOSE_SQUARE);
 
     eat(TokenType.COLON);
-    ParseTree value = parseExpression();
+    ParseTree value = parseAssignmentExpression();
 
     return new ComputedPropertyAssignmentTree(getTreeLocation(start), assign, value);
   }
