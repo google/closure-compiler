@@ -998,7 +998,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     anonymousFunctionNaming = AnonymousFunctionNamingPolicy.OFF;
     exportTestFunctions = false;
     gatherExternsFromTypes = true;
-    declaredGlobalExternsOnWindow = false;
+    declaredGlobalExternsOnWindow = true;
 
     // Alterations
     runtimeTypeCheck = false;
