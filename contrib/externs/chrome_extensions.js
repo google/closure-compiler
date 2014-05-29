@@ -1648,7 +1648,23 @@ chrome.cookies = {};
 
 
 /**
- * @param {Object} details
+ * This typedef is used for the parameters to chrome.cookies.get,
+ * chrome.cookies.remove, and for the parameter to remove's callback. These uses
+ * all identify a single cookie uniquely without specifying its content, and the
+ * objects are identical except for the the storeId being optional vs required.
+ * If greater divergence occurs, then going to two typedefs is recommended.
+ *
+ * @typedef {?{
+ *   url: string,
+ *   name: string,
+ *   storeId: (string|undefined)
+ * }}
+ */
+chrome.cookies.CookieIdentifier;
+
+
+/**
+ * @param {!chrome.cookies.CookieIdentifier} details
  * @param {function(Cookie=): void} callback
  */
 chrome.cookies.get = function(details, callback) {};
@@ -1668,15 +1684,37 @@ chrome.cookies.getAllCookieStores = function(callback) {};
 
 
 /**
- * @param {Object} details
+ * @param {!chrome.cookies.CookieIdentifier} details
+ * @param {function(chrome.cookies.CookieIdentifier): void=} opt_callback If
+ *     removal failed for any reason, the parameter will be "null", and
+ *     "chrome.runtime.lastError" will be set.
  */
-chrome.cookies.remove = function(details) {};
+chrome.cookies.remove = function(details, opt_callback) {};
 
 
 /**
- * @param {Object} details
+ * @typedef {?{
+ *   url: string,
+ *   name: (string|undefined),
+ *   value: (string|undefined),
+ *   domain: (string|undefined),
+ *   path: (string|undefined),
+ *   secure: (boolean|undefined),
+ *   httpOnly: (boolean|undefined),
+ *   expirationDate: (number|undefined),
+ *   storeId: (string|undefined)
+ * }}
  */
-chrome.cookies.set = function(details) {};
+chrome.cookies.CookieSetDetails;
+
+
+/**
+ * @param {!chrome.cookies.CookieSetDetails} details
+ * @param {function(Cookie): void=} opt_callback If setting failed for any
+ *    reason, the parameter will be "null", and "chrome.runtime.lastError" will
+ *    be set.
+ */
+chrome.cookies.set = function(details, opt_callback) {};
 
 
 /**
