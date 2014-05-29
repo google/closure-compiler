@@ -1086,7 +1086,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("[x, {y, z}] = foo();");
   }
 
-  public void testArrayComp() {
+  public void testArrayComprehensions() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("[for (x of y) z];");
     parse("[for ({x,y} of z) x+y];");
@@ -1096,7 +1096,20 @@ public class NewParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("[for (x of y) z];",
         "this language feature is only supported in es6 mode:"
-        + " array comprehensions");
+        + " array/generator comprehensions");
+  }
+
+  public void testGeneratorComprehensions() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("(for (x of y) z);");
+    parse("(for ({x,y} of z) x+y);");
+    parse("(for (x of y) if (x<10) z);");
+    parseError("(for (a = 5 of v) a);", "'identifier' expected");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning("(for (x of y) z);",
+        "this language feature is only supported in es6 mode:"
+        + " array/generator comprehensions");
   }
 
   public void testLetForbidden1() {

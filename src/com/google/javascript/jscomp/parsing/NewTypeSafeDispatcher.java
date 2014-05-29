@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.parsing;
 
-import com.google.javascript.jscomp.parsing.parser.trees.ArrayComprehensionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
@@ -29,6 +28,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyAssignmentTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
@@ -149,7 +149,7 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processObjectPattern(ObjectPatternTree tree);
   abstract T processObjectPatternField(ObjectPatternFieldTree tree);
   abstract T processSpreadPatternElement(SpreadPatternElementTree tree);
-  abstract T processArrayComprehension(ArrayComprehensionTree tree);
+  abstract T processComprehension(ComprehensionTree tree);
   abstract T processComprehensionFor(ComprehensionForTree tree);
   abstract T processComprehensionIf(ComprehensionIfTree tree);
 
@@ -324,8 +324,8 @@ abstract class NewTypeSafeDispatcher<T> {
       case SPREAD_PATTERN_ELEMENT:
         return processSpreadPatternElement(node.asSpreadPatternElement());
 
-      case ARRAY_COMPREHENSION:
-        return processArrayComprehension(node.asArrayComprehension());
+      case COMPREHENSION:
+        return processComprehension(node.asComprehension());
       case COMPREHENSION_FOR:
         return processComprehensionFor(node.asComprehensionFor());
       case COMPREHENSION_IF:

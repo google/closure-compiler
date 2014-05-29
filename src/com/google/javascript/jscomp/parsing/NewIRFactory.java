@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.LiteralToken;
 import com.google.javascript.jscomp.parsing.parser.TokenType;
-import com.google.javascript.jscomp.parsing.parser.trees.ArrayComprehensionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
@@ -40,6 +39,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyAssignmentTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
@@ -923,10 +923,21 @@ class NewIRFactory {
     }
 
     @Override
-    Node processArrayComprehension(ArrayComprehensionTree tree) {
-      maybeWarnEs6Feature(tree, "array comprehensions");
+    Node processComprehension(ComprehensionTree tree) {
+      maybeWarnEs6Feature(tree, "array/generator comprehensions");
 
-      Node node = newNode(Token.ARRAY_COMP);
+      int type;
+      switch (tree.type) {
+        case ARRAY:
+          type = Token.ARRAY_COMP;
+          break;
+        case GENERATOR:
+         type = Token.GENERATOR_COMP;
+          break;
+        default:
+          throw new IllegalStateException("unreachable");
+      }
+      Node node = newNode(type);
       for (ParseTree child : tree.children) {
         node.addChildToBack(transform(child));
       }

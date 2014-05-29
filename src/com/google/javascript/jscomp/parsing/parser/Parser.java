@@ -1303,9 +1303,23 @@ public class Parser {
     }
   }
 
+  private ParseTree parseGeneratorComprehension() {
+    return parseComprehension(
+        ComprehensionTree.ComprehensionType.GENERATOR,
+        TokenType.OPEN_PAREN, TokenType.CLOSE_PAREN);
+  }
+
   private ParseTree parseArrayComprehension() {
+    return parseComprehension(
+        ComprehensionTree.ComprehensionType.ARRAY,
+        TokenType.OPEN_SQUARE, TokenType.CLOSE_SQUARE);
+  }
+
+  private ParseTree parseComprehension(
+      ComprehensionTree.ComprehensionType type,
+      TokenType startToken, TokenType endToken) {
     SourcePosition start = getTreeStartLocation();
-    eat(TokenType.OPEN_SQUARE);
+    eat(startToken);
 
     ImmutableList.Builder<ParseTree> children = ImmutableList.builder();
     while (peek(TokenType.FOR) || peek(TokenType.IF)) {
@@ -1315,11 +1329,13 @@ public class Parser {
         children.add(parseComprehensionIf());
       }
     }
-    ParseTree tailExpression = parseAssignmentExpression();
-    eat(TokenType.CLOSE_SQUARE);
 
-    return new ArrayComprehensionTree(
+    ParseTree tailExpression = parseAssignmentExpression();
+    eat(endToken);
+
+    return new ComprehensionTree(
         getTreeLocation(start),
+        type,
         children.build(),
         tailExpression);
   }
@@ -1539,6 +1555,10 @@ public class Parser {
   }
 
   private ParseTree parseParenExpression() {
+    if (peekType(1) == TokenType.FOR) {
+      return parseGeneratorComprehension();
+    }
+
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.OPEN_PAREN);
     ParseTree result = parseExpression();

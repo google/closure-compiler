@@ -256,7 +256,8 @@ public class AstValidator implements CompilerPass {
         return;
 
       case Token.ARRAY_COMP:
-        validateArrayComp(n);
+      case Token.GENERATOR_COMP:
+        validateComprehension(n);
         return;
 
       case Token.OBJECTLIT:
@@ -835,8 +836,7 @@ public class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateArrayComp(Node n) {
-    validateNodeType(Token.ARRAY_COMP, n);
+  private void validateComprehension(Node n) {
     validateMinimumChildCount(n, 2);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getType()) {
@@ -850,7 +850,7 @@ public class AstValidator implements CompilerPass {
         if (c == n.getLastChild()) {
           validateExpression(c);
         } else {
-          violation("All children of an ARRAY_COMP node, except the last"
+          violation("All children of a comprehension node, except the last"
               + " one, must be FOR_OF or IF nodes.", c);
         }
 

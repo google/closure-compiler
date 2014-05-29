@@ -253,6 +253,14 @@ class CodeGenerator {
         add("]");
         break;
 
+      case Token.GENERATOR_COMP:
+        add("(");
+        for (Node child = first; child != null; child = child.getNext()) {
+          add(child);
+        }
+        add(")");
+        break;
+
       case Token.PARAM_LIST:
         add("(");
         addList(first);

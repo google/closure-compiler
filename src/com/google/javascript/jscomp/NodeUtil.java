@@ -1331,6 +1331,7 @@ public final class NodeUtil {
       case Token.GETELEM:
       case Token.GETPROP:
       // Data values
+      case Token.GENERATOR_COMP:
       case Token.ARRAYLIT:
       case Token.ARRAY_COMP:
       case Token.ARRAY_PATTERN:

@@ -19,17 +19,27 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-public class ArrayComprehensionTree extends ParseTree {
+public class ComprehensionTree extends ParseTree {
+  public static enum ComprehensionType {
+    ARRAY,
+    GENERATOR
+  };
+
+  public final ComprehensionType type;
+
   // The "for of" and "if" trees.
   public final ImmutableList<ParseTree> children;
+
   // The AssignmentExpression at the end of the ComprehensionTail.
   public final ParseTree tailExpression;
 
-  public ArrayComprehensionTree(
+  public ComprehensionTree(
       SourceRange location,
+      ComprehensionType type,
       ImmutableList<ParseTree> children,
       ParseTree tailExpression) {
-    super(ParseTreeType.ARRAY_COMPREHENSION, location);
+    super(ParseTreeType.COMPREHENSION, location);
+    this.type = type;
     this.children = children;
     this.tailExpression = tailExpression;
   }

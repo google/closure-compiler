@@ -185,6 +185,7 @@ public class Token {
         COMPUTED_PROP  = 174,
 
         ARRAY_COMP     = 175,
+        GENERATOR_COMP = 176,
 
         // JSDoc-only tokens
         ANNOTATION     = 300,
@@ -309,6 +310,7 @@ public class Token {
           case COLON:           return "COLON";
 
           case ARRAY_COMP:      return "ARRAY_COMP";
+          case GENERATOR_COMP:  return "GENERATOR_COMP";
           case ARRAY_PATTERN:   return "ARRAY_PATTERN";
           case OBJECT_PATTERN:  return "OBJECT_PATTERN";
           case CLASS:           return "CLASS";
