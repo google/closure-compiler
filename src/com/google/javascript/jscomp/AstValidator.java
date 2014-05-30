@@ -882,6 +882,9 @@ public class AstValidator implements CompilerPass {
           violation("Keys in an object literal should not be static.", n);
         }
         return;
+      case Token.COMPUTED_PROP:
+        validateObjectLitComputedPropKey(n);
+        return;
       default:
         violation("Expected object literal key expression but was "
               + Token.name(n.getType()), n);
@@ -934,6 +937,13 @@ public class AstValidator implements CompilerPass {
     if (n.hasOneChild()) {
       validateExpression(n.getFirstChild());
     }
+  }
+
+  private void validateObjectLitComputedPropKey(Node n) {
+    validateNodeType(Token.COMPUTED_PROP, n);
+    validateChildCount(n, Token.arity(Token.COMPUTED_PROP));
+    validateExpression(n.getFirstChild());
+    validateExpression(n.getLastChild());
   }
 
   private void validateObjectLiteralKeyName(Node n) {

@@ -47,7 +47,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     return 1;
   }
 
-  public void testExtendedObjLit() {
+  public void testObjectLiteralStringKeysWithNoValue() {
     test("var x = {a, b};", "var x = {a: a, b: b};");
   }
 
@@ -663,5 +663,106 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "($jscomp$spread$args1 = G.d()).n.apply($jscomp$spread$args1,",
         "    [].concat(b));"
     ));
+  }
+
+  public void testComputedProperties() {
+    test("var obj = { ['f' + 1] : 1, ['g' + 1] : 1 };",
+        Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "var obj = ($jscomp$compprop0['f' + 1] = 1,",
+        "  ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0));"
+    ));
+
+    test("var obj = { ['f'] : 1};",
+        Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "var obj = ($jscomp$compprop0['f'] = 1,",
+        "  $jscomp$compprop0);"
+    ));
+
+    test("var o = { ['f'] : 1}; var p = { ['g'] : 1};",
+        Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "var o = ($jscomp$compprop0['f'] = 1,",
+        "  $jscomp$compprop0);",
+        "var $jscomp$compprop1 = {};",
+        "var p = ($jscomp$compprop1['g'] = 1,",
+        "  $jscomp$compprop1);"
+    ));
+
+    test("({['f' + 1] : 1})",
+        Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "($jscomp$compprop0['f' + 1] = 1,",
+        "  $jscomp$compprop0)"
+    ));
+
+    test("({'a' : 2, ['f' + 1] : 1})",
+        Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "($jscomp$compprop0['a'] = 2,",
+        "  ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0));"
+    ));
+
+    test("({['f' + 1] : 1, 'a' : 2})",
+        Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "($jscomp$compprop0['f' + 1] = 1,",
+        "  ($jscomp$compprop0['a'] = 2, $jscomp$compprop0));"
+    ));
+
+    test("({'a' : 1, ['f' + 1] : 1, 'b' : 1})",
+        Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "($jscomp$compprop0['a'] = 1,",
+        "  ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0['b'] = 1, $jscomp$compprop0)));"
+    ));
+
+    test("({'a' : x++, ['f' + x++] : 1, 'b' : x++})",
+        Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "($jscomp$compprop0['a'] = x++, ($jscomp$compprop0['f' + x++] = 1,",
+        "  ($jscomp$compprop0['b'] = x++, $jscomp$compprop0)))"
+    ));
+
+    test("({a : x++, ['f' + x++] : 1, b : x++})",
+        Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "($jscomp$compprop0.a = x++, ($jscomp$compprop0['f' + x++] = 1,",
+        "  ($jscomp$compprop0.b = x++, $jscomp$compprop0)))"
+    ));
+
+    test("({a, ['f' + 1] : 1})",
+        Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "  ($jscomp$compprop0.a = a, ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0))"
+    ));
+
+    test("({['f' + 1] : 1, a})",
+        Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "  ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0.a = a, $jscomp$compprop0))"
+    ));
+  }
+
+  public void testComputedPropGetterSetter() {
+    testSame("var obj = {get latest () {return undefined;}}");
+    testSame("var obj = {set latest (str) {}}");
+    test("var obj = {'a' : 2, get l () {return null;}, ['f' + 1] : 1}",
+        Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {get l () {return null;}};",
+        "var obj = ($jscomp$compprop0['a'] = 2,",
+        "  ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0));"
+    ));
+    test("var obj = {['a' + 'b'] : 2, set l (str) {}}",
+        Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {set l (str) {}};",
+        "var obj = ($jscomp$compprop0['a' + 'b'] = 2, $jscomp$compprop0);"
+    ));
+  }
+
+  public void testNoComputedProperties() {
+    testSame("({'a' : 1})");
+    testSame("({'a' : 1, f : 1, b : 1})");
   }
 }

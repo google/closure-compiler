@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
+import com.google.common.collect.Lists;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -54,7 +55,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   private static final String FRESH_SPREAD_VAR = "$jscomp$spread$args";
 
-  private int freshVarCounter = 0;
+  private int freshSpreadVarCounter = 0;
+
+  private static final String FRESH_COMP_PROP_VAR = "$jscomp$compprop";
+
+  private int freshPropVarCounter = 0;
 
   public Es6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -85,7 +90,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         break;
       case Token.ARRAY_COMP:
       case Token.ARRAY_PATTERN:
-      case Token.COMPUTED_PROP:
       case Token.FOR_OF:
       case Token.OBJECT_PATTERN:
       case Token.SUPER:
@@ -100,6 +104,14 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
+      case Token.OBJECTLIT:
+        for (Node child : n.children()) {
+          if (child.isComputedProp()) {
+            visitObjectWithComputedProperty(n, parent);
+            break;
+          }
+        }
+        break;
       case Token.STRING_KEY:
         visitStringKey(n);
         break;
@@ -211,7 +223,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         while (!NodeUtil.isStatement(statement)) {
           statement = statement.getParent();
         }
-        Node freshVar = IR.name(FRESH_SPREAD_VAR + freshVarCounter++);
+        Node freshVar = IR.name(FRESH_SPREAD_VAR + freshSpreadVarCounter++);
         Node n = IR.var(freshVar.cloneTree());
         n.useSourceInfoIfMissingFromForTree(statement);
         statement.getParent().addChildBefore(n, statement);
@@ -231,6 +243,64 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
     result.useSourceInfoIfMissingFromForTree(node);
     parent.replaceChild(node, result);
+    compiler.reportCodeChange();
+  }
+
+  private void visitObjectWithComputedProperty(Node obj, Node parent) {
+    Preconditions.checkArgument(obj.isObjectLit());
+    List<Node> props = new ArrayList<>();
+    Node currElement = obj.getFirstChild();
+
+    while (currElement != null) {
+      if (currElement.isGetterDef() || currElement.isSetterDef()) {
+        currElement = currElement.getNext();
+      } else {
+        Node nextNode = currElement.getNext();
+        obj.removeChild(currElement);
+        props.add(currElement);
+        currElement = nextNode;
+      }
+    }
+
+    String objName = FRESH_COMP_PROP_VAR + freshPropVarCounter++;
+
+    props = Lists.reverse(props);
+    Node result = IR.name(objName);
+    for (Node propdef : props) {
+      if (propdef.isComputedProp()) {
+        Node propertyExpression = propdef.removeFirstChild();
+        Node value = propdef.removeFirstChild();
+        result = IR.comma(
+            IR.assign(
+                IR.getelem(
+                    IR.name(objName),
+                    propertyExpression),
+                value),
+            result);
+      } else {
+        if (!propdef.hasChildren()) {
+          Node name = IR.name(propdef.getString()).copyInformationFrom(propdef);
+          propdef.addChildToBack(name);
+        }
+        Node val = propdef.removeFirstChild();
+        propdef.setType(Token.STRING);
+        int type = propdef.isQuotedString() ? Token.GETELEM : Token.GETPROP;
+        Node access = new Node(type, IR.name(objName), propdef);
+        result = IR.comma(IR.assign(access, val), result);
+      }
+    }
+
+    Node statement = obj;
+    while (!NodeUtil.isStatement(statement)) {
+      statement = statement.getParent();
+    }
+
+    result.useSourceInfoIfMissingFromForTree(obj);
+    parent.replaceChild(obj, result);
+
+    Node var = IR.var(IR.name(objName), obj);
+    var.useSourceInfoIfMissingFromForTree(statement);
+    statement.getParent().addChildBefore(var, statement);
     compiler.reportCodeChange();
   }
 

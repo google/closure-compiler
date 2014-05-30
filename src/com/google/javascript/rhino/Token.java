@@ -447,6 +447,7 @@ public class Token {
       case LB:              return -1;
       case LC:              return -1;
       case COLON:           return -1;
+      case COMPUTED_PROP:   return 2;
     }
     throw new IllegalStateException(
         "No arity defined for " + Token.name(token));
