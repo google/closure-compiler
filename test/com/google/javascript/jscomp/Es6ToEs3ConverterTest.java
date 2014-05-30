@@ -562,13 +562,27 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testDefaultParameters() {
-    test("function f(zero, one = 1, two = 2) {}",
+    enableTypeCheck(CheckLevel.WARNING);
+    runTypeCheckAfterProcessing = true;
+
+    test("function f(zero, one = 1, two = 2) {}; f(1); f(1,2,3);",
         Joiner.on('\n').join(
-        "function f(zero, one, two) {",
-        "  one === undefined && (one = 1);",
-        "  two === undefined && (two = 2);",
-        "}"
+          "function f(zero, one, two) {",
+          "  one === undefined && (one = 1);",
+          "  two === undefined && (two = 2);",
+          "};",
+          "f(1); f(1,2,3);"
     ));
+
+    test("function f(zero, one = 1, two = 2) {}; f();",
+        Joiner.on('\n').join(
+          "function f(zero, one, two) {",
+          "  one === undefined && (one = 1);",
+          "  two === undefined && (two = 2);",
+          "}; f();"
+        ),
+        null,
+        TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
   public void testRestParameter() {
