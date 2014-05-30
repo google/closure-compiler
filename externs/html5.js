@@ -691,10 +691,12 @@ HTMLImageElement.prototype.crossOrigin;
  * This is a superposition of the Window and Worker postMessage methods.
  * @param {*} message
  * @param {(string|!Array.<!Transferable>)=} opt_targetOriginOrTransfer
- * @param {Array.<!Transferable>=} opt_transfer
+ * @param {(string|!Array.<!MessagePort>|!Array.<!Transferable>)=}
+ *     opt_targetOriginOrPortsOrTransfer
  * @return {void}
  */
-function postMessage(message, opt_targetOriginOrTransfer, opt_transfer) {}
+function postMessage(message, opt_targetOriginOrTransfer,
+    opt_targetOriginOrPortsOrTransfer) {}
 
 /**
  * The postMessage method (as defined by HTML5 spec), with support for the
