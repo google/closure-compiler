@@ -38,6 +38,7 @@ import org.kohsuke.args4j.spi.Setter;
 import org.kohsuke.args4j.spi.StringOptionHandler;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -51,6 +52,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -777,18 +779,61 @@ public class CommandLineRunner extends
 
   private void processFlagFile(PrintStream err)
             throws CmdLineException, IOException {
-    File flagFileInput = new File(flags.flagFile);
-    List<String> argsInFile = tokenizeKeepingQuotedStrings(
-        Files.readLines(flagFileInput, UTF_8));
+    Path flagFile = Paths.get(flags.flagFile);
+
+    BufferedReader buffer =
+      java.nio.file.Files.newBufferedReader(flagFile, UTF_8);
+    // Builds the tokens.
+    StringBuilder builder = new StringBuilder();
+    // Stores the built tokens.
+    List<String> tokens = new ArrayList<String>();
+    // Indicates if we are in a "quoted" token.
+    boolean quoted = false;
+    // Indicates if the char being processed has been escaped.
+    boolean escaped = false;
+
+    int c;
+
+    while ((c = buffer.read()) != -1) {
+      if (c == 32 || c == 9 || c == 10 || c == 13) {
+        if (quoted) {
+          builder.append((char) c);
+        } else if (builder.length() != 0) {
+          tokens.add(builder.toString());
+          builder.setLength(0);
+        }
+      } else if (c == 34) {
+        if (escaped) {
+          if (quoted) {
+            builder.setCharAt(builder.length()-1, (char) c);
+          } else {
+            builder.append((char) c);
+          }
+        } else {
+          quoted = !quoted;
+        }
+      } else {
+        builder.append((char) c);
+      }
+
+      escaped = c == 92;
+    }
+
+    buffer.close();
+
+    if (builder.length() != 0) {
+      tokens.add(builder.toString());
+    }
 
     flags.flagFile = "";
-    List<String> processedFileArgs
-        = processArgs(argsInFile.toArray(new String[] {}));
+
+    tokens = processArgs(tokens.toArray(new String[tokens.size()]));
+
     // Command-line warning levels should override flag file settings,
     // which means they should go last.
     List<GuardLevel> previous = new ArrayList<>(Flags.guardLevels);
     Flags.guardLevels.clear();
-    flags.parse(processedFileArgs);
+    flags.parse(tokens);
     Flags.guardLevels.addAll(previous);
 
     // Currently we are not supporting this (prevent direct/indirect loops)
