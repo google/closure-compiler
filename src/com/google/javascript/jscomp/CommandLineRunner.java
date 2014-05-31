@@ -844,11 +844,22 @@ public class CommandLineRunner extends
           ProcessCommonJSModules.toModuleName(flags.commonJsEntryModule));
     }
 
-    if (flags.outputWrapper != null && !flags.outputWrapper.isEmpty() &&
-        !flags.outputWrapper.contains(CommandLineRunner.OUTPUT_MARKER)) {
-      err.println("ERROR - invalid output_wrapper specified. Missing '" +
-          CommandLineRunner.OUTPUT_MARKER + "'.");
-      isConfigValid = false;
+    if (flags.outputWrapper != null && !flags.outputWrapper.isEmpty()) {
+      File file = new File(flags.outputWrapper);
+      if (file.isFile()) {
+        try {
+          // replace the file path with the file contents
+          flags.outputWrapper = Files.toString(file, UTF_8);
+        } catch (IOException e) {
+          err.println("ERROR - output_wrapper file could not be read.");
+          isConfigValid = false;
+        }
+      }
+      if (!flags.outputWrapper.contains(CommandLineRunner.OUTPUT_MARKER)) {
+        err.println("ERROR - invalid output_wrapper specified. Missing '" +
+            CommandLineRunner.OUTPUT_MARKER + "'.");
+        isConfigValid = false;
+      }
     }
 
     if (!isConfigValid || flags.displayHelp) {

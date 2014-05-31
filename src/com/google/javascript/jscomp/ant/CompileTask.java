@@ -16,8 +16,11 @@
 
 package com.google.javascript.jscomp.ant;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilationLevel;
@@ -320,6 +323,16 @@ public final class CompileTask
         StringBuilder source = new StringBuilder(compiler.toSource());
 
         if (this.outputWrapper != null) {
+          File file = new File(this.outputWrapper);
+          if (file.isFile()) {
+            try {
+              // replace the file path with the file contents
+              this.outputWrapper = Files.toString(file, UTF_8);
+            } catch (IOException e) {
+              throw new BuildException(
+                  "output_wrapper file could not be read.");
+            }
+          }
           int pos = -1;
           pos = this.outputWrapper.indexOf(CommandLineRunner.OUTPUT_MARKER);
           if (pos > -1) {
