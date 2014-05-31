@@ -562,6 +562,22 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("for(var a of b)c");
   }
 
+  public void testLetFor() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+
+    assertPrintSame("for(let a=0;a<5;a++)b");
+    assertPrintSame("for(let a in b)c");
+    assertPrintSame("for(let a of b)c");
+  }
+  
+  public void testConstFor() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+
+    assertPrintSame("for(const a=5;b<a;b++)c");
+    assertPrintSame("for(const a in b)c");
+    assertPrintSame("for(const a of b)c");
+  }
+
   public void testLiteralProperty() {
     assertPrint("(64).toString()", "(64).toString()");
   }
