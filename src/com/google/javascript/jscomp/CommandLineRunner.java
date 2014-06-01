@@ -18,7 +18,9 @@ package com.google.javascript.jscomp;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -507,46 +509,70 @@ public class CommandLineRunner extends
      */
     List<String> getJsFiles(PrintStream err) throws CmdLineException, IOException {
       final Set<String> allJsInputs = new LinkedHashSet<>();
-      final List<String> matchedPaths = new ArrayList<>();
       List<String> patterns = new ArrayList<>();
       patterns.addAll(js);
       patterns.addAll(arguments);
       for (String pattern : patterns) {
         if (!pattern.contains("*") && !pattern.startsWith("!")) {
-          allJsInputs.add(pattern);
+          File matchedFile = new File(pattern);
+          if (matchedFile.isDirectory()) {
+            matchPaths(new File(matchedFile, "**.js").toString(), allJsInputs);
+          } else {
+            allJsInputs.add(pattern);
+          }
         } else {
-          FileSystem fs = FileSystems.getDefault();
-          final boolean remove = pattern.indexOf("!") == 0;
-          if (remove) pattern = pattern.substring(1);
-          final PathMatcher matcher = fs.getPathMatcher("glob:" + pattern);
-          java.nio.file.Files.walkFileTree(
-              fs.getPath("."), new SimpleFileVisitor<Path>() {
-              @Override public FileVisitResult visitFile(
-                  Path p, BasicFileAttributes attrs) {
-                if (matcher.matches(p)) {
-                  if (remove) {
-                    allJsInputs.remove(p.toString());
-                  } else {
-                    allJsInputs.add(p.toString());
-                  }
-                }
-                matchedPaths.add(p.toString());
-                return FileVisitResult.CONTINUE;
-              }
-          });
+          matchPaths(pattern, allJsInputs);
         }
       }
 
       if (!patterns.isEmpty() && allJsInputs.isEmpty()) {
-        err.println("Paths attempted to match:");
-        for (String path : matchedPaths) {
-          err.println(path);
-        }
-
         throw new CmdLineException("No inputs matched");
       }
 
       return new ArrayList<>(allJsInputs);
+    }
+
+    private void matchPaths(String pattern, final Set<String> allJsInputs)
+        throws IOException {
+      FileSystem fs = FileSystems.getDefault();
+      final boolean remove = pattern.indexOf("!") == 0;
+      if (remove) pattern = pattern.substring(1);
+
+      if (File.separator.equals("\\")) {
+        pattern = pattern.replace('\\', '/');
+      }
+
+      // Split the pattern into two pieces: the globbing part
+      // and the non-globbing prefix.
+      List<String> patternParts =
+          ImmutableList.copyOf(Splitter.on("/").split(pattern));
+      String prefix = ".";
+      for (int i = 0; i < patternParts.size(); i++) {
+        if (patternParts.get(i).contains("*")) {
+          if (i == 0) {
+            break;
+          } else {
+            prefix = Joiner.on("/").join(patternParts.subList(0, i));
+            pattern = Joiner.on("/").join(patternParts.subList(i, patternParts.size()));
+          }
+        }
+      }
+
+      final PathMatcher matcher = fs.getPathMatcher("glob:" + pattern);
+      java.nio.file.Files.walkFileTree(
+          fs.getPath(prefix), new SimpleFileVisitor<Path>() {
+            @Override public FileVisitResult visitFile(
+                Path p, BasicFileAttributes attrs) {
+              if (matcher.matches(p)) {
+                if (remove) {
+                  allJsInputs.remove(p.toString());
+                } else {
+                  allJsInputs.add(p.toString());
+                }
+              }
+              return FileVisitResult.CONTINUE;
+            }
+          });
     }
 
     List<SourceMap.LocationMapping> getSourceMapLocationMappings() {
