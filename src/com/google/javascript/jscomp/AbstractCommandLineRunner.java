@@ -1227,7 +1227,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
             outputFileName.substring(0, outputFileName.length() - 3);
       }
 
-      basePath = file.getParent() + File.separatorChar + outputFileName;
+      String fileParent = file.getParent();
+      if (fileParent == null) {
+    	basePath = outputFileName;
+      } else {
+    	basePath = file.getParent() + File.separatorChar + outputFileName;
+      }
     }
 
     return basePath;
@@ -1248,8 +1253,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     if (config.createNameMapFiles) {
       String basePath = getMapPath(config.jsOutputFile);
 
-      propertyMapOutputPath = basePath + "_props_map.out";
-      variableMapOutputPath = basePath + "_vars_map.out";
+      propertyMapOutputPath = basePath + "_props_renaming_report.out";
+      variableMapOutputPath = basePath + "_vars_renaming_report.out";
       functionInformationMapOutputPath = basePath + "_functions_map.out";
     }
 

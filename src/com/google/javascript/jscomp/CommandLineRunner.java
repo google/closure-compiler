@@ -189,6 +189,25 @@ public class CommandLineRunner extends
         + "modules.")
     private List<String> module = new ArrayList<>();
 
+    @Option(name = "--variable_renaming_report",
+        usage = "File where the serialized version of the variable "
+        + "renaming map produced should be saved")
+    private String variableMapOutputFile = "";
+
+    @Option(name = "--create_renaming_reports",
+        handler = BooleanOptionHandler.class,
+        usage = "If true, variable renaming and property renaming report "
+        + "files will be produced as {binary name}_vars_renaming_report.out "
+        + "and {binary name}_props_renaming_report.out. Note that this flag "
+        + "cannot be used in conjunction with either variable_renaming_report "
+        + "or property_renaming_report")
+    private boolean createNameMapFiles = false;
+
+    @Option(name = "--property_renaming_report",
+        usage = "File where the serialized version of the property "
+        + "renaming map produced should be saved")
+    private String propertyMapOutputFile = "";
+
     @Option(name = "--third_party",
         handler = BooleanOptionHandler.class,
         usage = "Check source validity but do not enforce Closure style "
@@ -919,6 +938,9 @@ public class CommandLineRunner extends
           .setJs(jsFiles)
           .setJsOutputFile(flags.jsOutputFile)
           .setModule(flags.module)
+          .setVariableMapOutputFile(flags.variableMapOutputFile)
+          .setCreateNameMapFiles(flags.createNameMapFiles)
+          .setPropertyMapOutputFile(flags.propertyMapOutputFile)
           .setCodingConvention(conv)
           .setSummaryDetailLevel(flags.summaryDetailLevel)
           .setOutputWrapper(flags.outputWrapper)
