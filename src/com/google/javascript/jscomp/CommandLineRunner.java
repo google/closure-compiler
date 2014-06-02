@@ -1083,7 +1083,10 @@ public class CommandLineRunner extends
     "w3c_xml.js",
     "window.js",
     "webkit_notifications.js",
-    "webgl.js");
+    "webgl.js",
+    "w3c_rtc.js",
+    "w3c_audio.js",
+    "w3c_gamepad.js");
 
   /**
    * @return a mutable list
