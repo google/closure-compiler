@@ -184,7 +184,7 @@ class CheckGlobalNames implements CompilerPass {
                 ? name.getFullName() + ".prototype"
                 : name.getFullName();
             compiler.report(
-                JSError.make(ref.source.getName(), ref.node,
+                JSError.make(ref.node,
                     NAME_DEFINED_LATE_WARNING,
                     refName,
                     owner.getFullName(),
