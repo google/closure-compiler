@@ -299,21 +299,88 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testExtends() {
     enableAstValidation(false);
 
-    test("class C extends D { }",
-        null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class C extends D { }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() { }",
+        "goog.inherits(C, D);"
+    ));
+
+    test("class C extends ns.D { }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {ns.D} */",
+        "function C() { }",
+        "goog.inherits(C, ns.D);"
+    ));
+
+    test("class C extends D { constructor() { super(); } }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() { C.base(this, 'constructor'); }",
+        "goog.inherits(C, D);"
+    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("class C extends D { constructor(str) { super(str); } }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() { C.base(this, 'constructor', str); }",
+        "goog.inherits(C, D);"
+    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("class C extends foo() {}", null, Es6ToEs3Converter.DYNAMIC_EXTENDS_TYPE);
+    test("class C extends function(){} {}", null, Es6ToEs3Converter.DYNAMIC_EXTENDS_TYPE);
+  }
+
+  public void testExtendsInterface() {
+    test(Joiner.on('\n').join(
+        "/** @interface */",
+        "class D {",
+        "  f() {}",
+        "}",
+        "/** @interface */",
+        "class C extends D {",
+        "  g() {}",
+        "}"
+    ), Joiner.on('\n').join(
+        "/** @interface */",
+        "function D() {} D.prototype.f = function() {};",
+        "/** @interface @extends{D} */",
+        "function C() {} C.prototype.g = function() {};"
+    ));
+  }
+
+  public void testImplementsInterface() {
+    test(Joiner.on('\n').join(
+        "/** @interface */",
+        "class D {",
+        "  f() {}",
+        "}",
+        "/** @implements {D} */",
+        "class C {",
+        "  f() {console.log('hi');}",
+        "}"
+    ), Joiner.on('\n').join(
+        "/** @interface */",
+        "function D() {} D.prototype.f = function() {};",
+        "/** @constructor @struct @implements{D} */",
+        "function C() {} C.prototype.f = function() {console.log('hi');};"
+    ));
   }
 
   public void testSuper() {
     enableAstValidation(false);
 
     test("class C { constructor() { super(); } }",
-        null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+        "error, super call not valid w/o class", Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("class C extends D { constructor() { super(); } }",
+        "function C() { D.call(this); }", Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("class C extends D { constructor(str) { super(str); } }",
+        "function C() { D(str); }", Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
     test(Joiner.on('\n').join(
-        "class C {",
+        "class C extends D {",
         "  foo() { return super.foo(); }",
         "}"
-    ), null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    ), "function C() {} C.prototype.foo = function() {return D.foo.call(this);}",
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testStaticMethods() {

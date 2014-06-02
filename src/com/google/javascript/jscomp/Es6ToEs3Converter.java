@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -44,6 +45,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   static final DiagnosticType CANNOT_CONVERT_YET = DiagnosticType.error(
       "JSC_CANNOT_CONVERT_YET",
       "ES6-to-ES3 conversion of ''{0}'' is not yet implemented.");
+
+  static final DiagnosticType DYNAMIC_EXTENDS_TYPE = DiagnosticType.error(
+      "JSC_DYNAMIC_EXTENDS_TYPE",
+      "The class in an extends clause must be a qualified name.");
 
   static final DiagnosticType STATIC_METHOD_REFERENCES_THIS = DiagnosticType.warning(
       "JSC_STATIC_METHOD_REFERENCES_THIS",
@@ -92,11 +97,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       case Token.ARRAY_PATTERN:
       case Token.FOR_OF:
       case Token.OBJECT_PATTERN:
-      case Token.SUPER:
-        cannotConvertYet(n, Token.name(n.getType()));
-        // Don't bother visiting the children of a node if we
-        // already know we can't convert the node itself.
-        return false;
     }
     return true;
   }
@@ -320,11 +320,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     // Whether the constructor function in the output should be anonymous.
     boolean anonymous;
 
-    if (!superClassName.isEmpty()) {
-      cannotConvertYet(superClassName, "extends");
-      return;
-    }
-
     // If this is a class statement, or a class expression in a simple
     // assignment or var statement, convert it. In any other case, the
     // code is too dynamic, so just call cannotConvert.
@@ -414,7 +409,28 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         new JSDocInfoBuilder(true);
 
     newInfo.recordConstructor();
-    // TODO(tbreisacher): Add @extends if there is a superclass.
+    if (!superClassName.isEmpty()) {
+      if (!superClassName.isQualifiedName()) {
+        compiler.report(JSError.make(superClassName, DYNAMIC_EXTENDS_TYPE));
+        return;
+      }
+
+      Node superClassString = IR.string(superClassName.getQualifiedName());
+      if (newInfo.isInterfaceRecorded()) {
+        newInfo.recordExtendedInterface(new JSTypeExpression(new Node(Token.BANG, superClassString),
+            superClassName.getSourceFileName()));
+      } else {
+        // TODO(mattloring) Remove dependency on Closure Library.
+        Node inherits = NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(),
+            "goog.inherits");
+        Node inheritsCall = IR.exprResult(IR.call(inherits, className.cloneTree(),
+            superClassName.cloneTree()));
+        inheritsCall.useSourceInfoIfMissingFromForTree(classNode);
+        parent.addChildAfter(inheritsCall, classNode);
+        newInfo.recordBaseType(new JSTypeExpression(new Node(Token.BANG, superClassString),
+            superClassName.getSourceFileName()));
+      }
+    }
 
     // Classes are @struct by default.
     if (!newInfo.isUnrestrictedRecorded() && !newInfo.isDictRecorded() &&
