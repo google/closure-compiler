@@ -297,8 +297,6 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testExtends() {
-    enableAstValidation(false);
-
     test("class C extends D { }", Joiner.on('\n').join(
         "/** @constructor @struct @extends {D} */",
         "function C() { }",
@@ -315,15 +313,16 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "/** @constructor @struct @extends {D} */",
         "function C() { C.base(this, 'constructor'); }",
         "goog.inherits(C, D);"
-    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    ));
 
     test("class C extends D { constructor(str) { super(str); } }", Joiner.on('\n').join(
         "/** @constructor @struct @extends {D} */",
-        "function C() { C.base(this, 'constructor', str); }",
+        "function C(str) { C.base(this, 'constructor', str); }",
         "goog.inherits(C, D);"
-    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    ));
 
     test("class C extends foo() {}", null, Es6ToEs3Converter.DYNAMIC_EXTENDS_TYPE);
+
     test("class C extends function(){} {}", null, Es6ToEs3Converter.DYNAMIC_EXTENDS_TYPE);
   }
 
@@ -363,24 +362,141 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
-  public void testSuper() {
-    enableAstValidation(false);
+  public void testSuperCall() {
+    test("class C extends D { constructor() { super(); } }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() { C.base(this, 'constructor'); }",
+        "goog.inherits(C, D);"
+    ));
 
-    test("class C { constructor() { super(); } }",
-        "error, super call not valid w/o class", Es6ToEs3Converter.CANNOT_CONVERT_YET);
-
-    test("class C extends D { constructor() { super(); } }",
-        "function C() { D.call(this); }", Es6ToEs3Converter.CANNOT_CONVERT_YET);
-
-    test("class C extends D { constructor(str) { super(str); } }",
-        "function C() { D(str); }", Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class C extends D { constructor(str) { super(str); } }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C(str) { C.base(this, 'constructor', str); }",
+        "goog.inherits(C, D);"
+    ));
 
     test(Joiner.on('\n').join(
         "class C extends D {",
         "  foo() { return super.foo(); }",
         "}"
-    ), "function C() {} C.prototype.foo = function() {return D.foo.call(this);}",
-        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    ), Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() { }",
+        "goog.inherits(C, D);",
+        "C.prototype.foo = function() {return C.base(this, 'foo');}"
+    ));
+
+    test(Joiner.on('\n').join(
+        "class C extends D {",
+        "  foo(bar) { return super.foo(bar); }",
+        "}"
+    ), Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() { }",
+        "goog.inherits(C, D);",
+        "C.prototype.foo = function(bar) {return C.base(this, 'foo', bar);}"
+    ));
+
+    test("class C { constructor() { super(); } }",
+        null, Es6ToEs3Converter.NO_SUPERTYPE);
+
+    test("class C { method() { class D extends C { constructor() { super(); }}}}",
+        Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "function C() { }",
+        "C.prototype.method = function () {",
+        "  /** @constructor @struct @extends{C} */",
+        "  function D() {D.base(this, 'constructor');}",
+        "  goog.inherits(D, C);",
+        "};"
+    ));
+
+    test("var i = super();",
+        null, Es6ToEs3Converter.NO_SUPERTYPE);
+
+    test("class C extends D { f() {super();} }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() { }",
+        "goog.inherits(C, D);",
+        "C.prototype.f = function() {C.base(this, 'f');}"
+    ));
+  }
+
+  public void testClassNested() {
+    test("class C { f() { class D {} } }", Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "function C() {}",
+        "C.prototype.f = function() {",
+        "  /** @constructor @struct */ function D() {}",
+        "};"
+    ));
+
+    test("class C { f() { class D extends C {} } }", Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "function C() {}",
+        "C.prototype.f = function() {",
+        "  /** @constructor @struct @extends{C} */ function D() {}",
+        "  goog.inherits(D, C);",
+        "};"
+    ));
+  }
+
+  public void testSuperGet() {
+    test("class C extends D { f() {var i = super.c;} }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() {} C.prototype.f = function() {var i = D.prototype.c;};",
+        "goog.inherits(C, D);"
+    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("class C extends D { static f() {var i = super.c;} }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() {} C.prototype.f = function() {var i = D.c;};",
+        "goog.inherits(C, D);"
+    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("class C extends D { f() {var i; i = super[s];} }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() {} C.prototype.f = function() {var i; i = D.prototype[s];};",
+        "goog.inherits(C, D);"
+    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("class C extends D { f() {return super.s;} }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() {} C.prototype.f = function() {return D.s;};",
+        "goog.inherits(C, D);"
+    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("class C extends D { f() {m(super.s);} }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() {} C.prototype.f = function() {m(D.s);};",
+        "goog.inherits(C, D);"
+    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test(Joiner.on('\n').join(
+        "class C extends D {",
+        "  foo() { return super.m.foo(); }",
+        "}"
+    ), null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test(Joiner.on('\n').join(
+        "class C extends D {",
+        "  static foo() { return super.m.foo(); }",
+        "}"
+    ), null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
+  public void testSuperNew() {
+    test("class C extends D { f() {var s = new super;} }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() {} C.prototype.f = function() {var s = new D};",
+        "goog.inherits(C, D);"
+    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("class C extends D { f(str) {var s = new super(str);} }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {D} */",
+        "function C() {} C.prototype.f = function(str) {var s = new D(str);};",
+        "goog.inherits(C, D);"
+    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testStaticMethods() {

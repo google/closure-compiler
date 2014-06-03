@@ -1657,11 +1657,55 @@ public final class NodeUtil {
   }
 
   /**
+   * Finds the class member containing the given node.
+   */
+  static Node getEnclosingClassMember(Node n) {
+    Node curr = n;
+    while (!curr.isMemberDef()) {
+      curr = curr.getParent();
+      if (curr == null) {
+        return curr;
+      }
+    }
+    return curr;
+  }
+
+  /**
+   * Finds the class containing the given node.
+   */
+  static Node getEnclosingClass(Node n) {
+    Node curr = n;
+    while (!curr.isClass()) {
+      curr = curr.getParent();
+      if (curr == null) {
+        return curr;
+      }
+    }
+    return curr;
+  }
+
+  /**
    * Returns true if the shallow scope contains references to 'this' keyword
    */
   static boolean referencesThis(Node n) {
     Node start = (n.isFunction()) ? n.getLastChild() : n;
     return containsType(start, Token.THIS, MATCH_NOT_FUNCTION);
+  }
+
+  /**
+   * Returns true if the current scope contains references to the 'super' keyword.
+   * Note that if there are classes declared inside the current class, super calls which
+   * reference those classes are not reported.
+   */
+  static boolean referencesSuper(Node n) {
+    Node curr = n.getFirstChild();
+    while (curr != null) {
+      if (containsType(curr, Token.SUPER, MATCH_NOT_CLASS)) {
+        return true;
+      }
+      curr = curr.getNext();
+    }
+    return false;
   }
 
   /**
@@ -2793,7 +2837,19 @@ public final class NodeUtil {
     }
   }
 
+  /**
+   * A predicate for matching anything except class nodes.
+   */
+  private static class MatchNotClass implements Predicate<Node> {
+    @Override
+    public boolean apply(Node n) {
+      return !n.isClass();
+    }
+  }
+
   static final Predicate<Node> MATCH_NOT_FUNCTION = new MatchNotFunction();
+
+  static final Predicate<Node> MATCH_NOT_CLASS = new MatchNotClass();
 
   /**
    * A predicate for matching statements without exiting the current scope.

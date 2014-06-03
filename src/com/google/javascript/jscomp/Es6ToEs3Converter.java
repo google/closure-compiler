@@ -50,6 +50,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       "JSC_DYNAMIC_EXTENDS_TYPE",
       "The class in an extends clause must be a qualified name.");
 
+  static final DiagnosticType NO_SUPERTYPE = DiagnosticType.error(
+      "JSC_NO_SUPERTYPE",
+      "The super keyword may only appear in classes with an extends clause.");
+
   static final DiagnosticType STATIC_METHOD_REFERENCES_THIS = DiagnosticType.warning(
       "JSC_STATIC_METHOD_REFERENCES_THIS",
       "This static method uses the 'this' keyword."
@@ -93,11 +97,14 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
           visitArrowFunction(t, n);
         }
         break;
+      case Token.CLASS:
+        // Need to check for super references before they get rewritten.
+        checkClassSuperReferences(n);
+        break;
       case Token.ARRAY_COMP:
       case Token.ARRAY_PATTERN:
       case Token.FOR_OF:
       case Token.OBJECT_PATTERN:
-      case Token.SUPER:
         cannotConvertYet(n, Token.name(n.getType()));
         // Don't bother visiting the children of a node if we
         // already know we can't convert the node itself.
@@ -116,6 +123,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             break;
           }
         }
+        break;
+      case Token.SUPER:
+        visitSuper(n);
         break;
       case Token.STRING_KEY:
         visitStringKey(n);
@@ -149,6 +159,41 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       n.addChildToBack(name);
       compiler.reportCodeChange();
     }
+  }
+
+  private void visitSuper(Node node) {
+    Node enclosing = node.getParent();
+    Node potentialCallee = node;
+    if (!enclosing.isCall()) {
+      enclosing = enclosing.getParent();
+      potentialCallee = potentialCallee.getParent();
+    }
+    if (!(enclosing.isCall() && enclosing.getFirstChild() == potentialCallee)) {
+      cannotConvertYet(node, "Only calls to super or to a method of super are supported.");
+      return;
+    }
+    Node clazz = NodeUtil.getEnclosingClass(node);
+    if (clazz == null) {
+      compiler.report(JSError.make(node, NO_SUPERTYPE));
+      return;
+    }
+
+    Node methodName;
+    Node callName = enclosing.removeFirstChild();
+    if (callName.isSuper()) {
+      Node enclosingMember = NodeUtil.getEnclosingClassMember(enclosing);
+      methodName = IR.string(enclosingMember.getString()).srcref(enclosing);
+    } else {
+      methodName = IR.string(callName.getLastChild().getString()).srcref(enclosing);
+    }
+
+    Node base = IR.getprop(clazz.getFirstChild().cloneTree().srcref(enclosing),
+        IR.string("base").srcref(enclosing)).srcref(enclosing);
+    enclosing.addChildToFront(methodName);
+    enclosing.addChildToFront(IR.thisNode().srcref(enclosing));
+    enclosing.addChildToFront(base);
+    enclosing.putBooleanProp(Node.FREE_CALL, false);
+    compiler.reportCodeChange();
   }
 
   /**
@@ -309,6 +354,14 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     compiler.reportCodeChange();
   }
 
+  private void checkClassSuperReferences(Node classNode) {
+    Node className = classNode.getFirstChild();
+    Node superClassName = className.getNext();
+    if (NodeUtil.referencesSuper(classNode) && superClassName.isEmpty()) {
+      compiler.report(JSError.make(classNode, NO_SUPERTYPE));
+    }
+  }
+
   private void visitClass(Node classNode, Node parent) {
     Node className = classNode.getFirstChild();
     Node superClassName = className.getNext();
@@ -317,6 +370,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     // This is a statement node. We insert methods of the
     // transpiled class after this node.
     Node insertionPoint;
+
+    if (!superClassName.isEmpty() && !superClassName.isQualifiedName()) {
+      compiler.report(JSError.make(superClassName, DYNAMIC_EXTENDS_TYPE));
+      return;
+    }
 
     // The fully qualified name of the class, which will be used in the output.
     // May come from the class itself or the LHS of an assignment.
@@ -415,10 +473,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
     newInfo.recordConstructor();
     if (!superClassName.isEmpty()) {
-      if (!superClassName.isQualifiedName()) {
-        compiler.report(JSError.make(superClassName, DYNAMIC_EXTENDS_TYPE));
-        return;
-      }
 
       Node superClassString = IR.string(superClassName.getQualifiedName());
       if (newInfo.isInterfaceRecorded()) {

@@ -319,7 +319,7 @@ public class AstValidator implements CompilerPass {
     if (superClass.isEmpty()) {
       validateChildless(superClass);
     } else {
-      validateName(superClass);
+      validateExpression(superClass);
     }
 
     validateClassMembers(n.getLastChild());

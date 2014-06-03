@@ -1831,6 +1831,8 @@ public class CodePrinterTest extends TestCase {
 
   public void testSuper() {
     languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("class C extends foo(){}");
+    assertPrintSame("class C extends m.foo(){}");
     assertPrintSame("class C extends D{member(){super.foo()}}");
   }
 

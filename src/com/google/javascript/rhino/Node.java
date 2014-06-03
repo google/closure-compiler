@@ -1637,6 +1637,8 @@ public class Node implements Cloneable, Serializable {
       return left + "." + getLastChild().getString();
     } else if (type == Token.THIS) {
       return "this";
+    } else if (type == Token.SUPER) {
+      return "super";
     } else {
       return null;
     }
