@@ -282,40 +282,6 @@ options/arguments in your CUI application.</td>
   </tr>
 </table>
 
-### Jar Jar Links
-
-<table>
-  <tr>
-    <td>Code Path</td>
-    <td><code>lib/jarjar.jar</code></td>
-  </tr>
-
-  <tr>
-    <td>URL</td>
-    <td>http://jarjar.googlecode.com/</td>
-  </tr>
-
-  <tr>
-    <td>Version</td>
-    <td>1.1</td>
-  </tr>
-
-  <tr>
-    <td>License</td>
-    <td>Apache License 2.0</td>
-  </tr>
-
-  <tr>
-    <td>Description</td>
-    <td>A utility for repackaging Java libraries.</td>
-  </tr>
-
-  <tr>
-    <td>Local Modifications</td>
-    <td>None</td>
-  </tr>
-</table>
-
 ### JUnit
 
 <table>
