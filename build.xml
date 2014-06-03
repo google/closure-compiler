@@ -87,30 +87,6 @@
     </exec>
   </target>
 
-  <!-- compile rhino -->
-  <target name="rhino">
-    <ant antfile="build.xml"
-         inheritAll="false"
-         dir="lib/rhino/"
-         target="jar">
-      <property name="build.dir" value="${buildlib.dir}"/>
-      <property name="no-e4x" value="true"/>
-    </ant>
-  </target>
-
-  <target name="rhino-jarjar"
-          depends="rhino"
-          description="Renamespaces Rhino">
-    <taskdef name="jarjar"
-             classname="com.tonicsystems.jarjar.JarJarTask"
-             classpath="lib/jarjar.jar"/>
-    <jarjar destfile="${buildlib.dir}/rhino.jar" update="true">
-      <zipfileset src="${buildlib.dir}/rhino1_7R5pre/js.jar"/>
-      <rule pattern="org.mozilla.javascript.**"
-            result="com.google.javascript.rhino.head.@1"/>
-    </jarjar>
-  </target>
-
   <target name="protobuf-gen">
     <fileset dir="${src.dir}" id="proto.classpath">
       <include name="**/*.proto"/>
@@ -137,18 +113,12 @@
       <include name="jsr305.jar"/>
       <include name="protobuf-java.jar"/>
     </fileset>
-    <fileset dir="${buildlib.dir}">
-      <include name="rhino.jar"/>
-    </fileset>
   </path>
 
   <path id="allclasspath.path">
     <pathelement location="${classes.dir}" />
     <fileset dir="${lib.dir}">
       <include name="*.jar"/>
-    </fileset>
-    <fileset dir="${buildlib.dir}">
-      <include name="rhino.jar"/>
     </fileset>
   </path>
 
@@ -158,7 +128,7 @@
 
   <target name="compile"
           description="compile the source code"
-          depends="rhino-jarjar,relversion">
+          depends="relversion">
     <mkdir dir="${classes.dir}" />
     <javac srcdir="${gen.dir}"
            destdir="${classes.dir}"
@@ -209,8 +179,6 @@
       <zipfileset src="${lib.dir}/jsr305.jar"/>
       <zipfileset src="${lib.dir}/protobuf-java.jar"/>
 
-      <zipfileset src="${buildlib.dir}/rhino.jar"/>
-
       <manifest>
         <attribute name="Main-Class"
                    value="com.google.javascript.jscomp.CommandLineRunner" />
@@ -242,7 +210,6 @@
     <jar destfile="${compiler-jarfile}" update="true">
       <fileset dir="${testClasses.dir}" />
       <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
-      <zipfileset src="${buildlib.dir}/rhino.jar"/>
     </jar>
   </target>
 
@@ -312,8 +279,7 @@
   </target>
 
   <target name="javadoc"
-          description="generate Javadoc"
-          depends="rhino-jarjar">
+          description="generate Javadoc">
     <mkdir dir="${javadoc.dir}" />
     <javadoc
          destdir="${javadoc.dir}"
@@ -355,9 +321,6 @@
     <fileset dir="${classes.dir}">
       <include name="*.class" />
     </fileset>
-    <fileset dir="${buildlib.dir}">
-      <include name="rhino.jar"/>
-    </fileset>
   </path>
 
   <target name="webservice-compile"
@@ -378,7 +341,6 @@
    <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
    <jar destfile="${webservice-jarfile}" update="true">
      <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
-     <zipfileset src="${buildlib.dir}/rhino.jar"/>
      <fileset dir="${classes.dir}" />
      <fileset dir="${webservice-classes.dir}" />
    </jar>

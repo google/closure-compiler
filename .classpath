@@ -20,7 +20,6 @@
 
         If anyone has any better ideas, I'd be glad to hear them.
         -->
-        <classpathentry kind="lib" path="build/lib/rhino.jar"/>
 
         <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
         <classpathentry kind="output" path="build/classes"/>

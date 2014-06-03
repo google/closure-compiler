@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-Main-Class: org.mozilla.javascript.tools.shell.Main
-Implementation-Version: 1.7R4
-Implementation-Title: Mozilla Rhino 1.7R4
-Implementation-Vendor: Mozilla Foundation
-Implementation-URL: http://www.mozilla.org/rhino

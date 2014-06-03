@@ -73,7 +73,6 @@
   </parent>
 
   <modules>
-    <module>lib/rhino/pom.xml</module>
     <module>externs/pom.xml</module>
     <module>pom-main.xml</module>
   </modules>

@@ -140,41 +140,6 @@ limitations under the License.
 
 ### Rhino
 
-Two copies of Rhino exist in this repository:
-
-<table>
-  <tr>
-    <td>Code Path</td>
-    <td><code>lib/rhino</code></td>
-  </tr>
-
-  <tr>
-    <td>URL</td>
-    <td>http://www.mozilla.org/rhino</td>
-  </tr>
-
-  <tr>
-    <td>Version</td>
-    <td>Trunk</td>
-  </tr>
-
-  <tr>
-    <td>License</td>
-    <td>Netscape Public License and MPL / GPL dual license</td>
-  </tr>
-
-  <tr>
-    <td>Description</td>
-    <td>Mozilla Rhino is an implementation of JavaScript for the JVM.</td>
-  </tr>
-
-  <tr>
-    <td>Local Modifications</td>
-    <td>Minor changes to parsing JSDoc that usually get pushed
-  up-stream to Rhino trunk.</td>
-  </tr>
-</table>
-
 <table>
   <tr>
     <td>Code Path</td>
@@ -201,8 +166,8 @@ Two copies of Rhino exist in this repository:
   <tr>
     <td>Description</td>
     <td>A partial copy of Mozilla Rhino. Mozilla Rhino is an
-implementation of JavaScript for the JVM.  The JavaScript parser and
-the parse tree data structures were extracted and modified
+implementation of JavaScript for the JVM.  The JavaScript
+parse tree data structures were extracted and modified
 significantly for use by Google's JavaScript compiler.</td>
   </tr>
 
