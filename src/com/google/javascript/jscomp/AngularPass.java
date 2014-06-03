@@ -128,6 +128,8 @@ class AngularPass extends AbstractPostOrderCallback
               dependenciesArray
           )
       );
+      NodeUtil.setDebugInformation(statement, entry.getNode(), name);
+
       // adds `something.$inject = [...]` node after the annotated node or the following
       // goog.inherits call.
       Node insertionPoint = entry.getTarget();

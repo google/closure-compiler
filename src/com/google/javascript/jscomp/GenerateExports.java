@@ -88,6 +88,7 @@ class GenerateExports implements CompilerPass {
   private void addExtern(String export) {
     Node propstmt = IR.exprResult(
         IR.getprop(qualifiedNameNode("Object.prototype"), IR.string(export)));
+    NodeUtil.setDebugInformation(propstmt, getSynthesizedExternsRoot(), export);
     getSynthesizedExternsRoot().addChildToBack(propstmt);
     compiler.reportCodeChange();
   }
