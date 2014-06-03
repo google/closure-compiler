@@ -55,14 +55,6 @@
   </parent>
 
   <dependencies>
-    <!-- internal deps -->
-    <dependency>
-      <groupId>com.google.javascript</groupId>
-      <artifactId>closure-compiler-rhino</artifactId>
-      <classifier>shaded</classifier>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
-
     <dependency>
       <groupId>com.google.javascript</groupId>
       <artifactId>closure-compiler-externs</artifactId>
@@ -209,36 +201,13 @@
           <threadCount>4</threadCount> -->
         </configuration>
       </plugin>
-      <!-- merge rhino source into the compiler jar -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
 
-            <configuration>
-              <createDependencyReducedPom>false</createDependencyReducedPom>
-              <artifactSet>
-                <includes>
-                  <include>com.google.javascript:closure-compiler-rhino</include>
-                  </includes>
-              </artifactSet>
-              <minimizeJar>true</minimizeJar>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
           <show>protected</show>
           <nohelp>true</nohelp>
-
           <source>${jdk.version}</source>
           <target>${jdk.version}</target>
           <encoding>${project.build.sourceEncoding}</encoding>
@@ -248,6 +217,7 @@
           <detectLinks>true</detectLinks>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
@@ -261,6 +231,7 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
@@ -269,6 +240,7 @@
           </archive>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
