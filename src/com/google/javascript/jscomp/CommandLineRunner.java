@@ -172,6 +172,16 @@ public class CommandLineRunner extends
             "--js='**.js' --js='!**_test.js' to recursively include all " +
             "js files that do not end in _test.js")
     private List<String> js = new ArrayList<>();
+    
+    @Option(name = "--js_dir",
+        usage = "A directory that should be searched to find JavaScript sources. " +
+		    "The compiler will scan this directory for .js files. " + 
+        	"This is a utility flag to be able to quickly add all .js files from a subtree " +
+		    "(for example, all sources from a depended-upon library). " +
+            "It is equivalent to calling --js on all files in the directory. " +
+		    "Because the order of the files is not guaranteed, this flag may only " + 
+            "be used when --only_closure_dependencies is true.")
+    private List<String> jsDirs = new ArrayList<>();
 
     @Option(name = "--js_output_file",
         usage = "Primary output filename. If not specified, output is " +
@@ -557,7 +567,7 @@ public class CommandLineRunner extends
           });
         }
       }
-
+      
       if (!patterns.isEmpty() && allJsInputs.isEmpty()) {
         err.println("Paths attempted to match:");
         for (String path : matchedPaths) {
@@ -568,6 +578,48 @@ public class CommandLineRunner extends
       }
 
       return new ArrayList<>(allJsInputs);
+    }
+
+    /**
+     * Gets all JS paths under the directories specified by --js_dir on the command line.
+     */
+    private List<String> getJsDirFiles() throws CmdLineException, IOException {
+      List<String> jsPaths = new ArrayList<>();
+      for (String jsDir : jsDirs) {
+        jsPaths.addAll(getJsPathsInDir(jsDir));
+    	  
+      }
+      return jsPaths;
+    }
+
+    /**
+     * Gets all .js paths under the given directory.
+     */
+    private List<String> getJsPathsInDir(String jsDir) throws CmdLineException, IOException {
+      File jsDirFile = new File(jsDir);
+      
+      if (!jsDirFile.exists()) {
+        throw new CmdLineException("Specified js_dir does not exist: " + jsDirFile.getCanonicalPath());
+      }
+      
+      if (!jsDirFile.isDirectory()) {
+        throw new CmdLineException("Specified js_dir is not a directory: " + jsDirFile.getCanonicalPath());
+      }
+      
+      // Walk the file tree and return all the .js files.
+      final List<String> jsPaths = new ArrayList<>();
+      java.nio.file.Files.walkFileTree(
+          FileSystems.getDefault().getPath("."), new SimpleFileVisitor<Path>() {
+            @Override public FileVisitResult visitFile(
+                Path path, BasicFileAttributes attrs) {
+              if (path.endsWith(".js")) {
+                jsPaths.add(path.toString());
+              }
+
+              return FileVisitResult.CONTINUE;
+            } 
+          });
+      return jsPaths;
     }
 
     List<SourceMap.LocationMapping> getSourceMapLocationMappings() {
@@ -879,7 +931,11 @@ public class CommandLineRunner extends
         processFlagFile(err);
       }
 
+      // Add all files specified by --js or as args.
       jsFiles = flags.getJsFiles(err);
+      
+      // Add all files specified by --js_dir.
+      jsFiles.addAll(flags.getJsDirFiles());
     } catch (CmdLineException e) {
       err.println(e.getMessage());
       isConfigValid = false;
