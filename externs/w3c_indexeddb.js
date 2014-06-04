@@ -704,6 +704,16 @@ IDBCursor.prototype.advance = function(count) {};
  */
 IDBCursor.prototype.delete = function() {};
 
+/**
+ * @constructor
+ * @extends IDBCursor
+ * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBCursorWithValue
+ */
+function IDBCursorWithValue() {}
+
+/** @type {*} */
+IDBCursorWithValue.prototype.value; // readonly
+
 /** @type {function(new:IDBTransaction)} */
 Window.prototype.IDBTransaction;
 
