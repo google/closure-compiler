@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Maps;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -116,7 +117,7 @@ abstract class ES6ModuleLoader {
     String locate(String name, CompilerInput referrer) {
       if (isRelativeIdentifier(name)) {
         return convertSourceUriToModuleAddress(
-            createUri(referrer.getName()).resolve(createUri(name)));
+            createUri(referrer).resolve(createUri(name)));
       }
       return createUri(name).normalize().toString();
     }
@@ -128,7 +129,12 @@ abstract class ES6ModuleLoader {
 
     @Override
     String getLoadAddress(CompilerInput input) {
-      return convertSourceUriToModuleAddress(createUri(input.getName()));
+      return convertSourceUriToModuleAddress(createUri(input));
+    }
+
+    private static URI createUri(CompilerInput input) {
+      return createUri(
+          input.getName().replace("\\", MODULE_SLASH));
     }
 
     // TODO(nicksantos): Figure out a better way to deal with
