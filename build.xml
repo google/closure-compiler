@@ -170,9 +170,11 @@
           depends="compile"
           description="package compiler as an executable jar">
     <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
+    <copy file="${externs.dir}/externs.map" tofile="${build.dir}/externs.map" />
     <jar destfile="${compiler-jarfile}" update="true">
       <fileset dir="${classes.dir}" />
       <fileset dir="${build.dir}" includes="externs.zip" />
+      <fileset dir="${build.dir}" includes="externs.map" />
       <zipfileset src="${lib.dir}/args4j.jar"/>
       <zipfileset src="${lib.dir}/guava.jar"/>
       <zipfileset src="${lib.dir}/json.jar"/>

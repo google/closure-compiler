@@ -43,6 +43,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.reflect.AnnotatedElement;
 import java.nio.charset.Charset;
@@ -1030,60 +1031,35 @@ public class CommandLineRunner extends
   }
 
   // The externs expected in externs.zip, in sorted order.
-  private static final List<String> DEFAULT_EXTERNS_NAMES = ImmutableList.of(
-    // JS externs
-    "es3.js",
-    "es5.js",
-    "intl.js",
+  private static final List<String> DEFAULT_EXTERNS_NAMES;
 
-    // Event APIs
-    "w3c_event.js",
-    "w3c_event3.js",
-    "gecko_event.js",
-    "ie_event.js",
-    "webkit_event.js",
-    "w3c_device_sensor_event.js",
+  static {
+    InputStream input = CommandLineRunner.class.getResourceAsStream(
+        "/externs.map");
+    if (input == null) {
+      input = CommandLineRunner.class.getResourceAsStream("externs.map");
+    }
+    Preconditions.checkNotNull(input);
 
-    // DOM apis
-    "w3c_dom1.js",
-    "w3c_dom2.js",
-    "w3c_dom3.js",
-    "gecko_dom.js",
-    "ie_dom.js",
-    "webkit_dom.js",
+    DEFAULT_EXTERNS_NAMES = new ArrayList<String>();
 
-    // CSS apis
-    "w3c_css.js",
-    "gecko_css.js",
-    "ie_css.js",
-    "webkit_css.js",
+    BufferedReader reader = new BufferedReader(
+        new InputStreamReader(input, UTF_8));
 
-    // Top-level namespaces
-    "google.js",
-
-    "chrome.js",
-
-    "deprecated.js",
-    "fileapi.js",
-    "flash.js",
-    "gecko_xml.js",
-    "html5.js",
-    "ie_vml.js",
-    "iphone.js",
-    "v8.js",
-    "webstorage.js",
-    "w3c_anim_timing.js",
-    "w3c_css3d.js",
-    "w3c_elementtraversal.js",
-    "w3c_geolocation.js",
-    "w3c_indexeddb.js",
-    "w3c_navigation_timing.js",
-    "w3c_range.js",
-    "w3c_selectors.js",
-    "w3c_xml.js",
-    "window.js",
-    "webkit_notifications.js",
-    "webgl.js");
+    try {
+      while (true) {
+        String line = reader.readLine();
+        if (line != null) {
+          line = line.trim();
+          if (!line.isEmpty() && !line.startsWith("//")) {
+            DEFAULT_EXTERNS_NAMES.add(line);
+          }
+          continue;
+        }
+        break;
+      }
+    } catch (IOException e) {}
+  }
 
   /**
    * @return a mutable list
