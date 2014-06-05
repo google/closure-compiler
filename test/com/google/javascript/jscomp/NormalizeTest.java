@@ -215,6 +215,8 @@ public class NormalizeTest extends CompilerTestCase {
     testSame("switch (function g() {}) {}");
     test("switch (1) { case 1: function g() {}}",
          "switch (1) { case 1: var g = function () {}}");
+    test("if (true) {function g() {} function h() {}}",
+         "if (true) {var h = function() {}; var g = function () {}}");
 
 
     testSameInFunction("function f() {}");
