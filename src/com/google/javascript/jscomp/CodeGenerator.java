@@ -591,7 +591,7 @@ class CodeGenerator {
           add("for");
           cc.maybeInsertSpace();
           add("(");
-          if (first.isVar()) {
+          if (first.isVar() || first.isLet() || first.isConst()) {
             add(first, Context.IN_FOR_INIT_CLAUSE);
           } else {
             addExpr(first, 0, Context.IN_FOR_INIT_CLAUSE);
