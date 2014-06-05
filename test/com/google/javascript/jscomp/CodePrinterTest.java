@@ -398,6 +398,32 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("var [a,,c,,e]=[1,2,3,4,5]");
   }
 
+  public void testPrintArrayPatternLet() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("let []=[]");
+    assertPrintSame("let [a]=[1]");
+    assertPrintSame("let [a,b]=[1,2]");
+    assertPrintSame("let [a,...b]=[1,2]");
+    assertPrintSame("let [,b]=[1,2]");
+    assertPrintSame("let [,,,,,,g]=[1,2,3,4,5,6,7]");
+    assertPrintSame("let [a,,c]=[1,2,3]");
+    assertPrintSame("let [a,,,d]=[1,2,3,4]");
+    assertPrintSame("let [a,,c,,e]=[1,2,3,4,5]");
+  }
+
+  public void testPrintArrayPatternConst() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("const []=[]");
+    assertPrintSame("const [a]=[1]");
+    assertPrintSame("const [a,b]=[1,2]");
+    assertPrintSame("const [a,...b]=[1,2]");
+    assertPrintSame("const [,b]=[1,2]");
+    assertPrintSame("const [,,,,,,g]=[1,2,3,4,5,6,7]");
+    assertPrintSame("const [a,,c]=[1,2,3]");
+    assertPrintSame("const [a,,,d]=[1,2,3,4]");
+    assertPrintSame("const [a,,c,,e]=[1,2,3,4,5]");
+  }
+
   public void testPrintArrayPatternAssign() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("[]=[]");
@@ -425,6 +451,20 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("var {a}=foo()");
     assertPrintSame("var {a,b}=foo()");
     assertPrintSame("var {a:a,b:b}=foo()");
+  }
+
+  public void testPrintObjectPatternLet() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("let {a}=foo()");
+    assertPrintSame("let {a,b}=foo()");
+    assertPrintSame("let {a:a,b:b}=foo()");
+  }
+
+  public void testPrintObjectPatternConst() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("const {a}=foo()");
+    assertPrintSame("const {a,b}=foo()");
+    assertPrintSame("const {a:a,b:b}=foo()");
   }
 
   public void testPrintObjectPatternAssign() {
