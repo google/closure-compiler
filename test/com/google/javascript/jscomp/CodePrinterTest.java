@@ -609,7 +609,7 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("for(let a in b)c");
     assertPrintSame("for(let a of b)c");
   }
-  
+
   public void testConstFor() {
     languageMode = LanguageMode.ECMASCRIPT6;
 

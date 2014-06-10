@@ -1198,7 +1198,8 @@ class CodeGenerator {
   void addArrayPattern(Node n) {
     add("[");
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      if (child == n.getLastChild() && (n.getParent().isVar() || n.getParent().isLet() || n.getParent().isConst())) {
+      if (child == n.getLastChild()
+          && (n.getParent().isVar() || n.getParent().isLet() || n.getParent().isConst())) {
         add("]");
         add("=");
       } else if (child != n.getFirstChild()) {
@@ -1220,7 +1221,8 @@ class CodeGenerator {
 
     add("{");
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      if (child == n.getLastChild() && (n.getParent().isVar() || n.getParent().isLet() || n.getParent().isConst())) {
+      if (child == n.getLastChild()
+          && (n.getParent().isVar() || n.getParent().isLet() || n.getParent().isConst())) {
         add("}");
         add("=");
       } else if (child != n.getFirstChild()) {
