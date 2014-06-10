@@ -77,9 +77,14 @@ public class CompilerOptions implements Serializable, Cloneable {
    * external clients. This is a transitional flag for a new type
    * of const analysis.
    *
-   * TODO(nicksantos): Turn this on by default and remove this option.
+   * TODO(nicksantos): Remove this option.
    */
-  boolean inferConsts;
+  boolean inferConsts = true;
+
+  // TODO(tbreisacher): Remove this method after jslayout issues are solved.
+  public void setInferConst(boolean value) {
+    inferConsts = value;
+  }
 
   /**
    * Whether the compiler should assume that a function's "this" value
