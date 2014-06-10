@@ -1229,9 +1229,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
       String fileParent = file.getParent();
       if (fileParent == null) {
-    	basePath = outputFileName;
+        basePath = outputFileName;
       } else {
-    	basePath = file.getParent() + File.separatorChar + outputFileName;
+        basePath = file.getParent() + File.separatorChar + outputFileName;
       }
     }
 
