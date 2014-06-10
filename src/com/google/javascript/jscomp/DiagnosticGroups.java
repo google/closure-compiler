@@ -324,6 +324,12 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("useOfGoogBase",
           ProcessClosurePrimitives.USE_OF_GOOG_BASE);
 
+  // This group exists so that generated code can suppress these
+  // warnings. Not for general use.
+  public static final DiagnosticGroup OUT_OF_RANGE =
+      DiagnosticGroups.registerGroup("outOfRange",
+          PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
+
   /**
    * Adds warning levels by name.
    */
