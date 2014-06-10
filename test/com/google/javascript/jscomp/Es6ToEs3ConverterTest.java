@@ -24,10 +24,24 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
 public class Es6ToEs3ConverterTest extends CompilerTestCase {
+
+  private static final String CLOSURE_BASE =
+      "/** @const */ var goog = goog || {};"
+      + "goog.inherits = function(x,y) {};"
+      + "goog.base = function(x,y) {};";
+
+  private static final String EXTERNS_BASE =
+      "/**"
+      + "* @param {...*} var_args"
+      + "* @return {*}"
+      + "*/"
+      + "Function.prototype.apply = function(var_args) {};";
+
   @Override
   public void setUp() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     enableAstValidation(true);
+    runTypeCheckAfterProcessing = true;
   }
 
   @Override
@@ -542,6 +556,33 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
+  public void testStaticInheritanceFailure() {
+    enableTypeCheck(CheckLevel.WARNING);
+    test(Joiner.on('\n').join(
+        CLOSURE_BASE,
+        "class D {",
+        "  static f() {}",
+        "}",
+        "class C extends D {}",
+        "C.f();"), null, null, TypeCheck.INEXISTENT_PROPERTY);
+
+    test(Joiner.on('\n').join(
+        CLOSURE_BASE,
+        "class D {",
+        "  static f() {}",
+        "}",
+        "class C extends D { f() {} }",
+        "C.f();"), null, null, TypeCheck.INEXISTENT_PROPERTY);
+
+    test(Joiner.on('\n').join(
+        CLOSURE_BASE,
+        "class D {",
+        "  static f() {}",
+        "}",
+        "class C extends D { static f() {} g() {this.f()} }"),
+        null, null, TypeCheck.INEXISTENT_PROPERTY);
+  }
+
   /**
    * Check that we emit a warning if a static method references
    * {@code this} because we might mis-transpile it.
@@ -746,7 +787,6 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   public void testDefaultParameters() {
     enableTypeCheck(CheckLevel.WARNING);
-    runTypeCheckAfterProcessing = true;
 
     test("function f(zero, one = 1, two = 2) {}; f(1); f(1,2,3);",
         Joiner.on('\n').join(
@@ -838,7 +878,6 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("f(a, ...b, c, ...d, e);", "f.apply(null, [].concat([a], b, [c], d, [e]));");
     test("new F(...args);", "new Function.prototype.bind.apply(F, [].concat(args));");
 
-    // TODO(mattloring): Add integration test for this case to ensure it can be typechecked.
     test("Factory.create().m(...arr);",
         Joiner.on('\n').join(
         "var $jscomp$spread$args0;",
@@ -860,6 +899,39 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "($jscomp$spread$args1 = G.d()).n.apply($jscomp$spread$args1,",
         "    [].concat(b));"
     ));
+
+    enableTypeCheck(CheckLevel.WARNING);
+
+    test(EXTERNS_BASE, Joiner.on('\n').join(
+        "class C {}",
+        "class Factory {",
+        "  /** @return {C} */",
+        "  static create() {return new C()}",
+        "}",
+        "var arr = [1,2]",
+        "Factory.create().m(...arr);"
+        ), null, null, TypeCheck.INEXISTENT_PROPERTY);
+
+    test(EXTERNS_BASE, Joiner.on('\n').join(
+        "class C { m(a) {} }",
+        "class Factory {",
+        "  /** @return {C} */",
+        "  static create() {return new C()}",
+        "}",
+        "var arr = [1,2]",
+        "Factory.create().m(...arr);"
+        ), Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "function C() {}",
+        "C.prototype.m = function (a) {};",
+        "/** @constructor @struct */",
+        "function Factory() {}",
+        "/** @return {C} */",
+        "Factory.create = function () {return new C()};",
+        "var arr = [1,2]",
+        "var $jscomp$spread$args0;",
+        "($jscomp$spread$args0 = Factory.create()).m.apply($jscomp$spread$args0, [].concat(arr));"
+    ), null, null);
   }
 
   public void testComputedProperties() {
