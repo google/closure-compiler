@@ -74,8 +74,7 @@ public class Node implements Cloneable, Serializable {
       SYNTHETIC_BLOCK_PROP = 38,  // A synthetic block. Used to make
                                   // processing simpler, and does not
                                   // represent a real block in the source.
-      EMPTY_BLOCK        = 39,    // Used to indicate BLOCK that replaced
-                                  // EMPTY nodes.
+      ADDED_BLOCK        = 39,    // Used to indicate BLOCK that is added
       ORIGINALNAME_PROP  = 40,    // The original name of the node, before
                                   // renaming.
       SIDE_EFFECT_FLAGS  = 42,    // Function or constructor call side effect
@@ -129,7 +128,7 @@ public class Node implements Cloneable, Serializable {
         case OPT_ARG_NAME:       return "opt_arg";
 
         case SYNTHETIC_BLOCK_PROP: return "synthetic";
-        case EMPTY_BLOCK:        return "empty_block";
+        case ADDED_BLOCK:        return "added_block";
         case ORIGINALNAME_PROP:  return "originalname";
         case SIDE_EFFECT_FLAGS:  return "side_effect_flags";
 
@@ -2086,19 +2085,20 @@ public class Node implements Cloneable, Serializable {
   }
 
   /**
-   * Sets whether this is a synthetic block that should not be considered
-   * a real source block.
+   * Sets whether this is an added block that should not be considered
+   * a real source block. Eg: In "if (true) x;", the "x;" is put under an added
+   * block in the AST.
    */
-  public void setWasEmptyNode(boolean val) {
-    putBooleanProp(EMPTY_BLOCK, val);
+  public void setIsAddedBlock(boolean val) {
+    putBooleanProp(ADDED_BLOCK, val);
   }
 
   /**
-   * Returns whether this is a synthetic block that should not be considered
+   * Returns whether this is an added block that should not be considered
    * a real source block.
    */
-  public boolean wasEmptyNode() {
-    return getBooleanProp(EMPTY_BLOCK);
+  public boolean isAddedBlock() {
+    return getBooleanProp(ADDED_BLOCK);
   }
 
   /**

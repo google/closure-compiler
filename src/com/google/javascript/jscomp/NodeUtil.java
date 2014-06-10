@@ -589,7 +589,7 @@ public final class NodeUtil {
    * where it is evaluated. So /xyz/ and [3, 5] are literals, but
    * the name a is not.
    *
-   * Function literals do not meet this definition, because they
+   * <p>Function literals do not meet this definition, because they
    * lexically capture variables. For example, if you have
    * <code>
    * function() { return a; }
@@ -599,7 +599,7 @@ public final class NodeUtil {
    * any captured variables directly, it would still fail this definition,
    * because it affects the lifecycle of variables in the enclosing scope.
    *
-   * However, a function literal with respect to a particular scope is
+   * <p>However, a function literal with respect to a particular scope is
    * a literal.
    *
    * @param includeFunctions If true, all function expressions will be
@@ -1161,7 +1161,7 @@ public final class NodeUtil {
   /**
    * Returns true if the current node's type implies side effects.
    *
-   * This is a non-recursive version of the may have side effects
+   * <p>This is a non-recursive version of the may have side effects
    * check; used to check wherever the current node's type is one of
    * the reason's why a subtree has side effects.
    */
@@ -1728,6 +1728,27 @@ public final class NodeUtil {
   }
 
   /**
+   * Is this node a name declaration?
+   *
+   * @param n The node
+   * @return True if {@code n} is VAR, LET or CONST
+   */
+  static boolean isNameDeclaration(Node n) {
+    return n.isVar() || n.isLet() || n.isConst();
+  }
+
+  /**
+   * Is this node a name declaration?
+   *
+   * @param n The node
+   * @return True if {@code n} is VAR, LET or CONST
+   */
+  static boolean isLexicalDeclaration(Node n) {
+    return n.isLet() || n.isConst()
+        || isFunctionDeclaration(n) || isClassDeclaration(n);
+  }
+
+  /**
    * For an assignment or variable declaration get the assigned value.
    * @return The value node representing the new value.
    */
@@ -1829,6 +1850,7 @@ public final class NodeUtil {
   static boolean isControlStructure(Node n) {
     switch (n.getType()) {
       case Token.FOR:
+      case Token.FOR_OF:
       case Token.DO:
       case Token.WHILE:
       case Token.WITH:
@@ -1906,6 +1928,21 @@ public final class NodeUtil {
    */
   static boolean isStatementBlock(Node n) {
     return n.isScript() || n.isBlock();
+  }
+
+  /**
+   * A block scope is created by a non-synthetic block node, a for loop node,
+   * or a for-of loop node.
+   *
+   * Note: for functions, we use two separate scopes for parameters and
+   * declarations in the body. We need to make sure default parameters cannot
+   * reference var / function declarations in the body.
+   *
+   * @return Whether the node creates a block scope.
+   */
+  static boolean createsBlockScope(Node n) {
+    return ((n.isBlock() && !(n.hasChildren() && n.getFirstChild().isScript()))
+        || n.isFor() || n.isForOf());
   }
 
   /**
@@ -2071,6 +2108,13 @@ public final class NodeUtil {
   }
 
   /**
+   * see {@link #isClassDeclaration}
+   */
+  static boolean isClassDeclaration(Node n) {
+    return n.isClass() && isStatement(n);
+  }
+
+  /**
    * Is this node a hoisted function declaration? A function declaration in the
    * scope root is hoisted to the top of the scope.
    * See {@link #isFunctionDeclaration}).
@@ -2102,10 +2146,20 @@ public final class NodeUtil {
    * </pre>
    *
    * @param n A node
-   * @return Whether n is an function used within an expression.
+   * @return Whether n is a function used within an expression.
    */
   static boolean isFunctionExpression(Node n) {
     return n.isFunction() && !isStatement(n);
+  }
+
+  /**
+   * see {@link #isFunctionExpression}
+   *
+   * @param n A node
+   * @return Whether n is a class used within an expression.
+   */
+  static boolean isClassExpression(Node n) {
+    return n.isClass() && !isStatement(n);
   }
 
   /**
@@ -2196,7 +2250,7 @@ public final class NodeUtil {
    * Determines whether this node is used as an L-value. Notice that sometimes
    * names are used as both L-values and R-values.
    *
-   * We treat "var x;" as a pseudo-L-value, which kind of makes sense if you
+   * <p>We treat "var x;" as a pseudo-L-value, which kind of makes sense if you
    * treat it as "assignment to 'undefined' at the top of the scope". But if
    * we're honest with ourselves, it doesn't make sense, and we only do this
    * because it makes sense to treat this as syntactically similar to
@@ -3032,7 +3086,7 @@ public final class NodeUtil {
     }
 
     Scope.Var var = scope.getVar(node.getString());
-    return var != null && var.isConst();
+    return var != null && (var.isInferredConst() || var.isConst());
   }
 
   /**
@@ -3653,5 +3707,5 @@ public final class NodeUtil {
     // returning (int)d does not work as d can be outside int range
     // but the result must always be 32 lower bits of l
     return (int) l;
-}
+  }
 }

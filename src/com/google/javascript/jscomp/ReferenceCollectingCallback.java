@@ -298,6 +298,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       switch (parent.getType()) {
         case Token.DO:
         case Token.FOR:
+        case Token.FOR_OF:
         case Token.TRY:
         case Token.WHILE:
         case Token.WITH:
@@ -578,7 +579,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
   static final class Reference implements StaticReference<JSType> {
 
     private static final Set<Integer> DECLARATION_PARENTS =
-        ImmutableSet.of(Token.VAR, Token.FUNCTION, Token.CATCH);
+        ImmutableSet.of(Token.VAR, Token.LET, Token.CONST, Token.FUNCTION,
+            Token.CLASS, Token.CATCH);
 
     private final Node nameNode;
     private final BasicBlock basicBlock;
@@ -657,6 +659,14 @@ class ReferenceCollectingCallback implements ScopedCallback,
       return getParent().isVar();
     }
 
+    boolean isLetDeclaration() {
+      return getParent().isLet();
+    }
+
+    boolean isConstDeclaration() {
+      return getParent().isConst();
+    }
+
     boolean isHoistedFunction() {
       return NodeUtil.isHoistedFunctionDeclaration(getParent());
     }
@@ -713,6 +723,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
       Node parent = getParent();
       int parentType = parent.getType();
       return (parentType == Token.VAR && nameNode.getFirstChild() != null)
+          || (parentType == Token.LET && nameNode.getFirstChild() != null)
+          || (parentType == Token.CONST && nameNode.getFirstChild() != null)
           || parentType == Token.INC
           || parentType == Token.DEC
           || (NodeUtil.isAssignmentOp(parent)

@@ -330,7 +330,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
       case Token.NAME:
         // If the referenced variable is a constant, use its value.
         Scope.Var var = t.getScope().getVar(expr.getString());
-        if (var != null && var.isConst()) {
+        if (var != null && var.isInferredConst()) {
           Node value = var.getInitialValue();
           if (value != null && value.isString()) {
             key = value.getString();

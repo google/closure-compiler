@@ -2169,4 +2169,9 @@ final class TypedScopeCreator implements ScopeCreator {
     // NameReferenceGraphConstruction that build partial scopes.
     return functionAnalysisResults.get(n);
   }
+
+  @Override
+  public boolean hasBlockScope() {
+    return false;
+  }
 }

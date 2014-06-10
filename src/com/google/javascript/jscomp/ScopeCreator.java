@@ -32,4 +32,6 @@ interface ScopeCreator {
    * @param parent the parent Scope object (may be null)
    */
   Scope createScope(Node n, Scope parent);
+
+  boolean hasBlockScope();
 }

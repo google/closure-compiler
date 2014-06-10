@@ -110,7 +110,7 @@ class InlineVariables implements CompilerPass {
   private static class IdentifyConstants implements Predicate<Var> {
     @Override
     public boolean apply(Var var) {
-      return var.isConst();
+      return var.isInferredConst();
     }
   }
 

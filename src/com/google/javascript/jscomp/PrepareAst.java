@@ -98,10 +98,9 @@ class PrepareAst implements CompilerPass {
         if (NodeUtil.isControlStructureCodeBlock(n, c) && !c.isBlock()) {
           Node newBlock = IR.block().srcref(n);
           n.replaceChild(c, newBlock);
+          newBlock.setIsAddedBlock(true);
           if (!c.isEmpty()) {
             newBlock.addChildrenToFront(c);
-          } else {
-            newBlock.setWasEmptyNode(true);
           }
           c = newBlock;
           reportChange();

@@ -210,7 +210,7 @@ public class Scope
      * Returns {@code true} if the variable is declared as a constant,
      * based on the value reported by {@code NodeUtil}.
      */
-    public boolean isConst() {
+    public boolean isInferredConst() {
       if (nameNode == null) {
         return false;
       }
@@ -314,7 +314,7 @@ public class Scope
     /**
      * Record that this is escaped by an inner scope.
      *
-     * In other words, it's assigned in an inner scope so that it's much harder
+     * <p>In other words, it's assigned in an inner scope so that it's much harder
      * to make assertions about its value at a given point.
      */
     void markEscaped() {
@@ -332,7 +332,7 @@ public class Scope
     /**
      * Record that this is assigned exactly once..
      *
-     * In other words, it's assigned in an inner scope so that it's much harder
+     * <p>In other words, it's assigned in an inner scope so that it's much harder
      * to make assertions about its value at a given point.
      */
     void markAssignedExactlyOnce() {
@@ -345,6 +345,22 @@ public class Scope
      */
     boolean isMarkedAssignedExactlyOnce() {
       return markedAssignedExactlyOnce;
+    }
+
+    boolean isVar() {
+      return nameNode.getParent().isVar();
+    }
+
+    boolean isLet() {
+      return nameNode.getParent().isLet();
+    }
+
+    boolean isConst() {
+      return nameNode.getParent().isConst();
+    }
+
+    boolean isParam() {
+      return nameNode.getParent().isParamList();
     }
   }
 
@@ -373,7 +389,7 @@ public class Scope
       }
 
       Arguments otherVar = (Arguments) other;
-      return otherVar.scope.getRootNode() == scope.getRootNode();
+      return otherVar.scope.rootNode == scope.rootNode;
     }
 
     @Override public int hashCode() {
@@ -642,5 +658,33 @@ public class Scope
 
   void setTypeResolver(TypeResolver resolver) {
     this.typeResolver = resolver;
+  }
+
+  public boolean isBlockScope() {
+    return NodeUtil.createsBlockScope(rootNode);
+  }
+
+  /**
+   * A hoist scope is the hoist target for enclosing var declarations. It is
+   * either the top-level block of a function, a global scope, or a module scope.
+   *
+   * TODO(moz): Module scopes are not global, but are also hoist targets.
+   * Support them once module is implemented.
+   *
+   * @return Whether the scope is a hoist target for var declarations.
+   */
+  public boolean isHoistScope() {
+    return (parent != null && parent.getRootNode().isFunction()) || isGlobal();
+  }
+
+  public Scope getClosestHoistScope() {
+    Scope current = this;
+    while (current != null) {
+      if (current.isHoistScope()) {
+        return current;
+      }
+      current = current.parent;
+    }
+    return null;
   }
 }

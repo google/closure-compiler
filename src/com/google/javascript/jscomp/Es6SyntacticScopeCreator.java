@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 The Closure Compiler Authors.
+ * Copyright 2014 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,30 +23,28 @@ import com.google.javascript.rhino.Token;
 
 /**
  * <p>The syntactic scope creator scans the parse tree to create a Scope object
- * containing all the variable declarations in that scope.</p>
+ * containing all the variable declarations in that scope. This class adds supported
+ * for block-level scopes introduced in ECMAScript 6.</p>
  *
  * <p>This implementation is not thread-safe.</p>
  *
  */
-class SyntacticScopeCreator implements ScopeCreator {
+class Es6SyntacticScopeCreator implements ScopeCreator {
   private final AbstractCompiler compiler;
   private Scope scope;
   private InputId inputId;
   private final RedeclarationHandler redeclarationHandler;
 
-  // The arguments variable is special, in that it's declared in every local
-  // scope, but not explicitly declared.
+  // The arguments variable is special, in that it's declared for every function,
+  // but not explicitly declared.
   private static final String ARGUMENTS = "arguments";
 
-  /**
-   * Creates a ScopeCreator.
-   */
-  SyntacticScopeCreator(AbstractCompiler compiler) {
+  Es6SyntacticScopeCreator(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.redeclarationHandler = new DefaultRedeclarationHandler();
   }
 
-  SyntacticScopeCreator(
+  Es6SyntacticScopeCreator(
       AbstractCompiler compiler, RedeclarationHandler redeclarationHandler) {
     this.compiler = compiler;
     this.redeclarationHandler = redeclarationHandler;
@@ -80,7 +78,6 @@ class SyntacticScopeCreator implements ScopeCreator {
 
       final Node fnNameNode = n.getFirstChild();
       final Node args = fnNameNode.getNext();
-      final Node body = args.getNext();
 
       // Bleed the function name into the scope, if it hasn't
       // been declared in the outer scope.
@@ -93,12 +90,13 @@ class SyntacticScopeCreator implements ScopeCreator {
       Preconditions.checkState(args.isParamList());
       for (Node a = args.getFirstChild(); a != null;
            a = a.getNext()) {
-        Preconditions.checkState(a.isName());
+        Preconditions.checkState(a.isName() || a.isRest());
         declareVar(a);
       }
 
-      // Body
-      scanVars(body);
+      // Since we create a separate scope for body, stop scanning here
+    } else if (n.isBlock() || n.isFor() || n.isForOf()) {
+      scanVars(n);
     } else {
       // It's the global block
       Preconditions.checkState(scope.getParent() == null);
@@ -107,14 +105,27 @@ class SyntacticScopeCreator implements ScopeCreator {
   }
 
   /**
-   * Scans and gather variables declarations under a Node
-   */
+    * Scans and gather variables declarations under a Node
+    */
   private void scanVars(Node n) {
     switch (n.getType()) {
       case Token.VAR:
+        // Need to hoist to the closest function block or global scope.
         // Declare all variables. e.g. var x = 1, y, z;
-        for (Node child = n.getFirstChild();
-             child != null;) {
+        for (Node child = n.getFirstChild(); child != null;) {
+          Node next = child.getNext();
+          declareVar(scope.getClosestHoistScope(), child);
+          child = next;
+        }
+        return;
+
+      case Token.LET:
+      case Token.CONST:
+        // Only declare when scope is the current lexical scope
+        if (!isNodeAtCurrentLexicalScope(n)) {
+          return;
+        }
+        for (Node child = n.getFirstChild(); child != null;) {
           Node next = child.getNext();
           declareVar(child);
           child = next;
@@ -122,7 +133,7 @@ class SyntacticScopeCreator implements ScopeCreator {
         return;
 
       case Token.FUNCTION:
-        if (NodeUtil.isFunctionExpression(n)) {
+        if (NodeUtil.isFunctionExpression(n) || !isNodeAtCurrentLexicalScope(n)) {
           return;
         }
 
@@ -134,6 +145,18 @@ class SyntacticScopeCreator implements ScopeCreator {
         declareVar(n.getFirstChild());
         return;   // should not examine function's children
 
+      case Token.CLASS:
+        if (NodeUtil.isClassExpression(n) || !isNodeAtCurrentLexicalScope(n)) {
+          return;
+        }
+        String className = n.getFirstChild().getString();
+        if (className.isEmpty()) {
+          // This is invalid, but allow it so the checks can catch it.
+          return;
+        }
+        declareVar(n.getFirstChild());
+        return;  // should not examine class's children
+
       case Token.CATCH:
         Preconditions.checkState(n.getChildCount() == 2);
         Preconditions.checkState(n.getFirstChild().isName());
@@ -143,7 +166,9 @@ class SyntacticScopeCreator implements ScopeCreator {
         final Node var = n.getFirstChild();
         final Node block = var.getNext();
 
-        declareVar(var);
+        if (isNodeAtCurrentLexicalScope(n)) {
+          declareVar(var);
+        }
         scanVars(block);
         return;  // only one child to scan
 
@@ -182,22 +207,31 @@ class SyntacticScopeCreator implements ScopeCreator {
         Scope s, String name, Node n, CompilerInput input) {}
   }
 
+  private void declareVar(Node n) {
+    declareVar(scope, n);
+  }
+
   /**
    * Declares a variable.
    *
+   * @param s The scope to declare the variable in.
    * @param n The node corresponding to the variable name.
    */
-  private void declareVar(Node n) {
-    Preconditions.checkState(n.isName());
+  private void declareVar(Scope s, Node n) {
+    Preconditions.checkState(n.isName() || n.isRest());
+
+    String name = n.getString();
+    // Because of how we scan the variables, it is possible to encounter
+    // the same var declared name node twice. Bail out in this case.
+    if (s.getVar(name) != null && s.getVar(name).getNode() == n) {
+      return;
+    }
 
     CompilerInput input = compiler.getInput(inputId);
-    String name = n.getString();
-    if (scope.isDeclared(name, false)
-        || (scope.isLocal() && name.equals(ARGUMENTS))) {
-      redeclarationHandler.onRedeclaration(
-          scope, name, n, input);
+    if (s.isDeclared(name, false) || (s.isLocal() && name.equals(ARGUMENTS))) {
+      redeclarationHandler.onRedeclaration(s, name, n, input);
     } else {
-      scope.declare(name, n, null, input);
+      s.declare(name, n, null, input);
     }
   }
 
@@ -210,12 +244,28 @@ class SyntacticScopeCreator implements ScopeCreator {
    * @return The new untyped global scope generated as a result of this call.
    */
   static Scope generateUntypedTopScope(AbstractCompiler compiler) {
-    return new SyntacticScopeCreator(compiler).createScope(compiler.getRoot(),
+    return new Es6SyntacticScopeCreator(compiler).createScope(compiler.getRoot(),
         null);
+  }
+
+  /**
+   * Determines whether the name should be declared at current lexical scope.
+   * Assume the parent node is a BLOCK, FOR, FOR_OF or SCRIPT.
+   * TODO(moz): Make sure this assumption holds.
+   *
+   * @param n The declaration node to be checked
+   * @return whether the name should be declared at current lexical scope
+   */
+  private boolean isNodeAtCurrentLexicalScope(Node n) {
+    Node parent = n.getParent();
+    Preconditions.checkState(parent.isBlock() || parent.isFor()
+        || parent.isForOf() || parent.isScript());
+
+    return parent == scope.getRootNode() || parent.isScript();
   }
 
   @Override
   public boolean hasBlockScope() {
-    return false;
+    return true;
   }
 }

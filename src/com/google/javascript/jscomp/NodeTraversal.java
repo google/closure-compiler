@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -73,7 +74,7 @@ public class NodeTraversal {
   private InputId inputId;
 
   /** The scope creator */
-  private ScopeCreator scopeCreator;
+  private final ScopeCreator scopeCreator;
 
   /** Possible callback for scope entry and exist **/
   private ScopedCallback scopeCallback;
@@ -228,7 +229,9 @@ public class NodeTraversal {
    * Creates a node traversal using the specified callback interface.
    */
   public NodeTraversal(AbstractCompiler compiler, Callback cb) {
-    this(compiler, cb, new SyntacticScopeCreator(compiler));
+    this(compiler, cb, compiler.getLanguageMode() == LanguageMode.ECMASCRIPT6
+        ? new Es6SyntacticScopeCreator(compiler)
+        : new SyntacticScopeCreator(compiler));
   }
 
   /**
@@ -482,7 +485,7 @@ public class NodeTraversal {
    * the function the second time.
    * (We're assuming that P1 runs to a fixpoint, o/w we may miss optimizations.)
    *
-   * Most changes are reported with calls to Compiler.reportCodeChange(), which
+   * <p>Most changes are reported with calls to Compiler.reportCodeChange(), which
    * doesn't know which scope changed. We keep track of the current scope by
    * calling Compiler.setScope inside pushScope and popScope.
    * The automatic tracking can be wrong in rare cases when a pass changes scope
@@ -549,6 +552,9 @@ public class NodeTraversal {
 
     if (type == Token.FUNCTION) {
       traverseFunction(n, parent);
+    } else if (NodeUtil.createsBlockScope(n)
+        && scopeCreator.hasBlockScope()) {
+      traverseBlockScope(n);
     } else {
       for (Node child = n.getFirstChild(); child != null; ) {
         // child could be replaced, in which case our child node
@@ -596,6 +602,15 @@ public class NodeTraversal {
     // ES6 "arrow" function may not have a block as a body.
     traverseBranch(body, n);
 
+    popScope();
+  }
+
+  /** Traverses a non-function block. */
+  private void traverseBlockScope(Node n) {
+    pushScope(n);
+    for (Node child : n.children()) {
+      traverseBranch(child, n);
+    }
     popScope();
   }
 

@@ -503,12 +503,12 @@ class NewIRFactory {
     if (!irNode.isBlock()) {
       if (irNode.isEmpty()) {
         irNode.setType(Token.BLOCK);
-        irNode.setWasEmptyNode(true);
       } else {
         Node newBlock = newNode(Token.BLOCK, irNode);
         setSourceInfo(newBlock, irNode);
         irNode = newBlock;
       }
+      irNode.setIsAddedBlock(true);
     }
     return irNode;
   }

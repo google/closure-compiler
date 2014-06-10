@@ -84,7 +84,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
     // A semicolon is distinguished from a block without children by
     // annotating it with EMPTY_BLOCK.  Blocks without children are
     // usually intentional, especially with loops.
-    if (!block.hasChildren() && block.wasEmptyNode()) {
+    if (!block.hasChildren() && block.isAddedBlock()) {
         t.getCompiler().report(
             t.makeError(block, SUSPICIOUS_SEMICOLON));
     }

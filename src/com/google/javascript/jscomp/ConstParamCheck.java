@@ -123,7 +123,7 @@ class ConstParamCheck extends AbstractPostOrderCallback
       String name = argument.getString();
       Scope scope = traversal.getScope();
       Scope.Var var = scope.getVar(name);
-      if (var == null || !var.isConst()) {
+      if (var == null || !var.isInferredConst()) {
         compiler.report(traversal.makeError(
             argument, CONST_NOT_STRING_LITERAL_ERROR, name));
         return;

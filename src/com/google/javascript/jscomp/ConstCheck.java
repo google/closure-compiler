@@ -129,7 +129,7 @@ class ConstCheck extends AbstractPostOrderCallback
    * the point where it is declared.
    */
   private static boolean isConstant(Scope.Var var) {
-    return var != null && var.isConst();
+    return var != null && var.isInferredConst();
   }
 
   /**

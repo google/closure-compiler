@@ -111,4 +111,9 @@ class MemoizedScopeCreator
       }
     }
   }
+
+  @Override
+  public boolean hasBlockScope() {
+    return delegate.hasBlockScope();
+  }
 }

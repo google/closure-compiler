@@ -122,7 +122,9 @@ public class AstValidator implements CompilerPass {
         validateIf(n);
         return;
       case Token.VAR:
-        validateVar(n);
+      case Token.LET:
+      case Token.CONST:
+        validateNameDeclarationHelper(n.getType(), n);
         return;
       case Token.EXPR_RESULT:
         validateExprStmt(n);
@@ -534,15 +536,14 @@ public class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateVar(Node n) {
-    validateNodeType(Token.VAR, n);
+  private void validateNameDeclarationHelper(int type, Node n) {
     this.validateMinimumChildCount(n, 1);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      validateVarChild(c);
+      validateNameDeclarationChild(type, c);
     }
   }
 
-  private void validateVarChild(Node n) {
+  private void validateNameDeclarationChild(int type, Node n) {
     if (n.isName()) {
       // Don't use validateName here since this NAME node may have
       // a child.
@@ -552,13 +553,13 @@ public class AstValidator implements CompilerPass {
         validateExpression(n.getFirstChild());
       }
     } else if (n.isArrayPattern()) {
-      validateArrayPattern(n);
+      validateArrayPattern(type, n);
     } else {
-      violation("Invalid child for VAR node", n);
+      violation("Invalid child for " + Token.name(type) + " node", n);
     }
   }
 
-  private void validateArrayPattern(Node n) {
+  private void validateArrayPattern(int type, Node n) {
     validateNodeType(Token.ARRAY_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       // When the array pattern is a direct child of a VAR node,
@@ -568,7 +569,7 @@ public class AstValidator implements CompilerPass {
       } else {
         // The members of the array pattern can be simple names,
         // or nested array/object patterns, e.g. "var [a,[b,c]]=[1,[2,3]];"
-        validateVarChild(c);
+        validateNameDeclarationChild(type, c);
       }
     }
   }
@@ -593,18 +594,18 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateVarOrOptionalExpression(Node n) {
-    if (n.isVar()) {
-      validateVar(n);
+    if (NodeUtil.isNameDeclaration(n)) {
+      validateNameDeclarationHelper(n.getType(), n);
     } else {
       validateOptionalExpression(n);
     }
   }
 
   private void validateVarOrAssignmentTarget(Node n) {
-    if (n.isVar()) {
+    if (n.isVar() || n.isLet() || n.isConst()) {
       // Only one NAME can be declared for FOR-IN expressions.
       this.validateChildCount(n, 1);
-      validateVar(n);
+      validateNameDeclarationHelper(n.getType(), n);
     } else {
       validateAssignmentTarget(n);
     }
