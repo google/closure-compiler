@@ -29,6 +29,7 @@ var Intl = {};
  * @param {string|Array.<string>=} opt_locales
  * @param {{type: (string|undefined)}=}
  *         opt_options
+ * @constructor
  */
 Intl.v8BreakIterator = function(opt_locales, opt_options) {};
 
