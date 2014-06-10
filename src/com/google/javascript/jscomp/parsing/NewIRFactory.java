@@ -1574,8 +1574,10 @@ class NewIRFactory {
       Node leftChild = transform(getNode.operand);
       IdentifierToken nodeProp = getNode.memberName;
       Node rightChild = processObjectLitKeyAsString(nodeProp);
-      if (!rightChild.isQuotedString() && !isAllowedProp(
-          rightChild.getString())) {
+      if (!rightChild.isQuotedString()
+          && !currentFileIsExterns
+          && !isAllowedProp(
+            rightChild.getString())) {
         errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
             rightChild.getLineno(), rightChild.getCharno());
       }
