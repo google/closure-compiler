@@ -64,7 +64,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   //
   static final DiagnosticType UNEXPECTED_TOKEN = DiagnosticType.error(
       "JSC_INTERNAL_ERROR_UNEXPECTED_TOKEN",
-      "Internal Error: Don''t know how to handle {0}");
+      "Internal Error: TypeCheck doesn''t know how to handle {0}");
 
 
   //
