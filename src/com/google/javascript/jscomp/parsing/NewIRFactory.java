@@ -209,6 +209,8 @@ class NewIRFactory {
 
   private Comment currentComment;
 
+  private boolean currentFileIsExterns = false;
+
   private NewIRFactory(String sourceString,
                     StaticSourceFile sourceFile,
                     Config config,
@@ -531,6 +533,9 @@ class NewIRFactory {
       JsDocInfoParser jsDocParser) {
     if (jsDocParser.getFileOverviewJSDocInfo() != fileOverviewInfo) {
       fileOverviewInfo = jsDocParser.getFileOverviewJSDocInfo();
+      if (fileOverviewInfo.isExterns()) {
+        this.currentFileIsExterns = true;
+      }
       return true;
     }
     return false;
@@ -1482,7 +1487,9 @@ class NewIRFactory {
 
         Node key = transform(el);
         if (!key.isComputedProp() &&
-            !key.isQuotedString() && !isAllowedProp(key.getString())) {
+            !key.isQuotedString() &&
+            !currentFileIsExterns &&
+            !isAllowedProp(key.getString())) {
           errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
               key.getLineno(), key.getCharno());
         }

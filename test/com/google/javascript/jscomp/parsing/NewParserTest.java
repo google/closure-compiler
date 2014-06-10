@@ -1600,6 +1600,12 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("x().catch();");
   }
 
+  public void testKeywordsAsPropertiesInExterns() {
+    mode = LanguageMode.ECMASCRIPT3;
+
+    parse("/** @fileoverview\n@externs\n*/\n var x = {function: 1};");
+  }
+
   public void testUnicodeInIdentifiers() {
     parse("var \\u00fb");
     parse("Js\\u00C7ompiler");
