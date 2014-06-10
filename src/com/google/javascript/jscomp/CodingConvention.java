@@ -135,6 +135,13 @@ public interface CodingConvention extends Serializable {
   public boolean isSuperClassReference(String propertyName);
 
   /**
+   * Convenience method for determining if the node indicates the file
+   * is a "module" file (a file whose top level symbols are not in global
+   * scope).
+   */
+  boolean extractIsModuleFile(Node node, Node parent);
+
+  /**
    * Convenience method for determining provided dependencies amongst different
    * JS scripts.
    */

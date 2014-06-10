@@ -91,6 +91,15 @@ public class JSModule implements DependencyInfo, Serializable {
     throw new UnsupportedOperationException();
   }
 
+  @Override
+  public boolean isModule() {
+    // NOTE: The meaning of "module" has changed over time.  A "JsModule" is
+    // a collection of inputs that are loaded together. A "module" file,
+    // is a CommonJs module, ES6 module, goog.module or other file whose
+    // top level symbols are not in global scope.
+    throw new UnsupportedOperationException();
+  }
+
   /** Adds a source file input to this module. */
   public void add(SourceFile file) {
     add(new CompilerInput(file));

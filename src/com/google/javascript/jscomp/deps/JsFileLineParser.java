@@ -258,4 +258,13 @@ public abstract class JsFileLineParser {
     }
     return results;
   }
+
+  boolean parseJsBoolean(String jsBoolean) throws ParseException {
+    if (jsBoolean.equals("true")) {
+      return true;
+    } else if (jsBoolean.equals("false")) {
+      return false;
+    }
+    throw new ParseException("Syntax error in JS String literal", true /* fatal */);
+  }
 }

@@ -55,7 +55,8 @@ public class DepsFileParser extends JsFileLineParser {
    * goog.addDependency({1}, {2}, {3});
    */
   private final Matcher depArgsMatch =
-      Pattern.compile("\\s*([^,]*), (\\[[^\\]]*\\]), (\\[[^\\]]*\\])\\s*").matcher("");
+      Pattern.compile(
+          "\\s*([^,]*), (\\[[^\\]]*\\]), (\\[[^\\]]*\\])(?:, (true|false))?\\s*").matcher("");
 
   /**
    * The dependency information extracted from the current file.
@@ -155,11 +156,18 @@ public class DepsFileParser extends JsFileLineParser {
         }
         // Parse the file path.
         String path = pathTranslator.apply(parseJsString(depArgsMatch.group(1)));
+        String moduleMatch = depArgsMatch.group(4);
+        // Legacy deps files may not have a "isModule" parameter, those files are not modules.
+        boolean isModule = moduleMatch == null ? false : parseJsBoolean(moduleMatch);
+
         DependencyInfo depInfo = new SimpleDependencyInfo(path, filePath,
             // Parse the provides.
             parseJsStringArray(depArgsMatch.group(2)),
             // Parse the requires.
-            parseJsStringArray(depArgsMatch.group(3)));
+            parseJsStringArray(depArgsMatch.group(3)),
+            // "isModule"
+            isModule
+            );
 
         if (logger.isLoggable(Level.FINE)) {
           logger.fine("Found dep: " + depInfo);

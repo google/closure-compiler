@@ -200,13 +200,27 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   /**
+   * @return Whether the node indicates that the file represents a "module", a file whose top level
+   * declarations are not in global scope.
+   */
+  @Override
+  public boolean extractIsModuleFile(Node node, Node parent) {
+    String namespace = extractClassNameIfGoog(node, parent, "goog.module");
+    return namespace != null;
+  }
+
+  /**
    * Extracts X from goog.provide('X'), if the applied Node is goog.
    *
    * @return The extracted class name, or null.
    */
   @Override
-  public String extractClassNameIfProvide(Node node, Node parent){
-    return extractClassNameIfGoog(node, parent, "goog.provide");
+  public String extractClassNameIfProvide(Node node, Node parent) {
+    String namespace = extractClassNameIfGoog(node, parent, "goog.provide");
+    if (namespace == null) {
+      namespace = extractClassNameIfGoog(node, parent, "goog.module");
+    }
+    return namespace;
   }
 
   /**
@@ -215,7 +229,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
    * @return The extracted class name, or null.
    */
   @Override
-  public String extractClassNameIfRequire(Node node, Node parent){
+  public String extractClassNameIfRequire(Node node, Node parent) {
     return extractClassNameIfGoog(node, parent, "goog.require");
   }
 

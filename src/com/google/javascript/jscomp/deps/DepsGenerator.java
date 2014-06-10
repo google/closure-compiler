@@ -400,8 +400,17 @@ public class DepsGenerator {
       writeJsArray(out, provides);
       out.print(", ");
       writeJsArray(out, requires);
+      // While transitioning, only write "module" for goog.module 
+      if (depInfo.isModule()) {
+        out.print(", ");
+        writeJsBoolean(out, depInfo.isModule());
+      }
       out.println(");");
     }
+  }
+
+  private void writeJsBoolean(PrintStream out, boolean value) {
+    out.print(value ? "true" : "false");
   }
 
   /**

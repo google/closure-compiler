@@ -116,6 +116,11 @@ public class CodingConventions {
     }
 
     @Override
+    public boolean extractIsModuleFile(Node node, Node parent) {
+      return nextConvention.extractIsModuleFile(node, parent);
+    }
+
+    @Override
     public String extractClassNameIfProvide(Node node, Node parent) {
       return nextConvention.extractClassNameIfProvide(node, parent);
     }
@@ -315,14 +320,20 @@ public class CodingConventions {
     }
 
     @Override
+    public boolean extractIsModuleFile(Node node, Node parent) {
+      String message = "only implemented in ClosureCodingConvention";
+      throw new UnsupportedOperationException(message);
+    }
+
+    @Override
     public String extractClassNameIfProvide(Node node, Node parent) {
-      String message = "only implemented in GoogleCodingConvention";
+      String message = "only implemented in ClosureCodingConvention";
       throw new UnsupportedOperationException(message);
     }
 
     @Override
     public String extractClassNameIfRequire(Node node, Node parent) {
-      String message = "only implemented in GoogleCodingConvention";
+      String message = "only implemented in ClosureCodingConvention";
       throw new UnsupportedOperationException(message);
     }
 

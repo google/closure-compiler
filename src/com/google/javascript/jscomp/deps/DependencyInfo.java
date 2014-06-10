@@ -36,4 +36,7 @@ public interface DependencyInfo {
 
   /** Gets the symbols required by this file. */
   public Collection<String> getRequires();
+
+  /** Whether the symbol is provided by a module */
+  public boolean isModule();
 }

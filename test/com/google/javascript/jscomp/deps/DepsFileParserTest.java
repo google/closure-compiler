@@ -66,12 +66,13 @@ public class DepsFileParserTest extends TestCase {
 
     List<DependencyInfo> result = parser.parseFile(SRC_PATH, CONTENTS);
     ImmutableList<DependencyInfo> EXPECTED = ImmutableList.<DependencyInfo>of(
-        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY),
-        new SimpleDependencyInfo("yes2", SRC_PATH, EMPTY, EMPTY),
+        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY, false),
+        new SimpleDependencyInfo("yes2", SRC_PATH, EMPTY, EMPTY, false),
         new SimpleDependencyInfo(
-            "yes3", SRC_PATH, ImmutableList.of("a", "b"), ImmutableList.of("c")),
+            "yes3", SRC_PATH, ImmutableList.of("a", "b"), ImmutableList.of("c"),
+            false),
         new SimpleDependencyInfo(
-            "yes4", SRC_PATH, EMPTY, ImmutableList.of("a", "b", "c"))
+            "yes4", SRC_PATH, EMPTY, ImmutableList.of("a", "b", "c"), false)
     );
 
     assertEquals(EXPECTED, result);
@@ -85,10 +86,27 @@ public class DepsFileParserTest extends TestCase {
     assertEquals(0, errorManager.getWarningCount());
   }
 
-  public void testTooManyArgs() {
+  public void testTooManyArgs1() {
     parser.parseFile(SRC_PATH, "goog.addDependency('a', [], [], []);");
     assertEquals(1, errorManager.getErrorCount());
     assertEquals(0, errorManager.getWarningCount());
+  }
+
+  public void testTooManyArgs2() {
+    parser.parseFile(SRC_PATH, "goog.addDependency('a', [], [], false, []);");
+    assertEquals(1, errorManager.getErrorCount());
+    assertEquals(0, errorManager.getWarningCount());
+  }
+
+  public void testModule() {
+    List<DependencyInfo> result = parser.parseFile(SRC_PATH,
+        "goog.addDependency('yes1', [], [], true);\n" +
+        "goog.addDependency('yes2', [], [], false);\n");
+    ImmutableList<DependencyInfo> EXPECTED = ImmutableList.<DependencyInfo>of(
+        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY, true),
+        new SimpleDependencyInfo("yes2", SRC_PATH, EMPTY, EMPTY, false)
+        );
+    assertEquals(EXPECTED, result);
   }
 
   public void testShortcutMode() {
@@ -97,7 +115,7 @@ public class DepsFileParserTest extends TestCase {
         "foo();\n" +
         "goog.addDependency('no1', [], []);");
     ImmutableList<DependencyInfo> EXPECTED = ImmutableList.<DependencyInfo>of(
-        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY));
+        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY, false));
     assertEquals(EXPECTED, result);
   }
 
@@ -108,8 +126,8 @@ public class DepsFileParserTest extends TestCase {
         "foo();\n" +
         "goog.addDependency('yes2', [], []);");
     ImmutableList<DependencyInfo> EXPECTED = ImmutableList.<DependencyInfo>of(
-        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY),
-        new SimpleDependencyInfo("yes2", SRC_PATH, EMPTY, EMPTY));
+        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY, false),
+        new SimpleDependencyInfo("yes2", SRC_PATH, EMPTY, EMPTY, false));
     assertEquals(EXPECTED, result);
   }
 }

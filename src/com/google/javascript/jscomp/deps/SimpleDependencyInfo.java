@@ -35,6 +35,8 @@ public class SimpleDependencyInfo implements DependencyInfo {
   /** A list of required symbols. */
   private final List<String> requires;
 
+  private final boolean isModule;
+
   /** The path of the file relative to closure. */
   private final String srcPathRelativeToClosure;
 
@@ -54,11 +56,12 @@ public class SimpleDependencyInfo implements DependencyInfo {
    */
   public SimpleDependencyInfo(
       String srcPathRelativeToClosure, String pathOfDefiningFile,
-      List<String> provides, List<String> requires) {
+      List<String> provides, List<String> requires, boolean isModule) {
     this.srcPathRelativeToClosure = srcPathRelativeToClosure;
     this.pathOfDefiningFile = pathOfDefiningFile;
     this.provides = provides;
     this.requires = requires;
+    this.isModule = isModule;
   }
 
   @Override
@@ -69,6 +72,11 @@ public class SimpleDependencyInfo implements DependencyInfo {
   @Override
   public String getPathRelativeToClosureBase() {
     return srcPathRelativeToClosure;
+  }
+
+  @Override
+  public boolean isModule() {
+    return this.isModule;
   }
 
   @Override
@@ -91,19 +99,20 @@ public class SimpleDependencyInfo implements DependencyInfo {
             srcPathRelativeToClosure) &&
         Objects.equal(other.pathOfDefiningFile, pathOfDefiningFile) &&
         Objects.equal(other.requires, this.requires) &&
-        Objects.equal(other.provides, this.provides);
+        Objects.equal(other.provides, this.provides) &&
+        other.isModule == this.isModule;
   }
 
   @Override
   public String toString() {
     return String.format("DependencyInfo(relativePath='%1$s', path='%2$s', "
-        + "provides=%3$s, requires=%4$s)", srcPathRelativeToClosure,
-        pathOfDefiningFile, provides, requires);
+        + "provides=%3$s, requires=%4$s, module=%5$b)", srcPathRelativeToClosure,
+        pathOfDefiningFile, provides, requires, isModule);
   }
 
   @Override
   public int hashCode() {
     return Objects.hashCode(provides, requires,
-        srcPathRelativeToClosure, pathOfDefiningFile);
+        srcPathRelativeToClosure, pathOfDefiningFile, isModule);
   }
 }

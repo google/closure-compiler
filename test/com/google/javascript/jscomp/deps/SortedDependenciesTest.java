@@ -32,15 +32,15 @@ public class SortedDependenciesTest extends TestCase {
 
   public void testSort() throws Exception {
     SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "a", "a", provides(), requires("b", "c"));
+        "a", "a", provides(), requires("b", "c"), false);
     SimpleDependencyInfo b = new SimpleDependencyInfo(
-        "b", "b", provides("b"), requires("d"));
+        "b", "b", provides("b"), requires("d"), false);
     SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "c", "c", provides("c"), requires("d"));
+        "c", "c", provides("c"), requires("d"), false);
     SimpleDependencyInfo d = new SimpleDependencyInfo(
-        "d", "d", provides("d"), requires());
+        "d", "d", provides("d"), requires(), false);
     SimpleDependencyInfo e = new SimpleDependencyInfo(
-        "e", "e", provides("e"), requires());
+        "e", "e", provides("e"), requires(), false);
 
     assertSortedInputs(
         ImmutableList.of(d, b, c, a),
@@ -79,17 +79,17 @@ public class SortedDependenciesTest extends TestCase {
 
   public void testSort2() throws Exception {
     SimpleDependencyInfo ab = new SimpleDependencyInfo(
-        "ab", "ab", provides("a", "b"), requires("d", "f"));
+        "ab", "ab", provides("a", "b"), requires("d", "f"), false);
     SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "c", "c", provides("c"), requires("h"));
+        "c", "c", provides("c"), requires("h"), false);
     SimpleDependencyInfo d = new SimpleDependencyInfo(
-        "d", "d", provides("d"), requires("e", "f"));
+        "d", "d", provides("d"), requires("e", "f"), false);
     SimpleDependencyInfo ef = new SimpleDependencyInfo(
-        "ef", "ef", provides("e", "f"), requires("g", "c"));
+        "ef", "ef", provides("e", "f"), requires("g", "c"), false);
     SimpleDependencyInfo g = new SimpleDependencyInfo(
-        "g", "g", provides("g"), requires());
+        "g", "g", provides("g"), requires(), false);
     SimpleDependencyInfo hi = new SimpleDependencyInfo(
-        "hi", "hi", provides("h", "i"), requires());
+        "hi", "hi", provides("h", "i"), requires(), false);
 
     assertSortedInputs(
         ImmutableList.of(g, hi, c, ef, d, ab),
@@ -107,11 +107,11 @@ public class SortedDependenciesTest extends TestCase {
 
   public void testSort3() {
     SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "a", "a", provides("a"), requires("c"));
+        "a", "a", provides("a"), requires("c"), false);
     SimpleDependencyInfo b = new SimpleDependencyInfo(
-        "b", "b", provides("b"), requires("a"));
+        "b", "b", provides("b"), requires("a"), false);
     SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "c", "c", provides("c"), requires("b"));
+        "c", "c", provides("c"), requires("b"), false);
 
     try {
       new SortedDependencies<>(
@@ -125,7 +125,7 @@ public class SortedDependenciesTest extends TestCase {
   public void testSort4() throws Exception {
     // Check the degenerate case.
     SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "a", "a", provides("a"), requires("a"));
+        "a", "a", provides("a"), requires("a"), false);
     assertSortedDeps(
         ImmutableList.of(a),
         ImmutableList.of(a),
@@ -134,11 +134,11 @@ public class SortedDependenciesTest extends TestCase {
 
   public void testSort5() throws Exception {
     SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "a", "a", provides("a"), requires());
+        "a", "a", provides("a"), requires(), false);
     SimpleDependencyInfo b = new SimpleDependencyInfo(
-        "b", "b", provides("b"), requires());
+        "b", "b", provides("b"), requires(), false);
     SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "c", "c", provides("c"), requires());
+        "c", "c", provides("c"), requires(), false);
 
     assertSortedInputs(
         ImmutableList.of(a, b, c),

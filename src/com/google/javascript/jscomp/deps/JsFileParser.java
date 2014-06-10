@@ -41,7 +41,7 @@ public class JsFileParser extends JsFileLineParser {
 
   /** Pattern for matching goog.provide(*) and goog.require(*). */
   private static final Pattern GOOG_PROVIDE_REQUIRE_PATTERN = Pattern.compile(
-      "(?:^|;)\\s*goog\\.(provide|require|addDependency)\\s*\\((.*?)\\)");
+      "(?:^|;)\\s*(?:(?:var|let|const)\\s+[a-zA-Z_$][a-zA-Z0-9$_]*\\s+=\\s+)?goog\\.(provide|module|require|addDependency)\\s*\\((.*?)\\)");
 
   /** The first non-comment line of base.js */
   private static final String BASE_JS_START = "var COMPILED = false;";
@@ -53,6 +53,7 @@ public class JsFileParser extends JsFileLineParser {
   private List<String> provides;
   private List<String> requires;
   private boolean fileHasProvidesOrRequires;
+  private boolean fileIsModule;
 
   /** Whether to provide/require the root namespace. */
   private boolean includeGoogBase = false;
@@ -120,12 +121,13 @@ public class JsFileParser extends JsFileLineParser {
     provides = Lists.newArrayList();
     requires = Lists.newArrayList();
     fileHasProvidesOrRequires = false;
+    fileIsModule = false;
 
     logger.fine("Parsing Source: " + filePath);
     doParse(filePath, fileContents);
 
     DependencyInfo dependencyInfo = new SimpleDependencyInfo(
-        closureRelativePath, filePath, provides, requires);
+        closureRelativePath, filePath, provides, requires, fileIsModule);
     logger.fine("DepInfo: " + dependencyInfo);
     return dependencyInfo;
   }
@@ -142,6 +144,7 @@ public class JsFileParser extends JsFileLineParser {
     // win for people with a lot of JS.
     if (line.contains("provide") ||
         line.contains("require") ||
+        line.contains("module") ||
         line.contains("addDependency")) {
       // Iterate over the provides/requires.
       googMatcher.reset(line);
@@ -155,13 +158,17 @@ public class JsFileParser extends JsFileLineParser {
 
         // See if it's a require or provide.
         char firstChar = googMatcher.group(1).charAt(0);
-        boolean isProvide = firstChar == 'p';
+        boolean isProvide = (firstChar == 'p' || firstChar == 'm');
+        boolean isModule =  firstChar == 'm';
         boolean isRequire = firstChar == 'r';
+
+        if (isModule) {
+          this.fileIsModule = true;
+        }
 
         if (isProvide || isRequire) {
           // Parse the param.
           String arg = parseJsString(googMatcher.group(2));
-
           // Add the dependency.
           if (isRequire) {
             // goog is always implicit.

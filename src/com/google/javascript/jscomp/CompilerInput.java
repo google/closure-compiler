@@ -49,6 +49,7 @@ public class CompilerInput
   // The AST.
   private final SourceAst ast;
 
+  private boolean isModuleFile = false;
   // Provided and required symbols.
   private final Set<String> provides = Sets.newHashSet();
   private final Set<String> requires = Sets.newHashSet();
@@ -227,7 +228,7 @@ public class CompilerInput
       // compilation scheme. The API needs to be fixed so callers aren't
       // doing weird things like this, and then we should get rid of the
       // multiple-scan strategy.
-
+      this.isModuleFile = finder.isModuleFile;
       provides.addAll(finder.provides);
       requires.addAll(finder.requires);
     } else {
@@ -251,6 +252,7 @@ public class CompilerInput
   }
 
   private static class DepsFinder {
+    private boolean isModuleFile;
     private final List<String> provides = Lists.newArrayList();
     private final List<String> requires = Lists.newArrayList();
     private final CodingConvention codingConvention =
@@ -262,6 +264,11 @@ public class CompilerInput
 
     void visitSubtree(Node n, Node parent) {
       if (n.isCall()) {
+        boolean isModuleDetected =  codingConvention.extractIsModuleFile(n, parent);
+        if (isModuleDetected) {
+          this.isModuleFile = true;
+        }
+
         String require =
             codingConvention.extractClassNameIfRequire(n, parent);
         if (require != null) {
@@ -360,5 +367,10 @@ public class CompilerInput
   @Override
   public String toString() {
     return getName();
+  }
+
+  @Override
+  public boolean isModule() {
+    return this.isModuleFile;
   }
 }
