@@ -70,6 +70,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   private int freshPropVarCounter = 0;
 
+  private static final String FRESH_CLASS_NAME_BASE = "$jscomp$unique$class$";
+
   public Es6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
@@ -190,7 +192,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       methodName = IR.string(callName.getLastChild().getString()).srcref(enclosing);
     }
 
-    Node base = IR.getprop(clazz.getFirstChild().cloneTree().srcref(enclosing),
+    Node uniqueClassName = IR.name(FRESH_CLASS_NAME_BASE + clazz.getFirstChild().getString());
+    Node base = IR.getprop(uniqueClassName.srcref(enclosing),
         IR.string("base").srcref(enclosing)).srcref(enclosing);
     enclosing.addChildToFront(methodName);
     enclosing.addChildToFront(IR.thisNode().srcref(enclosing));
@@ -496,6 +499,19 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       }
     }
 
+    if (NodeUtil.isStatement(classNode)) {
+      String classString = constructor.removeFirstChild().getString();
+      Node uniqueName = IR.name(FRESH_CLASS_NAME_BASE + classString);
+      constructor = IR.var(uniqueName.cloneTree(), IR.function(IR.name(""),
+              constructor.removeFirstChild(), constructor.removeFirstChild()));
+      constructor.useSourceInfoIfMissingFromForTree(classNode);
+      Node reassign = IR.var(IR.name(classString), uniqueName);
+      reassign.useSourceInfoIfMissingFromForTree(classNode);
+
+      classNode.getParent().addChildAfter(reassign, classNode);
+      insertionPoint = reassign;
+    }
+
     // Classes are @struct by default.
     if (!newInfo.isUnrestrictedRecorded() && !newInfo.isDictRecorded() &&
         !newInfo.isStructRecorded()) {
@@ -511,7 +527,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     parent.replaceChild(classNode, constructor);
 
     if (NodeUtil.isStatement(constructor)) {
-      constructor.setJSDocInfo(newInfo.build(constructor));
+      insertionPoint.setJSDocInfo(newInfo.build(insertionPoint));
     } else if (parent.isName()) {
       // The constructor function is the RHS of a var statement.
       // Add the JSDoc to the VAR node.
