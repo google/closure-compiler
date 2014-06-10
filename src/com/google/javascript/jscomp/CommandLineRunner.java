@@ -47,7 +47,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.AnnotatedElement;
-import java.nio.charset.Charset;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
