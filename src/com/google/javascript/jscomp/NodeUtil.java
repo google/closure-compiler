@@ -770,7 +770,7 @@ public final class NodeUtil {
     if (!n.isVar()) {
       return false;
     }
-    JSDocInfo jsdoc = n.getJSDocInfo();
+    JSDocInfo jsdoc = getBestJSDocInfo(n);
     return jsdoc != null && jsdoc.hasTypedefType();
   }
 
@@ -778,7 +778,7 @@ public final class NodeUtil {
     if (!n.isVar()) {
       return false;
     }
-    JSDocInfo jsdoc = n.getJSDocInfo();
+    JSDocInfo jsdoc = getBestJSDocInfo(n);
     return jsdoc != null && jsdoc.hasEnumParameterType();
   }
 
@@ -786,41 +786,41 @@ public final class NodeUtil {
    * Returns true iff this node defines a namespace, such as goog or goog.math.
    */
   static boolean isNamespaceDecl(Node n) {
-    String qname;
+    Node qnameNode;
     Node initializer;
     if (n.getParent().isVar()) {
       JSDocInfo jsdoc = getBestJSDocInfo(n);
       if (jsdoc == null || !jsdoc.isConstant()) {
         return false;
       }
-      qname = n.getString();
+      qnameNode = n;
       initializer = n.getFirstChild();
     } else if (n.isExprResult()) {
       Node expr = n.getFirstChild();
       if (!expr.isAssign() || !expr.getFirstChild().isGetProp()) {
         return false;
       }
-      qname = expr.getFirstChild().getQualifiedName();
+      qnameNode = expr.getFirstChild();
       initializer = expr.getLastChild();
     } else if (n.isGetProp()) {
       Node parent = n.getParent();
       if (!parent.isAssign() || !parent.getParent().isExprResult()) {
         return false;
       }
-      qname = n.getQualifiedName();
+      qnameNode = n;
       initializer = parent.getLastChild();
     } else {
       return false;
     }
-    if (initializer == null || qname == null) {
+    if (initializer == null || qnameNode == null) {
       return false;
     }
     if (isEmptyObjectLit(initializer)) {
       return true;
     }
-    return initializer.isOr() &&
-        qname.equals(initializer.getFirstChild().getQualifiedName()) &&
-        isEmptyObjectLit(initializer.getLastChild());
+    return initializer.isOr()
+        && qnameNode.matchesQualifiedName(initializer.getFirstChild())
+        && isEmptyObjectLit(initializer.getLastChild());
   }
 
   static boolean isEmptyObjectLit(Node n) {

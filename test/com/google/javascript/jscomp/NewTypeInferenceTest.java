@@ -3695,6 +3695,45 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
+  public void testReferenceToNonexistentInterface() {
+    typeCheck(
+        "/** @constructor */ ns.Foo = function(){};",
+        VarCheck.UNDEFINED_VAR_ERROR);
+
+    typeCheck(
+        "ns.subns = {};",
+        VarCheck.UNDEFINED_VAR_ERROR);
+
+    typeCheck(
+        "/** @enum {number} */ ns.NUM = { N : 1 };",
+        VarCheck.UNDEFINED_VAR_ERROR);
+
+    typeCheck(
+        "/** @const */ var ns = {};\n" +
+        "/** @constructor */ ns.subns.Foo = function(){};",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    typeCheck(
+        "/** @const */ var ns = {};\n" +
+        "ns.subns.subsubns = {};",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    typeCheck(
+        "/** @const */ var ns = {};\n" +
+        "/** @enum {number} */ ns.subns.NUM = { N : 1 };",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    typeCheck(
+        "/** @constructor */ function Foo(){}\n" +
+        "Foo.subns.subsubns = {};",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    typeCheck(
+        "/** @constructor */ function Foo(){}\n" +
+        "/** @constructor */ Foo.subns.Bar = function(){};",
+        TypeCheck.INEXISTENT_PROPERTY);
+  }
+
   public void testThrow() {
     checkNoWarnings("throw 123;");
 
