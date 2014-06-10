@@ -215,4 +215,28 @@ public class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCase {
          "z:{a:function () {return o}}};");
   }
 
+  public final void testObjectPropertyReassigned(){
+    test("var a = {b:''};" +
+        "a.b='c';",
+        "var a={b:'c'};");
+  }
+
+  public final void testObjectPropertyReassigned2(){
+    test("var a = {b:'', x:10};" +
+        "a.b='c';",
+        "var a={x:10, b:'c'};");
+  }
+
+  public final void testObjectPropertyReassigned3(){
+    test("var a = {x:10};" +
+        "a.b = 'c';",
+        "var a = {x:10, b:'c'};");
+  }
+
+  public final void testObjectPropertyReassigned4(){
+    testSame(
+        "var a = {b:10};" +
+        "var x = 1;" +
+        "a.b = x+10;");
+  }
 }
