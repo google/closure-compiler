@@ -1253,8 +1253,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     if (config.createNameMapFiles) {
       String basePath = getMapPath(config.jsOutputFile);
 
-      propertyMapOutputPath = basePath + "_props_renaming_report.out";
-      variableMapOutputPath = basePath + "_vars_renaming_report.out";
+      propertyMapOutputPath = basePath + "_props_map.out";
+      variableMapOutputPath = basePath + "_vars_map.out";
       functionInformationMapOutputPath = basePath + "_functions_map.out";
     }
 
