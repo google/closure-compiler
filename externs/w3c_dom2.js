@@ -97,7 +97,7 @@ HTMLDocument.prototype.domain;
 HTMLDocument.prototype.URL;
 
 /**
- * @type {HTMLElement}
+ * @type {HTMLBodyElement}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-56360201
  */
 HTMLDocument.prototype.body;
