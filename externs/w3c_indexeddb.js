@@ -706,7 +706,7 @@ IDBCursor.prototype.delete = function() {};
 
 /**
  * @constructor
- * @extends IDBCursor
+ * @extends {IDBCursor}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBCursorWithValue
  */
 function IDBCursorWithValue() {}
