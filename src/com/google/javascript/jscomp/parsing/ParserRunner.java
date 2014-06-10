@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.Parser;
 import com.google.javascript.jscomp.parsing.parser.Parser.Config.Mode;
+import com.google.javascript.jscomp.parsing.parser.SourceFile;
 import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
@@ -97,9 +98,7 @@ public class ParserRunner {
       Config config,
       ErrorReporter errorReporter) {
     // TODO(johnlenz): unify "SourceFile", "Es6ErrorReporter" and "Config"
-    com.google.javascript.jscomp.parsing.parser.SourceFile file =
-        new com.google.javascript.jscomp.parsing.parser.SourceFile(
-            sourceFile.getName(), sourceString);
+    SourceFile file = new SourceFile(sourceFile.getName(), sourceString);
     Es6ErrorReporter es6ErrorReporter =
         new Es6ErrorReporter(errorReporter, file, config);
     com.google.javascript.jscomp.parsing.parser.Parser.Config es6config =
@@ -131,11 +130,11 @@ public class ParserRunner {
     private ErrorReporter reporter;
     private boolean errorSeen = false;
     private boolean isIdeMode;
-    private com.google.javascript.jscomp.parsing.parser.SourceFile source;
+    private SourceFile source;
 
     Es6ErrorReporter(
         ErrorReporter reporter,
-        com.google.javascript.jscomp.parsing.parser.SourceFile source,
+        SourceFile source,
         Config config) {
       this.reporter = reporter;
       this.isIdeMode = config.isIdeMode;
