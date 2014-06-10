@@ -1079,8 +1079,8 @@ public abstract class CompilerTestCase extends TestCase  {
             "Unexpected warning(s): " + Joiner.on("\n").join(aggregateWarnings),
             0, aggregateWarningCount);
       } else {
-        assertEquals("There should be one warning, repeated " + numRepetitions +
-            " time(s).", numRepetitions, aggregateWarningCount);
+        assertEquals("There should be one warning, repeated " + numRepetitions
+            + " time(s). Warnings: " + aggregateWarnings, numRepetitions, aggregateWarningCount);
         for (int i = 0; i < numRepetitions; ++i) {
           JSError[] warnings = errorManagers[i].getWarnings();
           JSError actual = warnings[0];

@@ -39,7 +39,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   static final DiagnosticType CANNOT_CONVERT = DiagnosticType.error(
       "JSC_CANNOT_CONVERT",
-      "This code cannot be converted from ES6 to ES3.");
+      "This code cannot be converted from ES6 to ES3. {0}");
 
   // TODO(tbreisacher): Remove this once all ES6 features are transpilable.
   static final DiagnosticType CANNOT_CONVERT_YET = DiagnosticType.error(
@@ -175,6 +175,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     Node clazz = NodeUtil.getEnclosingClass(node);
     if (clazz == null) {
       compiler.report(JSError.make(node, NO_SUPERTYPE));
+      return;
+    }
+    if (clazz.getFirstChild().isEmpty() && !clazz.getFirstChild().getNext().isEmpty()) {
       return;
     }
 
@@ -395,7 +398,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       // example.C = class {}; example.C.prototype.foo = function() {};
       fullClassName = parent.getFirstChild().getQualifiedName();
       if (fullClassName == null) {
-        cannotConvert(parent);
+        cannotConvert(parent, "Can only convert classes that are declarations or the right hand"
+            + " side of a simple assignment.");
         return;
       }
       anonymous = true;
@@ -407,7 +411,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       anonymous = true;
       insertionPoint = parent.getParent();
     } else {
-      cannotConvert(parent);
+      cannotConvert(parent, "Can only convert classes that are declarations or the right hand"
+            + " side of a simple assignment.");
       return;
     }
 
@@ -586,8 +591,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
   }
 
-  private void cannotConvert(Node n) {
-    compiler.report(JSError.make(n, CANNOT_CONVERT));
+  private void cannotConvert(Node n, String message) {
+    compiler.report(JSError.make(n, CANNOT_CONVERT, message));
   }
 
   /**

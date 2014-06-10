@@ -134,6 +134,10 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
+  public void testAnonymousSuper() {
+    test("f(class extends D { f() { super.g() } })", null, Es6ToEs3Converter.CANNOT_CONVERT);
+  }
+
   public void testClassWithJsDoc() {
     test(
         "class C { }",
