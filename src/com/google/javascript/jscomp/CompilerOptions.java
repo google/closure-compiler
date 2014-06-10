@@ -77,9 +77,9 @@ public class CompilerOptions implements Serializable, Cloneable {
    * external clients. This is a transitional flag for a new type
    * of const analysis.
    *
-   * TODO(nicksantos): Remove this option.
+   * TODO(nicksantos): Turn this on by default and remove this option.
    */
-  boolean inferConsts = true;
+  boolean inferConsts;
 
   /**
    * Whether the compiler should assume that a function's "this" value
