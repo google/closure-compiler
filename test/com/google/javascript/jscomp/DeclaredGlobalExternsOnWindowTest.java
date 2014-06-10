@@ -33,24 +33,41 @@ public class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
     return 1;
   }
 
-  public void testWindowProperty1() {
-    testExternChanges("var a", "", "var a;window.a;");
+  public void testWindowProperty1a() {
+    testExternChanges("var window; var a", "", "var window;var a;window.window;window.a");
+  }
+
+  // No "var window;" so this is a no-op.
+  public void testWindowProperty1b() {
+    testExternChanges("var a", "", "var a");
   }
 
   public void testWindowProperty2() {
     testExternChanges("", "var a", "");
   }
 
-  public void testWindowProperty3() {
-    testExternChanges("function f() {}", "var b", "function f(){};window.f;");
+  public void testWindowProperty3a() {
+    testExternChanges("var window; function f() {}", "var b",
+        "var window;function f(){};window.window;window.f;");
+  }
+
+  // No "var window;" so this is a no-op.
+  public void testWindowProperty3b() {
+    testExternChanges("function f() {}", "var b", "function f(){}");
   }
 
   public void testWindowProperty4() {
     testExternChanges("", "function f() {}", "");
   }
 
-  public void testWindowProperty5() {
-    testExternChanges("var x = function f() {}", "var b", "var x=function f(){};window.x;");
+  public void testWindowProperty5a() {
+    testExternChanges("var window; var x = function f() {}", "var b",
+        "var window;var x=function f(){};window.window;window.x;");
+  }
+
+  // No "var window;" so this is a no-op.
+  public void testWindowProperty5b() {
+    testExternChanges("var x = function f() {}", "var b", "var x=function f(){}");
   }
 
   /**
@@ -62,7 +79,7 @@ public class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
     runTypeCheckAfterProcessing = true;
 
     testSame(
-        "/** @type {string} */ var x;",
+        "var window;\n/** @type {string} */ var x;",
         "/** @param {number} n*/\n" +
         "function f(n) {}\n" +
         "f(window.x);\n",
@@ -90,7 +107,7 @@ public class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
     runTypeCheckAfterProcessing = true;
 
     testSame(
-        "/** @constructor */ function Foo() {}\n",
+        "var window;\n/** @constructor */ function Foo() {}\n",
         "/** @param {!window.Foo} f*/\n" +
         "function bar(f) {}\n" +
         "bar(new Foo());",

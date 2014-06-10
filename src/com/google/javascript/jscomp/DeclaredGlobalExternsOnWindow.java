@@ -27,7 +27,7 @@ import java.util.Set;
 
 /**
  * A compiler pass to normalize externs by declaring global names on
- * the "window" object.
+ * the "window" object, if it is declared in externs.
  */
 class DeclaredGlobalExternsOnWindow
     extends NodeTraversal.AbstractShallowStatementCallback
@@ -35,6 +35,9 @@ class DeclaredGlobalExternsOnWindow
 
   private final AbstractCompiler compiler;
   private final Set<Node> nodes = new LinkedHashSet<>();
+
+  // Whether there is a "var window" declaration in the externs.
+  private boolean windowInExterns = false;
 
   public DeclaredGlobalExternsOnWindow(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -47,7 +50,7 @@ class DeclaredGlobalExternsOnWindow
   }
 
   private void addWindowProperties() {
-    if (nodes.size() > 0) {
+    if (nodes.size() > 0 && windowInExterns) {
       for (Node node : nodes) {
         addExtern(node);
       }
@@ -59,6 +62,8 @@ class DeclaredGlobalExternsOnWindow
     String name = node.getString();
     JSDocInfo oldJSDocInfo = NodeUtil.getBestJSDocInfo(node);
 
+    // TODO(tbreisacher): Consider adding externs to 'this' instead of 'window',
+    // for environments where the global object is not called 'window.'
     Node window = IR.name("window");
     Node string = IR.string(name);
     Node getprop = IR.getprop(window, string);
@@ -106,6 +111,9 @@ class DeclaredGlobalExternsOnWindow
         // for window.location which conflicts with the "var location" one.
         if (!c.getString().equals("location")) {
           nodes.add(c);
+        }
+        if (!windowInExterns && c.getString().equals("window")) {
+          windowInExterns = true;
         }
       }
     }
