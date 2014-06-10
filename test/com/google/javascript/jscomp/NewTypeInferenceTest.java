@@ -3695,7 +3695,18 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
-  public void testReferenceToNonexistentInterface() {
+  public void testNonnamespaceLooksLikeANamespace() {
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @type {Object} */\n" +
+        "ns.obj = null;\n" +
+        "function setObj() {\n" +
+        "  ns.obj = {};\n" +
+        "}");
+  }
+
+  public void testReferenceToNonexistentNamespace() {
     typeCheck(
         "/** @constructor */ ns.Foo = function(){};",
         VarCheck.UNDEFINED_VAR_ERROR);

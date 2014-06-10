@@ -537,52 +537,9 @@ class GlobalTypeInfo implements CompilerPass {
           break;
         case Token.VAR:
           if (NodeUtil.isTypedefDecl(n)) {
-            if (n.getFirstChild().getFirstChild() != null) {
-              warnings.add(JSError.make(n, CANNOT_INIT_TYPEDEF));
-            }
-            String varName = n.getFirstChild().getString();
-            if (currentScope.isDefinedLocally(varName)) {
-              warnings.add(JSError.make(
-                  n, VariableReferenceCheck.REDECLARED_VARIABLE, varName));
-              break;
-            }
-            JSDocInfo jsdoc = n.getJSDocInfo();
-            Typedef td = Typedef.make(jsdoc.getTypedefType());
-            currentScope.addTypedef(varName, td);
+            visitTypedef(n);
           } else if (NodeUtil.isEnumDecl(n)) {
-            // TODO(dimvar): Currently, we don't handle adding static properties
-            // to an enum after its definition.
-            // Treat enum literals as namespaces.
-            String varName = n.getFirstChild().getString();
-            if (currentScope.isDefinedLocally(varName)) {
-              warnings.add(JSError.make(
-                  n, VariableReferenceCheck.REDECLARED_VARIABLE, varName));
-              break;
-            }
-            Node init = n.getFirstChild().getFirstChild();
-            if (init == null || !init.isObjectLit() ||
-                init.getFirstChild() == null) {
-              warnings.add(JSError.make(n, MALFORMED_ENUM));
-              currentScope.addLocal(varName, JSType.UNKNOWN, false);
-              break;
-            }
-            JSDocInfo jsdoc = n.getJSDocInfo();
-
-            Set<String> propNames = Sets.newHashSet();
-            for (Node prop : init.children()) {
-              String pname = NodeUtil.getObjectLitKeyName(prop);
-              if (propNames.contains(pname)) {
-                warnings.add(JSError.make(n, DUPLICATE_PROP_IN_ENUM, pname));
-              }
-              if (!convention.isValidEnumKey(pname)) {
-                warnings.add(
-                    JSError.make(prop, TypeCheck.ENUM_NOT_CONSTANT, pname));
-              }
-              propNames.add(pname);
-            }
-            currentScope.addEnum(varName,
-                EnumType.make(varName, jsdoc.getEnumParameterType(),
-                    ImmutableSet.copyOf(propNames)));
+            visitEnum(n);
           }
           break;
         case Token.GETPROP:
@@ -590,6 +547,59 @@ class GlobalTypeInfo implements CompilerPass {
           // Fix that and then handle typedefs on namespaces.
           break;
       }
+    }
+
+    private void visitTypedef(Node n) {
+      Preconditions.checkState(n.isVar());
+      if (n.getFirstChild().getFirstChild() != null) {
+        warnings.add(JSError.make(n, CANNOT_INIT_TYPEDEF));
+      }
+      String varName = n.getFirstChild().getString();
+      if (currentScope.isDefinedLocally(varName)) {
+        warnings.add(JSError.make(
+            n, VariableReferenceCheck.REDECLARED_VARIABLE, varName));
+        return;
+      }
+      JSDocInfo jsdoc = n.getJSDocInfo();
+      Typedef td = Typedef.make(jsdoc.getTypedefType());
+      currentScope.addTypedef(varName, td);
+    }
+
+    private void visitEnum(Node n) {
+      Preconditions.checkState(n.isVar());
+      // TODO(dimvar): Currently, we don't handle adding static properties
+      // to an enum after its definition.
+      // Treat enum literals as namespaces.
+      String varName = n.getFirstChild().getString();
+      if (currentScope.isDefinedLocally(varName)) {
+        warnings.add(JSError.make(
+            n, VariableReferenceCheck.REDECLARED_VARIABLE, varName));
+        return;
+      }
+      Node init = n.getFirstChild().getFirstChild();
+      if (init == null || !init.isObjectLit() ||
+          init.getFirstChild() == null) {
+        warnings.add(JSError.make(n, MALFORMED_ENUM));
+        currentScope.addLocal(varName, JSType.UNKNOWN, false);
+        return;
+      }
+      JSDocInfo jsdoc = n.getJSDocInfo();
+
+      Set<String> propNames = Sets.newHashSet();
+      for (Node prop : init.children()) {
+        String pname = NodeUtil.getObjectLitKeyName(prop);
+        if (propNames.contains(pname)) {
+          warnings.add(JSError.make(n, DUPLICATE_PROP_IN_ENUM, pname));
+        }
+        if (!convention.isValidEnumKey(pname)) {
+          warnings.add(
+              JSError.make(prop, TypeCheck.ENUM_NOT_CONSTANT, pname));
+        }
+        propNames.add(pname);
+      }
+      currentScope.addEnum(varName,
+          EnumType.make(varName, jsdoc.getEnumParameterType(),
+              ImmutableSet.copyOf(propNames)));
     }
 
     private void initFnScope(Node fn, Scope parentScope) {
@@ -740,7 +750,7 @@ class GlobalTypeInfo implements CompilerPass {
               if (initializer != null && initializer.isFunction()) {
                 visitFunctionDef(initializer, null);
               } else if (initializer != null && NodeUtil.isNamespaceDecl(n)) {
-                currentScope.addNamespace(name);
+                currentScope.addNamespace(n);
               } else if (parent.isCatch()) {
                 currentScope.addLocal(name, JSType.UNKNOWN, false);
               } else {
@@ -1551,7 +1561,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     private boolean isNamespace(Node expr) {
       if (expr.isName()) {
-        return localNamespaces.contains(expr.getString());
+        return isNamespace(expr.getString());
       }
       if (!expr.isGetProp()) {
         return false;
@@ -1561,7 +1571,7 @@ class GlobalTypeInfo implements CompilerPass {
         return false;
       }
       String leftmost = qname.getLeftmostName();
-      if (!localNamespaces.contains(leftmost)) {
+      if (!isNamespace(leftmost)) {
         return false;
       }
       JSType propType = getDeclaredTypeOf(leftmost)
@@ -1733,7 +1743,9 @@ class GlobalTypeInfo implements CompilerPass {
       locals.put(name, declType);
     }
 
-    private void addNamespace(String name) {
+    private void addNamespace(Node nameNode) {
+      Preconditions.checkArgument(nameNode.isName());
+      String name = nameNode.getString();
       Preconditions.checkArgument(!isDefinedLocally(name));
       locals.put(name, JSType.TOP_OBJECT);
       localNamespaces.add(name);

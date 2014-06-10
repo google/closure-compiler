@@ -767,19 +767,26 @@ public final class NodeUtil {
   }
 
   static boolean isTypedefDecl(Node n) {
-    if (!n.isVar()) {
+    if (n.isVar()
+        || n.isName() && n.getParent().isVar()
+        || n.isGetProp() && n.getParent().isExprResult()) {
+      JSDocInfo jsdoc = getBestJSDocInfo(n);
+      return jsdoc != null && jsdoc.hasTypedefType();
+    } else {
       return false;
     }
-    JSDocInfo jsdoc = getBestJSDocInfo(n);
-    return jsdoc != null && jsdoc.hasTypedefType();
   }
 
   static boolean isEnumDecl(Node n) {
-    if (!n.isVar()) {
+    if (n.isVar()
+        || n.isName() && n.getParent().isVar()
+        || (n.isGetProp() && n.getParent().isAssign()
+            && n.getParent().getParent().isExprResult())) {
+      JSDocInfo jsdoc = getBestJSDocInfo(n);
+      return jsdoc != null && jsdoc.hasEnumParameterType();
+    } else {
       return false;
     }
-    JSDocInfo jsdoc = getBestJSDocInfo(n);
-    return jsdoc != null && jsdoc.hasEnumParameterType();
   }
 
   /**
