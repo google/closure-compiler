@@ -1578,7 +1578,7 @@ angular.FormController.prototype.$addControl = function(control) {};
 angular.FormController.prototype.$dirty;
 
 /**
- * @type {!Object.<boolean>}
+ * @type {!Object.<boolean|!Array.<*>>}
  */
 angular.FormController.prototype.$error;
 
