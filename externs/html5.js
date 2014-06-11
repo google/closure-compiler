@@ -3351,7 +3351,7 @@ var IThenable = function() {};
  * @param {(function(TYPE):
  *             (RESULT|IThenable.<RESULT>|Thenable))=} opt_onFulfilled
  * @param {(function(*): *)=} opt_onRejected
- * @return {IThenable.<RESULT>}
+ * @return {!IThenable.<RESULT>}
  * @template RESULT
  */
 IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
@@ -3398,7 +3398,14 @@ Promise.all = function(iterable) {};
 Promise.race = function(iterable) {};
 
 
-/** @override */
+/**
+ * @param {(function(TYPE):
+ *             (RESULT|IThenable.<RESULT>|Thenable))=} opt_onFulfilled
+ * @param {(function(*): *)=} opt_onRejected
+ * @return {!Promise.<RESULT>}
+ * @template RESULT
+ * @override
+ */
 Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
 // Intentionally omitted until the spec gets clearer.
