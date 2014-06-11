@@ -146,6 +146,20 @@ class InferJSDocInfo extends AbstractPostOrderCallback
         attachJSDocInfoToNominalTypeOrShape(objType, docInfo, n.getString());
         break;
 
+      case Token.STRING_KEY:
+        docInfo = n.getJSDocInfo();
+        if (docInfo == null) {
+          return;
+        }
+        ObjectType owningType = dereferenceToObject(parent.getJSType());
+        if (owningType != null) {
+          String propName = n.getString();
+          if (owningType.hasOwnProperty(propName)) {
+            owningType.setPropertyJSDocInfo(propName, docInfo);
+          }
+        }
+        break;
+
       case Token.GETPROP:
         // Infer JSDocInfo on properties.
         // There are two ways to write doc comments on a property.
