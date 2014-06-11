@@ -42,7 +42,7 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
     Pattern.compile("[A-Z0-9][A-Z0-9_]*");
 
   private static final Pattern PACKAGE_WITH_TEST_DIR =
-    Pattern.compile("^(.*)/(?:test(?:ing)?/)(?:[^/]+)$");
+    Pattern.compile("^(.*)/(?:test|tests|testing)/(?:[^/]+)$");
 
   /** By default, decorate the ClosureCodingConvention. */
   public GoogleCodingConvention() {
@@ -153,8 +153,8 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
    * {@inheritDoc}
    *
    * <p>In Google code, the package name of a source file is its file path.
-   * Exception: if a source file's parent directory is "test" or "testing",
-   * that directory is stripped from the package name.
+   * Exception: if a source file's parent directory is "test", "tests", or
+   * "testing", that directory is stripped from the package name.
    */
   @Override
   public String getPackageName(StaticSourceFile source) {

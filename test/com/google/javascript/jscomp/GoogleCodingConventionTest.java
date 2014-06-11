@@ -145,13 +145,16 @@ public class GoogleCodingConventionTest extends TestCase {
     assertPackageName("foo/bar/baz.js", "foo/bar");
     assertPackageName("foo/bar/baz/quux.js", "foo/bar/baz");
     assertPackageName("foo/test/bar.js", "foo");
+    assertPackageName("foo/tests/bar.js", "foo");
     assertPackageName("foo/testing/bar.js", "foo");
     assertPackageName("foo/jstest/bar.js", "foo/jstest");
     assertPackageName("foo/bar/test/baz.js", "foo/bar");
+    assertPackageName("foo/bar/tests/baz.js", "foo/bar");
     assertPackageName("foo/bar/testing/baz.js", "foo/bar");
     assertPackageName("foo/bar/testament/baz.js", "foo/bar/testament");
     assertPackageName("foo/test/bar/baz.js", "foo/test/bar");
     assertPackageName("foo/bar/baz/test/quux.js", "foo/bar/baz");
+    assertPackageName("foo/bar/baz/tests/quux.js", "foo/bar/baz");
     assertPackageName("foo/bar/baz/testing/quux.js", "foo/bar/baz");
     assertPackageName("foo/bar/baz/unittests/quux.js", "foo/bar/baz/unittests");
     assertPackageName("foo/bar/test/baz/quux.js", "foo/bar/test/baz");
