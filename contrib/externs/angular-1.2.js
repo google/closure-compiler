@@ -1143,6 +1143,7 @@ angular.$http;
  *   headers: (Object|undefined),
  *   method: (string|undefined),
  *   params: (Object.<(string|Object)>|undefined),
+ *   responseType: (string|undefined),
  *   timeout: (number|!angular.$q.Promise|undefined),
  *   transformRequest:
  *       (function((string|Object), Object):(string|Object)|
@@ -1151,7 +1152,9 @@ angular.$http;
  *       (function((string|Object), Object):(string|Object)|
  *       Array.<function((string|Object), Object):(string|Object)>|undefined),
  *   url: (string|undefined),
- *   withCredentials: (boolean|undefined)
+ *   withCredentials: (boolean|undefined),
+ *   xsrfCookieName: (string|undefined),
+ *   xsrfHeaderName: (string|undefined)
  * }}
  */
 angular.$http.Config;
