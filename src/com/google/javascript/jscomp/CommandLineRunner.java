@@ -229,6 +229,11 @@ public class CommandLineRunner extends
         + " to do js string escaping on the output.")
     private String outputWrapper = "";
 
+    @Option(name = "--output_wrapper_file",
+        usage = "Loads the specified file and passes the file contents to the "
+        + "--output_wrapper flag, replacing the value if it exists.")
+    private String outputWrapperFile = "";
+
     @Option(name = "--module_wrapper",
         usage = "An output wrapper for a JavaScript module (optional). "
         + "The format is <name>:<wrapper>. The module name must correspond "
@@ -931,6 +936,17 @@ public class CommandLineRunner extends
       }
       flags.closureEntryPoint = Lists.newArrayList(
           ProcessCommonJSModules.toModuleName(flags.commonJsEntryModule));
+    }
+
+    if (flags.outputWrapperFile != null && !flags.outputWrapperFile.isEmpty()) {
+      flags.outputWrapper = "";
+      try {
+        flags.outputWrapper = Files.toString(
+            new File(flags.outputWrapperFile), UTF_8);
+      } catch (Exception e) {
+        err.println("ERROR - invalid output_wrapper_file specified.");
+        isConfigValid = false;
+      }
     }
 
     if (flags.outputWrapper != null && !flags.outputWrapper.isEmpty() &&

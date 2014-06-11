@@ -16,8 +16,11 @@
 
 package com.google.javascript.jscomp.ant;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilationLevel;
@@ -76,6 +79,7 @@ public final class CompileTask
   private String replacePropertiesPrefix;
   private File outputFile;
   private String outputWrapper;
+  private File outputWrapperFile;
   private final List<Parameter> defineParams;
   private final List<Parameter> entryPointParams;
   private final List<FileList> externFileLists;
@@ -200,6 +204,13 @@ public final class CompileTask
   }
 
   /**
+   * Set output wrapper file.
+   */
+  public void setOutputWrapperFile(File value) {
+    this.outputWrapperFile = value;
+  }
+
+  /**
    * Set the replacement property prefix.
    */
   public void setReplacePropertiesPrefix(String value) {
@@ -316,8 +327,17 @@ public final class CompileTask
           externs.size() + " extern(s)");
 
       Result result = compiler.compile(externs, sources, options);
+
       if (result.success) {
         StringBuilder source = new StringBuilder(compiler.toSource());
+
+        if (this.outputWrapperFile != null) {
+          try {
+            this.outputWrapper = Files.toString(this.outputWrapperFile, UTF_8);
+          } catch (Exception e) {
+            throw new BuildException("Invalid output_wrapper_file specified.");
+          }
+        }
 
         if (this.outputWrapper != null) {
           int pos = -1;
