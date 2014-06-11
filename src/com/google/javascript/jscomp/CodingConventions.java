@@ -290,8 +290,10 @@ public class CodingConventions {
 
     @Override
     public String getPackageName(StaticSourceFile source) {
-      // The default coding convention has no concept of a package.
-      return null;
+      // The package name of a source file is its file path.
+      String name = source.getName();
+      int lastSlash = name.lastIndexOf("/");
+      return lastSlash == -1 ? "" : name.substring(0, lastSlash);
     }
 
     @Override

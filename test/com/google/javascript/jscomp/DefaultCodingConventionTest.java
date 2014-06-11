@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import junit.framework.TestCase;
 
@@ -148,6 +149,20 @@ public class DefaultCodingConventionTest extends TestCase {
     assertNotFunctionBind("Function.prototype.bind.call()");
     assertFunctionBind("Function.prototype.bind.call(obj)");
     assertFunctionBind("Function.prototype.bind.call(obj, p1)");
+  }
+
+  public void testPackageNames() {
+    assertPackageName("foo.js", "");
+    assertPackageName("foo/bar.js", "foo");
+    assertPackageName("foo/bar/baz.js", "foo/bar");
+    assertPackageName("foo/bar/baz/quux.js", "foo/bar/baz");
+    assertPackageName("foo/test/bar.js", "foo/test");
+    assertPackageName("foo/testxyz/bar.js", "foo/testxyz");
+  }
+
+  private void assertPackageName(String filename, String expectedPackageName) {
+    StaticSourceFile sourceFile = SourceFile.fromCode(filename, "");
+    assertEquals(expectedPackageName, conv.getPackageName(sourceFile));
   }
 
   private void assertFunctionBind(String code) {
