@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.SourceMap.Format;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.LinkedHashMap;
@@ -47,6 +48,14 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
   @Override
   protected Format getSourceMapFormat() {
     return SourceMap.Format.V3;
+  }
+
+  private String getEncodedFileName() {
+    if (File.separatorChar == '\\') {
+      return "c:/myfile.js";
+    } else {
+      return "c:\\\\myfile.js";
+    }
   }
 
   public void testBasicMapping1() throws Exception {
@@ -204,7 +213,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
                    "\"mappings\":\"AAAAA;\",\n" +
-                   "\"sources\":[\"c:\\\\myfile.js\"],\n" +
+                   "\"sources\":[\"" + getEncodedFileName() + "\"],\n" +
                    "\"names\":[\"foo\"]\n" +
                    "}\n");
   }
@@ -218,7 +227,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
                    "\"mappings\":\"AAAAA,GAAOC,IAAOC;\",\n" +
-                   "\"sources\":[\"c:\\\\myfile.js\"],\n" +
+                   "\"sources\":[\"" + getEncodedFileName() + "\"],\n" +
                    "\"names\":[\"foo\",\"boo\",\"goo\"]\n" +
                    "}\n");
   }
@@ -265,7 +274,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
         "\"lineCount\":6,\n" +
         "\"mappings\":\"A;;;;AAGA,IAAIA,IAAIC,CAAJD,CAAQ,mxCAARA;AAA8xCE," +
             "CAA9xCF,CAAkyCG,CAAlyCH,CAAsyCI;\",\n" +
-        "\"sources\":[\"c:\\\\myfile.js\"],\n" +
+        "\"sources\":[\"" + getEncodedFileName() + "\"],\n" +
         "\"names\":[\"foo\",\"a\",\"c\",\"d\",\"e\"]\n" +
         "}\n");
 
@@ -309,7 +318,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
         "\"lineCount\":6,\n" +
         "\"mappings\":\"A;;;;IAGIA,IAAIC,CAAJD;AAA8xCE,CAA9xCF,CAAkyCG," +
         "CAAlyCH,CAAsyCI;\",\n" +
-        "\"sources\":[\"c:\\\\myfile.js\"],\n" +
+        "\"sources\":[\"" + getEncodedFileName() + "\"],\n" +
         "\"names\":[\"foo\",\"a\",\"c\",\"d\",\"e\"]\n" +
         "}\n");
   }
