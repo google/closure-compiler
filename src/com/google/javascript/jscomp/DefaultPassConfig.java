@@ -281,10 +281,7 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(checkVars);
-
-    if (options.inferConsts) {
-      checks.add(inferConsts);
-    }
+    checks.add(inferConsts);
 
     if (options.computeFunctionSideEffects) {
       checks.add(checkRegExp);
@@ -449,9 +446,7 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(collapseProperties);
     }
 
-    if (options.inferConsts) {
-      passes.add(inferConsts);
-    }
+    passes.add(inferConsts);
 
     // Running this pass before disambiguate properties allow the removing
     // unused methods that share the same name as methods called from unused

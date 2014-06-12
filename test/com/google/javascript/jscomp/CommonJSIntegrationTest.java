@@ -254,7 +254,6 @@ public class CommonJSIntegrationTest extends IntegrationTestCase {
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     options.processCommonJSModules = true;
     options.closurePass = true;
-    options.inferConsts = true;
     return options;
   }
 }

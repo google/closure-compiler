@@ -73,20 +73,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   boolean acceptConstKeyword;
 
   /**
-   * Whether to infer consts. This should not be configurable by
-   * external clients. This is a transitional flag for a new type
-   * of const analysis.
-   *
-   * TODO(nicksantos): Remove this option.
-   */
-  boolean inferConsts = true;
-
-  // TODO(tbreisacher): Remove this method after jslayout issues are solved.
-  public void setInferConst(boolean value) {
-    inferConsts = value;
-  }
-
-  /**
    * Whether the compiler should assume that a function's "this" value
    * never needs coercion (for example in non-strict "null" or "undefined" will
    * be coerced to the global "this" and primitives to objects).
