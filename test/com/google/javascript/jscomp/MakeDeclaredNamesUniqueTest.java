@@ -48,8 +48,7 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
                     localNamePrefix,
                     removeConst));
           }
-          NodeTraversal.traverseRoots(
-              compiler, Lists.newArrayList(externs, root), renamer);
+          NodeTraversal.traverse(compiler, root, renamer);
         }
       };
     } else {
