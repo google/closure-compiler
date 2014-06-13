@@ -185,19 +185,24 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
                 referenceNode, v);
         boolean letConstShadowsVar = v.getParentNode().isVar()
             && (reference.isLetDeclaration() || reference.isConstDeclaration());
-        boolean shadowCaught = false;
+        // We disallow redeclaration of caught exception in ES6
+        boolean shadowCatchVar = compiler.getLanguageMode().isEs6OrHigher()
+            && v.getParentNode().isCatch() && reference.isDeclaration()
+            && reference.getNode() != v.getNode();
+        boolean shadowDetected = false;
         if (isDeclaration && !allowDupe) {
           // Look through all the declarations we've found so far, and
           // check if any of them are before this block.
           for (BasicBlock declaredBlock : blocksWithDeclarations) {
             if (declaredBlock.provablyExecutesBefore(basicBlock)) {
-              shadowCaught = true;
+              shadowDetected = true;
               // TODO(johnlenz): Fix AST generating clients that so they would
               // have property StaticSourceFile attached at each node. Or
               // better yet, make sure the generated code never violates
               // the requirement to pass aggressive var check!
               DiagnosticType diagnosticType;
-              if (((v.isLet() || v.isConst())) || letConstShadowsVar) {
+              if (((v.isLet() || v.isConst()))
+                  || letConstShadowsVar || shadowCatchVar) {
                 diagnosticType = REDECLARED_VARIABLE_ERROR;
               } else {
                 diagnosticType = REDECLARED_VARIABLE;
@@ -212,7 +217,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           }
         }
 
-        if (!shadowCaught && isDeclaration && letConstShadowsVar) {
+        if (!shadowDetected && isDeclaration
+            && (letConstShadowsVar || shadowCatchVar)) {
           if (v.getScope() == reference.getScope()) {
             compiler.report(
                 JSError.make(NodeUtil.getSourceName(referenceNode),

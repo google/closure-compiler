@@ -137,7 +137,7 @@ class SyntacticScopeCreator implements ScopeCreator {
       case Token.CATCH:
         Preconditions.checkState(n.getChildCount() == 2);
         Preconditions.checkState(n.getFirstChild().isName());
-        // the first child is the catch var and the third child
+        // the first child is the catch var and the second child
         // is the code block
 
         final Node var = n.getFirstChild();

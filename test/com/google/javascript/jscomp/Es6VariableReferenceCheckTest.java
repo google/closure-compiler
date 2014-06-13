@@ -67,6 +67,7 @@ public class Es6VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("function f() { " + VARIABLE_RUN + "}");
     assertNoWarning("function f() { " + LET_RUN + "}");
     assertNoWarning("if (a) { var x; }");
+    assertNoWarning("try { let e; } catch (e) { let x; }");
   }
 
   public void testUndeclaredLet() {
@@ -283,6 +284,49 @@ public class Es6VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("var odds = [1,2,3,4].filter((n) => n%2 == 1)");
     assertRedeclare("var f = x => {var x;}");
     assertParameterShadowed("var f = x => {let x;}");
+  }
+
+  public void testTryCatch() {
+    assertRedeclareError(Joiner.on('\n').join(
+        "function f() {",
+        "  try {",
+        "    let e = 0;",
+        "    if (true) {",
+        "      let e = 1;",
+        "    }",
+        "  } catch (e) {",
+        "    let e;",
+        "  }",
+        "}"
+    ));
+
+    assertRedeclareError(Joiner.on('\n').join(
+        "function f() {",
+        "  try {",
+        "    let e = 0;",
+        "    if (true) {",
+        "      let e = 1;",
+        "    }",
+        "  } catch (e) {",
+        "      var e;",
+        "  }",
+        "}"
+    ));
+
+    assertRedeclareError(Joiner.on('\n').join(
+        "function f() {",
+        "  try {",
+        "    let e = 0;",
+        "    if (true) {",
+        "      let e = 1;",
+        "    }",
+        "  } catch (e) {",
+        "    function e() {",
+        "      var e;",
+        "    }",
+        "  }",
+        "}"
+    ));
   }
 
   /*public void testDefaultParam() {

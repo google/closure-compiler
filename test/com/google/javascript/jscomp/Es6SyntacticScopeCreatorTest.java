@@ -218,23 +218,26 @@ public class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testIsCatchBlockScoped() {
-    String js = "try { var x = 2; } catch (e) { var y = 3; }";
+    String js = "try { var x = 2; } catch (e) { var y = 3; let z = 4; }";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
     assertTrue(globalScope.isDeclared("x", false));
     assertTrue(globalScope.isDeclared("y", false));
+    assertFalse(globalScope.isDeclared("z", false));
     assertFalse(globalScope.isDeclared("e", false));
 
     Node tryBlock = root.getFirstChild().getFirstChild();
     Scope tryBlockScope = scopeCreator.createScope(tryBlock, globalScope);
     assertFalse(tryBlockScope.isDeclared("x", false));
     assertFalse(tryBlockScope.isDeclared("y", false));
+    assertFalse(tryBlockScope.isDeclared("z", false));
     assertFalse(tryBlockScope.isDeclared("e", false));
 
     Node catchBlock = tryBlock.getNext();
     Scope catchBlockScope = scopeCreator.createScope(catchBlock, tryBlockScope);
     assertFalse(catchBlockScope.isDeclared("x", false));
-    assertFalse(tryBlockScope.isDeclared("y", false));
+    assertFalse(catchBlockScope.isDeclared("y", false));
+    assertTrue(catchBlockScope.isDeclared("z", false));
     assertTrue(catchBlockScope.isDeclared("e", false));
   }
 

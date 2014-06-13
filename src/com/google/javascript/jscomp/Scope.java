@@ -674,7 +674,11 @@ public class Scope
    * @return Whether the scope is a hoist target for var declarations.
    */
   public boolean isHoistScope() {
-    return (parent != null && parent.getRootNode().isFunction()) || isGlobal();
+    return isFunctionBlockScope() || isGlobal();
+  }
+
+  public boolean isFunctionBlockScope() {
+    return parent != null && parent.getRootNode().isFunction();
   }
 
   public Scope getClosestHoistScope() {

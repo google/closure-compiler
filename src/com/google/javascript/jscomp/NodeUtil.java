@@ -1809,6 +1809,7 @@ public final class NodeUtil {
   static boolean isLoopStructure(Node n) {
     switch (n.getType()) {
       case Token.FOR:
+      case Token.FOR_OF:
       case Token.DO:
       case Token.WHILE:
         return true;
@@ -1825,6 +1826,7 @@ public final class NodeUtil {
   static Node getLoopCodeBlock(Node n) {
     switch (n.getType()) {
       case Token.FOR:
+      case Token.FOR_OF:
       case Token.WHILE:
         return n.getLastChild();
       case Token.DO:
@@ -1881,6 +1883,7 @@ public final class NodeUtil {
   static boolean isControlStructureCodeBlock(Node parent, Node n) {
     switch (parent.getType()) {
       case Token.FOR:
+      case Token.FOR_OF:
       case Token.WHILE:
       case Token.LABEL:
       case Token.WITH:
@@ -1948,7 +1951,8 @@ public final class NodeUtil {
    * @return Whether the node creates a block scope.
    */
   static boolean createsBlockScope(Node n) {
-    return ((n.isBlock() && !(n.hasChildren() && n.getFirstChild().isScript()))
+    return ((n.isBlock() && !(n.hasChildren() && n.getFirstChild().isScript())
+        && !(n.getParent() != null && n.getParent().isCatch()))
         || n.isFor() || n.isForOf());
   }
 
