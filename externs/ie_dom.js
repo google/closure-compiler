@@ -1007,12 +1007,12 @@ Element.prototype.classid;
 Element.prototype.componentFromPoint = function(iCoordX, iCoordY) {};
 
 /**
- * @param {Element} el The element to check
- * @return {boolean} If the element is contained within this one.
+ * @param {Node} node The node to check
+ * @return {boolean} If the node is contained within this element.
  * @see http://msdn.microsoft.com/en-us/library/ms536377(VS.85).aspx
  * @nosideeffects
  */
-Element.prototype.contains = function(el) {};
+Element.prototype.contains = function(node) {};
 
 /**
  * @type {boolean}
