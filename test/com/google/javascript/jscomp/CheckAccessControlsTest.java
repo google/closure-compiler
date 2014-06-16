@@ -469,6 +469,46 @@ public class CheckAccessControlsTest extends CompilerTestCase {
     }, null, PRIVATE_OVERRIDE);
   }
 
+  public void testNoPrivateAccessForProperties9() {
+    test(new String[] {
+      "/** @constructor */ function Foo() {}" +
+      "Foo.prototype = {" +
+      "/** @private */ bar_: 3" +
+      "}",
+      "new Foo().bar_;"
+    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
+  public void testNoPrivateAccessForProperties10() {
+    test(new String[] {
+      "/** @constructor */ function Foo() {}" +
+      "Foo.prototype = {" +
+      "/** @private */ bar_: function() {}" +
+      "}",
+      "new Foo().bar_();"
+    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
+  public void testNoPrivateAccessForProperties11() {
+    test(new String[] {
+      "/** @constructor */ function Foo() {}" +
+      "Foo.prototype = {" +
+      "/** @private */ get bar_() { return 1; }" +
+      "}",
+      "var a = new Foo().bar_;"
+    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
+  public void testNoPrivateAccessForProperties12() {
+    test(new String[] {
+      "/** @constructor */ function Foo() {}" +
+      "Foo.prototype = {" +
+      "/** @private */ set bar_(x) { this.barValue = x; }" +
+      "}",
+      "new Foo().bar_ = 1;"
+    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
   public void testProtectedAccessForProperties1() {
     testSame(new String[] {
       "/** @constructor */ function Foo() {}" +
@@ -573,6 +613,26 @@ public class CheckAccessControlsTest extends CompilerTestCase {
       "goog.NotASubFoo = function() { (new goog.Foo).bar(); };"
     }, null, BAD_PROTECTED_PROPERTY_ACCESS);
   }
+
+  public void testNoProtectedAccessForProperties6() {
+      test(new String[] {
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype = {" +
+        "/** @protected */ bar_: 3" +
+        "}",
+        "new Foo().bar_;"
+      }, null, BAD_PROTECTED_PROPERTY_ACCESS);
+    }
+
+    public void testNoProtectedAccessForProperties7() {
+      test(new String[] {
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype = {" +
+        "/** @protected */ bar_: function() {}" +
+        "}",
+        "new Foo().bar_();"
+      }, null, BAD_PROTECTED_PROPERTY_ACCESS);
+    }
 
   public void testPackagePrivateAccessForNames() {
     test(ImmutableList.of(
