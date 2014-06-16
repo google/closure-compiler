@@ -147,6 +147,8 @@ class InferJSDocInfo extends AbstractPostOrderCallback
         break;
 
       case Token.STRING_KEY:
+      case Token.GETTER_DEF:
+      case Token.SETTER_DEF:
         docInfo = n.getJSDocInfo();
         if (docInfo == null) {
           return;
