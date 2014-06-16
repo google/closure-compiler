@@ -231,7 +231,7 @@ public class RenamePropertiesTest extends CompilerTestCase {
     module3.add(SourceFile.fromCode("input3", module3Js));
 
     JSModule[] modules = new JSModule[] { module1, module2, module3 };
-    Compiler compiler = compileModules("", modules);
+    Compiler compiler = compileModules(modules);
 
     Result result = compiler.getResult();
     assertTrue(result.success);
@@ -397,8 +397,8 @@ public class RenamePropertiesTest extends CompilerTestCase {
     test(input2, expected2);
   }
 
-  private Compiler compileModules(String externs, JSModule[] modules) {
-    SourceFile externsInput = SourceFile.fromCode("externs", externs);
+  private Compiler compileModules(JSModule[] modules) {
+    SourceFile externsInput = SourceFile.fromCode("externs", DEFAULT_EXTERNS);
 
     CompilerOptions options = new CompilerOptions();
     options.propertyRenaming = PropertyRenamingPolicy.ALL_UNQUOTED;

@@ -17,9 +17,11 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -34,7 +36,7 @@ import java.util.Set;
  * that cross module boundaries respect declared module dependencies.
  *
  */
-class VarCheck extends AbstractPostOrderCallback implements
+class VarCheck extends AbstractScopedCallback implements
     HotSwapCompilerPass {
 
   static final DiagnosticType UNDEFINED_VAR_ERROR = DiagnosticType.error(
@@ -65,6 +67,12 @@ class VarCheck extends AbstractPostOrderCallback implements
       "accessing name {0} in externs has no effect. " +
       "Perhaps you forgot to add a var keyword?");
 
+  static final DiagnosticType NATIVE_EXTERN_VAR_ERROR =
+    DiagnosticType.error(
+      "JSC_NATIVE_EXTERN_VAR_ERROR",
+      "The compiler will not work if you don't pass es3.js " +
+      "and other default externs files");
+
   static final DiagnosticType UNDEFINED_EXTERN_VAR_ERROR =
     DiagnosticType.warning(
       "JSC_UNDEFINED_EXTERN_VAR_ERROR",
@@ -79,6 +87,13 @@ class VarCheck extends AbstractPostOrderCallback implements
     DiagnosticType.error(
         "JSC_VAR_ARGUMENTS_SHADOWED_ERROR",
         "Shadowing \"arguments\" is not allowed");
+
+  // Try to catch when people aren't passing in the default externs.
+  private static final Set<String> NATIVE_EXTERNS = ImmutableSet.of(
+      // These 3 variables are given special handling by optimizations.
+      // It is critical that these are in externs, so that Normalize
+      // renames local variables with the same name to something else.
+      "undefined", "NaN", "Infinity");
 
   // The arguments variable is special, in that it's declared in every local
   // scope, but not explicitly declared.
@@ -151,6 +166,19 @@ class VarCheck extends AbstractPostOrderCallback implements
     Scope topScope = scopeCreator.createScope(compiler.getRoot(), null);
     t.traverseWithScope(scriptRoot, topScope);
     // TODO(bashir) Check if we need to createSynthesizedExternVar like process.
+  }
+
+  @Override
+  public void enterScope(NodeTraversal t) {
+    Scope scope = t.getScope();
+    if (scope.isGlobal()) {
+      for (String varName : NATIVE_EXTERNS) {
+        if (scope.getVar(varName) == null) {
+          compiler.report(JSError.make(NATIVE_EXTERN_VAR_ERROR));
+          return;
+        }
+      }
+    }
   }
 
   @Override

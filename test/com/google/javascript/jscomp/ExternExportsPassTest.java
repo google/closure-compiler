@@ -618,8 +618,9 @@ public class ExternExportsPassTest extends TestCase {
                             "goog.exportProperty = function(a, b, c) {}; " +
                             js));
 
-    List<SourceFile> externFiles = Lists.newArrayList(
-        SourceFile.fromCode("externs", externs));
+    List<SourceFile> externFiles =
+        Lists.newArrayList(IntegrationTestCase.DEFAULT_EXTERNS);
+    externFiles.add(SourceFile.fromCode("externs2", externs));
 
     Result result = compiler.compile(externFiles, inputs, options);
 

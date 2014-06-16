@@ -45,6 +45,9 @@ import java.util.Map;
  */
 public abstract class CompilerTestCase extends TestCase  {
 
+  public static final String DEFAULT_EXTERNS =
+      "var undefined; var NaN; var Infinity;";
+
   /** Externs for the test */
   private final List<SourceFile> externsInputs;
 
@@ -148,7 +151,7 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   protected CompilerTestCase(String externs, boolean compareAsTree) {
     this.externsInputs = ImmutableList.of(
-        SourceFile.fromCode("externs", externs));
+        SourceFile.fromCode("externs", DEFAULT_EXTERNS + externs));
     this.compareAsTree = compareAsTree;
     this.parseTypeInfo = false;
     this.compareJsDoc = true;
@@ -481,7 +484,7 @@ public abstract class CompilerTestCase extends TestCase  {
   public void test(String externs, String js, String expected,
                    DiagnosticType error, DiagnosticType warning,
                    String description) {
-    SourceFile externsFile = SourceFile.fromCode("externs", externs);
+    SourceFile externsFile = SourceFile.fromCode("externs", DEFAULT_EXTERNS + externs);
     externsFile.setIsExtern(true);
     List<SourceFile> externsInputs = ImmutableList.of(externsFile);
     test(externsInputs, js, expected, error, warning, description);
@@ -810,7 +813,7 @@ public abstract class CompilerTestCase extends TestCase  {
   public void testSame(String externs, String js, DiagnosticType warning,
                        String description) {
     List<SourceFile> externsInputs = ImmutableList.of(
-        SourceFile.fromCode("externs", externs));
+        SourceFile.fromCode("externs", DEFAULT_EXTERNS + externs));
     test(externsInputs, js, js, null, warning, description);
   }
 
