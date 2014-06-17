@@ -711,7 +711,7 @@ public class Scanner {
       }
     }
     if (peekChar() != terminator) {
-      reportError(getPosition(beginIndex), "Unterminated String Literal");
+      reportError(getPosition(beginIndex), "Unterminated string literal");
     } else {
       nextChar();
     }

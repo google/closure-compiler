@@ -1781,6 +1781,15 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("/**/");
   }
 
+  public void testUnterminatedStringLiteral() {
+    parseError("var unterm = 'forgot closing quote",
+        "Unterminated string literal");
+
+    parseError("var unterm = 'forgot closing quote\n"
+        + "alert(unterm);",
+        "Unterminated string literal");
+  }
+
   /**
    * @bug 14231379
    */
