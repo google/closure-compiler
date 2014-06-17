@@ -389,7 +389,8 @@ public class JSType {
   }
 
   public JSType substituteGenerics(Map<String, JSType> concreteTypes) {
-    if (isTop() || isUnknown()) {
+    if (isTop() || isUnknown()
+        || objs == null && typeVar == null) {
       return this;
     }
     ImmutableSet<ObjectType> newObjs = null;
