@@ -43,6 +43,7 @@ public class FunctionType {
   private final NominalType nominalType;
   // Non-null iff this function has an @template annotation
   private final ImmutableList<String> typeParameters;
+  private static final boolean DEBUGGING = false;
 
   private FunctionType(
       ImmutableList<JSType> requiredFormals,
@@ -599,7 +600,7 @@ public class FunctionType {
     if (isLoose) {
       builder.append(" (loose)");
     }
-    if (!outerVarPreconditions.isEmpty()) {
+    if (DEBUGGING && !outerVarPreconditions.isEmpty()) {
       builder.append("\tFV: {");
       boolean firstIteration = true;
       for (Map.Entry<String, JSType> entry : outerVarPreconditions.entrySet()) {
