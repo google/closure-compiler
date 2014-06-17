@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallba
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.JsMessage.Builder;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
@@ -266,7 +267,14 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
     Builder builder = new Builder(
         isUnnamedMsg ? null : messageKey);
-    builder.setSourceName(traversal.getSourceName());
+    OriginalMapping mapping = compiler.getSourceMapping(
+        traversal.getSourceName(), traversal.getLineNumber(),
+        traversal.getCharno());
+    if (mapping != null) {
+      builder.setSourceName(mapping.getOriginalFile());
+    } else {
+      builder.setSourceName(traversal.getSourceName());
+    }
 
     try {
       if (isVar) {

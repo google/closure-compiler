@@ -449,6 +449,22 @@ public class NodeTraversal {
   }
 
   /**
+   * Gets the current char number, or zero if it cannot be determined. The line
+   * number is retrieved lazily as a running time optimization.
+   */
+  public int getCharno() {
+    Node cur = curNode;
+    while (cur != null) {
+      int line = cur.getCharno();
+      if (line >= 0) {
+        return line;
+      }
+      cur = cur.getParent();
+    }
+    return 0;
+  }
+
+  /**
    * Gets the current input source name.
    *
    * @return A string that may be empty, but not null

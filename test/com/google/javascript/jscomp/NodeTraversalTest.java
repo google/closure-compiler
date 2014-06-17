@@ -157,6 +157,68 @@ public class NodeTraversalTest extends TestCase {
     t.traverse(tree);
   }
 
+  public void testGetLineNoAndGetCharno() {
+    Compiler compiler = new Compiler();
+    final StringBuilder builder = new StringBuilder();
+    NodeTraversal t = new NodeTraversal(compiler,
+        new NodeTraversal.ScopedCallback() {
+
+          @Override
+          public void enterScope(NodeTraversal t) {
+          }
+
+          @Override
+          public void exitScope(NodeTraversal t) {
+          }
+
+          @Override
+          public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+            return true;
+          }
+
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            builder.append("visit ");
+            builder.append(t.getCurrentNode().toString(false, true, true));
+            builder.append(" @");
+            builder.append(t.getLineNumber());
+            builder.append(":");
+            builder.append(t.getCharno());
+            builder.append("\n");
+          }
+        }
+    );
+
+    String code = ""
+        + "var a; \n"
+        + "function foo() {\n"
+        + "  var b;\n"
+        + "  if (a) { var c;}\n"
+        + "}";
+    Node tree = parse(compiler, code);
+    t.traverse(tree);
+
+    // Note the char numbers are 0-indexed but the line numbers are 1-indexed.
+    String expectedResult = ""
+        + "visit NAME a [source_file: [testcode]] @1:4\n"
+        + "visit VAR [source_file: [testcode]] @1:0\n"
+        + "visit NAME foo [source_file: [testcode]] @2:9\n"
+        + "visit PARAM_LIST [source_file: [testcode]] @2:12\n"
+        + "visit NAME b [source_file: [testcode]] @3:6\n"
+        + "visit VAR [source_file: [testcode]] @3:2\n"
+        + "visit NAME a [source_file: [testcode]] @4:6\n"
+        + "visit NAME c [source_file: [testcode]] @4:15\n"
+        + "visit VAR [source_file: [testcode]] @4:11\n"
+        + "visit BLOCK [source_file: [testcode]] @4:9\n"
+        + "visit IF [source_file: [testcode]] @4:2\n"
+        + "visit BLOCK [source_file: [testcode]] @2:15\n"
+        + "visit FUNCTION foo [source_file: [testcode]] @2:0\n"
+        + "visit SCRIPT [synthetic: 1] [source_file: [testcode]] "
+        + "[input_id: InputId: [testcode]] @1:0\n";
+
+    assertEquals(expectedResult, builder.toString());
+  }
+
   public void testGetCurrentNode() {
     Compiler compiler = new Compiler();
     ScopeCreator creator = new SyntacticScopeCreator(compiler);

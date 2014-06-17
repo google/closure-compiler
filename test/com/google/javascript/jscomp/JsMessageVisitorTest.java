@@ -16,14 +16,18 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import static com.google.javascript.jscomp.JsMessage.Style;
 import static com.google.javascript.jscomp.JsMessage.Style.CLOSURE;
 import static com.google.javascript.jscomp.JsMessage.Style.LEGACY;
 import static com.google.javascript.jscomp.JsMessage.Style.RELAX;
 import static com.google.javascript.jscomp.JsMessageVisitor.isLowerCamelCaseWithNumericSuffixes;
 import static com.google.javascript.jscomp.JsMessageVisitor.toLowerCamelCaseWithNumericSuffixes;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.debugging.sourcemap.FilePosition;
+import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -37,6 +41,7 @@ import java.util.List;
  */
 public class JsMessageVisitorTest extends TestCase {
 
+  private CompilerOptions compilerOptions;
   private Compiler compiler;
   private List<JsMessage> messages;
   private boolean allowLegacyMessages;
@@ -45,6 +50,7 @@ public class JsMessageVisitorTest extends TestCase {
   protected void setUp() throws Exception {
     messages = Lists.newLinkedList();
     allowLegacyMessages = true;
+    compilerOptions = null;
   }
 
   public void testJsMessageOnVar() {
@@ -56,6 +62,38 @@ public class JsMessageVisitorTest extends TestCase {
     JsMessage msg = messages.get(0);
     assertEquals("MSG_HELLO", msg.getKey());
     assertEquals("Hello", msg.getDesc());
+    assertEquals("[testcode]", msg.getSourceName());
+  }
+
+  public void testJsMessagesWithSrcMap() throws Exception {
+    SourceMapGeneratorV3 sourceMap = new SourceMapGeneratorV3();
+    sourceMap.addMapping("source1.html", null, new FilePosition(10, 0),
+        new FilePosition(0, 0), new FilePosition(0, 100));
+    sourceMap.addMapping("source2.html", null, new FilePosition(10, 0),
+        new FilePosition(1, 0), new FilePosition(1, 100));
+    StringBuilder output = new StringBuilder();
+    sourceMap.appendTo(output, "unused.js");
+
+    compilerOptions = new CompilerOptions();
+    compilerOptions.inputSourceMaps = ImmutableMap.of(
+       "[testcode]", new SourceMapInput(
+           SourceFile.fromCode("example.srcmap", output.toString())));
+
+    extractMessagesSafely(
+        "/** @desc Hello */ var MSG_HELLO = goog.getMsg('a');\n"
+        + "/** @desc Hi */ var MSG_HI = goog.getMsg('b');\n");
+    assertEquals(0, compiler.getWarningCount());
+    assertEquals(2, messages.size());
+
+    JsMessage msg1 = messages.get(0);
+    assertEquals("MSG_HELLO", msg1.getKey());
+    assertEquals("Hello", msg1.getDesc());
+    assertEquals("source1.html", msg1.getSourceName());
+
+    JsMessage msg2 = messages.get(1);
+    assertEquals("MSG_HI", msg2.getKey());
+    assertEquals("Hi", msg2.getDesc());
+    assertEquals("source2.html", msg2.getSourceName());
   }
 
   public void testJsMessageOnProperty() {
@@ -551,6 +589,9 @@ public class JsMessageVisitorTest extends TestCase {
 
   private void extractMessages(String input) {
     compiler = new Compiler();
+    if (compilerOptions != null) {
+      compiler.initOptions(compilerOptions);
+    }
     Node root = compiler.parseTestCode(input);
     JsMessageVisitor visitor = new CollectMessages(compiler);
     visitor.process(null, root);
