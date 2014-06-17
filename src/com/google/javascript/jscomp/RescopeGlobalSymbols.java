@@ -52,7 +52,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private static final String DISAMBIGUATION_SUFFIX = "$";
   private static final String WINDOW = "window";
   private static final Set<String> SPECIAL_EXTERNS =
-      ImmutableSet.of(WINDOW, "eval", "arguments",
+      ImmutableSet.of(WINDOW, "eval", "arguments", "undefined",
           // The javascript built-in objects (listed in Ecma 262 section 4.2)
           "Object", "Function", "Array", "String", "Boolean", "Number", "Math",
           "Date", "RegExp", "JSON", "Error", "EvalError", "ReferenceError",
