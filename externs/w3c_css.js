@@ -2059,13 +2059,13 @@ CaretPosition.prototype.offset;
 // http://www.w3.org/TR/cssom-view/#extensions-to-the-element-interface
 
 /**
- * @return {ClientRectList}
+ * @return {!ClientRectList}
  * @see http://www.w3.org/TR/cssom-view/#dom-element-getclientrects
  */
 Element.prototype.getClientRects = function() {};
 
 /**
- * @return {ClientRect}
+ * @return {!ClientRect}
  * @see http://www.w3.org/TR/cssom-view/#dom-element-getboundingclientrect
  */
 Element.prototype.getBoundingClientRect = function() {};
@@ -2160,13 +2160,13 @@ HTMLElement.prototype.offsetHeight;
 // http://www.w3.org/TR/cssom-view/#extensions-to-the-range-interface
 
 /**
- * @return {ClientRectList}
+ * @return {!ClientRectList}
  * @see http://www.w3.org/TR/cssom-view/#dom-range-getclientrects
  */
 Range.prototype.getClientRects = function() {};
 
 /**
- * @return {ClientRect}
+ * @return {!ClientRect}
  * @see http://www.w3.org/TR/cssom-view/#dom-range-getboundingclientrect
  */
 Range.prototype.getBoundingClientRect = function() {};
