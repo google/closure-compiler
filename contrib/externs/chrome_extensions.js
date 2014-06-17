@@ -832,7 +832,7 @@ chrome.runtime.onConnect;
 chrome.runtime.onConnectExternal;
 
 
-/** @type {!chrome.runtime.ObjectEvent} */
+/** @type {!ChromeObjectEvent} */
 chrome.runtime.onInstalled;
 
 
@@ -856,7 +856,7 @@ chrome.runtime.onSuspend;
 chrome.runtime.onSuspendCanceled;
 
 
-/** @type {!chrome.runtime.ObjectEvent} */
+/** @type {!ChromeObjectEvent} */
 chrome.runtime.onUpdateAvailable;
 
 
@@ -892,39 +892,6 @@ chrome.runtime.onRestartRequired.prototype.hasListener = function(
  * @return {boolean}
  */
 chrome.runtime.onRestartRequired.prototype.hasListeners = function() {};
-
-
-
-/**
- * Event whose listeners take an Object parameter.
- * @constructor
- */
-chrome.runtime.ObjectEvent = function() {};
-
-
-/**
- * @param {function(!Object): void} callback Callback.
- */
-chrome.runtime.ObjectEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!Object): void} callback Callback.
- */
-chrome.runtime.ObjectEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!Object): void} callback Callback.
- * @return {boolean}
- */
-chrome.runtime.ObjectEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.runtime.ObjectEvent.prototype.hasListeners = function() {};
 
 
 
@@ -3432,6 +3399,133 @@ ChromeEvent.prototype.hasListeners = function(callback) {};
 
 
 /**
+ * Event whose listeners take a string parameter.
+ * @constructor
+ */
+function ChromeStringEvent() {}
+
+
+/** @param {function(string): void} callback */
+ChromeStringEvent.prototype.addListener = function(callback) {};
+
+
+/** @param {function(string): void} callback */
+ChromeStringEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(string): void} callback
+ * @return {boolean}
+ */
+ChromeStringEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+ChromeStringEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * Event whose listeners take a boolean parameter.
+ * @constructor
+ */
+
+function ChromeBooleanEvent() {}
+
+
+/**
+ * @param {function(boolean): void} callback
+ */
+ChromeBooleanEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(boolean): void} callback
+ */
+ChromeBooleanEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(boolean): void} callback
+ * @return {boolean}
+ */
+ChromeBooleanEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+ChromeBooleanEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * Event whose listeners take a number parameter.
+ * @constructor
+ */
+
+function ChromeNumberEvent() {}
+
+
+/**
+ * @param {function(number): void} callback
+ */
+ChromeNumberEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(number): void} callback
+ */
+ChromeNumberEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(number): void} callback
+ * @return {boolean}
+ */
+ChromeNumberEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+ChromeNumberEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * Event whose listeners take an Object parameter.
+ * @constructor
+ */
+function ChromeObjectEvent() {}
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+ChromeObjectEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+ChromeObjectEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ * @return {boolean}
+ */
+ChromeObjectEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+ChromeObjectEvent.prototype.hasListeners = function() {};
+
+
+/**
  * @see http://developer.chrome.com/extensions/pushMessaging.html
  * @const
  */
@@ -4851,33 +4945,6 @@ chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.hasListeners =
     function() {};
 
 
-
-/**
- * Event whose listeners take a string parameter.
- * @constructor
- */
-chrome.system.StringEvent = function() {};
-
-
-/** @param {function(string): void} callback */
-chrome.system.StringEvent.prototype.addListener = function(callback) {};
-
-
-/** @param {function(string): void} callback */
-chrome.system.StringEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(string): void} callback
- * @return {boolean}
- */
-chrome.system.StringEvent.prototype.hasListener = function(callback) {};
-
-
-/** @return {boolean} */
-chrome.system.StringEvent.prototype.hasListeners = function() {};
-
-
 /**
  * @const
  * @see http://developer.chrome.com/apps/system_storage.html
@@ -4941,7 +5008,7 @@ chrome.system.storage.StorageUnitInfoEvent.prototype.hasListeners =
 chrome.system.storage.onAttached;
 
 
-/** @type {!chrome.system.StringEvent} */
+/** @type {!ChromeStringEvent} */
 chrome.system.storage.onDetached;
 
 
@@ -5244,37 +5311,36 @@ chrome.screenlockPrivate.getLocked = function(callback) {};
 chrome.screenlockPrivate.setLocked = function(locked) {};
 
 
-/** @constructor */
-chrome.screenlockPrivate.BooleanEvent = function() {};
-
-
-/**
- * @param {function(boolean)} callback
- */
-chrome.screenlockPrivate.BooleanEvent.prototype.addListener = function(
-    callback) {};
-
-
-/**
- * @param {function(boolean)} callback
- */
-chrome.screenlockPrivate.BooleanEvent.prototype.removeListener = function(
-    callback) {};
-
-
-/**
- * @param {function(boolean)} callback
- * @return {boolean}
- */
-chrome.screenlockPrivate.BooleanEvent.prototype.hasListener = function(
-    callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.screenlockPrivate.BooleanEvent.prototype.hasListeners = function() {};
-
-
-/** @type {!chrome.screenlockPrivate.BooleanEvent} */
+/** @type {!ChromeBooleanEvent} */
 chrome.screenlockPrivate.onChanged;
+
+
+/**
+ * @const
+ * @see https://developer.chrome.com/apps/webstore
+ */
+chrome.webstore = {};
+
+
+/**
+ * @param {string|function()|function(string)=}
+ *     opt_urlOrSuccessCallbackOrFailureCallback Either the URL to install or
+ *     the succcess callback taking no arg or the failure callback taking an
+ *     error string arg.
+ * @param {function()|function(string)=} opt_successCallbackOrFailureCallback
+ *     Either the succcess callback taking no arg or the failure callback
+ *     taking an error string arg.
+ * @param {function(string)=} opt_failureCallback The failure callback.
+ */
+chrome.webstore.install = function(
+    opt_urlOrSuccessCallbackOrFailureCallback,
+    opt_successCallbackOrFailureCallback,
+    opt_failureCallback) {};
+
+
+/** @type {!ChromeStringEvent} */
+chrome.webstore.onInstallStageChanged;
+
+
+/** @type {!ChromeNumberEvent} */
+chrome.webstore.onDownloadProgress;
