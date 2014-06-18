@@ -2065,7 +2065,7 @@ CaretPosition.prototype.offset;
 Element.prototype.getClientRects = function() {};
 
 /**
- * @return {ClientRect}
+ * @return {!ClientRect}
  * @see http://www.w3.org/TR/cssom-view/#dom-element-getboundingclientrect
  */
 Element.prototype.getBoundingClientRect = function() {};
