@@ -563,6 +563,17 @@ public class JsMessageVisitorTest extends TestCase {
         "var MSG_EXTERNAL_2 = goog.getMsg('a')})");
   }
 
+  public void testUsingMsgPrefixWithFallback() {
+    extractMessages(
+        "function f() {\n" +
+        "/** @desc Hello */ var MSG_UNNAMED_1 = goog.getMsg('hello');\n" +
+        "/** @desc Hello */ var MSG_UNNAMED_2 = goog.getMsg('hello');\n" +
+        "var x = goog.getMsgWithFallback(\n" +
+        "    MSG_UNNAMED_1, MSG_UNNAMED_2);\n" +
+        "}\n");
+    assertNoErrors();
+  }
+
   public void testErrorWhenUsingMsgPrefixWithFallback() {
     extractMessages(
         "/** @desc Hello */ var MSG_HELLO_1 = goog.getMsg('hello');\n" +
@@ -570,6 +581,12 @@ public class JsMessageVisitorTest extends TestCase {
         "/** @desc Hello */ " +
         "var MSG_HELLO_3 = goog.getMsgWithFallback(MSG_HELLO_1, MSG_HELLO_2);");
     assertOneError(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
+  }
+
+  private void assertNoErrors() {
+    String errors = Joiner.on("\n").join(compiler.getErrors());
+    assertEquals("There should be no errors. " + errors,
+        0, compiler.getErrorCount());
   }
 
   private void assertOneError(DiagnosticType type) {

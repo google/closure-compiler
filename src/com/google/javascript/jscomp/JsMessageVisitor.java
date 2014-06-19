@@ -336,7 +336,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
     if (!isUnnamedMessage) {
       MessageLocation location = new MessageLocation(message, msgNode);
       messageNames.put(msgName, location);
-    } else if (msgNode.isName()) {
+    } else {
       Var var = t.getScope().getVar(msgName);
       if (var != null) {
         unnamedMessages.put(var, message);
