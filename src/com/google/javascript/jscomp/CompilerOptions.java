@@ -868,6 +868,11 @@ public class CompilerOptions implements Serializable, Cloneable {
   boolean looseTypes;
 
   /**
+   * Transitional option.
+   */
+  boolean enforceAccessControlCodingConventions;
+
+  /**
    * When set, assume that apparently side-effect free code is meaningful.
    */
   boolean protectHiddenSideEffects;
@@ -893,6 +898,7 @@ public class CompilerOptions implements Serializable, Cloneable {
    * Instrument code for the purpose of collecting coverage data.
    */
   public boolean instrumentForCoverage;
+
 
   /**
    * Initializes compiler options. All options are disabled by default.

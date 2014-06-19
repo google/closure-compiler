@@ -109,7 +109,8 @@ public class DiagnosticGroups {
           CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS,
           CheckAccessControls.EXTEND_FINAL_CLASS,
           CheckAccessControls.PRIVATE_OVERRIDE,
-          CheckAccessControls.VISIBILITY_MISMATCH);
+          CheckAccessControls.VISIBILITY_MISMATCH,
+          CheckAccessControls.CONVENTION_MISMATCH);
 
   public static final DiagnosticGroup ACCESS_CONTROLS =
       DiagnosticGroups.registerGroup("accessControls",

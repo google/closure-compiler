@@ -1414,7 +1414,8 @@ public class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("checkAccessControls", true) {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      return new CheckAccessControls(compiler);
+      return new CheckAccessControls(
+          compiler, options.enforceAccessControlCodingConventions);
     }
   };
 

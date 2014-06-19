@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.CheckAccessControls.BAD_PRIVATE_PROPE
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS;
 import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_DELETED;
 import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE;
+import static com.google.javascript.jscomp.CheckAccessControls.CONVENTION_MISMATCH;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_CLASS;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_CLASS_REASON;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_NAME;
@@ -49,8 +50,13 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Override
+  protected int getNumRepetitions() {
+    return 1;
+  }
+
+  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CheckAccessControls(compiler);
+    return new CheckAccessControls(compiler, true);
   }
 
   @Override
@@ -340,6 +346,15 @@ public class CheckAccessControlsTest extends CompilerTestCase {
     testSame("/** @private */ function foo_() {}; foo_();");
     test(new String[] {
       "/** @private */ function foo_() {};",
+      "foo_();"
+    }, null, BAD_PRIVATE_GLOBAL_ACCESS);
+  }
+
+  public void testPrivateAccessForNames2() {
+    // Private by convention
+    testSame("function foo_() {}; foo_();");
+    test(new String[] {
+      "function foo_() {};",
       "foo_();"
     }, null, BAD_PRIVATE_GLOBAL_ACCESS);
   }
@@ -956,7 +971,47 @@ public class CheckAccessControlsTest extends CompilerTestCase {
     }, null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
-  public void testConstantProperty1() {
+  public void testPrivatePropertyByConvention1() {
+    test(new String[] {
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @type {number} */ Foo.prototype.length_;\n",
+        "/** @param {?Foo} x */ function f(x) { return x.length_; }\n"
+    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
+  public void testPrivatePropertyByConvention2() {
+    test(new String[] {
+        "/** @constructor */ function Foo() {\n" +
+        "  /** @type {number} */ this.length_ = 1;\n" +
+        "}\n" +
+        "/** @type {number} */ Foo.prototype.length_;\n",
+        "/** @param {Foo} x */ function f(x) { return x.length_; }\n"
+    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
+  public void testDeclarationAndConventionConflict1() {
+    testSame(
+        "/** @constructor */ function Foo() {}" +
+        "/** @protected */ Foo.prototype.length_;",
+        CONVENTION_MISMATCH, true);
+  }
+
+  public void testDeclarationAndConventionConflict2() {
+    testSame(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @public {number} */ Foo.prototype.length_;\n",
+        CONVENTION_MISMATCH, true);
+  }
+
+  public void testDeclarationAndConventionConflict3() {
+    testSame(
+        "/** @constructor */ function Foo() {" +
+        "  /** @protected */ this.length_ = 1;\n" +
+        "}\n",
+        CONVENTION_MISMATCH, true);
+  }
+
+  public void testConstantProperty1a() {
     test("/** @constructor */ function A() {" +
         "/** @const */ this.bar = 3;}" +
         "/** @constructor */ function B() {" +
@@ -964,7 +1019,15 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         null, CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
-  public void testConstantProperty2() {
+  public void testConstantProperty1b() {
+    test("/** @constructor */ function A() {" +
+        "this.BAR = 3;}" +
+        "/** @constructor */ function B() {" +
+        "this.BAR = 3;this.BAR += 4;}",
+        null, CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
+  public void testConstantProperty2a() {
     test("/** @constructor */ function Foo() {}" +
         "/** @const */ Foo.prototype.prop = 2;" +
         "var foo = new Foo();" +
@@ -972,15 +1035,73 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         null , CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
-  public void testConstantProperty3() {
+  public void testConstantProperty2b() {
+    test("/** @constructor */ function Foo() {}" +
+        "Foo.prototype.PROP = 2;" +
+        "var foo = new Foo();" +
+        "foo.PROP = 3;",
+        null , CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
+  public void testNamespaceConstantProperty1() {
+    test("" +
+        "/** @const */ var o = {};\n" +
+        "/** @const */ o.x = 1;" +
+        "o.x = 2;",
+        null , CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
+  public void testNamespaceConstantProperty2() {
+    test("" +
+        "var o = {};\n" +
+        "/** @const */ o.x = 1;\n" +
+        "o.x = 2;\n",
+        null , CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
+  public void testNamespaceConstantProperty3() {
+    test("" +
+        "/** @const */ var o = {};\n" +
+        "/** @const */ o.x = 1;" +
+        "o.x = 2;",
+        null , CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
+  public void testConstantProperty3a1() {
+    // We don't currently check constants defined in object literals.
     testSame("var o = { /** @const */ x: 1 };" +
         "o.x = 2;");
+  }
+
+  public void testConstantProperty3a2() {
+    // We should report this but we don't.
+    testSame("/** @const */ var o = { /** @const */ x: 1 };" +
+        "o.x = 2;");
+  }
+
+  public void testConstantProperty3b1() {
+    // We should report this but we don't.
+    testSame("var o = { XYZ: 1 };" +
+        "o.XYZ = 2;");
+  }
+
+  public void testConstantProperty3b2() {
+    // We should report this but we don't.
+    testSame("/** @const */ var o = { XYZ: 1 };" +
+        "o.XYZ = 2;");
   }
 
   public void testConstantProperty4() {
     test("/** @constructor */ function cat(name) {}" +
         "/** @const */ cat.test = 1;" +
         "cat.test *= 2;",
+        null, CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
+  public void testConstantProperty4b() {
+    test("/** @constructor */ function cat(name) {}" +
+        "cat.TEST = 1;" +
+        "cat.TEST *= 2;",
         null, CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
@@ -1018,9 +1139,14 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         "this.bar = 4;}");
   }
 
-  public void testConstantProperty10() {
+  public void testConstantProperty10a() {
     testSame("/** @constructor */ function Foo() { this.prop = 1;}" +
         "/** @const */ Foo.prototype.prop;");
+  }
+
+  public void testConstantProperty10b() {
+    testSame("/** @constructor */ function Foo() { this.PROP = 1;}" +
+        "Foo.prototype.PROP;");
   }
 
   public void testConstantProperty11() {
@@ -1073,6 +1199,46 @@ public class CheckAccessControlsTest extends CompilerTestCase {
     String js = "var f = new Foo(); f.PROP = 1; f.PROP = 2;";
     test(externs, js, (String) null, CONST_PROPERTY_REASSIGNED_VALUE, null);
   }
+
+  public void testConstantProperty15() {
+    testSame("/** @constructor */ function Foo() {};\n" +
+        "Foo.CONST = 100;\n" +
+        "/** @type {Foo} */\n" +
+        "var foo = new Foo();\n" +
+        "/** @type {number} */\n" +
+        "foo.CONST = Foo.CONST;");
+  }
+
+  public void testConstantProperty15a() {
+    test("/** @constructor */ function Foo() { this.CONST = 100; };\n" +
+        "/** @type {Foo} */\n" +
+        "var foo = new Foo();\n" +
+        "/** @type {number} */\n" +
+        "foo.CONST = 0;",
+        null, CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
+  public void testConstantProperty15b() {
+    test("/** @constructor */ function Foo() {};\n" +
+        "Foo.prototype.CONST = 100;\n" +
+        "/** @type {Foo} */\n" +
+        "var foo = new Foo();\n" +
+        "/** @type {number} */\n" +
+        "foo.CONST = 0;",
+        null, CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
+  public void testConstantProperty15c() {
+    test("" +
+        "/** @constructor */ function Bar() {this.CONST = 100;};\n" +
+        "/** @constructor \n @extends {Bar} */ function Foo() {};\n" +
+        "/** @type {Foo} */\n" +
+        "var foo = new Foo();\n" +
+        "/** @type {number} */\n" +
+        "foo.CONST = 0;",
+        null, CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
 
   public void testSuppressConstantProperty() {
     testSame("/** @constructor */ function A() {" +

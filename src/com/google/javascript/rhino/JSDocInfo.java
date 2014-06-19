@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -124,6 +125,7 @@ public class JSDocInfo implements Serializable {
     // Bit flags for properties.
     private int propertyBitField = 0;
 
+    @Override
     public String toString() {
       return com.google.common.base.Objects.toStringHelper(this)
           .add("bitfield", propertyBitField)
@@ -1710,6 +1712,12 @@ public class JSDocInfo implements Serializable {
    */
   public void setAssociatedNode(Node node) {
     this.associatedNode = node;
+  }
+
+  /** Gets the name of the source file that contains this JSDoc. */
+  public StaticSourceFile getStaticSourceFile() {
+    return this.associatedNode != null
+        ? this.associatedNode.getStaticSourceFile() : null;
   }
 
   /** Gets the name of the source file that contains this JSDoc. */
