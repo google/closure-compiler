@@ -33,12 +33,9 @@ import java.util.List;
 abstract class IntegrationTestCase extends TestCase {
 
   /** Externs for the test */
-  protected static final List<SourceFile> DEFAULT_EXTERNS = ImmutableList.of(
+  protected final List<SourceFile> DEFAULT_EXTERNS = ImmutableList.of(
     SourceFile.fromCode("externs",
         "var arguments;\n"
-        + "var undefined;\n"
-        + "var NaN;\n"
-        + "var Infinity;\n"
         + "/** @constructor */ function Window() {}\n"
         + "/** @type {string} */ Window.prototype.name;\n"
         + "/** @type {string} */ Window.prototype.offsetWidth;\n"
@@ -56,22 +53,7 @@ abstract class IntegrationTestCase extends TestCase {
         + " */\n"
         + "function Function(var_args) {}\n"
         + "/** @param {...*} var_args */\n"
-        + "Function.prototype.call = function (var_args) {};"
-        + "/**\n"
-        + " * @constructor\n"
-        + " * @param {...*} var_args\n"
-        + " * @return {!Array}\n"
-        + " */\n"
-        + "function Array(var_args) {}"
-        + "/**\n"
-        + " * @param {*=} opt_begin\n"
-        + " * @param {*=} opt_end\n"
-        + " * @return {!Array}\n"
-        + " * @this {Object}\n"
-        + " */\n"
-        + "Array.prototype.slice = function(opt_begin, opt_end) {};"
-        + "/** @constructor */ function Element() {}"
-        + "Element.prototype.offsetWidth;"));
+        + "Function.prototype.call = function (var_args) {};"));
 
   protected List<SourceFile> externs = DEFAULT_EXTERNS;
 

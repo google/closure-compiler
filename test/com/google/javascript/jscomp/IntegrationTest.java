@@ -1866,7 +1866,7 @@ public class IntegrationTest extends IntegrationTestCase {
 
     options.aliasExternals = true;
     externs = ImmutableList.of(
-        SourceFile.fromCode("externs", CompilerTestCase.DEFAULT_EXTERNS + "extern.foo"));
+        SourceFile.fromCode("externs", "extern.foo"));
 
     test(options,
          "var extern; " +
@@ -1880,7 +1880,6 @@ public class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.checkSymbols = true;
     externs = ImmutableList.of(SourceFile.fromCode("externs",
-        CompilerTestCase.DEFAULT_EXTERNS +
         "var externs = {}; /** @suppress {duplicate} */ var externs = {};"));
     testSame(options, "");
   }
@@ -1964,8 +1963,7 @@ public class IntegrationTest extends IntegrationTestCase {
 
     externs = ImmutableList.of(
         SourceFile.fromCode(
-            "externs",
-            CompilerTestCase.DEFAULT_EXTERNS + "var use; var arguments; arguments.callee;"));
+            "externs", "var use; var arguments; arguments.callee;"));
 
     String code =
         "function App() {}\n" +
@@ -3055,14 +3053,6 @@ public class IntegrationTest extends IntegrationTestCase {
     Node out1 = parse(input1, options, false);
     Node out2 = parse(input2, options, false);
     assertFalse(out1.isEquivalentTo(out2));
-  }
-
-  public void testDefaultExternsCheck() {
-    CompilerOptions options = new CompilerOptions();
-    Compiler compiler = new Compiler();
-    compiler.compile(ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), options);
-    assertEquals(1, compiler.getErrors().length);
-    assertEquals(VarCheck.NATIVE_EXTERN_VAR_ERROR, compiler.getErrors()[0].getType());
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */

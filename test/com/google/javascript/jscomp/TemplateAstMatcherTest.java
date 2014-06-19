@@ -498,7 +498,7 @@ public class TemplateAstMatcherTest extends TestCase {
         "template", template));
 
     compiler.compile(
-        ImmutableList.of(SourceFile.fromCode("externs", CompilerTestCase.DEFAULT_EXTERNS + externs)),
+        ImmutableList.of(SourceFile.fromCode("externs", externs)),
         ImmutableList.of(
             // The extra block allows easier separation of template and test
             // code.

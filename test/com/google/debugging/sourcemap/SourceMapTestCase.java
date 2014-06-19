@@ -50,7 +50,7 @@ public abstract class SourceMapTestCase extends TestCase {
 
 
   static final List<SourceFile> EXTERNS = ImmutableList.of(
-      SourceFile.fromCode("externs", "var undefined,NaN,Infinity;"));
+      SourceFile.fromCode("externs", ""));
 
   protected DetailLevel detailLevel = SourceMap.DetailLevel.ALL;
 

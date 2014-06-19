@@ -24,7 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagUsageException;
@@ -71,8 +70,42 @@ public class CommandLineRunnerTest extends TestCase {
   private List<String> args = Lists.newArrayList();
 
   /** Externs for the test */
-  private static final List<SourceFile> DEFAULT_EXTERNS =
-      IntegrationTestCase.DEFAULT_EXTERNS;
+  private static final List<SourceFile> DEFAULT_EXTERNS = ImmutableList.of(
+    SourceFile.fromCode("externs",
+        "var arguments;"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @param {...*} var_args\n"
+        + " * @nosideeffects\n"
+        + " * @throws {Error}\n"
+        + " */\n"
+        + "function Function(var_args) {}\n"
+        + "/**\n"
+        + " * @param {...*} var_args\n"
+        + " * @return {*}\n"
+        + " */\n"
+        + "Function.prototype.call = function(var_args) {};"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @param {...*} var_args\n"
+        + " * @return {!Array}\n"
+        + " */\n"
+        + "function Array(var_args) {}"
+        + "/**\n"
+        + " * @param {*=} opt_begin\n"
+        + " * @param {*=} opt_end\n"
+        + " * @return {!Array}\n"
+        + " * @this {Object}\n"
+        + " */\n"
+        + "Array.prototype.slice = function(opt_begin, opt_end) {};"
+        + "/** @constructor */ function Window() {}\n"
+        + "/** @type {string} */ Window.prototype.name;\n"
+        + "/** @type {Window} */ var window;"
+        + "/** @constructor */ function Element() {}"
+        + "Element.prototype.offsetWidth;"
+        + "/** @nosideeffects */ function noSideEffects() {}\n"
+        + "/** @param {...*} x */ function alert(x) {}\n")
+  );
 
   private List<SourceFile> externs;
 
@@ -1027,10 +1060,8 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSyntheticExterns() {
-    externs = ImmutableList.copyOf(
-        Iterables.concat(
-            DEFAULT_EXTERNS,
-            ImmutableList.of(SourceFile.fromCode("externs2", "myVar.property;"))));
+    externs = ImmutableList.of(
+        SourceFile.fromCode("externs", "myVar.property;"));
     test("var theirVar = {}; var myVar = {}; var yourVar = {};",
          VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
 

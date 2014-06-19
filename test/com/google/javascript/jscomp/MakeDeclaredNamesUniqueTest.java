@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.Node;
 
@@ -47,7 +48,8 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
                     localNamePrefix,
                     removeConst));
           }
-          NodeTraversal.traverse(compiler, root, renamer);
+          NodeTraversal.traverseRoots(
+              compiler, Lists.newArrayList(externs, root), renamer);
         }
       };
     } else {
