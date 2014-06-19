@@ -1528,47 +1528,93 @@ chrome.bookmarks.onRemoved;
 
 
 /**
+ * @typedef {?{
+ *   content: string,
+ *   description: string
+ * }}
+ */
+var SuggestResult;
+
+
+/**
  * @const
  * @see https://developer.chrome.com/extensions/omnibox.html
  */
 chrome.omnibox = {};
 
 
+/** @constructor */
+chrome.omnibox.InputChangedEvent = function() {};
+
+
 /**
- * @param {SuggestResult} suggestion A partial SuggestResult object.
+ * @param {function(string, function(!Array.<!SuggestResult>)): void} callback
+ */
+chrome.omnibox.InputChangedEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(string, function(!Array.<!SuggestResult>)): void} callback
+ */
+chrome.omnibox.InputChangedEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(string, function(!Array.<!SuggestResult>)): void} callback
+ * @return {boolean}
+ */
+chrome.omnibox.InputChangedEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+chrome.omnibox.InputChangedEvent.prototype.hasListeners = function() {};
+
+
+/** @constructor */
+chrome.omnibox.InputEnteredEvent = function() {};
+
+
+/** @param {function(string, string): void} callback */
+chrome.omnibox.InputEnteredEvent.prototype.addListener = function(callback) {};
+
+
+/** @param {function(string, string): void} callback */
+chrome.omnibox.InputEnteredEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(string, string): void} callback
+ * @return {boolean}
+ */
+chrome.omnibox.InputEnteredEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+chrome.omnibox.InputEnteredEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * @param {{description: string}} suggestion A partial SuggestResult object.
  */
 chrome.omnibox.setDefaultSuggestion = function(suggestion) {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.omnibox.onInputCancelled;
 
 
-/** @type {ChromeEvent} */
+/** @type {!chrome.omnibox.InputChangedEvent} */
 chrome.omnibox.onInputChanged;
 
 
-/** @type {ChromeEvent} */
+/** @type {!chrome.omnibox.InputEnteredEvent} */
 chrome.omnibox.onInputEntered;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.omnibox.onInputStarted;
-
-
-
-/**
- * @constructor
- */
-function SuggestResult() {}
-
-
-/** @type {string} */
-SuggestResult.prototype.content;
-
-
-/** @type {string} */
-SuggestResult.prototype.description;
 
 
 /**
