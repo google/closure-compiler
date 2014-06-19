@@ -849,7 +849,7 @@ Element.prototype.nodeValue;
 /** @type {Node} */ Element.prototype.parentNode;
 Element.prototype.prefix;
 /** @type {Node} */ Element.prototype.previousSibling;
-/** @type {CSSStyleDeclaration} */ Element.prototype.style;
+/** @type {!CSSStyleDeclaration} */ Element.prototype.style;
 /**
  * @type {number}
  * @implicitCast
