@@ -869,29 +869,56 @@ function DOMURL() {}
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#
- * @type {!DOMURL}
+ * @constructor
+ * @param {string} urlString
+ * @param {string=} opt_base
+ * @extends {DOMURL}
  */
-Window.prototype.URL;
+function URL(urlString, opt_base) {}
+
+/** @constructor */
+window.URL = URL;
+
+/** @type {string} */
+URL.prototype.protocol;
 
 /**
- * This has replaced URL in Chrome since WebKit revision 75739.
- * @see http://www.w3.org/TR/FileAPI/#
- * @type {!DOMURL}
+ * @see http://www.w3.org/TR/FileAPI/#dfn-createObjectURL
+ * @param {!File|!Blob|!MediaSource|!MediaStream} obj
+ * @return {string}
  */
-Window.prototype.webkitURL;
+URL.createObjectURL = function(obj) {};
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-revokeObjectURL
+ * @param {string} url
+ */
+URL.revokeObjectURL = function(url) {};
+
+/**
+ * This has been replaced by URL in Chrome since WebKit revision 75739.
+ * @constructor
+ * @param {string} urlString
+ * @param {string=} opt_base
+ * @extends {DOMURL}
+ */
+function webkitURL(urlString, opt_base) {}
+
+/** @constructor */
+window.webkitURL = webkitURL;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-createObjectURL
  * @param {!Object} obj
  * @return {string}
  */
-DOMURL.prototype.createObjectURL = function(obj) {};
+webkitURL.createObjectURL = function(obj) {};
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-revokeObjectURL
  * @param {string} url
  */
-DOMURL.prototype.revokeObjectURL = function(url) {};
+webkitURL.revokeObjectURL = function(url) {};
 
 /**
  * @see https://developers.google.com/chrome/whitepapers/storage
