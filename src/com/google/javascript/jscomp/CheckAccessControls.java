@@ -455,6 +455,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
     ObjectType objectType =
       ObjectType.cast(dereference(getprop.getFirstChild().getJSType()));
+
     String propertyName = getprop.getLastChild().getString();
 
     boolean isConstant = isPropertyDeclaredConstant(objectType, propertyName);
@@ -464,6 +465,15 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       if (isDelete) {
         compiler.report(
             t.makeError(getprop, CONST_PROPERTY_DELETED, propertyName));
+        return;
+      }
+
+      // Can't check for constant properties on generic function types.
+      // TODO(johnlenz): I'm not 100% certain this is necessary, or if
+      // the type is being inspected incorrectly.
+      if (objectType == null
+          || (objectType.isFunctionType()
+              && !objectType.toMaybeFunctionType().isConstructor())) {
         return;
       }
 
@@ -479,18 +489,16 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         oType = oType.getImplicitPrototype();
       }
 
-      if (objectType != null) {
-        initializedConstantProperties.put(objectType,
-            propertyName);
+      initializedConstantProperties.put(objectType,
+          propertyName);
 
-        // Add the prototype when we're looking at an instance object
-        if (objectType.isInstanceType()) {
-          ObjectType prototype = objectType.getImplicitPrototype();
-          if (prototype != null) {
-            if (prototype.hasProperty(propertyName)) {
-              initializedConstantProperties.put(prototype,
-                  propertyName);
-            }
+      // Add the prototype when we're looking at an instance object
+      if (objectType.isInstanceType()) {
+        ObjectType prototype = objectType.getImplicitPrototype();
+        if (prototype != null) {
+          if (prototype.hasProperty(propertyName)) {
+            initializedConstantProperties.put(prototype,
+                propertyName);
           }
         }
       }

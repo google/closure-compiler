@@ -1059,6 +1059,14 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         null , CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
+  public void testNamespaceConstantProperty2a() {
+    testSame("" +
+        "var o = {};\n" +
+        "/** @const */ o.x = 1;\n" +
+        "var o2 = {};\n" +
+        "/** @const */ o2.x = 1;\n");
+  }
+
   public void testNamespaceConstantProperty3() {
     test("" +
         "/** @const */ var o = {};\n" +
@@ -1239,6 +1247,41 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         null, CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
+  public void testConstantProperty16() {
+    testSame(
+        "/** @constructor */ function Foo() {};\n" +
+        "Foo.CONST = 100;\n" +
+        "/** @constructor */ function Bar() {};\n" +
+        "Bar.CONST = 100;\n");
+  }
+
+  public void testConstantProperty17() {
+    testSame(
+        "function Foo() {};\n" +
+        "Foo.CONST = 100;\n" +
+        "function Bar() {};\n" +
+        "Bar.CONST = 100;\n");
+  }
+
+  public void testConstantProperty18() {
+    testSame(
+        "/** @param {string} a */\n" +
+        "function Foo(a) {};\n" +
+        "Foo.CONST = 100;\n" +
+        "/** @param {string} a */\n" +
+        "function Bar(a) {};\n" +
+        "Bar.CONST = 100;\n");
+  }
+
+  public void testConstantProperty19() {
+    testSame(
+        "/** @param {string} a */\n" +
+        "function Foo(a) {};\n" +
+        "Foo.CONST = 100;\n" +
+        "/** @param {number} a */\n" +
+        "function Bar(a) {};\n" +
+        "Bar.CONST = 100;\n");
+  }
 
   public void testSuppressConstantProperty() {
     testSame("/** @constructor */ function A() {" +
