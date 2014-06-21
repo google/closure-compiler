@@ -408,6 +408,19 @@ public final class NodeUtil {
     }
   }
 
+  static Node getClassNameNode(Node clazz) {
+    Node parent = clazz.getParent();
+    if (NodeUtil.isStatement(clazz)) {
+      return clazz.getFirstChild();
+    } else if (parent.isAssign() && parent.getParent().isExprResult()) {
+      return parent.getFirstChild();
+    } else if (parent.isName()) {
+      return parent;
+    } else {
+      return null;
+    }
+  }
+
   /**
    * Gets the node of a function's name. This method recognizes five forms:
    * <ul>
@@ -1664,11 +1677,11 @@ public final class NodeUtil {
   }
 
   /**
-   * Finds the class member containing the given node.
+   * Gets the closest ancestor to the given node of the provided type.
    */
-  static Node getEnclosingClassMember(Node n) {
+  static Node getEnclosingType(Node n, int type) {
     Node curr = n;
-    while (!curr.isMemberDef()) {
+    while (curr.getType() != type) {
       curr = curr.getParent();
       if (curr == null) {
         return curr;
@@ -1678,17 +1691,17 @@ public final class NodeUtil {
   }
 
   /**
+   * Finds the class member containing the given node.
+   */
+  static Node getEnclosingClassMember(Node n) {
+    return getEnclosingType(n, Token.MEMBER_DEF);
+  }
+
+  /**
    * Finds the class containing the given node.
    */
   static Node getEnclosingClass(Node n) {
-    Node curr = n;
-    while (!curr.isClass()) {
-      curr = curr.getParent();
-      if (curr == null) {
-        return curr;
-      }
-    }
-    return curr;
+    return getEnclosingType(n, Token.CLASS);
   }
 
   /**

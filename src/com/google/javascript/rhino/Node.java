@@ -1682,6 +1682,8 @@ public class Node implements Cloneable, Serializable {
            name.length() == endIndex && qname.startsWith(name);
       case Token.THIS:
         return start == 0 && 4 == endIndex && qname.startsWith("this");
+      case Token.SUPER:
+        return start == 0 && 5 == endIndex && qname.startsWith("super");
       case Token.GETPROP:
         String prop = getLastChild().getString();
         return start > 1
@@ -1705,6 +1707,8 @@ public class Node implements Cloneable, Serializable {
       case Token.NAME:
         return !getString().isEmpty() && getString().equals(n.getString());
       case Token.THIS:
+        return true;
+      case Token.SUPER:
         return true;
       case Token.GETPROP:
         return getLastChild().getString().equals(n.getLastChild().getString())

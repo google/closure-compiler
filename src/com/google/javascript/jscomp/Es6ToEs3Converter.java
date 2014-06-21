@@ -54,10 +54,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       "JSC_NO_SUPERTYPE",
       "The super keyword may only appear in classes with an extends clause.");
 
-  static final DiagnosticType STATIC_METHOD_REFERENCES_THIS = DiagnosticType.warning(
-      "JSC_STATIC_METHOD_REFERENCES_THIS",
-      "This static method uses the 'this' keyword."
-           + " The transpiled output may be incorrect.");
+  static final DiagnosticType CLASS_REASSIGNMENT = DiagnosticType.error(
+      "CLASS_REASSIGNMENT",
+      "Class names defined inside a function cannot be reassigned.");
 
   // The name of the var that captures 'this' for converting arrow functions.
   private static final String THIS_VAR = "$jscomp$this";
@@ -71,6 +70,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   private int freshPropVarCounter = 0;
 
   private static final String FRESH_CLASS_NAME_BASE = "$jscomp$unique$class$";
+
+  // The name of the property-copying function, defined in runtime_lib.js
+  public static final String COPY_PROP = "$jscomp$copy$properties";
 
   public Es6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -89,7 +91,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   }
 
   /**
-   * Arrow functions must be visited pre-order in order to rewrite the
+   * Some nodes (such as arrow functions) must be visited pre-order in order to rewrite the
    * references to {@code this} correctly.
    * Everything else is translated post-order in {@link #visit}.
    */
@@ -100,6 +102,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         if (n.isArrowFunction()) {
           visitArrowFunction(t, n);
         }
+        break;
+      case Token.THIS:
+        visitThis(n, parent);
         break;
       case Token.CLASS:
         // Need to check for super references before they get rewritten.
@@ -165,6 +170,28 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
   }
 
+  private void visitThis(Node node, Node parent) {
+    Node enclosingMemberDef = NodeUtil.getEnclosingClassMember(node);
+    if (enclosingMemberDef == null) {
+      return;
+    }
+    Node enclosingClass = NodeUtil.getEnclosingClass(node);
+    if (enclosingMemberDef.isStaticMember()) {
+      parent.replaceChild(node,
+          IR.name(NodeUtil.getClassNameNode(enclosingClass).getQualifiedName()).srcref(node));
+    }
+  }
+
+  private void checkClassReassignment(Node clazz) {
+    Node enclosingFunction = getEnclosingFunction(clazz);
+    if (enclosingFunction == null) {
+      return;
+    }
+    Node name = NodeUtil.getClassNameNode(clazz);
+    CheckClassAssignments checkAssigns = new CheckClassAssignments(name);
+    NodeTraversal.traverse(compiler, enclosingFunction, checkAssigns);
+  }
+
   private void visitSuper(Node node) {
     Node enclosing = node.getParent();
     Node potentialCallee = node;
@@ -193,8 +220,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     } else {
       methodName = IR.string(callName.getLastChild().getString()).srcref(enclosing);
     }
-
-    Node uniqueClassName = IR.name(FRESH_CLASS_NAME_BASE + clazz.getFirstChild().getString());
+    boolean inFunction = isInFunction(clazz);
+    String uniqueClassString = inFunction ? clazz.getFirstChild().getString()
+        : getUniqueClassName(clazz.getFirstChild().getString());
+    Node uniqueClassName = IR.name(uniqueClassString);
     Node base = IR.getprop(uniqueClassName.srcref(enclosing),
         IR.string("base").srcref(enclosing)).srcref(enclosing);
     enclosing.addChildToFront(methodName);
@@ -370,7 +399,23 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
   }
 
+  /**
+   * Classes are processed in 4 phases.
+   *
+   * 1) Metadata about the class is computed including the name and unique name (used to
+   * support mocking).
+   *
+   * 2) Class members are processed and rewritten.
+   *
+   * 3) The constructor is built.
+   *
+   * 4) Class is reassigned using a unique name to support mocking
+   *   ex) function foo() {} is rewritten to var unique$foo = function() {}; var foo = unique$foo;
+   *
+   */
   private void visitClass(Node classNode, Node parent) {
+    checkClassReassignment(classNode);
+    // Collect Metadata
     Node className = classNode.getFirstChild();
     Node superClassName = className.getNext();
     Node classMembers = classNode.getLastChild();
@@ -420,12 +465,16 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             + " side of a simple assignment.");
       return;
     }
+    boolean useUnique = NodeUtil.isStatement(classNode) && !isInFunction(classNode);
+    String uniqueFullClassName = useUnique ? getUniqueClassName(fullClassName) : fullClassName;
+    String superClassString = superClassName.getQualifiedName();
 
     Verify.verify(NodeUtil.isStatement(insertionPoint));
 
     className.detachFromParent();
     Node constructor = null;
     JSDocInfo ctorJSDocInfo = null;
+    // Process all members of the class
     for (Node member : classMembers.children()) {
       if (member.getString().equals("constructor")) {
         ctorJSDocInfo = member.getJSDocInfo();
@@ -436,15 +485,12 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       } else {
         String qualifiedMemberName;
         if (member.isStaticMember()) {
-          if (NodeUtil.referencesThis(member.getFirstChild())) {
-            compiler.report(JSError.make(member, STATIC_METHOD_REFERENCES_THIS));
-          }
           qualifiedMemberName = Joiner.on(".").join(
-              fullClassName,
+              uniqueFullClassName,
               member.getString());
         } else {
           qualifiedMemberName = Joiner.on(".").join(
-              fullClassName,
+              uniqueFullClassName,
               "prototype",
               member.getString());
         }
@@ -469,6 +515,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       }
     }
 
+    // Rewrite constructor
     if (constructor == null) {
       Node name = anonymous ? IR.name("").srcref(className) : className;
       constructor = IR.function(
@@ -484,9 +531,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     newInfo.recordConstructor();
     if (!superClassName.isEmpty()) {
 
-      Node superClassString = IR.string(superClassName.getQualifiedName());
       if (newInfo.isInterfaceRecorded()) {
-        newInfo.recordExtendedInterface(new JSTypeExpression(new Node(Token.BANG, superClassString),
+        newInfo.recordExtendedInterface(new JSTypeExpression(new Node(Token.BANG,
+            IR.string(superClassString)),
             superClassName.getSourceFileName()));
       } else {
         // TODO(mattloring) Remove dependency on Closure Library.
@@ -496,22 +543,14 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             superClassName.cloneTree()));
         inheritsCall.useSourceInfoIfMissingFromForTree(classNode);
         parent.addChildAfter(inheritsCall, classNode);
-        newInfo.recordBaseType(new JSTypeExpression(new Node(Token.BANG, superClassString),
+        newInfo.recordBaseType(new JSTypeExpression(new Node(Token.BANG,
+            IR.string(superClassString)),
             superClassName.getSourceFileName()));
+        Node copyProps = IR.call(IR.name(COPY_PROP).srcref(classNode), className.cloneTree(),
+            superClassName.cloneTree()).srcref(classNode);
+        copyProps.putBooleanProp(Node.FREE_CALL, true);
+        parent.addChildAfter(IR.exprResult(copyProps).srcref(classNode),  inheritsCall);
       }
-    }
-
-    if (NodeUtil.isStatement(classNode)) {
-      String classString = constructor.removeFirstChild().getString();
-      Node uniqueName = IR.name(FRESH_CLASS_NAME_BASE + classString);
-      constructor = IR.var(uniqueName.cloneTree(), IR.function(IR.name(""),
-              constructor.removeFirstChild(), constructor.removeFirstChild()));
-      constructor.useSourceInfoIfMissingFromForTree(classNode);
-      Node reassign = IR.var(IR.name(classString), uniqueName);
-      reassign.useSourceInfoIfMissingFromForTree(classNode);
-
-      classNode.getParent().addChildAfter(reassign, classNode);
-      insertionPoint = reassign;
     }
 
     // Classes are @struct by default.
@@ -526,7 +565,32 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         newInfo.recordParameter(param, ctorJSDocInfo.getParameterType(param));
       }
     }
-    parent.replaceChild(classNode, constructor);
+
+    // Reassign using a unique name if we are dealing with a statement.
+    if (useUnique) {
+      constructor.removeFirstChild();
+      Node uniqueName = IR.name(uniqueFullClassName);
+      constructor = IR.var(uniqueName.cloneTree(), IR.function(IR.name(""),
+              constructor.removeFirstChild(), constructor.removeFirstChild()));
+      constructor.useSourceInfoIfMissingFromForTree(classNode);
+      constructor.setJSDocInfo(newInfo.build(constructor));
+      newInfo = JSDocInfoBuilder.copyFrom(constructor.getJSDocInfo());
+      Node reassign = IR.var(IR.name(fullClassName), uniqueName);
+      reassign.useSourceInfoIfMissingFromForTree(classNode);
+
+      classNode.getParent().addChildAfter(reassign, classNode);
+      insertionPoint = reassign;
+    } else {
+      insertionPoint = constructor;
+    }
+
+    if (NodeUtil.isStatement(classNode) && isInFunction(classNode)) {
+      Node ctorVar = IR.var(IR.name(fullClassName), constructor);
+      ctorVar.useSourceInfoIfMissingFromForTree(classNode);
+      parent.replaceChild(classNode, ctorVar);
+    } else {
+      parent.replaceChild(classNode, constructor);
+    }
 
     if (NodeUtil.isStatement(constructor)) {
       insertionPoint.setJSDocInfo(newInfo.build(insertionPoint));
@@ -534,6 +598,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       // The constructor function is the RHS of a var statement.
       // Add the JSDoc to the VAR node.
       Node var = parent.getParent();
+      var.setJSDocInfo(newInfo.build(var));
+    } else if (constructor.getParent().isName()) {
+      // Is a newly created VAR node.
+      Node var = constructor.getParent().getParent();
       var.setJSDocInfo(newInfo.build(var));
     } else if (parent.isAssign()) {
       // The constructor function is the RHS of an assignment.
@@ -591,6 +659,19 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     scope.declare(THIS_VAR, name, null, compiler.getInput(parent.getInputId()));
   }
 
+  private static String getUniqueClassName(String qualifiedName) {
+    return (FRESH_CLASS_NAME_BASE + qualifiedName).replace(".", "$");
+  }
+
+  //TODO(mattloring) move this functionality to scopes once class scopes are computed.
+  private static Node getEnclosingFunction(Node n) {
+    return NodeUtil.getEnclosingType(n, Token.FUNCTION);
+  }
+
+  private static boolean isInFunction(Node n) {
+    return getEnclosingFunction(n) != null;
+  }
+
   private static class UpdateThisNodes implements NodeTraversal.Callback {
     private boolean changed = false;
 
@@ -607,6 +688,25 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       return !n.isFunction() || n.isArrowFunction();
     }
+  }
+
+  private class CheckClassAssignments extends NodeTraversal.AbstractPostOrderCallback {
+    private Node className;
+
+    public CheckClassAssignments(Node className) {
+      this.className = className;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (!n.isAssign() || n.getFirstChild() == className) {
+        return;
+      }
+      if (className.matchesQualifiedName(n.getFirstChild())) {
+        compiler.report(JSError.make(n, CLASS_REASSIGNMENT));
+      }
+    }
+
   }
 
   private void cannotConvert(Node n, String message) {

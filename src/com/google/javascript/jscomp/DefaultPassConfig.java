@@ -209,6 +209,7 @@ public class DefaultPassConfig extends PassConfig {
 
     if (options.getLanguageIn() != options.getLanguageOut()) {
       checks.add(convertEs6ToEs3);
+      checks.add(convertStaticInheritance);
     }
 
     if (options.declaredGlobalExternsOnWindow) {
@@ -1097,6 +1098,14 @@ public class DefaultPassConfig extends PassConfig {
           converter.hotSwapScript(scriptRoot, originalRoot);
         }
       };
+    }
+  };
+
+  final PassFactory convertStaticInheritance =
+      new PassFactory("Es6StaticInheritance", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new Es6ToEs3ClassSideInheritance(compiler);
     }
   };
 
