@@ -429,6 +429,8 @@ class NewIRFactory {
           break;
         // Variable declarations are valid
         case Token.VAR:
+        case Token.LET:
+        case Token.CONST:
           valid = true;
           break;
         // Function declarations are valid
@@ -446,6 +448,8 @@ class NewIRFactory {
             case Token.CATCH:
             case Token.FUNCTION:
             case Token.VAR:
+            case Token.LET:
+            case Token.CONST:
             case Token.PARAM_LIST:
               valid = true;
               break;

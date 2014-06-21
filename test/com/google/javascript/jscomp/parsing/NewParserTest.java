@@ -342,14 +342,42 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     // VAR
     assertEquals(Token.VAR, varNode.getType());
-    JSDocInfo info = varNode.getJSDocInfo();
-    assertNotNull(info);
-    assertTypeEquals(NUMBER_TYPE, info.getType());
+    JSDocInfo varInfo = varNode.getJSDocInfo();
+    assertNotNull(varInfo);
+    assertTypeEquals(NUMBER_TYPE, varInfo.getType());
 
-    // NAME
-    Node nameNode = varNode.getFirstChild();
-    assertEquals(Token.NAME, nameNode.getType());
-    assertNull(nameNode.getJSDocInfo());
+    // VAR NAME
+    Node varNameNode = varNode.getFirstChild();
+    assertEquals(Token.NAME, varNameNode.getType());
+    assertNull(varNameNode.getJSDocInfo());
+
+    mode = LanguageMode.ECMASCRIPT6;
+
+    Node letNode = parse("/** @type number */let a;").getFirstChild();
+
+    // LET
+    assertEquals(Token.LET, letNode.getType());
+    JSDocInfo letInfo = letNode.getJSDocInfo();
+    assertNotNull(letInfo);
+    assertTypeEquals(NUMBER_TYPE, letInfo.getType());
+
+    // LET NAME
+    Node letNameNode = letNode.getFirstChild();
+    assertEquals(Token.NAME, letNameNode.getType());
+    assertNull(letNameNode.getJSDocInfo());
+
+    Node constNode = parse("/** @type number */const a = 0;").getFirstChild();
+
+    // CONST
+    assertEquals(Token.CONST, constNode.getType());
+    JSDocInfo constInfo = constNode.getJSDocInfo();
+    assertNotNull(constInfo);
+    assertTypeEquals(NUMBER_TYPE, constInfo.getType());
+
+    // LET NAME
+    Node constNameNode = constNode.getFirstChild();
+    assertEquals(Token.NAME, constNameNode.getType());
+    assertNull(constNameNode.getJSDocInfo());
   }
 
   public void testJSDocAttachment2() {
