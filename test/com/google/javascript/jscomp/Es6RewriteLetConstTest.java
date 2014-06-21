@@ -29,6 +29,7 @@ public class Es6RewriteLetConstTest extends CompilerTestCase {
   public void setUp() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     enableAstValidation(true);
+    runTypeCheckAfterProcessing = true;
   }
 
   @Override
@@ -217,7 +218,7 @@ public class Es6RewriteLetConstTest extends CompilerTestCase {
         "  }",
         "}"
     ), Joiner.on('\n').join(
-        "for (var i = undefined in [0, 1]) {",
+        "for (var i in [0, 1]) {",
         "  function f() {",
         "    var i = 0;",
         "    if (true) {",
@@ -228,6 +229,7 @@ public class Es6RewriteLetConstTest extends CompilerTestCase {
     ));
 
     test("for (let i = 0;;) { let i; }", "for (var i = 0;;) { var i$0 = undefined; }");
+    test("for (let i = 0;;) {} let i;", "for (var i$0 = 0;;) {} var i = undefined;");
   }
 
   public void testLoopClosure() {
@@ -236,7 +238,17 @@ public class Es6RewriteLetConstTest extends CompilerTestCase {
         "for (let i = 0; i < 10; i++) {",
         "  arr.push(function() { return i; });",
         "}"
-    ), null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var $jscomp$loop$0 = {i: undefined};",
+        "$jscomp$loop$0.i = 0;",
+        "for (; $jscomp$loop$0.i < 10;",
+        "    $jscomp$loop$0 = {i: $jscomp$loop$0.i}, $jscomp$loop$0.i++) {",
+        "  arr.push((function($jscomp$loop$0) {",
+        "      return function() { return $jscomp$loop$0.i; };",
+        "  })($jscomp$loop$0));",
+        "}"
+    ));
 
     test(Joiner.on('\n').join(
         "const arr = [];",
@@ -244,7 +256,17 @@ public class Es6RewriteLetConstTest extends CompilerTestCase {
         "  let y = i;",
         "  arr.push(function() { return y; });",
         "}"
-    ), null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var $jscomp$loop$0 = {y: undefined};",
+        "var i = 0;",
+        "for (; i < 10; $jscomp$loop$0 = {y: $jscomp$loop$0.y}, i++) {",
+        "  $jscomp$loop$0.y = i;",
+        "  arr.push((function($jscomp$loop$0) {",
+        "      return function() { return $jscomp$loop$0.y; };",
+        "  })($jscomp$loop$0));",
+        "}"
+    ));
 
     test(Joiner.on('\n').join(
         "const arr = [];",
@@ -252,13 +274,447 @@ public class Es6RewriteLetConstTest extends CompilerTestCase {
         "  let i = 0;",
         "  arr.push(function() { return i; });",
         "}"
-    ), null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var $jscomp$loop$0 = {i: undefined}",
+        "while (true) {",
+        "  $jscomp$loop$0.i = 0;",
+        "  arr.push((function($jscomp$loop$0) {",
+        "      return function() { return $jscomp$loop$0.i; };",
+        "  })($jscomp$loop$0));",
+        "  $jscomp$loop$0 = {i: $jscomp$loop$0.i}",
+        "}"
+    ));
 
+    test(Joiner.on('\n').join(
+        "const arr = [];",
+        "for (let i = 0; i < 10; i++) {",
+        "  let y = i;",
+        "  arr.push(function() { return y + i; });",
+        "}"
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var $jscomp$loop$0 = {y: undefined, i: undefined};",
+        "$jscomp$loop$0.i = 0;",
+        "for (; $jscomp$loop$0.i < 10;",
+        "    $jscomp$loop$0 = {y: $jscomp$loop$0.y, i: $jscomp$loop$0.i},",
+        "        $jscomp$loop$0.i++) {",
+        "  $jscomp$loop$0.y = $jscomp$loop$0.i;",
+        "  arr.push((function($jscomp$loop$0) {",
+        "          return function() {",
+        "              return $jscomp$loop$0.y + $jscomp$loop$0.i;",
+        "          };",
+        "  }($jscomp$loop$0)));",
+        "}"
+    ));
+
+    // Renamed inner i
+    test(Joiner.on('\n').join(
+        "const arr = [];",
+        "let x = 0",
+        "for (let i = 0; i < 10; i++) {",
+        "  let i = x + 1;",
+        "  arr.push(function() { return i + i; });",
+        "  x++;",
+        "}"
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var x = 0",
+        "var $jscomp$loop$1 = {i$0: undefined};",
+        "var i = 0;",
+        "for (; i < 10; $jscomp$loop$1 = {i$0: $jscomp$loop$1.i$0}, i++) {",
+        "  $jscomp$loop$1.i$0 = x + 1;",
+        "  arr.push((function($jscomp$loop$1) {",
+        "      return function() {",
+        "          return $jscomp$loop$1.i$0 + $jscomp$loop$1.i$0;",
+        "      };",
+        "  }($jscomp$loop$1)));",
+        "  x++;",
+        "}"
+    ));
+
+    // Renamed, but both closures reference the inner i
+    test(Joiner.on('\n').join(
+        "const arr = [];",
+        "let x = 0",
+        "for (let i = 0; i < 10; i++) {",
+        "  arr.push(function() { return i + i; });",
+        "  let i = x + 1;",
+        "  arr.push(function() { return i + i; });",
+        "  x++;",
+        "}"
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var x = 0",
+        "var $jscomp$loop$1 = {i$0: undefined};",
+        "var i = 0;",
+        "for (; i < 10; $jscomp$loop$1 = {i$0: $jscomp$loop$1.i$0}, i++) {",
+        "  arr.push((function($jscomp$loop$1) {",
+        "      return function() {",
+        "          return $jscomp$loop$1.i$0 + $jscomp$loop$1.i$0;",
+        "      };",
+        "  }($jscomp$loop$1)));",
+        "  $jscomp$loop$1.i$0 = x + 1;",
+        "  arr.push((function($jscomp$loop$1) {",
+        "      return function() {",
+        "          return $jscomp$loop$1.i$0 + $jscomp$loop$1.i$0;",
+        "      };",
+        "  }($jscomp$loop$1)));",
+        "  x++;",
+        "}"
+    ));
+
+    // Renamed distinct captured variables
+    test(Joiner.on('\n').join(
+        "for (let i = 0; i < 10; i++) {",
+        "  if (true) {",
+        "    let i = x - 1;",
+        "    arr.push(function() { return i + i; });",
+        "  }",
+        "  let i = x + 1;",
+        "  arr.push(function() { return i + i; });",
+        "  x++;",
+        "}"
+    ), Joiner.on('\n').join(
+        "var $jscomp$loop$2 = {i$0 : undefined, i$1: undefined};",
+        "var i = 0;",
+        "for (; i < 10;",
+        "    $jscomp$loop$2 = {i$0: $jscomp$loop$2.i$0, i$1: $jscomp$loop$2.i$1}, i++) {",
+        "  if (true) {",
+        "    $jscomp$loop$2.i$0 = x - 1;",
+        "    arr.push((function($jscomp$loop$2) {",
+        "        return function() { return $jscomp$loop$2.i$0 + $jscomp$loop$2.i$0; };",
+        "    })($jscomp$loop$2));",
+        "  }",
+        "  $jscomp$loop$2.i$1 = x + 1;",
+        "  arr.push((function($jscomp$loop$2) {",
+        "      return function() { return $jscomp$loop$2.i$1 + $jscomp$loop$2.i$1; };",
+        "  })($jscomp$loop$2));",
+        "  x++;",
+        "}"
+    ));
+  }
+
+  public void testLoopClosureCommaInBody() {
+    test(Joiner.on('\n').join(
+        "const arr = [];",
+        "let j = 0;",
+        "for (let i = 0; i < 10; i++) {",
+        "  let i, j = 0;",
+        "  arr.push(function() { return i + j; });",
+        "}"
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var j = 0;",
+        "var $jscomp$loop$1 = {i$0: undefined, j: undefined};",
+        "var i = 0;",
+        "for (; i < 10; $jscomp$loop$1 = {i$0: $jscomp$loop$1.i$0,",
+        "    j: $jscomp$loop$1.j}, i++) {",
+        "    $jscomp$loop$1.i$0 = undefined;",
+        "    $jscomp$loop$1.j = 0;",
+        "  arr.push((function($jscomp$loop$1) {",
+        "      return function() { return $jscomp$loop$1.i$0 + $jscomp$loop$1.j; };",
+        "  })($jscomp$loop$1));",
+        "}"
+    ));
+  }
+
+  public void testLoopClosureCommaInIncrement() {
+    test(Joiner.on('\n').join(
+        "const arr = [];",
+        "let j = 0;",
+        "for (let i = 0; i < 10; i++, j++) {",
+        "  arr.push(function() { return i + j; });",
+        "}"
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var j = 0;",
+        "var $jscomp$loop$0 = {i: undefined};",
+        "$jscomp$loop$0.i = 0;",
+        "for (; $jscomp$loop$0.i < 10;",
+        "    $jscomp$loop$0 = {i: $jscomp$loop$0.i}, ($jscomp$loop$0.i++, j++)) {",
+        "  arr.push((function($jscomp$loop$0) {",
+        "      return function() { return $jscomp$loop$0.i + j; };",
+        "  })($jscomp$loop$0));",
+        "}"
+    ));
+  }
+
+  public void testLoopClosureCommaInInitializerAndIncrement() {
+    test(Joiner.on('\n').join(
+        "const arr = [];",
+        "for (let i = 0, j = 0; i < 10; i++, j++) {",
+        "  arr.push(function() { return i + j; });",
+        "}"
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var $jscomp$loop$0 = {i: undefined, j: undefined};",
+        "$jscomp$loop$0.i = 0;",
+        "$jscomp$loop$0.j = 0;",
+        "for (; $jscomp$loop$0.i < 10;",
+        "    $jscomp$loop$0 = {i: $jscomp$loop$0.i, j : $jscomp$loop$0.j},",
+        "        ($jscomp$loop$0.i++, $jscomp$loop$0.j++)) {",
+        "  arr.push((function($jscomp$loop$0) {",
+        "      return function() { return $jscomp$loop$0.i + $jscomp$loop$0.j; };",
+        "  })($jscomp$loop$0));",
+        "}"
+    ));
+
+    test(Joiner.on('\n').join(
+        "const arr = [];",
+        "for (let i = 0, j = 0; i < 10; i++, j++) {",
+        "  arr.push(function() { return j; });",
+        "}"
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var $jscomp$loop$0 = {j: undefined};",
+        "var i = 0;",
+        "$jscomp$loop$0.j = 0;",
+        "for (; i < 10; $jscomp$loop$0 = {j : $jscomp$loop$0.j},",
+        "    (i++, $jscomp$loop$0.j++)) {",
+        "  arr.push((function($jscomp$loop$0) {",
+        "      return function() { return $jscomp$loop$0.j; };",
+        "  })($jscomp$loop$0));",
+        "}"
+    ));
+  }
+
+  public void testLoopClosureMutated() {
     test(Joiner.on('\n').join(
         "const arr = [];",
         "for (let i = 0; i < 10; i++) {",
         "  arr.push(function() { return ++i; });",
         "}"
-    ), null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var $jscomp$loop$0 = {i: undefined};",
+        "$jscomp$loop$0.i = 0;",
+        "for (; $jscomp$loop$0.i < 10;",
+        "    $jscomp$loop$0 = {i: $jscomp$loop$0.i}, $jscomp$loop$0.i++) {",
+        "  arr.push((function($jscomp$loop$0) {",
+        "      return function() {",
+        "          return ++$jscomp$loop$0.i;",
+        "      };",
+        "  }($jscomp$loop$0)));",
+        "}"
+    ));
+
+    test(Joiner.on('\n').join(
+        "const arr = [];",
+        "for (let i = 0; i < 10; i++) {",
+        "  arr.push(function() { return i; });",
+        "  i += 100;",
+        "}"
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var $jscomp$loop$0 = {i: undefined};",
+        "$jscomp$loop$0.i = 0;",
+        "for (; $jscomp$loop$0.i < 10;",
+        "    $jscomp$loop$0 = {i: $jscomp$loop$0.i}, $jscomp$loop$0.i++) {",
+        "  arr.push((function($jscomp$loop$0) {",
+        "      return function() {",
+        "          return $jscomp$loop$0.i;",
+        "      };",
+        "  }($jscomp$loop$0)));",
+        "  $jscomp$loop$0.i += 100;",
+        "}"
+    ));
+  }
+
+  public void testNestedLoop() {
+    test(Joiner.on('\n').join(
+        "function f() {",
+        "  let arr = [];",
+        "  for (let i = 0; i < 10; i++) {",
+        "    for (let j = 0; j < 10; j++) {",
+        "      arr.push(function() { return j++ + i++; });",
+        "      arr.push(function() { return j++ + i++; });",
+        "    }",
+        "  }",
+        "}"
+    ), Joiner.on('\n').join(
+        "function f() {",
+        "  var arr = [];",
+        "  var $jscomp$loop$1 = {i : undefined};",
+        "  $jscomp$loop$1.i = 0;",
+        "  for (; $jscomp$loop$1.i < 10;",
+        "      $jscomp$loop$1 = {i: $jscomp$loop$1.i}, $jscomp$loop$1.i++) {",
+        "    var $jscomp$loop$0 = {j : undefined};",
+        "    $jscomp$loop$0.j = 0;",
+        "    for (; $jscomp$loop$0.j < 10;",
+        "        $jscomp$loop$0 = {j: $jscomp$loop$0.j}, $jscomp$loop$0.j++) {",
+        "      arr.push((function($jscomp$loop$0, $jscomp$loop$1) {",
+        "          return function() {",
+        "              return $jscomp$loop$0.j++ + $jscomp$loop$1.i++;",
+        "          };",
+        "      }($jscomp$loop$0, $jscomp$loop$1)));",
+        "      arr.push((function($jscomp$loop$0, $jscomp$loop$1) {",
+        "          return function() {",
+        "              return $jscomp$loop$0.j++ + $jscomp$loop$1.i++;",
+        "          };",
+        "      }($jscomp$loop$0, $jscomp$loop$1)));",
+        "    }",
+        "  }",
+        "}"
+    ));
+
+    // Renamed inner i
+    test(Joiner.on('\n').join(
+        "function f() {",
+        "  let arr = [];",
+        "  for (let i = 0; i < 10; i++) {",
+        "    arr.push(function() { return i++ + i++; });",
+        "    for (let i = 0; i < 10; i++) {",
+        "      arr.push(function() { return i++ + i++; });",
+        "    }",
+        "  }",
+        "}"
+    ), Joiner.on('\n').join(
+        "function f() {",
+        "  var arr = [];",
+        "  var $jscomp$loop$1 = {i : undefined};",
+        "  $jscomp$loop$1.i = 0;",
+        "  for (; $jscomp$loop$1.i < 10;",
+        "      $jscomp$loop$1 = {i: $jscomp$loop$1.i}, $jscomp$loop$1.i++) {",
+        "    arr.push((function($jscomp$loop$1) {",
+        "        return function() {",
+        "            return $jscomp$loop$1.i++ + $jscomp$loop$1.i++;",
+        "        };",
+        "    }($jscomp$loop$1)));",
+        "    var $jscomp$loop$2 = {i$0 : undefined};",
+        "    $jscomp$loop$2.i$0 = 0;",
+        "    for (; $jscomp$loop$2.i$0 < 10;",
+        "        $jscomp$loop$2 = {i$0: $jscomp$loop$2.i$0}, $jscomp$loop$2.i$0++) {",
+        "      arr.push((function($jscomp$loop$2) {",
+        "          return function() {",
+        "              return $jscomp$loop$2.i$0++ + $jscomp$loop$2.i$0++;",
+        "          };",
+        "      }($jscomp$loop$2)));",
+        "    }",
+        "  }",
+        "}"
+    ));
+  }
+
+  public void testForInAndForOf() {
+    test(Joiner.on('\n').join(
+        "const arr = [];",
+        "for (let i in [0, 1]) {",
+        "  arr.push(function() { return i; });",
+        "}"
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var $jscomp$loop$0 = {i: undefined};",
+        "for (var i in [0, 1]) {",
+        "  $jscomp$loop$0.i = i;",
+        "  arr.push((function($jscomp$loop$0) {",
+        "      return function() { return $jscomp$loop$0.i; };",
+        "  })($jscomp$loop$0));",
+        "  $jscomp$loop$0 = {i: $jscomp$loop$0.i};",
+        "}"
+    ));
+
+    test(Joiner.on('\n').join(
+        "const arr = [];",
+        "for (let i of [0, 1]) {",
+        "  let i = 0;",
+        "  arr.push(function() { return i; });",
+        "}"
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var $jscomp$loop$1 = {i$0: undefined};",
+        "for (var i of [0, 1]) {",
+        "  $jscomp$loop$1.i$0 = 0;",
+        "  arr.push((function($jscomp$loop$1) {",
+        "      return function() { return $jscomp$loop$1.i$0; };",
+        "  })($jscomp$loop$1));",
+        "  $jscomp$loop$1 = {i$0: $jscomp$loop$1.i$0}",
+        "}"
+    ));
+
+    test(Joiner.on('\n').join(
+        "for (;;) {",
+        "  let a = getArray();",
+        "  f = function() {",
+        "    for (var x in use(a)) {",
+        "      f(a);",
+        "      a.push(x);",
+        "      return x;",
+        "    }",
+        "  }",
+        "}"
+    ), Joiner.on('\n').join(
+        "var $jscomp$loop$0 = {a: undefined};",
+        "for (;; $jscomp$loop$0 = {a: $jscomp$loop$0.a}) {",
+        "  $jscomp$loop$0.a = getArray();",
+        "  f = (function($jscomp$loop$0) {",
+        "    return function() {",
+        "      for (var x in use($jscomp$loop$0.a)) {",
+        "        f($jscomp$loop$0.a);",
+        "        $jscomp$loop$0.a.push(x);",
+        "        return x;",
+        "      }",
+        "    };",
+        "  }($jscomp$loop$0));",
+        "}"
+    ));
+  }
+
+  public void testDoWhileForOfCapturedLet() {
+    test(Joiner.on('\n').join(
+        "const arr = [];",
+        "do {",
+        "  let special = 99;",
+        "  for (let i of [0, 1, special, 3, 4, 5]) {",
+        "    i = Number(i);",
+        "    arr.push(function() { return i++; });",
+        "    arr.push(function() { return i + special; });",
+        "  }",
+        "} while (false);"
+    ), Joiner.on('\n').join(
+        "var arr = [];",
+        "var $jscomp$loop$1 = {special: undefined};",
+        "do {",
+        "  $jscomp$loop$1.special = 99;",
+        "  var $jscomp$loop$0 = {i: undefined};",
+        "  for (var i of [0, 1, $jscomp$loop$1.special, 3, 4, 5]) {",
+        "    $jscomp$loop$0.i = i",
+        "    $jscomp$loop$0.i = Number($jscomp$loop$0.i);",
+        "    arr.push((function($jscomp$loop$0) {",
+        "        return function() { return $jscomp$loop$0.i++; };",
+        "    }($jscomp$loop$0)));",
+        "    arr.push((function($jscomp$loop$0, $jscomp$loop$1) {",
+        "        return function() { return $jscomp$loop$0.i + $jscomp$loop$1.special; };",
+        "    }($jscomp$loop$0, $jscomp$loop$1)));",
+        "    $jscomp$loop$0 = {i: $jscomp$loop$0.i};",
+        "  }",
+        "  $jscomp$loop$1 = {special: $jscomp$loop$1.special};",
+        "} while (false);"
+    ));
+  }
+
+  public void testDoWhileForOfCapturedLetAnnotated() {
+    enableTypeCheck(CheckLevel.WARNING);
+
+    test("/** @type {number} */ let x = 5; x = 'str';",
+        null, null, TypeValidator.TYPE_MISMATCH_WARNING);
+
+    test("let /** number */ x = 5; x = 'str';",
+        null, null, TypeValidator.TYPE_MISMATCH_WARNING);
+
+    test(Joiner.on('\n').join(
+        "while (true) {",
+        "  /** @type {number} */ let x = 5;",
+        "  (function() { x++; })();",
+        "  x = 'str';",
+        "}"
+    ), null, null, TypeValidator.TYPE_MISMATCH_WARNING);
+
+    test(Joiner.on('\n').join(
+        "for (/** @type {number} */ let x = 5;;) {",
+        "  (function() { x++; })();",
+        "  x = 'str';",
+        "}"
+    ), null, null, TypeValidator.TYPE_MISMATCH_WARNING);
   }
 }

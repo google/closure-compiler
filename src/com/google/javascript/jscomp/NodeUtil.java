@@ -1795,12 +1795,19 @@ public final class NodeUtil {
         && n.getFirstChild().isCall();
   }
 
+  static boolean isVanillaFor(Node n) {
+    return n.isFor() && n.getChildCount() == 4;
+  }
+
+  static boolean isEnhancedFor(Node n) {
+    return n.isForOf() || isForIn(n);
+  }
+
   /**
    * @return Whether the node represents a FOR-IN loop.
    */
   static boolean isForIn(Node n) {
-    return n.isFor()
-        && n.getChildCount() == 3;
+    return n.isFor() && n.getChildCount() == 3;
   }
 
   /**

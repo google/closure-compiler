@@ -53,7 +53,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
   static final DiagnosticType UNDECLARED_REFERENCE_ERROR = DiagnosticType.error(
       "JSC_REFERENCE_BEFORE_DECLARE_ERROR",
-      "Variable {0} is undeclared");
+      "Illegal variable reference before declaration: {0}");
 
   static final DiagnosticType REASSIGNED_CONSTANT = DiagnosticType.error(
       "JSC_REASSIGNED_CONSTANT",

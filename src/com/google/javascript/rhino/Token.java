@@ -418,6 +418,7 @@ public class Token {
       case WHILE:           return 2;
       case DO:              return 2;
       case FOR:             return -1;
+      case FOR_OF:          return 3;
       case BREAK:           return -1;
       case CONTINUE:        return -1;
       case VAR:             return -1;

@@ -109,6 +109,9 @@ public class AstValidator implements CompilerPass {
       case Token.FOR:
         validateFor(n);
         return;
+      case Token.FOR_OF:
+        validateForOf(n);
+        return;
       case Token.WHILE:
         validateWhile(n);
         return;
@@ -537,7 +540,7 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateNameDeclarationHelper(int type, Node n) {
-    this.validateMinimumChildCount(n, 1);
+    validateMinimumChildCount(n, 1);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       validateNameDeclarationChild(type, c);
     }
@@ -593,6 +596,14 @@ public class AstValidator implements CompilerPass {
     validateBlock(n.getLastChild());
   }
 
+  private void validateForOf(Node n) {
+    validateNodeType(Token.FOR_OF, n);
+    validateChildCount(n, Token.arity(Token.FOR_OF));
+    validateVarOrAssignmentTarget(n.getFirstChild());
+    validateExpression(n.getChildAtIndex(1));
+    validateBlock(n.getLastChild());
+  }
+
   private void validateVarOrOptionalExpression(Node n) {
     if (NodeUtil.isNameDeclaration(n)) {
       validateNameDeclarationHelper(n.getType(), n);
@@ -604,7 +615,7 @@ public class AstValidator implements CompilerPass {
   private void validateVarOrAssignmentTarget(Node n) {
     if (n.isVar() || n.isLet() || n.isConst()) {
       // Only one NAME can be declared for FOR-IN expressions.
-      this.validateChildCount(n, 1);
+      validateChildCount(n, 1);
       validateNameDeclarationHelper(n.getType(), n);
     } else {
       validateAssignmentTarget(n);

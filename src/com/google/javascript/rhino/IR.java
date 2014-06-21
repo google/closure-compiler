@@ -146,15 +146,23 @@ public class IR {
   }
 
   public static Node var(Node name, Node value) {
-    Preconditions.checkState(name.isName() && !name.hasChildren());
-    Preconditions.checkState(mayBeExpression(value));
-    name.addChildToFront(value);
-    return var(name);
+    return nameDeclaration(name, value, Token.VAR);
   }
 
   public static Node var(Node name) {
+    return nameDeclaration(name, Token.VAR);
+  }
+
+  public static Node nameDeclaration(Node name, int type) {
     Preconditions.checkState(name.isName());
-    return new Node(Token.VAR, name);
+    return new Node(type, name);
+  }
+
+  public static Node nameDeclaration(Node name, Node value, int type) {
+    Preconditions.checkState(name.isName() && !name.hasChildren());
+    Preconditions.checkState(mayBeExpression(value));
+    name.addChildToFront(value);
+    return new Node(type, name);
   }
 
   public static Node returnNode() {
@@ -481,6 +489,13 @@ public class IR {
 
   public static Node stringKey(String s) {
     return Node.newString(Token.STRING_KEY, s);
+  }
+
+  public static Node stringKey(String s, Node value) {
+    Preconditions.checkState(mayBeExpression(value));
+    Node stringKey = stringKey(s);
+    stringKey.addChildToFront(value);
+    return stringKey;
   }
 
   public static Node number(double d) {
