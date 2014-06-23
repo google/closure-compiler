@@ -105,7 +105,7 @@ AudioContext.prototype.createScriptProcessor = function(bufferSize,
     numberOfInputChannels_opt, numberOfOutputChannels_opt) {};
 
 /**
- * @return {!AnalyserNode}
+ * @return {!RealtimeAnalyserNode}
  */
 AudioContext.prototype.createAnalyser = function() {};
 
@@ -694,46 +694,37 @@ ConvolverNode.prototype.normalize;
  * @constructor
  * @extends {AudioNode}
  */
-var AnalyserNode = function() {};
+var RealtimeAnalyserNode = function() {};
 
 /**
  * @param {Float32Array} array
  */
-AnalyserNode.prototype.getFloatFrequencyData = function(array) {};
+RealtimeAnalyserNode.prototype.getFloatFrequencyData = function(array) {};
 
 /**
  * @param {Uint8Array} array
  */
-AnalyserNode.prototype.getByteFrequencyData = function(array) {};
+RealtimeAnalyserNode.prototype.getByteFrequencyData = function(array) {};
 
 /**
  * @param {Uint8Array} array
  */
-AnalyserNode.prototype.getByteTimeDomainData = function(array) {};
+RealtimeAnalyserNode.prototype.getByteTimeDomainData = function(array) {};
 
 /** @type {number} */
-AnalyserNode.prototype.fftSize;
+RealtimeAnalyserNode.prototype.fftSize;
 
 /** @type {number} */
-AnalyserNode.prototype.frequencyBinCount;
+RealtimeAnalyserNode.prototype.frequencyBinCount;
 
 /** @type {number} */
-AnalyserNode.prototype.minDecibels;
+RealtimeAnalyserNode.prototype.minDecibels;
 
 /** @type {number} */
-AnalyserNode.prototype.maxDecibels;
+RealtimeAnalyserNode.prototype.maxDecibels;
 
 /** @type {number} */
-AnalyserNode.prototype.smoothingTimeConstant;
-
-/**
- * @constructor
- * @extends {AnalyserNode}
- * @deprecated Use AnalyserNode
- *
- * This constructor has been added for backwards compatibility.
- */
-var RealtimeAnalyserNode = function() {};
+RealtimeAnalyserNode.prototype.smoothingTimeConstant;
 
 /**
  * @constructor
