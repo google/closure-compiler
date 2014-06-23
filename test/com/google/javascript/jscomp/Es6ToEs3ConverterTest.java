@@ -1208,6 +1208,34 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ), null, null);
   }
 
+  public void testMethodInObject() {
+    test("var obj = { f() {alert(1); } };",
+        "var obj = { f: function() {alert(1); } };");
+
+    test(Joiner.on('\n').join(
+        "var obj = {",
+        "  f() { alert(1); },",
+        "  x",
+        "};"), Joiner.on('\n').join(
+        "var obj = {",
+        "  f: function() { alert(1); },",
+        "  x: x",
+        "};"));
+  }
+
+  public void testComputedPropertiesWithMethod() {
+      test(Joiner.on('\n').join(
+          "var obj = {",
+          "  ['f' + 1] : 1,",
+          "  m() {},",
+          "  ['g' + 1] : 1,",
+          "};"), Joiner.on('\n').join(
+          "var $jscomp$compprop0 = {};",
+          "var obj = ($jscomp$compprop0['f' + 1] = 1,",
+          "  ($jscomp$compprop0.m = function() {}, ",
+          "     ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0)));"));
+  }
+
   public void testComputedProperties() {
     test("var obj = { ['f' + 1] : 1, ['g' + 1] : 1 };",
         Joiner.on('\n').join(
