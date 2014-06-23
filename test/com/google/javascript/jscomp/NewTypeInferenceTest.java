@@ -3682,6 +3682,15 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
+  public void testUndeclaredNamespaces() {
+    typeCheck(
+          "/** @constructor */ ns.Foo = function(){};\n"
+        + "ns.Foo.prototype.method = function(){};",
+        ImmutableList.of(
+            VarCheck.UNDEFINED_VAR_ERROR,
+            VarCheck.UNDEFINED_VAR_ERROR));
+  }
+
   public void testNestedNamespaces() {
     // ns.subns is not @const annotated, but we still get good checking for its
     // properties. This is the same behavior as the previous type inference.
