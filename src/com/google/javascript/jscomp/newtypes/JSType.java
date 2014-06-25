@@ -65,8 +65,31 @@ public abstract class JSType {
   private static JSType makeType(int mask, String location,
       ImmutableSet<ObjectType> objs, String typeVar,
       ImmutableSet<EnumType> enums) {
+    // Fix up the mask for objects and enums
+    if (enums != null) {
+      if (enums.isEmpty()) {
+        mask &= ~ENUM_MASK;
+      } else {
+        mask |= ENUM_MASK;
+      }
+    }
+
+    if (objs != null) {
+      if (objs.isEmpty()) {
+        mask &= ~NON_SCALAR_MASK;
+      } else {
+        mask |= NON_SCALAR_MASK;
+      }
+    }
+
     if (objs == null && typeVar == null && enums == null && location == null) {
       return MaskType.make(mask);
+    }
+    if (mask == NON_SCALAR_MASK && location == null) {
+      return new ObjsType(objs);
+    }
+    if (mask == (NON_SCALAR_MASK | NULL_MASK) && location == null) {
+      return new NullableObjsType(objs);
     }
     return new UnionType(mask, location, objs, typeVar, enums);
   }
@@ -1097,20 +1120,16 @@ final class UnionType extends JSType {
     if (enums == null) {
       this.enums = null;
     } else if (enums.isEmpty()) {
-      mask &= ~ENUM_MASK;
       this.enums = null;
     } else {
-      mask |= ENUM_MASK;
       this.enums = enums;
     }
 
     if (objs == null) {
       this.objs = null;
     } else if (objs.isEmpty()) {
-      mask &= ~NON_SCALAR_MASK;
       this.objs = null;
     } else {
-      mask |= NON_SCALAR_MASK;
       this.objs = objs;
     }
 
@@ -1246,6 +1265,62 @@ class MaskType extends JSType {
 
   protected ImmutableSet<ObjectType> getObjs() {
     return null;
+  }
+
+  protected String getTypeVar() {
+    return null;
+  }
+
+  protected ImmutableSet<EnumType> getEnums() {
+    return null;
+  }
+
+  public String getLocation() {
+    return null;
+  }
+}
+
+final class ObjsType extends JSType {
+  private ImmutableSet<ObjectType> objs;
+
+  ObjsType(ImmutableSet<ObjectType> objs) {
+    this.objs = objs;
+  }
+
+  protected int getMask() {
+    return NON_SCALAR_MASK;
+  }
+
+  protected ImmutableSet<ObjectType> getObjs() {
+    return objs;
+  }
+
+  protected String getTypeVar() {
+    return null;
+  }
+
+  protected ImmutableSet<EnumType> getEnums() {
+    return null;
+  }
+
+  public String getLocation() {
+    return null;
+  }
+}
+
+final class NullableObjsType extends JSType {
+  private ImmutableSet<ObjectType> objs;
+
+  NullableObjsType(ImmutableSet<ObjectType> objs) {
+    this.objs = objs;
+  }
+
+  protected int getMask() {
+    return NON_SCALAR_MASK | NULL_MASK;
+  }
+
+  protected ImmutableSet<ObjectType> getObjs() {
+    return objs;
   }
 
   protected String getTypeVar() {
