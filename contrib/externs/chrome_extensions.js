@@ -698,6 +698,10 @@ chrome.runtime.Manifest.prototype.description;
 chrome.runtime.Manifest.prototype.oauth2;
 
 
+/** @type {!Array.<(string|!Object)>} */
+chrome.runtime.Manifest.prototype.permissions;
+
+
 
 /**
  * Oauth2 info in the manifest.
@@ -5090,6 +5094,7 @@ chrome.system.storage.getAvailableCapacity = function(id, callback) {};
 chrome.usb = {};
 
 
+
 /** @constructor */
 chrome.usb.Device = function Device() {};
 
@@ -5104,6 +5109,7 @@ chrome.usb.Device.prototype.vendorId;
 
 /** @type {number} */
 chrome.usb.Device.prototype.productId;
+
 
 
 /** @constructor */
@@ -5122,36 +5128,70 @@ chrome.usb.ConnectionHandle.prototype.vendorId;
 chrome.usb.ConnectionHandle.prototype.productId;
 
 
-/**
- * @typedef {{
- *   address: number,
- *   type: string,
- *   direction: string,
- *   maximumPacketSize: number,
- *   synchronization: (string|undefined),
- *   usage: (string|undefined),
- *   pollingInterval: (number|undefined)
- * }}
- */
+
+/** @constructor */
 chrome.usb.InterfaceEndpoint;
 
 
-/**
- * @typedef {{
- *   interfaceNumber: number,
- *   alternateSetting: number,
- *   interfaceClass: number,
- *   interfaceSubclass: number,
- *   interfaceProtocol: number,
- *   description: (string|undefined),
- *   endpoints: !Array.<!chrome.usb.InterfaceEndpoint>
- * }}
- */
+/** @type {number} */
+chrome.usb.InterfaceEndpoint.prototype.address;
+
+
+/** @type {string} */
+chrome.usb.InterfaceEndpoint.prototype.direction;
+
+
+/** @type {number} */
+chrome.usb.InterfaceEndpoint.prototype.maximumPacketSize;
+
+
+/** @type {(string|undefined)} */
+chrome.usb.InterfaceEndpoint.prototype.synchronization;
+
+
+/** @type {(string|undefined)} */
+chrome.usb.InterfaceEndpoint.prototype.usage;
+
+
+/** @type {(number|undefined)} */
+chrome.usb.InterfaceEndpoint.prototype.pollingInterval;
+
+
+
+/** @constructor */
 chrome.usb.InterfaceDescriptor;
 
 
+/** @type {number} */
+chrome.usb.InterfaceDescriptor.prototype.interfaceNumber;
+
+
+/** @type {number} */
+chrome.usb.InterfaceDescriptor.prototype.alternateSetting;
+
+
+/** @type {number} */
+chrome.usb.InterfaceDescriptor.prototype.interfaceClass;
+
+
+/** @type {number} */
+chrome.usb.InterfaceDescriptor.prototype.interfaceSubclass;
+
+
+/** @type {number} */
+chrome.usb.InterfaceDescriptor.prototype.interfaceProtocol;
+
+
+/** @type {(string|undefined)} */
+chrome.usb.InterfaceDescriptor.prototype.description;
+
+
+/** @type {!Array.<!chrome.usb.InterfaceEndpoint>} */
+chrome.usb.InterfaceDescriptor.prototype.endpoints;
+
+
 /**
- * @typedef {{
+ * @typedef {?{
  *   direction: string,
  *   endpoint: number,
  *   length: (number|undefined),
@@ -5160,8 +5200,9 @@ chrome.usb.InterfaceDescriptor;
  */
 chrome.usb.GenericTransferInfo;
 
+
 /**
- * @typedef {{
+ * @typedef {?{
  *   direction: string,
  *   recipient: string,
  *   requestType: string,
@@ -5169,10 +5210,11 @@ chrome.usb.GenericTransferInfo;
  *   value: number,
  *   index: number,
  *   length: (number|undefined),
- *   data: (ArrayBuffer|undefined)
+ *   data: (!ArrayBuffer|undefined)
  * }}
  */
 chrome.usb.ControlTransferInfo;
+
 
 
 /** @constructor */
@@ -5185,6 +5227,16 @@ chrome.usb.TransferResultInfo.prototype.resultCode;
 
 /** @type {!ArrayBuffer|undefined} */
 chrome.usb.TransferResultInfo.prototype.data;
+
+
+/**
+ * @typedef {?{
+ *   deviceId: number,
+ *   productId: number,
+ *   interfaceId: (number|undefined)
+ * }}
+ */
+chrome.usb.FindDevicesOptions;
 
 
 /**
@@ -5216,7 +5268,8 @@ chrome.usb.openDevice = function(device, callback) {};
 
 /**
  * @see http://developer.chrome.com/apps/usb.html#method-findDevices
- * @param {!Object} options The properties to search for on target devices.
+ * @param {!chrome.usb.FindDevicesOptions} options The properties to search for
+ *     on target devices.
  * @param {function(!Array.<!chrome.usb.ConnectionHandle>)} callback Invoked
  *     with the opened ConnectionHandle on complete.
  */
@@ -5226,10 +5279,10 @@ chrome.usb.findDevices = function(options, callback) {};
 /**
  * @see http://developer.chrome.com/apps/usb.html#method-closeDevice
  * @param {!chrome.usb.ConnectionHandle} handle The connection handle to close.
- * @param {function()=} callback The callback to invoke once the device is
+ * @param {function()=} opt_callback The callback to invoke once the device is
  *     closed.
  */
-chrome.usb.closeDevice = function(handle, callback) {};
+chrome.usb.closeDevice = function(handle, opt_callback) {};
 
 
 /**
