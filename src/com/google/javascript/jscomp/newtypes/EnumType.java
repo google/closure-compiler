@@ -33,7 +33,7 @@ import java.util.Collection;
  * - We represent the object literal that defined the enum as an ObjectType.
  * - We represent an element of the enum by using this class in JSType.
  */
-public class EnumType extends TypeWithProperties {
+public class EnumType extends Namespace implements TypeWithProperties {
 
   private enum State {
     NOT_RESOLVED,
@@ -87,6 +87,13 @@ public class EnumType extends TypeWithProperties {
     return enumObjType;
   }
 
+  public JSType toJSType() {
+    // TODO(blickly): Put off pulling of Namespace's JSTypes until
+    // enums are finalized and add back this check.
+//     return getObjLitType();
+    return enumObjType;
+  }
+
   // Returns null iff there is a type cycle
   public JSTypeExpression getTypeExpr() {
     Preconditions.checkState(state != State.RESOLVED);
@@ -124,38 +131,38 @@ public class EnumType extends TypeWithProperties {
    */
   private JSType computeObjType() {
     Preconditions.checkState(enumPropType != null);
-    PersistentMap<String, Property> propMap = PersistentMap.create();
+    PersistentMap<String, Property> propMap = otherProps;
     for (String s : props) {
       propMap = propMap.with(s,
           Property.makeConstant(enumPropType, enumPropType));
     }
-    return JSType.fromObjectType(
+    return withNamedTypes(
         ObjectType.makeObjectType(
             null, propMap, null, false, ObjectKind.UNRESTRICTED));
   }
 
   @Override
-  protected JSType getProp(QualifiedName qname) {
+  public JSType getProp(QualifiedName qname) {
     return declaredType.getProp(qname);
   }
 
   @Override
-  protected JSType getDeclaredProp(QualifiedName qname) {
+  public JSType getDeclaredProp(QualifiedName qname) {
     return declaredType.getDeclaredProp(qname);
   }
 
   @Override
-  protected boolean mayHaveProp(QualifiedName qname) {
+  public boolean mayHaveProp(QualifiedName qname) {
     return declaredType.mayHaveProp(qname);
   }
 
   @Override
-  protected boolean hasProp(QualifiedName qname) {
+  public boolean hasProp(QualifiedName qname) {
     return declaredType.hasProp(qname);
   }
 
   @Override
-  protected boolean hasConstantProp(QualifiedName qname) {
+  public boolean hasConstantProp(QualifiedName qname) {
     return declaredType.hasConstantProp(qname);
   }
 

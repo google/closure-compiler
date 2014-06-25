@@ -900,8 +900,8 @@ public abstract class JSType {
     }
     Preconditions.checkState(getObjs() != null || getEnums() != null);
     return nullAcceptingJoin(
-        TypeWithProperties.getProp(getObjs(), qname),
-        TypeWithProperties.getProp(getEnums(), qname));
+        TypeWithPropertiesStatics.getProp(getObjs(), qname),
+        TypeWithPropertiesStatics.getProp(getEnums(), qname));
   }
 
   public JSType getDeclaredProp(QualifiedName qname) {
@@ -910,20 +910,22 @@ public abstract class JSType {
     }
     Preconditions.checkState(getObjs() != null || getEnums() != null);
     return nullAcceptingJoin(
-        TypeWithProperties.getDeclaredProp(getObjs(), qname),
-        TypeWithProperties.getDeclaredProp(getEnums(), qname));
+        TypeWithPropertiesStatics.getDeclaredProp(getObjs(), qname),
+        TypeWithPropertiesStatics.getDeclaredProp(getEnums(), qname));
   }
 
   public boolean mayHaveProp(QualifiedName qname) {
-    return TypeWithProperties.mayHaveProp(getObjs(), qname)
-        || TypeWithProperties.mayHaveProp(getEnums(), qname);
+    return TypeWithPropertiesStatics.mayHaveProp(getObjs(), qname) ||
+        TypeWithPropertiesStatics.mayHaveProp(getEnums(), qname);
   }
 
   public boolean hasProp(QualifiedName qname) {
-    if (getObjs() != null && !TypeWithProperties.hasProp(getObjs(), qname)) {
+    if (getObjs() != null
+        && !TypeWithPropertiesStatics.hasProp(getObjs(), qname)) {
       return false;
     }
-    if (getEnums() != null && !TypeWithProperties.hasProp(getEnums(), qname)) {
+    if (getEnums() != null
+        && !TypeWithPropertiesStatics.hasProp(getEnums(), qname)) {
       return false;
     }
     return getEnums() != null || getObjs() != null;
@@ -931,8 +933,8 @@ public abstract class JSType {
 
   public boolean hasConstantProp(QualifiedName pname) {
     Preconditions.checkArgument(pname.isIdentifier());
-    return TypeWithProperties.hasConstantProp(getObjs(), pname)
-        || TypeWithProperties.hasConstantProp(getEnums(), pname);
+    return TypeWithPropertiesStatics.hasConstantProp(getObjs(), pname) ||
+        TypeWithPropertiesStatics.hasConstantProp(getEnums(), pname);
   }
 
   public JSType withoutProperty(QualifiedName qname) {

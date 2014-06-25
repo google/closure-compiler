@@ -790,9 +790,8 @@ public final class NodeUtil {
         || n.isGetProp() && n.getParent().isExprResult()) {
       JSDocInfo jsdoc = getBestJSDocInfo(n);
       return jsdoc != null && jsdoc.hasTypedefType();
-    } else {
-      return false;
     }
+    return false;
   }
 
   static boolean isEnumDecl(Node n) {
@@ -802,8 +801,19 @@ public final class NodeUtil {
             && n.getParent().getParent().isExprResult())) {
       JSDocInfo jsdoc = getBestJSDocInfo(n);
       return jsdoc != null && jsdoc.hasEnumParameterType();
-    } else {
-      return false;
+    }
+    return false;
+  }
+
+  static Node getInitializer(Node n) {
+    Preconditions.checkArgument(n.isQualifiedName());
+    switch (n.getParent().getType()) {
+      case Token.ASSIGN:
+        return n.getNext();
+      case Token.VAR:
+        return n.getFirstChild();
+      default:
+        return null;
     }
   }
 

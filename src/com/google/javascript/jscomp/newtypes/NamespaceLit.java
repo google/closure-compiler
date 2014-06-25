@@ -17,22 +17,17 @@
 package com.google.javascript.jscomp.newtypes;
 
 /**
- * A type that can contain properties,
- * such as an ObjectType, NominalType, or a Namespace.
+ *
+ * @author blickly@google.com (Ben Lickly)
+ * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-interface TypeWithProperties {
-  /** Get the inferred type of the given property */
-  JSType getProp(QualifiedName qname);
+public class NamespaceLit extends Namespace {
+  // collect namespaces during CNT
+  // careful w/ inferred vs declared props on namespaces (for otherprops)
 
-  /** Get the declared type of the given property */
-  JSType getDeclaredProp(QualifiedName qname);
-
-  /** Return whether this type contains any form of property */
-  boolean mayHaveProp(QualifiedName qname);
-
-  /** Return whether this type contains a required property */
-  boolean hasProp(QualifiedName qname);
-
-  /** Return whether this type contains a constant property */
-  boolean hasConstantProp(QualifiedName qname);
+  public JSType toJSType() {
+    ObjectType objs = ObjectType.makeObjectType(
+        null, otherProps, null, false, ObjectKind.UNRESTRICTED);
+    return withNamedTypes(objs);
+  }
 }

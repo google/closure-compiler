@@ -32,7 +32,7 @@ import java.util.Set;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class ObjectType extends TypeWithProperties {
+public class ObjectType implements TypeWithProperties {
   // TODO(dimvar): currently, we can't distinguish between an obj at the top of
   // the proto chain (nominalType = null) and an obj for which we can't figure
   // out its class
@@ -640,7 +640,7 @@ public class ObjectType extends TypeWithProperties {
   }
 
   @Override
-  protected JSType getProp(QualifiedName qname) {
+  public JSType getProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);
     if (qname.isIdentifier()) {
       return p == null ? JSType.UNDEFINED : p.getType();
@@ -651,7 +651,7 @@ public class ObjectType extends TypeWithProperties {
   }
 
   @Override
-  protected JSType getDeclaredProp(QualifiedName qname) {
+  public JSType getDeclaredProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);
     if (p == null) {
       return null;
@@ -671,7 +671,7 @@ public class ObjectType extends TypeWithProperties {
   }
 
   @Override
-  protected boolean mayHaveProp(QualifiedName qname) {
+  public boolean mayHaveProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);
     return p != null &&
         (qname.isIdentifier() ||
@@ -679,7 +679,7 @@ public class ObjectType extends TypeWithProperties {
   }
 
   @Override
-  protected boolean hasProp(QualifiedName qname) {
+  public boolean hasProp(QualifiedName qname) {
     Preconditions.checkArgument(qname.isIdentifier());
     Property p = getLeftmostProp(qname);
     if (p == null || p.isOptional()) {
@@ -690,7 +690,7 @@ public class ObjectType extends TypeWithProperties {
   }
 
   @Override
-  protected boolean hasConstantProp(QualifiedName qname) {
+  public boolean hasConstantProp(QualifiedName qname) {
     Preconditions.checkArgument(qname.isIdentifier());
     Property p = getLeftmostProp(qname);
     return p != null && p.isConstant();
