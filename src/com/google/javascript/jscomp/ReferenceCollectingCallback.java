@@ -649,6 +649,10 @@ class ReferenceCollectingCallback implements ScopedCallback,
 
     boolean isDeclaration() {
       Node parent = getParent();
+      // Special case for class B extends A, A is not a redeclaration.
+      if (parent.isClass() && nameNode != parent.getFirstChild()) {
+        return false;
+      }
       Node grandparent = parent.getParent();
       return DECLARATION_PARENTS.contains(parent.getType()) ||
           parent.isParamList() &&

@@ -61,7 +61,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
   static final DiagnosticType REDECLARED_VARIABLE_ERROR = DiagnosticType.error(
       "JSC_REDECLARED_VARIABLE_ERROR",
-      "Redeclared variable: {0}");
+      "Illegal redeclared variable: {0}");
 
   static final DiagnosticType PARAMETER_SHADOWED_ERROR = DiagnosticType.error(
       "JSC_PARAMETER_SHADOWED_ERROR",

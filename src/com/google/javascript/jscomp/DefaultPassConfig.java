@@ -207,11 +207,6 @@ public class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass("beforeStandardChecks"));
 
-    if (options.getLanguageIn() != options.getLanguageOut()) {
-      checks.add(convertEs6ToEs3);
-      checks.add(convertStaticInheritance);
-    }
-
     if (options.declaredGlobalExternsOnWindow) {
       checks.add(declaredGlobalExternsOnWindow);
     }
@@ -288,8 +283,14 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(checkRegExp);
     }
 
-    if (options.aggressiveVarCheck.isOn()) {
+    boolean needsConversion = options.getLanguageIn() != options.getLanguageOut();
+    if (needsConversion || options.aggressiveVarCheck.isOn()) {
       checks.add(checkVariableReferences);
+    }
+
+    if (needsConversion) {
+      checks.add(convertEs6ToEs3);
+      checks.add(convertStaticInheritance);
     }
 
     // This pass should run before types are assigned.
