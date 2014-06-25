@@ -293,10 +293,39 @@ public class AstValidator implements CompilerPass {
         validateClass(n);
         return;
 
+      case Token.TEMPLATELIT:
+        validateTemplateLit(n);
+        return;
+
       default:
         violation("Expected expression but was "
             + Token.name(n.getType()), n);
     }
+  }
+
+  private void validateTemplateLit(Node n) {
+    validateEs6Feature("template literal", n);
+    validateNodeType(Token.TEMPLATELIT, n);
+    if (!n.hasChildren()) {
+      return;
+    }
+    for (int i = 0; i < n.getChildCount(); i++) {
+      Node child = n.getChildAtIndex(i);
+      // If the first child is not a STRING, this is a tagged template.
+      if (i == 0 && !child.isString()) {
+        validateExpression(child);
+      } else if (child.isString()) {
+        validateString(child);
+      } else {
+        validateTemplateLitSub(child);
+      }
+    }
+  }
+
+  private void validateTemplateLitSub(Node n) {
+    validateNodeType(Token.TEMPLATELIT_SUB, n);
+    validateChildCount(n, Token.arity(Token.TEMPLATELIT_SUB));
+    validateExpression(n.getFirstChild());
   }
 
   /**

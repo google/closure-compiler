@@ -1336,4 +1336,19 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     testSame("({'a' : 1})");
     testSame("({'a' : 1, f : 1, b : 1})");
   }
+
+  public void testSimpleTemplateString() {
+    test("``", "\"\"");
+    test("`hello`", "\"hello\"");
+    test("`hello\nworld`", "\"hello\\nworld\"");
+    test("`hello\rworld`", "\"hello\\nworld\"");
+    test("`hello\r\nworld`", "\"hello\\nworld\"");
+    test("`hello\n\nworld`", "\"hello\\n\\nworld\"");
+    test("`${world}`", "\"\" + world");
+    test("`hello ${world}`", "\"hello \" + world");
+    test("`${hello} world`", "hello + \" world\"");
+    test("`${hello}${world}`", "\"\" + hello + world");
+    test("`${a} b ${c} d ${e}`", "a + \" b \" + c + \" d \" + e");
+    test("tag`${hello} world`", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
 }
