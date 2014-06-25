@@ -41,6 +41,7 @@ import com.google.javascript.rhino.Node;
  * Tests for {@link ProcessClosurePrimitives}.
  *
  */
+
 public class ProcessClosurePrimitivesTest extends CompilerTestCase {
   private String additionalCode;
   private String additionalEndCode;
