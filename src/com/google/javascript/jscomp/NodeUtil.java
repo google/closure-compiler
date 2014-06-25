@@ -421,6 +421,11 @@ public final class NodeUtil {
     }
   }
 
+  static String getClassName(Node n) {
+    Node nameNode = getClassNameNode(n);
+    return nameNode == null ? null : nameNode.getQualifiedName();
+  }
+
   /**
    * Gets the node of a function's name. This method recognizes five forms:
    * <ul>
@@ -1702,6 +1707,14 @@ public final class NodeUtil {
    */
   static Node getEnclosingClass(Node n) {
     return getEnclosingType(n, Token.CLASS);
+  }
+
+  static Node getEnclosingStatement(Node n) {
+    Node curr = n;
+    while (curr != null && !isStatement(curr)) {
+      curr = curr.getParent();
+    }
+    return curr;
   }
 
   /**

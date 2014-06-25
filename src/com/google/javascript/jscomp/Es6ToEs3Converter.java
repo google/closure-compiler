@@ -194,7 +194,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     Node enclosingClass = NodeUtil.getEnclosingClass(node);
     if (enclosingMemberDef.isStaticMember()) {
       parent.replaceChild(node,
-          IR.name(NodeUtil.getClassNameNode(enclosingClass).getQualifiedName()).srcref(node));
+          IR.name(NodeUtil.getClassName(enclosingClass)).srcref(node));
     }
   }
 
@@ -224,7 +224,12 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       compiler.report(JSError.make(node, NO_SUPERTYPE));
       return;
     }
-    if (clazz.getFirstChild().isEmpty() && !clazz.getFirstChild().getNext().isEmpty()) {
+    if (NodeUtil.getClassNameNode(clazz) == null) {
+      // Unnamed classes of the form:
+      //   f(class extends D { ... });
+      // give the problem that there is no name to be used in the call to goog.base for the
+      // translation of super calls.
+      // This will throw an error when the class is processed.
       return;
     }
 
@@ -237,8 +242,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       methodName = IR.string(callName.getLastChild().getString()).srcref(enclosing);
     }
     boolean inFunction = isInFunction(clazz);
-    String uniqueClassString = inFunction ? clazz.getFirstChild().getString()
-        : getUniqueClassName(clazz.getFirstChild().getString());
+    String uniqueClassString = inFunction ? NodeUtil.getClassName(clazz)
+        : getUniqueClassName(NodeUtil.getClassName(clazz));
     Node uniqueClassName = IR.name(uniqueClassString);
     Node base = IR.getprop(uniqueClassName.srcref(enclosing),
         IR.string("base").srcref(enclosing)).srcref(enclosing);
@@ -555,17 +560,22 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         // TODO(mattloring) Remove dependency on Closure Library.
         Node inherits = NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(),
             "goog.inherits");
-        Node inheritsCall = IR.exprResult(IR.call(inherits, className.cloneTree(),
-            superClassName.cloneTree()));
+        Node inheritsCall = IR.exprResult(IR.call(inherits,
+            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), fullClassName),
+            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), superClassString)));
         inheritsCall.useSourceInfoIfMissingFromForTree(classNode);
-        parent.addChildAfter(inheritsCall, classNode);
+        Node enclosingStatement = NodeUtil.getEnclosingStatement(classNode);
+        enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
         newInfo.recordBaseType(new JSTypeExpression(new Node(Token.BANG,
             IR.string(superClassString)),
             superClassName.getSourceFileName()));
-        Node copyProps = IR.call(IR.name(COPY_PROP).srcref(classNode), className.cloneTree(),
-            superClassName.cloneTree()).srcref(classNode);
+        Node copyProps = IR.call(IR.name(COPY_PROP).srcref(classNode),
+            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), fullClassName),
+            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), superClassString));
+        copyProps.useSourceInfoIfMissingFromForTree(classNode);
         copyProps.putBooleanProp(Node.FREE_CALL, true);
-        parent.addChildAfter(IR.exprResult(copyProps).srcref(classNode),  inheritsCall);
+        enclosingStatement.getParent().addChildAfter(
+            IR.exprResult(copyProps).srcref(classNode),  inheritsCall);
       }
     }
 

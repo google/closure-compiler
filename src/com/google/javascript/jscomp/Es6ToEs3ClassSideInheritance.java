@@ -82,8 +82,8 @@ public class Es6ToEs3ClassSideInheritance extends NodeTraversal.AbstractPostOrde
           staticMembers.put(nodeTraversal.getScope().getVar(subClassName.getQualifiedName()),
               staticMember);
         }
+        parent.detachFromParent();
       }
-      parent.getParent().removeChild(parent);
     }
   }
 
