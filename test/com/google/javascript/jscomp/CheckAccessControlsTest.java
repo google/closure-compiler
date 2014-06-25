@@ -583,6 +583,16 @@ public class CheckAccessControlsTest extends CompilerTestCase {
     });
   }
 
+  public void testProtectedAccessForProperties7() {
+    testSame(new String[] {
+      "/** @constructor */ var Foo = function() {};" +
+      "Foo.prototype = { /** @protected */ bar: function() {} }",
+      "/** @constructor \n * @extends {Foo} */" +
+      "var SubFoo = function() { this.bar(); };" +
+      "SubFoo.prototype = { moo: function() { this.bar(); }};"
+    });
+  }
+
   public void testNoProtectedAccessForProperties1() {
     test(new String[] {
       "/** @constructor */ function Foo() {} " +
@@ -630,24 +640,24 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testNoProtectedAccessForProperties6() {
-      test(new String[] {
-        "/** @constructor */ function Foo() {}" +
-        "Foo.prototype = {" +
-        "/** @protected */ bar_: 3" +
-        "}",
-        "new Foo().bar_;"
-      }, null, BAD_PROTECTED_PROPERTY_ACCESS);
-    }
+    test(new String[] {
+      "/** @constructor */ function Foo() {}" +
+      "Foo.prototype = {" +
+      "/** @protected */ bar_: 3" +
+      "}",
+      "new Foo().bar_;"
+    }, null, BAD_PROTECTED_PROPERTY_ACCESS);
+  }
 
-    public void testNoProtectedAccessForProperties7() {
-      test(new String[] {
-        "/** @constructor */ function Foo() {}" +
-        "Foo.prototype = {" +
-        "/** @protected */ bar_: function() {}" +
-        "}",
-        "new Foo().bar_();"
-      }, null, BAD_PROTECTED_PROPERTY_ACCESS);
-    }
+  public void testNoProtectedAccessForProperties7() {
+    test(new String[] {
+      "/** @constructor */ function Foo() {}" +
+      "Foo.prototype = {" +
+      "/** @protected */ bar_: function() {}" +
+      "}",
+      "new Foo().bar_();"
+    }, null, BAD_PROTECTED_PROPERTY_ACCESS);
+  }
 
   public void testPackagePrivateAccessForNames() {
     test(ImmutableList.of(

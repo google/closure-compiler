@@ -126,6 +126,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   private int deprecatedDepth = 0;
   private int methodDepth = 0;
   private JSType currentClass = null;
+  private boolean inPrototypeObjectLiteral = false;
 
   private final Multimap<JSType, String> initializedConstantProperties;
 
@@ -158,7 +159,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         deprecatedDepth++;
       }
 
-      if (methodDepth == 0) {
+      if (methodDepth == 0 && !inPrototypeObjectLiteral) {
         currentClass = getClassOfMethod(n, parent);
       }
       methodDepth++;
@@ -174,7 +175,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       }
 
       methodDepth--;
-      if (methodDepth == 0) {
+      if (methodDepth == 0 && !inPrototypeObjectLiteral) {
         currentClass = null;
       }
     }
@@ -232,6 +233,9 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    if (n.getType() == Token.OBJECTLIT) {
+      maybeEnterPrototype(parent);
+    }
     return true;
   }
 
@@ -250,10 +254,35 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       case Token.NEW:
         checkConstructorDeprecation(t, n, parent);
         break;
+      case Token.OBJECTLIT:
+        maybeExitPrototype(parent);
+        break;
       case Token.FUNCTION:
         checkFinalClassOverrides(t, n, parent);
         break;
     }
+  }
+
+  private void maybeEnterPrototype(Node parent) {
+    Node prototypeClassName = getAssignedPrototypeClassName(parent);
+    if (prototypeClassName != null) {
+      currentClass = normalizeClassType(prototypeClassName.getJSType());
+      inPrototypeObjectLiteral = true;
+    }
+  }
+
+  private void maybeExitPrototype(Node parent) {
+    if (getAssignedPrototypeClassName(parent) != null) {
+      currentClass = null;
+      inPrototypeObjectLiteral = false;
+    }
+  }
+
+  private Node getAssignedPrototypeClassName(Node parent) {
+    if (!parent.isAssign()) {
+      return null;
+    }
+    return NodeUtil.getPrototypeClassName(parent.getFirstChild());
   }
 
   /**
