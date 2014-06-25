@@ -741,8 +741,9 @@ class CodeGenerator {
         } else {
           addExpr(first, NodeUtil.precedence(type), context);
         }
+        Node args = first.getNext();
         add("(");
-        addList(first.getNext());
+        addList(args);
         add(")");
         break;
 
@@ -965,6 +966,26 @@ class CodeGenerator {
         add("(");
         add(first);
         add(")");
+        break;
+
+      case Token.TEMPLATELIT:
+        if (!first.isString()) {
+          add(first, Context.START_OF_EXPR);
+          first = first.getNext();
+        }
+        add("`");
+        for (Node c = first; c != null; c = c.getNext()) {
+          if (c.isString()) {
+            add(c.getString());
+          } else {
+            // Can't use add() since isWordChar('$') == true and cc would add
+            // an extra space.
+            cc.append("${");
+            add(c.getFirstChild(), Context.START_OF_EXPR);
+            add("}");
+          }
+        }
+        add("`");
         break;
 
       default:

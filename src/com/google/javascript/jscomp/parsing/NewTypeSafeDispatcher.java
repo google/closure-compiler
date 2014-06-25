@@ -74,6 +74,9 @@ import com.google.javascript.jscomp.parsing.parser.trees.SpreadExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SpreadPatternElementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.TemplateLiteralExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.TemplateLiteralPortionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.TemplateSubstitutionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThrowStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TryStatementTree;
@@ -120,7 +123,9 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processSwitchCase(CaseClauseTree tree);
   abstract T processSwitchStatement(SwitchStatementTree tree);
   abstract T processThrowStatement(ThrowStatementTree tree);
-  abstract T processTemplateString(LiteralExpressionTree tree);
+  abstract T processTemplateLiteral(TemplateLiteralExpressionTree tree);
+  abstract T processTemplateLiteralPortion(TemplateLiteralPortionTree tree);
+  abstract T processTemplateSubstitution(TemplateSubstitutionTree tree);
   abstract T processTryStatement(TryStatementTree tree);
   abstract T processUnaryExpression(UnaryExpressionTree tree);
   abstract T processVariableStatement(VariableStatementTree tree);
@@ -175,8 +180,6 @@ abstract class NewTypeSafeDispatcher<T> {
         return processNumberLiteral(expr);
       case STRING:
         return processStringLiteral(expr);
-      case TEMPLATE_STRING:
-        return processTemplateString(expr);
       case FALSE:
       case TRUE:
         return processBooleanLiteral(expr);
@@ -199,6 +202,12 @@ abstract class NewTypeSafeDispatcher<T> {
         return processBinaryExpression(node.asBinaryOperator());
       case ARRAY_LITERAL_EXPRESSION:
         return processArrayLiteral(node.asArrayLiteralExpression());
+      case TEMPLATE_LITERAL_EXPRESSION:
+        return processTemplateLiteral(node.asTemplateLiteralExpression());
+      case TEMPLATE_LITERAL_PORTION:
+        return processTemplateLiteralPortion(node.asTemplateLiteralPortion());
+      case TEMPLATE_SUBSTITUTION:
+        return processTemplateSubstitution(node.asTemplateSubstitution());
       case UNARY_EXPRESSION:
         return processUnaryExpression(node.asUnaryExpression());
       case BLOCK:

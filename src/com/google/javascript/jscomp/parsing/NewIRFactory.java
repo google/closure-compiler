@@ -26,76 +26,8 @@ import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.LiteralToken;
 import com.google.javascript.jscomp.parsing.parser.TokenType;
-import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
-import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
-import com.google.javascript.jscomp.parsing.parser.trees.BlockTree;
-import com.google.javascript.jscomp.parsing.parser.trees.BreakStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.CallExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.CaseClauseTree;
-import com.google.javascript.jscomp.parsing.parser.trees.CatchTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
-import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.*;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
-import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyAssignmentTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.DefaultClauseTree;
-import com.google.javascript.jscomp.parsing.parser.trees.DefaultParameterTree;
-import com.google.javascript.jscomp.parsing.parser.trees.DoWhileStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ExportSpecifierTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.FinallyTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ForInStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ForOfStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ForStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.FormalParameterListTree;
-import com.google.javascript.jscomp.parsing.parser.trees.FunctionDeclarationTree;
-import com.google.javascript.jscomp.parsing.parser.trees.GetAccessorTree;
-import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ImportDeclarationTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
-import com.google.javascript.jscomp.parsing.parser.trees.LabelledStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.LiteralExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.MemberLookupExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.MissingPrimaryExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ModuleImportTree;
-import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternFieldTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ParseTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ParseTreeType;
-import com.google.javascript.jscomp.parsing.parser.trees.PostfixExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
-import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentTree;
-import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
-import com.google.javascript.jscomp.parsing.parser.trees.SpreadExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.SpreadPatternElementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ThrowStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.TryStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.UnaryExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationListTree;
-import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationTree;
-import com.google.javascript.jscomp.parsing.parser.trees.VariableStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.WhileStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.WithStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.YieldExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.rhino.ErrorReporter;
@@ -1422,6 +1354,18 @@ class NewIRFactory {
       return node;
     }
 
+    Node processTemplateString(LiteralToken token) {
+      Preconditions.checkArgument(
+          token.type == TokenType.NO_SUBSTITUTION_TEMPLATE
+          || token.type == TokenType.TEMPLATE_HEAD
+          || token.type == TokenType.TEMPLATE_MIDDLE
+          || token.type == TokenType.TEMPLATE_TAIL);
+      // <CR><LF> and <CR> are normalized as <LF> for raw string value
+      Node node = newStringNode(token.value.replaceAll("\\r(\\n)?", "\n"));
+      setSourceInfo(node, token);
+      return node;
+    }
+
     Node processNameWithInlineJSDoc(IdentifierToken identifierToken) {
       Node node;
       JSDocInfo info = handleInlineJsDoc(identifierToken, true);
@@ -1490,10 +1434,10 @@ class NewIRFactory {
         }
 
         Node key = transform(el);
-        if (!key.isComputedProp() &&
-            !key.isQuotedString() &&
-            !currentFileIsExterns &&
-            !isAllowedProp(key.getString())) {
+        if (!key.isComputedProp()
+            && !key.isQuotedString()
+            && !currentFileIsExterns
+            && !isAllowedProp(key.getString())) {
           errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
               key.getLineno(), key.getCharno());
         }
@@ -1670,19 +1614,25 @@ class NewIRFactory {
     }
 
     @Override
-    Node processTemplateString(LiteralExpressionTree tree) {
+    Node processTemplateLiteral(TemplateLiteralExpressionTree tree) {
       maybeWarnEs6Feature(tree, "template strings");
-      LiteralToken token = tree.literalToken.asLiteral();
-      Preconditions.checkState(token.type == TokenType.TEMPLATE_STRING);
-      if (Pattern.compile("[^\\\\]\\$\\{").matcher(token.value).find()) {
-        errorReporter.warning(
-            "Placeholders in template strings are not supported yet.",
-            sourceName, lineno(tree), charno(tree));
+      Node node = tree.operand == null
+          ? newNode(Token.TEMPLATELIT)
+          : newNode(Token.TEMPLATELIT, transform(tree.operand));
+      for (ParseTree child : tree.elements) {
+        node.addChildToBack(transform(child));
       }
-
-      Node node = newStringNode(Token.STRING, normalizeString(token));
-      setSourceInfo(node, token);
       return node;
+    }
+
+    @Override
+    Node processTemplateLiteralPortion(TemplateLiteralPortionTree tree) {
+      return processTemplateString(tree.value.asLiteral());
+    }
+
+    @Override
+    Node processTemplateSubstitution(TemplateSubstitutionTree tree) {
+      return newNode(Token.TEMPLATELIT_SUB, transform(tree.expression));
     }
 
     @Override

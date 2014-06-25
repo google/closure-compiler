@@ -32,12 +32,6 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
  * When adding a new subclass of ParseTree you must also do the following:
  *   - add a new entry to ParseTreeType
  *   - add ParseTree.asXTree()
- *   - modify ParseTreeVisitor.visit(ParseTree) for new ParseTreeType
- *   - add ParseTreeVisitor.visit(XTree)
- *   - modify ParseTreeTransformer.transform(ParseTree) for new ParseTreeType
- *   - add ParseTreeTransformer.transform(XTree)
- *   - add ParseTreeWriter.visit(XTree)
- *   - add ParseTreeValidator.visit(XTree)
  */
 public class ParseTree {
   public final ParseTreeType type;
@@ -115,6 +109,12 @@ public class ParseTree {
     return (SpreadPatternElementTree) this; }
   public SuperExpressionTree asSuperExpression() { return (SuperExpressionTree) this; }
   public SwitchStatementTree asSwitchStatement() { return (SwitchStatementTree) this; }
+  public TemplateLiteralExpressionTree asTemplateLiteralExpression() {
+    return (TemplateLiteralExpressionTree) this; }
+  public TemplateLiteralPortionTree asTemplateLiteralPortion() {
+    return (TemplateLiteralPortionTree) this; }
+  public TemplateSubstitutionTree asTemplateSubstitution() {
+    return (TemplateSubstitutionTree) this; }
   public ThisExpressionTree asThisExpression() { return (ThisExpressionTree) this; }
   public ThrowStatementTree asThrowStatement() { return (ThrowStatementTree) this; }
   public TryStatementTree asTryStatement() { return (TryStatementTree) this; }
@@ -165,6 +165,7 @@ public class ParseTree {
       case MEMBER_LOOKUP_EXPRESSION:
       case CALL_EXPRESSION:
       case FUNCTION_DECLARATION:
+      case TEMPLATE_LITERAL_EXPRESSION:
         return true;
       default:
         return false;
@@ -191,6 +192,7 @@ public class ParseTree {
     case MEMBER_LOOKUP_EXPRESSION:
     case PAREN_EXPRESSION:
     case SUPER_EXPRESSION:
+    case TEMPLATE_LITERAL_EXPRESSION:
       return true;
     default:
       return false;
@@ -214,6 +216,7 @@ public class ParseTree {
       case ARRAY_LITERAL_EXPRESSION:
       case OBJECT_LITERAL_EXPRESSION:
       case PAREN_EXPRESSION:
+      case TEMPLATE_LITERAL_EXPRESSION:
       // FunctionExpression
       case FUNCTION_DECLARATION:
       // MemberExpression [ Expression ]

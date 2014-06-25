@@ -2004,4 +2004,19 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("export default x");
     assertPrintSame("export default 1");
   }
+
+  public void testTemplateLiteral() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("`hello`");
+    assertPrint("`hel\rlo`", "`hel\nlo`");
+    assertPrint("`hel\r\nlo`", "`hel\nlo`");
+
+    assertPrintSame("`hello${world}!`");
+    assertPrintSame("`hello${world} ${name}!`");
+
+    assertPrintSame("`hello${(function(){let x=3})()}`");
+    assertPrintSame("(function(){})()`${(function(){})()}`");
+    assertPrintSame("url`hello`");
+    assertPrintSame("url(`hello`)");
+  }
 }

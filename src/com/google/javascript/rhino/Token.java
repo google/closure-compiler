@@ -187,6 +187,9 @@ public class Token {
         ARRAY_COMP     = 175,
         GENERATOR_COMP = 176,
 
+        TEMPLATELIT     = 177, // template literal
+        TEMPLATELIT_SUB = 178, // template literal substitution
+
         // JSDoc-only tokens
         ANNOTATION     = 300,
         PIPE           = 301,
@@ -253,6 +256,8 @@ public class Token {
           case INSTANCEOF:      return "INSTANCEOF";
           case ARRAYLIT:        return "ARRAYLIT";
           case OBJECTLIT:       return "OBJECTLIT";
+          case TEMPLATELIT:      return "TEMPLATELIT";
+          case TEMPLATELIT_SUB:    return "TEMPLATELIT_SUB";
           case TRY:             return "TRY";
           case PARAM_LIST:      return "PARAM_LIST";
           case COMMA:           return "COMMA";
@@ -388,6 +393,8 @@ public class Token {
       case INSTANCEOF:      return 2;
       case ARRAYLIT:        return -1;
       case OBJECTLIT:       return -1;
+      case TEMPLATELIT:     return -1;
+      case TEMPLATELIT_SUB: return 1;
       case TRY:             return -1;
       case CLASS:           return 3;
       case MEMBER_DEF:      return 1;

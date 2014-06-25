@@ -1245,8 +1245,10 @@ public class Parser {
     case TRUE:
     case FALSE:
     case NULL:
-    case TEMPLATE_STRING:
       return parseLiteralExpression();
+    case NO_SUBSTITUTION_TEMPLATE:
+    case TEMPLATE_HEAD:
+      return parseTemplateLiteral(null);
     case OPEN_SQUARE:
       return parseArrayInitializer();
     case OPEN_CURLY:
@@ -1283,6 +1285,52 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     Token literal = nextLiteralToken();
     return new LiteralExpressionTree(getTreeLocation(start), literal);
+  }
+
+  /**
+   * Constructs a template literal expression tree. "operand" is used to handle
+   * the case like "foo`bar`", which is a CallExpression or MemberExpression that
+   * calls the function foo() with the template string as the argument (with extra
+   * handling). In this case, operand would be "foo", which is the callsite.
+   *
+   * We store this operand in the TemplateLiteralExpressionTree and
+   * generate a CALL node if it's not null later when transpiling.
+   *
+   * @param operand A non-null value would represent the callsite
+   * @return The template literal expression
+   */
+  private TemplateLiteralExpressionTree parseTemplateLiteral(ParseTree operand) {
+    SourcePosition start = operand == null
+        ? getTreeStartLocation()
+        : operand.location.start;
+    Token token = nextToken();
+    ImmutableList.Builder<ParseTree> elements = ImmutableList.builder();
+    elements.add(new TemplateLiteralPortionTree(token.location, token));
+    if (token.type == TokenType.NO_SUBSTITUTION_TEMPLATE) {
+      return new TemplateLiteralExpressionTree(
+          getTreeLocation(start), operand, elements.build());
+    }
+
+    // `abc${
+    ParseTree expression = parseExpression();
+    elements.add(new TemplateSubstitutionTree(expression.location, expression));
+    while (!errorReporter.hadError()) {
+      token = nextTemplateLiteralToken();
+      if (token.type == TokenType.ERROR || token.type == TokenType.END_OF_FILE) {
+        break;
+      }
+
+      elements.add(new TemplateLiteralPortionTree(token.location, token));
+      if (token.type == TokenType.TEMPLATE_TAIL) {
+        break;
+      }
+
+      expression = parseExpression();
+      elements.add(new TemplateSubstitutionTree(expression.location, expression));
+    }
+
+    return new TemplateLiteralExpressionTree(
+        getTreeLocation(start), operand, elements.build());
   }
 
   private Token nextLiteralToken() {
@@ -1593,36 +1641,37 @@ public class Parser {
 
   private boolean peekExpression() {
     switch (peekType()) {
-    case BANG:
-    case CLASS:
-    case DELETE:
-    case FALSE:
-    case FUNCTION:
-    case IDENTIFIER:
-    case MINUS:
-    case MINUS_MINUS:
-    case NEW:
-    case NULL:
-    case NUMBER:
-    case OPEN_CURLY:
-    case OPEN_PAREN:
-    case OPEN_SQUARE:
-    case PLUS:
-    case PLUS_PLUS:
-    case SLASH: // regular expression literal
-    case SLASH_EQUAL:
-    case STRING:
-    case TEMPLATE_STRING:
-    case SUPER:
-    case THIS:
-    case TILDE:
-    case TRUE:
-    case TYPEOF:
-    case VOID:
-    case YIELD:
-      return true;
-    default:
-      return false;
+      case BANG:
+      case CLASS:
+      case DELETE:
+      case FALSE:
+      case FUNCTION:
+      case IDENTIFIER:
+      case MINUS:
+      case MINUS_MINUS:
+      case NEW:
+      case NULL:
+      case NUMBER:
+      case OPEN_CURLY:
+      case OPEN_PAREN:
+      case OPEN_SQUARE:
+      case PLUS:
+      case PLUS_PLUS:
+      case SLASH: // regular expression literal
+      case SLASH_EQUAL:
+      case STRING:
+      case NO_SUBSTITUTION_TEMPLATE:
+      case TEMPLATE_HEAD:
+      case SUPER:
+      case THIS:
+      case TILDE:
+      case TRUE:
+      case TYPEOF:
+      case VOID:
+      case YIELD:
+        return true;
+      default:
+        return false;
     }
   }
 
@@ -1994,6 +2043,9 @@ public class Parser {
           IdentifierToken id = eatIdOrKeywordAsId();
           operand = new MemberExpressionTree(getTreeLocation(start), operand, id);
           break;
+        case NO_SUBSTITUTION_TEMPLATE:
+        case TEMPLATE_HEAD:
+          operand = parseTemplateLiteral(operand);
         }
       }
     }
@@ -2003,7 +2055,9 @@ public class Parser {
   private boolean peekCallSuffix() {
     return peek(TokenType.OPEN_PAREN)
         || peek(TokenType.OPEN_SQUARE)
-        || peek(TokenType.PERIOD);
+        || peek(TokenType.PERIOD)
+        || peek(TokenType.NO_SUBSTITUTION_TEMPLATE)
+        || peek(TokenType.TEMPLATE_HEAD);
   }
 
   // 11.2 Member Expression without the new production
@@ -2016,23 +2070,34 @@ public class Parser {
       operand = parsePrimaryExpression();
     }
     while (peekMemberExpressionSuffix()) {
-      if (peek(TokenType.OPEN_SQUARE)) {
-        eat(TokenType.OPEN_SQUARE);
-        ParseTree member = parseExpression();
-        eat(TokenType.CLOSE_SQUARE);
-        operand = new MemberLookupExpressionTree(
-            getTreeLocation(start), operand, member);
-      } else {
-        eat(TokenType.PERIOD);
-        IdentifierToken id = eatIdOrKeywordAsId();
-        operand = new MemberExpressionTree(getTreeLocation(start), operand, id);
+      switch (peekType()) {
+        case OPEN_SQUARE:
+          eat(TokenType.OPEN_SQUARE);
+          ParseTree member = parseExpression();
+          eat(TokenType.CLOSE_SQUARE);
+          operand = new MemberLookupExpressionTree(
+              getTreeLocation(start), operand, member);
+          break;
+        case PERIOD:
+          eat(TokenType.PERIOD);
+          IdentifierToken id = eatIdOrKeywordAsId();
+          operand = new MemberExpressionTree(getTreeLocation(start), operand, id);
+          break;
+        case NO_SUBSTITUTION_TEMPLATE:
+        case TEMPLATE_HEAD:
+          operand = parseTemplateLiteral(operand);
+          break;
+        default:
+          throw new RuntimeException("unreachable");
       }
     }
     return operand;
   }
 
   private boolean peekMemberExpressionSuffix() {
-    return peek(TokenType.OPEN_SQUARE) || peek(TokenType.PERIOD);
+    return peek(TokenType.OPEN_SQUARE) || peek(TokenType.PERIOD)
+        || peek(TokenType.NO_SUBSTITUTION_TEMPLATE)
+        || peek(TokenType.TEMPLATE_HEAD);
   }
 
   // 11.2 New Expression
@@ -2498,6 +2563,15 @@ public class Parser {
    */
   private LiteralToken nextRegularExpressionLiteralToken() {
     LiteralToken lastToken = scanner.nextRegularExpressionLiteralToken();
+    this.lastToken = lastToken;
+    return lastToken;
+  }
+
+  /**
+   * Consumes a template literal token and returns it.
+   */
+  private LiteralToken nextTemplateLiteralToken() {
+    LiteralToken lastToken = scanner.nextTemplateLiteralToken();
     this.lastToken = lastToken;
     return lastToken;
   }

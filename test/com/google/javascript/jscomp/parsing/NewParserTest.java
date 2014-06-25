@@ -1355,6 +1355,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse(s);
   }
 
+  public void testUseTemplateString() {
+    testTemplateString("f`hello world`;");
+    testTemplateString("`hello ${name} ${world}`.length;");
+  }
+
   public void testTemplateString() {
     testTemplateString("`hello world`;");
     testTemplateString("`hello\nworld`;");
@@ -1363,10 +1368,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testTemplateStringPlaceholder() {
     mode = LanguageMode.ECMASCRIPT6;
-
-    parse("`hello \\${name}`;");
-    parseWarning("`hello ${name}`;",
-        "Placeholders in template strings are not supported yet.");
+    parse("`hello ${name}`;");
+    parse("`hello ${name} ${world}`;");
+    parse("`hello ${name }`");
+    parseError("`hello ${name", "Expected '}' after expression in template literal");
+    parseError("`hello ${name tail}", "Expected '}' after expression in template literal");
   }
 
   public void testUnterminatedTemplateString() {

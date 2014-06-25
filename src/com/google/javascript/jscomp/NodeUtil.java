@@ -1377,6 +1377,7 @@ public final class NodeUtil {
       case Token.THIS:
       case Token.SUPER:
       case Token.TRUE:
+      case Token.TEMPLATELIT:
         return 15;
       case Token.CAST:
         return 16;

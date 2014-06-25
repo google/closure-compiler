@@ -127,6 +127,17 @@ public class Scanner {
         getTokenRange(beginToken));
   }
 
+  public LiteralToken nextTemplateLiteralToken() {
+    Token token = nextToken();
+    if (isAtEnd() || token.type != TokenType.CLOSE_CURLY) {
+      reportError(getPosition(index),
+          "Expected '}' after expression in template literal");
+    }
+
+    return nextTemplateLiteralTokenShared(
+        TokenType.TEMPLATE_TAIL, TokenType.TEMPLATE_MIDDLE);
+  }
+
   private boolean skipRegularExpressionBody() {
     if (!isRegularExpressionFirstChar(peekChar())) {
       reportError("Expected regular expression first char");
@@ -720,23 +731,38 @@ public class Scanner {
   }
 
   private Token scanTemplateString(int beginIndex) {
-    while (peekTemplateStringChar()) {
-      if (!skipStringLiteralChar()) {
-        return new LiteralToken(
-            TokenType.TEMPLATE_STRING, getTokenString(beginIndex), getTokenRange(beginIndex));
-      }
-    }
-    if (peekChar() != '`') {
+    if (isAtEnd()) {
       reportError(getPosition(beginIndex), "Unterminated template string");
-    } else {
-      nextChar();
     }
-    return new LiteralToken(
-        TokenType.TEMPLATE_STRING, getTokenString(beginIndex), getTokenRange(beginIndex));
+
+    return nextTemplateLiteralTokenShared(
+        TokenType.NO_SUBSTITUTION_TEMPLATE, TokenType.TEMPLATE_HEAD);
+  }
+
+  private LiteralToken nextTemplateLiteralTokenShared(TokenType endType,
+      TokenType middleType) {
+    int beginIndex = index;
+    skipTemplateCharacters();
+    if (isAtEnd()) {
+      reportError(getPosition(beginIndex), "Unterminated template string");
+    }
+
+    String value = getTokenString(beginIndex);
+    switch (peekChar()) {
+      case '`':
+        nextChar();
+        return new LiteralToken(endType, value, getTokenRange(beginIndex - 1));
+      case '$':
+        nextChar(); // $
+        nextChar(); // {
+        return new LiteralToken(middleType, value, getTokenRange(beginIndex - 1));
+      default: // Should have reported error already
+        return new LiteralToken(endType, value, getTokenRange(beginIndex - 1));
+    }
   }
 
   private String getTokenString(int beginIndex) {
-    return this.source.contents.substring(beginIndex, this.index);
+    return this.source.contents.substring(beginIndex, index);
   }
 
   private boolean peekStringLiteralChar(char terminator) {
@@ -751,8 +777,23 @@ public class Scanner {
     return true;
   }
 
-  private boolean peekTemplateStringChar() {
-    return !isAtEnd() && peekChar() != '`';
+  private void skipTemplateCharacters() {
+    while (!isAtEnd()) {
+      switch(peekChar()) {
+        case '`':
+          return;
+        case '\\':
+          skipStringLiteralEscapeSequence();
+          break;
+        case '$':
+          if (peekChar(1) == '{') {
+            return;
+          }
+          // Fall through.
+        default:
+          nextChar();
+      }
+    }
   }
 
   private boolean skipStringLiteralEscapeSequence() {
