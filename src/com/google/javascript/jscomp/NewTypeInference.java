@@ -2560,7 +2560,7 @@ public class NewTypeInference implements CompilerPass {
   private EnvTypePair analyzeCallNodeArgumentsBwd(
       Node callNode, TypeEnv outEnv) {
     TypeEnv env = outEnv;
-    for (int i = callNode.getChildCount() - 1; i >= 0; i--) {
+    for (int i = callNode.getChildCount() - 1; i > 0; i--) {
       Node arg = callNode.getChildAtIndex(i);
       env = analyzeExprBwd(arg, env).env;
     }
