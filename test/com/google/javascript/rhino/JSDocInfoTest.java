@@ -47,6 +47,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -430,6 +431,27 @@ public class JSDocInfoTest extends TestCase {
     info = new JSDocInfo(true);
     info.setModifies(Sets.newHashSet("arguments"));
     assertEquals(Sets.newHashSet("arguments"), info.getModifies());
+  }
+
+  public void testAddSingleTemplateTypeName(){
+    JSDocInfo info = new JSDocInfo(true);
+    ImmutableList<String> typeNames = ImmutableList.of("T");
+    assertTrue(info.declareTemplateTypeName("T"));
+    assertEquals(typeNames, info.getTemplateTypeNames());
+  }
+
+  public void testAddMultipleTemplateTypeName(){
+    JSDocInfo info = new JSDocInfo(true);
+    ImmutableList<String> typeNames = ImmutableList.of("T", "R");
+    info.declareTemplateTypeName("T");
+    info.declareTemplateTypeName("R");
+    assertEquals(typeNames, info.getTemplateTypeNames());
+  }
+
+  public void testFailToAddTemplateTypeName(){
+    JSDocInfo info = new JSDocInfo(true);
+    info.declareTemplateTypeName("T");
+    assertFalse(info.declareTemplateTypeName("T"));
   }
 
   /** Gets the type expression for a simple type name. */

@@ -886,13 +886,13 @@ public final class JsDocInfoParser {
           if (names.size() == 1 && names.get(0).isEmpty()) {
             parser.addTypeWarning("msg.jsdoc.templatemissing",
                   stream.getLineno(), stream.getCharno());
-          } else if (!jsdocBuilder.recordTemplateTypeNames(names)) {
-            parser.addTypeWarning("msg.jsdoc.template.at.most.once",
-                stream.getLineno(), stream.getCharno());
           } else {
             for (String typeName : names) {
               if (!validTemplateTypeName(typeName)) {
                 parser.addTypeWarning("msg.jsdoc.template.invalid.type.name",
+                    stream.getLineno(), stream.getCharno());
+              } else if (!jsdocBuilder.recordTemplateTypeName(typeName)) {
+                parser.addTypeWarning("msg.jsdoc.template.name.declared.twice",
                     stream.getLineno(), stream.getCharno());
               }
             }

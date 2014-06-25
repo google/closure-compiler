@@ -1769,6 +1769,7 @@ class GlobalTypeInfo implements CompilerPass {
       localTypedefs.put(name, td);
     }
 
+    @Override
     public Typedef getTypedef(String name) {
       if (isDefinedLocally(name)) {
         return localTypedefs.get(name);
@@ -1784,6 +1785,7 @@ class GlobalTypeInfo implements CompilerPass {
       localEnums.put(name, e);
     }
 
+    @Override
     public EnumType getEnum(String name) {
       if (isDefinedLocally(name)) {
         return localEnums.get(name);

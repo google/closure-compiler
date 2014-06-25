@@ -2847,11 +2847,6 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. @template tag missing type name");
   }
 
-  public void testParserWithTemplateDuplicated() {
-    parse("@template T\n@template V */",
-        "Bad type annotation. @template tag at most once");
-  }
-
   public void testParserWithTwoTemplates() {
     parse("@template T,V */");
   }
@@ -2864,6 +2859,35 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithValidAndInvalidTemplateType() {
     parse("@template S, {T} */",
         "Bad type annotation. Invalid type name(s) for @template annotation");
+  }
+
+  public void testParserWithTemplateDuplicated() {
+    parse("@template T\n@template V */");
+  }
+
+  public void testParserWithTemplateDuplicated2() {
+    parse("@template T,R\n@template V,U */");
+  }
+
+  public void testParserWithTemplateDuplicated3() {
+    parse("@template T\n@param {string} x\n@template V */");
+  }
+
+  public void testParserWithDoubleTemplateDeclaration() {
+    parse("@template T\n@template T */",
+        "Bad type annotation. Type name(s) for "
+        + "@template annotation declared twice");
+  }
+
+  public void testParserWithDoubleTemplateDeclaration2() {
+    parse("@template T,T */",
+        "Bad type annotation. Type name(s) for "
+        + "@template annotation declared twice");
+  }
+
+  public void testParserWithTemplateDuplicatedTypeNameMissing() {
+    parse("@template T,R\n@template */",
+        "Bad type annotation. @template tag missing type name");
   }
 
   public void testWhitelistedNewAnnotations() {
