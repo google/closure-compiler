@@ -74,6 +74,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   // The name of the property-copying function, defined in runtime_lib.js
   public static final String COPY_PROP = "$jscomp$copy$properties";
 
+  private static final String INHERITS = "$jscomp$inherits";
+
   public Es6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
@@ -557,12 +559,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             IR.string(superClassString)),
             superClassName.getSourceFileName()));
       } else {
-        // TODO(mattloring) Remove dependency on Closure Library.
-        Node inherits = NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(),
-            "goog.inherits");
-        Node inheritsCall = IR.exprResult(IR.call(inherits,
+        Node inherits = IR.call(IR.name(INHERITS),
             NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), fullClassName),
-            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), superClassString)));
+            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), superClassString));
+        inherits.putBooleanProp(Node.FREE_CALL, true);
+        Node inheritsCall = IR.exprResult(inherits);
         inheritsCall.useSourceInfoIfMissingFromForTree(classNode);
         Node enclosingStatement = NodeUtil.getEnclosingStatement(classNode);
         enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
