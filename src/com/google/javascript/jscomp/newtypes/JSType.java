@@ -62,6 +62,19 @@ public abstract class JSType {
   // eg, it can be a prop of a formal whose decl type is a record type.
   static String GENERIC_LOCATION = "%";
 
+  private static JSType makeType(int mask, String location,
+      ImmutableSet<ObjectType> objs, String typeVar,
+      ImmutableSet<EnumType> enums) {
+    if (objs == null && typeVar == null && enums == null && location == null) {
+      return MaskType.make(mask);
+    }
+    return new UnionType(mask, location, objs, typeVar, enums);
+  }
+
+  private static JSType makeType(int mask) {
+    return makeType(mask, null, null, null, null);
+  }
+
   protected abstract int getMask();
 
   protected abstract ImmutableSet<ObjectType> getObjs();
@@ -74,20 +87,20 @@ public abstract class JSType {
 
   // Factory method for wrapping a function in a JSType
   public static JSType fromFunctionType(FunctionType fn) {
-    return new UnionType(NON_SCALAR_MASK, null,
+    return makeType(NON_SCALAR_MASK, null,
         ImmutableSet.of(ObjectType.fromFunction(fn)), null, null);
   }
 
   public static JSType fromObjectType(ObjectType obj) {
-    return new UnionType(NON_SCALAR_MASK, null, ImmutableSet.of(obj), null, null);
+    return makeType(NON_SCALAR_MASK, null, ImmutableSet.of(obj), null, null);
   }
 
   public static JSType fromTypeVar(String template) {
-    return new UnionType(TYPEVAR_MASK, null, null, template, null);
+    return makeType(TYPEVAR_MASK, null, null, template, null);
   }
 
   static JSType fromEnum(EnumType e) {
-    return new UnionType(ENUM_MASK, null, null, null, ImmutableSet.of(e));
+    return makeType(ENUM_MASK, null, null, null, ImmutableSet.of(e));
   }
 
   boolean isValidType() {
@@ -111,19 +124,19 @@ public abstract class JSType {
     return ((getMask() & TYPEVAR_MASK) != 0) == (getTypeVar() != null);
   }
 
-  public static final JSType BOOLEAN = new UnionType(TRUE_MASK | FALSE_MASK);
-  public static final JSType BOTTOM = new UnionType(BOTTOM_MASK);
-  public static final JSType FALSE_TYPE = new UnionType(FALSE_MASK);
-  public static final JSType FALSY = new UnionType(FALSY_MASK);
-  public static final JSType NULL = new UnionType(NULL_MASK);
-  public static final JSType NUMBER = new UnionType(NUMBER_MASK);
-  public static final JSType STRING = new UnionType(STRING_MASK);
-  public static final JSType TOP = new UnionType(TOP_MASK);
-  public static final JSType TOP_SCALAR = new UnionType(TOP_SCALAR_MASK);
-  public static final JSType TRUE_TYPE = new UnionType(TRUE_MASK);
-  public static final JSType TRUTHY = new UnionType(TRUTHY_MASK);
-  public static final JSType UNDEFINED = new UnionType(UNDEFINED_MASK);
-  public static final JSType UNKNOWN = new UnionType(UNKNOWN_MASK);
+  public static final JSType BOOLEAN = new MaskType(TRUE_MASK | FALSE_MASK);
+  public static final JSType BOTTOM = new MaskType(BOTTOM_MASK);
+  public static final JSType FALSE_TYPE = new MaskType(FALSE_MASK);
+  public static final JSType FALSY = new MaskType(FALSY_MASK);
+  public static final JSType NULL = new MaskType(NULL_MASK);
+  public static final JSType NUMBER = new MaskType(NUMBER_MASK);
+  public static final JSType STRING = new MaskType(STRING_MASK);
+  public static final JSType TOP = new MaskType(TOP_MASK);
+  public static final JSType TOP_SCALAR = makeType(TOP_SCALAR_MASK);
+  public static final JSType TRUE_TYPE = new MaskType(TRUE_MASK);
+  public static final JSType TRUTHY = new MaskType(TRUTHY_MASK);
+  public static final JSType UNDEFINED = new MaskType(UNDEFINED_MASK);
+  public static final JSType UNKNOWN = new MaskType(UNKNOWN_MASK);
 
   public static final JSType TOP_OBJECT = fromObjectType(ObjectType.TOP_OBJECT);
   public static final JSType TOP_STRUCT = fromObjectType(ObjectType.TOP_STRUCT);
@@ -132,12 +145,12 @@ public abstract class JSType {
 
   // Some commonly used types
   public static final JSType NULL_OR_UNDEF =
-      new UnionType(NULL_MASK | UNDEFINED_MASK);
+      new MaskType(NULL_MASK | UNDEFINED_MASK);
   public static final JSType NUM_OR_STR =
-      new UnionType(NUMBER_MASK | STRING_MASK);
+      new MaskType(NUMBER_MASK | STRING_MASK);
 
   // Explicitly contains most types. Used only by removeType.
-  private static final JSType ALMOST_TOP = new UnionType(
+  private static final JSType ALMOST_TOP = makeType(
       TRUE_MASK | FALSE_MASK | NUMBER_MASK | STRING_MASK | NULL_MASK |
       UNDEFINED_MASK | NON_SCALAR_MASK,
       null, ImmutableSet.of(ObjectType.TOP_OBJECT), null, null);
@@ -335,11 +348,11 @@ public abstract class JSType {
     ImmutableSet<EnumType> newEnums =
         EnumType.union(lhs.getEnums(), rhs.getEnums());
     if (newEnums == null) {
-      return new UnionType(newMask, newLoc, newObjs, newTypevar, null);
+      return makeType(newMask, newLoc, newObjs, newTypevar, null);
     }
-    JSType tmpJoin = new UnionType(
+    JSType tmpJoin = makeType(
         newMask & ~ENUM_MASK, newLoc, newObjs, newTypevar, null);
-    return new UnionType(newMask, newLoc, newObjs, newTypevar,
+    return makeType(newMask, newLoc, newObjs, newTypevar,
         EnumType.normalizeForJoin(newEnums, tmpJoin));
   }
 
@@ -363,7 +376,7 @@ public abstract class JSType {
       }
       newObjs = builder.build();
     }
-    JSType current = new UnionType(
+    JSType current = makeType(
         getMask() & ~TYPEVAR_MASK, getLocation(), newObjs, null, getEnums());
     if ((getMask() & TYPEVAR_MASK) != 0) {
       current = JSType.join(current, concreteTypes.containsKey(getTypeVar()) ?
@@ -461,7 +474,7 @@ public abstract class JSType {
     if (!ununified.isEmpty()) {
       return null;
     }
-    return new UnionType(t1Mask, null, ImmutableSet.copyOf(unifiedObjs),
+    return makeType(t1Mask, null, ImmutableSet.copyOf(unifiedObjs),
         t1.getTypeVar(), newEnums);
   }
 
@@ -480,7 +493,7 @@ public abstract class JSType {
     } else if (getMask() == TYPEVAR_MASK
         && typeParameters.contains(getTypeVar())) {
       updateTypemap(typeMultimap, getTypeVar(),
-          new UnionType(promoteBoolean(other.getMask()), null, other.getObjs(),
+          makeType(promoteBoolean(other.getMask()), null, other.getObjs(),
               other.getTypeVar(), other.getEnums()));
       return true;
     } else if (other.isTop()) {
@@ -553,7 +566,7 @@ public abstract class JSType {
         // nothing left in other to assign to thisTypevar
         return false;
       }
-      JSType templateType = new UnionType(
+      JSType templateType = makeType(
           promoteBoolean(templateMask), null,
           ImmutableSet.copyOf(ununified), otherTypevar,
           ununifiedEnums == null ? null : ImmutableSet.copyOf(ununifiedEnums));
@@ -612,7 +625,8 @@ public abstract class JSType {
     return meetEnums(
         newMask, lhs.getMask() | rhs.getMask(), null,
         ObjectType.meetSets(lhs.getObjs(), rhs.getObjs()),
-        newTypevar, lhs.getObjs(), rhs.getObjs(), lhs.getEnums(), rhs.getEnums());
+        newTypevar, lhs.getObjs(), rhs.getObjs(),
+        lhs.getEnums(), rhs.getEnums());
   }
 
   /**
@@ -625,7 +639,7 @@ public abstract class JSType {
       ImmutableSet<ObjectType> objs1, ImmutableSet<ObjectType> objs2,
       ImmutableSet<EnumType> enums1, ImmutableSet<EnumType> enums2) {
     if (Objects.equal(enums1, enums2)) {
-      return new UnionType(newMask, newLocation, newObjs, newTypevar, enums1);
+      return makeType(newMask, newLocation, newObjs, newTypevar, enums1);
     }
     ImmutableSet.Builder<EnumType> enumBuilder = ImmutableSet.builder();
     ImmutableSet<EnumType> allEnums = EnumType.union(enums1, enums2);
@@ -675,7 +689,7 @@ public abstract class JSType {
         }
       }
     }
-    return new UnionType(
+    return makeType(
         newMask, newLocation, newObjs, newTypevar, enumBuilder.build());
   }
 
@@ -683,7 +697,7 @@ public abstract class JSType {
     if (this.isTop() || this.isUnknown()) {
       return this;
     }
-    return new UnionType(getMask() & ~NULL_MASK & ~FALSE_MASK & ~UNDEFINED_MASK,
+    return makeType(getMask() & ~NULL_MASK & ~FALSE_MASK & ~UNDEFINED_MASK,
         getLocation(), getObjs(), getTypeVar(), getEnums());
   }
 
@@ -691,7 +705,7 @@ public abstract class JSType {
     if (this.isTop() || this.isUnknown()) {
       return this;
     }
-    return new UnionType(getMask() & ~TRUE_MASK & ~NON_SCALAR_MASK,
+    return makeType(getMask() & ~TRUE_MASK & ~NON_SCALAR_MASK,
         getLocation(), null, getTypeVar(), getEnums());
   }
 
@@ -701,7 +715,7 @@ public abstract class JSType {
         && (rhs.getMask() & ~STRING_MASK) != 0) {
       newtype |= NUMBER_MASK;
     }
-    return new UnionType(newtype);
+    return makeType(newtype);
   }
 
   public JSType negate() {
@@ -770,7 +784,7 @@ public abstract class JSType {
     }
     int newMask = getMask() & ~otherMask;
     if ((otherMask & NON_SCALAR_MASK) == 0) {
-      return new UnionType(
+      return makeType(
           newMask, getLocation(), getObjs(), getTypeVar(), getEnums());
     }
     // TODO(dimvar): If objs and enums stay unchanged, reuse, don't recreate.
@@ -797,7 +811,7 @@ public abstract class JSType {
       }
       newEnums = builder.build();
     }
-    return new UnionType(newMask, getLocation(), newObjs, getTypeVar(), newEnums);
+    return makeType(newMask, getLocation(), newObjs, getTypeVar(), newEnums);
   }
 
   public JSType withLocation(String location) {
@@ -805,7 +819,7 @@ public abstract class JSType {
       return this;
     }
     String newLoc = location == null ? null : JSType.GENERIC_LOCATION;
-    return new UnionType(getMask(), location,
+    return makeType(getMask(), location,
         getObjs() == null ? null : ObjectType.withLocation(getObjs(), newLoc),
         getTypeVar(), getEnums());
   }
@@ -852,7 +866,7 @@ public abstract class JSType {
       Preconditions.checkState(getEnums() != null);
       return this;
     }
-    return new UnionType(
+    return makeType(
         getMask(), getLocation(),
         ObjectType.withLooseObjects(getObjs()), getTypeVar(), getEnums());
   }
@@ -901,7 +915,7 @@ public abstract class JSType {
   public JSType withoutProperty(QualifiedName qname) {
     return getObjs() == null ?
         this :
-        new UnionType(getMask(), getLocation(),
+        makeType(getMask(), getLocation(),
             ObjectType.withoutProperty(getObjs(), qname),
             getTypeVar(), getEnums());
   }
@@ -912,7 +926,7 @@ public abstract class JSType {
       return this;
     }
     Preconditions.checkState(getObjs() != null);
-    return new UnionType(getMask(), getLocation(),
+    return makeType(getMask(), getLocation(),
         ObjectType.withProperty(getObjs(), qname, type),
         getTypeVar(), getEnums());
   }
@@ -923,7 +937,7 @@ public abstract class JSType {
     if (type == null && isConstant) {
       type = JSType.UNKNOWN;
     }
-    return new UnionType(getMask(), null,
+    return makeType(getMask(), null,
         ObjectType.withDeclaredProperty(getObjs(), qname, type, isConstant),
         getTypeVar(), getEnums());
   }
@@ -931,7 +945,7 @@ public abstract class JSType {
   public JSType withPropertyRequired(String pname) {
     return (isUnknown() || getObjs() == null) ?
         this :
-        new UnionType(getMask(), getLocation(),
+        makeType(getMask(), getLocation(),
             ObjectType.withPropertyRequired(getObjs(), pname),
             getTypeVar(), getEnums());
   }
@@ -1023,7 +1037,8 @@ public abstract class JSType {
               }
               case ENUM_MASK: {
                 if (getEnums().size() == 1) {
-                  builder.append(Iterables.getOnlyElement(getEnums()).toString());
+                  builder.append(
+                      Iterables.getOnlyElement(getEnums()).toString());
                 } else {
                   Set<String> strReps = Sets.newTreeSet();
                   for (EnumType e : getEnums()) {
@@ -1135,5 +1150,113 @@ final class UnionType extends JSType {
 
   public String getLocation() {
     return location;
+  }
+}
+
+class MaskType extends JSType {
+  // Masks for common types:
+  private static final int NUMBER_OR_STRING_MASK = NUMBER_MASK | STRING_MASK;
+  // union of undefined and stuff
+  private static final int UNDEFINED_OR_BOOLEAN_MASK =
+      UNDEFINED_MASK | TRUE_MASK | FALSE_MASK;
+  private static final int UNDEFINED_OR_NUMBER_MASK =
+      UNDEFINED_MASK | NUMBER_MASK;
+  private static final int UNDEFINED_OR_STRING_MASK =
+      UNDEFINED_MASK | STRING_MASK;
+  private static final int UNDEFINED_OR_NULL_MASK = UNDEFINED_MASK | NULL_MASK;
+  // union of null and stuff
+  private static final int NULL_OR_BOOLEAN_MASK =
+      NULL_MASK | TRUE_MASK | FALSE_MASK;
+  private static final int NULL_OR_NUMBER_MASK = NULL_MASK | NUMBER_MASK;
+  private static final int NULL_OR_STRING_MASK = NULL_MASK | STRING_MASK;
+
+  private static final MaskType NUMBER_OR_STRING =
+      new MaskType(NUMBER_OR_STRING_MASK);
+  private static final MaskType UNDEFINED_OR_BOOLEAN =
+      new MaskType(UNDEFINED_OR_BOOLEAN_MASK);
+  private static final MaskType UNDEFINED_OR_NUMBER =
+      new MaskType(UNDEFINED_OR_NUMBER_MASK);
+  private static final MaskType UNDEFINED_OR_STRING =
+      new MaskType(UNDEFINED_OR_STRING_MASK);
+  private static final MaskType UNDEFINED_OR_NULL =
+      new MaskType(UNDEFINED_OR_NULL_MASK);
+  private static final MaskType NULL_OR_BOOLEAN =
+      new MaskType(NULL_OR_BOOLEAN_MASK);
+  private static final MaskType NULL_OR_NUMBER =
+      new MaskType(NULL_OR_NUMBER_MASK);
+  private static final MaskType NULL_OR_STRING =
+      new MaskType(NULL_OR_STRING_MASK);
+
+  protected final int mask;
+
+  MaskType(int mask) {
+    this.mask = mask;
+  }
+
+  static JSType make(int mask) {
+    switch (mask) {
+      case BOTTOM_MASK:
+        return JSType.BOTTOM;
+      case TRUE_MASK:
+        return JSType.TRUE_TYPE;
+      case FALSE_MASK:
+        return JSType.FALSE_TYPE;
+      case NULL_MASK:
+        return JSType.NULL;
+      case NUMBER_MASK:
+        return JSType.NUMBER;
+      case STRING_MASK:
+        return JSType.STRING;
+      case UNDEFINED_MASK:
+        return JSType.UNDEFINED;
+      case TRUTHY_MASK:
+        return JSType.TRUTHY;
+      case FALSY_MASK:
+        return JSType.FALSY;
+      case UNKNOWN_MASK:
+        return JSType.UNKNOWN;
+      case TOP_MASK:
+        return JSType.TOP;
+      case BOOLEAN_MASK:
+        return JSType.BOOLEAN;
+      case NUMBER_OR_STRING_MASK:
+        return NUMBER_OR_STRING;
+      case UNDEFINED_OR_BOOLEAN_MASK:
+        return UNDEFINED_OR_BOOLEAN;
+      case UNDEFINED_OR_NUMBER_MASK:
+        return UNDEFINED_OR_NUMBER;
+      case UNDEFINED_OR_STRING_MASK:
+        return UNDEFINED_OR_STRING;
+      case UNDEFINED_OR_NULL_MASK:
+        return UNDEFINED_OR_NULL;
+      case NULL_OR_BOOLEAN_MASK:
+        return NULL_OR_BOOLEAN;
+      case NULL_OR_NUMBER_MASK:
+        return NULL_OR_NUMBER;
+      case NULL_OR_STRING_MASK:
+        return NULL_OR_STRING;
+      default:
+        return new MaskType(mask);
+    }
+  }
+
+  protected int getMask() {
+    return mask;
+  }
+
+  protected ImmutableSet<ObjectType> getObjs() {
+    return null;
+  }
+
+  protected String getTypeVar() {
+    return null;
+  }
+
+  protected ImmutableSet<EnumType> getEnums() {
+    return null;
+  }
+
+  public String getLocation() {
+    return null;
   }
 }
