@@ -203,11 +203,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   }
 
   private void checkClassReassignment(Node clazz) {
+    Node name = NodeUtil.getClassNameNode(clazz);
     Node enclosingFunction = getEnclosingFunction(clazz);
     if (enclosingFunction == null) {
       return;
     }
-    Node name = NodeUtil.getClassNameNode(clazz);
     CheckClassAssignments checkAssigns = new CheckClassAssignments(name);
     NodeTraversal.traverse(compiler, enclosingFunction, checkAssigns);
   }
@@ -245,11 +245,13 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     } else {
       methodName = IR.string(callName.getLastChild().getString()).srcref(enclosing);
     }
-    boolean inFunction = isInFunction(clazz);
-    String uniqueClassString = inFunction ? NodeUtil.getClassName(clazz)
-        : getUniqueClassName(NodeUtil.getClassName(clazz));
-    Node uniqueClassName = IR.name(uniqueClassString);
-    Node base = IR.getprop(uniqueClassName.srcref(enclosing),
+    boolean useUnique = NodeUtil.isStatement(clazz) && !isInFunction(clazz);
+    String uniqueClassString = useUnique ? getUniqueClassName(NodeUtil.getClassName(clazz))
+        : NodeUtil.getClassName(clazz);
+    Node uniqueClassName = NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(),
+        uniqueClassString);
+    uniqueClassName.useSourceInfoIfMissingFromForTree(enclosing);
+    Node base = IR.getprop(uniqueClassName,
         IR.string("base").srcref(enclosing)).srcref(enclosing);
     enclosing.addChildToFront(methodName);
     enclosing.addChildToFront(IR.thisNode().srcref(enclosing));
