@@ -1763,81 +1763,120 @@ chrome.management = {};
 
 
 /**
- * @param {string} id
- * @param {function(ExtensionInfo): void} callback
+ * @typedef {?{
+ *   showConfirmDialog: (boolean|undefined)
+ * }}
  */
-chrome.management.get = function(id, callback) {};
+chrome.management.InstallOptions;
 
 
 /**
- * @param {function(Array.<ExtensionInfo>): void} callback Callback function.
- * @return {Array.<ExtensionInfo>}
+ * @param {string} id
+ * @param {function(!ExtensionInfo): void=} opt_callback Optional callback
+ *     function.
  */
-chrome.management.getAll = function(callback) {};
+chrome.management.get = function(id, opt_callback) {};
+
+
+/**
+ * @param {function(!Array.<!ExtensionInfo>): void=} opt_callback Optional
+ *     callback function.
+ * @return {!Array.<!ExtensionInfo>}
+ */
+chrome.management.getAll = function(opt_callback) {};
 
 
 /**
  * @param {string} id The id of an already installed extension.
- * @param {function(Array.<string>)=} opt_callback Optional callback function.
+ * @param {function(!Array.<string>)=} opt_callback Optional callback function.
  */
 chrome.management.getPermissionWarningsById = function(id, opt_callback) {};
 
 
 /**
  * @param {string} manifestStr Extension's manifest JSON string.
- * @param {function(Array.<string>)=} opt_callback An optional callback
- *     function.
+ * @param {function(!Array.<string>)=} opt_callback Optional callback function.
  */
 chrome.management.getPermissionWarningsByManifest =
     function(manifestStr, opt_callback) {};
 
 
 /**
- * @param {function(Array.<ExtensionInfo>): void} callback Callback function.
+ * @param {string} id The id of an already installed extension.
+ * @param {function(): void=} opt_callback Optional callback function.
  */
-chrome.management.launchApp = function(id, callback) {};
-
-
-/**
- * @param {string} id
- * @param {boolean} enabled
- * @param {function(): void} callback
- */
-chrome.management.setEnabled = function(id, enabled, callback) {};
+chrome.management.launchApp = function(id, opt_callback) {};
 
 
 /**
  * @param {string} id The id of an already installed extension.
- * @param {(Object|function(): void)=} opt_optionsOrCallback An optional
- *     uninstall options object or an optional callback function.
- * @param {function(): void=} opt_callback An optional callback function.
+ * @param {boolean} enabled Whether this item should be enabled.
+ * @param {function(): void=} opt_callback Optional callback function.
+ */
+chrome.management.setEnabled = function(id, enabled, opt_callback) {};
+
+
+/**
+ * @param {string} id The id of an already installed extension.
+ * @param {(!chrome.management.InstallOptions|function(): void)=}
+ *     opt_optionsOrCallback An optional uninstall options object or an optional
+ *     callback function.
+ * @param {function(): void=} opt_callback Optional callback function.
  */
 chrome.management.uninstall =
     function(id, opt_optionsOrCallback, opt_callback) {};
 
 
 /**
- * @param {(Object|function(): void)=} opt_optionsOrCallback An optional
- *     uninstall options object or an optional callback function.
+ * @param {(!chrome.management.InstallOptions|function(): void)=}
+ *     opt_optionsOrCallback An optional uninstall options object or an optional
+ *     callback function.
  * @param {function(): void=} opt_callback An optional callback function.
  */
 chrome.management.uninstallSelf =
     function(opt_optionsOrCallback, opt_callback) {};
 
 
-/** @type {ChromeEvent} */
+/**
+ * @param {string} id The id of an already installed extension.
+ * @param {function(): void=} opt_callback Optional callback function.
+ */
+chrome.management.createAppShortcut = function(id, opt_callback) {};
+
+
+/**
+ * @param {string} id The id of an already installed extension.
+ * @param {string} launchType The LaunchType enum value to set. Make sure this
+ *     value is in ExtensionInfo.availableLaunchTypes because the available
+ *     launch types vary on different platforms and configurations.
+ * @param {function(): void=} opt_callback Optional callback function.
+ */
+chrome.management.setLaunchType = function(id, launchType, opt_callback) {};
+
+
+/**
+ * @param {string} url The URL of a web page. The scheme of the URL can only be
+ *     "http" or "https".
+ * @param {string} title The title of the generated app.
+ * @param {function(!ExtensionInfo): void=} opt_callback Optional callback
+ *     function.
+ */
+chrome.management.generateAppForLink = function(url, title, opt_callback) {};
+
+
+/** @type {!ChromeExtensionInfoEvent} */
 chrome.management.onDisabled;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeExtensionInfoEvent} */
 chrome.management.onEnabled;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeExtensionInfoEvent} */
 chrome.management.onInstalled;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeStringEvent} */
 chrome.management.onUninstalled;
 
 
@@ -3258,7 +3297,7 @@ ExtensionInfo.prototype.mayDisable;
 ExtensionInfo.prototype.enabled;
 
 
-/** @type {string} */
+/** @type {string|undefined} */
 ExtensionInfo.prototype.disabledReason;
 
 
@@ -3266,15 +3305,15 @@ ExtensionInfo.prototype.disabledReason;
 ExtensionInfo.prototype.isApp;
 
 
-/** @type {string} */
+/** @type {string|undefined} */
 ExtensionInfo.prototype.appLaunchUrl;
 
 
-/** @type {string} */
+/** @type {string|undefined} */
 ExtensionInfo.prototype.homepageUrl;
 
 
-/** @type {string} */
+/** @type {string|undefined} */
 ExtensionInfo.prototype.updateUrl;
 
 
@@ -3286,7 +3325,7 @@ ExtensionInfo.prototype.offlineEnabled;
 ExtensionInfo.prototype.optionsUrl;
 
 
-/** @type {Array.<IconInfo>} */
+/** @type {!Array.<!IconInfo>|undefined} */
 ExtensionInfo.prototype.icons;
 
 
@@ -3296,6 +3335,18 @@ ExtensionInfo.prototype.permissions;
 
 /** @type {!Array.<string>} */
 ExtensionInfo.prototype.hostPermissions;
+
+
+/** @type {string} */
+ExtensionInfo.prototype.installType;
+
+
+/** @type {string|undefined} */
+ExtensionInfo.prototype.launchType;
+
+
+/** @type {!Array.<string>|undefined} */
+ExtensionInfo.prototype.availableLaunchTypes;
 
 
 
@@ -3430,22 +3481,23 @@ ChromeWindow.prototype.alwaysOnTop;
 function ChromeEvent() {}
 
 
-/** @param {Function} callback */
+/** @param {!Function} callback */
 ChromeEvent.prototype.addListener = function(callback) {};
 
 
-/** @param {Function} callback */
+/** @param {!Function} callback */
 ChromeEvent.prototype.removeListener = function(callback) {};
 
 
-// TODO: this returns boolean
-/** @param {Function} callback */
+/**
+ * @param {!Function} callback
+ * @return {boolean}
+ */
 ChromeEvent.prototype.hasListener = function(callback) {};
 
 
-// TODO: this returns boolean, and doesn't take any parameters
-/** @param {Function} callback */
-ChromeEvent.prototype.hasListeners = function(callback) {};
+/** @return {boolean} */
+ChromeEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -3573,6 +3625,33 @@ ChromeObjectEvent.prototype.hasListener = function(callback) {};
  * @return {boolean}
  */
 ChromeObjectEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * Event whose listeners take an ExtensionInfo parameter.
+ * @constructor
+ */
+function ChromeExtensionInfoEvent() {}
+
+
+/** @param {function(!ExtensionInfo): void} callback */
+ChromeExtensionInfoEvent.prototype.addListener = function(callback) {};
+
+
+/** @param {function(!ExtensionInfo): void} callback */
+ChromeExtensionInfoEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!ExtensionInfo): void} callback
+ * @return {boolean}
+ */
+ChromeExtensionInfoEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+ChromeExtensionInfoEvent.prototype.hasListeners = function() {};
 
 
 /**
