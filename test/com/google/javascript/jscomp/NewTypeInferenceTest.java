@@ -4317,6 +4317,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f() { return {}; }\n" +
         "f().x = 123;");
 
+    checkNoWarnings(
+        "function f() { return {}; }\n" +
+        "f().ns = {};");
+
     typeCheck(
         "/** @constructor */\n" +
         "function Foo() { /** @type {number} */ this.a = 123; }\n" +

@@ -587,7 +587,8 @@ class GlobalTypeInfo implements CompilerPass {
               || expr.isAssign() && expr.getFirstChild().isGetProp()) {
             Node getProp = expr.isGetProp() ? expr : expr.getFirstChild();
             if (NodeUtil.isPrototypeProperty(getProp)
-                || NodeUtil.referencesThis(getProp)) {
+                || NodeUtil.referencesThis(getProp)
+                || !getProp.isQualifiedName()) {
               // Class or prototype properties are handled later in ProcessScope
               return;
             }
