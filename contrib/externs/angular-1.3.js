@@ -406,6 +406,7 @@ angular.Directive.transclude;
  *   html: function(string=): (!angular.JQLite|string),
  *   inheritedData: function(string=, *=): *,
  *   injector: function(): !angular.$injector,
+ *   isolateScope: function(): (!angular.Scope|undefined),
  *   length: number,
  *   next: function(): !angular.JQLite,
  *   on: function(string, Function): !angular.JQLite,
