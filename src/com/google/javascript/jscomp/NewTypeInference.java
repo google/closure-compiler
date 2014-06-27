@@ -2228,7 +2228,8 @@ public class NewTypeInference implements CompilerPass {
    */
   private EnvTypePair analyzeExprBwd(
       Node expr, TypeEnv outEnv, JSType requiredType) {
-    Preconditions.checkArgument(requiredType != null);
+    Preconditions.checkArgument(requiredType != null,
+        "Required type null at: " + expr);
     Preconditions.checkArgument(!requiredType.isBottom());
     int exprKind = expr.getType();
     switch (exprKind) {

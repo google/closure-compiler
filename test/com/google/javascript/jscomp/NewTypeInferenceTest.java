@@ -5719,6 +5719,15 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
             VarCheck.UNDEFINED_VAR_ERROR));
   }
 
+  public void testInvalidEnumDeclarationDoesntCrash() {
+    typeCheck(
+        "var ns = {};\n" +
+        "function f() {\n" +
+        "  /** @enum {number} */ var EnumType = ns;\n" +
+        "}",
+        GlobalTypeInfo.MALFORMED_ENUM);
+  }
+
   public void testDebuggerStatementDoesntCrash() {
     checkNoWarnings("debugger;");
   }

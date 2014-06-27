@@ -862,8 +862,12 @@ class GlobalTypeInfo implements CompilerPass {
           // after we decide what to do with variables in general, eg, will we
           // use unique numeric ids?
           if (parent.isVar() || parent.isCatch()) {
-            if (NodeUtil.isNamespaceDecl(n) || NodeUtil.isTypedefDecl(parent)
-                || NodeUtil.isEnumDecl(parent)) {
+            if (NodeUtil.isNamespaceDecl(n) || NodeUtil.isTypedefDecl(n)
+                || NodeUtil.isEnumDecl(n)) {
+                if (!currentScope.isDefinedLocally(name)) {
+                  // Malformed enum or typedef
+                  currentScope.addLocal(name, JSType.UNKNOWN, false);
+                }
               break;
             }
             Node initializer = n.getFirstChild();
