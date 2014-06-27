@@ -7696,4 +7696,17 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var /** E.num */ x = 'str';",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testStringMethods() {
+    // TODO(blickly): This warning is spurious
+    typeCheck(
+        "/** @constructor */ function String(){}\n" +
+        "/** @this {String|string} */\n" +
+        "String.prototype.substr = function(start) {};\n" +
+        "/** @const */ var ns = {};\n" +
+        "/** @const */ var s = 'str';\n" +
+        "ns.r = s.substr(2);",
+        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+  }
+
 }

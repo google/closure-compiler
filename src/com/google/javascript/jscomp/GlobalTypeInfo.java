@@ -1284,8 +1284,10 @@ class GlobalTypeInfo implements CompilerPass {
             return null;
           }
           QualifiedName qname = new QualifiedName(n.getLastChild().getString());
-          JSType propType = recvType.getProp(qname);
-          return propType == null ? null : propType;
+          if (!recvType.mayHaveProp(qname)) {
+            return null;
+          }
+          return recvType.getProp(qname);
         case Token.COMMA:
           return simpleInferExprType(n.getLastChild());
         case Token.CALL:
