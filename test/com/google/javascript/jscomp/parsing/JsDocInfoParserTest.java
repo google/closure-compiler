@@ -2890,6 +2890,35 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. @template tag missing type name");
   }
 
+  public void testParserWithTypeTransformation() {
+    parse("@template T as\n type('string')*/");
+  }
+
+  public void testParserWithTypeTransformationNewline() {
+    parse("@template T as type('string')*/");
+  }
+
+  public void testParserWithTypeTransformationMultipleNames() {
+    parse("@template T, R as type('string')*/",
+        "Bad type annotation. "
+        + "Type transformation must be associated to a single type name");
+  }
+
+  public void testParserWithAsKeywordTwice() {
+    parse("@template S as type('number') as type('string')*/",
+        "Bad type annotation. "
+        + "Type transformation annotation must contain a single as");
+  }
+
+  public void testParserWithValidAsKeywordTwice() {
+    parse("@template Tas as type('string')*/");
+  }
+
+  public void testParserWithMissingTypeTransformationExpression() {
+    parse("@template T as*/",
+        "Bad type annotation. Missing type transformation expression");
+  }
+
   public void testWhitelistedNewAnnotations() {
     parse("@foobar */",
         "illegal use of unknown JSDoc tag \"foobar\"; ignoring it");

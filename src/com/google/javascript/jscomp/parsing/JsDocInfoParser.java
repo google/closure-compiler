@@ -877,11 +877,36 @@ public final class JsDocInfoParser {
           return token;
 
         case TEMPLATE: {
-          ExtractionInfo templateInfo = extractSingleLineBlock();
+          ExtractionInfo templateInfo = extractMultilineTextualBlock(token);
+          // Split the annotation with "as" to detect a type transformation
+          List<String> templateString =
+              Splitter.on(" as")
+              .trimResults()
+              .splitToList(templateInfo.string);
+
+          boolean isTypeTransformation = false;
+          // There is a type transformation if the "as" splits the text
+          if (templateString.size() >= 2) {
+            isTypeTransformation = true;
+            // templateString.get(1) contains the type transformation
+            if (templateString.get(1).isEmpty()) {
+              parser.addTypeWarning(
+                  "msg.jsdoc.typetransformation.expression.missing",
+                  stream.getLineno(), stream.getCharno());
+            }
+            // For each @template only one transformation is accepted
+            if (templateString.size() >= 3) {
+              parser.addTypeWarning(
+                  "msg.jsdoc.typetransformation.found.multiple.as",
+                  stream.getLineno(), stream.getCharno());
+            }
+          }
+
+          // templateString.get(0) contains the template type names
           List<String> names = Lists.newArrayList(
               Splitter.on(',')
                   .trimResults()
-                  .split(templateInfo.string));
+                  .split(templateString.get(0)));
 
           if (names.size() == 1 && names.get(0).isEmpty()) {
             parser.addTypeWarning("msg.jsdoc.templatemissing",
@@ -898,6 +923,12 @@ public final class JsDocInfoParser {
             }
           }
 
+          // Each transformation must have a single type name
+          if (isTypeTransformation && names.size() > 1) {
+             parser.addTypeWarning(
+                 "msg.jsdoc.typetransformation.with.multiple.names",
+                 stream.getLineno(), stream.getCharno());
+          }
           token = templateInfo.token;
           return token;
         }
