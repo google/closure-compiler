@@ -583,6 +583,36 @@ public class CheckAccessControlsTest extends CompilerTestCase {
     });
   }
 
+  public void testProtectedAccessForProperties7() {
+    testSame(new String[] {
+      "/** @constructor */ var Foo = function() {};" +
+      "Foo.prototype = { /** @protected */ bar: function() {} }",
+      "/** @constructor \n * @extends {Foo} */" +
+      "var SubFoo = function() { this.bar(); };" +
+      "SubFoo.prototype = { moo: function() { this.bar(); }};"
+    });
+  }
+
+  public void testProtectedAccessForProperties8() {
+    testSame(new String[] {
+      "/** @constructor */ var Foo = function() {};" +
+      "Foo.prototype = { /** @protected */ bar: function() {} }",
+      "/** @constructor \n * @extends {Foo} */" +
+      "var SubFoo = function() {};" +
+      "SubFoo.prototype = { get moo() { this.bar(); }};"
+    });
+  }
+
+  public void testProtectedAccessForProperties9() {
+    testSame(new String[] {
+      "/** @constructor */ var Foo = function() {};" +
+      "Foo.prototype = { /** @protected */ bar: function() {} }",
+      "/** @constructor \n * @extends {Foo} */" +
+      "var SubFoo = function() {};" +
+      "SubFoo.prototype = { set moo(val) { this.x = this.bar(); }};"
+    });
+  }
+
   public void testNoProtectedAccessForProperties1() {
     test(new String[] {
       "/** @constructor */ function Foo() {} " +

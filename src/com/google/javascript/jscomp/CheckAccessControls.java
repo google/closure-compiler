@@ -207,6 +207,16 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     } else if (NodeUtil.isFunctionDeclaration(n) ||
                parent.isName()) {
       return normalizeClassType(n.getJSType());
+    } else if (parent.isStringKey()
+        || parent.isGetterDef() || parent.isSetterDef()) {
+      Node objectLitParent = parent.getParent().getParent();
+      if (!objectLitParent.isAssign()) {
+        return null;
+      }
+      Node className = NodeUtil.getPrototypeClassName(objectLitParent.getFirstChild());
+      if (className != null) {
+        return normalizeClassType(className.getJSType());
+      }
     }
 
     return null;
@@ -591,7 +601,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
       StaticSourceFile referenceSource = getprop.getStaticSourceFile();
       boolean sameInput = referenceSource != null
-          && referenceSource.getName() == definingSource.getName();
+          && referenceSource.getName().equals(definingSource.getName());
       JSType ownerType = normalizeClassType(objectType);
       if (isOverride) {
         // Check an ASSIGN statement that's trying to override a property
