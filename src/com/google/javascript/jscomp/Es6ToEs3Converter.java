@@ -69,8 +69,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   private int freshPropVarCounter = 0;
 
-  private static final String FRESH_CLASS_NAME_BASE = "$jscomp$unique$class$";
-
   // The name of the property-copying function, defined in runtime_lib.js
   public static final String COPY_PROP = "$jscomp$copy$properties";
 
@@ -596,26 +594,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         newInfo.recordParameter(param, ctorJSDocInfo.getParameterType(param));
       }
     }
+    insertionPoint = constructor;
 
-    // Reassign using a unique name if we are dealing with a statement.
-    if (useUnique) {
-      constructor.removeFirstChild();
-      Node uniqueName = IR.name(uniqueFullClassName);
-      constructor = IR.var(uniqueName.cloneTree(), IR.function(IR.name(""),
-              constructor.removeFirstChild(), constructor.removeFirstChild()));
-      constructor.useSourceInfoIfMissingFromForTree(classNode);
-      constructor.setJSDocInfo(newInfo.build(constructor));
-      newInfo = JSDocInfoBuilder.copyFrom(constructor.getJSDocInfo());
-      Node reassign = IR.var(IR.name(fullClassName), uniqueName);
-      reassign.useSourceInfoIfMissingFromForTree(classNode);
-
-      classNode.getParent().addChildAfter(reassign, classNode);
-      insertionPoint = reassign;
-    } else {
-      insertionPoint = constructor;
-    }
-
-    if (NodeUtil.isStatement(classNode) && isInFunction(classNode)) {
+    if (NodeUtil.isStatement(classNode)) {
+      constructor.getFirstChild().setString("");
       Node ctorVar = IR.var(IR.name(fullClassName), constructor);
       ctorVar.useSourceInfoIfMissingFromForTree(classNode);
       parent.replaceChild(classNode, ctorVar);
@@ -691,7 +673,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   }
 
   private static String getUniqueClassName(String qualifiedName) {
-    return (FRESH_CLASS_NAME_BASE + qualifiedName).replace(".", "$");
+    return qualifiedName;
   }
 
   //TODO(mattloring) move this functionality to scopes once class scopes are computed.
