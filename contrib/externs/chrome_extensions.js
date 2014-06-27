@@ -5130,7 +5130,7 @@ chrome.usb.ConnectionHandle.prototype.productId;
 
 
 /** @constructor */
-chrome.usb.InterfaceEndpoint;
+chrome.usb.InterfaceEndpoint = function() {};
 
 
 /** @type {number} */
@@ -5159,7 +5159,7 @@ chrome.usb.InterfaceEndpoint.prototype.pollingInterval;
 
 
 /** @constructor */
-chrome.usb.InterfaceDescriptor;
+chrome.usb.InterfaceDescriptor = function() {};
 
 
 /** @type {number} */
@@ -5218,7 +5218,7 @@ chrome.usb.ControlTransferInfo;
 
 
 /** @constructor */
-chrome.usb.TransferResultInfo = function TransferResultInfo() {};
+chrome.usb.TransferResultInfo = function() {};
 
 
 /** @type {number|undefined} */
