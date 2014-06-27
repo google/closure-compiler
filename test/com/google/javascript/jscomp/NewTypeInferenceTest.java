@@ -7709,4 +7709,8 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
   }
 
+  public void testOutOfOrderDeclarations() {
+    // This is technically valid JS, but we don't support it
+    checkNoWarnings("Foo.STATIC = 5; /** @constructor */ function Foo(){}");
+  }
 }

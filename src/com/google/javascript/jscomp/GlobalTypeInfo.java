@@ -1508,8 +1508,12 @@ class GlobalTypeInfo implements CompilerPass {
       return false;
     }
     String receiverObjName = getProp.getFirstChild().getQualifiedName();
-    return s.isLocalFunDef(receiverObjName) && s.getScope(receiverObjName)
-        .getDeclaredType().getNominalType() != null;
+    if (!s.isLocalFunDef(receiverObjName)) {
+      return false;
+    }
+    DeclaredFunctionType ctorType =
+        s.getScope(receiverObjName).getDeclaredType();
+    return ctorType != null && ctorType.getNominalType() != null;
   }
 
   // TODO(blickly): Move to NodeUtil
