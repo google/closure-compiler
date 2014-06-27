@@ -3508,3 +3508,46 @@ ShadowRoot.prototype.innerHTML;
  * @type {!StyleSheetList}
  */
 ShadowRoot.prototype.styleSheets;
+
+
+/**
+ * @see http://www.w3.org/TR/html5/webappapis.html#the-errorevent-interface
+ *
+ * @constructor
+ * @extends {Event}
+ *
+ * @param {string} type
+ * @param {!ErrorEventInit=} eventInitDict
+ */
+var ErrorEvent;
+
+/** @const {string} */
+ErrorEvent.prototype.message;
+
+/** @const {string} */
+ErrorEvent.prototype.filename;
+
+/** @const {number} */
+ErrorEvent.prototype.lineno;
+
+/** @const {number} */
+ErrorEvent.prototype.colno;
+
+/** @const {*} */
+ErrorEvent.prototype.error;
+
+
+/**
+ * @see http://www.w3.org/TR/html5/webappapis.html#the-errorevent-interface
+ *
+ * @typedef {{
+ *   bubbles: boolean,
+ *   cancelable: boolean,
+ *   message: string,
+ *   filename: string,
+ *   lineno: number,
+ *   colno: number,
+ *   error: *
+ * }}
+ */
+ var ErrorEventInit;
