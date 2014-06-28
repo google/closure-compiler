@@ -3156,6 +3156,11 @@ Document.prototype.webkitFullscreenElement;
 /** @type {boolean} */
 Document.prototype.webkitFullScreenKeyboardInputAllowed;
 
+/** @type {boolean} */
+Document.prototype.webkitFullscreenEnabled;
+
+Document.prototype.webkitExitFullscreen = function() {};
+
 // IE 11 implementation.
 // http://msdn.microsoft.com/en-us/library/ie/dn265028(v=vs.85).aspx
 /** @return {void} */
