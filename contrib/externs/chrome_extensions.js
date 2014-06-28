@@ -5522,3 +5522,90 @@ chrome.webstore.onInstallStageChanged;
 
 /** @type {!ChromeNumberEvent} */
 chrome.webstore.onDownloadProgress;
+
+
+/**
+ * @const
+ * @see https://developer.chrome.com/extensions/downloads
+ */
+chrome.downloads = {};
+
+/**
+ * @param {object}
+ * @param {function(integer)}
+ */
+chrome.downloads.download = function(options, callback) {};
+
+/**
+ * @param {object}
+ * @param {function(Array.<DownloadItem>)}
+ */
+chrome.downloads.search = function(query, callback) {};
+
+/**
+ * @param {integer}
+ * @param {function()}
+ */
+chrome.downloads.pause = function(downloadId, callback) {};
+
+/**
+ * @param {integer}
+ * @param {function()}
+ */
+chrome.downloads.resume = function(downloadId, callback) {};
+
+/**
+ * @param {integer}
+ * @param {function()}
+ */
+chrome.downloads.cancel = function(downloadId, callback) {};
+
+/**
+ * @param {integer}
+ * @param {object}
+ * @param {function(string)}
+ */
+chrome.downloads.getFileIcon = function(downloadId, options, callback) {};
+
+/**
+ * @param {integer}
+ */
+chrome.downloads.open = function(downloadId) {};
+
+/**
+ * @param {integer}
+ */
+chrome.downloads.show = function(downloadId) {};
+
+/**
+ * Show the default Downloads folder in a file manager
+ */
+chrome.downloads.showDefaultFolder = function() {};
+
+/**
+ * @param {object}
+ * @param {function(Array.<integer>)}
+ */
+chrome.downloads.erase = function(query, callback) {};
+
+/**
+ * @param {integer}
+ * @param {function()}
+ */
+chrome.downloads.removeFile = function(downloadId, callback) {};
+
+/**
+ * @param {integer}
+ * @param {function()}
+ */
+chrome.downloads.acceptDanger = function(downloadId, callback) {};
+
+/**
+ * @param {integer}
+ */
+chrome.downloads.drag = function(downloadId) {};
+
+/**
+ * @param {bool}
+ */
+chrome.downloads.setShelfEnabled = function(enabled) {};
