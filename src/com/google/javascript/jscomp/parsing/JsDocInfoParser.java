@@ -399,6 +399,7 @@ public final class JsDocInfoParser {
           return eatUntilEOLIfNotAnnotation();
 
         case CONSTRUCTOR:
+        case CLASS:
           if (!jsdocBuilder.recordConstructor()) {
             if (jsdocBuilder.isInterfaceRecorded()) {
               parser.addTypeWarning("msg.jsdoc.interface.constructor",
@@ -984,6 +985,7 @@ public final class JsDocInfoParser {
         case DEFINE:
         case RETURN:
         case PACKAGE:
+        case INTERNAL:
         case PRIVATE:
         case PROTECTED:
         case PUBLIC:
@@ -997,6 +999,7 @@ public final class JsDocInfoParser {
           boolean hasType = lookAheadForType();
           boolean isAlternateTypeAnnotation =
               (annotation == Annotation.PACKAGE ||
+               annotation == Annotation.INTERNAL ||
                annotation == Annotation.PRIVATE ||
                annotation == Annotation.PROTECTED ||
                annotation == Annotation.PUBLIC ||
@@ -1067,6 +1070,7 @@ public final class JsDocInfoParser {
                 break;
 
               case PACKAGE:
+              case INTERNAL:
                 if (!jsdocBuilder.recordVisibility(Visibility.PACKAGE)) {
                   parser.addParserWarning(
                       "msg.jsdoc.visibility.package",

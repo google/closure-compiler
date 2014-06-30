@@ -27,6 +27,7 @@ import java.util.Map;
 enum Annotation {
   NG_INJECT,
   AUTHOR,
+  CLASS, // same as constructor
   CONSISTENTIDGENERATOR,
   CONSTANT,
   CONSTRUCTOR,
@@ -47,6 +48,7 @@ enum Annotation {
   IMPLICIT_CAST,
   INHERIT_DOC,
   INTERFACE,
+  INTERNAL, // same as package
   JAVA_DISPATCH,
   JAGGER_INJECT,
   JAGGER_MODULE,
@@ -89,6 +91,7 @@ enum Annotation {
       put("ngInject", Annotation.NG_INJECT).
       put("argument", Annotation.PARAM).
       put("author", Annotation.AUTHOR).
+      put("class", Annotation.CLASS).
       put("consistentIdGenerator", Annotation.CONSISTENTIDGENERATOR).
       put("const", Annotation.CONSTANT).
       put("constant", Annotation.CONSTANT).
@@ -112,6 +115,7 @@ enum Annotation {
       put("implicitCast", Annotation.IMPLICIT_CAST).
       put("inheritDoc", Annotation.INHERIT_DOC).
       put("interface", Annotation.INTERFACE).
+      put("internal", Annotation.INTERNAL).
       put("javadispatch", Annotation.JAVA_DISPATCH).
       put("jaggerInject", Annotation.JAGGER_INJECT).
       put("jaggerModule", Annotation.JAGGER_MODULE).
