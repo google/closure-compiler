@@ -2023,6 +2023,148 @@ chrome.fileBrowserHandle.onExecute;
 
 /**
  * @const
+ * @see https://developer.chrome.com/extensions/gcm
+ */
+chrome.gcm = {};
+
+
+/**
+ * @see https://developer.chrome.com/extensions/gcm#property-MAX_MESSAGE_SIZE
+ * @type {number}
+ */
+chrome.gcm.MAX_MESSAGE_SIZE;
+
+
+/**
+ * Registers the application with GCM. The registration ID will be returned by
+ * the callback. If register is called again with the same list of senderIds,
+ * the same registration ID will be returned.
+ * @see https://developer.chrome.com/extensions/gcm#method-register
+ * @param {!Array.<string>} senderIds A list of server IDs that are allowed to
+ *     send messages to the application.
+ * @param {function(string): void} callback Function called when
+ *     registration completes with registration ID as argument.
+ */
+chrome.gcm.register = function(senderIds, callback) {};
+
+
+/**
+ * Unregisters the application from GCM.
+ * @see https://developer.chrome.com/extensions/gcm#method-unregister
+ * @param {function(): void} callback Called when unregistration is done.
+ */
+chrome.gcm.unregister = function(callback) {};
+
+
+/**
+ * Sends an upstream message using GCM.
+ * @see https://developer.chrome.com/extensions/gcm#method-send
+ * @param {!chrome.gcm.Message} message Message to be sent.
+ * @param {function(string): void} callback Called with message ID.
+ */
+chrome.gcm.send = function(message, callback) {};
+
+
+/**
+ * Outgoing message.
+ * @typedef {?{
+ *   destinationId: string,
+ *   messageId: string,
+ *   timeToLive: (number|undefined),
+ *   data: !Object.<string, string>
+ * }}
+ */
+chrome.gcm.Message;
+
+
+/**
+ * An event, fired when a message is received through GCM.
+ * @see https://developer.chrome.com/extensions/gcm#event-onMessage
+ * @type {!chrome.gcm.OnMessageEvent}
+ */
+chrome.gcm.onMessage;
+
+
+/**
+ * An event, fired when GCM server had to delete messages to the application
+ * from its queue in order to manage its size.
+ * @see https://developer.chrome.com/extensions/gcm#event-onMessagesDeleted
+ * @type {!ChromeEvent}
+ */
+chrome.gcm.onMessagesDeleted;
+
+
+/**
+ * An event indicating problems with sending messages.
+ * @see https://developer.chrome.com/extensions/gcm#event-onSendError
+ * @type {!chrome.gcm.OnSendErrorEvent}
+ */
+chrome.gcm.onSendError;
+
+
+/**
+ * @constructor
+ */
+chrome.gcm.OnMessageEvent = function() {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+chrome.gcm.OnMessageEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+chrome.gcm.OnMessageEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ * @return {boolean}
+ */
+chrome.gcm.OnMessageEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.gcm.OnMessageEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * @constructor
+ */
+chrome.gcm.OnSendErrorEvent = function() {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+chrome.gcm.OnSendErrorEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+chrome.gcm.OnSendErrorEvent.prototype.removeListener = function(callback) {};
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ * @return {boolean}
+ */
+chrome.gcm.OnSendErrorEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.gcm.OnSendErrorEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * @const
  * @see https://developer.chrome.com/extensions/history.html
  */
 chrome.history = {};
