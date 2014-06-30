@@ -458,7 +458,8 @@ class NewIRFactory {
       errorReporter.warning(
           SUSPICIOUS_COMMENT_WARNING,
           sourceName,
-          comment.location.start.line, 0);
+          lineno(comment.location.start),
+          charno(comment.location.start));
     }
   }
 
@@ -1328,14 +1329,12 @@ class NewIRFactory {
         node = newStringNode(Token.STRING, identifierToken.value);
       } else {
         JSDocInfo info = handleJsDoc(identifierToken);
-        if (identifierToken == null ||
-            isReservedKeyword(identifierToken.toString())) {
-          int linenum = identifierToken != null ?
-              identifierToken.location.start.line : 0;
+        if (isReservedKeyword(identifierToken.toString())) {
           errorReporter.error(
             "identifier is a reserved word",
             sourceName,
-            linenum, 0);
+            lineno(identifierToken.location.start),
+            charno(identifierToken.location.start));
         }
         node = newStringNode(Token.NAME, identifierToken.value);
         if (info != null) {
@@ -1367,16 +1366,15 @@ class NewIRFactory {
     }
 
     Node processNameWithInlineJSDoc(IdentifierToken identifierToken) {
-      Node node;
       JSDocInfo info = handleInlineJsDoc(identifierToken, true);
-      if (identifierToken == null ||
-          isReservedKeyword(identifierToken.toString())) {
+      if (isReservedKeyword(identifierToken.toString())) {
         errorReporter.error(
           "identifier is a reserved word",
           sourceName,
-          identifierToken.location.start.line, 0);
+          lineno(identifierToken.location.start),
+          charno(identifierToken.location.start));
       }
-      node = newStringNode(Token.NAME, identifierToken.toString());
+      Node node = newStringNode(Token.NAME, identifierToken.toString());
       if (info != null) {
         // validateTypeAnnotations(info, identifierToken);
         attachJSDoc(info, node);
