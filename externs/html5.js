@@ -3386,14 +3386,16 @@ Promise.reject = function(opt_error) {};
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
- * param {!Array}
+ * @param {!Array}
+ * @return {!Promise}
  */
 Promise.all = function(iterable) {};
 
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
- * param {!Array}
+ * @param {!Array}
+ * @return {!Promise}
  */
 Promise.race = function(iterable) {};
 
