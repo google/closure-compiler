@@ -141,9 +141,11 @@ function clearInterval(intervalID) {}
 function clearTimeout(timeoutID) {}
 
 /**
+ * @param {string=} message
+ * @return {boolean}
  * @see https://developer.mozilla.org/en/DOM/window.confirm
  */
-function confirm(x) {}
+function confirm(message) {}
 
 /**
  * @see https://developer.mozilla.org/en/DOM/window.dump
