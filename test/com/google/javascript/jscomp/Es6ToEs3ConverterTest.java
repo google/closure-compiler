@@ -989,9 +989,60 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testForOf() {
-    enableAstValidation(false);
+    // With array literal and declaring new bound variable.
+    test(Joiner.on('\n').join(
+      "for (var i of [1,2,3]) {",
+      "  console.log(i);",
+      "}"
+    ), Joiner.on('\n').join(
+        "for (var $jscomp$iter$0 = $jscomp$make$iterator([1,2,3]),",
+        "    $jscomp$key$i = $jscomp$iter$0.next();",
+        "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
+        "  var i = $jscomp$key$i.value;",
+        "  console.log(i);",
+        "}"
+    ));
 
-    test("for (x of y) { z(); }", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    // With simple assign instead of var declaration in bound variable.
+    test(Joiner.on('\n').join(
+      "for (i of [1,2,3]) {",
+      "  console.log(i);",
+      "}"
+    ), Joiner.on('\n').join(
+        "for (var $jscomp$iter$0 = $jscomp$make$iterator([1,2,3]),",
+        "    $jscomp$key$i = $jscomp$iter$0.next();",
+        "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
+        "  var i = $jscomp$key$i.value;",
+        "  console.log(i);",
+        "}"
+    ));
+
+    // With name instead of array literal.
+    test(Joiner.on('\n').join(
+      "for (var i of arr) {",
+      "  console.log(i);",
+      "}"
+    ), Joiner.on('\n').join(
+        "for (var $jscomp$iter$0 = $jscomp$make$iterator(arr),",
+        "    $jscomp$key$i = $jscomp$iter$0.next();",
+        "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
+        "  var i = $jscomp$key$i.value;",
+        "  console.log(i);",
+        "}"
+    ));
+
+    // With no block in for loop body.
+    test(Joiner.on('\n').join(
+      "for (var i of [1,2,3])",
+      "  console.log(i);"
+    ), Joiner.on('\n').join(
+        "for (var $jscomp$iter$0 = $jscomp$make$iterator([1,2,3]),",
+        "    $jscomp$key$i = $jscomp$iter$0.next();",
+        "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
+        "  var i = $jscomp$key$i.value;",
+        "  console.log(i);",
+        "}"
+    ));
   }
 
   public void testArrayComprehension() {

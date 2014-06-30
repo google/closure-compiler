@@ -74,6 +74,14 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   private static final String INHERITS = "$jscomp$inherits";
 
+  private static final String ITER_BASE = "$jscomp$iter$";
+
+  private int iterCounter = 0;
+
+  private static final String ITER_RESULT = "$jscomp$key$";
+
+  private static final String MAKE_ITER = "$jscomp$make$iterator";
+
   public Es6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
@@ -112,7 +120,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         break;
       case Token.ARRAY_COMP:
       case Token.ARRAY_PATTERN:
-      case Token.FOR_OF:
       case Token.OBJECT_PATTERN:
         cannotConvertYet(n, Token.name(n.getType()));
         // Don't bother visiting the children of a node if we
@@ -137,6 +144,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         if (parent.isObjectLit()) {
           visitMemberDefInObjectLit(n, parent);
         }
+        break;
+      case Token.FOR_OF:
+        visitForOf(n, parent);
         break;
       case Token.SUPER:
         visitSuper(n);
@@ -197,7 +207,37 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     if (enclosingMemberDef.isStaticMember()) {
       parent.replaceChild(node,
           IR.name(NodeUtil.getClassName(enclosingClass)).srcref(node));
+      compiler.reportCodeChange();
     }
+  }
+
+  private void visitForOf(Node node, Node parent) {
+    Node variable = node.removeFirstChild();
+    Node iterable = node.removeFirstChild();
+    Node body = node.removeFirstChild();
+
+    Node iterName = IR.name(ITER_BASE + (iterCounter++));
+    Node getNext = IR.call(IR.getprop(iterName.cloneTree(), IR.string("next")));
+    String variableName = variable.isName() ? variable.getQualifiedName()
+        : variable.getFirstChild().getQualifiedName(); // var or let
+    Node iterResult = IR.name(ITER_RESULT + variableName);
+
+    Node makeIter = IR.call(IR.name(MAKE_ITER), iterable);
+    makeIter.putBooleanProp(Node.FREE_CALL, true);
+    Node init = IR.var(iterName.cloneTree(), makeIter);
+    Node initIterResult = iterResult.cloneTree();
+    initIterResult.addChildToFront(getNext.cloneTree());
+    init.addChildToBack(initIterResult);
+
+    Node cond = IR.not(IR.getprop(iterResult.cloneTree(), IR.string("done")));
+    Node incr = IR.assign(iterResult.cloneTree(), getNext.cloneTree());
+    body.addChildToFront(IR.var(IR.name(variableName),
+        IR.getprop(iterResult.cloneTree(), IR.string("value"))));
+
+    Node newFor = IR.forNode(init, cond, incr, body);
+    newFor.useSourceInfoIfMissingFromForTree(node);
+    parent.replaceChild(node, newFor);
+    compiler.reportCodeChange();
   }
 
   private void checkClassReassignment(Node clazz) {
