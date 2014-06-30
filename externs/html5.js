@@ -547,16 +547,16 @@ function Database() {}
 Database.prototype.version;
 
 /**
- * @param {function(!SQLTransaction) : void} callback
- * @param {(function(!SQLError) : void)=} opt_errorCallback
+ * @param {function(!SQLTransaction) : undefined} callback
+ * @param {(function(!SQLError) : undefined)=} opt_errorCallback
  * @param {Function=} opt_Callback
  */
 Database.prototype.transaction = function(
     callback, opt_errorCallback, opt_Callback) {};
 
 /**
- * @param {function(!SQLTransaction) : void} callback
- * @param {(function(!SQLError) : void)=} opt_errorCallback
+ * @param {function(!SQLTransaction) : undefined} callback
+ * @param {(function(!SQLError) : undefined)=} opt_errorCallback
  * @param {Function=} opt_Callback
  */
 Database.prototype.readTransaction = function(
@@ -565,8 +565,8 @@ Database.prototype.readTransaction = function(
 /**
  * @param {string} oldVersion
  * @param {string} newVersion
- * @param {function(!SQLTransaction) : void} callback
- * @param {function(!SQLError) : void} errorCallback
+ * @param {function(!SQLTransaction) : undefined} callback
+ * @param {function(!SQLError) : undefined} errorCallback
  * @param {Function} successCallback
  */
 Database.prototype.changeVersion = function(
@@ -607,14 +607,14 @@ function SQLTransaction() {}
  * @param {string} sqlStatement
  * @param {Array.<*>=} opt_queryArgs
  * @param {SQLStatementCallback=} opt_callback
- * @param {(function(!SQLTransaction, !SQLError) : (boolean|void))=}
+ * @param {(function(!SQLTransaction, !SQLError) : (boolean|undefined))=}
  *     opt_errorCallback
  */
 SQLTransaction.prototype.executeSql = function(
     sqlStatement, opt_queryArgs, opt_callback, opt_errorCallback) {};
 
 /**
- * @typedef {(function(!SQLTransaction, !SQLResultSet) : void)}
+ * @typedef {(function(!SQLTransaction, !SQLResultSet) : undefined)}
  */
 var SQLStatementCallback;
 
@@ -693,7 +693,7 @@ HTMLImageElement.prototype.crossOrigin;
  * @param {(string|!Array.<!Transferable>)=} opt_targetOriginOrTransfer
  * @param {(string|!Array.<!MessagePort>|!Array.<!Transferable>)=}
  *     opt_targetOriginOrPortsOrTransfer
- * @return {void}
+ * @return {undefined}
  */
 function postMessage(message, opt_targetOriginOrTransfer,
     opt_targetOriginOrPortsOrTransfer) {}
@@ -3088,6 +3088,7 @@ HTMLEmbedElement.prototype.type;
 
 /**
  * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-element-requestfullscreen
+ * @return {undefined}
  */
 Element.prototype.requestFullscreen = function() {};
 
@@ -3105,6 +3106,7 @@ Document.prototype.fullscreenElement;
 
 /**
  * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-document-exitfullscreen
+ * @return {undefined}
  */
 Document.prototype.exitFullscreen = function() {};
 
@@ -3112,11 +3114,13 @@ Document.prototype.exitFullscreen = function() {};
 // Firefox 10 implementation.
 Element.prototype.mozRequestFullScreen = function() {};
 
+/** @return {undefined} */
 Element.prototype.mozRequestFullScreenWithKeys = function() {};
 
 /** @type {boolean} */
 Document.prototype.mozFullScreen;
 
+/** @return {undefined} */
 Document.prototype.mozCancelFullScreen = function() {};
 
 /** @type {Element} */
@@ -3145,6 +3149,7 @@ Element.prototype.webkitRequestFullscreen = function(opt_allowKeyboardInput) {};
 /** @type {boolean} */
 Document.prototype.webkitIsFullScreen;
 
+/** @return {undefined} */
 Document.prototype.webkitCancelFullScreen = function() {};
 
 /** @type {Element} */
@@ -3156,12 +3161,18 @@ Document.prototype.webkitFullscreenElement;
 /** @type {boolean} */
 Document.prototype.webkitFullScreenKeyboardInputAllowed;
 
+/** @type {boolean} */
+Document.prototype.webkitFullscreenEnabled;
+
+/** @return {undefined} */
+Document.prototype.webkitExitFullscreen = function() {};
+
 // IE 11 implementation.
 // http://msdn.microsoft.com/en-us/library/ie/dn265028(v=vs.85).aspx
-/** @return {void} */
+/** @return {undefined} */
 Element.prototype.msRequestFullscreen = function() {};
 
-/** @return {void} */
+/** @return {undefined} */
 Element.prototype.msExitFullscreen = function() {};
 
 /** @type {boolean} */
