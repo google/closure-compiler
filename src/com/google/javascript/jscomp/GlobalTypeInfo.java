@@ -294,6 +294,9 @@ class GlobalTypeInfo implements CompilerPass {
       new NodeTraversal(compiler, cnt).traverse(s.getBody());
       s.resolveTypedefs(typeParser);
       s.resolveEnums(typeParser);
+      if (NewTypeInference.measureMem) {
+        NewTypeInference.updatePeakMem();
+      }
     }
 
     // (4) The bulk of the global-scope processing happens here:
@@ -313,6 +316,9 @@ class GlobalTypeInfo implements CompilerPass {
       ProcessScope ps = new ProcessScope(s);
       new NodeTraversal(compiler, ps).traverse(s.getBody());
       ps.finishProcessingScope();
+      if (NewTypeInference.measureMem) {
+        NewTypeInference.updatePeakMem();
+      }
     }
 
     // (7) Adjust types of properties based on inheritance information.

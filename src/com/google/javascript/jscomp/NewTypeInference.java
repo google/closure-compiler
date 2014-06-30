@@ -215,6 +215,9 @@ public class NewTypeInference implements CompilerPass {
   private JSType arrayType, regexpType; // used for array and regexp literals
   private static boolean debugging = false;
   private final boolean isClosurePassOn;
+  // Used for profiling during development
+  static boolean measureMem = false;
+  private static long peakMem = 0;
 
   NewTypeInference(AbstractCompiler compiler, boolean isClosurePassOn) {
     this.warnings = new WarningReporter(compiler);
@@ -253,6 +256,17 @@ public class NewTypeInference implements CompilerPass {
     }
     for (DeferredCheck check : deferredChecks.values()) {
       check.runCheck(summaries, warnings);
+    }
+    if (measureMem) {
+      System.out.println("Peak mem: " + peakMem + "MB");
+    }
+  }
+
+  static void updatePeakMem() {
+    Runtime rt = Runtime.getRuntime();
+    long currentUsedMem = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024);
+    if (currentUsedMem > peakMem) {
+      peakMem = currentUsedMem;
     }
   }
 
@@ -510,6 +524,9 @@ public class NewTypeInference implements CompilerPass {
       // TODO(dimvar): Revisit what we throw away after the bwd analysis
       TypeEnv entryEnv = getEntryTypeEnv();
       initEdgeEnvsFwd(entryEnv);
+      if (measureMem) {
+        updatePeakMem();
+      }
     } else {
       TypeEnv entryEnv = getTypeEnvFromDeclaredTypes();
       initEdgeEnvsFwd(entryEnv);
@@ -517,6 +534,9 @@ public class NewTypeInference implements CompilerPass {
     analyzeFunctionFwd(workset);
     if (scope.isFunction()) {
       createSummary(scope);
+    }
+    if (measureMem) {
+      updatePeakMem();
     }
   }
 
