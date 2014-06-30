@@ -864,39 +864,8 @@ chrome.runtime.onSuspendCanceled;
 chrome.runtime.onUpdateAvailable;
 
 
-/**
- * @constructor
- */
-chrome.runtime.onRestartRequired = function() {};
-
-
-/**
- * @param {function(string)} callback
- */
-chrome.runtime.onRestartRequired.prototype.addListener = function(
-    callback) {};
-
-
-/**
- * @param {function(string)} callback
- */
-chrome.runtime.onRestartRequired.prototype.removeListener = function(
-    callback) {};
-
-
-/**
- * @param {function(string)} callback
- * @return {boolean}
- */
-chrome.runtime.onRestartRequired.prototype.hasListener = function(
-    callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.runtime.onRestartRequired.prototype.hasListeners = function() {};
-
+/** @type {!ChromeStringEvent} */
+chrome.runtime.onRestartRequired;
 
 
 /**
