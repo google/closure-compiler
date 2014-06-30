@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -27,6 +26,7 @@ import com.google.common.collect.Sets;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -465,7 +465,7 @@ public abstract class JSType {
 
     int t1Mask = promoteBoolean(t1.getMask());
     int t2Mask = promoteBoolean(t2.getMask());
-    if (t1Mask != t2Mask || !Objects.equal(t1.getTypeVar(), t2.getTypeVar())) {
+    if (t1Mask != t2Mask || !Objects.equals(t1.getTypeVar(), t2.getTypeVar())) {
       return null;
     }
     // All scalar types are equal
@@ -614,7 +614,7 @@ public abstract class JSType {
     }
     int newMask = getMask() & other.getMask();
     String newTypevar;
-    if (Objects.equal(getTypeVar(), other.getTypeVar())) {
+    if (Objects.equals(getTypeVar(), other.getTypeVar())) {
       newTypevar = getTypeVar();
     } else {
       newTypevar = null;
@@ -639,7 +639,7 @@ public abstract class JSType {
     }
     int newMask = lhs.getMask() & rhs.getMask();
     String newTypevar;
-    if (Objects.equal(lhs.getTypeVar(), rhs.getTypeVar())) {
+    if (Objects.equals(lhs.getTypeVar(), rhs.getTypeVar())) {
       newTypevar = lhs.getTypeVar();
     } else {
       newTypevar = null;
@@ -661,7 +661,7 @@ public abstract class JSType {
       String newLocation, ImmutableSet<ObjectType> newObjs, String newTypevar,
       ImmutableSet<ObjectType> objs1, ImmutableSet<ObjectType> objs2,
       ImmutableSet<EnumType> enums1, ImmutableSet<EnumType> enums2) {
-    if (Objects.equal(enums1, enums2)) {
+    if (Objects.equals(enums1, enums2)) {
       return makeType(newMask, newLocation, newObjs, newTypevar, enums1);
     }
     ImmutableSet.Builder<EnumType> enumBuilder = ImmutableSet.builder();
@@ -782,7 +782,7 @@ public abstract class JSType {
     if ((mask | other.getMask()) != other.getMask()) {
       return false;
     }
-    if (!Objects.equal(getTypeVar(), other.getTypeVar())) {
+    if (!Objects.equals(getTypeVar(), other.getTypeVar())) {
       return false;
     }
     if (getObjs() == null) {
@@ -838,7 +838,7 @@ public abstract class JSType {
   }
 
   public JSType withLocation(String location) {
-    if (Objects.equal(location, getLocation())) {
+    if (Objects.equals(location, getLocation())) {
       return this;
     }
     String newLoc = location == null ? null : JSType.GENERIC_LOCATION;
@@ -1096,12 +1096,12 @@ public abstract class JSType {
     }
     Preconditions.checkArgument(o instanceof JSType);
     JSType t2 = (JSType) o;
-    return getMask() == t2.getMask() && Objects.equal(getObjs(), t2.getObjs());
+    return getMask() == t2.getMask() && Objects.equals(getObjs(), t2.getObjs());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(getMask(), getObjs());
+    return Objects.hash(getMask(), getObjs());
   }
 }
 

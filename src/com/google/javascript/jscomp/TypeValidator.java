@@ -27,7 +27,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.Scope.Var;
@@ -46,6 +45,7 @@ import com.google.javascript.rhino.jstype.UnknownType;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -915,7 +915,7 @@ class TypeValidator {
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(typeA, typeB);
+      return Objects.hash(typeA, typeB);
     }
 
     @Override public String toString() {

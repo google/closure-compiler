@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -46,6 +45,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -2754,7 +2754,7 @@ public class NewTypeInference implements CompilerPass {
     Preconditions.checkArgument(!varName.contains("."));
     JSType oldType = env.getType(varName);
     if (oldType != null && oldType.equals(type) &&
-        Objects.equal(oldType.getLocation(), type.getLocation())) {
+        Objects.equals(oldType.getLocation(), type.getLocation())) {
       return env;
     }
     return env.putType(varName, type);
@@ -3134,13 +3134,13 @@ public class NewTypeInference implements CompilerPass {
       return callSite == dc2.callSite &&
           callerScope == dc2.callerScope &&
           calleeScope == dc2.calleeScope &&
-          Objects.equal(expectedRetType, dc2.expectedRetType) &&
-          Objects.equal(argTypes, dc2.argTypes);
+          Objects.equals(expectedRetType, dc2.expectedRetType) &&
+          Objects.equals(argTypes, dc2.argTypes);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(
+      return Objects.hash(
           callSite, callerScope, calleeScope, expectedRetType, argTypes);
     }
   }

@@ -16,12 +16,12 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Multimap;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  *
@@ -220,6 +220,6 @@ class Property {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(inferredType, attribute);
+    return Objects.hash(inferredType, attribute);
   }
 }

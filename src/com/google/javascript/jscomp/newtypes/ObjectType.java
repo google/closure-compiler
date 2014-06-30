@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
@@ -25,6 +24,7 @@ import com.google.common.collect.Sets;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -823,13 +823,13 @@ public class ObjectType implements TypeWithProperties {
     }
     Preconditions.checkArgument(o instanceof ObjectType);
     ObjectType obj2 = (ObjectType) o;
-    return Objects.equal(fn, obj2.fn) &&
-        Objects.equal(nominalType, obj2.nominalType) &&
-        Objects.equal(props, obj2.props);
+    return Objects.equals(fn, obj2.fn) &&
+        Objects.equals(nominalType, obj2.nominalType) &&
+        Objects.equals(props, obj2.props);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(fn, props, nominalType);
+    return Objects.hash(fn, props, nominalType);
   }
 }

@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -26,6 +25,7 @@ import com.google.common.collect.Multimap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  *
@@ -546,15 +546,15 @@ public class FunctionType {
     }
     Preconditions.checkArgument(obj instanceof FunctionType, "obj is: %s", obj);
     FunctionType f2 = (FunctionType) obj;
-    return Objects.equal(this.requiredFormals, f2.requiredFormals) &&
-        Objects.equal(this.optionalFormals, f2.optionalFormals) &&
-        Objects.equal(this.restFormals, f2.restFormals) &&
-        Objects.equal(this.returnType, f2.returnType);
+    return Objects.equals(this.requiredFormals, f2.requiredFormals) &&
+        Objects.equals(this.optionalFormals, f2.optionalFormals) &&
+        Objects.equals(this.restFormals, f2.restFormals) &&
+        Objects.equals(this.returnType, f2.returnType);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(
+    return Objects.hash(
         requiredFormals, optionalFormals, restFormals, returnType);
   }
 
