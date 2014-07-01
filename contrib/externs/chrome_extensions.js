@@ -5708,76 +5708,76 @@ chrome.downloads.setShelfEnabled = function(enabled) {};
 
 
 /** @constructor */
-function DownloadItemEvent() {};
+chrome.downloads.DownloadItemEvent = function() {};
 /**
  * @param {function(!chrome.downloads.DownloadItem)} callback
  */
-DownloadItemEvent.prototype.addListener = function(callback) {};
+chrome.downloads.DownloadItemEvent.prototype.addListener = function(callback) {};
 /**
  * @param {function(!chrome.downloads.DownloadItem)} callback
  */
-DownloadItemEvent.prototype.removeListener = function(callback) {};
+chrome.downloads.DownloadItemEvent.prototype.removeListener = function(callback) {};
 /**
  * @param {function(!chrome.downloads.DownloadItem)} callback
  * @return {boolean}
  */
-DownloadItemEvent.prototype.hasListener = function(callback) {};
+chrome.downloads.DownloadItemEvent.prototype.hasListener = function(callback) {};
 /**
  * @return {boolean}
  */
-DownloadItemEvent.prototype.hasListeners = function() {};
+chrome.downloads.DownloadItemEvent.prototype.hasListeners = function() {};
 
 
 /** @constructor */
-function DownloadDeltaEvent() {};
+chrome.downloads.DownloadDeltaEvent = function() {};
 /**
  * @param {function(!chrome.downloads.DownloadDelta)} callback
  */
-DownloadDeltaEvent.prototype.addListener = function(callback) {};
+chrome.downloads.DownloadDeltaEvent.prototype.addListener = function(callback) {};
 /**
  * @param {function(!chrome.downloads.DownloadDelta)} callback
  */
-DownloadDeltaEvent.prototype.removeListener = function(callback) {};
+chrome.downloads.DownloadDeltaEvent.prototype.removeListener = function(callback) {};
 /**
  * @param {function(!chrome.downloads.DownloadDelta)} callback
  * @return {boolean}
  */
-DownloadDeltaEvent.prototype.hasListener = function(callback) {};
+chrome.downloads.DownloadDeltaEvent.prototype.hasListener = function(callback) {};
 /**
  * @return {boolean}
  */
-DownloadDeltaEvent.prototype.hasListeners = function() {};
+chrome.downloads.DownloadDeltaEvent.prototype.hasListeners = function() {};
 
 
 /** @constructor */
-function DownloadFilenameSuggestEvent() {};
+chrome.downloads.DownloadFilenameSuggestEvent = function() {};
 /**
  * @param {function(!chrome.downloads.DownloadItem,function())} callback
  */
-DownloadFilenameSuggestEvent.prototype.addListener = function(callback) {};
+chrome.downloads.DownloadFilenameSuggestEvent.prototype.addListener = function(callback) {};
 /**
  * @param {function(!chrome.downloads.DownloadItem,function())} callback
  */
-DownloadFilenameSuggestEvent.prototype.removeListener = function(callback) {};
+chrome.downloads.DownloadFilenameSuggestEvent.prototype.removeListener = function(callback) {};
 /**
  * @param {function(!chrome.downloads.DownloadItem,function())} callback
  * @return {boolean}
  */
-DownloadFilenameSuggestEvent.prototype.hasListener = function(callback) {};
+chrome.downloads.DownloadFilenameSuggestEvent.prototype.hasListener = function(callback) {};
 /**
  * @return {boolean}
  */
-DownloadFilenameSuggestEvent.prototype.hasListeners = function() {};
+chrome.downloads.DownloadFilenameSuggestEvent.prototype.hasListeners = function() {};
 
 
-/** @type {!DownloadItemEvent} */
+/** @type {!chrome.downloads.DownloadItemEvent} */
 chrome.downloads.onCreated;
 
 /** @type {!ChromeNumberEvent} */
 chrome.downloads.onErased;
 
-/** @type {!DownloadDeltaEvent}*/
+/** @type {!chrome.downloads.DownloadDeltaEvent}*/
 chrome.downloads.onChanged;
 
-/** @type {!DownloadFilenameSuggestEvent} */
+/** @type {!chrome.downloads.DownloadFilenameSuggestEvent} */
 chrome.downloads.onDeterminingFilename;
