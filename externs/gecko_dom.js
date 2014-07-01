@@ -275,6 +275,12 @@ Window.prototype.clearTimeout = function(timeoutID) {};
 Window.prototype.close = function() {};
 
 /**
+ * @param {*} message
+ * @return {boolean}
+ */
+Window.prototype.confirm = function(message) {};
+
+/**
  * @param {string} regular
  * @return {string}
  * @see https://developer.mozilla.org/en/DOM/window.escape
