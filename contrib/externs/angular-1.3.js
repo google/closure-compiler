@@ -213,6 +213,57 @@ angular.uppercase = function(s) {};
 
 /**
  * @typedef {{
+ *   enter: (function(!angular.JQLite, !Function): (!Function|undefined)|
+ *       undefined),
+ *   leave: (function(!angular.JQLite, !Function): (!Function|undefined)|
+ *       undefined),
+ *   move: (function(!angular.JQLite, !Function): (!Function|undefined)|
+ *       undefined),
+ *   addClass: (function(!angular.JQLite, !Function): (!Function|undefined)|
+ *       undefined),
+ *   removeClass: (function(!angular.JQLite, !Function): (!Function|undefined)|
+ *       undefined)
+ *   }}
+ */
+angular.Animation;
+
+/**
+ * @param {!angular.JQLite} element
+ * @param {!Function} done
+ * @return {(!Function|undefined)}
+ */
+angular.Animation.enter = function(element, done) {};
+
+/**
+ * @param {!angular.JQLite} element
+ * @param {!Function} done
+ * @return {(!Function|undefined)}
+ */
+angular.Animation.leave = function(element, done) {};
+
+/**
+ * @param {!angular.JQLite} element
+ * @param {!Function} done
+ * @return {(!Function|undefined)}
+ */
+angular.Animation.move = function(element, done) {};
+
+/**
+ * @param {!angular.JQLite} element
+ * @param {!Function} done
+ * @return {(!Function|undefined)}
+ */
+angular.Animation.addClass = function(element, done) {};
+
+/**
+ * @param {!angular.JQLite} element
+ * @param {!Function} done
+ * @return {(!Function|undefined)}
+ */
+angular.Animation.removeClass = function(element, done) {};
+
+/**
+ * @typedef {{
  *   $attr: Object.<string,string>,
  *   $normalize: function(string): string,
  *   $observe: function(string, function(*)): function(*),
@@ -654,6 +705,8 @@ angular.JQLite.wrap = function(element) {};
 
 /**
  * @typedef {{
+ *   animation:
+ *       function(string, function(...[*]):angular.Animation):!angular.Module,
  *   config: function((Function|Array.<string|Function>)):!angular.Module,
  *   constant: function(string, *):angular.Module,
  *   controller:
@@ -679,6 +732,12 @@ angular.JQLite.wrap = function(element) {};
  *   }}
  */
 angular.Module;
+
+/**
+ * @param {string} name
+ * @param {function(...[*]):angular.Animation} animationFactory
+ */
+angular.Module.animation = function(name, animationFactory) {};
 
 /**
  * @param {Function|Array.<string|Function>} configFn
