@@ -62,6 +62,9 @@ public abstract class JSType {
   // eg, it can be a prop of a formal whose decl type is a record type.
   static String GENERIC_LOCATION = "%";
 
+  // Used only for development
+  public static boolean mockToString = false;
+
   private static JSType makeType(int mask, String location,
       ImmutableSet<ObjectType> objs, String typeVar,
       ImmutableSet<EnumType> enums) {
@@ -990,6 +993,9 @@ public abstract class JSType {
 
   @Override
   public String toString() {
+    if (mockToString) {
+      return "";
+    }
     return appendTo(new StringBuilder()).toString();
   }
 

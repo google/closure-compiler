@@ -197,7 +197,11 @@ public class NewTypeInference implements CompilerPass {
   public static class WarningReporter {
     AbstractCompiler compiler;
     WarningReporter(AbstractCompiler compiler) { this.compiler = compiler; }
-    void add(JSError warning) { compiler.report(warning); }
+    void add(JSError warning) {
+      if (!JSType.mockToString) {
+        compiler.report(warning);
+      }
+    }
   }
 
   private WarningReporter warnings;
@@ -213,9 +217,10 @@ public class NewTypeInference implements CompilerPass {
   static final String GETTER_PREFIX = "%getter_fun";
   static final String SETTER_PREFIX = "%setter_fun";
   private JSType arrayType, regexpType; // used for array and regexp literals
-  private static boolean debugging = false;
   private final boolean isClosurePassOn;
-  // Used for profiling during development
+
+  // Used only for development
+  private static boolean showDebuggingPrints = false;
   static boolean measureMem = false;
   private static long peakMem = 0;
 
@@ -278,7 +283,7 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private static void println(Object ... objs) {
-    if (debugging) {
+    if (showDebuggingPrints) {
       StringBuilder b = new StringBuilder();
       for (Object obj : objs) {
         b.append(obj == null ? "null" : obj.toString());
