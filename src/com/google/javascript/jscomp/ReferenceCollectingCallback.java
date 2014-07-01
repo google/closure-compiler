@@ -579,8 +579,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
   static final class Reference implements StaticReference<JSType> {
 
     private static final Set<Integer> DECLARATION_PARENTS =
-        ImmutableSet.of(Token.VAR, Token.LET, Token.CONST, Token.FUNCTION,
-            Token.CLASS, Token.CATCH);
+        ImmutableSet.of(Token.VAR, Token.LET, Token.CONST, Token.ARRAY_PATTERN,
+            Token.FUNCTION, Token.CLASS, Token.CATCH);
 
     private final Node nameNode;
     private final BasicBlock basicBlock;

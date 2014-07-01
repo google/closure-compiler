@@ -104,18 +104,34 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
     }
   }
 
+  private void declareLHS(Scope declarationScope, Node lhs) {
+    Preconditions.checkState(lhs.isArrayPattern() || lhs.isName());
+
+    if (lhs.isName()) {
+      declareVar(declarationScope, lhs);
+    } else if (lhs.isArrayPattern()) {
+      // Nested array pattern.
+      for (Node child = lhs.getFirstChild(); child != null; child = child.getNext()) {
+        if (NodeUtil.isNameDeclaration(lhs.getParent()) && child.getNext() == null) {
+          // If the arrayPattern is a direct child of the var/let/const node,
+          // then its last child is the RHS of the assignment, not a variable to
+          // be declared.
+          return;
+        }
+
+        declareLHS(declarationScope, child);
+      }
+    }
+  }
+
   /**
     * Scans and gather variables declarations under a Node
     */
   private void scanVars(Node n) {
     switch (n.getType()) {
       case Token.VAR:
-        // Need to hoist to the closest function block or global scope.
-        // Declare all variables. e.g. var x = 1, y, z;
-        for (Node child = n.getFirstChild(); child != null;) {
-          Node next = child.getNext();
-          declareVar(scope.getClosestHoistScope(), child);
-          child = next;
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          declareLHS(scope.getClosestHoistScope(), child);
         }
         return;
 
@@ -125,10 +141,8 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         if (!isNodeAtCurrentLexicalScope(n)) {
           return;
         }
-        for (Node child = n.getFirstChild(); child != null;) {
-          Node next = child.getNext();
-          declareVar(child);
-          child = next;
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          declareLHS(scope, child);
         }
         return;
 

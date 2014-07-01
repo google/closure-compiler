@@ -53,6 +53,89 @@ public class Es6SyntacticScopeCreatorTest extends TestCase {
     scopeCreator = new Es6SyntacticScopeCreator(compiler);
   }
 
+  public void testArrayDestructuring() {
+    Scope scope = getScope("var [x, y] = foo();");
+    assertTrue(scope.isDeclared("x", false));
+    assertTrue(scope.isDeclared("y", false));
+  }
+
+  public void testNestedArrayDestructuring() {
+    Scope scope = getScope("var [x, [y,z]] = foo();");
+    assertTrue(scope.isDeclared("x", false));
+    assertTrue(scope.isDeclared("y", false));
+    assertTrue(scope.isDeclared("z", false));
+  }
+
+  public void testArrayDestructuringWithName() {
+    Scope scope = getScope("var a = 1, [x, y] = foo();");
+    assertTrue(scope.isDeclared("a", false));
+    assertTrue(scope.isDeclared("x", false));
+    assertTrue(scope.isDeclared("y", false));
+  }
+
+  public void testArrayDestructuringLet() {
+    String js = ""
+        + "function foo() {\n"
+        + "  var [a, b] = getVars();"
+        + "  if (true) {"
+        + "    let [x, y] = getLets();"
+        + "  }"
+        + "}";
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node functionNode = root.getFirstChild();
+    Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+
+    Node functionBlock = functionNode.getLastChild();
+    Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
+
+    assertTrue(functionBlockScope.isDeclared("a", false));
+    assertTrue(functionBlockScope.isDeclared("b", false));
+    assertFalse(functionBlockScope.isDeclared("x", false));
+    assertFalse(functionBlockScope.isDeclared("y", false));
+
+    Node var = functionBlock.getFirstChild();
+    Node ifStmt = var.getNext();
+    Node ifBlock = ifStmt.getLastChild();
+    Scope blockScope = scopeCreator.createScope(ifBlock, functionBlockScope);
+
+    // a and b are declared in the parent scope.
+    assertFalse(blockScope.isDeclared("a", false));
+    assertFalse(blockScope.isDeclared("b", false));
+    assertTrue(blockScope.isDeclared("a", true));
+    assertTrue(blockScope.isDeclared("b", true));
+
+    // x and y are declared in this scope.
+    assertTrue(blockScope.isDeclared("x", false));
+    assertTrue(blockScope.isDeclared("y", false));
+  }
+
+  public void testArrayDestructuringVarInBlock() {
+    String js = ""
+        + "function foo() {\n"
+        + "  var [a, b] = getVars();"
+        + "  if (true) {"
+        + "    var [x, y] = getMoreVars();"
+        + "  }"
+        + "}";
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node functionNode = root.getFirstChild();
+    Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+
+    Node functionBlock = functionNode.getLastChild();
+    Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
+
+    assertTrue(functionBlockScope.isDeclared("a", false));
+    assertTrue(functionBlockScope.isDeclared("b", false));
+    assertTrue(functionBlockScope.isDeclared("x", false));
+    assertTrue(functionBlockScope.isDeclared("y", false));
+  }
+
   public void testFunctionScope() {
     Scope scope = getScope("function foo() {}\n"
                          + "var x = function bar(a1) {};"
