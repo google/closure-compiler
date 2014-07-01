@@ -96,8 +96,8 @@ public class Es6ToEs3ClassSideInheritance extends NodeTraversal.AbstractPostOrde
         for (String staticMember : staticMembers.get(key)) {
           Node sAssign = IR.exprResult(
               IR.assign(
-                  IR.getprop(subClassName.detachFromParent(), IR.string(staticMember)),
-                  IR.getprop(superClassName.detachFromParent(), IR.string(staticMember))));
+                  IR.getprop(subClassName.cloneTree(), IR.string(staticMember)),
+                  IR.getprop(superClassName.cloneTree(), IR.string(staticMember))));
           sAssign.useSourceInfoIfMissingFromForTree(n);
           parent.getParent().addChildAfter(sAssign, parent);
           staticMembers.put(subClassName.getQualifiedName(),

@@ -111,9 +111,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
           visitArrowFunction(t, n);
         }
         break;
-      case Token.THIS:
-        visitThis(n, parent);
-        break;
       case Token.CLASS:
         // Need to check for super references before they get rewritten.
         checkClassSuperReferences(n);
@@ -198,19 +195,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
   }
 
-  private void visitThis(Node node, Node parent) {
-    Node enclosingMemberDef = NodeUtil.getEnclosingClassMember(node);
-    if (enclosingMemberDef == null) {
-      return;
-    }
-    Node enclosingClass = NodeUtil.getEnclosingClass(node);
-    if (enclosingMemberDef.isStaticMember()) {
-      parent.replaceChild(node,
-          IR.name(NodeUtil.getClassName(enclosingClass)).srcref(node));
-      compiler.reportCodeChange();
-    }
-  }
-
   private void visitForOf(Node node, Node parent) {
     Node variable = node.removeFirstChild();
     Node iterable = node.removeFirstChild();
@@ -275,11 +259,21 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       return;
     }
 
+    Node enclosingMemberDef = NodeUtil.getEnclosingClassMember(node);
+    if (enclosingMemberDef.isStaticMember()) {
+      node.getParent().replaceChild(node, clazz.getFirstChild().getNext().cloneTree());
+      Node callTarget = IR.getprop(potentialCallee.detachFromParent(), IR.string("call"));
+      callTarget.useSourceInfoIfMissingFromForTree(enclosing);
+      enclosing.addChildToFront(callTarget);
+      enclosing.addChildAfter(IR.thisNode(), callTarget);
+      compiler.reportCodeChange();
+      return;
+    }
+
     Node methodName;
     Node callName = enclosing.removeFirstChild();
     if (callName.isSuper()) {
-      Node enclosingMember = NodeUtil.getEnclosingClassMember(enclosing);
-      methodName = IR.string(enclosingMember.getString()).srcref(enclosing);
+      methodName = IR.string(enclosingMemberDef.getString()).srcref(enclosing);
     } else {
       methodName = IR.string(callName.getLastChild().getString()).srcref(enclosing);
     }

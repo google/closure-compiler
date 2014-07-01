@@ -695,18 +695,6 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         null, Es6ToEs3Converter.CLASS_REASSIGNMENT);
   }
 
-  public void testStaticMethodsWithThis() {
-    test(Joiner.on('\n').join(
-        "class C {",
-        "  static foo() { alert(this); }",
-        "}"
-    ), Joiner.on('\n').join(
-        "/** @constructor @struct */",
-        "var C = function() {};",
-        "C.foo = function() { alert(C); };"
-    ));
-  }
-
   public void testArrowInClass() {
     test(Joiner.on('\n').join(
         "class C {",
