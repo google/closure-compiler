@@ -294,9 +294,6 @@ ClipboardData.prototype.setData = function(type, data) {};
  */
 ClipboardData.prototype.getData = function(type) { };
 
-/** @type {function(new:ActiveXObject, string, string=)} */
-Window.prototype.ActiveXObject;
-
 /**
  * @type {!Window}
  * @see https://developer.mozilla.org/en/DOM/window
