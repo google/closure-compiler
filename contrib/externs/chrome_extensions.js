@@ -5712,19 +5712,47 @@ chrome.downloads.onCreated = function() {};
 /**
  * @param {function(!chrome.downloads.DownloadItem)} callback
  */
-chrome.downloads.onCreated.addListener = function(callback) {};
+chrome.downloads.onCreated.prototype.addListener = function(callback) {};
+/**
+ * @param {function(!chrome.downloads.DownloadItem)} callback
+ */
+chrome.downloads.onCreated.prototype.removeListener = function(callback) {};
+/**
+ * @param {function(!chrome.downloads.DownloadItem)} callback
+ * @return {boolean}
+ */
+chrome.downloads.onCreated.prototype.hasListener = function(callback) {};
+/**
+ * @return {boolean}
+ */
+chrome.downloads.onCreated.prototype.hasListeners = function() {};
+
 
 /**
  * @type {!ChromeNumberEvent}
  */
 chrome.downloads.onErased;
 
+
 /** @constructor */
 chrome.downloads.onChanged = function() {};
 /**
  * @param {function(!chrome.downloads.DownloadDelta)} callback
  */
-chrome.downloads.onChanged.addListener = function(callback) {};
+chrome.downloads.onChanged.prototype.addListener = function(callback) {};
+/**
+ * @param {function(!chrome.downloads.DownloadDelta)} callback
+ */
+chrome.downloads.onChanged.prototype.removeListener = function(callback) {};
+/**
+ * @param {function(!chrome.downloads.DownloadDelta)} callback
+ * @return {boolean}
+ */
+chrome.downloads.onChanged.prototype.hasListener = function(callback) {};
+/**
+ * @return {boolean}
+ */
+chrome.downloads.onChanged.prototype.hasListeners = function() {};
 
 
 /** @constructor */
@@ -5732,4 +5760,17 @@ chrome.downloads.onDeterminingFilename = function() {};
 /**
  * @param {function(!chrome.downloads.DownloadItem,function())} callback
  */
-chrome.downloads.onDeterminingFilename.addListener = function(callback) {};
+chrome.downloads.onDeterminingFilename.prototype.addListener = function(callback) {};
+/**
+ * @param {function(!chrome.downloads.DownloadItem,function())} callback
+ */
+chrome.downloads.onDeterminingFilename.prototype.removeListener = function(callback) {};
+/**
+ * @param {function(!chrome.downloads.DownloadItem,function())} callback
+ * @return {boolean}
+ */
+chrome.downloads.onDeterminingFilename.prototype.hasListener = function(callback) {};
+/**
+ * @return {boolean}
+ */
+chrome.downloads.onDeterminingFilename.prototype.hasListeners = function() {};
