@@ -5530,50 +5530,146 @@ chrome.webstore.onDownloadProgress;
  */
 chrome.downloads = {};
 
+/** @constructor */
+chrome.downloads.StringDelta = function() {};
+/** @type {!string} */
+chrome.downloads.StringDelta.prototype.previous;
+/** @type {!string} */
+chrome.downloads.StringDelta.prototype.current;
+
+/** @constructor */
+chrome.downloads.DoubleDelta = function() {};
+/** @type {!number} */
+chrome.downloads.DoubleDelta.prototype.previous;
+/** @type {!number} */
+chrome.downloads.DoubleDelta.prototype.current;
+
+/** @constructor */
+chrome.downloads.BooleanDelta = function() {};
+/** @type {!boolean} */
+chrome.downloads.BooleanDelta.prototype.previous;
+/** @type {!boolean} */
+chrome.downloads.BooleanDelta.prototype.current;
+
+/** @constructor */
+chrome.downloads.DownloadItem = function() {};
+/** @type {!number} */
+chrome.downloads.DownloadItem.prototype.id;
+/** @type {!string} */
+chrome.downloads.DownloadItem.prototype.url;
+/** @type {!string} */
+chrome.downloads.DownloadItem.prototype.referrer;
+/** @type {!string} */
+chrome.downloads.DownloadItem.prototype.filename;
+/** @type {!boolean} */
+chrome.downloads.DownloadItem.prototype.incognito;
+/** @type {!string} */
+chrome.downloads.DownloadItem.prototype.danger;
+/** @type {!string} */
+chrome.downloads.DownloadItem.prototype.mime;
+/** @type {!string} */
+chrome.downloads.DownloadItem.prototype.startTime;
+/** @type {string} */
+chrome.downloads.DownloadItem.prototype.endTime;
+/** @type {string} */
+chrome.downloads.DownloadItem.prototype.estimatedEndTime;
+/** @type {!string} */
+chrome.downloads.DownloadItem.prototype.state;
+/** @type {!boolean} */
+chrome.downloads.DownloadItem.prototype.paused;
+/** @type {!boolean} */
+chrome.downloads.DownloadItem.prototype.canResume;
+/** @type {string} */
+chrome.downloads.DownloadItem.prototype.error;
+/** @type {!number} */
+chrome.downloads.DownloadItem.prototype.bytesReceived;
+/** @type {!number} */
+chrome.downloads.DownloadItem.prototype.totalBytes;
+/** @type {!number} */
+chrome.downloads.DownloadItem.prototype.fileSize;
+/** @type {!boolean} */
+chrome.downloads.DownloadItem.prototype.exists;
+/** @type {string} */
+chrome.downloads.DownloadItem.prototype.byExtensionId;
+/** @type {string} */
+chrome.downloads.DownloadItem.prototype.byExtensionName;
+
+/** @constructor */
+chrome.downloads.DownloadDelta = function() {};
+/** @type {number} */
+chrome.downloads.DownloadDelta.prototype.id;
+/** @type {chrome.downloads.StringDelta} */
+chrome.downloads.DownloadDelta.prototype.url;
+/** @type {chrome.downloads.StringDelta} */
+chrome.downloads.DownloadDelta.prototype.filename;
+/** @type {chrome.downloads.StringDelta} */
+chrome.downloads.DownloadDelta.prototype.danger;
+/** @type {chrome.downloads.StringDelta} */
+chrome.downloads.DownloadDelta.prototype.mime;
+/** @type {chrome.downloads.StringDelta} */
+chrome.downloads.DownloadDelta.prototype.startTime;
+/** @type {chrome.downloads.StringDelta} */
+chrome.downloads.DownloadDelta.prototype.endTime;
+/** @type {chrome.downloads.StringDelta} */
+chrome.downloads.DownloadDelta.prototype.state;
+/** @type {chrome.downloads.BooleanDelta} */
+chrome.downloads.DownloadDelta.prototype.canResume;
+/** @type {chrome.downloads.BooleanDelta} */
+chrome.downloads.DownloadDelta.prototype.paused;
+/** @type {chrome.downloads.StringDelta} */
+chrome.downloads.DownloadDelta.prototype.error;
+/** @type {chrome.downloads.DoubleDelta} */
+chrome.downloads.DownloadDelta.prototype.totalBytes;
+/** @type {chrome.downloads.DoubleDelta} */
+chrome.downloads.DownloadDelta.prototype.fileSize;
+/** @type {chrome.downloads.BooleanDelta} */
+chrome.downloads.DownloadDelta.prototype.exists;
+
+
 /**
- * @param {object}
- * @param {function(integer)}
+ * @param {Object} options
+ * @param {function(number)=} callback
  */
 chrome.downloads.download = function(options, callback) {};
 
 /**
- * @param {object}
- * @param {function(Array.<DownloadItem>)}
+ * @param {Object} query
+ * @param {function(!Array.<chrome.downloads.DownloadItem>)} callback
  */
 chrome.downloads.search = function(query, callback) {};
 
 /**
- * @param {integer}
- * @param {function()}
+ * @param {!number} downloadId
+ * @param {function()=} callback
  */
 chrome.downloads.pause = function(downloadId, callback) {};
 
 /**
- * @param {integer}
- * @param {function()}
+ * @param {!number} downloadId
+ * @param {function()=} callback
  */
 chrome.downloads.resume = function(downloadId, callback) {};
 
 /**
- * @param {integer}
- * @param {function()}
+ * @param {!number} downloadId
+ * @param {function()=} callback
  */
 chrome.downloads.cancel = function(downloadId, callback) {};
 
 /**
- * @param {integer}
- * @param {object}
- * @param {function(string)}
+ * @param {!number} downloadId
+ * @param {?Object} options
+ * @param {function(!string)} callback
  */
 chrome.downloads.getFileIcon = function(downloadId, options, callback) {};
 
 /**
- * @param {integer}
+ * @param {!number} downloadId
  */
 chrome.downloads.open = function(downloadId) {};
 
 /**
- * @param {integer}
+ * @param {!number} downloadId
  */
 chrome.downloads.show = function(downloadId) {};
 
@@ -5583,29 +5679,57 @@ chrome.downloads.show = function(downloadId) {};
 chrome.downloads.showDefaultFolder = function() {};
 
 /**
- * @param {object}
- * @param {function(Array.<integer>)}
+ * @param {!Object} query
+ * @param {function(Array.<number>)=} callback
  */
 chrome.downloads.erase = function(query, callback) {};
 
 /**
- * @param {integer}
- * @param {function()}
+ * @param {!number} downloadId
+ * @param {function()=} callback
  */
 chrome.downloads.removeFile = function(downloadId, callback) {};
 
 /**
- * @param {integer}
- * @param {function()}
+ * @param {!number} downloadId
+ * @param {function()=} callback
  */
 chrome.downloads.acceptDanger = function(downloadId, callback) {};
 
 /**
- * @param {integer}
+ * @param {!number} downloadId
  */
 chrome.downloads.drag = function(downloadId) {};
 
 /**
- * @param {bool}
+ * @param {!boolean} enabled
  */
 chrome.downloads.setShelfEnabled = function(enabled) {};
+
+
+/** @constructor */
+chrome.downloads.onCreated = function() {};
+/**
+ * @param {function(!chrome.downloads.DownloadItem)} callback
+ */
+chrome.downloads.onCreated.addListener = function(callback) {};
+
+/**
+ * @type {!ChromeNumberEvent}
+ */
+chrome.downloads.onErased;
+
+/** @constructor */
+chrome.downloads.onChanged = function() {};
+/**
+ * @param {function(!chrome.downloads.DownloadDelta)} callback
+ */
+chrome.downloads.onChanged.addListener = function(callback) {};
+
+
+/** @constructor */
+chrome.downloads.onDeterminingFilename = function() {};
+/**
+ * @param {function(!chrome.downloads.DownloadItem,function())} callback
+ */
+chrome.downloads.onDeterminingFilename.addListener = function(callback) {};
