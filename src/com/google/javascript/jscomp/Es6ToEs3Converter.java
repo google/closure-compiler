@@ -171,7 +171,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         }
         break;
       case Token.TEMPLATELIT:
-        visitTemplateLiteral(t, n);
+        visitTemplateLiteral(n);
     }
   }
 
@@ -743,7 +743,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
   }
 
-  private void visitTemplateLiteral(NodeTraversal t, Node n) {
+  private void visitTemplateLiteral(Node n) {
     if (!n.getFirstChild().isName()) {
       createDefaultTemplateLiteral(n);
     } else {
