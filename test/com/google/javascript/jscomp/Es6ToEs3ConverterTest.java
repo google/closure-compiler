@@ -925,6 +925,9 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testDefaultParameters() {
     enableTypeCheck(CheckLevel.WARNING);
 
+    test("var x = true; function f(a=x) { var x = false; return a; }",
+        "var x = true; function f(a) { a === undefined && (a = x); var x$0 = false; return a; }");
+
     test("function f(zero, one = 1, two = 2) {}; f(1); f(1,2,3);",
         Joiner.on('\n').join(
           "function f(zero, one, two) {",

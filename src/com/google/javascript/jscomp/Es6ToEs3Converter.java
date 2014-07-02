@@ -82,20 +82,24 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   private static final String MAKE_ITER = "$jscomp$make$iterator";
 
+  private final UniqueNameGenerator unique = new UniqueNameGenerator();
+
   public Es6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
   @Override
   public void process(Node externs, Node root) {
+    new Es6HandleDefaultParameters(compiler, unique).process(externs, root);
     NodeTraversal.traverse(compiler, root, this);
-    new Es6RewriteLetConst(compiler).process(externs, root);
+    new Es6RewriteLetConst(compiler, unique).process(externs, root);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    new Es6HandleDefaultParameters(compiler, unique).hotSwapScript(scriptRoot, originalRoot);
     NodeTraversal.traverse(compiler, scriptRoot, this);
-    new Es6RewriteLetConst(compiler).hotSwapScript(scriptRoot, originalRoot);
+    new Es6RewriteLetConst(compiler, unique).hotSwapScript(scriptRoot, originalRoot);
   }
 
   /**
@@ -799,6 +803,14 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       }
     }
 
+  }
+
+  static class UniqueNameGenerator {
+    private int uId;
+
+    String generate(String name) {
+      return name + "$" + uId++;
+    }
   }
 
   private void cannotConvert(Node n, String message) {

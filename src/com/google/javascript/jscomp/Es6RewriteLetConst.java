@@ -20,6 +20,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.Es6ToEs3Converter.UniqueNameGenerator;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
@@ -43,16 +44,13 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
-  private int uId;
   private final Map<Node, Map<String, String>> renameMap = new LinkedHashMap<>();
   private final Set<Node> letConsts = new HashSet<>();
+  private final UniqueNameGenerator unique;
 
-  public Es6RewriteLetConst(AbstractCompiler compiler) {
+  public Es6RewriteLetConst(AbstractCompiler compiler, UniqueNameGenerator unique) {
     this.compiler = compiler;
-  }
-
-  private String newUniqueName(String name) {
-    return name + "$" + uId++;
+    this.unique = unique;
   }
 
   @Override
@@ -76,7 +74,7 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
     boolean doRename = false;
     if (scope != hoistScope) {
       doRename = hoistScope.isDeclared(oldName, true);
-      String newName = doRename ? newUniqueName(oldName) : oldName;
+      String newName = doRename ? unique.generate(oldName) : oldName;
       Var oldVar = scope.getVar(oldName);
       scope.undeclare(oldVar);
       hoistScope.declare(newName, nameNode, null, oldVar.input);
@@ -228,7 +226,8 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
           functionHandledMap.put(function, name);
 
           if (!loopObjectMap.containsKey(loopNode)) {
-            loopObjectMap.put(loopNode, new LoopObject(newUniqueName(LOOP_OBJECT_NAME)));
+            loopObjectMap.put(loopNode,
+                new LoopObject(unique.generate(LOOP_OBJECT_NAME)));
           }
           LoopObject object = loopObjectMap.get(loopNode);
           object.vars.add(var);
