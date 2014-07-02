@@ -150,7 +150,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         visitForOf(n, parent);
         break;
       case Token.SUPER:
-        visitSuper(n);
+        visitSuper(n, parent);
         break;
       case Token.STRING_KEY:
         visitStringKey(n);
@@ -238,14 +238,14 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     NodeTraversal.traverse(compiler, enclosingFunction, checkAssigns);
   }
 
-  private void visitSuper(Node node) {
-    Node enclosing = node.getParent();
+  private void visitSuper(Node node, Node parent) {
+    Node enclosing = parent;
     Node potentialCallee = node;
-    if (!enclosing.isCall()) {
-      enclosing = enclosing.getParent();
-      potentialCallee = potentialCallee.getParent();
+    if (!parent.isCall()) {
+      enclosing = parent.getParent();
+      potentialCallee = parent;
     }
-    if (!(enclosing.isCall() && enclosing.getFirstChild() == potentialCallee)) {
+    if (!enclosing.isCall() || enclosing.getFirstChild() != potentialCallee) {
       cannotConvertYet(node, "Only calls to super or to a method of super are supported.");
       return;
     }
@@ -265,11 +265,22 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
     Node enclosingMemberDef = NodeUtil.getEnclosingClassMember(node);
     if (enclosingMemberDef.isStaticMember()) {
-      node.getParent().replaceChild(node, clazz.getFirstChild().getNext().cloneTree());
-      Node callTarget = IR.getprop(potentialCallee.detachFromParent(), IR.string("call"));
-      callTarget.useSourceInfoIfMissingFromForTree(enclosing);
+      Node superName = clazz.getFirstChild().getNext();
+      Node callTarget;
+      potentialCallee.detachFromParent();
+      if (potentialCallee == node) {
+        // of the form super()
+        potentialCallee =
+            IR.getprop(superName.cloneTree(), IR.string(enclosingMemberDef.getString()));
+        enclosing.putBooleanProp(Node.FREE_CALL, false);
+      } else {
+        // of the form super.method()
+        potentialCallee.replaceChild(node, superName.cloneTree());
+      }
+      callTarget = IR.getprop(potentialCallee, IR.string("call"));
       enclosing.addChildToFront(callTarget);
       enclosing.addChildAfter(IR.thisNode(), callTarget);
+      enclosing.useSourceInfoIfMissingFromForTree(enclosing);
       compiler.reportCodeChange();
       return;
     }

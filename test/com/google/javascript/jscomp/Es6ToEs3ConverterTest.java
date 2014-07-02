@@ -587,6 +587,22 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
+  public void testSuperCallNonConstructor() {
+    test("class S extends B { static f() { super(); } }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {B} */",
+        "var S = function() {};",
+        "$jscomp$inherits(S, B);",
+        "$jscomp$copy$properties(S, B);",
+        "S.f=function() { B.f.call(this) }"));
+
+    test("class S extends B { f() { super(); } }", Joiner.on('\n').join(
+        "/** @constructor @struct @extends {B} */",
+        "var S = function() {};",
+        "$jscomp$inherits(S, B);",
+        "$jscomp$copy$properties(S, B);",
+        "S.prototype.f=function() { S.base(this, \"f\") }"));
+  }
+
   public void testStaticMethods() {
     test(Joiner.on('\n').join(
         "class C {",
