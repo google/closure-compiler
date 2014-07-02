@@ -783,6 +783,12 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ), null, null, TypeCheck.CONFLICTING_SHAPE_TYPE);
   }
 
+  public void testClassGetterSetter() {
+    test("class C { get value() {} }", null, Es6ToEs3Converter.CANNOT_CONVERT);
+
+    test("class C { set value(v) {} }", null, Es6ToEs3Converter.CANNOT_CONVERT);
+  }
+
   public void testArrowFunction() {
     test("var f = x => { return x+1; };",
         "var f = function(x) { return x+1; };");

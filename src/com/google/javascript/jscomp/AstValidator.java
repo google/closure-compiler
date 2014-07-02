@@ -367,8 +367,13 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateClassMember(Node n) {
-    validateNodeType(Token.MEMBER_DEF, n);
-    validateChildCount(n, Token.arity(Token.MEMBER_DEF));
+    if (n.getType() != Token.MEMBER_DEF
+        && n.getType() != Token.GETTER_DEF
+        && n.getType() != Token.SETTER_DEF) {
+      violation("Class contained member which was not a MEMBER_DEF, GETTER_DEF, or SETTER_DEF",
+          n);
+    }
+    validateChildCount(n, Token.arity(n.getType()));
     validateFunctionExpression(n.getFirstChild());
   }
 

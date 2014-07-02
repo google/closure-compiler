@@ -119,6 +119,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         // Need to check for super references before they get rewritten.
         checkClassSuperReferences(n);
         break;
+      case Token.CLASS_MEMBERS:
+        checkMemberDefs(n);
+        break;
       case Token.ARRAY_COMP:
       case Token.ARRAY_PATTERN:
       case Token.OBJECT_PATTERN:
@@ -236,6 +239,14 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
     CheckClassAssignments checkAssigns = new CheckClassAssignments(name);
     NodeTraversal.traverse(compiler, enclosingFunction, checkAssigns);
+  }
+
+  public void checkMemberDefs(Node members) {
+    for (Node member : members.children()) {
+      if (member.isGetterDef() || member.isSetterDef()) {
+        cannotConvert(member, "Cannot convert getters or setters in class definitions.");
+      }
+    }
   }
 
   private void visitSuper(Node node, Node parent) {
