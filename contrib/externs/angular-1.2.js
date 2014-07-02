@@ -1451,7 +1451,7 @@ angular.$interpolateProvider.endSymbol;
  *   protocol: function():string,
  *   replace: function(),
  *   search: function((string|Object.<string, string>)=,
- *       ?(string|Array.<string>)=): (!Object|angular.$location),
+ *       ?(string|Array.<string>|boolean)=): (!Object|angular.$location),
  *   url: function(string=):string
  *   }}
  */
@@ -1496,7 +1496,7 @@ angular.$location.replace = function() {};
 
 /**
  * @param {(string|Object.<string, string>)=} opt_search
- * @param {?(string|Array.<string>)=} opt_paramValue
+ * @param {?(string|Array.<string>|boolean)=} opt_paramValue
  * @return {(!Object|angular.$location)}
  */
 angular.$location.search = function(opt_search, opt_paramValue) {};
@@ -1941,6 +1941,9 @@ angular.$route.Route.regexp;
 /******************************************************************************
  * $routeParams Service
  *****************************************************************************/
+
+// TODO: This should be !Object.<string|boolean> because valueless query params
+// (without even an equal sign) come through as boolean "true".
 
 /** @typedef {!Object.<string>} */
 angular.$routeParams;
