@@ -1,6 +1,8 @@
+.idea/
 build/
 TESTS-TestSuites.xml
 junit*.properties
 target/
 *~
+*.iml
 .settings
