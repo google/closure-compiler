@@ -7,7 +7,7 @@ The [Closure Compiler](https://developers.google.com/closure/compiler/) is a too
  * See the [Google Developers Site](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for documentation including instructions for running the compiler from the command line.
 
 ## Options for Getting Help
-1. Post in the [Closure Compiler Discuss Group] (https://groups.google.com/forum/#!forum/closure-compiler-discuss)
+1. Post in the [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
 2. Ask a question on [Stack Overflow](http://stackoverflow.com/questions/tagged/google-closure-compiler)
 3. Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ)
 
@@ -31,7 +31,7 @@ Note: The Closure Compiler requires [Java 7 or higher](http://www.java.com/).
 ### Using [Eclipse](http://www.eclipse.org/)
 
 1. Download and open the [Eclipse IDE](http://www.eclipse.org/).
-2. Navigate to ```File > New > Project ...``` and create a Java Projet. Give
+2. Navigate to ```File > New > Project ...``` and create a Java Project. Give
    the project a name.
 3. Select ```Create project from existing source``` and choose the root of the
    checked-out source tree as the existing directory.
@@ -41,10 +41,10 @@ Note: The Closure Compiler requires [Java 7 or higher](http://www.java.com/).
 
 ## Running
 
-On the command line, type
+On the command line, at the root of this project, type
 
 ```
-java -jar compiler.jar
+java -jar build/compiler.jar
 ```
 
 This starts the compiler in interactive mode. Type
