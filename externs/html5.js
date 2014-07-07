@@ -916,6 +916,7 @@ WebWorker.prototype.onmessage;
 
 /**
  * Sent when the worker thread encounters an error.
+ * TODO(tbreisacher): Should this change to function(!ErrorEvent)?
  * @type {?function(!Event)}
  */
 WebWorker.prototype.onerror;
@@ -971,6 +972,7 @@ Worker.prototype.onmessage = function() {};
 
 /**
  * Sent when the worker thread encounters an error.
+ * TODO(tbreisacher): Should this change to function(!ErrorEvent)?
  * @type {?function(!Event)}
  */
 Worker.prototype.onerror = function() {};
@@ -1009,6 +1011,7 @@ SharedWorker.prototype.port;
 
 /**
  * Called on network errors for loading the initial script.
+ * TODO(tbreisacher): Should this change to function(!ErrorEvent)?
  * @type {?function(!Event)}
  */
 SharedWorker.prototype.onerror = function() {};
@@ -3510,3 +3513,47 @@ ShadowRoot.prototype.innerHTML;
  * @type {!StyleSheetList}
  */
 ShadowRoot.prototype.styleSheets;
+
+
+
+/**
+ * @see http://www.w3.org/TR/html5/webappapis.html#the-errorevent-interface
+ *
+ * @constructor
+ * @extends {Event}
+ *
+ * @param {string} type
+ * @param {ErrorEventInit=} opt_eventInitDict
+ */
+function ErrorEvent(type, opt_eventInitDict) {}
+
+/** @const {string} */
+ErrorEvent.prototype.message;
+
+/** @const {string} */
+ErrorEvent.prototype.filename;
+
+/** @const {number} */
+ErrorEvent.prototype.lineno;
+
+/** @const {number} */
+ErrorEvent.prototype.colno;
+
+/** @const {*} */
+ErrorEvent.prototype.error;
+
+
+/**
+ * @see http://www.w3.org/TR/html5/webappapis.html#the-errorevent-interface
+ *
+ * @typedef {{
+ *   bubbles: (boolean|undefined),
+ *   cancelable: (boolean|undefined),
+ *   message: string,
+ *   filename: string,
+ *   lineno: number,
+ *   colno: number,
+ *   error: *
+ * }}
+ */
+ var ErrorEventInit;
