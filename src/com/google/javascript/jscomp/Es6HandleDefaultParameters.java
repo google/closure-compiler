@@ -60,7 +60,9 @@ public class Es6HandleDefaultParameters extends AbstractPostOrderCallback
     }
 
     Node block = paramList.getNext();
-    Scope fBlockScope = new Es6SyntacticScopeCreator(compiler).createScope(block, null);
+    Es6SyntacticScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
+    Scope fScope = creator.createScope(n, t.getScope());
+    Scope fBlockScope = creator.createScope(block, fScope);
     Map<String, String> currFuncRenameMap = new HashMap<>();
     for (Iterator<Var> it = fBlockScope.getVars(); it.hasNext();) {
       Var var = it.next();
@@ -72,7 +74,7 @@ public class Es6HandleDefaultParameters extends AbstractPostOrderCallback
     }
     new NodeTraversal(compiler,
         new RenameReferences(fBlockScope, currFuncRenameMap))
-        .traverseInnerNode(block, block.getParent(), fBlockScope.getParent());
+        .traverseInnerNode(block, block.getParent(), fScope);
   }
 
   @Override
