@@ -284,12 +284,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("goog.example.C = class { }",
         "/** @constructor @struct */ goog.example.C = function() {}");
 
-    test("goog.example.C = class C { }",
-        "/** @constructor @struct */ goog.example.C = function() {}");
-
-    test("goog.example.C = class C { foo() {} }", Joiner.on('\n').join(
+    test("goog.example.C = class { foo() {} }", Joiner.on('\n').join(
         "/** @constructor @struct */ goog.example.C = function() {}",
-        "",
         "goog.example.C.prototype.foo = function() {};"
     ));
   }
@@ -494,6 +490,12 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "$jscomp$inherits(C, D);",
         "$jscomp$copy$properties(C, D);"
     ));
+  }
+
+  public void testMultiNameClass() {
+    test("var F = class G {}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("F = class G {}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testClassNested() {

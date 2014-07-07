@@ -548,6 +548,13 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             + " side of a simple assignment.");
       return;
     }
+
+    if (!className.isEmpty() && !className.getString().equals(fullClassName)) {
+      // cannot bind two class names in the case of: var Foo = class Bar {};
+      cannotConvertYet(classNode, "named class in an assignment");
+      return;
+    }
+
     boolean useUnique = NodeUtil.isStatement(classNode) && !isInFunction(classNode);
     String uniqueFullClassName = useUnique ? getUniqueClassName(fullClassName) : fullClassName;
     String superClassString = superClassName.getQualifiedName();
