@@ -942,8 +942,8 @@ class NewIRFactory {
     }
 
     @Override
-    Node processSpreadPatternElement(SpreadPatternElementTree tree) {
-      return newNode(Token.SPREAD, transform(tree.lvalue));
+    Node processAssignmentRestElement(AssignmentRestElementTree tree) {
+      return newStringNode(Token.REST, tree.identifier.value);
     }
 
     @Override

@@ -2130,7 +2130,7 @@ public class Parser {
 
     eat(TokenType.OPEN_PAREN);
     while (peekAssignmentOrSpread()) {
-      arguments.add(parseAssignmentOrSpead());
+      arguments.add(parseAssignmentOrSpread());
 
       if (!peek(TokenType.CLOSE_PAREN)) {
         eat(TokenType.COMMA);
@@ -2144,13 +2144,13 @@ public class Parser {
    * Whether we have a spread expression or an assignment next.
    *
    * This does not peek the operand for the spread expression. This means that
-   * {@code parseAssignmentOrSpread} might still fail when this returns true.
+   * {@link parseAssignmentOrSpread} might still fail when this returns true.
    */
   private boolean peekAssignmentOrSpread() {
     return peek(TokenType.SPREAD) || peekAssignmentExpression();
   }
 
-  private ParseTree parseAssignmentOrSpead() {
+  private ParseTree parseAssignmentOrSpread() {
     if (peek(TokenType.SPREAD)) {
       return parseSpreadExpression();
     }
@@ -2269,22 +2269,25 @@ public class Parser {
 
     // An element that's not a sub-pattern
 
-    boolean spread = false;
+    boolean rest = false;
     SourcePosition start = getTreeStartLocation();
     if (peek(TokenType.SPREAD)) {
       eat(TokenType.SPREAD);
-      spread = true;
+      rest = true;
     }
 
     ParseTree lvalue = parseLeftHandSideExpression();
 
-    if (kind == PatternKind.INITIALIZER
+    if ((rest || kind == PatternKind.INITIALIZER)
         && lvalue.type != ParseTreeType.IDENTIFIER_EXPRESSION) {
       reportError("lvalues in initializer patterns must be identifiers");
+      return lvalue;
     }
 
-    return spread
-        ? new SpreadPatternElementTree(getTreeLocation(start), lvalue)
+    return rest
+        ? new AssignmentRestElementTree(
+            getTreeLocation(start),
+            lvalue.asIdentifierExpression().identifierToken)
         : lvalue;
   }
 
@@ -2304,8 +2307,8 @@ public class Parser {
         ParseTree element = parsePatternElement(kind, arraySubPatternFollowSet);
         elements.add(element);
 
-        if (element.isSpreadPatternElement()) {
-          // Spread can only appear in the posterior, so we must be done
+        if (element.isAssignmentRestElement()) {
+          // Rest can only appear in the posterior, so we must be done
           break;
         } else if (peek(TokenType.COMMA)) {
           // Consume the comma separator
@@ -2359,7 +2362,7 @@ public class Parser {
       eat(TokenType.COLON);
       element = parsePatternElement(kind, objectSubPatternFollowSet);
 
-      if (element.isSpreadPatternElement()) {
+      if (element.isAssignmentRestElement()) {
         reportError("Rest can not be used in object patterns");
       }
     }

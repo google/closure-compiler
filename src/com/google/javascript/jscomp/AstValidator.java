@@ -599,10 +599,12 @@ public class AstValidator implements CompilerPass {
   private void validateArrayPattern(int type, Node n) {
     validateNodeType(Token.ARRAY_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      // When the array pattern is a direct child of a VAR node,
-      // the last element is the RHS of the 'var' assignment.
-      if (c == n.getLastChild() && n.getParent().isVar()) {
+      // When the array pattern is a direct child of a var/let/const node,
+      // the last element is the RHS of the assignment.
+      if (c == n.getLastChild() && NodeUtil.isNameDeclaration(n.getParent())) {
         validateExpression(c);
+      } else if (c.isRest()) {
+        validateRest(c);
       } else {
         // The members of the array pattern can be simple names,
         // or nested array/object patterns, e.g. "var [a,[b,c]]=[1,[2,3]];"

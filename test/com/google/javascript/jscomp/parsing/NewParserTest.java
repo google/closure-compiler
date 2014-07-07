@@ -1073,12 +1073,13 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("var [x,] = ['x',];", "'identifier' expected");
   }
 
-  public void testArrayDestructuringSpread() {
+  public void testArrayDestructuringRest() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("var [first, ...rest] = foo();");
 
-    // TODO(tbreisacher): Make this error clearer.
+    // TODO(tbreisacher): Make these errors clearer.
     parseError("var [first, ...more, last] = foo();", "'identifier' expected");
+    parseError("var [first, ...[re, st]] = foo();", "'identifier' expected");
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("var [first, ...rest] = foo();",

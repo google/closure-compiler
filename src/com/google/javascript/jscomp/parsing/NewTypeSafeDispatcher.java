@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.parsing;
 
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
+import com.google.javascript.jscomp.parsing.parser.trees.AssignmentRestElementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BlockTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BreakStatementTree;
@@ -71,7 +72,6 @@ import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SpreadExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.SpreadPatternElementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TemplateLiteralExpressionTree;
@@ -153,7 +153,7 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processArrayPattern(ArrayPatternTree tree);
   abstract T processObjectPattern(ObjectPatternTree tree);
   abstract T processObjectPatternField(ObjectPatternFieldTree tree);
-  abstract T processSpreadPatternElement(SpreadPatternElementTree tree);
+  abstract T processAssignmentRestElement(AssignmentRestElementTree tree);
   abstract T processComprehension(ComprehensionTree tree);
   abstract T processComprehensionFor(ComprehensionForTree tree);
   abstract T processComprehensionIf(ComprehensionIfTree tree);
@@ -330,8 +330,8 @@ abstract class NewTypeSafeDispatcher<T> {
         return processObjectPattern(node.asObjectPattern());
       case OBJECT_PATTERN_FIELD:
         return processObjectPatternField(node.asObjectPatternField());
-      case SPREAD_PATTERN_ELEMENT:
-        return processSpreadPatternElement(node.asSpreadPatternElement());
+      case ASSIGNMENT_REST_ELEMENT:
+        return processAssignmentRestElement(node.asAssignmentRestElement());
 
       case COMPREHENSION:
         return processComprehension(node.asComprehension());
