@@ -663,9 +663,9 @@ public class CheckAccessControlsTest extends CompilerTestCase {
       test(new String[] {
         "/** @constructor */ function Foo() {}" +
         "Foo.prototype = {" +
-        "/** @protected */ bar_: 3" +
+        "/** @protected */ bar: 3" +
         "}",
-        "new Foo().bar_;"
+        "new Foo().bar;"
       }, null, BAD_PROTECTED_PROPERTY_ACCESS);
     }
 
@@ -673,9 +673,9 @@ public class CheckAccessControlsTest extends CompilerTestCase {
       test(new String[] {
         "/** @constructor */ function Foo() {}" +
         "Foo.prototype = {" +
-        "/** @protected */ bar_: function() {}" +
+        "/** @protected */ bar: function() {}" +
         "}",
-        "new Foo().bar_();"
+        "new Foo().bar();"
       }, null, BAD_PROTECTED_PROPERTY_ACCESS);
     }
 
@@ -1038,6 +1038,36 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         "/** @constructor */ function Foo() {" +
         "  /** @protected */ this.length_ = 1;\n" +
         "}\n",
+        CONVENTION_MISMATCH, true);
+  }
+
+  public void testDeclarationAndConventionConflict4a() {
+    testSame(
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype = { /** @protected */ length_: 1 }\n" +
+        "new Foo().length_",
+        CONVENTION_MISMATCH, true);
+  }
+
+  public void testDeclarationAndConventionConflict4b() {
+    testSame(
+        "var NS = {}; /** @constructor */ NS.Foo = function() {};" +
+        "NS.Foo.prototype = { /** @protected */ length_: 1 };\n" +
+        "(new NS.Foo()).length_;",
+        CONVENTION_MISMATCH, true);
+  }
+
+  public void testDeclarationAndConventionConflict5() {
+    testSame(
+        "/** @constructor */ function Foo() {}\n" +
+        "Foo.prototype = { /** @protected */ get length_() { return 1; } }\n",
+        CONVENTION_MISMATCH, true);
+  }
+
+  public void testDeclarationAndConventionConflict6() {
+    testSame(
+        "/** @constructor */ function Foo() {}\n" +
+        "Foo.prototype = { /** @protected */ set length_(x) { } }\n",
         CONVENTION_MISMATCH, true);
   }
 
