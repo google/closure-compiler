@@ -1391,6 +1391,25 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "Hex digit expected");
   }
 
+  public void testExponentialLiterals() {
+    parse("0e0");
+    parse("0E0");
+    parse("0E1");
+    parse("1E0");
+    parse("1E-0");
+    parse("10E10");
+    parse("10E-10");
+    parse("1.0E1");
+    parseError("01E0",
+        "Semi-colon expected");
+    parseError("0E",
+        "Exponent part must contain at least one digit");
+    parseError("1E-",
+        "Exponent part must contain at least one digit");
+    parseError("1E1.1",
+        "Semi-colon expected");
+  }
+
   public void testBinaryLiterals() {
     mode = LanguageMode.ECMASCRIPT3;
     parseWarning("0b0001;",

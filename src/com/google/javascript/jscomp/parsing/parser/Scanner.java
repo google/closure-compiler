@@ -612,11 +612,20 @@ public class Scanner {
       skipHexDigits();
       return new LiteralToken(
           TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
+    case 'e':
+    case 'E':
+      return scanExponentOfNumericLiteral(beginToken);
     case '.':
       return scanFractionalNumericLiteral(beginToken);
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
-      return scanPostDigit(beginToken);
+      skipDecimalDigits();
+      if (peek('.')) {
+          nextChar();
+          skipDecimalDigits();
+      }
+      return new LiteralToken(
+          TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
     default:
       return new LiteralToken(
           TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));

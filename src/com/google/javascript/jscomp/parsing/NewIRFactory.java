@@ -2223,6 +2223,8 @@ class NewIRFactory {
       // TODO(johnlenz): accept octal numbers in es3 etc.
       switch (value.charAt(1)) {
         case '.':
+        case 'e':
+        case 'E':
           return Double.valueOf(value);
         case 'b':
         case 'B': {
