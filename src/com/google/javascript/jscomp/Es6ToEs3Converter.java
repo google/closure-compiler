@@ -277,6 +277,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     Node enclosingMemberDef = NodeUtil.getEnclosingClassMember(node);
     if (enclosingMemberDef.isStaticMember()) {
       Node superName = clazz.getFirstChild().getNext();
+      if (!superName.isQualifiedName()) {
+        // This has already been reported, just don't need to continue processing the class.
+        return;
+      }
       Node callTarget;
       potentialCallee.detachFromParent();
       if (potentialCallee == node) {
@@ -479,7 +483,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   private void checkClassSuperReferences(Node classNode) {
     Node className = classNode.getFirstChild();
     Node superClassName = className.getNext();
-    if (NodeUtil.referencesSuper(classNode) && superClassName.isEmpty()) {
+    if (NodeUtil.referencesSuper(classNode) && !superClassName.isQualifiedName()) {
       compiler.report(JSError.make(classNode, NO_SUPERTYPE));
     }
   }

@@ -448,6 +448,12 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("class C { constructor() { super(); } }",
         null, Es6ToEs3Converter.NO_SUPERTYPE);
 
+    test("class C { f() { super(); } }",
+        null, Es6ToEs3Converter.NO_SUPERTYPE);
+
+    test("class C { static f() { super(); } }",
+        null, Es6ToEs3Converter.NO_SUPERTYPE);
+
     test("class C { method() { class D extends C { constructor() { super(); }}}}",
         Joiner.on('\n').join(
         "/** @constructor @struct */",
