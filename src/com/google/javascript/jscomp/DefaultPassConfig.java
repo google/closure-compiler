@@ -289,7 +289,10 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     if (needsConversion) {
+      checks.add(es6HandleDefaultParams);
       checks.add(convertEs6ToEs3);
+      checks.add(rewriteLetConst);
+      checks.add(markTranspilationDone);
       checks.add(convertStaticInheritance);
     }
 
@@ -1079,26 +1082,32 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
+  final HotSwapPassFactory es6HandleDefaultParams =
+      new HotSwapPassFactory("Es6HandleDefaultParams", true) {
+    @Override
+    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+      return new Es6HandleDefaultParameters(compiler);
+    }
+  };
 
-  /** Converts ES6 code to ES3 code. */
+  /**
+   * Does the main ES6 to ES3 conversion.
+   * There are a few other passes which run before or after this one,
+   * to convert constructs which are not converted by this pass.
+   */
   final HotSwapPassFactory convertEs6ToEs3 =
       new HotSwapPassFactory("convertEs6", true) {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      final HotSwapCompilerPass converter = new Es6ToEs3Converter(compiler);
+      return new Es6ToEs3Converter(compiler);
+    }
+  };
 
-      return new HotSwapCompilerPass() {
-        @Override
-        public void process(Node externs, Node root) {
-          converter.process(externs, root);
-          compiler.setLanguageMode(options.getLanguageOut());
-        }
-
-        @Override
-        public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-          converter.hotSwapScript(scriptRoot, originalRoot);
-        }
-      };
+  final HotSwapPassFactory rewriteLetConst =
+      new HotSwapPassFactory("Es6RewriteLetConst", true) {
+    @Override
+    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+      return new Es6RewriteLetConst(compiler);
     }
   };
 
@@ -1107,6 +1116,17 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new Es6ToEs3ClassSideInheritance(compiler);
+    }
+  };
+
+  final PassFactory markTranspilationDone = new PassFactory("setLanguageMode", true) {
+    @Override
+    protected CompilerPass create(final AbstractCompiler compiler) {
+      return new CompilerPass() {
+        public void process(Node externs, Node root) {
+          compiler.setLanguageMode(options.getLanguageOut());
+        }
+      };
     }
   };
 

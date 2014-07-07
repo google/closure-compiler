@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.Es6ToEs3Converter.UniqueNameGenerator;
 
 /**
  * Test case for {@link Es6HandleDefaultParameters}.
@@ -43,7 +42,7 @@ public class Es6HandleDefaultParametersTest extends CompilerTestCase {
 
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
-    return new Es6HandleDefaultParameters(compiler, new UniqueNameGenerator());
+    return new Es6HandleDefaultParameters(compiler);
   }
 
   @Override

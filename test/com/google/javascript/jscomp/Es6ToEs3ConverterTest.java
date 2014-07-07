@@ -52,8 +52,13 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
-    return new Es6ToEs3Converter(compiler);
+  public CompilerPass getProcessor(final Compiler compiler) {
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null, null);
+    DefaultPassConfig passConfig = new DefaultPassConfig(getOptions());
+    optimizer.addOneTimePass(passConfig.es6HandleDefaultParams);
+    optimizer.addOneTimePass(passConfig.convertEs6ToEs3);
+    optimizer.addOneTimePass(passConfig.rewriteLetConst);
+    return optimizer;
   }
 
   @Override

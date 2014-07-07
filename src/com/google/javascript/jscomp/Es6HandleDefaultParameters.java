@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
-import com.google.javascript.jscomp.Es6ToEs3Converter.UniqueNameGenerator;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
@@ -40,9 +39,9 @@ public class Es6HandleDefaultParameters extends AbstractPostOrderCallback
   private final AbstractCompiler compiler;
   private final UniqueNameGenerator unique;
 
-  public Es6HandleDefaultParameters(AbstractCompiler compiler, UniqueNameGenerator unique) {
+  public Es6HandleDefaultParameters(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.unique = unique;
+    this.unique = new UniqueNameGenerator();
   }
 
   @Override
