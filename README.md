@@ -39,6 +39,17 @@ Note: The Closure Compiler requires [Java 7 or higher](http://www.java.com/).
    the Outline pane. Run the ```jar``` rule to build the compiler in
    ```build/compiler.jar```.
 
+### Using [IntelliJ IDEA](http://www.jetbrains.com/idea/)
+
+1. Download and open [IntelliJ](http://www.jetbrains.com/idea/download/)
+1. Click ```Import Project...``` or```File > Import Project...``` and choose the
+   this project's root directory.
+1. Create the project from Eclipse using the default options.
+1. Navigate to ```View > Tool Windows > Ant Build```.
+1. Click the "+" in the Ant Build window and add ```build.xml```.
+1. To build, click the play button in the Ant Build window. Alternatively, you
+   can use ```Build > compiler > jar```.
+
 ## Running
 
 On the command line, at the root of this project, type
