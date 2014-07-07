@@ -561,7 +561,7 @@ public class AstValidator implements CompilerPass {
         break;
       default:
         violation("SPREAD node should not be the child of a "
-            + parent.getType() + " node.", n);
+            + Token.name(parent.getType()) + " node.", n);
     }
   }
 
