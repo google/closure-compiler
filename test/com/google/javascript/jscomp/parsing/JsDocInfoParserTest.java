@@ -2890,11 +2890,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. @template tag missing type name");
   }
 
-  public void testParserWithTypeTransformation() {
-    parse("@template T as\n type('string')*/");
+  public void testParserWithTypeTransformationNewline() {
+    parse("@template R as\n type('string')*/",
+        "Bad type annotation. Missing type transformation expression");
   }
 
-  public void testParserWithTypeTransformationNewline() {
+  public void testParserWithTypeTransformation() {
     parse("@template T as type('string')*/");
   }
 
@@ -2904,12 +2905,6 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         + "Type transformation must be associated to a single type name");
   }
 
-  public void testParserWithAsKeywordTwice() {
-    parse("@template S as type('number') as type('string')*/",
-        "Bad type annotation. "
-        + "Type transformation annotation must contain a single as");
-  }
-
   public void testParserWithValidAsKeywordTwice() {
     parse("@template Tas as type('string')*/");
   }
@@ -2917,6 +2912,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithMissingTypeTransformationExpression() {
     parse("@template T as*/",
         "Bad type annotation. Missing type transformation expression");
+  }
+
+  public void testBug16129690() {
+    parse("@param {T} x\n"
+        + "@template T\n"
+        + "random documentation text*/");
   }
 
   public void testWhitelistedNewAnnotations() {

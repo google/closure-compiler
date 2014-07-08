@@ -877,36 +877,28 @@ public final class JsDocInfoParser {
           return token;
 
         case TEMPLATE: {
-          ExtractionInfo templateInfo = extractMultilineTextualBlock(token);
-          // Split the annotation with "as" to detect a type transformation
-          List<String> templateString =
-              Splitter.on(" as")
-              .trimResults()
-              .splitToList(templateInfo.string);
-
+          ExtractionInfo templateInfo = extractSingleLineBlock();
           boolean isTypeTransformation = false;
-          // There is a type transformation if the "as" splits the text
-          if (templateString.size() >= 2) {
+          String templateNames;
+          String typeTransformationStart = "";
+          // Detect if there is a type transformation
+          if (templateInfo.string.contains(" as")) {
             isTypeTransformation = true;
-            // templateString.get(1) contains the type transformation
-            if (templateString.get(1).isEmpty()) {
-              parser.addTypeWarning(
-                  "msg.jsdoc.typetransformation.expression.missing",
-                  stream.getLineno(), stream.getCharno());
-            }
-            // For each @template only one transformation is accepted
-            if (templateString.size() >= 3) {
-              parser.addTypeWarning(
-                  "msg.jsdoc.typetransformation.found.multiple.as",
-                  stream.getLineno(), stream.getCharno());
-            }
+            int typeTransformationIndex = templateInfo.string.indexOf(" as");
+            // Split into the template names and the type transformation
+            templateNames = templateInfo.string
+                .substring(0, typeTransformationIndex);
+            typeTransformationStart = templateInfo.string
+                .substring(typeTransformationIndex + 3);
+          } else {
+            templateNames = templateInfo.string;
           }
 
-          // templateString.get(0) contains the template type names
+          // Obtain the template type names
           List<String> names = Lists.newArrayList(
               Splitter.on(',')
                   .trimResults()
-                  .split(templateString.get(0)));
+                  .split(templateNames));
 
           if (names.size() == 1 && names.get(0).isEmpty()) {
             parser.addTypeWarning("msg.jsdoc.templatemissing",
@@ -923,13 +915,30 @@ public final class JsDocInfoParser {
             }
           }
 
-          // Each transformation must have a single type name
-          if (isTypeTransformation && names.size() > 1) {
-             parser.addTypeWarning(
-                 "msg.jsdoc.typetransformation.with.multiple.names",
-                 stream.getLineno(), stream.getCharno());
+          // Parse the type transformation expression
+          if (isTypeTransformation) {
+            // If it is a type transformation there has to be a single type name
+            if (names.size() > 1) {
+                parser.addTypeWarning(
+                    "msg.jsdoc.typetransformation.with.multiple.names",
+                    stream.getLineno(), stream.getCharno());
+            }
+            // Extract the TTL expression
+            ExtractionInfo typeTransformationInfo =
+                extractMultilineTextualBlock(templateInfo.token);
+            String typeTransformationEnd = typeTransformationInfo.string;
+            String typeTransformationString =
+                typeTransformationStart + typeTransformationEnd;
+            if (typeTransformationString.equals("")) {
+              parser.addTypeWarning(
+                  "msg.jsdoc.typetransformation.expression.missing",
+                  stream.getLineno(), stream.getCharno());
+            }
+            // Update the token after the parsing the type transformation
+            token = typeTransformationInfo.token;
+          } else {
+            token = templateInfo.token;
           }
-          token = templateInfo.token;
           return token;
         }
 
