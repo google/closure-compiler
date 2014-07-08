@@ -606,6 +606,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var S = function() {};",
         "$jscomp$inherits(S, B);",
         "$jscomp$copy$properties(S, B);",
+        "/** @this {?} */",
         "S.f=function() { B.f.call(this) }"));
 
     test("class S extends B { f() { super(); } }", Joiner.on('\n').join(
@@ -614,6 +615,12 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "$jscomp$inherits(S, B);",
         "$jscomp$copy$properties(S, B);",
         "S.prototype.f=function() { S.base(this, \"f\") }"));
+  }
+
+  public void testStaticThis() {
+    test("class F { static f() { return this; } }", Joiner.on('\n').join(
+        "/** @constructor @struct */ var F = function() {}",
+        "/** @this {?} */ F.f = function() { return this; };"));
   }
 
   public void testStaticMethods() {

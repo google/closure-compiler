@@ -588,6 +588,18 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         assign.srcref(member);
 
         JSDocInfo info = member.getJSDocInfo();
+        if (member.isStaticMember() && NodeUtil.referencesThis(assign.getLastChild())) {
+          JSDocInfoBuilder memberDoc;
+          if (info == null) {
+            memberDoc = new JSDocInfoBuilder(true);
+          } else {
+            memberDoc = JSDocInfoBuilder.copyFrom(info);
+          }
+          memberDoc.recordThisType(
+              new JSTypeExpression(new Node(Token.BANG, new Node(Token.QMARK)),
+              member.getSourceFileName()));
+          info = memberDoc.build(assign);
+        }
         if (info != null) {
           info.setAssociatedNode(assign);
           assign.setJSDocInfo(info);
