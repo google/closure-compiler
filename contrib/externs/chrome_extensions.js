@@ -4798,6 +4798,139 @@ chrome.alarms.AlarmCreateInfo;
 
 
 /**
+ * @see https://developer.chrome.com/apps/hid
+ * @const
+ */
+chrome.hid = {};
+
+
+/**
+ * @typedef {?{
+ *   vendorId: number,
+ *   productId: number
+ * }}
+ * @see https://developer.chrome.com/apps/hid#method-getDevices
+ */
+chrome.hid.HidGetDevicesOptions;
+
+/**
+ * @typedef {?{
+ *   usagePage: number,
+ *   usage: number,
+ *   reportIds: !Array.<number>
+ * }}
+* @see https://developer.chrome.com/apps/hid#method-getDevices
+*/
+chrome.hid.HidDeviceUsage;
+
+/**
+ * @typedef {?{
+ *   deviceId: number,
+ *   vendorId: number,
+ *   productId: number,
+ *   collections: !Array.<!chrome.hid.HidDeviceUsage>,
+ *   maxInputReportSize: number,
+ *   maxOutputReportSize: number,
+ *   maxFeatureReportSize: number
+ * }}
+* @see https://developer.chrome.com/apps/hid#method-getDevices
+*/
+chrome.hid.HidDeviceInfo;
+
+
+/**
+ * @typedef {?{
+ *   connectionId: number
+ * }}
+ * @see https://developer.chrome.com/apps/hid#method-connect
+ */
+chrome.hid.HidConnectInfo;
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-getDevices
+ * Enumerates all the connected HID devices specified by the
+ * vendorId/productId/interfaceId tuple.
+ * @param {!chrome.hid.HidGetDevicesOptions} options The properties to search
+ *     for on target devices.
+ * @param {function(!Array.<!Object>)} callback Invoked with a list of
+ *     |HidDeviceInfo|s on complete.
+ */
+chrome.hid.getDevices = function(options, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-connect
+ * Opens a connection to a HID device for communication.
+ * @param {number} deviceId The ID of the device to open.
+ * @param {function(!Object=)} callback Invoked with an |HidConnectInfo| if the
+ *     connection succeeds, or undefined if it fails.
+ */
+chrome.hid.connect = function(deviceId, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-disconnect
+ * Disconnects from a device.
+ * @param {number} connectionId The connection to close.
+ * @param {function()=} opt_callback The callback to invoke once the connection
+ *     is closed.
+ */
+chrome.hid.disconnect = function(connectionId, opt_callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-receive
+ * Receives an input report from an HID device.
+ * @param {number} connectionId The connection from which to receive the report.
+ * @param {number} size The size of the input report to receive.
+ * @param {function(!ArrayBuffer)} callback The callback to invoke with the
+ *     received report.
+ */
+chrome.hid.receive = function(connectionId, size, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-send
+ * Sends an output report to an HID device.
+ * @param {number} connectionId The connection to which to send the report.
+ * @param {number} reportId The report ID to use, or 0 if none.
+ * @param {!ArrayBuffer} data The report data.
+ * @param {function()} callback The callback to invoke once the write is
+ *     finished.
+ */
+chrome.hid.send = function(connectionId, reportId, data, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-receiveFeatureReport
+ * Receives a feature report from the device.
+ * @param {number} connectionId The connection from which to read the feature
+ *     report.
+ * @param {number} reportId The report ID to use, or 0 if none.
+ * @param {number} size The size of the feature report to receive.
+ * @param {function(!ArrayBuffer)} callback The callback to invoke with the
+ *     received report.
+ */
+chrome.hid.receiveFeatureReport =
+    function(connectionId, reportId, size, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-sendFeatureReport
+ * Sends a feature report to the device.
+ * @param {number} connectionId The connection to which to send the feature
+ *     report.
+ * @param {number} reportId The report ID to use, or 0 if none.
+ * @param {!ArrayBuffer} data The report data.
+ * @param {function()} callback The callback to invoke once the write is
+ *     finished.
+ */
+chrome.hid.sendFeatureReport =
+    function(connectionId, reportId, data, callback) {};
+
+
+/**
  * @see http://developer.chrome.com/extensions/notifications.html
  * @const
  */
