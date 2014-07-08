@@ -176,7 +176,7 @@ significantly for use by Google's JavaScript compiler.</td>
   <tr>
     <td>Local Modifications</td>
     <td>The packages have been renamespaced. All code not
-relevant to parsing has been removed. A JsDoc parser and static typing
+relevant to the parse tree has been removed. A JsDoc parser and static typing
 system have been added.</td>
   </tr>
 </table>
