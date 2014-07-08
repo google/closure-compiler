@@ -45,11 +45,9 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
   private final AbstractCompiler compiler;
   private final Map<Node, Map<String, String>> renameMap = new LinkedHashMap<>();
   private final Set<Node> letConsts = new HashSet<>();
-  private final UniqueNameGenerator unique;
 
   public Es6RewriteLetConst(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.unique = new UniqueNameGenerator();
   }
 
   @Override
@@ -73,7 +71,9 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
     boolean doRename = false;
     if (scope != hoistScope) {
       doRename = hoistScope.isDeclared(oldName, true);
-      String newName = doRename ? unique.generate(oldName) : oldName;
+      String newName = doRename
+          ? oldName + "$" + compiler.getUniqueNameIdSupplier().get()
+          : oldName;
       Var oldVar = scope.getVar(oldName);
       scope.undeclare(oldVar);
       hoistScope.declare(newName, nameNode, null, oldVar.input);
@@ -226,7 +226,8 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
 
           if (!loopObjectMap.containsKey(loopNode)) {
             loopObjectMap.put(loopNode,
-                new LoopObject(unique.generate(LOOP_OBJECT_NAME)));
+                new LoopObject(
+                    LOOP_OBJECT_NAME + "$" + compiler.getUniqueNameIdSupplier().get()));
           }
           LoopObject object = loopObjectMap.get(loopNode);
           object.vars.add(var);

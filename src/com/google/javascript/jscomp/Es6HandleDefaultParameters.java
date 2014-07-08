@@ -37,11 +37,9 @@ public class Es6HandleDefaultParameters extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
-  private final UniqueNameGenerator unique;
 
   public Es6HandleDefaultParameters(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.unique = new UniqueNameGenerator();
   }
 
   @Override
@@ -69,7 +67,8 @@ public class Es6HandleDefaultParameters extends AbstractPostOrderCallback
       String oldName = var.getName();
       if (collector.currFuncReferences.contains(oldName)
           && !currFuncRenameMap.containsKey(oldName)) {
-        currFuncRenameMap.put(oldName, unique.generate(oldName));
+        currFuncRenameMap.put(
+            oldName, oldName + "$" + compiler.getUniqueNameIdSupplier().get());
       }
     }
     new NodeTraversal(compiler,

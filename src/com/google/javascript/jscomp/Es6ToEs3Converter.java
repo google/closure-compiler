@@ -63,11 +63,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   private static final String FRESH_SPREAD_VAR = "$jscomp$spread$args";
 
-  private int freshSpreadVarCounter = 0;
-
   private static final String FRESH_COMP_PROP_VAR = "$jscomp$compprop";
-
-  private int freshPropVarCounter = 0;
 
   // The name of the property-copying function, defined in runtime_lib.js
   public static final String COPY_PROP = "$jscomp$copy$properties";
@@ -75,8 +71,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   private static final String INHERITS = "$jscomp$inherits";
 
   private static final String ITER_BASE = "$jscomp$iter$";
-
-  private int iterCounter = 0;
 
   private static final String ITER_RESULT = "$jscomp$key$";
 
@@ -201,7 +195,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     Node iterable = node.removeFirstChild();
     Node body = node.removeFirstChild();
 
-    Node iterName = IR.name(ITER_BASE + (iterCounter++));
+    Node iterName = IR.name(ITER_BASE + compiler.getUniqueNameIdSupplier().get());
     Node getNext = IR.call(IR.getprop(iterName.cloneTree(), IR.string("next")));
     String variableName = variable.isName() ? variable.getQualifiedName()
         : variable.getFirstChild().getQualifiedName(); // var or let
@@ -393,7 +387,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         while (!NodeUtil.isStatement(statement)) {
           statement = statement.getParent();
         }
-        Node freshVar = IR.name(FRESH_SPREAD_VAR + freshSpreadVarCounter++);
+        Node freshVar = IR.name(FRESH_SPREAD_VAR + compiler.getUniqueNameIdSupplier().get());
         Node n = IR.var(freshVar.cloneTree());
         n.useSourceInfoIfMissingFromForTree(statement);
         statement.getParent().addChildBefore(n, statement);
@@ -432,7 +426,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       }
     }
 
-    String objName = FRESH_COMP_PROP_VAR + freshPropVarCounter++;
+    String objName = FRESH_COMP_PROP_VAR + compiler.getUniqueNameIdSupplier().get();
 
     props = Lists.reverse(props);
     Node result = IR.name(objName);
