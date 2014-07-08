@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 The Closure Compiler Authors.
+ * Copyright 2014 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import com.google.javascript.rhino.jstype.JSType;
  * have results that are used. If not, we should protect the call
  * and warn the user about potentially useless code. Because some extern
  * methods have hidden side effects, we cannot simply remove them as dead code.
- * See issue 237.
+ * @see https://github.com/google/closure-compiler/issues/237
  *
  * Because the JSDoc information needed is type information,
  * it's important that TypedScopeCreator, TypeInference, and InferJSDocInfo
@@ -135,3 +135,4 @@ class CheckNoSideEffectExternCalls extends AbstractPostOrderCallback
     compiler.reportCodeChange();
   }
 }
+
