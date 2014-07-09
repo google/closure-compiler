@@ -88,7 +88,7 @@ public class NodeTraversalTest extends TestCase {
     NodeTraversal t = new NodeTraversal(compiler, null);
     DiagnosticType dt = DiagnosticType.warning("FOO", "{0}, {1} - {2}");
 
-    t.report(null, dt, "Foo", "Bar", "Hello");
+    t.report(new Node(Token.EMPTY), dt, "Foo", "Bar", "Hello");
     assertEquals(1, errors.size());
     assertEquals("Foo, Bar - Hello", errors.get(0).description);
   }

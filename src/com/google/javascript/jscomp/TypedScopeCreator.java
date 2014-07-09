@@ -502,7 +502,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
       switch (n.getType()) {
         case Token.CALL:
-          checkForClassDefiningCalls(t, n);
+          checkForClassDefiningCalls(n);
           checkForCallingConventionDefiningCalls(n, delegateCallingConventions);
           break;
 
@@ -608,7 +608,7 @@ final class TypedScopeCreator implements ScopeCreator {
         Var lendsVar = scope.getVar(lendsName);
         if (lendsVar == null) {
           compiler.report(
-              JSError.make(sourceName, objectLit, UNKNOWN_LENDS, lendsName));
+              JSError.make(objectLit, UNKNOWN_LENDS, lendsName));
         } else {
           type = lendsVar.getType();
           if (type == null) {
@@ -616,7 +616,7 @@ final class TypedScopeCreator implements ScopeCreator {
           }
           if (!type.isSubtype(typeRegistry.getNativeType(OBJECT_TYPE))) {
             compiler.report(
-                JSError.make(sourceName, objectLit, LENDS_ON_NON_OBJECT,
+                JSError.make(objectLit, LENDS_ON_NON_OBJECT,
                     lendsName, type.toString()));
             type = null;
           } else {
@@ -757,7 +757,7 @@ final class TypedScopeCreator implements ScopeCreator {
       if (n.hasMoreThanOneChild()) {
         if (info != null) {
           // multiple children
-          compiler.report(JSError.make(sourceName, n, MULTIPLE_VAR_DEF));
+          compiler.report(JSError.make(n, MULTIPLE_VAR_DEF));
         }
         for (Node name : n.children()) {
           defineName(name, n, name.getJSDocInfo());
@@ -1074,10 +1074,10 @@ final class TypedScopeCreator implements ScopeCreator {
             if (keyName == null) {
               // GET and SET don't have a String value;
               compiler.report(
-                  JSError.make(sourceName, key, ENUM_NOT_CONSTANT, keyName));
+                  JSError.make(key, ENUM_NOT_CONSTANT, keyName));
             } else if (!codingConvention.isValidEnumKey(keyName)) {
               compiler.report(
-                  JSError.make(sourceName, key, ENUM_NOT_CONSTANT, keyName));
+                  JSError.make(key, ENUM_NOT_CONSTANT, keyName));
             } else {
               enumType.defineElement(keyName, key);
             }
@@ -1197,7 +1197,7 @@ final class TypedScopeCreator implements ScopeCreator {
               (initialValue.isObjectLit() ||
                initialValue.isQualifiedName());
           if (!isValidValue) {
-            compiler.report(JSError.make(sourceName, n, ENUM_INITIALIZER));
+            compiler.report(JSError.make(n, ENUM_INITIALIZER));
           }
         }
       }
@@ -1286,7 +1286,7 @@ final class TypedScopeCreator implements ScopeCreator {
       if (newVar.getInitialValue() == null &&
           !n.isFromExterns()) {
         compiler.report(
-            JSError.make(sourceName, n,
+            JSError.make(n,
                 fnType.isConstructor() ?
                 CTOR_INITIALIZER : IFACE_INITIALIZER,
                 variableName));
@@ -1441,7 +1441,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * Because JS has no 'native' syntax for defining classes,
      * this is often very coding-convention dependent and business-logic heavy.
      */
-    private void checkForClassDefiningCalls(NodeTraversal t, Node n) {
+    private void checkForClassDefiningCalls(Node n) {
       SubclassRelationship relationship =
           codingConvention.getClassesDefinedByCall(n);
       if (relationship != null) {
@@ -1496,12 +1496,10 @@ final class TypedScopeCreator implements ScopeCreator {
             objectLiteralCast.objectNode.putBooleanProp(
                 Node.REFLECTED_OBJECT, true);
           } else {
-            compiler.report(JSError.make(t.getSourceName(), n,
-                    CONSTRUCTOR_EXPECTED));
+            compiler.report(JSError.make(n, CONSTRUCTOR_EXPECTED));
           }
         } else {
-          compiler.report(JSError.make(t.getSourceName(), n,
-                  objectLiteralCast.diagnosticType));
+          compiler.report(JSError.make(n, objectLiteralCast.diagnosticType));
         }
       }
     }
@@ -1842,7 +1840,7 @@ final class TypedScopeCreator implements ScopeCreator {
         case Token.VAR:
           // Handle typedefs.
           if (n.hasOneChild()) {
-            checkForTypedef(t, n.getFirstChild(), n.getJSDocInfo());
+            checkForTypedef(n.getFirstChild(), n.getJSDocInfo());
           }
           break;
       }
@@ -1852,7 +1850,7 @@ final class TypedScopeCreator implements ScopeCreator {
     void maybeDeclareQualifiedName(
         NodeTraversal t, JSDocInfo info,
         Node n, Node parent, Node rhsValue) {
-      checkForTypedef(t, n, info);
+      checkForTypedef(n, info);
       super.maybeDeclareQualifiedName(t, info, n, parent, rhsValue);
     }
 
@@ -1862,8 +1860,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * @param candidate A qualified name node.
      * @param info JSDoc comments.
      */
-    private void checkForTypedef(
-        NodeTraversal t, Node candidate, JSDocInfo info) {
+    private void checkForTypedef(Node candidate, JSDocInfo info) {
       if (info == null || !info.hasTypedefType()) {
         return;
       }
@@ -1881,8 +1878,7 @@ final class TypedScopeCreator implements ScopeCreator {
       JSType realType = info.getTypedefType().evaluate(scope, typeRegistry);
       if (realType == null) {
         compiler.report(
-            JSError.make(
-                t.getSourceName(), candidate, MALFORMED_TYPEDEF, typedef));
+            JSError.make(candidate, MALFORMED_TYPEDEF, typedef));
       }
 
       typeRegistry.overwriteDeclaredType(typedef, realType);

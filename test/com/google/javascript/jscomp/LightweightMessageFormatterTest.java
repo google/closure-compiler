@@ -74,8 +74,9 @@ public class LightweightMessageFormatterTest extends TestCase {
   }
 
   public void testFormatErrorSpaces() throws Exception {
-    JSError error = JSError.make("javascript/complex.js",
-        Node.newString("foobar", 5, 8), FOO_TYPE);
+    Node n = Node.newString("foobar", 5, 8);
+    n.setSourceFileForTesting("javascript/complex.js");
+    JSError error = JSError.make(n, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("    if (foobar) {");
     assertEquals("javascript/complex.js:5: ERROR - error description here\n" +
         "    if (foobar) {\n" +
@@ -83,8 +84,9 @@ public class LightweightMessageFormatterTest extends TestCase {
   }
 
   public void testFormatErrorTabs() throws Exception {
-    JSError error = JSError.make("javascript/complex.js",
-        Node.newString("foobar", 5, 6), FOO_TYPE);
+    Node n = Node.newString("foobar", 5, 6);
+    n.setSourceFileForTesting("javascript/complex.js");
+    JSError error = JSError.make(n, FOO_TYPE);
     LightweightMessageFormatter formatter = formatter("\t\tif (foobar) {");
     assertEquals("javascript/complex.js:5: ERROR - error description here\n" +
         "\t\tif (foobar) {\n" +
@@ -110,8 +112,9 @@ public class LightweightMessageFormatterTest extends TestCase {
   }
 
   public void testFormatErrorOriginalSource() throws Exception {
-    JSError error = JSError.make("javascript/complex.js",
-        Node.newString("foobar", 5, 8), FOO_TYPE);
+    Node n = Node.newString("foobar", 5, 8);
+    n.setSourceFileForTesting("javascript/complex.js");
+    JSError error = JSError.make(n, FOO_TYPE);
     LightweightMessageFormatter formatter =
         formatter("    if (foobar) {", "<div ng-show='(foo'>");
     assertEquals(

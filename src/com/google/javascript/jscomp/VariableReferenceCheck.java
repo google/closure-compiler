@@ -135,7 +135,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             continue;
           }
           compiler.report(
-              JSError.make(NodeUtil.getSourceName(r.getNode()),
+              JSError.make(
                   r.getNode(),
                   checkLevel,
                   (r.isVarDeclaration() || r.isHoistedFunction())
@@ -208,7 +208,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
                 diagnosticType = REDECLARED_VARIABLE;
               }
               compiler.report(
-                  JSError.make(NodeUtil.getSourceName(referenceNode),
+                  JSError.make(
                       referenceNode,
                       checkLevel,
                       diagnosticType, v.name));
@@ -221,7 +221,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             && (letConstShadowsVar || shadowCatchVar)) {
           if (v.getScope() == reference.getScope()) {
             compiler.report(
-                JSError.make(NodeUtil.getSourceName(referenceNode),
+                JSError.make(
                     referenceNode,
                     checkLevel,
                     REDECLARED_VARIABLE_ERROR, v.name));
@@ -234,7 +234,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           for (BasicBlock declaredBlock : blocksWithDeclarations) {
             if (!declaredBlock.provablyExecutesBefore(basicBlock)) {
               compiler.report(
-                  JSError.make(NodeUtil.getSourceName(referenceNode),
+                  JSError.make(
                       referenceNode,
                       AMBIGUOUS_FUNCTION_DECL, v.name));
               break;
@@ -259,8 +259,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             if (reference.getScope() == v.scope) {
               isUndeclaredReference = true;
               compiler.report(
-                  JSError.make(NodeUtil.getSourceName(referenceNode),
-                               reference.getNode(),
+                  JSError.make(reference.getNode(),
                                checkLevel,
                                (v.isLet() || v.isConst())
                                    ? UNDECLARED_REFERENCE_ERROR
@@ -272,8 +271,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         if (!isDeclaration && !isUndeclaredReference
             && v.isConst() && reference.isLvalue()) {
           compiler.report(
-              JSError.make(NodeUtil.getSourceName(referenceNode),
-                           referenceNode,
+              JSError.make(referenceNode,
                            checkLevel,
                            REASSIGNED_CONSTANT, v.name));
         }
@@ -281,8 +279,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         if (isDeclaration && !v.isVar()
             && reference.getGrandparent().isAddedBlock()) {
           compiler.report(
-              JSError.make(NodeUtil.getSourceName(referenceNode),
-                           referenceNode,
+              JSError.make(referenceNode,
                            checkLevel,
                            DECLARATION_NOT_DIRECTLY_IN_BLOCK, v.name));
         }

@@ -762,10 +762,7 @@ class Normalize implements CompilerPass {
         // Use the name of the var before it was made unique.
         name = MakeDeclaredNamesUnique.ContextualRenameInverter.getOrginalName(
             name);
-        compiler.report(
-            JSError.make(
-                input.getName(), n,
-                CATCH_BLOCK_VAR_ERROR, name));
+        compiler.report(JSError.make(n, CATCH_BLOCK_VAR_ERROR, name));
       } else if (v != null && parent.isFunction()) {
         if (v.getParentNode().isVar()) {
           s.undeclare(v);

@@ -82,9 +82,7 @@ class CreateSyntheticBlocks implements CompilerPass {
     // Complain about any unmatched markers.
     for (Node node : markerStack) {
       compiler.report(
-          JSError.make(NodeUtil.getSourceName(node),
-          node,
-          UNMATCHED_START_MARKER, startMarkerName));
+          JSError.make(node, UNMATCHED_START_MARKER, startMarkerName));
     }
 
     // Add the block for the valid marker sets.

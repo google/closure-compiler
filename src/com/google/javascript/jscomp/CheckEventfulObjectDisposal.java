@@ -473,12 +473,10 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
     for (EventfulObjectState e : eventfulObjectMap.values()) {
       Node n = e.allocationSite;
       if (e.seen == SeenType.ALLOCATED) {
-        compiler.report(JSError.make(n.getSourceFileName(), n,
-            EVENTFUL_OBJECT_NOT_DISPOSED));
+        compiler.report(JSError.make(n, EVENTFUL_OBJECT_NOT_DISPOSED));
       } else if (e.seen == SeenType.ALLOCATED_LOCALLY &&
           checkingPolicy == DisposalCheckingPolicy.AGGRESSIVE) {
-        compiler.report(JSError.make(n.getSourceFileName(), n,
-            EVENTFUL_OBJECT_PURELY_LOCAL));
+        compiler.report(JSError.make(n, EVENTFUL_OBJECT_PURELY_LOCAL));
       }
     }
   }
@@ -783,21 +781,18 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
         /*
          * Anonymous function
          */
-        compiler.report(JSError.make(n.getSourceFileName(), n,
-            UNLISTEN_WITH_ANONBOUND));
+        compiler.report(JSError.make(n, UNLISTEN_WITH_ANONBOUND));
       } else if (listener.isCall()) {
         if (!listener.getFirstChild().isQualifiedName()) {
           /*
            * Anonymous function
            */
-          compiler.report(JSError.make(n.getSourceFileName(), n,
-              UNLISTEN_WITH_ANONBOUND));
+          compiler.report(JSError.make(n, UNLISTEN_WITH_ANONBOUND));
         } else if (listener.getFirstChild().matchesQualifiedName("goog.bind")) {
           /*
            * Using goog.bind to unlisten
            */
-          compiler.report(JSError.make(n.getSourceFileName(), n,
-              UNLISTEN_WITH_ANONBOUND));
+          compiler.report(JSError.make(n, UNLISTEN_WITH_ANONBOUND));
         }
       }
     }
