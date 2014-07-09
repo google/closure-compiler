@@ -58,6 +58,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     optimizer.addOneTimePass(passConfig.es6HandleDefaultParams);
     optimizer.addOneTimePass(passConfig.convertEs6ToEs3);
     optimizer.addOneTimePass(passConfig.rewriteLetConst);
+    optimizer.addOneTimePass(passConfig.rewriteGenerators);
     return optimizer;
   }
 
@@ -1309,5 +1310,39 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("`${hello}${world}`", "\"\" + hello + world");
     test("`${a} b ${c} d ${e}`", "a + \" b \" + c + \" d \" + e");
     test("tag`${hello} world`", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
+  public void testSimpleGenerator() {
+    test("function *f() {}", Joiner.on('\n').join(
+      "function f() {",
+      "  return { $$iterator: function() {",
+      "    var $jscomp$generator$state = 0;",
+      "    return { next: function() {",
+      "      while (1) switch ($jscomp$generator$state) {",
+      "        case 0:",
+      "          $jscomp$generator$state = -1;",
+      "        default:",
+      "          return {done: true}",
+      "      }",
+      "    }}",
+      "  }}",
+      "}"
+    ));
+
+    test("function *f(a,b) {}", Joiner.on('\n').join(
+      "function f(a,b) {",
+      "  return { $$iterator: function() {",
+      "    var $jscomp$generator$state = 0;",
+      "    return { next: function() {",
+      "      while (1) switch ($jscomp$generator$state) {",
+      "        case 0:",
+      "          $jscomp$generator$state = -1;",
+      "        default:",
+      "          return {done: true}",
+      "      }",
+      "    }}",
+      "  }}",
+      "}"
+    ));
   }
 }

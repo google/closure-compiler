@@ -292,6 +292,7 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(es6HandleDefaultParams);
       checks.add(convertEs6ToEs3);
       checks.add(rewriteLetConst);
+      checks.add(rewriteGenerators);
       checks.add(markTranspilationDone);
       checks.add(convertStaticInheritance);
     }
@@ -1108,6 +1109,14 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
       return new Es6RewriteLetConst(compiler);
+    }
+  };
+
+  final HotSwapPassFactory rewriteGenerators =
+      new HotSwapPassFactory("rewriteGenerators", true) {
+    @Override
+    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+      return new Es6RewriteGenerators(compiler);
     }
   };
 
