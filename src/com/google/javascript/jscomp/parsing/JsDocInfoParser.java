@@ -877,21 +877,42 @@ public final class JsDocInfoParser {
           return token;
 
         case TEMPLATE: {
-          ExtractionInfo templateInfo = extractSingleLineBlock();
-          boolean isTypeTransformation = false;
+          ExtractionInfo templateInfo =
+              extractMultilineTextualBlock(token, WhitespaceOption.TRIM);
+          String templateString = templateInfo.string;
+          // TTL stands for type transformation language
+          // TODO(lpino): This delimiter needs to be further discussed
+          String ttlStartDelimiter = ":=";
+          String ttlEndDelimiter = "=:";
           String templateNames;
-          String typeTransformationStart = "";
+          String typeTransformationExpr = "";
+          boolean isTypeTransformation = false;
           // Detect if there is a type transformation
-          if (templateInfo.string.contains(" as")) {
-            isTypeTransformation = true;
-            int typeTransformationIndex = templateInfo.string.indexOf(" as");
-            // Split into the template names and the type transformation
-            templateNames = templateInfo.string
-                .substring(0, typeTransformationIndex);
-            typeTransformationStart = templateInfo.string
-                .substring(typeTransformationIndex + 3);
+          if (!templateString.contains(ttlStartDelimiter)) {
+            // If there is no type transformation take the first line
+            if (templateString.contains("\n")) {
+              templateNames =
+                  templateString.substring(0, templateString.indexOf('\n'));
+            } else {
+              templateNames = templateString;
+            }
           } else {
-            templateNames = templateInfo.string;
+            // Split the part with the template type names
+            int ttlStartIndex = templateString.indexOf(ttlStartDelimiter);
+            templateNames = templateString.substring(0, ttlStartIndex);
+            // Check if the type transformation expression ends correctly
+            if (!templateString.contains(ttlEndDelimiter)) {
+              parser.addTypeWarning(
+                  "msg.jsdoc.typetransformation.missing.delimiter",
+                  stream.getLineno(), stream.getCharno());
+            } else {
+              isTypeTransformation = true;
+              // Split the part of the type transformation
+              int ttlEndIndex = templateString.indexOf(ttlEndDelimiter);
+              typeTransformationExpr = templateString.substring(
+                  ttlStartIndex + ttlStartDelimiter.length(),
+                  ttlEndIndex).trim();
+            }
           }
 
           // Obtain the template type names
@@ -915,30 +936,20 @@ public final class JsDocInfoParser {
             }
           }
 
-          // Parse the type transformation expression
           if (isTypeTransformation) {
-            // If it is a type transformation there has to be a single type name
+            // A type transformation must be associated to a single type name
             if (names.size() > 1) {
                 parser.addTypeWarning(
                     "msg.jsdoc.typetransformation.with.multiple.names",
                     stream.getLineno(), stream.getCharno());
             }
-            // Extract the TTL expression
-            ExtractionInfo typeTransformationInfo =
-                extractMultilineTextualBlock(templateInfo.token);
-            String typeTransformationEnd = typeTransformationInfo.string;
-            String typeTransformationString =
-                typeTransformationStart + typeTransformationEnd;
-            if (typeTransformationString.equals("")) {
+            if (typeTransformationExpr.equals("")) {
               parser.addTypeWarning(
                   "msg.jsdoc.typetransformation.expression.missing",
                   stream.getLineno(), stream.getCharno());
             }
-            // Update the token after the parsing the type transformation
-            token = typeTransformationInfo.token;
-          } else {
-            token = templateInfo.token;
           }
+          token = templateInfo.token;
           return token;
         }
 

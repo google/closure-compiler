@@ -2891,26 +2891,32 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParserWithTypeTransformationNewline() {
-    parse("@template R as\n type('string')*/",
-        "Bad type annotation. Missing type transformation expression");
+    parse("@template R := \n type('string') =:*/");
   }
 
   public void testParserWithTypeTransformation() {
-    parse("@template T as type('string')*/");
+    parse("@template T := type('string') =:*/");
+  }
+
+  public void testParserWithTypeTransformation2() {
+    parse("@template T := type('string') =:\n"
+        + "Random text*/");
   }
 
   public void testParserWithTypeTransformationMultipleNames() {
-    parse("@template T, R as type('string')*/",
+    parse("@template T, R := type('string') =:*/",
         "Bad type annotation. "
         + "Type transformation must be associated to a single type name");
   }
 
-  public void testParserWithValidAsKeywordTwice() {
-    parse("@template Tas as type('string')*/");
+  public void testParserWithMissingTypeTransformationExpression() {
+    parse("@template T := */",
+        "Bad type annotation. "
+        + "Expected end delimiter for a type transformation");
   }
 
-  public void testParserWithMissingTypeTransformationExpression() {
-    parse("@template T as*/",
+  public void testParserWithMissingTypeTransformationExpression2() {
+    parse("@template T := =:*/",
         "Bad type annotation. Missing type transformation expression");
   }
 
