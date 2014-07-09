@@ -1022,20 +1022,24 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testVersionFlag() {
     args.add("--version");
-    testSame("");
+    assertFalse(
+        createCommandLineRunner(
+            new String[] {"function f() {}"}).shouldRunCompiler());
     assertEquals(
         0,
-        new String(errReader.toByteArray(), UTF_8).indexOf(
+        new String(outReader.toByteArray(), UTF_8).indexOf(
             "Closure Compiler (http://github.com/google/closure-compiler)\n" +
             "Version: "));
   }
 
   public void testVersionFlag2() {
     lastArg = "--version";
-    testSame("");
+    assertFalse(
+        createCommandLineRunner(
+            new String[] {"function f() {}"}).shouldRunCompiler());
     assertEquals(
         0,
-        new String(errReader.toByteArray(), UTF_8).indexOf(
+        new String(outReader.toByteArray(), UTF_8).indexOf(
             "Closure Compiler (http://github.com/google/closure-compiler)\n" +
             "Version: "));
   }

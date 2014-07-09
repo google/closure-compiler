@@ -441,7 +441,7 @@ public class CommandLineRunner extends
 
     @Option(name = "--version",
         handler = BooleanOptionHandler.class,
-        usage = "Prints the compiler version to stderr.")
+        usage = "Prints the compiler version to stdout.")
     private boolean version = false;
 
     @Option(name = "--translations_file",
@@ -765,12 +765,12 @@ public class CommandLineRunner extends
    */
   protected CommandLineRunner(String[] args) {
     super();
-    initConfigFromFlags(args, System.err);
+    initConfigFromFlags(args, System.out, System.err);
   }
 
   protected CommandLineRunner(String[] args, PrintStream out, PrintStream err) {
     super(out, err);
-    initConfigFromFlags(args, err);
+    initConfigFromFlags(args, out, err);
   }
 
   /**
@@ -892,7 +892,7 @@ public class CommandLineRunner extends
     }
   }
 
-  private void initConfigFromFlags(String[] args, PrintStream err) {
+  private void initConfigFromFlags(String[] args, PrintStream out, PrintStream err) {
 
     List<String> processedArgs = processArgs(args);
 
@@ -918,11 +918,11 @@ public class CommandLineRunner extends
     }
 
     if (flags.version) {
-      err.println(
+      out.println(
           "Closure Compiler (http://github.com/google/closure-compiler)\n" +
           "Version: " + Compiler.getReleaseVersion() + "\n" +
           "Built on: " + Compiler.getReleaseDate());
-      err.flush();
+      out.flush();
     }
 
     if (flags.processCommonJsModules) {
@@ -958,6 +958,8 @@ public class CommandLineRunner extends
     if (!isConfigValid || flags.displayHelp) {
       isConfigValid = false;
       flags.printUsage(err);
+    } else if (flags.version) {
+      isConfigValid = false;
     } else {
       CodingConvention conv;
       if (flags.thirdParty) {
