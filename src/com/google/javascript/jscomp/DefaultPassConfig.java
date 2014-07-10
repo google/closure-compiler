@@ -330,10 +330,6 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(checkControlFlow);
     }
 
-    if (options.checkTypes) {
-      checks.add(checkSideEffectsWithTypes);
-    }
-
     // CheckAccessControls only works if check types is on.
     if (options.checkTypes &&
         (!options.disables(DiagnosticGroups.ACCESS_CONTROLS)
@@ -850,24 +846,6 @@ public class DefaultPassConfig extends PassConfig {
     assertAllLoopablePasses(passes);
     return passes;
   }
-
-  /**
-   * Checks for extern calls that should be protected from side-effect removal
-   */
-  final HotSwapPassFactory checkSideEffectsWithTypes =
-      new HotSwapPassFactory("checkSideEffectsWithTypes", true) {
-    @Override
-    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      // The current approach to protecting "hidden" side-effects is to
-      // wrap them in a function call that is stripped later, this shouldn't
-      // be done in IDE mode where AST changes may be unexpected.
-      boolean protectHiddenSideEffects =
-          options.protectHiddenSideEffects && !options.ideMode;
-      return new CheckNoSideEffectExternCalls(compiler,
-          options.checkSuspiciousCode ? CheckLevel.WARNING : CheckLevel.OFF,
-              protectHiddenSideEffects);
-    }
-  };
 
   /**
    * Checks for code that is probably wrong (such as stray expressions).
