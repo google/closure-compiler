@@ -105,15 +105,12 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
   }
 
   private void declareLHS(Scope declarationScope, Node lhs) {
-    Preconditions.checkState(lhs.isArrayPattern() || lhs.isName());
-
-    if (lhs.isName()) {
+    if (lhs.isName() || lhs.isStringKey()) {
       declareVar(declarationScope, lhs);
-    } else if (lhs.isArrayPattern()) {
-      // Nested array pattern.
+    } else if (lhs.isArrayPattern() || lhs.isObjectPattern()) {
       for (Node child = lhs.getFirstChild(); child != null; child = child.getNext()) {
         if (NodeUtil.isNameDeclaration(lhs.getParent()) && child.getNext() == null) {
-          // If the arrayPattern is a direct child of the var/let/const node,
+          // If the pattern is a direct child of the var/let/const node,
           // then its last child is the RHS of the assignment, not a variable to
           // be declared.
           return;
@@ -121,6 +118,8 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
 
         declareLHS(declarationScope, child);
       }
+    } else {
+      throw new RuntimeException("Cannot declare a variable for node: " + lhs);
     }
   }
 
@@ -232,7 +231,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
    * @param n The node corresponding to the variable name.
    */
   private void declareVar(Scope s, Node n) {
-    Preconditions.checkState(n.isName() || n.isRest());
+    Preconditions.checkState(n.isName() || n.isRest() || n.isStringKey());
 
     String name = n.getString();
     // Because of how we scan the variables, it is possible to encounter
