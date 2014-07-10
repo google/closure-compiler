@@ -41,8 +41,8 @@ public class CheckNoSideEffectExternCallsTest extends CompilerTestCase {
   public void testUselessCode() {
     String externs = "/** @return {boolean}\n * @nosideeffects */\n" +
         "function noSideEffectsExtern(){}\n" +
-    	"/** @const */ var foo = {};\n" +
-    	"/** @return {boolean}\n * @nosideeffects */\n" +
+        "/** @const */ var foo = {};\n" +
+        "/** @return {boolean}\n * @nosideeffects */\n" +
         "foo.noSideEffectsExtern = function(){}";
 
     test(externs, "alert(noSideEffectsExtern());",
@@ -52,7 +52,7 @@ public class CheckNoSideEffectExternCallsTest extends CompilerTestCase {
         "JSCOMPILER_PRESERVE(noSideEffectsExtern());",
         null, e, "Suspicious code. The result of the extern function call " +
         "\"noSideEffectsExtern\" is not being used.");
-    
+
     test(externs, "alert(foo.noSideEffectsExtern());",
             "alert(foo.noSideEffectsExtern());", ok, null);
 
@@ -62,4 +62,3 @@ public class CheckNoSideEffectExternCallsTest extends CompilerTestCase {
         "\"foo.noSideEffectsExtern\" is not being used.");
   }
 }
-

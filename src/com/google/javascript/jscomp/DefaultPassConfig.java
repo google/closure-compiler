@@ -868,7 +868,7 @@ public class DefaultPassConfig extends PassConfig {
               protectHiddenSideEffects);
     }
   };
-  
+
   /**
    * Checks for code that is probably wrong (such as stray expressions).
    */
@@ -881,8 +881,6 @@ public class DefaultPassConfig extends PassConfig {
               protectHiddenSideEffects);
     }
   };
-  
-  
 
   /**
    * Removes the "protector" functions that were added by CheckSideEffects.
