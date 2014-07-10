@@ -472,7 +472,7 @@ public class NewTypeInference implements CompilerPass {
         // For DO loops, we do BODY-CONDT-CONDF-FOLLOW
         // Since CONDT is currently unused, this could be optimized.
         List<DiGraphEdge<Node, ControlFlowGraph.Branch>> outEdges =
-            cfg.getOutEdges(dn.getValue());
+            cfg.getOutEdges(currentNode);
         seen.add(dn);
         workset.add(dn);
         for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : outEdges) {
@@ -490,7 +490,7 @@ public class NewTypeInference implements CompilerPass {
       default:
         // Wait for all other incoming edges at join nodes.
         for (DiGraphEdge<Node, ControlFlowGraph.Branch> inEdge :
-            cfg.getInEdges(dn.getValue())) {
+            cfg.getInEdges(currentNode)) {
           if (!seen.contains(inEdge.getSource())
               && !inEdge.getSource().getValue().isDo()) {
             return;
@@ -499,6 +499,25 @@ public class NewTypeInference implements CompilerPass {
         seen.add(dn);
         if (cfg.getEntry() != dn) {
           workset.add(dn);
+        }
+        // Don't recur for straight-line code
+        while (true) {
+          List<DiGraphNode<Node, ControlFlowGraph.Branch>> succs =
+              cfg.getDirectedSuccNodes(dn);
+          if (succs.size() != 1) {
+            break;
+          }
+          DiGraphNode<Node, ControlFlowGraph.Branch> succ = succs.get(0);
+          if (succ == cfg.getImplicitReturn()) {
+            return;
+          }
+          // Make sure that succ isn't a join node
+          if (cfg.getDirectedPredNodes(succ).size() > 1) {
+            break;
+          }
+          workset.add(succ);
+          seen.add(succ);
+          dn = succ;
         }
         for (DiGraphNode<Node, ControlFlowGraph.Branch> succ :
             cfg.getDirectedSuccNodes(dn)) {
