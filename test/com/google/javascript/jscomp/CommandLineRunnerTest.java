@@ -1026,7 +1026,7 @@ public class CommandLineRunnerTest extends TestCase {
     assertEquals(
         0,
         new String(errReader.toByteArray(), UTF_8).indexOf(
-            "Closure Compiler (http://code.google.com/closure/compiler)\n" +
+            "Closure Compiler (http://github.com/google/closure-compiler)\n" +
             "Version: "));
   }
 
@@ -1036,7 +1036,7 @@ public class CommandLineRunnerTest extends TestCase {
     assertEquals(
         0,
         new String(errReader.toByteArray(), UTF_8).indexOf(
-            "Closure Compiler (http://code.google.com/closure/compiler)\n" +
+            "Closure Compiler (http://github.com/google/closure-compiler)\n" +
             "Version: "));
   }
 

@@ -920,7 +920,7 @@ public class CommandLineRunner extends
 
     if (flags.version) {
       err.println(
-          "Closure Compiler (http://code.google.com/closure/compiler)\n" +
+          "Closure Compiler (http://github.com/google/closure-compiler)\n" +
           "Version: " + Compiler.getReleaseVersion() + "\n" +
           "Built on: " + Compiler.getReleaseDate());
       err.flush();
