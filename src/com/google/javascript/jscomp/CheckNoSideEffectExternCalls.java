@@ -80,7 +80,8 @@ class CheckNoSideEffectExternCalls extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isCall() && !NodeUtil.isExpressionResultUsed(n) &&
-        (n.getFirstChild().isName() || n.getFirstChild().isString())) {
+        (n.getFirstChild().isName() || n.getFirstChild().isString() ||
+        n.getFirstChild().isGetProp())) {
       JSType targetType = n.getFirstChild().getJSType();
       if (targetType != null && targetType.isFunctionType()) {
         targetType = targetType.restrictByNotNullOrUndefined();
@@ -91,7 +92,7 @@ class CheckNoSideEffectExternCalls extends AbstractPostOrderCallback
             functionJSDocInfo.getAssociatedNode() != null &&
             functionJSDocInfo.getAssociatedNode().isFromExterns()) {
           t.getCompiler().report(t.makeError(n, level, USELESS_CODE_ERROR,
-              n.getFirstChild().getString()));
+              n.getFirstChild().getQualifiedName()));
           problemNodes.add(n);
         }
       }
@@ -118,8 +119,6 @@ class CheckNoSideEffectExternCalls extends AbstractPostOrderCallback
     }
   }
 
-  // TODO(chadkillingsworth) Check to see if the protector function has
-  // already been added by the CheckSideEffects pass
   private void addExtern() {
     Node name = IR.name(PROTECTOR_FN);
     name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
