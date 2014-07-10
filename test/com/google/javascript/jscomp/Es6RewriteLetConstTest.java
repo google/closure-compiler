@@ -717,4 +717,33 @@ public class Es6RewriteLetConstTest extends CompilerTestCase {
         "}"
     ), null, null, TypeValidator.TYPE_MISMATCH_WARNING);
   }
+
+  public void testLetForInitializers() {
+    test(Joiner.on('\n').join(
+        "{",
+        "  let l = [];",
+        "  for (var vx = 1, vy = 2, vz = 3; vx < 10; vx++) {",
+        "    let lx = vx, ly = vy, lz = vz;",
+        "    l.push(function() { return [ lx, ly, lz ]; });",
+        "  }",
+        "}"
+    ), Joiner.on('\n').join(
+        "{",
+        "  var l = [];",
+        "  var $jscomp$loop$0 = {lx: undefined, ly: undefined, lz: undefined};",
+        "  var vx = 1, vy = 2, vz = 3;",
+        "  for (; vx < 10; $jscomp$loop$0 = {lx: $jscomp$loop$0.lx,",
+        "      ly: $jscomp$loop$0.ly, lz: $jscomp$loop$0.lz}, vx++){",
+        "    $jscomp$loop$0.lx = vx;",
+        "    $jscomp$loop$0.ly = vy;",
+        "    $jscomp$loop$0.lz = vz;",
+        "    l.push(function($jscomp$loop$0) {",
+        "        return function() {",
+        "            return [ $jscomp$loop$0.lx, $jscomp$loop$0.ly, $jscomp$loop$0.lz ];",
+        "        };",
+        "    }($jscomp$loop$0));",
+        "  }",
+        "}"
+    ));
+  }
 }

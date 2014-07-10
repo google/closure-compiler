@@ -308,18 +308,16 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
                       .useSourceInfoIfMissingFromForTree(reference));
             } else {
               if (NodeUtil.isNameDeclaration(reference.getParent())) {
-                Node grandParent = reference.getParent().getParent();
                 Node declaration = reference.getParent();
+                Node grandParent = declaration.getParent();
                 // Normalize: "let i = 0, j = 0;" becomes "let i = 0; let j = 0;"
-                if (declaration.getChildCount() > 1) {
-                  for (int i = 1; i < declaration.getChildCount(); i++) {
-                    Node name = declaration.getChildAtIndex(i);
-                    grandParent.addChildAfter(
-                        IR.nameDeclaration(
-                            name.detachFromParent(), declaration.getType())
-                            .useSourceInfoIfMissingFromForTree(declaration),
-                        declaration);
-                  }
+                while (declaration.getChildCount() > 1) {
+                  Node name = declaration.getLastChild();
+                  grandParent.addChildAfter(
+                      IR.nameDeclaration(
+                          name.detachFromParent(), declaration.getType())
+                          .useSourceInfoIfMissingFromForTree(declaration),
+                      declaration);
                 }
 
                 // Change declaration to assignment, or just drop it if there's
