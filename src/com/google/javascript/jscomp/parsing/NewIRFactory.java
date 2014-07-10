@@ -515,11 +515,7 @@ class NewIRFactory {
       JsDocInfoParser jsDocParser = createJsDocInfoParser(comment);
       parsedComments.add(comment);
       if (!handlePossibleFileOverviewJsDoc(jsDocParser)) {
-        JSDocInfo info = jsDocParser.retrieveAndResetParsedJSDocInfo();
-        if (info != null) {
-          // validateTypeAnnotations(info, node);
-        }
-        return info;
+        return jsDocParser.retrieveAndResetParsedJSDocInfo();
       }
     }
     return null;
@@ -812,25 +808,6 @@ class NewIRFactory {
       node.setLength(length);
     }
   }
-
-  /*
-  private int position2charno(int position) {
-    int newlineIndex = Collections.binarySearch(newlines, position);
-    int lineIndex = -1;
-    if (newlineIndex >= 0) {
-      lineIndex = newlines.get(newlineIndex);
-    } else if (newlineIndex <= -2) {
-      lineIndex = newlines.get(-newlineIndex - 2);
-    }
-
-    if (lineIndex == -1) {
-      return position;
-    } else {
-      // Subtract one for initial position being 0.
-      return position - lineIndex - 1;
-    }
-  }
-  */
 
   private Node justTransform(ParseTree node) {
     return transformDispatcher.process(node);
@@ -1338,7 +1315,6 @@ class NewIRFactory {
         }
         node = newStringNode(Token.NAME, identifierToken.value);
         if (info != null) {
-          // validateTypeAnnotations(info, identifierToken);
           attachJSDoc(info, node);
         }
       }
@@ -1376,7 +1352,6 @@ class NewIRFactory {
       }
       Node node = newStringNode(Token.NAME, identifierToken.toString());
       if (info != null) {
-        // validateTypeAnnotations(info, identifierToken);
         attachJSDoc(info, node);
       }
       setSourceInfo(node, identifierToken);
