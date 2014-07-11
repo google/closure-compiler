@@ -537,7 +537,7 @@ public class Parser {
     if (peek(TokenType.OPEN_CURLY)) {
       functionBody = parseFunctionBody();
     } else {
-      functionBody = parseAssignmentExpression();
+      functionBody = parseAssignment(expressionIn);
     }
 
     FunctionDeclarationTree declaration =  new FunctionDeclarationTree(
@@ -2339,7 +2339,7 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     ImmutableList.Builder<ParseTree> fields = ImmutableList.builder();
     eat(TokenType.OPEN_CURLY);
-    while (peekObjectPatternField(kind)) {
+    while (peekObjectPatternField()) {
       fields.add(parseObjectPatternField(kind));
 
       if (peek(TokenType.COMMA)) {
@@ -2354,7 +2354,7 @@ public class Parser {
     return new ObjectPatternTree(getTreeLocation(start), fields.build());
   }
 
-  private boolean peekObjectPatternField(PatternKind kind) {
+  private boolean peekObjectPatternField() {
     return peekId();
   }
 
