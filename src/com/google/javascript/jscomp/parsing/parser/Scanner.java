@@ -643,7 +643,10 @@ public class Scanner {
     boolean containsUnicodeEscape = ch == '\\';
 
     ch = peekChar();
-    while (isIdentifierPart(ch) || ch == '\\') {
+    while (isIdentifierPart(ch)
+        || ch == '\\'
+        || (ch == '{' && containsUnicodeEscape)
+        || (ch == '}' && containsUnicodeEscape)) {
       if (ch == '\\') {
         containsUnicodeEscape = true;
       }
@@ -654,28 +657,9 @@ public class Scanner {
     String value = valueBuilder.toString();
 
     // Process unicode escapes.
-    while (containsUnicodeEscape && value.contains("\\")) {
-      int escapeStart = value.indexOf('\\');
-      try {
-        if (value.charAt(escapeStart + 1) != 'u') {
-          reportError(
-              getPosition(index),
-              "Invalid escape sequence: '\\%c'", value.charAt(escapeStart + 1));
-          return createToken(TokenType.ERROR, beginToken);
-        }
-
-        String hexDigits = value.substring(escapeStart + 2, escapeStart + 6);
-        ch = (char) Integer.parseInt(hexDigits, 0x10);
-        if (!isIdentifierPart(ch)) {
-          reportError(
-              getPosition(index),
-              "Character '%c' (U+%04X) is not a valid identifier char",
-              ch, (int) ch);
-          return createToken(TokenType.ERROR, beginToken);
-        }
-        value = value.substring(0, escapeStart) + ch +
-            value.substring(escapeStart + 6);
-      } catch (NumberFormatException|StringIndexOutOfBoundsException e) {
+    if (containsUnicodeEscape) {
+      value = processUnicodeEscapes(value);
+      if (value == null) {
         reportError(
             getPosition(index),
             "Invalid escape sequence");
@@ -699,6 +683,50 @@ public class Scanner {
     }
 
     return new IdentifierToken(getTokenRange(beginToken), value);
+  }
+
+  /**
+   * Converts unicode escapes in the given string to the equivalent unicode character.
+   * If there are no escapes, returns the input unchanged.
+   * If there is an invalid escape sequence, returns null.
+   */
+  private String processUnicodeEscapes(String value) {
+    while (value.contains("\\")) {
+      int escapeStart = value.indexOf('\\');
+      try {
+        if (value.charAt(escapeStart + 1) != 'u') {
+          return null;
+        }
+
+        String hexDigits;
+        int escapeEnd;
+        if (value.charAt(escapeStart + 2) != '{') {
+          // Simple escape with exactly four hex digits: \\uXXXX
+          escapeEnd = escapeStart + 6;
+          hexDigits = value.substring(escapeStart + 2, escapeEnd);
+        } else {
+          // Escape with braces can have any number of hex digits: \\u{XXXXXXX}
+          escapeEnd = escapeStart + 3;
+          while (isHexDigit(value.charAt(escapeEnd))) {
+            escapeEnd++;
+          }
+          if (value.charAt(escapeEnd) != '}') {
+            return null;
+          }
+          hexDigits = value.substring(escapeStart + 3, escapeEnd);
+          escapeEnd++;
+        }
+        char ch = (char) Integer.parseInt(hexDigits, 0x10);
+        if (!isIdentifierPart(ch)) {
+          return null;
+        }
+        value = value.substring(0, escapeStart) + ch +
+            value.substring(escapeEnd);
+      } catch (NumberFormatException|StringIndexOutOfBoundsException e) {
+        return null;
+      }
+    }
+    return value;
   }
 
   private boolean isIdentifierStart(char ch) {
@@ -832,7 +860,17 @@ public class Scanner {
     case 'x':
       return skipHexDigit() && skipHexDigit();
     case 'u':
-      return skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit();
+      if (peek('{')) {
+        nextChar();
+        boolean allHexDigits = true;
+        while (!peek('}')) {
+          allHexDigits = allHexDigits && skipHexDigit();
+        }
+        nextChar();
+        return allHexDigits;
+      } else {
+        return skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit();
+      }
     default:
       return true;
     }

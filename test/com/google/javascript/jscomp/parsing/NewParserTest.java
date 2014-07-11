@@ -1701,9 +1701,29 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("Js\\u0043ompiler");
   }
 
+  public void testUnicodePointEscapeInIdentifiers() {
+    parse("var \\u{0043}");
+    parse("Js\\u{0043}ompiler");
+    parse("Js\\u{765}ompiler");
+  }
+
+  public void testUnicodePointEscapeStringLiterals() {
+    parse("var i = \'\\u0043ompiler\'");
+  }
+
+  public void testInvalidUnicodePointEscape() {
+    parseError("var \\u{defg", "Invalid escape sequence");
+    parseError("var \\u{defgRestOfIdentifier", "Invalid escape sequence");
+    parseError("var \\u{DEFG}", "Invalid escape sequence");
+    parseError("Js\\u{}ompiler", "Invalid escape sequence");
+    // Legal unicode but invalid in identifier
+    parseError("Js\\u{99}ompiler", "Invalid escape sequence");
+    parseError("Js\\u{10000}ompiler", "Invalid escape sequence");
+  }
+
   public void testInvalidEscape() {
-    parseError("var \\x39abc", "Invalid escape sequence: '\\x'");
-    parseError("var abc\\t", "Invalid escape sequence: '\\t'");
+    parseError("var \\x39abc", "Invalid escape sequence");
+    parseError("var abc\\t", "Invalid escape sequence");
   }
 
   public void testEOFInUnicodeEscape() {
@@ -1725,13 +1745,15 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testUnicodeEscapeInvalidIdentifierStart() {
     parseError("var \\u0037yler",
         "Character '7' (U+0037) is not a valid identifier start char");
+    parseError("var \\u{37}yler",
+        "Character '7' (U+0037) is not a valid identifier start char");
     parseError("var \\u0020space",
-        "Character ' ' (U+0020) is not a valid identifier char");
+        "Invalid escape sequence");
   }
 
   public void testUnicodeEscapeInvalidIdentifierChar() {
     parseError("var sp\\u0020ce",
-        "Character ' ' (U+0020) is not a valid identifier char");
+        "Invalid escape sequence");
   }
 
   /**
