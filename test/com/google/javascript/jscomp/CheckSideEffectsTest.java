@@ -122,4 +122,52 @@ public class CheckSideEffectsTest extends CompilerTestCase {
     test("void f();", "JSCOMPILER_PRESERVE(void f());", null, e,
         "Suspicious code. The result of the 'void' operator is not being used.");
   }
+
+  public void testExternFunctions() {
+    String externs = "/** @return {boolean}\n * @nosideeffects */\n" +
+        "function noSideEffectsExtern(){}\n" +
+        "/** @return {boolean}\n * @nosideeffects */\n" +
+        "var noSideEffectsExtern2 = function(){};\n" +
+        "/** @return {boolean} */ function hasSideEffectsExtern(){}\n" +
+        "/** @return {boolean} */ var hasSideEffectsExtern2 = function(){}\n";
+
+    testSame(externs, "alert(noSideEffectsExtern());", ok);
+
+    test(externs, "noSideEffectsExtern();",
+        "JSCOMPILER_PRESERVE(noSideEffectsExtern());",
+        null, e, "Suspicious code. The result of the extern function call " +
+        "'noSideEffectsExtern' is not being used.");
+
+    test(externs, "noSideEffectsExtern2();",
+            "JSCOMPILER_PRESERVE(noSideEffectsExtern2());",
+            null, e, "Suspicious code. The result of the extern function call " +
+            "'noSideEffectsExtern2' is not being used.");
+
+    testSame(externs, "hasSideEffectsExtern()", ok);
+
+    testSame(externs, "hasSideEffectsExtern2()", ok);
+
+    // Methods redefined in inner scopes should not trigger a warning
+    testSame(externs, "(function() { function noSideEffectsExtern() {}; " +
+             "noSideEffectsExtern(); })()", ok);
+  }
+
+  public void testExternPropertyFunctions() {
+    String externs = "/** @const */ var foo = {};\n" +
+        "/** @return {boolean}\n * @nosideeffects */\n" +
+        "foo.noSideEffectsExtern = function(){}";
+
+    test(externs, "alert(foo.noSideEffectsExtern());",
+            "alert(foo.noSideEffectsExtern());", ok, null);
+
+    test(externs, "foo.noSideEffectsExtern();",
+        "JSCOMPILER_PRESERVE(foo.noSideEffectsExtern());",
+        null, e, "Suspicious code. The result of the extern function call " +
+        "'foo.noSideEffectsExtern' is not being used.");
+
+    // Methods redefined in inner scopes should not trigger a warning
+    testSame(externs, "(function() { var foo = {}; " +
+            "foo.noSideEffectsExtern = function() {}; " +
+            "noSideEffectsExtern(); })()", ok);
+  }
 }

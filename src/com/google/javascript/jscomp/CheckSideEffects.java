@@ -17,12 +17,15 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -32,7 +35,7 @@ import java.util.List;
  *         "continued on the next line but you forgot the +";
  * x == foo();  // should that be '='?
  * foo();;  // probably just a stray-semicolon. Doesn't hurt to check though
- * </p>
+ * </pre>
  * and generates warnings.
  *
  */
@@ -49,6 +52,9 @@ final class CheckSideEffects extends AbstractPostOrderCallback
 
   private final List<Node> problemNodes = Lists.newArrayList();
 
+  private final LinkedHashMap<String, String> noSideEffectExterns =
+    Maps.newLinkedHashMap();
+
   private final AbstractCompiler compiler;
 
   private final boolean protectSideEffectFreeCode;
@@ -62,6 +68,8 @@ final class CheckSideEffects extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
+    NodeTraversal.traverse(compiler, externs, new GetNoSideEffectExterns());
+
     NodeTraversal.traverse(compiler, root, this);
 
     // Code with hidden side-effect code is common, for example
@@ -69,6 +77,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     // will still allowing local dead code removal in general,
     // protect the "side-effect free" code in the source.
     //
+    // This also includes function calls such as with document.createElement
     if (protectSideEffectFreeCode) {
       protectSideEffects();
     }
@@ -109,22 +118,48 @@ final class CheckSideEffects extends AbstractPostOrderCallback
 
     boolean isResultUsed = NodeUtil.isExpressionResultUsed(n);
     boolean isSimpleOp = NodeUtil.isSimpleOperator(n);
-    if (!isResultUsed &&
-        (isSimpleOp || !NodeUtil.mayHaveSideEffects(n, t.getCompiler()))) {
-      String msg = "This code lacks side-effects. Is there a bug?";
-      if (n.isString()) {
-        msg = "Is there a missing '+' on the previous line?";
-      } else if (isSimpleOp) {
-        msg = "The result of the '" + Token.name(n.getType()).toLowerCase() +
-            "' operator is not being used.";
-      }
+    if (!isResultUsed) {
+      if (isSimpleOp || !NodeUtil.mayHaveSideEffects(n, t.getCompiler())) {
+        String msg = "This code lacks side-effects. Is there a bug?";
+        if (n.isString()) {
+          msg = "Is there a missing '+' on the previous line?";
+        } else if (isSimpleOp) {
+          msg = "The result of the '" + Token.name(n.getType()).toLowerCase() +
+              "' operator is not being used.";
+        }
 
-      t.getCompiler().report(
-          t.makeError(n, level, USELESS_CODE_ERROR, msg));
-      // TODO(johnlenz): determine if it is necessary to
-      // try to protect side-effect free statements as well.
-      if (!NodeUtil.isStatement(n)) {
-        problemNodes.add(n);
+        t.getCompiler().report(
+            t.makeError(n, level, USELESS_CODE_ERROR, msg));
+        // TODO(johnlenz): determine if it is necessary to
+        // try to protect side-effect free statements as well.
+        if (!NodeUtil.isStatement(n)) {
+          problemNodes.add(n);
+        }
+      } else if (n.isCall() && (n.getFirstChild().isGetProp() ||
+          n.getFirstChild().isName() || n.getFirstChild().isString())) {
+        String qname = n.getFirstChild().getQualifiedName();
+
+        // The name should not be defined in src scopes - only externs
+        boolean isDefinedInSrc = false;
+        if (qname != null) {
+          if (n.getFirstChild().isGetProp()) {
+            Node rootNameNode =
+                NodeUtil.getRootOfQualifiedName(n.getFirstChild());
+            isDefinedInSrc =
+                t.getScope().getVar(rootNameNode.getString()) != null;
+          } else {
+            isDefinedInSrc = t.getScope().getVar(qname) != null;
+          }
+        }
+
+        if (qname != null && noSideEffectExterns.containsKey(qname) &&
+            !isDefinedInSrc) {
+          problemNodes.add(n);
+          String msg = "The result of the extern function call '" + qname +
+              "' is not being used.";
+          t.getCompiler().report(
+              t.makeError(n, level, USELESS_CODE_ERROR, msg));
+        }
       }
     }
   }
@@ -188,6 +223,25 @@ final class CheckSideEffects extends AbstractPostOrderCallback
           Node expr = n.getLastChild();
           n.detachChildren();
           parent.replaceChild(n, expr);
+        }
+      }
+    }
+  }
+
+  /**
+   * Get fully qualified function names which are marked
+   * with @nosideeffects
+   *
+   * TODO(ChadKillingsworth) Add support for object literals
+   */
+  private class GetNoSideEffectExterns extends AbstractPostOrderCallback {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isFunction()) {
+        String name = NodeUtil.getFunctionName(n);
+        JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
+        if (jsDoc != null && jsDoc.isNoSideEffects()) {
+          noSideEffectExterns.put(name, null);
         }
       }
     }
