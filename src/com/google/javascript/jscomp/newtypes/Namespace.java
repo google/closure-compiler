@@ -180,7 +180,8 @@ public abstract class Namespace {
   }
 
   /** Add a new undeclared property to this namespace */
-  public void addUndeclaredProperty(String pname, JSType t, boolean isConstant) {
+  public void addUndeclaredProperty(
+      String pname, JSType t, boolean isConstant) {
     if (otherProps.containsKey(pname)) {
       return;
     }

@@ -183,10 +183,6 @@ public class ObjectType implements TypeWithProperties {
     if (qname.isIdentifier()) {
       String pname = qname.getLeftmostName();
       JSType declType = getDeclaredProp(qname);
-      Preconditions.checkState(declType == null || type == null ||
-          type.isSubtypeOf(declType),
-          "Cannot add property of type %s to a property declared of type %s",
-          type, declType);
       if (type == null) {
         type = declType;
       }
@@ -195,9 +191,16 @@ public class ObjectType implements TypeWithProperties {
         if (hasConstantProp(qname)) {
           isConstant = true;
         }
+        if (type != null && !type.isSubtypeOf(declType)) {
+          // Can happen in inheritance-related type errors.
+          // Not sure what the best approach is.
+          // For now, just forget the inferred type.
+          type = declType;
+        }
       } else if (isDeclared) {
         declType = type;
       }
+
       if (type == null && declType == null) {
         newProps = newProps.without(pname);
       } else {
@@ -496,7 +499,7 @@ public class ObjectType implements TypeWithProperties {
     }
     return ObjectType.makeObjectType(
         null,
-        meetPropsHelper(true, resultNominalType, this.props, other.props),
+        meetPropsHelper(true, null, this.props, other.props),
         this.fn == null ? null : this.fn.specialize(other.fn),
         this.isLoose,
         ObjectKind.meet(this.objectKind, other.objectKind));
@@ -781,8 +784,8 @@ public class ObjectType implements TypeWithProperties {
   }
 
   public StringBuilder appendTo(StringBuilder builder) {
-    if (props.isEmpty() ||
-         (props.size() == 1 && props.containsKey("prototype"))) {
+    if (props.isEmpty()
+        || (props.size() == 1 && props.containsKey("prototype"))) {
       if (fn != null) {
         return fn.appendTo(builder);
       } else if (nominalType != null) {
@@ -800,9 +803,10 @@ public class ObjectType implements TypeWithProperties {
       builder.append('{');
       boolean firstIteration = true;
       for (String pname : Sets.newTreeSet(props.keySet())) {
-        if (!firstIteration) {
-          builder.append(", ");
+        if (firstIteration) {
           firstIteration = false;
+        } else {
+          builder.append(", ");
         }
         builder.append(pname);
         builder.append(':');

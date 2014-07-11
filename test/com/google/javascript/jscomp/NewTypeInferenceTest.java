@@ -2871,6 +2871,17 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @interface */ function Foo() {}\n" +
         "/** @implements {Foo} */ function bar() {}",
         GlobalTypeInfo.IMPLEMENTS_WITHOUT_CONSTRUCTOR);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "Foo.prototype.method = function(x) { x - 1; };\n" +
+        "/** @constructor @extends {Foo} */\n" +
+        "function Bar() {}\n" +
+        "Bar.prototype.method = function(x, y) { x - y; };\n" +
+        "Bar.prototype.method2 = function(x, y) {};\n" +
+        "Bar.prototype.method = Bar.prototype.method2;",
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
   }
 
   public void testInheritanceSubtyping() {
