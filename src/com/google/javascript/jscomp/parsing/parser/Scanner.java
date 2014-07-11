@@ -606,7 +606,7 @@ public class Scanner {
     case 'x':
     case 'X':
       nextChar();
-      if (!isHexDigit(peekChar())) {
+      if (!peekHexDigit()) {
         reportError("Hex Integer Literal must contain at least one digit");
       }
       skipHexDigits();
@@ -707,7 +707,7 @@ public class Scanner {
         } else {
           // Escape with braces can have any number of hex digits: \\u{XXXXXXX}
           escapeEnd = escapeStart + 3;
-          while (isHexDigit(value.charAt(escapeEnd))) {
+          while (Character.digit(value.charAt(escapeEnd), 0x10) >= 0) {
             escapeEnd++;
           }
           if (value.charAt(escapeEnd) != '}') {
@@ -862,8 +862,12 @@ public class Scanner {
     case 'u':
       if (peek('{')) {
         nextChar();
+        if (peek('}')) {
+          reportError("Empty unicode escape");
+          return false;
+        }
         boolean allHexDigits = true;
-        while (!peek('}')) {
+        while (!peek('}') && allHexDigits) {
           allHexDigits = allHexDigits && skipHexDigit();
         }
         nextChar();
@@ -877,7 +881,7 @@ public class Scanner {
   }
 
   private boolean skipHexDigit() {
-    if (!isHexDigit(peekChar())) {
+    if (!peekHexDigit()) {
       reportError("Hex digit expected");
       return false;
     }
@@ -939,27 +943,13 @@ public class Scanner {
     }
   }
 
+  private boolean peekHexDigit() {
+    return Character.digit(peekChar(), 0x10) >= 0;
+  }
+
   private void skipHexDigits() {
-    while (isHexDigit(peekChar())) {
+    while (peekHexDigit()) {
       nextChar();
-    }
-  }
-
-  private static boolean isHexDigit(char ch) {
-    return valueOfHexDigit(ch) >= 0;
-  }
-
-  private static int valueOfHexDigit(char ch) {
-    switch (ch) {
-    case '0': case '1': case '2': case '3': case '4':
-    case '5': case '6': case '7': case '8': case '9':
-      return ch - '0';
-    case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
-      return ch - 'a' + 10;
-    case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
-      return ch - 'A' + 10;
-    default:
-      return -1;
     }
   }
 

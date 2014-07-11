@@ -1709,9 +1709,13 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testUnicodePointEscapeStringLiterals() {
     parse("var i = \'\\u0043ompiler\'");
+    parse("var i = \'\\u{43}ompiler\'");
+    parse("var i = \'\\u{1f42a}ompiler\'");
+    parse("var i = \'\\u{2603}ompiler\'");
+    parse("var i = \'\\u{1}ompiler\'");
   }
 
-  public void testInvalidUnicodePointEscape() {
+  public void testInvalidUnicodePointEscapeInIdentifiers() {
     parseError("var \\u{defg", "Invalid escape sequence");
     parseError("var \\u{defgRestOfIdentifier", "Invalid escape sequence");
     parseError("var \\u{DEFG}", "Invalid escape sequence");
@@ -1719,6 +1723,14 @@ public class NewParserTest extends BaseJSTypeTestCase {
     // Legal unicode but invalid in identifier
     parseError("Js\\u{99}ompiler", "Invalid escape sequence");
     parseError("Js\\u{10000}ompiler", "Invalid escape sequence");
+  }
+
+  public void testInvalidUnicodePointEscapeStringLiterals() {
+    parseError("var i = \'\\u{defg\'", "Hex digit expected");
+    parseError("var i = \'\\u{defgRestOfIdentifier\'", "Hex digit expected");
+    parseError("var i = \'\\u{DEFG}\'", "Hex digit expected");
+    parseError("var i = \'Js\\u{}ompiler\'", "Empty unicode escape");
+    parseError("var i = \'\\u{345", "Hex digit expected");
   }
 
   public void testInvalidEscape() {

@@ -2142,17 +2142,28 @@ class NewIRFactory {
           break;
         case 'x':
           result.append((char) (
-              hexdigit(value.charAt(cur + 1)) * 16
+              hexdigit(value.charAt(cur + 1)) * 0x10
               + hexdigit(value.charAt(cur + 2))));
           cur += 2;
           break;
         case 'u':
-          result.append((char) (
-              hexdigit(value.charAt(cur + 1)) * 16 * 16 * 16
-              + hexdigit(value.charAt(cur + 2)) * 16 * 16
-              + hexdigit(value.charAt(cur + 3)) * 16
-              + hexdigit(value.charAt(cur + 4))));
-          cur += 4;
+          int escapeEnd;
+          String hexDigits;
+          if (value.charAt(cur + 1) != '{') {
+            // Simple escape with exactly four hex digits: \\uXXXX
+            escapeEnd = cur + 5;
+            hexDigits = value.substring(cur + 1, escapeEnd);
+          } else {
+            // Escape with braces can have any number of hex digits: \\u{XXXXXXX}
+            escapeEnd = cur + 2;
+            while (Character.digit(value.charAt(escapeEnd), 0x10) >= 0) {
+              escapeEnd++;
+            }
+            hexDigits = value.substring(cur + 2, escapeEnd);
+            escapeEnd++;
+          }
+          result.append((char) Integer.parseInt(hexDigits, 0x10));
+          cur = escapeEnd - 1;
           break;
         default:
           // TODO(tbreisacher): Add a warning because the user probably
@@ -2234,7 +2245,7 @@ class NewIRFactory {
           long v = 0;
           int c = 1;
           while (++c < length) {
-            v = (v * 16) + hexdigit(value.charAt(c));
+            v = (v * 0x10) + hexdigit(value.charAt(c));
           }
           return Double.valueOf(v);
         }
