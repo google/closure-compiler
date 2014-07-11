@@ -52,8 +52,8 @@ public class Es6HandleDefaultParameters extends AbstractPostOrderCallback
     Node paramList = n.getChildAtIndex(1);
     CollectReferences collector = new CollectReferences();
     for (Node child : paramList.children()) {
-      if (child.isName() && child.hasChildren()) {
-        NodeTraversal.traverse(compiler, child.getFirstChild(), collector);
+      if (child.isDefaultValue()) {
+        NodeTraversal.traverse(compiler, child.getLastChild(), collector);
       }
     }
 

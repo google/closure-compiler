@@ -428,11 +428,11 @@ public class CommandLineRunnerTest extends TestCase {
   // Integration tests
 
   public void testIssue70a() {
-    test("function foo({}) {}", RhinoErrorReporter.PARSE_ERROR);
+    test("function foo({}) {}", RhinoErrorReporter.ES6_FEATURE);
   }
 
   public void testIssue70b() {
-    test("function foo([]) {}", RhinoErrorReporter.PARSE_ERROR);
+    test("function foo([]) {}", RhinoErrorReporter.ES6_FEATURE);
   }
 
   public void testIssue81() {

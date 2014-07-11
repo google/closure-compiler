@@ -486,6 +486,18 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("[a,{b,c}]=foo()");
   }
 
+  public void testPrintDestructuringInParamList() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("function f([a]){}");
+    assertPrintSame("function f([a,b]){}");
+    assertPrintSame("function f([a,b]=c()){}");
+    assertPrintSame("function f({a}){}");
+    assertPrintSame("function f({a,b}){}");
+    assertPrintSame("function f({a,b}=c()){}");
+    assertPrintSame("function f([a,{b,c}]){}");
+    assertPrintSame("function f({a,b:[c,d]}){}");
+  }
+
   public void testBreakTrustedStrings() {
     // Break scripts
     assertPrint("'<script>'", "\"<script>\"");

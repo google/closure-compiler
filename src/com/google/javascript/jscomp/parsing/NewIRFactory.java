@@ -1188,9 +1188,11 @@ class NewIRFactory {
       Node params = newNode(Token.PARAM_LIST);
       for (ParseTree param : tree.parameters) {
         Node paramNode = transformNodeWithInlineJsDoc(param, false);
-        // We only support simple names, default parameters, and rest
-        // parameters, for the moment.
-        Preconditions.checkState(paramNode.isName() || paramNode.isRest());
+        // Children must be simple names, default parameters, rest
+        // parameters, or destructuring patterns.
+        Preconditions.checkState(paramNode.isName() || paramNode.isRest()
+            || paramNode.isArrayPattern() || paramNode.isObjectPattern()
+            || paramNode.isDefaultValue());
         params.addChildToBack(paramNode);
       }
       return params;
@@ -1199,10 +1201,8 @@ class NewIRFactory {
     @Override
     Node processDefaultParameter(DefaultParameterTree tree) {
       maybeWarnEs6Feature(tree, "default parameters");
-
-      Node name = newStringNode(Token.NAME, tree.identifier.identifierToken.value);
-      name.addChildToFront(transform(tree.expression));
-      return name;
+      return newNode(Token.DEFAULT_VALUE,
+          transform(tree.lhs), transform(tree.defaultValue));
     }
 
     @Override

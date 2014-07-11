@@ -515,18 +515,31 @@ public class AstValidator implements CompilerPass {
           violation("Rest parameters must come after all other parameters.", c);
         }
         validateRest(c);
-      } else {
-        // Don't call validateName, since it requires every NAME to have
-        // zero children, which is not the case here.
-        validateNodeType(Token.NAME, c);
-        validateNonEmptyString(c);
+      } else if (c.isDefaultValue()) {
+        defaultParams = true;
+        validateAssignmentExpression(c);
 
-        // If a previous parameter has a default value, this one must too
-        validateMinimumChildCount(c, defaultParams ? 1 : 0);
-        validateMaximumChildCount(c, 1);
-        if (c.hasOneChild()) {
-          validateExpression(c.getFirstChild());
-          defaultParams = true;
+        // LHS can only be a name or destructuring pattern.
+        Node lhs = c.getFirstChild();
+        if (lhs.isName()) {
+          validateName(lhs);
+        } else if (lhs.isArrayPattern()) {
+          validateArrayPattern(Token.PARAM_LIST, lhs);
+        } else {
+          validateObjectPattern(Token.PARAM_LIST, lhs);
+        }
+      } else {
+        if (defaultParams) {
+          violation("Cannot have a parameter without a default value,"
+              + " after one with a default value.", c);
+        }
+
+        if (c.isName()) {
+          validateName(c);
+        } else if (c.isArrayPattern()) {
+          validateArrayPattern(Token.PARAM_LIST, c);
+        } else {
+          validateObjectPattern(Token.PARAM_LIST, c);
         }
       }
     }

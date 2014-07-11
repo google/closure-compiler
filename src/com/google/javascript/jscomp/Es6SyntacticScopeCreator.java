@@ -88,10 +88,12 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
 
       // Args: Declare function variables
       Preconditions.checkState(args.isParamList());
-      for (Node a = args.getFirstChild(); a != null;
-           a = a.getNext()) {
-        Preconditions.checkState(a.isName() || a.isRest());
-        declareVar(a);
+      for (Node a = args.getFirstChild(); a != null; a = a.getNext()) {
+        if (a.isDefaultValue()) {
+          declareLHS(scope, a.getFirstChild());
+        } else {
+          declareLHS(scope, a);
+        }
       }
 
       // Since we create a separate scope for body, stop scanning here
@@ -105,7 +107,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
   }
 
   private void declareLHS(Scope declarationScope, Node lhs) {
-    if (lhs.isName() || lhs.isStringKey()) {
+    if (lhs.isName() || lhs.isStringKey() || lhs.isRest()) {
       declareVar(declarationScope, lhs);
     } else if (lhs.isArrayPattern() || lhs.isObjectPattern()) {
       for (Node child = lhs.getFirstChild(); child != null; child = child.getNext()) {

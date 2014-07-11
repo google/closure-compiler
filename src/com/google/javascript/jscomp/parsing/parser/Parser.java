@@ -604,26 +604,38 @@ public class Parser {
 
     boolean hasDefaultParameters = false;
 
-    while (peekId() || peek(TokenType.SPREAD)) {
+    while (peek(TokenType.SPREAD) || peekId()
+        || peek(TokenType.OPEN_SQUARE) || peek(TokenType.OPEN_CURLY)) {
+
+      SourcePosition start = getTreeStartLocation();
+
       if (peek(TokenType.SPREAD)) {
-        SourcePosition start = getTreeStartLocation();
         eat(TokenType.SPREAD);
         result.add(new RestParameterTree(getTreeLocation(start), eatId()));
 
         // Rest parameters must be the last parameter; so we must be done.
         break;
-      } else {
-        // TODO: implement pattern parsing here
-
-        // Once we have seen a default parameter all remaining params must either
-        //  be default or rest parameters.
-        if (hasDefaultParameters || peek(1, TokenType.EQUAL)) {
-          result.add(parseDefaultParameter());
-          hasDefaultParameters = true;
-        } else {
-           result.add(parseIdentifierExpression());
-        }
       }
+
+      ParseTree parameter;
+      if (peekId()) {
+        parameter = parseIdentifierExpression();
+      } else if (peek(TokenType.OPEN_SQUARE)) {
+        parameter = parseArrayPattern(PatternKind.INITIALIZER);
+      } else {
+        parameter = parseObjectPattern(PatternKind.INITIALIZER);
+      }
+
+      // Once we have seen a default parameter all remaining params must either
+      // be default or rest parameters.
+      if (hasDefaultParameters || peek(TokenType.EQUAL)) {
+        eat(TokenType.EQUAL);
+        ParseTree defaultValue = parseAssignmentExpression();
+        parameter = new DefaultParameterTree(getTreeLocation(start), parameter, defaultValue);
+        hasDefaultParameters = true;
+      }
+
+      result.add(parameter);
 
       if (!peek(TokenType.CLOSE_PAREN)) {
         eat(TokenType.COMMA);
@@ -634,14 +646,6 @@ public class Parser {
 
     return new FormalParameterListTree(
         getTreeLocation(listStart), result.build());
-  }
-
-  private DefaultParameterTree parseDefaultParameter() {
-    SourcePosition start = getTreeStartLocation();
-    IdentifierExpressionTree ident = parseIdentifierExpression();
-    eat(TokenType.EQUAL);
-    ParseTree expr = parseAssignmentExpression();
-    return new DefaultParameterTree(getTreeLocation(start), ident, expr);
   }
 
   private BlockTree parseFunctionBody() {
@@ -2466,9 +2470,8 @@ public class Parser {
     if (peekId()) {
       return eatIdOrKeywordAsId();
     } else {
-      // generate an missing id error.
-      Token result = eat(TokenType.IDENTIFIER);
-      return (IdentifierToken) result;
+      reportExpectedError(peekToken(), TokenType.IDENTIFIER);
+      return null;
     }
   }
 

@@ -660,6 +660,10 @@ class ReferenceCollectingCallback implements ScopedCallback,
         parent = parent.getParent();
       }
 
+      if (parent.isDefaultValue() && nameNode == parent.getFirstChild()) {
+        return true;
+      }
+
       return DECLARATION_PARENTS.contains(parent.getType());
     }
 

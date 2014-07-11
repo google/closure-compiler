@@ -139,7 +139,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
                   r.getNode(),
                   checkLevel,
                   (r.isVarDeclaration() || r.isHoistedFunction())
-                      && !(maybeParam.getNode().hasChildren()
+                      && !(maybeParam.getNode().getParent().isDefaultValue()
                           || maybeParam.getNode().isRest())
                   ? REDECLARED_VARIABLE
                   : PARAMETER_SHADOWED_ERROR, v.name));
@@ -201,7 +201,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
               // better yet, make sure the generated code never violates
               // the requirement to pass aggressive var check!
               DiagnosticType diagnosticType;
-              if (((v.isLet() || v.isConst()))
+              if (v.isLet() || v.isConst()
                   || letConstShadowsVar || shadowCatchVar) {
                 diagnosticType = REDECLARED_VARIABLE_ERROR;
               } else {

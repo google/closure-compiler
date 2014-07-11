@@ -318,14 +318,17 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     Node block = function.getLastChild();
     for (int i = 0; i < paramList.getChildCount(); i++) {
       Node param = paramList.getChildAtIndex(i);
-      if (param.hasChildren()) { // default parameter
-        param.setOptionalArg(true);
+      if (param.isDefaultValue()) {
+        Node name = param.removeFirstChild();
         Node defaultValue = param.removeFirstChild();
+        paramList.replaceChild(param, name);
+        name.setOptionalArg(true);
+
         // Transpile to: param === undefined && (param = defaultValue);
-        Node name = IR.name(param.getString());
-        Node undefined = IR.name("undefined");
-        Node stm = IR.exprResult(IR.and(IR.sheq(name, undefined),
-            IR.assign(name.cloneNode(), defaultValue)));
+        Node stm = IR.exprResult(
+            IR.and(
+                IR.sheq(name.cloneNode(), IR.name("undefined")),
+                IR.assign(name.cloneNode(), defaultValue)));
         block.addChildAfter(stm.useSourceInfoIfMissingFromForTree(param), insertSpot);
         insertSpot = stm;
         compiler.reportCodeChange();

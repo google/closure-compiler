@@ -1053,6 +1053,14 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "const declarations");
   }
 
+  public void testAnonymousFunctionExpression() {
+    mode = LanguageMode.ECMASCRIPT5;
+    parseError("function () {}", "'identifier' expected");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError("function () {}", "'identifier' expected");
+  }
+
   public void testArrayDestructuringVar() {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("var [x,y] = foo();",
@@ -1076,6 +1084,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testArrayDestructuringRest() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("var [first, ...rest] = foo();");
+    parse("let [first, ...rest] = foo();");
+    parse("const [first, ...rest] = foo();");
 
     // TODO(tbreisacher): Make these errors clearer.
     parseError("var [first, ...more, last] = foo();", "'identifier' expected");
@@ -1084,6 +1094,14 @@ public class NewParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("var [first, ...rest] = foo();",
         "this language feature is only supported in es6 mode: destructuring");
+  }
+
+  public void testArrayDestructuringFnDeclaration() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("function f([x, y]) { use(x); use(y); }");
+    parse("function f([x, [y, z]]) {}");
+    parse("function f([x, y] = [1, 2]) { use(x); use(y); }");
+    parse("function f([x, x]) {}");
   }
 
   public void testObjectDestructuringVar() {
@@ -1106,6 +1124,14 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("({}) = foo();");
   }
 
+  public void testObjectDestructuringFnDeclaration() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("function f({x, y}) { use(x); use(y); }");
+    parse("function f({w, x: {y, z}}) {}");
+    parse("function f({x, y} = {x:1, y:2}) {}");
+    parse("function f({x, x}) {}");
+  }
+
   public void testMixedDestructuring() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("var {x: [y, z]} = foo();");
@@ -1113,6 +1139,9 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     parse("({x: [y, z]} = foo());");
     parse("[x, {y, z}] = foo();");
+
+    parse("function f([x, {y, z}]) {}");
+    parse("function f({x: [y, z]}) {}");
   }
 
   public void testArrayComprehensions() {

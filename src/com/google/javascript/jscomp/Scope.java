@@ -19,10 +19,12 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticReference;
@@ -35,6 +37,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Scope contains information about a variable scope in JavaScript.
@@ -348,19 +351,38 @@ public class Scope
     }
 
     boolean isVar() {
-      return nameNode.getParent().isVar();
+      return declarationType() == Token.VAR;
     }
 
     boolean isLet() {
-      return nameNode.getParent().isLet();
+      return declarationType() == Token.LET;
     }
 
     boolean isConst() {
-      return nameNode.getParent().isConst();
+      return declarationType() == Token.CONST;
     }
 
     boolean isParam() {
-      return nameNode.getParent().isParamList();
+      return declarationType() == Token.PARAM_LIST;
+    }
+
+    private int declarationType() {
+      final Set<Integer> types = ImmutableSet.of(
+          Token.VAR,
+          Token.LET,
+          Token.CONST,
+          Token.FUNCTION,
+          Token.CLASS,
+          Token.CATCH,
+          Token.PARAM_LIST);
+      for (Node current = nameNode; current != null;
+          current = current.getParent()) {
+        if (types.contains(current.getType())) {
+          return current.getType();
+        }
+      }
+      throw new IllegalStateException("The nameNode for " + this + " must be a descendant"
+          + " of one of: " + types);
     }
   }
 
