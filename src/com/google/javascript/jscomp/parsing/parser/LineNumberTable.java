@@ -44,7 +44,7 @@ public class LineNumberTable {
     for (int index = 0; index < source.length(); index++) {
       char ch = source.charAt(index);
       if (isLineTerminator(ch)) {
-        if (index < source.length() && ch == '\r'
+        if (index + 1 < source.length() && ch == '\r'
             && source.charAt(index + 1) == '\n') {
           index++;
         }
