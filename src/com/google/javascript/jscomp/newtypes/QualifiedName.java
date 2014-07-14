@@ -45,15 +45,25 @@ public class QualifiedName {
   }
 
   public static QualifiedName fromGetprop(Node getprop) {
-    if (!getprop.isQualifiedName()) {
+    if (getprop == null || !getprop.isQualifiedName()) {
       return null;
     }
     return new QualifiedName(ImmutableList.copyOf(
         Splitter.on('.').split(getprop.getQualifiedName())));
   }
 
+  public static QualifiedName fromQname(String qname) {
+    return qname.contains(".") ?
+        new QualifiedName(ImmutableList.copyOf(Splitter.on('.').split(qname))) :
+        new QualifiedName(qname);
+  }
+
   public boolean isIdentifier() {
     return parts.size() == 1;
+  }
+
+  public int size() {
+    return parts.size();
   }
 
   public QualifiedName getAllButLeftmost() {
@@ -63,6 +73,15 @@ public class QualifiedName {
 
   public String getLeftmostName() {
     return parts.get(0);
+  }
+
+  QualifiedName getAllButRightmost() {
+    Preconditions.checkArgument(!isIdentifier());
+    return new QualifiedName(parts.subList(0, parts.size() - 1));
+  }
+
+  String getRightmostName() {
+    return parts.get(parts.size() - 1);
   }
 
   public String toString() {

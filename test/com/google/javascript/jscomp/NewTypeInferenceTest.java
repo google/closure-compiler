@@ -2871,6 +2871,17 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @interface */ function Foo() {}\n" +
         "/** @implements {Foo} */ function bar() {}",
         GlobalTypeInfo.IMPLEMENTS_WITHOUT_CONSTRUCTOR);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "Foo.prototype.method = function(x) { x - 1; };\n" +
+        "/** @constructor @extends {Foo} */\n" +
+        "function Bar() {}\n" +
+        "Bar.prototype.method = function(x, y) { x - y; };\n" +
+        "Bar.prototype.method2 = function(x, y) {};\n" +
+        "Bar.prototype.method = Bar.prototype.method2;",
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
   }
 
   public void testInheritanceSubtyping() {
@@ -3715,6 +3726,29 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
   }
 
+  public void testNamespacedObjectsDontCrash() {
+    checkNoWarnings("/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @constructor */\n" +
+        "ns.Foo = function() {\n" +
+        "  ns.Foo.obj.value = ns.Foo.VALUE;\n" +
+        "};\n" +
+        "ns.Foo.obj = {};\n" +
+        "ns.Foo.VALUE = 128;");
+  }
+
+  public void testRedeclaredNamespaces() {
+    // TODO(blickly): Consider a warning if RHS doesn't contain ||
+    checkNoWarnings(
+        "/** @const */ var ns = ns || {}\n"
+      + "/** @const */ var ns = ns || {}");
+
+    checkNoWarnings(
+        "/** @const */ var ns = ns || {}\n"
+      + "ns.subns = ns.subns || {}\n"
+      + "ns.subns = ns.subns || {}");
+  }
+
   public void testReferenceToNonexistentNamespace() {
     typeCheck(
         "/** @constructor */ ns.Foo = function(){};",
@@ -3726,6 +3760,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     typeCheck(
         "/** @enum {number} */ ns.NUM = { N : 1 };",
+        VarCheck.UNDEFINED_VAR_ERROR);
+
+    typeCheck(
+        "/** @typedef {number} */ ns.NUM;",
         VarCheck.UNDEFINED_VAR_ERROR);
 
     typeCheck(
@@ -3741,6 +3779,11 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/** @const */ var ns = {};\n" +
         "/** @enum {number} */ ns.subns.NUM = { N : 1 };",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    typeCheck(
+        "/** @const */ var ns = {};\n" +
+        "/** @typedef {number} */ ns.subns.NUM;",
         TypeCheck.INEXISTENT_PROPERTY);
 
     typeCheck(
@@ -4284,6 +4327,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     checkNoWarnings(
         "function f() { return {}; }\n" +
         "f().x = 123;");
+
+    checkNoWarnings(
+        "function f() { return {}; }\n" +
+        "f().ns = {};");
 
     typeCheck(
         "/** @constructor */\n" +
@@ -5681,6 +5728,15 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         ImmutableList.of(
             VarCheck.UNDEFINED_VAR_ERROR,
             VarCheck.UNDEFINED_VAR_ERROR));
+  }
+
+  public void testInvalidEnumDeclarationDoesntCrash() {
+    typeCheck(
+        "var ns = {};\n" +
+        "function f() {\n" +
+        "  /** @enum {number} */ var EnumType = ns;\n" +
+        "}",
+        GlobalTypeInfo.MALFORMED_ENUM);
   }
 
   public void testDebuggerStatementDoesntCrash() {
@@ -7104,7 +7160,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  /** @enum {function(T):number} */\n" +
         "  var E = { ONE: x };\n" +
         "}",
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
 
     typeCheck(
         "/**\n" +
@@ -7117,7 +7173,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  /** @enum {function(E1):E1} */\n" +
         "  var E2 = { ONE: function(x) { return x; } };\n" +
         "}",
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
 
     typeCheck(
         "/**\n" +
@@ -7132,8 +7188,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  var E2 = { ONE: function(x) { return x; } };\n" +
         "}",
         ImmutableList.of(
-            RhinoErrorReporter.BAD_JSDOC_ANNOTATION,
-            RhinoErrorReporter.BAD_JSDOC_ANNOTATION));
+            GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME,
+            GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME,
+            GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME));
 
     // No unions in enums
     typeCheck(
@@ -7580,5 +7637,100 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         ImmutableList.of(
             NewTypeInference.MISTYPED_ASSIGN_RHS,
             NewTypeInference.INVALID_OPERAND_TYPE));
+  }
+
+  public void testAcrossScopeNamespaces() {
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "(function() {\n" +
+        "  /** @constructor */\n" +
+        "  ns.Foo = function() {};\n" +
+        "})();\n" +
+        "ns.Foo();",
+        TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "(function() {\n" +
+        "  /** @type {string} */\n" +
+        "  ns.str = 'str';\n" +
+        "})();\n" +
+        "ns.str - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "(function() {\n" +
+        "  /** @constructor */\n" +
+        "  ns.Foo = function() {};\n" +
+        "})();\n" +
+        "function f(/** ns.Foo */ x) {}\n" +
+        "f(1);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "(function() {\n" +
+        "  /** @constructor */\n" +
+        "  ns.Foo = function() {};\n" +
+        "})();\n" +
+        "var /** ns.Foo */ x = 123;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+  }
+
+  public void testQualifiedNamedTypes() {
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @constructor */\n" +
+        "ns.Foo = function() {};\n" +
+        "ns.Foo();",
+        TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @typedef {number} */\n" +
+        "ns.num;\n" +
+        "var /** ns.num */ y = 'str';",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @enum {number} */\n" +
+        "ns.Foo = { A: 1 };\n" +
+        "var /** ns.Foo */ y = 'str';",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var E = { A: 1 };\n" +
+        "/** @typedef {number} */\n" +
+        "E.num;\n" +
+        "var /** E.num */ x = 'str';",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testStringMethods() {
+    // TODO(blickly): This warning is spurious
+    typeCheck(
+        "/** @constructor */ function String(){}\n" +
+        "/** @this {String|string} */\n" +
+        "String.prototype.substr = function(start) {};\n" +
+        "/** @const */ var ns = {};\n" +
+        "/** @const */ var s = 'str';\n" +
+        "ns.r = s.substr(2);",
+        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+  }
+
+  public void testOutOfOrderDeclarations() {
+    // This is technically valid JS, but we don't support it
+    checkNoWarnings("Foo.STATIC = 5; /** @constructor */ function Foo(){}");
   }
 }

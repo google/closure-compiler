@@ -195,7 +195,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         }
 
         compiler.report(JSError.make(
-            r.inputName, r.requireNode, requiresLevel, error, r.namespace));
+            r.requireNode, requiresLevel, error, r.namespace));
       }
     }
   }

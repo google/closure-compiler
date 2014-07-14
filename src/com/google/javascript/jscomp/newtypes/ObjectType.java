@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
@@ -25,6 +24,7 @@ import com.google.common.collect.Sets;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -32,7 +32,7 @@ import java.util.Set;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class ObjectType extends TypeWithProperties {
+public class ObjectType implements TypeWithProperties {
   // TODO(dimvar): currently, we can't distinguish between an obj at the top of
   // the proto chain (nominalType = null) and an obj for which we can't figure
   // out its class
@@ -183,10 +183,6 @@ public class ObjectType extends TypeWithProperties {
     if (qname.isIdentifier()) {
       String pname = qname.getLeftmostName();
       JSType declType = getDeclaredProp(qname);
-      Preconditions.checkState(declType == null || type == null ||
-          type.isSubtypeOf(declType),
-          "Cannot add property of type %s to a property declared of type %s",
-          type, declType);
       if (type == null) {
         type = declType;
       }
@@ -195,9 +191,16 @@ public class ObjectType extends TypeWithProperties {
         if (hasConstantProp(qname)) {
           isConstant = true;
         }
+        if (type != null && !type.isSubtypeOf(declType)) {
+          // Can happen in inheritance-related type errors.
+          // Not sure what the best approach is.
+          // For now, just forget the inferred type.
+          type = declType;
+        }
       } else if (isDeclared) {
         declType = type;
       }
+
       if (type == null && declType == null) {
         newProps = newProps.without(pname);
       } else {
@@ -496,7 +499,7 @@ public class ObjectType extends TypeWithProperties {
     }
     return ObjectType.makeObjectType(
         null,
-        meetPropsHelper(true, resultNominalType, this.props, other.props),
+        meetPropsHelper(true, null, this.props, other.props),
         this.fn == null ? null : this.fn.specialize(other.fn),
         this.isLoose,
         ObjectKind.meet(this.objectKind, other.objectKind));
@@ -640,7 +643,7 @@ public class ObjectType extends TypeWithProperties {
   }
 
   @Override
-  protected JSType getProp(QualifiedName qname) {
+  public JSType getProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);
     if (qname.isIdentifier()) {
       return p == null ? JSType.UNDEFINED : p.getType();
@@ -651,7 +654,7 @@ public class ObjectType extends TypeWithProperties {
   }
 
   @Override
-  protected JSType getDeclaredProp(QualifiedName qname) {
+  public JSType getDeclaredProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);
     if (p == null) {
       return null;
@@ -671,7 +674,7 @@ public class ObjectType extends TypeWithProperties {
   }
 
   @Override
-  protected boolean mayHaveProp(QualifiedName qname) {
+  public boolean mayHaveProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);
     return p != null &&
         (qname.isIdentifier() ||
@@ -679,7 +682,7 @@ public class ObjectType extends TypeWithProperties {
   }
 
   @Override
-  protected boolean hasProp(QualifiedName qname) {
+  public boolean hasProp(QualifiedName qname) {
     Preconditions.checkArgument(qname.isIdentifier());
     Property p = getLeftmostProp(qname);
     if (p == null || p.isOptional()) {
@@ -690,7 +693,7 @@ public class ObjectType extends TypeWithProperties {
   }
 
   @Override
-  protected boolean hasConstantProp(QualifiedName qname) {
+  public boolean hasConstantProp(QualifiedName qname) {
     Preconditions.checkArgument(qname.isIdentifier());
     Property p = getLeftmostProp(qname);
     return p != null && p.isConstant();
@@ -781,8 +784,8 @@ public class ObjectType extends TypeWithProperties {
   }
 
   public StringBuilder appendTo(StringBuilder builder) {
-    if (props.isEmpty() ||
-         (props.size() == 1 && props.containsKey("prototype"))) {
+    if (props.isEmpty()
+        || (props.size() == 1 && props.containsKey("prototype"))) {
       if (fn != null) {
         return fn.appendTo(builder);
       } else if (nominalType != null) {
@@ -800,9 +803,10 @@ public class ObjectType extends TypeWithProperties {
       builder.append('{');
       boolean firstIteration = true;
       for (String pname : Sets.newTreeSet(props.keySet())) {
-        if (!firstIteration) {
-          builder.append(", ");
+        if (firstIteration) {
           firstIteration = false;
+        } else {
+          builder.append(", ");
         }
         builder.append(pname);
         builder.append(':');
@@ -823,13 +827,13 @@ public class ObjectType extends TypeWithProperties {
     }
     Preconditions.checkArgument(o instanceof ObjectType);
     ObjectType obj2 = (ObjectType) o;
-    return Objects.equal(fn, obj2.fn) &&
-        Objects.equal(nominalType, obj2.nominalType) &&
-        Objects.equal(props, obj2.props);
+    return Objects.equals(fn, obj2.fn) &&
+        Objects.equals(nominalType, obj2.nominalType) &&
+        Objects.equals(props, obj2.props);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(fn, props, nominalType);
+    return Objects.hash(fn, props, nominalType);
   }
 }

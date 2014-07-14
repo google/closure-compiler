@@ -182,7 +182,6 @@ class ProcessDefines implements CompilerPass {
           allDefines.add(name);
         } else {
           JSError error = JSError.make(
-              decl.getSourceName(),
               decl.node, INVALID_DEFINE_TYPE_ERROR);
           compiler.report(error);
         }

@@ -537,7 +537,7 @@ public class Parser {
     if (peek(TokenType.OPEN_CURLY)) {
       functionBody = parseFunctionBody();
     } else {
-      functionBody = parseAssignmentExpression();
+      functionBody = parseAssignment(expressionIn);
     }
 
     FunctionDeclarationTree declaration =  new FunctionDeclarationTree(
@@ -604,26 +604,38 @@ public class Parser {
 
     boolean hasDefaultParameters = false;
 
-    while (peekId() || peek(TokenType.SPREAD)) {
+    while (peek(TokenType.SPREAD) || peekId()
+        || peek(TokenType.OPEN_SQUARE) || peek(TokenType.OPEN_CURLY)) {
+
+      SourcePosition start = getTreeStartLocation();
+
       if (peek(TokenType.SPREAD)) {
-        SourcePosition start = getTreeStartLocation();
         eat(TokenType.SPREAD);
         result.add(new RestParameterTree(getTreeLocation(start), eatId()));
 
         // Rest parameters must be the last parameter; so we must be done.
         break;
-      } else {
-        // TODO: implement pattern parsing here
-
-        // Once we have seen a default parameter all remaining params must either
-        //  be default or rest parameters.
-        if (hasDefaultParameters || peek(1, TokenType.EQUAL)) {
-          result.add(parseDefaultParameter());
-          hasDefaultParameters = true;
-        } else {
-           result.add(parseIdentifierExpression());
-        }
       }
+
+      ParseTree parameter;
+      if (peekId()) {
+        parameter = parseIdentifierExpression();
+      } else if (peek(TokenType.OPEN_SQUARE)) {
+        parameter = parseArrayPattern(PatternKind.INITIALIZER);
+      } else {
+        parameter = parseObjectPattern(PatternKind.INITIALIZER);
+      }
+
+      // Once we have seen a default parameter all remaining params must either
+      // be default or rest parameters.
+      if (hasDefaultParameters || peek(TokenType.EQUAL)) {
+        eat(TokenType.EQUAL);
+        ParseTree defaultValue = parseAssignmentExpression();
+        parameter = new DefaultParameterTree(getTreeLocation(start), parameter, defaultValue);
+        hasDefaultParameters = true;
+      }
+
+      result.add(parameter);
 
       if (!peek(TokenType.CLOSE_PAREN)) {
         eat(TokenType.COMMA);
@@ -634,14 +646,6 @@ public class Parser {
 
     return new FormalParameterListTree(
         getTreeLocation(listStart), result.build());
-  }
-
-  private DefaultParameterTree parseDefaultParameter() {
-    SourcePosition start = getTreeStartLocation();
-    IdentifierExpressionTree ident = parseIdentifierExpression();
-    eat(TokenType.EQUAL);
-    ParseTree expr = parseAssignmentExpression();
-    return new DefaultParameterTree(getTreeLocation(start), ident, expr);
   }
 
   private BlockTree parseFunctionBody() {
@@ -2130,7 +2134,7 @@ public class Parser {
 
     eat(TokenType.OPEN_PAREN);
     while (peekAssignmentOrSpread()) {
-      arguments.add(parseAssignmentOrSpead());
+      arguments.add(parseAssignmentOrSpread());
 
       if (!peek(TokenType.CLOSE_PAREN)) {
         eat(TokenType.COMMA);
@@ -2144,13 +2148,13 @@ public class Parser {
    * Whether we have a spread expression or an assignment next.
    *
    * This does not peek the operand for the spread expression. This means that
-   * {@code parseAssignmentOrSpread} might still fail when this returns true.
+   * {@link parseAssignmentOrSpread} might still fail when this returns true.
    */
   private boolean peekAssignmentOrSpread() {
     return peek(TokenType.SPREAD) || peekAssignmentExpression();
   }
 
-  private ParseTree parseAssignmentOrSpead() {
+  private ParseTree parseAssignmentOrSpread() {
     if (peek(TokenType.SPREAD)) {
       return parseSpreadExpression();
     }
@@ -2269,22 +2273,25 @@ public class Parser {
 
     // An element that's not a sub-pattern
 
-    boolean spread = false;
+    boolean rest = false;
     SourcePosition start = getTreeStartLocation();
     if (peek(TokenType.SPREAD)) {
       eat(TokenType.SPREAD);
-      spread = true;
+      rest = true;
     }
 
     ParseTree lvalue = parseLeftHandSideExpression();
 
-    if (kind == PatternKind.INITIALIZER
+    if ((rest || kind == PatternKind.INITIALIZER)
         && lvalue.type != ParseTreeType.IDENTIFIER_EXPRESSION) {
       reportError("lvalues in initializer patterns must be identifiers");
+      return lvalue;
     }
 
-    return spread
-        ? new SpreadPatternElementTree(getTreeLocation(start), lvalue)
+    return rest
+        ? new AssignmentRestElementTree(
+            getTreeLocation(start),
+            lvalue.asIdentifierExpression().identifierToken)
         : lvalue;
   }
 
@@ -2304,8 +2311,8 @@ public class Parser {
         ParseTree element = parsePatternElement(kind, arraySubPatternFollowSet);
         elements.add(element);
 
-        if (element.isSpreadPatternElement()) {
-          // Spread can only appear in the posterior, so we must be done
+        if (element.isAssignmentRestElement()) {
+          // Rest can only appear in the posterior, so we must be done
           break;
         } else if (peek(TokenType.COMMA)) {
           // Consume the comma separator
@@ -2332,7 +2339,7 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     ImmutableList.Builder<ParseTree> fields = ImmutableList.builder();
     eat(TokenType.OPEN_CURLY);
-    while (peekObjectPatternField(kind)) {
+    while (peekObjectPatternField()) {
       fields.add(parseObjectPatternField(kind));
 
       if (peek(TokenType.COMMA)) {
@@ -2347,7 +2354,7 @@ public class Parser {
     return new ObjectPatternTree(getTreeLocation(start), fields.build());
   }
 
-  private boolean peekObjectPatternField(PatternKind kind) {
+  private boolean peekObjectPatternField() {
     return peekId();
   }
 
@@ -2359,7 +2366,7 @@ public class Parser {
       eat(TokenType.COLON);
       element = parsePatternElement(kind, objectSubPatternFollowSet);
 
-      if (element.isSpreadPatternElement()) {
+      if (element.isAssignmentRestElement()) {
         reportError("Rest can not be used in object patterns");
       }
     }
@@ -2463,9 +2470,8 @@ public class Parser {
     if (peekId()) {
       return eatIdOrKeywordAsId();
     } else {
-      // generate an missing id error.
-      Token result = eat(TokenType.IDENTIFIER);
-      return (IdentifierToken) result;
+      reportExpectedError(peekToken(), TokenType.IDENTIFIER);
+      return null;
     }
   }
 

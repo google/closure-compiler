@@ -61,7 +61,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
   static final DiagnosticType REDECLARED_VARIABLE_ERROR = DiagnosticType.error(
       "JSC_REDECLARED_VARIABLE_ERROR",
-      "Redeclared variable: {0}");
+      "Illegal redeclared variable: {0}");
 
   static final DiagnosticType PARAMETER_SHADOWED_ERROR = DiagnosticType.error(
       "JSC_PARAMETER_SHADOWED_ERROR",
@@ -135,11 +135,11 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             continue;
           }
           compiler.report(
-              JSError.make(NodeUtil.getSourceName(r.getNode()),
+              JSError.make(
                   r.getNode(),
                   checkLevel,
                   (r.isVarDeclaration() || r.isHoistedFunction())
-                      && !(maybeParam.getNode().hasChildren()
+                      && !(maybeParam.getNode().getParent().isDefaultValue()
                           || maybeParam.getNode().isRest())
                   ? REDECLARED_VARIABLE
                   : PARAMETER_SHADOWED_ERROR, v.name));
@@ -201,14 +201,14 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
               // better yet, make sure the generated code never violates
               // the requirement to pass aggressive var check!
               DiagnosticType diagnosticType;
-              if (((v.isLet() || v.isConst()))
+              if (v.isLet() || v.isConst()
                   || letConstShadowsVar || shadowCatchVar) {
                 diagnosticType = REDECLARED_VARIABLE_ERROR;
               } else {
                 diagnosticType = REDECLARED_VARIABLE;
               }
               compiler.report(
-                  JSError.make(NodeUtil.getSourceName(referenceNode),
+                  JSError.make(
                       referenceNode,
                       checkLevel,
                       diagnosticType, v.name));
@@ -221,7 +221,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             && (letConstShadowsVar || shadowCatchVar)) {
           if (v.getScope() == reference.getScope()) {
             compiler.report(
-                JSError.make(NodeUtil.getSourceName(referenceNode),
+                JSError.make(
                     referenceNode,
                     checkLevel,
                     REDECLARED_VARIABLE_ERROR, v.name));
@@ -234,7 +234,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           for (BasicBlock declaredBlock : blocksWithDeclarations) {
             if (!declaredBlock.provablyExecutesBefore(basicBlock)) {
               compiler.report(
-                  JSError.make(NodeUtil.getSourceName(referenceNode),
+                  JSError.make(
                       referenceNode,
                       AMBIGUOUS_FUNCTION_DECL, v.name));
               break;
@@ -259,8 +259,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             if (reference.getScope() == v.scope) {
               isUndeclaredReference = true;
               compiler.report(
-                  JSError.make(NodeUtil.getSourceName(referenceNode),
-                               reference.getNode(),
+                  JSError.make(reference.getNode(),
                                checkLevel,
                                (v.isLet() || v.isConst())
                                    ? UNDECLARED_REFERENCE_ERROR
@@ -272,8 +271,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         if (!isDeclaration && !isUndeclaredReference
             && v.isConst() && reference.isLvalue()) {
           compiler.report(
-              JSError.make(NodeUtil.getSourceName(referenceNode),
-                           referenceNode,
+              JSError.make(referenceNode,
                            checkLevel,
                            REASSIGNED_CONSTANT, v.name));
         }
@@ -281,8 +279,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         if (isDeclaration && !v.isVar()
             && reference.getGrandparent().isAddedBlock()) {
           compiler.report(
-              JSError.make(NodeUtil.getSourceName(referenceNode),
-                           referenceNode,
+              JSError.make(referenceNode,
                            checkLevel,
                            DECLARATION_NOT_DIRECTLY_IN_BLOCK, v.name));
         }

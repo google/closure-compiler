@@ -877,27 +877,78 @@ public final class JsDocInfoParser {
           return token;
 
         case TEMPLATE: {
-          ExtractionInfo templateInfo = extractSingleLineBlock();
+          ExtractionInfo templateInfo =
+              extractMultilineTextualBlock(token, WhitespaceOption.TRIM);
+          String templateString = templateInfo.string;
+          // TTL stands for type transformation language
+          // TODO(lpino): This delimiter needs to be further discussed
+          String ttlStartDelimiter = ":=";
+          String ttlEndDelimiter = "=:";
+          String templateNames;
+          String typeTransformationExpr = "";
+          boolean isTypeTransformation = false;
+          // Detect if there is a type transformation
+          if (!templateString.contains(ttlStartDelimiter)) {
+            // If there is no type transformation take the first line
+            if (templateString.contains("\n")) {
+              templateNames =
+                  templateString.substring(0, templateString.indexOf('\n'));
+            } else {
+              templateNames = templateString;
+            }
+          } else {
+            // Split the part with the template type names
+            int ttlStartIndex = templateString.indexOf(ttlStartDelimiter);
+            templateNames = templateString.substring(0, ttlStartIndex);
+            // Check if the type transformation expression ends correctly
+            if (!templateString.contains(ttlEndDelimiter)) {
+              parser.addTypeWarning(
+                  "msg.jsdoc.typetransformation.missing.delimiter",
+                  stream.getLineno(), stream.getCharno());
+            } else {
+              isTypeTransformation = true;
+              // Split the part of the type transformation
+              int ttlEndIndex = templateString.indexOf(ttlEndDelimiter);
+              typeTransformationExpr = templateString.substring(
+                  ttlStartIndex + ttlStartDelimiter.length(),
+                  ttlEndIndex).trim();
+            }
+          }
+
+          // Obtain the template type names
           List<String> names = Lists.newArrayList(
               Splitter.on(',')
                   .trimResults()
-                  .split(templateInfo.string));
+                  .split(templateNames));
 
           if (names.size() == 1 && names.get(0).isEmpty()) {
             parser.addTypeWarning("msg.jsdoc.templatemissing",
                   stream.getLineno(), stream.getCharno());
-          } else if (!jsdocBuilder.recordTemplateTypeNames(names)) {
-            parser.addTypeWarning("msg.jsdoc.template.at.most.once",
-                stream.getLineno(), stream.getCharno());
           } else {
             for (String typeName : names) {
               if (!validTemplateTypeName(typeName)) {
                 parser.addTypeWarning("msg.jsdoc.template.invalid.type.name",
                     stream.getLineno(), stream.getCharno());
+              } else if (!jsdocBuilder.recordTemplateTypeName(typeName)) {
+                parser.addTypeWarning("msg.jsdoc.template.name.declared.twice",
+                    stream.getLineno(), stream.getCharno());
               }
             }
           }
 
+          if (isTypeTransformation) {
+            // A type transformation must be associated to a single type name
+            if (names.size() > 1) {
+                parser.addTypeWarning(
+                    "msg.jsdoc.typetransformation.with.multiple.names",
+                    stream.getLineno(), stream.getCharno());
+            }
+            if (typeTransformationExpr.equals("")) {
+              parser.addTypeWarning(
+                  "msg.jsdoc.typetransformation.expression.missing",
+                  stream.getLineno(), stream.getCharno());
+            }
+          }
           token = templateInfo.token;
           return token;
         }
@@ -2441,8 +2492,8 @@ public final class JsDocInfoParser {
 
   private Node wrapNode(int type, Node n) {
     return n == null ? null :
-        new Node(type, n, stream.getLineno(),
-            stream.getCharno()).clonePropsFrom(templateNode);
+        new Node(type, n, n.getLineno(),
+            n.getCharno()).clonePropsFrom(templateNode);
   }
 
   private Node newNode(int type) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 The Closure Compiler Authors.
+ * Copyright 2014 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Definitions for the fullscreen API specification of HTML5.
- * @see http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html
- *
- * @externs
- */
+package com.google.javascript.jscomp.newtypes;
 
-// TODO(nicksantos): Delete me.
+/**
+ *
+ * @author blickly@google.com (Ben Lickly)
+ * @author dimvar@google.com (Dimitris Vardoulakis)
+ */
+public class NamespaceLit extends Namespace {
+  // collect namespaces during CNT
+  // careful w/ inferred vs declared props on namespaces (for otherprops)
+
+  public JSType toJSType() {
+    ObjectType objs = ObjectType.makeObjectType(
+        null, otherProps, null, false, ObjectKind.UNRESTRICTED);
+    return withNamedTypes(objs);
+  }
+}

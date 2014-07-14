@@ -49,8 +49,7 @@ abstract class AbstractPeepholeOptimization {
    * @param n The node for which the error should be reported
    */
   protected void report(DiagnosticType diagnostic, Node n) {
-    JSError error =
-        JSError.make(NodeUtil.getSourceName(n), n, diagnostic, n.toString());
+    JSError error = JSError.make(n, diagnostic, n.toString());
     compiler.report(error);
   }
 

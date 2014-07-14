@@ -213,6 +213,57 @@ angular.uppercase = function(s) {};
 
 /**
  * @typedef {{
+ *   enter: (function(!angular.JQLite, !Function): (!Function|undefined)|
+ *       undefined),
+ *   leave: (function(!angular.JQLite, !Function): (!Function|undefined)|
+ *       undefined),
+ *   move: (function(!angular.JQLite, !Function): (!Function|undefined)|
+ *       undefined),
+ *   addClass: (function(!angular.JQLite, !Function): (!Function|undefined)|
+ *       undefined),
+ *   removeClass: (function(!angular.JQLite, !Function): (!Function|undefined)|
+ *       undefined)
+ *   }}
+ */
+angular.Animation;
+
+/**
+ * @param {!angular.JQLite} element
+ * @param {!Function} done
+ * @return {(!Function|undefined)}
+ */
+angular.Animation.enter = function(element, done) {};
+
+/**
+ * @param {!angular.JQLite} element
+ * @param {!Function} done
+ * @return {(!Function|undefined)}
+ */
+angular.Animation.leave = function(element, done) {};
+
+/**
+ * @param {!angular.JQLite} element
+ * @param {!Function} done
+ * @return {(!Function|undefined)}
+ */
+angular.Animation.move = function(element, done) {};
+
+/**
+ * @param {!angular.JQLite} element
+ * @param {!Function} done
+ * @return {(!Function|undefined)}
+ */
+angular.Animation.addClass = function(element, done) {};
+
+/**
+ * @param {!angular.JQLite} element
+ * @param {!Function} done
+ * @return {(!Function|undefined)}
+ */
+angular.Animation.removeClass = function(element, done) {};
+
+/**
+ * @typedef {{
  *   $attr: Object.<string,string>,
  *   $normalize: function(string): string,
  *   $observe: function(string, function(*)): function(*),
@@ -406,6 +457,7 @@ angular.Directive.transclude;
  *   html: function(string=): (!angular.JQLite|string),
  *   inheritedData: function(string=, *=): *,
  *   injector: function(): !angular.$injector,
+ *   isolateScope: function(): (!angular.Scope|undefined),
  *   length: number,
  *   next: function(): !angular.JQLite,
  *   on: function(string, Function): !angular.JQLite,
@@ -653,6 +705,8 @@ angular.JQLite.wrap = function(element) {};
 
 /**
  * @typedef {{
+ *   animation:
+ *       function(string, function(...[*]):angular.Animation):!angular.Module,
  *   config: function((Function|Array.<string|Function>)):!angular.Module,
  *   constant: function(string, *):angular.Module,
  *   controller:
@@ -678,6 +732,12 @@ angular.JQLite.wrap = function(element) {};
  *   }}
  */
 angular.Module;
+
+/**
+ * @param {string} name
+ * @param {function(...[*]):angular.Animation} animationFactory
+ */
+angular.Module.animation = function(name, animationFactory) {};
 
 /**
  * @param {Function|Array.<string|Function>} configFn
@@ -1373,7 +1433,7 @@ angular.$interpolateProvider.endSymbol;
  *   protocol: function():string,
  *   replace: function(),
  *   search: function((string|Object.<string, string>)=,
- *       ?(string|Array.<string>)=): (!Object|angular.$location),
+ *       ?(string|Array.<string>|boolean)=): (!Object|angular.$location),
  *   url: function(string=):string
  *   }}
  */
@@ -1418,7 +1478,7 @@ angular.$location.replace = function() {};
 
 /**
  * @param {(string|Object.<string, string>)=} opt_search
- * @param {?(string|Array.<string>)=} opt_paramValue
+ * @param {?(string|Array.<string>|boolean)=} opt_paramValue
  * @return {(!Object|angular.$location)}
  */
 angular.$location.search = function(opt_search, opt_paramValue) {};
@@ -1863,6 +1923,9 @@ angular.$route.Route.regexp;
 /******************************************************************************
  * $routeParams Service
  *****************************************************************************/
+
+// TODO: This should be !Object.<string|boolean> because valueless query params
+// (without even an equal sign) come through as boolean "true".
 
 /** @typedef {!Object.<string>} */
 angular.$routeParams;

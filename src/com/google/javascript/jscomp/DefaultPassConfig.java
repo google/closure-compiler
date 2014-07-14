@@ -207,11 +207,6 @@ public class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass("beforeStandardChecks"));
 
-    if (options.getLanguageIn() != options.getLanguageOut()) {
-      checks.add(convertEs6ToEs3);
-      checks.add(convertStaticInheritance);
-    }
-
     if (options.declaredGlobalExternsOnWindow) {
       checks.add(declaredGlobalExternsOnWindow);
     }
@@ -288,8 +283,18 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(checkRegExp);
     }
 
-    if (options.aggressiveVarCheck.isOn()) {
+    boolean needsConversion = options.getLanguageIn() != options.getLanguageOut();
+    if (needsConversion || options.aggressiveVarCheck.isOn()) {
       checks.add(checkVariableReferences);
+    }
+
+    if (needsConversion) {
+      checks.add(es6HandleDefaultParams);
+      checks.add(convertEs6ToEs3);
+      checks.add(rewriteLetConst);
+      checks.add(rewriteGenerators);
+      checks.add(markTranspilationDone);
+      checks.add(convertStaticInheritance);
     }
 
     // This pass should run before types are assigned.
@@ -1078,26 +1083,40 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
+  final HotSwapPassFactory es6HandleDefaultParams =
+      new HotSwapPassFactory("Es6HandleDefaultParams", true) {
+    @Override
+    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+      return new Es6HandleDefaultParameters(compiler);
+    }
+  };
 
-  /** Converts ES6 code to ES3 code. */
+  /**
+   * Does the main ES6 to ES3 conversion.
+   * There are a few other passes which run before or after this one,
+   * to convert constructs which are not converted by this pass.
+   */
   final HotSwapPassFactory convertEs6ToEs3 =
       new HotSwapPassFactory("convertEs6", true) {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      final HotSwapCompilerPass converter = new Es6ToEs3Converter(compiler);
+      return new Es6ToEs3Converter(compiler);
+    }
+  };
 
-      return new HotSwapCompilerPass() {
-        @Override
-        public void process(Node externs, Node root) {
-          converter.process(externs, root);
-          compiler.setLanguageMode(options.getLanguageOut());
-        }
+  final HotSwapPassFactory rewriteLetConst =
+      new HotSwapPassFactory("Es6RewriteLetConst", true) {
+    @Override
+    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+      return new Es6RewriteLetConst(compiler);
+    }
+  };
 
-        @Override
-        public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-          converter.hotSwapScript(scriptRoot, originalRoot);
-        }
-      };
+  final HotSwapPassFactory rewriteGenerators =
+      new HotSwapPassFactory("rewriteGenerators", true) {
+    @Override
+    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+      return new Es6RewriteGenerators(compiler);
     }
   };
 
@@ -1106,6 +1125,17 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new Es6ToEs3ClassSideInheritance(compiler);
+    }
+  };
+
+  final PassFactory markTranspilationDone = new PassFactory("setLanguageMode", true) {
+    @Override
+    protected CompilerPass create(final AbstractCompiler compiler) {
+      return new CompilerPass() {
+        public void process(Node externs, Node root) {
+          compiler.setLanguageMode(options.getLanguageOut());
+        }
+      };
     }
   };
 

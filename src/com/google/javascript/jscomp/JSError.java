@@ -105,40 +105,18 @@ public class JSError {
   /**
    * Creates a JSError from a file and Node position.
    *
-   * @param sourceName The source file name
-   * @param n Determines the line and char position within the source file name
-   * @param type The DiagnosticType
-   * @param arguments Arguments to be incorporated into the message
-   */
-  public static JSError make(String sourceName, Node n,
-                             DiagnosticType type, String... arguments) {
-    return new JSError(sourceName, n, type, arguments);
-  }
-
-  /**
-   * Creates a JSError from a file and Node position.
-   *
    * @param n Determines the line and char position and source file name
    * @param type The DiagnosticType
    * @param arguments Arguments to be incorporated into the message
    */
   public static JSError make(Node n, DiagnosticType type, String... arguments) {
-    return new JSError(n.getSourceFileName(), n, type, arguments);
+    // TODO(tbreisacher): Get rid of this null check once all tests pass without it.
+    return new JSError(n == null ? null : n.getSourceFileName(), n, type, arguments);
   }
 
-  /**
-   * Creates a JSError from a file and Node position.
-   *
-   * @param sourceName The source file name
-   * @param n Determines the line and char position within the source file name
-   * @param type The DiagnosticType
-   * @param arguments Arguments to be incorporated into the message
-   */
-  public static JSError make(String sourceName, Node n, CheckLevel level,
-      DiagnosticType type, String... arguments) {
-
-    return new JSError(sourceName, n, n.getLineno(), n.getCharno(), type, level,
-        arguments);
+  public static JSError make(Node n, CheckLevel level, DiagnosticType type, String... arguments) {
+    return new JSError(
+        n.getSourceFileName(), n, n.getLineno(), n.getCharno(), type, level, arguments);
   }
 
   //

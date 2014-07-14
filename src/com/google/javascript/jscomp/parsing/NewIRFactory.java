@@ -458,7 +458,8 @@ class NewIRFactory {
       errorReporter.warning(
           SUSPICIOUS_COMMENT_WARNING,
           sourceName,
-          comment.location.start.line, 0);
+          lineno(comment.location.start),
+          charno(comment.location.start));
     }
   }
 
@@ -514,11 +515,7 @@ class NewIRFactory {
       JsDocInfoParser jsDocParser = createJsDocInfoParser(comment);
       parsedComments.add(comment);
       if (!handlePossibleFileOverviewJsDoc(jsDocParser)) {
-        JSDocInfo info = jsDocParser.retrieveAndResetParsedJSDocInfo();
-        if (info != null) {
-          // validateTypeAnnotations(info, node);
-        }
-        return info;
+        return jsDocParser.retrieveAndResetParsedJSDocInfo();
       }
     }
     return null;
@@ -812,25 +809,6 @@ class NewIRFactory {
     }
   }
 
-  /*
-  private int position2charno(int position) {
-    int newlineIndex = Collections.binarySearch(newlines, position);
-    int lineIndex = -1;
-    if (newlineIndex >= 0) {
-      lineIndex = newlines.get(newlineIndex);
-    } else if (newlineIndex <= -2) {
-      lineIndex = newlines.get(-newlineIndex - 2);
-    }
-
-    if (lineIndex == -1) {
-      return position;
-    } else {
-      // Subtract one for initial position being 0.
-      return position - lineIndex - 1;
-    }
-  }
-  */
-
   private Node justTransform(ParseTree node) {
     return transformDispatcher.process(node);
   }
@@ -941,8 +919,8 @@ class NewIRFactory {
     }
 
     @Override
-    Node processSpreadPatternElement(SpreadPatternElementTree tree) {
-      return newNode(Token.SPREAD, transform(tree.lvalue));
+    Node processAssignmentRestElement(AssignmentRestElementTree tree) {
+      return newStringNode(Token.REST, tree.identifier.value);
     }
 
     @Override
@@ -1210,9 +1188,11 @@ class NewIRFactory {
       Node params = newNode(Token.PARAM_LIST);
       for (ParseTree param : tree.parameters) {
         Node paramNode = transformNodeWithInlineJsDoc(param, false);
-        // We only support simple names, default parameters, and rest
-        // parameters, for the moment.
-        Preconditions.checkState(paramNode.isName() || paramNode.isRest());
+        // Children must be simple names, default parameters, rest
+        // parameters, or destructuring patterns.
+        Preconditions.checkState(paramNode.isName() || paramNode.isRest()
+            || paramNode.isArrayPattern() || paramNode.isObjectPattern()
+            || paramNode.isDefaultValue());
         params.addChildToBack(paramNode);
       }
       return params;
@@ -1221,10 +1201,8 @@ class NewIRFactory {
     @Override
     Node processDefaultParameter(DefaultParameterTree tree) {
       maybeWarnEs6Feature(tree, "default parameters");
-
-      Node name = newStringNode(Token.NAME, tree.identifier.identifierToken.value);
-      name.addChildToFront(transform(tree.expression));
-      return name;
+      return newNode(Token.DEFAULT_VALUE,
+          transform(tree.lhs), transform(tree.defaultValue));
     }
 
     @Override
@@ -1328,18 +1306,15 @@ class NewIRFactory {
         node = newStringNode(Token.STRING, identifierToken.value);
       } else {
         JSDocInfo info = handleJsDoc(identifierToken);
-        if (identifierToken == null ||
-            isReservedKeyword(identifierToken.toString())) {
-          int linenum = identifierToken != null ?
-              identifierToken.location.start.line : 0;
+        if (isReservedKeyword(identifierToken.toString())) {
           errorReporter.error(
             "identifier is a reserved word",
             sourceName,
-            linenum, 0);
+            lineno(identifierToken.location.start),
+            charno(identifierToken.location.start));
         }
         node = newStringNode(Token.NAME, identifierToken.value);
         if (info != null) {
-          // validateTypeAnnotations(info, identifierToken);
           attachJSDoc(info, node);
         }
       }
@@ -1367,18 +1342,16 @@ class NewIRFactory {
     }
 
     Node processNameWithInlineJSDoc(IdentifierToken identifierToken) {
-      Node node;
       JSDocInfo info = handleInlineJsDoc(identifierToken, true);
-      if (identifierToken == null ||
-          isReservedKeyword(identifierToken.toString())) {
+      if (isReservedKeyword(identifierToken.toString())) {
         errorReporter.error(
           "identifier is a reserved word",
           sourceName,
-          identifierToken.location.start.line, 0);
+          lineno(identifierToken.location.start),
+          charno(identifierToken.location.start));
       }
-      node = newStringNode(Token.NAME, identifierToken.toString());
+      Node node = newStringNode(Token.NAME, identifierToken.toString());
       if (info != null) {
-        // validateTypeAnnotations(info, identifierToken);
         attachJSDoc(info, node);
       }
       setSourceInfo(node, identifierToken);
@@ -2169,17 +2142,28 @@ class NewIRFactory {
           break;
         case 'x':
           result.append((char) (
-              hexdigit(value.charAt(cur + 1)) * 16
+              hexdigit(value.charAt(cur + 1)) * 0x10
               + hexdigit(value.charAt(cur + 2))));
           cur += 2;
           break;
         case 'u':
-          result.append((char) (
-              hexdigit(value.charAt(cur + 1)) * 16 * 16 * 16
-              + hexdigit(value.charAt(cur + 2)) * 16 * 16
-              + hexdigit(value.charAt(cur + 3)) * 16
-              + hexdigit(value.charAt(cur + 4))));
-          cur += 4;
+          int escapeEnd;
+          String hexDigits;
+          if (value.charAt(cur + 1) != '{') {
+            // Simple escape with exactly four hex digits: \\uXXXX
+            escapeEnd = cur + 5;
+            hexDigits = value.substring(cur + 1, escapeEnd);
+          } else {
+            // Escape with braces can have any number of hex digits: \\u{XXXXXXX}
+            escapeEnd = cur + 2;
+            while (Character.digit(value.charAt(escapeEnd), 0x10) >= 0) {
+              escapeEnd++;
+            }
+            hexDigits = value.substring(cur + 2, escapeEnd);
+            escapeEnd++;
+          }
+          result.append((char) Integer.parseInt(hexDigits, 0x10));
+          cur = escapeEnd - 1;
           break;
         default:
           // TODO(tbreisacher): Add a warning because the user probably
@@ -2225,6 +2209,8 @@ class NewIRFactory {
       // TODO(johnlenz): accept octal numbers in es3 etc.
       switch (value.charAt(1)) {
         case '.':
+        case 'e':
+        case 'E':
           return Double.valueOf(value);
         case 'b':
         case 'B': {
@@ -2259,7 +2245,7 @@ class NewIRFactory {
           long v = 0;
           int c = 1;
           while (++c < length) {
-            v = (v * 16) + hexdigit(value.charAt(c));
+            v = (v * 0x10) + hexdigit(value.charAt(c));
           }
           return Double.valueOf(v);
         }

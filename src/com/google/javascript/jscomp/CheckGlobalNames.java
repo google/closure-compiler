@@ -210,7 +210,7 @@ class CheckGlobalNames implements CompilerPass {
 
   private void reportBadModuleReference(Name name, Ref ref) {
     compiler.report(
-        JSError.make(ref.source.getName(), ref.node, STRICT_MODULE_DEP_QNAME,
+        JSError.make(ref.node, STRICT_MODULE_DEP_QNAME,
                      ref.getModule().getName(),
                      name.getDeclaration().getModule().getName(),
                      name.getFullName()));
@@ -224,7 +224,7 @@ class CheckGlobalNames implements CompilerPass {
     }
 
     compiler.report(
-        JSError.make(ref.getSourceName(), ref.node, level,
+        JSError.make(ref.node, level,
             UNDEFINED_NAME_WARNING, name.getFullName()));
   }
 

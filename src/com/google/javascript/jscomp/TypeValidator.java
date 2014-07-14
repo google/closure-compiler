@@ -27,7 +27,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.Scope.Var;
@@ -46,6 +45,7 @@ import com.google.javascript.rhino.jstype.UnknownType;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -201,7 +201,7 @@ class TypeValidator {
   // a warning and attempt to correct the mismatch, when possible.
 
   void expectValidTypeofName(NodeTraversal t, Node n, String found) {
-    report(JSError.make(t.getSourceName(), n, UNKNOWN_TYPEOF_VALUE, found));
+    report(JSError.make(n, UNKNOWN_TYPEOF_VALUE, found));
   }
 
   /**
@@ -364,7 +364,7 @@ class TypeValidator {
     Preconditions.checkState(n.isGetElem());
     Node indexNode = n.getLastChild();
     if (objType.isStruct()) {
-      report(JSError.make(t.getSourceName(), indexNode,
+      report(JSError.make(indexNode,
                           ILLEGAL_PROPERTY_ACCESS, "'[]'", "struct"));
     }
     if (objType.isUnknownType()) {
@@ -516,8 +516,7 @@ class TypeValidator {
         registerMismatch(superObject, declaredSuper, report(
             t.makeError(n, MISSING_EXTENDS_TAG_WARNING, subObject.toString())));
       } else {
-        mismatch(t.getSourceName(), n,
-            "mismatch in declaration of superclass type",
+        mismatch(n, "mismatch in declaration of superclass type",
             superObject, declaredSuper);
       }
 
@@ -638,11 +637,11 @@ class TypeValidator {
             !newType.isEquivalentTo(varType)) {
 
           if (newType.isEquivalentTo(varType)) {
-            report(JSError.make(sourceName, n, DUP_VAR_DECLARATION,
+            report(JSError.make(n, DUP_VAR_DECLARATION,
                 variableName, var.getInputName(),
                 String.valueOf(var.nameNode.getLineno())));
           } else {
-            report(JSError.make(sourceName, n, DUP_VAR_DECLARATION_TYPE_MISMATCH,
+            report(JSError.make(n, DUP_VAR_DECLARATION_TYPE_MISMATCH,
                 variableName, newType.toString(), var.getInputName(),
                 String.valueOf(var.nameNode.getLineno()),
                 varType.toString()));
@@ -683,7 +682,7 @@ class TypeValidator {
       String sourceName = n.getSourceFileName();
       sourceName = sourceName == null ? "" : sourceName;
       registerMismatch(instance, implementedInterface,
-          report(JSError.make(sourceName, n,
+          report(JSError.make(n,
           INTERFACE_METHOD_NOT_IMPLEMENTED,
           prop, implementedInterface.toString(), instance.toString())));
     } else {
@@ -724,7 +723,7 @@ class TypeValidator {
    */
   private void mismatch(NodeTraversal t, Node n,
                         String msg, JSType found, JSType required) {
-    mismatch(t.getSourceName(), n, msg, found, required);
+    mismatch(n, msg, found, required);
   }
 
   private void mismatch(NodeTraversal t, Node n,
@@ -732,10 +731,9 @@ class TypeValidator {
     mismatch(t, n, msg, found, getNativeType(required));
   }
 
-  private void mismatch(String sourceName, Node n,
-                        String msg, JSType found, JSType required) {
+  private void mismatch(Node n, String msg, JSType found, JSType required) {
     registerMismatch(found, required, report(
-        JSError.make(sourceName, n, TYPE_MISMATCH_WARNING,
+        JSError.make(n, TYPE_MISMATCH_WARNING,
                      formatFoundRequired(msg, found, required))));
   }
 
@@ -915,7 +913,7 @@ class TypeValidator {
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(typeA, typeB);
+      return Objects.hash(typeA, typeB);
     }
 
     @Override public String toString() {

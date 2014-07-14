@@ -88,10 +88,12 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
 
       // Args: Declare function variables
       Preconditions.checkState(args.isParamList());
-      for (Node a = args.getFirstChild(); a != null;
-           a = a.getNext()) {
-        Preconditions.checkState(a.isName() || a.isRest());
-        declareVar(a);
+      for (Node a = args.getFirstChild(); a != null; a = a.getNext()) {
+        if (a.isDefaultValue()) {
+          declareLHS(scope, a.getFirstChild());
+        } else {
+          declareLHS(scope, a);
+        }
       }
 
       // Since we create a separate scope for body, stop scanning here
@@ -104,18 +106,33 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
     }
   }
 
+  private void declareLHS(Scope declarationScope, Node lhs) {
+    if (lhs.isName() || lhs.isStringKey() || lhs.isRest()) {
+      declareVar(declarationScope, lhs);
+    } else if (lhs.isArrayPattern() || lhs.isObjectPattern()) {
+      for (Node child = lhs.getFirstChild(); child != null; child = child.getNext()) {
+        if (NodeUtil.isNameDeclaration(lhs.getParent()) && child.getNext() == null) {
+          // If the pattern is a direct child of the var/let/const node,
+          // then its last child is the RHS of the assignment, not a variable to
+          // be declared.
+          return;
+        }
+
+        declareLHS(declarationScope, child);
+      }
+    } else {
+      throw new RuntimeException("Cannot declare a variable for node: " + lhs);
+    }
+  }
+
   /**
     * Scans and gather variables declarations under a Node
     */
   private void scanVars(Node n) {
     switch (n.getType()) {
       case Token.VAR:
-        // Need to hoist to the closest function block or global scope.
-        // Declare all variables. e.g. var x = 1, y, z;
-        for (Node child = n.getFirstChild(); child != null;) {
-          Node next = child.getNext();
-          declareVar(scope.getClosestHoistScope(), child);
-          child = next;
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          declareLHS(scope.getClosestHoistScope(), child);
         }
         return;
 
@@ -125,10 +142,8 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         if (!isNodeAtCurrentLexicalScope(n)) {
           return;
         }
-        for (Node child = n.getFirstChild(); child != null;) {
-          Node next = child.getNext();
-          declareVar(child);
-          child = next;
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          declareLHS(scope, child);
         }
         return;
 
@@ -218,7 +233,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
    * @param n The node corresponding to the variable name.
    */
   private void declareVar(Scope s, Node n) {
-    Preconditions.checkState(n.isName() || n.isRest());
+    Preconditions.checkState(n.isName() || n.isRest() || n.isStringKey());
 
     String name = n.getString();
     // Because of how we scan the variables, it is possible to encounter

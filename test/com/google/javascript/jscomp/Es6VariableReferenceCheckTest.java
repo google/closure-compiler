@@ -329,6 +329,14 @@ public class Es6VariableReferenceCheckTest extends CompilerTestCase {
     ));
   }
 
+  public void testClass() {
+    assertNoWarning("class A { f() { return 1729; } }");
+  }
+
+  public void testClassExtend() {
+    assertNoWarning("class A {} class C extends A {} C = class extends A {}");
+  }
+
   /*public void testDefaultParam() {
     assertUndeclaredError("function f(x=a) { var a; }");
     assertUndeclaredError("function f(x=a()) { function a() {} }");

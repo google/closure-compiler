@@ -48,6 +48,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -110,7 +111,7 @@ public class JSDocInfo implements Serializable {
     List<JSTypeExpression> implementedInterfaces = null;
     Map<String, JSTypeExpression> parameters = null;
     List<JSTypeExpression> thrownTypes = null;
-    ImmutableList<String> templateTypeNames = null;
+    List<String> templateTypeNames = null;
     Set<String> disposedParameters = null;
 
     // Other information
@@ -1095,16 +1096,18 @@ public class JSDocInfo implements Serializable {
    * Declares a template type name. Template type names are described using the
    * {@code @template} annotation.
    *
-   * @param templateTypeNames the template type name.
+   * @param newTemplateTypeName the template type name.
    */
-  boolean declareTemplateTypeNames(List<String> templateTypeNames) {
+  boolean declareTemplateTypeName(String newTemplateTypeName) {
     lazyInitInfo();
 
-    if (info.templateTypeNames != null) {
+    if (info.templateTypeNames == null){
+      info.templateTypeNames = new ArrayList<String>();
+    } else if (info.templateTypeNames.contains(newTemplateTypeName)) {
       return false;
     }
 
-    info.templateTypeNames = ImmutableList.copyOf(templateTypeNames);
+    info.templateTypeNames.add(newTemplateTypeName);
     return true;
   }
 
@@ -1737,7 +1740,7 @@ public class JSDocInfo implements Serializable {
     if (info == null || info.templateTypeNames == null) {
       return ImmutableList.of();
     }
-    return info.templateTypeNames;
+    return ImmutableList.copyOf(info.templateTypeNames);
   }
 
   /**

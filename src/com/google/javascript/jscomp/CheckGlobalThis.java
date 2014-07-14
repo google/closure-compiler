@@ -80,7 +80,10 @@ final class CheckGlobalThis implements Callback {
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
 
     if (n.isFunction()) {
-      // Arrow functions don't bind this
+      // Arrow functions automatically get the "this" value from the
+      // enclosing scope. e.g. the "this" in
+      //   Foo.prototype.getBar = () => this.bar;
+      // is the global "this", not an instance of Foo.
       if (n.isArrowFunction()) {
         return true;
       }

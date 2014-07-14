@@ -705,7 +705,7 @@ public class JSTypeCreatorFromJSDoc {
 
   // /** @param {...?} var_args */ function f(var_args) { ... }
   // var_args shouldn't be used in the body of f
-  public boolean isRestArg(JSDocInfo funJsdoc, String formalParamName) {
+  public static boolean isRestArg(JSDocInfo funJsdoc, String formalParamName) {
     if (funJsdoc == null) {
       return false;
     }

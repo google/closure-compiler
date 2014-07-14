@@ -122,7 +122,7 @@ class CheckProvides implements HotSwapCompilerPass {
         if (!found) {
           Node n = ctorEntry.getValue();
           compiler.report(
-              JSError.make(n.getSourceFileName(), n,
+              JSError.make(n,
                   checkLevel, MISSING_PROVIDE_WARNING, ctorEntry.getKey()));
         }
       }

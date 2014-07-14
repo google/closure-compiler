@@ -466,7 +466,7 @@ class DisambiguateProperties<T> implements CompilerPass {
             }
           }
           compiler.report(JSError.make(
-              t.getSourceName(), n, propertiesToErrorFor.get(name),
+              n, propertiesToErrorFor.get(name),
               Warnings.INVALIDATION, name,
               (type == null ? "null" : type.toString()),
               n.toString(), suggestion));
@@ -497,7 +497,7 @@ class DisambiguateProperties<T> implements CompilerPass {
           // case right now.
           if (propertiesToErrorFor.containsKey(name)) {
             compiler.report(JSError.make(
-                t.getSourceName(), child, propertiesToErrorFor.get(name),
+                child, propertiesToErrorFor.get(name),
                 Warnings.INVALIDATION, name,
                 (type == null ? "null" : type.toString()), n.toString(), ""));
           }
@@ -590,7 +590,7 @@ class DisambiguateProperties<T> implements CompilerPass {
                 !reported.contains(prop.name)) {
               reported.add(prop.name);
               compiler.report(JSError.make(
-                  NodeUtil.getSourceName(node), node,
+                  node,
                   checkLevelForProp,
                   Warnings.INVALIDATION_ON_TYPE, prop.name,
                   rootType.toString(), ""));

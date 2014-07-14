@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 The Closure Compiler Authors.
+ * Copyright 2014 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp.parsing.parser.trees;
 
+import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-public class SpreadPatternElementTree extends ParseTree {
-  public final ParseTree lvalue;
+public class AssignmentRestElementTree extends ParseTree {
+  public final IdentifierToken identifier;
 
-  public SpreadPatternElementTree(SourceRange location, ParseTree lvalue) {
-    super(ParseTreeType.SPREAD_PATTERN_ELEMENT, location);
-    this.lvalue = lvalue;
+  public AssignmentRestElementTree(SourceRange location, IdentifierToken identifier) {
+    super(ParseTreeType.ASSIGNMENT_REST_ELEMENT, location);
+    this.identifier = identifier;
   }
 }
+

@@ -788,11 +788,11 @@ final class FunctionTypeBuilder {
   }
 
   private void reportWarning(DiagnosticType warning, String ... args) {
-    compiler.report(JSError.make(sourceName, errorRoot, warning, args));
+    compiler.report(JSError.make(errorRoot, warning, args));
   }
 
   private void reportError(DiagnosticType error, String ... args) {
-    compiler.report(JSError.make(sourceName, errorRoot, error, args));
+    compiler.report(JSError.make(errorRoot, error, args));
   }
 
   /**

@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -32,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -370,7 +370,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(in, out);
+      return Objects.hash(in, out);
     }
   }
 
@@ -528,7 +528,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(in, out);
+      return Objects.hash(in, out);
     }
   }
 

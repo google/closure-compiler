@@ -28,6 +28,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -148,12 +149,12 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
   /**
    * List of found goog.getMsg call nodes.
    *
-   * When we visit goog.getMsg() node we add a pair node:sourcename and later
-   * when we visit its parent we remove this pair. All nodes that are left at
+   * When we visit goog.getMsg() node we add it, and later
+   * when we visit its parent we remove it. All nodes that are left at
    * the end of traversing are orphaned nodes. It means have no corresponding
    * var or property node.
    */
-  private final Map<Node, String> googMsgNodes = Maps.newHashMap();
+  private final Set<Node> googMsgNodes = new HashSet<>();
 
   private final CheckLevel checkLevel;
 
@@ -188,8 +189,8 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
 
-    for (Map.Entry<Node, String> msgNode : googMsgNodes.entrySet()) {
-      compiler.report(JSError.make(msgNode.getValue(), msgNode.getKey(),
+    for (Node msgNode : googMsgNodes) {
+      compiler.report(JSError.make(msgNode,
           checkLevel, MESSAGE_NODE_IS_ORPHANED));
     }
   }
@@ -231,7 +232,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
       case Token.CALL:
         // goog.getMsg()
         if (node.getFirstChild().matchesQualifiedName(MSG_FUNCTION_NAME)) {
-          googMsgNodes.put(node, traversal.getSourceName());
+          googMsgNodes.add(node);
         } else if (node.getFirstChild().matchesQualifiedName(
             MSG_FALLBACK_FUNCTION_NAME)) {
           visitFallbackFunctionCall(traversal, node);

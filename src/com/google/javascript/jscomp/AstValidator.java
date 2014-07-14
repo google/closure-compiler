@@ -367,8 +367,13 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateClassMember(Node n) {
-    validateNodeType(Token.MEMBER_DEF, n);
-    validateChildCount(n, Token.arity(Token.MEMBER_DEF));
+    if (n.getType() != Token.MEMBER_DEF
+        && n.getType() != Token.GETTER_DEF
+        && n.getType() != Token.SETTER_DEF) {
+      violation("Class contained member which was not a MEMBER_DEF, GETTER_DEF, or SETTER_DEF",
+          n);
+    }
+    validateChildCount(n, Token.arity(n.getType()));
     validateFunctionExpression(n.getFirstChild());
   }
 
@@ -510,18 +515,31 @@ public class AstValidator implements CompilerPass {
           violation("Rest parameters must come after all other parameters.", c);
         }
         validateRest(c);
-      } else {
-        // Don't call validateName, since it requires every NAME to have
-        // zero children, which is not the case here.
-        validateNodeType(Token.NAME, c);
-        validateNonEmptyString(c);
+      } else if (c.isDefaultValue()) {
+        defaultParams = true;
+        validateAssignmentExpression(c);
 
-        // If a previous parameter has a default value, this one must too
-        validateMinimumChildCount(c, defaultParams ? 1 : 0);
-        validateMaximumChildCount(c, 1);
-        if (c.hasOneChild()) {
-          validateExpression(c.getFirstChild());
-          defaultParams = true;
+        // LHS can only be a name or destructuring pattern.
+        Node lhs = c.getFirstChild();
+        if (lhs.isName()) {
+          validateName(lhs);
+        } else if (lhs.isArrayPattern()) {
+          validateArrayPattern(Token.PARAM_LIST, lhs);
+        } else {
+          validateObjectPattern(Token.PARAM_LIST, lhs);
+        }
+      } else {
+        if (defaultParams) {
+          violation("Cannot have a parameter without a default value,"
+              + " after one with a default value.", c);
+        }
+
+        if (c.isName()) {
+          validateName(c);
+        } else if (c.isArrayPattern()) {
+          validateArrayPattern(Token.PARAM_LIST, c);
+        } else {
+          validateObjectPattern(Token.PARAM_LIST, c);
         }
       }
     }
@@ -556,7 +574,7 @@ public class AstValidator implements CompilerPass {
         break;
       default:
         violation("SPREAD node should not be the child of a "
-            + parent.getType() + " node.", n);
+            + Token.name(parent.getType()) + " node.", n);
     }
   }
 
@@ -586,6 +604,8 @@ public class AstValidator implements CompilerPass {
       }
     } else if (n.isArrayPattern()) {
       validateArrayPattern(type, n);
+    } else if (n.isObjectPattern()) {
+      validateObjectPattern(type, n);
     } else {
       violation("Invalid child for " + Token.name(type) + " node", n);
     }
@@ -594,13 +614,32 @@ public class AstValidator implements CompilerPass {
   private void validateArrayPattern(int type, Node n) {
     validateNodeType(Token.ARRAY_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      // When the array pattern is a direct child of a VAR node,
-      // the last element is the RHS of the 'var' assignment.
-      if (c == n.getLastChild() && n.getParent().isVar()) {
+      // When the array pattern is a direct child of a var/let/const node,
+      // the last element is the RHS of the assignment.
+      if (c == n.getLastChild() && NodeUtil.isNameDeclaration(n.getParent())) {
         validateExpression(c);
+      } else if (c.isRest()) {
+        validateRest(c);
       } else {
         // The members of the array pattern can be simple names,
         // or nested array/object patterns, e.g. "var [a,[b,c]]=[1,[2,3]];"
+        validateNameDeclarationChild(type, c);
+      }
+    }
+  }
+
+  private void validateObjectPattern(int type, Node n) {
+    validateNodeType(Token.OBJECT_PATTERN, n);
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+      // When the object pattern is a direct child of a var/let/const node,
+      // the last element is the RHS of the assignment.
+      if (c == n.getLastChild() && NodeUtil.isNameDeclaration(n.getParent())) {
+        validateExpression(c);
+      } else if (c.isStringKey()) {
+        validateObjectLitStringKey(c);
+        validateChildCount(c, 0);
+      } else {
+        // Nested destructuring pattern.
         validateNameDeclarationChild(type, c);
       }
     }

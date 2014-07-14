@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.graph;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterators.filter;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -30,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -174,7 +174,7 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
 
       @Override
       public boolean apply(@Nullable Object b) {
-        if (Objects.equal(value, b)) {
+        if (Objects.equals(value, b)) {
           return true;
         }
         Node<E> nodeForB = elmap.get(b);

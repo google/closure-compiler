@@ -570,10 +570,9 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     List<String> templateNames = new ArrayList<>();
     templateNames.addAll(classInfo.getTemplateTypeNames());
     templateNames.addAll(ctorInfo.getTemplateTypeNames());
-    if (templateNames.size() > 0) {
-      mergedInfo.recordTemplateTypeNames(templateNames);
+    for (String typeName : templateNames) {
+      mergedInfo.recordTemplateTypeName(typeName);
     }
-
     return mergedInfo.build(associatedNode);
   }
 }

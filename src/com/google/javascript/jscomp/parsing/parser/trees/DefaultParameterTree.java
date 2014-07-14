@@ -19,13 +19,13 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 public class DefaultParameterTree extends ParseTree {
-  public final IdentifierExpressionTree identifier;
-  public final ParseTree expression;
+  public final ParseTree lhs;
+  public final ParseTree defaultValue;
 
-  public DefaultParameterTree(SourceRange location, IdentifierExpressionTree identifier,
-      ParseTree expression) {
+  public DefaultParameterTree(SourceRange location, ParseTree lhs,
+      ParseTree defaultValue) {
     super(ParseTreeType.DEFAULT_PARAMETER, location);
-    this.identifier = identifier;
-    this.expression = expression;
+    this.lhs = lhs;
+    this.defaultValue = defaultValue;
   }
 }

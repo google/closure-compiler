@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -46,6 +45,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -197,7 +197,11 @@ public class NewTypeInference implements CompilerPass {
   public static class WarningReporter {
     AbstractCompiler compiler;
     WarningReporter(AbstractCompiler compiler) { this.compiler = compiler; }
-    void add(JSError warning) { compiler.report(warning); }
+    void add(JSError warning) {
+      if (!JSType.mockToString) {
+        compiler.report(warning);
+      }
+    }
   }
 
   private WarningReporter warnings;
@@ -213,8 +217,12 @@ public class NewTypeInference implements CompilerPass {
   static final String GETTER_PREFIX = "%getter_fun";
   static final String SETTER_PREFIX = "%setter_fun";
   private JSType arrayType, regexpType; // used for array and regexp literals
-  private static boolean debugging = false;
   private final boolean isClosurePassOn;
+
+  // Used only for development
+  private static boolean showDebuggingPrints = false;
+  static boolean measureMem = false;
+  private static long peakMem = 0;
 
   NewTypeInference(AbstractCompiler compiler, boolean isClosurePassOn) {
     this.warnings = new WarningReporter(compiler);
@@ -254,6 +262,17 @@ public class NewTypeInference implements CompilerPass {
     for (DeferredCheck check : deferredChecks.values()) {
       check.runCheck(summaries, warnings);
     }
+    if (measureMem) {
+      System.out.println("Peak mem: " + peakMem + "MB");
+    }
+  }
+
+  static void updatePeakMem() {
+    Runtime rt = Runtime.getRuntime();
+    long currentUsedMem = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024);
+    if (currentUsedMem > peakMem) {
+      peakMem = currentUsedMem;
+    }
   }
 
   private boolean isArrayType(JSType t) {
@@ -264,7 +283,7 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private static void println(Object ... objs) {
-    if (debugging) {
+    if (showDebuggingPrints) {
       StringBuilder b = new StringBuilder();
       for (Object obj : objs) {
         b.append(obj == null ? "null" : obj.toString());
@@ -453,7 +472,7 @@ public class NewTypeInference implements CompilerPass {
         // For DO loops, we do BODY-CONDT-CONDF-FOLLOW
         // Since CONDT is currently unused, this could be optimized.
         List<DiGraphEdge<Node, ControlFlowGraph.Branch>> outEdges =
-            cfg.getOutEdges(dn.getValue());
+            cfg.getOutEdges(currentNode);
         seen.add(dn);
         workset.add(dn);
         for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : outEdges) {
@@ -471,7 +490,7 @@ public class NewTypeInference implements CompilerPass {
       default:
         // Wait for all other incoming edges at join nodes.
         for (DiGraphEdge<Node, ControlFlowGraph.Branch> inEdge :
-            cfg.getInEdges(dn.getValue())) {
+            cfg.getInEdges(currentNode)) {
           if (!seen.contains(inEdge.getSource())
               && !inEdge.getSource().getValue().isDo()) {
             return;
@@ -480,6 +499,25 @@ public class NewTypeInference implements CompilerPass {
         seen.add(dn);
         if (cfg.getEntry() != dn) {
           workset.add(dn);
+        }
+        // Don't recur for straight-line code
+        while (true) {
+          List<DiGraphNode<Node, ControlFlowGraph.Branch>> succs =
+              cfg.getDirectedSuccNodes(dn);
+          if (succs.size() != 1) {
+            break;
+          }
+          DiGraphNode<Node, ControlFlowGraph.Branch> succ = succs.get(0);
+          if (succ == cfg.getImplicitReturn()) {
+            return;
+          }
+          // Make sure that succ isn't a join node
+          if (cfg.getDirectedPredNodes(succ).size() > 1) {
+            break;
+          }
+          workset.add(succ);
+          seen.add(succ);
+          dn = succ;
         }
         for (DiGraphNode<Node, ControlFlowGraph.Branch> succ :
             cfg.getDirectedSuccNodes(dn)) {
@@ -510,6 +548,9 @@ public class NewTypeInference implements CompilerPass {
       // TODO(dimvar): Revisit what we throw away after the bwd analysis
       TypeEnv entryEnv = getEntryTypeEnv();
       initEdgeEnvsFwd(entryEnv);
+      if (measureMem) {
+        updatePeakMem();
+      }
     } else {
       TypeEnv entryEnv = getTypeEnvFromDeclaredTypes();
       initEdgeEnvsFwd(entryEnv);
@@ -517,6 +558,9 @@ public class NewTypeInference implements CompilerPass {
     analyzeFunctionFwd(workset);
     if (scope.isFunction()) {
       createSummary(scope);
+    }
+    if (measureMem) {
+      updatePeakMem();
     }
   }
 
@@ -2228,7 +2272,8 @@ public class NewTypeInference implements CompilerPass {
    */
   private EnvTypePair analyzeExprBwd(
       Node expr, TypeEnv outEnv, JSType requiredType) {
-    Preconditions.checkArgument(requiredType != null);
+    Preconditions.checkArgument(requiredType != null,
+        "Required type null at: " + expr);
     Preconditions.checkArgument(!requiredType.isBottom());
     int exprKind = expr.getType();
     switch (exprKind) {
@@ -2560,7 +2605,7 @@ public class NewTypeInference implements CompilerPass {
   private EnvTypePair analyzeCallNodeArgumentsBwd(
       Node callNode, TypeEnv outEnv) {
     TypeEnv env = outEnv;
-    for (int i = callNode.getChildCount() - 1; i >= 0; i--) {
+    for (int i = callNode.getChildCount() - 1; i > 0; i--) {
       Node arg = callNode.getChildAtIndex(i);
       env = analyzeExprBwd(arg, env).env;
     }
@@ -2733,7 +2778,7 @@ public class NewTypeInference implements CompilerPass {
     Preconditions.checkArgument(!varName.contains("."));
     JSType oldType = env.getType(varName);
     if (oldType != null && oldType.equals(type) &&
-        Objects.equal(oldType.getLocation(), type.getLocation())) {
+        Objects.equals(oldType.getLocation(), type.getLocation())) {
       return env;
     }
     return env.putType(varName, type);
@@ -3113,13 +3158,13 @@ public class NewTypeInference implements CompilerPass {
       return callSite == dc2.callSite &&
           callerScope == dc2.callerScope &&
           calleeScope == dc2.calleeScope &&
-          Objects.equal(expectedRetType, dc2.expectedRetType) &&
-          Objects.equal(argTypes, dc2.argTypes);
+          Objects.equals(expectedRetType, dc2.expectedRetType) &&
+          Objects.equals(argTypes, dc2.argTypes);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(
+      return Objects.hash(
           callSite, callerScope, calleeScope, expectedRetType, argTypes);
     }
   }

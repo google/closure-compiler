@@ -657,6 +657,7 @@ public class IR {
       case Token.STRING:
       case Token.SUB:
       case Token.THIS:
+      case Token.SUPER:
       case Token.TYPEOF:
       case Token.TRUE:
       case Token.URSH:

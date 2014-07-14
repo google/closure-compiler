@@ -1053,6 +1053,14 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "const declarations");
   }
 
+  public void testAnonymousFunctionExpression() {
+    mode = LanguageMode.ECMASCRIPT5;
+    parseError("function () {}", "'identifier' expected");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError("function () {}", "'identifier' expected");
+  }
+
   public void testArrayDestructuringVar() {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("var [x,y] = foo();",
@@ -1073,16 +1081,27 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("var [x,] = ['x',];", "'identifier' expected");
   }
 
-  public void testArrayDestructuringSpread() {
+  public void testArrayDestructuringRest() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("var [first, ...rest] = foo();");
+    parse("let [first, ...rest] = foo();");
+    parse("const [first, ...rest] = foo();");
 
-    // TODO(tbreisacher): Make this error clearer.
+    // TODO(tbreisacher): Make these errors clearer.
     parseError("var [first, ...more, last] = foo();", "'identifier' expected");
+    parseError("var [first, ...[re, st]] = foo();", "'identifier' expected");
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("var [first, ...rest] = foo();",
         "this language feature is only supported in es6 mode: destructuring");
+  }
+
+  public void testArrayDestructuringFnDeclaration() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("function f([x, y]) { use(x); use(y); }");
+    parse("function f([x, [y, z]]) {}");
+    parse("function f([x, y] = [1, 2]) { use(x); use(y); }");
+    parse("function f([x, x]) {}");
   }
 
   public void testObjectDestructuringVar() {
@@ -1105,6 +1124,14 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("({}) = foo();");
   }
 
+  public void testObjectDestructuringFnDeclaration() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("function f({x, y}) { use(x); use(y); }");
+    parse("function f({w, x: {y, z}}) {}");
+    parse("function f({x, y} = {x:1, y:2}) {}");
+    parse("function f({x, x}) {}");
+  }
+
   public void testMixedDestructuring() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("var {x: [y, z]} = foo();");
@@ -1112,6 +1139,9 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     parse("({x: [y, z]} = foo());");
     parse("[x, {y, z}] = foo();");
+
+    parse("function f([x, {y, z}]) {}");
+    parse("function f({x: [y, z]}) {}");
   }
 
   public void testArrayComprehensions() {
@@ -1390,6 +1420,25 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "Hex digit expected");
   }
 
+  public void testExponentialLiterals() {
+    parse("0e0");
+    parse("0E0");
+    parse("0E1");
+    parse("1E0");
+    parse("1E-0");
+    parse("10E10");
+    parse("10E-10");
+    parse("1.0E1");
+    parseError("01E0",
+        "Semi-colon expected");
+    parseError("0E",
+        "Exponent part must contain at least one digit");
+    parseError("1E-",
+        "Exponent part must contain at least one digit");
+    parseError("1E1.1",
+        "Semi-colon expected");
+  }
+
   public void testBinaryLiterals() {
     mode = LanguageMode.ECMASCRIPT3;
     parseWarning("0b0001;",
@@ -1652,9 +1701,41 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("Js\\u0043ompiler");
   }
 
+  public void testUnicodePointEscapeInIdentifiers() {
+    parse("var \\u{0043}");
+    parse("Js\\u{0043}ompiler");
+    parse("Js\\u{765}ompiler");
+  }
+
+  public void testUnicodePointEscapeStringLiterals() {
+    parse("var i = \'\\u0043ompiler\'");
+    parse("var i = \'\\u{43}ompiler\'");
+    parse("var i = \'\\u{1f42a}ompiler\'");
+    parse("var i = \'\\u{2603}ompiler\'");
+    parse("var i = \'\\u{1}ompiler\'");
+  }
+
+  public void testInvalidUnicodePointEscapeInIdentifiers() {
+    parseError("var \\u{defg", "Invalid escape sequence");
+    parseError("var \\u{defgRestOfIdentifier", "Invalid escape sequence");
+    parseError("var \\u{DEFG}", "Invalid escape sequence");
+    parseError("Js\\u{}ompiler", "Invalid escape sequence");
+    // Legal unicode but invalid in identifier
+    parseError("Js\\u{99}ompiler", "Invalid escape sequence");
+    parseError("Js\\u{10000}ompiler", "Invalid escape sequence");
+  }
+
+  public void testInvalidUnicodePointEscapeStringLiterals() {
+    parseError("var i = \'\\u{defg\'", "Hex digit expected");
+    parseError("var i = \'\\u{defgRestOfIdentifier\'", "Hex digit expected");
+    parseError("var i = \'\\u{DEFG}\'", "Hex digit expected");
+    parseError("var i = \'Js\\u{}ompiler\'", "Empty unicode escape");
+    parseError("var i = \'\\u{345", "Hex digit expected");
+  }
+
   public void testInvalidEscape() {
-    parseError("var \\x39abc", "Invalid escape sequence: '\\x'");
-    parseError("var abc\\t", "Invalid escape sequence: '\\t'");
+    parseError("var \\x39abc", "Invalid escape sequence");
+    parseError("var abc\\t", "Invalid escape sequence");
   }
 
   public void testEOFInUnicodeEscape() {
@@ -1676,13 +1757,15 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testUnicodeEscapeInvalidIdentifierStart() {
     parseError("var \\u0037yler",
         "Character '7' (U+0037) is not a valid identifier start char");
+    parseError("var \\u{37}yler",
+        "Character '7' (U+0037) is not a valid identifier start char");
     parseError("var \\u0020space",
-        "Character ' ' (U+0020) is not a valid identifier char");
+        "Invalid escape sequence");
   }
 
   public void testUnicodeEscapeInvalidIdentifierChar() {
     parseError("var sp\\u0020ce",
-        "Character ' ' (U+0020) is not a valid identifier char");
+        "Invalid escape sequence");
   }
 
   /**

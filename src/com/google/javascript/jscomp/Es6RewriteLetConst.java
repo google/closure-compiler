@@ -43,16 +43,11 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
-  private int uId;
   private final Map<Node, Map<String, String>> renameMap = new LinkedHashMap<>();
   private final Set<Node> letConsts = new HashSet<>();
 
   public Es6RewriteLetConst(AbstractCompiler compiler) {
     this.compiler = compiler;
-  }
-
-  private String newUniqueName(String name) {
-    return name + "$" + uId++;
   }
 
   @Override
@@ -76,7 +71,9 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
     boolean doRename = false;
     if (scope != hoistScope) {
       doRename = hoistScope.isDeclared(oldName, true);
-      String newName = doRename ? newUniqueName(oldName) : oldName;
+      String newName = doRename
+          ? oldName + "$" + compiler.getUniqueNameIdSupplier().get()
+          : oldName;
       Var oldVar = scope.getVar(oldName);
       scope.undeclare(oldVar);
       hoistScope.declare(newName, nameNode, null, oldVar.input);
@@ -228,7 +225,9 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
           functionHandledMap.put(function, name);
 
           if (!loopObjectMap.containsKey(loopNode)) {
-            loopObjectMap.put(loopNode, new LoopObject(newUniqueName(LOOP_OBJECT_NAME)));
+            loopObjectMap.put(loopNode,
+                new LoopObject(
+                    LOOP_OBJECT_NAME + "$" + compiler.getUniqueNameIdSupplier().get()));
           }
           LoopObject object = loopObjectMap.get(loopNode);
           object.vars.add(var);
@@ -309,18 +308,16 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
                       .useSourceInfoIfMissingFromForTree(reference));
             } else {
               if (NodeUtil.isNameDeclaration(reference.getParent())) {
-                Node grandParent = reference.getParent().getParent();
                 Node declaration = reference.getParent();
+                Node grandParent = declaration.getParent();
                 // Normalize: "let i = 0, j = 0;" becomes "let i = 0; let j = 0;"
-                if (declaration.getChildCount() > 1) {
-                  for (int i = 1; i < declaration.getChildCount(); i++) {
-                    Node name = declaration.getChildAtIndex(i);
-                    grandParent.addChildAfter(
-                        IR.nameDeclaration(
-                            name.detachFromParent(), declaration.getType())
-                            .useSourceInfoIfMissingFromForTree(declaration),
-                        declaration);
-                  }
+                while (declaration.getChildCount() > 1) {
+                  Node name = declaration.getLastChild();
+                  grandParent.addChildAfter(
+                      IR.nameDeclaration(
+                          name.detachFromParent(), declaration.getType())
+                          .useSourceInfoIfMissingFromForTree(declaration),
+                      declaration);
                 }
 
                 // Change declaration to assignment, or just drop it if there's

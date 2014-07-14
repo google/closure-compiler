@@ -579,8 +579,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
   static final class Reference implements StaticReference<JSType> {
 
     private static final Set<Integer> DECLARATION_PARENTS =
-        ImmutableSet.of(Token.VAR, Token.LET, Token.CONST, Token.FUNCTION,
-            Token.CLASS, Token.CATCH);
+        ImmutableSet.of(Token.VAR, Token.LET, Token.CONST, Token.PARAM_LIST,
+            Token.FUNCTION, Token.CLASS, Token.CATCH);
 
     private final Node nameNode;
     private final BasicBlock basicBlock;
@@ -649,10 +649,22 @@ class ReferenceCollectingCallback implements ScopedCallback,
 
     boolean isDeclaration() {
       Node parent = getParent();
-      Node grandparent = parent.getParent();
-      return DECLARATION_PARENTS.contains(parent.getType()) ||
-          parent.isParamList() &&
-          grandparent.isFunction();
+      // Special case for class B extends A, A is not a redeclaration.
+      if (parent.isClass() && nameNode != parent.getFirstChild()) {
+        return false;
+      }
+
+      // Special case for array pattern: An array pattern is a declaration, only
+      // if it's a descendant of a declaration.
+      while (parent.isArrayPattern()) {
+        parent = parent.getParent();
+      }
+
+      if (parent.isDefaultValue() && nameNode == parent.getFirstChild()) {
+        return true;
+      }
+
+      return DECLARATION_PARENTS.contains(parent.getType());
     }
 
     boolean isVarDeclaration() {

@@ -313,10 +313,10 @@ final public class JSDocInfoBuilder {
    * Records a template type name.
    *
    * @return {@code true} if the template type name was recorded and
-   *     {@code false} if a template type name was already defined.
+   *     {@code false} if the input template type name was already defined.
    */
-  public boolean recordTemplateTypeNames(List<String> names) {
-    if (currentInfo.declareTemplateTypeNames(names)) {
+  public boolean recordTemplateTypeName(String name) {
+    if (currentInfo.declareTemplateTypeName(name)) {
       populated = true;
       return true;
     } else {

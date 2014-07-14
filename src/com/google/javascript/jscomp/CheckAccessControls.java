@@ -207,6 +207,16 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     } else if (NodeUtil.isFunctionDeclaration(n) ||
                parent.isName()) {
       return normalizeClassType(n.getJSType());
+    } else if (parent.isStringKey()
+        || parent.isGetterDef() || parent.isSetterDef()) {
+      Node objectLitParent = parent.getParent().getParent();
+      if (!objectLitParent.isAssign()) {
+        return null;
+      }
+      Node className = NodeUtil.getPrototypeClassName(objectLitParent.getFirstChild());
+      if (className != null) {
+        return normalizeClassType(className.getJSType());
+      }
     }
 
     return null;
@@ -246,6 +256,11 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         checkPropertyDeprecation(t, n, parent);
         checkPropertyVisibility(t, n, parent);
         checkConstantProperty(t, n);
+        break;
+      case Token.STRING_KEY:
+      case Token.GETTER_DEF:
+      case Token.SETTER_DEF:
+        checkKeyVisibilityConvention(t, n, parent);
         break;
       case Token.NEW:
         checkConstructorDeprecation(t, n, parent);
@@ -346,6 +361,38 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   private boolean isPrivateByConvention(String name) {
     return enforceCodingConventions
         && compiler.getCodingConvention().isPrivate(name);
+  }
+
+  /**
+   * Determines whether the given OBJECTLIT property visibility
+   * violates the coding convention.
+   * @param t The current traversal.
+   * @param key The objectlit key node (STRING_KEY, GETTER_DEF, SETTER_DEF).
+   */
+  private void checkKeyVisibilityConvention(NodeTraversal t,
+      Node key, Node parent) {
+    JSDocInfo info = key.getJSDocInfo();
+    if (info == null) {
+      return;
+    }
+    if (!isPrivateByConvention(key.getString())) {
+      return;
+    }
+    Node assign = parent.getParent();
+    if (assign == null || !assign.isAssign()) {
+      return;
+    }
+    Node left = assign.getFirstChild();
+    if (!left.isGetProp()
+        || !left.getLastChild().getString().equals("prototype")) {
+      return;
+    }
+    Visibility declaredVisibility = info.getVisibility();
+    // Visibility is declared to be something other than private.
+    if (declaredVisibility != Visibility.INHERITED
+        && declaredVisibility != Visibility.PRIVATE) {
+      compiler.report(t.makeError(key, CONVENTION_MISMATCH));
+    }
   }
 
   /**
@@ -591,7 +638,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
       StaticSourceFile referenceSource = getprop.getStaticSourceFile();
       boolean sameInput = referenceSource != null
-          && referenceSource.getName() == definingSource.getName();
+          && referenceSource.getName().equals(definingSource.getName());
       JSType ownerType = normalizeClassType(objectType);
       if (isOverride) {
         // Check an ASSIGN statement that's trying to override a property

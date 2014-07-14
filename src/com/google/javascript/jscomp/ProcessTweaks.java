@@ -492,7 +492,7 @@ class ProcessTweaks implements CompilerPass {
           // For register* and overrideDefaultValue calls, ensure the default
           // value is a literal of the correct type.
           if (!registerFunc.isValidNodeType(valueNode.getType())) {
-            compiler.report(JSError.make(call.sourceName,
+            compiler.report(JSError.make(
                 valueNode, INVALID_TWEAK_DEFAULT_VALUE_WARNING,
                 tweakId, registerFunc.getName(),
                 registerFunc.getExpectedTypeName()));
@@ -500,7 +500,7 @@ class ProcessTweaks implements CompilerPass {
         } else if (tweakFunc.isGetterFunction()) {
           // For getter calls, ensure the correct getter was used.
           if (!tweakFunc.isCorrectRegisterFunction(registerFunc)) {
-            compiler.report(JSError.make(call.sourceName,
+            compiler.report(JSError.make(
                 call.callNode, TWEAK_WRONG_GETTER_TYPE_WARNING,
                 tweakFunc.getName(), registerFunc.getName()));
           }
@@ -513,7 +513,7 @@ class ProcessTweaks implements CompilerPass {
      */
     void emitUnknownTweakErrors() {
       for (TweakFunctionCall call : functionCalls) {
-        compiler.report(JSError.make(call.sourceName,
+        compiler.report(JSError.make(
             call.getIdNode(), UNKNOWN_TWEAK_WARNING, tweakId));
       }
     }

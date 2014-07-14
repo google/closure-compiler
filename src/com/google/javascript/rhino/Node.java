@@ -2479,6 +2479,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.DEFAULT_CASE;
   }
 
+  public boolean isDefaultValue() {
+    return this.getType() == Token.DEFAULT_VALUE;
+  }
+
   public boolean isDelProp() {
     return this.getType() == Token.DELPROP;
   }
@@ -2585,6 +2589,10 @@ public class Node implements Cloneable, Serializable {
 
   public boolean isObjectLit() {
     return this.getType() == Token.OBJECTLIT;
+  }
+
+  public boolean isObjectPattern() {
+    return this.getType() == Token.OBJECT_PATTERN;
   }
 
   public boolean isOr() {

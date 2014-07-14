@@ -179,8 +179,8 @@ public class Token {
         EXPORT_SPEC    = 170,
         MODULE         = 171,
 
-        REST           = 172, // "..." in a param list.
-        SPREAD         = 173, // "..." in other contexts.
+        REST           = 172, // "..." in formal parameters, or an array pattern.
+        SPREAD         = 173, // "..." in a call expression, or an array literal.
 
         COMPUTED_PROP  = 174,
 
@@ -189,6 +189,8 @@ public class Token {
 
         TEMPLATELIT     = 177, // template literal
         TEMPLATELIT_SUB = 178, // template literal substitution
+
+        DEFAULT_VALUE   = 179, // Formal parameter with a default value
 
         // JSDoc-only tokens
         ANNOTATION     = 300,
@@ -335,6 +337,7 @@ public class Token {
           case REST:            return "REST";
           case SPREAD:          return "SPREAD";
           case COMPUTED_PROP:   return "COMPUTED_PROP";
+          case DEFAULT_VALUE:   return "DEFAULT_VALUE";
 
           case PLACEHOLDER1:        return "PLACEHOLDER1";
           case PLACEHOLDER2:        return "PLACEHOLDER2";
@@ -399,6 +402,7 @@ public class Token {
       case CLASS:           return 3;
       case MEMBER_DEF:      return 1;
       case PARAM_LIST:      return -1;
+      case DEFAULT_VALUE:   return 2;
       case COMMA:           return 2;
       case ASSIGN:          return 2;
       case ASSIGN_BITOR:    return 2;

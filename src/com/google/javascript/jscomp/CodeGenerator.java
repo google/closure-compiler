@@ -267,6 +267,12 @@ class CodeGenerator {
         add(")");
         break;
 
+      case Token.DEFAULT_VALUE:
+        add(first);
+        add("=");
+        add(first.getNext());
+        break;
+
       case Token.COMMA:
         Preconditions.checkState(childCount == 2);
         unrollBinaryOperator(n, Token.COMMA, ",", context,

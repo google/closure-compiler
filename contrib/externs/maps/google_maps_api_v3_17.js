@@ -265,7 +265,7 @@ google.maps.Data.prototype.contains = function(feature) {};
 google.maps.Data.prototype.forEach = function(callback) {};
 
 /**
- * @param {string} id
+ * @param {number|string} id
  * @return {google.maps.Data.Feature|undefined}
  */
 google.maps.Data.prototype.getFeatureById = function(id) {};
@@ -321,6 +321,12 @@ google.maps.Data.prototype.setMap = function(map) {};
 google.maps.Data.prototype.setStyle = function(style) {};
 
 /**
+ * @param {function(Object)} callback
+ * @return {undefined}
+ */
+google.maps.Data.prototype.toGeoJson = function(callback) {};
+
+/**
  * @interface
  */
 google.maps.Data.AddFeatureEvent = function() {};
@@ -365,7 +371,7 @@ google.maps.Data.Feature.prototype.getGeometry = function() {};
 
 /**
  * @nosideeffects
- * @return {string|undefined}
+ * @return {number|string|undefined}
  */
 google.maps.Data.Feature.prototype.getId = function() {};
 
@@ -393,6 +399,12 @@ google.maps.Data.Feature.prototype.setGeometry = function(newGeometry) {};
  * @return {undefined}
  */
 google.maps.Data.Feature.prototype.setProperty = function(name, newValue) {};
+
+/**
+ * @param {function(Object)} callback
+ * @return {undefined}
+ */
+google.maps.Data.Feature.prototype.toGeoJson = function(callback) {};
 
 /**
  * @interface

@@ -69,7 +69,7 @@ class ReplaceMessages extends JsMessageVisitor {
     JsMessage replacement = bundle.getMessage(message.getId());
     if (replacement == null) {
       if (strictReplacement) {
-        compiler.report(JSError.make(message.getSourceName(),
+        compiler.report(JSError.make(
             definition.getMessageNode(), BUNDLE_DOES_NOT_HAVE_THE_MESSAGE,
             message.getId()));
         // Fallback to the default message
@@ -87,7 +87,7 @@ class ReplaceMessages extends JsMessageVisitor {
     try {
       newValue = getNewValueNode(replacement, msgNode);
     } catch (MalformedException e) {
-      compiler.report(JSError.make(message.getSourceName(),
+      compiler.report(JSError.make(
           e.getNode(), MESSAGE_TREE_MALFORMED, e.getMessage()));
       newValue = msgNode;
     }

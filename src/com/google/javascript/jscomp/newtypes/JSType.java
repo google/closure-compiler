@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -27,6 +26,7 @@ import com.google.common.collect.Sets;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -62,11 +62,37 @@ public abstract class JSType {
   // eg, it can be a prop of a formal whose decl type is a record type.
   static String GENERIC_LOCATION = "%";
 
+  // Used only for development
+  public static boolean mockToString = false;
+
   private static JSType makeType(int mask, String location,
       ImmutableSet<ObjectType> objs, String typeVar,
       ImmutableSet<EnumType> enums) {
+    // Fix up the mask for objects and enums
+    if (enums != null) {
+      if (enums.isEmpty()) {
+        mask &= ~ENUM_MASK;
+      } else {
+        mask |= ENUM_MASK;
+      }
+    }
+
+    if (objs != null) {
+      if (objs.isEmpty()) {
+        mask &= ~NON_SCALAR_MASK;
+      } else {
+        mask |= NON_SCALAR_MASK;
+      }
+    }
+
     if (objs == null && typeVar == null && enums == null && location == null) {
       return MaskType.make(mask);
+    }
+    if (mask == NON_SCALAR_MASK && location == null) {
+      return new ObjsType(objs);
+    }
+    if (mask == (NON_SCALAR_MASK | NULL_MASK) && location == null) {
+      return new NullableObjsType(objs);
     }
     return new UnionType(mask, location, objs, typeVar, enums);
   }
@@ -442,7 +468,7 @@ public abstract class JSType {
 
     int t1Mask = promoteBoolean(t1.getMask());
     int t2Mask = promoteBoolean(t2.getMask());
-    if (t1Mask != t2Mask || !Objects.equal(t1.getTypeVar(), t2.getTypeVar())) {
+    if (t1Mask != t2Mask || !Objects.equals(t1.getTypeVar(), t2.getTypeVar())) {
       return null;
     }
     // All scalar types are equal
@@ -591,7 +617,7 @@ public abstract class JSType {
     }
     int newMask = getMask() & other.getMask();
     String newTypevar;
-    if (Objects.equal(getTypeVar(), other.getTypeVar())) {
+    if (Objects.equals(getTypeVar(), other.getTypeVar())) {
       newTypevar = getTypeVar();
     } else {
       newTypevar = null;
@@ -616,7 +642,7 @@ public abstract class JSType {
     }
     int newMask = lhs.getMask() & rhs.getMask();
     String newTypevar;
-    if (Objects.equal(lhs.getTypeVar(), rhs.getTypeVar())) {
+    if (Objects.equals(lhs.getTypeVar(), rhs.getTypeVar())) {
       newTypevar = lhs.getTypeVar();
     } else {
       newTypevar = null;
@@ -638,7 +664,7 @@ public abstract class JSType {
       String newLocation, ImmutableSet<ObjectType> newObjs, String newTypevar,
       ImmutableSet<ObjectType> objs1, ImmutableSet<ObjectType> objs2,
       ImmutableSet<EnumType> enums1, ImmutableSet<EnumType> enums2) {
-    if (Objects.equal(enums1, enums2)) {
+    if (Objects.equals(enums1, enums2)) {
       return makeType(newMask, newLocation, newObjs, newTypevar, enums1);
     }
     ImmutableSet.Builder<EnumType> enumBuilder = ImmutableSet.builder();
@@ -759,7 +785,7 @@ public abstract class JSType {
     if ((mask | other.getMask()) != other.getMask()) {
       return false;
     }
-    if (!Objects.equal(getTypeVar(), other.getTypeVar())) {
+    if (!Objects.equals(getTypeVar(), other.getTypeVar())) {
       return false;
     }
     if (getObjs() == null) {
@@ -815,7 +841,7 @@ public abstract class JSType {
   }
 
   public JSType withLocation(String location) {
-    if (Objects.equal(location, getLocation())) {
+    if (Objects.equals(location, getLocation())) {
       return this;
     }
     String newLoc = location == null ? null : JSType.GENERIC_LOCATION;
@@ -877,8 +903,8 @@ public abstract class JSType {
     }
     Preconditions.checkState(getObjs() != null || getEnums() != null);
     return nullAcceptingJoin(
-        TypeWithProperties.getProp(getObjs(), qname),
-        TypeWithProperties.getProp(getEnums(), qname));
+        TypeWithPropertiesStatics.getProp(getObjs(), qname),
+        TypeWithPropertiesStatics.getProp(getEnums(), qname));
   }
 
   public JSType getDeclaredProp(QualifiedName qname) {
@@ -887,20 +913,22 @@ public abstract class JSType {
     }
     Preconditions.checkState(getObjs() != null || getEnums() != null);
     return nullAcceptingJoin(
-        TypeWithProperties.getDeclaredProp(getObjs(), qname),
-        TypeWithProperties.getDeclaredProp(getEnums(), qname));
+        TypeWithPropertiesStatics.getDeclaredProp(getObjs(), qname),
+        TypeWithPropertiesStatics.getDeclaredProp(getEnums(), qname));
   }
 
   public boolean mayHaveProp(QualifiedName qname) {
-    return TypeWithProperties.mayHaveProp(getObjs(), qname)
-        || TypeWithProperties.mayHaveProp(getEnums(), qname);
+    return TypeWithPropertiesStatics.mayHaveProp(getObjs(), qname) ||
+        TypeWithPropertiesStatics.mayHaveProp(getEnums(), qname);
   }
 
   public boolean hasProp(QualifiedName qname) {
-    if (getObjs() != null && !TypeWithProperties.hasProp(getObjs(), qname)) {
+    if (getObjs() != null
+        && !TypeWithPropertiesStatics.hasProp(getObjs(), qname)) {
       return false;
     }
-    if (getEnums() != null && !TypeWithProperties.hasProp(getEnums(), qname)) {
+    if (getEnums() != null
+        && !TypeWithPropertiesStatics.hasProp(getEnums(), qname)) {
       return false;
     }
     return getEnums() != null || getObjs() != null;
@@ -908,8 +936,8 @@ public abstract class JSType {
 
   public boolean hasConstantProp(QualifiedName pname) {
     Preconditions.checkArgument(pname.isIdentifier());
-    return TypeWithProperties.hasConstantProp(getObjs(), pname)
-        || TypeWithProperties.hasConstantProp(getEnums(), pname);
+    return TypeWithPropertiesStatics.hasConstantProp(getObjs(), pname) ||
+        TypeWithPropertiesStatics.hasConstantProp(getEnums(), pname);
   }
 
   public JSType withoutProperty(QualifiedName qname) {
@@ -965,6 +993,9 @@ public abstract class JSType {
 
   @Override
   public String toString() {
+    if (mockToString) {
+      return "";
+    }
     return appendTo(new StringBuilder()).toString();
   }
 
@@ -1071,12 +1102,12 @@ public abstract class JSType {
     }
     Preconditions.checkArgument(o instanceof JSType);
     JSType t2 = (JSType) o;
-    return getMask() == t2.getMask() && Objects.equal(getObjs(), t2.getObjs());
+    return getMask() == t2.getMask() && Objects.equals(getObjs(), t2.getObjs());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(getMask(), getObjs());
+    return Objects.hash(getMask(), getObjs());
   }
 }
 
@@ -1097,20 +1128,16 @@ final class UnionType extends JSType {
     if (enums == null) {
       this.enums = null;
     } else if (enums.isEmpty()) {
-      mask &= ~ENUM_MASK;
       this.enums = null;
     } else {
-      mask |= ENUM_MASK;
       this.enums = enums;
     }
 
     if (objs == null) {
       this.objs = null;
     } else if (objs.isEmpty()) {
-      mask &= ~NON_SCALAR_MASK;
       this.objs = null;
     } else {
-      mask |= NON_SCALAR_MASK;
       this.objs = objs;
     }
 
@@ -1246,6 +1273,62 @@ class MaskType extends JSType {
 
   protected ImmutableSet<ObjectType> getObjs() {
     return null;
+  }
+
+  protected String getTypeVar() {
+    return null;
+  }
+
+  protected ImmutableSet<EnumType> getEnums() {
+    return null;
+  }
+
+  public String getLocation() {
+    return null;
+  }
+}
+
+final class ObjsType extends JSType {
+  private ImmutableSet<ObjectType> objs;
+
+  ObjsType(ImmutableSet<ObjectType> objs) {
+    this.objs = objs;
+  }
+
+  protected int getMask() {
+    return NON_SCALAR_MASK;
+  }
+
+  protected ImmutableSet<ObjectType> getObjs() {
+    return objs;
+  }
+
+  protected String getTypeVar() {
+    return null;
+  }
+
+  protected ImmutableSet<EnumType> getEnums() {
+    return null;
+  }
+
+  public String getLocation() {
+    return null;
+  }
+}
+
+final class NullableObjsType extends JSType {
+  private ImmutableSet<ObjectType> objs;
+
+  NullableObjsType(ImmutableSet<ObjectType> objs) {
+    this.objs = objs;
+  }
+
+  protected int getMask() {
+    return NON_SCALAR_MASK | NULL_MASK;
+  }
+
+  protected ImmutableSet<ObjectType> getObjs() {
+    return objs;
   }
 
   protected String getTypeVar() {

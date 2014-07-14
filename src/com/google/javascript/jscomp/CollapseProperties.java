@@ -433,7 +433,7 @@ class CollapseProperties implements CompilerPass {
    */
   private void warnAboutNamespaceAliasing(Name nameObj, Ref ref) {
     compiler.report(
-        JSError.make(ref.getSourceName(), ref.node,
+        JSError.make(ref.node,
                      UNSAFE_NAMESPACE_WARNING, nameObj.getFullName()));
   }
 
@@ -445,7 +445,7 @@ class CollapseProperties implements CompilerPass {
    */
   private void warnAboutNamespaceRedefinition(Name nameObj, Ref ref) {
     compiler.report(
-        JSError.make(ref.getSourceName(), ref.node,
+        JSError.make(ref.node,
                      NAMESPACE_REDEFINED_WARNING, nameObj.getFullName()));
   }
 
@@ -889,8 +889,7 @@ class CollapseProperties implements CompilerPass {
             public void visit(NodeTraversal t, Node n, Node parent) {
               if (n.isThis()) {
                 compiler.report(
-                    JSError.make(name.getDeclaration().getSourceName(), n,
-                        UNSAFE_THIS, name.getFullName()));
+                    JSError.make(n, UNSAFE_THIS, name.getFullName()));
               }
             }
           });

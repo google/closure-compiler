@@ -750,8 +750,7 @@ public class NodeTraversal {
   /** Reports a diagnostic (error or warning) */
   public void report(Node n, DiagnosticType diagnosticType,
       String... arguments) {
-    JSError error = JSError.make(
-        getBestSourceFileName(n), n, diagnosticType, arguments);
+    JSError error = JSError.make(n, diagnosticType, arguments);
     compiler.report(error);
   }
 
@@ -773,7 +772,7 @@ public class NodeTraversal {
    */
   public JSError makeError(Node n, CheckLevel level, DiagnosticType type,
       String... arguments) {
-    return JSError.make(getBestSourceFileName(n), n, level, type, arguments);
+    return JSError.make(n, level, type, arguments);
   }
 
   /**
@@ -784,7 +783,7 @@ public class NodeTraversal {
    * @param arguments Arguments to be incorporated into the message
    */
   public JSError makeError(Node n, DiagnosticType type, String... arguments) {
-    return JSError.make(getBestSourceFileName(n), n, type, arguments);
+    return JSError.make(n, type, arguments);
   }
 
   private String getBestSourceFileName(Node n) {

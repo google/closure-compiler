@@ -114,11 +114,13 @@ class VarCheck extends AbstractPostOrderCallback implements
    * @return the SyntacticScopeCreator
    */
   private ScopeCreator createScopeCreator() {
-    if (sanityCheck) {
+    if (compiler.getLanguageMode().isEs6OrHigher()) {
+      // Redeclaration check is handled in VariableReferenceCheck for ES6
+      return new Es6SyntacticScopeCreator(compiler);
+    } else if (sanityCheck) {
       return new SyntacticScopeCreator(compiler);
     } else {
-      return new SyntacticScopeCreator(
-          compiler, new RedeclarationCheckHandler());
+      return new SyntacticScopeCreator(compiler, new RedeclarationCheckHandler());
     }
   }
 
@@ -358,7 +360,7 @@ class VarCheck extends AbstractPostOrderCallback implements
 
         if (!allowDupe) {
           compiler.report(
-              JSError.make(NodeUtil.getSourceName(n), n,
+              JSError.make(n,
                            VAR_MULTIPLY_DECLARED_ERROR,
                            name,
                            (origVar.input != null
@@ -369,8 +371,7 @@ class VarCheck extends AbstractPostOrderCallback implements
         // Disallow shadowing "arguments" as we can't handle with our current
         // scope modeling.
         compiler.report(
-            JSError.make(NodeUtil.getSourceName(n), n,
-                VAR_ARGUMENTS_SHADOWED_ERROR));
+            JSError.make(n, VAR_ARGUMENTS_SHADOWED_ERROR));
       }
     }
   }

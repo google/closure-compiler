@@ -306,15 +306,14 @@ public class NominalType {
    * If the raw nominal type has an @template, then many nominal types can be
    * created from it by instantiation.
    */
-  public static class RawNominalType {
+  public static class RawNominalType extends Namespace {
     private final String name;
     // Each instance of the class has these properties by default
     private PersistentMap<String, Property> classProps = PersistentMap.create();
     // The object pointed to by the prototype property of the constructor of
     // this class has these properties
     private PersistentMap<String, Property> protoProps = PersistentMap.create();
-    // The constructor of this class has these "static" properties
-    private PersistentMap<String, Property> ctorProps = PersistentMap.create();
+    // The "static" properties of the constructor are stored in the namespace.
     boolean isFinalized = false;
     private NominalType superClass = null;
     private ImmutableSet<NominalType> interfaces = null;
@@ -323,6 +322,7 @@ public class NominalType {
     // Empty iff this type is not generic
     private final ImmutableList<String> typeParameters;
     private final ObjectKind objectKind;
+    private FunctionType ctorFn;
 
     private RawNominalType(String name, ImmutableList<String> typeParameters,
         boolean isInterface, ObjectKind objectKind) {
@@ -337,25 +337,25 @@ public class NominalType {
     }
 
     public static RawNominalType makeUnrestrictedClass(
-        String name, ImmutableList<String> typeParameters) {
+        QualifiedName name, ImmutableList<String> typeParameters) {
       return new RawNominalType(
-          name, typeParameters, false, ObjectKind.UNRESTRICTED);
+          name.toString(), typeParameters, false, ObjectKind.UNRESTRICTED);
     }
 
     public static RawNominalType makeStructClass(
-        String name, ImmutableList<String> typeParameters) {
-      return new RawNominalType(name, typeParameters, false, ObjectKind.STRUCT);
+        QualifiedName name, ImmutableList<String> typeParameters) {
+      return new RawNominalType(name.toString(), typeParameters, false, ObjectKind.STRUCT);
     }
 
     public static RawNominalType makeDictClass(
-        String name, ImmutableList<String> typeParameters) {
-      return new RawNominalType(name, typeParameters, false, ObjectKind.DICT);
+        QualifiedName name, ImmutableList<String> typeParameters) {
+      return new RawNominalType(name.toString(), typeParameters, false, ObjectKind.DICT);
     }
 
     public static RawNominalType makeInterface(
-        String name, ImmutableList<String> typeParameters) {
+        QualifiedName name, ImmutableList<String> typeParameters) {
       // interfaces are struct by default
-      return new RawNominalType(name, typeParameters, true, ObjectKind.STRUCT);
+      return new RawNominalType(name.toString(), typeParameters, true, ObjectKind.STRUCT);
     }
 
     public String getName() {
@@ -380,6 +380,11 @@ public class NominalType {
 
     ImmutableList<String> getTypeParameters() {
       return typeParameters;
+    }
+
+    public void setCtorFunction(FunctionType ctorFn) {
+      Preconditions.checkState(!isFinalized);
+      this.ctorFn = ctorFn;
     }
 
     private boolean hasAncestorClass(RawNominalType ancestor) {
@@ -612,44 +617,31 @@ public class NominalType {
     //////////// Constructor Properties
 
     public boolean hasCtorProp(String pname) {
-      Property prop = ctorProps.get(pname);
-      if (prop == null) {
-        return false;
-      }
-      Preconditions.checkState(!prop.isOptional());
-      return true;
+      return super.hasProp(pname);
     }
 
     /** Add a new non-optional declared property to this class's constructor */
     public void addCtorProperty(String pname, JSType type, boolean isConstant) {
       Preconditions.checkState(!isFinalized);
-      if (type == null && isConstant) {
-        type = JSType.UNKNOWN;
-      }
-      ctorProps = ctorProps.with(pname, isConstant ?
-          Property.makeConstant(type, type) : Property.make(type, type));
+      super.addProperty(pname, type, isConstant);
     }
 
     /** Add a new undeclared property to this class's constructor */
     public void addUndeclaredCtorProperty(String pname) {
       Preconditions.checkState(!isFinalized);
-      if (ctorProps.containsKey(pname)) {
-        return;
-      }
-      ctorProps =
-          ctorProps.with(pname, Property.make(JSType.UNKNOWN, null));
+      super.addUndeclaredProperty(pname, JSType.UNKNOWN, false);
     }
 
     public JSType getCtorPropDeclaredType(String pname) {
-      Property p = ctorProps.get(pname);
-      return p == null ? null : p.getDeclaredType();
+      return super.getPropDeclaredType(pname);
     }
+
 
     // Returns the (function) object referred to by the constructor of this
     // class.
     private JSType createConstructorObject(FunctionType ctorFn) {
-      return JSType.fromObjectType(
-          ObjectType.makeObjectType(null, ctorProps, ctorFn,
+      return withNamedTypes(
+          ObjectType.makeObjectType(null, otherProps, ctorFn,
               ctorFn.isLoose(), ObjectKind.UNRESTRICTED));
     }
 
@@ -680,6 +672,7 @@ public class NominalType {
 
     // If we try to mutate the class after the AST-preparation phase, error.
     public RawNominalType finalizeNominalType() {
+      Preconditions.checkState(ctorFn != null);
       // System.out.println("Class " + name +
       //     " created with class properties: " + classProps +
       //     " and prototype properties: " + protoProps);
@@ -696,6 +689,11 @@ public class NominalType {
       StringBuilder builder = new StringBuilder(name);
       appendGenericSuffixTo(builder, ImmutableMap.<String, JSType>of());
       return builder.toString();
+    }
+
+    public JSType toJSType() {
+      Preconditions.checkState(ctorFn != null);
+      return createConstructorObject(ctorFn);
     }
 
     // equals and hashCode default to reference equality, which is what we want

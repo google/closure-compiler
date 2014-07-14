@@ -606,17 +606,26 @@ public class Scanner {
     case 'x':
     case 'X':
       nextChar();
-      if (!isHexDigit(peekChar())) {
+      if (!peekHexDigit()) {
         reportError("Hex Integer Literal must contain at least one digit");
       }
       skipHexDigits();
       return new LiteralToken(
           TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
+    case 'e':
+    case 'E':
+      return scanExponentOfNumericLiteral(beginToken);
     case '.':
       return scanFractionalNumericLiteral(beginToken);
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
-      return scanPostDigit(beginToken);
+      skipDecimalDigits();
+      if (peek('.')) {
+          nextChar();
+          skipDecimalDigits();
+      }
+      return new LiteralToken(
+          TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
     default:
       return new LiteralToken(
           TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
@@ -634,7 +643,10 @@ public class Scanner {
     boolean containsUnicodeEscape = ch == '\\';
 
     ch = peekChar();
-    while (isIdentifierPart(ch) || ch == '\\') {
+    while (isIdentifierPart(ch)
+        || ch == '\\'
+        || (ch == '{' && containsUnicodeEscape)
+        || (ch == '}' && containsUnicodeEscape)) {
       if (ch == '\\') {
         containsUnicodeEscape = true;
       }
@@ -645,28 +657,9 @@ public class Scanner {
     String value = valueBuilder.toString();
 
     // Process unicode escapes.
-    while (containsUnicodeEscape && value.contains("\\")) {
-      int escapeStart = value.indexOf('\\');
-      try {
-        if (value.charAt(escapeStart + 1) != 'u') {
-          reportError(
-              getPosition(index),
-              "Invalid escape sequence: '\\%c'", value.charAt(escapeStart + 1));
-          return createToken(TokenType.ERROR, beginToken);
-        }
-
-        String hexDigits = value.substring(escapeStart + 2, escapeStart + 6);
-        ch = (char) Integer.parseInt(hexDigits, 0x10);
-        if (!isIdentifierPart(ch)) {
-          reportError(
-              getPosition(index),
-              "Character '%c' (U+%04X) is not a valid identifier char",
-              ch, (int) ch);
-          return createToken(TokenType.ERROR, beginToken);
-        }
-        value = value.substring(0, escapeStart) + ch +
-            value.substring(escapeStart + 6);
-      } catch (NumberFormatException|StringIndexOutOfBoundsException e) {
+    if (containsUnicodeEscape) {
+      value = processUnicodeEscapes(value);
+      if (value == null) {
         reportError(
             getPosition(index),
             "Invalid escape sequence");
@@ -690,6 +683,50 @@ public class Scanner {
     }
 
     return new IdentifierToken(getTokenRange(beginToken), value);
+  }
+
+  /**
+   * Converts unicode escapes in the given string to the equivalent unicode character.
+   * If there are no escapes, returns the input unchanged.
+   * If there is an invalid escape sequence, returns null.
+   */
+  private String processUnicodeEscapes(String value) {
+    while (value.contains("\\")) {
+      int escapeStart = value.indexOf('\\');
+      try {
+        if (value.charAt(escapeStart + 1) != 'u') {
+          return null;
+        }
+
+        String hexDigits;
+        int escapeEnd;
+        if (value.charAt(escapeStart + 2) != '{') {
+          // Simple escape with exactly four hex digits: \\uXXXX
+          escapeEnd = escapeStart + 6;
+          hexDigits = value.substring(escapeStart + 2, escapeEnd);
+        } else {
+          // Escape with braces can have any number of hex digits: \\u{XXXXXXX}
+          escapeEnd = escapeStart + 3;
+          while (Character.digit(value.charAt(escapeEnd), 0x10) >= 0) {
+            escapeEnd++;
+          }
+          if (value.charAt(escapeEnd) != '}') {
+            return null;
+          }
+          hexDigits = value.substring(escapeStart + 3, escapeEnd);
+          escapeEnd++;
+        }
+        char ch = (char) Integer.parseInt(hexDigits, 0x10);
+        if (!isIdentifierPart(ch)) {
+          return null;
+        }
+        value = value.substring(0, escapeStart) + ch +
+            value.substring(escapeEnd);
+      } catch (NumberFormatException|StringIndexOutOfBoundsException e) {
+        return null;
+      }
+    }
+    return value;
   }
 
   private boolean isIdentifierStart(char ch) {
@@ -823,14 +860,28 @@ public class Scanner {
     case 'x':
       return skipHexDigit() && skipHexDigit();
     case 'u':
-      return skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit();
+      if (peek('{')) {
+        nextChar();
+        if (peek('}')) {
+          reportError("Empty unicode escape");
+          return false;
+        }
+        boolean allHexDigits = true;
+        while (!peek('}') && allHexDigits) {
+          allHexDigits = allHexDigits && skipHexDigit();
+        }
+        nextChar();
+        return allHexDigits;
+      } else {
+        return skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit();
+      }
     default:
       return true;
     }
   }
 
   private boolean skipHexDigit() {
-    if (!isHexDigit(peekChar())) {
+    if (!peekHexDigit()) {
       reportError("Hex digit expected");
       return false;
     }
@@ -892,27 +943,13 @@ public class Scanner {
     }
   }
 
+  private boolean peekHexDigit() {
+    return Character.digit(peekChar(), 0x10) >= 0;
+  }
+
   private void skipHexDigits() {
-    while (isHexDigit(peekChar())) {
+    while (peekHexDigit()) {
       nextChar();
-    }
-  }
-
-  private static boolean isHexDigit(char ch) {
-    return valueOfHexDigit(ch) >= 0;
-  }
-
-  private static int valueOfHexDigit(char ch) {
-    switch (ch) {
-    case '0': case '1': case '2': case '3': case '4':
-    case '5': case '6': case '7': case '8': case '9':
-      return ch - '0';
-    case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
-      return ch - 'a' + 10;
-    case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
-      return ch - 'A' + 10;
-    default:
-      return -1;
     }
   }
 

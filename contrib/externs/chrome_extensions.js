@@ -698,6 +698,10 @@ chrome.runtime.Manifest.prototype.description;
 chrome.runtime.Manifest.prototype.oauth2;
 
 
+/** @type {!Array.<(string|!Object)>} */
+chrome.runtime.Manifest.prototype.permissions;
+
+
 
 /**
  * Oauth2 info in the manifest.
@@ -860,39 +864,8 @@ chrome.runtime.onSuspendCanceled;
 chrome.runtime.onUpdateAvailable;
 
 
-/**
- * @constructor
- */
-chrome.runtime.onRestartRequired = function() {};
-
-
-/**
- * @param {function(string)} callback
- */
-chrome.runtime.onRestartRequired.prototype.addListener = function(
-    callback) {};
-
-
-/**
- * @param {function(string)} callback
- */
-chrome.runtime.onRestartRequired.prototype.removeListener = function(
-    callback) {};
-
-
-/**
- * @param {function(string)} callback
- * @return {boolean}
- */
-chrome.runtime.onRestartRequired.prototype.hasListener = function(
-    callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.runtime.onRestartRequired.prototype.hasListeners = function() {};
-
+/** @type {!ChromeStringEvent} */
+chrome.runtime.onRestartRequired;
 
 
 /**
@@ -1759,81 +1732,120 @@ chrome.management = {};
 
 
 /**
- * @param {string} id
- * @param {function(ExtensionInfo): void} callback
+ * @typedef {?{
+ *   showConfirmDialog: (boolean|undefined)
+ * }}
  */
-chrome.management.get = function(id, callback) {};
+chrome.management.InstallOptions;
 
 
 /**
- * @param {function(Array.<ExtensionInfo>): void} callback Callback function.
- * @return {Array.<ExtensionInfo>}
+ * @param {string} id
+ * @param {function(!ExtensionInfo): void=} opt_callback Optional callback
+ *     function.
  */
-chrome.management.getAll = function(callback) {};
+chrome.management.get = function(id, opt_callback) {};
+
+
+/**
+ * @param {function(!Array.<!ExtensionInfo>): void=} opt_callback Optional
+ *     callback function.
+ * @return {!Array.<!ExtensionInfo>}
+ */
+chrome.management.getAll = function(opt_callback) {};
 
 
 /**
  * @param {string} id The id of an already installed extension.
- * @param {function(Array.<string>)=} opt_callback Optional callback function.
+ * @param {function(!Array.<string>)=} opt_callback Optional callback function.
  */
 chrome.management.getPermissionWarningsById = function(id, opt_callback) {};
 
 
 /**
  * @param {string} manifestStr Extension's manifest JSON string.
- * @param {function(Array.<string>)=} opt_callback An optional callback
- *     function.
+ * @param {function(!Array.<string>)=} opt_callback Optional callback function.
  */
 chrome.management.getPermissionWarningsByManifest =
     function(manifestStr, opt_callback) {};
 
 
 /**
- * @param {function(Array.<ExtensionInfo>): void} callback Callback function.
+ * @param {string} id The id of an already installed extension.
+ * @param {function(): void=} opt_callback Optional callback function.
  */
-chrome.management.launchApp = function(id, callback) {};
-
-
-/**
- * @param {string} id
- * @param {boolean} enabled
- * @param {function(): void} callback
- */
-chrome.management.setEnabled = function(id, enabled, callback) {};
+chrome.management.launchApp = function(id, opt_callback) {};
 
 
 /**
  * @param {string} id The id of an already installed extension.
- * @param {(Object|function(): void)=} opt_optionsOrCallback An optional
- *     uninstall options object or an optional callback function.
- * @param {function(): void=} opt_callback An optional callback function.
+ * @param {boolean} enabled Whether this item should be enabled.
+ * @param {function(): void=} opt_callback Optional callback function.
+ */
+chrome.management.setEnabled = function(id, enabled, opt_callback) {};
+
+
+/**
+ * @param {string} id The id of an already installed extension.
+ * @param {(!chrome.management.InstallOptions|function(): void)=}
+ *     opt_optionsOrCallback An optional uninstall options object or an optional
+ *     callback function.
+ * @param {function(): void=} opt_callback Optional callback function.
  */
 chrome.management.uninstall =
     function(id, opt_optionsOrCallback, opt_callback) {};
 
 
 /**
- * @param {(Object|function(): void)=} opt_optionsOrCallback An optional
- *     uninstall options object or an optional callback function.
+ * @param {(!chrome.management.InstallOptions|function(): void)=}
+ *     opt_optionsOrCallback An optional uninstall options object or an optional
+ *     callback function.
  * @param {function(): void=} opt_callback An optional callback function.
  */
 chrome.management.uninstallSelf =
     function(opt_optionsOrCallback, opt_callback) {};
 
 
-/** @type {ChromeEvent} */
+/**
+ * @param {string} id The id of an already installed extension.
+ * @param {function(): void=} opt_callback Optional callback function.
+ */
+chrome.management.createAppShortcut = function(id, opt_callback) {};
+
+
+/**
+ * @param {string} id The id of an already installed extension.
+ * @param {string} launchType The LaunchType enum value to set. Make sure this
+ *     value is in ExtensionInfo.availableLaunchTypes because the available
+ *     launch types vary on different platforms and configurations.
+ * @param {function(): void=} opt_callback Optional callback function.
+ */
+chrome.management.setLaunchType = function(id, launchType, opt_callback) {};
+
+
+/**
+ * @param {string} url The URL of a web page. The scheme of the URL can only be
+ *     "http" or "https".
+ * @param {string} title The title of the generated app.
+ * @param {function(!ExtensionInfo): void=} opt_callback Optional callback
+ *     function.
+ */
+chrome.management.generateAppForLink = function(url, title, opt_callback) {};
+
+
+/** @type {!ChromeExtensionInfoEvent} */
 chrome.management.onDisabled;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeExtensionInfoEvent} */
 chrome.management.onEnabled;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeExtensionInfoEvent} */
 chrome.management.onInstalled;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeStringEvent} */
 chrome.management.onUninstalled;
 
 
@@ -2007,6 +2019,148 @@ chrome.fileBrowserHandle = {};
 
 /** @type {ChromeEvent} */
 chrome.fileBrowserHandle.onExecute;
+
+
+/**
+ * @const
+ * @see https://developer.chrome.com/extensions/gcm
+ */
+chrome.gcm = {};
+
+
+/**
+ * @see https://developer.chrome.com/extensions/gcm#property-MAX_MESSAGE_SIZE
+ * @type {number}
+ */
+chrome.gcm.MAX_MESSAGE_SIZE;
+
+
+/**
+ * Registers the application with GCM. The registration ID will be returned by
+ * the callback. If register is called again with the same list of senderIds,
+ * the same registration ID will be returned.
+ * @see https://developer.chrome.com/extensions/gcm#method-register
+ * @param {!Array.<string>} senderIds A list of server IDs that are allowed to
+ *     send messages to the application.
+ * @param {function(string): void} callback Function called when
+ *     registration completes with registration ID as argument.
+ */
+chrome.gcm.register = function(senderIds, callback) {};
+
+
+/**
+ * Unregisters the application from GCM.
+ * @see https://developer.chrome.com/extensions/gcm#method-unregister
+ * @param {function(): void} callback Called when unregistration is done.
+ */
+chrome.gcm.unregister = function(callback) {};
+
+
+/**
+ * Sends an upstream message using GCM.
+ * @see https://developer.chrome.com/extensions/gcm#method-send
+ * @param {!chrome.gcm.Message} message Message to be sent.
+ * @param {function(string): void} callback Called with message ID.
+ */
+chrome.gcm.send = function(message, callback) {};
+
+
+/**
+ * Outgoing message.
+ * @typedef {?{
+ *   destinationId: string,
+ *   messageId: string,
+ *   timeToLive: (number|undefined),
+ *   data: !Object.<string, string>
+ * }}
+ */
+chrome.gcm.Message;
+
+
+/**
+ * An event, fired when a message is received through GCM.
+ * @see https://developer.chrome.com/extensions/gcm#event-onMessage
+ * @type {!chrome.gcm.OnMessageEvent}
+ */
+chrome.gcm.onMessage;
+
+
+/**
+ * An event, fired when GCM server had to delete messages to the application
+ * from its queue in order to manage its size.
+ * @see https://developer.chrome.com/extensions/gcm#event-onMessagesDeleted
+ * @type {!ChromeEvent}
+ */
+chrome.gcm.onMessagesDeleted;
+
+
+/**
+ * An event indicating problems with sending messages.
+ * @see https://developer.chrome.com/extensions/gcm#event-onSendError
+ * @type {!chrome.gcm.OnSendErrorEvent}
+ */
+chrome.gcm.onSendError;
+
+
+/**
+ * @constructor
+ */
+chrome.gcm.OnMessageEvent = function() {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+chrome.gcm.OnMessageEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+chrome.gcm.OnMessageEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ * @return {boolean}
+ */
+chrome.gcm.OnMessageEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.gcm.OnMessageEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * @constructor
+ */
+chrome.gcm.OnSendErrorEvent = function() {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+chrome.gcm.OnSendErrorEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+chrome.gcm.OnSendErrorEvent.prototype.removeListener = function(callback) {};
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ * @return {boolean}
+ */
+chrome.gcm.OnSendErrorEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.gcm.OnSendErrorEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -3254,7 +3408,7 @@ ExtensionInfo.prototype.mayDisable;
 ExtensionInfo.prototype.enabled;
 
 
-/** @type {string} */
+/** @type {string|undefined} */
 ExtensionInfo.prototype.disabledReason;
 
 
@@ -3262,15 +3416,15 @@ ExtensionInfo.prototype.disabledReason;
 ExtensionInfo.prototype.isApp;
 
 
-/** @type {string} */
+/** @type {string|undefined} */
 ExtensionInfo.prototype.appLaunchUrl;
 
 
-/** @type {string} */
+/** @type {string|undefined} */
 ExtensionInfo.prototype.homepageUrl;
 
 
-/** @type {string} */
+/** @type {string|undefined} */
 ExtensionInfo.prototype.updateUrl;
 
 
@@ -3282,7 +3436,7 @@ ExtensionInfo.prototype.offlineEnabled;
 ExtensionInfo.prototype.optionsUrl;
 
 
-/** @type {Array.<IconInfo>} */
+/** @type {!Array.<!IconInfo>|undefined} */
 ExtensionInfo.prototype.icons;
 
 
@@ -3292,6 +3446,18 @@ ExtensionInfo.prototype.permissions;
 
 /** @type {!Array.<string>} */
 ExtensionInfo.prototype.hostPermissions;
+
+
+/** @type {string} */
+ExtensionInfo.prototype.installType;
+
+
+/** @type {string|undefined} */
+ExtensionInfo.prototype.launchType;
+
+
+/** @type {!Array.<string>|undefined} */
+ExtensionInfo.prototype.availableLaunchTypes;
 
 
 
@@ -3426,22 +3592,23 @@ ChromeWindow.prototype.alwaysOnTop;
 function ChromeEvent() {}
 
 
-/** @param {Function} callback */
+/** @param {!Function} callback */
 ChromeEvent.prototype.addListener = function(callback) {};
 
 
-/** @param {Function} callback */
+/** @param {!Function} callback */
 ChromeEvent.prototype.removeListener = function(callback) {};
 
 
-// TODO: this returns boolean
-/** @param {Function} callback */
+/**
+ * @param {!Function} callback
+ * @return {boolean}
+ */
 ChromeEvent.prototype.hasListener = function(callback) {};
 
 
-// TODO: this returns boolean, and doesn't take any parameters
-/** @param {Function} callback */
-ChromeEvent.prototype.hasListeners = function(callback) {};
+/** @return {boolean} */
+ChromeEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -3569,6 +3736,33 @@ ChromeObjectEvent.prototype.hasListener = function(callback) {};
  * @return {boolean}
  */
 ChromeObjectEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * Event whose listeners take an ExtensionInfo parameter.
+ * @constructor
+ */
+function ChromeExtensionInfoEvent() {}
+
+
+/** @param {function(!ExtensionInfo): void} callback */
+ChromeExtensionInfoEvent.prototype.addListener = function(callback) {};
+
+
+/** @param {function(!ExtensionInfo): void} callback */
+ChromeExtensionInfoEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!ExtensionInfo): void} callback
+ * @return {boolean}
+ */
+ChromeExtensionInfoEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+ChromeExtensionInfoEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -4604,6 +4798,139 @@ chrome.alarms.AlarmCreateInfo;
 
 
 /**
+ * @see https://developer.chrome.com/apps/hid
+ * @const
+ */
+chrome.hid = {};
+
+
+/**
+ * @typedef {?{
+ *   vendorId: number,
+ *   productId: number
+ * }}
+ * @see https://developer.chrome.com/apps/hid#method-getDevices
+ */
+chrome.hid.HidGetDevicesOptions;
+
+/**
+ * @typedef {?{
+ *   usagePage: number,
+ *   usage: number,
+ *   reportIds: !Array.<number>
+ * }}
+* @see https://developer.chrome.com/apps/hid#method-getDevices
+*/
+chrome.hid.HidDeviceUsage;
+
+/**
+ * @typedef {?{
+ *   deviceId: number,
+ *   vendorId: number,
+ *   productId: number,
+ *   collections: !Array.<!chrome.hid.HidDeviceUsage>,
+ *   maxInputReportSize: number,
+ *   maxOutputReportSize: number,
+ *   maxFeatureReportSize: number
+ * }}
+* @see https://developer.chrome.com/apps/hid#method-getDevices
+*/
+chrome.hid.HidDeviceInfo;
+
+
+/**
+ * @typedef {?{
+ *   connectionId: number
+ * }}
+ * @see https://developer.chrome.com/apps/hid#method-connect
+ */
+chrome.hid.HidConnectInfo;
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-getDevices
+ * Enumerates all the connected HID devices specified by the
+ * vendorId/productId/interfaceId tuple.
+ * @param {!chrome.hid.HidGetDevicesOptions} options The properties to search
+ *     for on target devices.
+ * @param {function(!Array.<!Object>)} callback Invoked with a list of
+ *     |HidDeviceInfo|s on complete.
+ */
+chrome.hid.getDevices = function(options, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-connect
+ * Opens a connection to a HID device for communication.
+ * @param {number} deviceId The ID of the device to open.
+ * @param {function(!Object=)} callback Invoked with an |HidConnectInfo| if the
+ *     connection succeeds, or undefined if it fails.
+ */
+chrome.hid.connect = function(deviceId, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-disconnect
+ * Disconnects from a device.
+ * @param {number} connectionId The connection to close.
+ * @param {function()=} opt_callback The callback to invoke once the connection
+ *     is closed.
+ */
+chrome.hid.disconnect = function(connectionId, opt_callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-receive
+ * Receives an input report from an HID device.
+ * @param {number} connectionId The connection from which to receive the report.
+ * @param {number} size The size of the input report to receive.
+ * @param {function(!ArrayBuffer)} callback The callback to invoke with the
+ *     received report.
+ */
+chrome.hid.receive = function(connectionId, size, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-send
+ * Sends an output report to an HID device.
+ * @param {number} connectionId The connection to which to send the report.
+ * @param {number} reportId The report ID to use, or 0 if none.
+ * @param {!ArrayBuffer} data The report data.
+ * @param {function()} callback The callback to invoke once the write is
+ *     finished.
+ */
+chrome.hid.send = function(connectionId, reportId, data, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-receiveFeatureReport
+ * Receives a feature report from the device.
+ * @param {number} connectionId The connection from which to read the feature
+ *     report.
+ * @param {number} reportId The report ID to use, or 0 if none.
+ * @param {number} size The size of the feature report to receive.
+ * @param {function(!ArrayBuffer)} callback The callback to invoke with the
+ *     received report.
+ */
+chrome.hid.receiveFeatureReport =
+    function(connectionId, reportId, size, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-sendFeatureReport
+ * Sends a feature report to the device.
+ * @param {number} connectionId The connection to which to send the feature
+ *     report.
+ * @param {number} reportId The report ID to use, or 0 if none.
+ * @param {!ArrayBuffer} data The report data.
+ * @param {function()} callback The callback to invoke once the write is
+ *     finished.
+ */
+chrome.hid.sendFeatureReport =
+    function(connectionId, reportId, data, callback) {};
+
+
+/**
  * @see http://developer.chrome.com/extensions/notifications.html
  * @const
  */
@@ -5090,6 +5417,7 @@ chrome.system.storage.getAvailableCapacity = function(id, callback) {};
 chrome.usb = {};
 
 
+
 /** @constructor */
 chrome.usb.Device = function Device() {};
 
@@ -5104,6 +5432,7 @@ chrome.usb.Device.prototype.vendorId;
 
 /** @type {number} */
 chrome.usb.Device.prototype.productId;
+
 
 
 /** @constructor */
@@ -5122,36 +5451,70 @@ chrome.usb.ConnectionHandle.prototype.vendorId;
 chrome.usb.ConnectionHandle.prototype.productId;
 
 
-/**
- * @typedef {{
- *   address: number,
- *   type: string,
- *   direction: string,
- *   maximumPacketSize: number,
- *   synchronization: (string|undefined),
- *   usage: (string|undefined),
- *   pollingInterval: (number|undefined)
- * }}
- */
-chrome.usb.InterfaceEndpoint;
+
+/** @constructor */
+chrome.usb.InterfaceEndpoint = function() {};
+
+
+/** @type {number} */
+chrome.usb.InterfaceEndpoint.prototype.address;
+
+
+/** @type {string} */
+chrome.usb.InterfaceEndpoint.prototype.direction;
+
+
+/** @type {number} */
+chrome.usb.InterfaceEndpoint.prototype.maximumPacketSize;
+
+
+/** @type {(string|undefined)} */
+chrome.usb.InterfaceEndpoint.prototype.synchronization;
+
+
+/** @type {(string|undefined)} */
+chrome.usb.InterfaceEndpoint.prototype.usage;
+
+
+/** @type {(number|undefined)} */
+chrome.usb.InterfaceEndpoint.prototype.pollingInterval;
+
+
+
+/** @constructor */
+chrome.usb.InterfaceDescriptor = function() {};
+
+
+/** @type {number} */
+chrome.usb.InterfaceDescriptor.prototype.interfaceNumber;
+
+
+/** @type {number} */
+chrome.usb.InterfaceDescriptor.prototype.alternateSetting;
+
+
+/** @type {number} */
+chrome.usb.InterfaceDescriptor.prototype.interfaceClass;
+
+
+/** @type {number} */
+chrome.usb.InterfaceDescriptor.prototype.interfaceSubclass;
+
+
+/** @type {number} */
+chrome.usb.InterfaceDescriptor.prototype.interfaceProtocol;
+
+
+/** @type {(string|undefined)} */
+chrome.usb.InterfaceDescriptor.prototype.description;
+
+
+/** @type {!Array.<!chrome.usb.InterfaceEndpoint>} */
+chrome.usb.InterfaceDescriptor.prototype.endpoints;
 
 
 /**
- * @typedef {{
- *   interfaceNumber: number,
- *   alternateSetting: number,
- *   interfaceClass: number,
- *   interfaceSubclass: number,
- *   interfaceProtocol: number,
- *   description: (string|undefined),
- *   endpoints: !Array.<!chrome.usb.InterfaceEndpoint>
- * }}
- */
-chrome.usb.InterfaceDescriptor;
-
-
-/**
- * @typedef {{
+ * @typedef {?{
  *   direction: string,
  *   endpoint: number,
  *   length: (number|undefined),
@@ -5160,8 +5523,9 @@ chrome.usb.InterfaceDescriptor;
  */
 chrome.usb.GenericTransferInfo;
 
+
 /**
- * @typedef {{
+ * @typedef {?{
  *   direction: string,
  *   recipient: string,
  *   requestType: string,
@@ -5169,14 +5533,15 @@ chrome.usb.GenericTransferInfo;
  *   value: number,
  *   index: number,
  *   length: (number|undefined),
- *   data: (ArrayBuffer|undefined)
+ *   data: (!ArrayBuffer|undefined)
  * }}
  */
 chrome.usb.ControlTransferInfo;
 
 
+
 /** @constructor */
-chrome.usb.TransferResultInfo = function TransferResultInfo() {};
+chrome.usb.TransferResultInfo = function() {};
 
 
 /** @type {number|undefined} */
@@ -5185,6 +5550,16 @@ chrome.usb.TransferResultInfo.prototype.resultCode;
 
 /** @type {!ArrayBuffer|undefined} */
 chrome.usb.TransferResultInfo.prototype.data;
+
+
+/**
+ * @typedef {?{
+ *   deviceId: number,
+ *   productId: number,
+ *   interfaceId: (number|undefined)
+ * }}
+ */
+chrome.usb.FindDevicesOptions;
 
 
 /**
@@ -5216,7 +5591,8 @@ chrome.usb.openDevice = function(device, callback) {};
 
 /**
  * @see http://developer.chrome.com/apps/usb.html#method-findDevices
- * @param {!Object} options The properties to search for on target devices.
+ * @param {!chrome.usb.FindDevicesOptions} options The properties to search for
+ *     on target devices.
  * @param {function(!Array.<!chrome.usb.ConnectionHandle>)} callback Invoked
  *     with the opened ConnectionHandle on complete.
  */
@@ -5226,10 +5602,10 @@ chrome.usb.findDevices = function(options, callback) {};
 /**
  * @see http://developer.chrome.com/apps/usb.html#method-closeDevice
  * @param {!chrome.usb.ConnectionHandle} handle The connection handle to close.
- * @param {function()=} callback The callback to invoke once the device is
+ * @param {function()=} opt_callback The callback to invoke once the device is
  *     closed.
  */
-chrome.usb.closeDevice = function(handle, callback) {};
+chrome.usb.closeDevice = function(handle, opt_callback) {};
 
 
 /**

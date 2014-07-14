@@ -33,12 +33,16 @@
   </description>
   <inceptionYear>2009</inceptionYear>
 
+  <prerequisites>
+    <maven>2.2.1</maven>
+  </prerequisites>
+
   <scm>
     <connection>
       scm:git:https://github.com/google/closure-compiler.git
     </connection>
     <developerConnection>
-      scm:git:https://github.com/google/closure-compiler.git
+      scm:git:git@github.com:google/closure-compiler.git
     </developerConnection>
     <url>
       https://github.com/google/closure-compiler
@@ -106,7 +110,6 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
     <jdk.version>1.7</jdk.version>
     <junit.version>4.11</junit.version>
@@ -117,6 +120,11 @@
     <pluginManagement>
       <!-- set versions/conf of common plugins for reproducibility, ordered alphabetically by owner -->
       <plugins>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>2.4.0</version>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-antrun-plugin</artifactId>
@@ -148,12 +156,12 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.16</version>
+          <version>2.17</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-shade-plugin</artifactId>
-          <version>2.2</version>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>2.4</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -173,4 +181,21 @@
       </plugins>
     </pluginManagement>
   </build>
+
+  <profiles>
+    <profile>
+      <id>parallel-test</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <forkCount>1C</forkCount>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

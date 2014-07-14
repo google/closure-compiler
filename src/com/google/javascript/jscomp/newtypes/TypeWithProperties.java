@@ -16,87 +16,23 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.collect.ImmutableSet;
+/**
+ * A type that can contain properties,
+ * such as an ObjectType, NominalType, or a Namespace.
+ */
+interface TypeWithProperties {
+  /** Get the inferred type of the given property */
+  JSType getProp(QualifiedName qname);
 
-abstract class TypeWithProperties {
+  /** Get the declared type of the given property */
+  JSType getDeclaredProp(QualifiedName qname);
 
-  protected abstract JSType getProp(QualifiedName qname);
+  /** Return whether this type contains any form of property */
+  boolean mayHaveProp(QualifiedName qname);
 
-  protected abstract JSType getDeclaredProp(QualifiedName qname);
+  /** Return whether this type contains a required property */
+  boolean hasProp(QualifiedName qname);
 
-  protected abstract boolean mayHaveProp(QualifiedName qname);
-
-  protected abstract boolean hasProp(QualifiedName qname);
-
-  protected abstract boolean hasConstantProp(QualifiedName qname);
-
-  static JSType getProp(
-      ImmutableSet<? extends TypeWithProperties> types, QualifiedName qname) {
-    if (types == null) {
-      return null;
-    }
-    JSType ptype = JSType.BOTTOM;
-    for (TypeWithProperties t : types) {
-      if (t.mayHaveProp(qname)) {
-        ptype = JSType.join(ptype, t.getProp(qname));
-      }
-    }
-    return ptype.isBottom() ? null : ptype;
-  }
-
-  static JSType getDeclaredProp(
-      ImmutableSet<? extends TypeWithProperties> types, QualifiedName qname) {
-    if (types == null) {
-      return null;
-    }
-    JSType ptype = JSType.BOTTOM;
-    for (TypeWithProperties t : types) {
-      if (t.mayHaveProp(qname)) {
-        JSType declType = t.getDeclaredProp(qname);
-        if (declType != null) {
-          ptype = JSType.join(ptype, declType);
-        }
-      }
-    }
-    return ptype.isBottom() ? null : ptype;
-  }
-
-  static boolean mayHaveProp(
-      ImmutableSet<? extends TypeWithProperties> types, QualifiedName qname) {
-    if (types == null) {
-      return false;
-    }
-    for (TypeWithProperties t : types) {
-      if (t.mayHaveProp(qname)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  static boolean hasProp(
-      ImmutableSet<? extends TypeWithProperties> types, QualifiedName qname) {
-    if (types == null) {
-      return false;
-    }
-    for (TypeWithProperties t : types) {
-      if (!t.hasProp(qname)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  static boolean hasConstantProp(
-      ImmutableSet<? extends TypeWithProperties> types, QualifiedName qname) {
-    if (types == null) {
-      return false;
-    }
-    for (TypeWithProperties t : types) {
-      if (t.hasConstantProp(qname)) {
-        return true;
-      }
-    }
-    return false;
-  }
+  /** Return whether this type contains a constant property */
+  boolean hasConstantProp(QualifiedName qname);
 }
