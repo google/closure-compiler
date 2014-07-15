@@ -121,7 +121,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         declareLHS(declarationScope, child);
       }
     } else {
-      throw new RuntimeException("Cannot declare a variable for node: " + lhs);
+      Preconditions.checkState(lhs.isEmpty());
     }
   }
 

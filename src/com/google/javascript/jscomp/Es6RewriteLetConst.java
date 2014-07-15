@@ -314,7 +314,7 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
                 while (declaration.getChildCount() > 1) {
                   Node name = declaration.getLastChild();
                   grandParent.addChildAfter(
-                      IR.nameDeclaration(
+                      IR.declaration(
                           name.detachFromParent(), declaration.getType())
                           .useSourceInfoIfMissingFromForTree(declaration),
                       declaration);

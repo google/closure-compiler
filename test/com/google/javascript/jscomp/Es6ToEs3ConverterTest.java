@@ -1297,6 +1297,35 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     testSame("({'a' : 1, f : 1, b : 1})");
   }
 
+  public void testArrayDestructuring() {
+    test(
+        "var [x,y] = z();",
+        Joiner.on('\n').join(
+            "var $jscomp$destructuring$var0 = z();",
+            "var x = $jscomp$destructuring$var0[0];",
+            "var y = $jscomp$destructuring$var0[1];"));
+    test(
+        "var [a,b] = c();"
+        + "var [x,y] = z();",
+        Joiner.on('\n').join(
+            "var $jscomp$destructuring$var0 = c();",
+            "var a = $jscomp$destructuring$var0[0];",
+            "var b = $jscomp$destructuring$var0[1];",
+            "var $jscomp$destructuring$var1 = z();",
+            "var x = $jscomp$destructuring$var1[0];",
+            "var y = $jscomp$destructuring$var1[1];"));
+  }
+
+  public void testArrayDestructuringParam() {
+    test("function f([x,y]) { use(x); use(y); }", null,
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
+  public void testArrayDestructuringRest() {
+    test("let [one, ...others] = f();", null,
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
   public void testSimpleTemplateString() {
     test("``", "\"\"");
     test("`hello`", "\"hello\"");

@@ -63,6 +63,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   private static final String FRESH_SPREAD_VAR = "$jscomp$spread$args";
 
+  private static final String DESTRUCTURING_TEMP_VAR = "$jscomp$destructuring$var";
+
+  private int destructuringVarCounter = 0;
+
   private static final String FRESH_COMP_PROP_VAR = "$jscomp$compprop";
 
   // The name of the property-copying function, defined in runtime_lib.js
@@ -111,7 +115,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         checkMemberDefs(n);
         break;
       case Token.ARRAY_COMP:
-      case Token.ARRAY_PATTERN:
       case Token.OBJECT_PATTERN:
         cannotConvertYet(n, Token.name(n.getType()));
         // Don't bother visiting the children of a node if we
@@ -164,7 +167,76 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         break;
       case Token.TEMPLATELIT:
         visitTemplateLiteral(n);
+        break;
+      case Token.ARRAY_PATTERN:
+        for (Node child : n.children()) {
+          if (child.isRest()) {
+            cannotConvertYet(child, "REST node in an ARRAY_PATTERN");
+            return;
+          }
+        }
+        visitArrayPattern(t, n, parent);
+        break;
     }
+  }
+
+  private void visitArrayPattern(NodeTraversal t, Node arrayPattern, Node parent) {
+    Node rhs, nodeToDetach;
+    if (NodeUtil.isNameDeclaration(parent)) {
+      // The array pattern is the only child, because Es6SplitVariableDeclarations
+      // has already run.
+      Preconditions.checkState(arrayPattern.getNext() == null);
+      rhs = arrayPattern.getLastChild();
+      nodeToDetach = parent;
+    } else if (parent.isAssign()) {
+      rhs = arrayPattern.getNext();
+      nodeToDetach = parent.getParent();
+      Preconditions.checkState(nodeToDetach.isExprResult());
+    } else if (parent.isArrayPattern()) {
+      // This is a nested array pattern. Don't do anything now; we'll visit it
+      // after visiting the parent.
+      return;
+    } else {
+      cannotConvertYet(arrayPattern, "ARRAY_PATTERN that is a child of a "
+          + Token.name(parent.getType()));
+      return;
+    }
+
+    // Convert 'var [x, y] = rhs' to:
+    // var temp = rhs;
+    // var x = temp[0];
+    // var y = temp[1];
+    String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
+    Node tempDecl = IR.var(IR.name(tempVarName), rhs.detachFromParent())
+        .useSourceInfoFromForTree(arrayPattern);
+    nodeToDetach.getParent().addChildBefore(tempDecl, nodeToDetach);
+
+    int i = 0;
+    for (Node child = arrayPattern.getFirstChild(), next;
+        child != null;
+        child = next, i++) {
+      next = child.getNext();
+      if (child.isEmpty()) {
+        continue;
+      }
+
+      Node newRHS = IR.getelem(IR.name(tempVarName), IR.number(i));
+      Node newNode;
+      if (parent.isAssign()) {
+        Node assignment = IR.assign(child.detachFromParent(), newRHS);
+        newNode = IR.exprResult(assignment);
+      } else {
+        newNode = IR.declaration(
+            child.detachFromParent(), newRHS, parent.getType())
+                .useSourceInfoFromForTree(arrayPattern);
+      }
+
+      nodeToDetach.getParent().addChildBefore(newNode, nodeToDetach);
+      // Explicitly visit the new nodes to translate nested destructuring.
+      visit(t, child, newNode);
+    }
+    nodeToDetach.detachFromParent();
+    compiler.reportCodeChange();
   }
 
   /**

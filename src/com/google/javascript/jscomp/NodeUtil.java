@@ -1783,10 +1783,23 @@ public final class NodeUtil {
   }
 
   /**
-   * Is this node a name declaration?
-   *
    * @param n The node
-   * @return True if {@code n} is VAR, LET or CONST
+   * @return True if {@code n} is a VAR, LET or CONST that contains a
+   *     destructuring pattern.
+   */
+  static boolean isDestructuringDeclaration(Node n) {
+    if (n.isVar() || n.isLet() || n.isConst()) {
+      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+        if (c.isArrayPattern() || c.isObjectPattern()) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Is this node declaring a block-scoped variable?
    */
   static boolean isLexicalDeclaration(Node n) {
     return n.isLet() || n.isConst()

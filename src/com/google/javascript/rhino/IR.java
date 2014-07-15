@@ -145,24 +145,30 @@ public class IR {
     return paramList;
   }
 
-  public static Node var(Node name, Node value) {
-    return nameDeclaration(name, value, Token.VAR);
+  public static Node var(Node lhs, Node value) {
+    return declaration(lhs, value, Token.VAR);
   }
 
-  public static Node var(Node name) {
-    return nameDeclaration(name, Token.VAR);
+  public static Node var(Node lhs) {
+    return declaration(lhs, Token.VAR);
   }
 
-  public static Node nameDeclaration(Node name, int type) {
-    Preconditions.checkState(name.isName());
-    return new Node(type, name);
+  public static Node declaration(Node lhs, int type) {
+    Preconditions.checkState(
+        lhs.isName() || lhs.isArrayPattern() || lhs.isObjectPattern());
+    return new Node(type, lhs);
   }
 
-  public static Node nameDeclaration(Node name, Node value, int type) {
-    Preconditions.checkState(name.isName() && !name.hasChildren());
+  public static Node declaration(Node lhs, Node value, int type) {
+    if (lhs.isName()) {
+      Preconditions.checkState(!lhs.hasChildren());
+    } else {
+      Preconditions.checkState(lhs.isArrayPattern() || lhs.isObjectPattern());
+    }
     Preconditions.checkState(mayBeExpression(value));
-    name.addChildToFront(value);
-    return new Node(type, name);
+
+    lhs.addChildToBack(value);
+    return new Node(type, lhs);
   }
 
   public static Node returnNode() {
