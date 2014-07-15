@@ -294,6 +294,12 @@ public abstract class JSType {
     return foundLooseStruct && !foundNonLooseStruct;
   }
 
+  public boolean isLoose() {
+    ImmutableSet<ObjectType> objs = getObjs();
+    return objs != null && objs.size() == 1
+        && Iterables.getOnlyElement(objs).isLoose();
+  }
+
   public boolean isDict() {
     if (getObjs() == null) {
       return false;

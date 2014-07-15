@@ -2306,6 +2306,8 @@ public class NewTypeInference implements CompilerPass {
 
         String varName = expr.getString();
         JSType inferredType = envGetType(outEnv, varName);
+        println(varName, "'s inferredType: ", inferredType,
+            " requiredType:  ", requiredType);
         if (inferredType == null) { // Needed for the free vars in the tests
           return new EnvTypePair(outEnv, JSType.UNKNOWN);
         }
@@ -2315,6 +2317,7 @@ public class NewTypeInference implements CompilerPass {
             preciseType.hasNonScalar()) {
           preciseType = preciseType.withLoose();
         }
+        println(varName, "'s preciseType: ", preciseType);
 
         if (!preciseType.isInhabitable()) {
           // If there is a type mismatch, we can propagate the previously
@@ -2869,33 +2872,48 @@ public class NewTypeInference implements CompilerPass {
     JSType reqObjType =
         pickReqObjType(obj).withLoose().withProperty(pname, type);
     LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv, reqObjType, true);
+    TypeEnv lvalueEnv = lvalue.env;
     JSType lvalueType = lvalue.type;
     if (!lvalueType.isSubtypeOf(JSType.TOP_OBJECT)) {
       warnings.add(JSError.make(obj, PROPERTY_ACCESS_ON_NONOBJECT,
               pnameAsString, lvalueType.toString()));
-      return new LValueResultFwd(lvalue.env, type, null, null);
+      return new LValueResultFwd(lvalueEnv, type, null, null);
     }
     Node parent = obj.getParent();
     if (parent.isGetProp() &&
         parent.getParent().isAssign() &&
         mayWarnAboutPropCreation(pname, parent, lvalueType)) {
-      return new LValueResultFwd(lvalue.env, type, null, null);
+      return new LValueResultFwd(lvalueEnv, type, null, null);
     }
     if (!insideQualifiedName &&
         mayWarnAboutConstProp(parent, lvalueType, pname)) {
-      return new LValueResultFwd(lvalue.env, type, null, null);
+      return new LValueResultFwd(lvalueEnv, type, null, null);
     }
-    // Warn for inexistent property either on the non-top-level of a qualified
-    // name, or for assignment ops that won't create a new property.
-    boolean warnForInexistentProp = insideQualifiedName ||
-        parent.getParent().getType() != Token.ASSIGN;
-    if (warnForInexistentProp &&
-        !lvalueType.isUnknown() &&
-        !lvalueType.isDict() &&
-        !lvalueType.mayHaveProp(pname)) {
-      warnings.add(JSError.make(obj, TypeCheck.INEXISTENT_PROPERTY,
-            pnameAsString, lvalueType.toString()));
-      return new LValueResultFwd(lvalue.env, type, null, null);
+    if (!lvalueType.mayHaveProp(pname)) {
+      if (insideQualifiedName && lvalueType.isLoose()) {
+        // For loose objects, create the inner property if it doesn't exist.
+        lvalueType = lvalueType.withProperty(
+            pname, JSType.TOP_OBJECT.withLoose());
+        if (lvalueType.isDict() && parent.isGetProp()) {
+          lvalueType = lvalueType.specialize(JSType.TOP_STRUCT);
+        } else if (lvalueType.isStruct() && parent.isGetElem()) {
+          lvalueType = lvalueType.specialize(JSType.TOP_DICT);
+        }
+        lvalueEnv = updateLvalueTypeInEnv(
+            lvalueEnv, obj, lvalue.ptr, lvalueType);
+      } else {
+        // Warn for inexistent prop either on the non-top-level of a qualified
+        // name, or for assignment ops that won't create a new property.
+        boolean warnForInexistentProp = insideQualifiedName ||
+            parent.getParent().getType() != Token.ASSIGN;
+        if (warnForInexistentProp &&
+            !lvalueType.isUnknown() &&
+            !lvalueType.isDict()) {
+          warnings.add(JSError.make(obj, TypeCheck.INEXISTENT_PROPERTY,
+                  pnameAsString, lvalueType.toString()));
+          return new LValueResultFwd(lvalueEnv, type, null, null);
+        }
+      }
     }
     if (parent.isGetElem()) {
       mayWarnAboutStructPropAccess(obj, lvalueType);
@@ -2909,10 +2927,10 @@ public class NewTypeInference implements CompilerPass {
       Preconditions.checkNotNull(funType);
       JSType formalType = funType.getFormalType(0);
       Preconditions.checkState(!formalType.isBottom());
-      return new LValueResultFwd(lvalue.env, formalType, formalType, null);
+      return new LValueResultFwd(lvalueEnv, formalType, formalType, null);
     }
     return new LValueResultFwd(
-        lvalue.env,
+        lvalueEnv,
         lvalueType.mayHaveProp(pname) ?
             lvalueType.getProp(pname) : JSType.UNKNOWN,
         lvalueType.mayHaveProp(pname) ?

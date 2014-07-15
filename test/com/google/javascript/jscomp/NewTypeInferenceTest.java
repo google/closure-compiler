@@ -6066,6 +6066,20 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function Foo() {}\n" +
         "function f(obj) { obj['prop']; return obj; }\n" +
         "var /** !Foo */ x = f({ prop: 123 });");
+
+    // We infer unrestricted loose obj for mixed . and [] access
+    checkNoWarnings(
+        "function f(obj) {\n" +
+        "  if (obj['p1']) {\n" +
+        "    obj.p2.p3 = 123;\n" +
+        "  }\n" +
+        "}");
+
+    checkNoWarnings(
+        "function f(obj) {\n" +
+        "  return obj['a'] + obj.b;\n" +
+        "}\n" +
+        "f({ a: 123, 'b': 234 });");
   }
 
   public void testStructDictInheritance() {

@@ -112,6 +112,10 @@ public class ObjectType implements TypeWithProperties {
     return objectKind.isStruct();
   }
 
+  boolean isLoose() {
+    return isLoose;
+  }
+
   boolean isLooseStruct() {
     return isLoose && objectKind.isStruct();
   }
@@ -172,6 +176,7 @@ public class ObjectType implements TypeWithProperties {
     return newObjs.build();
   }
 
+  // When type is null, this method removes the property.
   // If the property is already declared, but isDeclared is false, be careful
   // to not un-declare it.
   // If the property is already constant, but isConstant is false, be careful
@@ -230,6 +235,7 @@ public class ObjectType implements TypeWithProperties {
         nominalType, newProps, fn, isLoose, objectKind);
   }
 
+  // When type is null, this method removes the property.
   ObjectType withProperty(QualifiedName qname, JSType type) {
     return withPropertyHelper(qname, type, false, false);
   }
