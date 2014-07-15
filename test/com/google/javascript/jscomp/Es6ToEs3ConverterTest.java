@@ -1313,6 +1313,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testSimpleGenerator() {
+    // TODO(mattloring): expand these tests once a translation strategy is decided upon.
     test("function *f() {}", Joiner.on('\n').join(
       "function f() {",
       "  return { $$iterator: function() {",
@@ -1345,4 +1346,5 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       "}"
     ));
   }
+
 }

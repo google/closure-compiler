@@ -2162,7 +2162,7 @@ class NewIRFactory {
             hexDigits = value.substring(cur + 2, escapeEnd);
             escapeEnd++;
           }
-          result.append((char) Integer.parseInt(hexDigits, 0x10));
+          result.append(Character.toChars(Integer.parseInt(hexDigits, 0x10)));
           cur = escapeEnd - 1;
           break;
         default:

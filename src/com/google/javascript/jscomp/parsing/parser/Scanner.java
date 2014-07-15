@@ -716,6 +716,7 @@ public class Scanner {
           hexDigits = value.substring(escapeStart + 3, escapeEnd);
           escapeEnd++;
         }
+        //TODO(mattloring): Allow code points greater than the size of a char
         char ch = (char) Integer.parseInt(hexDigits, 0x10);
         if (!isIdentifierPart(ch)) {
           return null;
