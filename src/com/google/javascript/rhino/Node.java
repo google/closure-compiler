@@ -2678,4 +2678,8 @@ public class Node implements Cloneable, Serializable {
   public boolean isWith() {
     return this.getType() == Token.WITH;
   }
+
+  public boolean isYield() {
+    return this.getType() == Token.YIELD;
+  }
 }

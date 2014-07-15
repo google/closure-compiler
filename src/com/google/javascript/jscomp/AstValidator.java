@@ -297,10 +297,21 @@ public class AstValidator implements CompilerPass {
         validateTemplateLit(n);
         return;
 
+      case Token.YIELD:
+        validateYield(n);
+        return;
+
       default:
         violation("Expected expression but was "
             + Token.name(n.getType()), n);
     }
+  }
+
+  private void validateYield(Node n) {
+    validateEs6Feature("yield", n);
+    validateNodeType(Token.YIELD, n);
+    validateChildCount(n, Token.arity(Token.YIELD));
+    validateExpression(n.getFirstChild());
   }
 
   private void validateTemplateLit(Node n) {
