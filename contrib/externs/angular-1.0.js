@@ -38,8 +38,10 @@
  *     $window
  *
  * TODO: Resolve two issues with angular.$http
- *         1) angular.$http cannot be declared as a callable type.
- *            Its helper methods should be used instead.
+ *         1) angular.$http isn't declared as a
+ *            callable type. It should be declared as a function, and properties
+ *            added following the technique used by $timeout, $parse and
+ *            $interval.
  *         2) angular.$http.delete cannot be added as an extern
  *            as it is a reserved keyword.
  *            Its use is potentially not supported in IE.
@@ -1195,6 +1197,33 @@ angular.$interpolateProvider.startSymbol;
 
 /** @type {function(string)} */
 angular.$interpolateProvider.endSymbol;
+
+/******************************************************************************
+ * $interval Service
+ *****************************************************************************/
+
+/**
+ * @typedef {
+ *  function(function(), number=, number=, boolean=):angular.$q.Promise
+ * }
+ */
+angular.$interval;
+
+/**
+ * Augment the angular.$interval type definition by reopening the type via an
+ * artificial angular.$interval instance.
+ *
+ * This allows us to define methods on function objects which is something
+ * that can't be expressed via typical type annotations.
+ *
+ * @type {angular.$interval}
+ */
+angular.$interval_;
+
+/**
+ * @type {function(!angular.$q.Promise):boolean}
+ */
+angular.$interval_.cancel = function(promise) {};
 
 /******************************************************************************
  * $location Service
