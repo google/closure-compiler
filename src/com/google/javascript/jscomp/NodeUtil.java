@@ -2194,6 +2194,24 @@ public final class NodeUtil {
             || n.getParent().getParent().isFunction());
   }
 
+  static boolean isBlockScopedFunctionDeclaration(Node n) {
+    if (!isFunctionDeclaration(n)) {
+      return false;
+    }
+    Node current = n.getParent();
+    while (current != null) {
+      if (current.isBlock()) {
+        return !current.getParent().isFunction();
+      } else if (current.isFunction() || current.isScript()) {
+        return false;
+      } else {
+        Preconditions.checkArgument(current.isLabel());
+        current = current.getParent();
+      }
+    }
+    return false;
+  }
+
   /**
    * Is a FUNCTION node an function expression? An function expression is one
    * that has either no name or a name that is not added to the current scope.

@@ -397,7 +397,9 @@ class Normalize implements CompilerPass {
           break;
 
         case Token.FUNCTION:
-          normalizeFunctionDeclaration(n);
+          if (maybeNormalizeFunctionDeclaration(n)) {
+            reportCodeChange("Function declaration");
+          }
           break;
 
         case Token.NAME:
@@ -466,12 +468,14 @@ class Normalize implements CompilerPass {
      *
      * @see https://github.com/google/closure-compiler/pull/429
      */
-    private void normalizeFunctionDeclaration(Node n) {
+    static boolean maybeNormalizeFunctionDeclaration(Node n) {
       Preconditions.checkState(n.isFunction());
       if (!NodeUtil.isFunctionExpression(n)
           && !NodeUtil.isHoistedFunctionDeclaration(n)) {
         rewriteFunctionDeclaration(n);
+        return true;
       }
+      return false;
     }
 
     /**
@@ -490,7 +494,7 @@ class Normalize implements CompilerPass {
      *         LP
      *         BLOCK
      */
-    private void rewriteFunctionDeclaration(Node n) {
+    private static void rewriteFunctionDeclaration(Node n) {
       // Prepare a spot for the function.
       Node oldNameNode = n.getFirstChild();
       Node fnNameNode = oldNameNode.cloneNode();
@@ -499,13 +503,15 @@ class Normalize implements CompilerPass {
       // Prepare the function
       oldNameNode.setString("");
 
-      // Move the function
+      // Move the function if it's not the child of a label node
       Node parent = n.getParent();
-      parent.removeChild(n);
-      parent.addChildToFront(var);
+      if (parent.isLabel()) {
+        parent.replaceChild(n, var);
+      } else {
+        parent.removeChild(n);
+        parent.addChildToFront(var);
+      }
       fnNameNode.addChildToFront(n);
-
-      reportCodeChange("Function declaration");
     }
 
     /**
@@ -544,6 +550,7 @@ class Normalize implements CompilerPass {
       Preconditions.checkArgument(n.isLabel());
 
       Node last = n.getLastChild();
+      // TODO(moz): Avoid adding blocks for cases like "label: let x;"
       switch (last.getType()) {
         case Token.LABEL:
         case Token.BLOCK:

@@ -21,6 +21,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.Normalize.NormalizeStatements;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -44,7 +45,7 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
 
   private final AbstractCompiler compiler;
   private final Map<Node, Map<String, String>> renameMap = new LinkedHashMap<>();
-  private final Set<Node> letConsts = new HashSet<>();
+  private final Set<Node> blockScopedDeclarations = new HashSet<>();
 
   public Es6RewriteLetConst(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -53,20 +54,22 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     // TODO(moz): Add support for renaming classes.
-    if (!n.isLet() && !n.isConst()) {
+    if (!n.isLet() && !n.isConst() && !NodeUtil.isBlockScopedFunctionDeclaration(n)) {
       return;
     }
 
     Scope scope = t.getScope();
     Node nameNode = n.getFirstChild();
-    if (!nameNode.hasChildren()
+    if (!n.isFunction() && !nameNode.hasChildren()
         && (parent == null || !NodeUtil.isEnhancedFor(parent))) {
       nameNode.addChildToFront(
           IR.name("undefined").useSourceInfoIfMissingFrom(nameNode));
     }
 
     String oldName = nameNode.getString();
-    letConsts.add(n);
+    if (n.isLet() || n.isConst()) {
+      blockScopedDeclarations.add(n);
+    }
     Scope hoistScope = scope.getClosestHoistScope();
     boolean doRename = false;
     if (scope != hoistScope) {
@@ -103,12 +106,14 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
         compiler, Lists.newArrayList(externs, root), transformer);
     transformer.transformLoopClosure();
 
-    if (!letConsts.isEmpty()) {
-      for (Node n : letConsts) {
+    if (!blockScopedDeclarations.isEmpty()) {
+      for (Node n : blockScopedDeclarations) {
         n.setType(Token.VAR);
       }
       compiler.reportCodeChange();
     }
+    NodeTraversal.traverseRoots(compiler, Lists.newArrayList(externs, root),
+        new RewriteBlockScopedFunctionDeclaration());
   }
 
   @Override
@@ -120,11 +125,25 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
     NodeTraversal.traverse(compiler, scriptRoot, transformer);
     transformer.transformLoopClosure();
 
-    if (!letConsts.isEmpty()) {
-      for (Node n : letConsts) {
+    if (!blockScopedDeclarations.isEmpty()) {
+      for (Node n : blockScopedDeclarations) {
         n.setType(Token.VAR);
       }
       compiler.reportCodeChange();
+    }
+    NodeTraversal.traverse(compiler, scriptRoot, new RewriteBlockScopedFunctionDeclaration());
+  }
+
+  private class RewriteBlockScopedFunctionDeclaration extends
+      NodeTraversal.AbstractPostOrderCallback {
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isFunction()) {
+        if (NormalizeStatements.maybeNormalizeFunctionDeclaration(n)) {
+          compiler.reportCodeChange();
+        }
+      }
     }
   }
 

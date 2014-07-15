@@ -265,7 +265,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
 
   /**
    * Determines whether the name should be declared at current lexical scope.
-   * Assume the parent node is a BLOCK, FOR, FOR_OF or SCRIPT.
+   * Assume the parent node is a BLOCK, FOR, FOR_OF, SCRIPT or LABEL.
    * TODO(moz): Make sure this assumption holds.
    *
    * @param n The declaration node to be checked
@@ -274,11 +274,21 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
   private boolean isNodeAtCurrentLexicalScope(Node n) {
     Node parent = n.getParent();
     Preconditions.checkState(parent.isBlock() || parent.isFor()
-        || parent.isForOf() || parent.isScript());
+        || parent.isForOf() || parent.isScript() || parent.isLabel());
 
-    return parent == scope.getRootNode() || parent.isScript()
+    if (parent == scope.getRootNode() || parent.isScript()
         || (parent.getParent().isCatch()
-            && parent.getParent().getParent() == scope.getRootNode());
+            && parent.getParent().getParent() == scope.getRootNode())) {
+      return true;
+    }
+
+    while (parent.isLabel()) {
+      if (parent.getParent() == scope.getRootNode()) {
+        return true;
+      }
+      parent = parent.getParent();
+    }
+    return false;
   }
 
   @Override

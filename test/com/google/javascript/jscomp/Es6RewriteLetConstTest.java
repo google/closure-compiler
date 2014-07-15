@@ -219,7 +219,7 @@ public class Es6RewriteLetConstTest extends CompilerTestCase {
         "}"
     ), Joiner.on('\n').join(
         "for (var i in [0, 1]) {",
-        "  function f() {",
+        "  var f = function() {",
         "    var i = 0;",
         "    if (true) {",
         "      var i$0 = 1;",
@@ -743,6 +743,28 @@ public class Es6RewriteLetConstTest extends CompilerTestCase {
         "        };",
         "    }($jscomp$loop$0));",
         "  }",
+        "}"
+    ));
+  }
+
+  public void testBlockScopedFunctionDeclaration() {
+    test(Joiner.on('\n').join(
+        "function f() {",
+        "  var x = 1;",
+        "  if (a) {",
+        "    label0: label1: label2:",
+        "      function x() { return x; }",
+        "  }",
+        "  return x;",
+        "}"
+    ), Joiner.on('\n').join(
+        "function f() {",
+        "  var x = 1;",
+        "  if (a) {",
+        "    label0: label1: label2:",
+        "      var x$0 = function() { return x$0; };",
+        "  }",
+        "  return x;",
         "}"
     ));
   }
