@@ -209,7 +209,7 @@ class GlobalTypeInfo implements CompilerPass {
       TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED,
       VarCheck.UNDEFINED_VAR_ERROR,
       VariableReferenceCheck.REDECLARED_VARIABLE,
-      VariableReferenceCheck.UNDECLARED_REFERENCE);
+      VariableReferenceCheck.EARLY_REFERENCE);
 
   // An out-to-in list of the scopes, built during CollectNamedTypes
   // This will be reversed at the end of GlobalTypeInfo to make sure
@@ -885,7 +885,7 @@ class GlobalTypeInfo implements CompilerPass {
             } else {
               for (Node useBeforeDeclNode : undeclaredVars.get(name)) {
                 warnings.add(JSError.make(useBeforeDeclNode,
-                    VariableReferenceCheck.UNDECLARED_REFERENCE, name));
+                    VariableReferenceCheck.EARLY_REFERENCE, name));
               }
               undeclaredVars.removeAll(name);
               if (parent.isCatch()) {

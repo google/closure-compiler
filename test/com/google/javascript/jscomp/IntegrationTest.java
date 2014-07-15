@@ -418,7 +418,7 @@ public class IntegrationTest extends IntegrationTestCase {
     options.checkSymbols = true;
     options.aggressiveVarCheck = CheckLevel.ERROR;
     test(options, "x = 3; var x = 5;",
-         VariableReferenceCheck.UNDECLARED_REFERENCE);
+         VariableReferenceCheck.EARLY_REFERENCE);
   }
 
   public void testInferTypes() {

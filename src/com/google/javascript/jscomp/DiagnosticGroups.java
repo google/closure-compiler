@@ -221,7 +221,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("checkVars",
           VarCheck.UNDEFINED_VAR_ERROR,
           VarCheck.VAR_MULTIPLY_DECLARED_ERROR,
-          VariableReferenceCheck.UNDECLARED_REFERENCE,
+          VariableReferenceCheck.EARLY_REFERENCE,
           VariableReferenceCheck.REDECLARED_VARIABLE);
 
   public static final DiagnosticGroup CHECK_USELESS_CODE =

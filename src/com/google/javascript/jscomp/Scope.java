@@ -700,7 +700,7 @@ public class Scope
   }
 
   public boolean isFunctionBlockScope() {
-    return parent != null && parent.getRootNode().isFunction();
+    return isBlockScope() && parent != null && parent.getRootNode().isFunction();
   }
 
   public Scope getClosestHoistScope() {

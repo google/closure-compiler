@@ -588,7 +588,7 @@ public class CommandLineRunnerTest extends TestCase {
     args.add("--jscomp_off=es5Strict");
     args.add("-W=VERBOSE");
     test("if (true) { f(); function f() {} }",
-         VariableReferenceCheck.UNDECLARED_REFERENCE);
+         VariableReferenceCheck.EARLY_REFERENCE);
   }
 
   public void testHoistedFunction2() {

@@ -197,7 +197,7 @@ public class VariableReferenceCheckTest extends CompilerTestCase {
    * Expects the JS to generate one bad-write warning.
    */
   private void assertUndeclared(String js) {
-    testSame(js, VariableReferenceCheck.UNDECLARED_REFERENCE);
+    testSame(js, VariableReferenceCheck.EARLY_REFERENCE);
   }
 
   /**

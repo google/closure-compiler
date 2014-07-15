@@ -216,9 +216,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testUseBeforeDeclaration() {
-    typeCheck("x; var x;", VariableReferenceCheck.UNDECLARED_REFERENCE);
+    typeCheck("x; var x;", VariableReferenceCheck.EARLY_REFERENCE);
 
-    typeCheck("x = 7; var x;", VariableReferenceCheck.UNDECLARED_REFERENCE);
+    typeCheck("x = 7; var x;", VariableReferenceCheck.EARLY_REFERENCE);
 
     checkNoWarnings(
         "function f() { return 9; }\n" +
@@ -1425,7 +1425,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "n.foo = 5; var n;",
         ImmutableList.of(
-            VariableReferenceCheck.UNDECLARED_REFERENCE,
+            VariableReferenceCheck.EARLY_REFERENCE,
             NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT));
   }
 
@@ -4202,7 +4202,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  return 123;\n" +
         "}",
         ImmutableList.of(
-            VariableReferenceCheck.UNDECLARED_REFERENCE,
+            VariableReferenceCheck.EARLY_REFERENCE,
             NewTypeInference.INVALID_OPERAND_TYPE));
 
     typeCheck(
@@ -4230,11 +4230,11 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   public void testTryCatch() {
     typeCheck(
         "try { e; } catch (e) {}",
-        VariableReferenceCheck.UNDECLARED_REFERENCE);
+        VariableReferenceCheck.EARLY_REFERENCE);
 
     typeCheck(
         "e; try {} catch (e) {}",
-        VariableReferenceCheck.UNDECLARED_REFERENCE);
+        VariableReferenceCheck.EARLY_REFERENCE);
 
     checkNoWarnings("try {} catch (e) { e; }");
     // If the CFG can see that the TRY won't throw, it doesn't go to the catch.
@@ -6681,7 +6681,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var s = x;\n" +
         "var /** string */ x;\n",
         ImmutableList.of(
-            VariableReferenceCheck.UNDECLARED_REFERENCE,
+            VariableReferenceCheck.EARLY_REFERENCE,
             GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE));
 
     typeCheck(

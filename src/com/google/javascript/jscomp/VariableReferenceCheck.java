@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.BasicBlock;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
@@ -26,6 +27,7 @@ import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -39,7 +41,7 @@ import java.util.Set;
  */
 class VariableReferenceCheck implements HotSwapCompilerPass {
 
-  static final DiagnosticType UNDECLARED_REFERENCE = DiagnosticType.warning(
+  static final DiagnosticType EARLY_REFERENCE = DiagnosticType.warning(
       "JSC_REFERENCE_BEFORE_DECLARE",
       "Variable referenced before declaration: {0}");
 
@@ -51,7 +53,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
     DiagnosticType.disabled("AMBIGUOUS_FUNCTION_DECL",
         "Ambiguous use of a named function: {0}.");
 
-  static final DiagnosticType UNDECLARED_REFERENCE_ERROR = DiagnosticType.error(
+  static final DiagnosticType EARLY_REFERENCE_ERROR = DiagnosticType.error(
       "JSC_REFERENCE_BEFORE_DECLARE_ERROR",
       "Illegal variable reference before declaration: {0}");
 
@@ -117,11 +119,43 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         ReferenceCollection referenceCollection = referenceMap.getReferences(v);
         // TODO(moz): Figure out why this could be null
         if (referenceCollection != null) {
-          if (scope.isBlockScope() && !scope.isGlobal()
-              && scope.getParent().getRootNode().isFunction()) {
+          if (scope.getRootNode().isFunction() && v.getParentNode().isDefaultValue()
+              && v.getParentNode().getFirstChild() == v.getNode()) {
+            checkDefaultParam(v, scope);
+          } else if (scope.isFunctionBlockScope()) {
             checkShadowParam(v, scope, referenceCollection.references);
           }
           checkVar(v, referenceCollection.references);
+        }
+      }
+    }
+
+    /**
+     * Do a shallow check since cases like:
+     *   function f(y = () => x, x = 5) { return y(); }
+     * is legal. We are going to miss cases like:
+     *   function f(y = (() => x)(), x = 5) { return y(); }
+     * but this should be rare.
+     */
+    private class ShallowReferenceCollector extends AbstractShallowCallback {
+      private final Set<Node> currParamReferences = new LinkedHashSet<>();
+
+      @Override
+      public void visit(NodeTraversal t, Node n, Node parent) {
+        if (!NodeUtil.isReferenceName(n)) {
+          return;
+        }
+        currParamReferences.add(n);
+      }
+    }
+
+    private void checkDefaultParam(Var v, Scope scope) {
+      ShallowReferenceCollector check = new ShallowReferenceCollector();
+      NodeTraversal.traverse(compiler, v.getParentNode().getChildAtIndex(1), check);
+      for (Node ref : check.currParamReferences) {
+        String refName = ref.getString();
+        if (!scope.isDeclared(refName, true)) {
+          compiler.report(JSError.make(ref, checkLevel, EARLY_REFERENCE_ERROR, v.name));
         }
       }
     }
@@ -261,9 +295,9 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
               compiler.report(
                   JSError.make(reference.getNode(),
                                checkLevel,
-                               (v.isLet() || v.isConst())
-                                   ? UNDECLARED_REFERENCE_ERROR
-                                   : UNDECLARED_REFERENCE, v.name));
+                               (v.isLet() || v.isConst() || v.isParam())
+                                   ? EARLY_REFERENCE_ERROR
+                                   : EARLY_REFERENCE, v.name));
             }
           }
         }

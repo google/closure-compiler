@@ -71,14 +71,14 @@ public class Es6VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testUndeclaredLet() {
-    assertUndeclaredError(Joiner.on('\n').join(
+    assertEarlyReferenceError(Joiner.on('\n').join(
         "if (a) {",
         "  x = 3;",
         "  let x;",
         "}"
     ));
 
-    assertUndeclaredError(Joiner.on('\n').join(
+    assertEarlyReferenceError(Joiner.on('\n').join(
         "var x = 1;",
         "if (true) {",
         "  x++;",
@@ -88,7 +88,7 @@ public class Es6VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testUndeclaredConst() {
-    assertUndeclaredError(Joiner.on('\n').join(
+    assertEarlyReferenceError(Joiner.on('\n').join(
         "if (a) {",
         "  x = 3;",
         "  const x = 3;",
@@ -97,7 +97,7 @@ public class Es6VariableReferenceCheckTest extends CompilerTestCase {
 
     // For the following, IE 11 gives "Assignment to const", but technically
     // they are also undeclared references, which get caught in the first place.
-    assertUndeclaredError(Joiner.on('\n').join(
+    assertEarlyReferenceError(Joiner.on('\n').join(
         "var x = 1;",
         "if (true) {",
         "  x++;",
@@ -105,8 +105,8 @@ public class Es6VariableReferenceCheckTest extends CompilerTestCase {
         "}"
     ));
 
-    assertUndeclaredError("a = 1; const a = 0;");
-    assertUndeclaredError("a++; const a = 0;");
+    assertEarlyReferenceError("a = 1; const a = 0;");
+    assertEarlyReferenceError("a++; const a = 0;");
   }
 
   public void testIllegalLetShadowing() {
@@ -164,13 +164,13 @@ public class Es6VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testIllegalLetConstEarlyReference() {
-    assertUndeclaredError("let x = x");
-    assertUndeclaredError("const x = x");
-    assertUndeclaredError("let x = x || 0");
-    assertUndeclaredError("const x = x || 0");
+    assertEarlyReferenceError("let x = x");
+    assertEarlyReferenceError("const x = x");
+    assertEarlyReferenceError("let x = x || 0");
+    assertEarlyReferenceError("const x = x || 0");
     // In the following cases, "x" might not be reachable but we warn anyways
-    assertUndeclaredError("let x = expr || x");
-    assertUndeclaredError("const x = expr || x");
+    assertEarlyReferenceError("let x = expr || x");
+    assertEarlyReferenceError("const x = expr || x");
   }
 
   public void testCorrectEarlyReference() {
@@ -337,13 +337,21 @@ public class Es6VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("class A {} class C extends A {} C = class extends A {}");
   }
 
-  /*public void testDefaultParam() {
-    assertUndeclaredError("function f(x=a) { var a; }");
-    assertUndeclaredError("function f(x=a()) { function a() {} }");
-    assertUndeclaredError("function f(x=[a, b]) { var a; var b; }");
-    assertUndeclaredError("function f(x=(function f(){ return a; })()) { var a; }");
+  /**
+   * We can't catch all possible runtime errors but it's useful to have some
+   * basic checks.
+   */
+  public void testDefaultParam() {
+    assertEarlyReferenceError("function f(x=a) {}");
+    assertEarlyReferenceError("function f(x=a) { let a; }");
+    assertEarlyReferenceError("function f(x=a) { var a; }");
+    assertEarlyReferenceError("function f(x=a()) { function a() {} }");
+    assertEarlyReferenceError("function f(x=[a]) { var a; }");
+    assertEarlyReferenceError("function f(x=y, y=2) {}");
+    assertNoWarning("function f(x=a) {} var a;");
     assertNoWarning("let b; function f(x=b) { var b; }");
-  }*/
+    assertNoWarning("function f(y = () => x, x = 5) { return y(); }");
+  }
 
   /**
    * Expects the JS to generate one bad-read error.
@@ -377,14 +385,14 @@ public class Es6VariableReferenceCheckTest extends CompilerTestCase {
    * Expects the JS to generate one bad-write error.
    */
   private void assertUndeclared(String js) {
-    testSame(js, VariableReferenceCheck.UNDECLARED_REFERENCE);
+    testSame(js, VariableReferenceCheck.EARLY_REFERENCE);
   }
 
   /**
    * Expects the JS to generate one bad-write error.
    */
-  private void assertUndeclaredError(String js) {
-    testSame(js, VariableReferenceCheck.UNDECLARED_REFERENCE_ERROR);
+  private void assertEarlyReferenceError(String js) {
+    testSame(js, VariableReferenceCheck.EARLY_REFERENCE_ERROR);
   }
 
   /**
