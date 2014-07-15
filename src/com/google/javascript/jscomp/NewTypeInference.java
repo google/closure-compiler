@@ -1442,22 +1442,25 @@ public class NewTypeInference implements CompilerPass {
               DeferredCheck dc;
               if (expr.isCall()) {
                 dc = deferredChecks.get(expr);
-                if (dc == null) {
+                if (dc != null) {
+                  dc.updateReturn(expectedRetType);
+                } else {
+                  // The backward analysis of a function is skipped when all
+                  // variables, including outer vars, are declared.
+                  // So, we check that dc is null iff bwd was skipped.
                   Preconditions.checkState(
                       !currentScope.hasUndeclaredFormalsOrOuters(),
                       "No deferred check created in backward direction for %s",
                       expr);
-                  dc = new DeferredCheck(expr, expectedRetType,
-                      currentScope, currentScope.getScope(calleeName));
-                } else {
-                  dc.updateReturn(expectedRetType);
                 }
-              } else {
+              } else { // call to constructor
                 dc = new DeferredCheck(expr, null,
                     currentScope, currentScope.getScope(calleeName));
                 deferredChecks.put(expr, dc);
               }
-              dc.updateArgTypes(argTypes);
+              if (dc != null) {
+                dc.updateArgTypes(argTypes);
+              }
             }
           }
         }

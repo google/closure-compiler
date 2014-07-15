@@ -1878,7 +1878,7 @@ class GlobalTypeInfo implements CompilerPass {
       Scope s = localFunDefs.get(fnName);
       if (s != null) {
         return s;
-      } else if (parent != null) {
+      } else if (parent != null && !isDefinedLocally(fnName)) {
         return parent.getScopeHelper(fnName);
       }
       return null;

@@ -942,6 +942,17 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         " g();" +
         "}",
         TypeCheck.WRONG_ARGUMENT_COUNT);
+
+    // We used to erroneously create a deferred check for the call to f
+    // (and crash as a result), because we had a bug where the top-level
+    // function was not being shadowed by the formal parameter.
+    checkNoWarnings(
+        "function f() { return 123; }\n" +
+        "var outer = 123;\n" +
+        "function g(/** function(number) */ f) {\n" +
+        "  f(123) < 'str';\n" +
+        "  return outer;\n" +
+        "}");
   }
 
   public void testFunctionsInsideFunctions() {
