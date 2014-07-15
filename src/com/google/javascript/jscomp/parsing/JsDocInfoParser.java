@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.jscomp.parsing.TypeTransformationParser.TypeTransformationWarning;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -34,6 +35,7 @@ import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -887,6 +889,7 @@ public final class JsDocInfoParser {
           String templateNames;
           String typeTransformationExpr = "";
           boolean isTypeTransformation = false;
+          boolean validTypeTransformation = true;
           // Detect if there is a type transformation
           if (!templateString.contains(ttlStartDelimiter)) {
             // If there is no type transformation take the first line
@@ -902,6 +905,7 @@ public final class JsDocInfoParser {
             templateNames = templateString.substring(0, ttlStartIndex);
             // Check if the type transformation expression ends correctly
             if (!templateString.contains(ttlEndDelimiter)) {
+              validTypeTransformation = false;
               parser.addTypeWarning(
                   "msg.jsdoc.typetransformation.missing.delimiter",
                   stream.getLineno(), stream.getCharno());
@@ -944,9 +948,29 @@ public final class JsDocInfoParser {
                     stream.getLineno(), stream.getCharno());
             }
             if (typeTransformationExpr.equals("")) {
+              validTypeTransformation = false;
               parser.addTypeWarning(
                   "msg.jsdoc.typetransformation.expression.missing",
                   stream.getLineno(), stream.getCharno());
+            }
+            // Build the AST for the type transformation
+            if (validTypeTransformation) {
+              TypeTransformationParser ttlParser =
+                  new TypeTransformationParser(typeTransformationExpr,
+                      sourceFile, errorReporter);
+              // If the parsing was successful save the AST
+              if (ttlParser.parseTypeTransformation()) {
+                Node ttlAst = ttlParser.getTypeTransformationAst();
+                // TODO(lpino): Use the Type Transformation AST
+              } else {
+                // Throw the warnings otherwise
+                ArrayList<TypeTransformationWarning> warnings = ttlParser.getWarnings();
+                for (TypeTransformationWarning currentWarning : warnings) {
+                  parser.addTypeWarning(currentWarning.messageId,
+                      stream.getLineno() + currentWarning.nodeWarning.getLineno(),
+                      stream.getCharno() + currentWarning.nodeWarning.getCharno());
+                }
+              }
             }
           }
           token = templateInfo.token;

@@ -2926,6 +2926,78 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         + "random documentation text*/");
   }
 
+  public void testParserWithTTLInvalidOperation() {
+    parse("@template T := foo() =:*/",
+        "Bad type annotation. Invalid type transformation expression");
+  }
+
+  public void testParserWithTTLInvalidTypeTransformation() {
+    parse("@template T := var a; =:*/",
+        "Bad type annotation. Invalid type transformation expression");
+  }
+
+  public void testParserWithTTLValidTypename() {
+    parse("@template T := foo =:*/");
+  }
+
+  public void testParserWithTTLValidTypename2() {
+    parse("@template T := R =:*/");
+  }
+
+  public void testParserWithTTLValidTypename3() {
+    parse("@template T := _Foo =:*/");
+  }
+
+  public void testParserWithTTLValidTypename4() {
+    parse("@template T := $foo =:*/");
+  }
+
+  public void testParserWithTTLBasicType() {
+    parse("@template T := type('string') =:*/");
+  }
+
+  public void testParserWithTTLInvalidBasicType() {
+    parse("@template T := type(a) =:*/",
+        "Bad type annotation. Invalid type name");
+  }
+
+  public void testParserWithTTLEmptyBasicType() {
+    parse("@template T := type() =:*/",
+        "Bad type annotation. Missing parameter in type operation");
+  }
+
+  public void testParserWithTTLExtraParamsBasicType() {
+    parse("@template T := type('string','number') =:*/",
+        "Bad type annotation. Found extra parameter in type operation");
+  }
+
+  public void testParserWithTTLValidUnionType() {
+    parse("@template T := union(type('string'), type('number')) =:*/");
+  }
+
+  public void testParserWithTTLValidUnionType2() {
+    parse("@template T := union(R, S) =:*/");
+  }
+
+  public void testParserWithTTLValidUnionType3() {
+    parse("@template T := union(R, type('string'), S) =:*/");
+  }
+
+  public void testParserWithTTLEmptyUnionType() {
+    parse("@template T := union() =:*/",
+        "Bad type annotation. Union of less than two types");
+  }
+
+  public void testParserWithTTLSingletonUnionType() {
+    parse("@template T := union(type('string')) =:*/",
+        "Bad type annotation. Union of less than two types");
+  }
+
+  public void testParserWithTTLInvalidUnionType2() {
+    parse("@template T := union(function(a){}, T) =:*/",
+        "Bad type annotation. Invalid basic type expression");
+  }
+
   public void testWhitelistedNewAnnotations() {
     parse("@foobar */",
         "illegal use of unknown JSDoc tag \"foobar\"; ignoring it");
