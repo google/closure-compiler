@@ -1375,39 +1375,16 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       "}"
     ));
 
-    test("function *f() { var i = 0; yield i; i = 1; yield i;}", Joiner.on('\n').join(
-      "function f() {",
-      "  return { $$iterator: function() {",
-      "    var $jscomp$generator$state = 0;",
-      "    return { next: function() {",
-      "      while (1) switch ($jscomp$generator$state) {",
-      "        case 0:",
-      "          var i = 0;",
-      "          $jscomp$generator$state = 1;",
-      "          return {value: i, done: false};",
-      "        case 1:",
-      "          i = 1;",
-      "          $jscomp$generator$state = 2;",
-      "          return {value: i, done: false};",
-      "        case 2:",
-      "          $jscomp$generator$state = -1;",
-      "        default:",
-      "          return {done: true}",
-      "      }",
-      "    }}",
-      "  }}",
-      "}"
-    ));
-
     test("function *f() { var i = 0; yield i; i = 1; yield i; i = i + 1; yield i;}",
         Joiner.on('\n').join(
       "function f() {",
       "  return { $$iterator: function() {",
       "    var $jscomp$generator$state = 0;",
+      "    var i;",
       "    return { next: function() {",
       "      while (1) switch ($jscomp$generator$state) {",
       "        case 0:",
-      "          var i = 0;",
+      "          i = 0;",
       "          $jscomp$generator$state = 1;",
       "          return {value: i, done: false};",
       "        case 1:",

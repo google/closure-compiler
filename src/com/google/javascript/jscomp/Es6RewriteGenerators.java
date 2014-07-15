@@ -93,6 +93,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
         IR.exprResult(IR.assign(IR.name(GENERATOR_STATE), IR.number(-1))));
 
     Node currentCase = getUnique(genBlock, Token.CASE);
+    Node varRoot = getUnique(genBlock, Token.VAR);
 
     while (originalBody.hasChildren()) {
       Node nextStatement = originalBody.removeFirstChild();
@@ -101,6 +102,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       if (nextStatement.isExprResult() && nextStatement.getFirstChild().isYield()) {
         visitYieldExprResult(nextStatement, currentCase);
         makeFreshCase = true;
+      } else if (nextStatement.isVar()) {
+        visitVar(nextStatement, currentCase, varRoot);
+        makeFreshCase = false;
       } else {
         // In the default case, add the statement to the current case block unchanged.
         currentCase.getLastChild().addChildToBack(nextStatement);
@@ -118,6 +122,13 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     parent.replaceChild(n, genFunc);
     parent.useSourceInfoIfMissingFromForTree(parent);
     compiler.reportCodeChange();
+  }
+
+  private void visitVar(Node statement, Node enclosingCase, Node hoistRoot) {
+    Node name = statement.getFirstChild();
+    enclosingCase.getLastChild().addChildToBack(
+        IR.exprResult(IR.assign(name.detachFromParent(), name.removeFirstChild())));
+    hoistRoot.getParent().addChildAfter(IR.var(name.cloneTree()), hoistRoot);
   }
 
   private void visitYieldExprResult(Node statement, Node enclosingCase) {
