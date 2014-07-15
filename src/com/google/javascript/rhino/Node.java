@@ -2495,6 +2495,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.EMPTY;
   }
 
+  public boolean isExport() {
+    return this.getType() == Token.EXPORT;
+  }
+
   public boolean isExprResult() {
     return this.getType() == Token.EXPR_RESULT;
   }
@@ -2533,6 +2537,10 @@ public class Node implements Cloneable, Serializable {
 
   public boolean isIf() {
     return this.getType() == Token.IF;
+  }
+
+  public boolean isImport() {
+    return this.getType() == Token.IMPORT;
   }
 
   public boolean isIn() {

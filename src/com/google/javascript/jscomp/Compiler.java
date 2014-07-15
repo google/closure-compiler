@@ -1353,8 +1353,10 @@ public class Compiler extends AbstractCompiler {
         externsRoot.addChildToBack(n);
       }
 
+      boolean needsConversion = options.getLanguageIn() != options.getLanguageOut();
+
       // Modules inferred in ProcessCommonJS pass.
-      if (options.transformAMDToCJSModules || options.processCommonJSModules) {
+      if (options.transformAMDToCJSModules || options.processCommonJSModules || needsConversion) {
         processAMDAndCommonJSModules();
       }
 
@@ -1511,6 +1513,17 @@ public class Compiler extends AbstractCompiler {
   private void repartitionInputs() {
     fillEmptyModules(modules);
     rebuildInputsFromModules();
+  }
+
+  void processEs6Modules() {
+    for (CompilerInput input : inputs) {
+      input.setCompiler(this);
+      Node root = input.getAstRoot(this);
+      if (root == null) {
+        continue;
+      }
+      new TransformEs6ModuleToCjsModule(this).process(null, root);
+    }
   }
 
   /**

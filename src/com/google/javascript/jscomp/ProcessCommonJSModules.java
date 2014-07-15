@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -65,14 +64,6 @@ public class ProcessCommonJSModules implements CompilerPass {
     this.compiler = compiler;
     this.loader = loader;
     this.reportDependencies = reportDependencies;
-  }
-
-  void process(CompilerInput input) {
-    compiler.putCompilerInput(input.getInputId(), input);
-    Node root = input.getAstRoot(compiler);
-    if (!compiler.hasHaltingErrors()) {
-      process(null, root);
-    }
   }
 
   @Override
@@ -177,8 +168,7 @@ public class ProcessCommonJSModules implements CompilerPass {
           "ProcessCommonJSModules supports only one invocation per " +
           "CompilerInput / script node");
 
-      String moduleName = toModuleName(
-          loader.getLoadAddress(t.getInput()));
+      String moduleName = toModuleName(loader.getLoadAddress(t.getInput()));
 
       // Rename vars to not conflict in global scope.
       NodeTraversal.traverse(compiler, script, new SuffixVarsCallback(

@@ -156,6 +156,12 @@ public class AstValidator implements CompilerPass {
       case Token.CLASS:
         validateClassDeclaration(n);
         return;
+      case Token.IMPORT:
+        validateImport(n);
+        return;
+      case Token.EXPORT:
+        validateExport(n);
+        return;
       default:
         violation("Expected statement but was "
             + Token.name(n.getType()) + ".", n);
@@ -312,6 +318,83 @@ public class AstValidator implements CompilerPass {
     validateNodeType(Token.YIELD, n);
     validateChildCount(n, Token.arity(Token.YIELD));
     validateExpression(n.getFirstChild());
+  }
+
+  private void validateImport(Node n) {
+    validateEs6Feature("import statement", n);
+    validateNodeType(Token.IMPORT, n);
+    validateChildCount(n, Token.arity(Token.IMPORT));
+    if (n.getFirstChild().isEmpty()) {
+      if (n.getChildAtIndex(1).isEmpty()) { // import "mod"
+        validateString(n.getChildAtIndex(2));
+      } else {  // import {a as foo} from "mod"
+        validateImportSpecifiers(n.getChildAtIndex(1));
+        validateString(n.getChildAtIndex(2));
+      }
+    } else if (n.getFirstChild().isName()) {
+      validateName(n.getFirstChild());
+      if (n.getChildAtIndex(1).isEmpty()) { // import a from "mod"
+        validateString(n.getChildAtIndex(2));
+      } else { // import a, {b as bar} from "mod"
+        validateImportSpecifiers(n.getChildAtIndex(1));
+        validateString(n.getChildAtIndex(2));
+      }
+    }
+  }
+
+  private void validateImportSpecifiers(Node n) {
+    validateNodeType(Token.IMPORT_SPECS, n);
+    for (Node child : n.children()) {
+      validateImportSpecifier(child);
+    }
+  }
+
+  private void validateImportSpecifier(Node n) {
+    validateNodeType(Token.IMPORT_SPEC, n);
+    validateMinimumChildCount(n, 1);
+    validateMaximumChildCount(n, 2);
+    for (Node child : n.children()) {
+      validateName(child);
+    }
+  }
+
+  private void validateExport(Node n) {
+    validateNodeType(Token.EXPORT, n);
+    if (n.getBooleanProp(Node.EXPORT_ALL_FROM)) { // export * from "mod"
+      validateChildCount(n, 2);
+      validateNodeType(Token.EMPTY, n.getFirstChild());
+      validateString(n.getChildAtIndex(1));
+    } else if (n.getBooleanProp(Node.EXPORT_DEFAULT)) { // export default foo = 2
+      validateChildCount(n, 1);
+      validateAssignmentTarget(n.getFirstChild());
+    } else {
+      validateMinimumChildCount(n, 1);
+      validateMaximumChildCount(n, 2);
+      if (n.getFirstChild().getType() == Token.EXPORT_SPECS) {
+        validateExportSpecifiers(n.getFirstChild());
+      } else {
+        validateStatement(n.getFirstChild());
+      }
+      if (n.getChildCount() == 2) {
+        validateString(n.getChildAtIndex(1));
+      }
+    }
+  }
+
+  private void validateExportSpecifiers(Node n) {
+    validateNodeType(Token.EXPORT_SPECS, n);
+    for (Node child : n.children()) {
+      validateExportSpecifier(child);
+    }
+  }
+
+  private void validateExportSpecifier(Node n) {
+    validateNodeType(Token.EXPORT_SPEC, n);
+    validateMinimumChildCount(n, 1);
+    validateMaximumChildCount(n, 2);
+    for (Node child : n.children()) {
+      validateName(child);
+    }
   }
 
   private void validateTemplateLit(Node n) {
