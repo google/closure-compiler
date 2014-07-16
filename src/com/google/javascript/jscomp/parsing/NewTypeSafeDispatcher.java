@@ -188,10 +188,8 @@ abstract class NewTypeSafeDispatcher<T> {
       case REGULAR_EXPRESSION:
         return processRegExpLiteral(expr);
       default:
-        throw new IllegalStateException("Unexpected literal type: " +
-            expr.literalToken.getClass() +
-            " type: " +
-            expr.literalToken.type.toString());
+        throw new IllegalStateException("Unexpected literal type: "
+            + expr.literalToken.getClass() + " type: " + expr.literalToken.type);
     }
   }
 

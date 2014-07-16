@@ -50,9 +50,8 @@ class ContinueFuzzer extends AbstractFuzzer {
     Node node = new Node(Token.CONTINUE);
     Scope localScope = context.scopeManager.localScope();
     double toLabel = getOwnConfig().optDouble("toLabel");
-    if (budget > 1 &&
-        localScope.loopLabels.size() > 0 &&
-        context.random.nextDouble() < toLabel) {
+    if (budget > 1 && !localScope.loopLabels.isEmpty()
+        && context.random.nextDouble() < toLabel) {
       node.addChildToBack(
           Node.newString(Token.LABEL_NAME,
               localScope.randomLabelForContinue(context.random)));

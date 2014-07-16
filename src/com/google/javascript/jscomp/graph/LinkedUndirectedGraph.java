@@ -328,7 +328,7 @@ public class LinkedUndirectedGraph<N, E>
 
     @Override
     public String getLabel() {
-      return value != null ? value.toString() : "null";
+      return String.valueOf(value);
     }
 
     public Iterator<GraphNode<N, E>> neighborIterator() {
@@ -437,7 +437,7 @@ public class LinkedUndirectedGraph<N, E>
 
     @Override
     public String getLabel() {
-      return value != null ? value.toString() : "null";
+      return String.valueOf(value);
     }
 
     @SuppressWarnings("unchecked")
@@ -454,7 +454,7 @@ public class LinkedUndirectedGraph<N, E>
 
     @Override
     public String toString() {
-      return nodeA.toString() + " -- " + nodeB.toString();
+      return nodeA + " -- " + nodeB;
     }
   }
 

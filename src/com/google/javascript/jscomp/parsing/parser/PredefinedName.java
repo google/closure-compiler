@@ -96,6 +96,6 @@ public final class PredefinedName {
 
   public static String getParameterName(int index) {
     // TODO: consider caching these
-    return "$" + Integer.toString(index);
+    return "$" + index;
   }
 }

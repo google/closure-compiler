@@ -524,7 +524,7 @@ public final class SimpleFormat {
     }
 
     private CharSequence transformFromString() {
-        CharSequence result = arg != null ? arg.toString() : "null";
+    CharSequence result = String.valueOf(arg);
         return padding(result, 0);
     }
 
@@ -651,7 +651,7 @@ public final class SimpleFormat {
         if ('d' == currentConversionType) {
             if (formatToken.flagComma) {
               // TO bad... we don't care about the comma...
-                result.append(arg.toString());
+              result.append(arg);
             } else {
               result.append(value);
             }
@@ -745,7 +745,7 @@ public final class SimpleFormat {
         }
 
         StringBuilder result = new StringBuilder();
-        result.append(date.toString());
+        result.append(date);
         return padding(result, 0);
     }
 
@@ -872,8 +872,8 @@ public final class SimpleFormat {
     }
 
     private void transform_f(StringBuilder result) {
-        // Removed all the actual logic...
-        result.append(arg.toString());
+      // Removed all the actual logic...
+      result.append(arg);
     }
 
     private void transform_a(StringBuilder result) {

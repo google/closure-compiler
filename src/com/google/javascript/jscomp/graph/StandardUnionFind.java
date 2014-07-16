@@ -165,7 +165,7 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
 
   @Override
   public Set<E> findAll(final E value) {
-    checkArgument(elmap.containsKey(value), "Element does not exist: " + value);
+    checkArgument(elmap.containsKey(value), "Element does not exist: %s", value);
 
     final Predicate<Object> isSameRoot = new Predicate<Object>() {
 

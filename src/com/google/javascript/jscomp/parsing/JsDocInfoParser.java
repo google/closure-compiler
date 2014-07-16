@@ -947,7 +947,7 @@ public final class JsDocInfoParser {
                     "msg.jsdoc.typetransformation.with.multiple.names",
                     stream.getLineno(), stream.getCharno());
             }
-            if (typeTransformationExpr.equals("")) {
+            if (typeTransformationExpr.isEmpty()) {
               validTypeTransformation = false;
               parser.addTypeWarning(
                   "msg.jsdoc.typetransformation.expression.missing",

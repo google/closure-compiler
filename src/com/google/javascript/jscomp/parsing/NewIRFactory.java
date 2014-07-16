@@ -1857,9 +1857,7 @@ class NewIRFactory {
     @Override
     Node processIllegalToken(ParseTree node) {
       errorReporter.error(
-          "Unsupported syntax: " + node.type.toString(),
-          sourceName,
-          lineno(node), 0);
+          "Unsupported syntax: " + node.type, sourceName, lineno(node), 0);
       return newNode(Token.EMPTY);
     }
 
@@ -2075,7 +2073,7 @@ class NewIRFactory {
     StringBuilder result = new StringBuilder();
     while (cur != -1) {
       if (cur - start > 0) {
-        result.append(value.substring(start, cur));
+        result.append(value, start, cur);
       }
       cur += 1; // skip the escape char.
       char c = value.charAt(cur);
@@ -2175,7 +2173,7 @@ class NewIRFactory {
       cur = value.indexOf('\\', start);
     }
     // skip the trailing quote.
-    result.append(value.substring(start, value.length() - 1));
+    result.append(value, start, value.length() - 1);
 
     return result.toString();
   }

@@ -248,11 +248,8 @@ public class JSError {
         : jsError.sourceName != null) {
       return false;
     }
-    if (!type.equals(jsError.type)) {
-      return false;
-    }
+    return type.equals(jsError.type);
 
-    return true;
   }
 
   @Override

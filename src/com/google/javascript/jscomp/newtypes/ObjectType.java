@@ -691,11 +691,7 @@ public class ObjectType implements TypeWithProperties {
   public boolean hasProp(QualifiedName qname) {
     Preconditions.checkArgument(qname.isIdentifier());
     Property p = getLeftmostProp(qname);
-    if (p == null || p.isOptional()) {
-      return false;
-    } else {
-      return true;
-    }
+    return p != null && !p.isOptional();
   }
 
   @Override

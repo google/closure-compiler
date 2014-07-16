@@ -201,12 +201,7 @@ public class Driver {
             output2[1]);
         hasError = true;
       }
-      if (hasError &&
-          getLogger().getLevel().intValue() < Level.WARNING.intValue()) {
-        return false;
-      } else {
-        return true;
-      }
+      return !(hasError && getLogger().getLevel().intValue() < Level.WARNING.intValue());
     } else {
       StringBuilder sb =
           new StringBuilder("Different outputs!");

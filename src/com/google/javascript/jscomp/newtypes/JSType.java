@@ -321,22 +321,14 @@ public abstract class JSType {
         || isScalar() || isTypeVariable() || isEnumElement()) {
       return false;
     }
-    if (getMask() == NON_SCALAR_MASK && getObjs().size() == 1) {
-      return false;
-    }
-    return true;
+    return !(getMask() == NON_SCALAR_MASK && getObjs().size() == 1);
   }
 
   public static boolean areCompatibleScalarTypes(JSType lhs, JSType rhs) {
     Preconditions.checkArgument(
         lhs.isSubtypeOf(TOP_SCALAR) || rhs.isSubtypeOf(TOP_SCALAR));
-    if (lhs.isBottom() || rhs.isBottom()
-        || lhs.isUnknown() || rhs.isUnknown()
-        || (lhs.isBoolean() && rhs.isBoolean())
-        || lhs.equals(rhs)) {
-      return true;
-    }
-    return false;
+    return lhs.isBottom() || rhs.isBottom() || lhs.isUnknown() || rhs.isUnknown()
+        || (lhs.isBoolean() && rhs.isBoolean()) || lhs.equals(rhs);
   }
 
   // Only makes sense for a JSType that represents a single enum
@@ -1074,8 +1066,7 @@ public abstract class JSType {
               }
               case ENUM_MASK: {
                 if (getEnums().size() == 1) {
-                  builder.append(
-                      Iterables.getOnlyElement(getEnums()).toString());
+                  builder.append(Iterables.getOnlyElement(getEnums()));
                 } else {
                   Set<String> strReps = Sets.newTreeSet();
                   for (EnumType e : getEnums()) {

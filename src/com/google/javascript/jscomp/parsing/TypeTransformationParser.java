@@ -67,7 +67,7 @@ final class TypeTransformationParser {
     this.typeTransformationString = typeTransformationString;
     this.sourceFile = sourceFile;
     this.errorReporter = errorReporter;
-    warnings = new ArrayList<TypeTransformationWarning>();
+    warnings = new ArrayList<>();
   }
 
   public Node getTypeTransformationAst() {

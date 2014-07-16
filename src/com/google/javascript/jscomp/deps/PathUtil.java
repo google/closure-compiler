@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.deps;
 
+import static com.google.common.base.StandardSystemProperty.USER_DIR;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -116,7 +118,7 @@ public final class PathUtil {
    * @return The path made absolute.
    */
   public static String makeAbsolute(String path) {
-    return makeAbsolute(path, System.getProperty("user.dir"));
+    return makeAbsolute(path, USER_DIR.value());
   }
 
   /**

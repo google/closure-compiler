@@ -38,7 +38,7 @@ public class FormalParameterListTree extends ParseTree {
   }
 
   public boolean hasRestParameter() {
-    return parameters.size() > 0 && getLastParameter().isRestParameter();
+    return !parameters.isEmpty() && getLastParameter().isRestParameter();
   }
 
   private ParseTree getLastParameter() {

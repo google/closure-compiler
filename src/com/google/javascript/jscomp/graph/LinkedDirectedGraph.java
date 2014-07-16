@@ -312,9 +312,7 @@ public class LinkedDirectedGraph<N, E>
   public List<DiGraphEdge<N, E>> getEdges() {
     List<DiGraphEdge<N, E>> result = Lists.newArrayList();
     for (DiGraphNode<N, E> node : nodes.values()) {
-      for (DiGraphEdge<N, E> edge : node.getOutEdges()) {
-        result.add(edge);
-      }
+      result.addAll(node.getOutEdges());
     }
     return Collections.unmodifiableList(result);
   }
@@ -376,7 +374,7 @@ public class LinkedDirectedGraph<N, E>
 
     @Override
     public String getLabel() {
-      return value != null ? value.toString() : "null";
+      return String.valueOf(value);
     }
 
     @Override
@@ -519,7 +517,7 @@ public class LinkedDirectedGraph<N, E>
 
     @Override
     public String getLabel() {
-      return value != null ? value.toString() : "null";
+      return String.valueOf(value);
     }
 
     @Override
@@ -534,7 +532,7 @@ public class LinkedDirectedGraph<N, E>
 
     @Override
     public String toString() {
-      return sourceNode.toString() + " -> " + destNode.toString();
+      return sourceNode + " -> " + destNode;
     }
 
     @Override

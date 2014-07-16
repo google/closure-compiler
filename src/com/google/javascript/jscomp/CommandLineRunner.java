@@ -560,7 +560,7 @@ public class CommandLineRunner extends
     private void matchPaths(String pattern, final Set<String> allJsInputs)
         throws IOException {
       FileSystem fs = FileSystems.getDefault();
-      final boolean remove = pattern.indexOf("!") == 0;
+      final boolean remove = pattern.indexOf('!') == 0;
       if (remove) pattern = pattern.substring(1);
 
       if (File.separator.equals("\\")) {
@@ -569,8 +569,7 @@ public class CommandLineRunner extends
 
       // Split the pattern into two pieces: the globbing part
       // and the non-globbing prefix.
-      List<String> patternParts =
-          ImmutableList.copyOf(Splitter.on("/").split(pattern));
+      List<String> patternParts = Splitter.on('/').splitToList(pattern);
       String prefix = ".";
       for (int i = 0; i < patternParts.size(); i++) {
         if (patternParts.get(i).contains("*")) {
@@ -835,7 +834,7 @@ public class CommandLineRunner extends
     // Builds the tokens.
     StringBuilder builder = new StringBuilder();
     // Stores the built tokens.
-    List<String> tokens = new ArrayList<String>();
+    List<String> tokens = new ArrayList<>();
     // Indicates if we are in a "quoted" token.
     boolean quoted = false;
     // Indicates if the char being processed has been escaped.

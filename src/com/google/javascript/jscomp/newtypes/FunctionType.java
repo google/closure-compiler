@@ -421,12 +421,8 @@ public class FunctionType {
         return false;
       }
     }
-    if (!this.getReturnType().isBottom() &&
-        !f2.getReturnType().isBottom() &&
-        JSType.meet(this.getReturnType(), f2.getReturnType()).isBottom()) {
-      return false;
-    }
-    return true;
+    return this.getReturnType().isBottom() || f2.getReturnType().isBottom()
+        || !JSType.meet(this.getReturnType(), f2.getReturnType()).isBottom();
   }
 
   public boolean isGeneric() {
