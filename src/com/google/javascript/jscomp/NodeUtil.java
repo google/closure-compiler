@@ -1738,6 +1738,14 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns true if the shallow scope contains references to 'yield' keyword
+   */
+  static boolean referencesYield(Node n) {
+    Node start = n.isFunction() ? n.getLastChild() : n;
+    return containsType(start, Token.YIELD, MATCH_NOT_FUNCTION);
+  }
+
+  /**
    * Returns true if the current scope contains references to the 'super' keyword.
    * Note that if there are classes declared inside the current class, super calls which
    * reference those classes are not reported.

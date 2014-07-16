@@ -25,7 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Converts ES6 generator functions to valid ES3 code.
+ * Converts ES6 generator functions to valid ES3 code. This pass runs after all ES6 features
+ * except for yield and generators have been transpiled.
  *
  * @author mattloring@google.com (Matthew Loring)
  */
@@ -97,25 +98,20 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
     while (originalBody.hasChildren()) {
       Node nextStatement = originalBody.removeFirstChild();
-      boolean makeFreshCase;
+      boolean advanceCase = translateStatementInOriginalBody(nextStatement, currentCase,
+          originalBody, varRoot);
 
-      if (nextStatement.isExprResult() && nextStatement.getFirstChild().isYield()) {
-        visitYieldExprResult(nextStatement, currentCase);
-        makeFreshCase = true;
-      } else if (nextStatement.isVar()) {
-        visitVar(nextStatement, currentCase, varRoot);
-        makeFreshCase = false;
-      } else {
-        // In the default case, add the statement to the current case block unchanged.
-        currentCase.getLastChild().addChildToBack(nextStatement);
-        makeFreshCase = false;
-      }
-
-      if (makeFreshCase) {
-        Node newCase = IR.caseNode(IR.number(generatorCaseCount), IR.block());
+      if (advanceCase) {
+        int caseNumber;
+        if (nextStatement.isGeneratorMarker()) {
+          caseNumber = (int) nextStatement.getDouble();
+        } else {
+          caseNumber = generatorCaseCount;
+          generatorCaseCount++;
+        }
+        Node newCase = IR.caseNode(IR.number(caseNumber), IR.block());
         currentCase.getParent().addChildAfter(newCase, currentCase);
         currentCase = newCase;
-        generatorCaseCount++;
       }
     }
 
@@ -124,25 +120,122 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     compiler.reportCodeChange();
   }
 
-  private void visitVar(Node statement, Node enclosingCase, Node hoistRoot) {
-    Node name = statement.getFirstChild();
+  /** Returns true if a new case node should be added */
+  private boolean translateStatementInOriginalBody(Node statement, Node currentCase,
+      Node originalBody, Node varRoot) {
+    if (statement.isExprResult() && statement.getFirstChild().isYield()) {
+      visitYieldExprResult(statement, currentCase);
+      return true;
+    } else if (statement.isVar()) {
+      visitVar(statement, currentCase, varRoot);
+      return false;
+    } else if (statement.isFor() && NodeUtil.referencesYield(statement)) {
+      visitFor(statement, originalBody);
+      return false;
+    } else if (statement.isWhile() && NodeUtil.referencesYield(statement)) {
+      visitWhile(statement, originalBody);
+      return false;
+    } else if (statement.isBlock()) {
+      visitBlock(statement, originalBody);
+      return false;
+    } else if (statement.isGeneratorMarker()) {
+      return true;
+    } else {
+      // In the default case, add the statement to the current case block unchanged.
+      currentCase.getLastChild().addChildToBack(statement);
+      return false;
+    }
+  }
+
+  /**
+   * Blocks are flattened by lifting all children to the body of the original generator.
+   */
+  private void visitBlock(Node blockStatement, Node originalGeneratorBody) {
+    Node insertionPoint = blockStatement.removeFirstChild();
+    originalGeneratorBody.addChildToFront(insertionPoint);
+    for (Node child = blockStatement.removeFirstChild(); child != null;
+        child = blockStatement.removeFirstChild()) {
+      originalGeneratorBody.addChildAfter(child, insertionPoint);
+      insertionPoint = child;
+    }
+  }
+
+  /**
+   * While loops are translated with case statements before and after the loop body with
+   * conditional jumps between these case statements to achieve looping.
+   */
+  private void visitWhile(Node whileStatement, Node originalGeneratorBody) {
+    Node condition = whileStatement.removeFirstChild();
+    Node body = whileStatement.removeFirstChild();
+
+    int loopBeginState = generatorCaseCount++;
+    int loopEndState = generatorCaseCount++;
+
+    Node beginCase = IR.number(loopBeginState);
+    beginCase.setGeneratorMarker(true);
+    Node conditionalBranch = IR.ifNode(IR.not(condition),
+        IR.block(createStateUpdate(loopEndState), IR.breakNode()));
+    Node setStateLoopStart = createStateUpdate(loopBeginState);
+    Node breakToStart = IR.breakNode();
+    Node endCase = IR.number(loopEndState);
+    endCase.setGeneratorMarker(true);
+
+    originalGeneratorBody.addChildToFront(beginCase);
+    originalGeneratorBody.addChildAfter(conditionalBranch, beginCase);
+    originalGeneratorBody.addChildAfter(body, conditionalBranch);
+    originalGeneratorBody.addChildAfter(setStateLoopStart, body);
+    originalGeneratorBody.addChildAfter(breakToStart, setStateLoopStart);
+    originalGeneratorBody.addChildAfter(endCase, breakToStart);
+  }
+
+  /**
+   * For loops are translated into equivalent while loops to consolidate loop translation logic.
+   */
+  private void visitFor(Node whileStatement, Node originalGeneratorBody) {
+    Node initializer = whileStatement.removeFirstChild();
+    Node condition = whileStatement.removeFirstChild();
+    Node postStatement = IR.exprResult(whileStatement.removeFirstChild());
+    Node body = whileStatement.removeFirstChild();
+
+    Node equivalentWhile = IR.whileNode(condition, body);
+    body.addChildToBack(postStatement);
+
+    originalGeneratorBody.addChildToFront(initializer);
+    originalGeneratorBody.addChildAfter(equivalentWhile, initializer);
+  }
+
+  /**
+   * Vars are hoisted into the closure containing the iterator to preserve their state accross
+   * multiple calls to next().
+   */
+  private void visitVar(Node varStatement, Node enclosingCase, Node hoistRoot) {
+    Node name = varStatement.getFirstChild();
     enclosingCase.getLastChild().addChildToBack(
         IR.exprResult(IR.assign(name.detachFromParent(), name.removeFirstChild())));
     hoistRoot.getParent().addChildAfter(IR.var(name.cloneTree()), hoistRoot);
   }
 
-  private void visitYieldExprResult(Node statement, Node enclosingCase) {
-    enclosingCase.getLastChild().addChildToBack(getContextUpdate());
+  /**
+   * Yield sets the state so that execution resume at the next statement when the function is next
+   * called and then returns an iterator result with the desired value.
+   */
+  private void visitYieldExprResult(Node yieldStatement, Node enclosingCase) {
+    enclosingCase.getLastChild().addChildToBack(createStateUpdate());
     enclosingCase.getLastChild().addChildToBack(IR.returnNode(
-        getIteratorResult(statement.getFirstChild().removeFirstChild())));
+        createIteratorResult(yieldStatement.getFirstChild().removeFirstChild())));
   }
 
-  private Node getContextUpdate() {
+  private Node createStateUpdate() {
     return IR.exprResult(
         IR.assign(IR.name(GENERATOR_STATE), IR.number(generatorCaseCount)));
   }
 
-  private Node getIteratorResult(Node value) {
+  private Node createStateUpdate(int state) {
+    return IR.exprResult(
+        IR.assign(IR.name(GENERATOR_STATE), IR.number(state)));
+  }
+
+  private Node createIteratorResult(Node value) {
     return IR.objectlit(
         IR.propdef(IR.stringKey("value"), value),
         IR.propdef(IR.stringKey("done"), IR.falseNode()));

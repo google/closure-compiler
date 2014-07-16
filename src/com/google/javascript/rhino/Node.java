@@ -111,7 +111,7 @@ public class Node implements Cloneable, Serializable {
       EXPORT_DEFAULT     = 62,    // Set if a export is a "default" export
       EXPORT_ALL_FROM    = 63,    // Set if a export is a "*" export
       IS_CONSTANT_VAR    = 64,    // A lexical variable is inferred const
-      LAST_PROP          = 64;    // Unused in the compiler, but keep for Rhino.
+      GENERATOR_MARKER   = 65;    // Used by the ES6-to-ES3 translator.
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -152,6 +152,7 @@ public class Node implements Cloneable, Serializable {
         case EXPORT_DEFAULT:     return "export_default";
         case EXPORT_ALL_FROM:    return "export_all_from";
         case IS_CONSTANT_VAR:    return "is_constant_var";
+        case GENERATOR_MARKER:   return "is_generator_marker";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -2138,6 +2139,20 @@ public class Node implements Cloneable, Serializable {
    */
   public boolean isGeneratorFunction() {
     return getBooleanProp(GENERATOR_FN);
+  }
+
+  /**
+   * Sets whether this node is a marker used in the translation of generators.
+   */
+  public void setGeneratorMarker(boolean isGeneratorMarker) {
+    putBooleanProp(GENERATOR_MARKER, isGeneratorMarker);
+  }
+
+  /**
+   * Returns whether this node is a marker used in the translation of generators.
+   */
+  public boolean isGeneratorMarker() {
+    return getBooleanProp(GENERATOR_MARKER);
   }
 
   /**
