@@ -5452,67 +5452,6 @@ chrome.usb.ConnectionHandle.prototype.productId;
 
 
 
-/** @constructor */
-chrome.usb.InterfaceEndpoint = function() {};
-
-
-/** @type {number} */
-chrome.usb.InterfaceEndpoint.prototype.address;
-
-
-/** @type {string} */
-chrome.usb.InterfaceEndpoint.prototype.direction;
-
-
-/** @type {number} */
-chrome.usb.InterfaceEndpoint.prototype.maximumPacketSize;
-
-
-/** @type {(string|undefined)} */
-chrome.usb.InterfaceEndpoint.prototype.synchronization;
-
-
-/** @type {(string|undefined)} */
-chrome.usb.InterfaceEndpoint.prototype.usage;
-
-
-/** @type {(number|undefined)} */
-chrome.usb.InterfaceEndpoint.prototype.pollingInterval;
-
-
-
-/** @constructor */
-chrome.usb.InterfaceDescriptor = function() {};
-
-
-/** @type {number} */
-chrome.usb.InterfaceDescriptor.prototype.interfaceNumber;
-
-
-/** @type {number} */
-chrome.usb.InterfaceDescriptor.prototype.alternateSetting;
-
-
-/** @type {number} */
-chrome.usb.InterfaceDescriptor.prototype.interfaceClass;
-
-
-/** @type {number} */
-chrome.usb.InterfaceDescriptor.prototype.interfaceSubclass;
-
-
-/** @type {number} */
-chrome.usb.InterfaceDescriptor.prototype.interfaceProtocol;
-
-
-/** @type {(string|undefined)} */
-chrome.usb.InterfaceDescriptor.prototype.description;
-
-
-/** @type {!Array.<!chrome.usb.InterfaceEndpoint>} */
-chrome.usb.InterfaceDescriptor.prototype.endpoints;
-
-
 /**
  * @typedef {?{
  *   direction: string,
@@ -5612,7 +5551,7 @@ chrome.usb.closeDevice = function(handle, opt_callback) {};
  * @see http://developer.chrome.com/apps/usb.html#method-listInterfaces
  * @param {!chrome.usb.ConnectionHandle} handle The device from which the
  *     interfaces should be listed.
- * @param {function(!Array.<!chrome.usb.InterfaceDescriptor>)} callback
+ * @param {function(!Array.<!Object>)} callback
  *     The callback to invoke when the interfaces are enumerated.
  */
 chrome.usb.listInterfaces = function(handle, callback) {};
