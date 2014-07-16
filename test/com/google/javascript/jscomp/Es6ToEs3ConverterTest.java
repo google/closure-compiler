@@ -1406,7 +1406,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
-  public void testForLoops() {
+  public void testForLoopsGenerator() {
     test("function *f() {var i = 0; for (var j = 0; j < 10; j++) { i += j; } yield i;}",
       Joiner.on('\n').join(
         "function f() {",
@@ -1459,7 +1459,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
-  public void testWhileLoops() {
+  public void testWhileLoopsGenerator() {
     test("function *f() {var i = 0; while (i < 10) { i++; i++; i++; } yield i;}",
       Joiner.on('\n').join(
         "function f() {",
@@ -1501,6 +1501,60 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "          j++",
         "          $jscomp$generator$state = 1;",
         "          break",
+        "        case 2:",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {done: true}",
+        "      }",
+        "    }}",
+        "  }}",
+        "}"
+    ));
+  }
+
+  public void testIfGenerator() {
+    test("function *f() { var j = 0; if (j < 1) { yield j; } }",
+      Joiner.on('\n').join(
+        "function f() {",
+        "  return { $$iterator: function() {",
+        "    var $jscomp$generator$state = 0;",
+        "    var j;",
+        "    return { next: function() {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          j = 0;",
+        "          if (!(j < 1)) { $jscomp$generator$state = 1; break; }",
+        "          $jscomp$generator$state = 2;",
+        "          return {value: j, done: false};",
+        "        case 2:",
+        "        case 1:",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {done: true}",
+        "      }",
+        "    }}",
+        "  }}",
+        "}"
+    ));
+
+    test("function *f(i) { if (i < 1) { yield i; } else { yield 1; } }",
+      Joiner.on('\n').join(
+        "function f(i) {",
+        "  return { $$iterator: function() {",
+        "    var $jscomp$generator$state = 0;",
+        "    return { next: function() {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          if (!(i < 1)) { $jscomp$generator$state = 1; break; }",
+        "          $jscomp$generator$state = 3;",
+        "          return {value: i, done: false};",
+        "        case 3:",
+        "          $jscomp$generator$state = 2;",
+        "          break;",
+        "        case 1:",
+        "          $jscomp$generator$state = 4;",
+        "          return {value: 1, done: false};",
+        "        case 4:",
         "        case 2:",
         "          $jscomp$generator$state = -1;",
         "        default:",

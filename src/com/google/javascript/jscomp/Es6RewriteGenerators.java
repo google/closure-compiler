@@ -135,6 +135,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     } else if (statement.isWhile() && NodeUtil.referencesYield(statement)) {
       visitWhile(statement, originalBody);
       return false;
+    } else if (statement.isIf() && NodeUtil.referencesYield(statement)
+        && !statement.isGeneratorSafeIf()) {
+      visitIf(statement, originalBody);
+      return false;
     } else if (statement.isBlock()) {
       visitBlock(statement, originalBody);
       return false;
@@ -144,6 +148,43 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       // In the default case, add the statement to the current case block unchanged.
       currentCase.getLastChild().addChildToBack(statement);
       return false;
+    }
+  }
+
+  /**
+   * {@code if} statements have their bodies lifted to the function top level
+   * and use a case statement to jump over the body if the condition of the
+   * if statement is false.
+   */
+  private void visitIf(Node ifStatement, Node originalGeneratorBody) {
+    Node condition = ifStatement.removeFirstChild();
+    Node ifBody = ifStatement.removeFirstChild();
+    boolean hasElse = ifStatement.hasChildren();
+
+    int ifEndState = generatorCaseCount++;
+
+    Node invertedConditional = IR.ifNode(IR.not(condition),
+        IR.block(createStateUpdate(ifEndState), IR.breakNode()));
+    invertedConditional.setGeneratorSafeIf(true);
+    Node endIf = IR.number(ifEndState);
+    endIf.setGeneratorMarker(true);
+
+    originalGeneratorBody.addChildToFront(invertedConditional);
+    originalGeneratorBody.addChildAfter(ifBody, invertedConditional);
+    originalGeneratorBody.addChildAfter(endIf, ifBody);
+
+    if (hasElse) {
+      Node elseBlock = ifStatement.removeFirstChild();
+
+      int elseEndState = generatorCaseCount++;
+
+      Node endElse = IR.number(elseEndState);
+      endElse.setGeneratorMarker(true);
+
+      ifBody.addChildToBack(createStateUpdate(elseEndState));
+      ifBody.addChildToBack(IR.breakNode());
+      originalGeneratorBody.addChildAfter(elseBlock, endIf);
+      originalGeneratorBody.addChildAfter(endElse, elseBlock);
     }
   }
 
@@ -161,31 +202,43 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   /**
-   * While loops are translated with case statements before and after the loop body with
-   * conditional jumps between these case statements to achieve looping.
+   * {@code while} loops are translated to a case statement followed by an if statement
+   * containing the loop body. The if statement finishes by jumping back to the initial
+   * case statement to enter the loop again.
+   *
+   * <code>
+   * while (b) {
+   *   s;
+   * }
+   * </code>
+   *
+   * is rewritten to:
+   *
+   * <code>
+   * case_marker n;
+   * if (b) {
+   *   s;
+   *   state = n;
+   *   break;
+   * }
+   * </code>
    */
   private void visitWhile(Node whileStatement, Node originalGeneratorBody) {
     Node condition = whileStatement.removeFirstChild();
     Node body = whileStatement.removeFirstChild();
 
     int loopBeginState = generatorCaseCount++;
-    int loopEndState = generatorCaseCount++;
 
     Node beginCase = IR.number(loopBeginState);
     beginCase.setGeneratorMarker(true);
-    Node conditionalBranch = IR.ifNode(IR.not(condition),
-        IR.block(createStateUpdate(loopEndState), IR.breakNode()));
+    Node conditionalBranch = IR.ifNode(condition, body);
     Node setStateLoopStart = createStateUpdate(loopBeginState);
     Node breakToStart = IR.breakNode();
-    Node endCase = IR.number(loopEndState);
-    endCase.setGeneratorMarker(true);
 
     originalGeneratorBody.addChildToFront(beginCase);
     originalGeneratorBody.addChildAfter(conditionalBranch, beginCase);
-    originalGeneratorBody.addChildAfter(body, conditionalBranch);
-    originalGeneratorBody.addChildAfter(setStateLoopStart, body);
-    originalGeneratorBody.addChildAfter(breakToStart, setStateLoopStart);
-    originalGeneratorBody.addChildAfter(endCase, breakToStart);
+    body.addChildToBack(setStateLoopStart);
+    body.addChildToBack(breakToStart);
   }
 
   /**
