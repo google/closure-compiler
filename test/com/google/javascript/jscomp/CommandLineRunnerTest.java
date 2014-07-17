@@ -300,9 +300,10 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testCheckSymbolsOnForVerbose() {
+    args.add("--jscomp_error=checkVars");
     args.add("--warning_level=VERBOSE");
     test("x = 3;", VarCheck.UNDEFINED_VAR_ERROR);
-    test("var y; var y;", VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
+    test("var y; var y;", VariableReferenceCheck.REDECLARED_VARIABLE);
   }
 
   public void testCheckSymbolsOverrideForVerbose() {
@@ -1071,9 +1072,10 @@ public class CommandLineRunnerTest extends TestCase {
          "var theirVar={},myVar={},yourVar={};");
 
     args.add("--jscomp_off=externsValidation");
+    args.add("--jscomp_error=checkVars");
     args.add("--warning_level=VERBOSE");
     test("var theirVar = {}; var myVar = {}; var myVar = {};",
-         VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
+         VariableReferenceCheck.REDECLARED_VARIABLE);
   }
 
   public void testGoogAssertStripping() {
@@ -1321,8 +1323,8 @@ public class CommandLineRunnerTest extends TestCase {
   private void test(String[] original, DiagnosticType warning) {
     Compiler compiler = compile(original);
     assertEquals("Expected exactly one warning or error " +
-        "Errors: \n" + Joiner.on("\n").join(compiler.getErrors()) +
-        "Warnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
+        "\nErrors: \n" + Joiner.on("\n").join(compiler.getErrors()) +
+        "\nWarnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
         1, compiler.getErrors().length + compiler.getWarnings().length);
 
     assertFalse(exitCodes.isEmpty());
