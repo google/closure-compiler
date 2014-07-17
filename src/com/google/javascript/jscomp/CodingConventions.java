@@ -86,6 +86,11 @@ public class CodingConventions {
     }
 
     @Override
+    public boolean isFunctionCallThatAlwaysThrows(Node n) {
+      return nextConvention.isFunctionCallThatAlwaysThrows(n);
+    }
+
+    @Override
     public boolean isExported(String name, boolean local) {
       return nextConvention.isExported(name, local);
     }
@@ -286,6 +291,11 @@ public class CodingConventions {
     public boolean isVarArgsParameter(Node parameter) {
       // be as lax as possible
       return parameter.isVarArgs();
+    }
+
+    @Override
+    public boolean isFunctionCallThatAlwaysThrows(Node n) {
+      return false;
     }
 
     @Override

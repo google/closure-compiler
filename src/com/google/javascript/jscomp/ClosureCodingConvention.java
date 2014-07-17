@@ -346,6 +346,22 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
+  public boolean isFunctionCallThatAlwaysThrows(Node n) {
+    if (n.isExprResult()) {
+      if (!n.getFirstChild().isCall()) {
+        return false;
+      }
+    } else if (!n.isCall()) {
+      return false;
+    }
+    if (n.isExprResult()) {
+      n = n.getFirstChild();
+    }
+    // n is a call
+    return n.getFirstChild().matchesQualifiedName("goog.asserts.fail");
+  }
+
+  @Override
   public ObjectLiteralCast getObjectLiteralCast(Node callNode) {
     Preconditions.checkArgument(callNode.isCall());
     ObjectLiteralCast proxyCast = super.getObjectLiteralCast(callNode);

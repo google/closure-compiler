@@ -41,6 +41,7 @@ class CheckMissingReturn implements ScopedCallback {
 
   private final AbstractCompiler compiler;
   private final CheckLevel level;
+  private final CodingConvention convention;
 
   private static final Predicate<Node> IS_RETURN = new Predicate<Node>() {
     @Override
@@ -86,6 +87,7 @@ class CheckMissingReturn implements ScopedCallback {
   CheckMissingReturn(AbstractCompiler compiler, CheckLevel level) {
     this.compiler = compiler;
     this.level = level;
+    this.convention = compiler.getCodingConvention();
   }
 
   @Override
@@ -119,9 +121,13 @@ class CheckMissingReturn implements ScopedCallback {
    *
    * @return true if all paths return, converse not necessarily true
    */
-  private static boolean fastAllPathsReturnCheck(ControlFlowGraph<Node> cfg) {
+  private boolean fastAllPathsReturnCheck(ControlFlowGraph<Node> cfg) {
     for (DiGraphEdge<Node, Branch> s : cfg.getImplicitReturn().getInEdges()) {
-      if (!s.getSource().getValue().isReturn()) {
+      Node n = s.getSource().getValue();
+      // NOTE(dimvar): it is possible to change ControlFlowAnalysis.java, so
+      // that the calls that always throw are treated in the same way as THROW
+      // in the CFG. Then, we would not need to use the coding convention here.
+      if (!n.isReturn() && !convention.isFunctionCallThatAlwaysThrows(n)) {
         return false;
       }
     }

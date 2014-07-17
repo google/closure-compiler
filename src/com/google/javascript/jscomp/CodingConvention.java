@@ -86,6 +86,12 @@ public interface CodingConvention extends Serializable {
   public boolean isVarArgsParameter(Node parameter);
 
   /**
+   * Used by CheckMissingReturn. When a function call always throws an error,
+   * it can be the last stm of a block and we don't warn about missing return.
+   */
+  public boolean isFunctionCallThatAlwaysThrows(Node n);
+
+  /**
    * Checks whether a global variable or function name should be treated as
    * exported, or externally referenceable.
    *
