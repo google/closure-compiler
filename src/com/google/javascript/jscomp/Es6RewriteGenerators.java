@@ -129,13 +129,13 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     } else if (statement.isVar()) {
       visitVar(statement, currentCase, varRoot);
       return false;
-    } else if (statement.isFor() && NodeUtil.referencesYield(statement)) {
+    } else if (statement.isFor() && yieldsOrReturns(statement)) {
       visitFor(statement, originalBody);
       return false;
-    } else if (statement.isWhile() && NodeUtil.referencesYield(statement)) {
+    } else if (statement.isWhile() && yieldsOrReturns(statement)) {
       visitWhile(statement, originalBody);
       return false;
-    } else if (statement.isIf() && NodeUtil.referencesYield(statement)
+    } else if (statement.isIf() && yieldsOrReturns(statement)
         && !statement.isGeneratorSafeIf()) {
       visitIf(statement, originalBody);
       return false;
@@ -144,6 +144,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       return false;
     } else if (statement.isGeneratorMarker()) {
       return true;
+    } else if (statement.isReturn()) {
+      visitReturn(statement, currentCase);
+      return false;
     } else {
       // In the default case, add the statement to the current case block unchanged.
       currentCase.getLastChild().addChildToBack(statement);
@@ -242,7 +245,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   /**
-   * For loops are translated into equivalent while loops to consolidate loop translation logic.
+   * {@code for} loops are translated into equivalent while loops to
+   * consolidate loop translation logic.
    */
   private void visitFor(Node whileStatement, Node originalGeneratorBody) {
     Node initializer = whileStatement.removeFirstChild();
@@ -258,7 +262,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   /**
-   * Vars are hoisted into the closure containing the iterator to preserve their state accross
+   * {@code var} statements are hoisted into the closure containing the iterator
+   * to preserve their state accross
    * multiple calls to next().
    */
   private void visitVar(Node varStatement, Node enclosingCase, Node hoistRoot) {
@@ -272,13 +277,24 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   /**
-   * Yield sets the state so that execution resume at the next statement when the function is next
-   * called and then returns an iterator result with the desired value.
+   * {@code yield} sets the state so that execution resume at the next statement
+   * when the function is next called and then returns an iterator result with
+   * the desired value.
    */
   private void visitYieldExprResult(Node yieldStatement, Node enclosingCase) {
     enclosingCase.getLastChild().addChildToBack(createStateUpdate());
     enclosingCase.getLastChild().addChildToBack(IR.returnNode(
         createIteratorResult(yieldStatement.getFirstChild().removeFirstChild())));
+  }
+
+  /**
+   * {@code return} statements are translated to set the state to done before returning the
+   * desired value.
+   */
+  private void visitReturn(Node returnStatement, Node enclosingCase) {
+    enclosingCase.getLastChild().addChildToBack(createStateUpdate(-1));
+    enclosingCase.getLastChild().addChildToBack(IR.returnNode(
+        createIteratorResult(returnStatement.removeFirstChild())));
   }
 
   private Node createStateUpdate() {
@@ -298,6 +314,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   //TODO(mattloring): move these to NodeUtil if deemed generally useful.
+  private static boolean yieldsOrReturns(Node n) {
+    return NodeUtil.referencesYield(n) || NodeUtil.referencesReturn(n);
+  }
+
   /**
    * Finds the only child of the provided node of the given type.
    */

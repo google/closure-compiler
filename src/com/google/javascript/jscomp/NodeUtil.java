@@ -1746,6 +1746,14 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns true if the shallow scope contains references to 'return' keyword
+   */
+  static boolean referencesReturn(Node n) {
+    Node start = n.isFunction() ? n.getLastChild() : n;
+    return containsType(start, Token.RETURN, MATCH_NOT_FUNCTION);
+  }
+
+  /**
    * Returns true if the current scope contains references to the 'super' keyword.
    * Note that if there are classes declared inside the current class, super calls which
    * reference those classes are not reported.
