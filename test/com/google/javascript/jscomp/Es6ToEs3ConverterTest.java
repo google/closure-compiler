@@ -1532,6 +1532,43 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
+  public void testGeneratorBreakContinueThrow() {
+    test(Joiner.on('\n').join(
+        "function *f() {",
+        "  var i = 0; for (var j = 0; j < 10; j++) { i += j; continue; } yield i;",
+        "}"
+    ), Joiner.on('\n').join(
+        "function f() {",
+        "  return { $$iterator: function() {",
+        "    var $jscomp$generator$state = 0;",
+        "    var i;",
+        "    return { next: function() {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          i = 0;",
+        "          for (var j = 0; j < 10; j++) { i += j; continue; }",
+        "          $jscomp$generator$state = 1;",
+        "          return {value: i, done: false};",
+        "        case 1:",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {done: true}",
+        "      }",
+        "    }}",
+        "  }}",
+        "}"
+    ));
+
+    test("function *f() {var i = 0; for (var j = 0; j < 10; j++) { i += j; continue; yield i;}}",
+      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("function *f() {var i = 0; for (var j = 0; j < 10; j++) { i += j; break; yield i;}}",
+      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("function *f() {var i = 0; for (var j = 0; j < 10; j++) { i += j; throw 5; yield i;}}",
+      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
   public void testIfGenerator() {
     test("function *f() { var j = 0; if (j < 1) { yield j; } }",
       Joiner.on('\n').join(

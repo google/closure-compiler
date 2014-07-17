@@ -136,7 +136,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       visitWhile(statement, originalBody);
       return false;
     } else if (statement.isIf() && yieldsOrReturns(statement)
-        && !statement.isGeneratorSafeIf()) {
+        && !statement.isGeneratorSafe()) {
       visitIf(statement, originalBody);
       return false;
     } else if (statement.isBlock()) {
@@ -146,6 +146,12 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       return true;
     } else if (statement.isReturn()) {
       visitReturn(statement, currentCase);
+      return false;
+    } else if ((statement.isBreak() && !statement.isGeneratorSafe())
+        || statement.isContinue() || statement.isThrow()) {
+      compiler.report(JSError.make(statement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+          "Breaks, continues, and throws are not yet allowed if their"
+          + " enclosing control structure contains a yield or return."));
       return false;
     } else {
       // In the default case, add the statement to the current case block unchanged.
@@ -166,9 +172,11 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
     int ifEndState = generatorCaseCount++;
 
+    Node safeBreak = IR.breakNode();
+    safeBreak.setGeneratorSafe(true);
     Node invertedConditional = IR.ifNode(IR.not(condition),
-        IR.block(createStateUpdate(ifEndState), IR.breakNode()));
-    invertedConditional.setGeneratorSafeIf(true);
+        IR.block(createStateUpdate(ifEndState), safeBreak));
+    invertedConditional.setGeneratorSafe(true);
     Node endIf = IR.number(ifEndState);
     endIf.setGeneratorMarker(true);
 
@@ -185,7 +193,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       endElse.setGeneratorMarker(true);
 
       ifBody.addChildToBack(createStateUpdate(elseEndState));
-      ifBody.addChildToBack(IR.breakNode());
+      ifBody.addChildToBack(safeBreak.cloneTree());
       originalGeneratorBody.addChildAfter(elseBlock, endIf);
       originalGeneratorBody.addChildAfter(endElse, elseBlock);
     }
@@ -237,6 +245,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     Node conditionalBranch = IR.ifNode(condition, body);
     Node setStateLoopStart = createStateUpdate(loopBeginState);
     Node breakToStart = IR.breakNode();
+    breakToStart.setGeneratorSafe(true);
 
     originalGeneratorBody.addChildToFront(beginCase);
     originalGeneratorBody.addChildAfter(conditionalBranch, beginCase);
