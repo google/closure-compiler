@@ -262,10 +262,13 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    * multiple calls to next().
    */
   private void visitVar(Node varStatement, Node enclosingCase, Node hoistRoot) {
-    Node name = varStatement.getFirstChild();
-    enclosingCase.getLastChild().addChildToBack(
-        IR.exprResult(IR.assign(name.detachFromParent(), name.removeFirstChild())));
-    hoistRoot.getParent().addChildAfter(IR.var(name.cloneTree()), hoistRoot);
+    Node name = varStatement.removeFirstChild();
+    while (name != null) {
+      enclosingCase.getLastChild().addChildToBack(
+          IR.exprResult(IR.assign(name, name.removeFirstChild())));
+      hoistRoot.getParent().addChildAfter(IR.var(name.cloneTree()), hoistRoot);
+      name = varStatement.removeFirstChild();
+    }
   }
 
   /**
