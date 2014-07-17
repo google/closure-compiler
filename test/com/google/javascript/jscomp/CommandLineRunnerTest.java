@@ -1325,7 +1325,7 @@ public class CommandLineRunnerTest extends TestCase {
         "Warnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
         1, compiler.getErrors().length + compiler.getWarnings().length);
 
-    assertTrue(exitCodes.size() > 0);
+    assertFalse(exitCodes.isEmpty());
     int lastExitCode = exitCodes.get(exitCodes.size() - 1);
 
     if (compiler.getErrors().length > 0) {

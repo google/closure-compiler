@@ -390,7 +390,7 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
     // Extensions, only if there is any
     for (String key : this.extensions.keySet()) {
       Object objValue = this.extensions.get(key);
-      String value = new String(objValue.toString());
+      String value = objValue.toString();
       if (objValue instanceof String){
         value = JSONObject.quote(value);
       }
@@ -646,7 +646,7 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
       // The mapping list is ordered as a pre-order traversal.  The mapping
       // positions give us enough information to rebuild the stack and this
       // allows the building of the source map in O(n) time.
-      Deque<Mapping> stack = new ArrayDeque<Mapping>();
+      Deque<Mapping> stack = new ArrayDeque<>();
       for (Mapping m : mappings) {
         // Find the closest ancestor of the current mapping:
         // An overlapping mapping is an ancestor of the current mapping, any

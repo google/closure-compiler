@@ -408,7 +408,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
           defstrs.add(defstr);
         }
 
-        sb.append(defstrs.toString());
+        sb.append(defstrs);
         found.add(sb.toString());
       }
     }

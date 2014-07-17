@@ -22,10 +22,10 @@ import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import javax.annotation.Nullable;
 import junit.framework.TestCase;
 
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Unit tests for ExpressionDecomposer
@@ -532,9 +532,9 @@ public class ExpressionDecomposerTest extends TestCase {
     if (compiler.getErrorCount() != 0) {
       String msg = "Error encountered: ";
       for (JSError err : compiler.getErrors()) {
-        msg += err.toString() + "\n";
+        msg += err + "\n";
       }
-      assertTrue(msg, compiler.getErrorCount() == 0);
+      assertEquals(msg, 0, compiler.getErrorCount());
     }
   }
 
@@ -561,7 +561,7 @@ public class ExpressionDecomposerTest extends TestCase {
     assertNotNull("Call to " + fnName + " was not found.", callSite);
 
     DecompositionType result = decomposer.canExposeExpression(callSite);
-    assertTrue(result == DecompositionType.DECOMPOSABLE);
+    assertSame(DecompositionType.DECOMPOSABLE, result);
 
     compiler.resetUniqueNameId();
     decomposer.exposeExpression(callSite);

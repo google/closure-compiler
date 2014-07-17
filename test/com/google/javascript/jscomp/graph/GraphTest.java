@@ -16,15 +16,15 @@
 
 package com.google.javascript.jscomp.graph;
 
-import com.google.javascript.jscomp.graph.Graph;
-import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
 import com.google.javascript.jscomp.graph.Annotatable;
 import com.google.javascript.jscomp.graph.Annotation;
-import com.google.javascript.jscomp.graph.GraphNode;
-import com.google.javascript.jscomp.graph.SubGraph;
 import com.google.javascript.jscomp.graph.DiGraph;
+import com.google.javascript.jscomp.graph.Graph;
 import com.google.javascript.jscomp.graph.Graph.GraphEdge;
+import com.google.javascript.jscomp.graph.GraphNode;
+import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
+import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
+import com.google.javascript.jscomp.graph.SubGraph;
 import com.google.javascript.jscomp.graph.UndiGraph;
 
 import junit.framework.TestCase;
@@ -367,7 +367,7 @@ public class GraphTest extends TestCase {
         count--;
       }
     }
-    assertTrue(count == 0);
+    assertEquals(0, count);
   }
 
   private <T extends GraphNode<String, String>> void assertSetEquals(
@@ -378,6 +378,6 @@ public class GraphTest extends TestCase {
     }
     Set<String> otherSet = new HashSet<>();
     Collections.addAll(otherSet, targets);
-    assertTrue(otherSet.equals(set));
+    assertEquals(set, otherSet);
   }
 }

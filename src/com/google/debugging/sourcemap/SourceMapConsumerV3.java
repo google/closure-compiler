@@ -243,7 +243,7 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
 
     ArrayList<Entry> entries = lines.get(lineNumber);
     // No empty lists.
-    Preconditions.checkState(entries.size() > 0);
+    Preconditions.checkState(!entries.isEmpty());
     if (entries.get(0).getGeneratedColumn() > column) {
       return getPreviousMapping(lineNumber);
     }
@@ -326,17 +326,17 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
 
     void build() {
       int [] temp = new int[MAX_ENTRY_VALUES];
-      ArrayList<Entry> entries = new ArrayList<Entry>();
+      ArrayList<Entry> entries = new ArrayList<>();
       while (content.hasNext()) {
         // ';' denotes a new line.
         if (tryConsumeToken(';')) {
           // The line is complete, store the result for the line,
           // null if the line is empty.
           ArrayList<Entry> result;
-          if (entries.size() > 0) {
+          if (!entries.isEmpty()) {
             result = entries;
             // A new array list for the next line.
-            entries = new ArrayList<Entry>();
+            entries = new ArrayList<>();
           } else {
             result = null;
           }
@@ -536,8 +536,7 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
    * OriginalMappings.
    */
   private void createReverseMapping() {
-    reverseSourceMapping =
-        new HashMap<String, Map<Integer, Collection<OriginalMapping>>>();
+    reverseSourceMapping = new HashMap<>();
 
     for (int targetLine = 0; targetLine < lines.size(); targetLine++) {
       ArrayList<Entry> entries = lines.get(targetLine);

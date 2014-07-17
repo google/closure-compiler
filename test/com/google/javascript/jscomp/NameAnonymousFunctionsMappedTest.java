@@ -50,7 +50,7 @@ public class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
 
   private void assertMapping(String... pairs) {
     VariableMap functionMap = pass.getFunctionMap();
-    assertTrue(pairs.length % 2 == 0);
+    assertEquals(0, pairs.length % 2);
     for (int i = 0; i < pairs.length; i += 2) {
       String s = functionMap.lookupSourceName(pairs[i]);
       assertEquals(pairs[i + 1], s);

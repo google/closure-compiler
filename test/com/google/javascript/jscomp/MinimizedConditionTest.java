@@ -41,8 +41,7 @@ public class MinimizedConditionTest extends TestCase {
     List<SourceFile> externs = Lists.newArrayList();
     compiler.init(externs, input, new CompilerOptions());
     Node root = compiler.parseInputs();
-    assertTrue("Unexpected parse error(s): " +
-        Joiner.on("\n").join(compiler.getErrors()), root != null);
+    assertNotNull("Unexpected parse error(s): " + Joiner.on("\n").join(compiler.getErrors()), root);
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
     Node script = mainRoot.getFirstChild();

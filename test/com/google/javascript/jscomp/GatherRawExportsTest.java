@@ -118,6 +118,6 @@ public class GatherRawExportsTest extends CompilerTestCase {
   private void assertExported(String js, String ... names) {
     Set<String> setNames = Sets.newHashSet(names);
     testSame(js);
-    assertTrue(last.getExportedVariableNames().equals(setNames));
+    assertEquals(setNames, last.getExportedVariableNames());
   }
 }

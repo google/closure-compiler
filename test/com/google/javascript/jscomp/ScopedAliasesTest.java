@@ -889,12 +889,10 @@ public class ScopedAliasesTest extends CompilerTestCase {
       JSDocInfo info = n.getJSDocInfo();
       if (info != null) {
         Collection<Node> typeNodes = info.getTypeNodes();
-        if (typeNodes.size() > 0) {
+        if (!typeNodes.isEmpty()) {
           if (actualTypes != null) {
             List<Node> expectedTypes = Lists.newArrayList();
-            for (Node typeNode : info.getTypeNodes()) {
-              expectedTypes.add(typeNode);
-            }
+            expectedTypes.addAll(info.getTypeNodes());
             assertEquals("Wrong number of JsDoc types",
                 expectedTypes.size(), actualTypes.size());
             for (int i = 0; i < expectedTypes.size(); i++) {
@@ -903,9 +901,7 @@ public class ScopedAliasesTest extends CompilerTestCase {
             }
           } else {
             actualTypes = Lists.newArrayList();
-            for (Node typeNode : info.getTypeNodes()) {
-              actualTypes.add(typeNode);
-            }
+            actualTypes.addAll(info.getTypeNodes());
           }
         }
       }

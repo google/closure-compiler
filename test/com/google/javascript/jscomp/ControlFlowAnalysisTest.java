@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -25,7 +26,6 @@ import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -55,9 +55,7 @@ public class ControlFlowAnalysisTest extends TestCase {
       ControlFlowGraph<Node> cfg) {
     List<DiGraphEdge<Node, Branch>> edges = Lists.newArrayList();
     for (DiGraphNode<Node, Branch> n : cfg.getDirectedGraphNodes()) {
-      for (DiGraphEdge<Node, Branch> e : cfg.getOutEdges(n.getValue())) {
-        edges.add(e);
-      }
+      edges.addAll(cfg.getOutEdges(n.getValue()));
     }
     return edges;
   }
@@ -207,8 +205,8 @@ public class ControlFlowAnalysisTest extends TestCase {
       Node source = edge.getSource().getValue();
       DiGraphNode<Node, Branch> dest = edge.getDestination();
       if (source.getType() == startToken) {
-        assertTrue("Token " + startToken + " should not have an out going" +
-            " edge to the implicit return", !cfg.isImplicitReturn(dest));
+        assertFalse("Token " + startToken + " should not have an out going"
+            + " edge to the implicit return", cfg.isImplicitReturn(dest));
         return;
       }
     }
@@ -1459,8 +1457,7 @@ public class ControlFlowAnalysisTest extends TestCase {
   private void assertNodeOrder(ControlFlowGraph<Node> cfg,
       List<Integer> nodeTypes) {
     List<DiGraphNode<Node, Branch>> cfgNodes =
-        Lists.newArrayList(cfg.getDirectedGraphNodes());
-    Collections.sort(cfgNodes, cfg.getOptionalNodeComparator(true));
+        Ordering.from(cfg.getOptionalNodeComparator(true)).sortedCopy(cfg.getDirectedGraphNodes());
 
     // IMPLICIT RETURN must always be last.
     Node implicitReturn = cfgNodes.remove(cfgNodes.size() - 1).getValue();

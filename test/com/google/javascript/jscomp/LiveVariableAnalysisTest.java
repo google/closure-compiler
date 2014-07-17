@@ -287,32 +287,32 @@ public class LiveVariableAnalysisTest extends TestCase {
     FlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
         getFlowStateAtX(src);
     assertNotNull(src + " should contain a label 'X:'", state);
-    assertTrue("Variable" + var + " should be live before X", state.getIn()
-        .isLive(liveness.getVarIndex(var)));
+    assertTrue("Variable" + var + " should be live before X",
+        state.getIn().isLive(liveness.getVarIndex(var)));
   }
 
   private void assertLiveAfterX(String src, String var) {
     FlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
         getFlowStateAtX(src);
-    assertTrue("Label X should be in the input program.", state != null);
-    assertTrue("Variable" + var + " should be live after X", state.getOut()
-        .isLive(liveness.getVarIndex(var)));
+    assertNotNull("Label X should be in the input program.", state);
+    assertTrue("Variable" + var + " should be live after X",
+        state.getOut().isLive(liveness.getVarIndex(var)));
   }
 
   private void assertNotLiveAfterX(String src, String var) {
     FlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
         getFlowStateAtX(src);
-    assertTrue("Label X should be in the input program.", state != null);
-    assertTrue("Variable" + var + " should not be live after X", !state
-        .getOut().isLive(liveness.getVarIndex(var)));
+    assertNotNull("Label X should be in the input program.", state);
+    assertFalse("Variable" + var + " should not be live after X",
+        state.getOut().isLive(liveness.getVarIndex(var)));
   }
 
   private void assertNotLiveBeforeX(String src, String var) {
     FlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
         getFlowStateAtX(src);
-    assertTrue("Label X should be in the input program.", state != null);
-    assertTrue("Variable" + var + " should not be live before X", !state
-        .getIn().isLive(liveness.getVarIndex(var)));
+    assertNotNull("Label X should be in the input program.", state);
+    assertFalse("Variable" + var + " should not be live before X",
+        state.getIn().isLive(liveness.getVarIndex(var)));
   }
 
   private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtX(

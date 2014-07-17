@@ -240,7 +240,7 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
     StringBuilder output = new StringBuilder();
     js.append("/** @constructor */ var Foo = function(){};\n");
     js.append("/** @constructor */ var Bar = function(){};\n");
-    output.append(js.toString());
+    output.append(js);
 
     int vars = 10;
     for (int i = 0; i < vars; i++) {

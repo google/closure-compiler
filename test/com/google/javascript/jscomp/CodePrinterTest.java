@@ -86,11 +86,11 @@ public class CodePrinterTest extends TestCase {
     if (actual != expected) {
       String msg = "";
       for (JSError err : compiler.getErrors()) {
-        msg += "Error:" + err.toString() + "\n";
+        msg += "Error:" + err + "\n";
       }
       if (!allowWarnings) {
         for (JSError err : compiler.getWarnings()) {
-          msg += "Warning:" + err.toString() + "\n";
+          msg += "Warning:" + err + "\n";
         }
       }
       assertEquals("Unexpected warnings or errors.\n " + msg, expected, actual);

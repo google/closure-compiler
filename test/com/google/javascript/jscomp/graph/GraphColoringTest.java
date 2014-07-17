@@ -196,14 +196,14 @@ public class GraphColoringTest extends TestCase {
    */
   private static <N, E> void validateColoring(Graph<N, E> graph) {
     for (GraphNode<N, E> node : graph.getNodes()) {
-      assertTrue(node.getAnnotation() != null);
+      assertNotNull(node.getAnnotation());
     }
     for (GraphEdge<N, E> edge : graph.getEdges()) {
       Color c1 = edge.getNodeA().getAnnotation();
       Color c2 = edge.getNodeB().getAnnotation();
-      assertTrue(c1 != null);
-      assertTrue(c2 != null);
-      assertTrue(!c1.equals(c2));
+      assertNotNull(c1);
+      assertNotNull(c2);
+      assertFalse(c1.equals(c2));
     }
   }
 }

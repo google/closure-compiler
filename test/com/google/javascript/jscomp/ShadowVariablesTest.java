@@ -256,8 +256,7 @@ public class ShadowVariablesTest extends CompilerTestCase{
     try {
       vm.getNewNameToOriginalNameMap();
     } catch (java.lang.IllegalArgumentException unexpected) {
-      fail("Invalid VariableMap generated: " +
-           vm.getOriginalNameToNewNameMap().toString());
+      fail("Invalid VariableMap generated: " + vm.getOriginalNameToNewNameMap());
     }
   }
 

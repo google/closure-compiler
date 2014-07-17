@@ -148,7 +148,7 @@ public class PhaseOptimizerTest extends TestCase {
     List<String> optimalOrder = Lists.newArrayList(
         PhaseOptimizer.OPTIMAL_ORDER);
     Random random = new Random();
-    while (optimalOrder.size() > 0) {
+    while (!optimalOrder.isEmpty()) {
       addLoopedPass(
           loop, optimalOrder.remove(random.nextInt(optimalOrder.size())), 0);
     }

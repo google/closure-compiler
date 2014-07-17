@@ -145,7 +145,7 @@ public class FunctionTypeBuilderTest extends CompilerTestCase {
       String typeName = type.getInstanceType().toString();
       FunctionType typeInRegistry = ((ObjectType) getLastCompiler()
           .getTypeRegistry().getType(typeName)).getConstructor();
-      assertTrue(typeInRegistry == type);
+      assertSame(type, typeInRegistry);
     }
   }
 }

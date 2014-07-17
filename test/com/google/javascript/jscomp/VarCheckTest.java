@@ -66,7 +66,7 @@ public class VarCheckTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override public void process(Node externs, Node root) {
         new VarCheck(compiler, sanityCheck).process(externs, root);
-        if (sanityCheck == false && !compiler.hasErrors()) {
+        if (!sanityCheck && !compiler.hasErrors()) {
           new VarCheck(compiler, true).process(externs, root);
         }
         if (declarationCheck) {

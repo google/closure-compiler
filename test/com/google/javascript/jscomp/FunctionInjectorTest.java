@@ -1424,9 +1424,9 @@ public class FunctionInjectorTest extends TestCase {
     if (compiler.getErrorCount() != 0) {
       String msg = "Error encountered: ";
       for (JSError err : compiler.getErrors()) {
-        msg += err.toString() + "\n";
+        msg += err + "\n";
       }
-      assertTrue(msg, compiler.getErrorCount() == 0);
+      assertEquals(msg, 0, compiler.getErrorCount());
     }
   }
 
@@ -1481,9 +1481,8 @@ public class FunctionInjectorTest extends TestCase {
         assertTrue("canInlineReferenceToFunction should not be CAN_NOT_INLINE",
             CanInlineResult.NO != canInline);
         if (decompose) {
-          assertTrue("canInlineReferenceToFunction " +
-              "should be CAN_INLINE_AFTER_DECOMPOSITION",
-              CanInlineResult.AFTER_PREPARATION == canInline);
+          assertSame("canInlineReferenceToFunction " + "should be CAN_INLINE_AFTER_DECOMPOSITION",
+              canInline, CanInlineResult.AFTER_PREPARATION);
 
           Set<String> knownConstants = Sets.newHashSet();
           injector.setKnownConstants(knownConstants);
@@ -1587,7 +1586,7 @@ public class FunctionInjectorTest extends TestCase {
     String message = "Unexpected errors: ";
     JSError[] errs = compiler.getErrors();
     for (int i = 0; i < errs.length; i++){
-      message += "\n" + errs[i].toString();
+      message += "\n" + errs[i];
     }
     assertEquals(message, 0, compiler.getErrorCount());
     return n;

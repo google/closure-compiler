@@ -8923,7 +8923,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertTrue(googNodeType instanceof ObjectType);
 
     // goog scope type and goog type on VAR node must be the same
-    assertTrue(googScopeType == googNodeType);
+    assertSame(googNodeType, googScopeType);
 
     // goog type on the left of the GETPROP node (under fist ASSIGN)
     Node getpropFoo1 = varNode.getNext().getFirstChild().getFirstChild();
@@ -8933,7 +8933,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertTrue(googGetpropFoo1Type instanceof ObjectType);
 
     // still the same type as the one on the variable
-    assertTrue(googGetpropFoo1Type == googScopeType);
+    assertSame(googScopeType, googGetpropFoo1Type);
 
     // the foo property should be defined on goog
     JSType googFooType = ((ObjectType) googScopeType).getPropertyType("foo");
@@ -8949,7 +8949,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertTrue(googGetpropFoo2Type instanceof ObjectType);
 
     // still the same type as the one on the variable
-    assertTrue(googGetpropFoo2Type == googScopeType);
+    assertSame(googScopeType, googGetpropFoo2Type);
 
     // goog.foo type on the left of the top-level GETPROP node
     // (under second ASSIGN)

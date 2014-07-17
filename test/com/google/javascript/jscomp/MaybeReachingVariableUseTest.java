@@ -121,7 +121,7 @@ public class MaybeReachingVariableUseTest extends TestCase {
   private void assertMatch(String src) {
     computeUseDef(src);
     Collection<Node> result = useDef.getUses("x", def);
-    assertTrue(result.size() == uses.size());
+    assertEquals(uses.size(), result.size());
     assertTrue(result.containsAll(uses));
   }
 

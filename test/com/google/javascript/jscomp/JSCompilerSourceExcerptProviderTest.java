@@ -52,13 +52,13 @@ public class JSCompilerSourceExcerptProviderTest extends TestCase {
     assertEquals("bar:fourth line", provider.getSourceLine("bar", 4));
   }
 
-  public void testExcerptLineFromInexistantSource() throws Exception {
-    assertEquals(null, provider.getSourceLine("inexistant", 1));
-    assertEquals(null, provider.getSourceLine("inexistant", 7));
-    assertEquals(null, provider.getSourceLine("inexistant", 90));
+  public void testExcerptLineFromInexistentSource() throws Exception {
+    assertEquals(null, provider.getSourceLine("inexistent", 1));
+    assertEquals(null, provider.getSourceLine("inexistent", 7));
+    assertEquals(null, provider.getSourceLine("inexistent", 90));
   }
 
-  public void testExcerptInexistantLine() throws Exception {
+  public void testExcerptInexistentLine() throws Exception {
     assertEquals(null, provider.getSourceLine("foo", 0));
     assertEquals(null, provider.getSourceLine("foo", 4));
     assertEquals(null, provider.getSourceLine("bar", 0));
@@ -82,17 +82,17 @@ public class JSCompilerSourceExcerptProviderTest extends TestCase {
     assertRegionWellFormed("bar", 4);
   }
 
-  public void testExcerptRegionFromInexistantSource() throws Exception {
-    assertEquals(null, provider.getSourceRegion("inexistant", 0));
-    assertEquals(null, provider.getSourceRegion("inexistant", 6));
-    assertEquals(null, provider.getSourceRegion("inexistant", 90));
+  public void testExcerptRegionFromInexistentSource() throws Exception {
+    assertNull(provider.getSourceRegion("inexistent", 0));
+    assertNull(provider.getSourceRegion("inexistent", 6));
+    assertNull(provider.getSourceRegion("inexistent", 90));
   }
 
-  public void testExcerptInexistantRegion() throws Exception {
-    assertEquals(null, provider.getSourceRegion("foo", 0));
-    assertEquals(null, provider.getSourceRegion("foo", 4));
-    assertEquals(null, provider.getSourceRegion("bar", 0));
-    assertEquals(null, provider.getSourceRegion("bar", 5));
+  public void testExcerptInexistentRegion() throws Exception {
+    assertNull(provider.getSourceRegion("foo", 0));
+    assertNull(provider.getSourceRegion("foo", 4));
+    assertNull(provider.getSourceRegion("bar", 0));
+    assertNull(provider.getSourceRegion("bar", 5));
   }
 
   /**

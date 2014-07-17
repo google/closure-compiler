@@ -899,7 +899,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseParam2() throws Exception {
     JSDocInfo info = parse("@param index*/");
     assertEquals(1, info.getParameterCount());
-    assertEquals(null, info.getParameterType("index"));
+    assertNull(info.getParameterType("index"));
   }
 
   public void testParseParam3() throws Exception {
@@ -911,7 +911,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseParam4() throws Exception {
     JSDocInfo info = parse("@param index useful comments*/");
     assertEquals(1, info.getParameterCount());
-    assertEquals(null, info.getParameterType("index"));
+    assertNull(info.getParameterType("index"));
   }
 
   public void testParseParam5() throws Exception {
@@ -1420,7 +1420,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testStackedAnnotation8() throws Exception {
     JSDocInfo info = parse("@throws {number} @constructor */", true);
-    assertTrue(!info.getThrownTypes().isEmpty());
+    assertFalse(info.getThrownTypes().isEmpty());
     assertTrue(info.isConstructor());
 
     info = parse("@return {number} @constructor */", false);
@@ -1717,7 +1717,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo info = parse(comment);
     assertEquals(2, info.getParameterCount());
     assertTypeEquals(NUMBER_TYPE, info.getParameterType("index"));
-    assertEquals(null, info.getParameterType("name"));
+    assertNull(info.getParameterType("name"));
     assertTypeEquals(BOOLEAN_TYPE, info.getReturnType());
     assertEquals(Visibility.PROTECTED, info.getVisibility());
   }
@@ -1736,7 +1736,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     JSDocInfo info = parse(comment);
     assertEquals(1, info.getParameterCount());
-    assertEquals(null, info.getParameterType("mediaTag"));
+    assertNull(info.getParameterType("mediaTag"));
     assertEquals(Visibility.PUBLIC, info.getVisibility());
     assertTrue(info.isConstant());
   }
@@ -2186,8 +2186,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     Collection<String> authors = jsdoc.getAuthors();
 
-    assertTrue(authors != null);
-    assertTrue(authors.size() == 3);
+    assertNotNull(authors);
+    assertEquals(3, authors.size());
 
     assertContains(authors, "a@google.com (A Person)");
     assertContains(authors, "b@google.com (B Person)");
@@ -2343,8 +2343,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     Collection<String> references = jsdoc.getReferences();
 
-    assertTrue(references != null);
-    assertTrue(references.size() == 4);
+    assertNotNull(references);
+    assertEquals(4, references.size());
 
     assertContains(references, "A cool place!");
     assertContains(references, "The world.");
@@ -3225,7 +3225,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
                                                        int startCharno,
                                                        int endLineno,
                                                        int endCharno) {
-    assertTrue(marker.getDescription() != null);
+    assertNotNull(marker.getDescription());
     assertEquals(description, marker.getDescription().getItem());
 
     // Match positional information.
@@ -3252,7 +3252,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       int startLineno, int startCharno, int endLineno, int endCharno,
       boolean hasBrackets) {
 
-    assertTrue(marker.getType() != null);
+    assertNotNull(marker.getType());
     assertTrue(marker.getType().getItem().isString());
 
     // Match the name and brackets information.
@@ -3280,7 +3280,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @SuppressWarnings("deprecation")
   private JSDocInfo.Marker assertNameInMarker(JSDocInfo.Marker marker,
       String name, int startLine, int startCharno) {
-    assertTrue(marker.getName() != null);
+    assertNotNull(marker.getName());
     assertEquals(name, marker.getName().getItem());
 
     assertEquals(startCharno, marker.getName().getPositionOnStartLine());
@@ -3332,7 +3332,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     Collection<JSDocInfo.Marker> markers = jsdoc.getMarkers();
 
-    assertTrue(markers.size() > 0);
+    assertFalse(markers.isEmpty());
 
     int counter = 0;
 

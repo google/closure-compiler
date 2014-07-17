@@ -30,6 +30,7 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -948,12 +949,10 @@ public abstract class CompilerTestCase extends TestCase  {
     compiler.addChangeHandler(recentChange);
 
     Node root = compiler.parseInputs();
-    assertTrue("Unexpected parse error(s): " +
-        Joiner.on("\n").join(compiler.getErrors()), root != null);
+    assertNotNull("Unexpected parse error(s): " + Joiner.on("\n").join(compiler.getErrors()), root);
     if (!expectParseWarningsThisTest) {
-      assertTrue("Unexpected parse warnings(s): " +
-          Joiner.on("\n").join(compiler.getWarnings()),
-          compiler.getWarnings().length == 0);
+      assertEquals("Unexpected parse warnings(s): " + Joiner.on("\n").join(compiler.getWarnings()),
+          0, compiler.getWarnings().length);
     }
 
     if (astValidationEnabled) {
@@ -1040,7 +1039,7 @@ public abstract class CompilerTestCase extends TestCase  {
 
         hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         aggregateWarningCount += errorManagers[i].getWarningCount();
-        aggregateWarnings.addAll(Lists.newArrayList(compiler.getWarnings()));
+        Collections.addAll(aggregateWarnings, compiler.getWarnings());
 
         if (normalizeEnabled) {
           boolean verifyDeclaredConstants = true;
@@ -1236,8 +1235,7 @@ public abstract class CompilerTestCase extends TestCase  {
 
     compiler.init(externsInputs, inputs, getOptions());
     Node root = compiler.parseInputs();
-    assertTrue("Unexpected parse error(s): " +
-        Joiner.on("\n").join(compiler.getErrors()), root != null);
+    assertNotNull("Unexpected parse error(s): " + Joiner.on("\n").join(compiler.getErrors()), root);
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
     // Only run the normalize pass, if asked.

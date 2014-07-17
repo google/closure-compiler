@@ -211,7 +211,7 @@ public class JsMessageExtractorTest extends TestCase {
             "var MSG_UNNAMED_1 = goog.getMsg('foo');",
             "var MSG_UNNAMED_2 = goog.getMsg('foo');"));
     assertEquals(2, msgs.size());
-    assertTrue(msgs.get(0).getId().equals(msgs.get(1).getId()));
+    assertEquals(msgs.get(1).getId(), msgs.get(0).getId());
     assertEquals(msgs.get(0), msgs.get(1));
 
     msgs = Lists.newArrayList(

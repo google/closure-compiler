@@ -718,7 +718,7 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
                         " ",
                         getNameString(nameNode),
                         " = ",
-                        (type != null) ? type.toString() : "null"));
+                        String.valueOf(type)));
         }
 
         if (node.isGetProp()) {
@@ -731,7 +731,7 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
                     " ",
                     child.getString(),
                     " = ",
-                    (type != null) ? type.toString() : "null"));
+                    String.valueOf(type)));
           }
         }
       }

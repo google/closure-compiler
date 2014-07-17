@@ -256,8 +256,7 @@ public abstract class SourceMapTestCase extends TestCase {
       // Ensure that if the token name does not being with an 'STR' (meaning a
       // string) it has an original name.
       if (!inputToken.tokenName.startsWith("STR")) {
-        assertTrue("missing name for " + inputToken.tokenName,
-            !mapping.getIdentifier().isEmpty());
+        assertFalse("missing name for " + inputToken.tokenName, mapping.getIdentifier().isEmpty());
       }
 
       // Ensure that if the mapping has a name, it matches the token.

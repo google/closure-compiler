@@ -150,15 +150,15 @@ public class CombinedCompilerPassTest extends TestCase  {
     }
 
     void checkResults() {
-      assertEquals("ConcatTraversal ignoring " +
-                   traversal.getIgnoring().toString() +
-                   " has unexpected visiting order",
-                   expectedVisited, traversal.getVisited());
+      assertEquals(
+          "ConcatTraversal ignoring " + traversal.getIgnoring()
+          + " has unexpected visiting order",
+          expectedVisited, traversal.getVisited());
 
-      assertEquals("ConcatTraversal ignoring " +
-                   traversal.getIgnoring().toString() +
-                   " has unexpected traversal order",
-                   shouldTraverseExpected, traversal.getShouldTraversed());
+      assertEquals(
+          "ConcatTraversal ignoring " + traversal.getIgnoring()
+          + " has unexpected traversal order",
+          shouldTraverseExpected, traversal.getShouldTraversed());
     }
   }
 

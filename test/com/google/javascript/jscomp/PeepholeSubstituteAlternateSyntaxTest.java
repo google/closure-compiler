@@ -155,18 +155,18 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   }
 
   public void testContainsUnicodeEscape() throws Exception {
-    assertTrue(!PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(""));
-    assertTrue(!PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo"));
+    assertFalse(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(""));
+    assertFalse(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo"));
     assertTrue(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
         "\u2028"));
     assertTrue(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
         "\\u2028"));
     assertTrue(
         PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo\\u2028"));
-    assertTrue(!PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
+    assertFalse(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
         "foo\\\\u2028"));
     assertTrue(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
-            "foo\\\\u2028bar\\u2028"));
+        "foo\\\\u2028bar\\u2028"));
   }
 
   public void testFoldLiteralObjectConstructors() {

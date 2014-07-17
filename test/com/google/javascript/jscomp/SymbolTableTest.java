@@ -873,7 +873,7 @@ public class SymbolTableTest extends TestCase {
 
     Symbol y = getDocVar(table, "y");
     assertNotNull(x);
-    assertEquals(null, y.getType());
+    assertNull(y.getType());
     assertEquals(1, table.getReferenceList(y).size());
   }
 
@@ -947,8 +947,8 @@ public class SymbolTableTest extends TestCase {
 
   private void assertSymmetricOrdering(
       Ordering<Symbol> ordering, Symbol first, Symbol second) {
-    assertTrue(ordering.compare(first, first) == 0);
-    assertTrue(ordering.compare(second, second) == 0);
+    assertEquals(0, ordering.compare(first, first));
+    assertEquals(0, ordering.compare(second, second));
     assertTrue(ordering.compare(first, second) < 0);
     assertTrue(ordering.compare(second, first) > 0);
   }

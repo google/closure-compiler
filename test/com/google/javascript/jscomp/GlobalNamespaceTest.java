@@ -62,7 +62,7 @@ public class GlobalNamespaceTest extends TestCase {
 
     n.removeRef(set1);
 
-    assertEquals(null, n.getDeclaration());
+    assertNull(n.getDeclaration());
     assertEquals(0, n.globalSets);
   }
 

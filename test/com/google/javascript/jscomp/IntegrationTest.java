@@ -431,12 +431,12 @@ public class IntegrationTest extends IntegrationTestCase {
         CLOSURE_BOILERPLATE +
         "goog.provide('Foo'); /** @enum */ Foo = {a: 3};",
         TypeCheck.ENUM_NOT_CONSTANT);
-    assertTrue(lastCompiler.getErrorManager().getTypedPercent() == 0);
+    assertEquals(0.0, lastCompiler.getErrorManager().getTypedPercent());
 
     // This does not generate a warning.
     test(options, "/** @type {number} */ var n = window.name;",
         "var n = window.name;");
-    assertTrue(lastCompiler.getErrorManager().getTypedPercent() == 0);
+    assertEquals(0.0, lastCompiler.getErrorManager().getTypedPercent());
   }
 
   public void testTypeCheckAndInference() {
@@ -444,7 +444,7 @@ public class IntegrationTest extends IntegrationTestCase {
     options.checkTypes = true;
     test(options, "/** @type {number} */ var n = window.name;",
          TypeValidator.TYPE_MISMATCH_WARNING);
-    assertTrue(lastCompiler.getErrorManager().getTypedPercent() > 0);
+    assertTrue(lastCompiler.getErrorManager().getTypedPercent() > 0.0);
   }
 
   public void testTypeNameParser() {

@@ -132,10 +132,9 @@ public class TypeInferenceTest extends TestCase {
   }
 
   private JSType getType(String name) {
-    assertTrue("The return scope should not be null.", returnScope != null);
+    assertNotNull("The return scope should not be null.", returnScope);
     StaticSlot<JSType> var = returnScope.getSlot(name);
-    assertTrue("The variable " + name + " is missing from the scope.",
-        var != null);
+    assertNotNull("The variable " + name + " is missing from the scope.", var);
     return var.getType();
   }
 
@@ -149,7 +148,7 @@ public class TypeInferenceTest extends TestCase {
 
   private void verifySubtypeOf(String name, JSType type) {
     JSType varType = getType(name);
-    assertTrue("The variable " + name + " is missing a type.", varType != null);
+    assertNotNull("The variable " + name + " is missing a type.", varType);
     assertTrue("The type " + varType + " of variable " + name +
         " is not a subtype of " + type +".",  varType.isSubtype(type));
   }

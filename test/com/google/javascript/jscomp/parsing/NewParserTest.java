@@ -1258,7 +1258,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     Node n = parse("/** @fileoverview Hi mom! */ function Foo() {}");
     assertEquals(Token.FUNCTION, n.getFirstChild().getType());
-    assertTrue(n.getJSDocInfo() != null);
+    assertNotNull(n.getJSDocInfo());
     assertNull(n.getFirstChild().getJSDocInfo());
     assertEquals("Hi mom!",
         n.getJSDocInfo().getFileOverview());
@@ -1288,9 +1288,9 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     Node n = parse("/** @fileoverview Hi mom! */"
         + " /** @constructor */ function Foo() {}");
-    assertTrue(n.getJSDocInfo() != null);
+    assertNotNull(n.getJSDocInfo());
     assertEquals("Hi mom!", n.getJSDocInfo().getFileOverview());
-    assertTrue(n.getFirstChild().getJSDocInfo() != null);
+    assertNotNull(n.getFirstChild().getJSDocInfo());
     assertFalse(n.getFirstChild().getJSDocInfo().hasFileOverview());
     assertTrue(n.getFirstChild().getJSDocInfo().isConstructor());
   }

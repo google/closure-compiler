@@ -1895,7 +1895,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "try {} catch (e) {}");
     // Note: "e" actually belongs to a inner scope but we don't
     // model catches as separate scopes currently.
-    assertEquals(null, globalScope.getVar("e").getType());
+    assertNull(globalScope.getVar("e").getType());
   }
 
   public void testDeclaredCatchExpression2() {
