@@ -58,9 +58,15 @@ final class TypeTransformationParser {
 
   private static final String TYPE_KEYWORD = "type";
   private static final String UNION_KEYWORD = "union";
+  private static final String COND_KEYWORD = "cond";
   private static final ImmutableList<String> TYPE_CONSTRUCTORS =
       ImmutableList.of(TYPE_KEYWORD, UNION_KEYWORD);
-
+  private static final ImmutableList<String> OPERATIONS =
+      ImmutableList.of(COND_KEYWORD);
+  private static final String EQTYPE_PREDICATE = "eq";
+  private static final String SUBTYPE_PREDICATE = "sub";
+  private static final ImmutableList<String> BOOLEAN_PREDICATES =
+      ImmutableList.of(EQTYPE_PREDICATE, SUBTYPE_PREDICATE);
 
   public TypeTransformationParser(String typeTransformationString,
       StaticSourceFile sourceFile, ErrorReporter errorReporter) {
@@ -263,6 +269,94 @@ final class TypeTransformationParser {
   }
 
   /**
+   * A boolean expression (Bool-Exp) must follow the syntax:
+   * Bool-Exp := eq(Type-Exp, Type-Exp) | sub(Type-Exp, Type-Exp)
+   */
+  private boolean validTTLBooleanTypeExpression(Node expression) {
+    // it must be a CALL for eq and sub predicates
+    if (expression.getType() != Token.CALL) {
+      addNewWarning("msg.jsdoc.typetransformation.invalid.bool", expression);
+      return false;
+    }
+    // Check for valid predicates
+    if (!BOOLEAN_PREDICATES.contains(expression.getFirstChild().getString())) {
+      addNewWarning(
+          "msg.jsdoc.typetransformation.invalid.predicate", expression);
+      return false;
+    }
+    // The expression must have three children:
+    // - The eq or sub keyword
+    // - Two type expressions as parameters
+    if (expression.getChildCount() < 3) {
+      addNewWarning(
+          "msg.jsdoc.typetransformation.missing.param.bool", expression);
+      return false;
+    }
+    if (expression.getChildCount() > 3) {
+      addNewWarning(
+          "msg.jsdoc.typetransformation.extra.param.bool", expression);
+      return false;
+    }
+    // Both input types must be valid type expressions
+    if (!validTTLTypeExpression(expression.getChildAtIndex(1))
+        || !validTTLTypeExpression(expression.getChildAtIndex(2))) {
+      addNewWarning(
+          "msg.jsdoc.typetransformation.invalid.param.bool", expression);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * A conditional type transformation expression must be of the
+   * form cond(Bool-Exp, TTL-Exp, TTL-Exp)
+   */
+  private boolean validTTLCondionalExpression(Node expression) {
+    // A conditional expression must be a function call
+    if (expression.getType() != Token.CALL) {
+      addNewWarning("msg.jsdoc.typetransformation.invalid.cond", expression);
+      return false;
+    }
+    // It must start with cond keyword
+    if (!expression.getFirstChild().getString().equals(COND_KEYWORD)) {
+     addNewWarning("msg.jsdoc.typetransformation.invalid.cond", expression);
+      return false;
+    }
+    // The expression must have four children:
+    // - The cond keyword
+    // - A boolean expression
+    // - A type transformation expression with the 'if' branch
+    // - A type transformation expression with the 'else' branch
+    if (expression.getChildCount() < 4) {
+     addNewWarning(
+         "msg.jsdoc.typetransformation.missing.param.cond", expression);
+      return false;
+    }
+    if (expression.getChildCount() > 4) {
+     addNewWarning(
+         "msg.jsdoc.typetransformation.extra.param.cond", expression);
+      return false;
+    }
+    // Check for the validity of the boolean and the expressions
+    if (!validTTLBooleanTypeExpression(expression.getChildAtIndex(1))) {
+      addNewWarning(
+          "msg.jsdoc.typetransformation.invalid.param.bool.cond", expression);
+      return false;
+    }
+    if (!validTypeTransformationExpression(expression.getChildAtIndex(2))) {
+      addNewWarning(
+          "msg.jsdoc.typetransformation.invalid.param.if.cond", expression);
+      return false;
+    }
+    if (!validTypeTransformationExpression(expression.getChildAtIndex(3))) {
+      addNewWarning(
+          "msg.jsdoc.typetransformation.invalid.param.else.cond", expression);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Checks the structure of the AST of a type transformation expression
    * in @template T as TTL-Exp.
    */
@@ -282,12 +376,16 @@ final class TypeTransformationParser {
     // If it is a CALL we can safely move one level down
     Node operation = expression.getFirstChild();
     // Check for valid operations
-    if (!TYPE_CONSTRUCTORS.contains(operation.getString())) {
+    if (!TYPE_CONSTRUCTORS.contains(operation.getString())
+        && !OPERATIONS.contains(operation.getString())) {
       addNewWarning(
           "msg.jsdoc.typetransformation.invalid.expression", operation);
       return false;
     }
     // Check the rest of the expression depending on the operation
-    return validTTLTypeExpression(expression);
+    if (TYPE_CONSTRUCTORS.contains(operation.getString())) {
+      return validTTLTypeExpression(expression);
+    }
+    return validTTLCondionalExpression(expression);
   }
 }

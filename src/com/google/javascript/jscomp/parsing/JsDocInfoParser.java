@@ -879,6 +879,10 @@ public final class JsDocInfoParser {
           return token;
 
         case TEMPLATE: {
+          int templateLineno = stream.getLineno();
+          int templateCharno = stream.getCharno();
+          // TODO(lpino): Fix the position of the warning marker for this case.
+          // For now the lineno and charno are set at the beginning of the @template
           ExtractionInfo templateInfo =
               extractMultilineTextualBlock(token, WhitespaceOption.TRIM);
           String templateString = templateInfo.string;
@@ -908,7 +912,7 @@ public final class JsDocInfoParser {
               validTypeTransformation = false;
               parser.addTypeWarning(
                   "msg.jsdoc.typetransformation.missing.delimiter",
-                  stream.getLineno(), stream.getCharno());
+                  templateLineno, templateCharno);
             } else {
               isTypeTransformation = true;
               // Split the part of the type transformation
@@ -927,15 +931,15 @@ public final class JsDocInfoParser {
 
           if (names.size() == 1 && names.get(0).isEmpty()) {
             parser.addTypeWarning("msg.jsdoc.templatemissing",
-                  stream.getLineno(), stream.getCharno());
+                templateLineno, templateCharno);
           } else {
             for (String typeName : names) {
               if (!validTemplateTypeName(typeName)) {
                 parser.addTypeWarning("msg.jsdoc.template.invalid.type.name",
-                    stream.getLineno(), stream.getCharno());
+                    templateLineno, templateCharno);
               } else if (!jsdocBuilder.recordTemplateTypeName(typeName)) {
                 parser.addTypeWarning("msg.jsdoc.template.name.declared.twice",
-                    stream.getLineno(), stream.getCharno());
+                    templateLineno, templateCharno);
               }
             }
           }
@@ -945,13 +949,13 @@ public final class JsDocInfoParser {
             if (names.size() > 1) {
                 parser.addTypeWarning(
                     "msg.jsdoc.typetransformation.with.multiple.names",
-                    stream.getLineno(), stream.getCharno());
+                    templateLineno, templateCharno);
             }
             if (typeTransformationExpr.isEmpty()) {
               validTypeTransformation = false;
               parser.addTypeWarning(
                   "msg.jsdoc.typetransformation.expression.missing",
-                  stream.getLineno(), stream.getCharno());
+                  templateLineno, templateCharno);
             }
             // Build the AST for the type transformation
             if (validTypeTransformation) {
@@ -966,9 +970,11 @@ public final class JsDocInfoParser {
                 // Throw the warnings otherwise
                 ArrayList<TypeTransformationWarning> warnings = ttlParser.getWarnings();
                 for (TypeTransformationWarning currentWarning : warnings) {
-                  parser.addTypeWarning(currentWarning.messageId,
-                      stream.getLineno() + currentWarning.nodeWarning.getLineno(),
-                      stream.getCharno() + currentWarning.nodeWarning.getCharno());
+                  // TODO(lpino): Report the exact lineno and charno in the
+                  // type transformation. For now they are set at the beginning
+                  // of the @template
+                  parser.addTypeWarning(
+                      currentWarning.messageId, templateLineno, templateCharno);
                 }
               }
             }

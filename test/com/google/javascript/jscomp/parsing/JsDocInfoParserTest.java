@@ -2998,6 +2998,67 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Invalid basic type expression");
   }
 
+  public void testParserWithTTLConditional() {
+    parse("@template T := cond(eq(T, R), R, S) =: */");
+  }
+
+  public void testParserWithTTLConditional2() {
+    parse("@template T := cond(sub(T, R), R, S) =: */");
+  }
+
+  public void testParserWithTTLExtraParamBoolean() {
+    parse("@template T := cond(eq(T, R, S), R, S) =: */",
+        "Bad type annotation. Found extra parameter in boolean predicate",
+        "Bad type annotation. Invalid boolean expression inside conditional");
+  }
+
+  public void testParserWithTTLMissingParamBoolean() {
+    parse("@template T := cond(eq(T), R, S) =: */",
+        "Bad type annotation. Missing parameter in boolean predicate",
+        "Bad type annotation. Invalid boolean expression inside conditional");
+  }
+
+  public void testParserWithTTLInvalidBooleanConditional() {
+    parse("@template T := cond(aaa, R, S) =: */",
+        "Bad type annotation. Invalid boolean expression",
+        "Bad type annotation. Invalid boolean expression inside conditional");
+  }
+
+  public void testParserWithTTLInvalidBooleanConditional2() {
+    parse("@template T := cond(foo(T, R), S, R) =: */",
+        "Bad type annotation. Invalid boolean predicate",
+        "Bad type annotation. Invalid boolean expression inside conditional");
+  }
+
+  public void testParserWithTTLInvalidBooleanConditional3() {
+    parse("@template T := cond(eq(T, foo()), R, S) =: */",
+        "Bad type annotation. Invalid type expression",
+        "Bad type annotation. Invalid type expression inside boolean",
+        "Bad type annotation. Invalid boolean expression inside conditional");
+  }
+
+  public void testParserWithTTLInvalidConditionalMissingParam() {
+    parse("@template T := cond(sub(T, R), T) =: */",
+        "Bad type annotation. Missing parameter in conditional");
+  }
+
+  public void testParserWithTTLInvalidConditionalExtraParam() {
+    parse("@template T := cond(sub(T, R), T, R, R) =: */",
+        "Bad type annotation. Found extra parameter in conditional");
+  }
+
+  public void testParserWithTTLInvalidConditional() {
+    parse("@template T := cond(eq(T, R), foo(), S) =: */",
+        "Bad type annotation. Invalid type transformation expression",
+        "Bad type annotation. Invalid if expression inside conditional");
+  }
+
+  public void testParserWithTTLInvalidConditional2() {
+    parse("@template T := cond(eq(T, R), S, foo()) =: */",
+        "Bad type annotation. Invalid type transformation expression",
+        "Bad type annotation. Invalid else expression inside conditional");
+  }
+
   public void testWhitelistedNewAnnotations() {
     parse("@foobar */",
         "illegal use of unknown JSDoc tag \"foobar\"; ignoring it");
