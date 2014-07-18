@@ -17,11 +17,16 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 /**
@@ -55,8 +60,16 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   private static int generatorCaseCount = 0;
 
+  // Maintains a stack of numbers which identify the cases which mark the end of loops. These
+  // are used to manage jump destinations for break and continue statements.
+  private Deque<Integer> currentLoopEndCase;
+  // The node head of this stack must be executed before any continue statement.
+  private Deque<Node> currentLoopContinueStatement;
+
   public Es6RewriteGenerators(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.currentLoopEndCase = new ArrayDeque<>();
+    this.currentLoopContinueStatement = new ArrayDeque<>();
   }
 
   @Override
@@ -99,6 +112,19 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     generatorCaseCount++;
 
     Node genFunc = IR.function(n.removeFirstChild(), n.removeFirstChild(), genBlock);
+
+    //TODO(mattloring): remove this suppression once we can optimize the switch statement to
+    // remove unused cases.
+    JSDocInfoBuilder genDoc;
+    if (n.getJSDocInfo() == null) {
+      genDoc = new JSDocInfoBuilder(true);
+    } else {
+      genDoc = JSDocInfoBuilder.copyFrom(n.getJSDocInfo());
+    }
+    //TODO(mattloring): copy existing suppressions.
+    genDoc.recordSuppressions(ImmutableSet.of("uselessCode"));
+    JSDocInfo genInfo = genDoc.build(genFunc);
+    genFunc.setJSDocInfo(genInfo);
 
     originalGeneratorBody = n.getFirstChild();
 
@@ -146,7 +172,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     } else if (currentStatement.isWhile() && yieldsOrReturns(currentStatement)) {
       visitWhile();
       return false;
-    } else if (currentStatement.isIf() && yieldsOrReturns(currentStatement)
+    } else if (currentStatement.isIf()
+        && (yieldsOrReturns(currentStatement) || jumpsOut(currentStatement))
         && !currentStatement.isGeneratorSafe()) {
       visitIf();
       return false;
@@ -154,20 +181,54 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       visitBlock();
       return false;
     } else if (currentStatement.isGeneratorMarker()) {
+      visitGeneratorMarker();
       return true;
     } else if (currentStatement.isReturn()) {
       visitReturn();
       return false;
-    } else if ((currentStatement.isBreak() && !currentStatement.isGeneratorSafe())
-        || currentStatement.isContinue() || currentStatement.isThrow()) {
+    } else if (currentStatement.isContinue()) {
+      visitContinue();
+      return false;
+    } else if (currentStatement.isBreak() && !currentStatement.isGeneratorSafe()) {
+      visitBreak();
+      return false;
+    } else if (currentStatement.isThrow()) {
       compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
-          "Breaks, continues, and throws are not yet allowed if their"
-          + " enclosing control structure contains a yield or return."));
+          "Throws are not yet allowed if their enclosing control structure"
+          + " contains a yield or return."));
       return false;
     } else {
       // In the default case, add the statement to the current case block unchanged.
       enclosingCase.getLastChild().addChildToBack(currentStatement);
       return false;
+    }
+  }
+
+  private void visitContinue() {
+    if (!currentLoopContinueStatement.peekFirst().isEmpty()) {
+      enclosingCase.getLastChild().addChildToBack(
+        currentLoopContinueStatement.peekFirst().cloneTree());
+    }
+    enclosingCase.getLastChild().addChildToBack(
+        createStateUpdate(currentLoopEndCase.peekFirst() - 1));
+    enclosingCase.getLastChild().addChildToBack(createSafeBreak());
+  }
+
+  private void visitBreak() {
+    enclosingCase.getLastChild().addChildToBack(
+        createStateUpdate(currentLoopEndCase.peekFirst()));
+    enclosingCase.getLastChild().addChildToBack(createSafeBreak());
+  }
+
+  /**
+   * If we reach the marker cooresponding to the end of the current loop,
+   * pop the loop information off of our stack.
+   */
+  private void visitGeneratorMarker() {
+    if (currentLoopEndCase.peekFirst() != null
+        && currentLoopEndCase.peekFirst() == currentStatement.getDouble()) {
+      currentLoopEndCase.removeFirst();
+      currentLoopContinueStatement.removeFirst();
     }
   }
 
@@ -183,10 +244,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
     int ifEndState = generatorCaseCount++;
 
-    Node safeBreak = IR.breakNode();
-    safeBreak.setGeneratorSafe(true);
     Node invertedConditional = IR.ifNode(IR.not(condition),
-        IR.block(createStateUpdate(ifEndState), safeBreak));
+        IR.block(createStateUpdate(ifEndState), createSafeBreak()));
     invertedConditional.setGeneratorSafe(true);
     Node endIf = IR.number(ifEndState);
     endIf.setGeneratorMarker(true);
@@ -204,7 +263,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       endElse.setGeneratorMarker(true);
 
       ifBody.addChildToBack(createStateUpdate(elseEndState));
-      ifBody.addChildToBack(safeBreak.cloneTree());
+      ifBody.addChildToBack(createSafeBreak());
       originalGeneratorBody.addChildAfter(elseBlock, endIf);
       originalGeneratorBody.addChildAfter(endElse, elseBlock);
     }
@@ -250,13 +309,16 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     Node body = currentStatement.removeFirstChild();
 
     int loopBeginState = generatorCaseCount++;
+    currentLoopEndCase.addFirst(generatorCaseCount);
+    if (currentLoopContinueStatement.size() != currentLoopEndCase.size()) {
+      currentLoopContinueStatement.addFirst(IR.empty());
+    }
 
     Node beginCase = IR.number(loopBeginState);
     beginCase.setGeneratorMarker(true);
     Node conditionalBranch = IR.ifNode(condition, body);
     Node setStateLoopStart = createStateUpdate(loopBeginState);
-    Node breakToStart = IR.breakNode();
-    breakToStart.setGeneratorSafe(true);
+    Node breakToStart = createSafeBreak();
 
     originalGeneratorBody.addChildToFront(beginCase);
     originalGeneratorBody.addChildAfter(conditionalBranch, beginCase);
@@ -271,13 +333,18 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   private void visitFor() {
     Node initializer = currentStatement.removeFirstChild();
     Node condition = currentStatement.removeFirstChild();
-    Node postStatement = IR.exprResult(currentStatement.removeFirstChild());
+    Node postExpression = currentStatement.removeFirstChild();
     Node body = currentStatement.removeFirstChild();
 
     Node equivalentWhile = IR.whileNode(condition, body);
-    body.addChildToBack(postStatement);
+    if (!postExpression.isEmpty()) {
+      body.addChildToBack(IR.exprResult(postExpression));
+      currentLoopContinueStatement.addFirst(body.getLastChild());
+    }
 
-    originalGeneratorBody.addChildToFront(initializer);
+    if (!initializer.isEmpty()) {
+      originalGeneratorBody.addChildToFront(initializer);
+    }
     originalGeneratorBody.addChildAfter(equivalentWhile, initializer);
   }
 
@@ -333,9 +400,19 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
         IR.propdef(IR.stringKey("done"), IR.falseNode()));
   }
 
+  private static Node createSafeBreak() {
+    Node breakNode = IR.breakNode();
+    breakNode.setGeneratorSafe(true);
+    return breakNode;
+  }
+
   //TODO(mattloring): move these to NodeUtil if deemed generally useful.
   private static boolean yieldsOrReturns(Node n) {
     return NodeUtil.referencesYield(n) || NodeUtil.referencesReturn(n);
+  }
+
+  private static boolean jumpsOut(Node n) {
+    return NodeUtil.referencesContinue(n) || NodeUtil.referencesBreak(n);
   }
 
   /**

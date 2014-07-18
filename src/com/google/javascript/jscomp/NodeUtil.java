@@ -1753,6 +1753,16 @@ public final class NodeUtil {
     return containsType(start, Token.RETURN, MATCH_NOT_FUNCTION);
   }
 
+  static boolean referencesContinue(Node n) {
+    Node start = n.isFunction() ? n.getLastChild() : n;
+    return containsType(start, Token.CONTINUE, MATCH_NOT_FUNCTION);
+  }
+
+  static boolean referencesBreak(Node n) {
+    Node start = n.isFunction() ? n.getLastChild() : n;
+    return containsType(start, Token.BREAK, MATCH_NOT_FUNCTION);
+  }
+
   /**
    * Returns true if the current scope contains references to the 'super' keyword.
    * Note that if there are classes declared inside the current class, super calls which
