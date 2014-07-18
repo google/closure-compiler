@@ -668,6 +668,7 @@ public class IR {
       case Token.TRUE:
       case Token.URSH:
       case Token.VOID:
+      case Token.YIELD:
         return true;
 
       default:

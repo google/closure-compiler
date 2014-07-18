@@ -93,6 +93,12 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
           visitGenerator(n, parent);
         }
         break;
+      case Token.YIELD:
+        if (!n.getParent().isExprResult()) {
+          compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+          "Yield may only be used as a statement."));
+        }
+        break;
     }
   }
 

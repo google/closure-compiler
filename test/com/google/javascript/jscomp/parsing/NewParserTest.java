@@ -1357,6 +1357,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("function * f() { yield * yield; }"); // OK  (yield * (yield))
     parseError("function * f() { yield + yield; }", "primary expression expected");
     parse("function * f() { (yield) + (yield); }"); // OK
+    parse("function * f() { return yield; }"); // OK
+    parse("function * f() { return yield 1; }"); // OK
   }
 
   public void testYield3() {
