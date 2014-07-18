@@ -1506,7 +1506,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * Prints all the input contents, starting with a comment that specifies
    * the input file name (using root-relative paths) before each file.
    */
-  private void printBundleTo(Iterable<CompilerInput> inputs, Appendable out)
+  @VisibleForTesting
+  void printBundleTo(Iterable<CompilerInput> inputs, Appendable out)
       throws IOException {
     for (CompilerInput input : inputs) {
       // Every module has an empty file in it. This makes it easier to implement
@@ -1534,7 +1535,26 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       out.append("//");
       out.append(displayName);
       out.append("\n");
+
+      if (input.isModule()) {
+        // Add module preamble
+        String moduleName = Iterables.get(input.getProvides(), 0);
+        out.append(
+            "goog.loadModule('" + moduleName + "', function(exports) {" +
+            "'use strict';");
+      }
+
       Files.copy(file, inputCharset, out);
+
+      if (input.isModule()) {
+        // Add module postamble
+        out.append(
+            "\n" + // terminate any trailing single line comment.
+            ";return exports;" +
+            "});" +
+            "\n//# sourceURL=" + displayName + "\n");
+      }
+
       out.append("\n");
     }
   }

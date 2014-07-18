@@ -228,7 +228,7 @@ public class CompilerInput
       // compilation scheme. The API needs to be fixed so callers aren't
       // doing weird things like this, and then we should get rid of the
       // multiple-scan strategy.
-      this.isModuleFile = finder.isModuleFile;
+      isModuleFile = finder.isModuleFile;
       provides.addAll(finder.provides);
       requires.addAll(finder.requires);
     } else {
@@ -243,6 +243,7 @@ public class CompilerInput
             .setIncludeGoogBase(true)
             .parseFile(getName(), getName(), getCode());
 
+        isModuleFile = info.isModule();
         provides.addAll(info.getProvides());
         requires.addAll(info.getRequires());
 
@@ -371,6 +372,6 @@ public class CompilerInput
 
   @Override
   public boolean isModule() {
-    return this.isModuleFile;
+    return isModuleFile;
   }
 }
