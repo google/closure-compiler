@@ -34,6 +34,19 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
+  // The current case statement onto which translated statements from the
+  // body of a generator will be appended.
+  private Node enclosingCase;
+
+  // The destination for vars defined in the body of a generator.
+  private Node hoistRoot;
+
+  // The body of the generator function currently being translated.
+  private Node originalGeneratorBody;
+
+  // The current statement being translated.
+  private Node currentStatement;
+
   private static final String ITER_KEY = "$$iterator";
 
   // This holds the current state at which a generator should resume execution after
@@ -87,31 +100,30 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
     Node genFunc = IR.function(n.removeFirstChild(), n.removeFirstChild(), genBlock);
 
-    Node originalBody = n.getFirstChild();
+    originalGeneratorBody = n.getFirstChild();
 
     // Set state to the default after the body of the function has completed.
-    originalBody.addChildToBack(
+    originalGeneratorBody.addChildToBack(
         IR.exprResult(IR.assign(IR.name(GENERATOR_STATE), IR.number(-1))));
 
-    Node currentCase = getUnique(genBlock, Token.CASE);
-    Node varRoot = getUnique(genBlock, Token.VAR);
+    enclosingCase = getUnique(genBlock, Token.CASE);
+    hoistRoot = getUnique(genBlock, Token.VAR);
 
-    while (originalBody.hasChildren()) {
-      Node nextStatement = originalBody.removeFirstChild();
-      boolean advanceCase = translateStatementInOriginalBody(nextStatement, currentCase,
-          originalBody, varRoot);
+    while (originalGeneratorBody.hasChildren()) {
+      currentStatement = originalGeneratorBody.removeFirstChild();
+      boolean advanceCase = translateStatementInOriginalBody();
 
       if (advanceCase) {
         int caseNumber;
-        if (nextStatement.isGeneratorMarker()) {
-          caseNumber = (int) nextStatement.getDouble();
+        if (currentStatement.isGeneratorMarker()) {
+          caseNumber = (int) currentStatement.getDouble();
         } else {
           caseNumber = generatorCaseCount;
           generatorCaseCount++;
         }
         Node newCase = IR.caseNode(IR.number(caseNumber), IR.block());
-        currentCase.getParent().addChildAfter(newCase, currentCase);
-        currentCase = newCase;
+        enclosingCase.getParent().addChildAfter(newCase, enclosingCase);
+        enclosingCase = newCase;
       }
     }
 
@@ -121,41 +133,40 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   /** Returns true if a new case node should be added */
-  private boolean translateStatementInOriginalBody(Node statement, Node currentCase,
-      Node originalBody, Node varRoot) {
-    if (statement.isExprResult() && statement.getFirstChild().isYield()) {
-      visitYieldExprResult(statement, currentCase);
+  private boolean translateStatementInOriginalBody() {
+    if (currentStatement.isExprResult() && currentStatement.getFirstChild().isYield()) {
+      visitYieldExprResult();
       return true;
-    } else if (statement.isVar()) {
-      visitVar(statement, currentCase, varRoot);
+    } else if (currentStatement.isVar()) {
+      visitVar();
       return false;
-    } else if (statement.isFor() && yieldsOrReturns(statement)) {
-      visitFor(statement, originalBody);
+    } else if (currentStatement.isFor() && yieldsOrReturns(currentStatement)) {
+      visitFor();
       return false;
-    } else if (statement.isWhile() && yieldsOrReturns(statement)) {
-      visitWhile(statement, originalBody);
+    } else if (currentStatement.isWhile() && yieldsOrReturns(currentStatement)) {
+      visitWhile();
       return false;
-    } else if (statement.isIf() && yieldsOrReturns(statement)
-        && !statement.isGeneratorSafe()) {
-      visitIf(statement, originalBody);
+    } else if (currentStatement.isIf() && yieldsOrReturns(currentStatement)
+        && !currentStatement.isGeneratorSafe()) {
+      visitIf();
       return false;
-    } else if (statement.isBlock()) {
-      visitBlock(statement, originalBody);
+    } else if (currentStatement.isBlock()) {
+      visitBlock();
       return false;
-    } else if (statement.isGeneratorMarker()) {
+    } else if (currentStatement.isGeneratorMarker()) {
       return true;
-    } else if (statement.isReturn()) {
-      visitReturn(statement, currentCase);
+    } else if (currentStatement.isReturn()) {
+      visitReturn();
       return false;
-    } else if ((statement.isBreak() && !statement.isGeneratorSafe())
-        || statement.isContinue() || statement.isThrow()) {
-      compiler.report(JSError.make(statement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+    } else if ((currentStatement.isBreak() && !currentStatement.isGeneratorSafe())
+        || currentStatement.isContinue() || currentStatement.isThrow()) {
+      compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
           "Breaks, continues, and throws are not yet allowed if their"
           + " enclosing control structure contains a yield or return."));
       return false;
     } else {
       // In the default case, add the statement to the current case block unchanged.
-      currentCase.getLastChild().addChildToBack(statement);
+      enclosingCase.getLastChild().addChildToBack(currentStatement);
       return false;
     }
   }
@@ -165,10 +176,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    * and use a case statement to jump over the body if the condition of the
    * if statement is false.
    */
-  private void visitIf(Node ifStatement, Node originalGeneratorBody) {
-    Node condition = ifStatement.removeFirstChild();
-    Node ifBody = ifStatement.removeFirstChild();
-    boolean hasElse = ifStatement.hasChildren();
+  private void visitIf() {
+    Node condition = currentStatement.removeFirstChild();
+    Node ifBody = currentStatement.removeFirstChild();
+    boolean hasElse = currentStatement.hasChildren();
 
     int ifEndState = generatorCaseCount++;
 
@@ -185,7 +196,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     originalGeneratorBody.addChildAfter(endIf, ifBody);
 
     if (hasElse) {
-      Node elseBlock = ifStatement.removeFirstChild();
+      Node elseBlock = currentStatement.removeFirstChild();
 
       int elseEndState = generatorCaseCount++;
 
@@ -202,11 +213,11 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   /**
    * Blocks are flattened by lifting all children to the body of the original generator.
    */
-  private void visitBlock(Node blockStatement, Node originalGeneratorBody) {
-    Node insertionPoint = blockStatement.removeFirstChild();
+  private void visitBlock() {
+    Node insertionPoint = currentStatement.removeFirstChild();
     originalGeneratorBody.addChildToFront(insertionPoint);
-    for (Node child = blockStatement.removeFirstChild(); child != null;
-        child = blockStatement.removeFirstChild()) {
+    for (Node child = currentStatement.removeFirstChild(); child != null;
+        child = currentStatement.removeFirstChild()) {
       originalGeneratorBody.addChildAfter(child, insertionPoint);
       insertionPoint = child;
     }
@@ -234,9 +245,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    * }
    * </code>
    */
-  private void visitWhile(Node whileStatement, Node originalGeneratorBody) {
-    Node condition = whileStatement.removeFirstChild();
-    Node body = whileStatement.removeFirstChild();
+  private void visitWhile() {
+    Node condition = currentStatement.removeFirstChild();
+    Node body = currentStatement.removeFirstChild();
 
     int loopBeginState = generatorCaseCount++;
 
@@ -257,11 +268,11 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    * {@code for} loops are translated into equivalent while loops to
    * consolidate loop translation logic.
    */
-  private void visitFor(Node whileStatement, Node originalGeneratorBody) {
-    Node initializer = whileStatement.removeFirstChild();
-    Node condition = whileStatement.removeFirstChild();
-    Node postStatement = IR.exprResult(whileStatement.removeFirstChild());
-    Node body = whileStatement.removeFirstChild();
+  private void visitFor() {
+    Node initializer = currentStatement.removeFirstChild();
+    Node condition = currentStatement.removeFirstChild();
+    Node postStatement = IR.exprResult(currentStatement.removeFirstChild());
+    Node body = currentStatement.removeFirstChild();
 
     Node equivalentWhile = IR.whileNode(condition, body);
     body.addChildToBack(postStatement);
@@ -275,13 +286,13 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    * to preserve their state accross
    * multiple calls to next().
    */
-  private void visitVar(Node varStatement, Node enclosingCase, Node hoistRoot) {
-    Node name = varStatement.removeFirstChild();
+  private void visitVar() {
+    Node name = currentStatement.removeFirstChild();
     while (name != null) {
       enclosingCase.getLastChild().addChildToBack(
           IR.exprResult(IR.assign(name, name.removeFirstChild())));
       hoistRoot.getParent().addChildAfter(IR.var(name.cloneTree()), hoistRoot);
-      name = varStatement.removeFirstChild();
+      name = currentStatement.removeFirstChild();
     }
   }
 
@@ -290,20 +301,20 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    * when the function is next called and then returns an iterator result with
    * the desired value.
    */
-  private void visitYieldExprResult(Node yieldStatement, Node enclosingCase) {
+  private void visitYieldExprResult() {
     enclosingCase.getLastChild().addChildToBack(createStateUpdate());
     enclosingCase.getLastChild().addChildToBack(IR.returnNode(
-        createIteratorResult(yieldStatement.getFirstChild().removeFirstChild())));
+        createIteratorResult(currentStatement.getFirstChild().removeFirstChild())));
   }
 
   /**
    * {@code return} statements are translated to set the state to done before returning the
    * desired value.
    */
-  private void visitReturn(Node returnStatement, Node enclosingCase) {
+  private void visitReturn() {
     enclosingCase.getLastChild().addChildToBack(createStateUpdate(-1));
     enclosingCase.getLastChild().addChildToBack(IR.returnNode(
-        createIteratorResult(returnStatement.removeFirstChild())));
+        createIteratorResult(currentStatement.removeFirstChild())));
   }
 
   private Node createStateUpdate() {
