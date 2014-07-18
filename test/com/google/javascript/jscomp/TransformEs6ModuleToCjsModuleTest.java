@@ -63,7 +63,11 @@ public class TransformEs6ModuleToCjsModuleTest extends CompilerTestCase {
   }
 
   public void testExport() {
-    test("export var a; export var b;", "var a; var b; module.exports = {a: a, b: b};");
+    test("export var a = 1, b = 2;",
+        "var a = 1, b = 2; module.exports = {a: a, b: b};");
+    test("export var a; export var b;",
+        "var a; var b; module.exports = {a: a, b: b};");
+    test("export function f() {};", "function f() {} module.exports = {f: f};");
     test("export {f as foo, b as bar};", "module.exports = {foo: f, bar: b};");
   }
 

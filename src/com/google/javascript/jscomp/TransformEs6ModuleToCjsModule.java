@@ -116,10 +116,15 @@ public class TransformEs6ModuleToCjsModule extends AbstractPostOrderCallback
         }
         parent.removeChild(n);
       } else {
-        String name = n.getFirstChild().getFirstChild().getString();
-        Var v = t.getScope().getVar(name);
-        if (v == null || v.isGlobal()) {
-          exportMap.put(name, name);
+        for (Node grandChild : n.getFirstChild().children()) {
+          if (!grandChild.isName()) {
+            break;
+          }
+          String name = grandChild.getString();
+          Var v = t.getScope().getVar(name);
+          if (v == null || v.isGlobal()) {
+            exportMap.put(name, name);
+          }
         }
         parent.replaceChild(n, n.removeFirstChild());
       }
