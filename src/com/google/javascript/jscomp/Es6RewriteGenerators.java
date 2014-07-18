@@ -60,6 +60,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   private static int generatorCaseCount = 0;
 
+  private static final String GENERATOR_DO_WHILE_INITIAL = "$jscomp$generator$first$do";
+
   // Maintains a stack of numbers which identify the cases which mark the end of loops. These
   // are used to manage jump destinations for break and continue statements.
   private Deque<Integer> currentLoopEndCase;
@@ -171,6 +173,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       return false;
     } else if (currentStatement.isWhile() && yieldsOrReturns(currentStatement)) {
       visitWhile();
+      return false;
+    } else if (currentStatement.isDo() && yieldsOrReturns(currentStatement)) {
+      visitDo();
       return false;
     } else if (currentStatement.isIf()
         && (yieldsOrReturns(currentStatement) || jumpsOut(currentStatement))
@@ -344,8 +349,28 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
     if (!initializer.isEmpty()) {
       originalGeneratorBody.addChildToFront(initializer);
+      originalGeneratorBody.addChildAfter(equivalentWhile, initializer);
+    } else {
+      originalGeneratorBody.addChildToFront(equivalentWhile);
     }
-    originalGeneratorBody.addChildAfter(equivalentWhile, initializer);
+  }
+
+  /**
+   * Do while loops are rewritten into equivalent for loops to reduce duplication in
+   * translation logic.
+   */
+  private void visitDo() {
+    Node body = currentStatement.removeFirstChild();
+    Node condition = currentStatement.removeFirstChild();
+
+    Node firstEntry = IR.name(GENERATOR_DO_WHILE_INITIAL);
+    Node init = IR.var(firstEntry.cloneTree(), IR.trueNode());
+    Node incr = IR.assign(firstEntry.cloneTree(), IR.falseNode());
+
+    Node equivalentFor = IR.forNode(init, IR.or(firstEntry.cloneTree(),
+        condition), incr, body);
+
+    originalGeneratorBody.addChildToFront(equivalentFor);
   }
 
   /**

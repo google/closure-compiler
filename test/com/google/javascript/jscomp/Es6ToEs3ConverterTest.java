@@ -1746,4 +1746,36 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
+  public void testDoWhileLoopsGenerator() {
+    test("function *f() { do { yield j; } while (j < 10); }",
+      Joiner.on('\n').join(
+        "/** @suppress {uselessCode} */",
+        "function f() {",
+        "  return { $$iterator: function() {",
+        "    var $jscomp$generator$state = 0;",
+        "    var $jscomp$generator$first$do;",
+        "    return { next: function() {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          $jscomp$generator$first$do = true;",
+        "        case 1:",
+        "          if (!($jscomp$generator$first$do || j < 10)) {",
+        "            $jscomp$generator$state = 2; break; }",
+        "          $jscomp$generator$state = 3;",
+        "          return {value: j, done: false};",
+        "        case 3:",
+        "          $jscomp$generator$first$do = false;",
+        "          $jscomp$generator$state = 1;",
+        "          break",
+        "        case 2:",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {done: true}",
+        "      }",
+        "    }}",
+        "  }}",
+        "}"
+    ));
+  }
+
 }
