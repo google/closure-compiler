@@ -1355,8 +1355,12 @@ public class Compiler extends AbstractCompiler {
 
       boolean needsConversion = options.getLanguageIn() != options.getLanguageOut();
 
+      if (needsConversion && options.processCommonJSModules) {
+        processEs6Modules();
+      }
+
       // Modules inferred in ProcessCommonJS pass.
-      if (options.transformAMDToCJSModules || options.processCommonJSModules || needsConversion) {
+      if (options.transformAMDToCJSModules || options.processCommonJSModules) {
         processAMDAndCommonJSModules();
       }
 
@@ -1536,8 +1540,9 @@ public class Compiler extends AbstractCompiler {
     Map<CompilerInput, JSModule> modulesByInput = Maps.newLinkedHashMap();
     // TODO(nicksantos): Refactor module dependency resolution to work nicely
     // with multiple ways to express dependencies. Directly support JSModules
-    // that are equivalent to a signal file and which express their deps
+    // that are equivalent to a single file and which express their deps
     // directly in the source.
+    boolean needsConversion = options.getLanguageIn() != options.getLanguageOut();
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
@@ -1551,7 +1556,7 @@ public class Compiler extends AbstractCompiler {
         ProcessCommonJSModules cjs = new ProcessCommonJSModules(
             this,
             ES6ModuleLoader.createNaiveLoader(
-                this, options.commonJSModulePathPrefix));
+                this, options.commonJSModulePathPrefix), true, !needsConversion);
         cjs.process(null, root);
         JSModule m = cjs.getModule();
         if (m != null) {
@@ -1560,7 +1565,10 @@ public class Compiler extends AbstractCompiler {
         }
       }
     }
-    if (options.processCommonJSModules) {
+    // TODO(moz): ProcessCommonJSModules treats each CommonJS/ES6 input as a
+    // separate module, which causes problems with non-CommonJS code. Disable
+    // this part of dependency management until we refactor it.
+    if (options.processCommonJSModules && !needsConversion) {
       List<JSModule> modules = Lists.newArrayList(modulesByName.values());
       if (!modules.isEmpty()) {
         this.modules = modules;

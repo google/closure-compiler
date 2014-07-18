@@ -19,6 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -53,21 +54,30 @@ public class ProcessCommonJSModules implements CompilerPass {
   private final Compiler compiler;
   private final ES6ModuleLoader loader;
   private final boolean reportDependencies;
+  private final boolean overrideModule;
   private JSModule module;
 
+  private boolean dontProcess;
+
   ProcessCommonJSModules(Compiler compiler, ES6ModuleLoader loader) {
-    this(compiler, loader, true);
+    this(compiler, loader, true, true);
   }
 
   ProcessCommonJSModules(Compiler compiler, ES6ModuleLoader loader,
-      boolean reportDependencies) {
+      boolean reportDependencies, boolean overrideModule) {
     this.compiler = compiler;
     this.loader = loader;
     this.reportDependencies = reportDependencies;
+    this.overrideModule = overrideModule;
   }
 
   @Override
   public void process(Node externs, Node root) {
+    dontProcess = false;
+    NodeTraversal.traverse(compiler, root, new FindGoogProvideAndGoogModule());
+    if (dontProcess) {
+      return;
+    }
     NodeTraversal
         .traverse(compiler, root, new ProcessCommonJsModulesCallback());
   }
@@ -94,6 +104,32 @@ public class ProcessCommonJSModules implements CompilerPass {
             .replaceAll("-", "_")
             .replaceAll(":", "_")
             .replaceAll("\\.", "");
+  }
+
+  /**
+   * Avoid processing if we find the appearance of goog.provide or goog.module.
+   *
+   * TODO(moz): Let ES6, CommonJS and goog.provide live happily together.
+   */
+  private class FindGoogProvideAndGoogModule extends AbstractPreOrderCallback {
+    @Override
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+      // Shallow traversal, since we don't need to inspect within function declarations.
+      if (parent == null || !parent.isFunction()
+          || n == parent.getFirstChild()) {
+        if (n.isExprResult()) {
+          Node maybeGetProp = n.getFirstChild().getFirstChild();
+          if (maybeGetProp != null
+              && (maybeGetProp.matchesQualifiedName("goog.provide")
+                  || maybeGetProp.matchesQualifiedName("goog.module"))) {
+            dontProcess = true;
+            return false;
+          }
+        }
+        return true;
+      }
+      return false;
+    }
   }
 
   /**
@@ -184,7 +220,9 @@ public class ProcessCommonJSModules implements CompilerPass {
         CompilerInput ci = t.getInput();
         ci.addProvide(moduleName);
         JSModule m = new JSModule(moduleName);
-        m.addAndOverrideModule(ci);
+        if (overrideModule) {
+          m.addAndOverrideModule(ci);
+        }
         module = m;
       }
       script.addChildToFront(IR.exprResult(
@@ -377,6 +415,11 @@ public class ProcessCommonJSModules implements CompilerPass {
 
         // refs to 'exports' are handled separately.
         if (EXPORTS.equals(name)) {
+          return;
+        }
+
+        // closure_test_suite looks for test*() functions
+        if (compiler.getOptions().exportTestFunctions && name.startsWith("test")) {
           return;
         }
 
