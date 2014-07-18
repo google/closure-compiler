@@ -60,34 +60,65 @@
  *
  * C. Pseudo-types
  * The Chrome APIs define many types are that actually pseudo-types, that
- * is, they can't be instantiated by name, such as Port defined at
- * http://developer.chrome.com/extensions/runtime.html#type-Port.
+ * is, they can't be instantiated by name. The extension APIs also pass
+ * untyped objects (a bag of properties) to callbacks.
  *
- * There are two fundamentally different kinds of pseudo-types: those
- * instantiated in extension code and those instantiated in extension
- * library functions. The latter are returned by library functions or passed
- * to callbacks. The Chrome Extension APIs include one instance of the former
- * in Permissions, defined at
+ * The Chrome extension APIs include at least three different situations:
+ *
+ * 1. an object that must be created by an extension developer and passed
+ *    into a Chrome extension API and for which there is no constructor.
+ * 2. an instance of a type that is created inside the extension libraries
+ *    and passed out to a callback/listener or returned by an extension API
+ *    (the constructor implicity lives within the library).
+ * 3. like #2, but a bag-of-properties object that is passed out to a
+ *    callback/listener or returned by an extension API so there is no
+ *    defined type.
+ *
+ * For #1, use a typedef so object literals and objects created via goog.object
+ * are acceptable, for example, the Permissions type defined at
  * http://developer.chrome.com/extensions/permissions.html#type-Permissions
+ * should be:
  *
- * Those types instantiated in extension code should be declared as typedefs
- * so that object literals and objects created via goog.object are acceptable,
- * for example, Permissions would be:
- *
- *   * at-typedef {{permissions: (Array.<string>|undefined),
- *                  origins: (Array.<string>|undefined)}}
+ *   / **
+ *     * at-typedef {?{
+ *     *   permissions: (!Array.<string>|undefined),
+ *     *   origins: (!Array.<string>|undefined)
+ *     * }}
+ *     * /
  *   chrome.permissions.Permissions;
  *
- * Those types instantiated in library code should be declared as classes.
+ * Using typedefs provides type-safety for the fields that are defined in
+ * the object literal and also defined in the typedef. Note that typedefs define
+ * a minimal interface and will not complain about extraneous (often
+ * misspelled) fields.
+ *
+ * Also, typedefs of record types are non-nullable by default. The "{?{"
+ * creates a nullable record-type typedef so ! has the same meaning in usages
+ * as it does for real types.
+ *
+ * For #2, use a standard constructor, even though no constructor is provided
+ * and extension writers will never instantiate an instance, as using a first
+ * class type provides the strongest type checking. For example, see the Port
+ * type defined at http://developer.chrome.com/apps/runtime.html#type-Port.
  * Always qualify the type name to reduce top-level pollution in this file:
  *
  *   Do:
- *        function chrome.extension.Port() {}
+ *        chrome.extension.Port = function() {}
  *   Don't:
  *        function Port() {}
  *
- * In both cases, when the type is used by more than one package use "shared",
- * for example, chrome.shared.Port.
+ * Note that, unfortunately, the actual Port class definition in this file
+ * does not follow this recommendation.
+ *
+ * For #3, use {!Object}, that is, a bag of properites. This is a sad reality
+ * given that the Chrome extensions do not document a real type. It is tempting
+ * to define a real-type within this file and treat this situation as identical
+ * to #2, but that means a new type is being defined in this file and developers
+ * do not expect to find required new types in extension files.
+ *
+ * If a real type is declared here, then developers will need to incorporate
+ * that type into the signature of their callback method and there will be
+ * no indication from the docs that they need to do so.
  *
  * D. Events
  * Most packages define a set of events with the standard set of methods:
